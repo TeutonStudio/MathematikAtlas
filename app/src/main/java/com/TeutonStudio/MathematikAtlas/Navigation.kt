@@ -44,6 +44,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCommand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCommandErgebnis
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenControllerZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenLayoutAnwenden
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenZwischenablage
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
@@ -175,6 +176,10 @@ private fun KnotenKartenTestAnwendung() {
                 controller = controller.mitAuswahl(AuswahlDaten())
                 status = "Keine Auswahl"
             },
+            onLayout = {
+                fuehreAus(KartenLayoutAnwenden())
+                status = "Layout angewendet"
+            },
             onRueckgaengig = {
                 controller = controller.rueckgaengig()
                 status = "Rueckgaengig"
@@ -254,6 +259,7 @@ private fun SeitenLeiste(
     onAuswahlLoeschen: () -> Unit,
     onAuswahlDuplizieren: () -> Unit,
     onAuswahlLeeren: () -> Unit,
+    onLayout: () -> Unit,
     onRueckgaengig: () -> Unit,
     onWiederholen: () -> Unit,
     onKnotenNameAendern: (String, String) -> Unit,
@@ -295,6 +301,8 @@ private fun SeitenLeiste(
             TestKnopf(text = "Alle", onClick = onAllesAuswaehlen, modifier = Modifier.weight(1f))
             TestKnopf(text = "Leeren", onClick = onAuswahlLeeren, modifier = Modifier.weight(1f))
         }
+        Spacer(Modifier.height(8.dp))
+        TestKnopf(text = "Layout", onClick = onLayout, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TestKnopf(text = "Undo", onClick = onRueckgaengig, modifier = Modifier.weight(1f))
