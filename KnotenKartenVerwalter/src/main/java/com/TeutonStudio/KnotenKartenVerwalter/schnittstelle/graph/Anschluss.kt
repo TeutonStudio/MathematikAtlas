@@ -1,4 +1,4 @@
-package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
+package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

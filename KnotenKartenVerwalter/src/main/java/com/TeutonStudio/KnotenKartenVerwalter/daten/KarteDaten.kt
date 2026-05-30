@@ -1,8 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
 import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenArten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.VerbindungArten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KnotenArten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungArten
 
 /**
  * Persistierter Viewport einer Karte.

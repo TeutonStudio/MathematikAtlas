@@ -1,4 +1,4 @@
-package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
+package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import android.view.MotionEvent
 import androidx.compose.foundation.background
@@ -51,6 +51,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.mitTypPruefung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KoordinatenUmrechnung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.zuComposable
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.pow
@@ -116,8 +118,8 @@ sealed interface Karte: GraphObjekt {
 open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
-    override val knotenArten: KnotenArten = KnotenArten.Standard,
-    override val verbindungArten: VerbindungArten = VerbindungArten.Standard,
+    override val knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+    override val verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen = {},
     override val onKontextAktion: KontextAktionAusführen = {},
@@ -182,8 +184,8 @@ private data class KontextMenüZustand(
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
-    knotenArten: KnotenArten = KnotenArten.Standard,
-    verbindungArten: VerbindungArten = VerbindungArten.Standard,
+    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+    verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     aktualisierung: KartenAktualisierung,
 ) = BasisKarte(this, zustand, knotenArten, verbindungArten, aktualisierung).zuComposable(modifier)
 
@@ -198,8 +200,8 @@ public fun KarteDaten.zuComposable(
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
-    knotenArten: KnotenArten = KnotenArten.Standard,
-    verbindungArten: VerbindungArten = VerbindungArten.Standard,
+    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+    verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
     onKontextAktion: KontextAktionAusführen = {},
@@ -226,8 +228,8 @@ public fun KarteDaten.zuComposable(
 private fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
-    knotenArten: KnotenArten = KnotenArten.Standard,
-    verbindungArten: VerbindungArten = VerbindungArten.Standard,
+    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+    verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -505,8 +507,8 @@ private fun KartenOberfläche(
             sichtbareDaten.zuComposable(
                 modifier = Modifier,
                 zustand = sichtbarerZustand,
-                fläche = fläche,
-                onAnsichtÄndern = { neueAnsicht -> ansicht = neueAnsicht },
+
+                aktualisierung = { id,verschiebung -> TODO() },
             )
         }
 
@@ -926,13 +928,13 @@ private fun KartePreview() {
                 id = "definition",
                 name = "Definition",
                 position = Offset(40f, 80f),
-                art = EingabeKnoten.KNOTEN_ART,
+                art = EingabeKnoten.Companion.KNOTEN_ART,
             ),
             KnotenDaten(
                 id = "satz",
                 name = "Satz",
                 position = Offset(300f, 360f),
-                art = AusgabeKnoten.KNOTEN_ART,
+                art = AusgabeKnoten.Companion.KNOTEN_ART,
             ),
         ),
         verbindungen = listOf(

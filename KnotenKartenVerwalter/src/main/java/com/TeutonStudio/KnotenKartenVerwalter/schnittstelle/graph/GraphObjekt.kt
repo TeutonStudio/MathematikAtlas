@@ -1,4 +1,4 @@
-package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
+package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 // Grundklasse für ein Objekt, dass auf einem KartenGraph erscheint
 sealed interface GraphObjekt {
     @Composable
-    fun zuComposable(modifier: Modifier = Modifier)
+    fun zuComposable(modifier: Modifier = Modifier.Companion)
     // Der Inhalt des Fensters, dass bei Längerhaten geöffnet wird
     fun erhalteKontextFenster() = Unit
     // Der Inhalt des Inspectrs zu diesem Objekt

@@ -27,6 +27,10 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenGrenzen
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.grenzen
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zoomSicher
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zuWeltPosition
 
 /**
  * Rendert nur die Minimap einer Karte.

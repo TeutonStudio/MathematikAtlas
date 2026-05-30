@@ -2,10 +2,10 @@ package com.TeutonStudio.KnotenKartenVerwalter
 
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AusgabeKnoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.EingabeKnoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenArten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.RechenKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AusgabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.EingabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KnotenArten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.RechenKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.Zahlenraum
 import org.junit.Assert.assertEquals

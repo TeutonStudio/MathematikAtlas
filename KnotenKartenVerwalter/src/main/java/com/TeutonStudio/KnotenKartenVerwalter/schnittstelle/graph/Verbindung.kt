@@ -1,4 +1,4 @@
-package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
+package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
@@ -9,8 +9,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Erstellt eine Zeichenfunktion für eine einzelne Verbindung.
@@ -126,7 +127,7 @@ private fun DrawScope.VerbindungPfad(
         else -> Color(0xFF475569)
     }
 
-    val kontrollAbstand = kotlin.math.max(48f, kotlin.math.abs(ende.x - start.x) / 2f)
+    val kontrollAbstand = max(48f, abs(ende.x - start.x) / 2f)
     val pfad = Path().apply {
         moveTo(start.x, start.y)
         cubicTo(
