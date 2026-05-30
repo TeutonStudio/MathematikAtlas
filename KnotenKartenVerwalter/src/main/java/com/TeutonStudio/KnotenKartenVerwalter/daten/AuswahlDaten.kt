@@ -35,4 +35,9 @@ data class AuswahlDaten(
 
     fun umgeschalteteVerbindung(verbindungId: String): AuswahlDaten =
         if (verbindungId in verbindungIds) ohneVerbindung(verbindungId) else mitVerbindung(verbindungId)
+
+    fun plus(andere: AuswahlDaten): AuswahlDaten = AuswahlDaten(
+        knotenIds = knotenIds + andere.knotenIds,
+        verbindungIds = verbindungIds + andere.verbindungIds,
+    )
 }

@@ -9,6 +9,9 @@ sealed interface GraphObjekt {
     fun zuComposable(modifier: Modifier = Modifier)
     // Der Inhalt des Fensters, dass bei Längerhaten geöffnet wird
     fun erhalteKontextFenster() = Unit
+    // Der Inhalt des Inspectrs zu diesem Objekt
+    fun erhalteInspectorFenster() = Unit
+
     // Auf dem Graph wird von einem Anschluss aus gezogen
     fun planeVerbindung(a: Anschluss) = Unit
     // Auf dem Graph wird eine gezogene Verbindung auf einem Anschluss dieses Knoten losgelassen

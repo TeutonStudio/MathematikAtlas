@@ -61,7 +61,7 @@ fun KarteDaten.fuegeEin(
         knoten.copy(
             id = idZuNeu.getValue(knoten.id),
             position = zielPosition + (knoten.position - ursprung),
-            ausgewaehlt = true,
+            ausgewaehlt = false,
         )
     }
     val neueKnotenIds = neueKnoten.mapTo(mutableSetOf()) { it.id }
@@ -72,7 +72,7 @@ fun KarteDaten.fuegeEin(
             id = neueId(),
             quellKnotenId = neueQuelle,
             zielKnotenId = neuesZiel,
-            ausgewaehlt = true,
+            ausgewaehlt = false,
         )
     }
 

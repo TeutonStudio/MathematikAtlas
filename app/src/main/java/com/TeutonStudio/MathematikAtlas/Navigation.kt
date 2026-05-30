@@ -44,8 +44,10 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenZwischenablage
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.dupliziereAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fuegeEin
 import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
+import com.TeutonStudio.KnotenKartenVerwalter.daten.loescheAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.mitErsetztemEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenTreffer
@@ -97,6 +99,7 @@ private fun KnotenKartenTestAnwendung() {
         SeitenLeiste(
             karten = gespeicherteKarten,
             aktuelleKarte = aktuelleKarte,
+            auswahl = auswahl,
             status = status,
             onNeueKarte = {
                 aktuelleKarte = beispielKarte("Neue KnotenKarte")
@@ -135,6 +138,36 @@ private fun KnotenKartenTestAnwendung() {
                     status = "Auswahl eingefuegt"
                 }
             },
+            onAllesAuswaehlen = {
+                auswahl = AuswahlDaten(
+                    knotenIds = aktuelleKarte.knoten.mapTo(mutableSetOf()) { it.id },
+                    verbindungIds = aktuelleKarte.verbindungen.mapTo(mutableSetOf()) { it.id },
+                )
+                status = auswahl.statusText()
+            },
+            onAuswahlLoeschen = {
+                aktuelleKarte = aktuelleKarte.loescheAuswahl(auswahl)
+                auswahl = AuswahlDaten()
+                status = "Auswahl geloescht"
+            },
+            onAuswahlDuplizieren = {
+                val ergebnis = aktuelleKarte.dupliziereAuswahl(auswahl)
+                aktuelleKarte = ergebnis.karte
+                auswahl = ergebnis.auswahl
+                status = if (auswahl.istLeer) "Keine Auswahl zum Duplizieren" else "Auswahl dupliziert"
+            },
+            onAuswahlLeeren = {
+                auswahl = AuswahlDaten()
+                status = "Keine Auswahl"
+            },
+            onKnotenNameAendern = { knotenId, name ->
+                aktuelleKarte = aktuelleKarte.copy(
+                    knoten = aktuelleKarte.knoten.map { knoten ->
+                        if (knoten.id == knotenId) knoten.copy(name = name) else knoten
+                    },
+                )
+                status = "Knoten bearbeitet"
+            },
         )
 
         Spacer(Modifier.width(12.dp))
@@ -167,7 +200,9 @@ private fun KnotenKartenTestAnwendung() {
                     status = "Verbindung erstellt"
                 },
                 onKontextAktion = { aktion ->
-                    aktuelleKarte = aktuelleKarte.führeKontextAktionAus(aktion)
+                    val ergebnis = aktuelleKarte.führeKontextAktionAus(aktion, auswahl)
+                    aktuelleKarte = ergebnis.karte
+                    auswahl = ergebnis.auswahl
                     status = "Kontext: ${aktion.aktion}"
                 },
                 onAuswahlÄndern = { neueAuswahl ->
@@ -190,6 +225,7 @@ private fun AuswahlDaten.statusText(): String = when {
 private fun SeitenLeiste(
     karten: List<KartenEintrag>,
     aktuelleKarte: KarteDaten,
+    auswahl: AuswahlDaten,
     status: String,
     onNeueKarte: () -> Unit,
     onSpeichern: () -> Unit,
@@ -198,6 +234,11 @@ private fun SeitenLeiste(
     onKnotenHinzufuegen: () -> Unit,
     onKopieren: () -> Unit,
     onEinfuegen: () -> Unit,
+    onAllesAuswaehlen: () -> Unit,
+    onAuswahlLoeschen: () -> Unit,
+    onAuswahlDuplizieren: () -> Unit,
+    onAuswahlLeeren: () -> Unit,
+    onKnotenNameAendern: (String, String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -231,6 +272,20 @@ private fun SeitenLeiste(
             TestKnopf(text = "Kopieren", onClick = onKopieren, modifier = Modifier.weight(1f))
             TestKnopf(text = "Einfuegen", onClick = onEinfuegen, modifier = Modifier.weight(1f))
         }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Alle", onClick = onAllesAuswaehlen, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Leeren", onClick = onAuswahlLeeren, modifier = Modifier.weight(1f))
+        }
+
+        Spacer(Modifier.height(16.dp))
+        AuswahlBearbeiter(
+            karte = aktuelleKarte,
+            auswahl = auswahl,
+            onLoeschen = onAuswahlLoeschen,
+            onDuplizieren = onAuswahlDuplizieren,
+            onKnotenNameAendern = onKnotenNameAendern,
+        )
 
         Spacer(Modifier.height(16.dp))
         BasicText(
@@ -259,6 +314,60 @@ private fun SeitenLeiste(
             text = status,
             style = TextStyle(fontSize = 13.sp, color = Color(0xFF4B5563)),
         )
+    }
+}
+
+@Composable
+private fun AuswahlBearbeiter(
+    karte: KarteDaten,
+    auswahl: AuswahlDaten,
+    onLoeschen: () -> Unit,
+    onDuplizieren: () -> Unit,
+    onKnotenNameAendern: (String, String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF9FAFB), RoundedCornerShape(6.dp))
+            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(6.dp))
+            .padding(10.dp),
+    ) {
+        BasicText(
+            text = "Auswahl",
+            style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151)),
+        )
+        Spacer(Modifier.height(8.dp))
+        BasicText(
+            text = auswahl.statusText(),
+            style = TextStyle(fontSize = 13.sp, color = Color(0xFF4B5563)),
+        )
+        Spacer(Modifier.height(8.dp))
+
+        val einzelnerKnoten = auswahl.knotenIds.singleOrNull()?.let { id ->
+            karte.knoten.firstOrNull { it.id == id }
+        }
+        if (einzelnerKnoten != null && auswahl.verbindungIds.isEmpty()) {
+            BasicText(
+                text = "Name",
+                style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B7280)),
+            )
+            Spacer(Modifier.height(4.dp))
+            EingabeFeld(
+                wert = einzelnerKnoten.name,
+                onWertAendern = { onKnotenNameAendern(einzelnerKnoten.id, it) },
+            )
+            Spacer(Modifier.height(6.dp))
+            BasicText(
+                text = "Typ: ${einzelnerKnoten.art}",
+                style = TextStyle(fontSize = 12.sp, color = Color(0xFF6B7280)),
+            )
+        }
+
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Duplizieren", onClick = onDuplizieren, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Loeschen", onClick = onLoeschen, modifier = Modifier.weight(1f))
+        }
     }
 }
 
@@ -420,22 +529,41 @@ private fun KarteDaten.mitNeuemKnoten(position: Offset? = null): KarteDaten {
     )
 }
 
-private fun KarteDaten.führeKontextAktionAus(aktion: KartenKontextAktion): KarteDaten = when (aktion.aktion) {
-    "Knoten erstellen" -> mitNeuemKnoten(aktion.weltPosition)
+private data class KontextErgebnis(
+    val karte: KarteDaten,
+    val auswahl: AuswahlDaten,
+)
+
+private fun KarteDaten.führeKontextAktionAus(
+    aktion: KartenKontextAktion,
+    aktuelleAuswahl: AuswahlDaten,
+): KontextErgebnis = when (aktion.aktion) {
+    "Knoten erstellen" -> {
+        val neueKarte = mitNeuemKnoten(aktion.weltPosition)
+        KontextErgebnis(neueKarte, AuswahlDaten(knotenIds = setOf(neueKarte.knoten.last().id)))
+    }
+    "Knoten auswaehlen" -> {
+        val ziel = aktion.ziel as? KartenTreffer.Knoten ?: return KontextErgebnis(this, aktuelleAuswahl)
+        KontextErgebnis(this, AuswahlDaten(knotenIds = setOf(ziel.knotenId)))
+    }
+    "Verbindung auswaehlen" -> {
+        val ziel = aktion.ziel as? KartenTreffer.Verbindung ?: return KontextErgebnis(this, aktuelleAuswahl)
+        KontextErgebnis(this, AuswahlDaten(verbindungIds = setOf(ziel.verbindungId)))
+    }
+    "Knoten duplizieren" -> {
+        val ziel = aktion.ziel as? KartenTreffer.Knoten ?: return KontextErgebnis(this, aktuelleAuswahl)
+        val ergebnis = dupliziereAuswahl(AuswahlDaten(knotenIds = setOf(ziel.knotenId)))
+        KontextErgebnis(ergebnis.karte, ergebnis.auswahl)
+    }
     "Knoten loeschen" -> {
-        val ziel = aktion.ziel as? KartenTreffer.Knoten ?: return this
-        copy(
-            knoten = knoten.filterNot { it.id == ziel.knotenId },
-            verbindungen = verbindungen.filterNot {
-                it.quellKnotenId == ziel.knotenId || it.zielKnotenId == ziel.knotenId
-            },
-        )
+        val ziel = aktion.ziel as? KartenTreffer.Knoten ?: return KontextErgebnis(this, aktuelleAuswahl)
+        KontextErgebnis(loescheAuswahl(AuswahlDaten(knotenIds = setOf(ziel.knotenId))), AuswahlDaten())
     }
     "Verbindung loeschen" -> {
-        val ziel = aktion.ziel as? KartenTreffer.Verbindung ?: return this
-        copy(verbindungen = verbindungen.filterNot { it.id == ziel.verbindungId })
+        val ziel = aktion.ziel as? KartenTreffer.Verbindung ?: return KontextErgebnis(this, aktuelleAuswahl)
+        KontextErgebnis(loescheAuswahl(AuswahlDaten(verbindungIds = setOf(ziel.verbindungId))), AuswahlDaten())
     }
-    else -> this
+    else -> KontextErgebnis(this, aktuelleAuswahl)
 }
 
 private fun KarteDaten.zuJson(): JSONObject = JSONObject()

@@ -90,13 +90,17 @@ open class BasisKnoten(
     protected open val eingangsDaten: List<EingangDaten> = listOf(EingangDaten("in", "Eingang"))
     protected open val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("out", "Ausgang"))
 
-    override val eingänge: Map<Int, Anschluss> = eingangsDaten.mapIndexed { index, anschluss ->
-        index to BasisEingang(anschluss, this) as Anschluss
-    }.toMap()
+    override val eingänge: Map<Int, Anschluss> by lazy {
+        eingangsDaten.mapIndexed { index, anschluss ->
+            index to BasisEingang(anschluss, this) as Anschluss
+        }.toMap()
+    }
 
-    override val ausgänge: Map<Int, Anschluss> = ausgangsDaten.mapIndexed { index, anschluss ->
-        index to BasisAusgang(anschluss, this) as Anschluss
-    }.toMap()
+    override val ausgänge: Map<Int, Anschluss> by lazy {
+        ausgangsDaten.mapIndexed { index, anschluss ->
+            index to BasisAusgang(anschluss, this) as Anschluss
+        }.toMap()
+    }
 
     override fun erhalteAnschlüsseGeordnet(): List<AnschlussDaten> = eingangsDaten + ausgangsDaten
 

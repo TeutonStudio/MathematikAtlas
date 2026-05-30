@@ -3,7 +3,10 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -246,6 +249,7 @@ private fun KartenOberfläche(
     var verbindungsDrag by remember { mutableStateOf<VerbindungsDrag?>(null) }
     var kontextMenü by remember { mutableStateOf<KontextMenüZustand?>(null) }
     var blockiereHintergrundGesten by remember { mutableStateOf(false) }
+    var ziehtAnschluss by remember { mutableStateOf(false) }
 
     // Während eines Drags kann die sichtbare Position bereits von den
     // übergebenen Daten abweichen. Diese Map hält die unmittelbare UI-Reaktion
@@ -311,7 +315,12 @@ private fun KartenOberfläche(
             .pointerInput(daten.id) {
                 detectTapGestures(
                     onTap = { position ->
-                        val ziel = position.treffer(aktuelleKnoten, aktuelleVerbindungen, aktuelleAnschlüsse, aktuelleAnsicht)
+                        val ziel = position.treffer(
+                            aktuelleKnoten,
+                            aktuelleVerbindungen,
+                            aktuelleAnschlüsse,
+                            aktuelleAnsicht
+                        )
                         onAuswahlÄndern(ziel.zuAuswahl())
                     },
                 )
@@ -323,7 +332,7 @@ private fun KartenOberfläche(
                 if (
                     sekundär &&
                     (ereignis.actionMasked == MotionEvent.ACTION_DOWN ||
-                        ereignis.actionMasked == MotionEvent.ACTION_BUTTON_PRESS)
+                            ereignis.actionMasked == MotionEvent.ACTION_BUTTON_PRESS)
                 ) {
                     öffneKontextMenü(Offset(ereignis.x, ereignis.y))
                     true
@@ -398,8 +407,7 @@ private fun KartenOberfläche(
         // gespeichert werden.
         sichtbareKnoten.forEach { knotenObjekt ->
             val knoten = knotenObjekt.daten
-            var startPosition = knoten.position
-            var gesamtDrag = Offset.Zero
+            val aktuellerKnoten by rememberUpdatedState(knoten)
             var knotenModifier = Modifier
                 .offset { knoten.position.zuBildschirmIntOffset(sichtbarerZustand) }
                 .size(
@@ -408,20 +416,25 @@ private fun KartenOberfläche(
                 )
             if (knoten.beweglich) {
                 knotenModifier = knotenModifier.pointerInput(daten.id, knoten.id, sichtbarerZustand.zoom) {
+                    var startPosition = Offset.Zero
+                    var gesamtDrag = Offset.Zero
                     detectDragGestures(
-                        onDragStart = {
+                        onDragStart = { if (!ziehtAnschluss) {
+                            val aktuellerKnotenId = aktuellerKnoten.id
                             kontextMenü = null
                             blockiereHintergrundGesten = true
-                            startPosition = knoten.position
+                            startPosition = aktuellerKnoten.position
                             gesamtDrag = Offset.Zero
-                        },
-                        onDrag = { change, dragAmount ->
+                            onAuswahlÄndern(AuswahlDaten(knotenIds = setOf(aktuellerKnotenId)))
+                        } },
+                        onDrag = { change, dragAmount -> if (!ziehtAnschluss) {
                             change.consume()
                             gesamtDrag += dragAmount
                             val neuePosition = startPosition + (gesamtDrag / sichtbarerZustand.zoomSicher())
-                            gezogeneKnoten = gezogeneKnoten + (knoten.id to neuePosition)
-                            aktualisierung(knoten.id, neuePosition)
-                        },
+                            val aktuellerKnotenId = aktuellerKnoten.id
+                            gezogeneKnoten = gezogeneKnoten + (aktuellerKnotenId to neuePosition)
+                            aktualisierung(aktuellerKnotenId, neuePosition)
+                        } },
                         onDragEnd = {
                             blockiereHintergrundGesten = false
                         },
@@ -437,9 +450,11 @@ private fun KartenOberfläche(
                 modifierAnschluss = { richtung, index ->
                     val referenz = knotenObjekt.anschlussReferenz(richtung, index, sichtbarerZustand)
                     // Anschlüsse sind Drag-Startpunkte für neue Verbindungen.
-                    AnschlussModifier.pointerInput(daten.id, referenz, anschlüsse, sichtbarerZustand) {
-                        detectDragGestures(
-                            onDragStart = {
+                    AnschlussModifier.pointerInput(daten.id, referenz) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            try {
+                                ziehtAnschluss = true
                                 kontextMenü = null
                                 blockiereHintergrundGesten = true
                                 verbindungsDrag = VerbindungsDrag(
@@ -447,26 +462,27 @@ private fun KartenOberfläche(
                                     startPosition = referenz.position,
                                     aktuellePosition = referenz.position,
                                 )
-                            },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                val alt = verbindungsDrag ?: return@detectDragGestures
-                                verbindungsDrag = alt.copy(aktuellePosition = alt.aktuellePosition + dragAmount)
-                            },
-                            onDragEnd = {
+
+                                down.consume()
+                                drag(down.id) { change ->
+                                    change.consume()
+                                    val alt = verbindungsDrag ?: return@drag
+                                    verbindungsDrag = alt.copy(
+                                        aktuellePosition = alt.aktuellePosition + (change.position - change.previousPosition),
+                                    )
+                                }
+
                                 val drag = verbindungsDrag
-                                val ziel = drag?.aktuellePosition?.nächsterAnschluss(anschlüsse, maxAbstand = 28f)
+                                val ziel = drag?.aktuellePosition?.nächsterAnschluss(aktuelleAnschlüsse, maxAbstand = 28f)
                                 if (drag != null && ziel != null && drag.start.istKompatibelMit(ziel)) {
                                     onVerbindungErstellen(drag.start.zuVerbindung(ziel))
                                 }
+                            } finally {
+                                ziehtAnschluss = false
                                 verbindungsDrag = null
                                 blockiereHintergrundGesten = false
-                            },
-                            onDragCancel = {
-                                verbindungsDrag = null
-                                blockiereHintergrundGesten = false
-                            },
-                        )
+                            }
+                        }
                     }
                 },
             )

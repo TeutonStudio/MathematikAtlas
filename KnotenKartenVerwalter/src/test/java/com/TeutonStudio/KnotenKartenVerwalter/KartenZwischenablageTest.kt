@@ -8,7 +8,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fuegeEin
 import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class KartenZwischenablageTest {
@@ -39,8 +39,8 @@ class KartenZwischenablageTest {
         assertEquals(Offset(140f, 230f), ergebnis.karte.knoten[1].position)
         assertEquals("a-neu", ergebnis.karte.verbindungen.single().quellKnotenId)
         assertEquals("b-neu", ergebnis.karte.verbindungen.single().zielKnotenId)
-        assertTrue(ergebnis.karte.knoten.all { it.ausgewaehlt })
-        assertTrue(ergebnis.karte.verbindungen.all { it.ausgewaehlt })
+        assertFalse(ergebnis.karte.knoten.any { it.ausgewaehlt })
+        assertFalse(ergebnis.karte.verbindungen.any { it.ausgewaehlt })
     }
 
     private fun beispielKarte() = KarteDaten(
