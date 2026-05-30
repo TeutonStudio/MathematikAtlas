@@ -2,7 +2,6 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
 import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.PositionDaten
 
 /**
  * Vorbereitete Datenstrukturen fuer Pointer-, Drag- und Zoom-Interaktionen der Karte.
@@ -16,7 +15,7 @@ internal data class KnotenDragZustand(
     val knotenId: String,
 
     /** Weltposition des Knotens beim Start der Geste. */
-    val startPosition: PositionDaten,
+    val startPosition: Offset,
 
     /** Bildschirmposition des Zeigers beim Start der Geste. */
     val startPointer: Offset,

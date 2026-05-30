@@ -125,13 +125,13 @@ private fun Übersicht(
 
             // Knoten werden als stark vereinfachte Rechtecke dargestellt.
             daten.knoten.forEach { knoten ->
-                val linksOben = projektion.zuMiniMap(knoten.position.waagrecht, knoten.position.senkrecht)
+                val linksOben = projektion.zuMiniMap(knoten.position.x, knoten.position.y)
                 drawRect(
                     color = if (knoten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF94A3B8),
                     topLeft = linksOben,
                     size = Size(
-                        width = (knoten.fläche.waagrecht * projektion.skalierung).coerceAtLeast(3f),
-                        height = (knoten.fläche.senkrecht * projektion.skalierung).coerceAtLeast(3f),
+                        width = (knoten.fläche.x * projektion.skalierung).coerceAtLeast(3f),
+                        height = (knoten.fläche.y * projektion.skalierung).coerceAtLeast(3f),
                     ),
                 )
             }

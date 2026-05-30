@@ -13,16 +13,27 @@ enum class AnschlussRichtung {
 }
 
 /**
+ * Kante eines Knotens, an der ein Anschluss liegt.
+ */
+enum class AnschlussKante {
+    Links,
+    Rechts,
+    Oben,
+    Unten,
+}
+
+/**
  * Gemeinsame Basisdaten eines Anschlusses.
  *
  * Anschlüsse entsprechen ReactFlow-Handles: Sie besitzen eine stabile ID, ein
  * sichtbares Label und eine feste Richtung.
  */
 sealed class AnschlussDaten(
-    open val id: String,
+    override val id: String,
     open val label: String,
     open val richtung: AnschlussRichtung,
-)
+    open val kante: AnschlussKante,
+): GraphDaten
 
 /**
  * Eingangsanschluss eines Knotens.
@@ -30,10 +41,12 @@ sealed class AnschlussDaten(
 data class EingangDaten(
     override val id: String,
     override val label: String,
+    override val kante: AnschlussKante = AnschlussKante.Links,
 ) : AnschlussDaten(
     id = id,
     label = label,
     richtung = AnschlussRichtung.Eingang,
+    kante = kante,
 )
 
 /**
@@ -42,8 +55,10 @@ data class EingangDaten(
 data class AusgangDaten(
     override val id: String,
     override val label: String,
+    override val kante: AnschlussKante = AnschlussKante.Rechts,
 ) : AnschlussDaten(
     id = id,
     label = label,
     richtung = AnschlussRichtung.Ausgang,
+    kante = kante,
 )

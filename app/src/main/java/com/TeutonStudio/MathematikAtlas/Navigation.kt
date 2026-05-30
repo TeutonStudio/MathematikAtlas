@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -37,16 +38,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsfensterDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.FlächeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.PositionDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.mitErsetztemEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenTreffer
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AusgabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.EingabeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.zuComposable
 import org.json.JSONArray
 import org.json.JSONObject
@@ -106,7 +106,7 @@ private fun KnotenKartenTestAnwendung() {
                 status = "'${eintrag.name}' geoeffnet"
             },
             onNameAendern = { name ->
-                aktuelleKarte = aktuelleKarte.copy(name = name)
+                aktuelleKarte =  KarteDaten(aktuelleKarte, name = name)
             },
             onKnotenHinzufuegen = {
                 aktuelleKarte = aktuelleKarte.mitNeuemKnoten()
@@ -135,8 +135,7 @@ private fun KnotenKartenTestAnwendung() {
                 },
                 onVerbindungErstellen = { verbindung ->
                     aktuelleKarte = aktuelleKarte.copy(
-                        verbindungen = aktuelleKarte.verbindungen
-                            .filterNot { it.id == verbindung.id } + verbindung,
+                        verbindungen = aktuelleKarte.verbindungen.mitErsetztemEingang(verbindung),
                     )
                     status = "Verbindung erstellt"
                 },
@@ -338,42 +337,40 @@ private fun beispielKarte(name: String): KarteDaten {
             KnotenDaten(
                 id = "definition",
                 name = "Definition",
-                position = PositionDaten(60f, 80f),
-                ausgänge = listOf(AusgangDaten("weiter", "weiter")),
+                position = Offset(60f, 80f),
+                art = EingabeKnoten.KNOTEN_ART,
             ),
             KnotenDaten(
                 id = "satz",
                 name = "Satz",
-                position = PositionDaten(360f, 260f),
-                eingänge = listOf(EingangDaten("vorher", "vorher")),
+                position = Offset(360f, 260f),
+                art = AusgabeKnoten.KNOTEN_ART,
             ),
         ),
         verbindungen = listOf(
             VerbindungDaten(
                 id = "verbindung-1",
                 quellKnotenId = "definition",
-                quellAnschlussId = "weiter",
+                quellAnschlussId = "out",
                 zielKnotenId = "satz",
-                zielAnschlussId = "vorher",
+                zielAnschlussId = "in",
             ),
         ),
     )
 }
 
-private fun KarteDaten.mitNeuemKnoten(position: PositionDaten? = null): KarteDaten {
+private fun KarteDaten.mitNeuemKnoten(position: Offset? = null): KarteDaten {
     val nummer = knoten.size + 1
     val id = "knoten-$nummer-${UUID.randomUUID()}"
     return copy(
         knoten = knoten + KnotenDaten(
             id = id,
             name = "Knoten $nummer",
-            position = position ?: PositionDaten(
-                waagrecht = 90f + nummer * 40f,
-                senkrecht = 120f + nummer * 30f,
+            position = position ?: Offset(
+                x = 90f + nummer * 40f,
+                y = 120f + nummer * 30f,
             ),
-            fläche = FlächeDaten(180f, 96f),
-            eingänge = listOf(EingangDaten("in", "in")),
-            ausgänge = listOf(AusgangDaten("out", "out")),
+            fläche = Offset(180f, 96f),
         ),
     )
 }
@@ -406,12 +403,11 @@ private fun KarteDaten.zuJson(): JSONObject = JSONObject()
 private fun KnotenDaten.zuJson(): JSONObject = JSONObject()
     .put("id", id)
     .put("name", name)
-    .put("position", JSONObject().put("waagrecht", position.waagrecht).put("senkrecht", position.senkrecht))
-    .put("flaeche", JSONObject().put("waagrecht", fläche.waagrecht).put("senkrecht", fläche.senkrecht))
-    .put("typ", typ)
+    .put("position", JSONObject().put("x", position.x).put("y", position.y))
+    .put("flaeche", JSONObject().put("x", fläche.x).put("y", fläche.y))
+    .put("knotenArt", art)
+    .put("typ", art)
     .put("beweglich", beweglich)
-    .put("eingaenge", JSONArray(eingänge.map { JSONObject().put("id", it.id).put("label", it.label) }))
-    .put("ausgaenge", JSONArray(ausgänge.map { JSONObject().put("id", it.id).put("label", it.label) }))
 
 private fun VerbindungDaten.zuJson(): JSONObject = JSONObject()
     .put("id", id)
@@ -420,11 +416,11 @@ private fun VerbindungDaten.zuJson(): JSONObject = JSONObject()
     .put("zielKnotenId", zielKnotenId)
     .put("zielAnschlussId", zielAnschlussId)
     .put("label", label)
-    .put("typ", typ)
+    .put("typ", art)
 
 private fun AnsichtsfensterDaten.zuJson(): JSONObject = JSONObject()
-    .put("x", x)
-    .put("y", y)
+    .put("x", verschiebung.x)
+    .put("y", verschiebung.y)
     .put("zoom", zoom)
 
 private fun JSONObject.zuKarteDaten(): KarteDaten = KarteDaten(
@@ -434,8 +430,10 @@ private fun JSONObject.zuKarteDaten(): KarteDaten = KarteDaten(
     verbindungen = getJSONArray("verbindungen").asObjects().map { it.zuVerbindungDaten() },
     ansichtsfenster = optJSONObject("ansichtsfenster")?.let {
         AnsichtsfensterDaten(
-            x = it.optDouble("x", 0.0).toFloat(),
-            y = it.optDouble("y", 0.0).toFloat(),
+            verschiebung = Offset(
+                x = it.optDouble("x", 0.0).toFloat(),
+                y = it.optDouble("y", 0.0).toFloat(),
+            ),
             zoom = it.optDouble("zoom", 1.0).toFloat(),
         )
     } ?: AnsichtsfensterDaten(),
@@ -447,22 +445,16 @@ private fun JSONObject.zuKnotenDaten(): KnotenDaten {
     return KnotenDaten(
         id = getString("id"),
         name = getString("name"),
-        position = PositionDaten(
-            waagrecht = position.getDouble("waagrecht").toFloat(),
-            senkrecht = position.getDouble("senkrecht").toFloat(),
+        position = Offset(
+            x = position.optDouble("x", position.optDouble("waagrecht", 0.0)).toFloat(),
+            y = position.optDouble("y", position.optDouble("senkrecht", 0.0)).toFloat(),
         ),
-        fläche = FlächeDaten(
-            waagrecht = flaeche.getDouble("waagrecht").toFloat(),
-            senkrecht = flaeche.getDouble("senkrecht").toFloat(),
+        fläche = Offset(
+            x = flaeche.optDouble("x", flaeche.optDouble("waagrecht", 180.0)).toFloat(),
+            y = flaeche.optDouble("y", flaeche.optDouble("senkrecht", 96.0)).toFloat(),
         ),
-        typ = optString("typ", "default"),
+        art = optString("knotenArt", optString("typ", "default")),
         beweglich = optBoolean("beweglich", true),
-        eingänge = optJSONArray("eingaenge").orEmptyObjects().map {
-            EingangDaten(it.getString("id"), it.getString("label"))
-        },
-        ausgänge = optJSONArray("ausgaenge").orEmptyObjects().map {
-            AusgangDaten(it.getString("id"), it.getString("label"))
-        },
     )
 }
 
@@ -473,7 +465,7 @@ private fun JSONObject.zuVerbindungDaten(): VerbindungDaten = VerbindungDaten(
     zielKnotenId = getString("zielKnotenId"),
     zielAnschlussId = getString("zielAnschlussId"),
     label = optString("label").takeIf { it.isNotBlank() && it != "null" },
-    typ = optString("typ", "default"),
+    art = optString("typ", "default"),
 )
 
 private fun JSONArray?.orEmptyObjects(): List<JSONObject> = this?.asObjects().orEmpty()

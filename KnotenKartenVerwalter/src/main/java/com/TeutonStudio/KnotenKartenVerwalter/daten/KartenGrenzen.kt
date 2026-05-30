@@ -38,16 +38,16 @@ data class KartenGrenzenDaten(
 fun List<KnotenDaten>.zuKartenGrenzenDaten(padding: Float = 0f): KartenGrenzenDaten? {
     if (isEmpty()) return null
     val erster = first()
-    var links = erster.position.waagrecht
-    var oben = erster.position.senkrecht
-    var rechts = erster.position.waagrecht + erster.fläche.waagrecht
-    var unten = erster.position.senkrecht + erster.fläche.senkrecht
+    var links = erster.position.x
+    var oben = erster.position.y
+    var rechts = erster.position.x + erster.fläche.x
+    var unten = erster.position.y + erster.fläche.y
 
     drop(1).forEach { knoten ->
-        links = minOf(links, knoten.position.waagrecht)
-        oben = minOf(oben, knoten.position.senkrecht)
-        rechts = maxOf(rechts, knoten.position.waagrecht + knoten.fläche.waagrecht)
-        unten = maxOf(unten, knoten.position.senkrecht + knoten.fläche.senkrecht)
+        links = minOf(links, knoten.position.x)
+        oben = minOf(oben, knoten.position.y)
+        rechts = maxOf(rechts, knoten.position.x + knoten.fläche.x)
+        unten = maxOf(unten, knoten.position.y + knoten.fläche.y)
     }
 
     return KartenGrenzenDaten(

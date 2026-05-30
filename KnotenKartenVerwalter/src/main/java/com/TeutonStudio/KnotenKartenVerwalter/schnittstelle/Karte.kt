@@ -38,13 +38,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.PositionDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -54,7 +52,7 @@ import kotlin.math.roundToInt
 /**
  * Callback für eine geänderte Knotenposition in Weltkoordinaten.
  */
-typealias KartenAktualisierung = (knotenId: String, position: PositionDaten) -> Unit
+typealias KartenAktualisierung = (knotenId: String, position: Offset) -> Unit
 
 /**
  * Callback, wenn durch Anschluss-Drag eine neue Verbindung entstanden ist.
@@ -88,9 +86,45 @@ sealed class KartenTreffer {
  */
 data class KartenKontextAktion(
     val ziel: KartenTreffer,
-    val weltPosition: PositionDaten,
+    val weltPosition: Offset,
     val aktion: String,
 )
+
+sealed interface Karte: GraphObjekt {
+    public val daten: KarteDaten
+    public val zustand: KarteZustand
+    public val knotenArten: KnotenArten
+    public val aktualisierung: KartenAktualisierung
+    public val onVerbindungErstellen: VerbindungErstellen
+    public val onKontextAktion: KontextAktionAusführen
+}
+
+open class BasisKarte(
+    override val daten: KarteDaten,
+    override val zustand: KarteZustand = KarteZustand(),
+    override val knotenArten: KnotenArten = KnotenArten.Standard,
+    override val aktualisierung: KartenAktualisierung,
+    override val onVerbindungErstellen: VerbindungErstellen = {},
+    override val onKontextAktion: KontextAktionAusführen = {},
+): Karte {
+    @Composable
+    override fun zuComposable(modifier: Modifier) {
+        Inhalt(modifier)
+    }
+
+    @Composable
+    protected open fun Inhalt(modifier: Modifier) {
+        KartenOberfläche(
+            daten = daten,
+            zustand = zustand,
+            knotenArten = knotenArten,
+            modifier = modifier,
+            aktualisierung = aktualisierung,
+            onVerbindungErstellen = onVerbindungErstellen,
+            onKontextAktion = onKontextAktion,
+        )
+    }
+}
 
 /**
  * Aufgelöste Anschlussgeometrie für Rendering, Verbindungserstellung und
@@ -100,6 +134,7 @@ private data class AnschlussReferenz(
     val knotenId: String,
     val anschlussId: String,
     val richtung: AnschlussRichtung,
+    val kante: AnschlussKante,
     val position: Offset,
 )
 
@@ -118,7 +153,7 @@ private data class VerbindungsDrag(
 private data class KontextMenüZustand(
     val position: Offset,
     val ziel: KartenTreffer,
-    val weltPosition: PositionDaten,
+    val weltPosition: Offset,
 )
 
 /**
@@ -128,8 +163,9 @@ private data class KontextMenüZustand(
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
+    knotenArten: KnotenArten = KnotenArten.Standard,
     aktualisierung: KartenAktualisierung,
-) = Karte(this, zustand, modifier, aktualisierung)
+) = BasisKarte(this, zustand, knotenArten, aktualisierung).zuComposable(modifier)
 
 /**
  * Rendert eine interaktive Knotenkarte.
@@ -142,10 +178,11 @@ public fun KarteDaten.zuComposable(
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
+    knotenArten: KnotenArten = KnotenArten.Standard,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
     onKontextAktion: KontextAktionAusführen = {},
-) = Karte(this, zustand, modifier, aktualisierung, onVerbindungErstellen, onKontextAktion)
+) = BasisKarte(this, zustand, knotenArten, aktualisierung, onVerbindungErstellen, onKontextAktion).zuComposable(modifier)
 
 /**
  * Zentrale Kartenoberfläche.
@@ -155,9 +192,10 @@ public fun KarteDaten.zuComposable(
  * Kontextmenü koordiniert.
  */
 @Composable
-private fun Karte(
+private fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
+    knotenArten: KnotenArten = KnotenArten.Standard,
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -172,7 +210,7 @@ private fun Karte(
     var ansicht by remember(daten.id) {
         mutableStateOf(
             KarteZustand(
-                verschiebung = Offset(daten.ansichtsfenster.x, daten.ansichtsfenster.y),
+                verschiebung = Offset(daten.ansichtsfenster.verschiebung.x, daten.ansichtsfenster.verschiebung.y),
                 zoom = daten.ansichtsfenster.zoom.takeIf { it > 0f } ?: 1f,
                 zeigeÜbersicht = zustand.zeigeÜbersicht,
                 zeigeKontrollLeiste = zustand.zeigeKontrollLeiste,
@@ -180,7 +218,7 @@ private fun Karte(
         )
     }
     var gezogeneKnoten by remember(daten.id) {
-        mutableStateOf(emptyMap<String, PositionDaten>())
+        mutableStateOf(emptyMap<String, Offset>())
     }
 
     // Diese Zustände sind rein visuell und werden nicht in KarteDaten
@@ -192,15 +230,13 @@ private fun Karte(
     // Während eines Drags kann die sichtbare Position bereits von den
     // übergebenen Daten abweichen. Diese Map hält die unmittelbare UI-Reaktion
     // stabil, bis der Aufrufer den neuen State zurückgibt.
-    val sichtbareKnoten = daten.knoten.map { knoten ->
-        gezogeneKnoten[knoten.id]?.let { knoten.copy(position = it) } ?: knoten
+    val sichtbareKnotenDaten = daten.knoten.map { knoten ->
+        gezogeneKnoten[knoten.id]?.let { KnotenDaten(knoten, position = it) } ?: knoten
     }
-    val sichtbareDaten = daten.copy(knoten = sichtbareKnoten)
-    val knotenNachId = sichtbareKnoten.associateBy { it.id }
-    val sichtbarerZustand = ansicht.copy(
-        zeigeÜbersicht = zustand.zeigeÜbersicht,
-        zeigeKontrollLeiste = zustand.zeigeKontrollLeiste,
-    )
+    val sichtbareKnoten = sichtbareKnotenDaten.map { knotenArten.erstelle(it) }
+    val sichtbareDaten = KarteDaten(daten, knoten = sichtbareKnotenDaten)
+    val knotenNachId = sichtbareKnoten.associateBy { it.daten.id }
+    val sichtbarerZustand = KarteZustand(ansicht, zeigeÜbersicht = zustand.zeigeÜbersicht, zeigeKontrollLeiste = zustand.zeigeKontrollLeiste)
     val anschlüsse = sichtbareKnoten.flatMap { it.anschlussReferenzen(sichtbarerZustand) }
     val density = LocalDensity.current
 
@@ -229,7 +265,7 @@ private fun Karte(
         kontextMenü = KontextMenüZustand(
             position = position,
             ziel = ziel,
-            weltPosition = position.zuWeltPosition(aktuelleAnsicht).zuPositionDaten(),
+            weltPosition = position.zuWeltPosition(aktuelleAnsicht).zuWeltOffset(),
         )
     }
 
@@ -319,14 +355,15 @@ private fun Karte(
         // Jeder Knoten bekommt seine eigene Drag-Interaktion. Das Delta wird
         // durch den Zoom geteilt, weil Knotenpositionen in Weltkoordinaten
         // gespeichert werden.
-        sichtbareKnoten.forEach { knoten ->
+        sichtbareKnoten.forEach { knotenObjekt ->
+            val knoten = knotenObjekt.daten
             var startPosition = knoten.position
             var gesamtDrag = Offset.Zero
             var knotenModifier = Modifier
                 .offset { knoten.position.zuBildschirmIntOffset(sichtbarerZustand) }
                 .size(
-                    with(density) { (knoten.fläche.waagrecht * sichtbarerZustand.zoom).toDp() },
-                    with(density) { (knoten.fläche.senkrecht * sichtbarerZustand.zoom).toDp() },
+                    with(density) { (knoten.fläche.x * sichtbarerZustand.zoom).toDp() },
+                    with(density) { (knoten.fläche.y * sichtbarerZustand.zoom).toDp() },
                 )
             if (knoten.beweglich) {
                 knotenModifier = knotenModifier.pointerInput(daten.id, knoten.id, sichtbarerZustand.zoom) {
@@ -354,10 +391,10 @@ private fun Karte(
                 }
             }
 
-            knoten.zuComposable(
+            knotenObjekt.zuComposable(
                 modifierKnoten = knotenModifier,
                 modifierAnschluss = { richtung, index ->
-                    val referenz = knoten.anschlussReferenz(richtung, index, sichtbarerZustand)
+                    val referenz = knotenObjekt.anschlussReferenz(richtung, index, sichtbarerZustand)
                     // Anschlüsse sind Drag-Startpunkte für neue Verbindungen.
                     AnschlussModifier.pointerInput(daten.id, referenz, anschlüsse, sichtbarerZustand) {
                         detectDragGestures(
@@ -496,7 +533,8 @@ internal fun KarteZustand.transformiereUm(zentrum: Offset, pan: Offset, zoomÄnd
     val alterZoom = zoomSicher()
     val neuerZoom = (alterZoom * zoomÄnderung).coerceIn(0.25f, 3f)
     val weltZentrum = (zentrum - verschiebung) / alterZoom
-    return copy(
+    return KarteZustand(
+        this,
         zoom = neuerZoom,
         verschiebung = zentrum - weltZentrum * neuerZoom + pan,
     )
@@ -521,7 +559,7 @@ internal fun KarteDaten.zoomAufInhalt(fläche: IntSize, aktuellerZustand: KarteZ
         x = (fläche.width - breite * neuerZoom) / 2f - grenzen.links * neuerZoom,
         y = (fläche.height - höhe * neuerZoom) / 2f - grenzen.oben * neuerZoom,
     )
-    return aktuellerZustand.copy(zoom = neuerZoom, verschiebung = verschiebung)
+    return KarteZustand(aktuellerZustand, zoom = neuerZoom, verschiebung = verschiebung)
 }
 
 /**
@@ -540,10 +578,10 @@ internal data class KartenGrenzen(
 internal fun List<KnotenDaten>.grenzen(padding: Float = 0f): KartenGrenzen? {
     if (isEmpty()) return null
     val grenzen = fold<KnotenDaten, KartenGrenzen?>(null) { grenzen, knoten ->
-        val links = knoten.position.waagrecht
-        val oben = knoten.position.senkrecht
-        val rechts = links + knoten.fläche.waagrecht
-        val unten = oben + knoten.fläche.senkrecht
+        val links = knoten.position.x
+        val oben = knoten.position.y
+        val rechts = links + knoten.fläche.x
+        val unten = oben + knoten.fläche.y
         if (grenzen == null) {
             KartenGrenzen(links, oben, rechts, unten)
         } else {
@@ -574,15 +612,15 @@ internal fun Offset.zuWeltPosition(zustand: KarteZustand): Offset {
 /**
  * Rechnet eine Weltposition in Bildschirmkoordinaten um.
  */
-internal fun PositionDaten.zuBildschirmOffset(zustand: KarteZustand): Offset = Offset(
-    x = waagrecht * zustand.zoomSicher() + zustand.verschiebung.x,
-    y = senkrecht * zustand.zoomSicher() + zustand.verschiebung.y,
+internal fun Offset.zuBildschirmOffset(zustand: KarteZustand): Offset = Offset(
+    x = x * zustand.zoomSicher() + zustand.verschiebung.x,
+    y = y * zustand.zoomSicher() + zustand.verschiebung.y,
 )
 
 /**
  * Rechnet eine Weltposition in eine ganzzahlige Bildschirmposition für Modifier.offset um.
  */
-internal fun PositionDaten.zuBildschirmIntOffset(zustand: KarteZustand): IntOffset {
+internal fun Offset.zuBildschirmIntOffset(zustand: KarteZustand): IntOffset {
     val offset = zuBildschirmOffset(zustand)
     return IntOffset(offset.x.roundToInt(), offset.y.roundToInt())
 }
@@ -600,55 +638,64 @@ internal operator fun Offset.div(wert: Float): Offset = Offset(x / wert, y / wer
 internal operator fun Offset.times(wert: Float): Offset = Offset(x * wert, y * wert)
 
 /**
- * Addiert ein Weltkoordinaten-Delta auf eine Position.
- */
-private operator fun PositionDaten.plus(other: Offset): PositionDaten = PositionDaten(
-    waagrecht = waagrecht + other.x,
-    senkrecht = senkrecht + other.y,
-)
-
-/**
  * Konvertiert einen Offset in eine fachliche Weltposition.
  */
-private fun Offset.zuPositionDaten(): PositionDaten = PositionDaten(x, y)
+private fun Offset.zuWeltOffset(): Offset = Offset(x, y)
 
 /**
  * Löst alle Anschlüsse eines Knotens in Bildschirmpositionen auf.
  */
-private fun KnotenDaten.anschlussReferenzen(zustand: KarteZustand): List<AnschlussReferenz> =
-    eingängeGeordnet.mapIndexed { index, anschluss ->
-        anschlussReferenz(AnschlussRichtung.Eingang, index, zustand).copy(anschlussId = anschluss.id)
-    } + ausgängeGeordnet.mapIndexed { index, anschluss ->
-        anschlussReferenz(AnschlussRichtung.Ausgang, index, zustand).copy(anschlussId = anschluss.id)
+private fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<AnschlussReferenz> =
+    erhalteAnschlüsseGeordnet(AnschlussRichtung.Eingang).mapIndexed { index, anschluss ->
+        anschlussReferenz(AnschlussRichtung.Eingang, index, zustand)
+    } + erhalteAnschlüsseGeordnet(AnschlussRichtung.Ausgang).mapIndexed { index, anschluss ->
+        anschlussReferenz(AnschlussRichtung.Ausgang, index, zustand)
     }
 
 /**
  * Berechnet die Bildschirmposition eines einzelnen Anschlusses.
  */
-private fun KnotenDaten.anschlussReferenz(
+private fun Knoten.anschlussReferenz(
     richtung: AnschlussRichtung,
     index: Int,
     zustand: KarteZustand,
 ): AnschlussReferenz {
-    val anzahl = when (richtung) {
-        AnschlussRichtung.Eingang -> eingängeGeordnet.size
-        AnschlussRichtung.Ausgang -> ausgängeGeordnet.size
-    }.coerceAtLeast(1)
-    val anschlussId = when (richtung) {
-        AnschlussRichtung.Eingang -> eingängeGeordnet.getOrNull(index)?.id
-        AnschlussRichtung.Ausgang -> ausgängeGeordnet.getOrNull(index)?.id
-    }.orEmpty()
-    val weltPosition = PositionDaten(
-        waagrecht = when (richtung) {
-            AnschlussRichtung.Eingang -> position.waagrecht
-            AnschlussRichtung.Ausgang -> position.waagrecht + fläche.waagrecht
+    val daten = daten
+    val anschlüsse = erhalteAnschlüsseGeordnet(richtung)
+    val anschluss = anschlüsse.getOrNull(index)
+    val kante = anschluss?.kante ?: when (richtung) {
+        AnschlussRichtung.Eingang -> AnschlussKante.Links
+        AnschlussRichtung.Ausgang -> AnschlussKante.Rechts
+    }
+    val anschlüsseAnKante = erhalteAnschlüsseGeordnet().filter { it.kante == kante }
+    val indexAnKante = anschlüsseAnKante.indexOfFirst { it.richtung == richtung && it.id == anschluss?.id }
+        .coerceAtLeast(0)
+    val anzahlAnKante = anschlüsseAnKante.size.coerceAtLeast(1)
+    val anteil = (indexAnKante + 1f) / (anzahlAnKante + 1f)
+    val weltPosition = Offset(
+        x = when (richtung) {
+            AnschlussRichtung.Eingang -> when (kante) {
+                AnschlussKante.Links -> daten.position.x
+                AnschlussKante.Rechts -> daten.position.x + daten.fläche.x
+                AnschlussKante.Oben, AnschlussKante.Unten -> daten.position.x + daten.fläche.x * anteil
+            }
+            AnschlussRichtung.Ausgang -> when (kante) {
+                AnschlussKante.Links -> daten.position.x
+                AnschlussKante.Rechts -> daten.position.x + daten.fläche.x
+                AnschlussKante.Oben, AnschlussKante.Unten -> daten.position.x + daten.fläche.x * anteil
+            }
         },
-        senkrecht = position.senkrecht + fläche.senkrecht * (index + 1) / (anzahl + 1),
+        y = when (kante) {
+            AnschlussKante.Links, AnschlussKante.Rechts -> daten.position.y + daten.fläche.y * anteil
+            AnschlussKante.Oben -> daten.position.y
+            AnschlussKante.Unten -> daten.position.y + daten.fläche.y
+        },
     )
     return AnschlussReferenz(
-        knotenId = id,
-        anschlussId = anschlussId,
+        knotenId = daten.id,
+        anschlussId = anschluss?.id.orEmpty(),
         richtung = richtung,
+        kante = kante,
         position = weltPosition.zuBildschirmOffset(zustand),
     )
 }
@@ -657,11 +704,13 @@ private fun KnotenDaten.anschlussReferenz(
  * Liefert den Bildschirm-Startpunkt einer Verbindung.
  */
 private fun VerbindungDaten.startOffset(
-    knotenNachId: Map<String, KnotenDaten>,
+    knotenNachId: Map<String, Knoten>,
     zustand: KarteZustand,
 ): Offset? {
     val knoten = knotenNachId[quellKnotenId] ?: return null
-    val index = knoten.ausgängeGeordnet.indexOfFirst { it.id == quellAnschlussId }.coerceAtLeast(0)
+    val index = knoten.erhalteAnschlüsseGeordnet(AnschlussRichtung.Ausgang)
+        .indexOfFirst { it.id == quellAnschlussId }
+        .coerceAtLeast(0)
     return knoten.anschlussReferenz(AnschlussRichtung.Ausgang, index, zustand).position
 }
 
@@ -669,11 +718,13 @@ private fun VerbindungDaten.startOffset(
  * Liefert den Bildschirm-Endpunkt einer Verbindung.
  */
 private fun VerbindungDaten.endeOffset(
-    knotenNachId: Map<String, KnotenDaten>,
+    knotenNachId: Map<String, Knoten>,
     zustand: KarteZustand,
 ): Offset? {
     val knoten = knotenNachId[zielKnotenId] ?: return null
-    val index = knoten.eingängeGeordnet.indexOfFirst { it.id == zielAnschlussId }.coerceAtLeast(0)
+    val index = knoten.erhalteAnschlüsseGeordnet(AnschlussRichtung.Eingang)
+        .indexOfFirst { it.id == zielAnschlussId }
+        .coerceAtLeast(0)
     return knoten.anschlussReferenz(AnschlussRichtung.Eingang, index, zustand).position
 }
 
@@ -714,7 +765,7 @@ private fun Offset.nächsterAnschluss(
  * Führt den Hit-Test für Kontextmenüs aus.
  */
 private fun Offset.treffer(
-    knoten: List<KnotenDaten>,
+    knoten: List<Knoten>,
     verbindungen: List<VerbindungDaten>,
     anschlüsse: List<AnschlussReferenz>,
     zustand: KarteZustand,
@@ -723,11 +774,11 @@ private fun Offset.treffer(
         return KartenTreffer.Anschluss(it.knotenId, it.anschlussId, it.richtung)
     }
 
-    knoten.firstOrNull { enthältBildschirmPunkt(it, zustand) }?.let {
-        return KartenTreffer.Knoten(it.id)
+    knoten.firstOrNull { enthältBildschirmPunkt(it.daten, zustand) }?.let {
+        return KartenTreffer.Knoten(it.daten.id)
     }
 
-    val knotenNachId = knoten.associateBy { it.id }
+    val knotenNachId = knoten.associateBy { it.daten.id }
     verbindungen.firstOrNull { verbindung ->
         val start = verbindung.startOffset(knotenNachId, zustand)
         val ende = verbindung.endeOffset(knotenNachId, zustand)
@@ -745,8 +796,8 @@ private fun Offset.treffer(
 private fun Offset.enthältBildschirmPunkt(knoten: KnotenDaten, zustand: KarteZustand): Boolean {
     val linksOben = knoten.position.zuBildschirmOffset(zustand)
     val zoom = zustand.zoomSicher()
-    return x in linksOben.x..(linksOben.x + knoten.fläche.waagrecht * zoom) &&
-        y in linksOben.y..(linksOben.y + knoten.fläche.senkrecht * zoom)
+    return x in linksOben.x..(linksOben.x + knoten.fläche.x * zoom) &&
+        y in linksOben.y..(linksOben.y + knoten.fläche.y * zoom)
 }
 
 /**
@@ -800,14 +851,14 @@ private fun KartePreview() {
             KnotenDaten(
                 id = "definition",
                 name = "Definition",
-                position = PositionDaten(40f, 80f),
-                ausgänge = listOf(AusgangDaten("out", "Weiter")),
+                position = Offset(40f, 80f),
+                art = EingabeKnoten.KNOTEN_ART,
             ),
             KnotenDaten(
                 id = "satz",
                 name = "Satz",
-                position = PositionDaten(300f, 360f),
-                eingänge = listOf(EingangDaten("in", "Vorher")),
+                position = Offset(300f, 360f),
+                art = AusgabeKnoten.KNOTEN_ART,
             ),
         ),
         verbindungen = listOf(

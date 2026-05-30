@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 
 /**
@@ -23,7 +24,8 @@ private fun VerbindungDaten.zuPfad(start: Offset, ende: Offset): DrawScope.() ->
  * Rendert eine einzelne Verbindung zwischen zwei Bildschirmpositionen.
  */
 @Composable
-public fun VerbindungDaten.zuComposable(start: Offset, ende: Offset, modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.zuPfad(start,ende))
+public fun VerbindungDaten.zuComposable(start: Offset, ende: Offset, modifier: Modifier = Modifier) =
+    BasisVerbindung(this, start = start, ende = ende).zuComposable(modifier)
 
 /**
  * Rendert eine Liste fachlicher Verbindungen.
@@ -32,10 +34,18 @@ public fun VerbindungDaten.zuComposable(start: Offset, ende: Offset, modifier: M
  * Verbindungen mit fehlenden Endpunkten werden übersprungen.
  */
 @Composable
-public fun List<VerbindungDaten>.zuComposable(start: (VerbindungDaten) -> Offset?, ende: (VerbindungDaten) -> Offset?, modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map {
-    val s = start(it)
-    val e = ende(it)
-    if (s != null && e != null) it.zuPfad(s,e) else null }.filterNotNull())
+public fun List<VerbindungDaten>.zuComposable(
+    start: (VerbindungDaten) -> Offset?,
+    ende: (VerbindungDaten) -> Offset?,
+    modifier: Modifier = Modifier,
+) = VerbindungUmgebung(
+    modifier,
+    this.mapNotNull {
+        val s = start(it)
+        val e = ende(it)
+        if (s != null && e != null) BasisVerbindung(it, start = s, ende = e).zeichnung() else null
+    },
+)
 
 /**
  * Rendert bereits aufgelöste Verbindungen.
@@ -44,7 +54,10 @@ public fun List<VerbindungDaten>.zuComposable(start: (VerbindungDaten) -> Offset
  * eines Anschlusses verwendet.
  */
 @Composable
-public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map { it.first.zuPfad(it.second,it.third) })
+public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(
+    modifier,
+    this.map { BasisVerbindung(it.first, start = it.second, ende = it.third).zeichnung() },
+)
 
 /**
  * Gemeinsame Canvas-Umgebung für eine oder mehrere Zeichenfunktionen.
@@ -63,6 +76,36 @@ private fun VerbindungUmgebung(
     modifier: Modifier = Modifier,
     inhalt: List<DrawScope.() -> Unit>,
 ) { Canvas(modifier = modifier) { inhalt.forEach { it() } } }
+
+
+sealed interface Verbindung: GraphObjekt {
+    public val daten: VerbindungDaten
+    public val von: Anschluss?
+    public val zu: Anschluss?
+    public val start: Offset
+    public val ende: Offset
+
+}
+
+open class BasisVerbindung(
+    override val daten: VerbindungDaten,
+    override val von: Anschluss? = null,
+    override val zu: Anschluss? = null,
+    override val start: Offset = Offset.Zero,
+    override val ende: Offset = Offset.Zero,
+): Verbindung {
+    @Composable
+    override fun zuComposable(modifier: Modifier) {
+        VerbindungUmgebung(modifier, zeichnung())
+    }
+
+    internal open fun zeichnung(): DrawScope.() -> Unit = daten.zuPfad(start, ende)
+
+    public companion object {
+        public const val VERBINDUNG_ART: String = "default"
+    }
+}
+
 
 /**
  * Zeichnet eine Bezier-Verbindung.
@@ -95,4 +138,32 @@ private fun DrawScope.VerbindungPfad(
         color = farbe,
         style = Stroke(width = 3f, cap = StrokeCap.Round),
     )
+}
+
+public fun interface VerbindungFabrik {
+    public fun erstelle(daten: VerbindungDaten): Verbindung
+}
+
+/**
+ * Registry wie ReactFlows `nodeTypes`: `KnotenDaten.knotenArt` entscheidet,
+ * welche Knotenklasse und damit welche Anschlüsse verwendet werden.
+ */
+data class VerbindungArten(
+    private val fabriken: Map<String, VerbindungFabrik> = standardFabriken,
+) {
+    public fun erstelle(daten: VerbindungDaten): Verbindung =
+        (fabriken[daten.art] ?: fabriken.getValue(BasisVerbindung.VERBINDUNG_ART)).erstelle(daten)
+
+    public fun mit(art: String, fabrik: VerbindungFabrik): VerbindungArten =
+        copy(fabriken = fabriken + (art to fabrik))
+
+    public companion object {
+        private val standardFabriken = mapOf(
+            BasisKnoten.KNOTEN_ART to VerbindungFabrik(::BasisVerbindung),
+//            EingabeKnoten.KNOTEN_ART to VerbindungFabrik(::EingabeKnoten),
+//            AusgabeKnoten.KNOTEN_ART to VerbindungFabrik(::AusgabeKnoten),
+        )
+
+        public val Standard: KnotenArten = KnotenArten()
+    }
 }

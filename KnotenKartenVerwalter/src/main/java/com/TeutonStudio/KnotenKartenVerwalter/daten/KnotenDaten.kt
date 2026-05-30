@@ -1,6 +1,5 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
-import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
@@ -12,8 +11,8 @@ import kotlin.math.roundToInt
  * zusätzlich die Transformationsfunktionen in `schnittstelle/Karte.kt`.
  */
 public fun KnotenDaten.zuIntOffset(zustand: KarteZustand): IntOffset = IntOffset(
-    x = (this.position.waagrecht * zustand.zoom + zustand.verschiebung.x).roundToInt(),
-    y = (this.position.senkrecht * zustand.zoom + zustand.verschiebung.y).roundToInt(),
+    x = (this.position.x * zustand.zoom + zustand.verschiebung.x).roundToInt(),
+    y = (this.position.y * zustand.zoom + zustand.verschiebung.y).roundToInt(),
 )
 
 /**
@@ -26,34 +25,14 @@ public fun KnotenDaten.zuIntOffset(verschiebung: Offset): IntOffset = zuIntOffse
 /**
  * Rechnet ein Bildschirmdelta mit dem aktuellen Zoom in ein Weltdelta um.
  */
-public operator fun Offset.div(other: KarteZustand): PositionDaten {
+public operator fun Offset.div(other: KarteZustand): Offset {
     val zoom = other.zoom.takeIf { it > 0f } ?: 1f
-    return PositionDaten(this.x / zoom, this.y / zoom)
+    return Offset(this.x / zoom, this.y / zoom)
 }
 
-/**
- * Position in Weltkoordinaten.
- */
-data class PositionDaten(
-    val waagrecht: Float,
-    val senkrecht: Float,
-) {
-    /** Addiert zwei Weltpositionen komponentenweise. */
-    operator fun plus(other: PositionDaten) = PositionDaten(waagrecht+other.waagrecht,senkrecht+other.senkrecht)
+open class KnotenZustand(
 
-    /** Subtrahiert zwei Weltpositionen komponentenweise. */
-    operator fun minus(other: PositionDaten) = PositionDaten(waagrecht-other.waagrecht,senkrecht-other.senkrecht)
-}
-
-/**
- * Größe eines Knotens in Weltkoordinaten.
- */
-data class FlächeDaten(
-    val waagrecht: Float,
-    val senkrecht: Float,
-) {
-
-}
+)
 
 /**
  * Fachlicher Zustand eines Knotens.
@@ -62,37 +41,58 @@ data class FlächeDaten(
  * Anschlüsse werden getrennt nach Eingängen und Ausgängen gespeichert, damit die
  * UI sie links und rechts am Knotenrahmen anordnen kann.
  */
-data class KnotenDaten(
-    val id: String,
+open class KnotenDaten(
+    override val id: String,
     val name: String,
-    val position: PositionDaten = PositionDaten(0f, 0f),
-    val fläche: FlächeDaten = FlächeDaten(180f, 96f),
-    val typ: String = "default",
-    val eingänge: List<EingangDaten> = emptyList(),
-    val ausgänge: List<AusgangDaten> = emptyList(),
+    val position: Offset = Offset(0f, 0f),
+    val fläche: Offset = Offset(180f, 96f),
+    val art: String = "default",
     val ausgewaehlt: Boolean = false,
     val beweglich: Boolean = true,
-//    val bewegt: Boolean = false, // Eher für schnittstelle relevant.
-) {
-    /**
-     * Gibt die Anschlüsse passend zur gewünschten Richtung zurück.
-     */
-    public fun erhalteAnschlüsseGeordnet(richtung: AnschlussRichtung): List<AnschlussDaten> = when(richtung) {
-        AnschlussRichtung.Eingang -> eingängeGeordnet
-        AnschlussRichtung.Ausgang -> ausgängeGeordnet
-    }
+    val data: Map<String, Any> = emptyMap(),
+): GraphDaten {
+    constructor(
+        daten: KnotenDaten,
+        id: String? = null,
+        name: String? = null,
+        position: Offset? = null,
+        fläche: Offset? = null,
+        art: String? = null,
+        ausgewaehlt: Boolean? = null,
+        beweglich: Boolean? = null,
+        data: Map<String, Any>? = null,
+    ): this(
+        id ?: daten.id,
+        name ?: daten.name,
+        position ?: daten.position,
+        fläche ?: daten.fläche,
+        art ?: daten.art,
+        ausgewaehlt ?: daten.ausgewaehlt,
+        beweglich ?: daten.beweglich,
+        data ?: daten.data,
+    )
 
-    /**
-     * Sortierte Eingänge. Aktuell entspricht die Render-Reihenfolge der
-     * gespeicherten Listen-Reihenfolge.
-     */
-    val eingängeGeordnet: List<EingangDaten>
-        get() = eingänge
+    /** Kompatibilitätsname zur ReactFlow-Bezeichnung `type`. */
+    val typ: String
+        get() = art
 
-    /**
-     * Sortierte Ausgänge. Aktuell entspricht die Render-Reihenfolge der
-     * gespeicherten Listen-Reihenfolge.
-     */
-    val ausgängeGeordnet: List<AusgangDaten>
-        get() = ausgänge
+    fun copy(
+        id: String = this.id,
+        name: String = this.name,
+        position: Offset = this.position,
+        fläche: Offset = this.fläche,
+        art: String = this.art,
+        ausgewaehlt: Boolean = this.ausgewaehlt,
+        beweglich: Boolean = this.beweglich,
+        data: Map<String, Any> = this.data,
+    ): KnotenDaten = KnotenDaten(
+        id = id,
+        name = name,
+        position = position,
+        fläche = fläche,
+        art = art,
+        ausgewaehlt = ausgewaehlt,
+        beweglich = beweglich,
+        data = data,
+    )
 }

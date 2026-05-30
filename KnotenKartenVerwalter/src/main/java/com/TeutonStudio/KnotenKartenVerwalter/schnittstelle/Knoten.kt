@@ -20,10 +20,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+
+public fun interface KnotenFabrik {
+    public fun erstelle(daten: KnotenDaten): Knoten
+}
+
+/**
+ * Registry wie ReactFlows `nodeTypes`: `KnotenDaten.knotenArt` entscheidet,
+ * welche Knotenklasse und damit welche Anschlüsse verwendet werden.
+ */
+data class KnotenArten(
+    private val fabriken: Map<String, KnotenFabrik> = standardFabriken,
+) {
+    public fun erstelle(daten: KnotenDaten): Knoten =
+        (fabriken[daten.art] ?: fabriken.getValue(BasisKnoten.KNOTEN_ART)).erstelle(daten)
+
+    public fun mit(art: String, fabrik: KnotenFabrik): KnotenArten =
+        copy(fabriken = fabriken + (art to fabrik))
+
+    public companion object {
+        private val standardFabriken = mapOf(
+            BasisKnoten.KNOTEN_ART to KnotenFabrik(::BasisKnoten),
+            EingabeKnoten.KNOTEN_ART to KnotenFabrik(::EingabeKnoten),
+            AusgabeKnoten.KNOTEN_ART to KnotenFabrik(::AusgabeKnoten),
+        )
+
+        public val Standard: KnotenArten = KnotenArten()
+    }
+}
 
 /**
  * Rendert einen Knoten als Compose-Baustein.
@@ -36,7 +66,87 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 public fun KnotenDaten.zuComposable(
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
-) = Knoten(this, modifierKnoten, modifierAnschluss)
+) = BasisKnoten(this).zuComposable(modifierKnoten, modifierAnschluss)
+
+
+sealed interface Knoten: GraphObjekt {
+    public val daten: KnotenDaten
+    public val eingänge: Map<Int, Anschluss>
+    public val ausgänge: Map<Int, Anschluss>
+
+    public fun erhalteAnschlüsseGeordnet(): List<AnschlussDaten>
+    public fun erhalteAnschlüsseGeordnet(richtung: AnschlussRichtung): List<AnschlussDaten>
+
+    @Composable
+    public fun zuComposable(
+        modifierKnoten: Modifier = Modifier,
+        modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
+    )
+}
+
+open class BasisKnoten(
+    override val daten: KnotenDaten,
+): Knoten {
+    protected open val eingangsDaten: List<EingangDaten> = listOf(EingangDaten("in", "Eingang"))
+    protected open val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("out", "Ausgang"))
+
+    override val eingänge: Map<Int, Anschluss> = eingangsDaten.mapIndexed { index, anschluss ->
+        index to BasisEingang(anschluss, this) as Anschluss
+    }.toMap()
+
+    override val ausgänge: Map<Int, Anschluss> = ausgangsDaten.mapIndexed { index, anschluss ->
+        index to BasisAusgang(anschluss, this) as Anschluss
+    }.toMap()
+
+    override fun erhalteAnschlüsseGeordnet(): List<AnschlussDaten> = eingangsDaten + ausgangsDaten
+
+    override fun erhalteAnschlüsseGeordnet(richtung: AnschlussRichtung): List<AnschlussDaten> = when (richtung) {
+        AnschlussRichtung.Eingang -> eingangsDaten
+        AnschlussRichtung.Ausgang -> ausgangsDaten
+    }
+
+    @Composable
+    override fun zuComposable(modifier: Modifier) {
+        zuComposable(modifier) { _, _ -> AnschlussModifier }
+    }
+
+    @Composable
+    override fun zuComposable(
+        modifierKnoten: Modifier,
+        modifierAnschluss: (AnschlussRichtung, Int) -> Modifier,
+    ) {
+        Inhalt(modifierKnoten, modifierAnschluss)
+    }
+
+    @Composable
+    protected open fun Inhalt(
+        modifierKnoten: Modifier,
+        modifierAnschluss: (AnschlussRichtung, Int) -> Modifier,
+    ) {
+        KnotenRahmen(this, modifierKnoten, modifierAnschluss)
+    }
+
+    public companion object {
+        public const val KNOTEN_ART: String = "default"
+    }
+}
+
+open class EingabeKnoten(daten: KnotenDaten): BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = emptyList()
+
+    public companion object {
+        public const val KNOTEN_ART: String = "eingabe"
+    }
+}
+
+open class AusgabeKnoten(daten: KnotenDaten): BasisKnoten(daten) {
+    override val ausgangsDaten: List<AusgangDaten> = emptyList()
+
+    public companion object {
+        public const val KNOTEN_ART: String = "ausgabe"
+    }
+}
+
 
 /**
  * Standarddarstellung eines Knotens.
@@ -45,11 +155,12 @@ public fun KnotenDaten.zuComposable(
  * rechts auf dem Rahmen liegen.
  */
 @Composable
-private fun Knoten(
-    daten: KnotenDaten,
+private fun KnotenRahmen(
+    knoten: Knoten,
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
 ) {
+    val daten = knoten.daten
     val randFarbe = if (daten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF64748B)
     Box(
         modifier = modifierKnoten
@@ -81,53 +192,79 @@ private fun Knoten(
             }
         }
 
-        // Eingänge liegen wie ReactFlow-Target-Handles links am Knotenrahmen.
-        AnschlussSpalteAmRand(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxHeight()
-                .offset(x = (-5).dp),
-        ) {
-            daten.eingängeGeordnet.zuPfad { index ->
-                modifierAnschluss(AnschlussRichtung.Eingang, index)
-            }
-        }
-
-        // Ausgänge liegen wie ReactFlow-Source-Handles rechts am Knotenrahmen.
-        AnschlussSpalteAmRand(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .offset(x = 5.dp),
-        ) {
-            daten.ausgängeGeordnet.zuPfad { index ->
-                modifierAnschluss(AnschlussRichtung.Ausgang, index)
-            }
-        }
+        AnschlussLeisteAmRand(
+            kante = AnschlussKante.Links,
+            modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5).dp),
+            anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Links },
+            modifierAnschluss = modifierAnschluss,
+            knoten = knoten,
+        )
+        AnschlussLeisteAmRand(
+            kante = AnschlussKante.Rechts,
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().offset(x = 5.dp),
+            anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Rechts },
+            modifierAnschluss = modifierAnschluss,
+            knoten = knoten,
+        )
+        AnschlussLeisteAmRand(
+            kante = AnschlussKante.Oben,
+            modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().offset(y = (-5).dp),
+            anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Oben },
+            modifierAnschluss = modifierAnschluss,
+            knoten = knoten,
+        )
+        AnschlussLeisteAmRand(
+            kante = AnschlussKante.Unten,
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().offset(y = 5.dp),
+            anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Unten },
+            modifierAnschluss = modifierAnschluss,
+            knoten = knoten,
+        )
     }
 }
 
 /**
- * Positioniert eine Anschluss-Spalte mittig über die komplette Knoten-Höhe.
+ * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
  */
 @Composable
-private fun AnschlussSpalteAmRand(
+private fun AnschlussLeisteAmRand(
+    kante: AnschlussKante,
     modifier: Modifier,
-    content: @Composable () -> Unit,
+    anschlüsse: List<AnschlussDaten>,
+    modifierAnschluss: (AnschlussRichtung, Int) -> Modifier,
+    knoten: Knoten,
 ) {
+    if (anschlüsse.isEmpty()) return
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            content()
+        if (kante == AnschlussKante.Links || kante == AnschlussKante.Rechts) {
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                anschlüsse.forEach { anschluss ->
+                    anschluss.zuPfad(modifierAnschluss(anschluss.richtung, knoten.indexVon(anschluss)))
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                anschlüsse.forEach { anschluss ->
+                    anschluss.zuPfad(modifierAnschluss(anschluss.richtung, knoten.indexVon(anschluss)))
+                }
+            }
         }
     }
 }
+
+private fun Knoten.indexVon(anschluss: AnschlussDaten): Int =
+    erhalteAnschlüsseGeordnet(anschluss.richtung).indexOfFirst { it.id == anschluss.id }.coerceAtLeast(0)
 
 /**
  * Vorschau der Standard-Knotendarstellung.
@@ -138,8 +275,6 @@ private fun KnotenPreview() {
     val daten = KnotenDaten(
         id = "knoten-1",
         name = "Ableitung",
-        eingänge = listOf(EingangDaten("in", "Eingang")),
-        ausgänge = listOf(AusgangDaten("out", "Ausgang")),
     )
     daten.zuComposable { _, _ -> AnschlussModifier }
 }

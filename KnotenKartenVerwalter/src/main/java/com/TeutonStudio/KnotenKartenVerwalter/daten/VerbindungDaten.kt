@@ -1,5 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
+
+
+
 /**
  * Fachliche Beschreibung einer Verbindung zwischen zwei Anschlüssen.
  *
@@ -7,13 +10,26 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten
  * bleiben Verbindungen stabil, auch wenn Knoten visuell verschoben oder
  * Anschlüsse neu gerendert werden.
  */
-data class VerbindungDaten(
-    val id: String,
+open class VerbindungDaten(
+    override val id: String,
     val quellKnotenId: String,
     val quellAnschlussId: String,
     val zielKnotenId: String,
     val zielAnschlussId: String,
     val label: String? = null,
-    val typ: String = "default",
+    val art: String = "default",
     val ausgewaehlt: Boolean = false,
-)
+): GraphDaten
+
+/**
+ * Fügt eine Verbindung hinzu und ersetzt dabei eine vorhandene Verbindung auf
+ * demselben Ziel-Eingang. Ausgänge bleiben damit automatisch mehrfach nutzbar.
+ */
+public fun List<VerbindungDaten>.mitErsetztemEingang(verbindung: VerbindungDaten): List<VerbindungDaten> =
+    filterNot {
+        it.id == verbindung.id ||
+            (
+                it.zielKnotenId == verbindung.zielKnotenId &&
+                    it.zielAnschlussId == verbindung.zielAnschlussId
+                )
+    } + verbindung

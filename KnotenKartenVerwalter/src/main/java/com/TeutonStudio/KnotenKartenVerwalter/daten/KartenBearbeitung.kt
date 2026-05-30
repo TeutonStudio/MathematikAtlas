@@ -1,5 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
+import androidx.compose.ui.geometry.Offset
+
 /**
  * Beschreibt Bearbeitungsaktionen, die durch Tastatur oder Kontextmenue entstehen koennen.
  *
@@ -14,7 +16,7 @@ sealed class KartenBearbeitungsAktion {
     data class AuswahlKopieren(val auswahl: AuswahlDaten) : KartenBearbeitungsAktion()
 
     /** Fuegt eine vorher kopierte Auswahl an einer Zielposition wieder ein. */
-    data class Einfuegen(val zielPosition: PositionDaten) : KartenBearbeitungsAktion()
+    data class Einfuegen(val zielPosition: Offset) : KartenBearbeitungsAktion()
 
     /** Bricht die laufende Interaktion ab, zum Beispiel Verbindungserstellung oder Auswahlrechteck. */
     data object Abbrechen : KartenBearbeitungsAktion()

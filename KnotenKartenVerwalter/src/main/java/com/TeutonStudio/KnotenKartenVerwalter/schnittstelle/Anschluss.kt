@@ -66,6 +66,50 @@ public fun AusgangDaten.zuPfad(modifier: Modifier = Modifier) = Ausgang(this, mo
 @Composable
 public fun AnschlussDaten.zuPfad(modifier: Modifier = Modifier) = Anschluss(this,modifier)
 
+
+sealed interface Anschluss: GraphObjekt {
+    public val daten: AnschlussDaten
+    public val besitzer: Knoten
+    public var partner: Anschluss?
+    public fun erlaubtVerbindung(daten: Anschluss): Boolean
+}
+
+open class BasisAnschluss(
+    override val daten: AnschlussDaten,
+    override val besitzer: Knoten,
+    override var partner: Anschluss? = null,
+): Anschluss {
+    @Composable
+    override fun zuComposable(modifier: Modifier) {
+        daten.zuPfad(modifier)
+    }
+
+    override fun erstelleVerbindung(
+        von: Anschluss,
+        zu: Anschluss,
+    ) {
+        if (this == von && erlaubtVerbindung(zu)) partner = zu
+        if (this == zu && erlaubtVerbindung(von)) partner = von
+    }
+
+    override fun erlaubtVerbindung(daten: Anschluss): Boolean {
+        return besitzer.daten.id != daten.besitzer.daten.id && this.daten.richtung != daten.daten.richtung
+    }
+}
+
+open class BasisEingang(
+    override val daten: EingangDaten,
+    override val besitzer: Knoten,
+    override var partner: Anschluss? = null,
+): BasisAnschluss(daten, besitzer, partner)
+
+open class BasisAusgang(
+    override val daten: AusgangDaten,
+    override val besitzer: Knoten,
+    override var partner: Anschluss? = null,
+): BasisAnschluss(daten, besitzer, partner)
+
+
 /**
  * Gemeinsames Anschluss-Rendering.
  *
