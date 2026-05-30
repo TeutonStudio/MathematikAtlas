@@ -443,6 +443,7 @@ private fun AuswahlBearbeiter(
     onLoeschen: () -> Unit,
     onDuplizieren: () -> Unit,
     onKnotenNameAendern: (String, String) -> Unit,
+    onKnotenDataAendern: (String, String, Any) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -480,6 +481,12 @@ private fun AuswahlBearbeiter(
                 text = "Typ: ${einzelnerKnoten.art}",
                 style = TextStyle(fontSize = 12.sp, color = Color(0xFF6B7280)),
             )
+            Spacer(Modifier.height(8.dp))
+            MathematikInspector(
+                knoten = einzelnerKnoten,
+                karten = karte,
+                onDataAendern = { key, wert -> onKnotenDataAendern(einzelnerKnoten.id, key, wert) },
+            )
         }
 
         Spacer(Modifier.height(10.dp))
@@ -488,6 +495,104 @@ private fun AuswahlBearbeiter(
             TestKnopf(text = "Loeschen", onClick = onLoeschen, modifier = Modifier.weight(1f))
         }
     }
+}
+
+@Composable
+private fun MathematikInspector(
+    knoten: KnotenDaten,
+    karten: KarteDaten,
+    onDataAendern: (String, Any) -> Unit,
+) {
+    fun stringWert(key: String): String = knoten.data[key]?.toString().orEmpty()
+
+    when (knoten.art) {
+        MathematikEingabeKnoten.KNOTEN_ART -> {
+            BeschriftetesFeld("Wert", stringWert("wert")) { onDataAendern("wert", it) }
+            ZahlenraumAuswahl(knoten.zahlenTyp().raum) { onDataAendern("zahlenTyp", knoten.zahlenTyp().copy(raum = it)) }
+        }
+        UnbekannteKnoten.KNOTEN_ART -> {
+            BeschriftetesFeld("Variable", stringWert("variable").ifBlank { knoten.name }) { onDataAendern("variable", it) }
+            ZahlenraumAuswahl(knoten.zahlenTyp().raum) { onDataAendern("zahlenTyp", knoten.zahlenTyp().copy(raum = it)) }
+        }
+        RechenKnoten.KNOTEN_ART -> {
+            BasicText("Operator", style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B7280)))
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("+", "-", "*", "/", "^").forEach { op ->
+                    TestKnopf(text = op, onClick = { onDataAendern("operator", op) }, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        FormelKnoten.KNOTEN_ART -> {
+            BeschriftetesFeld("Formel", stringWert("formel")) { onDataAendern("formel", it) }
+        }
+        AuswertungsKnoten.KNOTEN_ART -> {
+            BasicText(
+                text = "Status: ${stringWert("status").ifBlank { "nicht ausgewertet" }}",
+                style = TextStyle(fontSize = 12.sp, color = Color(0xFF6B7280)),
+            )
+        }
+        FunktionKnoten.KNOTEN_ART -> {
+            BeschriftetesFeld("Referenz-Karten-ID", stringWert("kartenId")) { onDataAendern("kartenId", it) }
+            val funktionName = stringWert("funktion").ifBlank { "Funktion" }
+            BasicText(
+                text = "$funktionName (${karten.knoten.count { it.art == UnbekannteKnoten.KNOTEN_ART }} lokale Unbekannte)",
+                style = TextStyle(fontSize = 12.sp, color = Color(0xFF6B7280)),
+            )
+        }
+        LOESEN_KNOTEN_ART -> {
+            BeschriftetesFeld("Karten-IDs", stringWert("kartenIds")) { onDataAendern("kartenIds", it) }
+            BeschriftetesFeld("Argumente", stringWert("argumente").ifBlank { "a,c,a" }) { onDataAendern("argumente", it) }
+        }
+    }
+
+    val cache = karten.cache.eintrag(knoten.id)
+    if (cache != null) {
+        Spacer(Modifier.height(6.dp))
+        BasicText(
+            text = if (cache.gueltig) "Cache: ${cache.daten.values.firstOrNull().orEmpty()}" else "Cache-Fehler: ${cache.fehler}",
+            style = TextStyle(fontSize = 12.sp, color = if (cache.gueltig) Color(0xFF047857) else Color(0xFFB91C1C)),
+        )
+    }
+}
+
+@Composable
+private fun BeschriftetesFeld(
+    label: String,
+    wert: String,
+    onWertAendern: (String) -> Unit,
+) {
+    BasicText(
+        text = label,
+        style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B7280)),
+    )
+    Spacer(Modifier.height(4.dp))
+    EingabeFeld(wert = wert, onWertAendern = onWertAendern)
+    Spacer(Modifier.height(6.dp))
+}
+
+@Composable
+private fun ZahlenraumAuswahl(
+    aktuellerRaum: Zahlenraum,
+    onRaumAendern: (Zahlenraum) -> Unit,
+) {
+    BasicText(
+        text = "Zahlenraum: ${aktuellerRaum.kurzform}",
+        style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B7280)),
+    )
+    Spacer(Modifier.height(4.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(
+            "N" to Zahlenraum.Natuerlich,
+            "Z" to Zahlenraum.Ganz,
+            "Q" to Zahlenraum.Rational,
+            "R" to Zahlenraum.Reell,
+            "C" to Zahlenraum.Komplex,
+        ).forEach { (label, raum) ->
+            TestKnopf(text = label, onClick = { onRaumAendern(raum) }, modifier = Modifier.weight(1f))
+        }
+    }
+    Spacer(Modifier.height(6.dp))
 }
 
 @Composable
@@ -563,6 +668,9 @@ private data class KartenEintrag(
     val knotenAnzahl: Int,
 )
 
+private const val PERSISTENZ_VERSION = 1
+private const val LOESEN_KNOTEN_ART = "loesen"
+
 private class KnotenKartenSpeicher(context: Context) {
     private val ordner = File(context.filesDir, "knotenkarten")
 
@@ -584,6 +692,10 @@ private class KnotenKartenSpeicher(context: Context) {
             .sortedBy { it.name.lowercase() }
     }
 
+    fun alleKarten(): Map<String, KarteDaten> = liste().mapNotNull { eintrag ->
+        lade(eintrag.datei)?.let { karte -> karte.id to karte }
+    }.toMap()
+
     fun ladeErste(): KarteDaten? = liste().firstOrNull()?.let { lade(it.datei) }
 
     fun lade(datei: String): KarteDaten? {
@@ -597,6 +709,10 @@ private class KnotenKartenSpeicher(context: Context) {
         val ziel = File(ordner, "${karte.id}.json")
         ziel.writeText(karte.zuJson().toString(2))
     }
+
+    fun loesche(kartenId: String) {
+        File(ordner, "$kartenId.json").takeIf { it.exists() }?.delete()
+    }
 }
 
 private fun Context.knotenKartenSpeicher() = KnotenKartenSpeicher(this)
@@ -608,45 +724,172 @@ private fun beispielKarte(name: String): KarteDaten {
         name = name,
         knoten = listOf(
             KnotenDaten(
-                id = "definition",
-                name = "Definition",
+                id = "eingabe-4",
+                name = "4",
                 position = Offset(60f, 80f),
-                art = EingabeKnoten.KNOTEN_ART,
+                art = MathematikEingabeKnoten.KNOTEN_ART,
+                data = matheDaten(
+                    MathematikEingabeKnoten.KNOTEN_ART,
+                    "4",
+                    mapOf("wert" to "4", "zahlenTyp" to ZahlenTyp(Zahlenraum.Natuerlich, wert = "4")),
+                ),
             ),
             KnotenDaten(
-                id = "satz",
-                name = "Satz",
-                position = Offset(360f, 260f),
-                art = AusgabeKnoten.KNOTEN_ART,
+                id = "unbekannte-x",
+                name = "x",
+                position = Offset(60f, 260f),
+                art = UnbekannteKnoten.KNOTEN_ART,
+                data = matheDaten(
+                    UnbekannteKnoten.KNOTEN_ART,
+                    "x",
+                    mapOf("variable" to "x", "zahlenTyp" to ZahlenTyp(Zahlenraum.Ganz, anzeigename = "x")),
+                ),
+            ),
+            KnotenDaten(
+                id = "addition",
+                name = "Addition",
+                position = Offset(360f, 160f),
+                art = RechenKnoten.KNOTEN_ART,
+                data = matheDaten(RechenKnoten.KNOTEN_ART, "Addition", mapOf("operator" to "+", "zahlenTyp" to ZahlenTyp(Zahlenraum.Reell))),
+            ),
+            KnotenDaten(
+                id = "formel",
+                name = "Formel",
+                position = Offset(660f, 160f),
+                art = FormelKnoten.KNOTEN_ART,
+                data = matheDaten(FormelKnoten.KNOTEN_ART, "Formel", mapOf("formel" to "4 + x", "zahlenTyp" to ZahlenTyp(Zahlenraum.Reell))),
+            ),
+            KnotenDaten(
+                id = "auswertung",
+                name = "Auswertung",
+                position = Offset(960f, 160f),
+                art = AuswertungsKnoten.KNOTEN_ART,
+                data = matheDaten(AuswertungsKnoten.KNOTEN_ART, "Auswertung"),
             ),
         ),
         verbindungen = listOf(
             VerbindungDaten(
-                id = "verbindung-1",
-                quellKnotenId = "definition",
-                quellAnschlussId = "out",
-                zielKnotenId = "satz",
+                id = "v-eingabe-addition",
+                quellKnotenId = "eingabe-4",
+                quellAnschlussId = "wert",
+                zielKnotenId = "addition",
+                zielAnschlussId = "links",
+                zahlenTyp = ZahlenTyp(Zahlenraum.Natuerlich, wert = "4"),
+            ),
+            VerbindungDaten(
+                id = "v-x-addition",
+                quellKnotenId = "unbekannte-x",
+                quellAnschlussId = "variable",
+                zielKnotenId = "addition",
+                zielAnschlussId = "rechts",
+                zahlenTyp = ZahlenTyp(Zahlenraum.Ganz, anzeigename = "x"),
+            ),
+            VerbindungDaten(
+                id = "v-addition-formel",
+                quellKnotenId = "addition",
+                quellAnschlussId = "ergebnis",
+                zielKnotenId = "formel",
                 zielAnschlussId = "in",
+                zahlenTyp = ZahlenTyp(Zahlenraum.Reell),
+            ),
+            VerbindungDaten(
+                id = "v-formel-auswertung",
+                quellKnotenId = "formel",
+                quellAnschlussId = "formel",
+                zielKnotenId = "auswertung",
+                zielAnschlussId = "in",
+                zahlenTyp = ZahlenTyp(Zahlenraum.Reell),
             ),
         ),
     )
 }
 
-private fun KarteDaten.mitNeuemKnoten(position: Offset? = null): KarteDaten {
-    return copy(knoten = knoten + neuerKnoten(position))
+private fun funktionsBeispielKarte(name: String): KarteDaten {
+    val referenz = beispielKarte("Referenzierte Funktion")
+    return KarteDaten(
+        id = UUID.randomUUID().toString(),
+        name = name,
+        initialKnoten = referenz.knoten,
+        initialVerbindungen = referenz.verbindungen,
+        knoten = listOf(
+            KnotenDaten(
+                id = "argument",
+                name = "Argument",
+                position = Offset(80f, 140f),
+                art = MathematikEingabeKnoten.KNOTEN_ART,
+                data = matheDaten(MathematikEingabeKnoten.KNOTEN_ART, "Argument", mapOf("wert" to "2", "zahlenTyp" to ZahlenTyp(Zahlenraum.Reell, wert = "2"))),
+            ),
+            KnotenDaten(
+                id = "funktion",
+                name = "f",
+                position = Offset(360f, 260f),
+                art = FunktionKnoten.KNOTEN_ART,
+                data = matheDaten(
+                    FunktionKnoten.KNOTEN_ART,
+                    "f",
+                    mapOf(
+                        "kartenId" to referenz.id,
+                        "funktion" to "f",
+                        "zahlenTyp" to ZahlenTyp(Zahlenraum.Funktion(listOf(Zahlenraum.Reell), Zahlenraum.Reell), ausdruck = "f"),
+                    ),
+                ),
+            ),
+            KnotenDaten(
+                id = "loesen",
+                name = "Loesen",
+                position = Offset(660f, 260f),
+                art = LOESEN_KNOTEN_ART,
+                data = matheDaten(LOESEN_KNOTEN_ART, "Loesen", mapOf("kartenIds" to referenz.id, "argumente" to "a,c,a")),
+            ),
+        ),
+        verbindungen = listOf(
+            VerbindungDaten(
+                id = "v-argument-funktion",
+                quellKnotenId = "argument",
+                quellAnschlussId = "wert",
+                zielKnotenId = "funktion",
+                zielAnschlussId = "argument",
+                zahlenTyp = ZahlenTyp(Zahlenraum.Reell, wert = "2"),
+            ),
+            VerbindungDaten(
+                id = "v-funktion-loesen",
+                quellKnotenId = "funktion",
+                quellAnschlussId = "wert",
+                zielKnotenId = "loesen",
+                zielAnschlussId = "in",
+                zahlenTyp = ZahlenTyp(Zahlenraum.Reell),
+            ),
+        ),
+    )
 }
 
-private fun KarteDaten.neuerKnoten(position: Offset? = null): KnotenDaten {
+private fun KarteDaten.mitNeuemKnoten(position: Offset? = null, art: String = MathematikEingabeKnoten.KNOTEN_ART): KarteDaten {
+    return copy(knoten = knoten + neuerKnoten(position, art))
+}
+
+private fun KarteDaten.neuerKnoten(position: Offset? = null, art: String = MathematikEingabeKnoten.KNOTEN_ART): KnotenDaten {
     val nummer = knoten.size + 1
     val id = "knoten-$nummer-${UUID.randomUUID()}"
+    val name = when (art) {
+        MathematikEingabeKnoten.KNOTEN_ART -> "Eingabe $nummer"
+        UnbekannteKnoten.KNOTEN_ART -> "x$nummer"
+        RechenKnoten.KNOTEN_ART -> "Rechnung $nummer"
+        FormelKnoten.KNOTEN_ART -> "Formel $nummer"
+        AuswertungsKnoten.KNOTEN_ART -> "Auswertung $nummer"
+        FunktionKnoten.KNOTEN_ART -> "Funktion $nummer"
+        LOESEN_KNOTEN_ART -> "Loesen $nummer"
+        else -> "Knoten $nummer"
+    }
     return KnotenDaten(
         id = id,
-        name = "Knoten $nummer",
+        name = name,
         position = position ?: Offset(
             x = 90f + nummer * 40f,
             y = 120f + nummer * 30f,
         ),
         fläche = Offset(180f, 96f),
+        art = art,
+        data = matheDaten(art, name),
     )
 }
 
@@ -687,12 +930,163 @@ private fun KarteDaten.führeKontextAktionAus(
     else -> KontextErgebnis(this, aktuelleAuswahl)
 }
 
+private fun KarteDaten.duplizierteKarte(): KarteDaten {
+    val neueId = UUID.randomUUID().toString()
+    return copy(
+        id = neueId,
+        name = "$name Kopie",
+        knoten = knoten.map { it.copy(id = "${it.id}-$neueId") },
+        verbindungen = verbindungen.map {
+            it.copy(
+                id = "${it.id}-$neueId",
+                quellKnotenId = "${it.quellKnotenId}-$neueId",
+                zielKnotenId = "${it.zielKnotenId}-$neueId",
+            )
+        },
+    )
+}
+
+private fun Map<String, Any>.mitAktualisierterKurzform(art: String, name: String): Map<String, Any> =
+    matheDaten(art, name, this)
+
+private fun matheDaten(
+    art: String,
+    name: String,
+    daten: Map<String, Any> = emptyMap(),
+): Map<String, Any> {
+    val typ = daten["zahlenTyp"] as? ZahlenTyp ?: ZahlenTyp(Zahlenraum.Reell)
+    val kurzform = when (art) {
+        MathematikEingabeKnoten.KNOTEN_ART -> typ.copy(wert = daten["wert"]?.toString()?.ifBlank { null }).kurzform
+        UnbekannteKnoten.KNOTEN_ART -> typ.copy(anzeigename = daten["variable"]?.toString()?.ifBlank { null } ?: name).kurzform
+        RechenKnoten.KNOTEN_ART -> daten["operator"]?.toString()?.ifBlank { null } ?: "+"
+        FormelKnoten.KNOTEN_ART -> daten["formel"]?.toString()?.ifBlank { null } ?: name
+        AuswertungsKnoten.KNOTEN_ART -> daten["status"]?.toString()?.ifBlank { null } ?: "Auswertung"
+        FunktionKnoten.KNOTEN_ART -> typ.kurzform
+        LOESEN_KNOTEN_ART -> "Loesen: ${daten["argumente"]?.toString()?.ifBlank { "a,c,a" } ?: "a,c,a"}"
+        else -> typ.kurzform
+    }
+    return daten + ("kurzform" to kurzform)
+}
+
+private fun KnotenDaten.zahlenTyp(): ZahlenTyp =
+    data["zahlenTyp"] as? ZahlenTyp ?: ZahlenTyp(Zahlenraum.Reell)
+
+private data class MatheWert(
+    val ausdruck: String,
+    val wert: Double?,
+    val typ: ZahlenTyp,
+    val fehler: String? = null,
+)
+
+private fun KarteDaten.werteMathematikAus(karten: Map<String, KarteDaten>): KarteDaten {
+    val werte = mutableMapOf<String, MatheWert>()
+    val eingehend = verbindungen.groupBy { it.zielKnotenId }
+    val ausgehend = verbindungen.groupBy { it.quellKnotenId }
+    val grad = knoten.associate { it.id to eingehend[it.id].orEmpty().size }.toMutableMap()
+    val nachId = knoten.associateBy { it.id }
+    val reihenfolge = mutableListOf<KnotenDaten>()
+    val offen = ArrayDeque(knoten.filter { grad.getValue(it.id) == 0 }.map { it.id })
+
+    while (offen.isNotEmpty()) {
+        val id = offen.removeFirst()
+        val aktueller = nachId[id] ?: continue
+        reihenfolge += aktueller
+        ausgehend[id].orEmpty().forEach { verbindung ->
+            grad[verbindung.zielKnotenId] = grad.getValue(verbindung.zielKnotenId) - 1
+            if (grad.getValue(verbindung.zielKnotenId) == 0) offen.addLast(verbindung.zielKnotenId)
+        }
+    }
+    val zyklen = knoten.filterNot { kandidat -> reihenfolge.any { it.id == kandidat.id } }
+    reihenfolge += zyklen
+
+    val neueKnoten = reihenfolge.map { knoten ->
+        val inputs = eingehend[knoten.id].orEmpty().mapNotNull { werte[it.quellKnotenId] }
+        val wert = knoten.berechneMatheWert(inputs, karten, zyklen.any { it.id == knoten.id })
+        werte[knoten.id] = wert
+        val status = wert.fehler ?: wert.ausdruck
+        knoten.copy(data = (knoten.data + mapOf("status" to status, "kurzform" to status, "zahlenTyp" to wert.typ)))
+    }
+    return copy(knoten = knoten.map { alt -> neueKnoten.firstOrNull { it.id == alt.id } ?: alt })
+}
+
+private fun KnotenDaten.berechneMatheWert(
+    inputs: List<MatheWert>,
+    karten: Map<String, KarteDaten>,
+    istZyklus: Boolean,
+): MatheWert {
+    val typ = zahlenTyp()
+    if (istZyklus) return MatheWert(name, null, typ, "zyklische Abhaengigkeit")
+    val inputFehler = inputs.firstOrNull { it.fehler != null }?.fehler
+    if (inputFehler != null) return MatheWert(name, null, typ, inputFehler)
+
+    return when (art) {
+        MathematikEingabeKnoten.KNOTEN_ART -> {
+            val wertText = data["wert"]?.toString().orEmpty()
+            MatheWert(wertText.ifBlank { name }, wertText.toDoubleOrNull(), typ.copy(wert = wertText.ifBlank { null }))
+        }
+        UnbekannteKnoten.KNOTEN_ART -> {
+            val variable = data["variable"]?.toString()?.ifBlank { null } ?: name
+            MatheWert(variable, null, typ.copy(anzeigename = variable))
+        }
+        RechenKnoten.KNOTEN_ART -> berechneOperator(inputs, data["operator"]?.toString() ?: "+", typ)
+        FormelKnoten.KNOTEN_ART -> {
+            val formel = data["formel"]?.toString()?.ifBlank { null } ?: inputs.joinToString(" ") { it.ausdruck }
+            MatheWert(formel, inputs.firstOrNull()?.wert, typ.copy(ausdruck = formel))
+        }
+        AuswertungsKnoten.KNOTEN_ART -> inputs.firstOrNull()
+            ?: MatheWert(name, null, typ, "fehlende Eingabe")
+        FunktionKnoten.KNOTEN_ART -> {
+            val referenz = data["kartenId"]?.toString()?.let { karten[it] }
+            if (referenz == null) {
+                MatheWert(name, null, typ, "referenzierte Karte fehlt")
+            } else {
+                val ausgabe = referenz.werteMathematikAus(karten).knoten.lastOrNull { it.art == FormelKnoten.KNOTEN_ART }
+                val ausdruck = "${data["funktion"]?.toString()?.ifBlank { null } ?: referenz.name}(${inputs.joinToString(", ") { it.ausdruck }})"
+                MatheWert(ausgabe?.data?.get("status")?.toString() ?: ausdruck, null, typ)
+            }
+        }
+        LOESEN_KNOTEN_ART -> {
+            val gleichung = inputs.joinToString(" = ") { it.ausdruck }.ifBlank { "Gleichungssystem" }
+            MatheWert(gleichung, null, typ, if (inputs.size < 2) "mindestens zwei Kartenausdruecke noetig" else null)
+        }
+        else -> inputs.firstOrNull() ?: MatheWert(name, null, typ)
+    }
+}
+
+private fun berechneOperator(inputs: List<MatheWert>, operator: String, typ: ZahlenTyp): MatheWert {
+    if (inputs.size < 2) return MatheWert(operator, null, typ, "fehlende Eingabe")
+    val links = inputs[0]
+    val rechts = inputs[1]
+    if (!links.typ.istKompatibelMit(typ) || !rechts.typ.istKompatibelMit(typ)) {
+        return MatheWert("$operator", null, typ, "inkompatibler Zahlenraum")
+    }
+    val ausdruck = "(${links.ausdruck} $operator ${rechts.ausdruck})"
+    val wert = links.wert?.let { l ->
+        rechts.wert?.let { r ->
+            when (operator) {
+                "+" -> l + r
+                "-" -> l - r
+                "*" -> l * r
+                "/" -> if (r == 0.0) null else l / r
+                "^" -> Math.pow(l, r)
+                else -> null
+            }
+        }
+    }
+    return MatheWert(wert?.kompakt() ?: ausdruck, wert, typ.copy(ausdruck = ausdruck))
+}
+
+private fun Double.kompakt(): String =
+    if (this % 1.0 == 0.0) toLong().toString() else toString()
+
 private fun KarteDaten.zuJson(): JSONObject = JSONObject()
+    .put("version", PERSISTENZ_VERSION)
     .put("id", id)
     .put("name", name)
     .put("ansichtsfenster", ansichtsfenster.zuJson())
     .put("knoten", JSONArray(knoten.map { it.zuJson() }))
     .put("verbindungen", JSONArray(verbindungen.map { it.zuJson() }))
+    .put("auswahl", JSONObject())
     .put("cache", cache.zuJson())
 
 private fun KnotenDaten.zuJson(): JSONObject = JSONObject()
@@ -703,6 +1097,7 @@ private fun KnotenDaten.zuJson(): JSONObject = JSONObject()
     .put("knotenArt", art)
     .put("typ", art)
     .put("beweglich", beweglich)
+    .put("data", data.zuJsonData())
 
 private fun VerbindungDaten.zuJson(): JSONObject = JSONObject()
     .put("id", id)
@@ -712,6 +1107,8 @@ private fun VerbindungDaten.zuJson(): JSONObject = JSONObject()
     .put("zielAnschlussId", zielAnschlussId)
     .put("label", label)
     .put("typ", art)
+    .put("zahlenTyp", zahlenTyp?.zuJson())
+    .put("fehler", fehler)
 
 private fun AnsichtsfensterDaten.zuJson(): JSONObject = JSONObject()
     .put("x", verschiebung.x)
@@ -751,6 +1148,7 @@ private fun JSONObject.zuKnotenDaten(): KnotenDaten {
         ),
         art = optString("knotenArt", optString("typ", "default")),
         beweglich = optBoolean("beweglich", true),
+        data = optJSONObject("data")?.zuDataMap().orEmpty(),
     )
 }
 
@@ -762,6 +1160,8 @@ private fun JSONObject.zuVerbindungDaten(): VerbindungDaten = VerbindungDaten(
     zielAnschlussId = getString("zielAnschlussId"),
     label = optString("label").takeIf { it.isNotBlank() && it != "null" },
     art = optString("typ", "default"),
+    zahlenTyp = optJSONObject("zahlenTyp")?.zuZahlenTyp(),
+    fehler = optString("fehler").takeIf { it.isNotBlank() && it != "null" },
 )
 
 private fun KartenCacheDaten.zuJson(): JSONObject = JSONObject()
@@ -800,6 +1200,62 @@ private fun JSONObject.zuKnotenCacheEintrag(fallbackKnotenId: String): KnotenCac
         fehler = optString("fehler").takeIf { it.isNotBlank() && it != "null" },
         gueltig = optBoolean("gueltig", true),
     )
+}
+
+private fun Map<String, Any>.zuJsonData(): JSONObject = JSONObject().also { ziel ->
+    forEach { (key, value) ->
+        ziel.put(
+            key,
+            when (value) {
+                is ZahlenTyp -> value.zuJson()
+                is Zahlenraum -> value.zuJson()
+                else -> value
+            },
+        )
+    }
+}
+
+private fun JSONObject.zuDataMap(): Map<String, Any> = keys().asSequence().associateWith { key ->
+    val value = get(key)
+    if (key == "zahlenTyp" && value is JSONObject) value.zuZahlenTyp() else value
+}
+
+private fun ZahlenTyp.zuJson(): JSONObject = JSONObject()
+    .put("raum", raum.zuJson())
+    .put("wert", wert)
+    .put("anzeigename", anzeigename)
+    .put("ausdruck", ausdruck)
+
+private fun JSONObject.zuZahlenTyp(): ZahlenTyp = ZahlenTyp(
+    raum = optJSONObject("raum")?.zuZahlenraum() ?: Zahlenraum.Reell,
+    wert = optString("wert").takeIf { it.isNotBlank() && it != "null" },
+    anzeigename = optString("anzeigename").takeIf { it.isNotBlank() && it != "null" },
+    ausdruck = optString("ausdruck").takeIf { it.isNotBlank() && it != "null" },
+)
+
+private fun Zahlenraum.zuJson(): JSONObject = when (this) {
+    Zahlenraum.Natuerlich -> JSONObject().put("art", "N")
+    Zahlenraum.Ganz -> JSONObject().put("art", "Z")
+    Zahlenraum.Rational -> JSONObject().put("art", "Q")
+    Zahlenraum.Reell -> JSONObject().put("art", "R")
+    Zahlenraum.Komplex -> JSONObject().put("art", "C")
+    is Zahlenraum.Eingeschraenkt -> JSONObject().put("art", "eingeschraenkt").put("basis", basis.zuJson()).put("bedingung", bedingung)
+    is Zahlenraum.Produkt -> JSONObject().put("art", "produkt").put("raeume", JSONArray(raeume.map { it.zuJson() }))
+    is Zahlenraum.Funktion -> JSONObject().put("art", "funktion").put("eingaben", JSONArray(eingaben.map { it.zuJson() })).put("ausgabe", ausgabe.zuJson())
+}
+
+private fun JSONObject.zuZahlenraum(): Zahlenraum = when (optString("art", "R")) {
+    "N" -> Zahlenraum.Natuerlich
+    "Z" -> Zahlenraum.Ganz
+    "Q" -> Zahlenraum.Rational
+    "C" -> Zahlenraum.Komplex
+    "eingeschraenkt" -> Zahlenraum.Eingeschraenkt(optJSONObject("basis")?.zuZahlenraum() ?: Zahlenraum.Reell, optString("bedingung"))
+    "produkt" -> Zahlenraum.Produkt(optJSONArray("raeume").orEmptyObjects().map { it.zuZahlenraum() })
+    "funktion" -> Zahlenraum.Funktion(
+        eingaben = optJSONArray("eingaben").orEmptyObjects().map { it.zuZahlenraum() },
+        ausgabe = optJSONObject("ausgabe")?.zuZahlenraum() ?: Zahlenraum.Reell,
+    )
+    else -> Zahlenraum.Reell
 }
 
 private fun JSONArray?.orEmptyObjects(): List<JSONObject> = this?.asObjects().orEmpty()
