@@ -19,6 +19,8 @@ open class VerbindungDaten(
     val label: String? = null,
     val art: String = "default",
     val ausgewaehlt: Boolean = false,
+    val zahlenTyp: ZahlenTyp? = null,
+    val fehler: String? = null,
 ): GraphDaten {
     fun copy(
         id: String = this.id,
@@ -29,6 +31,8 @@ open class VerbindungDaten(
         label: String? = this.label,
         art: String = this.art,
         ausgewaehlt: Boolean = this.ausgewaehlt,
+        zahlenTyp: ZahlenTyp? = this.zahlenTyp,
+        fehler: String? = this.fehler,
     ): VerbindungDaten = VerbindungDaten(
         id = id,
         quellKnotenId = quellKnotenId,
@@ -38,6 +42,8 @@ open class VerbindungDaten(
         label = label,
         art = art,
         ausgewaehlt = ausgewaehlt,
+        zahlenTyp = zahlenTyp,
+        fehler = fehler,
     )
 }
 

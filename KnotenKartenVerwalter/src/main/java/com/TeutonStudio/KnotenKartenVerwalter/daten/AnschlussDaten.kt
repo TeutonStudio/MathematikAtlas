@@ -33,6 +33,7 @@ sealed class AnschlussDaten(
     open val label: String,
     open val richtung: AnschlussRichtung,
     open val kante: AnschlussKante,
+    open val zahlenTyp: ZahlenTyp? = null,
 ): GraphDaten
 
 /**
@@ -42,11 +43,13 @@ data class EingangDaten(
     override val id: String,
     override val label: String,
     override val kante: AnschlussKante = AnschlussKante.Links,
+    override val zahlenTyp: ZahlenTyp? = null,
 ) : AnschlussDaten(
     id = id,
     label = label,
     richtung = AnschlussRichtung.Eingang,
     kante = kante,
+    zahlenTyp = zahlenTyp,
 )
 
 /**
@@ -56,9 +59,11 @@ data class AusgangDaten(
     override val id: String,
     override val label: String,
     override val kante: AnschlussKante = AnschlussKante.Rechts,
+    override val zahlenTyp: ZahlenTyp? = null,
 ) : AnschlussDaten(
     id = id,
     label = label,
     richtung = AnschlussRichtung.Ausgang,
     kante = kante,
+    zahlenTyp = zahlenTyp,
 )

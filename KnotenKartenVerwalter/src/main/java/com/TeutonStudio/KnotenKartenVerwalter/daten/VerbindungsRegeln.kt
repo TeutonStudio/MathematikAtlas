@@ -16,12 +16,17 @@ data class VerbindungsRegeln(
 
     /** Erlaubt eine Verbindung nur von Ausgang nach Eingang. */
     val nurAusgangZuEingang: Boolean = true,
+
+    /** Prueft optionale mathematische Anschluss-Typen auf Kompatibilitaet. */
+    val pruefeZahlenTypen: Boolean = true,
 ) {
     fun darfErstellen(
         vorhandeneVerbindungen: List<VerbindungDaten>,
         neueVerbindung: VerbindungDaten,
         quellRichtung: AnschlussRichtung = AnschlussRichtung.Ausgang,
         zielRichtung: AnschlussRichtung = AnschlussRichtung.Eingang,
+        quellTyp: ZahlenTyp? = null,
+        zielTyp: ZahlenTyp? = null,
     ): Boolean {
         if (!selbstVerbindungErlaubt && neueVerbindung.quellKnotenId == neueVerbindung.zielKnotenId) {
             return false
@@ -35,8 +40,24 @@ data class VerbindungsRegeln(
             return false
         }
 
+        if (pruefeZahlenTypen && quellTyp != null && zielTyp != null && !quellTyp.istKompatibelMit(zielTyp)) {
+            return false
+        }
+
         return true
     }
+}
+
+fun VerbindungDaten.mitTypPruefung(
+    quellTyp: ZahlenTyp?,
+    zielTyp: ZahlenTyp?,
+): VerbindungDaten {
+    val fehler = if (quellTyp != null && zielTyp != null && !quellTyp.istKompatibelMit(zielTyp)) {
+        "${quellTyp.kurzform} passt nicht zu ${zielTyp.kurzform}"
+    } else {
+        null
+    }
+    return copy(zahlenTyp = quellTyp, fehler = fehler)
 }
 
 private fun VerbindungDaten.gleicheAnschluesseWie(andere: VerbindungDaten): Boolean =
