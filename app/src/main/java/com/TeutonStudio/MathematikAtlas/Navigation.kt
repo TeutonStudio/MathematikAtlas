@@ -39,16 +39,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsfensterDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AppKartenCommand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCommand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCommandErgebnis
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenControllerZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenZwischenablage
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenAendern
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVerschieben
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlEinfuegen
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlLoeschen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.dupliziereAuswahl
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fuegeEin
 import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.loescheAuswahl
-import com.TeutonStudio.KnotenKartenVerwalter.daten.mitErsetztemEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AusgabeKnoten
@@ -81,13 +89,20 @@ fun Navigation() {
 private fun KnotenKartenTestAnwendung() {
     val context = LocalContext.current
     var gespeicherteKarten by remember { mutableStateOf(context.knotenKartenSpeicher().liste()) }
-    var aktuelleKarte by remember { mutableStateOf(context.knotenKartenSpeicher().ladeErste() ?: beispielKarte("Testkarte")) }
-    var auswahl by remember { mutableStateOf(AuswahlDaten()) }
+    var controller by remember {
+        mutableStateOf(KartenControllerZustand(context.knotenKartenSpeicher().ladeErste() ?: beispielKarte("Testkarte")))
+    }
     var zwischenablage by remember { mutableStateOf(KartenZwischenablage()) }
     var status by remember { mutableStateOf("Bereit") }
+    val aktuelleKarte = controller.karte
+    val auswahl = controller.auswahl
 
     fun aktualisiereListe() {
         gespeicherteKarten = context.knotenKartenSpeicher().liste()
+    }
+
+    fun fuehreAus(command: KartenCommand) {
+        controller = controller.fuehreAus(command)
     }
 
     Row(
@@ -102,8 +117,7 @@ private fun KnotenKartenTestAnwendung() {
             auswahl = auswahl,
             status = status,
             onNeueKarte = {
-                aktuelleKarte = beispielKarte("Neue KnotenKarte")
-                auswahl = AuswahlDaten()
+                controller = KartenControllerZustand(beispielKarte("Neue KnotenKarte"))
                 status = "Neue KnotenKarte erstellt"
             },
             onSpeichern = {
@@ -112,15 +126,17 @@ private fun KnotenKartenTestAnwendung() {
                 status = "'${aktuelleKarte.name}' gespeichert"
             },
             onOeffnen = { eintrag ->
-                aktuelleKarte = context.knotenKartenSpeicher().lade(eintrag.datei) ?: aktuelleKarte
-                auswahl = AuswahlDaten()
+                controller = KartenControllerZustand(context.knotenKartenSpeicher().lade(eintrag.datei) ?: aktuelleKarte)
                 status = "'${eintrag.name}' geoeffnet"
             },
             onNameAendern = { name ->
-                aktuelleKarte =  KarteDaten(aktuelleKarte, name = name)
+                fuehreAus(AppKartenCommand("Karte umbenennen") { karte, aktuelleAuswahl ->
+                    KartenCommandErgebnis(KarteDaten(karte, name = name), aktuelleAuswahl)
+                })
             },
             onKnotenHinzufuegen = {
-                aktuelleKarte = aktuelleKarte.mitNeuemKnoten()
+                val knoten = aktuelleKarte.neuerKnoten()
+                fuehreAus(KnotenErstellen(knoten))
                 status = "Knoten hinzugefuegt"
             },
             onKopieren = {
@@ -132,41 +148,46 @@ private fun KnotenKartenTestAnwendung() {
                     status = "Zwischenablage ist leer"
                 } else {
                     val ziel = Offset(120f + aktuelleKarte.knoten.size * 12f, 120f + aktuelleKarte.knoten.size * 12f)
-                    val ergebnis = aktuelleKarte.fuegeEin(zwischenablage, ziel)
-                    aktuelleKarte = ergebnis.karte
-                    auswahl = ergebnis.auswahl
+                    fuehreAus(AuswahlEinfuegen(zwischenablage, ziel))
                     status = "Auswahl eingefuegt"
                 }
             },
             onAllesAuswaehlen = {
-                auswahl = AuswahlDaten(
+                val neueAuswahl = AuswahlDaten(
                     knotenIds = aktuelleKarte.knoten.mapTo(mutableSetOf()) { it.id },
                     verbindungIds = aktuelleKarte.verbindungen.mapTo(mutableSetOf()) { it.id },
                 )
-                status = auswahl.statusText()
+                controller = controller.mitAuswahl(neueAuswahl)
+                status = neueAuswahl.statusText()
             },
             onAuswahlLoeschen = {
-                aktuelleKarte = aktuelleKarte.loescheAuswahl(auswahl)
-                auswahl = AuswahlDaten()
+                fuehreAus(AuswahlLoeschen(auswahl))
                 status = "Auswahl geloescht"
             },
             onAuswahlDuplizieren = {
-                val ergebnis = aktuelleKarte.dupliziereAuswahl(auswahl)
-                aktuelleKarte = ergebnis.karte
-                auswahl = ergebnis.auswahl
+                fuehreAus(AppKartenCommand("Auswahl duplizieren") { karte, aktuelleAuswahl ->
+                    val ergebnis = karte.dupliziereAuswahl(aktuelleAuswahl)
+                    KartenCommandErgebnis(ergebnis.karte, ergebnis.auswahl, ausgefuehrt = !ergebnis.auswahl.istLeer)
+                })
                 status = if (auswahl.istLeer) "Keine Auswahl zum Duplizieren" else "Auswahl dupliziert"
             },
             onAuswahlLeeren = {
-                auswahl = AuswahlDaten()
+                controller = controller.mitAuswahl(AuswahlDaten())
                 status = "Keine Auswahl"
             },
+            onRueckgaengig = {
+                controller = controller.rueckgaengig()
+                status = "Rueckgaengig"
+            },
+            onWiederholen = {
+                controller = controller.wiederholen()
+                status = "Wiederholt"
+            },
             onKnotenNameAendern = { knotenId, name ->
-                aktuelleKarte = aktuelleKarte.copy(
-                    knoten = aktuelleKarte.knoten.map { knoten ->
-                        if (knoten.id == knotenId) knoten.copy(name = name) else knoten
-                    },
-                )
-                status = "Knoten bearbeitet"
+                aktuelleKarte.knoten.firstOrNull { it.id == knotenId }?.let { knoten ->
+                    fuehreAus(KnotenAendern(knoten.copy(name = name)))
+                    status = "Knoten bearbeitet"
+                }
             },
         )
 
@@ -187,26 +208,21 @@ private fun KnotenKartenTestAnwendung() {
                     auswahl = auswahl,
                 ),
                 aktualisierung = { knotenId, position ->
-                    aktuelleKarte = aktuelleKarte.copy(
-                        knoten = aktuelleKarte.knoten.map { knoten ->
-                            if (knoten.id == knotenId) knoten.copy(position = position) else knoten
-                        },
-                    )
+                    fuehreAus(KnotenVerschieben(knotenId, position))
                 },
                 onVerbindungErstellen = { verbindung ->
-                    aktuelleKarte = aktuelleKarte.copy(
-                        verbindungen = aktuelleKarte.verbindungen.mitErsetztemEingang(verbindung),
-                    )
+                    fuehreAus(VerbindungErstellen(verbindung))
                     status = "Verbindung erstellt"
                 },
                 onKontextAktion = { aktion ->
-                    val ergebnis = aktuelleKarte.führeKontextAktionAus(aktion, auswahl)
-                    aktuelleKarte = ergebnis.karte
-                    auswahl = ergebnis.auswahl
+                    fuehreAus(AppKartenCommand("Kontext: ${aktion.aktion}") { karte, aktuelleAuswahl ->
+                        val ergebnis = karte.führeKontextAktionAus(aktion, aktuelleAuswahl)
+                        KartenCommandErgebnis(ergebnis.karte, ergebnis.auswahl)
+                    })
                     status = "Kontext: ${aktion.aktion}"
                 },
                 onAuswahlÄndern = { neueAuswahl ->
-                    auswahl = neueAuswahl
+                    controller = controller.mitAuswahl(neueAuswahl)
                     status = neueAuswahl.statusText()
                 },
             )
@@ -238,6 +254,8 @@ private fun SeitenLeiste(
     onAuswahlLoeschen: () -> Unit,
     onAuswahlDuplizieren: () -> Unit,
     onAuswahlLeeren: () -> Unit,
+    onRueckgaengig: () -> Unit,
+    onWiederholen: () -> Unit,
     onKnotenNameAendern: (String, String) -> Unit,
 ) {
     Column(
@@ -276,6 +294,11 @@ private fun SeitenLeiste(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TestKnopf(text = "Alle", onClick = onAllesAuswaehlen, modifier = Modifier.weight(1f))
             TestKnopf(text = "Leeren", onClick = onAuswahlLeeren, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Undo", onClick = onRueckgaengig, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Redo", onClick = onWiederholen, modifier = Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(16.dp))
@@ -514,18 +537,20 @@ private fun beispielKarte(name: String): KarteDaten {
 }
 
 private fun KarteDaten.mitNeuemKnoten(position: Offset? = null): KarteDaten {
+    return copy(knoten = knoten + neuerKnoten(position))
+}
+
+private fun KarteDaten.neuerKnoten(position: Offset? = null): KnotenDaten {
     val nummer = knoten.size + 1
     val id = "knoten-$nummer-${UUID.randomUUID()}"
-    return copy(
-        knoten = knoten + KnotenDaten(
-            id = id,
-            name = "Knoten $nummer",
-            position = position ?: Offset(
-                x = 90f + nummer * 40f,
-                y = 120f + nummer * 30f,
-            ),
-            fläche = Offset(180f, 96f),
+    return KnotenDaten(
+        id = id,
+        name = "Knoten $nummer",
+        position = position ?: Offset(
+            x = 90f + nummer * 40f,
+            y = 120f + nummer * 30f,
         ),
+        fläche = Offset(180f, 96f),
     )
 }
 
