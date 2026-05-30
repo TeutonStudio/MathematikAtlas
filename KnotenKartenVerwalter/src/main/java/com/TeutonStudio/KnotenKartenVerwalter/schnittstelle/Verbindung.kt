@@ -38,12 +38,13 @@ public fun List<VerbindungDaten>.zuComposable(
     start: (VerbindungDaten) -> Offset?,
     ende: (VerbindungDaten) -> Offset?,
     modifier: Modifier = Modifier,
+    verbindungArten: VerbindungArten = VerbindungArten.Standard,
 ) = VerbindungUmgebung(
     modifier,
     this.mapNotNull {
         val s = start(it)
         val e = ende(it)
-        if (s != null && e != null) BasisVerbindung(it, start = s, ende = e).zeichnung() else null
+        if (s != null && e != null) verbindungArten.erstelle(it, s, e).zeichnung() else null
     },
 )
 
@@ -119,7 +120,11 @@ private fun DrawScope.VerbindungPfad(
     start: Offset,
     ende: Offset,
 ) {
-    val farbe = if (daten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF475569)
+    val farbe = when {
+        daten.fehler != null -> Color(0xFFDC2626)
+        daten.ausgewaehlt -> Color(0xFF2563EB)
+        else -> Color(0xFF475569)
+    }
 
     val kontrollAbstand = kotlin.math.max(48f, kotlin.math.abs(ende.x - start.x) / 2f)
     val pfad = Path().apply {
@@ -141,7 +146,7 @@ private fun DrawScope.VerbindungPfad(
 }
 
 public fun interface VerbindungFabrik {
-    public fun erstelle(daten: VerbindungDaten): Verbindung
+    public fun erstelle(daten: VerbindungDaten, start: Offset, ende: Offset): Verbindung
 }
 
 /**
@@ -152,18 +157,23 @@ data class VerbindungArten(
     private val fabriken: Map<String, VerbindungFabrik> = standardFabriken,
 ) {
     public fun erstelle(daten: VerbindungDaten): Verbindung =
-        (fabriken[daten.art] ?: fabriken.getValue(BasisVerbindung.VERBINDUNG_ART)).erstelle(daten)
+        erstelle(daten, Offset.Zero, Offset.Zero)
+
+    internal fun erstelle(daten: VerbindungDaten, start: Offset, ende: Offset): BasisVerbindung =
+        (fabriken[daten.art] ?: fabriken.getValue(BasisVerbindung.VERBINDUNG_ART))
+            .erstelle(daten, start, ende) as? BasisVerbindung
+            ?: BasisVerbindung(daten, start = start, ende = ende)
 
     public fun mit(art: String, fabrik: VerbindungFabrik): VerbindungArten =
         copy(fabriken = fabriken + (art to fabrik))
 
     public companion object {
         private val standardFabriken = mapOf(
-            BasisKnoten.KNOTEN_ART to VerbindungFabrik(::BasisVerbindung),
-//            EingabeKnoten.KNOTEN_ART to VerbindungFabrik(::EingabeKnoten),
-//            AusgabeKnoten.KNOTEN_ART to VerbindungFabrik(::AusgabeKnoten),
+            BasisVerbindung.VERBINDUNG_ART to VerbindungFabrik { daten, start, ende ->
+                BasisVerbindung(daten, start = start, ende = ende)
+            },
         )
 
-        public val Standard: KnotenArten = KnotenArten()
+        public val Standard: VerbindungArten = VerbindungArten()
     }
 }

@@ -27,6 +27,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.Zahlenraum
 
 public fun interface KnotenFabrik {
     public fun erstelle(daten: KnotenDaten): Knoten
@@ -50,6 +52,12 @@ data class KnotenArten(
             BasisKnoten.KNOTEN_ART to KnotenFabrik(::BasisKnoten),
             EingabeKnoten.KNOTEN_ART to KnotenFabrik(::EingabeKnoten),
             AusgabeKnoten.KNOTEN_ART to KnotenFabrik(::AusgabeKnoten),
+            MathematikEingabeKnoten.KNOTEN_ART to KnotenFabrik(::MathematikEingabeKnoten),
+            UnbekannteKnoten.KNOTEN_ART to KnotenFabrik(::UnbekannteKnoten),
+            RechenKnoten.KNOTEN_ART to KnotenFabrik(::RechenKnoten),
+            FormelKnoten.KNOTEN_ART to KnotenFabrik(::FormelKnoten),
+            AuswertungsKnoten.KNOTEN_ART to KnotenFabrik(::AuswertungsKnoten),
+            FunktionKnoten.KNOTEN_ART to KnotenFabrik(::FunktionKnoten),
         )
 
         public val Standard: KnotenArten = KnotenArten()
@@ -156,6 +164,62 @@ open class AusgabeKnoten(daten: KnotenDaten): BasisKnoten(daten) {
     }
 }
 
+open class MathematikEingabeKnoten(daten: KnotenDaten) : BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = emptyList()
+    override val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("wert", "Wert", zahlenTyp = daten.zahlenTypOderDefault()))
+
+    public companion object {
+        public const val KNOTEN_ART: String = "mathe-eingabe"
+    }
+}
+
+open class UnbekannteKnoten(daten: KnotenDaten) : BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = emptyList()
+    override val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("variable", "Variable", zahlenTyp = daten.zahlenTypOderDefault()))
+
+    public companion object {
+        public const val KNOTEN_ART: String = "unbekannte"
+    }
+}
+
+open class RechenKnoten(daten: KnotenDaten) : BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = listOf(
+        EingangDaten("links", "Links", zahlenTyp = daten.zahlenTypOderDefault()),
+        EingangDaten("rechts", "Rechts", zahlenTyp = daten.zahlenTypOderDefault()),
+    )
+    override val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("ergebnis", "Ergebnis", zahlenTyp = daten.zahlenTypOderDefault()))
+
+    public companion object {
+        public const val KNOTEN_ART: String = "rechen"
+    }
+}
+
+open class FormelKnoten(daten: KnotenDaten) : BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = listOf(EingangDaten("in", "Eingabe", zahlenTyp = daten.zahlenTypOderDefault()))
+    override val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("formel", "Formel", zahlenTyp = daten.zahlenTypOderDefault()))
+
+    public companion object {
+        public const val KNOTEN_ART: String = "formel"
+    }
+}
+
+open class AuswertungsKnoten(daten: KnotenDaten) : BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = listOf(EingangDaten("in", "Eingabe", zahlenTyp = daten.zahlenTypOderDefault()))
+    override val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("ergebnis", "Ergebnis", zahlenTyp = daten.zahlenTypOderDefault()))
+
+    public companion object {
+        public const val KNOTEN_ART: String = "auswertung"
+    }
+}
+
+open class FunktionKnoten(daten: KnotenDaten) : BasisKnoten(daten) {
+    override val eingangsDaten: List<EingangDaten> = listOf(EingangDaten("argument", "Argument", zahlenTyp = daten.zahlenTypOderDefault()))
+    override val ausgangsDaten: List<AusgangDaten> = listOf(AusgangDaten("wert", "Wert", zahlenTyp = daten.zahlenTypOderDefault()))
+
+    public companion object {
+        public const val KNOTEN_ART: String = "funktion"
+    }
+}
 
 /**
  * Standarddarstellung eines Knotens.
@@ -198,7 +262,7 @@ private fun KnotenRahmen(
                     style = TextStyle(color = Color(0xFF0F172A), fontSize = (14f * skalierung).sp),
                 )
                 BasicText(
-                    text = daten.typ,
+                    text = daten.mathematischeKurzform() ?: daten.typ,
                     style = TextStyle(color = Color(0xFF64748B), fontSize = (14f * skalierung).sp),
                 )
             }
@@ -277,6 +341,23 @@ private fun AnschlussLeisteAmRand(
 
 private fun Knoten.indexVon(anschluss: AnschlussDaten): Int =
     erhalteAnschlüsseGeordnet(anschluss.richtung).indexOfFirst { it.id == anschluss.id }.coerceAtLeast(0)
+
+private fun KnotenDaten.zahlenTypOderDefault(): ZahlenTyp =
+    data["zahlenTyp"] as? ZahlenTyp ?: ZahlenTyp(Zahlenraum.Reell)
+
+private fun KnotenDaten.mathematischeKurzform(): String? {
+    (data["kurzform"] as? String)?.takeIf { it.isNotBlank() }?.let { return it }
+    val typ = data["zahlenTyp"] as? ZahlenTyp
+    return when (art) {
+        MathematikEingabeKnoten.KNOTEN_ART -> typ?.copy(wert = data["wert"] as? String ?: typ.wert)?.kurzform
+        UnbekannteKnoten.KNOTEN_ART -> typ?.copy(anzeigename = data["variable"] as? String ?: name)?.kurzform
+        RechenKnoten.KNOTEN_ART -> data["operator"] as? String ?: "?"
+        FormelKnoten.KNOTEN_ART -> data["formel"] as? String ?: typ?.kurzform
+        AuswertungsKnoten.KNOTEN_ART -> data["status"] as? String ?: "Auswertung"
+        FunktionKnoten.KNOTEN_ART -> typ?.kurzform ?: data["funktion"] as? String
+        else -> typ?.kurzform
+    }
+}
 
 /**
  * Vorschau der Standard-Knotendarstellung.

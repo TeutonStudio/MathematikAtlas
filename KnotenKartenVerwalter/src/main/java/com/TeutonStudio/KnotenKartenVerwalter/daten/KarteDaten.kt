@@ -72,6 +72,7 @@ open class KarteDaten(
     val artenKnoten: List<KnotenArten> = emptyList(),
     val artenVerbindungen: List<VerbindungArten> = emptyList(),
     val ansichtsfenster: AnsichtsfensterDaten = AnsichtsfensterDaten(),
+    val cache: KartenCacheDaten = KartenCacheDaten(),
 ): GraphDaten {
     constructor(
         daten: KarteDaten,
@@ -85,6 +86,7 @@ open class KarteDaten(
         artenKnoten: List<KnotenArten>? = null,
         artenVerbindungen: List<VerbindungArten>? = null,
         ansichtsfenster: AnsichtsfensterDaten? = null,
+        cache: KartenCacheDaten? = null,
     ): this(
         id ?: daten.id,
         name ?: daten.name,
@@ -96,6 +98,7 @@ open class KarteDaten(
         artenKnoten ?: daten.artenKnoten,
         artenVerbindungen ?: daten.artenVerbindungen,
         ansichtsfenster ?: daten.ansichtsfenster,
+        cache ?: daten.cache,
     )
 
     fun copy(
@@ -109,6 +112,7 @@ open class KarteDaten(
         artenKnoten: List<KnotenArten> = this.artenKnoten,
         artenVerbindungen: List<VerbindungArten> = this.artenVerbindungen,
         ansichtsfenster: AnsichtsfensterDaten = this.ansichtsfenster,
+        cache: KartenCacheDaten = this.cache,
     ): KarteDaten = KarteDaten(
         id = id,
         name = name,
@@ -120,5 +124,6 @@ open class KarteDaten(
         artenKnoten = artenKnoten,
         artenVerbindungen = artenVerbindungen,
         ansichtsfenster = ansichtsfenster,
+        cache = cache,
     )
 }

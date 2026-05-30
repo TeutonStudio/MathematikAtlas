@@ -170,6 +170,8 @@ data class KartenControllerZustand(
     val karte: KarteDaten,
     val auswahl: AuswahlDaten = AuswahlDaten(),
     val undoRedoAktiv: Boolean = true,
+    val pullCacheAktiv: Boolean = true,
+    val pullAuswertung: KnotenPullAuswertung = StandardKnotenPullAuswertung,
     val undoStack: List<KartenHistoryEintrag> = emptyList(),
     val redoStack: List<KartenHistoryEintrag> = emptyList(),
 ) {
@@ -189,19 +191,24 @@ data class KartenControllerZustand(
         if (!ergebnis.ausgefuehrt) return this
 
         val neueAuswahl = ergebnis.auswahl ?: auswahl
+        val neueKarte = if (pullCacheAktiv) {
+            ergebnis.karte.mitAktualisiertemPullCache(pullAuswertung)
+        } else {
+            ergebnis.karte
+        }
         if (!undoRedoAktiv) {
-            return copy(karte = ergebnis.karte, auswahl = neueAuswahl)
+            return copy(karte = neueKarte, auswahl = neueAuswahl)
         }
 
         val eintrag = KartenHistoryEintrag(
             commandBeschreibung = command.beschreibung,
             vorher = karte,
-            nachher = ergebnis.karte,
+            nachher = neueKarte,
             auswahlVorher = auswahl,
             auswahlNachher = neueAuswahl,
         )
         return copy(
-            karte = ergebnis.karte,
+            karte = neueKarte,
             auswahl = neueAuswahl,
             undoStack = undoStack + eintrag,
             redoStack = emptyList(),

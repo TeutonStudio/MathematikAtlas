@@ -49,6 +49,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.mitTypPruefung
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.pow
@@ -104,6 +106,7 @@ sealed interface Karte: GraphObjekt {
     public val daten: KarteDaten
     public val zustand: KarteZustand
     public val knotenArten: KnotenArten
+    public val verbindungArten: VerbindungArten
     public val aktualisierung: KartenAktualisierung
     public val onVerbindungErstellen: VerbindungErstellen
     public val onKontextAktion: KontextAktionAusführen
@@ -114,6 +117,7 @@ open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
     override val knotenArten: KnotenArten = KnotenArten.Standard,
+    override val verbindungArten: VerbindungArten = VerbindungArten.Standard,
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen = {},
     override val onKontextAktion: KontextAktionAusführen = {},
@@ -130,6 +134,7 @@ open class BasisKarte(
             daten = daten,
             zustand = zustand,
             knotenArten = knotenArten,
+            verbindungArten = verbindungArten,
             modifier = modifier,
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
@@ -149,6 +154,7 @@ private data class AnschlussReferenz(
     val richtung: AnschlussRichtung,
     val kante: AnschlussKante,
     val position: Offset,
+    val zahlenTyp: ZahlenTyp?,
 )
 
 /**
@@ -177,8 +183,9 @@ public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
     knotenArten: KnotenArten = KnotenArten.Standard,
+    verbindungArten: VerbindungArten = VerbindungArten.Standard,
     aktualisierung: KartenAktualisierung,
-) = BasisKarte(this, zustand, knotenArten, aktualisierung).zuComposable(modifier)
+) = BasisKarte(this, zustand, knotenArten, verbindungArten, aktualisierung).zuComposable(modifier)
 
 /**
  * Rendert eine interaktive Knotenkarte.
@@ -192,6 +199,7 @@ public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
     knotenArten: KnotenArten = KnotenArten.Standard,
+    verbindungArten: VerbindungArten = VerbindungArten.Standard,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
     onKontextAktion: KontextAktionAusführen = {},
@@ -200,6 +208,7 @@ public fun KarteDaten.zuComposable(
     daten = this,
     zustand = zustand,
     knotenArten = knotenArten,
+    verbindungArten = verbindungArten,
     aktualisierung = aktualisierung,
     onVerbindungErstellen = onVerbindungErstellen,
     onKontextAktion = onKontextAktion,
@@ -218,6 +227,7 @@ private fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
     knotenArten: KnotenArten = KnotenArten.Standard,
+    verbindungArten: VerbindungArten = VerbindungArten.Standard,
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -370,6 +380,7 @@ private fun KartenOberfläche(
             { it.startOffset(knotenNachId, sichtbarerZustand) },
             { it.endeOffset(knotenNachId, sichtbarerZustand) },
             Modifier.fillMaxSize(),
+            verbindungArten,
         )
 
         // Während des Ziehens eines Anschlusses wird eine temporäre Verbindung
@@ -752,6 +763,7 @@ private fun Knoten.anschlussReferenz(
         richtung = richtung,
         kante = kante,
         position = weltPosition.zuBildschirmOffset(zustand),
+        zahlenTyp = anschluss?.zahlenTyp,
     )
 }
 
@@ -801,7 +813,7 @@ private fun AnschlussReferenz.zuVerbindung(ziel: AnschlussReferenz): VerbindungD
         quellAnschlussId = quelle.anschlussId,
         zielKnotenId = ende.knotenId,
         zielAnschlussId = ende.anschlussId,
-    )
+    ).mitTypPruefung(quelle.zahlenTyp, ende.zahlenTyp)
 }
 
 /**

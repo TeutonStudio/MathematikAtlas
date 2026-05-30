@@ -44,9 +44,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCommand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCommandErgebnis
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenControllerZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCacheDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenLayoutAnwenden
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenZwischenablage
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenCacheEintrag
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenAendern
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenErstellen
@@ -55,6 +57,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlEinfuegen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlLoeschen
+import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.Zahlenraum
+import com.TeutonStudio.KnotenKartenVerwalter.daten.istKompatibelMit
 import com.TeutonStudio.KnotenKartenVerwalter.daten.dupliziereAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.loescheAuswahl
@@ -62,6 +67,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AusgabeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.EingabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AuswertungsKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.FormelKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.FunktionKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.MathematikEingabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.RechenKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.UnbekannteKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.zuComposable
 import org.json.JSONArray
 import org.json.JSONObject
@@ -89,9 +100,10 @@ fun Navigation() {
 @Composable
 private fun KnotenKartenTestAnwendung() {
     val context = LocalContext.current
-    var gespeicherteKarten by remember { mutableStateOf(context.knotenKartenSpeicher().liste()) }
+    val speicher = remember { context.knotenKartenSpeicher() }
+    var gespeicherteKarten by remember { mutableStateOf(speicher.liste()) }
     var controller by remember {
-        mutableStateOf(KartenControllerZustand(context.knotenKartenSpeicher().ladeErste() ?: beispielKarte("Testkarte")))
+        mutableStateOf(KartenControllerZustand(speicher.ladeErste() ?: beispielKarte("Mathematik Beispiel")))
     }
     var zwischenablage by remember { mutableStateOf(KartenZwischenablage()) }
     var status by remember { mutableStateOf("Bereit") }
@@ -99,7 +111,7 @@ private fun KnotenKartenTestAnwendung() {
     val auswahl = controller.auswahl
 
     fun aktualisiereListe() {
-        gespeicherteKarten = context.knotenKartenSpeicher().liste()
+        gespeicherteKarten = speicher.liste()
     }
 
     fun fuehreAus(command: KartenCommand) {
@@ -121,24 +133,54 @@ private fun KnotenKartenTestAnwendung() {
                 controller = KartenControllerZustand(beispielKarte("Neue KnotenKarte"))
                 status = "Neue KnotenKarte erstellt"
             },
+            onBeispielKarte = {
+                controller = KartenControllerZustand(beispielKarte("Mathematik Beispiel"))
+                status = "Beispielkarte geladen"
+            },
+            onFunktionsBeispiel = {
+                controller = KartenControllerZustand(funktionsBeispielKarte("Funktionskarte"))
+                status = "Funktionsbeispiel geladen"
+            },
             onSpeichern = {
-                context.knotenKartenSpeicher().speichere(aktuelleKarte)
+                speicher.speichere(aktuelleKarte)
                 aktualisiereListe()
                 status = "'${aktuelleKarte.name}' gespeichert"
             },
             onOeffnen = { eintrag ->
-                controller = KartenControllerZustand(context.knotenKartenSpeicher().lade(eintrag.datei) ?: aktuelleKarte)
+                controller = KartenControllerZustand(speicher.lade(eintrag.datei) ?: aktuelleKarte)
                 status = "'${eintrag.name}' geoeffnet"
+            },
+            onDuplizieren = {
+                val duplikat = aktuelleKarte.duplizierteKarte()
+                speicher.speichere(duplikat)
+                controller = KartenControllerZustand(duplikat)
+                aktualisiereListe()
+                status = "'${aktuelleKarte.name}' dupliziert"
+            },
+            onLoeschen = {
+                speicher.loesche(aktuelleKarte.id)
+                aktualisiereListe()
+                controller = KartenControllerZustand(speicher.ladeErste() ?: beispielKarte("Neue KnotenKarte"))
+                status = "Karte geloescht"
             },
             onNameAendern = { name ->
                 fuehreAus(AppKartenCommand("Karte umbenennen") { karte, aktuelleAuswahl ->
                     KartenCommandErgebnis(KarteDaten(karte, name = name), aktuelleAuswahl)
                 })
             },
-            onKnotenHinzufuegen = {
-                val knoten = aktuelleKarte.neuerKnoten()
+            onKnotenHinzufuegen = { art ->
+                val knoten = aktuelleKarte.neuerKnoten(art = art)
                 fuehreAus(KnotenErstellen(knoten))
-                status = "Knoten hinzugefuegt"
+                status = "Knoten '${knoten.name}' hinzugefuegt"
+            },
+            onAuswerten = {
+                fuehreAus(AppKartenCommand("Mathematik auswerten") { karte, aktuelleAuswahl ->
+                    KartenCommandErgebnis(
+                        karte = karte.werteMathematikAus(speicher.alleKarten() + (karte.id to karte)),
+                        auswahl = aktuelleAuswahl,
+                    )
+                })
+                status = "Mathematik ausgewertet"
             },
             onKopieren = {
                 zwischenablage = aktuelleKarte.kopiereAuswahl(auswahl)
@@ -191,6 +233,13 @@ private fun KnotenKartenTestAnwendung() {
             onKnotenNameAendern = { knotenId, name ->
                 aktuelleKarte.knoten.firstOrNull { it.id == knotenId }?.let { knoten ->
                     fuehreAus(KnotenAendern(knoten.copy(name = name)))
+                    status = "Knoten bearbeitet"
+                }
+            },
+            onKnotenDataAendern = { knotenId, key, wert ->
+                aktuelleKarte.knoten.firstOrNull { it.id == knotenId }?.let { knoten ->
+                    val neueDaten = knoten.data + (key to wert)
+                    fuehreAus(KnotenAendern(knoten.copy(data = neueDaten.mitAktualisierterKurzform(knoten.art, knoten.name))))
                     status = "Knoten bearbeitet"
                 }
             },
@@ -249,10 +298,15 @@ private fun SeitenLeiste(
     auswahl: AuswahlDaten,
     status: String,
     onNeueKarte: () -> Unit,
+    onBeispielKarte: () -> Unit,
+    onFunktionsBeispiel: () -> Unit,
     onSpeichern: () -> Unit,
     onOeffnen: (KartenEintrag) -> Unit,
+    onDuplizieren: () -> Unit,
+    onLoeschen: () -> Unit,
     onNameAendern: (String) -> Unit,
-    onKnotenHinzufuegen: () -> Unit,
+    onKnotenHinzufuegen: (String) -> Unit,
+    onAuswerten: () -> Unit,
     onKopieren: () -> Unit,
     onEinfuegen: () -> Unit,
     onAllesAuswaehlen: () -> Unit,
@@ -263,6 +317,7 @@ private fun SeitenLeiste(
     onRueckgaengig: () -> Unit,
     onWiederholen: () -> Unit,
     onKnotenNameAendern: (String, String) -> Unit,
+    onKnotenDataAendern: (String, String, Any) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -290,7 +345,39 @@ private fun SeitenLeiste(
             TestKnopf(text = "Speichern", onClick = onSpeichern, modifier = Modifier.weight(1f))
         }
         Spacer(Modifier.height(8.dp))
-        TestKnopf(text = "Knoten erstellen", onClick = onKnotenHinzufuegen, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Beispiel", onClick = onBeispielKarte, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Funktion", onClick = onFunktionsBeispiel, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Karte kop.", onClick = onDuplizieren, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Karte loe.", onClick = onLoeschen, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(12.dp))
+        BasicText(
+            text = "Mathematische Knoten",
+            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151)),
+        )
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Eingabe", onClick = { onKnotenHinzufuegen(MathematikEingabeKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Unbek.", onClick = { onKnotenHinzufuegen(UnbekannteKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Rechen", onClick = { onKnotenHinzufuegen(RechenKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Formel", onClick = { onKnotenHinzufuegen(FormelKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Auswert.", onClick = { onKnotenHinzufuegen(AuswertungsKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Funktion", onClick = { onKnotenHinzufuegen(FunktionKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(6.dp))
+        TestKnopf(text = "LoesenKnoten", onClick = { onKnotenHinzufuegen(LOESEN_KNOTEN_ART) }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        TestKnopf(text = "Auswerten", onClick = onAuswerten, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TestKnopf(text = "Kopieren", onClick = onKopieren, modifier = Modifier.weight(1f))
@@ -316,6 +403,7 @@ private fun SeitenLeiste(
             onLoeschen = onAuswahlLoeschen,
             onDuplizieren = onAuswahlDuplizieren,
             onKnotenNameAendern = onKnotenNameAendern,
+            onKnotenDataAendern = onKnotenDataAendern,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -605,6 +693,7 @@ private fun KarteDaten.zuJson(): JSONObject = JSONObject()
     .put("ansichtsfenster", ansichtsfenster.zuJson())
     .put("knoten", JSONArray(knoten.map { it.zuJson() }))
     .put("verbindungen", JSONArray(verbindungen.map { it.zuJson() }))
+    .put("cache", cache.zuJson())
 
 private fun KnotenDaten.zuJson(): JSONObject = JSONObject()
     .put("id", id)
@@ -634,6 +723,7 @@ private fun JSONObject.zuKarteDaten(): KarteDaten = KarteDaten(
     name = getString("name"),
     knoten = getJSONArray("knoten").asObjects().map { it.zuKnotenDaten() },
     verbindungen = getJSONArray("verbindungen").asObjects().map { it.zuVerbindungDaten() },
+    cache = optJSONObject("cache")?.zuKartenCacheDaten() ?: KartenCacheDaten(),
     ansichtsfenster = optJSONObject("ansichtsfenster")?.let {
         AnsichtsfensterDaten(
             verschiebung = Offset(
@@ -673,6 +763,44 @@ private fun JSONObject.zuVerbindungDaten(): VerbindungDaten = VerbindungDaten(
     label = optString("label").takeIf { it.isNotBlank() && it != "null" },
     art = optString("typ", "default"),
 )
+
+private fun KartenCacheDaten.zuJson(): JSONObject = JSONObject()
+    .put("version", version)
+    .put("knoten", JSONObject().also { ziel ->
+        knoten.forEach { (knotenId, eintrag) -> ziel.put(knotenId, eintrag.zuJson()) }
+    })
+
+private fun KnotenCacheEintrag.zuJson(): JSONObject = JSONObject()
+    .put("knotenId", knotenId)
+    .put("signatur", signatur)
+    .put("daten", JSONObject().also { ziel ->
+        daten.forEach { (key, value) -> ziel.put(key, value) }
+    })
+    .put("fehler", fehler)
+    .put("gueltig", gueltig)
+
+private fun JSONObject.zuKartenCacheDaten(): KartenCacheDaten {
+    val knotenJson = optJSONObject("knoten") ?: return KartenCacheDaten(version = optInt("version", 1))
+    val eintraege = knotenJson.keys().asSequence().associateWith { knotenId ->
+        knotenJson.getJSONObject(knotenId).zuKnotenCacheEintrag(knotenId)
+    }
+    return KartenCacheDaten(
+        version = optInt("version", 1),
+        knoten = eintraege,
+    )
+}
+
+private fun JSONObject.zuKnotenCacheEintrag(fallbackKnotenId: String): KnotenCacheEintrag {
+    val datenJson = optJSONObject("daten")
+    val daten = datenJson?.keys()?.asSequence()?.associateWith { key -> datenJson.optString(key) }.orEmpty()
+    return KnotenCacheEintrag(
+        knotenId = optString("knotenId", fallbackKnotenId),
+        signatur = optString("signatur"),
+        daten = daten,
+        fehler = optString("fehler").takeIf { it.isNotBlank() && it != "null" },
+        gueltig = optBoolean("gueltig", true),
+    )
+}
 
 private fun JSONArray?.orEmptyObjects(): List<JSONObject> = this?.asObjects().orEmpty()
 
