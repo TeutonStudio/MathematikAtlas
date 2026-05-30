@@ -26,6 +26,13 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
  */
 val AnschlussModifier = Modifier.padding(vertical = 4.dp).size(10.dp)
 
+internal fun anschlussModifierSkaliert(skalierung: Float): Modifier {
+    val faktor = skalierung.coerceAtLeast(0.1f)
+    return Modifier
+        .padding(vertical = (4f * faktor).dp)
+        .size((10f * faktor).dp)
+}
+
 /**
  * Rendert eine gemischte Anschlussliste als vertikale Anschluss-Spalte.
  */

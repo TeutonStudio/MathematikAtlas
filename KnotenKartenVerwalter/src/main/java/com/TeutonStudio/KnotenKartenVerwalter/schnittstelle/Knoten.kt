@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
@@ -66,7 +67,8 @@ data class KnotenArten(
 public fun KnotenDaten.zuComposable(
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
-) = BasisKnoten(this).zuComposable(modifierKnoten, modifierAnschluss)
+    inhaltSkalierung: Float = 1f,
+) = BasisKnoten(this).zuComposable(modifierKnoten, modifierAnschluss, inhaltSkalierung)
 
 
 sealed interface Knoten: GraphObjekt {
@@ -81,6 +83,7 @@ sealed interface Knoten: GraphObjekt {
     public fun zuComposable(
         modifierKnoten: Modifier = Modifier,
         modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
+        inhaltSkalierung: Float = 1f,
     )
 }
 
@@ -111,23 +114,25 @@ open class BasisKnoten(
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
-        zuComposable(modifier) { _, _ -> AnschlussModifier }
+        zuComposable(modifierKnoten = modifier, modifierAnschluss = { _, _ -> AnschlussModifier })
     }
 
     @Composable
     override fun zuComposable(
         modifierKnoten: Modifier,
         modifierAnschluss: (AnschlussRichtung, Int) -> Modifier,
+        inhaltSkalierung: Float,
     ) {
-        Inhalt(modifierKnoten, modifierAnschluss)
+        Inhalt(modifierKnoten, modifierAnschluss, inhaltSkalierung)
     }
 
     @Composable
     protected open fun Inhalt(
         modifierKnoten: Modifier,
         modifierAnschluss: (AnschlussRichtung, Int) -> Modifier,
+        inhaltSkalierung: Float,
     ) {
-        KnotenRahmen(this, modifierKnoten, modifierAnschluss)
+        KnotenRahmen(this, modifierKnoten, modifierAnschluss, inhaltSkalierung)
     }
 
     public companion object {
@@ -163,20 +168,23 @@ private fun KnotenRahmen(
     knoten: Knoten,
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
+    inhaltSkalierung: Float = 1f,
 ) {
     val daten = knoten.daten
     val randFarbe = if (daten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF64748B)
+    val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
+    val form = RoundedCornerShape((8f * skalierung).dp)
     Box(
         modifier = modifierKnoten
-            .border(1.dp, randFarbe, RoundedCornerShape(8.dp))
-            .background(Color.White, RoundedCornerShape(8.dp)),
+            .border((1f * skalierung).dp, randFarbe, form)
+            .background(Color.White, form),
     ) {
         // Der eigentliche Textinhalt bekommt seitlichen Abstand, damit er nicht
         // unter den auf dem Rahmen liegenden Anschlüssen liegt.
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 10.dp),
+                .padding(horizontal = (18f * skalierung).dp, vertical = (10f * skalierung).dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -187,39 +195,39 @@ private fun KnotenRahmen(
             ) {
                 BasicText(
                     text = daten.name,
-                    style = TextStyle(color = Color(0xFF0F172A)),
+                    style = TextStyle(color = Color(0xFF0F172A), fontSize = (14f * skalierung).sp),
                 )
                 BasicText(
                     text = daten.typ,
-                    style = TextStyle(color = Color(0xFF64748B)),
+                    style = TextStyle(color = Color(0xFF64748B), fontSize = (14f * skalierung).sp),
                 )
             }
         }
 
         AnschlussLeisteAmRand(
             kante = AnschlussKante.Links,
-            modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5).dp),
+            modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5f * skalierung).dp),
             anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Links },
             modifierAnschluss = modifierAnschluss,
             knoten = knoten,
         )
         AnschlussLeisteAmRand(
             kante = AnschlussKante.Rechts,
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().offset(x = 5.dp),
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().offset(x = (5f * skalierung).dp),
             anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Rechts },
             modifierAnschluss = modifierAnschluss,
             knoten = knoten,
         )
         AnschlussLeisteAmRand(
             kante = AnschlussKante.Oben,
-            modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().offset(y = (-5).dp),
+            modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().offset(y = (-5f * skalierung).dp),
             anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Oben },
             modifierAnschluss = modifierAnschluss,
             knoten = knoten,
         )
         AnschlussLeisteAmRand(
             kante = AnschlussKante.Unten,
-            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().offset(y = 5.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().offset(y = (5f * skalierung).dp),
             anschlüsse = knoten.erhalteAnschlüsseGeordnet().filter { it.kante == AnschlussKante.Unten },
             modifierAnschluss = modifierAnschluss,
             knoten = knoten,
@@ -280,5 +288,5 @@ private fun KnotenPreview() {
         id = "knoten-1",
         name = "Ableitung",
     )
-    daten.zuComposable { _, _ -> AnschlussModifier }
+    daten.zuComposable(modifierAnschluss = { _, _ -> AnschlussModifier })
 }

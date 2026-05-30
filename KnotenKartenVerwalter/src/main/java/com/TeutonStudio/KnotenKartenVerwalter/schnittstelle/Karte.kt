@@ -447,10 +447,11 @@ private fun KartenOberfläche(
 
             knotenObjekt.zuComposable(
                 modifierKnoten = knotenModifier,
+                inhaltSkalierung = sichtbarerZustand.zoomSicher(),
                 modifierAnschluss = { richtung, index ->
                     val referenz = knotenObjekt.anschlussReferenz(richtung, index, sichtbarerZustand)
                     // Anschlüsse sind Drag-Startpunkte für neue Verbindungen.
-                    AnschlussModifier.pointerInput(daten.id, referenz) {
+                    anschlussModifierSkaliert(sichtbarerZustand.zoomSicher()).pointerInput(daten.id, referenz) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
                             try {
