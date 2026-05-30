@@ -19,7 +19,27 @@ open class VerbindungDaten(
     val label: String? = null,
     val art: String = "default",
     val ausgewaehlt: Boolean = false,
-): GraphDaten
+): GraphDaten {
+    fun copy(
+        id: String = this.id,
+        quellKnotenId: String = this.quellKnotenId,
+        quellAnschlussId: String = this.quellAnschlussId,
+        zielKnotenId: String = this.zielKnotenId,
+        zielAnschlussId: String = this.zielAnschlussId,
+        label: String? = this.label,
+        art: String = this.art,
+        ausgewaehlt: Boolean = this.ausgewaehlt,
+    ): VerbindungDaten = VerbindungDaten(
+        id = id,
+        quellKnotenId = quellKnotenId,
+        quellAnschlussId = quellAnschlussId,
+        zielKnotenId = zielKnotenId,
+        zielAnschlussId = zielAnschlussId,
+        label = label,
+        art = art,
+        ausgewaehlt = ausgewaehlt,
+    )
+}
 
 /**
  * Fügt eine Verbindung hinzu und ersetzt dabei eine vorhandene Verbindung auf

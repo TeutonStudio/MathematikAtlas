@@ -17,4 +17,22 @@ data class AuswahlDaten(
     /** Wahr, wenn weder Knoten noch Verbindungen ausgewaehlt sind. */
     val istLeer: Boolean
         get() = knotenIds.isEmpty() && verbindungIds.isEmpty()
+
+    fun nurKnoten(knotenId: String): AuswahlDaten = AuswahlDaten(knotenIds = setOf(knotenId))
+
+    fun nurVerbindung(verbindungId: String): AuswahlDaten = AuswahlDaten(verbindungIds = setOf(verbindungId))
+
+    fun mitKnoten(knotenId: String): AuswahlDaten = copy(knotenIds = knotenIds + knotenId)
+
+    fun ohneKnoten(knotenId: String): AuswahlDaten = copy(knotenIds = knotenIds - knotenId)
+
+    fun mitVerbindung(verbindungId: String): AuswahlDaten = copy(verbindungIds = verbindungIds + verbindungId)
+
+    fun ohneVerbindung(verbindungId: String): AuswahlDaten = copy(verbindungIds = verbindungIds - verbindungId)
+
+    fun umgeschalteterKnoten(knotenId: String): AuswahlDaten =
+        if (knotenId in knotenIds) ohneKnoten(knotenId) else mitKnoten(knotenId)
+
+    fun umgeschalteteVerbindung(verbindungId: String): AuswahlDaten =
+        if (verbindungId in verbindungIds) ohneVerbindung(verbindungId) else mitVerbindung(verbindungId)
 }

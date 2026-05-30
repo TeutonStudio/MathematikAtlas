@@ -28,6 +28,7 @@ open class KarteZustand(
     val zoom: Float = 1f,
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
+    val auswahl: AuswahlDaten = AuswahlDaten(),
 ) {
     constructor(
         zustand: KarteZustand,
@@ -35,11 +36,13 @@ open class KarteZustand(
         zoom: Float? = null,
         zeigeÜbersicht: Boolean? = null,
         zeigeKontrollLeiste: Boolean? = null,
+        auswahl: AuswahlDaten? = null,
     ): this(
         verschiebung ?: zustand.verschiebung,
         zoom ?: zustand.zoom,
         zeigeÜbersicht ?: zustand.zeigeÜbersicht,
         zeigeKontrollLeiste ?: zustand.zeigeKontrollLeiste,
+        auswahl ?: zustand.auswahl,
     )
 
     fun copy(
@@ -47,7 +50,8 @@ open class KarteZustand(
         zoom: Float = this.zoom,
         zeigeÜbersicht: Boolean = this.zeigeÜbersicht,
         zeigeKontrollLeiste: Boolean = this.zeigeKontrollLeiste,
-    ): KarteZustand = KarteZustand(verschiebung, zoom, zeigeÜbersicht, zeigeKontrollLeiste)
+        auswahl: AuswahlDaten = this.auswahl,
+    ): KarteZustand = KarteZustand(verschiebung, zoom, zeigeÜbersicht, zeigeKontrollLeiste, auswahl)
 }
 
 /**

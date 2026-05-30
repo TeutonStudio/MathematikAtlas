@@ -38,10 +38,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsfensterDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenZwischenablage
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fuegeEin
+import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.mitErsetztemEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KartenTreffer
@@ -76,6 +80,8 @@ private fun KnotenKartenTestAnwendung() {
     val context = LocalContext.current
     var gespeicherteKarten by remember { mutableStateOf(context.knotenKartenSpeicher().liste()) }
     var aktuelleKarte by remember { mutableStateOf(context.knotenKartenSpeicher().ladeErste() ?: beispielKarte("Testkarte")) }
+    var auswahl by remember { mutableStateOf(AuswahlDaten()) }
+    var zwischenablage by remember { mutableStateOf(KartenZwischenablage()) }
     var status by remember { mutableStateOf("Bereit") }
 
     fun aktualisiereListe() {
@@ -94,6 +100,7 @@ private fun KnotenKartenTestAnwendung() {
             status = status,
             onNeueKarte = {
                 aktuelleKarte = beispielKarte("Neue KnotenKarte")
+                auswahl = AuswahlDaten()
                 status = "Neue KnotenKarte erstellt"
             },
             onSpeichern = {
@@ -103,6 +110,7 @@ private fun KnotenKartenTestAnwendung() {
             },
             onOeffnen = { eintrag ->
                 aktuelleKarte = context.knotenKartenSpeicher().lade(eintrag.datei) ?: aktuelleKarte
+                auswahl = AuswahlDaten()
                 status = "'${eintrag.name}' geoeffnet"
             },
             onNameAendern = { name ->
@@ -111,6 +119,21 @@ private fun KnotenKartenTestAnwendung() {
             onKnotenHinzufuegen = {
                 aktuelleKarte = aktuelleKarte.mitNeuemKnoten()
                 status = "Knoten hinzugefuegt"
+            },
+            onKopieren = {
+                zwischenablage = aktuelleKarte.kopiereAuswahl(auswahl)
+                status = if (zwischenablage.istLeer) "Keine Auswahl zum Kopieren" else "Auswahl kopiert"
+            },
+            onEinfuegen = {
+                if (zwischenablage.istLeer) {
+                    status = "Zwischenablage ist leer"
+                } else {
+                    val ziel = Offset(120f + aktuelleKarte.knoten.size * 12f, 120f + aktuelleKarte.knoten.size * 12f)
+                    val ergebnis = aktuelleKarte.fuegeEin(zwischenablage, ziel)
+                    aktuelleKarte = ergebnis.karte
+                    auswahl = ergebnis.auswahl
+                    status = "Auswahl eingefuegt"
+                }
             },
         )
 
@@ -125,7 +148,11 @@ private fun KnotenKartenTestAnwendung() {
         ) {
             aktuelleKarte.zuComposable(
                 modifier = Modifier.fillMaxSize(),
-                zustand = KarteZustand(zeigeÜbersicht = true, zeigeKontrollLeiste = true),
+                zustand = KarteZustand(
+                    zeigeÜbersicht = true,
+                    zeigeKontrollLeiste = true,
+                    auswahl = auswahl,
+                ),
                 aktualisierung = { knotenId, position ->
                     aktuelleKarte = aktuelleKarte.copy(
                         knoten = aktuelleKarte.knoten.map { knoten ->
@@ -143,9 +170,20 @@ private fun KnotenKartenTestAnwendung() {
                     aktuelleKarte = aktuelleKarte.führeKontextAktionAus(aktion)
                     status = "Kontext: ${aktion.aktion}"
                 },
+                onAuswahlÄndern = { neueAuswahl ->
+                    auswahl = neueAuswahl
+                    status = neueAuswahl.statusText()
+                },
             )
         }
     }
+}
+
+private fun AuswahlDaten.statusText(): String = when {
+    istLeer -> "Keine Auswahl"
+    knotenIds.size == 1 && verbindungIds.isEmpty() -> "Knoten ausgewaehlt"
+    verbindungIds.size == 1 && knotenIds.isEmpty() -> "Verbindung ausgewaehlt"
+    else -> "${knotenIds.size} Knoten, ${verbindungIds.size} Verbindungen ausgewaehlt"
 }
 
 @Composable
@@ -158,6 +196,8 @@ private fun SeitenLeiste(
     onOeffnen: (KartenEintrag) -> Unit,
     onNameAendern: (String) -> Unit,
     onKnotenHinzufuegen: () -> Unit,
+    onKopieren: () -> Unit,
+    onEinfuegen: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -186,6 +226,11 @@ private fun SeitenLeiste(
         }
         Spacer(Modifier.height(8.dp))
         TestKnopf(text = "Knoten erstellen", onClick = onKnotenHinzufuegen, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Kopieren", onClick = onKopieren, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Einfuegen", onClick = onEinfuegen, modifier = Modifier.weight(1f))
+        }
 
         Spacer(Modifier.height(16.dp))
         BasicText(

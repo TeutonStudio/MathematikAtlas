@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
@@ -63,6 +65,11 @@ typealias VerbindungErstellen = (verbindung: VerbindungDaten) -> Unit
  * Callback für Aktionen aus dem Kontextmenü der Karte.
  */
 typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
+
+/**
+ * Callback fuer kontrollierte Auswahl von Knoten und Verbindungen.
+ */
+typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
 
 /**
  * Ergebnis eines Hit-Tests auf der Karte.
@@ -97,6 +104,7 @@ sealed interface Karte: GraphObjekt {
     public val aktualisierung: KartenAktualisierung
     public val onVerbindungErstellen: VerbindungErstellen
     public val onKontextAktion: KontextAktionAusführen
+    public val onAuswahlÄndern: AuswahlÄndern
 }
 
 open class BasisKarte(
@@ -106,6 +114,7 @@ open class BasisKarte(
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen = {},
     override val onKontextAktion: KontextAktionAusführen = {},
+    override val onAuswahlÄndern: AuswahlÄndern = {},
 ): Karte {
     @Composable
     override fun zuComposable(modifier: Modifier) {
@@ -122,6 +131,7 @@ open class BasisKarte(
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
             onKontextAktion = onKontextAktion,
+            onAuswahlÄndern = onAuswahlÄndern,
         )
     }
 }
@@ -182,7 +192,16 @@ public fun KarteDaten.zuComposable(
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
     onKontextAktion: KontextAktionAusführen = {},
-) = BasisKarte(this, zustand, knotenArten, aktualisierung, onVerbindungErstellen, onKontextAktion).zuComposable(modifier)
+    onAuswahlÄndern: AuswahlÄndern = {},
+) = BasisKarte(
+    daten = this,
+    zustand = zustand,
+    knotenArten = knotenArten,
+    aktualisierung = aktualisierung,
+    onVerbindungErstellen = onVerbindungErstellen,
+    onKontextAktion = onKontextAktion,
+    onAuswahlÄndern = onAuswahlÄndern,
+).zuComposable(modifier)
 
 /**
  * Zentrale Kartenoberfläche.
@@ -200,6 +219,7 @@ private fun KartenOberfläche(
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
     onKontextAktion: KontextAktionAusführen = {},
+    onAuswahlÄndern: AuswahlÄndern = {},
 ) {
     // Größe des sichtbaren Kartencontainers. Sie ist notwendig für Fit-to-View
     // und Minimap-Viewport-Berechnungen.
@@ -231,12 +251,25 @@ private fun KartenOberfläche(
     // übergebenen Daten abweichen. Diese Map hält die unmittelbare UI-Reaktion
     // stabil, bis der Aufrufer den neuen State zurückgibt.
     val sichtbareKnotenDaten = daten.knoten.map { knoten ->
-        gezogeneKnoten[knoten.id]?.let { KnotenDaten(knoten, position = it) } ?: knoten
+        val position = gezogeneKnoten[knoten.id]
+        KnotenDaten(
+            knoten,
+            position = position ?: knoten.position,
+            ausgewaehlt = knoten.id in zustand.auswahl.knotenIds || knoten.ausgewaehlt,
+        )
     }
     val sichtbareKnoten = sichtbareKnotenDaten.map { knotenArten.erstelle(it) }
-    val sichtbareDaten = KarteDaten(daten, knoten = sichtbareKnotenDaten)
+    val sichtbareVerbindungen = daten.verbindungen.map { verbindung ->
+        verbindung.copy(ausgewaehlt = verbindung.id in zustand.auswahl.verbindungIds || verbindung.ausgewaehlt)
+    }
+    val sichtbareDaten = KarteDaten(daten, knoten = sichtbareKnotenDaten, verbindungen = sichtbareVerbindungen)
     val knotenNachId = sichtbareKnoten.associateBy { it.daten.id }
-    val sichtbarerZustand = KarteZustand(ansicht, zeigeÜbersicht = zustand.zeigeÜbersicht, zeigeKontrollLeiste = zustand.zeigeKontrollLeiste)
+    val sichtbarerZustand = KarteZustand(
+        ansicht,
+        zeigeÜbersicht = zustand.zeigeÜbersicht,
+        zeigeKontrollLeiste = zustand.zeigeKontrollLeiste,
+        auswahl = zustand.auswahl,
+    )
     val anschlüsse = sichtbareKnoten.flatMap { it.anschlussReferenzen(sichtbarerZustand) }
     val density = LocalDensity.current
 
@@ -275,6 +308,14 @@ private fun KartenOberfläche(
             .clipToBounds()
             .onSizeChanged { fläche = it }
             .background(Color(0xFFF8FAFC))
+            .pointerInput(daten.id) {
+                detectTapGestures(
+                    onTap = { position ->
+                        val ziel = position.treffer(aktuelleKnoten, aktuelleVerbindungen, aktuelleAnschlüsse, aktuelleAnsicht)
+                        onAuswahlÄndern(ziel.zuAuswahl())
+                    },
+                )
+            }
             // Android liefert Rechtsklicks je nach Eingabegerät zuverlässiger
             // über MotionEvent-Buttonzustände als über reine Compose-Events.
             .pointerInteropFilter { ereignis ->
@@ -605,17 +646,14 @@ internal fun List<KnotenDaten>.grenzen(padding: Float = 0f): KartenGrenzen? {
  * Rechnet eine Bildschirmposition in Weltkoordinaten um.
  */
 internal fun Offset.zuWeltPosition(zustand: KarteZustand): Offset {
-    val zoom = zustand.zoomSicher()
-    return (this - zustand.verschiebung) / zoom
+    return KoordinatenUmrechnung.bildschirmZuWelt(this, zustand)
 }
 
 /**
  * Rechnet eine Weltposition in Bildschirmkoordinaten um.
  */
-internal fun Offset.zuBildschirmOffset(zustand: KarteZustand): Offset = Offset(
-    x = x * zustand.zoomSicher() + zustand.verschiebung.x,
-    y = y * zustand.zoomSicher() + zustand.verschiebung.y,
-)
+internal fun Offset.zuBildschirmOffset(zustand: KarteZustand): Offset =
+    KoordinatenUmrechnung.weltZuBildschirm(this, zustand)
 
 /**
  * Rechnet eine Weltposition in eine ganzzahlige Bildschirmposition für Modifier.offset um.
@@ -788,6 +826,13 @@ private fun Offset.treffer(
     }
 
     return KartenTreffer.Hintergrund
+}
+
+private fun KartenTreffer.zuAuswahl(): AuswahlDaten = when (this) {
+    KartenTreffer.Hintergrund -> AuswahlDaten()
+    is KartenTreffer.Knoten -> AuswahlDaten(knotenIds = setOf(knotenId))
+    is KartenTreffer.Anschluss -> AuswahlDaten(knotenIds = setOf(knotenId))
+    is KartenTreffer.Verbindung -> AuswahlDaten(verbindungIds = setOf(verbindungId))
 }
 
 /**
