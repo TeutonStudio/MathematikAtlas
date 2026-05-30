@@ -11,62 +11,66 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 
+/**
+ * Erstellt eine Zeichenfunktion für eine einzelne Verbindung.
+ *
+ * Die eigentliche Geometrie wird erst im Canvas-DrawScope gezeichnet, damit alle
+ * Verbindungen gemeinsam auf einer Canvas-Ebene hinter den Knoten liegen können.
+ */
 private fun VerbindungDaten.zuPfad(start: Offset, ende: Offset): DrawScope.() -> Unit = { VerbindungPfad(this@zuPfad, start, ende) }
 
+/**
+ * Rendert eine einzelne Verbindung zwischen zwei Bildschirmpositionen.
+ */
 @Composable
 public fun VerbindungDaten.zuComposable(start: Offset, ende: Offset, modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.zuPfad(start,ende))
 
+/**
+ * Rendert eine Liste fachlicher Verbindungen.
+ *
+ * Die übergebenen Funktionen lösen die referenzierten Anschlusspositionen auf.
+ * Verbindungen mit fehlenden Endpunkten werden übersprungen.
+ */
 @Composable
 public fun List<VerbindungDaten>.zuComposable(start: (VerbindungDaten) -> Offset?, ende: (VerbindungDaten) -> Offset?, modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map {
     val s = start(it)
     val e = ende(it)
     if (s != null && e != null) it.zuPfad(s,e) else null }.filterNotNull())
 
+/**
+ * Rendert bereits aufgelöste Verbindungen.
+ *
+ * Diese Variante wird unter anderem für die temporäre Verbindung beim Ziehen
+ * eines Anschlusses verwendet.
+ */
 @Composable
 public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map { it.first.zuPfad(it.second,it.third) })
 
-/*@Composable
-private fun Verbindung(
-    daten: VerbindungDaten,
-    start: Offset,
-    ende: Offset,
-    modifier: Modifier = Modifier,
-) { VerbindungUmgebung(modifier,daten.zuPfad(start,ende))
-    val farbe = if (daten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF475569)
-
-    Canvas(modifier = modifier) {
-        val kontrollAbstand = kotlin.math.max(48f, kotlin.math.abs(ende.x - start.x) / 2f)
-        val pfad = Path().apply {
-            moveTo(start.x, start.y)
-            cubicTo(
-                start.x + kontrollAbstand,
-                start.y,
-                ende.x - kontrollAbstand,
-                ende.y,
-                ende.x,
-                ende.y,
-            )
-        }
-        drawPath(
-            path = pfad,
-            color = farbe,
-            style = Stroke(width = 3f, cap = StrokeCap.Round),
-        )
-    }
-}*/
-
+/**
+ * Gemeinsame Canvas-Umgebung für eine oder mehrere Zeichenfunktionen.
+ */
 @Composable
 private fun VerbindungUmgebung(
     modifier: Modifier = Modifier,
     vararg inhalt: DrawScope.() -> Unit,
 ) { Canvas(modifier = modifier) { inhalt.forEach { it() } } }
 
+/**
+ * Listenvariante der gemeinsamen Canvas-Umgebung.
+ */
 @Composable
 private fun VerbindungUmgebung(
     modifier: Modifier = Modifier,
     inhalt: List<DrawScope.() -> Unit>,
 ) { Canvas(modifier = modifier) { inhalt.forEach { it() } } }
 
+/**
+ * Zeichnet eine Bezier-Verbindung.
+ *
+ * Der Startpunkt läuft horizontal nach rechts aus, der Endpunkt horizontal von
+ * links ein. Damit entspricht die Kurve der üblichen Darstellung von
+ * Node-Graph-Verbindungen.
+ */
 private fun DrawScope.VerbindungPfad(
     daten: VerbindungDaten,
     start: Offset,

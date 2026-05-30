@@ -21,9 +21,18 @@ import androidx.compose.ui.unit.sp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 
+/**
+ * Rendert die Kontrollleiste für einen Karten-Zustand.
+ *
+ * Die Karte selbst bleibt kontrolliert: Die Buttons verändern den Zustand nicht
+ * direkt, sondern melden die gewünschte Aktion über Callbacks.
+ */
 @Composable
 public fun KarteZustand.zuComposable(daten: KarteDaten, onZoomRein: () -> Unit, onZoomRaus: () -> Unit, onZoomAufInhalt: () -> Unit) = Kontrolleiste(this,onZoomRein,onZoomRaus,onZoomAufInhalt)
 
+/**
+ * Schwebende Werkzeugleiste unten links in der Karte.
+ */
 @Composable
 fun Kontrolleiste(
     zustand: KarteZustand,
@@ -50,6 +59,9 @@ fun Kontrolleiste(
     }
 }
 
+/**
+ * Einheitlicher quadratischer Button der Kontrollleiste.
+ */
 @Composable
 private fun KontrollKnopf(
     text: String,

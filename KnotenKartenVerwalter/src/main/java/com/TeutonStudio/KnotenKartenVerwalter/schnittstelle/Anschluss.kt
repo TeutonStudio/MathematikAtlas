@@ -18,30 +18,60 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 
+/**
+ * Standardgröße und Außenabstand eines Anschlusses.
+ *
+ * Der Modifier wird von `Knoten.kt` erweitert, wenn ein Anschluss zusätzlich als
+ * Drag-Startpunkt für Verbindungen dienen soll.
+ */
 val AnschlussModifier = Modifier.padding(vertical = 4.dp).size(10.dp)
 
+/**
+ * Rendert eine gemischte Anschlussliste als vertikale Anschluss-Spalte.
+ */
 @JvmName("list_of_connectdata_2_path")
 @Composable
 public fun List<AnschlussDaten>.zuPfad(istEingang: Boolean, modifier: (Int) -> Modifier = { AnschlussModifier }) = AnschlussSpalte(this,modifier,istEingang)
 
+/**
+ * Rendert Eingänge als linke Anschluss-Spalte.
+ */
 @JvmName("list_of_inputdata_2_path")
 @Composable
 public fun List<EingangDaten>.zuPfad(modifier: (Int) -> Modifier = { AnschlussModifier }) = (this as List<AnschlussDaten>).zuPfad(true,modifier)
 
+/**
+ * Rendert Ausgänge als rechte Anschluss-Spalte.
+ */
 @JvmName("list_of_outputdata_2_path")
 @Composable
 public fun List<AusgangDaten>.zuPfad(modifier: (Int) -> Modifier = { AnschlussModifier }) = (this as List<AnschlussDaten>).zuPfad(false,modifier)
 
 
+/**
+ * Rendert einen einzelnen Eingang.
+ */
 @Composable
 public fun EingangDaten.zuPfad(modifier: Modifier = Modifier) = Eingang(this, modifier)
 
+/**
+ * Rendert einen einzelnen Ausgang.
+ */
 @Composable
 public fun AusgangDaten.zuPfad(modifier: Modifier = Modifier) = Ausgang(this, modifier)
 
+/**
+ * Rendert einen beliebigen Anschluss anhand seiner Richtung.
+ */
 @Composable
 public fun AnschlussDaten.zuPfad(modifier: Modifier = Modifier) = Anschluss(this,modifier)
 
+/**
+ * Gemeinsames Anschluss-Rendering.
+ *
+ * Eingänge und Ausgänge unterscheiden sich nur in der Farbe. Die runde Form
+ * macht den Anschluss als interaktiven Handle erkennbar.
+ */
 @Composable
 private fun Anschluss(
     daten: AnschlussDaten,
@@ -70,6 +100,9 @@ private fun Ausgang(
     modifier: Modifier = Modifier,
 ) = Anschluss(daten = daten, modifier = modifier)
 
+/**
+ * Ordnet Anschlüsse gleichmäßig über die Höhe eines Knotens an.
+ */
 @Composable
 private fun AnschlussSpalte(
     anschlüsse: List<AnschlussDaten>,

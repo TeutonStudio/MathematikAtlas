@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,12 +28,18 @@ import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
 
+/**
+ * Rendert nur die Minimap einer Karte.
+ */
 @Composable
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
 ) = Übersicht(this, zustand, modifier)
 
+/**
+ * Rendert die interaktive Minimap mit Zugriff auf die Größe der Hauptkarte.
+ */
 @Composable
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
@@ -41,6 +48,12 @@ public fun KarteDaten.zuComposable(
     onAnsichtÄndern: (KarteZustand) -> Unit,
 ) = Übersicht(this, zustand, modifier, fläche, onAnsichtÄndern)
 
+/**
+ * Minimap der Knotenkarte.
+ *
+ * Sie stellt den gesamten Graphen und den aktuell sichtbaren Weltbereich dar.
+ * Drag auf der Minimap verschiebt den Hauptviewport.
+ */
 @Composable
 private fun Übersicht(
     daten: KarteDaten,
@@ -49,10 +62,18 @@ private fun Übersicht(
     fläche: IntSize = IntSize.Zero,
     onAnsichtÄndern: ((KarteZustand) -> Unit)? = null,
 ) {
+    // Die Minimap berücksichtigt sowohl Graphgrenzen als auch den sichtbaren
+    // Bereich, damit der blaue Viewport-Rahmen immer im Minimap-Koordinatensystem liegt.
     val graphGrenzen = daten.knoten.grenzen(padding = 80f) ?: return
     val sichtGrenzen = zustand.sichtbarerWeltBereich(fläche)
     val miniGrenzen = graphGrenzen.vereinigtMit(sichtGrenzen)
     var miniFläche by remember { mutableStateOf(IntSize.Zero) }
+
+    // Der Drag-Handler soll während einer laufenden Geste nicht neu starten,
+    // aber trotzdem den aktuellen Viewport verwenden.
+    val aktuellerZustand by rememberUpdatedState(zustand)
+    val aktuelleGrenzen by rememberUpdatedState(miniGrenzen)
+    val aktuelleFläche by rememberUpdatedState(fläche)
 
     Box(
         modifier = modifier
@@ -65,17 +86,29 @@ private fun Übersicht(
                 .size(180.dp, 120.dp)
                 .background(Color.White, RoundedCornerShape(8.dp))
                 .onSizeChanged { miniFläche = it }
-                .pointerInput(daten.id, zustand, fläche, miniFläche, miniGrenzen) {
+                .pointerInput(daten.id, miniFläche) {
+                    // DragStart setzt den Viewport sofort, Drag hält ihn während
+                    // gedrückter Maustaste oder Fingerbewegung kontinuierlich nach.
                     detectDragGestures(
                         onDragStart = { position ->
                             onAnsichtÄndern?.invoke(
-                                zustand.ansichtFürMiniMapPosition(position, miniGrenzen, miniFläche, fläche),
+                                aktuellerZustand.ansichtFürMiniMapPosition(
+                                    position,
+                                    aktuelleGrenzen,
+                                    miniFläche,
+                                    aktuelleFläche,
+                                ),
                             )
                         },
                         onDrag = { change, _ ->
                             change.consume()
                             onAnsichtÄndern?.invoke(
-                                zustand.ansichtFürMiniMapPosition(change.position, miniGrenzen, miniFläche, fläche),
+                                aktuellerZustand.ansichtFürMiniMapPosition(
+                                    change.position,
+                                    aktuelleGrenzen,
+                                    miniFläche,
+                                    aktuelleFläche,
+                                ),
                             )
                         },
                     )
@@ -83,12 +116,14 @@ private fun Übersicht(
         ) {
             val projektion = MiniMapProjektion(miniGrenzen, size)
 
+            // Hintergrund der Minimap.
             drawRect(
                 color = Color(0xFFF8FAFC),
                 topLeft = Offset.Zero,
                 size = size,
             )
 
+            // Knoten werden als stark vereinfachte Rechtecke dargestellt.
             daten.knoten.forEach { knoten ->
                 val linksOben = projektion.zuMiniMap(knoten.position.waagrecht, knoten.position.senkrecht)
                 drawRect(
@@ -101,6 +136,8 @@ private fun Übersicht(
                 )
             }
 
+            // Das blaue Rechteck beschreibt den sichtbaren Bereich der Hauptkarte.
+            // clipRect verhindert, dass Rahmenanteile außerhalb der Minimap sichtbar werden.
             if (sichtGrenzen != null) {
                 val linksOben = projektion.zuMiniMap(sichtGrenzen.links, sichtGrenzen.oben)
                 val rechtsUnten = projektion.zuMiniMap(sichtGrenzen.rechts, sichtGrenzen.unten)
@@ -123,6 +160,7 @@ private fun Übersicht(
                 }
             }
 
+            // Dünner Abschlussrahmen der Minimap.
             drawRect(
                 color = Color(0xFFE2E8F0),
                 topLeft = Offset.Zero,
@@ -133,6 +171,9 @@ private fun Übersicht(
     }
 }
 
+/**
+ * Projektionsdaten zwischen Weltkoordinaten und Minimap-Koordinaten.
+ */
 private data class MiniMapProjektion(
     val grenzen: KartenGrenzen,
     val größe: Size,
@@ -149,17 +190,26 @@ private data class MiniMapProjektion(
         y = (größe.height - höhe * skalierung) / 2f,
     )
 
+    /**
+     * Rechnet eine Weltposition in eine Position innerhalb der Minimap um.
+     */
     fun zuMiniMap(x: Float, y: Float): Offset = Offset(
         x = ursprung.x + (x - grenzen.links) * skalierung,
         y = ursprung.y + (y - grenzen.oben) * skalierung,
     )
 
+    /**
+     * Rechnet eine Minimap-Position zurück in Weltkoordinaten.
+     */
     fun zuWelt(position: Offset): Offset = Offset(
         x = grenzen.links + (position.x - ursprung.x) / skalierung,
         y = grenzen.oben + (position.y - ursprung.y) / skalierung,
     )
 }
 
+/**
+ * Berechnet den in der Hauptkarte sichtbaren Weltbereich.
+ */
 private fun KarteZustand.sichtbarerWeltBereich(fläche: IntSize): KartenGrenzen? {
     if (fläche.width <= 0 || fläche.height <= 0) return null
     val linksOben = Offset.Zero.zuWeltPosition(this)
@@ -172,6 +222,9 @@ private fun KarteZustand.sichtbarerWeltBereich(fläche: IntSize): KartenGrenzen?
     )
 }
 
+/**
+ * Vereinigt zwei Welt-Rechtecke.
+ */
 private fun KartenGrenzen.vereinigtMit(andere: KartenGrenzen?): KartenGrenzen {
     if (andere == null) return this
     return KartenGrenzen(
@@ -182,6 +235,9 @@ private fun KartenGrenzen.vereinigtMit(andere: KartenGrenzen?): KartenGrenzen {
     )
 }
 
+/**
+ * Erzeugt einen neuen Hauptviewport aus einer Position innerhalb der Minimap.
+ */
 private fun KarteZustand.ansichtFürMiniMapPosition(
     position: Offset,
     grenzen: KartenGrenzen,

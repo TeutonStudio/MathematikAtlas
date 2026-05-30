@@ -25,12 +25,25 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 
+/**
+ * Rendert einen Knoten als Compose-Baustein.
+ *
+ * `modifierKnoten` positioniert und skaliert den gesamten Knoten. Über
+ * `modifierAnschluss` kann die Karte jeden Anschluss zusätzlich mit
+ * Pointer-Interaktion versehen.
+ */
 @Composable
 public fun KnotenDaten.zuComposable(
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
 ) = Knoten(this, modifierKnoten, modifierAnschluss)
 
+/**
+ * Standarddarstellung eines Knotens.
+ *
+ * Der Inhalt bleibt innerhalb des Rahmens, während die Anschlüsse links und
+ * rechts auf dem Rahmen liegen.
+ */
 @Composable
 private fun Knoten(
     daten: KnotenDaten,
@@ -43,6 +56,8 @@ private fun Knoten(
             .border(1.dp, randFarbe, RoundedCornerShape(8.dp))
             .background(Color.White, RoundedCornerShape(8.dp)),
     ) {
+        // Der eigentliche Textinhalt bekommt seitlichen Abstand, damit er nicht
+        // unter den auf dem Rahmen liegenden Anschlüssen liegt.
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,6 +81,7 @@ private fun Knoten(
             }
         }
 
+        // Eingänge liegen wie ReactFlow-Target-Handles links am Knotenrahmen.
         AnschlussSpalteAmRand(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -77,6 +93,7 @@ private fun Knoten(
             }
         }
 
+        // Ausgänge liegen wie ReactFlow-Source-Handles rechts am Knotenrahmen.
         AnschlussSpalteAmRand(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
@@ -90,6 +107,9 @@ private fun Knoten(
     }
 }
 
+/**
+ * Positioniert eine Anschluss-Spalte mittig über die komplette Knoten-Höhe.
+ */
 @Composable
 private fun AnschlussSpalteAmRand(
     modifier: Modifier,
@@ -109,6 +129,9 @@ private fun AnschlussSpalteAmRand(
     }
 }
 
+/**
+ * Vorschau der Standard-Knotendarstellung.
+ */
 @Preview
 @Composable
 private fun KnotenPreview() {
