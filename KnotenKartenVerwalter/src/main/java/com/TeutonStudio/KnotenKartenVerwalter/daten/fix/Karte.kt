@@ -66,16 +66,16 @@ open class KarteZustand(
 open class KarteDaten(
     override val id: String,
     override val klasse: String?,
-    val name: String,
-    val größe: Offset? = null, // TODO größe des Graphs
-    val knoten: List<KnotenDaten> = emptyList(),
-    val verbindungen: List<VerbindungDaten> = emptyList(),
-    val initialKnoten: List<KnotenDaten> = emptyList(),
-    val initialVerbindungen: List<VerbindungDaten> = emptyList(),
-//    val artenKnoten: List<KnotenArten> = emptyList(),
-    val artenVerbindungen: List<VerbindungArten> = emptyList(),
-    val ansichtsfenster: AnsichtsfensterDaten = AnsichtsfensterDaten(),
-    val cache: KartenCacheDaten = KartenCacheDaten(),
+    public val name: String,
+    public val größe: Offset? = null, // TODO größe des Graphs
+    public val knoten: List<KnotenDaten> = emptyList(),
+    public val verbindungen: List<VerbindungDaten> = emptyList(),
+    public val initialKnoten: List<KnotenDaten> = emptyList(),
+    public val initialVerbindungen: List<VerbindungDaten> = emptyList(),
+//    public val artenKnoten: List<KnotenArten> = emptyList(),
+    public val artenVerbindungen: List<VerbindungArten> = emptyList(),
+    public val ansichtsfenster: AnsichtsfensterDaten = AnsichtsfensterDaten(),
+    public val cache: KartenCacheDaten = KartenCacheDaten(),
 ): GraphDaten {
     constructor(
         daten: KarteDaten,
