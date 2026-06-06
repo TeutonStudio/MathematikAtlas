@@ -324,7 +324,7 @@ private fun SeitenLeiste(
     onKnotenNameAendern: (String, String) -> Unit,
     onKnotenDataAendern: (String, String, Any) -> Unit,
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .width(300.dp)
             .fillMaxHeight()
@@ -332,112 +332,167 @@ private fun SeitenLeiste(
             .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
             .padding(12.dp),
     ) {
-        BasicText(
-            text = "KnotenKarten Test",
-            style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827)),
-        )
-        Spacer(Modifier.height(12.dp))
-
-        EingabeFeld(
-            wert = aktuelleKarte.name,
-            onWertAendern = onNameAendern,
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Neu", onClick = onNeueKarte, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Speichern", onClick = onSpeichern, modifier = Modifier.weight(1f))
+        item {
+            BasicText(
+                text = "KnotenKarten Test",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF111827)
+                ),
+            )
         }
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Beispiel", onClick = onBeispielKarte, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Funktion", onClick = onFunktionsBeispiel, modifier = Modifier.weight(1f))
+        item {
+            Spacer(Modifier.height(12.dp))
         }
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Karte kop.", onClick = onDuplizieren, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Karte loe.", onClick = onLoeschen, modifier = Modifier.weight(1f))
+        item {
+            EingabeFeld(
+                wert = aktuelleKarte.name,
+                onWertAendern = onNameAendern,
+            )
         }
-        Spacer(Modifier.height(12.dp))
-        BasicText(
-            text = "Mathematische Knoten",
-            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151)),
-        )
-        Spacer(Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Eingabe", onClick = { onKnotenHinzufuegen(MathematikEingabeKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Unbek.", onClick = { onKnotenHinzufuegen(UnbekannteKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        item {
+            Spacer(Modifier.height(12.dp))
         }
-        Spacer(Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Rechen", onClick = { onKnotenHinzufuegen(RechenKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Formel", onClick = { onKnotenHinzufuegen(FormelKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TestKnopf(text = "Neu", onClick = onNeueKarte, modifier = Modifier.weight(1f))
+                TestKnopf(text = "Speichern", onClick = onSpeichern, modifier = Modifier.weight(1f))
+            }
         }
-        Spacer(Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Auswert.", onClick = { onKnotenHinzufuegen(AuswertungsKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Funktion", onClick = { onKnotenHinzufuegen(FunktionKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        item {
+            Spacer(Modifier.height(8.dp))
         }
-        Spacer(Modifier.height(6.dp))
-        TestKnopf(text = "LoesenKnoten", onClick = { onKnotenHinzufuegen(LOESEN_KNOTEN_ART) }, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        TestKnopf(text = "Auswerten", onClick = onAuswerten, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Kopieren", onClick = onKopieren, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Einfuegen", onClick = onEinfuegen, modifier = Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Alle", onClick = onAllesAuswaehlen, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Leeren", onClick = onAuswahlLeeren, modifier = Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(8.dp))
-        TestKnopf(text = "Layout", onClick = onLayout, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TestKnopf(text = "Undo", onClick = onRueckgaengig, modifier = Modifier.weight(1f))
-            TestKnopf(text = "Redo", onClick = onWiederholen, modifier = Modifier.weight(1f))
-        }
-
-        Spacer(Modifier.height(16.dp))
-        AuswahlBearbeiter(
-            karte = aktuelleKarte,
-            auswahl = auswahl,
-            onLoeschen = onAuswahlLoeschen,
-            onDuplizieren = onAuswahlDuplizieren,
-            onKnotenNameAendern = onKnotenNameAendern,
-            onKnotenDataAendern = onKnotenDataAendern,
-        )
-
-        Spacer(Modifier.height(16.dp))
-        BasicText(
-            text = "Gespeicherte Karten",
-            style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151)),
-        )
-        Spacer(Modifier.height(8.dp))
-
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            items(karten, key = { it.datei }) { eintrag ->
-                KartenZeile(
-                    eintrag = eintrag,
-                    ausgewaehlt = eintrag.id == aktuelleKarte.id,
-                    onClick = { onOeffnen(eintrag) },
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TestKnopf(
+                    text = "Beispiel",
+                    onClick = onBeispielKarte,
+                    modifier = Modifier.weight(1f)
+                )
+                TestKnopf(
+                    text = "Funktion",
+                    onClick = onFunktionsBeispiel,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
+        item {
+            Spacer(Modifier.height(8.dp))
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TestKnopf(
+                    text = "Karte kop.",
+                    onClick = onDuplizieren,
+                    modifier = Modifier.weight(1f)
+                )
+                TestKnopf(text = "Karte loe.", onClick = onLoeschen, modifier = Modifier.weight(1f))
+            }
+        }
+        item { Spacer(Modifier.height(12.dp)) }
+        item { BasicText(
+            text = "Mathematische Knoten",
+            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151)),
+        ) }
+        item { Spacer(Modifier.height(6.dp)) }
+        item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Eingabe", onClick = { onKnotenHinzufuegen(MathematikEingabeKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Unbek.", onClick = { onKnotenHinzufuegen(UnbekannteKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        } }
+        item { Spacer(Modifier.height(6.dp)) }
+        item {Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Rechen", onClick = { onKnotenHinzufuegen(RechenKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Formel", onClick = { onKnotenHinzufuegen(FormelKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        } }
+        item { Spacer(Modifier.height(6.dp)) }
+        item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Auswert.", onClick = { onKnotenHinzufuegen(AuswertungsKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Funktion", onClick = { onKnotenHinzufuegen(FunktionKnoten.KNOTEN_ART) }, modifier = Modifier.weight(1f))
+        } }
+        item {Spacer(Modifier.height(6.dp)) }
+        item {TestKnopf(text = "LoesenKnoten", onClick = { onKnotenHinzufuegen(LOESEN_KNOTEN_ART) }, modifier = Modifier.fillMaxWidth()) }
+        item {Spacer(Modifier.height(8.dp)) }
+        item {TestKnopf(text = "Auswerten", onClick = onAuswerten, modifier = Modifier.fillMaxWidth()) }
+        item {Spacer(Modifier.height(8.dp)) }
+        item {Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TestKnopf(text = "Kopieren", onClick = onKopieren, modifier = Modifier.weight(1f))
+            TestKnopf(text = "Einfuegen", onClick = onEinfuegen, modifier = Modifier.weight(1f))
+        } }
+        item{ Spacer(Modifier.height(8.dp)) }
+        item{
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TestKnopf(
+                    text = "Alle",
+                    onClick = onAllesAuswaehlen,
+                    modifier = Modifier.weight(1f)
+                )
+                TestKnopf(
+                    text = "Leeren",
+                    onClick = onAuswahlLeeren,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        item { Spacer(Modifier.height(8.dp)) }
+        item { TestKnopf(text = "Layout", onClick = onLayout, modifier = Modifier.fillMaxWidth()) }
+        item { Spacer(Modifier.height(8.dp)) }
+        item{
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TestKnopf(text = "Undo", onClick = onRueckgaengig, modifier = Modifier.weight(1f))
+                TestKnopf(text = "Redo", onClick = onWiederholen, modifier = Modifier.weight(1f))
+            }
+        }
 
-        Spacer(Modifier.height(8.dp))
-        BasicText(
-            text = status,
-            style = TextStyle(fontSize = 13.sp, color = Color(0xFF4B5563)),
-        )
+        item{ Spacer(Modifier.height(16.dp)) }
+        item{
+            AuswahlBearbeiter(
+                karte = aktuelleKarte,
+                auswahl = auswahl,
+                onLoeschen = onAuswahlLoeschen,
+                onDuplizieren = onAuswahlDuplizieren,
+                onKnotenNameAendern = onKnotenNameAendern,
+                onKnotenDataAendern = onKnotenDataAendern,
+            )
+        }
+
+        item{ Spacer(Modifier.height(16.dp)) }
+        item{
+            BasicText(
+                text = "Gespeicherte Karten",
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF374151)
+                ),
+            )
+        }
+        item{ Spacer(Modifier.height(8.dp)) }
+        items(karten, key = { it.datei }) { eintrag ->
+            KartenZeile(
+                eintrag = eintrag,
+                ausgewaehlt = eintrag.id == aktuelleKarte.id,
+                onClick = { onOeffnen(eintrag) },
+            )
+        }
+
+/*        item{
+            LazyColumn(
+                modifier = Modifier
+//                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+            }
+        }*/
+
+        item{ Spacer(Modifier.height(8.dp)) }
+        item{
+            BasicText(
+                text = status,
+                style = TextStyle(fontSize = 13.sp, color = Color(0xFF4B5563)),
+            )
+        }
     }
 }
 

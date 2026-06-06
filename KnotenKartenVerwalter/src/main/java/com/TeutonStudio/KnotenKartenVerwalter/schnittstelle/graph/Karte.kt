@@ -42,17 +42,22 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.mitTypPruefung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KoordinatenUmrechnung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.anschlussModifierSkaliert
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.zuComposable
+import kotlin.collections.map
+import kotlin.compareTo
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.pow
@@ -104,10 +109,13 @@ data class KartenKontextAktion(
     val aktion: String,
 )
 
+/**
+ * Die Karte als GraphObjekt und als minimalistischte Grundlage für Karrten
+ */
 sealed interface Karte: GraphObjekt {
     public val daten: KarteDaten
     public val zustand: KarteZustand
-    public val knotenArten: KnotenArten
+//    public val knotenArten: KnotenArten
     public val verbindungArten: VerbindungArten
     public val aktualisierung: KartenAktualisierung
     public val onVerbindungErstellen: VerbindungErstellen
@@ -115,10 +123,13 @@ sealed interface Karte: GraphObjekt {
     public val onAuswahlÄndern: AuswahlÄndern
 }
 
+/**
+ * Standardkarte
+ */
 open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
-    override val knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+//    override val knotenArten: KnotenArten = KnotenArten.Companion.Standard,
     override val verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen = {},
@@ -127,15 +138,11 @@ open class BasisKarte(
 ): Karte {
     @Composable
     override fun zuComposable(modifier: Modifier) {
-        Inhalt(modifier)
-    }
-
-    @Composable
-    protected open fun Inhalt(modifier: Modifier) {
         KartenOberfläche(
             daten = daten,
             zustand = zustand,
-            knotenArten = knotenArten,
+            knotenKlassen = BasisKnotenFabrik,
+//            knotenArten = knotenArten,
             verbindungArten = verbindungArten,
             modifier = modifier,
             aktualisierung = aktualisierung,
@@ -150,20 +157,21 @@ open class BasisKarte(
  * Aufgelöste Anschlussgeometrie für Rendering, Verbindungserstellung und
  * Hit-Testing.
  */
-private data class AnschlussReferenz(
+/*private data class AnschlussReferenz(
     val knotenId: String,
     val anschlussId: String,
     val richtung: AnschlussRichtung,
     val kante: AnschlussKante,
     val position: Offset,
     val zahlenTyp: ZahlenTyp?,
-)
+)*/
 
 /**
  * Temporärer Zustand während eine neue Verbindung gezogen wird.
  */
 private data class VerbindungsDrag(
-    val start: AnschlussReferenz,
+    val anschluss: AnschlussDaten,
+//    val start: AnschlussReferenz,
     val startPosition: Offset,
     val aktuellePosition: Offset,
 )
@@ -184,10 +192,10 @@ private data class KontextMenüZustand(
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
-    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+//    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
     verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     aktualisierung: KartenAktualisierung,
-) = BasisKarte(this, zustand, knotenArten, verbindungArten, aktualisierung).zuComposable(modifier)
+) = BasisKarte(this, zustand, /*knotenArten,*/ verbindungArten, aktualisierung).zuComposable(modifier)
 
 /**
  * Rendert eine interaktive Knotenkarte.
@@ -200,7 +208,7 @@ public fun KarteDaten.zuComposable(
 public fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
     zustand: KarteZustand = KarteZustand(),
-    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+//    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
     verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -209,13 +217,14 @@ public fun KarteDaten.zuComposable(
 ) = BasisKarte(
     daten = this,
     zustand = zustand,
-    knotenArten = knotenArten,
+//    knotenArten = knotenArten,
     verbindungArten = verbindungArten,
     aktualisierung = aktualisierung,
     onVerbindungErstellen = onVerbindungErstellen,
     onKontextAktion = onKontextAktion,
     onAuswahlÄndern = onAuswahlÄndern,
 ).zuComposable(modifier)
+
 
 /**
  * Zentrale Kartenoberfläche.
@@ -228,7 +237,8 @@ public fun KarteDaten.zuComposable(
 private fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
-    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
+    knotenKlassen: KnotenFabrik,
+//    knotenArten: KnotenArten = KnotenArten.Companion.Standard,
     verbindungArten: VerbindungArten = VerbindungArten.Companion.Standard,
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
@@ -252,8 +262,9 @@ private fun KartenOberfläche(
             ),
         )
     }
+    // Absolute Position der Knoten nach id
     var gezogeneKnoten by remember(daten.id) {
-        mutableStateOf(emptyMap<String, Offset>())
+        mutableStateOf(emptyMap<String, KnotenPosition>())
     }
 
     // Diese Zustände sind rein visuell und werden nicht in KarteDaten
@@ -267,14 +278,18 @@ private fun KartenOberfläche(
     // übergebenen Daten abweichen. Diese Map hält die unmittelbare UI-Reaktion
     // stabil, bis der Aufrufer den neuen State zurückgibt.
     val sichtbareKnotenDaten = daten.knoten.map { knoten ->
-        val position = gezogeneKnoten[knoten.id]
         KnotenDaten(
             knoten,
-            position = position ?: knoten.position,
+            position = gezogeneKnoten[knoten.id] ?: knoten.position,
             ausgewaehlt = knoten.id in zustand.auswahl.knotenIds || knoten.ausgewaehlt,
         )
     }
-    val sichtbareKnoten = sichtbareKnotenDaten.map { knotenArten.erstelle(it) }
+    val sichtbareKnoten = sichtbareKnotenDaten.mapNotNull {
+        val fabrik = knotenKlassen[it.klasse]
+        if (fabrik != null) fabrik(it)
+        else null
+//        knotenArten.erstelle(it)
+    }
     val sichtbareVerbindungen = daten.verbindungen.map { verbindung ->
         verbindung.copy(ausgewaehlt = verbindung.id in zustand.auswahl.verbindungIds || verbindung.ausgewaehlt)
     }
@@ -286,7 +301,7 @@ private fun KartenOberfläche(
         zeigeKontrollLeiste = zustand.zeigeKontrollLeiste,
         auswahl = zustand.auswahl,
     )
-    val anschlüsse = sichtbareKnoten.flatMap { it.anschlussReferenzen(sichtbarerZustand) }
+    val anschlüsse = sichtbareKnoten.map { it.daten to it.erhalteAnschlüsse().keys.toList() }.toMap()
     val density = LocalDensity.current
 
     // Pointer-Handler laufen über mehrere Frames. rememberUpdatedState sorgt
@@ -309,7 +324,7 @@ private fun KartenOberfläche(
      * Öffnet das Kontextmenü an einer Bildschirmposition und speichert zusätzlich
      * die entsprechende Weltposition für Aktionen wie "Knoten erstellen".
      */
-    fun öffneKontextMenü(position: Offset) {
+    fun öffneKontextMenü(position: Offset) { // TODO
         val ziel = position.treffer(aktuelleKnoten, aktuelleVerbindungen, aktuelleAnschlüsse, aktuelleAnsicht)
         kontextMenü = KontextMenüZustand(
             position = position,
@@ -389,28 +404,28 @@ private fun KartenOberfläche(
         // angezeigt. Startet der Drag an einem Eingang, wird die Bezier-Kurve
         // visuell so gedreht, dass die Tangentenrichtung korrekt bleibt.
         verbindungsDrag?.let { drag ->
-            val start = if (drag.start.richtung == AnschlussRichtung.Eingang) {
+/*            val start = if (drag.anschluss.richtung == AnschlussRichtung.Eingang) {
                 drag.aktuellePosition
             } else {
                 drag.startPosition
             }
-            val ende = if (drag.start.richtung == AnschlussRichtung.Eingang) {
+            val ende = if (drag.anschluss.richtung == AnschlussRichtung.Eingang) {
                 drag.startPosition
             } else {
                 drag.aktuellePosition
-            }
+            }*/
             listOf(
                 Triple(
                     VerbindungDaten(
                         id = "temporaer",
-                        quellKnotenId = drag.start.knotenId,
-                        quellAnschlussId = drag.start.anschlussId,
-                        zielKnotenId = drag.start.knotenId,
-                        zielAnschlussId = drag.start.anschlussId,
+                        quellKnotenId = "",
+                        quellAnschlussId = drag.anschluss.id,
+                        zielKnotenId = "",
+                        zielAnschlussId = drag.anschluss.id,
                         ausgewaehlt = true,
                     ),
-                    start,
-                    ende,
+                    drag.startPosition,
+                    drag.aktuellePosition,
                 ),
             ).zuComposable(Modifier.fillMaxSize())
         }
@@ -461,10 +476,27 @@ private fun KartenOberfläche(
             knotenObjekt.zuComposable(
                 modifierKnoten = knotenModifier,
                 inhaltSkalierung = sichtbarerZustand.zoomSicher(),
-                modifierAnschluss = { richtung, index ->
-                    val referenz = knotenObjekt.anschlussReferenz(richtung, index, sichtbarerZustand)
+                modifierAnschluss = { daten,index ->
+                    val anschlüsseAnKante = knotenObjekt.erhalteAnschlüsse().filterKante(daten.kante)
+                    val anzahlAnKante = anschlüsseAnKante.size.coerceAtLeast(1)
+                    val indexAnKante = anschlüsseAnKante.filter { (anschluss,idx) -> daten.id == anschluss.id }.firstNotNullOfOrNull { it.value } ?: 0
+                    val anteil = (indexAnKante + 1f) / (anzahlAnKante + 1f)
+                    val weltPosition = Offset(
+                        x =  when (daten.kante) {
+                            AnschlussKante.Links -> knoten.position.x
+                            AnschlussKante.Rechts -> knoten.position.x + knoten.fläche.x
+                            AnschlussKante.Oben, AnschlussKante.Unten -> knoten.position.x + knoten.fläche.x * anteil
+                        },
+                        y = when (daten.kante) {
+                            AnschlussKante.Links, AnschlussKante.Rechts -> knoten.position.y + knoten.fläche.y * anteil
+                            AnschlussKante.Oben -> knoten.position.y
+                            AnschlussKante.Unten -> knoten.position.y + knoten.fläche.y
+                        },
+                    )
+                    val position = weltPosition.zuBildschirmOffset(zustand)
+//                    val referenz = knotenObjekt.anschlussReferenz(daten.kante, index, sichtbarerZustand)
                     // Anschlüsse sind Drag-Startpunkte für neue Verbindungen.
-                    anschlussModifierSkaliert(sichtbarerZustand.zoomSicher()).pointerInput(daten.id, referenz) {
+                    Modifier.anschlussModifierSkaliert(sichtbarerZustand.zoomSicher()).pointerInput(daten.id /*, referenz*/) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
                             try {
@@ -472,9 +504,10 @@ private fun KartenOberfläche(
                                 kontextMenü = null
                                 blockiereHintergrundGesten = true
                                 verbindungsDrag = VerbindungsDrag(
-                                    start = referenz,
-                                    startPosition = referenz.position,
-                                    aktuellePosition = referenz.position,
+//                                    start = referenz,
+                                    anschluss = daten,
+                                    startPosition = weltPosition.zuBildschirmOffset(zustand),
+                                    aktuellePosition = weltPosition.zuBildschirmOffset(zustand),
                                 )
 
                                 down.consume()
@@ -487,9 +520,28 @@ private fun KartenOberfläche(
                                 }
 
                                 val drag = verbindungsDrag
-                                val ziel = drag?.aktuellePosition?.nächsterAnschluss(aktuelleAnschlüsse, maxAbstand = 28f)
-                                if (drag != null && ziel != null && drag.start.istKompatibelMit(ziel)) {
-                                    onVerbindungErstellen(drag.start.zuVerbindung(ziel))
+//                                val ziel = drag?.aktuellePosition?.nächsterAnschluss(aktuelleAnschlüsse, maxAbstand = 28f)
+                                val aPos = drag?.aktuellePosition ?: Offset.Zero
+                                val sPos = drag?.startPosition ?: Offset.Zero
+                                val maxAbstand = 28f
+                                val ziel = aktuelleAnschlüsse
+                                    .map { it to hypot(aPos.x - sPos.x, aPos.y - sPos.y) }
+                                    .filter { it.second <= maxAbstand }
+                                    .minByOrNull { it.second }
+                                    ?.first
+                                val zielKnoten = ziel?.key
+                                val zielAnschluss = ziel?.value?.find { /*TODO*/ true }
+                                if (drag != null && ziel != null && true /* TODO istKompatibel abfrage */) {
+//                                    onVerbindungErstellen(drag.start.zuVerbindung(ziel))
+//                                    val quelle = if (richtung == AnschlussRichtung.Ausgang) this else ziel
+//                                    val ende = if (richtung == AnschlussRichtung.Eingang) this else ziel
+                                    VerbindungDaten(
+                                        id = "verbindung-${knoten.id}-${daten.id}-${zielKnoten?.id ?: ""}-${zielAnschluss?.id ?: ""}",
+                                        quellKnotenId = knoten.id,
+                                        quellAnschlussId = daten.id,
+                                        zielKnotenId = zielKnoten?.id ?: "",
+                                        zielAnschlussId = zielAnschluss?.id ?: "",
+                                    ) // .mitTypPruefung(quelle.zahlenTyp, ende.zahlenTyp)
                                 }
                             } finally {
                                 ziehtAnschluss = false
@@ -507,8 +559,10 @@ private fun KartenOberfläche(
             sichtbareDaten.zuComposable(
                 modifier = Modifier,
                 zustand = sichtbarerZustand,
-
-                aktualisierung = { id,verschiebung -> TODO() },
+                fläche = fläche,
+                onAnsichtÄndern = { neueAnsicht ->
+                    ansicht = neueAnsicht
+                },
             )
         }
 
@@ -713,17 +767,17 @@ private fun Offset.zuWeltOffset(): Offset = Offset(x, y)
 /**
  * Löst alle Anschlüsse eines Knotens in Bildschirmpositionen auf.
  */
-private fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<AnschlussReferenz> =
+/*private fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<AnschlussReferenz> =
     erhalteAnschlüsseGeordnet(AnschlussRichtung.Eingang).mapIndexed { index, anschluss ->
         anschlussReferenz(AnschlussRichtung.Eingang, index, zustand)
     } + erhalteAnschlüsseGeordnet(AnschlussRichtung.Ausgang).mapIndexed { index, anschluss ->
         anschlussReferenz(AnschlussRichtung.Ausgang, index, zustand)
-    }
+    }*/
 
 /**
  * Berechnet die Bildschirmposition eines einzelnen Anschlusses.
  */
-private fun Knoten.anschlussReferenz(
+/*private fun Knoten.anschlussReferenz(
     richtung: AnschlussRichtung,
     index: Int,
     zustand: KarteZustand,
@@ -767,7 +821,7 @@ private fun Knoten.anschlussReferenz(
         position = weltPosition.zuBildschirmOffset(zustand),
         zahlenTyp = anschluss?.zahlenTyp,
     )
-}
+}*/
 
 /**
  * Liefert den Bildschirm-Startpunkt einer Verbindung.
@@ -800,8 +854,10 @@ private fun VerbindungDaten.endeOffset(
 /**
  * Prüft, ob zwei Anschlüsse verbunden werden dürfen.
  */
+/*
 private fun AnschlussReferenz.istKompatibelMit(ziel: AnschlussReferenz): Boolean =
     knotenId != ziel.knotenId && richtung != ziel.richtung
+*/
 
 /**
  * Erzeugt aus zwei kompatiblen Anschlüssen eine fachliche Verbindung.
@@ -836,7 +892,7 @@ private fun Offset.nächsterAnschluss(
 private fun Offset.treffer(
     knoten: List<Knoten>,
     verbindungen: List<VerbindungDaten>,
-    anschlüsse: List<AnschlussReferenz>,
+    anschlüsse: Map<KnotenDaten, List<AnschlussDaten>>,
     zustand: KarteZustand,
 ): KartenTreffer {
     nächsterAnschluss(anschlüsse, maxAbstand = 16f)?.let {
