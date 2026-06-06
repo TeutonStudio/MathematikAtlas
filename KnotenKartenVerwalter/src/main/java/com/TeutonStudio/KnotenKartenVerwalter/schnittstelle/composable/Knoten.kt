@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,13 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import com.TeutonStudio.KnotenKartenVerwalter.daten.istHorizontal
-import com.TeutonStudio.KnotenKartenVerwalter.daten.istVertikal
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KnotenAschlüsse
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.filterKante
 import kotlin.collections.forEach
 
 /**

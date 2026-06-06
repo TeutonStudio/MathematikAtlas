@@ -60,6 +60,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlLoeschen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.ZahlenTyp
 import com.TeutonStudio.KnotenKartenVerwalter.daten.Zahlenraum
 import com.TeutonStudio.KnotenKartenVerwalter.daten.dupliziereAuswahl
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.loescheAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion

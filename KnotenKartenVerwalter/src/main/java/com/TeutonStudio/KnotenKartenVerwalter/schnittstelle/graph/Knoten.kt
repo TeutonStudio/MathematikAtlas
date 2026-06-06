@@ -7,16 +7,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 
 // Daten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 
 // Composable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
-import kotlin.collections.filter
 
 /*public fun interface KnotenFabrik {
     public fun erstelle(daten: KnotenDaten, anschlüsse: KnotenAschlüsse): Knoten
@@ -87,7 +83,7 @@ sealed interface Knoten: GraphObjekt {
         inhaltSkalierung: Float = 1f,
     )
     // TODO herausfinden, ob bestehende Verbindungen als Argument funktionieren
-    public fun erhalteAnschlüsse(): KnotenAschlüsse
+    public fun erhalteAnschlüsse(): KnotenAnschlüsse
 
     @Composable
     override fun zuComposable(
@@ -106,7 +102,7 @@ open class BasisKnoten(override val daten: KnotenDaten): Knoten {
         inhaltSkalierung: Float,
     ) { KnotenRahmen(this, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
 
-    override fun erhalteAnschlüsse(): KnotenAschlüsse {
+    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
         TODO("Not yet implemented")
     }
 

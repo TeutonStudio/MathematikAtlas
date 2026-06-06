@@ -11,11 +11,13 @@ import androidx.compose.ui.unit.dp
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
 
 // Composables
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
+import kotlin.collections.component1
 
 /**
  * Standardgröße und Außenabstand eines Anschlusses.
@@ -23,11 +25,17 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
  * Der Modifier wird von `Knoten.kt` erweitert, wenn ein Anschluss zusätzlich als
  * Drag-Startpunkt für Verbindungen dienen soll.
  */
-val AnschlussModifierStandard = Modifier.padding(vertical = 4.dp).size(10.dp)
+val AnschlussModifierStandard = Modifier
+    .padding(vertical = 4.dp)
+    .size(10.dp)
 
 
-typealias KnotenAschlüsse = Map<AnschlussDaten,Int>
-public fun KnotenAschlüsse.filterKante(kante: AnschlussKante): KnotenAschlüsse = this.filter { (daten,idx) -> daten.kante == kante }
+typealias KnotenAnschlüsse = Map<AnschlussDaten,Int>
+public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }
+public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): KnotenAnschlüsse = this.filter { (daten,idx) -> when (richtung) {
+    AnschlussRichtung.Eingang -> daten is EingangDaten
+    AnschlussRichtung.Ausgang -> daten is AusgangDaten
+} }
 
 /**
  * Anschluss als Graphobjekt und Elternklasse aller Anschlüsse

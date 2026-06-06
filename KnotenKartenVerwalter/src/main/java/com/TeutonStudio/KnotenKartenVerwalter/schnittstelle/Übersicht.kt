@@ -25,8 +25,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenGrenzen
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.grenzen
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zoomSicher

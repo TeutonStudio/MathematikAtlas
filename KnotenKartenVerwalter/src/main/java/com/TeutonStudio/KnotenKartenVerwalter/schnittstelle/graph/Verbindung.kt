@@ -1,6 +1,10 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+// Compose
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -9,7 +13,14 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+
+// Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungsRegeln
+
+// Kotlin
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -177,4 +188,154 @@ data class VerbindungArten(
 
         public val Standard: VerbindungArten = VerbindungArten()
     }
+}
+
+/**
+ * Temporärer Zustand waehrend eine neue Verbindung gezogen wird.
+ *
+ * Diese Datei kennt keine Karte und keine Compose-Oberflaeche.
+ * Sie weiss nur: Startanschluss, aktuelle Pointerposition, Zielsuche,
+ * Kompatibilitaet, Verbindung erzeugen.
+ */
+internal data class VerbindungsDrag(
+    val start: AnschlussReferenz,
+    val aktuellePosition: Offset,
+)
+
+/**
+ * Baut die Vorschau-Verbindung fuer den Canvas-Layer.
+ *
+ * Wenn der Drag an einem Eingang startet, wird die Vorschau visuell gedreht,
+ * damit die Bezier-Tangenten weiterhin passend aussehen.
+ */
+internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, Offset, Offset> {
+    val startPosition = if (start.richtung == AnschlussRichtung.Eingang) {
+        aktuellePosition
+    } else {
+        start.position
+    }
+
+    val endePosition = if (start.richtung == AnschlussRichtung.Eingang) {
+        start.position
+    } else {
+        aktuellePosition
+    }
+
+    return Triple(
+        VerbindungDaten(
+            id = "temporaer",
+            quellKnotenId = "",
+            quellAnschlussId = start.anschlussId,
+            zielKnotenId = "",
+            zielAnschlussId = start.anschlussId,
+            ausgewaehlt = true,
+        ),
+        startPosition,
+        endePosition,
+    )
+}
+
+/**
+ * Pointer-Interaktion fuer das Ziehen einer Verbindung ab einem Anschluss.
+ *
+ * Der Graph wird als Lambda uebergeben, damit der Pointer-Handler auch nach
+ * Recompositionen aktuelle Knoten, Anschluesse und Verbindungen sieht.
+ */
+internal fun Modifier.verbindungsZiehen(
+    start: AnschlussReferenz,
+    graph: () -> KartenGraph,
+    onDragAendern: (VerbindungsDrag?) -> Unit,
+    onZiehtAnschlussAendern: (Boolean) -> Unit,
+    onBlockiereHintergrundGestenAendern: (Boolean) -> Unit,
+    onVerbindungErstellen: (VerbindungDaten) -> Unit,
+    regeln: VerbindungsRegeln = VerbindungsRegeln(),
+    maxZielAbstand: Float = 28f,
+): Modifier =
+    pointerInput(start.knotenId, start.anschlussId, start.position) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            var lokalerDrag = VerbindungsDrag(
+                start = start,
+                aktuellePosition = start.position,
+            )
+
+            try {
+                onZiehtAnschlussAendern(true)
+                onBlockiereHintergrundGestenAendern(true)
+                onDragAendern(lokalerDrag)
+
+                down.consume()
+
+                drag(down.id) { change ->
+                    change.consume()
+
+                    lokalerDrag = lokalerDrag.copy(
+                        aktuellePosition = lokalerDrag.aktuellePosition +
+                                (change.position - change.previousPosition),
+                    )
+
+                    onDragAendern(lokalerDrag)
+                }
+
+                val aktuellerGraph = graph()
+                val ziel = aktuellerGraph.naechsterAnschluss(
+                    position = lokalerDrag.aktuellePosition,
+                    maxAbstand = maxZielAbstand,
+                    ausgenommen = lokalerDrag.start,
+                )
+
+                if (ziel != null) {
+                    val verbindung = lokalerDrag.start.zuVerbindungOderNull(
+                        ziel = ziel,
+                        vorhandeneVerbindungen = aktuellerGraph.verbindungen,
+                        regeln = regeln,
+                    )
+
+                    if (verbindung != null) {
+                        onVerbindungErstellen(verbindung)
+                    }
+                }
+            } finally {
+                onDragAendern(null)
+                onZiehtAnschlussAendern(false)
+                onBlockiereHintergrundGestenAendern(false)
+            }
+        }
+    }
+
+/**
+ * Erstellt eine Verbindung, falls Start und Ziel fachlich kompatibel sind.
+ */
+internal fun AnschlussReferenz.zuVerbindungOderNull(
+    ziel: AnschlussReferenz,
+    vorhandeneVerbindungen: List<VerbindungDaten>,
+    regeln: VerbindungsRegeln = VerbindungsRegeln(),
+): VerbindungDaten? {
+    if (knotenId == ziel.knotenId) return null
+    if (richtung == ziel.richtung) return null
+
+    val quelle = if (richtung == AnschlussRichtung.Ausgang) this else ziel
+    val ende = if (richtung == AnschlussRichtung.Eingang) this else ziel
+
+    val verbindung = VerbindungDaten(
+        id = "verbindung-${quelle.knotenId}-${quelle.anschlussId}-${ende.knotenId}-${ende.anschlussId}",
+        quellKnotenId = quelle.knotenId,
+        quellAnschlussId = quelle.anschlussId,
+        zielKnotenId = ende.knotenId,
+        zielAnschlussId = ende.anschlussId,
+    ) /*.mitTypPruefung(
+        quellTyp = quelle.zahlenTyp,
+        zielTyp = ende.zahlenTyp,
+    )*/
+
+    val erlaubt = regeln.darfErstellen(
+        vorhandeneVerbindungen = vorhandeneVerbindungen,
+        neueVerbindung = verbindung,
+        quellRichtung = quelle.richtung,
+        zielRichtung = ende.richtung,
+        quellTyp = quelle.zahlenTyp,
+        zielTyp = ende.zahlenTyp,
+    )
+
+    return if (erlaubt) verbindung else null
 }
