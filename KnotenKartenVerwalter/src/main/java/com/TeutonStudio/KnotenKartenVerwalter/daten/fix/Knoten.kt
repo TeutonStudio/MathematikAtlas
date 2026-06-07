@@ -3,7 +3,11 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AusgabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.EingabeKnoten
 
 
 open class KnotenZustand(
@@ -28,7 +32,7 @@ open class KnotenZustand(
  */
 open class KnotenDaten(
     override val id: String,
-    override val klasse: String?,
+    override val klasse: KnotenArt? = BasisKnoten.KNOTEN_ART,
     open val name: String,
     open val position: KartenPosition = Offset(0f, 0f), // Mitte des Knotens
     open val dimension: Rechteck = IntSize(180, 96),
@@ -40,7 +44,7 @@ open class KnotenDaten(
     constructor(
         daten: KnotenDaten,
         id: String? = null,
-        klasse: String? = null,
+        klasse: KnotenArt? = null,
         name: String? = null,
         position: KartenPosition? = null,
         dimension: Rechteck? = null,
@@ -62,7 +66,7 @@ open class KnotenDaten(
 
     fun copy(
         id: String = this.id,
-        klasse: String? = this.klasse,
+        klasse: KnotenArt? = this.klasse,
         name: String = this.name,
         position: KartenPosition = this.position,
         dimension: Rechteck = this.dimension,
@@ -96,7 +100,7 @@ open class KnotenDaten(
  */
 open class EingabeDaten(
     override val id: String,
-    override val klasse: String?,
+    override val klasse: KnotenArt? = EingabeKnoten.KNOTEN_ART,
     override val name: String,
     override val position: KartenPosition = Offset(0f, 0f),
     override val dimension: Rechteck = IntSize(180, 96),
@@ -111,7 +115,7 @@ open class EingabeDaten(
 
     fun copy(
         id: String = this.id,
-        klasse: String? = this.klasse,
+        klasse: KnotenArt? = this.klasse,
         name: String = this.name,
         position: KartenPosition = this.position,
         fläche: Rechteck = this.dimension,
@@ -139,7 +143,7 @@ open class EingabeDaten(
  */
 open class AusgabeDaten(
     override val id: String,
-    override val klasse: String?,
+    override val klasse: KnotenArt? = AusgabeKnoten.KNOTEN_ART,
     override val name: String,
     override val position: KartenPosition = Offset(0f, 0f),
     override val dimension: Rechteck = IntSize(180, 96),
@@ -154,7 +158,7 @@ open class AusgabeDaten(
 
     fun copy(
         id: String = this.id,
-        klasse: String? = this.klasse,
+        klasse: KnotenArt? = this.klasse,
         name: String = this.name,
         position: KartenPosition = this.position,
         fläche: Rechteck = this.dimension,

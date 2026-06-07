@@ -22,12 +22,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
 class Graph(
     private val daten: KarteDaten,
     private val zustand: KarteZustand = KarteZustand(),
-    private val kartenFabrik: KartenFabrik = BasisKartenFabrik,
     private val aktualisierung: KartenAktualisierung = { _, _ -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = {},
 ) : GraphObjekt {
+    private val kartenFabrik: KartenFabrik = BasisKartenFabrik
 
     private val karte: Karte = kartenFabrik.erzeugeKarte(
         daten = daten,

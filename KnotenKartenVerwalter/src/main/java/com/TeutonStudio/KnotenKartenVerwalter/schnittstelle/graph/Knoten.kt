@@ -63,8 +63,9 @@ sealed interface Knoten: GraphObjekt {
  */
 open class BasisKnoten(
     override val daten: KnotenDaten,
-    override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik,
 ): Knoten {
+    override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
+
     @Composable
     override fun zuComposable(
         modifierKnoten: Modifier,

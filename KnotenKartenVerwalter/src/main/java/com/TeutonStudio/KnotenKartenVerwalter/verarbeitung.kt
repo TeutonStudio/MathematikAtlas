@@ -210,8 +210,7 @@ public fun KarteZustand.erhalteNachBildPos(
     knoten: Iterable<Knoten>,
     verbindung: Iterable<Verbindung>,
 ): GraphObjekt? {
-    val kartePos = pos.zuKarte(this.ansicht)
-        KartenPosition.Zero // TODO umrechnung der Bildschirm position [pos] abhängig von ansicht zoom und ansicht verschiebung.
+    val kartePos = pos.zuKarte(this.ansicht) // TODO umrechnung der Bildschirm position [pos] abhängig von ansicht zoom und ansicht verschiebung.
     var auswahl: GraphObjekt? = null
     knoten.forEach {
         if (kartePos.aufKnoten(it.daten)) auswahl = it

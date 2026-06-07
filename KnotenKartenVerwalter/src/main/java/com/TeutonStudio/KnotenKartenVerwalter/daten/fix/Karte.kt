@@ -3,9 +3,11 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import com.TeutonStudio.KnotenKartenVerwalter.AnsichtsfensterDaten
+import com.TeutonStudio.KnotenKartenVerwalter.KartenArt
 import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import com.TeutonStudio.KnotenKartenVerwalter.StandardAnsicht
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
 
 /**
  * Persistierter Viewport einer Karte.
@@ -66,7 +68,7 @@ open class KartenCacheDaten() {
  */
 open class KarteDaten(
     override val id: String,
-    override val klasse: String?,
+    override val klasse: KartenArt? = BasisKarte.KARTEN_ART,
     public val name: String,
     public val größe: Rechteck? = null, // TODO größe des Graphs
     public val knoten: List<KnotenDaten> = emptyList(), // TODO evtl mutable

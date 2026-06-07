@@ -24,6 +24,25 @@ val BasisKartenFabrik: KartenFabrik = mapOf(
     BasisKarte.KARTEN_ART to ::BasisKarte as KartenKonstruktor,
 )
 
+/*private fun basisKarteKonstruktor(
+    daten: KarteDaten,
+    zustand: KarteZustand,
+    aktualisierung: KartenAktualisierung,
+    onVerbindungErstellen: VerbindungErstellen,
+    onKontextAktion: KontextAktionAusführen,
+    onAuswahlÄndern: AuswahlÄndern,
+): Karte = BasisKarte(
+    daten = daten,
+    zustand = zustand,
+    knotenFabrik = BasisKnotenFabrik,
+    verbindungFabrik = BasisVerbindungFabrik,
+    aktualisierung = aktualisierung,
+    onVerbindungErstellen = onVerbindungErstellen,
+    onKontextAktion = onKontextAktion,
+    onAuswahlÄndern = onAuswahlÄndern,
+)*/
+
+
 /**
  * Trefferziel auf der Karte.
  *
@@ -99,13 +118,13 @@ sealed interface Karte: GraphObjekt {
 open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
-    override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik,
-    override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik,
     override val aktualisierung: KartenAktualisierung = { knotenId,position ->  },
     override val onVerbindungErstellen: VerbindungErstellen = {},
     override val onKontextAktion: KontextAktionAusführen = {},
     override val onAuswahlÄndern: AuswahlÄndern = {},
 ) : Karte {
+    override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
+    override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
     @Composable
     override fun zuComposable(modifier: Modifier) {

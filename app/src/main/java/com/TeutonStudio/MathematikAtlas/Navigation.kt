@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
@@ -381,31 +382,26 @@ private fun testKarte(): KarteDaten = KarteDaten(
             id = "eingabe",
             name = "Eingabe",
             position = Offset(80f, 120f),
-            klasse = EingabeKnoten.KNOTEN_ART,
         ),
         KnotenDaten(
             id = "mitte",
             name = "Mitte",
             position = Offset(360f, 170f),
-            klasse = BasisKnoten.KNOTEN_ART,
         ),
-        KnotenDaten(
+        AusgabeDaten(
             id = "ausgabe",
             name = "Ausgabe",
             position = Offset(660f, 120f),
-            klasse = AusgabeKnoten.KNOTEN_ART,
         ),
     ),
     verbindungen = listOf(
         VerbindungDaten(
             id = "v-eingabe-mitte",
             ids = idReferenz("eingabe" to "mitte","out" to "in"),
-            klasse = BasisEingang.ANSCHLUSS_ART,
         ),
         VerbindungDaten(
             id = "v-mitte-ausgabe",
             ids = idReferenz("mitte" to "ausgabe","out" to "in"),
-            klasse = BasisAusgang.ANSCHLUSS_ART,
         ),
     ),
 )
