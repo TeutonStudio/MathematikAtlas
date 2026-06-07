@@ -67,10 +67,6 @@ public fun KnotenRahmen(
                     text = daten.name,
                     style = TextStyle(color = Color(0xFF0F172A), fontSize = (14f * skalierung).sp),
                 )
-/*                BasicText(
-                    text = daten.mathematischeKurzform() ?: daten.typ,
-                    style = TextStyle(color = Color(0xFF64748B), fontSize = (14f * skalierung).sp),
-                )*/
             }
         }
         AnschlussKante.entries.forEach { kante ->

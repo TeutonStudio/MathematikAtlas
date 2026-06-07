@@ -3,9 +3,11 @@ package com.TeutonStudio.KnotenKartenVerwalter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.center
+import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnsichtsfensterDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
@@ -16,12 +18,14 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAusgang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Karte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
 import kotlin.math.roundToInt
+
+fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
 
 // Geometrie
 
@@ -40,14 +44,49 @@ typealias BildschirmPosition = IntOffset
 /**
  * Dimensionen eines Rechteck
  */
-typealias Rechteck = Offset
+typealias Rechteck = IntSize
 
 /**
  *
  */
 public fun KartenPosition.zuBild(daten: AnsichtsfensterDaten): BildschirmPosition {
-    return TODO("Formel für Karte zu Bildschrim in bezug auf positionen definieren")
+    return TODO("Formel für Karte zu Bildschirm in bezug auf positionen definieren")
 }
+
+/**
+ *
+ */
+public fun BildschirmPosition.zuKarte(ansicht: AnsichtsfensterDaten): KartenPosition {
+    return TODO("Formel für Bildschirm zu Karte in bezug auf positionen deifnieren")
+}
+
+/**
+ *
+ */
+public fun KartenPosition.aufKnoten(daten: KnotenDaten): Boolean {
+    val abstand = daten.dimension.center.toOffset()
+    val eckeMin = daten.position - abstand
+    val eckeMax = daten.position + abstand
+    val inX = this.x in eckeMin.x..eckeMax.x
+    val inY = this.y in eckeMin.y..eckeMax.y
+    return inX && inY
+}
+
+/**
+ *
+ */
+public fun KartenPosition.aufVerbindung(daten: VerbindungDaten,knoten: Pair<Knoten,Knoten>): Boolean {
+    return TODO("formel zu ermittelung der entfernung zur Verbindung zur pos definieren")
+}
+
+public fun KnotenPosition.zuKarte(daten: KnotenDaten): KartenPosition {
+    return this.zuKarte(daten.position)
+}
+
+public fun KnotenPosition.zuKarte(zentrum: KartenPosition): KartenPosition {
+    return TODO("definieren, ob der lokale Knotenraum andere skalierung hat als der der Karte.")
+}
+
 
 /**
  * Rechnet die Weltposition eines Knotens in eine Bildschirmposition um.
@@ -56,16 +95,16 @@ public fun KartenPosition.zuBild(daten: AnsichtsfensterDaten): BildschirmPositio
  * zusätzlich die Transformationsfunktionen in `schnittstelle/Karte.kt`.
  */
 public fun BildschirmPosition.zuIntOffset(zustand: KarteZustand): IntOffset = IntOffset(
-    x = (this.x * zustand.zoom + zustand.verschiebung.x).roundToInt(),
-    y = (this.y * zustand.zoom + zustand.verschiebung.y).roundToInt(),
+    x = (this.x * zustand.ansicht.erhalteZoomfaktor() + zustand.ansicht.erhalteVerschiebung().x).roundToInt(),
+    y = (this.y * zustand.ansicht.erhalteZoomfaktor() + zustand.ansicht.erhalteVerschiebung().y).roundToInt(),
 )
 
 /**
  * Kurzform für eine reine Verschiebung ohne expliziten Zoom.
  */
-public fun BildschirmPosition.zuIntOffset(verschiebung: Offset): IntOffset = zuIntOffset(
+/*public fun BildschirmPosition.zuIntOffset(verschiebung: Offset): IntOffset = zuIntOffset(
     KarteZustand(verschiebung = verschiebung),
-)
+)*/
 
 // Anschluss
 
@@ -122,12 +161,15 @@ typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second
 
+private fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)
+public fun idReferenz.istVerbunden(daten: KnotenDaten): Boolean = this.hatKnotenId(daten.id)
+
+private fun idReferenz.hatAnschlussId(id: String): Boolean = this.erhalteAnschlussIds().enthält(id)
+public fun idReferenz.istVerbunden(daten: AnschlussDaten): Boolean = this.hatAnschlussId(daten.id)
+
 public fun idReferenz.hatGleichenKnoten(other: idReferenz): Boolean {
-    val knotenIds1 = this.erhalteKnotenIds()
-    val knotenIds2 = other.erhalteKnotenIds()
-    val ersterKnoten = knotenIds1.first == knotenIds2.first || knotenIds1.first == knotenIds2.second
-    val zweiterKnoten = knotenIds1.second == knotenIds2.first || knotenIds1.second == knotenIds2.second
-    return ersterKnoten || zweiterKnoten
+    val knotenIds = other.erhalteKnotenIds()
+    return this.hatKnotenId(knotenIds.first) || this.hatKnotenId(knotenIds.second)
 }
 
 public fun idReferenz.hatGleichenAnschluss(other: idReferenz): Boolean {
@@ -142,6 +184,44 @@ public fun idReferenz.hatGleichenAnschluss(other: idReferenz): Boolean {
 
 
 // Karten
+
+/**
+ * Persistierter Viewport einer Karte.
+ *
+ * `x` und `y` beschreiben die Verschiebung des Weltkoordinatensystems in
+ * Bildschirmkoordinaten. `zoom` beschreibt den Skalierungsfaktor zwischen Welt-
+ * und Bildschirmkoordinaten.
+ */
+typealias AnsichtsfensterDaten = Triple<Float,Float,Float>
+
+public fun AnsichtsfensterDaten(zoom: Float, verschiebung: Offset): AnsichtsfensterDaten = Triple(zoom,verschiebung.x,verschiebung.y)
+public fun StandardAnsicht(): AnsichtsfensterDaten = Triple(1f,0f,0f)
+
+public fun AnsichtsfensterDaten.erhalteVerschoben(von: BildschirmPosition): BildschirmPosition = TODO()
+public fun AnsichtsfensterDaten.erhalteVerschiebung(): Offset = Offset(this.second,this.third)
+public fun AnsichtsfensterDaten.erhalteZoomfaktor(): Float = first
+
+/**
+ *
+ */
+public fun KarteZustand.erhalteNachBildPos(
+    pos: BildschirmPosition,
+    knoten: Iterable<Knoten>,
+    verbindung: Iterable<Verbindung>,
+): GraphObjekt? {
+    val kartePos = pos.zuKarte(this.ansicht)
+        KartenPosition.Zero // TODO umrechnung der Bildschirm position [pos] abhängig von ansicht zoom und ansicht verschiebung.
+    var auswahl: GraphObjekt? = null
+    knoten.forEach {
+        if (kartePos.aufKnoten(it.daten)) auswahl = it
+    }
+    verbindung.forEach {
+        val k = knoten.filter { k -> it.daten.ids.hatKnotenId(k.daten.id) }
+        if (kartePos.aufVerbindung(it.daten,k[0] to k[1])) auswahl = it
+    }
+
+    return auswahl
+}
 
 /**
  * Callback fuer eine geaenderte Knotenposition in Weltkoordinaten.
@@ -199,6 +279,34 @@ public fun KnotenFabrik.erzeugeKnoten(daten: KnotenDaten): Knoten? = this[daten.
 
 typealias KartenArt = String
 typealias KartenFabrik = Map<KartenArt,KartenKonstruktor>
-typealias KartenKonstruktor = (KarteDaten) -> Karte
+typealias KartenKonstruktor = (
+    daten: KarteDaten,
+    zustand: KarteZustand,
+    aktualisierung: KartenAktualisierung,
+    onVerbindungErstellen: VerbindungErstellen,
+    onKontextAktion: KontextAktionAusführen,
+    onAuswahlÄndern: AuswahlÄndern,
+) -> Karte
 
-public fun KartenFabrik.erzeugeKarte(daten: KarteDaten): Karte? = this[daten.klasse]?.invoke(daten)
+fun KartenFabrik.erzeugeKarte(
+    daten: KarteDaten,
+    zustand: KarteZustand,
+    aktualisierung: KartenAktualisierung,
+    onVerbindungErstellen: VerbindungErstellen,
+    onKontextAktion: KontextAktionAusführen,
+    onAuswahlÄndern: AuswahlÄndern,
+): Karte {
+    val klasse = daten.klasse ?: BasisKarte.KARTEN_ART
+
+    val konstruktor = this[klasse]
+        ?: error("Keine Kartenklasse '$klasse'. Bekannte Klassen: ${keys.joinToString()}")
+
+    return konstruktor(
+        daten,
+        zustand,
+        aktualisierung,
+        onVerbindungErstellen,
+        onKontextAktion,
+        onAuswahlÄndern,
+    )
+}

@@ -7,6 +7,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.daten.aktiv.LiveKarte
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
@@ -20,7 +21,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
  * nur noch einen Graph aus KarteDaten und Callbacks.
  */
 class Graph(
-    private val daten: KarteDaten,
+    private val daten: LiveKarte,
     private val zustand: KarteZustand = KarteZustand(),
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik,
     private val aktualisierung: KartenAktualisierung = { _, _ -> },
@@ -29,8 +30,14 @@ class Graph(
     private val onAuswahlÄndern: AuswahlÄndern = {},
 ) : GraphObjekt {
 
-    private val karte: Karte
-        get() = kartenFabrik.erzeugeKarte(daten) ?: TODO("Fehlerhafte Daten Klassen zuordnung")
+    private val karte: Karte = kartenFabrik.erzeugeKarte(
+        daten = daten,
+        zustand = zustand,
+        aktualisierung = aktualisierung,
+        onVerbindungErstellen = onVerbindungErstellen,
+        onKontextAktion = onKontextAktion,
+        onAuswahlÄndern = onAuswahlÄndern,
+    )
 
     @Composable
     override fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)

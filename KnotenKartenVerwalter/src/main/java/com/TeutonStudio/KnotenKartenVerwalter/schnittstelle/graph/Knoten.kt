@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
@@ -13,7 +14,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 
 // Composable
@@ -25,6 +28,12 @@ val BasisKnotenFabrik: KnotenFabrik = mapOf(
     EingabeKnoten.KNOTEN_ART to ::EingabeKnoten as KnotenKonstruktor,
     AusgabeKnoten.KNOTEN_ART to ::AusgabeKnoten as KnotenKonstruktor,
 )
+
+@Composable
+public fun List<Knoten>.zuComposable(
+    modifierKnoten: (KnotenDaten) -> Modifier,
+    modifierAnschluss: (KnotenDaten) -> AnschlussModifier,
+) = this.map { it.zuComposable(modifierKnoten(it.daten),modifierAnschluss(it.daten)) }
 
 /**
  * Knoten Elternklasse
@@ -64,7 +73,11 @@ open class BasisKnoten(
     ) { KnotenRahmen(this,anschlussFabrik, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
 
     override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        TODO("Not yet implemented")
+        return mapOf(
+            EingangDaten("in1","Eingang 1", AnschlussKante.Links) to 0,
+            EingangDaten("in2","Eingang 2", AnschlussKante.Links) to 1,
+            AusgangDaten("out","Ausgang", AnschlussKante.Rechts) to 0
+        )
     }
 
     public companion object {
@@ -79,6 +92,13 @@ open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "eingabe"
     }
+
+    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
+        return mapOf(
+            AusgangDaten("out1","Ausgang 1", AnschlussKante.Rechts) to 0,
+            AusgangDaten("out2","Ausgang 2", AnschlussKante.Rechts) to 1,
+        )
+    }
 }
 
 /**
@@ -87,6 +107,13 @@ open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
 open class AusgabeKnoten(daten: AusgabeDaten): BasisKnoten(daten) {
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "ausgabe"
+    }
+
+    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
+        return mapOf(
+            EingangDaten("in1","Eingang 1", AnschlussKante.Links) to 0,
+            EingangDaten("in2","Eingang 2", AnschlussKante.Links) to 1,
+        )
     }
 }
 

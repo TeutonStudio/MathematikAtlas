@@ -37,9 +37,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
@@ -49,7 +51,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungsDrag
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungsZiehen
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zuComposable
@@ -91,58 +98,41 @@ internal fun KartenOberfläche(
     onKontextAktion: KontextAktionAusführen = {},
     onAuswahlÄndern: AuswahlÄndern = {},
 ) {
-    var fläche by remember { mutableStateOf(IntSize.Zero) }
-
+    var fläche by remember { mutableStateOf(daten.größe) }
     var ansicht by remember(daten.id) {
         mutableStateOf(
             KarteZustand(
-                verschiebung = Offset(
-                    daten.ansichtsfenster.verschiebung.x,
-                    daten.ansichtsfenster.verschiebung.y,
-                ),
-                zoom = daten.ansichtsfenster.zoom.takeIf { it > 0f } ?: 1f,
+                ansicht = daten.ansicht,
                 zeigeÜbersicht = zustand.zeigeÜbersicht,
                 zeigeKontrollLeiste = zustand.zeigeKontrollLeiste,
             ),
         )
     }
-
-    var gezogeneKnoten by remember(daten.id) {
-        mutableStateOf(emptyMap<String, KnotenPosition>())
-    }
-
+    var gezogeneKnoten by remember(daten.id) { mutableStateOf(emptyMap<String, KartenPosition>()) }
     var verbindungsDrag by remember { mutableStateOf<VerbindungsDrag?>(null) }
     var kontextMenü by remember { mutableStateOf<KontextMenüZustand?>(null) }
     var blockiereHintergrundGesten by remember { mutableStateOf(false) }
     var ziehtAnschluss by remember { mutableStateOf(false) }
 
-    val sichtbareKnotenDaten = daten.knoten.map { knoten ->
-        KnotenDaten(
-            knoten,
-            position = gezogeneKnoten[knoten.id] ?: knoten.position,
-            ausgewaehlt = knoten.id in zustand.auswahl.knotenIds || knoten.ausgewaehlt,
-        )
-    }
+    val sichtbareKnotenDaten = daten.knoten.map { knoten -> KnotenDaten(knoten,
+        position = gezogeneKnoten[knoten.id] ?: knoten.position,
+        ausgewaehlt = knoten.id in zustand.auswahl.knotenIds || knoten.ausgewaehlt,
+    ) }
+    val sichtbareKnoten = sichtbareKnotenDaten.mapNotNull { knotenFabrik.erzeugeKnoten(it) }
 
-    val sichtbareKnoten = sichtbareKnotenDaten.mapNotNull { knotenDaten ->
-        knotenFabrik[knotenDaten.klasse]?.invoke(knotenDaten)
-    }
+    val sichtbareVerbindungenDaten = daten.verbindungen.map { verbindung -> verbindung.copy(
+        ausgewaehlt = verbindung.id in zustand.auswahl.verbindungIds || verbindung.ausgewaehlt,
+    ) }
+    val sichtbareVerbindungen = sichtbareVerbindungenDaten.mapNotNull { verbindungFabrik.erzeugeVerbindung(it) }
 
-    val sichtbareVerbindungen = daten.verbindungen.map { verbindung ->
-        verbindung.copy(
-            ausgewaehlt = verbindung.id in zustand.auswahl.verbindungIds ||
-                    verbindung.ausgewaehlt,
-        )
-    }
-
-    val sichtbareDaten = KarteDaten(
+/*    val sichtbareDaten = KarteDaten(
         daten,
         knoten = sichtbareKnotenDaten,
-        verbindungen = sichtbareVerbindungen,
-    )
+        verbindungen = sichtbareVerbindungenDaten,
+    )*/
 
     val sichtbarerZustand = KarteZustand(
-        ansicht,
+        ansicht.ansicht,
         zeigeÜbersicht = zustand.zeigeÜbersicht,
         zeigeKontrollLeiste = zustand.zeigeKontrollLeiste,
         auswahl = zustand.auswahl,
@@ -177,13 +167,32 @@ internal fun KartenOberfläche(
             .background(Color(0xFFF8FAFC))
             .pointerInput(daten.id) {
                 detectTapGestures(
-/*                    onTap = { position -> TODO
-                        val ziel = aktuellerGraph.treffer(position)
-                        onAuswahlÄndern(ziel.zuAuswahl())
-                    },*/
+                    onDoubleTap = { position ->
+                        /* TODO
+                            Zoom und Verschiebugn auf Inhalt.
+                        */
+                    },
+                    onLongPress = { position ->
+                        /* TODO
+                            Kontextfenster aufrufen
+                         */
+                    },
+                    onTap = { position ->
+                        val ziel = sichtbarerZustand.erhalteNachBildPos(
+                            position.round(),
+                            sichtbareKnoten,
+                            sichtbareVerbindungen
+                        )
+                        if (ziel is Knoten) {
+                            onAuswahlÄndern(AuswahlDaten(knotenIds = setOf(ziel.daten.id)))
+                        }
+                        if (ziel is Verbindung) {
+                            onAuswahlÄndern(AuswahlDaten(verbindungIds = setOf(ziel.daten.id)))
+                        }
+                    },
                 )
             }
-            .pointerInteropFilter { ereignis ->
+            .pointerInteropFilter { ereignis -> // TODO verstehen warum existent
                 val sekundär = ereignis.buttonState and MotionEvent.BUTTON_SECONDARY != 0
                 if (
                     sekundär &&
@@ -220,18 +229,17 @@ internal fun KartenOberfläche(
                 }
             },
     ) {
-        sichtbareDaten.verbindungen.zuComposable(
-            { verbindung -> aktuellerGraph.startOffset(verbindung) },
-            { verbindung -> aktuellerGraph.endeOffset(verbindung) },
-            Modifier.fillMaxSize(),
-            verbindungArten,
+        sichtbareVerbindungen.zuComposable(Modifier.fillMaxSize())
+        sichtbareKnoten.zuComposable(
+            { d -> Modifier},
+            { d -> { a,idx -> Modifier }},
         )
 
-        aktuellerDrag?.let { drag ->
+/*        aktuellerDrag?.let { drag ->
             listOf(drag.zuVorschau()).zuComposable(Modifier.fillMaxSize())
-        }
+        }*/
 
-        sichtbareKnoten.forEach { knotenObjekt ->
+        /*sichtbareKnoten.forEach { knotenObjekt ->
             val knoten = knotenObjekt.daten
             val aktuellerKnoten by rememberUpdatedState(knoten)
 
@@ -318,9 +326,9 @@ internal fun KartenOberfläche(
                         )
                 },
             )
-        }
+        }*/
 
-        if (sichtbarerZustand.zeigeÜbersicht) {
+/*        if (sichtbarerZustand.zeigeÜbersicht) {
             sichtbareDaten.zuComposable(
                 modifier = Modifier,
                 zustand = sichtbarerZustand,
@@ -329,9 +337,9 @@ internal fun KartenOberfläche(
                     ansicht = neueAnsicht
                 },
             )
-        }
+        }*/
 
-        if (sichtbarerZustand.zeigeKontrollLeiste) {
+/*        if (sichtbarerZustand.zeigeKontrollLeiste) {
             sichtbarerZustand.zuComposable(
                 daten = sichtbareDaten,
                 onZoomRein = {
@@ -344,9 +352,9 @@ internal fun KartenOberfläche(
                     ansicht = sichtbareDaten.zoomAufInhalt(fläche, sichtbarerZustand)
                 },
             )
-        }
+        }*/
 
-        kontextMenü?.let { menü ->
+/*        kontextMenü?.let { menü ->
             KontextMenü(
                 zustand = menü,
                 onAktion = { aktion ->
@@ -363,7 +371,7 @@ internal fun KartenOberfläche(
                     kontextMenü = null
                 },
             )
-        }
+        }*/
     }
 }
 
@@ -430,7 +438,7 @@ private fun Offset.zuWeltOffset(): Offset =
 @Preview
 @Composable
 private fun KartePreview() {
-    val daten = KarteDaten(
+/*    val daten = KarteDaten(
         id = "karte-1",
         name = "Mathematik",
         knoten = listOf(
@@ -456,9 +464,9 @@ private fun KartePreview() {
                 zielAnschlussId = "in",
             ),
         ),
-    )
+    )*/
 
-    daten.zuComposable(
+/*    daten.zuComposable(
         aktualisierung = { _, _ -> },
-    )
+    )*/
 }

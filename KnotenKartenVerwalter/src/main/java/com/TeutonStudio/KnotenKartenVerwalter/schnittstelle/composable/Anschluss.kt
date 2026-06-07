@@ -46,10 +46,8 @@ public fun List<AnschlussDaten>.zuPfad(istEingang: Boolean, modifier: (Int) -> M
  */
 @Composable
 public fun Map<AnschlussDaten,Int>.zuLeiste(besitzer: Knoten, kante: AnschlussKante, anschlussFabrik: AnschlussFabrik, modifier: AnschlussModifier) {
-    val liste = this.filterKante(kante); if (liste.isEmpty()) return
-    val maxIdx = liste.maxBy { it.value }.value
-    val keyByIdx = { idx: Int -> liste.filterKeys { liste[it] == idx }.firstNotNullOfOrNull { it.key } }
-    val anschlussListe = List(maxIdx) { keyByIdx(it) }.filterNotNull()
+    val sorter = compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id }
+    val anschlussListe = this.filterKante(kante).entries.sortedWith(sorter).map { it.key }
     val listeComposable = anschlussListe.mapNotNull { daten ->
         anschlussFabrik.erzeugeAnschluss(daten, besitzer)
     }.mapIndexed { idx, anschluss ->

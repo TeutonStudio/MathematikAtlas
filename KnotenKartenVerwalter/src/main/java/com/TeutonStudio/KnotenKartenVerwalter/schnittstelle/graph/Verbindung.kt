@@ -32,6 +32,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.istEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.VerbindungPfad
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
+import kotlin.invoke
 
 // Kotlin
 import kotlin.math.hypot
@@ -62,20 +63,21 @@ val BasisVerbindungFabrik: VerbindungFabrik = mapOf(
  * Verbindungen mit fehlenden Endpunkten werden übersprungen.
  */
 @Composable
+public fun List<Verbindung>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map { it.zeichnung() })
+
+/**
+ * Rendert eine Liste fachlicher Verbindungen.
+ *
+ * Die übergebenen Funktionen lösen die referenzierten Anschlusspositionen auf.
+ * Verbindungen mit fehlenden Endpunkten werden übersprungen.
+ */
+@Composable
 public fun List<VerbindungDaten>.zuComposable(
     start: (VerbindungDaten) -> KartenPosition,
     ende: (VerbindungDaten) -> KartenPosition,
     modifier: Modifier = Modifier,
     fabrik: VerbindungFabrik = BasisVerbindungFabrik,
-) = VerbindungUmgebung(
-    modifier,
-    this.mapNotNull {
-        val pos = (start.invoke(it) to ende.invoke(it))
-        // if (pos.first != null && pos.second != null)
-        val v = fabrik.erzeugeVerbindung(it,null,pos)
-        v?.zeichnung()
-    },
-)
+) = this.mapNotNull { fabrik.erzeugeVerbindung(it,null,start.invoke(it) to ende.invoke(it)) }.zuComposable(modifier)
 
 /**
  * Rendert bereits aufgelöste Verbindungen.
@@ -89,7 +91,7 @@ public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: 
     this.map { BasisVerbindung(it.first, start = it.second, ende = it.third).zeichnung() },
 )
 
-
+// TODO KartenPosition nicht eher was für Daten ??
 sealed interface Verbindung: GraphObjekt {
     public val daten: VerbindungDaten
     public val von: Anschluss?
@@ -116,77 +118,6 @@ open class BasisVerbindung(
         public const val VERBINDUNG_ART: VerbindungArt = "default"
     }
 }
-
-
-/**
- * Zeichnet eine Bezier-Verbindung.
- *
- * Der Startpunkt läuft horizontal nach rechts aus, der Endpunkt horizontal von
- * links ein. Damit entspricht die Kurve der üblichen Darstellung von
- * Node-Graph-Verbindungen.
- */
-/*private fun DrawScope.VerbindungPfad(
-    daten: VerbindungDaten,
-    start: Offset,
-    ende: Offset,
-) {
-    val farbe = when {
-        daten.fehler != null -> Color(0xFFDC2626)
-        daten.ausgewaehlt -> Color(0xFF2563EB)
-        else -> Color(0xFF475569)
-    }
-
-    val kontrollAbstand = max(48f, abs(ende.x - start.x) / 2f)
-    val pfad = Path().apply {
-        moveTo(start.x, start.y)
-        cubicTo(
-            start.x + kontrollAbstand,
-            start.y,
-            ende.x - kontrollAbstand,
-            ende.y,
-            ende.x,
-            ende.y,
-        )
-    }
-    drawPath(
-        path = pfad,
-        color = farbe,
-        style = Stroke(width = 3f, cap = StrokeCap.Round),
-    )
-}*/
-
-/*public fun interface VerbindungFabrik {
-    public fun erstelle(daten: VerbindungDaten, start: Offset, ende: Offset): Verbindung
-}*/
-
-/**
- * Registry wie ReactFlows `nodeTypes`: `KnotenDaten.knotenArt` entscheidet,
- * welche Knotenklasse und damit welche Anschlüsse verwendet werden.
- */
-/*data class VerbindungArten(
-    private val fabriken: Map<String, VerbindungFabrik> = standardFabriken,
-) {
-    public fun erstelle(daten: VerbindungDaten): Verbindung =
-        erstelle(daten, Offset.Zero, Offset.Zero)
-
-    internal fun erstelle(daten: VerbindungDaten, start: Offset, ende: Offset): BasisVerbindung =
-        (fabriken[daten.art] ?: fabriken.getValue(BasisVerbindung.VERBINDUNG_ART))
-            .erstelle(daten, start, ende) as? BasisVerbindung
-            ?: BasisVerbindung(daten, start = start, ende = ende)
-
-    public fun mit(art: String, fabrik: VerbindungFabrik): VerbindungArten =
-        copy(fabriken = fabriken + (art to fabrik))
-
-    public companion object {
-        private val standardFabriken = mapOf(
-            BasisVerbindung.VERBINDUNG_ART to VerbindungFabrik { daten, start, ende ->
-                BasisVerbindung(daten, start = start, ende = ende)
-            },
-        )
-
-        public val Standard: VerbindungArten = VerbindungArten()
-    }
-}*/
 
 /**
  * Temporärer Zustand waehrend eine neue Verbindung gezogen wird.
@@ -373,7 +304,7 @@ internal fun Knoten.anschlussReferenz(
         anschlussId = anschluss.id,
         richtung = richtung,
         kante = anschluss.kante,
-        position = kartePos.zuBild(zustand.alsDaten()),
+        position = kartePos.zuBild(zustand.ansicht),
     )
 }
 
