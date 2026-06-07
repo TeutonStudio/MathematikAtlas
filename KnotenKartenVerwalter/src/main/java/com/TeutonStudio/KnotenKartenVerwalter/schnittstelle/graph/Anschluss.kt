@@ -7,10 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
@@ -23,6 +27,13 @@ import com.TeutonStudio.KnotenKartenVerwalter.istEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
 import kotlin.collections.component1
 import kotlin.collections.filter
+
+@Suppress("UNCHECKED_CAST")
+val BasisAnschlussFabrik: AnschlussFabrik = mapOf(
+    BasisAnschluss.ANSCHLUSS_ART to ::BasisAnschluss as AnschlussKonstruktor,
+    BasisEingang.ANSCHLUSS_ART to ::BasisEingang as AnschlussKonstruktor,
+    BasisAusgang.ANSCHLUSS_ART to ::BasisAusgang as AnschlussKonstruktor,
+)
 
 /**
  * Standardgröße und Außenabstand eines Anschlusses.
@@ -70,6 +81,10 @@ open class BasisAnschluss(
     override fun erstelleVerbindung(zu: Anschluss) {
         TODO("Not yet implemented")
     }
+
+    public companion object {
+        public const val ANSCHLUSS_ART = "default"
+    }
 }
 
 /**
@@ -79,10 +94,13 @@ open class BasisAnschluss(
 open class BasisEingang(
     override val daten: EingangDaten,
     override val besitzer: Knoten,
-//    override var partner: Anschluss? = null,
 ): BasisAnschluss(daten, besitzer) {
 
     override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istAusgang()
+
+    public companion object {
+        public const val ANSCHLUSS_ART = "input"
+    }
 }
 
 /**
@@ -91,8 +109,11 @@ open class BasisEingang(
 open class BasisAusgang(
     override val daten: AusgangDaten,
     override val besitzer: Knoten,
-//    override var partner: Anschluss? = null,
 ): BasisAnschluss(daten, besitzer) {
 
     override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istEingang()
+
+    public companion object {
+        public const val ANSCHLUSS_ART = "output"
+    }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
@@ -34,7 +35,7 @@ import kotlin.collections.forEach
  */
 @Composable
 public fun KnotenRahmen(
-    knoten: Knoten,
+    knoten: Knoten, anschlussFabrik: AnschlussFabrik,
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussDaten, Int) -> Modifier = { daten, idx -> AnschlussModifierStandard },
     inhaltSkalierung: Float = 1f,
@@ -77,7 +78,7 @@ public fun KnotenRahmen(
                 modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5f * skalierung).dp),
                 contentAlignment = Alignment.Center,
             ) {
-                knoten.erhalteAnschlüsse().zuLeiste(kante) { daten,idx -> AnschlussModifierStandard }
+                knoten.erhalteAnschlüsse().zuLeiste(knoten,kante,anschlussFabrik,modifierAnschluss)
             }
         }
     }

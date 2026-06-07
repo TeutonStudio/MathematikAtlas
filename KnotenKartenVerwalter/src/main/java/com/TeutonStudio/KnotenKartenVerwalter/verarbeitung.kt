@@ -163,6 +163,8 @@ typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
  */
 typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
 
+
+
 /// Fabriken
 
 // Verbindung
@@ -176,6 +178,14 @@ public fun VerbindungFabrik.erzeugeVerbindung(
     anschlüsse: Pair<Anschluss,Anschluss>? = null,
     positionen: Pair<KartenPosition, KartenPosition> = Offset.Zero to Offset.Zero
 ): Verbindung? = this[daten.klasse]?.invoke(daten, anschlüsse?.first, anschlüsse?.second,positionen.first,positionen.second)
+
+// Anschluss
+
+typealias AnschlussArt = String
+typealias AnschlussFabrik = Map<AnschlussArt,AnschlussKonstruktor>
+typealias AnschlussKonstruktor = (daten: AnschlussDaten, besitzer: Knoten) -> Anschluss
+
+public fun AnschlussFabrik.erzeugeAnschluss(daten: AnschlussDaten, besitzer: Knoten): Anschluss? = this[daten.klasse]?.invoke(daten,besitzer)
 
 // Knoten
 

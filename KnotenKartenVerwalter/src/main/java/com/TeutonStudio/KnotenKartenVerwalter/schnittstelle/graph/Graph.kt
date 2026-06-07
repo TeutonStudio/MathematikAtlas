@@ -22,7 +22,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
 class Graph(
     private val daten: KarteDaten,
     private val zustand: KarteZustand = KarteZustand(),
-    private val kartenKlassen: KartenFabrik = BasisKartenFabrik,
+    private val kartenFabrik: KartenFabrik = BasisKartenFabrik,
     private val aktualisierung: KartenAktualisierung = { _, _ -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onKontextAktion: KontextAktionAusführen = {},
@@ -30,7 +30,7 @@ class Graph(
 ) : GraphObjekt {
 
     private val karte: Karte
-        get() = kartenKlassen.erzeugeKarte(daten) ?: TODO("Fehlerhafte Daten Klassen zuordnung")
+        get() = kartenFabrik.erzeugeKarte(daten) ?: TODO("Fehlerhafte Daten Klassen zuordnung")
 
     @Composable
     override fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)

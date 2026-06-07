@@ -267,7 +267,7 @@ internal fun Modifier.verbindungsZiehen(
 
                 val aktuellerGraph = graph()
                 val ziel = lokalerDrag.aktuellePosition.naechsterAnschluss(
-                    anschluesse = aktuellerGraph.daten.,
+                    anschluesse = aktuellerGraph.daten.erhalteAnschlüsse(referenz),
                     maxAbstand = maxZielAbstand,
                 )
 

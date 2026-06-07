@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +49,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.anschlussModifierSkaliert
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungsDrag
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungsZiehen
@@ -85,8 +83,8 @@ private data class KontextMenüZustand(
 internal fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
-    knotenKlassen: KnotenFabrik,
-    verbindungKlassen: VerbindungFabrik,
+    knotenFabrik: KnotenFabrik,
+    verbindungFabrik: VerbindungFabrik,
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -127,7 +125,7 @@ internal fun KartenOberfläche(
     }
 
     val sichtbareKnoten = sichtbareKnotenDaten.mapNotNull { knotenDaten ->
-        knotenKlassen[knotenDaten.klasse]?.invoke(knotenDaten)
+        knotenFabrik[knotenDaten.klasse]?.invoke(knotenDaten)
     }
 
     val sichtbareVerbindungen = daten.verbindungen.map { verbindung ->

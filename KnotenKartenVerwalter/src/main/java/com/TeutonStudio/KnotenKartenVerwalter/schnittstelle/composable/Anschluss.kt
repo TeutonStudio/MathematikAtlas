@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
@@ -21,9 +23,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.RichtungsAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 import com.TeutonStudio.KnotenKartenVerwalter.filterKante
 import com.TeutonStudio.KnotenKartenVerwalter.istHorizontal
 import com.TeutonStudio.KnotenKartenVerwalter.istVertikal
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import kotlin.collections.filterKeys
 import kotlin.collections.maxBy
 
@@ -40,18 +45,19 @@ public fun List<AnschlussDaten>.zuPfad(istEingang: Boolean, modifier: (Int) -> M
  * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
  */
 @Composable
-public fun Map<AnschlussDaten,Int>.zuLeiste(kante: AnschlussKante, modifier: AnschlussModifier) {
+public fun Map<AnschlussDaten,Int>.zuLeiste(besitzer: Knoten, kante: AnschlussKante, anschlussFabrik: AnschlussFabrik, modifier: AnschlussModifier) {
     val liste = this.filterKante(kante); if (liste.isEmpty()) return
     val maxIdx = liste.maxBy { it.value }.value
     val keyByIdx = { idx: Int -> liste.filterKeys { liste[it] == idx }.firstNotNullOfOrNull { it.key } }
     val anschlussListe = List(maxIdx) { keyByIdx(it) }.filterNotNull()
-    if (kante.istVertikal()) {
-        AnschlussSpalte(anschlussListe) { idx: Int -> modifier(anschlussListe[idx], idx) }
-    } else if (kante.istHorizontal()) {
-        AnschlussZeile(anschlussListe) { idx: Int -> modifier(anschlussListe[idx], idx) }
-    } else {
-        TODO()
+    val listeComposable = anschlussListe.mapNotNull { daten ->
+        anschlussFabrik.erzeugeAnschluss(daten, besitzer)
+    }.mapIndexed { idx, anschluss ->
+        @Composable { anschluss.zuComposable(modifier(anschluss.daten,idx)) }
     }
+    if (kante.istVertikal()) AnschlussSpalte(listeComposable)
+    else if (kante.istHorizontal()) AnschlussZeile(listeComposable)
+    else TODO()
 }
 
 /**
@@ -137,20 +143,12 @@ public fun Ausgang(
  */
 @Composable
 public fun AnschlussSpalte(
-    anschlüsse: List<AnschlussDaten>,
-    modifier: (Int) -> Modifier = { Modifier.padding(vertical = 4.dp).size(10.dp) },
+    inhalt: Iterable<@Composable (() -> Unit)>,
 ) {
     Column(
         modifier = Modifier.fillMaxHeight(),
         verticalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        anschlüsse.forEachIndexed { idx, anschluss ->
-            when {
-                anschluss is EingangDaten -> Eingang(anschluss,modifier(idx))
-                anschluss is AusgangDaten -> Ausgang(anschluss,modifier(idx))
-            }
-        }
-    }
+    ) { inhalt.forEach { it() } }
 }
 
 /**
@@ -158,18 +156,13 @@ public fun AnschlussSpalte(
  */
 @Composable
 public fun AnschlussZeile(
-    anschlüsse: List<AnschlussDaten>,
-    modifier: (Int) -> Modifier = { Modifier.padding(vertical = 4.dp).size(10.dp) },
+    inhalt: Iterable<@Composable (() -> Unit)>,
 ) {
     Row(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        anschlüsse.forEachIndexed { idx, anschluss ->
-            when {
-                anschluss is EingangDaten -> Eingang(anschluss,modifier(idx))
-                anschluss is AusgangDaten -> Ausgang(anschluss,modifier(idx))
-            }
-        }
-    }
+    ) { inhalt.forEach { it() } }
 }
+
+// @Composable
+// public fun Anschluss(anschluss: Anschluss, modifier: Modifier) = anschluss.zuComposable(modifier)
