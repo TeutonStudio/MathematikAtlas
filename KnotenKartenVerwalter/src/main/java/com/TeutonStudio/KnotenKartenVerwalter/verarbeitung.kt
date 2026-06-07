@@ -25,6 +25,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
 import kotlin.math.roundToInt
 
+public fun <K, V> Iterable<Pair<K, V>>.toMutableMap() = this.toMap().toMutableMap()
 public fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
 public fun <T> Pair<T,T>.toSet(): Set<T> = setOf(first,second)
 
@@ -143,17 +144,17 @@ public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben
 /**
  * Anschlüsse eines Knotens und ihre Sortierung
  */
-typealias KnotenAnschlüsse = Map<AnschlussDaten,Int>
+typealias KnotenAnschlüsse = MutableMap<AnschlussDaten,Int>
 /**
  * Der Modifier für einen Anschluss, abhängig von Anschluss und index
  */
 typealias AnschlussModifier = (AnschlussDaten, Int) -> Modifier
 
-public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }
+public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }.toMutableMap()
 public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): KnotenAnschlüsse = this.filter { (daten,idx) -> when (richtung) {
     AnschlussRichtung.Eingang -> daten is EingangDaten
     AnschlussRichtung.Ausgang -> daten is AusgangDaten
-} }
+} }.toMutableMap()
 
 // Verbindung
 

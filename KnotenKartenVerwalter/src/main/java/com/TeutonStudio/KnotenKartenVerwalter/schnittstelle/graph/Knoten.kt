@@ -50,7 +50,7 @@ sealed interface Knoten: GraphObjekt {
         inhaltSkalierung: Float = 1f,
     )
     // TODO herausfinden, ob bestehende Verbindungen als Argument funktionieren
-    public fun erhalteAnschlüsse(): KnotenAnschlüsse
+//    public fun erhalteAnschlüsse(): KnotenAnschlüsse
 
     @Composable
     override fun zuComposable(
@@ -73,13 +73,9 @@ open class BasisKnoten(
         inhaltSkalierung: Float,
     ) { KnotenRahmen(this,anschlussFabrik, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
 
-    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        return mapOf(
-            EingangDaten("in1","Eingang 1", AnschlussKante.Links) to 0,
-            EingangDaten("in2","Eingang 2", AnschlussKante.Links) to 1,
-            AusgangDaten("out","Ausgang", AnschlussKante.Rechts) to 0
-        )
-    }
+/*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
+        return TODO("Korrekte Anschlussabfrage")
+    }*/
 
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "default"
@@ -94,12 +90,12 @@ open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
         public const val KNOTEN_ART: KnotenArt = "eingabe"
     }
 
-    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        return mapOf(
+/*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
+        return mutableMapOf(
             AusgangDaten("out1","Ausgang 1", AnschlussKante.Rechts) to 0,
             AusgangDaten("out2","Ausgang 2", AnschlussKante.Rechts) to 1,
         )
-    }
+    }*/
 }
 
 /**
@@ -110,12 +106,12 @@ open class AusgabeKnoten(daten: AusgabeDaten): BasisKnoten(daten) {
         public const val KNOTEN_ART: KnotenArt = "ausgabe"
     }
 
-    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        return mapOf(
+/*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
+        return mutableMapOf(
             EingangDaten("in1","Eingang 1", AnschlussKante.Links) to 0,
             EingangDaten("in2","Eingang 2", AnschlussKante.Links) to 1,
         )
-    }
+    }*/
 }
 
 

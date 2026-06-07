@@ -257,8 +257,7 @@ internal fun AnschlussReferenz.zuVerbindungOderNull(
  * Loest alle gerichteten Anschluesse eines Knotens in Bildschirmpositionen auf.
  */
 internal fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<AnschlussReferenz> =
-    erhalteAnschlüsse()
-        .entries
+    daten.anschlüsse.entries
         .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })
         .mapNotNull { (anschluss, _) -> anschlussReferenz(anschluss, zustand) }
 
@@ -271,8 +270,7 @@ internal fun Knoten.anschlussReferenz(
 ): AnschlussReferenz? {
     val richtung = if (anschluss is RichtungsAnschlussDaten) anschluss.richtung else null
 //    val richtung = anschluss.richtungOderNull ?: return null
-    val anschluesseAnKante = erhalteAnschlüsse()
-        .entries
+    val anschluesseAnKante = daten.anschlüsse.entries
         .filter { (daten, _) -> daten.kante == anschluss.kante }
         .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })
 

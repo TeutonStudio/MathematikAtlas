@@ -81,12 +81,17 @@ data class StandardKartenLayout(
                 val spalte = tiefe.getValue(knoten.id)
                 val zeile = zeilenProSpalte.getOrDefault(spalte, 0)
                 zeilenProSpalte[spalte] = zeile + 1
-                knoten.copy(
+                knoten.position = Offset(
+                    x = start.x + spalte * spaltenAbstand,
+                    y = start.y + zeile * zeilenAbstand,
+                )
+                knoten
+/*                knoten.copy(
                     position = Offset(
                         x = start.x + spalte * spaltenAbstand,
                         y = start.y + zeile * zeilenAbstand,
                     ),
-                )
+                )*/
             }
             .associateBy { it.id }
 

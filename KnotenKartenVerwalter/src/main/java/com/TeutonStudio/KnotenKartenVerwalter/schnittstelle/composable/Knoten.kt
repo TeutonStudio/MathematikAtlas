@@ -74,7 +74,7 @@ public fun KnotenRahmen(
                 modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5f * skalierung).dp),
                 contentAlignment = Alignment.Center,
             ) {
-                knoten.erhalteAnschlüsse().zuLeiste(knoten,kante,anschlussFabrik,modifierAnschluss)
+                knoten.daten.anschlüsse.zuLeiste(knoten,kante,anschlussFabrik,modifierAnschluss)
             }
         }
     }

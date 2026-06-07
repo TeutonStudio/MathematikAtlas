@@ -32,8 +32,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
@@ -81,7 +85,8 @@ private fun KnotenKartenTestAnwendung() {
         karte = KarteDaten(
             karte,
             knoten = karte.knoten.map { knoten ->
-                if (knoten.id == knotenId) KnotenDaten(knoten, position = position) else knoten
+                if (knoten.id == knotenId) knoten.position = position
+                knoten
             },
         )
         status = "Knoten verschoben"
@@ -119,7 +124,6 @@ private fun KnotenKartenTestAnwendung() {
                     id = "knoten-$nummer",
                     name = "Knoten $nummer",
                     position = aktion.weltPosition,
-                    klasse = BasisKnoten.KNOTEN_ART,
                 )
                 karte = KarteDaten(
                     karte,
@@ -375,23 +379,32 @@ private fun AuswahlDaten.statusText(): String = when {
 
 private fun testKarte(): KarteDaten = KarteDaten(
     id = "test-karte",
-    klasse = BasisKarte.KARTEN_ART,
     name = "Graph Testkarte",
     knoten = listOf(
         KnotenDaten(
             id = "eingabe",
             name = "Eingabe",
             position = Offset(80f, 120f),
+            anschlüsse = mutableMapOf(
+                AusgangDaten("out", AnschlussKante.Rechts,"Ausgang 1") to 0
+            )
         ),
         KnotenDaten(
             id = "mitte",
             name = "Mitte",
             position = Offset(360f, 170f),
+            anschlüsse = mutableMapOf(
+                AusgangDaten("out", AnschlussKante.Rechts,"Ausgang 1") to 0,
+                EingangDaten("in", AnschlussKante.Links,"Eingang 1") to 0,
+            )
         ),
         AusgabeDaten(
             id = "ausgabe",
             name = "Ausgabe",
             position = Offset(660f, 120f),
+            anschlussLabel = mutableMapOf(
+                AnschlussKante.Rechts to ("Ausgang 1" to 0)
+            )
         ),
     ),
     verbindungen = listOf(
@@ -401,7 +414,7 @@ private fun testKarte(): KarteDaten = KarteDaten(
         ),
         VerbindungDaten(
             id = "v-mitte-ausgabe",
-            ids = idReferenz("mitte" to "ausgabe","out" to "in"),
+            ids = idReferenz("mitte" to "ausgabe","out" to AusgabeDaten.id("ausgabe",0)),
         ),
     ),
 )

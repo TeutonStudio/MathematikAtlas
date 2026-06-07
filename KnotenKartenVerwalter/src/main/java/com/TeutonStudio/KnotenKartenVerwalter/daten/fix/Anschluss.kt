@@ -2,6 +2,12 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.RichtungsAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAnschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAusgang
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
 
 /**
  * Gemeinsame Basisdaten eines Anschlusses.
@@ -11,12 +17,20 @@ import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
  */
 sealed class AnschlussDaten(
     override val id: String,
-    override val klasse: String? = null,
-    open val label: String,
-//    open val richtung: AnschlussRichtung,
     open val kante: AnschlussKante,
-//    open val zahlenTyp: ZahlenTyp? = null,
-): GraphDaten
+): GraphDaten {
+    override val klasse: String? = BasisAnschluss.ANSCHLUSS_ART
+    open var label: String = ""
+
+    constructor(
+        id: String,
+        kante: AnschlussKante,
+        label: String = "",
+    ): this(id,kante) {
+        this.label = label
+    }
+
+}
 
 /**
  * Gemeinsame Basisdaten eines gerichteten Anschlusses.
@@ -26,40 +40,54 @@ sealed class AnschlussDaten(
  */
 sealed class RichtungsAnschlussDaten(
     override val id: String,
-    override val label: String,
     open val richtung: AnschlussRichtung,
     override val kante: AnschlussKante,
-//    override val zahlenTyp: ZahlenTyp? = null,
-): AnschlussDaten(id,null,label,kante)
+): AnschlussDaten(id,kante) {
+
+    constructor(
+        id: String,
+        richtung: AnschlussRichtung,
+        kante: AnschlussKante,
+        label: String = "",
+    ): this(id,richtung,kante) {
+        this.label = label
+    }
+}
 
 /**
  * Eingangsanschluss eines Knotens.
  */
 open class EingangDaten(
     override val id: String,
-    override val label: String,
     override val kante: AnschlussKante = AnschlussKante.Links,
-//    override val zahlenTyp: ZahlenTyp? = null,
-) : RichtungsAnschlussDaten(
-    id = id,
-    label = label,
-    richtung = AnschlussRichtung.Eingang,
-    kante = kante,
-//    zahlenTyp = zahlenTyp,
-)
+) : RichtungsAnschlussDaten(id,AnschlussRichtung.Eingang,kante) {
+    override val klasse: String? = BasisEingang.ANSCHLUSS_ART
+
+    constructor(
+        id: String,
+        kante: AnschlussKante,
+        label: String = "",
+    ): this(id,kante) {
+        this.label = label
+    }
+
+}
 
 /**
  * Ausgangsanschluss eines Knotens.
  */
 open class AusgangDaten(
     override val id: String,
-    override val label: String,
     override val kante: AnschlussKante = AnschlussKante.Rechts,
-//    override val zahlenTyp: ZahlenTyp? = null,
-) : RichtungsAnschlussDaten(
-    id = id,
-    label = label,
-    richtung = AnschlussRichtung.Ausgang,
-    kante = kante,
-//    zahlenTyp = zahlenTyp,
-)
+) : RichtungsAnschlussDaten(id,AnschlussRichtung.Ausgang,kante) {
+    override val klasse: String? = BasisAusgang.ANSCHLUSS_ART
+
+    constructor(
+        id: String,
+        kante: AnschlussKante,
+        label: String = "",
+    ): this(id,kante) {
+        this.label = label
+    }
+
+}

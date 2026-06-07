@@ -2,12 +2,16 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AusgabeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.EingabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.toMutableMap
 
 
 open class KnotenZustand(
@@ -32,39 +36,42 @@ open class KnotenZustand(
  */
 open class KnotenDaten(
     override val id: String,
-    override val klasse: KnotenArt? = BasisKnoten.KNOTEN_ART,
-    open val name: String,
-    open var position: KartenPosition = Offset(0f, 0f), // Mitte des Knotens
-    open val dimension: Rechteck = IntSize(180, 96),
-//    open val art: String = "default",
-    open var ausgewaehlt: Boolean = false,
-    open val beweglich: Boolean = true,
-    open val data: Map<String, Any> = emptyMap(),
+    open val name: String = "",
+
 ): GraphDaten {
+    override val klasse: KnotenArt? = BasisKnoten.KNOTEN_ART
+    open var position: KartenPosition = Offset(0f, 0f) // Mitte des Knotens
+    open var dimension: Rechteck = IntSize(180, 96)
+    //    open val art: String = "default",
+    open var ausgewaehlt: Boolean = false
+    open var beweglich: Boolean = true
+    open val anschlüsse: KnotenAnschlüsse = mutableMapOf()
+    open val data: MutableMap<String, Any> = mutableMapOf()
+
     constructor(
-        daten: KnotenDaten,
-        id: String? = null,
-        klasse: KnotenArt? = null,
-        name: String? = null,
+        id: String,
+        name: String,
         position: KartenPosition? = null,
         dimension: Rechteck? = null,
-//        art: String? = null,
         ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
-        data: Map<String, Any>? = null,
+        anschlüsse: KnotenAnschlüsse? = null,
+        data: MutableMap<String, Any>? = null,
     ): this(
-        id ?: daten.id,
-        klasse ?: daten.klasse,
-        name ?: daten.name,
-        position ?: daten.position,
-        dimension ?: daten.dimension,
-//        art ?: daten.art,
-        ausgewaehlt ?: daten.ausgewaehlt,
-        beweglich ?: daten.beweglich,
-        data ?: daten.data,
-    )
+        id,
+        name,
+    ) {
+        this.position = position ?: this.position
+        this.dimension = dimension ?: this.dimension
+        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
+        this.beweglich = beweglich ?: this.beweglich
+        this.anschlüsse.clear()
+        this.anschlüsse.putAll(anschlüsse ?: this.anschlüsse)
+        this.data.clear()
+        this.data.putAll(data ?: this.data)
+    }
 
-    fun copy(
+/*    fun copy(
         id: String = this.id,
         klasse: KnotenArt? = this.klasse,
         name: String = this.name,
@@ -73,6 +80,7 @@ open class KnotenDaten(
 //        art: String = this.art,
         ausgewaehlt: Boolean = this.ausgewaehlt,
         beweglich: Boolean = this.beweglich,
+        anschlüsse: KnotenAnschlüsse = this.anschlüsse,
         data: Map<String, Any> = this.data,
     ): KnotenDaten = KnotenDaten(
         id = id,
@@ -83,8 +91,9 @@ open class KnotenDaten(
 //        art = art,
 //        ausgewaehlt = ausgewaehlt,
         beweglich = beweglich,
+        anschlüsse = anschlüsse,
         data = data,
-    )
+    )*/
 
 /*    fun save(betrachtungsModell: LiveKnoten) = copy(
         dimension = betrachtungsModell.dimension,
@@ -100,42 +109,45 @@ open class KnotenDaten(
  */
 open class EingabeDaten(
     override val id: String,
-    override val klasse: KnotenArt? = EingabeKnoten.KNOTEN_ART,
     override val name: String,
-    override var position: KartenPosition = Offset(0f, 0f),
-    override val dimension: Rechteck = IntSize(180, 96),
-//    override val art: String = "default",
-    override var ausgewaehlt: Boolean = false,
-    override val beweglich: Boolean = true,
-    override val data: Map<String, Any> = emptyMap(),
-    val anschlussLabel: List<String> = listOf("anschluss"),
-): KnotenDaten(
-    id,klasse,name,position,dimension,ausgewaehlt,beweglich,data
-) {
+): KnotenDaten(id,name) {
+    override val klasse: KnotenArt? = EingabeKnoten.KNOTEN_ART
+    override var position: KartenPosition = Offset(0f, 0f)
+    override var dimension: Rechteck = IntSize(180, 96)
+    //    override val art: String = "default",
+    override var ausgewaehlt: Boolean = false
+    override var beweglich: Boolean = true
+    override val anschlüsse: KnotenAnschlüsse
+        get() = anschlussLabel.map { AusgangDaten(id(this.id,it.value.second),it.key,it.value.first) to it.value.second }.toMutableMap()
+    override val data: MutableMap<String, Any> = mutableMapOf()
+    val anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>> = mutableMapOf()
 
-    fun copy(
-        id: String = this.id,
-        klasse: KnotenArt? = this.klasse,
-        name: String = this.name,
-        position: KartenPosition = this.position,
-        fläche: Rechteck = this.dimension,
-//        art: String = this.art,
-        ausgewaehlt: Boolean = this.ausgewaehlt,
-        beweglich: Boolean = this.beweglich,
-        data: Map<String, Any> = this.data,
-        anschlussLabel: List<String> = this.anschlussLabel,
-    ): EingabeDaten = EingabeDaten(
-        id = id,
-        klasse = klasse,
-        name = name,
-        position = position,
-        dimension = fläche,
-//        art = art,
-        ausgewaehlt = ausgewaehlt,
-        beweglich = beweglich,
-        data = data,
-        anschlussLabel = anschlussLabel,
-    )
+    constructor(
+        id: String,
+        name: String,
+        position: KartenPosition? = null,
+        dimension: Rechteck? = null,
+        ausgewaehlt: Boolean? = null,
+        beweglich: Boolean? = null,
+        anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>>? = null,
+        data: MutableMap<String, Any>? = null,
+    ): this(
+        id,
+        name,
+    ) {
+        this.position = position ?: this.position
+        this.dimension = dimension ?: this.dimension
+        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
+        this.beweglich = beweglich ?: this.beweglich
+        this.anschlussLabel.clear()
+        this.anschlussLabel.putAll(anschlussLabel ?: this.anschlussLabel)
+        this.data.clear()
+        this.data.putAll(data ?: this.data)
+    }
+
+    public companion object {
+        public fun id(id: String, idx: Int): String = "${id} out ${idx}"
+    }
 }
 
 /**
@@ -143,40 +155,43 @@ open class EingabeDaten(
  */
 open class AusgabeDaten(
     override val id: String,
-    override val klasse: KnotenArt? = AusgabeKnoten.KNOTEN_ART,
     override val name: String,
-    override var position: KartenPosition = Offset(0f, 0f),
-    override val dimension: Rechteck = IntSize(180, 96),
-//    override val art: String = "default",
-    override var ausgewaehlt: Boolean = false,
-    override val beweglich: Boolean = true,
-    override val data: Map<String, Any> = emptyMap(),
-    val anschlussLabel: List<String> = listOf("anschluss"),
-): KnotenDaten(
-    id,klasse,name,position,dimension,ausgewaehlt,beweglich,data
-) {
+): KnotenDaten(id,name) {
+    override val klasse: KnotenArt? = AusgabeKnoten.KNOTEN_ART
+    override var position: KartenPosition = Offset(0f, 0f)
+    override var dimension: Rechteck = IntSize(180, 96)
+    //    override val art: String = "default",
+    override var ausgewaehlt: Boolean = false
+    override var beweglich: Boolean = true
+    override val anschlüsse: KnotenAnschlüsse
+        get() = anschlussLabel.map { EingangDaten(id(this.id, it.value.second),it.key,it.value.first) to it.value.second }.toMutableMap()
+    override val data: MutableMap<String, Any> = mutableMapOf()
+    val anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>> = mutableMapOf()
 
-    fun copy(
-        id: String = this.id,
-        klasse: KnotenArt? = this.klasse,
-        name: String = this.name,
-        position: KartenPosition = this.position,
-        fläche: Rechteck = this.dimension,
-//        art: String = this.art,
-        ausgewaehlt: Boolean = this.ausgewaehlt,
-        beweglich: Boolean = this.beweglich,
-        data: Map<String, Any> = this.data,
-        anschlussLabel: List<String> = this.anschlussLabel,
-    ): AusgabeDaten = AusgabeDaten(
-        id = id,
-        klasse = klasse,
-        name = name,
-        position = position,
-        dimension = fläche,
-//        art = art,
-        ausgewaehlt = ausgewaehlt,
-        beweglich = beweglich,
-        data = data,
-        anschlussLabel = anschlussLabel,
-    )
+    constructor(
+        id: String,
+        name: String,
+        position: KartenPosition? = null,
+        dimension: Rechteck? = null,
+        ausgewaehlt: Boolean? = null,
+        beweglich: Boolean? = null,
+        anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>>? = null,
+        data: MutableMap<String, Any>? = null,
+    ): this(
+        id,
+        name,
+    ) {
+        this.position = position ?: this.position
+        this.dimension = dimension ?: this.dimension
+        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
+        this.beweglich = beweglich ?: this.beweglich
+        this.anschlussLabel.clear()
+        this.anschlussLabel.putAll(anschlussLabel ?: this.anschlussLabel)
+        this.data.clear()
+        this.data.putAll(data ?: this.data)
+    }
+
+    public companion object {
+        public fun id(id: String, idx: Int): String = "${id} out ${idx}"
+    }
 }
