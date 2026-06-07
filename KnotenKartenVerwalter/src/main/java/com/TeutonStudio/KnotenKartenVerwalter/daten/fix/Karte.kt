@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import com.TeutonStudio.KnotenKartenVerwalter.AnsichtsfensterDaten
 import com.TeutonStudio.KnotenKartenVerwalter.KartenArt
@@ -29,7 +30,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
  * Knotenpositionen weiterhin in Weltkoordinaten gespeichert werden.
  */
 open class KarteZustand(
-    val ansicht: AnsichtsfensterDaten = StandardAnsicht(),
+    var ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
     val auswahl: AuswahlDaten = AuswahlDaten(),
@@ -85,7 +86,7 @@ open class KarteDaten(
         id: String? = null,
         klasse: String? = null,
         name: String? = null,
-        größe: IntSize? = null,
+        größe: Rechteck? = null,
         knoten: List<KnotenDaten>? = null,
         verbindungen: List<VerbindungDaten>? = null,
         initialKnoten: List<KnotenDaten>? = null,
@@ -113,7 +114,7 @@ open class KarteDaten(
         id: String = this.id,
         klasse: String? = this.klasse,
         name: String = this.name,
-        größe: IntSize? = this.größe,
+        größe: Rechteck? = this.größe,
         knoten: List<KnotenDaten> = this.knoten,
         verbindungen: List<VerbindungDaten> = this.verbindungen,
         initialKnoten: List<KnotenDaten> = this.initialKnoten,

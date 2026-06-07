@@ -1,11 +1,19 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.center
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toIntRect
 import androidx.compose.ui.unit.toOffset
+import androidx.compose.ui.unit.toSize
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
@@ -46,7 +54,9 @@ typealias BildschirmPosition = IntOffset
 /**
  * Dimensionen eines Rechteck
  */
-typealias Rechteck = IntSize
+typealias Rechteck = Rect
+
+public fun Rechteck(breite: Float, tiefe: Float, position: KartenPosition): Rechteck= Rect(position,position+ Offset(breite,tiefe))
 
 /**
  *
@@ -65,14 +75,7 @@ public fun BildschirmPosition.zuKarte(ansicht: AnsichtsfensterDaten): KartenPosi
 /**
  *
  */
-public fun KartenPosition.aufKnoten(daten: KnotenDaten): Boolean {
-    val abstand = daten.dimension.center.toOffset()
-    val eckeMin = daten.position - abstand
-    val eckeMax = daten.position + abstand
-    val inX = this.x in eckeMin.x..eckeMax.x
-    val inY = this.y in eckeMin.y..eckeMax.y
-    return inX && inY
-}
+public fun KartenPosition.aufKnoten(daten: KnotenDaten): Boolean = daten.dimension.contains(this - daten.position)
 
 /**
  *
@@ -89,6 +92,30 @@ public fun KnotenPosition.zuKarte(zentrum: KartenPosition): KartenPosition {
     return TODO("definieren, ob der lokale Knotenraum andere skalierung hat als der der Karte.")
 }
 
+/*private fun Modifier.alignFürKante(
+    kante: AnschlussKante,
+    skalierung: Float,
+): Modifier = when (kante) {
+    AnschlussKante.Links ->
+        this.align(Alignment.CenterStart)
+            .fillMaxHeight()
+            .offset(x = (-5f * skalierung).dp)
+
+    AnschlussKante.Rechts ->
+        this.align(Alignment.CenterEnd)
+            .fillMaxHeight()
+            .offset(x = (5f * skalierung).dp)
+
+    AnschlussKante.Oben ->
+        this.align(Alignment.TopCenter)
+            .fillMaxWidth()
+            .offset(y = (-5f * skalierung).dp)
+
+    AnschlussKante.Unten ->
+        this.align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .offset(y = (5f * skalierung).dp)
+}*/
 
 /**
  * Rechnet die Weltposition eines Knotens in eine Bildschirmposition um.
@@ -150,7 +177,8 @@ typealias KnotenAnschlüsse = MutableMap<AnschlussDaten,Int>
  */
 typealias AnschlussModifier = (AnschlussDaten, Int) -> Modifier
 
-public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }.toMutableMap()
+// public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }.toMutableMap()
+public fun Map<Anschluss,Int>.filterKante(kante: AnschlussKante): Map<Anschluss,Int> = this.filter { (a,idx) -> a.daten.kante == kante }.toMutableMap()
 public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): KnotenAnschlüsse = this.filter { (daten,idx) -> when (richtung) {
     AnschlussRichtung.Eingang -> daten is EingangDaten
     AnschlussRichtung.Ausgang -> daten is AusgangDaten
@@ -182,8 +210,13 @@ public fun idReferenz.hatGleichenAnschluss(other: idReferenz): Boolean {
     return  (ersterAnschluss || zweiterAnschluss) && hatGleichenKnoten(other)
 }
 
+@Composable @JvmName("IterVerbindungen2Composable")
+public fun Iterable<Verbindung>.zuComposable(modifier: (VerbindungDaten) -> Modifier) = this.forEach { it.zuComposable(modifier(it.daten)) }
+
 // Knoten
 
+@Composable @JvmName("IterKnoten2Composable")
+public fun Iterable<Knoten>.zuComposable(modifier: (KnotenDaten) -> Modifier) = this.forEach { it.zuComposable(modifier(it.daten)) }
 
 // Karten
 
@@ -198,6 +231,10 @@ typealias AnsichtsfensterDaten = Triple<Float,Float,Float>
 
 public fun AnsichtsfensterDaten(zoom: Float, verschiebung: Offset): AnsichtsfensterDaten = Triple(zoom,verschiebung.x,verschiebung.y)
 public fun StandardAnsicht(): AnsichtsfensterDaten = Triple(1f,0f,0f)
+
+public fun KarteZustand.verschiebe(delta: Offset) { ansicht = Triple(ansicht.first,ansicht.second + delta.x, ansicht.third + delta.y) }
+public fun KarteZustand.zoome(delta: Float) { ansicht = Triple(ansicht.first + delta,ansicht.second,ansicht.third) }
+public fun KarteZustand.transformiere(verschiebung: Offset,zoom: Float) { ansicht = Triple(ansicht.first + zoom,ansicht.second + verschiebung.x, ansicht.third + verschiebung.y) }
 
 public fun AnsichtsfensterDaten.erhalteVerschoben(von: BildschirmPosition): BildschirmPosition = TODO()
 public fun AnsichtsfensterDaten.erhalteVerschiebung(): Offset = Offset(this.second,this.third)

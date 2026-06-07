@@ -269,7 +269,6 @@ internal fun Knoten.anschlussReferenz(
     zustand: KarteZustand,
 ): AnschlussReferenz? {
     val richtung = if (anschluss is RichtungsAnschlussDaten) anschluss.richtung else null
-//    val richtung = anschluss.richtungOderNull ?: return null
     val anschluesseAnKante = daten.anschlüsse.entries
         .filter { (daten, _) -> daten.kante == anschluss.kante }
         .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })

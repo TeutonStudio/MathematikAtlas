@@ -1,8 +1,20 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import android.view.MotionEvent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
@@ -15,8 +27,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KartenOberfläche
 
 @Suppress("UNCHECKED_CAST")
@@ -126,14 +142,21 @@ open class BasisKarte(
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
+    val knoten
+        get() = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it) }
+    val verbindungen
+        get() = daten.verbindungen.mapNotNull { verbindungFabrik.erzeugeVerbindung(it) }
+
     @Composable
     override fun zuComposable(modifier: Modifier) {
         KartenOberfläche(
             daten = daten,
             zustand = zustand,
-            knotenFabrik = knotenFabrik,
-            verbindungFabrik = verbindungFabrik,
-            modifier = modifier,
+            knoten = knoten,
+            verbindungen = verbindungen,
+            modifier = modifier.fillMaxSize().clipToBounds().background(Color(0xFFF8FAFC))
+//            .onSizeChanged { fläche = it } TODO
+                    ,
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
             onKontextAktion = onKontextAktion,

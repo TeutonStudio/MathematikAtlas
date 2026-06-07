@@ -5,6 +5,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
 import com.TeutonStudio.KnotenKartenVerwalter.hatGleichenAnschluss
 import com.TeutonStudio.KnotenKartenVerwalter.idReferenz
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisVerbindung
 
 /**
  * Fachliche Beschreibung einer Verbindung zwischen zwei Anschlüssen.
@@ -15,7 +16,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
  */
 open class VerbindungDaten(
     override val id: String,
-    override val klasse: VerbindungArt = BasisEingang.ANSCHLUSS_ART,
+    override val klasse: VerbindungArt = BasisVerbindung.VERBINDUNG_ART,
     val ids: idReferenz,
     val label: String? = null,
     val art: String = "default",

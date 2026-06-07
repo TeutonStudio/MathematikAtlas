@@ -22,7 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import kotlin.collections.forEach
@@ -35,12 +38,13 @@ import kotlin.collections.forEach
  */
 @Composable
 public fun KnotenRahmen(
-    knoten: Knoten, anschlussFabrik: AnschlussFabrik,
+    daten: KnotenDaten,
+    anschlüsse:  Map<Anschluss, Int>,
     modifierKnoten: Modifier = Modifier,
     modifierAnschluss: (AnschlussDaten, Int) -> Modifier = { daten, idx -> AnschlussModifierStandard },
     inhaltSkalierung: Float = 1f,
 ) {
-    val daten = knoten.daten
+//    val daten = knoten.daten
     val randFarbe = if (daten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF64748B)
     val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
     val form = RoundedCornerShape((8f * skalierung).dp)
@@ -74,7 +78,7 @@ public fun KnotenRahmen(
                 modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5f * skalierung).dp),
                 contentAlignment = Alignment.Center,
             ) {
-                knoten.daten.anschlüsse.zuLeiste(knoten,kante,anschlussFabrik,modifierAnschluss)
+                anschlüsse.zuLeiste(kante,modifierAnschluss)
             }
         }
     }

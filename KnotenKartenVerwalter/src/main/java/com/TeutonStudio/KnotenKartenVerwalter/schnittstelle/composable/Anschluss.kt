@@ -45,14 +45,8 @@ public fun List<AnschlussDaten>.zuPfad(istEingang: Boolean, modifier: (Int) -> M
  * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
  */
 @Composable
-public fun MutableMap<AnschlussDaten,Int>.zuLeiste(besitzer: Knoten, kante: AnschlussKante, anschlussFabrik: AnschlussFabrik, modifier: AnschlussModifier) {
-    val sorter = compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id }
-    val anschlussListe = this.filterKante(kante).entries.sortedWith(sorter).map { it.key }
-    val listeComposable = anschlussListe.mapNotNull { daten ->
-        anschlussFabrik.erzeugeAnschluss(daten, besitzer)
-    }.mapIndexed { idx, anschluss ->
-        @Composable { anschluss.zuComposable(modifier(anschluss.daten,idx)) }
-    }
+public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, modifier: AnschlussModifier) {
+    val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(modifier(anschluss.daten,idx)) } }
     if (kante.istVertikal()) AnschlussSpalte(listeComposable)
     else if (kante.istHorizontal()) AnschlussZeile(listeComposable)
     else TODO()

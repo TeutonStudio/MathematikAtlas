@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
@@ -40,8 +41,11 @@ open class KnotenDaten(
 
 ): GraphDaten {
     override val klasse: KnotenArt? = BasisKnoten.KNOTEN_ART
-    open var position: KartenPosition = Offset(0f, 0f) // Mitte des Knotens
-    open var dimension: Rechteck = IntSize(180, 96)
+    open var position: KartenPosition = Offset(0f, 0f)
+    open val dimension: Rechteck
+        get() = Rect(position,position + Offset(breite,tiefe))
+    open var breite: Float = 180f
+    open var tiefe: Float = 96f
     //    open val art: String = "default",
     open var ausgewaehlt: Boolean = false
     open var beweglich: Boolean = true
@@ -52,7 +56,8 @@ open class KnotenDaten(
         id: String,
         name: String,
         position: KartenPosition? = null,
-        dimension: Rechteck? = null,
+        breite: Float? = null,
+        tiefe: Float? = null,
         ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
         anschlüsse: KnotenAnschlüsse? = null,
@@ -62,7 +67,8 @@ open class KnotenDaten(
         name,
     ) {
         this.position = position ?: this.position
-        this.dimension = dimension ?: this.dimension
+        this.breite = breite ?: this.breite
+        this.tiefe = tiefe ?: this.tiefe
         this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
         this.beweglich = beweglich ?: this.beweglich
         this.anschlüsse.clear()
@@ -70,38 +76,6 @@ open class KnotenDaten(
         this.data.clear()
         this.data.putAll(data ?: this.data)
     }
-
-/*    fun copy(
-        id: String = this.id,
-        klasse: KnotenArt? = this.klasse,
-        name: String = this.name,
-        position: KartenPosition = this.position,
-        dimension: Rechteck = this.dimension,
-//        art: String = this.art,
-        ausgewaehlt: Boolean = this.ausgewaehlt,
-        beweglich: Boolean = this.beweglich,
-        anschlüsse: KnotenAnschlüsse = this.anschlüsse,
-        data: Map<String, Any> = this.data,
-    ): KnotenDaten = KnotenDaten(
-        id = id,
-        klasse = klasse,
-        name = name,
-        position = position,
-        dimension = dimension,
-//        art = art,
-//        ausgewaehlt = ausgewaehlt,
-        beweglich = beweglich,
-        anschlüsse = anschlüsse,
-        data = data,
-    )*/
-
-/*    fun save(betrachtungsModell: LiveKnoten) = copy(
-        dimension = betrachtungsModell.dimension,
-        position = betrachtungsModell.position,
-        ausgewaehlt = betrachtungsModell.ausgewaehlt,
-        name = betrachtungsModell.name,
-        data = betrachtungsModell.data
-    )*/
 }
 
 /**
@@ -113,8 +87,6 @@ open class EingabeDaten(
 ): KnotenDaten(id,name) {
     override val klasse: KnotenArt? = EingabeKnoten.KNOTEN_ART
     override var position: KartenPosition = Offset(0f, 0f)
-    override var dimension: Rechteck = IntSize(180, 96)
-    //    override val art: String = "default",
     override var ausgewaehlt: Boolean = false
     override var beweglich: Boolean = true
     override val anschlüsse: KnotenAnschlüsse
@@ -126,7 +98,8 @@ open class EingabeDaten(
         id: String,
         name: String,
         position: KartenPosition? = null,
-        dimension: Rechteck? = null,
+        breite: Float? = null,
+        tiefe: Float? = null,
         ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
         anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>>? = null,
@@ -136,7 +109,8 @@ open class EingabeDaten(
         name,
     ) {
         this.position = position ?: this.position
-        this.dimension = dimension ?: this.dimension
+        this.breite = breite ?: this.breite
+        this.tiefe = tiefe ?: this.tiefe
         this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
         this.beweglich = beweglich ?: this.beweglich
         this.anschlussLabel.clear()
@@ -159,8 +133,6 @@ open class AusgabeDaten(
 ): KnotenDaten(id,name) {
     override val klasse: KnotenArt? = AusgabeKnoten.KNOTEN_ART
     override var position: KartenPosition = Offset(0f, 0f)
-    override var dimension: Rechteck = IntSize(180, 96)
-    //    override val art: String = "default",
     override var ausgewaehlt: Boolean = false
     override var beweglich: Boolean = true
     override val anschlüsse: KnotenAnschlüsse
@@ -172,7 +144,8 @@ open class AusgabeDaten(
         id: String,
         name: String,
         position: KartenPosition? = null,
-        dimension: Rechteck? = null,
+        breite: Float? = null,
+        tiefe: Float? = null,
         ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
         anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>>? = null,
@@ -182,7 +155,8 @@ open class AusgabeDaten(
         name,
     ) {
         this.position = position ?: this.position
-        this.dimension = dimension ?: this.dimension
+        this.breite = breite ?: this.breite
+        this.tiefe = tiefe ?: this.tiefe
         this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
         this.beweglich = beweglich ?: this.beweglich
         this.anschlussLabel.clear()

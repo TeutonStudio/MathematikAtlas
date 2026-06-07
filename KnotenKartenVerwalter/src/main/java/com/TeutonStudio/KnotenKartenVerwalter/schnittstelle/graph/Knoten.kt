@@ -18,9 +18,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 
 // Composable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
+import kotlin.let
 
 @Suppress("UNCHECKED_CAST")
 val BasisKnotenFabrik: KnotenFabrik = mapOf(
@@ -49,8 +51,6 @@ sealed interface Knoten: GraphObjekt {
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
     )
-    // TODO herausfinden, ob bestehende Verbindungen als Argument funktionieren
-//    public fun erhalteAnschlüsse(): KnotenAnschlüsse
 
     @Composable
     override fun zuComposable(
@@ -66,12 +66,15 @@ open class BasisKnoten(
 ): Knoten {
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
 
+    val anschlüsse
+        get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
+
     @Composable
     override fun zuComposable(
         modifierKnoten: Modifier,
         modifierAnschluss: AnschlussModifier,
         inhaltSkalierung: Float,
-    ) { KnotenRahmen(this,anschlussFabrik, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
+    ) { KnotenRahmen(daten,anschlüsse, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
 
 /*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
         return TODO("Korrekte Anschlussabfrage")
