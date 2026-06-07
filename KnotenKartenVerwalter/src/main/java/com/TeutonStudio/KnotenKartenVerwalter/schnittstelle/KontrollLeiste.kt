@@ -18,8 +18,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 
 /**
  * Rendert die Kontrollleiste für einen Karten-Zustand.

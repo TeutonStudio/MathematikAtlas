@@ -3,6 +3,8 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten
 import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.mitErsetztemEingang
 import java.util.UUID
 
 data class KartenCommandErgebnis(

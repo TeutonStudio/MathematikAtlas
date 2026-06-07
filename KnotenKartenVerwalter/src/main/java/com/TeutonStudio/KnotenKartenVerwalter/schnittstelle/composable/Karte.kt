@@ -39,20 +39,22 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
+import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
+import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.anschlussModifierSkaliert
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AuswahlÄndern
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenAktualisierung
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KnotenFabrik
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KontextAktionAusführen
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungArten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungsDrag
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungsZiehen
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.zuComposable
 import kotlin.math.roundToInt
 
@@ -84,7 +86,7 @@ internal fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
     knotenKlassen: KnotenFabrik,
-    verbindungArten: VerbindungArten = VerbindungArten.Standard,
+    verbindungKlassen: VerbindungFabrik,
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -148,33 +150,26 @@ internal fun KartenOberfläche(
         auswahl = zustand.auswahl,
     )
 
-    val graph = KartenGraph(
-        knoten = sichtbareKnoten,
-        verbindungen = sichtbareDaten.verbindungen,
-        zustand = sichtbarerZustand,
-    )
-
     val density = LocalDensity.current
 
     val aktuelleAnsicht by rememberUpdatedState(sichtbarerZustand)
-    val aktuellerGraph by rememberUpdatedState(graph)
     val aktuellerDrag by rememberUpdatedState(verbindungsDrag)
     val hintergrundGestenBlockiert by rememberUpdatedState(blockiereHintergrundGesten)
 
-    LaunchedEffect(daten.id, fläche) {
+/*    LaunchedEffect(daten.id, fläche) { TODO
         if (fläche.width > 0 && fläche.height > 0 && daten.knoten.isNotEmpty()) {
             ansicht = daten.zoomAufInhalt(fläche, ansicht)
         }
-    }
+    }*/
 
-    fun öffneKontextMenü(position: Offset) {
+/*    fun öffneKontextMenü(position: Offset) { TODO
         val ziel = aktuellerGraph.treffer(position)
         kontextMenü = KontextMenüZustand(
             position = position,
             ziel = ziel,
             weltPosition = position.zuWeltPosition(aktuelleAnsicht).zuWeltOffset(),
         )
-    }
+    }*/
 
     Box(
         modifier = modifier
@@ -184,10 +179,10 @@ internal fun KartenOberfläche(
             .background(Color(0xFFF8FAFC))
             .pointerInput(daten.id) {
                 detectTapGestures(
-                    onTap = { position ->
+/*                    onTap = { position -> TODO
                         val ziel = aktuellerGraph.treffer(position)
                         onAuswahlÄndern(ziel.zuAuswahl())
-                    },
+                    },*/
                 )
             }
             .pointerInteropFilter { ereignis ->
@@ -199,7 +194,7 @@ internal fun KartenOberfläche(
                                     ereignis.actionMasked == MotionEvent.ACTION_BUTTON_PRESS
                             )
                 ) {
-                    öffneKontextMenü(Offset(ereignis.x, ereignis.y))
+//                    öffneKontextMenü(Offset(ereignis.x, ereignis.y)) TODO
                     true
                 } else {
                     false
@@ -209,7 +204,7 @@ internal fun KartenOberfläche(
                 detectTransformGestures { zentrum, pan, zoomÄnderung, _ ->
                     if (hintergrundGestenBlockiert) return@detectTransformGestures
                     kontextMenü = null
-                    ansicht = aktuelleAnsicht.transformiereUm(zentrum, pan, zoomÄnderung)
+//                    ansicht = aktuelleAnsicht.transformiereUm(zentrum, pan, zoomÄnderung) TODO
                 }
             }
             .pointerInput(daten.id) {
@@ -220,7 +215,7 @@ internal fun KartenOberfläche(
                             ereignis.type == PointerEventType.Press &&
                             ereignis.buttons.isSecondaryPressed
                         ) {
-                            öffneKontextMenü(ereignis.changes.first().position)
+//                            öffneKontextMenü(ereignis.changes.first().position) TODO
                             ereignis.changes.forEach { it.consume() }
                         }
                     }

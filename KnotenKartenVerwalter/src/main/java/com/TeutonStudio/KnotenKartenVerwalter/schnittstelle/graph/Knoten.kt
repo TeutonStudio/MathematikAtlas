@@ -4,6 +4,11 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 
 // Daten
@@ -14,55 +19,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 // Composable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
 
-/*public fun interface KnotenFabrik {
-    public fun erstelle(daten: KnotenDaten, anschlüsse: KnotenAschlüsse): Knoten
-}*/
-
-/**
- * Registry wie ReactFlows `nodeTypes`: `KnotenDaten.knotenArt` entscheidet,
- * welche Knotenklasse und damit welche Anschlüsse verwendet werden.
- */
-/*data class KnotenArten(
-    private val fabriken: Map<String, KnotenFabrik> = standardFabriken,
-) {
-    public fun erstelle(daten: KnotenDaten, anschlüsse: KnotenAschlüsse): Knoten =
-        (fabriken[daten.art] ?: fabriken.getValue(BasisKnoten.KNOTEN_ART)).erstelle(daten,anschlüsse)
-
-    public fun mit(art: String, fabrik: KnotenFabrik): KnotenArten =
-        copy(fabriken = fabriken + (art to fabrik))
-
-    public companion object {
-*//*        private fun registriereKnoten(knoten: object): Pair<String, KnotenFabrik> {
-            return knoten.KNOTEN_ART to KnotenFabrik(::knoten)
-        }*//*
-        private val standardFabriken = mapOf(
-            BasisKnoten.KNOTEN_ART to KnotenFabrik(::BasisKnoten),
-            EingabeKnoten.KNOTEN_ART to KnotenFabrik(::EingabeKnoten),
-            AusgabeKnoten.KNOTEN_ART to KnotenFabrik(::AusgabeKnoten),
-            // TODO GruppenKnoten
-        )
-
-        public val Standard: KnotenArten = KnotenArten()
-    }
-}*/
-
-/**
- * Rendert einen Knoten als Compose-Baustein.
- *
- * `modifierKnoten` positioniert und skaliert den gesamten Knoten. Über
- * `modifierAnschluss` kann die Karte jeden Anschluss zusätzlich mit
- * Pointer-Interaktion versehen.
- */
-/*@Composable
-public fun KnotenDaten.zuComposable(
-    modifierKnoten: Modifier = Modifier,
-    modifierAnschluss: (AnschlussRichtung, Int) -> Modifier = { _, _ -> AnschlussModifier },
-    inhaltSkalierung: Float = 1f,
-) = BasisKnoten(this).zuComposable(modifierKnoten, modifierAnschluss, inhaltSkalierung)*/
-
-typealias KnotenFabrik = Map<String,KnotenKonstruktor>
-typealias KnotenKonstruktor = (KnotenDaten) -> Knoten
-
 @Suppress("UNCHECKED_CAST")
 val BasisKnotenFabrik: KnotenFabrik = mapOf(
     BasisKnoten.KNOTEN_ART to ::BasisKnoten as KnotenKonstruktor,
@@ -70,8 +26,9 @@ val BasisKnotenFabrik: KnotenFabrik = mapOf(
     AusgabeKnoten.KNOTEN_ART to ::AusgabeKnoten as KnotenKonstruktor,
 )
 
-typealias AnschlussModifier = (AnschlussDaten, Int) -> Modifier
-
+/**
+ * Knoten Elternklasse
+ */
 sealed interface Knoten: GraphObjekt {
     public val daten: KnotenDaten
 //    public val anschlüsse: KnotenAschlüsse
@@ -79,7 +36,7 @@ sealed interface Knoten: GraphObjekt {
     @Composable
     public fun zuComposable(
         modifierKnoten: Modifier = Modifier,
-        modifierAnschluss: AnschlussModifier = { daten,idx -> AnschlussModifierStandard },
+        modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
     )
     // TODO herausfinden, ob bestehende Verbindungen als Argument funktionieren
@@ -107,27 +64,29 @@ open class BasisKnoten(override val daten: KnotenDaten): Knoten {
     }
 
     public companion object {
-        public const val KNOTEN_ART: String = "default"
+        public const val KNOTEN_ART: KnotenArt = "default"
     }
 }
 
 /**
- * Standard Knoten mit einem Ausgang
+ * Standard Knoten mit Ausgängen
  */
 open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
     public companion object {
-        public const val KNOTEN_ART: String = "eingabe"
+        public const val KNOTEN_ART: KnotenArt = "eingabe"
     }
 }
 
 /**
- * Standard Knoten mit einem Eingang
+ * Standard Knoten Eingängen
  */
 open class AusgabeKnoten(daten: AusgabeDaten): BasisKnoten(daten) {
     public companion object {
-        public const val KNOTEN_ART: String = "ausgabe"
+        public const val KNOTEN_ART: KnotenArt = "ausgabe"
     }
 }
+
+
 
 /**
  * Vorschau der Standard-Knotendarstellung.

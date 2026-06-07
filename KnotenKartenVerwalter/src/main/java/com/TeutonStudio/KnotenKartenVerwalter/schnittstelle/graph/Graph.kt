@@ -2,11 +2,14 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
+import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
+import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
+import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
 
 /**
  * Graph ist die dünne Render-Brücke zwischen fachlichen Kartendaten und
@@ -19,8 +22,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 class Graph(
     private val daten: KarteDaten,
     private val zustand: KarteZustand = KarteZustand(),
-    private val knotenKlassen: KnotenFabrik = BasisKnotenFabrik,
-    private val verbindungArten: VerbindungArten = VerbindungArten.Standard,
+    private val kartenKlassen: KartenFabrik = BasisKartenFabrik,
     private val aktualisierung: KartenAktualisierung = { _, _ -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onKontextAktion: KontextAktionAusführen = {},
@@ -28,29 +30,14 @@ class Graph(
 ) : GraphObjekt {
 
     private val karte: Karte
-        get() = BasisKarte(
-            daten = daten,
-            zustand = zustand,
-            knotenKlassen = knotenKlassen,
-            verbindungArten = verbindungArten,
-            aktualisierung = aktualisierung,
-            onVerbindungErstellen = onVerbindungErstellen,
-            onKontextAktion = onKontextAktion,
-            onAuswahlÄndern = onAuswahlÄndern,
-        )
+        get() = kartenKlassen.erzeugeKarte(daten) ?: TODO("Fehlerhafte Daten Klassen zuordnung")
 
     @Composable
-    override fun zuComposable(modifier: Modifier) {
-        karte.zuComposable(modifier)
-    }
+    override fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)
 
-    override fun planeVerbindung(a: Anschluss) {
-        karte.planeVerbindung(a)
-    }
+    override fun planeVerbindung(a: Anschluss) = karte.planeVerbindung(a)
 
-    override fun erstelleVerbindung(von: Anschluss, zu: Anschluss) {
-        karte.erstelleVerbindung(von, zu)
-    }
+    override fun erstelleVerbindung(von: Anschluss, zu: Anschluss) = karte.erstelleVerbindung(von, zu)
 }
 
 /**
@@ -58,6 +45,7 @@ class Graph(
  *
  * karte.zuGraphComposable(...)
  */
+/*
 @Composable
 fun KarteDaten.zuGraphComposable(
     modifier: Modifier = Modifier,
@@ -79,4 +67,4 @@ fun KarteDaten.zuGraphComposable(
         onKontextAktion = onKontextAktion,
         onAuswahlÄndern = onAuswahlÄndern,
     ).zuComposable(modifier)
-}
+}*/

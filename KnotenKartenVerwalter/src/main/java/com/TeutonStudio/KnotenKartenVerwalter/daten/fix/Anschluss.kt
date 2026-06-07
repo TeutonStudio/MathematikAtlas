@@ -1,34 +1,7 @@
-package com.TeutonStudio.KnotenKartenVerwalter.daten
+package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante.Links
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante.Oben
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante.Rechts
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante.Unten
-
-/**
- * Seite eines Anschlusses am Knoten.
- *
- * Eingänge liegen links am Knotenrahmen, Ausgänge rechts. Diese Richtung wird
- * sowohl für das Rendering als auch für die Validierung neuer Verbindungen
- * verwendet.
- */
-enum class AnschlussRichtung {
-    Eingang,
-    Ausgang,
-}
-
-/**
- * Kante eines Knotens, an der ein Anschluss liegt.
- */
-enum class AnschlussKante {
-    Links,
-    Rechts,
-    Oben,
-    Unten,
-}
-
-public fun AnschlussKante.istVertikal(): Boolean = this == AnschlussKante.Links || this == AnschlussKante.Rechts
-public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben || this == AnschlussKante.Unten
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
 
 /**
  * Gemeinsame Basisdaten eines Anschlusses.
@@ -38,6 +11,7 @@ public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben
  */
 sealed class AnschlussDaten(
     override val id: String,
+    override val klasse: String? = null,
     open val label: String,
 //    open val richtung: AnschlussRichtung,
     open val kante: AnschlussKante,
@@ -56,12 +30,12 @@ sealed class RichtungsAnschlussDaten(
     open val richtung: AnschlussRichtung,
     override val kante: AnschlussKante,
 //    override val zahlenTyp: ZahlenTyp? = null,
-): AnschlussDaten(id,label,kante)
+): AnschlussDaten(id,null,label,kante)
 
 /**
  * Eingangsanschluss eines Knotens.
  */
-data class EingangDaten(
+open class EingangDaten(
     override val id: String,
     override val label: String,
     override val kante: AnschlussKante = AnschlussKante.Links,
@@ -77,7 +51,7 @@ data class EingangDaten(
 /**
  * Ausgangsanschluss eines Knotens.
  */
-data class AusgangDaten(
+open class AusgangDaten(
     override val id: String,
     override val label: String,
     override val kante: AnschlussKante = AnschlussKante.Rechts,

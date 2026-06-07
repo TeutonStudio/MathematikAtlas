@@ -134,8 +134,8 @@ private fun Übersicht(
                     color = if (knoten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF94A3B8),
                     topLeft = linksOben,
                     size = Size(
-                        width = (knoten.fläche.x * projektion.skalierung).coerceAtLeast(3f),
-                        height = (knoten.fläche.y * projektion.skalierung).coerceAtLeast(3f),
+                        width = (knoten.dimension.x * projektion.skalierung).coerceAtLeast(3f),
+                        height = (knoten.dimension.y * projektion.skalierung).coerceAtLeast(3f),
                     ),
                 )
             }

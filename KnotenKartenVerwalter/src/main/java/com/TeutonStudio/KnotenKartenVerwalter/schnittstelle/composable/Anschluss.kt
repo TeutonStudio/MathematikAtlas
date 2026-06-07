@@ -14,18 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.RichtungsAnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.istHorizontal
-import com.TeutonStudio.KnotenKartenVerwalter.daten.istVertikal
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifier
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.filterKante
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.RichtungsAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.filterKante
+import com.TeutonStudio.KnotenKartenVerwalter.istHorizontal
+import com.TeutonStudio.KnotenKartenVerwalter.istVertikal
 import kotlin.collections.filterKeys
+import kotlin.collections.maxBy
 
 /**
  * Rendert eine gemischte Anschlussliste als vertikale Anschluss-Spalte.

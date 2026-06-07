@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 
 /**
  * Renderer-Registry fuer spaetere benutzerdefinierte Knoten- und Verbindungstypen.

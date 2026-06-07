@@ -1,20 +1,14 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntOffset
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.GraphDaten
-import kotlin.math.roundToInt
-import kotlin.times
-
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
+import com.TeutonStudio.KnotenKartenVerwalter.daten.aktiv.LiveKnoten
 
 
 open class KnotenZustand(
 
 )
-
-typealias KnotenPosition = Offset
-typealias KnotenRechteck = Offset
 
 /**
  * Rechnet ein Bildschirmdelta mit dem aktuellen Zoom in ein Weltdelta um.
@@ -24,23 +18,6 @@ public operator fun Offset.div(other: KarteZustand): Offset {
     return Offset(this.x / zoom, this.y / zoom)
 }
 
-/**
- * Rechnet die Weltposition eines Knotens in eine Bildschirmposition um.
- *
- * Diese Hilfsfunktion wird von älterem UI-Code verwendet. Neue Kartenlogik nutzt
- * zusätzlich die Transformationsfunktionen in `schnittstelle/Karte.kt`.
- */
-public fun KnotenPosition.zuIntOffset(zustand: KarteZustand): IntOffset = IntOffset(
-    x = (this.x * zustand.zoom + zustand.verschiebung.x).roundToInt(),
-    y = (this.y * zustand.zoom + zustand.verschiebung.y).roundToInt(),
-)
-
-/**
- * Kurzform für eine reine Verschiebung ohne expliziten Zoom.
- */
-public fun KnotenPosition.zuIntOffset(verschiebung: Offset): IntOffset = zuIntOffset(
-    KarteZustand(verschiebung = verschiebung),
-)
 
 /**
  * Fachlicher Zustand eines Knotens.
@@ -53,8 +30,8 @@ open class KnotenDaten(
     override val id: String,
     override val klasse: String?,
     open val name: String,
-    open val position: KnotenPosition = Offset(0f, 0f),
-    open val fläche: KnotenRechteck = Offset(180f, 96f),
+    open val position: KartenPosition = Offset(0f, 0f),
+    open val dimension: Rechteck = Offset(180f, 96f),
     open val art: String = "default",
     open val ausgewaehlt: Boolean = false,
     open val beweglich: Boolean = true,
@@ -65,8 +42,8 @@ open class KnotenDaten(
         id: String? = null,
         klasse: String? = null,
         name: String? = null,
-        position: KnotenPosition? = null,
-        fläche: KnotenRechteck? = null,
+        position: KartenPosition? = null,
+        dimension: Rechteck? = null,
         art: String? = null,
         ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
@@ -76,7 +53,7 @@ open class KnotenDaten(
         klasse ?: daten.klasse,
         name ?: daten.name,
         position ?: daten.position,
-        fläche ?: daten.fläche,
+        dimension ?: daten.dimension,
         art ?: daten.art,
         ausgewaehlt ?: daten.ausgewaehlt,
         beweglich ?: daten.beweglich,
@@ -91,8 +68,8 @@ open class KnotenDaten(
         id: String = this.id,
         klasse: String? = this.klasse,
         name: String = this.name,
-        position: KnotenPosition = this.position,
-        fläche: KnotenRechteck = this.fläche,
+        position: KartenPosition = this.position,
+        dimension: Rechteck = this.dimension,
         art: String = this.art,
         ausgewaehlt: Boolean = this.ausgewaehlt,
         beweglich: Boolean = this.beweglich,
@@ -102,46 +79,57 @@ open class KnotenDaten(
         klasse = klasse,
         name = name,
         position = position,
-        fläche = fläche,
+        dimension = dimension,
         art = art,
         ausgewaehlt = ausgewaehlt,
         beweglich = beweglich,
         data = data,
     )
+
+    fun save(betrachtungsModell: LiveKnoten) = copy(
+        dimension = betrachtungsModell.dimension,
+        position = betrachtungsModell.position,
+        ausgewaehlt = betrachtungsModell.ausgewaehlt,
+        name = betrachtungsModell.name,
+        data = betrachtungsModell.data
+    )
 }
 
+/**
+ *
+ */
 open class EingabeDaten(
     override val id: String,
     override val klasse: String?,
     override val name: String,
-    override val position: KnotenPosition = Offset(0f, 0f),
-    override val fläche: KnotenRechteck = Offset(180f, 96f),
+    override val position: KartenPosition = Offset(0f, 0f),
+    override val dimension: Rechteck = Offset(180f, 96f),
     override val art: String = "default",
     override val ausgewaehlt: Boolean = false,
     override val beweglich: Boolean = true,
     override val data: Map<String, Any> = emptyMap(),
-    val anschlussLabel: String = "anschluss",
+    val anschlussLabel: List<String> = listOf("anschluss"),
 ): KnotenDaten(
-    id,klasse,name,position,fläche,art,ausgewaehlt,beweglich,data
+    id,klasse,name,position,dimension,art,ausgewaehlt,beweglich,data
 ) {
 
     fun copy(
         id: String = this.id,
         klasse: String? = this.klasse,
         name: String = this.name,
-        position: KnotenPosition = this.position,
-        fläche: KnotenRechteck = this.fläche,
+        position: KartenPosition = this.position,
+        fläche: Rechteck = this.dimension,
         art: String = this.art,
         ausgewaehlt: Boolean = this.ausgewaehlt,
         beweglich: Boolean = this.beweglich,
         data: Map<String, Any> = this.data,
-        anschlussLabel: String = this.anschlussLabel,
+        anschlussLabel: List<String> = this.anschlussLabel,
     ): EingabeDaten = EingabeDaten(
         id = id,
         klasse = klasse,
         name = name,
         position = position,
-        fläche = fläche,
+        dimension = fläche,
         art = art,
         ausgewaehlt = ausgewaehlt,
         beweglich = beweglich,
@@ -150,38 +138,41 @@ open class EingabeDaten(
     )
 }
 
+/**
+ *
+ */
 open class AusgabeDaten(
     override val id: String,
     override val klasse: String?,
     override val name: String,
-    override val position: KnotenPosition = Offset(0f, 0f),
-    override val fläche: KnotenRechteck = Offset(180f, 96f),
+    override val position: KartenPosition = Offset(0f, 0f),
+    override val dimension: Rechteck = Offset(180f, 96f),
     override val art: String = "default",
     override val ausgewaehlt: Boolean = false,
     override val beweglich: Boolean = true,
     override val data: Map<String, Any> = emptyMap(),
-    val anschlussLabel: String = "anschluss",
+    val anschlussLabel: List<String> = listOf("anschluss"),
 ): KnotenDaten(
-    id,klasse,name,position,fläche,art,ausgewaehlt,beweglich,data
+    id,klasse,name,position,dimension,art,ausgewaehlt,beweglich,data
 ) {
 
     fun copy(
         id: String = this.id,
         klasse: String? = this.klasse,
         name: String = this.name,
-        position: KnotenPosition = this.position,
-        fläche: KnotenRechteck = this.fläche,
+        position: KartenPosition = this.position,
+        fläche: Rechteck = this.dimension,
         art: String = this.art,
         ausgewaehlt: Boolean = this.ausgewaehlt,
         beweglich: Boolean = this.beweglich,
         data: Map<String, Any> = this.data,
-        anschlussLabel: String = this.anschlussLabel,
+        anschlussLabel: List<String> = this.anschlussLabel,
     ): AusgabeDaten = AusgabeDaten(
         id = id,
         klasse = klasse,
         name = name,
         position = position,
-        fläche = fläche,
+        dimension = fläche,
         art = art,
         ausgewaehlt = ausgewaehlt,
         beweglich = beweglich,

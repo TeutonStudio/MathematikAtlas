@@ -7,17 +7,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 
 // Daten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.EingangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.istAusgang
+import com.TeutonStudio.KnotenKartenVerwalter.istEingang
 
 // Composables
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
 import kotlin.collections.component1
+import kotlin.collections.filter
 
 /**
  * Standardgröße und Außenabstand eines Anschlusses.
@@ -30,12 +35,6 @@ val AnschlussModifierStandard = Modifier
     .size(10.dp)
 
 
-typealias KnotenAnschlüsse = Map<AnschlussDaten,Int>
-public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }
-public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): KnotenAnschlüsse = this.filter { (daten,idx) -> when (richtung) {
-    AnschlussRichtung.Eingang -> daten is EingangDaten
-    AnschlussRichtung.Ausgang -> daten is AusgangDaten
-} }
 
 /**
  * Anschluss als Graphobjekt und Elternklasse aller Anschlüsse
@@ -43,8 +42,16 @@ public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): Knoten
 sealed interface Anschluss: GraphObjekt {
     public val daten: AnschlussDaten
     public val besitzer: Knoten
-    public var partner: Anschluss?
+//    public var partner: Anschluss?
+
+    public fun erhaltePosition(): KartenPosition {
+        return TODO()
+    }
+
     public fun erlaubtVerbindung(daten: Anschluss): Boolean
+    public fun erstelleVerbindung(zu: Anschluss)
+
+    public fun istSelbst(zielBesitzer: Knoten?): Boolean = (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
 }
 
 /**
@@ -53,26 +60,15 @@ sealed interface Anschluss: GraphObjekt {
 open class BasisAnschluss(
     override val daten: AnschlussDaten,
     override val besitzer: Knoten,
-    override var partner: Anschluss? = null,
+//    override var partner: Anschluss? = null,
 ): Anschluss {
     @Composable
-    override fun zuComposable(modifier: Modifier) {
-        Anschluss(daten,Color.Black,modifier)
-    }
+    override fun zuComposable(modifier: Modifier) = Anschluss(daten,Color.Black,modifier)
 
-    override fun erstelleVerbindung(
-        von: Anschluss,
-        zu: Anschluss,
-    ) {
-        if (this == von && erlaubtVerbindung(zu)) partner = zu
-        if (this == zu && erlaubtVerbindung(von)) partner = von
-    }
+    override fun erlaubtVerbindung(daten: Anschluss): Boolean = !istSelbst(daten.besitzer)
 
-    private fun istSelbst(zielBesitzer: Knoten?): Boolean {
-        return (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
-    }
-    override fun erlaubtVerbindung(daten: Anschluss): Boolean {
-        return !istSelbst(daten.besitzer)
+    override fun erstelleVerbindung(zu: Anschluss) {
+        TODO("Not yet implemented")
     }
 }
 
@@ -83,15 +79,10 @@ open class BasisAnschluss(
 open class BasisEingang(
     override val daten: EingangDaten,
     override val besitzer: Knoten,
-    override var partner: Anschluss? = null,
-): BasisAnschluss(daten, besitzer, partner) {
+//    override var partner: Anschluss? = null,
+): BasisAnschluss(daten, besitzer) {
 
-    private fun istAusgang(ziel: Anschluss): Boolean {
-        return ziel is BasisAusgang
-    }
-    override fun erlaubtVerbindung(daten: Anschluss): Boolean {
-        return super.erlaubtVerbindung(daten) && istAusgang(daten)
-    }
+    override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istAusgang()
 }
 
 /**
@@ -100,13 +91,8 @@ open class BasisEingang(
 open class BasisAusgang(
     override val daten: AusgangDaten,
     override val besitzer: Knoten,
-    override var partner: Anschluss? = null,
-): BasisAnschluss(daten, besitzer, partner) {
+//    override var partner: Anschluss? = null,
+): BasisAnschluss(daten, besitzer) {
 
-    private fun istEingang(ziel: Anschluss): Boolean {
-        return ziel is BasisEingang
-    }
-    override fun erlaubtVerbindung(daten: Anschluss): Boolean {
-        return super.erlaubtVerbindung(daten) && istEingang(daten)
-    }
+    override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istEingang()
 }

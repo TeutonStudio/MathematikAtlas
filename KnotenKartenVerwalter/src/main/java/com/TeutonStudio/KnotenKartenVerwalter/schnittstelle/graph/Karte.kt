@@ -3,31 +3,73 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
+import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
+import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KartenKonstruktor
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
+import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
+import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KartenOberfläche
 
-/**
- * Callback fuer eine geaenderte Knotenposition in Weltkoordinaten.
- */
-typealias KartenAktualisierung = (knotenId: String, position: Offset) -> Unit
+@Suppress("UNCHECKED_CAST")
+val BasisKartenFabrik: KartenFabrik = mapOf(
+    BasisKarte.KARTEN_ART to ::BasisKarte as KartenKonstruktor,
+)
 
 /**
- * Callback, wenn durch Anschluss-Drag eine neue Verbindung entstanden ist.
+ * Trefferziel auf der Karte.
+ *
+ * Diese Struktur gehoert zur Graph-Logik, nicht zur Compose-Karte:
+ * Hit-Testing fragt den Graphen, was unter einer Bildschirmposition liegt.
  */
-typealias VerbindungErstellen = (verbindung: VerbindungDaten) -> Unit
+sealed class KartenTreffer {
+    data object Hintergrund : KartenTreffer()
+    data class Knoten(val knotenId: String) : KartenTreffer()
+    data class Anschluss(
+        val knotenId: String,
+        val anschlussId: String,
+        val richtung: AnschlussRichtung,
+    ) : KartenTreffer()
+
+    data class Verbindung(val verbindungId: String) : KartenTreffer()
+}
 
 /**
- * Callback fuer Aktionen aus dem Kontextmenue der Karte.
+ * Beschreibt eine Aktion aus einem Kontextmenue.
+ *
+ * Die Karte rendert nur das Menue. Der Graph liefert das Ziel.
  */
-typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
+data class KartenKontextAktion(
+    val ziel: KartenTreffer,
+    val weltPosition: Offset,
+    val aktion: String,
+)
 
 /**
- * Callback fuer kontrollierte Auswahl von Knoten und Verbindungen.
+ * Aufgeloeste Anschlussposition eines Knotens.
+ *
+ * Position liegt in Bildschirmkoordinaten, weil sie fuer Rendering,
+ * Hit-Testing und Verbindungsdrag verwendet wird.
  */
-typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
+internal data class AnschlussReferenz(
+    val knotenId: String,
+    val anschlussId: String,
+    val richtung: AnschlussRichtung?,
+    val kante: AnschlussKante,
+    val position: BildschirmPosition,
+)
 
 /**
  * Karte als GraphObjekt.
@@ -39,11 +81,11 @@ typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
  *
  * Die eigentliche Compose-Oberflaeche liegt in KarteComposable.kt.
  */
-sealed interface Karte : GraphObjekt {
+sealed interface Karte: GraphObjekt {
     val daten: KarteDaten
     val zustand: KarteZustand
     val knotenKlassen: KnotenFabrik
-    val verbindungArten: VerbindungArten
+    val verbindungKlassen: VerbindungFabrik
     val aktualisierung: KartenAktualisierung
     val onVerbindungErstellen: VerbindungErstellen
     val onKontextAktion: KontextAktionAusführen
@@ -62,8 +104,8 @@ open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
     override val knotenKlassen: KnotenFabrik = BasisKnotenFabrik,
-    override val verbindungArten: VerbindungArten = VerbindungArten.Standard,
-    override val aktualisierung: KartenAktualisierung,
+    override val verbindungKlassen: VerbindungFabrik = BasisVerbindungFabrik,
+    override val aktualisierung: KartenAktualisierung = { knotenId,position ->  },
     override val onVerbindungErstellen: VerbindungErstellen = {},
     override val onKontextAktion: KontextAktionAusführen = {},
     override val onAuswahlÄndern: AuswahlÄndern = {},
@@ -75,13 +117,17 @@ open class BasisKarte(
             daten = daten,
             zustand = zustand,
             knotenKlassen = knotenKlassen,
-            verbindungArten = verbindungArten,
+            verbindungKlassen = verbindungKlassen,
             modifier = modifier,
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
             onKontextAktion = onKontextAktion,
             onAuswahlÄndern = onAuswahlÄndern,
         )
+    }
+
+    public companion object {
+        public const val KARTEN_ART: KnotenArt = "default"
     }
 }
 
@@ -90,6 +136,7 @@ open class BasisKarte(
  *
  *     daten.zuComposable(...)
  */
+/*
 @Composable
 fun KarteDaten.zuComposable(
     modifier: Modifier = Modifier,
@@ -111,4 +158,4 @@ fun KarteDaten.zuComposable(
         onKontextAktion = onKontextAktion,
         onAuswahlÄndern = onAuswahlÄndern,
     ).zuComposable(modifier)
-}
+}*/

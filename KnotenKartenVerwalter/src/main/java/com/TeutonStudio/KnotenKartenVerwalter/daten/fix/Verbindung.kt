@@ -1,7 +1,9 @@
-package com.TeutonStudio.KnotenKartenVerwalter.daten
+package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
-
-
+import com.TeutonStudio.KnotenKartenVerwalter.VerbindungArt
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
+import com.TeutonStudio.KnotenKartenVerwalter.hatGleichenAnschluss
+import com.TeutonStudio.KnotenKartenVerwalter.idReferenz
 
 /**
  * Fachliche Beschreibung einer Verbindung zwischen zwei Anschlüssen.
@@ -12,37 +14,28 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten
  */
 open class VerbindungDaten(
     override val id: String,
-    val quellKnotenId: String,
-    val quellAnschlussId: String,
-    val zielKnotenId: String,
-    val zielAnschlussId: String,
+    override val klasse: VerbindungArt,
+    val ids: idReferenz,
     val label: String? = null,
     val art: String = "default",
     val ausgewaehlt: Boolean = false,
-    val zahlenTyp: ZahlenTyp? = null,
     val fehler: String? = null,
 ): GraphDaten {
     fun copy(
         id: String = this.id,
-        quellKnotenId: String = this.quellKnotenId,
-        quellAnschlussId: String = this.quellAnschlussId,
-        zielKnotenId: String = this.zielKnotenId,
-        zielAnschlussId: String = this.zielAnschlussId,
+        klasse: VerbindungArt = this.klasse,
+        ids: idReferenz = this.ids,
         label: String? = this.label,
         art: String = this.art,
         ausgewaehlt: Boolean = this.ausgewaehlt,
-        zahlenTyp: ZahlenTyp? = this.zahlenTyp,
         fehler: String? = this.fehler,
     ): VerbindungDaten = VerbindungDaten(
         id = id,
-        quellKnotenId = quellKnotenId,
-        quellAnschlussId = quellAnschlussId,
-        zielKnotenId = zielKnotenId,
-        zielAnschlussId = zielAnschlussId,
+        klasse = klasse,
+        ids = ids,
         label = label,
         art = art,
         ausgewaehlt = ausgewaehlt,
-        zahlenTyp = zahlenTyp,
         fehler = fehler,
     )
 }
@@ -52,10 +45,4 @@ open class VerbindungDaten(
  * demselben Ziel-Eingang. Ausgänge bleiben damit automatisch mehrfach nutzbar.
  */
 public fun List<VerbindungDaten>.mitErsetztemEingang(verbindung: VerbindungDaten): List<VerbindungDaten> =
-    filterNot {
-        it.id == verbindung.id ||
-            (
-                it.zielKnotenId == verbindung.zielKnotenId &&
-                    it.zielAnschlussId == verbindung.zielAnschlussId
-                )
-    } + verbindung
+    filterNot { it.id == verbindung.id || it.ids.hatGleichenAnschluss(verbindung.ids) } + verbindung

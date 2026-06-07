@@ -1,10 +1,9 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import androidx.compose.ui.geometry.Offset
+import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCacheDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungArten
 
 /**
  * Persistierter Viewport einer Karte.
@@ -54,6 +53,8 @@ open class KarteZustand(
         zeigeKontrollLeiste: Boolean = this.zeigeKontrollLeiste,
         auswahl: AuswahlDaten = this.auswahl,
     ): KarteZustand = KarteZustand(verschiebung, zoom, zeigeÜbersicht, zeigeKontrollLeiste, auswahl)
+
+    public fun alsDaten(): AnsichtsfensterDaten = AnsichtsfensterDaten(verschiebung,zoom)
 }
 
 /**
@@ -67,13 +68,13 @@ open class KarteDaten(
     override val id: String,
     override val klasse: String?,
     public val name: String,
-    public val größe: Offset? = null, // TODO größe des Graphs
-    public val knoten: List<KnotenDaten> = emptyList(),
-    public val verbindungen: List<VerbindungDaten> = emptyList(),
+    public val größe: Rechteck? = null, // TODO größe des Graphs
+    public val knoten: List<KnotenDaten> = emptyList(), // TODO evtl mutable
+    public val verbindungen: List<VerbindungDaten> = emptyList(), // TODO evtl mutable
     public val initialKnoten: List<KnotenDaten> = emptyList(),
     public val initialVerbindungen: List<VerbindungDaten> = emptyList(),
 //    public val artenKnoten: List<KnotenArten> = emptyList(),
-    public val artenVerbindungen: List<VerbindungArten> = emptyList(),
+//    public val artenVerbindungen: List<VerbindungArten> = emptyList(),
     public val ansichtsfenster: AnsichtsfensterDaten = AnsichtsfensterDaten(),
     public val cache: KartenCacheDaten = KartenCacheDaten(),
 ): GraphDaten {
@@ -88,7 +89,7 @@ open class KarteDaten(
         initialKnoten: List<KnotenDaten>? = null,
         initialVerbindungen: List<VerbindungDaten>? = null,
 //        artenKnoten: List<KnotenArten>? = null,
-        artenVerbindungen: List<VerbindungArten>? = null,
+//        artenVerbindungen: List<VerbindungArten>? = null,
         ansichtsfenster: AnsichtsfensterDaten? = null,
         cache: KartenCacheDaten? = null,
     ): this(
@@ -101,7 +102,7 @@ open class KarteDaten(
         initialKnoten ?: daten.initialKnoten,
         initialVerbindungen ?: daten.initialVerbindungen,
 //        artenKnoten ?: daten.artenKnoten,
-        artenVerbindungen ?: daten.artenVerbindungen,
+//        artenVerbindungen ?: daten.artenVerbindungen,
         ansichtsfenster ?: daten.ansichtsfenster,
         cache ?: daten.cache,
     )
@@ -116,7 +117,7 @@ open class KarteDaten(
         initialKnoten: List<KnotenDaten> = this.initialKnoten,
         initialVerbindungen: List<VerbindungDaten> = this.initialVerbindungen,
 //        artenKnoten: List<KnotenArten> = this.artenKnoten,
-        artenVerbindungen: List<VerbindungArten> = this.artenVerbindungen,
+//        artenVerbindungen: List<VerbindungArten> = this.artenVerbindungen,
         ansichtsfenster: AnsichtsfensterDaten = this.ansichtsfenster,
         cache: KartenCacheDaten = this.cache,
     ): KarteDaten = KarteDaten(
@@ -129,7 +130,7 @@ open class KarteDaten(
         initialKnoten = initialKnoten,
         initialVerbindungen = initialVerbindungen,
 //        artenKnoten = artenKnoten,
-        artenVerbindungen = artenVerbindungen,
+//        artenVerbindungen = artenVerbindungen,
         ansichtsfenster = ansichtsfenster,
         cache = cache,
     )
