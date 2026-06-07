@@ -33,12 +33,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.mitErsetztemEingang
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.mitErsetztemEingang
+import com.TeutonStudio.KnotenKartenVerwalter.hatAnschlussId
+import com.TeutonStudio.KnotenKartenVerwalter.hatKnotenId
+import com.TeutonStudio.KnotenKartenVerwalter.idReferenz
+import com.TeutonStudio.KnotenKartenVerwalter.istVerbunden
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AusgabeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAusgang
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.EingabeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
@@ -92,14 +99,12 @@ private fun KnotenKartenTestAnwendung() {
         val knotenIds = auswahl.knotenIds
         val verbindungIds = auswahl.verbindungIds
 
+        val hatKnoten = { v: VerbindungDaten -> true in knotenIds.map { v.ids.hatKnotenId(it) } }
+        val hatVerbindung = { v: VerbindungDaten -> true in knotenIds.map { v.ids.hatAnschlussId(it) } }
         karte = KarteDaten(
             karte,
             knoten = karte.knoten.filterNot { it.id in knotenIds },
-            verbindungen = karte.verbindungen.filterNot { verbindung ->
-                verbindung.id in verbindungIds ||
-                        verbindung.quellKnotenId in knotenIds ||
-                        verbindung.zielKnotenId in knotenIds
-            },
+            verbindungen = karte.verbindungen.filterNot { it.id in verbindungIds || hatKnoten(it) || hatVerbindung(it) },
         )
         auswahl = AuswahlDaten()
         status = "Auswahl geloescht"
@@ -113,7 +118,7 @@ private fun KnotenKartenTestAnwendung() {
                     id = "knoten-$nummer",
                     name = "Knoten $nummer",
                     position = aktion.weltPosition,
-                    art = BasisKnoten.KNOTEN_ART,
+                    klasse = BasisKnoten.KNOTEN_ART,
                 )
                 karte = KarteDaten(
                     karte,
@@ -369,41 +374,38 @@ private fun AuswahlDaten.statusText(): String = when {
 
 private fun testKarte(): KarteDaten = KarteDaten(
     id = "test-karte",
+    klasse = BasisKarte.KARTEN_ART,
     name = "Graph Testkarte",
     knoten = listOf(
         KnotenDaten(
             id = "eingabe",
             name = "Eingabe",
             position = Offset(80f, 120f),
-            art = EingabeKnoten.KNOTEN_ART,
+            klasse = EingabeKnoten.KNOTEN_ART,
         ),
         KnotenDaten(
             id = "mitte",
             name = "Mitte",
             position = Offset(360f, 170f),
-            art = BasisKnoten.KNOTEN_ART,
+            klasse = BasisKnoten.KNOTEN_ART,
         ),
         KnotenDaten(
             id = "ausgabe",
             name = "Ausgabe",
             position = Offset(660f, 120f),
-            art = AusgabeKnoten.KNOTEN_ART,
+            klasse = AusgabeKnoten.KNOTEN_ART,
         ),
     ),
     verbindungen = listOf(
         VerbindungDaten(
             id = "v-eingabe-mitte",
-            quellKnotenId = "eingabe",
-            quellAnschlussId = "out",
-            zielKnotenId = "mitte",
-            zielAnschlussId = "in",
+            ids = idReferenz("eingabe" to "mitte","out" to "in"),
+            klasse = BasisEingang.ANSCHLUSS_ART,
         ),
         VerbindungDaten(
             id = "v-mitte-ausgabe",
-            quellKnotenId = "mitte",
-            quellAnschlussId = "out",
-            zielKnotenId = "ausgabe",
-            zielAnschlussId = "in",
+            ids = idReferenz("mitte" to "ausgabe","out" to "in"),
+            klasse = BasisAusgang.ANSCHLUSS_ART,
         ),
     ),
 )

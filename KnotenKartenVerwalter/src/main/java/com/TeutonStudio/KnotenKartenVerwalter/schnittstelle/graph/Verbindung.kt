@@ -22,7 +22,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungKonstruktor
 
 // Daten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungsRegeln
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
@@ -85,11 +84,11 @@ public fun List<VerbindungDaten>.zuComposable(
  * Diese Variante wird unter anderem für die temporäre Verbindung beim Ziehen
  * eines Anschlusses verwendet.
  */
-@Composable
+/*@Composable
 public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(
     modifier,
     this.map { BasisVerbindung(it.first, start = it.second, ende = it.third).zeichnung() },
-)
+)*/
 
 // TODO KartenPosition nicht eher was für Daten ??
 sealed interface Verbindung: GraphObjekt {
@@ -159,14 +158,14 @@ internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, BildschirmPos
  * Der Graph wird als Lambda uebergeben, damit der Pointer-Handler auch nach
  * Recompositionen aktuelle Knoten, Anschluesse und Verbindungen sieht.
  */
-internal fun Modifier.verbindungsZiehen(
+/*internal fun Modifier.verbindungsZiehen(
     start: AnschlussReferenz,
     graph: () -> Karte,
     onDragAendern: (VerbindungsDrag?) -> Unit,
     onZiehtAnschlussAendern: (Boolean) -> Unit,
     onBlockiereHintergrundGestenAendern: (Boolean) -> Unit,
     onVerbindungErstellen: (VerbindungDaten) -> Unit,
-    regeln: VerbindungsRegeln = VerbindungsRegeln(),
+//    regeln: VerbindungsRegeln = VerbindungsRegeln(),
     maxZielAbstand: Float = 28f,
 ): Modifier =
     pointerInput(start.knotenId, start.anschlussId, start.position) {
@@ -198,7 +197,7 @@ internal fun Modifier.verbindungsZiehen(
 
                 val aktuellerGraph = graph()
                 val ziel = lokalerDrag.aktuellePosition.naechsterAnschluss(
-                    anschluesse = aktuellerGraph.daten.erhalteAnschlüsse(referenz),
+                    anschluesse = aktuellerGraph.daten, //.erhalteAnschlüsse(referenz),
                     maxAbstand = maxZielAbstand,
                 )
 
@@ -206,7 +205,7 @@ internal fun Modifier.verbindungsZiehen(
                     val verbindung = lokalerDrag.start.zuVerbindungOderNull(
                         ziel = ziel,
                         vorhandeneVerbindungen = aktuellerGraph.daten.verbindungen,
-                        regeln = regeln,
+//                        regeln = regeln,
                     )
 
                     if (verbindung != null) {
@@ -219,7 +218,7 @@ internal fun Modifier.verbindungsZiehen(
                 onBlockiereHintergrundGestenAendern(false)
             }
         }
-    }
+    }*/
 
 /**
  * Erstellt eine Verbindung, falls Start und Ziel fachlich kompatibel sind.
@@ -227,7 +226,7 @@ internal fun Modifier.verbindungsZiehen(
 internal fun AnschlussReferenz.zuVerbindungOderNull(
     ziel: AnschlussReferenz,
     vorhandeneVerbindungen: List<VerbindungDaten>,
-    regeln: VerbindungsRegeln = VerbindungsRegeln(),
+//    regeln: VerbindungsRegeln = VerbindungsRegeln(),
 ): VerbindungDaten? {
     if (knotenId == ziel.knotenId) return null
     if (richtung == ziel.richtung) return null
@@ -244,14 +243,14 @@ internal fun AnschlussReferenz.zuVerbindungOderNull(
         zielTyp = ende.zahlenTyp,
     )*/
 
-    val erlaubt = regeln.darfErstellen(
+/*    val erlaubt = regeln.darfErstellen( TODO
         vorhandeneVerbindungen = vorhandeneVerbindungen,
         neueVerbindung = verbindung,
         quellRichtung = quelle.richtung,
         zielRichtung = ende.richtung,
-    )
+    )*/
 
-    return if (erlaubt) verbindung else null
+    return if (true) verbindung else null
 }
 
 /**
@@ -287,15 +286,15 @@ internal fun Knoten.anschlussReferenz(
     val kartePos = Offset(
         x = when (anschluss.kante) {
             AnschlussKante.Links -> daten.position.x
-            AnschlussKante.Rechts -> daten.position.x + daten.dimension.x
+            AnschlussKante.Rechts -> daten.position.x + daten.dimension.width
             AnschlussKante.Oben,
-            AnschlussKante.Unten -> daten.position.x + daten.dimension.x * anteil
+            AnschlussKante.Unten -> daten.position.x + daten.dimension.width * anteil
         },
         y = when (anschluss.kante) {
             AnschlussKante.Links,
-            AnschlussKante.Rechts -> daten.position.y + daten.dimension.y * anteil
+            AnschlussKante.Rechts -> daten.position.y + daten.dimension.height * anteil
             AnschlussKante.Oben -> daten.position.y
-            AnschlussKante.Unten -> daten.position.y + daten.dimension.y
+            AnschlussKante.Unten -> daten.position.y + daten.dimension.height
         },
     ) as KartenPosition
 

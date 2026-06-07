@@ -3,6 +3,8 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten
 import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
+import com.TeutonStudio.KnotenKartenVerwalter.toSet
 
 /**
  * Schnittstelle fuer zukuenftige automatische Layout-Algorithmen.
@@ -34,9 +36,11 @@ data class StandardKartenLayout(
         val ausgehend = knotenIds.associateWith { mutableListOf<String>() }
 
         karte.verbindungen.forEach { verbindung ->
-            if (verbindung.quellKnotenId in knotenIds && verbindung.zielKnotenId in knotenIds) {
-                ausgehend.getValue(verbindung.quellKnotenId).add(verbindung.zielKnotenId)
-                eingehend[verbindung.zielKnotenId] = eingehend.getValue(verbindung.zielKnotenId) + 1
+            val quelle = verbindung.ids.erhalteKnotenIds().first
+            val ziel = verbindung.ids.erhalteKnotenIds().second
+            if (knotenIds.containsAll(verbindung.ids.erhalteKnotenIds().toSet())) {
+                ausgehend.getValue(quelle).add(ziel)
+                eingehend[ziel] = eingehend.getValue(ziel) + 1
             }
         }
 

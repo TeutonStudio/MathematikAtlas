@@ -6,7 +6,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.AnsichtsfensterDaten
 import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import com.TeutonStudio.KnotenKartenVerwalter.StandardAnsicht
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenCacheDaten
 
 /**
  * Persistierter Viewport einer Karte.
@@ -52,6 +51,10 @@ open class KarteZustand(
         zeigeKontrollLeiste: Boolean = this.zeigeKontrollLeiste,
         auswahl: AuswahlDaten = this.auswahl,
     ): KarteZustand = KarteZustand(ansicht, zeigeÜbersicht, zeigeKontrollLeiste, auswahl)
+}
+
+open class KartenCacheDaten() {
+
 }
 
 /**

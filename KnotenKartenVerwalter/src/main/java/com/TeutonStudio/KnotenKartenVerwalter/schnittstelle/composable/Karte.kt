@@ -58,7 +58,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.VerbindungsDrag
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungsZiehen
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.zuComposable
 import kotlin.math.roundToInt

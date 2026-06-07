@@ -25,7 +25,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
 import kotlin.math.roundToInt
 
-fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
+public fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
+public fun <T> Pair<T,T>.toSet(): Set<T> = setOf(first,second)
 
 // Geometrie
 
@@ -161,10 +162,10 @@ typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second
 
-private fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)
+public fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)
 public fun idReferenz.istVerbunden(daten: KnotenDaten): Boolean = this.hatKnotenId(daten.id)
 
-private fun idReferenz.hatAnschlussId(id: String): Boolean = this.erhalteAnschlussIds().enthält(id)
+public fun idReferenz.hatAnschlussId(id: String): Boolean = this.erhalteAnschlussIds().enthält(id)
 public fun idReferenz.istVerbunden(daten: AnschlussDaten): Boolean = this.hatAnschlussId(daten.id)
 
 public fun idReferenz.hatGleichenKnoten(other: idReferenz): Boolean {

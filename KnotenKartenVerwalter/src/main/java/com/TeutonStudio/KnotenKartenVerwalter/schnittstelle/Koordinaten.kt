@@ -1,7 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
 import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 
 /**
  * Zentrale Umrechnungen zwischen Weltkoordinaten und Bildschirmkoordinaten.
@@ -9,8 +9,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
  * Diese Datei dient als beschrifteter Zielort fuer die Koordinatenlogik. Die aktuelle Hauptkarte
  * besitzt noch interne Hilfsfunktionen; diese koennen schrittweise hierher verschoben werden.
  */
-object KoordinatenUmrechnung {
-    /** Rechnet eine Weltposition in eine Bildschirmposition um. */
+/*object KoordinatenUmrechnung {
+    *//** Rechnet eine Weltposition in eine Bildschirmposition um. *//*
     fun weltZuBildschirm(position: Offset, zustand: KarteZustand): Offset {
         val zoom = zustand.zoom.takeIf { it > 0f } ?: 1f
         return Offset(
@@ -19,7 +19,7 @@ object KoordinatenUmrechnung {
         )
     }
 
-    /** Rechnet eine Bildschirmposition in eine Weltposition um. */
+    *//** Rechnet eine Bildschirmposition in eine Weltposition um. *//*
     fun bildschirmZuWelt(position: Offset, zustand: KarteZustand): Offset {
         val zoom = zustand.zoom.takeIf { it > 0f } ?: 1f
         return Offset(
@@ -28,9 +28,9 @@ object KoordinatenUmrechnung {
         )
     }
 
-    /** Rechnet eine Bildschirmbewegung in eine Bewegung in Weltkoordinaten um. */
+    *//** Rechnet eine Bildschirmbewegung in eine Bewegung in Weltkoordinaten um. *//*
     fun deltaZuWelt(delta: Offset, zustand: KarteZustand): Offset {
         val zoom = zustand.zoom.takeIf { it > 0f } ?: 1f
         return Offset(delta.x / zoom, delta.y / zoom)
     }
-}
+}*/

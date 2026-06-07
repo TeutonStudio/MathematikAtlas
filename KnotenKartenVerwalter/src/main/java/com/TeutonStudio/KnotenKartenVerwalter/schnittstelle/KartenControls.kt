@@ -2,7 +2,6 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenGrenzenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 
 /**
@@ -11,8 +10,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
  * `KontrollLeiste.kt` rendert die Buttons. Diese Datei sammelt die Berechnungen, die hinter
  * Aktionen wie Zoom rein, Zoom raus und FitView stehen sollen.
  */
+/*
 object KartenControlsRechner {
-    /** Berechnet einen Viewport, der den uebergebenen Weltbereich sichtbar macht. */
+    */
+/** Berechnet einen Viewport, der den uebergebenen Weltbereich sichtbar macht. *//*
+
     fun fitView(
         grenzen: KartenGrenzenDaten,
         flaeche: IntSize,
@@ -37,3 +39,4 @@ object KartenControlsRechner {
         )
     }
 }
+*/

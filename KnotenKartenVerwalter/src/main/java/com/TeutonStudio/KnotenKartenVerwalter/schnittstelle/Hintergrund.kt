@@ -4,7 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 
 /**
  * Hintergrund-Layer der Karte.
@@ -21,7 +21,7 @@ internal fun KartenHintergrund(
 ) {
     Canvas(modifier = modifier) {
         // Platzhalter: Der Parameterzugriff verhindert, dass das Geruest unbenutzte Werte versteckt.
-        val zoom = zustand.zoom.takeIf { it > 0f } ?: 1f
+        val zoom = 1f // zustand.zoom.takeIf { it > 0f } ?: 1f
         val abstand = (rasterGroesse * zoom).coerceAtLeast(8f)
 
         // Ein sehr dezenter Rahmen macht den Layer im Debugging sichtbar, ohne schon ein fertiges
