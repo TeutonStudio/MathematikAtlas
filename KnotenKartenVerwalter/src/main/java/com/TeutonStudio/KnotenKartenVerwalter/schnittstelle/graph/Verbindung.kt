@@ -111,6 +111,11 @@ open class BasisVerbindung(
     @Composable
     override fun zuComposable(modifier: Modifier) = VerbindungUmgebung(modifier, zeichnung())
 
+    @Composable
+    override fun öffneKontext(pos: BildschirmPosition) {
+        TODO("Not yet implemented")
+    }
+
     override fun zeichnung(): DrawScope.() -> Unit = { VerbindungPfad(daten,start,ende) }
 
     public companion object {

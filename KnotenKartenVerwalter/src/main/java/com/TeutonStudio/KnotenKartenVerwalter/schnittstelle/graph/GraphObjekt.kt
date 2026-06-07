@@ -2,11 +2,13 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 
 // Grundklasse für ein Objekt, dass auf einem KartenGraph erscheint
 sealed interface GraphObjekt {
-    @Composable
-    fun zuComposable(modifier: Modifier = Modifier.Companion)
+    @Composable fun zuComposable(modifier: Modifier = Modifier.Companion)
+
+    @Composable fun öffneKontext(pos: BildschirmPosition)
     // Der Inhalt des Fensters, dass bei Längerhaten geöffnet wird
     fun erhalteKontextFenster() = Unit
     // Der Inhalt des Inspectrs zu diesem Objekt

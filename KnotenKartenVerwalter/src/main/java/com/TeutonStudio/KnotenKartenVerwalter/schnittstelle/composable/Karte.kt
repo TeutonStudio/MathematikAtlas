@@ -44,6 +44,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Karte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
@@ -78,7 +79,7 @@ private data class KontextMenüZustand(
  */
 @Composable
 internal fun KartenOberfläche(
-    daten: KarteDaten,
+    karte: Karte,
     knoten: Iterable<Knoten>,
     verbindungen: Iterable<Verbindung>,
     zustand: KarteZustand = KarteZustand(),
@@ -118,7 +119,7 @@ internal fun KartenOberfläche(
     }
 
     Box(modifier = modifier
-        .pointerInput(daten.id) {
+        .pointerInput(karte.daten.id) {
             detectTapGestures(
                 onDoubleTap = onDoupleTap,
                 onLongPress = onLongTap,
@@ -140,7 +141,7 @@ internal fun KartenOberfläche(
                 false
             }
         }
-        .pointerInput(daten.id) {
+        .pointerInput(karte.daten.id) {
             detectTransformGestures { zentrum, pan, zoomDelta, rot ->
                 zustand.transformiere(pan,zoomDelta)
 /*                        if (hintergrundGestenBlockiert) return@detectTransformGestures
@@ -148,7 +149,7 @@ internal fun KartenOberfläche(
 //                    ansicht = aktuelleAnsicht.transformiereUm(zentrum, pan, zoomÄnderung) TODO
             }
         }
-        .pointerInput(daten.id) { // TODO noch notwendig, da nun onLongPress
+        .pointerInput(karte.daten.id) { // TODO noch notwendig, da nun onLongPress
             awaitPointerEventScope {
                 while (true) {
                     val ereignis = awaitPointerEvent()
@@ -164,19 +165,23 @@ internal fun KartenOberfläche(
         },) {
         // TODO Hintergrund zeichnen
         verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
-        knoten.zuComposable({ d -> Modifier})
+        knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
 
         if (ctxKarte) {
             // TODO Karten kontextfenster
+            karte.öffneKontext(ctxPos.value)
         } else if (ctxKnoten != null) {
             // TODO Knoten kontextfenstzer
+            ctxKnoten!!.öffneKontext(ctxPos.value)
         } else if (ctxVerbindung != null) {
+            ctxVerbindung!!.öffneKontext(ctxPos.value)
             // TODO Verbindung kontextfenster
         }
     }
 }
 
-@Composable
+
+/*@Composable
 private fun KontextMenü(
     zustand: KontextMenüZustand,
     onAktion: (String) -> Unit,
@@ -231,7 +236,7 @@ private fun KontextMenü(
             ),
         )
     }
-}
+}*/
 
 private fun Offset.zuWeltOffset(): Offset =
     Offset(x, y)

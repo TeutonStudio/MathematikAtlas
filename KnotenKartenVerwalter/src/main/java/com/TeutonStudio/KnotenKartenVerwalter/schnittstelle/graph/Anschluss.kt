@@ -11,6 +11,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
@@ -60,7 +61,7 @@ sealed interface Anschluss: GraphObjekt {
     }
 
     public fun erlaubtVerbindung(daten: Anschluss): Boolean
-    public fun erstelleVerbindung(zu: Anschluss)
+//    public fun erstelleVerbindung(zu: Anschluss)
 
     public fun istSelbst(zielBesitzer: Knoten?): Boolean = (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
 }
@@ -76,11 +77,12 @@ open class BasisAnschluss(
     @Composable
     override fun zuComposable(modifier: Modifier) = Anschluss(daten,Color.Black,modifier)
 
-    override fun erlaubtVerbindung(daten: Anschluss): Boolean = !istSelbst(daten.besitzer)
-
-    override fun erstelleVerbindung(zu: Anschluss) {
+    @Composable
+    override fun öffneKontext(pos: BildschirmPosition) {
         TODO("Not yet implemented")
     }
+
+    override fun erlaubtVerbindung(daten: Anschluss): Boolean = !istSelbst(daten.besitzer)
 
     public companion object {
         public const val ANSCHLUSS_ART = "default"

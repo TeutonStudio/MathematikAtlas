@@ -3,6 +3,7 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
+import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
@@ -26,7 +27,7 @@ class Graph(
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = {},
-) : GraphObjekt {
+) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
 
     private val karte: Karte = kartenFabrik.erzeugeKarte(
@@ -39,11 +40,7 @@ class Graph(
     )
 
     @Composable
-    override fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)
-
-    override fun planeVerbindung(a: Anschluss) = karte.planeVerbindung(a)
-
-    override fun erstelleVerbindung(von: Anschluss, zu: Anschluss) = karte.erstelleVerbindung(von, zu)
+    public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)
 }
 
 /**

@@ -1,12 +1,27 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 // Compose
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
+import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
@@ -22,6 +37,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 
 // Composable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
+import org.w3c.dom.Text
 import kotlin.let
 
 @Suppress("UNCHECKED_CAST")
@@ -53,9 +69,30 @@ sealed interface Knoten: GraphObjekt {
     )
 
     @Composable
+    override fun öffneKontext(
+        pos: BildschirmPosition
+    ) {
+        Box(
+            modifier = Modifier
+                .offset { pos }
+//                .onSizeChanged { fensterGröße = it }
+                .background(Color.White, RoundedCornerShape(8.dp))
+                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                .padding(vertical = 4.dp),
+        ) {
+            Card() {
+                Column {
+                    Text("Kontextfenster des Knoten")
+                }
+            }
+        }
+
+    }
+
+    @Composable
     override fun zuComposable(
         modifier: Modifier
-    ) { /* */ }
+    ) { TODO("Falsche Methode aufgerufen") }
 }
 
 /**

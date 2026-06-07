@@ -15,6 +15,7 @@ import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
@@ -30,6 +31,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteAnschlussIds
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
@@ -94,7 +97,7 @@ data class KartenKontextAktion(
  * Position liegt in Bildschirmkoordinaten, weil sie fuer Rendering,
  * Hit-Testing und Verbindungsdrag verwendet wird.
  */
-internal data class AnschlussReferenz(
+data class AnschlussReferenz(
     val knotenId: String,
     val anschlussId: String,
     val richtung: AnschlussRichtung?,
@@ -144,13 +147,38 @@ open class BasisKarte(
 
     val knoten
         get() = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it) }
+    val anschlussReferenzen
+        get() = knoten.flatMap { it.anschlussReferenzen(zustand) }
+
     val verbindungen
-        get() = daten.verbindungen.mapNotNull { verbindungFabrik.erzeugeVerbindung(it) }
+        get(): List<Verbindung> {
+            return daten.verbindungen.mapNotNull { verbindung ->
+                val knotenIds = verbindung.ids.erhalteKnotenIds()
+                val anschlussIds = verbindung.ids.erhalteAnschlussIds()
+
+                val start = anschlussReferenzen.firstOrNull {
+                    it.knotenId == knotenIds.first &&
+                            it.anschlussId == anschlussIds.first
+                }
+
+                val ende = anschlussReferenzen.firstOrNull {
+                    it.knotenId == knotenIds.second &&
+                            it.anschlussId == anschlussIds.second
+                }
+
+                if (start == null || ende == null) return@mapNotNull null
+
+                verbindungFabrik.erzeugeVerbindung(
+                    daten = verbindung,
+                    positionen = start.position.toOffset() to ende.position.toOffset(),
+                )
+            }
+        }
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
         KartenOberfläche(
-            daten = daten,
+            karte = this,
             zustand = zustand,
             knoten = knoten,
             verbindungen = verbindungen,
@@ -162,6 +190,11 @@ open class BasisKarte(
             onKontextAktion = onKontextAktion,
             onAuswahlÄndern = onAuswahlÄndern,
         )
+    }
+
+    @Composable
+    override fun öffneKontext(pos: BildschirmPosition) {
+        TODO("Not yet implemented")
     }
 
     public companion object {

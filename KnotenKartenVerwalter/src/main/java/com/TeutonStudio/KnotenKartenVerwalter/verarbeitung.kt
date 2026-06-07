@@ -61,21 +61,35 @@ public fun Rechteck(breite: Float, tiefe: Float, position: KartenPosition): Rech
 /**
  *
  */
-public fun KartenPosition.zuBild(daten: AnsichtsfensterDaten): BildschirmPosition {
-    return TODO("Formel für Karte zu Bildschirm in bezug auf positionen definieren")
+public fun KartenPosition.zuBild(ansicht: AnsichtsfensterDaten): BildschirmPosition {
+    val zoom = ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
+    val verschiebung = ansicht.erhalteVerschiebung()
+
+    return IntOffset(
+        x = (x * zoom + verschiebung.x).roundToInt(),
+        y = (y * zoom + verschiebung.y).roundToInt(),
+    )
 }
+
 
 /**
  *
  */
 public fun BildschirmPosition.zuKarte(ansicht: AnsichtsfensterDaten): KartenPosition {
-    return TODO("Formel für Bildschirm zu Karte in bezug auf positionen deifnieren")
+    val zoom = ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
+    val verschiebung = ansicht.erhalteVerschiebung()
+
+    return Offset(
+        x = (x - verschiebung.x) / zoom,
+        y = (y - verschiebung.y) / zoom,
+    )
 }
+
 
 /**
  *
  */
-public fun KartenPosition.aufKnoten(daten: KnotenDaten): Boolean = daten.dimension.contains(this - daten.position)
+public fun KartenPosition.aufKnoten(daten: KnotenDaten): Boolean = daten.dimension.contains(this)
 
 /**
  *
@@ -216,7 +230,10 @@ public fun Iterable<Verbindung>.zuComposable(modifier: (VerbindungDaten) -> Modi
 // Knoten
 
 @Composable @JvmName("IterKnoten2Composable")
-public fun Iterable<Knoten>.zuComposable(modifier: (KnotenDaten) -> Modifier) = this.forEach { it.zuComposable(modifier(it.daten)) }
+public fun Iterable<Knoten>.zuComposable(
+    modifierKnoten: (KnotenDaten) -> Modifier,
+    modifierAnschluss: (KnotenDaten) -> AnschlussModifier,
+) = this.forEach { it.zuComposable(modifierKnoten(it.daten),modifierAnschluss(it.daten),1f) }
 
 // Karten
 
