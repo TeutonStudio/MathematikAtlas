@@ -113,16 +113,19 @@ internal fun KartenOberfläche(
     var blockiereHintergrundGesten by remember { mutableStateOf(false) }
     var ziehtAnschluss by remember { mutableStateOf(false) }
 
-    val sichtbareKnotenDaten = daten.knoten.map { knoten -> KnotenDaten(knoten,
+/*    val sichtbareKnotenDaten = daten.knoten.map { knoten ->
+        knoten.
+        knoten.copy(
         position = gezogeneKnoten[knoten.id] ?: knoten.position,
         ausgewaehlt = knoten.id in zustand.auswahl.knotenIds || knoten.ausgewaehlt,
-    ) }
-    val sichtbareKnoten = sichtbareKnotenDaten.mapNotNull { knotenFabrik.erzeugeKnoten(it) }
 
-    val sichtbareVerbindungenDaten = daten.verbindungen.map { verbindung -> verbindung.copy(
+    ) }*/
+    val sichtbareKnoten = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it) }
+
+/*    val sichtbareVerbindungenDaten = daten.verbindungen.map { verbindung -> verbindung.copy(
         ausgewaehlt = verbindung.id in zustand.auswahl.verbindungIds || verbindung.ausgewaehlt,
-    ) }
-    val sichtbareVerbindungen = sichtbareVerbindungenDaten.mapNotNull { verbindungFabrik.erzeugeVerbindung(it) }
+    ) }*/
+    val sichtbareVerbindungen = daten.verbindungen.mapNotNull { verbindungFabrik.erzeugeVerbindung(it) }
 
 /*    val sichtbareDaten = KarteDaten(
         daten,
