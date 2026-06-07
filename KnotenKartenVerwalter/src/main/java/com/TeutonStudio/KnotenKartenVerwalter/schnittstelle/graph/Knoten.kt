@@ -4,12 +4,12 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
@@ -31,6 +31,7 @@ val BasisKnotenFabrik: KnotenFabrik = mapOf(
  */
 sealed interface Knoten: GraphObjekt {
     public val daten: KnotenDaten
+    public val anschlussFabrik: AnschlussFabrik
 //    public val anschlüsse: KnotenAschlüsse
 
     @Composable
@@ -51,13 +52,16 @@ sealed interface Knoten: GraphObjekt {
 /**
  * Standard Knoten
  */
-open class BasisKnoten(override val daten: KnotenDaten): Knoten {
+open class BasisKnoten(
+    override val daten: KnotenDaten,
+    override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik,
+): Knoten {
     @Composable
     override fun zuComposable(
         modifierKnoten: Modifier,
         modifierAnschluss: AnschlussModifier,
         inhaltSkalierung: Float,
-    ) { KnotenRahmen(this, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
+    ) { KnotenRahmen(this,anschlussFabrik, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
 
     override fun erhalteAnschlüsse(): KnotenAnschlüsse {
         TODO("Not yet implemented")

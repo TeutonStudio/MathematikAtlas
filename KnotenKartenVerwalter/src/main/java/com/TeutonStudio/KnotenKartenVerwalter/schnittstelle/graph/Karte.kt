@@ -10,15 +10,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KartenKonstruktor
-import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
-import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KartenOberfläche
@@ -84,8 +80,8 @@ internal data class AnschlussReferenz(
 sealed interface Karte: GraphObjekt {
     val daten: KarteDaten
     val zustand: KarteZustand
-    val knotenKlassen: KnotenFabrik
-    val verbindungKlassen: VerbindungFabrik
+    val knotenFabrik: KnotenFabrik
+    val verbindungFabrik: VerbindungFabrik
     val aktualisierung: KartenAktualisierung
     val onVerbindungErstellen: VerbindungErstellen
     val onKontextAktion: KontextAktionAusführen
@@ -103,8 +99,8 @@ sealed interface Karte: GraphObjekt {
 open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
-    override val knotenKlassen: KnotenFabrik = BasisKnotenFabrik,
-    override val verbindungKlassen: VerbindungFabrik = BasisVerbindungFabrik,
+    override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik,
+    override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik,
     override val aktualisierung: KartenAktualisierung = { knotenId,position ->  },
     override val onVerbindungErstellen: VerbindungErstellen = {},
     override val onKontextAktion: KontextAktionAusführen = {},
@@ -116,8 +112,8 @@ open class BasisKarte(
         KartenOberfläche(
             daten = daten,
             zustand = zustand,
-            knotenKlassen = knotenKlassen,
-            verbindungKlassen = verbindungKlassen,
+            knotenFabrik = knotenFabrik,
+            verbindungFabrik = verbindungFabrik,
             modifier = modifier,
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
