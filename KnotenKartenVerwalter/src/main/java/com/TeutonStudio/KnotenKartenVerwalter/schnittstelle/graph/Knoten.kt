@@ -84,7 +84,7 @@ sealed interface Knoten: GraphObjekt {
         inhaltSkalierung: Float = 1f,
     ) {
         val anschlussListe = remember(daten.anschlüsse) {
-            daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
+            daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value } }.toMap()
         }
         KnotenRahmen(daten,anschlussListe, boxModiRect, inhaltSkalierung,beiVerschiebung) { Inhalt(modifierKnoten) }
     }
@@ -126,9 +126,12 @@ sealed interface Knoten: GraphObjekt {
  * Standard Knoten
  */
 open class BasisKnoten(
+    _graph: Graph,
     override val daten: KnotenDaten,
     override val besitzer: Karte,
 ): Knoten {
+    override lateinit var graph: Graph
+    init { definiereGraph(_graph) }
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
 
     @Composable
@@ -150,7 +153,7 @@ open class BasisKnoten(
 /**
  * Standard Knoten mit Ausgängen
  */
-open class EingabeKnoten(daten: EingabeDaten, besitzer: Karte): BasisKnoten(daten,besitzer) {
+open class EingabeKnoten(_graph: Graph,daten: EingabeDaten, besitzer: Karte): BasisKnoten(_graph,daten,besitzer) {
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "eingabe"
     }
@@ -160,7 +163,7 @@ open class EingabeKnoten(daten: EingabeDaten, besitzer: Karte): BasisKnoten(date
 /**
  * Standard Knoten Eingängen
  */
-open class AusgabeKnoten(daten: AusgabeDaten, besitzer: Karte): BasisKnoten(daten,besitzer) {
+open class AusgabeKnoten(_graph: Graph,daten: AusgabeDaten, besitzer: Karte): BasisKnoten(_graph,daten,besitzer) {
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "ausgabe"
     }

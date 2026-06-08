@@ -67,8 +67,8 @@ val BasisVerbindungFabrik: VerbindungFabrik = mapOf(
  * Die übergebenen Funktionen lösen die referenzierten Anschlusspositionen auf.
  * Verbindungen mit fehlenden Endpunkten werden übersprungen.
  */
-@Composable
-public fun List<Verbindung>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map { it.zeichnung() })
+/*@Composable
+public fun List<Verbindung>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map { it.zeichnung() })*/
 
 /**
  * Rendert eine Liste fachlicher Verbindungen.
@@ -76,13 +76,13 @@ public fun List<Verbindung>.zuComposable(modifier: Modifier = Modifier) = Verbin
  * Die übergebenen Funktionen lösen die referenzierten Anschlusspositionen auf.
  * Verbindungen mit fehlenden Endpunkten werden übersprungen.
  */
-@Composable
+/*@Composable
 public fun List<VerbindungDaten>.zuComposable(
     start: (VerbindungDaten) -> State<KartenPosition>,
     ende: (VerbindungDaten) -> State<KartenPosition>,
     modifier: Modifier = Modifier,
     fabrik: VerbindungFabrik = BasisVerbindungFabrik,
-) = this.mapNotNull { fabrik.erzeugeVerbindung(it,start(it),ende(it))}.zuComposable(modifier)
+) = this.mapNotNull { fabrik.erzeugeVerbindung(graph,it,start(it),ende(it))}.zuComposable(modifier)*/
 
 /**
  * Rendert bereits aufgelöste Verbindungen.
@@ -108,10 +108,13 @@ sealed interface Verbindung: GraphObjekt {
 }
 
 open class BasisVerbindung(
+    _graph: Graph,
     override val daten: VerbindungDaten,
     override val start: State<KartenPosition>,
     override val ende: State<KartenPosition>,
 ): Verbindung {
+    override lateinit var graph: Graph
+    init { definiereGraph(_graph) }
     @Composable
     override fun zuComposable(modifier: Modifier) = VerbindungUmgebung(modifier, zeichnung())
 

@@ -49,6 +49,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteVerschiebung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Karte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
@@ -85,9 +86,10 @@ private data class KontextMenüZustand(
 @Composable
 internal fun KartenOberfläche(
     karte: Karte,
+    zustand: KarteZustand = KarteZustand(),
+    erhalteNachBildPos: (BildschirmPosition, KarteZustand) -> GraphObjekt,
     knoten: Iterable<Knoten>,
     verbindungen: Iterable<Verbindung>,
-    zustand: KarteZustand = KarteZustand(),
     modifier: Modifier = Modifier,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen = {},
@@ -106,7 +108,7 @@ internal fun KartenOberfläche(
     }
     val onLongTap = { position: Offset ->
         ctxPos.value = position.round()
-        val ziel = zustand.erhalteNachBildPos(ctxPos.value, knoten, verbindungen)
+        val ziel = erhalteNachBildPos(ctxPos.value,zustand)
         if (ziel == null) ctxKarte = true; ctxKnoten = null; ctxVerbindung = null
         if (ziel is Knoten) ctxKnoten = ziel
         if (ziel is Verbindung) ctxVerbindung = ziel
@@ -115,7 +117,7 @@ internal fun KartenOberfläche(
          */
     }
     val onTap = { position: Offset ->
-        val ziel = zustand.erhalteNachBildPos(position.round(), knoten, verbindungen)
+        val ziel = erhalteNachBildPos(position.round(),zustand)
         if (ziel is Knoten) {
             onAuswahlÄndern(AuswahlDaten(knotenIds = setOf(ziel.daten.id)))
         }
@@ -130,7 +132,14 @@ internal fun KartenOberfläche(
             zustand.verschiebe(it)
             onAuswahlÄndern(AuswahlDaten.LEER)
 //            scope.invalidate() // TODO
-        } )
+        } ).pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
+            detectTapGestures(
+                onDoubleTap = onDoupleTap,
+                onLongPress = onLongTap,
+                onTap = onTap,
+            )
+            detectTransformGestures { centroid, pan, zoom, rotation ->  }
+        }
 /*        .pointerInput(karte.daten.id) { TODO
             detectTapGestures(
                 onDoubleTap = onDoupleTap,

@@ -31,34 +31,21 @@ class Graph(
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
 ) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
+    public val inhalt: MutableList<GraphObjekt> = mutableListOf()
 
-/*    private val karte: Karte = kartenFabrik.erzeugeKarte(
-        daten = daten,
-        zustand = zustand,
-        aktualisierung = { kId,pos ->
-            val knoten = daten.knoten.filter { it.id == kId }
-            if (knoten.size != 1) TODO("Knoten ID Fehler")
-            knoten[0].position = pos
-            aktualisierung(kId,pos)
-//        scope.invalid() // TODO wie??
-        },
-        onVerbindungErstellen = onVerbindungErstellen,
-        onKontextAktion = onKontextAktion,
-        onAuswahlÄndern = { a ->
-            daten.knoten.forEach {
-                it.ausgewaehlt = it.id in a.knotenIds
-            }
-            daten.verbindungen.forEach {
-                it.ausgewaehlt = it.id in a.verbindungIds
-            }
-            onAuswahlÄndern(a)
-        },
-    )*/
+    public fun erhalteNachBildPos(pos: BildschirmPosition, zustand: KarteZustand): GraphObjekt {
+        val karte = inhalt.filterIsInstance<Karte>().first()
+        val knoten = inhalt.filterIsInstance<Knoten>()
+        val verbindung = inhalt.filterIsInstance<Verbindung>()
+        // TODO
+        return karte
+    }
 
     @Composable
     public fun zuComposable(modifier: Modifier) {
         val karte = remember(daten) {
             kartenFabrik.erzeugeKarte(
+                graph = this,
                 daten = daten,
                 zustand = zustand,
                 aktualisierung = { kId,pos ->

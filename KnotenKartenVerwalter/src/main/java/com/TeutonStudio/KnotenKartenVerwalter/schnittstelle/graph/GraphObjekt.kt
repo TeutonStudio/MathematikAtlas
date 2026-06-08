@@ -6,6 +6,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 
 // Grundklasse für ein Objekt, dass auf einem KartenGraph erscheint
 sealed interface GraphObjekt {
+    public var graph: Graph
+    public fun definiereGraph(graph: Graph) { graph.inhalt.add(this); this.graph = graph }
+
     @Composable fun zuComposable(modifier: Modifier = Modifier.Companion)
 
     @Composable fun öffneKontext(pos: BildschirmPosition)

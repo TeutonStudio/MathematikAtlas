@@ -70,10 +70,13 @@ sealed interface Anschluss: GraphObjekt {
  * Standard für Anschlüsse
  */
 open class BasisAnschluss(
+    _graph: Graph,
     override val daten: AnschlussDaten,
     override val besitzer: Knoten,
 //    override var partner: Anschluss? = null,
 ): Anschluss {
+    override lateinit var graph: Graph
+    init { definiereGraph(_graph) }
     val radius
         get() = 5.dp
 
@@ -97,9 +100,10 @@ open class BasisAnschluss(
  * Wenn Verbindung bereits besteht, wird für die neue verbindung die alte gelöscht.
  */
 open class BasisEingang(
+    _graph: Graph,
     override val daten: EingangDaten,
     override val besitzer: Knoten,
-): BasisAnschluss(daten, besitzer) {
+): BasisAnschluss(_graph,daten, besitzer) {
 
     override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istAusgang()
 
@@ -112,9 +116,10 @@ open class BasisEingang(
  * Ein Anschluss, der sich nur mit Eingängen verbinden lässt
  */
 open class BasisAusgang(
+    _graph: Graph,
     override val daten: AusgangDaten,
     override val besitzer: Knoten,
-): BasisAnschluss(daten, besitzer) {
+): BasisAnschluss(_graph,daten, besitzer) {
 
     override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istEingang()
 

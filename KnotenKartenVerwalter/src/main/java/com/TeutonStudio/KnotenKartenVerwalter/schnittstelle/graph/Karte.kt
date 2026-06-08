@@ -29,6 +29,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteErtes
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteZweites
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
@@ -124,6 +125,10 @@ sealed interface Karte: GraphObjekt {
     val onKontextAktion: KontextAktionAusführen
     val onAuswahlÄndern: AuswahlÄndern
 
+/*    override fun definiereGraph(g: Graph) {
+        super.definiereGraph(g)
+        graph = g
+    }*/
 }
 
 /**
@@ -135,6 +140,7 @@ sealed interface Karte: GraphObjekt {
  * - zuComposable delegiert an die Oberflaechen-Datei.
  */
 open class BasisKarte(
+    _graph: Graph,
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
     override val aktualisierung: KartenAktualisierung,
@@ -142,13 +148,15 @@ open class BasisKarte(
     override val onKontextAktion: KontextAktionAusführen,
     override val onAuswahlÄndern: AuswahlÄndern,
 ) : Karte {
+    override lateinit var graph: Graph
+    init { definiereGraph(_graph) }
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
         val knotenListe = remember(daten.knoten) {
-            daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it, this) }
+            daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(graph, it,this) }
         }
         val referenz = remember(knotenListe) { knotenListe.flatMap { it.anschlussReferenzen(zustand) } }.toMap()
         val verbindungListe = remember(daten.verbindungen,knotenListe) { // referenz nicht als Key, da alle key von referenz auch hier key sind
@@ -160,18 +168,17 @@ open class BasisKarte(
                 if (startEntry == null || endeEntry == null) return@mapNotNull null
                 val start = derivedStateOf { pos(startEntry).zuBild(zustand.ansicht).toOffset() }
                 val ende = derivedStateOf { pos(endeEntry).zuBild(zustand.ansicht).toOffset() }
-                verbindungFabrik.erzeugeVerbindung(verbindung,start,ende)
+                verbindungFabrik.erzeugeVerbindung(graph,verbindung,start,ende)
             }
         }
 
         KartenOberfläche(
             karte = this,
             zustand = zustand,
+            erhalteNachBildPos = graph::erhalteNachBildPos,
             knoten = knotenListe,
             verbindungen = verbindungListe,
-            modifier = modifier.fillMaxSize().clipToBounds().background(Color(0xFFF8FAFC))
-//            .onSizeChanged { fläche = it } TODO
-                    ,
+            modifier = modifier.fillMaxSize().clipToBounds().background(Color(0xFFF8FAFC)),
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
             onKontextAktion = onKontextAktion,
