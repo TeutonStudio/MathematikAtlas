@@ -26,6 +26,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussZeile
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussReferenz
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAusgang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
@@ -220,6 +221,8 @@ typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second
+
+public fun idReferenz.istVerbunden(ref: AnschlussReferenz): Boolean = this.hatKnotenId(ref.knotenId) && this.hatAnschlussId(ref.anschlussId)
 
 public fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)
 public fun idReferenz.istVerbunden(daten: KnotenDaten): Boolean = this.hatKnotenId(daten.id)

@@ -76,7 +76,7 @@ public fun List<VerbindungDaten>.zuComposable(
     ende: (VerbindungDaten) -> KartenPosition,
     modifier: Modifier = Modifier,
     fabrik: VerbindungFabrik = BasisVerbindungFabrik,
-) = this.mapNotNull { fabrik.erzeugeVerbindung(it,null,start.invoke(it) to ende.invoke(it)) }.zuComposable(modifier)
+) = this.mapNotNull { fabrik.erzeugeVerbindung(it,/*null,*/start.invoke(it) to ende.invoke(it)) }.zuComposable(modifier)
 
 /**
  * Rendert bereits aufgelöste Verbindungen.
@@ -93,8 +93,8 @@ public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: 
 // TODO KartenPosition nicht eher was für Daten ??
 sealed interface Verbindung: GraphObjekt {
     public val daten: VerbindungDaten
-    public val von: Anschluss?
-    public val zu: Anschluss?
+//    public val von: Anschluss?
+//    public val zu: Anschluss?
     public val start: KartenPosition
     public val ende: KartenPosition
 
@@ -103,8 +103,8 @@ sealed interface Verbindung: GraphObjekt {
 
 open class BasisVerbindung(
     override val daten: VerbindungDaten,
-    override val von: Anschluss? = null,
-    override val zu: Anschluss? = null,
+//    override val von: Anschluss? = null,
+//    override val zu: Anschluss? = null,
     override val start: KartenPosition = Offset.Zero,
     override val ende: KartenPosition = Offset.Zero,
 ): Verbindung {

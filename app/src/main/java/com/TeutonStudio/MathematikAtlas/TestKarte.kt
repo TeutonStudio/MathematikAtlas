@@ -21,7 +21,8 @@ public fun testKarte(): KarteDaten = KarteDaten(
             name = "Eingabe",
             position = Offset(80f, 120f),
             anschlüsse = mutableMapOf(
-                AusgangDaten("out", AnschlussKante.Rechts,"Ausgang 1") to 0
+                AusgangDaten("out1", AnschlussKante.Rechts,"Ausgang 1") to 0,
+                AusgangDaten("out2", AnschlussKante.Rechts,"Ausgang 2") to 1
             )
         ),
         KnotenDaten(
@@ -51,7 +52,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
     verbindungen = listOf(
         VerbindungDaten(
             id = "v-eingabe-mitte",
-            ids = idReferenz("eingabe" to "mitte","out" to "in"),
+            ids = idReferenz("eingabe" to "mitte","out1" to "in"),
         ),
         VerbindungDaten(
             id = "v-mitte-ausgabe",

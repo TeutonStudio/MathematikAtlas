@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -37,14 +35,14 @@ public fun KnotenRahmen(
     boxModiRect:  (Density) -> Modifier,
     anschlussModifier: Map<AnschlussKante, Modifier>,
     inhaltSkalierung: Float = 1f,
-    onPositionÄndern: (Offset) -> Unit,
+    beiVerschiebung: (Offset) -> Unit,
     Inhalt: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
-    val scope = currentRecomposeScope
-    val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
+//    val scope = currentRecomposeScope
+//    val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
     Box(modifier = boxModiRect(density).draggable2D(
-        state = rememberDraggable2DState { onPositionÄndern(it) },
+        state = rememberDraggable2DState { beiVerschiebung(it) },
         enabled = daten.beweglich,
     )) {
         Inhalt()
@@ -52,14 +50,14 @@ public fun KnotenRahmen(
 //            val modi = if (kante.istVertikal()) Modifier.fillMaxHeight().offset(x = radius(kante)) else Modifier.fillMaxWidth().offset(y = radius(kante))
             val modi = Modifier.fillMaxKante(kante).offsetKante(kante,radius(kante))
             Box(
-                modifier = modi.align(alignment(kante)).offset(x = (-5f * skalierung).dp),
+                modifier = modi.align(alignment(kante)), //.offset(x = (-5f * skalierung).dp),
                 contentAlignment = Alignment.Center,
             ) { anschlüsse.zuLeiste(kante) }
         }
     }
 }
 
-private fun radius(kante: AnschlussKante, radius: Dp = 5.dp): Dp = if (kante == AnschlussKante.Rechts || kante == AnschlussKante.Unten) radius else -radius
+private fun radius(kante: AnschlussKante, radius: Dp = (2.5f).dp): Dp = if (kante == AnschlussKante.Rechts || kante == AnschlussKante.Unten) radius else -radius
 
 private fun alignment(kante: AnschlussKante): Alignment = when(kante) {
     AnschlussKante.Links -> Alignment.CenterStart

@@ -125,9 +125,10 @@ internal fun KartenOberfläche(
     }
     val modiPos = modifier.offset { zustand.ansicht.erhalteVerschiebung().round() }
 
-    Box(modifier = modiPos.draggable2D(
+    Box(modifier = Modifier.draggable2D(
         state = rememberDraggable2DState {
             zustand.verschiebe(it)
+            onAuswahlÄndern(AuswahlDaten.LEER)
 //            scope.invalidate() // TODO
         } )
 /*        .pointerInput(karte.daten.id) { TODO

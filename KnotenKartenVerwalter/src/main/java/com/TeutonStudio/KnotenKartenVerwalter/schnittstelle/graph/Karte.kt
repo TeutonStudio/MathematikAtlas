@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -36,6 +37,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
+import com.TeutonStudio.KnotenKartenVerwalter.istVerbunden
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KartenOberfläche
 
 @Suppress("UNCHECKED_CAST")
@@ -124,6 +126,7 @@ sealed interface Karte: GraphObjekt {
     val onVerbindungErstellen: VerbindungErstellen
     val onKontextAktion: KontextAktionAusführen
     val onAuswahlÄndern: AuswahlÄndern
+
 }
 
 /**
@@ -145,41 +148,32 @@ open class BasisKarte(
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
-    val knoten
-        get() = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it,this) }
-    val anschlussReferenzen
-        get() = knoten.flatMap { it.anschlussReferenzen(zustand) }
-
-    val verbindungen
-        get(): List<Verbindung> {
-            return daten.verbindungen.mapNotNull { verbindung ->
-                val knotenIds = verbindung.ids.erhalteKnotenIds()
-                val anschlussIds = verbindung.ids.erhalteAnschlussIds()
-
-                val start = anschlussReferenzen.firstOrNull {
-                    it.knotenId == knotenIds.first && it.anschlussId == anschlussIds.first
-                }
-
-                val ende = anschlussReferenzen.firstOrNull {
-                    it.knotenId == knotenIds.second && it.anschlussId == anschlussIds.second
-                }
+    @Composable
+    override fun zuComposable(modifier: Modifier) {
+        val knotenListe = remember(daten.knoten) {
+            daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it, this) }
+        }
+        val verbindungListe = remember(daten.verbindungen,knotenListe) {
+            val anschlussReferenzen = knotenListe.flatMap { it.anschlussReferenzen(zustand) }
+            daten.verbindungen.mapNotNull { verbindung ->
+                val start = anschlussReferenzen.firstOrNull { verbindung.ids.istVerbunden(it) }
+                val ende = anschlussReferenzen.firstOrNull { verbindung.ids.istVerbunden(it) }
 
                 if (start == null || ende == null) return@mapNotNull null
 
                 verbindungFabrik.erzeugeVerbindung(
                     daten = verbindung,
+//                    anschlüsse = null, // TODO
                     positionen = start.position.toOffset() to ende.position.toOffset(),
                 )
             }
         }
 
-    @Composable
-    override fun zuComposable(modifier: Modifier) {
         KartenOberfläche(
             karte = this,
             zustand = zustand,
-            knoten = knoten,
-            verbindungen = verbindungen,
+            knoten = knotenListe,
+            verbindungen = verbindungListe,
             modifier = modifier.fillMaxSize().clipToBounds().background(Color(0xFFF8FAFC))
 //            .onSizeChanged { fläche = it } TODO
                     ,

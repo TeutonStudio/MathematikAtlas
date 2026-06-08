@@ -40,4 +40,8 @@ data class AuswahlDaten(
         knotenIds = knotenIds + andere.knotenIds,
         verbindungIds = verbindungIds + andere.verbindungIds,
     )
+
+    public companion object {
+        public val LEER = AuswahlDaten()
+    }
 }

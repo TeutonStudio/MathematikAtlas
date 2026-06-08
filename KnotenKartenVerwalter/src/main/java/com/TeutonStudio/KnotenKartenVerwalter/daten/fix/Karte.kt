@@ -1,5 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
@@ -30,11 +33,13 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
  * Knotenpositionen weiterhin in Weltkoordinaten gespeichert werden.
  */
 open class KarteZustand(
-    var ansicht: AnsichtsfensterDaten = StandardAnsicht(),
+    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
     val auswahl: AuswahlDaten = AuswahlDaten(),
 ) {
+    var ansicht by mutableStateOf(ansicht)
+
     constructor(
         zustand: KarteZustand,
         ansicht: AnsichtsfensterDaten,

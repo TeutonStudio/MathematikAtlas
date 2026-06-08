@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +40,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 // Composable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
+import kotlin.div
 import kotlin.let
 
 @Suppress("UNCHECKED_CAST")
@@ -61,8 +64,7 @@ sealed interface Knoten: GraphObjekt {
     public val besitzer: Karte
     public val anschlussFabrik: AnschlussFabrik
 
-    val anschlüsse
-        get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
+//    val anschlüsse get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
 
     val bildPos
         get() = daten.position.zuBild(besitzer.zustand.ansicht)
@@ -85,14 +87,19 @@ sealed interface Knoten: GraphObjekt {
 
     @Composable
     public fun zuComposable(
-        modifierKnoten: Modifier = Modifier,
+        modifierKnoten: Modifier = Modifier.fillMaxSize(),
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
-    ) = KnotenRahmen(daten,anschlüsse, boxModiRect, anschlussModifier, inhaltSkalierung, {
-        val zoom = besitzer.zustand.ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
-        besitzer.aktualisierung(daten.id,daten.position + it / zoom)
-        besitzer.onAuswahlÄndern(AuswahlDaten(setOf(daten.id)))
-    }) { Inhalt(modifierKnoten) }
+    ) {
+        val anschlussListe = remember(daten.anschlüsse) {
+            daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
+        }
+        KnotenRahmen(daten,anschlussListe, boxModiRect, anschlussModifier, inhaltSkalierung, {
+            val zoom = besitzer.zustand.ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
+            besitzer.aktualisierung(daten.id,daten.position + it / zoom)
+            besitzer.onAuswahlÄndern(AuswahlDaten(setOf(daten.id)))
+        }) { Inhalt(modifierKnoten) }
+    }
 
     @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,Color(0xFF2563EB)) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
 

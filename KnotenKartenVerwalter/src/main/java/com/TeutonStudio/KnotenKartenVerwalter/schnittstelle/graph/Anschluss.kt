@@ -74,8 +74,11 @@ open class BasisAnschluss(
     override val besitzer: Knoten,
 //    override var partner: Anschluss? = null,
 ): Anschluss {
+    val radius
+        get() = 5.dp
+
     @Composable
-    override fun zuComposable(modifier: Modifier) = Anschluss(daten,Color.Black,modifier)
+    override fun zuComposable(modifier: Modifier) = Anschluss(daten,radius,Color.Black,modifier)
 
     @Composable
     override fun öffneKontext(pos: BildschirmPosition) {

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
@@ -91,11 +92,12 @@ internal fun Modifier.anschlussModifierSkaliert(skalierung: Float): Modifier {
 @Composable
 public fun Anschluss(
     daten: AnschlussDaten,
+    radius: Dp,
     farbe: Color,
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.size(5.dp).background(farbe, CircleShape),
+        modifier = modifier.size(radius).background(farbe, CircleShape),
         contentAlignment = Alignment.Center,
     ) { /* */ }
 }
@@ -109,10 +111,11 @@ public fun Anschluss(
 @Composable
 public fun RichtungsAnschluss(
     daten: RichtungsAnschlussDaten,
+    radius: Dp,
     modifier: Modifier = Modifier,
 ) {
     Anschluss(
-        daten, when (daten.richtung) {
+        daten,radius,when (daten.richtung) {
             AnschlussRichtung.Eingang -> Color(0xFF2563EB)
             AnschlussRichtung.Ausgang -> Color(0xFF059669)
         }, modifier,
@@ -123,14 +126,16 @@ public fun RichtungsAnschluss(
 @Composable
 public fun Eingang(
     daten: EingangDaten,
+    radius: Dp,
     modifier: Modifier = Modifier,
-) = RichtungsAnschluss(daten,modifier)
+) = RichtungsAnschluss(daten,radius,modifier)
 
 @Composable
 public fun Ausgang(
     daten: AusgangDaten,
+    radius: Dp,
     modifier: Modifier = Modifier,
-) = RichtungsAnschluss(daten,modifier)
+) = RichtungsAnschluss(daten,radius,modifier)
 
 /**
  * Ordnet Anschlüsse gleichmäßig über die Kante eines Knotens an.
