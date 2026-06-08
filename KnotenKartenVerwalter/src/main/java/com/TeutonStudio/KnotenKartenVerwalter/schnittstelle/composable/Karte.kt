@@ -127,19 +127,21 @@ internal fun KartenOberfläche(
     }
 //    val modiPos = modifier.offset { zustand.ansicht.erhalteVerschiebung().round() }
 
-    Box(modifier = modifier.draggable2D(
+    Box(modifier = modifier.clickable { // TODO herausfinden, wie visuelle effekte deaktivieren
+        onAuswahlÄndern(AuswahlDaten.LEER)
+    }.draggable2D(
         state = rememberDraggable2DState {
             zustand.verschiebe(it)
             onAuswahlÄndern(AuswahlDaten.LEER)
 //            scope.invalidate() // TODO
-        } ).pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
+        } )/*.pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
             detectTapGestures(
                 onDoubleTap = onDoupleTap,
                 onLongPress = onLongTap,
                 onTap = onTap,
             )
             detectTransformGestures { centroid, pan, zoom, rotation ->  }
-        }
+        }*/
 /*        .pointerInput(karte.daten.id) { TODO
             detectTapGestures(
                 onDoubleTap = onDoupleTap,

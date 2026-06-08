@@ -4,9 +4,15 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKonstruktor
@@ -21,11 +27,16 @@ import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.idReferenz
 import com.TeutonStudio.KnotenKartenVerwalter.istAusgang
 import com.TeutonStudio.KnotenKartenVerwalter.istEingang
+import com.TeutonStudio.KnotenKartenVerwalter.pos
 
 // Composables
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.zuBild
+import com.TeutonStudio.KnotenKartenVerwalter.zuKarte
 import kotlin.collections.component1
 import kotlin.collections.filter
 
@@ -80,8 +91,22 @@ open class BasisAnschluss(
     val radius
         get() = 5.dp
 
+    private val dragPos: MutableState<Offset> = mutableStateOf(Offset.Zero)
     @Composable
-    override fun zuComposable(modifier: Modifier) = Anschluss(daten,radius,Color.Black,modifier)
+    override fun zuComposable(modifier: Modifier) = Anschluss(daten,{
+        val start = derivedStateOf { (besitzer.daten to daten).pos().zuBild(graph.erhalteKarte().zustand.ansicht).toOffset() }
+        dragPos.value = start.value // it ist eine unpassende position
+        val ende = derivedStateOf { dragPos.value.round().zuKarte(graph.erhalteKarte().zustand.ansicht) }
+        graph.erhalteKarte().pseudoVerbindung.value = BasisVerbindung(graph, VerbindungDaten(
+            "pseudo", idReferenz(besitzer.daten to daten,besitzer.daten to daten)
+        ),start,ende)
+    },{ // TODO Herausfinden, warum anfangsPosition passt und ziel position nicht bei Maus liegt.
+        // TODO finalisieren
+        graph.erhalteKarte().pseudoVerbindung.value = null
+    },{
+        // TODO snap einbauen, nächsten abschluss und abstand nach position bestimmen
+        dragPos.value = it
+    },radius,Color.Black,modifier)
 
     @Composable
     override fun öffneKontext(pos: BildschirmPosition) {

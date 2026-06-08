@@ -77,6 +77,8 @@ class Graph(
         return karte
     }
 
+    public fun erhalteKarte(): Karte = inhalt.filterIsInstance<Karte>()[0]
+
     @Composable
     public fun zuComposable(modifier: Modifier) {
         val karte = remember(daten) {

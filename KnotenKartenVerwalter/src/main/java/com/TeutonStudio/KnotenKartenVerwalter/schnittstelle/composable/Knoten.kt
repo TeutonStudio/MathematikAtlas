@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable
 
 import androidx.annotation.FloatRange
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
@@ -41,7 +42,7 @@ public fun KnotenRahmen(
     val density = LocalDensity.current
     val scope = currentRecomposeScope
 //    val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
-    Box(modifier = boxModiRect(density).draggable2D(
+    Box(modifier = boxModiRect(density).clickable { beiVerschiebung(Offset.Zero) }.draggable2D(
         state = rememberDraggable2DState { beiVerschiebung(it) },
         enabled = daten.beweglich,
     )) {

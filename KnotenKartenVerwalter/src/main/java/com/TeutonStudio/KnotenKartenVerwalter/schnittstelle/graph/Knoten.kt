@@ -84,6 +84,9 @@ sealed interface Knoten: GraphObjekt {
         inhaltSkalierung: Float = 1f,
     ) {
         val anschlussListe = remember(daten.anschlüsse) {
+            graph.inhalt.filterIsInstance<Anschluss>().forEach {
+                graph.inhalt.remove(it)
+            } // TODO ist korrekte entfernung alter GraphObjekte
             daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value } }.toMap()
         }
         KnotenRahmen(daten,anschlussListe, boxModiRect, inhaltSkalierung,beiVerschiebung) { Inhalt(modifierKnoten) }

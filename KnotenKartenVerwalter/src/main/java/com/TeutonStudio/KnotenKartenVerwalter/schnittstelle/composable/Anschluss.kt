@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Arrangement
@@ -13,10 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
@@ -31,7 +36,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.filterKante
 import com.TeutonStudio.KnotenKartenVerwalter.istHorizontal
 import com.TeutonStudio.KnotenKartenVerwalter.istVertikal
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
 import kotlin.collections.filterKeys
 import kotlin.collections.maxBy
 
@@ -94,23 +101,39 @@ internal fun Modifier.anschlussModifierSkaliert(skalierung: Float): Modifier {
 @Composable
 public fun Anschluss(
     daten: AnschlussDaten,
+    onDragStarted: (Offset) -> Unit,
+    onDragStopped: () -> Unit,
+    onDragging: (Offset) -> Unit,
     radius: Dp,
     farbe: Color,
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.size(radius).background(farbe, CircleShape).draggable2D(
-            rememberDraggable2DState {
-                // TODO pseudo verbindung aktualisieren
-            },
-            onDragStarted = { startPosition ->
-                // TODO pseudo verbindung erstellen
-            },
-            onDragStopped = {
-                // TODO erstellen der pseudo verbindung an Karte delegieren, dass dieser entscheiden kann ob erlaubt.
-            }
+        modifier = modifier.size(radius).background(farbe, CircleShape).pointerInput(daten.id) {
+            detectDragGestures(
+                onDragStart = onDragStarted,
+                onDragEnd = onDragStopped,
+                onDrag = { change, dragAmount ->
+                    change.consume()
+                    // change.position ist die ABSOLUTE Position während des Drags
+                    // Kein manuelles Aufsummieren von Deltas nötig!
+                    onDragging(change.position)
+                }
+            )
+        },
 
-        ),
+/*            .draggable2D(
+            rememberDraggable2DState(onDraggin),*//* {
+                // TODO pseudo verbindung aktualisieren
+            },*//*
+            onDragStarted = onDragStarted*//*{ startPosition ->
+                // TODO pseudo verbindung erstellen
+            }*//*,
+            onDragStopped = onDragStopped*//*{
+                // TODO erstellen der pseudo verbindung an Karte delegieren, dass dieser entscheiden kann ob erlaubt.
+            }*//*
+
+            ),*/
         contentAlignment = Alignment.Center,
     ) { /* */ }
 }
@@ -124,11 +147,14 @@ public fun Anschluss(
 @Composable
 public fun RichtungsAnschluss(
     daten: RichtungsAnschlussDaten,
+    onDragStarted: (Offset) -> Unit,
+    onDragStopped: () -> Unit,
+    onDraggin: (Offset) -> Unit,
     radius: Dp,
     modifier: Modifier = Modifier,
 ) {
     Anschluss(
-        daten,radius,when (daten.richtung) {
+        daten,onDragStarted,onDragStopped,onDraggin,radius,when (daten.richtung) {
             AnschlussRichtung.Eingang -> Color(0xFF2563EB)
             AnschlussRichtung.Ausgang -> Color(0xFF059669)
         }, modifier,
@@ -139,16 +165,22 @@ public fun RichtungsAnschluss(
 @Composable
 public fun Eingang(
     daten: EingangDaten,
+    onDragStarted: (Offset) -> Unit,
+    onDragStopped: () -> Unit,
+    onDraggin: (Offset) -> Unit,
     radius: Dp,
     modifier: Modifier = Modifier,
-) = RichtungsAnschluss(daten,radius,modifier)
+) = RichtungsAnschluss(daten,onDragStarted,onDragStopped,onDraggin,radius,modifier)
 
 @Composable
 public fun Ausgang(
     daten: AusgangDaten,
+    onDragStarted: (Offset) -> Unit,
+    onDragStopped: () -> Unit,
+    onDraggin: (Offset) -> Unit,
     radius: Dp,
     modifier: Modifier = Modifier,
-) = RichtungsAnschluss(daten,radius,modifier)
+) = RichtungsAnschluss(daten,onDragStarted,onDragStopped,onDraggin,radius,modifier)
 
 /**
  * Ordnet Anschlüsse gleichmäßig über die Kante eines Knotens an.

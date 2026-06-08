@@ -106,11 +106,11 @@ public fun KartenPosition.aufVerbindung(daten: VerbindungDaten,knoten: Pair<Knot
     return TODO("formel zu ermittelung der entfernung zur Verbindung zur pos definieren")
 }
 
-public fun KnotenPosition.zuKarte(daten: KnotenDaten): KartenPosition {
+private fun KnotenPosition.zuKarte(daten: KnotenDaten): KartenPosition {
     return this.zuKarte(daten.position)
 }
 
-public fun KnotenPosition.zuKarte(zentrum: KartenPosition): KartenPosition {
+private fun KnotenPosition.zuKarte(zentrum: KartenPosition): KartenPosition {
     return TODO("definieren, ob der lokale Knotenraum andere skalierung hat als der der Karte.")
 }
 
@@ -254,9 +254,41 @@ public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): Knoten
     AnschlussRichtung.Ausgang -> daten is AusgangDaten
 } }.toMutableMap()
 
+
+
+public fun Pair<KnotenDaten,AnschlussDaten>.pos(): KartenPosition {
+    val anteil = relAnteilKante(first.anschlüsse,second.id,second.kante)
+    return Offset(
+        x = when (second.kante) {
+            AnschlussKante.Links -> first.position.x
+            AnschlussKante.Rechts -> first.position.x + first.dimension.width
+            AnschlussKante.Oben,
+            AnschlussKante.Unten -> first.position.x + first.dimension.width * anteil
+        },
+        y = when (second.kante) {
+            AnschlussKante.Links,
+            AnschlussKante.Rechts -> first.position.y + first.dimension.height * anteil
+            AnschlussKante.Oben -> first.position.y
+            AnschlussKante.Unten -> first.position.y + first.dimension.height
+        },
+    )
+}
+
+private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String, kante: AnschlussKante): Float {
+    val sorter = compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id }
+    val anschluesseAnKante = anschlüsse.entries.filter { (daten, _) -> daten.kante == kante }.sortedWith(sorter)
+    val indexAnKante = anschluesseAnKante.indexOfFirst { (daten, _) -> daten.id == aId }.coerceAtLeast(0)
+    val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
+    return (indexAnKante + 1f) / (anzahlAnKante + 1f)
+}
+
 // Verbindung
 
+public fun List<Verbindung>.plusVlt(arg: Verbindung?): List<Verbindung> = if (arg != null) plus(arg) else this
+
 typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
+
+public fun idReferenz(von: Pair<KnotenDaten, AnschlussDaten>,zu: Pair<KnotenDaten, AnschlussDaten>): idReferenz = (von.first.id to zu.first.id) to (von.second.id to zu.second.id)
 
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second

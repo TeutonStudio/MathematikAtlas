@@ -3,7 +3,9 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -33,6 +35,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteZweites
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
+import com.TeutonStudio.KnotenKartenVerwalter.plusVlt
+import com.TeutonStudio.KnotenKartenVerwalter.pos
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KartenOberfläche
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import kotlin.collections.component1
@@ -120,6 +124,7 @@ sealed interface Karte: GraphObjekt {
     val zustand: KarteZustand
     val knotenFabrik: KnotenFabrik
     val verbindungFabrik: VerbindungFabrik
+    val pseudoVerbindung: MutableState<Verbindung?>
     val aktualisierung: KartenAktualisierung
     val onVerbindungErstellen: VerbindungErstellen
     val onKontextAktion: KontextAktionAusführen
@@ -153,14 +158,22 @@ open class BasisKarte(
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
+    override val pseudoVerbindung = mutableStateOf<Verbindung?>(null)
+
     @Composable
     override fun zuComposable(modifier: Modifier) {
         val knotenListe = remember(daten.knoten) {
+            graph.inhalt.filterIsInstance<Knoten>().forEach {
+                graph.inhalt.remove(it)
+            } // TODO ist korrekte entfernung alter GraphObjekte
             daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(graph, it,this) }
         }
         val referenz = remember(knotenListe) { knotenListe.flatMap { it.anschlussReferenzen(zustand) } }.toMap()
         val verbindungListe = remember(daten.verbindungen,knotenListe) { // referenz nicht als Key, da alle key von referenz auch hier key sind
             val refIdx = referenz.map { (it.value.id to it.key.id) to it }.toMap()
+            graph.inhalt.filterIsInstance<Verbindung>().forEach {
+                graph.inhalt.remove(it)
+            } // TODO ist korrekte entfernung alter GraphObjekte
             daten.verbindungen.mapNotNull { verbindung ->
                 val startEntry = refIdx[verbindung.ids.erhalteErtes()]
                 val endeEntry = refIdx[verbindung.ids.erhalteZweites()]
@@ -170,14 +183,14 @@ open class BasisKarte(
                 val ende = derivedStateOf { pos(endeEntry).zuBild(zustand.ansicht).toOffset() }
                 verbindungFabrik.erzeugeVerbindung(graph,verbindung,start,ende)
             }
-        }
+        } // TODO Herausfinden, wie GraphObjekte einmalig erzeugt und dann verändert, statt neu erzeugt werden können
 
         KartenOberfläche(
             karte = this,
             zustand = zustand,
             erhalteNachBildPos = graph::erhalteNachBildPos,
             knoten = knotenListe,
-            verbindungen = verbindungListe,
+            verbindungen = verbindungListe.plusVlt(pseudoVerbindung.value),
             modifier = modifier.fillMaxSize().clipToBounds().background(Color(0xFFF8FAFC)),
             aktualisierung = aktualisierung,
             onVerbindungErstellen = onVerbindungErstellen,
@@ -191,32 +204,7 @@ open class BasisKarte(
         TODO("Not yet implemented")
     }
 
-    private fun pos(arg: Map.Entry<AnschlussDaten, KnotenDaten>): KartenPosition {
-        val knoten = arg.value; val anschluss = arg.key
-        val anteil = relAnteilKante(knoten.anschlüsse,anschluss.id,anschluss.kante)
-        return Offset(
-            x = when (anschluss.kante) {
-                AnschlussKante.Links -> knoten.position.x
-                AnschlussKante.Rechts -> knoten.position.x + knoten.dimension.width
-                AnschlussKante.Oben,
-                AnschlussKante.Unten -> knoten.position.x + knoten.dimension.width * anteil
-            },
-            y = when (anschluss.kante) {
-                AnschlussKante.Links,
-                AnschlussKante.Rechts -> knoten.position.y + knoten.dimension.height * anteil
-                AnschlussKante.Oben -> knoten.position.y
-                AnschlussKante.Unten -> knoten.position.y + knoten.dimension.height
-            },
-        )
-    }
-
-    private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String, kante: AnschlussKante): Float {
-        val sorter = compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id }
-        val anschluesseAnKante = anschlüsse.entries.filter { (daten, _) -> daten.kante == kante }.sortedWith(sorter)
-        val indexAnKante = anschluesseAnKante.indexOfFirst { (daten, _) -> daten.id == aId }.coerceAtLeast(0)
-        val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
-        return (indexAnKante + 1f) / (anzahlAnKante + 1f)
-    }
+    private fun pos(arg: Map.Entry<AnschlussDaten, KnotenDaten>): KartenPosition = (arg.value to arg.key).pos()
 
     public companion object {
         public const val KARTEN_ART: KnotenArt = "default"

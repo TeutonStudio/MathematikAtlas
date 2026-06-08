@@ -101,8 +101,8 @@ sealed interface Verbindung: GraphObjekt {
     public val daten: VerbindungDaten
 //    public val von: Anschluss?
 //    public val zu: Anschluss?
-    public val start: State<KartenPosition>
-    public val ende: State<KartenPosition>
+    public val start: State<KartenPosition> // TODO AnschlussKante als wert hinzufügen um davon abhängige bezierKurven zu Zeichnen
+    public val ende: State<KartenPosition> // TODO AnschlussKante als wert hinzufügen um davon abhängige bezierKurven zu Zeichnen
 
     public fun zeichnung(): DrawScope.() -> Unit
 }
