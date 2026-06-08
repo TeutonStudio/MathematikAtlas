@@ -20,13 +20,12 @@ import kotlin.collections.get
 
 typealias VerbindungArt = String
 typealias VerbindungFabrik = Map<VerbindungArt,VerbindungKonstruktor>
-typealias VerbindungKonstruktor = (daten:VerbindungDaten,/*von: Anschluss?, zu: Anschluss?,*/ start: KartenPosition, ende: KartenPosition) -> Verbindung
+typealias VerbindungKonstruktor = (daten:VerbindungDaten,start: State<KartenPosition>, ende: State<KartenPosition>) -> Verbindung
 
 public fun VerbindungFabrik.erzeugeVerbindung(
     daten: VerbindungDaten,
-//    anschlüsse: Pair<Anschluss,Anschluss>? = null,
-    positionen: State<Pair<KartenPosition, KartenPosition>> = mutableStateOf(Offset.Zero to Offset.Zero)
-): Verbindung? = this[daten.klasse]?.invoke(daten,/*anschlüsse?.first, anschlüsse?.second*/positionen.value.first,positionen.value.second)
+    start: State<KartenPosition>, ende: State<KartenPosition>,
+): Verbindung? = this[daten.klasse]?.invoke(daten,start,ende)
 
 // Anschluss
 

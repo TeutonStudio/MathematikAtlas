@@ -82,7 +82,7 @@ public fun List<VerbindungDaten>.zuComposable(
     ende: (VerbindungDaten) -> State<KartenPosition>,
     modifier: Modifier = Modifier,
     fabrik: VerbindungFabrik = BasisVerbindungFabrik,
-) = this.mapNotNull { fabrik.erzeugeVerbindung(it,/*null,*/remember { derivedStateOf { start.invoke(it).value to ende.invoke(it).value } })}.zuComposable(modifier)
+) = this.mapNotNull { fabrik.erzeugeVerbindung(it,start(it),ende(it))}.zuComposable(modifier)
 
 /**
  * Rendert bereits aufgelöste Verbindungen.
@@ -109,12 +109,9 @@ sealed interface Verbindung: GraphObjekt {
 
 open class BasisVerbindung(
     override val daten: VerbindungDaten,
-//    override val von: Anschluss? = null,
-//    override val zu: Anschluss? = null,
+    override val start: State<KartenPosition>,
+    override val ende: State<KartenPosition>,
 ): Verbindung {
-    override val start = mutableStateOf(KartenPosition.Zero)
-    override val ende = mutableStateOf(KartenPosition.Zero)
-
     @Composable
     override fun zuComposable(modifier: Modifier) = VerbindungUmgebung(modifier, zeichnung())
 

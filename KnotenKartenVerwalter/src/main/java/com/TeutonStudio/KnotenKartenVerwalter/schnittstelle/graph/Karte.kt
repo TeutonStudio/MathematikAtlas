@@ -154,14 +154,13 @@ open class BasisKarte(
         val verbindungListe = remember(daten.verbindungen,knotenListe) { // referenz nicht als Key, da alle key von referenz auch hier key sind
             val refIdx = referenz.map { (it.value.id to it.key.id) to it }.toMap()
             daten.verbindungen.mapNotNull { verbindung ->
-                val start = refIdx[verbindung.ids.erhalteErtes()]
-                val ende = refIdx[verbindung.ids.erhalteZweites()]
+                val startEntry = refIdx[verbindung.ids.erhalteErtes()]
+                val endeEntry = refIdx[verbindung.ids.erhalteZweites()]
 
-                if (start == null || ende == null) return@mapNotNull null
-                val positionen = derivedStateOf {
-                    pos(start).zuBild(zustand.ansicht).toOffset() to pos(ende).zuBild(zustand.ansicht).toOffset()
-                }
-                verbindungFabrik.erzeugeVerbindung(verbindung,positionen)
+                if (startEntry == null || endeEntry == null) return@mapNotNull null
+                val start = derivedStateOf { pos(startEntry).zuBild(zustand.ansicht).toOffset() }
+                val ende = derivedStateOf { pos(endeEntry).zuBild(zustand.ansicht).toOffset() }
+                verbindungFabrik.erzeugeVerbindung(verbindung,start,ende)
             }
         }
 
