@@ -6,6 +6,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -247,6 +248,9 @@ public fun idReferenz.hatGleichenAnschluss(other: idReferenz): Boolean {
 public fun Iterable<Verbindung>.zuComposable(modifier: (VerbindungDaten) -> Modifier) = this.forEach { it.zuComposable(modifier(it.daten)) }
 
 // Knoten
+
+public fun KnotenDaten.zuAuswahl(): AuswahlDaten = AuswahlDaten(setOf(id))
+public fun KnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
 
 @Composable @JvmName("IterKnoten2Composable")
 public fun Iterable<Knoten>.zuComposable(

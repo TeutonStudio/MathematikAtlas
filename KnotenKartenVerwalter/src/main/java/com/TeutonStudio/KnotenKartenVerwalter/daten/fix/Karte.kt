@@ -74,72 +74,37 @@ open class KartenCacheDaten() {
  */
 open class KarteDaten(
     override val id: String,
-    override val klasse: KartenArt? = BasisKarte.KARTEN_ART,
     public val name: String,
     public val größe: Rechteck? = null, // TODO größe des Graphs
-    public val knoten: List<KnotenDaten> = emptyList(), // TODO evtl mutable
-    public val verbindungen: List<VerbindungDaten> = emptyList(), // TODO evtl mutable
     public val initialKnoten: List<KnotenDaten> = emptyList(),
     public val initialVerbindungen: List<VerbindungDaten> = emptyList(),
-//    public val artenKnoten: List<KnotenArten> = emptyList(),
-//    public val artenVerbindungen: List<VerbindungArten> = emptyList(),
-    public val ansicht: AnsichtsfensterDaten = StandardAnsicht(),
-    public val cache: KartenCacheDaten = KartenCacheDaten(),
 ): GraphDaten {
+    override val klasse: KartenArt? = BasisKarte.KARTEN_ART
+
+    public val cache: KartenCacheDaten = KartenCacheDaten()
+    public val knoten: MutableList<KnotenDaten> = initialKnoten.toMutableList()
+    public val verbindungen: MutableList<VerbindungDaten> = initialVerbindungen.toMutableList()
+    public var ansicht: AnsichtsfensterDaten = StandardAnsicht()
+
     constructor(
         daten: KarteDaten,
         id: String? = null,
-        klasse: String? = null,
         name: String? = null,
         größe: Rechteck? = null,
-        knoten: List<KnotenDaten>? = null,
-        verbindungen: List<VerbindungDaten>? = null,
         initialKnoten: List<KnotenDaten>? = null,
         initialVerbindungen: List<VerbindungDaten>? = null,
-//        artenKnoten: List<KnotenArten>? = null,
-//        artenVerbindungen: List<VerbindungArten>? = null,
         ansichtsfenster: AnsichtsfensterDaten? = null,
         cache: KartenCacheDaten? = null,
     ): this(
         id ?: daten.id,
-        klasse ?: daten.klasse,
         name ?: daten.name,
         größe ?: daten.größe,
-        knoten ?: daten.knoten,
-        verbindungen ?: daten.verbindungen,
         initialKnoten ?: daten.initialKnoten,
         initialVerbindungen ?: daten.initialVerbindungen,
-//        artenKnoten ?: daten.artenKnoten,
-//        artenVerbindungen ?: daten.artenVerbindungen,
-        ansichtsfenster ?: daten.ansicht,
-        cache ?: daten.cache,
-    )
+    ) {
+        this.ansicht = ansichtsfenster ?: daten.ansicht
+//        this.cache = cache ?: daten.cache // TODO
 
-    fun copy(
-        id: String = this.id,
-        klasse: String? = this.klasse,
-        name: String = this.name,
-        größe: Rechteck? = this.größe,
-        knoten: List<KnotenDaten> = this.knoten,
-        verbindungen: List<VerbindungDaten> = this.verbindungen,
-        initialKnoten: List<KnotenDaten> = this.initialKnoten,
-        initialVerbindungen: List<VerbindungDaten> = this.initialVerbindungen,
-//        artenKnoten: List<KnotenArten> = this.artenKnoten,
-//        artenVerbindungen: List<VerbindungArten> = this.artenVerbindungen,
-        ansichtsfenster: AnsichtsfensterDaten = this.ansicht,
-        cache: KartenCacheDaten = this.cache,
-    ): KarteDaten = KarteDaten(
-        id = id,
-        klasse = klasse,
-        name = name,
-        größe = größe,
-        knoten = knoten,
-        verbindungen = verbindungen,
-        initialKnoten = initialKnoten,
-        initialVerbindungen = initialVerbindungen,
-//        artenKnoten = artenKnoten,
-//        artenVerbindungen = artenVerbindungen,
-        ansicht = ansichtsfenster,
-        cache = cache,
-    )
+    }
+
 }

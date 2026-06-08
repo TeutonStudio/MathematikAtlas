@@ -95,7 +95,7 @@ data class StandardKartenLayout(
             }
             .associateBy { it.id }
 
-        return karte.copy(knoten = karte.knoten.map { neueKnoten.getValue(it.id) })
+        return TODO("Layout Algorithmus nicht implementiert") // karte.copy(knoten = karte.knoten.map { neueKnoten.getValue(it.id) })
     }
 }
 

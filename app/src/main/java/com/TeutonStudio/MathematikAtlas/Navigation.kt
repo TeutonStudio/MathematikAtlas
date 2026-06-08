@@ -82,36 +82,15 @@ private fun KnotenKartenTestAnwendung() {
     var status by remember { mutableStateOf("Bereit") }
 
     fun verschiebeKnoten(knotenId: String, position: Offset) {
-        karte = KarteDaten(
-            karte,
-            knoten = karte.knoten.map { knoten ->
-                if (knoten.id == knotenId) knoten.position = position
-                knoten
-            },
-        )
         status = "Knoten verschoben"
     }
 
     fun erstelleVerbindung(verbindung: VerbindungDaten) {
-        karte = KarteDaten(
-            karte,
-            verbindungen = karte.verbindungen.mitErsetztemEingang(verbindung),
-        )
         auswahl = AuswahlDaten(verbindungIds = setOf(verbindung.id))
         status = "Verbindung erstellt"
     }
 
     fun loescheAuswahl() {
-        val knotenIds = auswahl.knotenIds
-        val verbindungIds = auswahl.verbindungIds
-
-        val hatKnoten = { v: VerbindungDaten -> true in knotenIds.map { v.ids.hatKnotenId(it) } }
-        val hatVerbindung = { v: VerbindungDaten -> true in knotenIds.map { v.ids.hatAnschlussId(it) } }
-        karte = KarteDaten(
-            karte,
-            knoten = karte.knoten.filterNot { it.id in knotenIds },
-            verbindungen = karte.verbindungen.filterNot { it.id in verbindungIds || hatKnoten(it) || hatVerbindung(it) },
-        )
         auswahl = AuswahlDaten()
         status = "Auswahl geloescht"
     }
@@ -124,10 +103,6 @@ private fun KnotenKartenTestAnwendung() {
                     id = "knoten-$nummer",
                     name = "Knoten $nummer",
                     position = aktion.weltPosition,
-                )
-                karte = KarteDaten(
-                    karte,
-                    knoten = karte.knoten + knoten,
                 )
                 auswahl = AuswahlDaten(knotenIds = setOf(knoten.id))
                 status = "Knoten erstellt"
@@ -144,10 +119,6 @@ private fun KnotenKartenTestAnwendung() {
             "Verbindung loeschen" -> {
                 val ziel = aktion.ziel as? KartenTreffer.Verbindung
                 if (ziel != null) {
-                    karte = KarteDaten(
-                        karte,
-                        verbindungen = karte.verbindungen.filterNot { it.id == ziel.verbindungId },
-                    )
                     auswahl = AuswahlDaten()
                     status = "Verbindung geloescht"
                 }

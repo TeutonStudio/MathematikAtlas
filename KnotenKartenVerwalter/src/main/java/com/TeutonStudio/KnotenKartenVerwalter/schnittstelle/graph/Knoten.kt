@@ -17,10 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
@@ -34,11 +38,13 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteSize
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 
 // Composable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
+import com.TeutonStudio.KnotenKartenVerwalter.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import kotlin.div
 import kotlin.let
@@ -64,26 +70,12 @@ sealed interface Knoten: GraphObjekt {
     public val besitzer: Karte
     public val anschlussFabrik: AnschlussFabrik
 
-//    val anschlüsse get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
-
-    val bildPos
-        get() = daten.position.zuBild(besitzer.zustand.ansicht)
-    val boxModiRect
-        get() = { d: Density -> Modifier.offset { bildPos }.size(
-            width = with(d) { (daten.breite * besitzer.zustand.ansicht.erhalteZoomfaktor()).toDp() },
-            height = with(d) { (daten.tiefe * besitzer.zustand.ansicht.erhalteZoomfaktor()).toDp() },
-        ) }
-    private val verLeisteModi
-        get() = Modifier.size(10.dp,daten.dimension.height.dp)
-    private val horLeisteModi
-        get() = Modifier.size(daten.dimension.width.dp,10.dp)
-    val anschlussModifier
-        get() = mapOf<AnschlussKante, Modifier>( // TODO soll die verschiebung zur mitte der Kante oder dem beginn der Kante erfolgen
-            AnschlussKante.Links to verLeisteModi,
-            AnschlussKante.Rechts to verLeisteModi,
-            AnschlussKante.Unten to horLeisteModi,
-            AnschlussKante.Oben to horLeisteModi,
-        )
+    val bildPos get() = daten.position.zuBild(besitzer.zustand.ansicht)
+    val boxModiRect get() = { d: Density -> Modifier.offset { bildPos }.size( size = with(d) { (daten.erhalteSize() * zoomFaktor()).toDpSize() }) }
+    val beiVerschiebung get() = { it: Offset ->
+        besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
+        besitzer.onAuswahlÄndern(daten.zuAuswahl())
+    }
 
     @Composable
     public fun zuComposable(
@@ -94,11 +86,7 @@ sealed interface Knoten: GraphObjekt {
         val anschlussListe = remember(daten.anschlüsse) {
             daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
         }
-        KnotenRahmen(daten,anschlussListe, boxModiRect, anschlussModifier, inhaltSkalierung, {
-            val zoom = besitzer.zustand.ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
-            besitzer.aktualisierung(daten.id,daten.position + it / zoom)
-            besitzer.onAuswahlÄndern(AuswahlDaten(setOf(daten.id)))
-        }) { Inhalt(modifierKnoten) }
+        KnotenRahmen(daten,anschlussListe, boxModiRect, inhaltSkalierung,beiVerschiebung) { Inhalt(modifierKnoten) }
     }
 
     @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,Color(0xFF2563EB)) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
@@ -127,6 +115,8 @@ sealed interface Knoten: GraphObjekt {
         }
 
     }
+
+    private fun zoomFaktor(): Float = besitzer.zustand.ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
 
     @Composable
     override fun zuComposable(modifier: Modifier) = TODO("Falsche Methode aufgerufen")

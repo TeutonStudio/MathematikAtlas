@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -33,13 +34,12 @@ public fun KnotenRahmen(
     daten: KnotenDaten,
     anschlüsse:  Map<Anschluss, Int>,
     boxModiRect:  (Density) -> Modifier,
-    anschlussModifier: Map<AnschlussKante, Modifier>,
     inhaltSkalierung: Float = 1f,
     beiVerschiebung: (Offset) -> Unit,
     Inhalt: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
-//    val scope = currentRecomposeScope
+    val scope = currentRecomposeScope
 //    val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
     Box(modifier = boxModiRect(density).draggable2D(
         state = rememberDraggable2DState { beiVerschiebung(it) },

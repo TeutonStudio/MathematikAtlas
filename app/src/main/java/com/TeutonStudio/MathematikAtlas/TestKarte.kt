@@ -15,7 +15,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.idReferenz
 public fun testKarte(): KarteDaten = KarteDaten(
     id = "test-karte",
     name = "Graph Testkarte",
-    knoten = listOf(
+    initialKnoten = listOf(
         KnotenDaten(
             id = "eingabe",
             name = "Eingabe",
@@ -45,11 +45,10 @@ public fun testKarte(): KarteDaten = KarteDaten(
             position = Offset(660f, 120f),
             anschlussLabel = mutableMapOf(
                 AnschlussKante.Links to ("Eingang 1" to 0)
-            ),
-            ausgewaehlt = true
+            )
         ),
     ),
-    verbindungen = listOf(
+    initialVerbindungen = listOf(
         VerbindungDaten(
             id = "v-eingabe-mitte",
             ids = idReferenz("eingabe" to "mitte","out1" to "in"),

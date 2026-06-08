@@ -153,19 +153,15 @@ open class BasisKarte(
         val knotenListe = remember(daten.knoten) {
             daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it, this) }
         }
-        val verbindungListe = remember(daten.verbindungen,knotenListe) {
-            val anschlussReferenzen = knotenListe.flatMap { it.anschlussReferenzen(zustand) }
+        val referenz = remember(knotenListe) { knotenListe.flatMap { it.anschlussReferenzen(zustand) } }
+        val verbindungListe = remember(daten.verbindungen,knotenListe) { // referenz nicht als Key, da alle key von referenz auch hier key sind
             daten.verbindungen.mapNotNull { verbindung ->
-                val start = anschlussReferenzen.firstOrNull { verbindung.ids.istVerbunden(it) }
-                val ende = anschlussReferenzen.firstOrNull { verbindung.ids.istVerbunden(it) }
+                val start = referenz.firstOrNull { verbindung.ids.istVerbunden(it) }
+                val ende = referenz.firstOrNull { verbindung.ids.istVerbunden(it) }
 
                 if (start == null || ende == null) return@mapNotNull null
-
-                verbindungFabrik.erzeugeVerbindung(
-                    daten = verbindung,
-//                    anschlüsse = null, // TODO
-                    positionen = start.position.toOffset() to ende.position.toOffset(),
-                )
+                val positionen = start.position.toOffset() to ende.position.toOffset()
+                verbindungFabrik.erzeugeVerbindung(verbindung,positionen)
             }
         }
 

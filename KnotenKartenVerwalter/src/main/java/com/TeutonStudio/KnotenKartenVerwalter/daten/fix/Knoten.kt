@@ -1,5 +1,10 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
+import androidx.compose.runtime.collection.mutableVectorOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
@@ -41,13 +46,13 @@ open class KnotenDaten(
 
 ): GraphDaten {
     override val klasse: KnotenArt? = BasisKnoten.KNOTEN_ART
-    open var position: KartenPosition = Offset(0f, 0f)
-    open val dimension: Rechteck
-        get() = Rect(position,position + Offset(breite,tiefe))
+    open val dimension: Rechteck get() = Rect(position,position + Offset(breite,tiefe))
     open var breite: Float = 180f
     open var tiefe: Float = 96f
-    open var ausgewaehlt: Boolean = false
+
     open var beweglich: Boolean = true
+    open var position: KartenPosition by mutableStateOf(KartenPosition.Zero)
+    open var ausgewaehlt by mutableStateOf(false)
     open val anschlüsse: KnotenAnschlüsse = mutableMapOf()
     open val data: MutableMap<String, Any> = mutableMapOf()
 
@@ -80,18 +85,23 @@ open class KnotenDaten(
 /**
  *
  */
+open class RichtungsDaten(
+    override val id: String,
+    override val name: String = "",
+): KnotenDaten(id,name) {
+    val anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>> = mutableMapOf()
+}
+
+/**
+ *
+ */
 open class EingabeDaten(
     override val id: String,
     override val name: String,
-): KnotenDaten(id,name) {
+): RichtungsDaten(id,name) {
     override val klasse: KnotenArt? = EingabeKnoten.KNOTEN_ART
-    override var position: KartenPosition = Offset(0f, 0f)
-    override var ausgewaehlt: Boolean = false
-    override var beweglich: Boolean = true
     override val anschlüsse: KnotenAnschlüsse
         get() = anschlussLabel.map { AusgangDaten(id(this.id,it.value.second),it.key,it.value.first) to it.value.second }.toMutableMap()
-    override val data: MutableMap<String, Any> = mutableMapOf()
-    val anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>> = mutableMapOf()
 
     constructor(
         id: String,
@@ -129,15 +139,10 @@ open class EingabeDaten(
 open class AusgabeDaten(
     override val id: String,
     override val name: String,
-): KnotenDaten(id,name) {
+): RichtungsDaten(id,name) {
     override val klasse: KnotenArt? = AusgabeKnoten.KNOTEN_ART
-    override var position: KartenPosition = Offset(0f, 0f)
-    override var ausgewaehlt: Boolean = false
-    override var beweglich: Boolean = true
     override val anschlüsse: KnotenAnschlüsse
         get() = anschlussLabel.map { EingangDaten(id(this.id, it.value.second),it.key,it.value.first) to it.value.second }.toMutableMap()
-    override val data: MutableMap<String, Any> = mutableMapOf()
-    val anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>> = mutableMapOf()
 
     constructor(
         id: String,

@@ -149,7 +149,6 @@ internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, BildschirmPos
         VerbindungDaten(
             id = "temporaer",
             ids = ("" to "") to (start.anschlussId to start.anschlussId),
-            klasse = BasisVerbindung.VERBINDUNG_ART,
             ausgewaehlt = true,
         ),
         startPosition,
@@ -242,7 +241,6 @@ internal fun AnschlussReferenz.zuVerbindungOderNull(
     val verbindung = VerbindungDaten(
         id = "verbindung-${quelle.knotenId}-${quelle.anschlussId}-${ende.knotenId}-${ende.anschlussId}",
         ids = (quelle.knotenId to ende.knotenId) to (quelle.anschlussId to ende.anschlussId),
-        klasse = BasisVerbindung.VERBINDUNG_ART
     ) /*.mitTypPruefung(
         quellTyp = quelle.zahlenTyp,
         zielTyp = ende.zahlenTyp,

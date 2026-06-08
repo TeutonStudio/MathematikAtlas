@@ -16,30 +16,15 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisVerbindun
  */
 open class VerbindungDaten(
     override val id: String,
-    override val klasse: VerbindungArt = BasisVerbindung.VERBINDUNG_ART,
     val ids: idReferenz,
     val label: String? = null,
     val art: String = "default",
     var ausgewaehlt: Boolean = false,
     val fehler: String? = null,
 ): GraphDaten {
-    fun copy(
-        id: String = this.id,
-        klasse: VerbindungArt = this.klasse,
-        ids: idReferenz = this.ids,
-        label: String? = this.label,
-        art: String = this.art,
-        ausgewaehlt: Boolean = this.ausgewaehlt,
-        fehler: String? = this.fehler,
-    ): VerbindungDaten = VerbindungDaten(
-        id = id,
-        klasse = klasse,
-        ids = ids,
-        label = label,
-        art = art,
-        ausgewaehlt = ausgewaehlt,
-        fehler = fehler,
-    )
+    override val klasse: VerbindungArt = BasisVerbindung.VERBINDUNG_ART
+
+    // TODO Konstruktor
 }
 
 /**
