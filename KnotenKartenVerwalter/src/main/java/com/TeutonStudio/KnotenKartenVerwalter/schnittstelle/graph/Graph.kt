@@ -4,15 +4,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.abstandZuVerbindung
+import com.TeutonStudio.KnotenKartenVerwalter.aufKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
+import com.TeutonStudio.KnotenKartenVerwalter.zuKarte
+
+private const val ANSCHLUSS_TREFFER_RADIUS = 14f
+private const val VERBINDUNG_TREFFER_RADIUS = 10f
 
 /**
  * Graph ist die dünne Render-Brücke zwischen fachlichen Kartendaten und
@@ -33,11 +40,40 @@ class Graph(
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
 
-    public fun erhalteNachBildPos(pos: BildschirmPosition, zustand: KarteZustand): GraphObjekt {
-        val karte = inhalt.filterIsInstance<Karte>().first()
-        val knoten = inhalt.filterIsInstance<Knoten>()
-        val verbindung = inhalt.filterIsInstance<Verbindung>()
-        // TODO
+
+    public fun erhalteNachBildPos(
+        pos: BildschirmPosition,
+        zustand: KarteZustand = this.zustand,
+    ): GraphObjekt {
+        val karte = inhalt
+            .asReversed()
+            .filterIsInstance<Karte>()
+            .firstOrNull()
+            ?: error("Graph enthält keine Karte")
+
+        val kartePos = pos.zuKarte(zustand.ansicht)
+
+        // 1. Anschlüsse zuerst, weil sie klein sind und am Knotenrand liegen.
+        inhalt.asReversed().filterIsInstance<Anschluss>().firstOrNull { anschluss ->
+                val ref = anschluss.besitzer.anschlussReferenz(
+                    anschluss = anschluss.daten,
+                    zustand = zustand,
+                )
+                val dist = (pos - (ref?.position ?: BildschirmPosition.Zero)).toOffset().getDistanceSquared()
+                ref != null && dist <= ANSCHLUSS_TREFFER_RADIUS
+            }?.let { return it }
+
+        // 2. Knoten danach.
+        inhalt.asReversed().filterIsInstance<Knoten>().firstOrNull { knoten ->
+                kartePos.aufKnoten(knoten.daten)
+            }?.let { return it }
+
+        // 3. Verbindungen danach, weil sie hinter den Knoten gezeichnet werden.
+        inhalt.asReversed().filterIsInstance<Verbindung>().firstOrNull { verbindung ->
+                pos.abstandZuVerbindung(verbindung) <= VERBINDUNG_TREFFER_RADIUS
+            }?.let { return it }
+
+        // 4. Hintergrund/Karte.
         return karte
     }
 

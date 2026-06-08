@@ -1,6 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.draggable2D
+import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,7 +99,18 @@ public fun Anschluss(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.size(radius).background(farbe, CircleShape),
+        modifier = modifier.size(radius).background(farbe, CircleShape).draggable2D(
+            rememberDraggable2DState {
+                // TODO pseudo verbindung aktualisieren
+            },
+            onDragStarted = { startPosition ->
+                // TODO pseudo verbindung erstellen
+            },
+            onDragStopped = {
+                // TODO erstellen der pseudo verbindung an Karte delegieren, dass dieser entscheiden kann ob erlaubt.
+            }
+
+        ),
         contentAlignment = Alignment.Center,
     ) { /* */ }
 }

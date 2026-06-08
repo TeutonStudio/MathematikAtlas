@@ -36,6 +36,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Karte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 public fun <K, V> Iterable<Pair<K, V>>.toMutableMap() = this.toMap().toMutableMap()
@@ -111,30 +114,65 @@ public fun KnotenPosition.zuKarte(zentrum: KartenPosition): KartenPosition {
     return TODO("definieren, ob der lokale Knotenraum andere skalierung hat als der der Karte.")
 }
 
-/*private fun Modifier.alignFürKante(
-    kante: AnschlussKante,
-    skalierung: Float,
-): Modifier = when (kante) {
-    AnschlussKante.Links ->
-        this.align(Alignment.CenterStart)
-            .fillMaxHeight()
-            .offset(x = (-5f * skalierung).dp)
 
-    AnschlussKante.Rechts ->
-        this.align(Alignment.CenterEnd)
-            .fillMaxHeight()
-            .offset(x = (5f * skalierung).dp)
+public fun BildschirmPosition.abstandZuVerbindung(verbindung: Verbindung): Float {
+    val p = Offset(x.toFloat(), y.toFloat())
 
-    AnschlussKante.Oben ->
-        this.align(Alignment.TopCenter)
-            .fillMaxWidth()
-            .offset(y = (-5f * skalierung).dp)
+    // Achtung: start/ende sind bei dir semantisch Bildschirmpositionen,
+    // obwohl der Typ State<KartenPosition> heißt.
+    val start = verbindung.start.value
+    val ende = verbindung.ende.value
 
-    AnschlussKante.Unten ->
-        this.align(Alignment.BottomCenter)
-            .fillMaxWidth()
-            .offset(y = (5f * skalierung).dp)
-}*/
+    val kontrollAbstand = max(48f, abs(ende.x - start.x) / 2f)
+    val c1 = Offset(start.x + kontrollAbstand, start.y)
+    val c2 = Offset(ende.x - kontrollAbstand, ende.y)
+
+    var vorher = start
+    var kleinsterAbstand = Float.POSITIVE_INFINITY
+
+    for (i in 1..32) {
+        val t = i / 32f
+        val aktuell = kubisch(start, c1, c2, ende, t)
+
+        kleinsterAbstand = minOf(
+            kleinsterAbstand,
+            p.abstandZuSegment(vorher, aktuell),
+        )
+
+        vorher = aktuell
+    }
+
+    return kleinsterAbstand
+}
+
+private fun kubisch(p0: Offset, p1: Offset, p2: Offset, p3: Offset, t: Float, ): Offset {
+    val u = 1f - t
+
+    return Offset(
+        x = u * u * u * p0.x + 3f * u * u * t * p1.x + 3f * u * t * t * p2.x + t * t * t * p3.x,
+        y = u * u * u * p0.y + 3f * u * u * t * p1.y + 3f * u * t * t * p2.y + t * t * t * p3.y,
+    )
+}
+
+private fun Offset.abstandZuSegment(a: Offset, b: Offset): Float {
+    val ab = b - a; val ap = this - a; val abQuadrat = ab.x * ab.x + ab.y * ab.y
+
+    if (abQuadrat <= 0.0001f) {
+        return hypot(
+            (x - a.x).toDouble(),
+            (y - a.y).toDouble(),
+        ).toFloat()
+    }
+
+    val t = ((ap.x * ab.x + ap.y * ab.y) / abQuadrat).coerceIn(0f, 1f)
+
+    val naechsterPunkt = Offset(x = a.x + ab.x * t, y = a.y + ab.y * t)
+
+    return hypot(
+        (x - naechsterPunkt.x).toDouble(),
+        (y - naechsterPunkt.y).toDouble(),
+    ).toFloat()
+}
 
 /**
  * Rechnet die Weltposition eines Knotens in eine Bildschirmposition um.
