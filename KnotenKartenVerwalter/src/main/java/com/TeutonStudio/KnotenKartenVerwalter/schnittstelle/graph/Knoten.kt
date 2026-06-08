@@ -3,8 +3,6 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 // Compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.draggable2D
-import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
@@ -17,8 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
@@ -35,6 +35,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenCard
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import kotlin.let
+import kotlin.math.roundToInt
 
 @Suppress("UNCHECKED_CAST")
 val BasisKnotenFabrik: KnotenFabrik = mapOf(
@@ -61,16 +62,27 @@ sealed interface Knoten: GraphObjekt {
         get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
 
     val bildPos
-        get() = daten.position.zuBild(besitzer.daten.ansicht)
+        get() = daten.position.zuBild(besitzer.zustand.ansicht)
     val boxModifier
-        get() = Modifier.offset(bildPos.x.dp,bildPos.y.dp).size(daten.dimension.width.dp,daten.dimension.height.dp)
+        get() = Modifier.offset{ bildPos }.size(daten.dimension.width.dp,daten.dimension.height.dp)
+    private val verLeisteModi
+        get() = Modifier.size(10.dp,daten.dimension.height.dp)
+    private val horLeisteModi
+        get() = Modifier.size(daten.dimension.width.dp,10.dp)
+    val anschlussModifier
+        get() = mapOf<AnschlussKante, Modifier>( // TODO soll die verschiebung zur mitte der Kante oder dem beginn der Kante erfolgen
+            AnschlussKante.Links to verLeisteModi.offset{ IntOffset.Zero },
+            AnschlussKante.Rechts to verLeisteModi.offset{ IntOffset(daten.dimension.width.roundToInt(),0) },
+            AnschlussKante.Unten to horLeisteModi.offset{ IntOffset(0,daten.dimension.height.roundToInt()) },
+            AnschlussKante.Oben to horLeisteModi.offset{ IntOffset(0,-daten.dimension.height.roundToInt()) },
+        )
 
     @Composable
     public fun zuComposable(
         modifierKnoten: Modifier = Modifier,
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
-    ) = KnotenCard(daten,anschlüsse, boxModifier, modifierAnschluss, inhaltSkalierung) { Inhalt(modifierKnoten) }
+    ) = KnotenCard(daten,anschlüsse, boxModifier, anschlussModifier, inhaltSkalierung) { Inhalt(modifierKnoten) }
 
     @Composable public fun Inhalt(modifier: Modifier) = Card(modifier) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
 

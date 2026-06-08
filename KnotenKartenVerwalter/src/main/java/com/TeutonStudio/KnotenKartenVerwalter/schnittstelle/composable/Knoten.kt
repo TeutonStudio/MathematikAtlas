@@ -8,15 +8,18 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
+import com.TeutonStudio.KnotenKartenVerwalter.zuLeiste
 import kotlin.collections.forEach
 
 /**
@@ -30,22 +33,23 @@ public fun KnotenCard(
     daten: KnotenDaten,
     anschlüsse:  Map<Anschluss, Int>,
     boxModifier: Modifier = Modifier,
-    modifierAnschluss: (AnschlussDaten, Int) -> Modifier = { daten, idx -> AnschlussModifierStandard },
+    anschlussModifier: Map<AnschlussKante, Modifier>,
     inhaltSkalierung: Float = 1f,
     Inhalt: @Composable () -> Unit
 ) {
+    val scope = currentRecomposeScope
     val randFarbe = if (daten.ausgewaehlt) Color(0xFF2563EB) else Color(0xFF64748B)
     val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
     Box(modifier = boxModifier.draggable2D(
-        state = rememberDraggable2DState { daten.position += it },
+        state = rememberDraggable2DState { daten.position += it; scope.invalidate() },
         enabled = daten.beweglich,
     )) {
         Inhalt()
         AnschlussKante.entries.forEach { kante ->
-            Box( // TODO brauche ich hier nochmal ne Box? die einzelnen ANschlüsse sind per Row und Column gruppiert.
+            Box(
                 modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight().offset(x = (-5f * skalierung).dp),
                 contentAlignment = Alignment.Center,
-            ) { anschlüsse.zuLeiste(kante,modifierAnschluss) }
+            ) { anschlüsse.zuLeiste(kante,anschlussModifier[kante]!!) }
         }
     }
 }

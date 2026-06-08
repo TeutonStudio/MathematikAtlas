@@ -22,7 +22,10 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussSpalte
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussZeile
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAusgang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
@@ -181,6 +184,19 @@ enum class AnschlussKante {
 
 public fun AnschlussKante.istVertikal(): Boolean = this == AnschlussKante.Links || this == AnschlussKante.Rechts
 public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben || this == AnschlussKante.Unten
+
+
+/**
+ * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
+ */
+@Composable
+public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier, modifier: AnschlussModifier = { daten,idx -> AnschlussModifierStandard }) {
+    val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(/*modifier(anschluss.daten,idx)*/) } }
+    if (kante.istVertikal()) AnschlussSpalte(leisteModifier,listeComposable)
+    else if (kante.istHorizontal()) AnschlussZeile(leisteModifier,listeComposable)
+    else TODO()
+}
+
 
 /**
  * Anschlüsse eines Knotens und ihre Sortierung

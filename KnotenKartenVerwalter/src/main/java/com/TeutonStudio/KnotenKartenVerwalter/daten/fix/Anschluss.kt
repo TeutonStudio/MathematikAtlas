@@ -15,7 +15,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
  * Anschlüsse entsprechen ReactFlow-Handles: Sie besitzen eine stabile ID, ein
  * sichtbares Label.
  */
-sealed class AnschlussDaten(
+open class AnschlussDaten(
     override val id: String,
     open val kante: AnschlussKante,
 ): GraphDaten {

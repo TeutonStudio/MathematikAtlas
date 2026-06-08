@@ -44,6 +44,7 @@ public fun List<AnschlussDaten>.zuPfad(istEingang: Boolean, modifier: (Int) -> M
 /**
  * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
  */
+/*
 @Composable
 public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, modifier: AnschlussModifier) {
     val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(modifier(anschluss.daten,idx)) } }
@@ -51,6 +52,7 @@ public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, modifier: Anschlus
     else if (kante.istHorizontal()) AnschlussZeile(listeComposable)
     else TODO()
 }
+*/
 
 /**
  * Rendert Eingänge als linke Anschluss-Spalte.
@@ -93,7 +95,7 @@ public fun Anschluss(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.background(farbe, CircleShape),
+        modifier = modifier.size(5.dp).background(farbe, CircleShape),
         contentAlignment = Alignment.Center,
     ) { /* */ }
 }
@@ -135,10 +137,11 @@ public fun Ausgang(
  */
 @Composable
 public fun AnschlussSpalte(
+    leisteModifier: Modifier,
     inhalt: Iterable<@Composable (() -> Unit)>,
 ) {
     Column(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = leisteModifier.fillMaxHeight(),
         verticalArrangement = Arrangement.SpaceEvenly,
     ) { inhalt.forEach { it() } }
 }
@@ -148,10 +151,11 @@ public fun AnschlussSpalte(
  */
 @Composable
 public fun AnschlussZeile(
+    leisteModifier: Modifier,
     inhalt: Iterable<@Composable (() -> Unit)>,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = leisteModifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) { inhalt.forEach { it() } }
 }

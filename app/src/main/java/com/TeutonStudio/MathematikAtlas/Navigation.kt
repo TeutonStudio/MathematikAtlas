@@ -396,6 +396,11 @@ private fun testKarte(): KarteDaten = KarteDaten(
             anschlüsse = mutableMapOf(
                 AusgangDaten("out", AnschlussKante.Rechts,"Ausgang 1") to 0,
                 EingangDaten("in", AnschlussKante.Links,"Eingang 1") to 0,
+                AnschlussDaten("top1", AnschlussKante.Oben,"Test Oben 1") to 0,
+                AnschlussDaten("top2", AnschlussKante.Oben,"Test Oben 2") to 1,
+                AnschlussDaten("top3", AnschlussKante.Oben,"Test Oben 3") to 2,
+                AnschlussDaten("bot1", AnschlussKante.Unten,"Test Unten 1") to 0,
+                AnschlussDaten("bot2", AnschlussKante.Unten,"Test Unten 2") to 1,
             )
         ),
         AusgabeDaten(
@@ -403,7 +408,7 @@ private fun testKarte(): KarteDaten = KarteDaten(
             name = "Ausgabe",
             position = Offset(660f, 120f),
             anschlussLabel = mutableMapOf(
-                AnschlussKante.Rechts to ("Ausgang 1" to 0)
+                AnschlussKante.Links to ("Eingang 1" to 0)
             )
         ),
     ),
