@@ -48,12 +48,12 @@ open class KarteZustand(
         auswahl ?: zustand.auswahl,
     )
 
-    fun copy(
+/*    fun copy(
         ansicht: AnsichtsfensterDaten = this.ansicht,
         zeigeÜbersicht: Boolean = this.zeigeÜbersicht,
         zeigeKontrollLeiste: Boolean = this.zeigeKontrollLeiste,
         auswahl: AuswahlDaten = this.auswahl,
-    ): KarteZustand = KarteZustand(ansicht, zeigeÜbersicht, zeigeKontrollLeiste, auswahl)
+    ): KarteZustand = KarteZustand(ansicht, zeigeÜbersicht, zeigeKontrollLeiste, auswahl)*/
 }
 
 open class KartenCacheDaten() {

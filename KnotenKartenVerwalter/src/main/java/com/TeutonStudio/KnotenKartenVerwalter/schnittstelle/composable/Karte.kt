@@ -6,6 +6,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.draggable2D
+import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +48,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteNachBildPos
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteVerschiebung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Karte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
@@ -93,6 +98,7 @@ internal fun KartenOberfläche(
     var ctxKarte by remember { mutableStateOf(false) }
     var ctxKnoten by remember { mutableStateOf<Knoten?>(null) }
     var ctxVerbindung by remember { mutableStateOf<Verbindung?>(null) }
+    val scope = currentRecomposeScope
     val onDoupleTap = { position: Offset ->
         /* TODO
             Zoom und Verschiebung auf Inhalt.
@@ -117,9 +123,14 @@ internal fun KartenOberfläche(
             onAuswahlÄndern(AuswahlDaten(verbindungIds = setOf(ziel.daten.id)))
         }
     }
+    val modiPos = modifier.offset { zustand.ansicht.erhalteVerschiebung().round() }
 
-    Box(modifier = modifier
-        .pointerInput(karte.daten.id) {
+    Box(modifier = modiPos.draggable2D(
+        state = rememberDraggable2DState {
+            zustand.verschiebe(it)
+//            scope.invalidate() // TODO
+        } )
+/*        .pointerInput(karte.daten.id) { TODO
             detectTapGestures(
                 onDoubleTap = onDoupleTap,
                 onLongPress = onLongTap,
@@ -144,8 +155,8 @@ internal fun KartenOberfläche(
         .pointerInput(karte.daten.id) {
             detectTransformGestures { zentrum, pan, zoomDelta, rot ->
                 zustand.transformiere(pan,zoomDelta)
-/*                        if (hintergrundGestenBlockiert) return@detectTransformGestures
-                        kontextMenü = null*/
+*//*                        if (hintergrundGestenBlockiert) return@detectTransformGestures
+                        kontextMenü = null*//*
 //                    ansicht = aktuelleAnsicht.transformiereUm(zentrum, pan, zoomÄnderung) TODO
             }
         }
@@ -162,7 +173,8 @@ internal fun KartenOberfläche(
                     }
                 }
             }
-        },) {
+        },*/
+    ) {
         // TODO Hintergrund zeichnen
         verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
         knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})

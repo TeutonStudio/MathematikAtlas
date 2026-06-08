@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 // Compose
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -10,13 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
@@ -25,6 +26,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
@@ -34,10 +36,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 
 // Composable
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenCard
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import kotlin.let
-import kotlin.math.roundToInt
 
 @Suppress("UNCHECKED_CAST")
 val BasisKnotenFabrik: KnotenFabrik = mapOf(
@@ -87,9 +88,13 @@ sealed interface Knoten: GraphObjekt {
         modifierKnoten: Modifier = Modifier,
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
-    ) = KnotenCard(daten,anschlüsse, boxModiRect, anschlussModifier, inhaltSkalierung) { Inhalt(modifierKnoten) }
+    ) = KnotenRahmen(daten,anschlüsse, boxModiRect, anschlussModifier, inhaltSkalierung, {
+        val zoom = besitzer.zustand.ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
+        besitzer.aktualisierung(daten.id,daten.position + it / zoom)
+        besitzer.onAuswahlÄndern(AuswahlDaten(setOf(daten.id)))
+    }) { Inhalt(modifierKnoten) }
 
-    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
+    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,Color(0xFF2563EB)) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
 
     @Composable public fun Kopfzeile() = Text(daten.name)
     @Composable public fun Textzeile()

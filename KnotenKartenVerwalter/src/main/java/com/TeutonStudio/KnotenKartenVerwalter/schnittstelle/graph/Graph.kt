@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.ui.Modifier
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
@@ -23,20 +24,34 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
 class Graph(
     private val daten: KarteDaten,
     private val zustand: KarteZustand = KarteZustand(),
-    private val aktualisierung: KartenAktualisierung = { _, _ -> },
+    private val aktualisierung: KartenAktualisierung = { kId,pos -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onKontextAktion: KontextAktionAusführen = {},
-    private val onAuswahlÄndern: AuswahlÄndern = {},
+    private val onAuswahlÄndern: AuswahlÄndern = { a -> },
 ) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
 
     private val karte: Karte = kartenFabrik.erzeugeKarte(
         daten = daten,
         zustand = zustand,
-        aktualisierung = aktualisierung,
+        aktualisierung = { kId,pos ->
+            val knoten = daten.knoten.filter { it.id == kId }
+            if (knoten.size != 1) TODO("Knoten ID Fehler")
+            knoten[0].position = pos
+            aktualisierung(kId,pos)
+//        scope.invalid() // TODO wie??
+        },
         onVerbindungErstellen = onVerbindungErstellen,
         onKontextAktion = onKontextAktion,
-        onAuswahlÄndern = onAuswahlÄndern,
+        onAuswahlÄndern = { a ->
+            daten.knoten.forEach {
+                it.ausgewaehlt = it.id in a.knotenIds
+            }
+            daten.verbindungen.forEach {
+                it.ausgewaehlt = it.id in a.verbindungIds
+            }
+            onAuswahlÄndern(a)
+        },
     )
 
     @Composable

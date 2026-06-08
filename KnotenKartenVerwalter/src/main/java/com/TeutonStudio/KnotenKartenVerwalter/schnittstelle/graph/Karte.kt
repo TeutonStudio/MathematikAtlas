@@ -137,10 +137,10 @@ sealed interface Karte: GraphObjekt {
 open class BasisKarte(
     override val daten: KarteDaten,
     override val zustand: KarteZustand = KarteZustand(),
-    override val aktualisierung: KartenAktualisierung = { knotenId,position ->  },
-    override val onVerbindungErstellen: VerbindungErstellen = {},
-    override val onKontextAktion: KontextAktionAusführen = {},
-    override val onAuswahlÄndern: AuswahlÄndern = {},
+    override val aktualisierung: KartenAktualisierung,
+    override val onVerbindungErstellen: VerbindungErstellen,
+    override val onKontextAktion: KontextAktionAusführen,
+    override val onAuswahlÄndern: AuswahlÄndern,
 ) : Karte {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik

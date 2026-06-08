@@ -20,7 +20,7 @@ open class VerbindungDaten(
     val ids: idReferenz,
     val label: String? = null,
     val art: String = "default",
-    val ausgewaehlt: Boolean = false,
+    var ausgewaehlt: Boolean = false,
     val fehler: String? = null,
 ): GraphDaten {
     fun copy(
