@@ -46,7 +46,6 @@ open class KnotenDaten(
         get() = Rect(position,position + Offset(breite,tiefe))
     open var breite: Float = 180f
     open var tiefe: Float = 96f
-    //    open val art: String = "default",
     open var ausgewaehlt: Boolean = false
     open var beweglich: Boolean = true
     open val anschlüsse: KnotenAnschlüsse = mutableMapOf()

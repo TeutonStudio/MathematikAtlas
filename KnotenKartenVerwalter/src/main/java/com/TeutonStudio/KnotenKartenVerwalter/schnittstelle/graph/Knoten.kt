@@ -59,14 +59,18 @@ public fun List<Knoten>.zuComposable(
 sealed interface Knoten: GraphObjekt {
     public val daten: KnotenDaten
     public val anschlussFabrik: AnschlussFabrik
-//    public val anschlüsse: KnotenAschlüsse
+
+    val anschlüsse
+        get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
 
     @Composable
     public fun zuComposable(
         modifierKnoten: Modifier = Modifier,
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
-    )
+    ) = KnotenRahmen(this,anschlüsse, modifierKnoten, modifierAnschluss, inhaltSkalierung)
+
+    @Composable public fun Inhalt()
 
     @Composable
     override fun öffneKontext(
@@ -103,19 +107,18 @@ open class BasisKnoten(
 ): Knoten {
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
 
-    val anschlüsse
-        get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
-
-    @Composable
+/*    @Composable
     override fun zuComposable(
         modifierKnoten: Modifier,
         modifierAnschluss: AnschlussModifier,
         inhaltSkalierung: Float,
-    ) { KnotenRahmen(daten,anschlüsse, modifierKnoten, modifierAnschluss, inhaltSkalierung) }
+    ) { KnotenRahmen(daten,anschlüsse, modifierKnoten, modifierAnschluss, inhaltSkalierung) }*/
 
-/*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        return TODO("Korrekte Anschlussabfrage")
-    }*/
+    @Composable
+    override fun Inhalt() {
+        TODO("Not yet implemented")
+    }
+
 
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "default"
@@ -130,12 +133,6 @@ open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
         public const val KNOTEN_ART: KnotenArt = "eingabe"
     }
 
-/*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        return mutableMapOf(
-            AusgangDaten("out1","Ausgang 1", AnschlussKante.Rechts) to 0,
-            AusgangDaten("out2","Ausgang 2", AnschlussKante.Rechts) to 1,
-        )
-    }*/
 }
 
 /**
@@ -146,12 +143,6 @@ open class AusgabeKnoten(daten: AusgabeDaten): BasisKnoten(daten) {
         public const val KNOTEN_ART: KnotenArt = "ausgabe"
     }
 
-/*    override fun erhalteAnschlüsse(): KnotenAnschlüsse {
-        return mutableMapOf(
-            EingangDaten("in1","Eingang 1", AnschlussKante.Links) to 0,
-            EingangDaten("in2","Eingang 2", AnschlussKante.Links) to 1,
-        )
-    }*/
 }
 
 

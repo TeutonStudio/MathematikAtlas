@@ -157,13 +157,11 @@ open class BasisKarte(
                 val anschlussIds = verbindung.ids.erhalteAnschlussIds()
 
                 val start = anschlussReferenzen.firstOrNull {
-                    it.knotenId == knotenIds.first &&
-                            it.anschlussId == anschlussIds.first
+                    it.knotenId == knotenIds.first && it.anschlussId == anschlussIds.first
                 }
 
                 val ende = anschlussReferenzen.firstOrNull {
-                    it.knotenId == knotenIds.second &&
-                            it.anschlussId == anschlussIds.second
+                    it.knotenId == knotenIds.second && it.anschlussId == anschlussIds.second
                 }
 
                 if (start == null || ende == null) return@mapNotNull null
