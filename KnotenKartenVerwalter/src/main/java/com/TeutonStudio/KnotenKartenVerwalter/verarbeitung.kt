@@ -190,7 +190,7 @@ public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben
  * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
  */
 @Composable
-public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier, modifier: AnschlussModifier = { daten,idx -> AnschlussModifierStandard }) {
+public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier, modifier: AnschlussModifier = { daten,idx -> AnschlussModifierStandard }) {
     val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(/*modifier(anschluss.daten,idx)*/) } }
     if (kante.istVertikal()) AnschlussSpalte(leisteModifier,listeComposable)
     else if (kante.istHorizontal()) AnschlussZeile(leisteModifier,listeComposable)

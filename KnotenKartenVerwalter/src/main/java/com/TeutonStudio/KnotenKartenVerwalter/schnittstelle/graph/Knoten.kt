@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
@@ -29,6 +30,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 
 // Composable
@@ -63,18 +65,21 @@ sealed interface Knoten: GraphObjekt {
 
     val bildPos
         get() = daten.position.zuBild(besitzer.zustand.ansicht)
-    val boxModifier
-        get() = Modifier.offset{ bildPos }.size(daten.dimension.width.dp,daten.dimension.height.dp)
+    val boxModiRect
+        get() = { d: Density -> Modifier.offset { bildPos }.size(
+            width = with(d) { (daten.breite * besitzer.zustand.ansicht.erhalteZoomfaktor()).toDp() },
+            height = with(d) { (daten.tiefe * besitzer.zustand.ansicht.erhalteZoomfaktor()).toDp() },
+        ) }
     private val verLeisteModi
         get() = Modifier.size(10.dp,daten.dimension.height.dp)
     private val horLeisteModi
         get() = Modifier.size(daten.dimension.width.dp,10.dp)
     val anschlussModifier
         get() = mapOf<AnschlussKante, Modifier>( // TODO soll die verschiebung zur mitte der Kante oder dem beginn der Kante erfolgen
-            AnschlussKante.Links to verLeisteModi.offset{ IntOffset.Zero },
-            AnschlussKante.Rechts to verLeisteModi.offset{ IntOffset(daten.dimension.width.roundToInt(),0) },
-            AnschlussKante.Unten to horLeisteModi.offset{ IntOffset(0,daten.dimension.height.roundToInt()) },
-            AnschlussKante.Oben to horLeisteModi.offset{ IntOffset(0,-daten.dimension.height.roundToInt()) },
+            AnschlussKante.Links to verLeisteModi,
+            AnschlussKante.Rechts to verLeisteModi,
+            AnschlussKante.Unten to horLeisteModi,
+            AnschlussKante.Oben to horLeisteModi,
         )
 
     @Composable
@@ -82,7 +87,7 @@ sealed interface Knoten: GraphObjekt {
         modifierKnoten: Modifier = Modifier,
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
-    ) = KnotenCard(daten,anschlüsse, boxModifier, anschlussModifier, inhaltSkalierung) { Inhalt(modifierKnoten) }
+    ) = KnotenCard(daten,anschlüsse, boxModiRect, anschlussModifier, inhaltSkalierung) { Inhalt(modifierKnoten) }
 
     @Composable public fun Inhalt(modifier: Modifier) = Card(modifier) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
 
