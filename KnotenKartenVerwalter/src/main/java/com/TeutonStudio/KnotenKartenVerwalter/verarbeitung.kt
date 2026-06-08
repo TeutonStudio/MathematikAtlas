@@ -223,6 +223,9 @@ typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second
 
+public fun idReferenz.erhalteErtes(): Pair<String,String> = this.first.first to this.second.first
+public fun idReferenz.erhalteZweites(): Pair<String,String> = this.first.second to this.second.second
+
 public fun idReferenz.istVerbunden(ref: AnschlussReferenz): Boolean = this.hatKnotenId(ref.knotenId) && this.hatAnschlussId(ref.anschlussId)
 
 public fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)

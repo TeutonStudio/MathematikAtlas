@@ -5,6 +5,11 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -25,6 +30,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.VerbindungKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.RichtungsAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
@@ -72,11 +78,11 @@ public fun List<Verbindung>.zuComposable(modifier: Modifier = Modifier) = Verbin
  */
 @Composable
 public fun List<VerbindungDaten>.zuComposable(
-    start: (VerbindungDaten) -> KartenPosition,
-    ende: (VerbindungDaten) -> KartenPosition,
+    start: (VerbindungDaten) -> State<KartenPosition>,
+    ende: (VerbindungDaten) -> State<KartenPosition>,
     modifier: Modifier = Modifier,
     fabrik: VerbindungFabrik = BasisVerbindungFabrik,
-) = this.mapNotNull { fabrik.erzeugeVerbindung(it,/*null,*/start.invoke(it) to ende.invoke(it)) }.zuComposable(modifier)
+) = this.mapNotNull { fabrik.erzeugeVerbindung(it,/*null,*/remember { derivedStateOf { start.invoke(it).value to ende.invoke(it).value } })}.zuComposable(modifier)
 
 /**
  * Rendert bereits aufgelöste Verbindungen.
@@ -95,8 +101,8 @@ sealed interface Verbindung: GraphObjekt {
     public val daten: VerbindungDaten
 //    public val von: Anschluss?
 //    public val zu: Anschluss?
-    public val start: KartenPosition
-    public val ende: KartenPosition
+    public val start: State<KartenPosition>
+    public val ende: State<KartenPosition>
 
     public fun zeichnung(): DrawScope.() -> Unit
 }
@@ -105,9 +111,10 @@ open class BasisVerbindung(
     override val daten: VerbindungDaten,
 //    override val von: Anschluss? = null,
 //    override val zu: Anschluss? = null,
-    override val start: KartenPosition = Offset.Zero,
-    override val ende: KartenPosition = Offset.Zero,
 ): Verbindung {
+    override val start = mutableStateOf(KartenPosition.Zero)
+    override val ende = mutableStateOf(KartenPosition.Zero)
+
     @Composable
     override fun zuComposable(modifier: Modifier) = VerbindungUmgebung(modifier, zeichnung())
 
@@ -116,7 +123,7 @@ open class BasisVerbindung(
         TODO("Not yet implemented")
     }
 
-    override fun zeichnung(): DrawScope.() -> Unit = { VerbindungPfad(daten,start,ende) }
+    override fun zeichnung(): DrawScope.() -> Unit = { VerbindungPfad(daten,start.value,ende.value) }
 
     public companion object {
         public const val VERBINDUNG_ART: VerbindungArt = "default"
@@ -259,10 +266,10 @@ internal fun AnschlussReferenz.zuVerbindungOderNull(
 /**
  * Loest alle gerichteten Anschluesse eines Knotens in Bildschirmpositionen auf.
  */
-internal fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<AnschlussReferenz> =
+internal fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<Pair<AnschlussDaten,KnotenDaten>> =
     daten.anschlüsse.entries
         .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })
-        .mapNotNull { (anschluss, _) -> anschlussReferenz(anschluss, zustand) }
+        .map { (anschluss, idx) -> Pair(anschluss, daten) }
 
 /**
  * Berechnet die Bildschirmposition eines einzelnen Anschlusses.

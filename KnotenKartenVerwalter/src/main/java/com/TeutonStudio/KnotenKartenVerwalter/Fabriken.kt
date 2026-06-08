@@ -1,5 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
@@ -23,8 +25,8 @@ typealias VerbindungKonstruktor = (daten:VerbindungDaten,/*von: Anschluss?, zu: 
 public fun VerbindungFabrik.erzeugeVerbindung(
     daten: VerbindungDaten,
 //    anschlüsse: Pair<Anschluss,Anschluss>? = null,
-    positionen: Pair<KartenPosition, KartenPosition> = Offset.Zero to Offset.Zero
-): Verbindung? = this[daten.klasse]?.invoke(daten,/*anschlüsse?.first, anschlüsse?.second*/positionen.first,positionen.second)
+    positionen: State<Pair<KartenPosition, KartenPosition>> = mutableStateOf(Offset.Zero to Offset.Zero)
+): Verbindung? = this[daten.klasse]?.invoke(daten,/*anschlüsse?.first, anschlüsse?.second*/positionen.value.first,positionen.value.second)
 
 // Anschluss
 

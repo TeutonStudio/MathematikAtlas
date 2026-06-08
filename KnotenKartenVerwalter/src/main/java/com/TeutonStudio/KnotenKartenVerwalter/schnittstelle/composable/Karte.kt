@@ -123,9 +123,9 @@ internal fun KartenOberfläche(
             onAuswahlÄndern(AuswahlDaten(verbindungIds = setOf(ziel.daten.id)))
         }
     }
-    val modiPos = modifier.offset { zustand.ansicht.erhalteVerschiebung().round() }
+//    val modiPos = modifier.offset { zustand.ansicht.erhalteVerschiebung().round() }
 
-    Box(modifier = Modifier.draggable2D(
+    Box(modifier = modifier.draggable2D(
         state = rememberDraggable2DState {
             zustand.verschiebe(it)
             onAuswahlÄndern(AuswahlDaten.LEER)
