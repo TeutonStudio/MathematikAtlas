@@ -3,41 +3,37 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 // Compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.draggable2D
+import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
-import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussModifier
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 
 // Composable
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
-import org.w3c.dom.Text
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenCard
+import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import kotlin.let
 
 @Suppress("UNCHECKED_CAST")
@@ -58,19 +54,29 @@ public fun List<Knoten>.zuComposable(
  */
 sealed interface Knoten: GraphObjekt {
     public val daten: KnotenDaten
+    public val besitzer: Karte
     public val anschlussFabrik: AnschlussFabrik
 
     val anschlüsse
         get() = daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(it.key, this)?.let { a -> a to it.value } }.toMap()
+
+    val bildPos
+        get() = daten.position.zuBild(besitzer.daten.ansicht)
+    val boxModifier
+        get() = Modifier.offset(bildPos.x.dp,bildPos.y.dp).size(daten.dimension.width.dp,daten.dimension.height.dp)
 
     @Composable
     public fun zuComposable(
         modifierKnoten: Modifier = Modifier,
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
-    ) = KnotenRahmen(this,anschlüsse, modifierKnoten, modifierAnschluss, inhaltSkalierung)
+    ) = KnotenCard(daten,anschlüsse, boxModifier, modifierAnschluss, inhaltSkalierung) { Inhalt(modifierKnoten) }
 
-    @Composable public fun Inhalt()
+    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
+
+    @Composable public fun Kopfzeile() = Text(daten.name)
+    @Composable public fun Textzeile()
+    @Composable public fun Fußzeile()
 
     @Composable
     override fun öffneKontext(
@@ -94,9 +100,7 @@ sealed interface Knoten: GraphObjekt {
     }
 
     @Composable
-    override fun zuComposable(
-        modifier: Modifier
-    ) { TODO("Falsche Methode aufgerufen") }
+    override fun zuComposable(modifier: Modifier) = TODO("Falsche Methode aufgerufen")
 }
 
 /**
@@ -104,19 +108,18 @@ sealed interface Knoten: GraphObjekt {
  */
 open class BasisKnoten(
     override val daten: KnotenDaten,
+    override val besitzer: Karte,
 ): Knoten {
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
 
-/*    @Composable
-    override fun zuComposable(
-        modifierKnoten: Modifier,
-        modifierAnschluss: AnschlussModifier,
-        inhaltSkalierung: Float,
-    ) { KnotenRahmen(daten,anschlüsse, modifierKnoten, modifierAnschluss, inhaltSkalierung) }*/
+    @Composable
+    override fun Textzeile() {
+        Text("Knoten Textzeile")
+    }
 
     @Composable
-    override fun Inhalt() {
-        TODO("Not yet implemented")
+    override fun Fußzeile() {
+        Text("Knoten Fußzeile")
     }
 
 
@@ -128,7 +131,7 @@ open class BasisKnoten(
 /**
  * Standard Knoten mit Ausgängen
  */
-open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
+open class EingabeKnoten(daten: EingabeDaten, besitzer: Karte): BasisKnoten(daten,besitzer) {
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "eingabe"
     }
@@ -138,7 +141,7 @@ open class EingabeKnoten(daten: EingabeDaten): BasisKnoten(daten) {
 /**
  * Standard Knoten Eingängen
  */
-open class AusgabeKnoten(daten: AusgabeDaten): BasisKnoten(daten) {
+open class AusgabeKnoten(daten: AusgabeDaten, besitzer: Karte): BasisKnoten(daten,besitzer) {
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "ausgabe"
     }

@@ -146,7 +146,7 @@ open class BasisKarte(
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
     val knoten
-        get() = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it) }
+        get() = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(it,this) }
     val anschlussReferenzen
         get() = knoten.flatMap { it.anschlussReferenzen(zustand) }
 

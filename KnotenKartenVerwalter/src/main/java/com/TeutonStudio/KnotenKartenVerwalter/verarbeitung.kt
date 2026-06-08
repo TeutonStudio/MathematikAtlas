@@ -326,9 +326,9 @@ public fun AnschlussFabrik.erzeugeAnschluss(daten: AnschlussDaten, besitzer: Kno
 
 typealias KnotenArt = String
 typealias KnotenFabrik = Map<KnotenArt,KnotenKonstruktor>
-typealias KnotenKonstruktor = (KnotenDaten) -> Knoten
+typealias KnotenKonstruktor = (daten: KnotenDaten,besitzer: Karte) -> Knoten
 
-public fun KnotenFabrik.erzeugeKnoten(daten: KnotenDaten): Knoten? = this[daten.klasse]?.invoke(daten)
+public fun KnotenFabrik.erzeugeKnoten(daten: KnotenDaten,besitzer: Karte): Knoten? = this[daten.klasse]?.invoke(daten,besitzer)
 
 // Karten
 
