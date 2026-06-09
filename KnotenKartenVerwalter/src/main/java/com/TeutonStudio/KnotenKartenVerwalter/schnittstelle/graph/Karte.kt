@@ -137,21 +137,21 @@ sealed interface Karte: GraphObjekt {
                 state = rememberDraggable2DState {
                     zustand.verschiebe(it)
                     onAuswahlÄndern(AuswahlDaten.LEER)
-                    graph.ctx = false
+                    graph.keinKontext()
                 }
             ).pointerInput(daten.id) {
                 detectTapGestures(
                     onTap = {
                         onAuswahlÄndern(AuswahlDaten.LEER)
-                        graph.ctx = false
+                        graph.keinKontext()
                     },
-                    onLongPress = { graph.ctx = true; graph.ctxPos = it.round(); graph.ctxObjekt = this@Karte },
+                    onLongPress = { graph.ctx = daten.id to it.round() },
                 )
             }
         ) {
             verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
-            if (öffneKontext().value) erhalteKontextFenster(graph.ctxPos)
+            if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
         }
     }
 

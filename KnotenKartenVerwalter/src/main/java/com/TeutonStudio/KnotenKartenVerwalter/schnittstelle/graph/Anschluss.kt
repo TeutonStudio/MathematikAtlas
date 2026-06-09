@@ -2,6 +2,7 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 // Compose
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
@@ -104,7 +106,45 @@ open class BasisAnschluss(
         val farbe = Color.Black
         Box(
             contentAlignment = Alignment.Center,
-            modifier = modifier.size(radius).background(farbe, CircleShape).draggable2D(
+            modifier = modifier.size(radius).background(farbe, CircleShape).pointerInput(daten.id) {
+                detectDragGestures(
+                    onDragStart = {
+                        graph.keinKontext()
+
+                        val start = derivedStateOf { erhaltePosition() }
+
+                        _dragPos = start.value
+                        dragPos.value = _dragPos
+
+                        val ende = derivedStateOf { dragPos.value }
+
+                        val vDaten = VerbindungDaten(
+                            "pseudo",
+                            idReferenz(besitzer.daten to daten, besitzer.daten to daten),
+                        )
+                        val verbindung = BasisVerbindung(graph,vDaten,start,ende)
+
+                        verbindung.startKante = daten.kante
+                        graph.erhalteKarte().pseudoVerbindung.value = verbindung
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        val nA = graph.erhaltePseudoAnschlussZiel()
+                        if (nA.second < 2) println(nA.first.daten.label)
+                        _dragPos += dragAmount
+                        dragPos.value = _dragPos
+                    },
+                    onDragEnd = {
+                        // TODO finalisieren
+                        graph.erhalteKarte().pseudoVerbindung.value = null
+                    },
+                    onDragCancel = {
+                        graph.erhalteKarte().pseudoVerbindung.value = null
+                    },
+                )
+            }
+
+                .draggable2D(
                 rememberDraggable2DState({
                     // TODO snap einbauen, nächsten abschluss und abstand nach position bestimmen
                     val nA = graph.erhaltePseudoAnschlussZiel()
@@ -125,7 +165,7 @@ open class BasisAnschluss(
                 onDragStopped = { graph.erhalteKarte().pseudoVerbindung.value = null }
             )
         ) {
-            if (öffneKontext().value) erhalteKontextFenster(graph.ctxPos)
+            if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
         }
     }
 

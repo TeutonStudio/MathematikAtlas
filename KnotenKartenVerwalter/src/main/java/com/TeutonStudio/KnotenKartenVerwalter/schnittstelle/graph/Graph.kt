@@ -46,9 +46,9 @@ class Graph(
 ) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
-    public var ctx by mutableStateOf(false)
-    public var ctxPos by mutableStateOf(IntOffset.Zero)
-    public lateinit var ctxObjekt: GraphObjekt
+    public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
+
+    public fun keinKontext() { ctx = "" to IntOffset.Zero }
 
     public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss,Float> {
         val p = erhalteKarte().pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero

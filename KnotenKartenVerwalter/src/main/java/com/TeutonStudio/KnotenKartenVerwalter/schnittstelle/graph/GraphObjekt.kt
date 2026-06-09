@@ -17,7 +17,7 @@ sealed interface GraphObjekt {
 
     @Composable fun erhalteKontextFenster(pos: BildschirmPosition) = Unit
 
-    fun öffneKontext() = derivedStateOf { graph.ctx && graph.ctxObjekt.daten.id == daten.id }
+    fun öffneKontext() = derivedStateOf { graph.ctx.first == daten.id }
 
 
 

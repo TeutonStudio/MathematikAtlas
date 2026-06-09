@@ -88,11 +88,6 @@ sealed interface Knoten: GraphObjekt {
 
     val bildPos get() = daten.position.zuBild(besitzer.zustand.ansicht)
     val boxModiRect get() = { d: Density -> Modifier.offset { bildPos }.size( size = with(d) { (daten.erhalteSize() * zoomFaktor()).toDpSize() }) }
-    val beiVerschiebung get() = { it: Offset ->
-        graph.ctx = false
-        besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
-        besitzer.onAuswahlÄndern(daten.zuAuswahl())
-    }
 
     @Composable
     public fun zuComposable(
@@ -102,12 +97,19 @@ sealed interface Knoten: GraphObjekt {
     ) {
         val density = LocalDensity.current
         Box(modifier = boxModiRect(density).draggable2D(
-            state = rememberDraggable2DState { beiVerschiebung(it) },
             enabled = daten.beweglich,
+            state = rememberDraggable2DState {
+                besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
+                besitzer.onAuswahlÄndern(daten.zuAuswahl())
+                graph.keinKontext()
+            },
         ).pointerInput(daten.id) {
             detectTapGestures(
-                onTap = { beiVerschiebung(Offset.Zero) },
-                onLongPress = { graph.ctx = true; graph.ctxPos = it.round(); graph.ctxObjekt = this@Knoten }
+                onLongPress = { graph.ctx = daten.id to it.round() },
+                onTap = {
+                    besitzer.onAuswahlÄndern(daten.zuAuswahl())
+                    graph.keinKontext()
+                },
             )
         }) {
             Inhalt(modifierKnoten)
@@ -118,7 +120,7 @@ sealed interface Knoten: GraphObjekt {
                     contentAlignment = Alignment.Center,
                 ) { anschlüsse.zuLeiste(kante) }
             }
-            if (öffneKontext().value) erhalteKontextFenster(graph.ctxPos)
+            if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
         }
     }
 
