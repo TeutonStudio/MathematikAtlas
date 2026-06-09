@@ -50,7 +50,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.plusVlt
 import com.TeutonStudio.KnotenKartenVerwalter.pos
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KartenOberfläche
 import com.TeutonStudio.KnotenKartenVerwalter.verschiebe
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import com.TeutonStudio.KnotenKartenVerwalter.zuComposable
@@ -149,7 +148,7 @@ sealed interface Karte: GraphObjekt {
                 )
             }
         ) {
-            verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
+            verbindungen.zuComposable(Modifier.fillMaxSize())
             pseudoVerbindung.value?.zuComposable()
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
             if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)

@@ -343,9 +343,7 @@ public fun Iterable<Verbindung>.zuComposable(
             onTap = {},
             onLongPress = {}
         )
-    }) {
-        forEach { verbindung -> with(verbindung) { zeichnung() } }
-    }
+    }) { forEach { verbindung -> verbindung.zeichnung() } }
 }
 
 // Knoten

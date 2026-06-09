@@ -83,7 +83,7 @@ private data class KontextMenüZustand(
  * Graph-, Hit-Test- und Verbindungslogik liegen in KartenGraph.kt und
  * VerbindungsZiehen.kt. Eine Karte, die nicht alles selbst macht. Skandal.
  */
-@Composable
+/*@Composable
 internal fun KartenOberfläche(
     daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
@@ -102,9 +102,9 @@ internal fun KartenOberfläche(
     var ctxVerbindung by remember { mutableStateOf<Verbindung?>(null) }
     val scope = currentRecomposeScope
     val onDoupleTap = { position: Offset ->
-        /* TODO
+        *//* TODO
             Zoom und Verschiebung auf Inhalt.
-        */
+        *//*
     }
     val onLongTap = { position: Offset ->
         ctxPos.value = position.round()
@@ -112,9 +112,9 @@ internal fun KartenOberfläche(
         if (ziel == null) ctxKarte = true; ctxKnoten = null; ctxVerbindung = null
         if (ziel is Knoten) ctxKnoten = ziel
         if (ziel is Verbindung) ctxVerbindung = ziel
-        /* TODO
+        *//* TODO
             Kontextfenster aufrufen
-         */
+         *//*
     }
     val onTap = { position: Offset ->
         val ziel = erhalteNachBildPos(position.round(),zustand)
@@ -143,15 +143,15 @@ internal fun KartenOberfläche(
             )
         }
 
-    /*.pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
+    *//*.pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
             detectTapGestures(
                 onDoubleTap = onDoupleTap,
                 onLongPress = onLongTap,
                 onTap = onTap,
             )
             detectTransformGestures { centroid, pan, zoom, rotation ->  }
-        }*/
-/*        .pointerInput(karte.daten.id) { TODO
+        }*//*
+*//*        .pointerInput(karte.daten.id) { TODO
             detectTapGestures(
                 onDoubleTap = onDoupleTap,
                 onLongPress = onLongTap,
@@ -176,8 +176,8 @@ internal fun KartenOberfläche(
         .pointerInput(karte.daten.id) {
             detectTransformGestures { zentrum, pan, zoomDelta, rot ->
                 zustand.transformiere(pan,zoomDelta)
-*//*                        if (hintergrundGestenBlockiert) return@detectTransformGestures
-                        kontextMenü = null*//*
+*//**//*                        if (hintergrundGestenBlockiert) return@detectTransformGestures
+                        kontextMenü = null*//**//*
 //                    ansicht = aktuelleAnsicht.transformiereUm(zentrum, pan, zoomÄnderung) TODO
             }
         }
@@ -194,13 +194,13 @@ internal fun KartenOberfläche(
                     }
                 }
             }
-        },*/
+        },*//*
     ) {
         // TODO Hintergrund zeichnen
         verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
         knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
 
-/*        if (ctxKarte) {
+*//*        if (ctxKarte) {
             // TODO Karten kontextfenster
             karte.öffneKontext(ctxPos.value)
         } else if (ctxKnoten != null) {
@@ -209,9 +209,9 @@ internal fun KartenOberfläche(
         } else if (ctxVerbindung != null) {
             ctxVerbindung!!.öffneKontext(ctxPos.value)
             // TODO Verbindung kontextfenster
-        }*/
+        }*//*
     }
-}
+}*/
 
 
 /*@Composable
