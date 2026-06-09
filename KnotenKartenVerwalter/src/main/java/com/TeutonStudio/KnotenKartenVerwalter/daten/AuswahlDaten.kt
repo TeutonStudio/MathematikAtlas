@@ -1,5 +1,9 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
+
 /**
  * Beschreibt die aktuell ausgewaehlten Graph-Elemente.
  *
@@ -17,6 +21,8 @@ data class AuswahlDaten(
     /** Wahr, wenn weder Knoten noch Verbindungen ausgewaehlt sind. */
     val istLeer: Boolean
         get() = knotenIds.isEmpty() && verbindungIds.isEmpty()
+
+    public fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id)
 
     fun nurKnoten(knotenId: String): AuswahlDaten = AuswahlDaten(knotenIds = setOf(knotenId))
 
@@ -43,5 +49,9 @@ data class AuswahlDaten(
 
     public companion object {
         public val LEER = AuswahlDaten()
+
+        public fun VerbindungDaten.zuAuswahl(): AuswahlDaten = AuswahlDaten(verbindungIds = setOf(id))
+        public fun KnotenDaten.zuAuswahl(): AuswahlDaten = AuswahlDaten(knotenIds = setOf(id))
     }
+
 }

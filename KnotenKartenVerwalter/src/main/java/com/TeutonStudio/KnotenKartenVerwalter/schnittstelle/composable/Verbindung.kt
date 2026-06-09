@@ -37,7 +37,7 @@ public fun VerbindungUmgebung(
 /**
  *
  */
-public fun DrawScope.VerbindungPfad(
+/*public fun DrawScope.VerbindungPfad(
     daten: VerbindungDaten,
     start: Offset,
     ende: Offset,
@@ -74,12 +74,12 @@ public fun DrawScope.VerbindungPfad(
         },
         color = when {
             daten.fehler != null -> Color(0xFFDC2626)
-            daten.ausgewaehlt -> Color(0xFF2563EB)
+            istS -> Color(0xFF2563EB)
             else -> Color(0xFF475569)
         },
         style = Stroke(width = 3f, cap = StrokeCap.Round),
     )
-}
+}*/
 
 private fun AnschlussKante.tangente(): Offset = when (this) {
     AnschlussKante.Links -> Offset(1f, 0f)

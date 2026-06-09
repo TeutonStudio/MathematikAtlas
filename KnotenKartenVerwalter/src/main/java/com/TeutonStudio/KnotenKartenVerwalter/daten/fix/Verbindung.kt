@@ -1,5 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungArt
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
 import com.TeutonStudio.KnotenKartenVerwalter.hatGleichenAnschluss
@@ -16,13 +19,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisVerbindun
  */
 open class VerbindungDaten(
     override val id: String,
-    val ids: idReferenz,
-    val label: String? = null,
-    val art: String = "default",
-    var ausgewaehlt: Boolean = false,
-    val fehler: String? = null,
+    open val ids: idReferenz,
+    open val label: String? = null,
+    open val fehler: String? = null,
 ): GraphDaten {
     override val klasse: VerbindungArt = BasisVerbindung.VERBINDUNG_ART
+//    open var ausgewaehlt by mutableStateOf(false)
 
     // TODO Konstruktor
 }

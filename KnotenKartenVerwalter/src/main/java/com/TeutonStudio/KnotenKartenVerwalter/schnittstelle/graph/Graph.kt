@@ -19,12 +19,17 @@ import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
+import com.TeutonStudio.KnotenKartenVerwalter.abstandZuBezier
 import com.TeutonStudio.KnotenKartenVerwalter.abstandZuVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.aufKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
+import com.TeutonStudio.KnotenKartenVerwalter.tangente
 import com.TeutonStudio.KnotenKartenVerwalter.zuKarte
+import kotlin.math.hypot
+import kotlin.math.max
 
 private const val ANSCHLUSS_TREFFER_RADIUS = 14f
 private const val VERBINDUNG_TREFFER_RADIUS = 10f
@@ -45,20 +50,36 @@ class Graph(
     private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
 ) {
-    private val kartenFabrik: KartenFabrik = BasisKartenFabrik
-    public val selektiertFarbe = Color(0xFF2563EB)
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
+    private val kartenFabrik: KartenFabrik = BasisKartenFabrik
+    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern)
+
+    public var selektiert by mutableStateOf(AuswahlDaten.LEER)
+    public val selektiertFarbe = Color(0xFF2563EB)
     public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
 
     public fun keinKontext() { ctx = "" to IntOffset.Zero }
 
+    public fun erhalteVerbindungNachKlick(pos: Offset): Pair<Verbindung,Float>? {
+        val liste = inhalt.filterIsInstance<Verbindung>().map {
+            val bezier = listOf(it.start.value,it.c1(),it.c2(),it.ende.value)
+            it to pos.abstandZuBezier(bezier)
+        }; if (liste.isEmpty()) return null
+        return liste.minBy { it.second }
+    }
+
+    public fun wähle(wahl: AuswahlDaten) {
+        selektiert = wahl
+        karte.onAuswahlÄndern(wahl)
+    }
+
     public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss,Float> {
-        val p = erhalteKarte().pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero
+        val p = karte.pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero
         val nA = erhalteAnschlussNachKartePos(p)
         return nA to (p-nA.erhaltePosition()).getDistanceSquared()
     }
 
-    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(erhalteKarte().zustand.ansicht))
+    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand.ansicht))
     public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.erhaltePosition() - pos).getDistanceSquared() }
 
     public fun erhalteNachBildPos(
@@ -97,11 +118,9 @@ class Graph(
         return karte
     }
 
-    public fun erhalteKarte(): Karte = inhalt.filterIsInstance<Karte>()[0]
-
     @Composable
     public fun zuComposable(modifier: Modifier) {
-        val karte = remember(daten) {
+/*        val karte = remember(daten) {
             kartenFabrik.erzeugeKarte(
                 graph = this,
                 daten = daten,
@@ -116,16 +135,16 @@ class Graph(
                 onVerbindungErstellen = onVerbindungErstellen,
                 onKontextAktion = onKontextAktion,
                 onAuswahlÄndern = { a ->
-                    daten.knoten.forEach {
-                        it.ausgewaehlt = it.id in a.knotenIds
-                    }
-                    daten.verbindungen.forEach {
-                        it.ausgewaehlt = it.id in a.verbindungIds
-                    }
+//                    daten.knoten.forEach {
+//                        it.ausgewaehlt = it.id in a.knotenIds
+//                    }
+//                    daten.verbindungen.forEach {
+//                        it.ausgewaehlt = it.id in a.verbindungIds
+//                    }
                     onAuswahlÄndern(a)
                 },
             )
-        }
+        }*/
         karte.zuComposable(modifier)
     }
 }

@@ -55,19 +55,44 @@ val BasisVerbindungFabrik: VerbindungFabrik = mapOf(
 )
 
 
-sealed interface Verbindung: GraphObjekt {
-    public override val daten: VerbindungDaten
+abstract class Verbindung(
+    _graph: Graph
+): GraphObjekt(_graph) {
+    public abstract override val daten: VerbindungDaten
 //    public val von: Anschluss?
 //    public val zu: Anschluss?
-    public var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
-    public val start: State<KartenPosition>
-    public var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
-    public val ende: State<KartenPosition>
+    public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
+    public abstract val start: State<KartenPosition>
+    public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
+    public abstract val ende: State<KartenPosition>
 
     @Composable
     override fun zuComposable(modifier: Modifier) = Canvas(modifier = modifier) { zeichnung() }
 
-    public val zeichnung: DrawScope.() -> Unit
+    public abstract val zeichnung: DrawScope.() -> Unit
+
+    public fun c1(): Offset {
+        val startRichtung = startKante.tangente()
+        val dx = ende.value.x - start.value.x
+        val dy = ende.value.y - start.value.y
+        val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
+        val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
+        return start.value + startRichtung * kontrollAbstand
+    }
+
+    public fun c2(): Offset {
+        val endeRichtung = endeKante.tangente()
+        val dx = ende.value.x - start.value.x
+        val dy = ende.value.y - start.value.y
+        val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
+        val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
+        return ende.value + endeRichtung * kontrollAbstand
+    }
+
+    @Composable
+    override fun erhalteKontextFenster(pos: BildschirmPosition) {
+        TODO("Not yet implemented")
+    }
 }
 
 open class BasisVerbindung(
@@ -75,9 +100,7 @@ open class BasisVerbindung(
     override val daten: VerbindungDaten,
     override val start: State<KartenPosition>,
     override val ende: State<KartenPosition>,
-): Verbindung {
-    override lateinit var graph: Graph
-    init { definiereGraph(_graph) }
+): Verbindung(_graph) {
     override var startKante: AnschlussKante = AnschlussKante.Links
     override var endeKante: AnschlussKante = AnschlussKante.Rechts
 
@@ -87,35 +110,18 @@ open class BasisVerbindung(
             drawPath(
                 path = erhaltePfad(),
                 color = when {
+                    istSelektiert -> graph.selektiertFarbe
                     daten.fehler != null -> Color(0xFFDC2626)
-                    daten.ausgewaehlt -> graph.selektiertFarbe
                     else -> Color(0xFF475569)
                 },
-                style = Stroke(width = if (daten.ausgewaehlt) 5f else 3f, cap = StrokeCap.Round),
+                style = Stroke(width = if (istSelektiert) 5f else 3f, cap = StrokeCap.Round),
             )
         }
 
     private fun erhaltePfad(): Path = Path().apply {
-        val startRichtung = startKante.tangente()
-        val endeRichtung = endeKante.tangente()
-        val dx = ende.value.x - start.value.x
-        val dy = ende.value.y - start.value.y
-        val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
-        val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
-        val c1 = start.value + startRichtung * kontrollAbstand
-        val c2 = ende.value + endeRichtung * kontrollAbstand
+        val cubic = { o1: Offset, o2: Offset, o3:  Offset -> cubicTo(o1.x,o1.y,o2.x,o2.y,o3.x,o3.y) }
         moveTo(start.value.x, start.value.y)
-        cubicTo(
-            c1.x,c1.y,
-            c2.x,c2.y,
-            ende.value.x,
-            ende.value.y,
-        )
-    }
-
-    @Composable
-    override fun erhalteKontextFenster(pos: BildschirmPosition) {
-        TODO("Not yet implemented")
+        cubic(c1(),c2(),ende.value)
     }
 
     public companion object {
@@ -149,7 +155,6 @@ internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, BildschirmPos
         VerbindungDaten(
             id = "temporaer",
             ids = ("" to "") to (start.anschlussId to start.anschlussId),
-            ausgewaehlt = true,
         ),
         startPosition,
         endePosition,

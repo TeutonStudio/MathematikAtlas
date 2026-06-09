@@ -52,7 +52,7 @@ open class KnotenDaten(
 
     open var beweglich: Boolean = true
     open var position: KartenPosition by mutableStateOf(KartenPosition.Zero)
-    open var ausgewaehlt by mutableStateOf(false)
+//    open var ausgewaehlt by mutableStateOf(false)
     open val anschlüsse: KnotenAnschlüsse = mutableMapOf()
     open val data: MutableMap<String, Any> = mutableMapOf()
 
@@ -62,7 +62,7 @@ open class KnotenDaten(
         position: KartenPosition? = null,
         breite: Float? = null,
         tiefe: Float? = null,
-        ausgewaehlt: Boolean? = null,
+//        ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
         anschlüsse: KnotenAnschlüsse? = null,
         data: MutableMap<String, Any>? = null,
@@ -73,7 +73,7 @@ open class KnotenDaten(
         this.position = position ?: this.position
         this.breite = breite ?: this.breite
         this.tiefe = tiefe ?: this.tiefe
-        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
+//        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
         this.beweglich = beweglich ?: this.beweglich
         this.anschlüsse.clear()
         this.anschlüsse.putAll(anschlüsse ?: this.anschlüsse)
@@ -109,7 +109,7 @@ open class EingabeDaten(
         position: KartenPosition? = null,
         breite: Float? = null,
         tiefe: Float? = null,
-        ausgewaehlt: Boolean? = null,
+//        ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
         anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>>? = null,
         data: MutableMap<String, Any>? = null,
@@ -120,7 +120,7 @@ open class EingabeDaten(
         this.position = position ?: this.position
         this.breite = breite ?: this.breite
         this.tiefe = tiefe ?: this.tiefe
-        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
+//        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
         this.beweglich = beweglich ?: this.beweglich
         this.anschlussLabel.clear()
         this.anschlussLabel.putAll(anschlussLabel ?: this.anschlussLabel)
@@ -150,7 +150,7 @@ open class AusgabeDaten(
         position: KartenPosition? = null,
         breite: Float? = null,
         tiefe: Float? = null,
-        ausgewaehlt: Boolean? = null,
+//        ausgewaehlt: Boolean? = null,
         beweglich: Boolean? = null,
         anschlussLabel: MutableMap<AnschlussKante,Pair<String, Int>>? = null,
         data: MutableMap<String, Any>? = null,
@@ -161,7 +161,7 @@ open class AusgabeDaten(
         this.position = position ?: this.position
         this.breite = breite ?: this.breite
         this.tiefe = tiefe ?: this.tiefe
-        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
+//        this.ausgewaehlt = ausgewaehlt ?: this.ausgewaehlt
         this.beweglich = beweglich ?: this.beweglich
         this.anschlussLabel.clear()
         this.anschlussLabel.putAll(anschlussLabel ?: this.anschlussLabel)

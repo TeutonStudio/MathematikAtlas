@@ -52,7 +52,11 @@ import kotlin.math.roundToInt
 
 public fun <K, V> Iterable<Pair<K, V>>.toMutableMap() = this.toMap().toMutableMap()
 public fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
+public fun <K,V> Pair<K,V>.wechsle(): Pair<V,K> = Pair(second,first)
 public fun <T> Pair<T,T>.toSet(): Set<T> = setOf(first,second)
+
+public fun printLogCat(vararg arg: Any?) = arg.forEach { println(it) }
+
 
 // Geometrie
 
@@ -166,21 +170,28 @@ private fun kubisch(p0: Offset, p1: Offset, p2: Offset, p3: Offset, t: Float, ):
 private fun Offset.abstandZuSegment(a: Offset, b: Offset): Float {
     val ab = b - a; val ap = this - a; val abQuadrat = ab.x * ab.x + ab.y * ab.y
 
-    if (abQuadrat <= 0.0001f) {
-        return hypot(
-            (x - a.x).toDouble(),
-            (y - a.y).toDouble(),
-        ).toFloat()
-    }
+    if (abQuadrat <= 0.0001f) { return (this - a).getDistanceSquared() }
 
     val t = ((ap.x * ab.x + ap.y * ab.y) / abQuadrat).coerceIn(0f, 1f)
 
     val naechsterPunkt = Offset(x = a.x + ab.x * t, y = a.y + ab.y * t)
 
-    return hypot(
-        (x - naechsterPunkt.x).toDouble(),
-        (y - naechsterPunkt.y).toDouble(),
-    ).toFloat()
+    return (this - naechsterPunkt).getDistanceSquared()
+}
+
+fun Offset.abstandZuBezier(bezier: List<Offset>, schritte: Int = 32): Float {
+    var vorher = bezier[0]
+    var kleinsterAbstand = Float.POSITIVE_INFINITY
+
+    for (i in 1..schritte) {
+        val t = i / schritte.toFloat()
+        val aktuell = kubisch(bezier[0],bezier[1],bezier[2],bezier[3],t)
+
+        kleinsterAbstand = minOf(kleinsterAbstand,abstandZuSegment(vorher, aktuell))
+        vorher = aktuell
+    }
+
+    return kleinsterAbstand
 }
 
 /**
@@ -294,6 +305,7 @@ private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String, kante: A
 // Verbindung
 
 public fun Iterable<Verbindung>.plusVlt(arg: Verbindung?): Iterable<Verbindung> = if (arg != null) plus(arg) else this
+//public fun Iterable<Verbindung>.abwählen() = forEach { it.daten.ausgewaehlt = false }
 
 typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 
@@ -341,7 +353,6 @@ public fun Iterable<Verbindung>.zuComposable(modifier: Modifier = Modifier) {
 
 // Knoten
 
-public fun KnotenDaten.zuAuswahl(): AuswahlDaten = AuswahlDaten(setOf(id))
 public fun KnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
 
 

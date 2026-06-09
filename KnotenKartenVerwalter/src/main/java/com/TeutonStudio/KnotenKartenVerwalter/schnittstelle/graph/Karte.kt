@@ -39,6 +39,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten.Companion.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
@@ -50,7 +51,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.plusVlt
 import com.TeutonStudio.KnotenKartenVerwalter.pos
+import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.verschiebe
+import com.TeutonStudio.KnotenKartenVerwalter.wechsle
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import com.TeutonStudio.KnotenKartenVerwalter.zuComposable
 import kotlin.collections.component1
@@ -116,39 +119,63 @@ data class AnschlussReferenz(
  *
  * Die eigentliche Compose-Oberflaeche liegt in KarteComposable.kt.
  */
-sealed interface Karte: GraphObjekt {
-    override val daten: KarteDaten
-    val zustand: KarteZustand
-    val knotenFabrik: KnotenFabrik
-    val verbindungFabrik: VerbindungFabrik
-    val pseudoVerbindung: MutableState<Verbindung?>
-    val aktualisierung: KartenAktualisierung
-    val onVerbindungErstellen: VerbindungErstellen
-    val onKontextAktion: KontextAktionAusführen
-    val onAuswahlÄndern: AuswahlÄndern
+abstract class Karte(
+    _graph: Graph
+): GraphObjekt(_graph) {
+    abstract override val daten: KarteDaten
+    abstract val zustand: KarteZustand
+    abstract val knotenFabrik: KnotenFabrik
+    abstract val verbindungFabrik: VerbindungFabrik
+    abstract val pseudoVerbindung: MutableState<Verbindung?>
+    abstract val aktualisierung: KartenAktualisierung
+    abstract val onVerbindungErstellen: VerbindungErstellen
+    abstract val onKontextAktion: KontextAktionAusführen
+    abstract val onAuswahlÄndern: AuswahlÄndern
 
-    var knoten: Iterable<Knoten>
-    var verbindungen: Iterable<Verbindung>
+    val knoten by lazy { daten.knoten.mapNotNull {
+        knotenFabrik.erzeugeKnoten(graph, it, this)
+    } }
+    val refListe by lazy { knoten.flatMap { k -> k.daten.anschlüsse.entries
+        .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })
+        .map { (anschluss, idx) -> Pair(anschluss,k.daten) } }.toMap()
+        .map { (it.value.id to it.key.id) to it }.toMap() }
+    val verbindungen by lazy { daten.verbindungen.mapNotNull {
+        val startEntry = refListe[it.ids.erhalteErtes()]
+        val endeEntry = refListe[it.ids.erhalteZweites()]
+
+        if (startEntry == null || endeEntry == null) return@mapNotNull null
+        val start = derivedStateOf { startEntry.toPair().wechsle().pos().zuBild(zustand.ansicht).toOffset() }
+        val ende = derivedStateOf { endeEntry.toPair().wechsle().pos().zuBild(zustand.ansicht).toOffset() }
+        verbindungFabrik.erzeugeVerbindung(graph,it,start,ende)
+    } }
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
         Box(
-            modifier = modifier.draggable2D(
-                state = rememberDraggable2DState {
-                    zustand.verschiebe(it)
-                    onAuswahlÄndern(AuswahlDaten.LEER)
-                    graph.keinKontext()
-                }
-            ).pointerInput(daten.id) {
-                detectTapGestures(
-                    onTap = {
-                        // TODO herausfinden, ob [it] auf verbindungs bezier kurve liegt.
+            modifier = modifier
+                .draggable2D(
+                    state = rememberDraggable2DState {
+                        zustand.verschiebe(it)
                         onAuswahlÄndern(AuswahlDaten.LEER)
                         graph.keinKontext()
-                    },
-                    onLongPress = { graph.ctx = daten.id to it.round() },
+                    }
                 )
-            }
+                .pointerInput(daten.id) {
+                    detectTapGestures(
+                        onTap = {
+                            // TODO herausfinden, wie ich it. tranformieren muss
+                            val v = graph.erhalteVerbindungNachKlick(it)
+                            if (v != null && v.second < 10f) {
+                                printLogCat(v.first, v.second)
+//                                v.first.daten.ausgewaehlt = true
+                                onAuswahlÄndern(v.first.daten.zuAuswahl())
+                            }
+                            onAuswahlÄndern(AuswahlDaten.LEER)
+                            graph.keinKontext()
+                        },
+                        onLongPress = { graph.ctx = daten.id to it.round() },
+                    )
+                }
         ) {
             verbindungen.zuComposable(Modifier.matchParentSize()/*.pointerInput(verbindungen.joinToString { it.daten.id }) {
                 detectTapGestures( // TODO Verbindung nach klickpunkt ermitteln
@@ -180,29 +207,9 @@ open class BasisKarte(
     override val onVerbindungErstellen: VerbindungErstellen,
     override val onKontextAktion: KontextAktionAusführen,
     override val onAuswahlÄndern: AuswahlÄndern,
-) : Karte {
+): Karte(_graph) {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
-    override lateinit var graph: Graph
-    override lateinit var knoten: Iterable<Knoten>
-    override lateinit var verbindungen: Iterable<Verbindung>
-    init {
-        definiereGraph(_graph)
-        knoten = daten.knoten.mapNotNull { knotenFabrik.erzeugeKnoten(graph, it,this) }
-        val refListe = knoten.flatMap { k -> k.daten.anschlüsse.entries
-            .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })
-            .map { (anschluss, idx) -> Pair(anschluss,k.daten) } }.toMap()
-            .map { (it.value.id to it.key.id) to it }.toMap()
-        verbindungen = daten.verbindungen.mapNotNull { verbindung ->
-            val startEntry = refListe[verbindung.ids.erhalteErtes()]
-            val endeEntry = refListe[verbindung.ids.erhalteZweites()]
-
-            if (startEntry == null || endeEntry == null) return@mapNotNull null
-            val start = derivedStateOf { pos(startEntry).zuBild(zustand.ansicht).toOffset() }
-            val ende = derivedStateOf { pos(endeEntry).zuBild(zustand.ansicht).toOffset() }
-            verbindungFabrik.erzeugeVerbindung(graph,verbindung,start,ende)
-        }
-    }
 
     override val pseudoVerbindung = mutableStateOf<Verbindung?>(null)
 

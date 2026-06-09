@@ -45,6 +45,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
 import com.TeutonStudio.KnotenKartenVerwalter.alignment
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten.Companion.zuAuswahl
 
 // Daten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
@@ -58,7 +59,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.offsetKante
 import com.TeutonStudio.KnotenKartenVerwalter.radius
 
 // Composable
-import com.TeutonStudio.KnotenKartenVerwalter.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import com.TeutonStudio.KnotenKartenVerwalter.zuLeiste
 import kotlin.div
@@ -80,12 +80,16 @@ public fun List<Knoten>.zuComposable(
 /**
  * Knoten Elternklasse
  */
-sealed interface Knoten: GraphObjekt {
-    public override val daten: KnotenDaten
-    public val besitzer: Karte
-    public val anschlussFabrik: AnschlussFabrik
-    public var anschlüsse: Map<Anschluss,Int>
+abstract class Knoten(
+    _graph: Graph
+): GraphObjekt(_graph) {
+    public abstract override val daten: KnotenDaten
+    public abstract val besitzer: Karte
+    public abstract val anschlussFabrik: AnschlussFabrik
 
+    public val anschlüsse by lazy { daten.anschlüsse.entries.mapNotNull {
+        anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value }
+    }.toMap() }
     val bildPos get() = daten.position.zuBild(besitzer.zustand.ansicht)
     val boxModiRect get() = { d: Density -> Modifier.offset { bildPos }.size( size = with(d) { (daten.erhalteSize() * zoomFaktor()).toDpSize() }) }
 
@@ -100,14 +104,14 @@ sealed interface Knoten: GraphObjekt {
             enabled = daten.beweglich,
             state = rememberDraggable2DState {
                 besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
-                besitzer.onAuswahlÄndern(daten.zuAuswahl())
+                graph.wähle(daten.zuAuswahl())
                 graph.keinKontext()
             },
         ).pointerInput(daten.id) {
             detectTapGestures(
                 onLongPress = { graph.ctx = daten.id to it.round() },
                 onTap = {
-                    besitzer.onAuswahlÄndern(daten.zuAuswahl())
+                    graph.wähle(daten.zuAuswahl())
                     graph.keinKontext()
                 },
             )
@@ -124,11 +128,11 @@ sealed interface Knoten: GraphObjekt {
         }
     }
 
-    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,graph.selektiertFarbe) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
+    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (istSelektiert) BorderStroke(5.dp,graph.selektiertFarbe) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
 
     @Composable public fun Kopfzeile() = Text(daten.name)
-    @Composable public fun Textzeile()
-    @Composable public fun Fußzeile()
+    @Composable public abstract fun Textzeile()
+    @Composable public abstract fun Fußzeile()
 
     @Composable
     override fun erhalteKontextFenster(
@@ -164,17 +168,9 @@ open class BasisKnoten(
     _graph: Graph,
     override val daten: KnotenDaten,
     override val besitzer: Karte,
-): Knoten {
+): Knoten(_graph) {
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
 
-    public override lateinit var graph: Graph
-    public override lateinit var anschlüsse: Map<Anschluss,Int>
-    init {
-        definiereGraph(_graph)
-        anschlüsse = daten.anschlüsse.entries.mapNotNull {
-            anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value }
-        }.toMap()
-    }
 
     @Composable
     override fun Textzeile() {

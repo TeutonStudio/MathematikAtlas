@@ -72,14 +72,16 @@ val AnschlussModifierStandard = Modifier
 /**
  * Anschluss als Graphobjekt und Elternklasse aller Anschlüsse
  */
-sealed interface Anschluss: GraphObjekt {
-    public override val daten: AnschlussDaten
-    public val besitzer: Knoten
+abstract class Anschluss(
+    _graph: Graph
+): GraphObjekt(_graph) {
+    public abstract override val daten: AnschlussDaten
+    public abstract val besitzer: Knoten
 //    public var partner: Anschluss?
 
     public fun erhaltePosition(): KartenPosition = (besitzer.daten to daten).pos()
 
-    public fun erlaubtVerbindung(daten: Anschluss): Boolean
+    public abstract fun erlaubtVerbindung(daten: Anschluss): Boolean
 //    public fun erstelleVerbindung(zu: Anschluss)
 
     public fun istSelbst(zielBesitzer: Knoten?): Boolean = (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
@@ -93,9 +95,7 @@ open class BasisAnschluss(
     override val daten: AnschlussDaten,
     override val besitzer: Knoten,
 //    override var partner: Anschluss? = null,
-): Anschluss {
-    override lateinit var graph: Graph
-    init { definiereGraph(_graph) }
+): Anschluss(_graph) {
     val radius
         get() = 5.dp
 
@@ -125,24 +125,24 @@ open class BasisAnschluss(
                         val verbindung = BasisVerbindung(graph,vDaten,start,ende)
 
                         verbindung.startKante = daten.kante
-                        graph.erhalteKarte().pseudoVerbindung.value = verbindung
+                        graph.karte.pseudoVerbindung.value = verbindung
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val nA = graph.inhalt.filterIsInstance<Anschluss>().filter { it.besitzer != besitzer }.minBy {
-                            (it.erhaltePosition().zuBild(graph.erhalteKarte().zustand.ansicht).toOffset() - change.position).getDistanceSquared()
+                            (it.erhaltePosition().zuBild(graph.karte.zustand.ansicht).toOffset() - change.position).getDistanceSquared()
                         }
-                        val dist = (nA.erhaltePosition().zuBild(graph.erhalteKarte().zustand.ansicht).toOffset() - change.position).getDistanceSquared()
+                        val dist = (nA.erhaltePosition().zuBild(graph.karte.zustand.ansicht).toOffset() - change.position).getDistanceSquared()
                         if (dist < 2) println(nA.daten.label)
                         _dragPos += dragAmount
                         dragPos.value = _dragPos
                     },
                     onDragEnd = {
                         // TODO finalisieren
-                        graph.erhalteKarte().pseudoVerbindung.value = null
+                        graph.karte.pseudoVerbindung.value = null
                     },
                     onDragCancel = {
-                        graph.erhalteKarte().pseudoVerbindung.value = null
+                        graph.karte.pseudoVerbindung.value = null
                     },
                 )
             }
