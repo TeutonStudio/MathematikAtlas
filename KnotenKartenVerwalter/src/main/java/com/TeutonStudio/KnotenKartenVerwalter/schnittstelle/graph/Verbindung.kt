@@ -98,11 +98,13 @@ public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: 
 
 // TODO KartenPosition nicht eher was für Daten ??
 sealed interface Verbindung: GraphObjekt {
-    public val daten: VerbindungDaten
+    public override val daten: VerbindungDaten
 //    public val von: Anschluss?
 //    public val zu: Anschluss?
-    public val start: State<KartenPosition> // TODO AnschlussKante als wert hinzufügen um davon abhängige bezierKurven zu Zeichnen
-    public val ende: State<KartenPosition> // TODO AnschlussKante als wert hinzufügen um davon abhängige bezierKurven zu Zeichnen
+    public var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
+    public val start: State<KartenPosition>
+    public var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
+    public val ende: State<KartenPosition>
 
     public fun zeichnung(): DrawScope.() -> Unit
 }
@@ -115,11 +117,13 @@ open class BasisVerbindung(
 ): Verbindung {
     override lateinit var graph: Graph
     init { definiereGraph(_graph) }
+    override var startKante: AnschlussKante = AnschlussKante.Links
+    override var endeKante: AnschlussKante = AnschlussKante.Rechts
     @Composable
     override fun zuComposable(modifier: Modifier) = VerbindungUmgebung(modifier, zeichnung())
 
     @Composable
-    override fun öffneKontext(pos: BildschirmPosition) {
+    override fun erhalteKontextFenster(pos: BildschirmPosition) {
         TODO("Not yet implemented")
     }
 

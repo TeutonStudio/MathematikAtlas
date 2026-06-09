@@ -37,7 +37,7 @@ public fun VerbindungUmgebung(
  */
 public fun DrawScope.VerbindungPfad(daten: VerbindungDaten, start: Offset, ende: Offset): Unit {
     val kontrollAbstand = max(48f, abs(ende.x - start.x) / 2f)
-    drawPath(
+    drawPath( // TODO abhängig von kante machen
         path = Path().apply {
             moveTo(start.x, start.y)
             cubicTo(

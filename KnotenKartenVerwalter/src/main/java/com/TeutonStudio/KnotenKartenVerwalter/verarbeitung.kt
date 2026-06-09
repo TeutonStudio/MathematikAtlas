@@ -1,12 +1,17 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
+import androidx.annotation.FloatRange
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -284,7 +289,7 @@ private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String, kante: A
 
 // Verbindung
 
-public fun List<Verbindung>.plusVlt(arg: Verbindung?): List<Verbindung> = if (arg != null) plus(arg) else this
+public fun Iterable<Verbindung>.plusVlt(arg: Verbindung?): Iterable<Verbindung> = if (arg != null) plus(arg) else this
 
 typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 
@@ -324,6 +329,7 @@ public fun Iterable<Verbindung>.zuComposable(modifier: (VerbindungDaten) -> Modi
 
 public fun KnotenDaten.zuAuswahl(): AuswahlDaten = AuswahlDaten(setOf(id))
 public fun KnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
+
 
 @Composable @JvmName("IterKnoten2Composable")
 public fun Iterable<Knoten>.zuComposable(
@@ -394,3 +400,17 @@ typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
  */
 typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
 
+// Modifier
+
+public fun radius(kante: AnschlussKante, radius: Dp = (2.5f).dp): Dp = if (kante == AnschlussKante.Rechts || kante == AnschlussKante.Unten) radius else -radius
+
+public fun alignment(kante: AnschlussKante): Alignment = when(kante) {
+    AnschlussKante.Links -> Alignment.CenterStart
+    AnschlussKante.Rechts -> Alignment.CenterEnd
+    AnschlussKante.Oben -> Alignment.TopCenter
+    AnschlussKante.Unten -> Alignment.BottomCenter
+}
+
+public fun Modifier.fillMaxKante(kante: AnschlussKante,@FloatRange fraction: Float = 1f): Modifier = if (kante.istVertikal()) fillMaxHeight(fraction) else fillMaxWidth(fraction)
+
+public fun Modifier.offsetKante(kante: AnschlussKante, offset: Dp = 0.dp) = if(kante.istVertikal()) offset(x=offset) else offset(y=offset)

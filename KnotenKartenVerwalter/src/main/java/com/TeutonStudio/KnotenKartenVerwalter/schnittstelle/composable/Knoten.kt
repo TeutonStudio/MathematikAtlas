@@ -2,6 +2,7 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable
 
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -42,10 +44,15 @@ public fun KnotenRahmen(
     val density = LocalDensity.current
     val scope = currentRecomposeScope
 //    val skalierung = inhaltSkalierung.coerceAtLeast(0.1f)
-    Box(modifier = boxModiRect(density).clickable { beiVerschiebung(Offset.Zero) }.draggable2D(
+    Box(modifier = boxModiRect(density).draggable2D(
         state = rememberDraggable2DState { beiVerschiebung(it) },
         enabled = daten.beweglich,
-    )) {
+    ).pointerInput(daten.id) {
+        detectTapGestures(
+            onTap = { beiVerschiebung(Offset.Zero) },
+            onLongPress = { /* TODO kontext fenster*/}
+        )
+    }) {
         Inhalt()
         AnschlussKante.entries.forEach { kante ->
 //            val modi = if (kante.istVertikal()) Modifier.fillMaxHeight().offset(x = radius(kante)) else Modifier.fillMaxWidth().offset(y = radius(kante))

@@ -1,12 +1,20 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 // Compose
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.draggable2D
+import androidx.compose.foundation.gestures.rememberDraggable2DState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -63,13 +71,11 @@ val AnschlussModifierStandard = Modifier
  * Anschluss als Graphobjekt und Elternklasse aller Anschlüsse
  */
 sealed interface Anschluss: GraphObjekt {
-    public val daten: AnschlussDaten
+    public override val daten: AnschlussDaten
     public val besitzer: Knoten
 //    public var partner: Anschluss?
 
-    public fun erhaltePosition(): KartenPosition {
-        return TODO()
-    }
+    public fun erhaltePosition(): KartenPosition = (besitzer.daten to daten).pos()
 
     public fun erlaubtVerbindung(daten: Anschluss): Boolean
 //    public fun erstelleVerbindung(zu: Anschluss)
@@ -91,25 +97,40 @@ open class BasisAnschluss(
     val radius
         get() = 5.dp
 
+    private var _dragPos: Offset by mutableStateOf(Offset.Zero)
     private val dragPos: MutableState<Offset> = mutableStateOf(Offset.Zero)
     @Composable
-    override fun zuComposable(modifier: Modifier) = Anschluss(daten,{
-        val start = derivedStateOf { (besitzer.daten to daten).pos().zuBild(graph.erhalteKarte().zustand.ansicht).toOffset() }
-        dragPos.value = start.value // it ist eine unpassende position
-        val ende = derivedStateOf { dragPos.value.round().zuKarte(graph.erhalteKarte().zustand.ansicht) }
-        graph.erhalteKarte().pseudoVerbindung.value = BasisVerbindung(graph, VerbindungDaten(
-            "pseudo", idReferenz(besitzer.daten to daten,besitzer.daten to daten)
-        ),start,ende)
-    },{ // TODO Herausfinden, warum anfangsPosition passt und ziel position nicht bei Maus liegt.
-        // TODO finalisieren
-        graph.erhalteKarte().pseudoVerbindung.value = null
-    },{
-        // TODO snap einbauen, nächsten abschluss und abstand nach position bestimmen
-        dragPos.value = it
-    },radius,Color.Black,modifier)
+    override fun zuComposable(modifier: Modifier) {
+        val farbe = Color.Black
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier.size(radius).background(farbe, CircleShape).draggable2D(
+                rememberDraggable2DState({
+                    // TODO snap einbauen, nächsten abschluss und abstand nach position bestimmen
+                    val nA = graph.erhaltePseudoAnschlussZiel()
+                    _dragPos += it
+                    dragPos.value = _dragPos
+//        dragPos.value = if (nA.second < 2) nA.first.erhaltePosition() else _dragPos
+                }),
+                onDragStarted = {
+                    val start = derivedStateOf { erhaltePosition() }
+                    _dragPos = start.value; dragPos.value = _dragPos
+                    val ende = derivedStateOf { dragPos.value }
+                    val v = BasisVerbindung(graph, VerbindungDaten(
+                        "pseudo", idReferenz(besitzer.daten to daten,besitzer.daten to daten)
+                    ),start,ende)
+                    v.startKante = daten.kante
+                    graph.erhalteKarte().pseudoVerbindung.value = v
+                },
+                onDragStopped = { graph.erhalteKarte().pseudoVerbindung.value = null }
+            )
+        ) {
+            if (öffneKontext().value) erhalteKontextFenster(graph.ctxPos)
+        }
+    }
 
     @Composable
-    override fun öffneKontext(pos: BildschirmPosition) {
+    override fun erhalteKontextFenster(pos: BildschirmPosition) {
         TODO("Not yet implemented")
     }
 

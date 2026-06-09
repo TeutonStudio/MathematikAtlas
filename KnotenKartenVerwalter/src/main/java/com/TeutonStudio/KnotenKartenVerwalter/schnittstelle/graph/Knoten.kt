@@ -4,6 +4,9 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable2D
+import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,14 +18,22 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussFabrik
@@ -32,6 +43,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenArt
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenKonstruktor
+import com.TeutonStudio.KnotenKartenVerwalter.alignment
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 
 // Daten
@@ -41,11 +53,14 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteSize
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
+import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
+import com.TeutonStudio.KnotenKartenVerwalter.offsetKante
+import com.TeutonStudio.KnotenKartenVerwalter.radius
 
 // Composable
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.KnotenRahmen
 import com.TeutonStudio.KnotenKartenVerwalter.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
+import com.TeutonStudio.KnotenKartenVerwalter.zuLeiste
 import kotlin.div
 import kotlin.let
 
@@ -66,13 +81,15 @@ public fun List<Knoten>.zuComposable(
  * Knoten Elternklasse
  */
 sealed interface Knoten: GraphObjekt {
-    public val daten: KnotenDaten
+    public override val daten: KnotenDaten
     public val besitzer: Karte
     public val anschlussFabrik: AnschlussFabrik
+    public var anschlüsse: Map<Anschluss,Int>
 
     val bildPos get() = daten.position.zuBild(besitzer.zustand.ansicht)
     val boxModiRect get() = { d: Density -> Modifier.offset { bildPos }.size( size = with(d) { (daten.erhalteSize() * zoomFaktor()).toDpSize() }) }
     val beiVerschiebung get() = { it: Offset ->
+        graph.ctx = false
         besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
         besitzer.onAuswahlÄndern(daten.zuAuswahl())
     }
@@ -83,13 +100,26 @@ sealed interface Knoten: GraphObjekt {
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
     ) {
-        val anschlussListe = remember(daten.anschlüsse) {
-            graph.inhalt.filterIsInstance<Anschluss>().forEach {
-                graph.inhalt.remove(it)
-            } // TODO ist korrekte entfernung alter GraphObjekte
-            daten.anschlüsse.mapNotNull { anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value } }.toMap()
+        val density = LocalDensity.current
+        Box(modifier = boxModiRect(density).draggable2D(
+            state = rememberDraggable2DState { beiVerschiebung(it) },
+            enabled = daten.beweglich,
+        ).pointerInput(daten.id) {
+            detectTapGestures(
+                onTap = { beiVerschiebung(Offset.Zero) },
+                onLongPress = { graph.ctx = true; graph.ctxPos = it.round(); graph.ctxObjekt = this@Knoten }
+            )
+        }) {
+            Inhalt(modifierKnoten)
+            AnschlussKante.entries.forEach { kante ->
+                val modi = Modifier.fillMaxKante(kante).offsetKante(kante,radius(kante))
+                Box(
+                    modifier = modi.align(alignment(kante)), //.offset(x = (-5f * skalierung).dp),
+                    contentAlignment = Alignment.Center,
+                ) { anschlüsse.zuLeiste(kante) }
+            }
+            if (öffneKontext().value) erhalteKontextFenster(graph.ctxPos)
         }
-        KnotenRahmen(daten,anschlussListe, boxModiRect, inhaltSkalierung,beiVerschiebung) { Inhalt(modifierKnoten) }
     }
 
     @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,Color(0xFF2563EB)) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
@@ -99,7 +129,7 @@ sealed interface Knoten: GraphObjekt {
     @Composable public fun Fußzeile()
 
     @Composable
-    override fun öffneKontext(
+    override fun erhalteKontextFenster(
         pos: BildschirmPosition
     ) {
         Box(
@@ -133,9 +163,16 @@ open class BasisKnoten(
     override val daten: KnotenDaten,
     override val besitzer: Karte,
 ): Knoten {
-    override lateinit var graph: Graph
-    init { definiereGraph(_graph) }
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
+
+    public override lateinit var graph: Graph
+    public override lateinit var anschlüsse: Map<Anschluss,Int>
+    init {
+        definiereGraph(_graph)
+        anschlüsse = daten.anschlüsse.entries.mapNotNull {
+            anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value }
+        }.toMap()
+    }
 
     @Composable
     override fun Textzeile() {

@@ -1,14 +1,21 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.currentRecomposeScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.abstandZuVerbindung
@@ -39,7 +46,18 @@ class Graph(
 ) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
+    public var ctx by mutableStateOf(false)
+    public var ctxPos by mutableStateOf(IntOffset.Zero)
+    public lateinit var ctxObjekt: GraphObjekt
 
+    public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss,Float> {
+        val p = erhalteKarte().pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero
+        val nA = erhalteAnschlussNachKartePos(p)
+        return nA to (p-nA.erhaltePosition()).getDistanceSquared()
+    }
+
+    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(erhalteKarte().zustand.ansicht))
+    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.erhaltePosition() - pos).getDistanceSquared() }
 
     public fun erhalteNachBildPos(
         pos: BildschirmPosition,

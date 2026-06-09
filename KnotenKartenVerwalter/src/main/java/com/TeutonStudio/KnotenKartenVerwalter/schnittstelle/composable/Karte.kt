@@ -85,7 +85,7 @@ private data class KontextMenüZustand(
  */
 @Composable
 internal fun KartenOberfläche(
-    karte: Karte,
+    daten: KarteDaten,
     zustand: KarteZustand = KarteZustand(),
     erhalteNachBildPos: (BildschirmPosition, KarteZustand) -> GraphObjekt,
     knoten: Iterable<Knoten>,
@@ -134,7 +134,16 @@ internal fun KartenOberfläche(
             zustand.verschiebe(it)
             onAuswahlÄndern(AuswahlDaten.LEER)
 //            scope.invalidate() // TODO
-        } )/*.pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
+        } ).pointerInput(daten.id) {
+            detectTapGestures(
+                onTap = {
+                    onAuswahlÄndern(AuswahlDaten.LEER)
+                },
+                onLongPress = {},
+            )
+        }
+
+    /*.pointerInput(karte.daten.id) { // TODO herausfinden ob problematisch, dass Gestures nicht in separierten pointertInputs
             detectTapGestures(
                 onDoubleTap = onDoupleTap,
                 onLongPress = onLongTap,
@@ -191,7 +200,7 @@ internal fun KartenOberfläche(
         verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
         knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
 
-        if (ctxKarte) {
+/*        if (ctxKarte) {
             // TODO Karten kontextfenster
             karte.öffneKontext(ctxPos.value)
         } else if (ctxKnoten != null) {
@@ -200,7 +209,7 @@ internal fun KartenOberfläche(
         } else if (ctxVerbindung != null) {
             ctxVerbindung!!.öffneKontext(ctxPos.value)
             // TODO Verbindung kontextfenster
-        }
+        }*/
     }
 }
 

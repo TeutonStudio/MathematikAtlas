@@ -109,7 +109,13 @@ public fun Anschluss(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.size(radius).background(farbe, CircleShape).pointerInput(daten.id) {
+        contentAlignment = Alignment.Center,
+        modifier = modifier.size(radius).background(farbe, CircleShape).draggable2D(
+            rememberDraggable2DState(onDragging),
+            onDragStarted = onDragStarted,
+            onDragStopped = { onDragStopped() }
+        )
+/*            .pointerInput(daten.id) {
             detectDragGestures(
                 onDragStart = onDragStarted,
                 onDragEnd = onDragStopped,
@@ -120,21 +126,7 @@ public fun Anschluss(
                     onDragging(change.position)
                 }
             )
-        },
-
-/*            .draggable2D(
-            rememberDraggable2DState(onDraggin),*//* {
-                // TODO pseudo verbindung aktualisieren
-            },*//*
-            onDragStarted = onDragStarted*//*{ startPosition ->
-                // TODO pseudo verbindung erstellen
-            }*//*,
-            onDragStopped = onDragStopped*//*{
-                // TODO erstellen der pseudo verbindung an Karte delegieren, dass dieser entscheiden kann ob erlaubt.
-            }*//*
-
-            ),*/
-        contentAlignment = Alignment.Center,
+        },*/
     ) { /* */ }
 }
 
