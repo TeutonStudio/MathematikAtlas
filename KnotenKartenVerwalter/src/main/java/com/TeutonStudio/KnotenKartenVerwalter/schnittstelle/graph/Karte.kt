@@ -142,6 +142,7 @@ sealed interface Karte: GraphObjekt {
             ).pointerInput(daten.id) {
                 detectTapGestures(
                     onTap = {
+                        // TODO herausfinden, ob [it] auf verbindungs bezier kurve liegt.
                         onAuswahlÄndern(AuswahlDaten.LEER)
                         graph.keinKontext()
                     },
@@ -149,12 +150,12 @@ sealed interface Karte: GraphObjekt {
                 )
             }
         ) {
-            verbindungen.zuComposable(Modifier.fillMaxSize().pointerInput(verbindungen.joinToString { it.daten.id }) {
+            verbindungen.zuComposable(Modifier.matchParentSize()/*.pointerInput(verbindungen.joinToString { it.daten.id }) {
                 detectTapGestures( // TODO Verbindung nach klickpunkt ermitteln
                     onTap = {},
                     onLongPress = {}
                 )
-            })
+            }*/)
             pseudoVerbindung.value?.zuComposable()
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
             if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)

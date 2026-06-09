@@ -67,7 +67,7 @@ sealed interface Verbindung: GraphObjekt {
     @Composable
     override fun zuComposable(modifier: Modifier) = Canvas(modifier = modifier) { zeichnung() }
 
-    public fun zeichnung(): DrawScope.() -> Unit
+    public val zeichnung: DrawScope.() -> Unit
 }
 
 open class BasisVerbindung(
@@ -82,17 +82,18 @@ open class BasisVerbindung(
     override var endeKante: AnschlussKante = AnschlussKante.Rechts
 
 
-    override fun zeichnung(): DrawScope.() -> Unit = {
-        drawPath(
-            path = erhaltePfad(),
-            color = when {
-                daten.fehler != null -> Color(0xFFDC2626)
-                daten.ausgewaehlt -> graph.selektiertFarbe
-                else -> Color(0xFF475569)
-            },
-            style = Stroke(width = if (daten.ausgewaehlt) 5f else 3f, cap = StrokeCap.Round),
-        )
-    }
+    override val zeichnung: DrawScope.() -> Unit
+        get() = {
+            drawPath(
+                path = erhaltePfad(),
+                color = when {
+                    daten.fehler != null -> Color(0xFFDC2626)
+                    daten.ausgewaehlt -> graph.selektiertFarbe
+                    else -> Color(0xFF475569)
+                },
+                style = Stroke(width = if (daten.ausgewaehlt) 5f else 3f, cap = StrokeCap.Round),
+            )
+        }
 
     private fun erhaltePfad(): Path = Path().apply {
         val startRichtung = startKante.tangente()
