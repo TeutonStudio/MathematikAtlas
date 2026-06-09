@@ -150,6 +150,7 @@ sealed interface Karte: GraphObjekt {
             }
         ) {
             verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
+            pseudoVerbindung.value?.zuComposable()
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
             if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
         }

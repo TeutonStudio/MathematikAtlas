@@ -129,8 +129,11 @@ open class BasisAnschluss(
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val nA = graph.erhaltePseudoAnschlussZiel()
-                        if (nA.second < 2) println(nA.first.daten.label)
+                        val nA = graph.inhalt.filterIsInstance<Anschluss>().filter { it.besitzer != besitzer }.minBy {
+                            (it.erhaltePosition().zuBild(graph.erhalteKarte().zustand.ansicht).toOffset() - change.position).getDistanceSquared()
+                        }
+                        val dist = (nA.erhaltePosition().zuBild(graph.erhalteKarte().zustand.ansicht).toOffset() - change.position).getDistanceSquared()
+                        if (dist < 2) println(nA.daten.label)
                         _dragPos += dragAmount
                         dragPos.value = _dragPos
                     },
@@ -144,7 +147,7 @@ open class BasisAnschluss(
                 )
             }
 
-                .draggable2D(
+/*                .draggable2D(
                 rememberDraggable2DState({
                     // TODO snap einbauen, nächsten abschluss und abstand nach position bestimmen
                     val nA = graph.erhaltePseudoAnschlussZiel()
@@ -163,7 +166,7 @@ open class BasisAnschluss(
                     graph.erhalteKarte().pseudoVerbindung.value = v
                 },
                 onDragStopped = { graph.erhalteKarte().pseudoVerbindung.value = null }
-            )
+            )*/
         ) {
             if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
         }

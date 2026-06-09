@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
@@ -45,6 +46,7 @@ class Graph(
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
 ) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
+    public val selektiertFarbe = Color(0xFF2563EB)
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
     public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
 

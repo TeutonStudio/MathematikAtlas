@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 // Compose
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -12,7 +13,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawScopeMarker
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
@@ -35,68 +41,20 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.RichtungsAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.istEingang
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.VerbindungPfad
+import com.TeutonStudio.KnotenKartenVerwalter.tangente
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import kotlin.invoke
 
 // Kotlin
 import kotlin.math.hypot
+import kotlin.math.max
 
 @Suppress("UNCHECKED_CAST")
 val BasisVerbindungFabrik: VerbindungFabrik = mapOf(
     BasisVerbindung.VERBINDUNG_ART to ::BasisVerbindung as VerbindungKonstruktor,
 )
 
-/**
- * Erstellt eine Zeichenfunktion für eine einzelne Verbindung.
- *
- * Die eigentliche Geometrie wird erst im Canvas-DrawScope gezeichnet, damit alle
- * Verbindungen gemeinsam auf einer Canvas-Ebene hinter den Knoten liegen können.
- */
-// private fun VerbindungDaten.zuPfad(start: Offset, ende: Offset): DrawScope.() -> Unit = { VerbindungPfad(this@zuPfad, start, ende) }
 
-/**
- * Rendert eine einzelne Verbindung zwischen zwei Bildschirmpositionen.
- */
-// @Composable
-// public fun VerbindungDaten.zuComposable(start: Offset, ende: Offset, modifier: Modifier = Modifier) = BasisVerbindung(this, start = start, ende = ende).zuComposable(modifier)
-
-/**
- * Rendert eine Liste fachlicher Verbindungen.
- *
- * Die übergebenen Funktionen lösen die referenzierten Anschlusspositionen auf.
- * Verbindungen mit fehlenden Endpunkten werden übersprungen.
- */
-/*@Composable
-public fun List<Verbindung>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(modifier,this.map { it.zeichnung() })*/
-
-/**
- * Rendert eine Liste fachlicher Verbindungen.
- *
- * Die übergebenen Funktionen lösen die referenzierten Anschlusspositionen auf.
- * Verbindungen mit fehlenden Endpunkten werden übersprungen.
- */
-/*@Composable
-public fun List<VerbindungDaten>.zuComposable(
-    start: (VerbindungDaten) -> State<KartenPosition>,
-    ende: (VerbindungDaten) -> State<KartenPosition>,
-    modifier: Modifier = Modifier,
-    fabrik: VerbindungFabrik = BasisVerbindungFabrik,
-) = this.mapNotNull { fabrik.erzeugeVerbindung(graph,it,start(it),ende(it))}.zuComposable(modifier)*/
-
-/**
- * Rendert bereits aufgelöste Verbindungen.
- *
- * Diese Variante wird unter anderem für die temporäre Verbindung beim Ziehen
- * eines Anschlusses verwendet.
- */
-/*@Composable
-public fun List<Triple<VerbindungDaten, Offset, Offset>>.zuComposable(modifier: Modifier = Modifier) = VerbindungUmgebung(
-    modifier,
-    this.map { BasisVerbindung(it.first, start = it.second, ende = it.third).zeichnung() },
-)*/
-
-// TODO KartenPosition nicht eher was für Daten ??
 sealed interface Verbindung: GraphObjekt {
     public override val daten: VerbindungDaten
 //    public val von: Anschluss?
@@ -105,6 +63,9 @@ sealed interface Verbindung: GraphObjekt {
     public val start: State<KartenPosition>
     public var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public val ende: State<KartenPosition>
+
+    @Composable
+    override fun zuComposable(modifier: Modifier) = Canvas(modifier = modifier) { zeichnung() }
 
     public fun zeichnung(): DrawScope.() -> Unit
 }
@@ -119,15 +80,45 @@ open class BasisVerbindung(
     init { definiereGraph(_graph) }
     override var startKante: AnschlussKante = AnschlussKante.Links
     override var endeKante: AnschlussKante = AnschlussKante.Rechts
-    @Composable
-    override fun zuComposable(modifier: Modifier) = VerbindungUmgebung(modifier, zeichnung())
+
+
+    override fun zeichnung(): DrawScope.() -> Unit = {
+        val dx = ende.value.x - start.value.x
+        val dy = ende.value.y - start.value.y
+
+        val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
+
+        val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
+
+        val startRichtung = startKante.tangente()
+        val endeRichtung = endeKante.tangente()
+
+        val c1 = start.value + startRichtung * kontrollAbstand
+        val c2 = ende.value + endeRichtung * kontrollAbstand
+
+        drawPath(
+            path = Path().apply {
+                moveTo(start.value.x, start.value.y)
+                cubicTo(
+                    c1.x,c1.y,
+                    c2.x,c2.y,
+                    ende.value.x,
+                    ende.value.y,
+                )
+            },
+            color = when {
+                daten.fehler != null -> Color(0xFFDC2626)
+                daten.ausgewaehlt -> graph.selektiertFarbe
+                else -> Color(0xFF475569)
+            },
+            style = Stroke(width = if (daten.ausgewaehlt) 5f else 3f, cap = StrokeCap.Round),
+        )
+    }
 
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
         TODO("Not yet implemented")
     }
-
-    override fun zeichnung(): DrawScope.() -> Unit = { VerbindungPfad(daten,start.value,ende.value) }
 
     public companion object {
         public const val VERBINDUNG_ART: VerbindungArt = "default"

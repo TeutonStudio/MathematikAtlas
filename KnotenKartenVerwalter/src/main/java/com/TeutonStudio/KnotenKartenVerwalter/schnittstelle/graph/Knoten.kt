@@ -124,7 +124,7 @@ sealed interface Knoten: GraphObjekt {
         }
     }
 
-    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,Color(0xFF2563EB)) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
+    @Composable public fun Inhalt(modifier: Modifier) = Card(modifier = modifier, border = if (daten.ausgewaehlt) BorderStroke(5.dp,graph.selektiertFarbe) else null) {Column(Modifier.padding(15.dp)) { Kopfzeile(); Textzeile(); Fußzeile() }}
 
     @Composable public fun Kopfzeile() = Text(daten.name)
     @Composable public fun Textzeile()

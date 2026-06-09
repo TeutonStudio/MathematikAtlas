@@ -1,6 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
 import androidx.annotation.FloatRange
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -30,6 +33,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussSpalte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussZeile
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.VerbindungUmgebung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussReferenz
@@ -322,8 +326,27 @@ public fun idReferenz.hatGleichenAnschluss(other: idReferenz): Boolean {
     return  (ersterAnschluss || zweiterAnschluss) && hatGleichenKnoten(other)
 }
 
-@Composable @JvmName("IterVerbindungen2Composable")
-public fun Iterable<Verbindung>.zuComposable(modifier: (VerbindungDaten) -> Modifier) = this.forEach { it.zuComposable(modifier(it.daten)) }
+public fun AnschlussKante.tangente(): Offset = when (this) {
+    AnschlussKante.Links -> Offset(1f, 0f)
+    AnschlussKante.Rechts -> Offset(-1f, 0f)
+    AnschlussKante.Oben -> Offset(0f, -1f)
+    AnschlussKante.Unten -> Offset(0f, 1f)
+}
+
+@Composable
+public fun Iterable<Verbindung>.zuComposable(
+    modifier: Modifier = Modifier,
+) {
+    if (this.count() == 0) return
+    Canvas(modifier = modifier.pointerInput(joinToString { it.daten.id }) {
+        detectTapGestures( // TODO Verbindung nach klickpunkt ermitteln
+            onTap = {},
+            onLongPress = {}
+        )
+    }) {
+        forEach { verbindung -> with(verbindung) { zeichnung() } }
+    }
+}
 
 // Knoten
 
