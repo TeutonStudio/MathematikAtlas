@@ -83,35 +83,32 @@ open class BasisVerbindung(
 
 
     override fun zeichnung(): DrawScope.() -> Unit = {
-        val dx = ende.value.x - start.value.x
-        val dy = ende.value.y - start.value.y
-
-        val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
-
-        val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
-
-        val startRichtung = startKante.tangente()
-        val endeRichtung = endeKante.tangente()
-
-        val c1 = start.value + startRichtung * kontrollAbstand
-        val c2 = ende.value + endeRichtung * kontrollAbstand
-
         drawPath(
-            path = Path().apply {
-                moveTo(start.value.x, start.value.y)
-                cubicTo(
-                    c1.x,c1.y,
-                    c2.x,c2.y,
-                    ende.value.x,
-                    ende.value.y,
-                )
-            },
+            path = erhaltePfad(),
             color = when {
                 daten.fehler != null -> Color(0xFFDC2626)
                 daten.ausgewaehlt -> graph.selektiertFarbe
                 else -> Color(0xFF475569)
             },
             style = Stroke(width = if (daten.ausgewaehlt) 5f else 3f, cap = StrokeCap.Round),
+        )
+    }
+
+    private fun erhaltePfad(): Path = Path().apply {
+        val startRichtung = startKante.tangente()
+        val endeRichtung = endeKante.tangente()
+        val dx = ende.value.x - start.value.x
+        val dy = ende.value.y - start.value.y
+        val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
+        val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
+        val c1 = start.value + startRichtung * kontrollAbstand
+        val c2 = ende.value + endeRichtung * kontrollAbstand
+        moveTo(start.value.x, start.value.y)
+        cubicTo(
+            c1.x,c1.y,
+            c2.x,c2.y,
+            ende.value.x,
+            ende.value.y,
         )
     }
 

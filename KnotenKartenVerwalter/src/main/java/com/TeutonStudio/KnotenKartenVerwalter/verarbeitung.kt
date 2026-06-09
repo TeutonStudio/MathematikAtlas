@@ -338,12 +338,7 @@ public fun Iterable<Verbindung>.zuComposable(
     modifier: Modifier = Modifier,
 ) {
     if (this.count() == 0) return
-    Canvas(modifier = modifier.pointerInput(joinToString { it.daten.id }) {
-        detectTapGestures( // TODO Verbindung nach klickpunkt ermitteln
-            onTap = {},
-            onLongPress = {}
-        )
-    }) { forEach { verbindung -> verbindung.zeichnung() } }
+    Canvas(modifier = modifier) { forEach { verbindung -> verbindung.zeichnung() } }
 }
 
 // Knoten

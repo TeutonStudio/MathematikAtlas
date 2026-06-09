@@ -55,6 +55,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import com.TeutonStudio.KnotenKartenVerwalter.zuComposable
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.collections.joinToString
 
 @Suppress("UNCHECKED_CAST")
 val BasisKartenFabrik: KartenFabrik = mapOf(
@@ -148,7 +149,12 @@ sealed interface Karte: GraphObjekt {
                 )
             }
         ) {
-            verbindungen.zuComposable(Modifier.fillMaxSize())
+            verbindungen.zuComposable(Modifier.fillMaxSize().pointerInput(verbindungen.joinToString { it.daten.id }) {
+                detectTapGestures( // TODO Verbindung nach klickpunkt ermitteln
+                    onTap = {},
+                    onLongPress = {}
+                )
+            })
             pseudoVerbindung.value?.zuComposable()
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
             if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
