@@ -78,20 +78,20 @@ fun Navigation() {
 @Composable
 private fun KnotenKartenTestAnwendung() {
     var karte by remember { mutableStateOf(testKarte()) }
-    var auswahl by remember { mutableStateOf(AuswahlDaten()) }
     var status by remember { mutableStateOf("Bereit") }
+    val auswahl = remember { mutableStateOf(AuswahlDaten()) }
 
     fun verschiebeKnoten(knotenId: String, position: Offset) {
         status = "Knoten verschoben"
     }
 
     fun erstelleVerbindung(verbindung: VerbindungDaten) {
-        auswahl = AuswahlDaten(verbindungIds = setOf(verbindung.id))
+        auswahl.value = AuswahlDaten(verbindungIds = setOf(verbindung.id))
         status = "Verbindung erstellt"
     }
 
     fun loescheAuswahl() {
-        auswahl = AuswahlDaten()
+        auswahl.value = AuswahlDaten()
         status = "Auswahl geloescht"
     }
 
@@ -104,14 +104,14 @@ private fun KnotenKartenTestAnwendung() {
                     name = "Knoten $nummer",
                     position = aktion.weltPosition,
                 )
-                auswahl = AuswahlDaten(knotenIds = setOf(knoten.id))
+                auswahl.value = AuswahlDaten(knotenIds = setOf(knoten.id))
                 status = "Knoten erstellt"
             }
 
             "Knoten loeschen" -> {
                 val ziel = aktion.ziel as? KartenTreffer.Knoten
                 if (ziel != null) {
-                    auswahl = AuswahlDaten(knotenIds = setOf(ziel.knotenId))
+                    auswahl.value = AuswahlDaten(knotenIds = setOf(ziel.knotenId))
                     loescheAuswahl()
                 }
             }
@@ -119,7 +119,7 @@ private fun KnotenKartenTestAnwendung() {
             "Verbindung loeschen" -> {
                 val ziel = aktion.ziel as? KartenTreffer.Verbindung
                 if (ziel != null) {
-                    auswahl = AuswahlDaten()
+                    auswahl.value = AuswahlDaten()
                     status = "Verbindung geloescht"
                 }
             }
@@ -127,7 +127,7 @@ private fun KnotenKartenTestAnwendung() {
             "Knoten auswaehlen" -> {
                 val ziel = aktion.ziel as? KartenTreffer.Knoten
                 if (ziel != null) {
-                    auswahl = AuswahlDaten(knotenIds = setOf(ziel.knotenId))
+                    auswahl.value = AuswahlDaten(knotenIds = setOf(ziel.knotenId))
                     status = "Knoten ausgewaehlt"
                 }
             }
@@ -135,7 +135,7 @@ private fun KnotenKartenTestAnwendung() {
             "Verbindung auswaehlen" -> {
                 val ziel = aktion.ziel as? KartenTreffer.Verbindung
                 if (ziel != null) {
-                    auswahl = AuswahlDaten(verbindungIds = setOf(ziel.verbindungId))
+                    auswahl.value = AuswahlDaten(verbindungIds = setOf(ziel.verbindungId))
                     status = "Verbindung ausgewaehlt"
                 }
             }
@@ -152,24 +152,36 @@ private fun KnotenKartenTestAnwendung() {
             .background(Color(0xFFF3F4F6))
             .padding(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
     ) {
-        val z = KarteZustand(
-            zeigeÜbersicht = true,
-            zeigeKontrollLeiste = true,
-            auswahl = auswahl,
-        )
+        val g = remember {
+            Graph(
+                daten = karte,
+                zustand = KarteZustand(
+                    zeigeÜbersicht = true,
+                    zeigeKontrollLeiste = true,
+                    auswahl = auswahl,
+                ),
+                aktualisierung = ::verschiebeKnoten,
+                onVerbindungErstellen = ::erstelleVerbindung,
+                onKontextAktion = ::fuehreKontextAktionAus,
+                onAuswahlÄndern = { neueAuswahl ->
+                    auswahl.value = neueAuswahl
+                    status = neueAuswahl.statusText()
+                },
+            )
+        }
         TestSeitenLeiste(
             karte = karte,
-            auswahl = auswahl,
+            auswahl = auswahl.value,
             status = status,
-            zustand = z,
+            zustand = g.karte.zustand,
             onNeueKarte = {
                 karte = testKarte()
-                auswahl = AuswahlDaten()
+                auswahl.value = AuswahlDaten()
                 status = "Testkarte geladen"
             },
             onAuswahlLoeschen = ::loescheAuswahl,
             onAuswahlLeeren = {
-                auswahl = AuswahlDaten()
+                auswahl.value = AuswahlDaten()
                 status = "Keine Auswahl"
             },
             onNameAendern = { neuerName ->
@@ -187,17 +199,7 @@ private fun KnotenKartenTestAnwendung() {
                 .background(Color.White, RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp)),
         ) {
-            Graph(
-                daten = karte,
-                zustand = z,
-                aktualisierung = ::verschiebeKnoten,
-                onVerbindungErstellen = ::erstelleVerbindung,
-                onKontextAktion = ::fuehreKontextAktionAus,
-                onAuswahlÄndern = { neueAuswahl ->
-                    auswahl = neueAuswahl
-                    status = neueAuswahl.statusText()
-                },
-            ).zuComposable(Modifier.fillMaxSize())
+            g.zuComposable(Modifier.fillMaxSize())
         }
     }
 }

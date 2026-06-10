@@ -56,7 +56,7 @@ class Graph(
     val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern)
 
     public val selektiert
-        get() = karte.zustand.auswahl
+        get() = karte.zustand.auswahl.value
     public val selektiertFarbe = Color(0xFF2563EB)
     public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
 
@@ -71,7 +71,7 @@ class Graph(
     }
 
     public fun wähle(wahl: AuswahlDaten) {
-        karte.zustand.auswahl = wahl
+        karte.zustand.auswahl.value = wahl
         karte.onAuswahlÄndern(wahl)
     }
 
@@ -90,42 +90,6 @@ class Graph(
 
     public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
     public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.erhaltePosition() - pos).getDistanceSquared() }
-
-/*    public fun erhalteNachBildPos(
-        pos: BildschirmPosition,
-        zustand: KarteZustand = karte.zustand,
-    ): GraphObjekt {
-        val karte = inhalt
-            .asReversed()
-            .filterIsInstance<Karte>()
-            .firstOrNull()
-            ?: error("Graph enthält keine Karte")
-
-        val kartePos = pos.zuKarte(zustand)
-
-        // 1. Anschlüsse zuerst, weil sie klein sind und am Knotenrand liegen.
-        inhalt.asReversed().filterIsInstance<Anschluss>().firstOrNull { anschluss ->
-                val ref = anschluss.besitzer.anschlussReferenz(
-                    anschluss = anschluss.daten,
-                    zustand = zustand,
-                )
-                val dist = (pos - (ref?.position ?: BildschirmPosition.Zero)).toOffset().getDistanceSquared()
-                ref != null && dist <= ANSCHLUSS_TREFFER_RADIUS
-            }?.let { return it }
-
-        // 2. Knoten danach.
-        inhalt.asReversed().filterIsInstance<Knoten>().firstOrNull { knoten ->
-                kartePos.aufKnoten(knoten.daten)
-            }?.let { return it }
-
-        // 3. Verbindungen danach, weil sie hinter den Knoten gezeichnet werden.
-        inhalt.asReversed().filterIsInstance<Verbindung>().firstOrNull { verbindung ->
-                pos.abstandZuVerbindung(verbindung) <= VERBINDUNG_TREFFER_RADIUS
-            }?.let { return it }
-
-        // 4. Hintergrund/Karte.
-        return karte
-    }*/
 
     @Composable
     public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)

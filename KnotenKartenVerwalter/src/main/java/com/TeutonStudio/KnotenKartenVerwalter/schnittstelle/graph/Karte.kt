@@ -142,17 +142,18 @@ abstract class Karte(
     val verbindungen by lazy { daten.verbindungen.mapNotNull {
         val startEntry = refListe[it.ids.erhalteErtes()]
         val endeEntry = refListe[it.ids.erhalteZweites()]
-
         if (startEntry == null || endeEntry == null) return@mapNotNull null
-        val start = derivedStateOf { startEntry.toPair().wechsle().pos() }
-        val ende = derivedStateOf { endeEntry.toPair().wechsle().pos() }
-        verbindungFabrik.erzeugeVerbindung(graph,it,start,ende)
+
+        verbindungFabrik.erzeugeVerbindung(graph,it,
+            derivedStateOf { startEntry.toPair().wechsle().pos() },
+            derivedStateOf { endeEntry.toPair().wechsle().pos() },
+        )
     } }
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
         Box(
-            modifier = modifier
+            modifier = modifier.fillMaxSize().clipToBounds()
                 .draggable2D(
                     state = rememberDraggable2DState {
                         zustand.verschiebe(it)
@@ -197,7 +198,7 @@ abstract class Karte(
 open class BasisKarte(
     _graph: Graph,
     override val daten: KarteDaten,
-    override val zustand: KarteZustand = KarteZustand(),
+    override val zustand: KarteZustand,
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen,
     override val onKontextAktion: KontextAktionAusführen,

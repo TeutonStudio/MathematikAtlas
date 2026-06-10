@@ -1,5 +1,6 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +37,7 @@ open class KarteZustand(
 //    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
-    var auswahl: AuswahlDaten = AuswahlDaten(),
+    val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten())
 ) {
     var zoom by mutableFloatStateOf(1f)
     var pos by mutableStateOf(Offset.Zero)
@@ -52,8 +53,11 @@ open class KarteZustand(
 //        ansicht ?: zustand.ansicht,
         zeigeÜbersicht ?: zustand.zeigeÜbersicht,
         zeigeKontrollLeiste ?: zustand.zeigeKontrollLeiste,
-        auswahl ?: zustand.auswahl,
-    )
+    ) {
+        this.auswahl.value = auswahl ?: zustand.auswahl.value
+        this.pos = pos ?: zustand.pos
+        this.zoom = zoom ?: zustand.zoom
+    }
 }
 
 open class KartenCacheDaten() {
