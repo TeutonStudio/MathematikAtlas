@@ -4,7 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 
 /**
  * Hintergrund-Layer der Karte.

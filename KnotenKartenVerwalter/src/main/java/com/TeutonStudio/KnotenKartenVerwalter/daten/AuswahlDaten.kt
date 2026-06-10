@@ -1,7 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
 /**

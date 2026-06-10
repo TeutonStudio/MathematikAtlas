@@ -1,8 +1,5 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntSize
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 
 /**
  * Reine Hilfsfunktionen fuer die spaetere Kontrollleiste.

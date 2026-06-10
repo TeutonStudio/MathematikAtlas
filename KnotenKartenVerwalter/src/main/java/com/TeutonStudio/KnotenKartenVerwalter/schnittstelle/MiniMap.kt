@@ -3,8 +3,8 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 
 /**
  * Ziel-Datei fuer die Minimap.

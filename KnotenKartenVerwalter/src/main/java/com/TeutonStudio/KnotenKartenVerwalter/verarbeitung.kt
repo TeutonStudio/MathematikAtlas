@@ -1,12 +1,6 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
 import androidx.annotation.FloatRange
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -19,33 +13,24 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import androidx.compose.ui.unit.toIntRect
-import androidx.compose.ui.unit.toOffset
-import androidx.compose.ui.unit.toSize
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussReferenz
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisAusgang
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisEingang
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Karte
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Knoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Verbindung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.istVertikal
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.wertFür
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
@@ -55,6 +40,8 @@ public fun <K, V> Iterable<Pair<K, V>>.toMutableMap() = this.toMap().toMutableMa
 public fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
 public fun <K,V> Pair<K,V>.wechsle(): Pair<V,K> = Pair(second,first)
 public fun <T> Pair<T,T>.toSet(): Set<T> = setOf(first,second)
+
+operator fun Offset.times(other: Offset): Float = x * other.x + y * other.y
 
 public fun printLogCat(vararg arg: Any?) = arg.forEach { println(it) }
 
@@ -78,39 +65,10 @@ typealias BildschirmPosition = IntOffset
  */
 typealias Rechteck = Rect
 
+operator fun Rechteck.times(other: Float): Offset = diagonale() * other
+public fun Rechteck.diagonale(): Offset = Offset(width,height)
+
 public fun Rechteck(breite: Float, tiefe: Float, position: KartenPosition): Rechteck= Rect(position,position+ Offset(breite,tiefe))
-
-/**
- *
- */
-public fun KartenPosition.zuBild(zustand: KarteZustand): BildschirmPosition  = (this + zustand.pos * zustand.zoom).round()
-
-
-/**
- *
- */
-public fun BildschirmPosition.zuKarte(zustand: KarteZustand): KartenPosition = (this.toOffset() - zustand.pos) / zustand.zoom
-
-
-/**
- *
- */
-public fun KartenPosition.aufKnoten(daten: KnotenDaten): Boolean = daten.dimension.contains(this)
-
-/**
- *
- */
-public fun KartenPosition.aufVerbindung(daten: VerbindungDaten,knoten: Pair<Knoten,Knoten>): Boolean {
-    return TODO("formel zu ermittelung der entfernung zur Verbindung zur pos definieren")
-}
-
-private fun KnotenPosition.zuKarte(daten: KnotenDaten): KartenPosition {
-    return this.zuKarte(daten.position)
-}
-
-private fun KnotenPosition.zuKarte(zentrum: KartenPosition): KartenPosition {
-    return TODO("definieren, ob der lokale Knotenraum andere skalierung hat als der der Karte.")
-}
 
 
 public fun BildschirmPosition.abstandZuVerbindung(verbindung: Verbindung): Float {
@@ -203,47 +161,6 @@ public fun BildschirmPosition.zuIntOffset(zustand: KarteZustand): IntOffset = th
  * sowohl für das Rendering als auch für die Validierung neuer Verbindungen
  * verwendet.
  */
-enum class AnschlussRichtung {
-    Eingang,
-    Ausgang,
-}
-
-public fun AnschlussRichtung?.istEingang(): Boolean = this == AnschlussRichtung.Eingang
-public fun AnschlussRichtung?.istAusgang(): Boolean = this == AnschlussRichtung.Ausgang
-
-public fun Anschluss.istEingang(): Boolean = this is BasisEingang
-public fun Anschluss.istAusgang(): Boolean = this is BasisAusgang
-
-/**
- * Kante eines Knotens, an der ein Anschluss liegt.
- */
-enum class AnschlussKante {
-    Links,
-    Rechts,
-    Oben,
-    Unten,
-}
-
-public fun AnschlussKante.istVertikal(): Boolean = this == AnschlussKante.Links || this == AnschlussKante.Rechts
-public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben || this == AnschlussKante.Unten
-
-
-/**
- * Positioniert Anschlüsse gleichmäßig an einer Knotenkante.
- */
-@Composable
-public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier, modifier: AnschlussModifier = { daten,idx -> AnschlussModifierStandard }) {
-    val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(/*modifier(anschluss.daten,idx)*/) } }
-    if (kante.istVertikal()) Column(
-        modifier = leisteModifier.fillMaxKante(kante),
-        verticalArrangement = Arrangement.SpaceEvenly,
-    ) { listeComposable.forEach { it() } }
-    else if (kante.istHorizontal()) Row(
-        modifier = leisteModifier.fillMaxKante(kante),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) { listeComposable.forEach { it() } }
-    else TODO()
-}
 
 
 /**
@@ -267,18 +184,18 @@ public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): Knoten
 public fun Pair<KnotenDaten,AnschlussDaten>.pos(): KartenPosition {
     val anteil = relAnteilKante(first.anschlüsse,second.id,second.kante)
     return Offset(
-        x = when (second.kante) {
-            AnschlussKante.Links -> first.position.x
-            AnschlussKante.Rechts -> first.position.x + first.dimension.width
-            AnschlussKante.Oben,
-            AnschlussKante.Unten -> first.position.x + first.dimension.width * anteil
-        },
-        y = when (second.kante) {
-            AnschlussKante.Links,
-            AnschlussKante.Rechts -> first.position.y + first.dimension.height * anteil
-            AnschlussKante.Oben -> first.position.y
-            AnschlussKante.Unten -> first.position.y + first.dimension.height
-        },
+        x = second.kante.wertFür(
+            first.position.x,
+            first.position.x + first.dimension.width,
+            0f,
+            first.position.x + first.dimension.width * anteil
+        ),
+        y = second.kante.wertFür(
+            0f,
+            first.position.y + first.dimension.height * anteil,
+            first.position.y,
+            first.position.y + first.dimension.height
+        ),
     )
 }
 
@@ -305,7 +222,7 @@ public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second
 public fun idReferenz.erhalteErtes(): Pair<String,String> = this.first.first to this.second.first
 public fun idReferenz.erhalteZweites(): Pair<String,String> = this.first.second to this.second.second
 
-public fun idReferenz.istVerbunden(ref: AnschlussReferenz): Boolean = this.hatKnotenId(ref.knotenId) && this.hatAnschlussId(ref.anschlussId)
+//public fun idReferenz.istVerbunden(ref: AnschlussReferenz): Boolean = this.hatKnotenId(ref.knotenId) && this.hatAnschlussId(ref.anschlussId)
 
 public fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)
 public fun idReferenz.istVerbunden(daten: KnotenDaten): Boolean = this.hatKnotenId(daten.id)
@@ -333,66 +250,15 @@ public fun AnschlussKante.tangente(): Offset = when (this) {
     AnschlussKante.Unten -> Offset(0f, 1f)
 }
 
-@Composable
+/*@Composable
 public fun Iterable<Verbindung>.zuComposable(modifier: Modifier = Modifier) {
     if (this.count() == 0) return
     Canvas(modifier = modifier) { forEach { verbindung -> verbindung.zeichnung(this) } }
-}
+}*/
 
 // Knoten
 
 public fun KnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
-
-
-@Composable @JvmName("IterKnoten2Composable")
-public fun Iterable<Knoten>.zuComposable(
-    modifierKnoten: (KnotenDaten) -> Modifier,
-    modifierAnschluss: (KnotenDaten) -> AnschlussModifier,
-) = this.forEach { it.zuComposable(modifierKnoten(it.daten),modifierAnschluss(it.daten),1f) }
-
-// Karten
-
-/**
- * Persistierter Viewport einer Karte.
- *
- * `x` und `y` beschreiben die Verschiebung des Weltkoordinatensystems in
- * Bildschirmkoordinaten. `zoom` beschreibt den Skalierungsfaktor zwischen Welt-
- * und Bildschirmkoordinaten.
- */
-typealias AnsichtsfensterDaten = Triple<Float,Float,Float>
-
-//public fun AnsichtsfensterDaten(zoom: Float, verschiebung: Offset): AnsichtsfensterDaten = Triple(zoom,verschiebung.x,verschiebung.y)
-//public fun StandardAnsicht(): AnsichtsfensterDaten = Triple(1f,0f,0f)
-
-public fun KarteZustand.verschiebe(delta: Offset) { pos += delta }
-public fun KarteZustand.zoome(delta: Float) { zoom += delta }
-public fun KarteZustand.transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
-
-public fun AnsichtsfensterDaten.erhalteVerschoben(von: BildschirmPosition): BildschirmPosition = TODO()
-public fun KarteZustand.erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von + pos * zoom).round()
-public fun AnsichtsfensterDaten.erhalteVerschiebung(): Offset = Offset(this.second,this.third)
-public fun AnsichtsfensterDaten.erhalteZoomfaktor(): Float = first
-
-/**
- *
- */
-public fun KarteZustand.erhalteNachBildPos(
-    pos: BildschirmPosition,
-    knoten: Iterable<Knoten>,
-    verbindung: Iterable<Verbindung>,
-): GraphObjekt? {
-    val kartePos = pos.zuKarte(this) // TODO umrechnung der Bildschirm position [pos] abhängig von ansicht zoom und ansicht verschiebung.
-    var auswahl: GraphObjekt? = null
-    knoten.forEach {
-        if (kartePos.aufKnoten(it.daten)) auswahl = it
-    }
-    verbindung.forEach {
-        val k = knoten.filter { k -> it.daten.ids.hatKnotenId(k.daten.id) }
-        if (kartePos.aufVerbindung(it.daten,k[0] to k[1])) auswahl = it
-    }
-
-    return auswahl
-}
 
 /**
  * Callback fuer eine geaenderte Knotenposition in Weltkoordinaten.
@@ -417,13 +283,6 @@ typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
 // Modifier
 
 public fun radius(kante: AnschlussKante, radius: Dp = (2.5f).dp): Dp = if (kante == AnschlussKante.Rechts || kante == AnschlussKante.Unten) radius else -radius
-
-public fun alignment(kante: AnschlussKante): Alignment = when(kante) {
-    AnschlussKante.Links -> Alignment.CenterStart
-    AnschlussKante.Rechts -> Alignment.CenterEnd
-    AnschlussKante.Oben -> Alignment.TopCenter
-    AnschlussKante.Unten -> Alignment.BottomCenter
-}
 
 public fun Modifier.fillMaxKante(kante: AnschlussKante,@FloatRange fraction: Float = 1f): Modifier = if (kante.istVertikal()) fillMaxHeight(fraction) else fillMaxWidth(fraction)
 

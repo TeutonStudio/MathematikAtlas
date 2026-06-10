@@ -15,24 +15,18 @@ import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
-import com.TeutonStudio.KnotenKartenVerwalter.KartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import com.TeutonStudio.KnotenKartenVerwalter.abstandZuBezier
-import com.TeutonStudio.KnotenKartenVerwalter.abstandZuVerbindung
-import com.TeutonStudio.KnotenKartenVerwalter.aufKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
-import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
-import com.TeutonStudio.KnotenKartenVerwalter.tangente
-import com.TeutonStudio.KnotenKartenVerwalter.zuKarte
-import kotlin.math.hypot
-import kotlin.math.max
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKartenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.erzeugeKarte
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 
-private const val ANSCHLUSS_TREFFER_RADIUS = 14f
 private const val VERBINDUNG_TREFFER_RADIUS = 10f
 
 /**
@@ -62,15 +56,14 @@ class Graph(
 
     public fun keinKontext() { ctx = "" to IntOffset.Zero }
 
-    public fun erhalteVerbindungNachKlick(pos: Offset): Pair<Verbindung,Float>? {
+    public fun erhalteVerbindungNachKlick(pos: KartenPosition): Pair<Verbindung, Offset>? {
         val liste = inhalt.filterIsInstance<Verbindung>().map {
-            val bezier = listOf(it.start.value,it.c1(),it.c2(),it.ende.value)
-            it to pos.abstandZuBezier(bezier)
+            it to it.abstand(pos)
         }; if (liste.isEmpty()) return null
-        return liste.minBy { it.second }
+        return liste.minBy { it.second.getDistanceSquared() }
     }
 
-    public fun wähle(wahl: AuswahlDaten) {
+    public fun wähle(wahl: AuswahlDaten = AuswahlDaten.LEER) {
         karte.zustand.auswahl.value = wahl
         karte.onAuswahlÄndern(wahl)
     }
@@ -88,7 +81,7 @@ class Graph(
         return nA to (p-nA.erhaltePosition()).getDistanceSquared()
     }
 
-    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
+//    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
     public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.erhaltePosition() - pos).getDistanceSquared() }
 
     @Composable

@@ -1,7 +1,5 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
-import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 
 /**
  * Zentrale Umrechnungen zwischen Weltkoordinaten und Bildschirmkoordinaten.
