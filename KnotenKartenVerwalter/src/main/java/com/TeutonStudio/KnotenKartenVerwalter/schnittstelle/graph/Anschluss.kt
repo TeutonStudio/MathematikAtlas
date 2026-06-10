@@ -100,6 +100,7 @@ open class BasisAnschluss(
 
     private var _dragPos: Offset by mutableStateOf(Offset.Zero)
     private val dragPos: MutableState<Offset> = mutableStateOf(Offset.Zero)
+
     @Composable
     override fun zuComposable(modifier: Modifier) {
         val farbe = Color.Black
@@ -123,15 +124,15 @@ open class BasisAnschluss(
                         )
                         val verbindung = BasisVerbindung(graph,vDaten,start,ende)
 
-                        verbindung.startKante = daten.kante
+                        verbindung.startKante = daten.kante // TODO Warum links rechts tangenten falsch
                         graph.karte.pseudoVerbindung.value = verbindung
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val nA = graph.inhalt.filterIsInstance<Anschluss>().filter { it.besitzer != besitzer }.minBy {
-                            (it.erhaltePosition().zuBild(graph.karte.zustand.ansicht).toOffset() - change.position).getDistanceSquared()
+                            (it.erhaltePosition().zuBild(graph.karte.zustand).toOffset() - change.position).getDistanceSquared()
                         }
-                        val dist = (nA.erhaltePosition().zuBild(graph.karte.zustand.ansicht).toOffset() - change.position).getDistanceSquared()
+                        val dist = (nA.erhaltePosition().zuBild(graph.karte.zustand).toOffset() - change.position).getDistanceSquared()
                         if (dist < 2) println(nA.daten.label)
                         _dragPos += dragAmount
                         dragPos.value = _dragPos
@@ -145,27 +146,6 @@ open class BasisAnschluss(
                     },
                 )
             }
-
-/*                .draggable2D(
-                rememberDraggable2DState({
-                    // TODO snap einbauen, nächsten abschluss und abstand nach position bestimmen
-                    val nA = graph.erhaltePseudoAnschlussZiel()
-                    _dragPos += it
-                    dragPos.value = _dragPos
-//        dragPos.value = if (nA.second < 2) nA.first.erhaltePosition() else _dragPos
-                }),
-                onDragStarted = {
-                    val start = derivedStateOf { erhaltePosition() }
-                    _dragPos = start.value; dragPos.value = _dragPos
-                    val ende = derivedStateOf { dragPos.value }
-                    val v = BasisVerbindung(graph, VerbindungDaten(
-                        "pseudo", idReferenz(besitzer.daten to daten,besitzer.daten to daten)
-                    ),start,ende)
-                    v.startKante = daten.kante
-                    graph.erhalteKarte().pseudoVerbindung.value = v
-                },
-                onDragStopped = { graph.erhalteKarte().pseudoVerbindung.value = null }
-            )*/
         ) {
             if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
         }

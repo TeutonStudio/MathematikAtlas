@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScopeMarker
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
@@ -38,6 +39,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.RichtungsAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteTransformiert
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeVerbindung
 import com.TeutonStudio.KnotenKartenVerwalter.istEingang
 import com.TeutonStudio.KnotenKartenVerwalter.tangente
@@ -58,8 +60,6 @@ abstract class Verbindung(
     _graph: Graph
 ): GraphObjekt(_graph) {
     public abstract override val daten: VerbindungDaten
-//    public val von: Anschluss?
-//    public val zu: Anschluss?
     public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val start: State<KartenPosition>
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
@@ -70,22 +70,28 @@ abstract class Verbindung(
 
     public abstract val zeichnung: DrawScope.() -> Unit
 
-    public fun c1(): Offset {
+    public fun c1(
+        _start: KartenPosition = graph.karte.zustand.erhalteTransformiert(start.value).toOffset(),
+        _ende: KartenPosition = graph.karte.zustand.erhalteTransformiert(ende.value).toOffset(),
+    ): Offset {
         val startRichtung = startKante.tangente()
-        val dx = ende.value.x - start.value.x
-        val dy = ende.value.y - start.value.y
+        val dx = _ende.x - _start.x
+        val dy = _ende.y - _start.y
         val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
         val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
-        return start.value + startRichtung * kontrollAbstand
+        return _start + startRichtung * kontrollAbstand
     }
 
-    public fun c2(): Offset {
+    public fun c2(
+        _start: KartenPosition = graph.karte.zustand.erhalteTransformiert(start.value).toOffset(),
+        _ende: KartenPosition = graph.karte.zustand.erhalteTransformiert(ende.value).toOffset(),
+    ): Offset {
         val endeRichtung = endeKante.tangente()
-        val dx = ende.value.x - start.value.x
-        val dy = ende.value.y - start.value.y
+        val dx = _ende.x - _start.x
+        val dy = _ende.y - _start.y
         val distanz = hypot(dx.toDouble(), dy.toDouble()).toFloat()
         val kontrollAbstand = max(48f, distanz * 0.35f).coerceAtMost(240f)
-        return ende.value + endeRichtung * kontrollAbstand
+        return _ende + endeRichtung * kontrollAbstand
     }
 
     @Composable
@@ -119,8 +125,11 @@ open class BasisVerbindung(
 
     private fun erhaltePfad(): Path = Path().apply {
         val cubic = { o1: Offset, o2: Offset, o3:  Offset -> cubicTo(o1.x,o1.y,o2.x,o2.y,o3.x,o3.y) }
-        moveTo(start.value.x, start.value.y)
-        cubic(c1(),c2(),ende.value)
+        val move = { p: Offset -> moveTo(p.x,p.y) }
+        val _start = graph.karte.zustand.erhalteTransformiert(start.value).toOffset()
+        val _ende = graph.karte.zustand.erhalteTransformiert(ende.value).toOffset()
+        move(_start)
+        cubic(c1(_start,_ende),c2(_start,_ende),_ende)
     }
 
     public companion object {
@@ -135,10 +144,10 @@ open class BasisVerbindung(
  * Sie weiss nur: Startanschluss, aktuelle Pointerposition, Zielsuche,
  * Kompatibilitaet, Verbindung erzeugen.
  */
-internal data class VerbindungsDrag(
+/*internal data class VerbindungsDrag(
     val start: AnschlussReferenz,
     val aktuellePosition: BildschirmPosition,
-)
+)*/
 
 /**
  * Baut die Vorschau-Verbindung fuer den Canvas-Layer.
@@ -146,7 +155,7 @@ internal data class VerbindungsDrag(
  * Wenn der Drag an einem Eingang startet, wird die Vorschau visuell gedreht,
  * damit die Bezier-Tangenten weiterhin passend aussehen.
  */
-internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, BildschirmPosition, BildschirmPosition> {
+/*internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, BildschirmPosition, BildschirmPosition> {
     val startPosition = if (start.richtung.istEingang()) { aktuellePosition } else { start.position }
     val endePosition = if (start.richtung == AnschlussRichtung.Eingang) { start.position } else { aktuellePosition }
 
@@ -158,80 +167,13 @@ internal fun VerbindungsDrag.zuVorschau(): Triple<VerbindungDaten, BildschirmPos
         startPosition,
         endePosition,
     )
-}
+}*/
 
-/**
- * Pointer-Interaktion fuer das Ziehen einer Verbindung ab einem Anschluss.
- *
- * Der Graph wird als Lambda uebergeben, damit der Pointer-Handler auch nach
- * Recompositionen aktuelle Knoten, Anschluesse und Verbindungen sieht.
- */
-/*internal fun Modifier.verbindungsZiehen(
-    start: AnschlussReferenz,
-    graph: () -> Karte,
-    onDragAendern: (VerbindungsDrag?) -> Unit,
-    onZiehtAnschlussAendern: (Boolean) -> Unit,
-    onBlockiereHintergrundGestenAendern: (Boolean) -> Unit,
-    onVerbindungErstellen: (VerbindungDaten) -> Unit,
-//    regeln: VerbindungsRegeln = VerbindungsRegeln(),
-    maxZielAbstand: Float = 28f,
-): Modifier =
-    pointerInput(start.knotenId, start.anschlussId, start.position) {
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false)
-            var lokalerDrag = VerbindungsDrag(
-                start = start,
-                aktuellePosition = start.position,
-            )
-
-            try {
-                onZiehtAnschlussAendern(true)
-                onBlockiereHintergrundGestenAendern(true)
-                onDragAendern(lokalerDrag)
-
-                down.consume()
-
-                drag(down.id) { change ->
-                    change.consume()
-                    change.scaleFactor // TODO für zoom verwenden
-                    change.panOffset // TODO vlt besser als selbst auszurechnen
-                    val rel = change.position - change.previousPosition // TODO vlt. panOffset
-                    lokalerDrag = lokalerDrag.copy(
-                        aktuellePosition = lokalerDrag.aktuellePosition + IntOffset(rel.x.toInt(),rel.y.toInt())
-                    )
-
-                    onDragAendern(lokalerDrag)
-                }
-
-                val aktuellerGraph = graph()
-                val ziel = lokalerDrag.aktuellePosition.naechsterAnschluss(
-                    anschluesse = aktuellerGraph.daten, //.erhalteAnschlüsse(referenz),
-                    maxAbstand = maxZielAbstand,
-                )
-
-                if (ziel != null) {
-                    val verbindung = lokalerDrag.start.zuVerbindungOderNull(
-                        ziel = ziel,
-                        vorhandeneVerbindungen = aktuellerGraph.daten.verbindungen,
-//                        regeln = regeln,
-                    )
-
-                    if (verbindung != null) {
-                        onVerbindungErstellen(verbindung)
-                    }
-                }
-            } finally {
-                onDragAendern(null)
-                onZiehtAnschlussAendern(false)
-                onBlockiereHintergrundGestenAendern(false)
-            }
-        }
-    }*/
 
 /**
  * Erstellt eine Verbindung, falls Start und Ziel fachlich kompatibel sind.
  */
-internal fun AnschlussReferenz.zuVerbindungOderNull(
+/*internal fun AnschlussReferenz.zuVerbindungOderNull(
     ziel: AnschlussReferenz,
     vorhandeneVerbindungen: List<VerbindungDaten>,
 //    regeln: VerbindungsRegeln = VerbindungsRegeln(),
@@ -245,33 +187,33 @@ internal fun AnschlussReferenz.zuVerbindungOderNull(
     val verbindung = VerbindungDaten(
         id = "verbindung-${quelle.knotenId}-${quelle.anschlussId}-${ende.knotenId}-${ende.anschlussId}",
         ids = (quelle.knotenId to ende.knotenId) to (quelle.anschlussId to ende.anschlussId),
-    ) /*.mitTypPruefung(
+    ) *//*.mitTypPruefung(
         quellTyp = quelle.zahlenTyp,
         zielTyp = ende.zahlenTyp,
-    )*/
+    )*//*
 
-/*    val erlaubt = regeln.darfErstellen( TODO
+*//*    val erlaubt = regeln.darfErstellen( TODO
         vorhandeneVerbindungen = vorhandeneVerbindungen,
         neueVerbindung = verbindung,
         quellRichtung = quelle.richtung,
         zielRichtung = ende.richtung,
-    )*/
+    )*//*
 
     return if (true) verbindung else null
-}
+}*/
 
 /**
  * Loest alle gerichteten Anschluesse eines Knotens in Bildschirmpositionen auf.
  */
-internal fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<Pair<AnschlussDaten,KnotenDaten>> =
+/*internal fun Knoten.anschlussReferenzen(zustand: KarteZustand): List<Pair<AnschlussDaten,KnotenDaten>> =
     daten.anschlüsse.entries
         .sortedWith(compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id })
-        .map { (anschluss, idx) -> Pair(anschluss, daten) }
+        .map { (anschluss, idx) -> Pair(anschluss, daten) }*/
 
 /**
  * Berechnet die Bildschirmposition eines einzelnen Anschlusses.
  */
-internal fun Knoten.anschlussReferenz(
+/*internal fun Knoten.anschlussReferenz(
     anschluss: AnschlussDaten,
     zustand: KarteZustand,
 ): AnschlussReferenz? {
@@ -307,14 +249,14 @@ internal fun Knoten.anschlussReferenz(
         anschlussId = anschluss.id,
         richtung = richtung,
         kante = anschluss.kante,
-        position = kartePos.zuBild(zustand.ansicht),
+        position = kartePos.zuBild(zustand),
     )
-}
+}*/
 
 /**
  * Sucht den naechsten Anschluss zu einer Bildschirmposition.
  */
-internal fun BildschirmPosition.naechsterAnschluss(
+/*internal fun BildschirmPosition.naechsterAnschluss(
     anschluesse: List<AnschlussReferenz>,
     maxAbstand: Float,
 ): AnschlussReferenz? =
@@ -329,4 +271,4 @@ internal fun KartenTreffer.zuAuswahl(): AuswahlDaten = when (this) {
     is KartenTreffer.Knoten -> AuswahlDaten(knotenIds = setOf(knotenId))
     is KartenTreffer.Anschluss -> AuswahlDaten(knotenIds = setOf(knotenId))
     is KartenTreffer.Verbindung -> AuswahlDaten(verbindungIds = setOf(verbindungId))
-}
+}*/

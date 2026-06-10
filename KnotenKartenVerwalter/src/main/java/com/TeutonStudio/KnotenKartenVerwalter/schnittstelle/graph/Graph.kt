@@ -25,6 +25,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.aufKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeKarte
 import com.TeutonStudio.KnotenKartenVerwalter.tangente
 import com.TeutonStudio.KnotenKartenVerwalter.zuKarte
@@ -44,7 +45,7 @@ private const val VERBINDUNG_TREFFER_RADIUS = 10f
  */
 class Graph(
     private val daten: KarteDaten,
-    private val zustand: KarteZustand = KarteZustand(),
+    private val zustand: KarteZustand,
     private val aktualisierung: KartenAktualisierung = { kId,pos -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onKontextAktion: KontextAktionAusführen = {},
@@ -55,7 +56,7 @@ class Graph(
     val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern)
 
     public val selektiert
-        get() = zustand.auswahl
+        get() = karte.zustand.auswahl
     public val selektiertFarbe = Color(0xFF2563EB)
     public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
 
@@ -70,8 +71,15 @@ class Graph(
     }
 
     public fun wähle(wahl: AuswahlDaten) {
-        zustand.auswahl = wahl
+        karte.zustand.auswahl = wahl
         karte.onAuswahlÄndern(wahl)
+    }
+
+    public fun verschiebeKnoten(id: String, um: Offset) {
+        val k = karte.knoten.filter { it.daten.id == id }
+        if (k.isEmpty()) return
+        k[0].daten.position += um / karte.zustand.zoom
+//        karte.aktualisierung(id,nach)
     }
 
     public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss,Float> {
@@ -80,12 +88,12 @@ class Graph(
         return nA to (p-nA.erhaltePosition()).getDistanceSquared()
     }
 
-    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand.ansicht))
+    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
     public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.erhaltePosition() - pos).getDistanceSquared() }
 
-    public fun erhalteNachBildPos(
+/*    public fun erhalteNachBildPos(
         pos: BildschirmPosition,
-        zustand: KarteZustand = this.zustand,
+        zustand: KarteZustand = karte.zustand,
     ): GraphObjekt {
         val karte = inhalt
             .asReversed()
@@ -93,7 +101,7 @@ class Graph(
             .firstOrNull()
             ?: error("Graph enthält keine Karte")
 
-        val kartePos = pos.zuKarte(zustand.ansicht)
+        val kartePos = pos.zuKarte(zustand)
 
         // 1. Anschlüsse zuerst, weil sie klein sind und am Knotenrand liegen.
         inhalt.asReversed().filterIsInstance<Anschluss>().firstOrNull { anschluss ->
@@ -117,64 +125,8 @@ class Graph(
 
         // 4. Hintergrund/Karte.
         return karte
-    }
+    }*/
 
     @Composable
-    public fun zuComposable(modifier: Modifier) {
-/*        val karte = remember(daten) {
-            kartenFabrik.erzeugeKarte(
-                graph = this,
-                daten = daten,
-                zustand = zustand,
-                aktualisierung = { kId,pos ->
-                    val knoten = daten.knoten.filter { it.id == kId }
-                    if (knoten.size != 1) TODO("Knoten ID Fehler")
-                    knoten[0].position = pos
-                    aktualisierung(kId,pos)
-//        scope.invalid() // TODO wie??
-                },
-                onVerbindungErstellen = onVerbindungErstellen,
-                onKontextAktion = onKontextAktion,
-                onAuswahlÄndern = { a ->
-//                    daten.knoten.forEach {
-//                        it.ausgewaehlt = it.id in a.knotenIds
-//                    }
-//                    daten.verbindungen.forEach {
-//                        it.ausgewaehlt = it.id in a.verbindungIds
-//                    }
-                    onAuswahlÄndern(a)
-                },
-            )
-        }*/
-        karte.zuComposable(modifier)
-    }
+    public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)
 }
-
-/**
- * Kompakter Einstieg für alte Aufrufstellen:
- *
- * karte.zuGraphComposable(...)
- */
-/*
-@Composable
-fun KarteDaten.zuGraphComposable(
-    modifier: Modifier = Modifier,
-    zustand: KarteZustand = KarteZustand(),
-    knotenKlassen: KnotenFabrik = BasisKnotenFabrik,
-    verbindungArten: VerbindungArten = VerbindungArten.Standard,
-    aktualisierung: KartenAktualisierung = { _, _ -> },
-    onVerbindungErstellen: (VerbindungDaten) -> Unit = {},
-    onKontextAktion: (KartenKontextAktion) -> Unit = {},
-    onAuswahlÄndern: (AuswahlDaten) -> Unit = {},
-) {
-    Graph(
-        daten = this,
-        zustand = zustand,
-        knotenKlassen = knotenKlassen,
-        verbindungArten = verbindungArten,
-        aktualisierung = aktualisierung,
-        onVerbindungErstellen = onVerbindungErstellen,
-        onKontextAktion = onKontextAktion,
-        onAuswahlÄndern = onAuswahlÄndern,
-    ).zuComposable(modifier)
-}*/

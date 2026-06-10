@@ -52,6 +52,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.AusgabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.EingabeDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteSize
+import com.TeutonStudio.KnotenKartenVerwalter.erhalteTransformiert
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteZoomfaktor
 import com.TeutonStudio.KnotenKartenVerwalter.erzeugeAnschluss
 import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
@@ -90,8 +91,6 @@ abstract class Knoten(
     public val anschlüsse by lazy { daten.anschlüsse.entries.mapNotNull {
         anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value }
     }.toMap() }
-    val bildPos get() = daten.position.zuBild(besitzer.zustand.ansicht)
-    val boxModiRect get() = { d: Density -> Modifier.offset { bildPos }.size( size = with(d) { (daten.erhalteSize() * zoomFaktor()).toDpSize() }) }
 
     @Composable
     public fun zuComposable(
@@ -99,25 +98,30 @@ abstract class Knoten(
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
     ) {
-        Box(modifier = boxModiRect(LocalDensity.current).draggable2D(
-            enabled = daten.beweglich,
-            state = rememberDraggable2DState {
-                besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
-                graph.wähle(daten.zuAuswahl())
-                graph.keinKontext()
-            },
-        ).pointerInput(daten.id) {
-            detectTapGestures(
-                onLongPress = { graph.ctx = daten.id to it.round() },
-                onTap = {
+        Box(modifier = Modifier
+            .offset { graph.karte.zustand.erhalteTransformiert(daten.position) }
+            .size(with(LocalDensity.current) { (daten.erhalteSize() * zoomFaktor()).toDpSize() })
+            .draggable2D(
+                enabled = daten.beweglich,
+                state = rememberDraggable2DState {
+                    graph.verschiebeKnoten(daten.id,it)
                     graph.wähle(daten.zuAuswahl())
                     graph.keinKontext()
-                },
-            )
-        }) {
+                }, )
+            .pointerInput(daten.id) {
+                detectTapGestures(
+                    onLongPress = { graph.ctx = daten.id to it.round() },
+                    onTap = {
+                        graph.wähle(daten.zuAuswahl())
+                        graph.keinKontext()
+                    },
+                ) }
+        ) {
             Inhalt(modifierKnoten)
             AnschlussKante.entries.forEach { kante ->
-                val modi = Modifier.fillMaxKante(kante).offsetKante(kante,radius(kante))
+                val modi = Modifier
+                    .fillMaxKante(kante)
+                    .offsetKante(kante, radius(kante))
                 Box(
                     modifier = modi.align(alignment(kante)), //.offset(x = (-5f * skalierung).dp),
                     contentAlignment = Alignment.Center,
@@ -154,7 +158,7 @@ abstract class Knoten(
 
     }
 
-    private fun zoomFaktor(): Float = besitzer.zustand.ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
+    private fun zoomFaktor(): Float = graph.karte.zustand.zoom.coerceAtLeast(0.01f)
 
     @Composable
     override fun zuComposable(modifier: Modifier) = TODO("Falsche Methode aufgerufen")

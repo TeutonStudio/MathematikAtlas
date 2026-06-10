@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.fix
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -9,7 +10,6 @@ import androidx.compose.ui.unit.IntSize
 import com.TeutonStudio.KnotenKartenVerwalter.AnsichtsfensterDaten
 import com.TeutonStudio.KnotenKartenVerwalter.KartenArt
 import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
-import com.TeutonStudio.KnotenKartenVerwalter.StandardAnsicht
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
 
@@ -33,32 +33,27 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisKarte
  * Knotenpositionen weiterhin in Weltkoordinaten gespeichert werden.
  */
 open class KarteZustand(
-    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
+//    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
     var auswahl: AuswahlDaten = AuswahlDaten(),
 ) {
-    var ansicht by mutableStateOf(ansicht)
+    var zoom by mutableFloatStateOf(1f)
+    var pos by mutableStateOf(Offset.Zero)
+//    var ansicht by mutableStateOf(ansicht)
 
     constructor(
         zustand: KarteZustand,
-        ansicht: AnsichtsfensterDaten,
+//        ansicht: AnsichtsfensterDaten,
         zeigeÜbersicht: Boolean? = null,
         zeigeKontrollLeiste: Boolean? = null,
         auswahl: AuswahlDaten? = null,
     ): this(
-        ansicht ?: zustand.ansicht,
+//        ansicht ?: zustand.ansicht,
         zeigeÜbersicht ?: zustand.zeigeÜbersicht,
         zeigeKontrollLeiste ?: zustand.zeigeKontrollLeiste,
         auswahl ?: zustand.auswahl,
     )
-
-/*    fun copy(
-        ansicht: AnsichtsfensterDaten = this.ansicht,
-        zeigeÜbersicht: Boolean = this.zeigeÜbersicht,
-        zeigeKontrollLeiste: Boolean = this.zeigeKontrollLeiste,
-        auswahl: AuswahlDaten = this.auswahl,
-    ): KarteZustand = KarteZustand(ansicht, zeigeÜbersicht, zeigeKontrollLeiste, auswahl)*/
 }
 
 open class KartenCacheDaten() {
@@ -84,7 +79,7 @@ open class KarteDaten(
     public val cache: KartenCacheDaten = KartenCacheDaten()
     public val knoten: MutableList<KnotenDaten> = initialKnoten.toMutableList()
     public val verbindungen: MutableList<VerbindungDaten> = initialVerbindungen.toMutableList()
-    public var ansicht: AnsichtsfensterDaten = StandardAnsicht()
+//    public var ansicht: AnsichtsfensterDaten = StandardAnsicht()
 
     constructor(
         daten: KarteDaten,
@@ -102,7 +97,7 @@ open class KarteDaten(
         initialKnoten ?: daten.initialKnoten,
         initialVerbindungen ?: daten.initialVerbindungen,
     ) {
-        this.ansicht = ansichtsfenster ?: daten.ansicht
+//        this.ansicht = ansichtsfenster ?: daten.ansicht
 //        this.cache = cache ?: daten.cache // TODO
 
     }

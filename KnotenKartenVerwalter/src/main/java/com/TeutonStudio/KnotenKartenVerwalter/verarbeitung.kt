@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toIntRect
 import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.unit.toSize
@@ -82,29 +83,13 @@ public fun Rechteck(breite: Float, tiefe: Float, position: KartenPosition): Rech
 /**
  *
  */
-public fun KartenPosition.zuBild(ansicht: AnsichtsfensterDaten): BildschirmPosition {
-    val zoom = ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
-    val verschiebung = ansicht.erhalteVerschiebung()
-
-    return IntOffset(
-        x = (x * zoom + verschiebung.x).roundToInt(),
-        y = (y * zoom + verschiebung.y).roundToInt(),
-    )
-}
+public fun KartenPosition.zuBild(zustand: KarteZustand): BildschirmPosition  = (this + zustand.pos * zustand.zoom).round()
 
 
 /**
  *
  */
-public fun BildschirmPosition.zuKarte(ansicht: AnsichtsfensterDaten): KartenPosition {
-    val zoom = ansicht.erhalteZoomfaktor().coerceAtLeast(0.01f)
-    val verschiebung = ansicht.erhalteVerschiebung()
-
-    return Offset(
-        x = (x - verschiebung.x) / zoom,
-        y = (y - verschiebung.y) / zoom,
-    )
-}
+public fun BildschirmPosition.zuKarte(zustand: KarteZustand): KartenPosition = (this.toOffset() - zustand.pos) / zustand.zoom
 
 
 /**
@@ -200,10 +185,7 @@ fun Offset.abstandZuBezier(bezier: List<Offset>, schritte: Int = 32): Float {
  * Diese Hilfsfunktion wird von älterem UI-Code verwendet. Neue Kartenlogik nutzt
  * zusätzlich die Transformationsfunktionen in `schnittstelle/Karte.kt`.
  */
-public fun BildschirmPosition.zuIntOffset(zustand: KarteZustand): IntOffset = IntOffset(
-    x = (this.x * zustand.ansicht.erhalteZoomfaktor() + zustand.ansicht.erhalteVerschiebung().x).roundToInt(),
-    y = (this.y * zustand.ansicht.erhalteZoomfaktor() + zustand.ansicht.erhalteVerschiebung().y).roundToInt(),
-)
+public fun BildschirmPosition.zuIntOffset(zustand: KarteZustand): IntOffset = this + (zustand.pos * zustand.zoom).round()
 
 /**
  * Kurzform für eine reine Verschiebung ohne expliziten Zoom.
@@ -379,14 +361,15 @@ public fun Iterable<Knoten>.zuComposable(
  */
 typealias AnsichtsfensterDaten = Triple<Float,Float,Float>
 
-public fun AnsichtsfensterDaten(zoom: Float, verschiebung: Offset): AnsichtsfensterDaten = Triple(zoom,verschiebung.x,verschiebung.y)
-public fun StandardAnsicht(): AnsichtsfensterDaten = Triple(1f,0f,0f)
+//public fun AnsichtsfensterDaten(zoom: Float, verschiebung: Offset): AnsichtsfensterDaten = Triple(zoom,verschiebung.x,verschiebung.y)
+//public fun StandardAnsicht(): AnsichtsfensterDaten = Triple(1f,0f,0f)
 
-public fun KarteZustand.verschiebe(delta: Offset) { ansicht = Triple(ansicht.first,ansicht.second + delta.x, ansicht.third + delta.y) }
-public fun KarteZustand.zoome(delta: Float) { ansicht = Triple(ansicht.first + delta,ansicht.second,ansicht.third) }
-public fun KarteZustand.transformiere(verschiebung: Offset,zoom: Float) { ansicht = Triple(ansicht.first + zoom,ansicht.second + verschiebung.x, ansicht.third + verschiebung.y) }
+public fun KarteZustand.verschiebe(delta: Offset) { pos += delta }
+public fun KarteZustand.zoome(delta: Float) { zoom += delta }
+public fun KarteZustand.transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
 
 public fun AnsichtsfensterDaten.erhalteVerschoben(von: BildschirmPosition): BildschirmPosition = TODO()
+public fun KarteZustand.erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von + pos * zoom).round()
 public fun AnsichtsfensterDaten.erhalteVerschiebung(): Offset = Offset(this.second,this.third)
 public fun AnsichtsfensterDaten.erhalteZoomfaktor(): Float = first
 
@@ -398,7 +381,7 @@ public fun KarteZustand.erhalteNachBildPos(
     knoten: Iterable<Knoten>,
     verbindung: Iterable<Verbindung>,
 ): GraphObjekt? {
-    val kartePos = pos.zuKarte(this.ansicht) // TODO umrechnung der Bildschirm position [pos] abhängig von ansicht zoom und ansicht verschiebung.
+    val kartePos = pos.zuKarte(this) // TODO umrechnung der Bildschirm position [pos] abhängig von ansicht zoom und ansicht verschiebung.
     var auswahl: GraphObjekt? = null
     knoten.forEach {
         if (kartePos.aufKnoten(it.daten)) auswahl = it

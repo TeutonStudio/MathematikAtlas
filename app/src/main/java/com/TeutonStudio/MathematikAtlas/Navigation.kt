@@ -152,10 +152,16 @@ private fun KnotenKartenTestAnwendung() {
             .background(Color(0xFFF3F4F6))
             .padding(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
     ) {
+        val z = KarteZustand(
+            zeigeÜbersicht = true,
+            zeigeKontrollLeiste = true,
+            auswahl = auswahl,
+        )
         TestSeitenLeiste(
             karte = karte,
             auswahl = auswahl,
             status = status,
+            zustand = z,
             onNeueKarte = {
                 karte = testKarte()
                 auswahl = AuswahlDaten()
@@ -183,11 +189,7 @@ private fun KnotenKartenTestAnwendung() {
         ) {
             Graph(
                 daten = karte,
-                zustand = KarteZustand(
-                    zeigeÜbersicht = true,
-                    zeigeKontrollLeiste = true,
-                    auswahl = auswahl,
-                ),
+                zustand = z,
                 aktualisierung = ::verschiebeKnoten,
                 onVerbindungErstellen = ::erstelleVerbindung,
                 onKontextAktion = ::fuehreKontextAktionAus,
@@ -205,6 +207,7 @@ private fun TestSeitenLeiste(
     karte: KarteDaten,
     auswahl: AuswahlDaten,
     status: String,
+    zustand: KarteZustand,
     onNeueKarte: () -> Unit,
     onAuswahlLoeschen: () -> Unit,
     onAuswahlLeeren: () -> Unit,
@@ -218,6 +221,7 @@ private fun TestSeitenLeiste(
             .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
             .padding(12.dp),
     ) {
+        BasicText(zustand.pos.toString())
         BasicText(
             text = "Graph Test",
             style = TextStyle(

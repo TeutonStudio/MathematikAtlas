@@ -144,8 +144,8 @@ abstract class Karte(
         val endeEntry = refListe[it.ids.erhalteZweites()]
 
         if (startEntry == null || endeEntry == null) return@mapNotNull null
-        val start = derivedStateOf { startEntry.toPair().wechsle().pos().zuBild(zustand.ansicht).toOffset() }
-        val ende = derivedStateOf { endeEntry.toPair().wechsle().pos().zuBild(zustand.ansicht).toOffset() }
+        val start = derivedStateOf { startEntry.toPair().wechsle().pos() }
+        val ende = derivedStateOf { endeEntry.toPair().wechsle().pos() }
         verbindungFabrik.erzeugeVerbindung(graph,it,start,ende)
     } }
 
@@ -165,24 +165,19 @@ abstract class Karte(
                         onTap = {
                             // TODO herausfinden, wie ich it. tranformieren muss
                             val v = graph.erhalteVerbindungNachKlick(it)
+                            graph.wähle(AuswahlDaten.LEER)
                             if (v != null && v.second < 10f) {
                                 printLogCat(v.first, v.second)
 //                                v.first.daten.ausgewaehlt = true
-                                onAuswahlÄndern(v.first.daten.zuAuswahl())
+                                graph.wähle(v.first.daten.zuAuswahl())
                             }
-                            onAuswahlÄndern(AuswahlDaten.LEER)
                             graph.keinKontext()
                         },
                         onLongPress = { graph.ctx = daten.id to it.round() },
                     )
                 }
         ) {
-            verbindungen.zuComposable(Modifier.matchParentSize()/*.pointerInput(verbindungen.joinToString { it.daten.id }) {
-                detectTapGestures( // TODO Verbindung nach klickpunkt ermitteln
-                    onTap = {},
-                    onLongPress = {}
-                )
-            }*/)
+            verbindungen.zuComposable()
             pseudoVerbindung.value?.zuComposable()
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
             if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
@@ -213,33 +208,6 @@ open class BasisKarte(
 
     override val pseudoVerbindung = mutableStateOf<Verbindung?>(null)
 
-/*    @Composable
-    override fun zuComposable(modifier: Modifier) {
-        var ctx by remember { mutableStateOf(false) }
-        var ctxPos by remember { mutableStateOf(IntOffset.Zero) }
-        Box(
-            modifier = modifier.draggable2D(
-                state = rememberDraggable2DState {
-                    zustand.verschiebe(it)
-                    onAuswahlÄndern(AuswahlDaten.LEER)
-                    ctx = false
-                }
-            ).pointerInput(daten.id) {
-                detectTapGestures(
-                    onTap = {
-                        onAuswahlÄndern(AuswahlDaten.LEER)
-                        ctx = false
-                    },
-                    onLongPress = { ctx = true; ctxPos = it.round() },
-                )
-            }
-        ) {
-            verbindungen.zuComposable({ d -> Modifier.fillMaxSize() })
-            knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
-            if (ctx) öffneKontext(ctxPos)
-        }
-    }*/
-
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(
@@ -255,32 +223,3 @@ open class BasisKarte(
         public const val KARTEN_ART: KnotenArt = "default"
     }
 }
-
-/**
- * Kompatibilitaets-Bruecke fuer bisherigen Aufruf:
- *
- *     daten.zuComposable(...)
- */
-/*
-@Composable
-fun KarteDaten.zuComposable(
-    modifier: Modifier = Modifier,
-    zustand: KarteZustand = KarteZustand(),
-    knotenKlassen: KnotenFabrik = BasisKnotenFabrik,
-    verbindungArten: VerbindungArten = VerbindungArten.Standard,
-    aktualisierung: KartenAktualisierung,
-    onVerbindungErstellen: VerbindungErstellen = {},
-    onKontextAktion: KontextAktionAusführen = {},
-    onAuswahlÄndern: AuswahlÄndern = {},
-) {
-    BasisKarte(
-        daten = this,
-        zustand = zustand,
-        knotenKlassen = knotenKlassen,
-        verbindungArten = verbindungArten,
-        aktualisierung = aktualisierung,
-        onVerbindungErstellen = onVerbindungErstellen,
-        onKontextAktion = onKontextAktion,
-        onAuswahlÄndern = onAuswahlÄndern,
-    ).zuComposable(modifier)
-}*/
