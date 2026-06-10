@@ -147,7 +147,10 @@ abstract class Karte(
         verbindungFabrik.erzeugeVerbindung(graph,it,
             derivedStateOf { startEntry.toPair().wechsle().pos() },
             derivedStateOf { endeEntry.toPair().wechsle().pos() },
-        )
+        )?.apply {
+            startKante = startEntry.key.kante
+            endeKante = endeEntry.key.kante
+        }
     } }
 
     @Composable

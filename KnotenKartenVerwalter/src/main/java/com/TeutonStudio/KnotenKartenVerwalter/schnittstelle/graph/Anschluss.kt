@@ -122,10 +122,10 @@ open class BasisAnschluss(
                             "pseudo",
                             idReferenz(besitzer.daten to daten, besitzer.daten to daten),
                         )
-                        val verbindung = BasisVerbindung(graph,vDaten,start,ende)
-
-                        verbindung.startKante = daten.kante // TODO Warum links rechts tangenten falsch
-                        graph.karte.pseudoVerbindung.value = verbindung
+                        graph.karte.pseudoVerbindung.value = BasisVerbindung(graph,vDaten,start,ende).apply {
+                            startKante = this@BasisAnschluss.daten.kante
+                            endeKante = AnschlussKante.Links
+                        }
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()

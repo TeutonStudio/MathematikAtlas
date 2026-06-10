@@ -327,8 +327,8 @@ public fun idReferenz.hatGleichenAnschluss(other: idReferenz): Boolean {
 }
 
 public fun AnschlussKante.tangente(): Offset = when (this) {
-    AnschlussKante.Links -> Offset(1f, 0f)
-    AnschlussKante.Rechts -> Offset(-1f, 0f)
+    AnschlussKante.Links -> Offset(-1f, 0f)
+    AnschlussKante.Rechts -> Offset(1f, 0f)
     AnschlussKante.Oben -> Offset(0f, -1f)
     AnschlussKante.Unten -> Offset(0f, 1f)
 }
