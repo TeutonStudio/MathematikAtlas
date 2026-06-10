@@ -12,17 +12,20 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
  * werden.
  */
 data class AuswahlDaten(
-    /** IDs aller ausgewaehlten Knoten. */
+    /** IDs aller ausgewählten Knoten. */
     val knotenIds: Set<String> = emptySet(),
 
-    /** IDs aller ausgewaehlten Verbindungen. */
+    /** IDs aller ausgewählten Verbindungen. */
     val verbindungIds: Set<String> = emptySet(),
+
+    /** IDs aller ausgweählten Anschlüsse. */
+    val anschlussIds: Set<String> = emptySet()
 ) {
     /** Wahr, wenn weder Knoten noch Verbindungen ausgewaehlt sind. */
     val istLeer: Boolean
         get() = knotenIds.isEmpty() && verbindungIds.isEmpty()
 
-    public fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id)
+    public fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id) || anschlussIds.contains(gO.daten.id)
 
     fun nurKnoten(knotenId: String): AuswahlDaten = AuswahlDaten(knotenIds = setOf(knotenId))
 

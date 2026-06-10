@@ -11,13 +11,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
 // Grundklasse für ein Objekt, dass auf einem KartenGraph erscheint
-abstract class GraphObjekt(
-    _graph: Graph
-) {
+abstract class GraphObjekt(_graph: Graph) {
     public abstract val daten: GraphDaten
     public lateinit var graph: Graph
     init { definiereGraph(_graph) }
@@ -31,6 +30,10 @@ abstract class GraphObjekt(
     public val öffneKontext = derivedStateOf { graph.ctx.first == daten.id }
 
     public val istSelektiert by derivedStateOf { graph.selektiert.enthält(this) }
+
+    public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.keys.find { it.daten.id == anschlussId }
+    public fun erhalteAnschlussMann(id: IDEhe): Anschluss? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
+    public fun erhalteAnschlussWeib(id: IDEhe): Anschluss? = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
     public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + zustand.pos * zustand.zoom).round()
     public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = round()
