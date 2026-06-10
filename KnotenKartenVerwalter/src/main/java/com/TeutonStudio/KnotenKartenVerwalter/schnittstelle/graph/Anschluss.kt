@@ -44,7 +44,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.istEingang
 import com.TeutonStudio.KnotenKartenVerwalter.pos
 
 // Composables
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.zuBild
 import com.TeutonStudio.KnotenKartenVerwalter.zuKarte
 import kotlin.collections.component1
@@ -168,7 +167,7 @@ open class BasisAnschluss(
                 onDragStopped = { graph.erhalteKarte().pseudoVerbindung.value = null }
             )*/
         ) {
-            if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
+            if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
         }
     }
 

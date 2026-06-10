@@ -54,7 +54,8 @@ class Graph(
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern)
 
-    public var selektiert by mutableStateOf(AuswahlDaten.LEER)
+    public val selektiert
+        get() = zustand.auswahl
     public val selektiertFarbe = Color(0xFF2563EB)
     public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
 
@@ -69,7 +70,7 @@ class Graph(
     }
 
     public fun wähle(wahl: AuswahlDaten) {
-        selektiert = wahl
+        zustand.auswahl = wahl
         karte.onAuswahlÄndern(wahl)
     }
 

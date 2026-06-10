@@ -36,7 +36,7 @@ open class KarteZustand(
     ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
-    val auswahl: AuswahlDaten = AuswahlDaten(),
+    var auswahl: AuswahlDaten = AuswahlDaten(),
 ) {
     var ansicht by mutableStateOf(ansicht)
 

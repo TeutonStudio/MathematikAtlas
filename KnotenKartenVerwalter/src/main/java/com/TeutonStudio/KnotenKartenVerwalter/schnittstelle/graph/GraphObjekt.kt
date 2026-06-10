@@ -23,7 +23,7 @@ abstract class GraphObjekt(
     @Composable
     open fun erhalteKontextFenster(pos: BildschirmPosition) = Unit
 
-    public fun öffneKontext() = derivedStateOf { graph.ctx.first == daten.id }
+    public val öffneKontext = derivedStateOf { graph.ctx.first == daten.id }
 
     val istSelektiert by derivedStateOf { graph.selektiert.enthält(this) }
 

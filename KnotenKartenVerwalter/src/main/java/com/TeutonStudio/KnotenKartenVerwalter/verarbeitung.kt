@@ -3,7 +3,10 @@ package com.TeutonStudio.KnotenKartenVerwalter
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -31,9 +34,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.fix.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussSpalte
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.AnschlussZeile
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.VerbindungUmgebung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussModifierStandard
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.AnschlussReferenz
@@ -252,8 +252,14 @@ public fun AnschlussKante.istHorizontal(): Boolean = this == AnschlussKante.Oben
 @Composable
 public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier, modifier: AnschlussModifier = { daten,idx -> AnschlussModifierStandard }) {
     val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(/*modifier(anschluss.daten,idx)*/) } }
-    if (kante.istVertikal()) AnschlussSpalte(leisteModifier,listeComposable)
-    else if (kante.istHorizontal()) AnschlussZeile(leisteModifier,listeComposable)
+    if (kante.istVertikal()) Column(
+        modifier = leisteModifier.fillMaxKante(kante),
+        verticalArrangement = Arrangement.SpaceEvenly,
+    ) { listeComposable.forEach { it() } }
+    else if (kante.istHorizontal()) Row(
+        modifier = leisteModifier.fillMaxKante(kante),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) { listeComposable.forEach { it() } }
     else TODO()
 }
 

@@ -27,7 +27,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 
 //
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.composable.VerbindungUmgebung
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungArt
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungKonstruktor

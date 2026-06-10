@@ -99,8 +99,7 @@ abstract class Knoten(
         modifierAnschluss: AnschlussModifier = { daten, idx -> AnschlussModifierStandard },
         inhaltSkalierung: Float = 1f,
     ) {
-        val density = LocalDensity.current
-        Box(modifier = boxModiRect(density).draggable2D(
+        Box(modifier = boxModiRect(LocalDensity.current).draggable2D(
             enabled = daten.beweglich,
             state = rememberDraggable2DState {
                 besitzer.aktualisierung(daten.id,daten.position + it / zoomFaktor())
@@ -124,7 +123,7 @@ abstract class Knoten(
                     contentAlignment = Alignment.Center,
                 ) { anschlüsse.zuLeiste(kante) }
             }
-            if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
+            if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
         }
     }
 

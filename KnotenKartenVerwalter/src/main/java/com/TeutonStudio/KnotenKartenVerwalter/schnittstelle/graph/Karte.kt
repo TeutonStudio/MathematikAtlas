@@ -185,7 +185,7 @@ abstract class Karte(
             }*/)
             pseudoVerbindung.value?.zuComposable()
             knoten.zuComposable({ d -> Modifier},{d -> { a,idx -> Modifier }})
-            if (öffneKontext().value) erhalteKontextFenster(graph.ctx.second)
+            if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
         }
     }
 
