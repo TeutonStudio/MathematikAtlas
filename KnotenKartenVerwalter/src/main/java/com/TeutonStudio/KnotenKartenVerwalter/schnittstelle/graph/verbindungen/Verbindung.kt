@@ -68,7 +68,7 @@ sealed class Verbindung(
         ) {
             Card() {
                 Column {
-                    Text("Kontextfenster des Knoten")
+                    Text("Kontextfenster der Verbindung")
                 }
             }
         }

@@ -38,6 +38,7 @@ abstract class GraphObjekt(_graph: Graph) {
     public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + zustand.pos * zustand.zoom).round()
     public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = round()
     public fun BildschirmPosition.zuKarte(zustand: KarteZustand = graph.karte.zustand): KartenPosition = (this.toOffset() - zustand.pos * zustand.zoom)
+    public fun BildschirmPosition.zuDelta(zustand: KarteZustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.zoom
     public fun BildschirmPosition.zuKnoten(
         knoten: Knoten,
         zustand: KarteZustand = graph.karte.zustand,

@@ -10,7 +10,7 @@ open class BasisAusgang(
     override val besitzer: Knoten,
 ): RichtungsAnschluss(_graph,daten, besitzer) {
 
-    override fun erlaubtVerbindung(daten: Anschluss): Boolean = super.erlaubtVerbindung(daten) && daten.istEingang()
+    override fun erlaubtVerbindung(anschluss: Anschluss): Boolean = super.erlaubtVerbindung(anschluss) && !anschluss.istAusgang()
 
     public companion object {
         public const val ANSCHLUSS_ART = "output"

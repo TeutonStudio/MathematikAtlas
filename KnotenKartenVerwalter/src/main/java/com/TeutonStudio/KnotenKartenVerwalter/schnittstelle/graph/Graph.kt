@@ -1,19 +1,14 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
-import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
@@ -56,11 +51,14 @@ class Graph(
 
     public fun keinKontext() { ctx = "" to IntOffset.Zero }
 
-    public fun erhalteVerbindungNachKlick(pos: KartenPosition): Pair<Verbindung, Offset>? {
-        val liste = inhalt.filterIsInstance<Verbindung>().map {
+    public fun erhalteVerbindungNachPos(pos: KartenPosition): Pair<Verbindung,Offset>? {
+        return inhalt.filterIsInstance<Verbindung>().map {
             it to it.abstand(pos)
-        }; if (liste.isEmpty()) return null
-        return liste.minBy { it.second.getDistanceSquared() }
+        }.minByOrNull { it.second.getDistanceSquared() }
+    }
+
+    public fun erhalteAnschlussNachPos(pos: KartenPosition): Pair<Anschluss,Offset>? {
+        return karte.anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
     }
 
     public fun wähle(wahl: AuswahlDaten = AuswahlDaten.LEER) {
@@ -78,11 +76,11 @@ class Graph(
     public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss,Float> {
         val p = karte.pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero
         val nA = erhalteAnschlussNachKartePos(p)
-        return nA to (p-nA.erhaltePosition()).getDistanceSquared()
+        return nA to (p-nA.pos).getDistanceSquared()
     }
 
 //    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
-    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.erhaltePosition() - pos).getDistanceSquared() }
+    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.pos - pos).getDistanceSquared() }
 
     @Composable
     public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)

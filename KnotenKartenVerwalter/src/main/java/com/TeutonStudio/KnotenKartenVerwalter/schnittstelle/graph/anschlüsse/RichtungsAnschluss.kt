@@ -9,12 +9,11 @@ sealed class RichtungsAnschluss(
     override val daten: RichtungsAnschlussDaten,
     override val besitzer: Knoten,
 ): Anschluss(_graph) {
-
-    override fun erlaubtVerbindung(daten: Anschluss): Boolean = daten.istEingang()
+    override fun erlaubtVerbindung(anschluss: Anschluss): Boolean = super.erlaubtVerbindung(anschluss)
 
     public companion object {
-        public const val ANSCHLUSS_ART = "output"
+        public const val ANSCHLUSS_ART = "dir"
     }
-    public fun Anschluss.istEingang(): Boolean = if (this is RichtungsAnschluss) this is BasisEingang || daten.richtung == AnschlussRichtung.Eingang else false
-    public fun Anschluss.istAusgang(): Boolean = if (this is RichtungsAnschluss) this is BasisAusgang || daten.richtung == AnschlussRichtung.Ausgang else false
+    public override fun istEingang(): Boolean = this is BasisEingang || daten.richtung == AnschlussRichtung.Eingang
+    public override fun istAusgang(): Boolean = this is BasisAusgang || daten.richtung == AnschlussRichtung.Ausgang
 }

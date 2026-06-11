@@ -31,7 +31,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten.Companion.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.pos
 import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
@@ -78,6 +77,7 @@ sealed class Karte(
             endeKante = anschlussWeib!!.daten.kante
         }
     } }
+    val anschlüsse get() = knoten.flatMap { it.anschlüsse.keys }
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
@@ -97,7 +97,7 @@ sealed class Karte(
                         onTap = {
                             // TODO herausfinden, wie ich it. tranformieren muss
                             val kartePos = zustand.erhalteUntransformiert(it.round())
-                            val v = graph.erhalteVerbindungNachKlick(kartePos)?.apply {
+                            val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
                                 printLogCat(first, second, second.getDistanceSquared())
                                 if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
                                     graph.wähle(first.daten.zuAuswahl())
@@ -109,7 +109,7 @@ sealed class Karte(
                         onLongPress = {
                             val karteCTX = { graph.ctx = daten.id to it.round() }
                             val kartePos = zustand.erhalteUntransformiert(it.round())
-                            val v = graph.erhalteVerbindungNachKlick(kartePos)?.apply {
+                            val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
                                 printLogCat(first, second, second.getDistanceSquared())
                                 if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
                                     graph.wähle(first.daten.zuAuswahl())
@@ -127,7 +127,7 @@ sealed class Karte(
             knoten.zuComposable()
             if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
             verbindungen.forEach {
-                if ( it.öffneKontext.value) it.erhalteKontextFenster(graph.ctx.second)
+                if (it.öffneKontext.value) it.erhalteKontextFenster(graph.ctx.second)
             }
         }
     }
@@ -146,7 +146,7 @@ sealed class Karte(
         ) {
             Card() {
                 Column {
-                    Text("Kontextfenster des Knoten")
+                    Text("Kontextfenster der Karte")
                 }
             }
         }
