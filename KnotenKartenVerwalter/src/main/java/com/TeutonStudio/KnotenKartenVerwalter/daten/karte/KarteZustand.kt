@@ -46,8 +46,11 @@ open class KarteZustand(
     public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(.25f,15f) }
     public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
 
-    public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von + pos * zoom).round()
-    public fun erhalteUntransformiert(von: BildschirmPosition): KartenPosition = von.toOffset() - pos * zoom
+    public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von * zoom + pos).round()
+
+//    public fun erhalteUntransformiert(von: BildschirmPosition): KartenPosition = (von.toOffset() - pos) / zoom
+
+    public fun erhalteDeltaUntransformiert(delta: Offset): Offset = delta / zoom
 
     public fun erhalteViewportRect(
         breite: Float = dimension.width.toFloat(),

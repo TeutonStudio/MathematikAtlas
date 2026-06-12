@@ -1,7 +1,12 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten
 
 import android.graphics.RectF
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
@@ -22,6 +27,10 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
     public val dimension get() = daten.erhalteSize()
 
     abstract fun definiereVerbindung()
+
+    @Composable
+    override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
+
 
     override fun beiKlick(klickPos: Offset) {
         besitzer.wähle(EinzelAuswahl(this))

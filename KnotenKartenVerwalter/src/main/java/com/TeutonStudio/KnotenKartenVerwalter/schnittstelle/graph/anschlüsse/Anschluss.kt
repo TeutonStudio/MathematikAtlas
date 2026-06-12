@@ -25,9 +25,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
@@ -50,75 +54,14 @@ sealed class Anschluss<D: AnschlussDaten>(
 //    public val karte get() = besitzer.besitzer
 //    public abstract val besitzer: Knoten
     //    public var partner: Anschluss?
-    val pos get() = besitzer.erhalteAnschlussPos(daten.id)
+    val pos get() = erhaltePos() ?: besitzer.erhalteAnschlussPos(daten.id)
+
+    private fun erhaltePos() = layoutCoordinates?.let { besitzer.layoutCoordinates?.localPositionOf(it,it.size.center.toOffset()) }?.round()?.zuKarte()
 
     private var dragPos by mutableStateOf(Offset.Zero)
     private var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
-    public val modifier get() = Modifier
-        .size(5.dp)
-        .background(Color.Black, CircleShape)
-        .pointerInput(daten.id) {
-            detectDragGestures(
-                onDragStart = ::beiVerbindungZiehenStart,
-                onDrag = ::beiVerbindungZiehenDelta,
-                onDragEnd = ::beiVerbindungZiehenEnde,
-                onDragCancel = ::beiVerbindungZiehenAbbruch,
-            )
-        }
-
-    @Composable
-    override fun Modifier.modifier(): Modifier = tapping()
-        .size(5.dp)
-        .background(Color.Black, CircleShape)
-        .pointerInput(daten.id) {
-            detectDragGestures(
-                onDragStart = ::beiVerbindungZiehenStart,
-                onDrag = ::beiVerbindungZiehenDelta,
-                onDragEnd = ::beiVerbindungZiehenEnde,
-                onDragCancel = ::beiVerbindungZiehenAbbruch,
-            )
-        }
-
-    override fun beiKlick(klickPos: Offset) {
-//                        graph.wähle(daten.zuAuswahl())
-        karte.keinKontext()
-    }
-
-    override fun beiHalten(klickPos: Offset) {
-        karte.ctx = daten.id to klickPos.round()
-//                        graph.wähle(daten.zuAuswahl())
-    }
-
-    override fun beiTransform(
-        centroid: Offset,
-        zoomDelta: Float,
-        panDelta: Offset,
-        rotationChange: Float
-    ) {}
-
-    @Composable
-    override fun BoxScope.erhalteDarstellung() {}
-
-    @Composable
-    override fun erhalteKontextFenster(pos: BildschirmPosition) {
-        Box(
-            modifier = Modifier
-                .offset { pos }
-//                .onSizeChanged { fensterGröße = it }
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
-                .padding(vertical = 4.dp),
-        ) {
-            Card() {
-                Column {
-                    Text("Kontextfenster des Anschluss")
-                }
-            }
-        }
-    }
-
-    public open fun beiVerbindungZiehenStart(klickPos: Offset) {
+    public override fun beiVerbindungZiehenStart(klickPos: Offset) {
         karte.keinKontext()
         karte.wähle()
         dragPos = pos
@@ -140,11 +83,12 @@ sealed class Anschluss<D: AnschlussDaten>(
             endeKante = AnschlussKante.Links
         }
     }
-    public open fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
+    public override fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
         change.consume()
-        dragPos += dragAmount.round().zuDelta()
+        dragPos = change.position + pos
+        dragAmount.round().zuDelta()
         if (graph.erhalteAnschlussNachPos(dragPos)?.apply {
-                val bedingung = second.getDistanceSquared() < 500f && erlaubtVerbindung(first)
+                val bedingung = second.getDistanceSquared() < 500f / karte.zustand.zoom && erlaubtVerbindung(first)
                 if (bedingung) {
                     dragZiel = first
                     karte.pseudoVerbindung.value?.endeKante = first.daten.kante
@@ -152,15 +96,48 @@ sealed class Anschluss<D: AnschlussDaten>(
                 } else dragZiel = null
             } == null) dragZiel = null
     }
-    public open fun beiVerbindungZiehenEnde() {
+    public override fun beiVerbindungZiehenEnde() {
         dragZiel?.let { karte.definiereVerbindung(this@Anschluss,it) }
         karte.pseudoVerbindung.value = null
     }
-    public open fun beiVerbindungZiehenAbbruch() {
+    public override fun beiVerbindungZiehenAbbruch() {
         karte.pseudoVerbindung.value = null
     }
 
 
+    override fun beiKlick(klickPos: Offset) {
+//                        graph.wähle(daten.zuAuswahl())
+        karte.keinKontext()
+    }
+
+    override fun beiHalten(klickPos: Offset) {
+        karte.ctx = daten.id to klickPos.round()
+//                        graph.wähle(daten.zuAuswahl())
+    }
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {}
+
+    @Composable override fun BoxScope.erhalteDarstellung() {}
+
+    @Composable
+    override fun erhalteKontextFenster(pos: BildschirmPosition) {
+        Box(
+            modifier = Modifier
+                .offset { pos }
+                .padding(vertical = 4.dp),
+        ) {
+            Card() {
+                Column {
+                    Text("Kontextfenster des Anschluss")
+                }
+            }
+        }
+    }
     public fun abstand(anschluss: Anschluss<out AnschlussDaten>): Offset = anschluss.pos - pos
 
     public fun istSelbst(zielBesitzer: Knoten?): Boolean = (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
@@ -173,7 +150,7 @@ sealed class Anschluss<D: AnschlussDaten>(
     public companion object {
         @Composable
         public fun Map<Anschluss<out AnschlussDaten>,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier) {
-            val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable() } }
+            val listeComposable = this.filterKante(kante).entries.sortedBy { it.value }.map { it.key }.map { @Composable { it.zuComposable() } }
             if (kante.istVertikal()) Column(
                 modifier = leisteModifier.fillMaxKante(kante),
                 verticalArrangement = Arrangement.SpaceEvenly,

@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.layout.LayoutCoordinates
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen

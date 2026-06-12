@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
@@ -40,6 +41,7 @@ sealed class Knoten(
     override val graph: Graph,
     override val daten: AnschlussKnotenDaten,
 ): GraphKnotenObjekt<AnschlussKnotenDaten> {
+    override var layoutCoordinates: LayoutCoordinates? = null
     public val anschlüsse by GraphCache(daten.anschlüsse) { d: AnschlussDaten ->
         anschlussFabrik.erzeugeAnschluss(graph,d,this).apply { registriere() }
     }
@@ -82,20 +84,13 @@ sealed class Knoten(
         Box(
             modifier = Modifier
                 .offset { pos }
-//                .onSizeChanged { fensterGröße = it }
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
                 .padding(vertical = 4.dp),
         ) {
             Card() {
-                Column {
-                    Card() {
-                        Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("id: ${daten.id}",Modifier.scale(.9f),Color.Gray)
-                            Text("löschen",Modifier.clickable() { graph.karte.vernichteKnoten(this@Knoten) })
-                            Text("duplizieren",Modifier.clickable() { graph.karte.dupliziereKnoten(this@Knoten) })
-                        }
-                    }
+                Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("id: ${daten.id}",Modifier.scale(.9f),Color.Gray)
+                    Text("löschen",Modifier.clickable() { graph.karte.vernichteKnoten(this@Knoten) })
+                    Text("duplizieren",Modifier.clickable() { graph.karte.dupliziereKnoten(this@Knoten) })
                 }
             }
         }
@@ -132,13 +127,7 @@ sealed class Knoten(
 //    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + daten.position).round()
 
     public companion object {
-        @Composable
-        public fun Iterable<Knoten>.zuComposable(
-            modifierKnoten: (AnschlussKnotenDaten) -> Modifier = { d -> Modifier}
-        ) = forEach { it.zuComposable(modifierKnoten(it.daten)
-            .offset { it.daten.position.round() }
-            .size(with(LocalDensity.current) { it.dimension.toDpSize() })
-        ) }
+        @Composable public fun Iterable<Knoten>.zuComposable() = forEach { it.zuComposable() }
     }
 
 }

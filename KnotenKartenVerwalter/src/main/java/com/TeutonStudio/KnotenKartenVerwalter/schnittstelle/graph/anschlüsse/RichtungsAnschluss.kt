@@ -1,5 +1,6 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 
+import androidx.compose.ui.layout.LayoutCoordinates
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
@@ -11,6 +12,8 @@ sealed class RichtungsAnschluss<D: RichtungsAnschlussDaten>(
     daten: D,
     override val besitzer: Knoten,
 ): Anschluss<D>(graph,daten) {
+    override var layoutCoordinates: LayoutCoordinates? = null
+
     override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = super.erlaubtVerbindung(anschluss)
 
     public companion object {

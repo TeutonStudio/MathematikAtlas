@@ -2,6 +2,7 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -20,10 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -69,6 +72,7 @@ sealed class Karte(
     override val graph: Graph,
     override val daten: KarteDaten,
 ): GraphKartenObjekt<KarteDaten> {
+    override var layoutCoordinates: LayoutCoordinates? = null
     abstract val zustand: KarteZustand
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik
@@ -123,7 +127,7 @@ sealed class Karte(
 
     override fun beiKlick(klickPos: Offset) {
         // TODO herausfinden, wie ich it. tranformieren muss
-        val kartePos = zustand.erhalteUntransformiert(klickPos.round())
+        val kartePos = klickPos.round().zuKarte()
         val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
 //            printLogCat(first, second, second.getDistanceSquared())
             if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
@@ -139,7 +143,7 @@ sealed class Karte(
     }
     override fun beiHalten(klickPos: Offset) {
         val karteCTX = { ctx = daten.id to klickPos.round() }
-        val kartePos = zustand.erhalteUntransformiert(klickPos.round())
+        val kartePos = klickPos.round().zuKarte()
         if (graph.erhalteVerbindungNachPos(kartePos)?.let {
                 printLogCat(it.first, it.second, it.second.getDistanceSquared())
                 if (it.second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
@@ -154,7 +158,7 @@ sealed class Karte(
         zustand.zoome(zoomDelta)
     }
 
-    @Composable override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
+    @Composable override fun Modifier.modifier(): Modifier = Modifier.fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
 
     @Composable
     override fun erhalteKontextFenster(
@@ -163,13 +167,13 @@ sealed class Karte(
         Box(
             modifier = Modifier
                 .offset { pos }
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
                 .padding(vertical = 4.dp),
         ) {
             Card() {
-                Column {
-                    Text("Kontextfenster der Karte")
+                Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("id: ${daten.id}",Modifier.scale(.9f),Color.Gray)
+                    Text("neu",Modifier.clickable() { graph.karte })
+                    Text("alles auswählen",Modifier.clickable() { graph.karte })
                 }
             }
         }

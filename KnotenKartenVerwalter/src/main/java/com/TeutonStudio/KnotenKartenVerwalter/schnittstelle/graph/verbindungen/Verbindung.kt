@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
@@ -37,12 +38,13 @@ sealed class Verbindung(
     override val graph: Graph,
     override val daten: VerbindungDaten,
 ): GraphDatenObjekt<VerbindungDaten> {
+    override var layoutCoordinates: LayoutCoordinates? = null
     public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val start: State<KartenPosition>
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val ende: State<KartenPosition>
 
-    @Composable override fun Modifier.modifier(): Modifier  = this
+    @Composable override fun Modifier.modifier() = this
 
     @Composable
     override fun zuComposable(modifier: Modifier) = Canvas(modifier = modifier) { zeichnung() }
@@ -70,9 +72,6 @@ sealed class Verbindung(
         Box(
             modifier = Modifier
                 .offset { pos }
-//                .onSizeChanged { fensterGröße = it }
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
                 .padding(vertical = 4.dp),
         ) {
             Card() {

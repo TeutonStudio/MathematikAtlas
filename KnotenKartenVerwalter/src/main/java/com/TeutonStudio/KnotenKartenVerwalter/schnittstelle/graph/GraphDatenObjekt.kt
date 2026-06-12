@@ -7,10 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
@@ -30,13 +31,17 @@ interface GraphDatenObjekt<D: GraphDaten>{
     public val daten: D
     public fun registriere() = also { graph.inhalt.add(it) }
 
-    @Composable open fun Modifier.modifier() = transform().tapping()
-    @Composable open fun Modifier.transform() = transformable(rememberTransformableState(::beiTransform))
-    @Composable open fun Modifier.tapping() = pointerInput(daten.id) { detectTapGestures(onTap = ::beiKlick,onLongPress = ::beiHalten) }
+    var layoutCoordinates: LayoutCoordinates?
+
+    @Composable open fun Modifier.modifier() = vorher().position().transform().tapping()
+    @Composable public fun Modifier.vorher() = this
+    @Composable public fun Modifier.transform() = transformable(rememberTransformableState(::beiTransform))
+    @Composable public fun Modifier.tapping() = pointerInput(daten.id) { detectTapGestures(onTap = ::beiKlick,onLongPress = ::beiHalten) }
+    @Composable public fun Modifier.position() = onGloballyPositioned { layoutCoordinates = it }
 
     @Composable
     open fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(
-        modifier = modifier.modifier()
+        modifier = Modifier.modifier()
     ) { erhalteDarstellung() }
 
     public open fun beiKlick(klickPos: Offset) {}
