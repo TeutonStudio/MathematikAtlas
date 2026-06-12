@@ -26,10 +26,7 @@ open class BezierVerbindung(
     override fun erhaltePfad(): Path = Path().apply {
         val cubic = { o1: Offset, o2: Offset, o3:  Offset -> cubicTo(o1.x,o1.y,o2.x,o2.y,o3.x,o3.y) }
         val move = { p: Offset -> moveTo(p.x,p.y) }
-        val _start = start.value.zuBild().toOffset()
-        val _ende = ende.value.zuBild().toOffset()
-        move(_start)
-        cubic(c1(_start,_ende),c2(_start,_ende),_ende)
+        move(start.value); cubic(c1(),c2(),ende.value)
     }
 
     override fun abstand(pos: KartenPosition): Offset {
@@ -90,8 +87,8 @@ open class BezierVerbindung(
     }
 
     public fun c1(
-        _start: KartenPosition = start.value.zuBild().toOffset(),
-        _ende: KartenPosition = ende.value.zuBild().toOffset(),
+        _start: KartenPosition = start.value,
+        _ende: KartenPosition = ende.value,
     ): Offset {
         val startRichtung = startKante.tangente()
         val dx = _ende.x - _start.x
@@ -102,8 +99,8 @@ open class BezierVerbindung(
     }
 
     public fun c2(
-        _start: KartenPosition = start.value.zuBild().toOffset(),
-        _ende: KartenPosition = ende.value.zuBild().toOffset(),
+        _start: KartenPosition = start.value,
+        _ende: KartenPosition = ende.value,
     ): Offset {
         val endeRichtung = endeKante.tangente()
         val dx = _ende.x - _start.x

@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
@@ -52,43 +53,54 @@ sealed class Anschluss<D: AnschlussDaten>(
     public abstract val besitzer: Knoten
 //    public var partner: Anschluss?
     val pos get() = besitzer.erhalteAnschlussPos(daten.id)
-    val radius
-        get() = 5.dp
 
-    private var _dragPos: Offset by mutableStateOf(Offset.Zero)
     private var dragPos by mutableStateOf(Offset.Zero)
     private var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
+    public val modifier get() = Modifier
+        .size(5.dp)
+        .background(Color.Black, CircleShape)
+        .pointerInput(daten.id) {
+            detectDragGestures(
+                onDragStart = ::beiVerbindungZiehenStart,
+                onDrag = ::beiVerbindungZiehenDelta,
+                onDragEnd = ::beiVerbindungZiehenEnde,
+                onDragCancel = ::beiVerbindungZiehenAbbruch,
+            )
+        }
+
     @Composable
-    override fun zuComposable(modifier: Modifier) {
-        val farbe = Color.Black
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = modifier
-                .size(radius)
-                .background(farbe, CircleShape)
-                .pointerInput(daten.id) {
-                    detectDragGestures(
-                        onDragStart = ::beiVerbindungZiehenStart,
-                        onDrag = ::beiVerbindungZiehenDelta,
-                        onDragEnd = ::beiVerbindungZiehenEnde,
-                        onDragCancel = ::beiVerbindungZiehenAbbruch,
-                    )
-                }
-                .pointerInput(daten.id) {
-                    detectTapGestures(
-                        onLongPress = {
-                            graph.ctx = daten.id to it.round()
+    override fun Modifier.modifier(): Modifier = tapping()
+        .size(5.dp)
+        .background(Color.Black, CircleShape)
+        .pointerInput(daten.id) {
+            detectDragGestures(
+                onDragStart = ::beiVerbindungZiehenStart,
+                onDrag = ::beiVerbindungZiehenDelta,
+                onDragEnd = ::beiVerbindungZiehenEnde,
+                onDragCancel = ::beiVerbindungZiehenAbbruch,
+            )
+        }
+
+    override fun beiKlick(klickPos: Offset) {
 //                        graph.wähle(daten.zuAuswahl())
-                        },
-                        onTap = {
-//                        graph.wähle(daten.zuAuswahl())
-                            graph.keinKontext()
-                        },
-                    )
-                }//.hoverable(interactionSource)
-        ) { }
+        graph.keinKontext()
     }
+
+    override fun beiHalten(klickPos: Offset) {
+        graph.ctx = daten.id to klickPos.round()
+//                        graph.wähle(daten.zuAuswahl())
+    }
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {}
+
+    @Composable
+    override fun BoxScope.erhalteDarstellung() {}
 
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
@@ -163,7 +175,7 @@ sealed class Anschluss<D: AnschlussDaten>(
     public companion object {
         @Composable
         public fun Map<Anschluss<out AnschlussDaten>,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier) {
-            val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(/*modifier(anschluss.daten,idx)*/) } }
+            val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable() } }
             if (kante.istVertikal()) Column(
                 modifier = leisteModifier.fillMaxKante(kante),
                 verticalArrangement = Arrangement.SpaceEvenly,
@@ -174,6 +186,8 @@ sealed class Anschluss<D: AnschlussDaten>(
             ) { listeComposable.forEach { it() } }
             else TODO("Sollte nicht passieren")
         }
+
+        public fun Iterable<Anschluss<out AnschlussDaten>>.findeNachId(id:String) = find { it.daten.id == id }
     }
 }
 

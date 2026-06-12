@@ -1,5 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen
 
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -32,12 +34,9 @@ open class BasisVerbindung(
     }
 
     override fun erhaltePfad(): Path = Path().apply {
-        val line = { p: IntOffset -> lineTo(p.x.toFloat(), p.y.toFloat()) }
-        val move = { p: IntOffset -> moveTo(p.x.toFloat(), p.y.toFloat()) }
-        val _start = start.value.zuBild()
-        val _ende = ende.value.zuBild()
-        move(_start)
-        line(_ende)
+        val line = { p: Offset -> lineTo(p.x, p.y) }
+        val move = { p: Offset -> moveTo(p.x, p.y) }
+        move(start.value); line(ende.value)
     }
 
     public fun aufPfad(pos: KartenPosition): Boolean {

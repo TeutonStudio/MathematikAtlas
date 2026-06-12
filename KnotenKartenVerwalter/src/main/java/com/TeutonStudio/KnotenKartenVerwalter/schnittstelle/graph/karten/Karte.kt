@@ -2,14 +2,21 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
@@ -18,8 +25,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
@@ -38,6 +50,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.anschlussNachId
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.anschlüsseNachIDEhe
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.findeNachId
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
@@ -67,80 +82,70 @@ sealed class Karte(
     }
 
     val verbindungen by GraphCache(daten.verbindungen) { d: VerbindungDaten ->
-        val knotenMann = knoten.find { it.daten.id == d.ids.knotenIdMann }
-        val knotenWeib = knoten.find { it.daten.id == d.ids.knotenIdWeib }
-        if (knotenMann == null && knotenWeib == null) null
-        val anschlussMann = knotenMann!!.anschlüsse.find { it.daten.id == d.ids.anschlussIdMann }
-        val anschlussWeib = knotenWeib!!.anschlüsse.find { it.daten.id == d.ids.anschlussIdWeib }
-        if (anschlussMann == null && anschlussWeib == null) null
-        verbindungFabrik.erzeugeVerbindung(graph,d,
-            derivedStateOf { knotenMann.erhalteAnschlussPos(anschlussMann!!.daten.id) },
-            derivedStateOf { knotenWeib.erhalteAnschlussPos(anschlussWeib!!.daten.id) },
-        )?.apply {
-            startKante = anschlussMann!!.daten.kante
-            endeKante = anschlussWeib!!.daten.kante
-            registriere()
-        }
+        knoten.anschlüsseNachIDEhe(d.ids)?.let {
+            verbindungFabrik.erzeugeVerbindung(graph,d,derivedStateOf { it.first.pos },derivedStateOf { it.second.pos },)?.apply {
+                startKante = it.first.daten.kante
+                endeKante = it.second.daten.kante
+            }
+        }?.apply { registriere() }
     }
 
     val anschlüsse get() = knoten.flatMap { it.anschlüsse }
 
+    override fun beiKlick(klickPos: Offset) {
+        // TODO herausfinden, wie ich it. tranformieren muss
+        val kartePos = zustand.erhalteUntransformiert(klickPos.round())
+        val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
+//            printLogCat(first, second, second.getDistanceSquared())
+            if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
+                graph.wähle(first.daten.zuAuswahl())
+            } else {
+                graph.wähle()
+            }
+        }
+        if (v == null) {
+            graph.wähle()
+        }
+        graph.keinKontext()
+    }
+    override fun beiHalten(klickPos: Offset) {
+        val karteCTX = { graph.ctx = daten.id to klickPos.round() }
+        val kartePos = zustand.erhalteUntransformiert(klickPos.round())
+        if (graph.erhalteVerbindungNachPos(kartePos)?.let {
+                printLogCat(it.first, it.second, it.second.getDistanceSquared())
+                if (it.second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
+                    graph.wähle(it.first.daten.zuAuswahl())
+                    graph.ctx = it.first.daten.id to klickPos.round()
+                    return@let it
+                } else { return@let null }
+            } == null) karteCTX()
+    }
+    override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
+        zustand.verschiebe(panDelta)
+        zustand.zoome(zoomDelta)
+    }
+
+    @Composable override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
+
     @Composable
-    override fun zuComposable(modifier: Modifier) {
+    override fun BoxScope.erhalteDarstellung() {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .clipToBounds()
-                .draggable2D(
-                    state = rememberDraggable2DState {
-                        zustand.verschiebe(it)
-                        onAuswahlÄndern(AuswahlDaten.LEER)
-                        graph.keinKontext()
-                    }
-                )
-                .pointerInput(daten.id) {
-                    detectTapGestures(
-                        onTap = {
-                            // TODO herausfinden, wie ich it. tranformieren muss
-                            val kartePos = zustand.erhalteUntransformiert(it.round())
-                            val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
-                                printLogCat(first, second, second.getDistanceSquared())
-                                if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
-                                    graph.wähle(first.daten.zuAuswahl())
-                                } else {
-                                    graph.wähle()
-                                }
-                            }
-                            if (v == null) {
-                                graph.wähle()
-                            }
-                            graph.keinKontext()
-                        },
-                        onLongPress = {
-                            val karteCTX = { graph.ctx = daten.id to it.round() }
-                            val kartePos = zustand.erhalteUntransformiert(it.round())
-                            val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
-                                printLogCat(first, second, second.getDistanceSquared())
-                                if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
-                                    graph.wähle(first.daten.zuAuswahl())
-                                    graph.ctx = first.daten.id to it.round()
-                                    return@detectTapGestures
-                                } else {
-                                    karteCTX()
-                                }
-                            }
-                            if (v == null) karteCTX()
-                        },
-                    )
-                }
+            modifier = Modifier.graphicsLayer {
+                translationX = zustand.pos.x
+                translationY = zustand.pos.y
+                scaleX = zustand.zoom
+                scaleY = zustand.zoom
+                transformOrigin = TransformOrigin(0f, 0f)
+            }
         ) {
+            val vp = zustand.erhalteViewportRect()
             verbindungen.zuComposable()
             pseudoVerbindung.value?.zuComposable()
-            knoten.zuComposable()
-            if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
-            verbindungen.forEach {
-                if (it.öffneKontext.value) it.erhalteKontextFenster(graph.ctx.second)
-            }
+            knoten.filter { it.istImViewport(vp) } .zuComposable()
+        }
+        if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
+        verbindungen.forEach {
+            if (it.öffneKontext.value) it.erhalteKontextFenster(graph.ctx.second)
         }
     }
 
@@ -163,5 +168,4 @@ sealed class Karte(
             }
         }
     }
-
 }

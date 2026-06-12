@@ -1,9 +1,16 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
@@ -21,17 +28,25 @@ abstract class GraphObjekt<D: GraphDaten>(
     public val graph: Graph,
     public val daten: D,
 ) {
-//    init { definiereGraph(graph) }
-//    public fun definiereGraph(graph: Graph) { graph.inhalt.add(this) }
     public fun registriere() = also { graph.inhalt.add(it) }
 
-
-    @Composable abstract fun zuComposable(modifier: Modifier = Modifier.Companion)
+    @Composable open fun Modifier.modifier() = transform().tapping()
+    @Composable open fun Modifier.transform() = transformable(rememberTransformableState(::beiTransform))
+    @Composable open fun Modifier.tapping() = pointerInput(daten.id) { detectTapGestures(onTap = ::beiKlick,onLongPress = ::beiHalten) }
 
     @Composable
-    open fun erhalteKontextFenster(pos: BildschirmPosition) = Unit
-    public val öffneKontext = derivedStateOf { graph.ctx.first == daten.id }
+    open fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(
+        modifier = modifier.modifier()
+    ) { erhalteDarstellung() }
 
+    public open fun beiKlick(klickPos: Offset) {}
+    public open fun beiHalten(klickPos: Offset) {}
+    public open fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {}
+
+    @Composable abstract fun BoxScope.erhalteDarstellung()
+    @Composable abstract fun erhalteKontextFenster(pos: BildschirmPosition)
+
+    public val öffneKontext = derivedStateOf { graph.ctx.first == daten.id }
     public val istSelektiert by derivedStateOf { graph.selektiert.enthält(this) }
 
     public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss<out AnschlussDaten>? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }

@@ -1,5 +1,6 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
+import android.graphics.RectF
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -172,6 +173,8 @@ public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): Knoten
     AnschlussRichtung.Ausgang -> daten is AusgangDaten
 } }.toMutableMap()
 
+
+public fun RectF.overlaps(other: RectF) = left <= other.right && right >= other.left && top <= other.bottom && bottom >= other.top
 
 
 /*public fun Pair<KnotenDaten,AnschlussDaten>.pos(): KartenPosition {

@@ -2,6 +2,7 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
@@ -27,7 +28,6 @@ open class BasisKnoten(
     override fun Fußzeile() {
         Text("Knoten Fußzeile")
     }
-
 
     public companion object {
         public const val KNOTEN_ART: KnotenArt = "default"

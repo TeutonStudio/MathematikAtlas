@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -36,8 +37,11 @@ sealed class Verbindung(
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val ende: State<KartenPosition>
 
+    @Composable override fun Modifier.modifier(): Modifier  = this
+
     @Composable
     override fun zuComposable(modifier: Modifier) = Canvas(modifier = modifier) { zeichnung() }
+    @Composable override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
 
     public val zeichnung: DrawScope.() -> Unit
         get() = {
