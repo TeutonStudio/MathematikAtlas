@@ -1,7 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
 import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlEinfuegen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlLoeschen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
@@ -10,7 +10,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVerschieben
 import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.kopiereAuswahl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

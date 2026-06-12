@@ -1,6 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.karte
 
 import android.graphics.RectF
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -12,13 +14,16 @@ import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.MultiAuswahl
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 
 open class KarteZustand(
 //    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
-    val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten())
+    val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten.LEER)
 ) {
     var dimension by mutableStateOf(IntSize.Zero)
     var zoom by mutableFloatStateOf(1f)
@@ -56,4 +61,5 @@ open class KarteZustand(
 
         return RectF(links, oben, rechts, unten)
     }
+
 }

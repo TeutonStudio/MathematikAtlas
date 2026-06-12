@@ -13,12 +13,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion

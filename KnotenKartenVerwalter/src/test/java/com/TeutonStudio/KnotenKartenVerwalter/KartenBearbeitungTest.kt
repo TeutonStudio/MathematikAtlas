@@ -1,7 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter
 
 import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KartenGrenzenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten

@@ -2,36 +2,30 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.draggable2D
-import androidx.compose.foundation.gestures.rememberDraggable2DState
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
@@ -39,24 +33,28 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten.Companion.zuAuswahl
+import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten.Companion.zuAuswahl
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.anschlussNachId
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.anschlüsseNachIDEhe
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.findeNachId
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.sichtbar
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung.Companion.sichtbar
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
@@ -92,30 +90,50 @@ sealed class Karte(
 
     val anschlüsse get() = knoten.flatMap { it.anschlüsse }
 
+    public var ctx by mutableStateOf("" to IntOffset.Zero)
+
+    public fun keinKontext() { ctx = "" to IntOffset.Zero }
+
+    public fun wähle(wahl: AuswahlDaten = AuswahlDaten.LEER) {
+        zustand.auswahl.value = wahl
+        onAuswahlÄndern(wahl)
+    }
+
+    public fun verschiebeKnoten(id: String, um: Offset) = knoten.filter { it.daten.id == id }.getOrNull(0)
+        ?.apply { daten.position += um / zustand.zoom }.let { it != null }
+
+    public fun vernichteKnoten(knoten: Knoten) = daten.knoten.remove(knoten.daten).apply {
+        daten.verbindungen.removeIf { it.ids.knotenIdMann == knoten.daten.id || it.ids.knotenIdWeib == knoten.daten.id }
+        keinKontext()
+    }
+    public fun dupliziereKnoten(knoten: Knoten) = daten.knoten.add(knoten.daten.duplizieren()).apply { keinKontext() }
+    public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply { keinKontext() }
+    public fun vernichteVerbindung(verbindung: Verbindung) = daten.verbindungen.remove(verbindung.daten).apply { keinKontext() }
+
     override fun beiKlick(klickPos: Offset) {
         // TODO herausfinden, wie ich it. tranformieren muss
         val kartePos = zustand.erhalteUntransformiert(klickPos.round())
         val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
 //            printLogCat(first, second, second.getDistanceSquared())
             if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
-                graph.wähle(first.daten.zuAuswahl())
+                wähle(first.daten.zuAuswahl())
             } else {
-                graph.wähle()
+                wähle()
             }
         }
         if (v == null) {
-            graph.wähle()
+            wähle()
         }
-        graph.keinKontext()
+        keinKontext()
     }
     override fun beiHalten(klickPos: Offset) {
-        val karteCTX = { graph.ctx = daten.id to klickPos.round() }
+        val karteCTX = { ctx = daten.id to klickPos.round() }
         val kartePos = zustand.erhalteUntransformiert(klickPos.round())
         if (graph.erhalteVerbindungNachPos(kartePos)?.let {
                 printLogCat(it.first, it.second, it.second.getDistanceSquared())
                 if (it.second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
-                    graph.wähle(it.first.daten.zuAuswahl())
-                    graph.ctx = it.first.daten.id to klickPos.round()
+                    wähle(it.first.daten.zuAuswahl())
+                    ctx = it.first.daten.id to klickPos.round()
                     return@let it
                 } else { return@let null }
             } == null) karteCTX()
@@ -128,35 +146,12 @@ sealed class Karte(
     @Composable override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
 
     @Composable
-    override fun BoxScope.erhalteDarstellung() {
-        Box(
-            modifier = Modifier.graphicsLayer {
-                translationX = zustand.pos.x
-                translationY = zustand.pos.y
-                scaleX = zustand.zoom
-                scaleY = zustand.zoom
-                transformOrigin = TransformOrigin(0f, 0f)
-            }
-        ) {
-            val vp = zustand.erhalteViewportRect()
-            verbindungen.zuComposable()
-            pseudoVerbindung.value?.zuComposable()
-            knoten.filter { it.istImViewport(vp) } .zuComposable()
-        }
-        if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
-        verbindungen.forEach {
-            if (it.öffneKontext.value) it.erhalteKontextFenster(graph.ctx.second)
-        }
-    }
-
-    @Composable
     override fun erhalteKontextFenster(
         pos: BildschirmPosition
     ) {
         Box(
             modifier = Modifier
                 .offset { pos }
-//                .onSizeChanged { fensterGröße = it }
                 .background(Color.White, RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
                 .padding(vertical = 4.dp),
@@ -167,5 +162,32 @@ sealed class Karte(
                 }
             }
         }
+    }
+
+    @Composable
+    override fun BoxScope.erhalteDarstellung() {
+        Box(
+            modifier = Modifier.graphicsLayer {
+                translationX = zustand.pos.x
+                translationY = zustand.pos.y
+                scaleX = zustand.zoom
+                scaleY = zustand.zoom
+                transformOrigin = TransformOrigin(0f, 0f)
+            }
+        ) {
+            verbindungen.sichtbar().zuComposable()
+            knoten.sichtbar().zuComposable()
+            pseudoVerbindung.value?.zuComposable()
+        }
+        graph.inhalt.zeigeKontext()
+        Box(Modifier.align(Alignment.CenterEnd)) {
+            zustand.auswahl.erhalteInspektorObjekt()?.erhalteInspektor()
+        }
+    }
+
+
+    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt<out GraphDaten>? = when {
+        value is EinzelAuswahl -> graph.inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }
+        else -> null
     }
 }

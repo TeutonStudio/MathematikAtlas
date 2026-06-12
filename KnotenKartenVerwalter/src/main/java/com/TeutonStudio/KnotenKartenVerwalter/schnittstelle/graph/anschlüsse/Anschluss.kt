@@ -50,6 +50,7 @@ sealed class Anschluss<D: AnschlussDaten>(
     graph: Graph,
     daten: D,
 ): GraphObjekt<D>(graph,daten) {
+    public val karte get() = besitzer.besitzer
     public abstract val besitzer: Knoten
 //    public var partner: Anschluss?
     val pos get() = besitzer.erhalteAnschlussPos(daten.id)
@@ -84,11 +85,11 @@ sealed class Anschluss<D: AnschlussDaten>(
 
     override fun beiKlick(klickPos: Offset) {
 //                        graph.wähle(daten.zuAuswahl())
-        graph.keinKontext()
+        karte.keinKontext()
     }
 
     override fun beiHalten(klickPos: Offset) {
-        graph.ctx = daten.id to klickPos.round()
+        karte.ctx = daten.id to klickPos.round()
 //                        graph.wähle(daten.zuAuswahl())
     }
 
@@ -121,11 +122,11 @@ sealed class Anschluss<D: AnschlussDaten>(
     }
 
     public open fun beiVerbindungZiehenStart(klickPos: Offset) {
-        graph.keinKontext()
-        graph.wähle()
+        karte.keinKontext()
+        karte.wähle()
         dragPos = pos
 
-        graph.karte.pseudoVerbindung.value = BezierVerbindung(
+        karte.pseudoVerbindung.value = BezierVerbindung(
             graph, VerbindungDaten(
                 "pseudo",
                 IDEhe(
@@ -149,17 +150,17 @@ sealed class Anschluss<D: AnschlussDaten>(
                 val bedingung = second.getDistanceSquared() < 500f && erlaubtVerbindung(first)
                 if (bedingung) {
                     dragZiel = first
-                    graph.karte.pseudoVerbindung.value?.endeKante = first.daten.kante
+                    karte.pseudoVerbindung.value?.endeKante = first.daten.kante
                     return
                 } else dragZiel = null
             } == null) dragZiel = null
     }
     public open fun beiVerbindungZiehenEnde() {
-        dragZiel?.let { graph.definiereVerbindung(this@Anschluss,it) }
-        graph.karte.pseudoVerbindung.value = null
+        dragZiel?.let { karte.definiereVerbindung(this@Anschluss,it) }
+        karte.pseudoVerbindung.value = null
     }
     public open fun beiVerbindungZiehenAbbruch() {
-        graph.karte.pseudoVerbindung.value = null
+        karte.pseudoVerbindung.value = null
     }
 
 

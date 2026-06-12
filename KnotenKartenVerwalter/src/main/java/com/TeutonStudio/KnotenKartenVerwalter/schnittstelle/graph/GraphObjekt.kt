@@ -44,17 +44,18 @@ abstract class GraphObjekt<D: GraphDaten>(
     public open fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {}
 
     @Composable abstract fun BoxScope.erhalteDarstellung()
-    @Composable abstract fun erhalteKontextFenster(pos: BildschirmPosition)
+    @Composable abstract fun erhalteKontextFenster(pos: BildschirmPosition = graph.karte.ctx.second)
+    @Composable open fun erhalteInspektor() {}
 
-    public val öffneKontext = derivedStateOf { graph.ctx.first == daten.id }
-    public val istSelektiert by derivedStateOf { graph.selektiert.enthält(this) }
+    public val öffneKontext = derivedStateOf { graph.karte.ctx.first == daten.id }
+    public val istSelektiert by derivedStateOf { graph.karte.zustand.auswahl.value.enthält(this) }
 
     public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss<out AnschlussDaten>? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }
     public fun erhalteAnschlussMann(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
     public fun erhalteAnschlussWeib(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
     public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + zustand.pos * zustand.zoom).round()
-    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = round()
+//    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = round()
     public fun BildschirmPosition.zuKarte(zustand: KarteZustand = graph.karte.zustand): KartenPosition = (this.toOffset() - zustand.pos * zustand.zoom)
     public fun BildschirmPosition.zuDelta(zustand: KarteZustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.zoom
     public fun BildschirmPosition.zuKnoten(
@@ -62,13 +63,15 @@ abstract class GraphObjekt<D: GraphDaten>(
         zustand: KarteZustand = graph.karte.zustand,
     ): KnotenPosition = this.toOffset() - knoten.daten.position
 
-    // Der Inhalt des Inspectrs zu diesem Objekt
-    fun erhalteInspectorFenster() = Unit
 
     // Auf dem Graph wird von einem Anschluss aus gezogen
     fun planeVerbindung(a: Anschluss<out AnschlussDaten>) = Unit
     // Auf dem Graph wird eine gezogene Verbindung auf einem Anschluss dieses Knoten losgelassen
     // von ist dabei der Anschluss von dem gezogen wurde und nach der auf dem fallen gelassen wurde
     fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit
+
+    public companion object {
+        @Composable public fun Iterable<GraphObjekt<out GraphDaten>>.zeigeKontext() = forEach { if (it.öffneKontext.value) it.erhalteKontextFenster() }
+    }
 
 }

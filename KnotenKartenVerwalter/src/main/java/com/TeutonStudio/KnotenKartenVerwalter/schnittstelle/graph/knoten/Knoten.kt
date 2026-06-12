@@ -4,6 +4,7 @@ import android.graphics.RectF
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -29,7 +31,9 @@ import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
@@ -66,13 +70,13 @@ sealed class Knoten(
     public val dimension get() = daten.erhalteSize()
 
     override fun beiKlick(klickPos: Offset) {
-        graph.wähle(daten.zuAuswahl())
-        graph.keinKontext()
+        besitzer.wähle(EinzelAuswahl(this))
+        besitzer.keinKontext()
     }
 
     override fun beiHalten(klickPos: Offset) {
-        graph.ctx = daten.id to klickPos.zuBildAusKnoten()
-        graph.wähle(daten.zuAuswahl())
+        besitzer.ctx = daten.id to klickPos.zuBildAusKnoten()
+        besitzer.wähle(EinzelAuswahl(this))
     }
 
     override fun beiTransform(
@@ -81,9 +85,9 @@ sealed class Knoten(
         panDelta: Offset,
         rotationChange: Float
     ) {
-        if (daten.beweglich) graph.verschiebeKnoten(daten.id,panDelta)
-        graph.wähle(daten.zuAuswahl())
-        graph.keinKontext()
+        if (daten.beweglich) besitzer.verschiebeKnoten(daten.id,panDelta)
+        besitzer.wähle(EinzelAuswahl(this))
+        besitzer.keinKontext()
     }
 
 
@@ -99,9 +103,14 @@ sealed class Knoten(
                 contentAlignment = Alignment.Center,
             ) { anschlüsse.associateWith { (daten.anschlussIdx[it.daten.id] ?: 0) }.zuLeiste(kante) }
         }
-        if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
-        anschlüsse.forEach {
-            if (it.öffneKontext.value) it.erhalteKontextFenster(erhalteAnschlussPos(it.daten.id).zuBildAusKnoten().zuKnoten(this@Knoten).round())
+    }
+
+    @Composable
+    override fun erhalteInspektor() {
+        Card(Modifier.padding(25.dp)) {
+            Column(Modifier.padding(15.dp)) {
+                Text("Inpektor: ${daten.name}")
+            }
         }
     }
 
@@ -123,13 +132,19 @@ sealed class Knoten(
         ) {
             Card() {
                 Column {
-                    Text("Kontextfenster des Knoten")
+                    Card() {
+                        Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("id: ${daten.id}",Modifier.scale(.9f),Color.Gray)
+                            Text("löschen",Modifier.clickable() { graph.karte.vernichteKnoten(this@Knoten) })
+                            Text("duplizieren",Modifier.clickable() { graph.karte.dupliziereKnoten(this@Knoten) })
+                        }
+                    }
                 }
             }
         }
     }
 
-    fun istImViewport(viewport: RectF): Boolean = RectF(
+    fun istImViewport(viewport: RectF = besitzer.zustand.erhalteViewportRect()): Boolean = RectF(
         daten.position.x,
         daten.position.y,
         daten.position.x + daten.breite,
@@ -165,6 +180,8 @@ sealed class Knoten(
         )
     }
 
+    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + daten.position).round()
+
     public companion object {
         @Composable
         public fun Iterable<Knoten>.zuComposable(
@@ -173,6 +190,8 @@ sealed class Knoten(
             .offset { it.daten.position.round() }
             .size(with(LocalDensity.current) { it.dimension.toDpSize() })
         ) }
+
+        public fun Iterable<Knoten>.sichtbar() = filter { it.istImViewport() }
 
         public fun Iterable<Knoten>.findeNachId(id:String) = find { it.daten.id == id }
         public fun Iterable<Knoten>.anschlussNachId(idKnoten:String,idAnschluss:String) = findeNachId(idKnoten)?.anschlussNachId(idAnschluss)
