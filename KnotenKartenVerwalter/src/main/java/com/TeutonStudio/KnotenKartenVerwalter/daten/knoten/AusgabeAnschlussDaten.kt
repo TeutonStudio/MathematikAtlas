@@ -1,26 +1,23 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.knoten
 
+import androidx.compose.runtime.toMutableStateList
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.AusgabeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
-import com.TeutonStudio.KnotenKartenVerwalter.toMutableMap
-import kotlin.collections.putAll
-import kotlin.text.clear
 
-open class AusgabeDaten(
+open class AusgabeAnschlussDaten(
     override val id: String,
     override val name: String,
-): RichtungsDaten(id,name) {
+): RichtungsAnschlussDaten<EingangDaten>(id,name) {
     override val klasse: KnotenArt? = AusgabeKnoten.KNOTEN_ART
-    override val anschlüsse: KnotenAnschlüsse
-        get() = anschlussLabel.map { EingangDaten(
-            id(this.id, it.value.second),
-            it.key,
-            it.value.first
-        ) to it.value.second }.toMutableMap()
+    override val anschlüsse
+        get() = anschlussLabel.map {
+            val id = id(this.id, it.value.second)
+            anschlussIdx.put(id,it.value.second)
+            EingangDaten(id,it.key,it.value.first)
+        }.toMutableStateList()
 
     constructor(
         id: String,

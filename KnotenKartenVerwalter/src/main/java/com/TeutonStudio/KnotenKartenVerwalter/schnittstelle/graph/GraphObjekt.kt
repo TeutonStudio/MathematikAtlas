@@ -10,17 +10,20 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KnotenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
 // Grundklasse für ein Objekt, dass auf einem KartenGraph erscheint
-abstract class GraphObjekt(_graph: Graph) {
-    public abstract val daten: GraphDaten
-    public lateinit var graph: Graph
-    init { definiereGraph(_graph) }
-    public fun definiereGraph(graph: Graph) { graph.inhalt.add(this); this.graph = graph }
+abstract class GraphObjekt<D: GraphDaten>(
+    public val graph: Graph,
+    public val daten: D,
+) {
+//    init { definiereGraph(graph) }
+//    public fun definiereGraph(graph: Graph) { graph.inhalt.add(this) }
+    public fun registriere() = also { graph.inhalt.add(it) }
 
 
     @Composable abstract fun zuComposable(modifier: Modifier = Modifier.Companion)
@@ -31,9 +34,9 @@ abstract class GraphObjekt(_graph: Graph) {
 
     public val istSelektiert by derivedStateOf { graph.selektiert.enthält(this) }
 
-    public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.keys.find { it.daten.id == anschlussId }
-    public fun erhalteAnschlussMann(id: IDEhe): Anschluss? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
-    public fun erhalteAnschlussWeib(id: IDEhe): Anschluss? = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
+    public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss<out AnschlussDaten>? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }
+    public fun erhalteAnschlussMann(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
+    public fun erhalteAnschlussWeib(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
     public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + zustand.pos * zustand.zoom).round()
     public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = round()
@@ -48,9 +51,9 @@ abstract class GraphObjekt(_graph: Graph) {
     fun erhalteInspectorFenster() = Unit
 
     // Auf dem Graph wird von einem Anschluss aus gezogen
-    fun planeVerbindung(a: Anschluss) = Unit
+    fun planeVerbindung(a: Anschluss<out AnschlussDaten>) = Unit
     // Auf dem Graph wird eine gezogene Verbindung auf einem Anschluss dieses Knoten losgelassen
     // von ist dabei der Anschluss von dem gezogen wurde und nach der auf dem fallen gelassen wurde
-    fun erstelleVerbindung(von: Anschluss, zu: Anschluss) = Unit
+    fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit
 
 }

@@ -4,13 +4,10 @@ import androidx.annotation.FloatRange
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -20,21 +17,17 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.istVertikal
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.wertFür
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import kotlin.math.abs
-import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 public fun <K, V> Iterable<Pair<K, V>>.toMutableMap() = this.toMap().toMutableMap()
 public fun <T> Pair<T,T>.enthält(value: T): Boolean = first == value || second == value
@@ -166,14 +159,14 @@ public fun BildschirmPosition.zuIntOffset(zustand: KarteZustand): IntOffset = th
 /**
  * Anschlüsse eines Knotens und ihre Sortierung
  */
-typealias KnotenAnschlüsse = MutableMap<AnschlussDaten,Int>
+typealias KnotenAnschlüsse = MutableMap<out AnschlussDaten,Int>
 /**
  * Der Modifier für einen Anschluss, abhängig von Anschluss und index
  */
 typealias AnschlussModifier = (AnschlussDaten, Int) -> Modifier
 
 // public fun KnotenAnschlüsse.filterKante(kante: AnschlussKante): KnotenAnschlüsse = this.filter { (daten,idx) -> daten.kante == kante }.toMutableMap()
-public fun Map<Anschluss,Int>.filterKante(kante: AnschlussKante): Map<Anschluss,Int> = this.filter { (a,idx) -> a.daten.kante == kante }.toMutableMap()
+public fun Map<Anschluss<out AnschlussDaten>,Int>.filterKante(kante: AnschlussKante): Map<Anschluss<out AnschlussDaten>,Int> = this.filter { (a,idx) -> a.daten.kante == kante }.toMutableMap()
 public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): KnotenAnschlüsse = this.filter { (daten,idx) -> when (richtung) {
     AnschlussRichtung.Eingang -> daten is EingangDaten
     AnschlussRichtung.Ausgang -> daten is AusgangDaten
@@ -181,7 +174,7 @@ public fun KnotenAnschlüsse.filterRichtung(richtung: AnschlussRichtung): Knoten
 
 
 
-public fun Pair<KnotenDaten,AnschlussDaten>.pos(): KartenPosition {
+/*public fun Pair<KnotenDaten,AnschlussDaten>.pos(): KartenPosition {
     val anteil = relAnteilKante(first.anschlüsse,second.id,second.kante)
     return Offset(
         x = second.kante.wertFür(
@@ -197,15 +190,15 @@ public fun Pair<KnotenDaten,AnschlussDaten>.pos(): KartenPosition {
             first.position.y + first.dimension.height
         ),
     )
-}
+}*/
 
-private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String, kante: AnschlussKante): Float {
+/*private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String, kante: AnschlussKante): Float {
     val sorter = compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id }
     val anschluesseAnKante = anschlüsse.entries.filter { (daten, _) -> daten.kante == kante }.sortedWith(sorter)
     val indexAnKante = anschluesseAnKante.indexOfFirst { (daten, _) -> daten.id == aId }.coerceAtLeast(0)
     val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
     return (indexAnKante + 1f) / (anzahlAnKante + 1f)
-}
+}*/
 
 // Verbindung
 
@@ -214,7 +207,7 @@ public fun Iterable<Verbindung>.plusVlt(arg: Verbindung?): Iterable<Verbindung> 
 
 typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 
-public fun idReferenz(von: Pair<KnotenDaten, AnschlussDaten>,zu: Pair<KnotenDaten, AnschlussDaten>): idReferenz = (von.first.id to zu.first.id) to (von.second.id to zu.second.id)
+public fun idReferenz(von: Pair<KnotenDaten, AnschlussDaten>, zu: Pair<KnotenDaten, AnschlussDaten>): idReferenz = (von.first.id to zu.first.id) to (von.second.id to zu.second.id)
 
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second

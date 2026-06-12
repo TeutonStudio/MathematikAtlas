@@ -1,15 +1,16 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
-sealed class RichtungsAnschluss(
-    _graph: Graph,
-    override val daten: RichtungsAnschlussDaten,
+sealed class RichtungsAnschluss<D: RichtungsAnschlussDaten>(
+    graph: Graph,
+    daten: D,
     override val besitzer: Knoten,
-): Anschluss(_graph) {
-    override fun erlaubtVerbindung(anschluss: Anschluss): Boolean = super.erlaubtVerbindung(anschluss)
+): Anschluss<D>(graph,daten) {
+    override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = super.erlaubtVerbindung(anschluss)
 
     public companion object {
         public const val ANSCHLUSS_ART = "dir"

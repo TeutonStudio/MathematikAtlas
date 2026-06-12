@@ -14,8 +14,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKartenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenFabrik
@@ -40,26 +43,21 @@ class Graph(
     private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
 ) {
-    public val inhalt: MutableList<GraphObjekt> = mutableListOf()
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
-    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern)
+    public val inhalt: MutableList<GraphObjekt<out GraphDaten>> = mutableListOf()
+    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern).apply { registriere() }
+    val knoten get() = karte.knoten
+    val anschlüsse get() = karte.anschlüsse
+    val verbindung get() = karte.verbindungen
 
-    public val selektiert
-        get() = karte.zustand.auswahl.value
+    public val selektiert get() = karte.zustand.auswahl.value
     public val selektiertFarbe = Color(0xFF2563EB)
     public var ctx by mutableStateOf<Pair<String, IntOffset>>("" to IntOffset.Zero)
 
     public fun keinKontext() { ctx = "" to IntOffset.Zero }
 
-    public fun erhalteVerbindungNachPos(pos: KartenPosition): Pair<Verbindung,Offset>? {
-        return inhalt.filterIsInstance<Verbindung>().map {
-            it to it.abstand(pos)
-        }.minByOrNull { it.second.getDistanceSquared() }
-    }
-
-    public fun erhalteAnschlussNachPos(pos: KartenPosition): Pair<Anschluss,Offset>? {
-        return karte.anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
-    }
+    public fun erhalteVerbindungNachPos(pos: KartenPosition): Pair<Verbindung,Offset>? = verbindung.map { it to it.abstand(pos) }.minByOrNull { it.second.getDistanceSquared() }
+    public fun erhalteAnschlussNachPos(pos: KartenPosition): Pair<Anschluss<out AnschlussDaten>,Offset>? = anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
 
     public fun wähle(wahl: AuswahlDaten = AuswahlDaten.LEER) {
         karte.zustand.auswahl.value = wahl
@@ -73,14 +71,24 @@ class Graph(
 //        karte.aktualisierung(id,nach)
     }
 
-    public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss,Float> {
+    public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) {
+        karte.daten.verbindungen.add(VerbindungDaten(
+            setOf(mann.daten.id,weib.daten.id).joinToString("-"),
+            mann.besitzer.daten.id to weib.besitzer.daten.id,
+            mann.daten.id to weib.daten.id,
+            "",null
+        ))
+        // TODO karte neu erzeugen
+    }
+
+    public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss<out AnschlussDaten>,Float> {
         val p = karte.pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero
         val nA = erhalteAnschlussNachKartePos(p)
         return nA to (p-nA.pos).getDistanceSquared()
     }
 
 //    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
-    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss = inhalt.filterIsInstance<Anschluss>().filter { it.daten.id != "pseudo" }.minBy { (it.pos - pos).getDistanceSquared() }
+    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss<out AnschlussDaten> = anschlüsse.filter { it.daten.id != "pseudo" }.minBy { (it.pos - pos).getDistanceSquared() }
 
     @Composable
     public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)

@@ -25,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
@@ -43,10 +45,10 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 
-sealed class Anschluss(
-    _graph: Graph
-): GraphObjekt(_graph) {
-    public abstract override val daten: AnschlussDaten
+sealed class Anschluss<D: AnschlussDaten>(
+    graph: Graph,
+    daten: D,
+): GraphObjekt<D>(graph,daten) {
     public abstract val besitzer: Knoten
 //    public var partner: Anschluss?
     val pos get() = besitzer.erhalteAnschlussPos(daten.id)
@@ -54,7 +56,8 @@ sealed class Anschluss(
         get() = 5.dp
 
     private var _dragPos: Offset by mutableStateOf(Offset.Zero)
-    private val dragPos: MutableState<Offset> = mutableStateOf(Offset.Zero)
+    private var dragPos by mutableStateOf(Offset.Zero)
+    private var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
@@ -66,44 +69,10 @@ sealed class Anschluss(
                 .background(farbe, CircleShape)
                 .pointerInput(daten.id) {
                     detectDragGestures(
-                        onDragStart = {
-                            graph.keinKontext()
-                            graph.wähle()
-
-                            val start = derivedStateOf { pos }
-                            _dragPos = start.value; dragPos.value = _dragPos
-                            val ende = derivedStateOf { dragPos.value }
-
-                            val vDaten = VerbindungDaten(
-                                "pseudo",
-                                IDEhe(besitzer.daten.id, besitzer.daten.id, daten.id, daten.id),
-                            )
-                            graph.karte.pseudoVerbindung.value =
-                                BezierVerbindung(graph, vDaten, start, ende).apply {
-                                    startKante = this@Anschluss.daten.kante
-                                    endeKante = AnschlussKante.Links
-                                }
-                        },
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            _dragPos += dragAmount.round().zuDelta()
-                            graph.erhalteAnschlussNachPos(_dragPos)?.apply {
-                                val bedingung = second.getDistanceSquared() < 500f && erlaubtVerbindung(first)
-                                if (bedingung) {
-                                    dragPos.value = first.pos
-                                    graph.karte.pseudoVerbindung.value?.endeKante = first.daten.kante
-                                    return@detectDragGestures
-                                }
-                            }
-                            dragPos.value = _dragPos
-                        },
-                        onDragEnd = {
-                            // TODO finalisieren
-                            graph.karte.pseudoVerbindung.value = null
-                        },
-                        onDragCancel = {
-                            graph.karte.pseudoVerbindung.value = null
-                        },
+                        onDragStart = ::beiVerbindungZiehenStart,
+                        onDrag = ::beiVerbindungZiehenDelta,
+                        onDragEnd = ::beiVerbindungZiehenEnde,
+                        onDragCancel = ::beiVerbindungZiehenAbbruch,
                     )
                 }
                 .pointerInput(daten.id) {
@@ -139,18 +108,61 @@ sealed class Anschluss(
         }
     }
 
-    public fun abstand(anschluss: Anschluss): Offset = anschluss.pos - pos
+    public open fun beiVerbindungZiehenStart(klickPos: Offset) {
+        graph.keinKontext()
+        graph.wähle()
+        dragPos = pos
 
-    public open fun erlaubtVerbindung(anschluss: Anschluss): Boolean = anschluss != this
+        graph.karte.pseudoVerbindung.value = BezierVerbindung(
+            graph, VerbindungDaten(
+                "pseudo",
+                IDEhe(
+                    besitzer.daten.id,
+                    besitzer.daten.id,
+                    daten.id,
+                    daten.id,
+                ),
+            ),
+            derivedStateOf { pos },
+            derivedStateOf { dragZiel?.pos ?: dragPos }
+        ).apply {
+            startKante = this@Anschluss.daten.kante
+            endeKante = AnschlussKante.Links
+        }
+    }
+    public open fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
+        change.consume()
+        dragPos += dragAmount.round().zuDelta()
+        if (graph.erhalteAnschlussNachPos(dragPos)?.apply {
+                val bedingung = second.getDistanceSquared() < 500f && erlaubtVerbindung(first)
+                if (bedingung) {
+                    dragZiel = first
+                    graph.karte.pseudoVerbindung.value?.endeKante = first.daten.kante
+                    return
+                } else dragZiel = null
+            } == null) dragZiel = null
+    }
+    public open fun beiVerbindungZiehenEnde() {
+        dragZiel?.let { graph.definiereVerbindung(this@Anschluss,it) }
+        graph.karte.pseudoVerbindung.value = null
+    }
+    public open fun beiVerbindungZiehenAbbruch() {
+        graph.karte.pseudoVerbindung.value = null
+    }
+
+
+    public fun abstand(anschluss: Anschluss<out AnschlussDaten>): Offset = anschluss.pos - pos
 
     public fun istSelbst(zielBesitzer: Knoten?): Boolean = (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
+    public open fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = anschluss != this
+
 
     public open fun istEingang(): Boolean = false
     public open fun istAusgang(): Boolean = false
 
     public companion object {
         @Composable
-        public fun Map<Anschluss,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier) {
+        public fun Map<Anschluss<out AnschlussDaten>,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier) {
             val listeComposable = this.filterKante(kante).map { (anschluss,idx) -> @Composable { anschluss.zuComposable(/*modifier(anschluss.daten,idx)*/) } }
             if (kante.istVertikal()) Column(
                 modifier = leisteModifier.fillMaxKante(kante),

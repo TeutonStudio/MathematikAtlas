@@ -28,9 +28,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
 
 sealed class Verbindung(
-    _graph: Graph
-): GraphObjekt(_graph) {
-    public abstract override val daten: VerbindungDaten
+    graph: Graph,
+    daten: VerbindungDaten,
+): GraphObjekt<VerbindungDaten>(graph,daten) {
     public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val start: State<KartenPosition>
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist

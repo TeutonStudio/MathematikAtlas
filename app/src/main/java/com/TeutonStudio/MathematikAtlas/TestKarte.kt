@@ -5,11 +5,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AusgabeDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AusgabeAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.idReferenz
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
 
 
@@ -17,7 +17,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
     id = "test-karte",
     name = "Graph Testkarte",
     initialKnoten = listOf(
-        KnotenDaten(
+        KnotenAnschlussDaten(
             id = "eingabe",
             name = "Eingabe",
             position = Offset(80f, 120f),
@@ -26,7 +26,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
                 AusgangDaten("out2", AnschlussKante.Rechts, "Ausgang 2") to 1
             )
         ),
-        KnotenDaten(
+        KnotenAnschlussDaten(
             id = "mitte",
             name = "Mitte",
             position = Offset(360f, 170f),
@@ -40,7 +40,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
                 AnschlussDaten("bot2", AnschlussKante.Unten,"Test Unten 2") to 1,
             )
         ),
-        AusgabeDaten(
+        AusgabeAnschlussDaten(
             id = "ausgabe",
             name = "Ausgabe",
             position = Offset(660f, 120f),
@@ -56,7 +56,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
         ),
         VerbindungDaten(
             id = "v-mitte-ausgabe",
-            ids = IDEhe("mitte","ausgabe","out",AusgabeDaten.id("ausgabe",0)),
+            ids = IDEhe("mitte","ausgabe","out",AusgabeAnschlussDaten.id("ausgabe",0)),
         ),
     ),
 )

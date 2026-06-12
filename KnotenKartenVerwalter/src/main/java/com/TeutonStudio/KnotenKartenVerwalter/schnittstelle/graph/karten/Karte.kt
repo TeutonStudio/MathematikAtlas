@@ -31,8 +31,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten.Companion.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
@@ -42,12 +46,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.V
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
 
-private const val VERBINDUNG_TREFFER_RADIUS = 25f
 
 sealed class Karte(
-    _graph: Graph
-): GraphObjekt(_graph) {
-    abstract override val daten: KarteDaten
+    graph: Graph,
+    daten: KarteDaten,
+): GraphObjekt<KarteDaten>(graph,daten) {
     abstract val zustand: KarteZustand
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik
@@ -57,27 +60,30 @@ sealed class Karte(
     abstract val onKontextAktion: KontextAktionAusführen
     abstract val onAuswahlÄndern: AuswahlÄndern
 
-    val knoten by lazy { daten.knoten.mapNotNull {
-        return@mapNotNull knotenFabrik.erzeugeKnoten(graph, it, this)
-    } }
-    val verbindungen by lazy { daten.verbindungen.mapNotNull { v ->
-        val knotenMann = knoten.find { it.daten.id == v.ids.knotenIdMann }
-        val knotenWeib = knoten.find { it.daten.id == v.ids.knotenIdWeib }
-        if (knotenMann == null && knotenWeib == null) return@mapNotNull null
+    private val VERBINDUNG_TREFFER_RADIUS = 50f
 
-        val anschlussMann = knotenMann!!.anschlüsse.keys.find { it.daten.id == v.ids.anschlussIdMann }
-        val anschlussWeib = knotenWeib!!.anschlüsse.keys.find { it.daten.id == v.ids.anschlussIdWeib }
-        if (anschlussMann == null && anschlussWeib == null) return@mapNotNull null
+    val knoten by GraphCache(daten.knoten) { d: KnotenDaten ->
+        knotenFabrik.erzeugeKnoten(graph,d,this).apply { registriere() }
+    }
 
-        return@mapNotNull verbindungFabrik.erzeugeVerbindung(graph,v,
+    val verbindungen by GraphCache(daten.verbindungen) { d: VerbindungDaten ->
+        val knotenMann = knoten.find { it.daten.id == d.ids.knotenIdMann }
+        val knotenWeib = knoten.find { it.daten.id == d.ids.knotenIdWeib }
+        if (knotenMann == null && knotenWeib == null) null
+        val anschlussMann = knotenMann!!.anschlüsse.find { it.daten.id == d.ids.anschlussIdMann }
+        val anschlussWeib = knotenWeib!!.anschlüsse.find { it.daten.id == d.ids.anschlussIdWeib }
+        if (anschlussMann == null && anschlussWeib == null) null
+        verbindungFabrik.erzeugeVerbindung(graph,d,
             derivedStateOf { knotenMann.erhalteAnschlussPos(anschlussMann!!.daten.id) },
-            derivedStateOf { knotenWeib.erhalteAnschlussPos(anschlussWeib!!.daten.id) }
+            derivedStateOf { knotenWeib.erhalteAnschlussPos(anschlussWeib!!.daten.id) },
         )?.apply {
             startKante = anschlussMann!!.daten.kante
             endeKante = anschlussWeib!!.daten.kante
+            registriere()
         }
-    } }
-    val anschlüsse get() = knoten.flatMap { it.anschlüsse.keys }
+    }
+
+    val anschlüsse get() = knoten.flatMap { it.anschlüsse }
 
     @Composable
     override fun zuComposable(modifier: Modifier) {
@@ -101,9 +107,13 @@ sealed class Karte(
                                 printLogCat(first, second, second.getDistanceSquared())
                                 if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
                                     graph.wähle(first.daten.zuAuswahl())
-                                } else { graph.wähle() }
+                                } else {
+                                    graph.wähle()
+                                }
                             }
-                            if (v == null) { graph.wähle() }
+                            if (v == null) {
+                                graph.wähle()
+                            }
                             graph.keinKontext()
                         },
                         onLongPress = {
@@ -115,7 +125,9 @@ sealed class Karte(
                                     graph.wähle(first.daten.zuAuswahl())
                                     graph.ctx = first.daten.id to it.round()
                                     return@detectTapGestures
-                                } else { karteCTX() }
+                                } else {
+                                    karteCTX()
+                                }
                             }
                             if (v == null) karteCTX()
                         },

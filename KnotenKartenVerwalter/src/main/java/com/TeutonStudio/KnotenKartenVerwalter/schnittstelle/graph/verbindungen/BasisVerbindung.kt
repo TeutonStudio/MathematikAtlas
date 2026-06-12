@@ -13,11 +13,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.times
 import kotlin.math.pow
 
 open class BasisVerbindung(
-    _graph: Graph,
-    override val daten: VerbindungDaten,
+    graph: Graph,
+    daten: VerbindungDaten,
     override val start: State<KartenPosition>,
     override val ende: State<KartenPosition>,
-): Verbindung(_graph) {
+): Verbindung(graph,daten) {
     override var startKante: AnschlussKante = AnschlussKante.Rechts
     override var endeKante: AnschlussKante = AnschlussKante.Links
 

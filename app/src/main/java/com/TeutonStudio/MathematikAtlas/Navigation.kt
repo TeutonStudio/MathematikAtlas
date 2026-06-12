@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,8 +34,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.TeutonStudio.KnotenKartenVerwalter.daten.AuswahlDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
@@ -83,10 +86,13 @@ private fun KnotenKartenTestAnwendung() {
         when (aktion.aktion) {
             "Knoten erstellen" -> {
                 val nummer = karte.knoten.size + 1
-                val knoten = KnotenDaten(
+                val knoten = KnotenAnschlussDaten(
                     id = "knoten-$nummer",
                     name = "Knoten $nummer",
                     position = aktion.weltPosition,
+                    anschlüsse = mutableStateMapOf(
+
+                    )
                 )
                 auswahl.value = AuswahlDaten(knotenIds = setOf(knoten.id))
                 status = "Knoten erstellt"

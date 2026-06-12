@@ -7,9 +7,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
 typealias AnschlussArt = String
 typealias AnschlussFabrik = Map<AnschlussArt,AnschlussKonstruktor>
-typealias AnschlussKonstruktor = (graph: Graph, daten: AnschlussDaten, besitzer: Knoten) -> Anschluss
+typealias AnschlussKonstruktor = (graph: Graph, daten: AnschlussDaten, besitzer: Knoten) -> Anschluss<out AnschlussDaten>
 
-public fun AnschlussFabrik.erzeugeAnschluss(graph: Graph, daten: AnschlussDaten, besitzer: Knoten): Anschluss? = this[daten.klasse]?.invoke(graph,daten,besitzer)
+public fun AnschlussFabrik.erzeugeAnschluss(graph: Graph, daten: AnschlussDaten, besitzer: Knoten): Anschluss<out AnschlussDaten>? = this[daten.klasse]?.invoke(graph,daten,besitzer)
 
 @Suppress("UNCHECKED_CAST")
 val BasisAnschlussFabrik: AnschlussFabrik = mapOf(

@@ -1,24 +1,28 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
-
+/*
 import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteKnotenIds
 import com.TeutonStudio.KnotenKartenVerwalter.toSet
 
+*/
 /**
  * Schnittstelle fuer zukuenftige automatische Layout-Algorithmen.
  *
  * Das Modul bindet bewusst keine konkrete Layout-Bibliothek fest ein. Eine App kann spaeter einen
  * eigenen Algorithmus bereitstellen und nur die neuen Knotenpositionen zurueckgeben.
- */
+ *//*
+
 fun interface KartenLayoutAlgorithmus {
-    /**
+    */
+/**
      * Berechnet eine neue Karte aus einer vorhandenen Karte.
      *
      * Implementierungen sollten IDs, Verbindungen und fachliche Daten erhalten und nur die Position
      * der Knoten aendern, sofern keine andere Aenderung ausdruecklich gewuenscht ist.
-     */
+     *//*
+
     fun berechneLayout(karte: KarteDaten): KarteDaten
 }
 
@@ -86,12 +90,14 @@ data class StandardKartenLayout(
                     y = start.y + zeile * zeilenAbstand,
                 )
                 knoten
+*/
 /*                knoten.copy(
                     position = Offset(
                         x = start.x + spalte * spaltenAbstand,
                         y = start.y + zeile * zeilenAbstand,
                     ),
-                )*/
+                )*//*
+
             }
             .associateBy { it.id }
 
@@ -100,3 +106,4 @@ data class StandardKartenLayout(
 }
 
 private fun Int?.orEmptyZero(): Int = this ?: 0
+*/

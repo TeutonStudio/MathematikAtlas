@@ -25,15 +25,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import com.TeutonStudio.KnotenKartenVerwalter.KnotenAnschlüsse
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.erhalteSize
 import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
 import com.TeutonStudio.KnotenKartenVerwalter.offsetKante
 import com.TeutonStudio.KnotenKartenVerwalter.radius
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.zuLeiste
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
@@ -41,21 +44,18 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.al
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.erzeugeAnschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.wertFür
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.toMap
-import kotlin.getValue
 
 sealed class Knoten(
-    _graph: Graph
-): GraphObjekt(_graph) {
-    public abstract override val daten: KnotenDaten
+    graph: Graph,
+    daten: KnotenDaten,
+): GraphObjekt<KnotenDaten>(graph,daten) {
     public abstract val besitzer: Karte
     public abstract val anschlussFabrik: AnschlussFabrik
 
-    public val anschlüsse by lazy { daten.anschlüsse.entries.mapNotNull {
-        anschlussFabrik.erzeugeAnschluss(graph,it.key, this)?.let { a -> a to it.value }
-    }.toMap() }
+    public val anschlüsse by GraphCache(daten.anschlüsse) { d: AnschlussDaten ->
+        anschlussFabrik.erzeugeAnschluss(graph,d,this).apply { registriere() }
+    }
 
     @Composable
     public override fun zuComposable(modifierKnoten: Modifier) {
@@ -89,10 +89,10 @@ sealed class Knoten(
                 Box(
                     modifier = modi.align(kante.alignment()), //.offset(x = (-5f * skalierung).dp),
                     contentAlignment = Alignment.Center,
-                ) { anschlüsse.zuLeiste(kante) }
+                ) { anschlüsse.map { it to (daten.anschlussIdx[it.daten.id] ?: 0) }.toMap().zuLeiste(kante) }
             }
             if (öffneKontext.value) erhalteKontextFenster(graph.ctx.second)
-            anschlüsse.keys.forEach {
+            anschlüsse.forEach {
                 if (it.öffneKontext.value) it.erhalteKontextFenster(erhalteAnschlussPos(it.daten.id).zuBildAusKnoten().zuKnoten(this@Knoten).round())
             }
         }
@@ -122,16 +122,16 @@ sealed class Knoten(
         }
     }
 
-    private fun relAnteilKante(anschlüsse: KnotenAnschlüsse, aId: String,kante: AnschlussKante): Float {
-        val sorter = compareBy<Map.Entry<AnschlussDaten, Int>> { it.value }.thenBy { it.key.id }
-        val anschluesseAnKante = anschlüsse.entries.filter { (daten, _) -> daten.kante == kante }.sortedWith(sorter)
-        val indexAnKante = anschluesseAnKante.indexOfFirst { (daten, _) -> daten.id == aId }.coerceAtLeast(0)
+    private fun relAnteilKante(anschlüsse: Iterable<AnschlussDaten>, aId: String, kante: AnschlussKante): Float {
+        val sorter = compareBy<AnschlussDaten> { it.id }
+        val anschluesseAnKante = anschlüsse.filter { it.kante == kante }.sortedWith(sorter)
+        val indexAnKante = anschluesseAnKante.indexOfFirst { it.id == aId }.coerceAtLeast(0)
         val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
         return (indexAnKante + 1f) / (anzahlAnKante + 1f)
     }
 
     public fun erhalteAnschlussPos(aId: String): KartenPosition {
-        val kante = daten.anschlüsse.keys.find { it.id == aId }?.kante ?: AnschlussKante.Rechts
+        val kante = daten.anschlüsse.find { it.id == aId }?.kante ?: AnschlussKante.Rechts
         val anteil = relAnteilKante(daten.anschlüsse,aId,kante)
 
         return Offset(
