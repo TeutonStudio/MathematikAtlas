@@ -1,6 +1,5 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
@@ -42,7 +41,7 @@ class Graph(
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
 ) {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
-    public val inhalt: MutableList<GraphObjekt<out GraphDaten>> = mutableListOf()
+    public val inhalt: MutableList<GraphObjekt> = mutableListOf()
     val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern).apply { registriere() }
     val knoten get() = karte.knoten
     val anschlüsse get() = karte.anschlüsse
@@ -72,7 +71,7 @@ class Graph(
 
     @Composable public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)
 
-    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt<out GraphDaten>? = when {
+    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
         value is EinzelAuswahl -> inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }
         else -> null
     }

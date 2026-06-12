@@ -2,10 +2,8 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.BasisAnschlussFabrik
@@ -13,7 +11,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
 open class BasisKnoten(
     graph: Graph,
-    daten: KnotenDaten,
+    daten: AnschlussKnotenDaten,
     override val besitzer: Karte,
 ): Knoten(graph,daten) {
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik

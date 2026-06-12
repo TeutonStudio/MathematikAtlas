@@ -3,7 +3,6 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -17,12 +16,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -32,27 +29,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
 import com.TeutonStudio.KnotenKartenVerwalter.filterKante
-import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 import kotlin.collections.component1
 import kotlin.collections.component2
 
+typealias GraphAnschluss = Anschluss<out AnschlussDaten>
 
 sealed class Anschluss<D: AnschlussDaten>(
-    graph: Graph,
-    daten: D,
-): GraphObjekt<D>(graph,daten) {
-    public val karte get() = besitzer.besitzer
-    public abstract val besitzer: Knoten
-//    public var partner: Anschluss?
+    override val graph: Graph,
+    override val daten: D,
+): GraphAnschlussObjekt<D> {
+//    public val karte get() = besitzer.besitzer
+//    public abstract val besitzer: Knoten
+    //    public var partner: Anschluss?
     val pos get() = besitzer.erhalteAnschlussPos(daten.id)
 
     private var dragPos by mutableStateOf(Offset.Zero)

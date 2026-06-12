@@ -1,8 +1,6 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 
-import androidx.compose.ui.geometry.Offset
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 

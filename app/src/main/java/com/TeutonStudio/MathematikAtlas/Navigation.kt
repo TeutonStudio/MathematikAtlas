@@ -38,7 +38,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.MultiAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
@@ -86,7 +86,7 @@ private fun KnotenKartenTestAnwendung() {
         when (aktion.aktion) {
             "Knoten erstellen" -> {
                 val nummer = karte.knoten.size + 1
-                val knoten = KnotenAnschlussDaten(
+                val knoten = KnotenDaten(
                     id = "knoten-$nummer",
                     name = "Knoten $nummer",
                     position = aktion.weltPosition,

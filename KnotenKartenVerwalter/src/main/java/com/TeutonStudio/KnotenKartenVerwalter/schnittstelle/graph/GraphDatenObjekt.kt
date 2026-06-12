@@ -23,11 +23,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
-// Grundklasse für ein Objekt, dass auf einem KartenGraph erscheint
-abstract class GraphObjekt<D: GraphDaten>(
-    public val graph: Graph,
-    public val daten: D,
-) {
+typealias GraphObjekt = GraphDatenObjekt<out GraphDaten>
+
+interface GraphDatenObjekt<D: GraphDaten>{
+    public val graph: Graph
+    public val daten: D
     public fun registriere() = also { graph.inhalt.add(it) }
 
     @Composable open fun Modifier.modifier() = transform().tapping()
@@ -47,8 +47,8 @@ abstract class GraphObjekt<D: GraphDaten>(
     @Composable abstract fun erhalteKontextFenster(pos: BildschirmPosition = graph.karte.ctx.second)
     @Composable open fun erhalteInspektor() {}
 
-    public val öffneKontext = derivedStateOf { graph.karte.ctx.first == daten.id }
-    public val istSelektiert by derivedStateOf { graph.karte.zustand.auswahl.value.enthält(this) }
+    public val öffneKontext get() = derivedStateOf { graph.karte.ctx.first == daten.id }
+    public val istSelektiert get() = derivedStateOf { graph.karte.zustand.auswahl.value.enthält(this) }
 
     public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss<out AnschlussDaten>? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }
     public fun erhalteAnschlussMann(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
@@ -71,7 +71,7 @@ abstract class GraphObjekt<D: GraphDaten>(
     fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit
 
     public companion object {
-        @Composable public fun Iterable<GraphObjekt<out GraphDaten>>.zeigeKontext() = forEach { if (it.öffneKontext.value) it.erhalteKontextFenster() }
+        @Composable public fun Iterable<GraphObjekt>.zeigeKontext() = forEach { if (it.öffneKontext.value) it.erhalteKontextFenster() }
     }
 
 }

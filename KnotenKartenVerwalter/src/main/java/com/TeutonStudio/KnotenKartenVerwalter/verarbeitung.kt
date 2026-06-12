@@ -15,16 +15,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussRichtung
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.istVertikal
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import kotlin.math.abs
 import kotlin.math.max
@@ -209,7 +209,7 @@ public fun Iterable<Verbindung>.plusVlt(arg: Verbindung?): Iterable<Verbindung> 
 
 typealias idReferenz = Pair<Pair<String,String>,Pair<String,String>>
 
-public fun idReferenz(von: Pair<KnotenDaten, AnschlussDaten>, zu: Pair<KnotenDaten, AnschlussDaten>): idReferenz = (von.first.id to zu.first.id) to (von.second.id to zu.second.id)
+public fun idReferenz(von: Pair<AnschlussKnotenDaten, AnschlussDaten>, zu: Pair<AnschlussKnotenDaten, AnschlussDaten>): idReferenz = (von.first.id to zu.first.id) to (von.second.id to zu.second.id)
 
 public fun idReferenz.erhalteKnotenIds(): Pair<String,String> = this.first
 public fun idReferenz.erhalteAnschlussIds(): Pair<String,String> = this.second
@@ -220,7 +220,7 @@ public fun idReferenz.erhalteZweites(): Pair<String,String> = this.first.second 
 //public fun idReferenz.istVerbunden(ref: AnschlussReferenz): Boolean = this.hatKnotenId(ref.knotenId) && this.hatAnschlussId(ref.anschlussId)
 
 public fun idReferenz.hatKnotenId(id: String): Boolean = this.erhalteKnotenIds().enthält(id)
-public fun idReferenz.istVerbunden(daten: KnotenDaten): Boolean = this.hatKnotenId(daten.id)
+public fun idReferenz.istVerbunden(daten: AnschlussKnotenDaten): Boolean = this.hatKnotenId(daten.id)
 
 public fun idReferenz.hatAnschlussId(id: String): Boolean = this.erhalteAnschlussIds().enthält(id)
 public fun idReferenz.istVerbunden(daten: AnschlussDaten): Boolean = this.hatAnschlussId(daten.id)
@@ -253,7 +253,7 @@ public fun Iterable<Verbindung>.zuComposable(modifier: Modifier = Modifier) {
 
 // Knoten
 
-public fun KnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
+public fun AnschlussKnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
 
 /**
  * Callback fuer eine geaenderte Knotenposition in Weltkoordinaten.

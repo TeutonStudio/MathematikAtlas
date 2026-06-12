@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl
 
 import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
 data class MultiAuswahl(
@@ -34,5 +35,5 @@ data class MultiAuswahl(
         verbindungIds = verbindungIds + andere.verbindungIds,
     )
 
-    override fun enthält(gO: GraphObjekt<out GraphDaten>): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id) || anschlussIds.contains(gO.daten.id)
+    override fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id) || anschlussIds.contains(gO.daten.id)
 }

@@ -33,25 +33,30 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten.Companion.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt.Companion.zeigeKontext
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.sichtbar
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.anschlüsseNachIDEhe
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.sichtbar
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung.Companion.sichtbar
@@ -61,9 +66,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.e
 
 
 sealed class Karte(
-    graph: Graph,
-    daten: KarteDaten,
-): GraphObjekt<KarteDaten>(graph,daten) {
+    override val graph: Graph,
+    override val daten: KarteDaten,
+): GraphKartenObjekt<KarteDaten> {
     abstract val zustand: KarteZustand
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik
@@ -75,7 +80,7 @@ sealed class Karte(
 
     private val VERBINDUNG_TREFFER_RADIUS = 50f
 
-    val knoten by GraphCache(daten.knoten) { d: KnotenDaten ->
+    val knoten by GraphCache(daten.knoten) { d: AnschlussKnotenDaten ->
         knotenFabrik.erzeugeKnoten(graph,d,this).apply { registriere() }
     }
 
@@ -104,10 +109,16 @@ sealed class Karte(
 
     public fun vernichteKnoten(knoten: Knoten) = daten.knoten.remove(knoten.daten).apply {
         daten.verbindungen.removeIf { it.ids.knotenIdMann == knoten.daten.id || it.ids.knotenIdWeib == knoten.daten.id }
-        keinKontext()
+        keinKontext(); wähle()
     }
     public fun dupliziereKnoten(knoten: Knoten) = daten.knoten.add(knoten.daten.duplizieren()).apply { keinKontext() }
-    public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply { keinKontext() }
+    public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
+        if (weib.daten is AusgangDaten && mann.besitzer is PullObjekt) (mann.besitzer as PullObjekt).aktualisiereCache()
+        if (mann.daten is AusgangDaten && weib.besitzer is PullObjekt) (weib.besitzer as PullObjekt).aktualisiereCache()
+        mann.besitzer.definiereVerbindung()
+        weib.besitzer.definiereVerbindung()
+        keinKontext()
+    }
     public fun vernichteVerbindung(verbindung: Verbindung) = daten.verbindungen.remove(verbindung.daten).apply { keinKontext() }
 
     override fun beiKlick(klickPos: Offset) {
@@ -186,7 +197,7 @@ sealed class Karte(
     }
 
 
-    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt<out GraphDaten>? = when {
+    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
         value is EinzelAuswahl -> graph.inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }
         else -> null
     }

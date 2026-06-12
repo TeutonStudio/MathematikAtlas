@@ -8,9 +8,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.toOffset
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.times
 import kotlin.math.pow
 

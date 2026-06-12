@@ -1,7 +1,5 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss
 
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.BasisAusgang
 
 open class AusgangDaten(

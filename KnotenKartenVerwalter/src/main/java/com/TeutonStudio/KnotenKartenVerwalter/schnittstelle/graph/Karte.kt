@@ -1,7 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.ui.geometry.Offset
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussRichtung
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
 
 
 /**

@@ -3,12 +3,10 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class GraphCache<D: GraphDaten, O: GraphObjekt<out D>>(
+class GraphCache<D: GraphDaten, O: GraphDatenObjekt<out D>>(
 //    graph: Graph,
     daten: SnapshotStateList<out D>,
     fabrik: (D) -> O?,

@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten

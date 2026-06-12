@@ -3,7 +3,7 @@ package com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 
-class IDEhe(
+data class IDEhe(
     val knotenIdMann: String,
     val knotenIdWeib: String,
     val anschlussIdMann: String,

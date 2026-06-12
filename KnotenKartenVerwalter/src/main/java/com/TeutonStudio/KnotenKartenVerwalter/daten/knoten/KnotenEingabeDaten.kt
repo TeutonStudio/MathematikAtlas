@@ -1,23 +1,42 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.knoten
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.Rechteck
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.EingabeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 
-open class EingabeAnschlussDaten(
+open class KnotenEingabeDaten(
     override val id: String,
     override val name: String,
-): RichtungsAnschlussDaten<AusgangDaten>(id,name) {
+): KnotenAnschlussDaten<AusgangDaten>, KnotenRichtung<AusgangDaten> {
     override val klasse: KnotenArt? = EingabeKnoten.KNOTEN_ART
-    override val anschlüsse
-        get() = anschlussLabel.map {
-            val id = AusgabeAnschlussDaten.id(this.id, it.value.second)
-            anschlussIdx.put(id,it.value.second)
-            AusgangDaten(id,it.key,it.value.first)
-        }.toMutableStateList()
+    override val dimension: Rechteck get() = Rect(position,position + Offset(breite,tiefe))
+    override var breite: Float = 180f
+    override var tiefe: Float = 96f
+
+    override var beweglich: Boolean = true
+    override var position: KartenPosition by mutableStateOf(KartenPosition.Zero)
+    override val anschlussIdx = mutableStateMapOf<String, Int>()
+    override val data: MutableMap<String, Any> = mutableMapOf()
+    override val anschlussLabel = mutableMapOf<AnschlussKante, Pair<String, Int>>()
+
+    override fun erzeugeAnschluss(
+        id: String,
+        kante: AnschlussKante,
+        label: String
+    ) = AusgangDaten(id,kante,label)
+
+    override fun erzeugeAnschlussId(knotenId: String, idx: Int): String = "${knotenId}-ausgang-${idx}"
 
     constructor(
         id: String,

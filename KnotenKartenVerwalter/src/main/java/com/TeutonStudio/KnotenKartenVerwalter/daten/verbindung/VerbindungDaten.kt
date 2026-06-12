@@ -13,7 +13,7 @@ open class VerbindungDaten(
     open val ids: IDEhe,
     open val label: String? = null,
     open val fehler: String? = null,
-): GraphDaten(id) {
+): GraphDaten {
     override val klasse: VerbindungArt = BezierVerbindung.VERBINDUNG_ART
 
     constructor(

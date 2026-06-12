@@ -27,16 +27,16 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.overlaps
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 
 sealed class Verbindung(
-    graph: Graph,
-    daten: VerbindungDaten,
-): GraphObjekt<VerbindungDaten>(graph,daten) {
+    override val graph: Graph,
+    override val daten: VerbindungDaten,
+): GraphDatenObjekt<VerbindungDaten> {
     public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val start: State<KartenPosition>
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
@@ -53,11 +53,11 @@ sealed class Verbindung(
             drawPath(
                 path = erhaltePfad(),
                 color = when {
-                    istSelektiert -> graph.selektiertFarbe
+                    istSelektiert.value -> graph.selektiertFarbe
                     daten.fehler != null -> Color(0xFFDC2626)
                     else -> Color(0xFF475569)
                 },
-                style = Stroke(width = if (istSelektiert) 8f else 3f, cap = StrokeCap.Round),
+                style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
             )
         }
 
