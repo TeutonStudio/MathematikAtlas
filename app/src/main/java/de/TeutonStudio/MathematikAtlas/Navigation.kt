@@ -179,9 +179,7 @@ private fun KnotenKartenTestAnwendung() {
         Spacer(Modifier.width(12.dp))
 
         Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
+            modifier = Modifier.fillMaxHeight().weight(1f)
                 .background(Color.White, RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp)),
         ) {

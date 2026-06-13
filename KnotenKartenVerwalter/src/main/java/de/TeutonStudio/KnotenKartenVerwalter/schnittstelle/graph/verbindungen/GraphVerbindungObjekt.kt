@@ -28,7 +28,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
 
     @Composable override fun Modifier.modifier() = this.zIndex(-1f)
 
-    @Composable override fun zuComposable(/*modifier: Modifier*/) = Canvas(modifier = Modifier.modifier()) { zeichnung() }
+    @Composable override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modifier()) { zeichnung() }
     @Composable override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
 
 

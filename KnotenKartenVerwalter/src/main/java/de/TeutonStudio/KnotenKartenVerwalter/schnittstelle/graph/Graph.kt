@@ -2,6 +2,7 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -60,8 +61,8 @@ class Graph(
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
-    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,Modifier) {
-        karte.zuComposable(/*modifier.matchParentSize()*/)
+    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f) {
+        karte.zuComposable(modifier.matchParentSize())
         Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
             karte.zuSteuerung()
             karte.zuÜbersicht()

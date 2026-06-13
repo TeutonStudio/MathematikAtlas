@@ -43,9 +43,7 @@ interface GraphHintergrund {
         modifier: Modifier = Modifier,
         vordergrund: @Composable BoxScope.() -> Unit,
     ) {
-        Box(
-            modifier = modifier.fillMaxSize().clipToBounds(),
-        ) {
+        Box(modifier = modifier.fillMaxSize().clipToBounds()) {
             Raster(
                 zustand = zustand,
                 rasterGröße = rasterGröße,
@@ -66,12 +64,9 @@ interface GraphHintergrund {
         rasterArt: RasterArt,
         rasterTesselation: RasterTesselation,
     ) {
-        val rasterFarbe =
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+        val rasterFarbe = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
 
-        Canvas(
-            modifier = modifier.fillMaxSize(),
-        ) {
+        Canvas(modifier.fillMaxSize()) {
             val zoom = zustand.zoom //.coerceAtLeast(0.0001f)
             val grundGröße = rasterGröße.coerceAtLeast(0.0001f)
 
@@ -215,36 +210,21 @@ interface GraphHintergrund {
     ) {
         val dreieckHöhe = rasterGröße * SQRT_3 / 2f
 
-        val ersteZeile =
-            floor(sichtbareWelt.top / dreieckHöhe).toInt() - 2
-
-        val letzteZeile =
-            ceil(sichtbareWelt.bottom / dreieckHöhe).toInt() + 2
+        val ersteZeile = floor(sichtbareWelt.top / dreieckHöhe).toInt() - 2
+        val letzteZeile = ceil(sichtbareWelt.bottom / dreieckHöhe).toInt() + 2
 
         for (zeile in ersteZeile..letzteZeile) {
-            val versatzX =
-                if ((zeile and 1) != 0) rasterGröße / 2f else 0f
+            val versatzX = if ((zeile and 1) != 0) rasterGröße / 2f else 0f
 
             val weltY = zeile * dreieckHöhe
 
-            val ersteSpalte = floor(
-                (sichtbareWelt.left - versatzX) / rasterGröße,
-            ).toInt() - 2
+            val ersteSpalte = floor((sichtbareWelt.left - versatzX) / rasterGröße).toInt() - 2
 
-            val letzteSpalte = ceil(
-                (sichtbareWelt.right - versatzX) / rasterGröße,
-            ).toInt() + 2
+            val letzteSpalte = ceil((sichtbareWelt.right - versatzX) / rasterGröße).toInt() + 2
 
             for (spalte in ersteSpalte..letzteSpalte) {
-                val weltPunkt = Offset(
-                    x = spalte * rasterGröße + versatzX,
-                    y = weltY,
-                )
-
-                val bildPunkt = weltPunkt.zuBildschirm(
-                    verschiebung = verschiebung,
-                    zoom = zoom,
-                )
+                val weltPunkt = Offset(x = spalte * rasterGröße + versatzX, y = weltY)
+                val bildPunkt = weltPunkt.zuBildschirm(verschiebung = verschiebung, zoom = zoom)
 
                 when (rasterArt) {
                     RasterArt.Punkte -> {

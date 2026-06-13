@@ -42,9 +42,7 @@ interface GraphDatenObjekt<D: GraphDaten>{
     @Composable public fun Modifier.position() = onGloballyPositioned { layoutCoordinates.value = it }
 
     @Composable
-    open fun zuComposable(/*modifier: Modifier = Modifier.Companion*/) = Box(
-        modifier = Modifier.modifier()
-    ) { erhalteDarstellung() }
+    open fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(modifier = modifier.modifier()) { erhalteDarstellung() }
 
     public open fun beiKlick(klickPos: Offset) {}
     public open fun beiHalten(klickPos: Offset) {}

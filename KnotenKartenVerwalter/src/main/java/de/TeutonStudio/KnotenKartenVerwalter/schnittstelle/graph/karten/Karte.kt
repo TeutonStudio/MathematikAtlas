@@ -107,9 +107,7 @@ sealed class Karte(
     }
     public override fun vernichteVerbindung(verbindung: Verbindung) = daten.verbindungen.remove(verbindung.daten).apply { keinKontext() }
 
-    public fun inhaltsGrenzen(
-        puffer: Float = 0f,
-    ): Rect? {
+    public fun inhaltsGrenzen(puffer: Float = 0f): Rect? {
         val grenzen = knoten.map { it.daten.dimension }.reduceOrNull { bisher, nächstes ->
             Rect(
                 left = minOf(bisher.left,nächstes.left),

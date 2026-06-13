@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
@@ -26,7 +27,7 @@ open class KarteZustand(
     public var zeigeÜbersicht by mutableStateOf(zeigeÜbersicht)
 
     public var zeigeKontrollLeiste by mutableStateOf(zeigeKontrollLeiste)
-    var rasterEinstellung = Pair(rasterArt,rasterTesselation)
+    var rasterEinstellung by mutableStateOf(rasterArt to rasterTesselation)
 
     var dimension by mutableStateOf(IntSize.Zero)
     var zoom by mutableFloatStateOf(1f)
@@ -77,11 +78,18 @@ open class KarteZustand(
     public fun zuBild(kartePos: KartenPosition): BildschirmPosition = (pos + kartePos * zoom).round()
     public fun zuKarte(bildPos: BildschirmPosition): KartenPosition = (bildPos.toOffset() - pos) / zoom
 
-//    public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von * zoom + pos).round()
+    public fun sichtbarerWeltBereich(): Rect? {
+        if (dimension.width <= 0 || dimension.height <= 0) { return null }
 
-//    public fun erhalteUntransformiert(von: BildschirmPosition): KartenPosition = (von.toOffset() - pos) / zoom
+        val sichererZoom = zoom.coerceAtLeast(0.0001f)
 
-//    public fun erhalteDeltaUntransformiert(delta: Offset): Offset = delta / zoom
+        return Rect(
+            left = -pos.x / sichererZoom,
+            top = -pos.y / sichererZoom,
+            right = (dimension.width - pos.x) / sichererZoom,
+            bottom = (dimension.height - pos.y) / sichererZoom,
+        )
+    }
 
     public fun erhalteViewportRect(
         breite: Float = dimension.width.toFloat(),

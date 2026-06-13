@@ -293,7 +293,7 @@ private data class MiniMapProjektion(
 /**
  * Ermittelt den sichtbaren Ausschnitt in Kartenkoordinaten.
  */
-private fun KarteZustand.sichtbarerWeltBereich(): Rect? {
+/*private fun KarteZustand.sichtbarerWeltBereich(): Rect? {
     if (
         dimension.width <= 0 ||
         dimension.height <= 0
@@ -313,7 +313,7 @@ private fun KarteZustand.sichtbarerWeltBereich(): Rect? {
                 dimension.height - pos.y
                 ) / sichererZoom,
     )
-}
+}*/
 
 private fun Rect.vereinigtMit(
     anderes: Rect,
