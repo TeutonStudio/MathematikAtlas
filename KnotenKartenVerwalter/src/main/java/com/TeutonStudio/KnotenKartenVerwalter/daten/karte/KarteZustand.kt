@@ -1,5 +1,6 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.karte
 
+import android.graphics.Rect
 import android.graphics.RectF
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
@@ -42,8 +43,30 @@ open class KarteZustand(
         this.pos = pos ?: zustand.pos
         this.zoom = zoom ?: zustand.zoom
     }
+
+//    fun verschiebeBildschirm(delta: Offset)
+
+    fun setzeZoom(neuerZoom: Float, fokus: Offset) {
+        val MIN_ZOOM = 0.2f
+        val MAX_ZOOM = 200.0f
+        val begrenzt = neuerZoom.coerceIn(MIN_ZOOM, MAX_ZOOM)
+        val faktor = begrenzt / zoom
+
+        pos = fokus - (fokus - pos) * faktor
+        zoom = begrenzt
+    }
+
+/*    fun zentriereAuf(
+        weltPosition: Offset,
+    )*/
+
+/*    fun passeInhaltEin(
+        inhalt: Rect,
+        rand: Float = 64f,
+    )*/
+
     public fun verschiebe(delta: Offset) { pos += delta }
-    public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(.25f,15f) }
+    public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(.05f,5f) }
     public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
 
     public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von * zoom + pos).round()

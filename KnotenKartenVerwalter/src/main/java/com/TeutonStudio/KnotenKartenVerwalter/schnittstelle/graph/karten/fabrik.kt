@@ -2,7 +2,6 @@ package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
-import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
@@ -16,7 +15,7 @@ typealias KartenKonstruktor = (
     zustand: KarteZustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
-    onKontextAktion: KontextAktionAusführen,
+//    onKontextAktion: KontextAktionAusführen,
     onAuswahlÄndern: AuswahlÄndern,
 ) -> Karte
 
@@ -25,7 +24,7 @@ fun KartenFabrik.erzeugeKarte(
     zustand: KarteZustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
-    onKontextAktion: KontextAktionAusführen,
+//    onKontextAktion: KontextAktionAusführen,
     onAuswahlÄndern: AuswahlÄndern,
 ): Karte {
     val klasse = daten.klasse ?: BasisKarte.KARTEN_ART
@@ -39,7 +38,7 @@ fun KartenFabrik.erzeugeKarte(
         zustand,
         aktualisierung,
         onVerbindungErstellen,
-        onKontextAktion,
+//        onKontextAktion,
         onAuswahlÄndern,
     )
 }

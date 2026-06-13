@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.Color
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
@@ -37,12 +36,12 @@ class Graph(
     private val zustand: KarteZustand,
     private val aktualisierung: KartenAktualisierung = { kId,pos -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
-    private val onKontextAktion: KontextAktionAusführen = {},
+//    private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
-) {
+): GraphHintergrund {
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
-    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onKontextAktion,onAuswahlÄndern).apply { registriere() }
+    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,/*onKontextAktion,*/onAuswahlÄndern).apply { registriere() }
     val knoten get() = karte.knoten
     val anschlüsse get() = karte.anschlüsse
     val verbindung get() = karte.verbindungen
@@ -69,7 +68,7 @@ class Graph(
 //    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
 //    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss<out AnschlussDaten> = anschlüsse.filter { it.daten.id != "pseudo" }.minBy { (it.pos - pos).getDistanceSquared() }
 
-    @Composable public fun zuComposable(modifier: Modifier) = karte.zuComposable(modifier)
+    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,Modifier) { karte.zuComposable(modifier) }
 
     public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
         value is EinzelAuswahl -> inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }

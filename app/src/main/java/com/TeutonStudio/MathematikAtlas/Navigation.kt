@@ -41,8 +41,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenTreffer
 
 sealed class Screen(val route: String) {
     data object StartScreen : Screen("start_screen")
@@ -82,8 +80,8 @@ private fun KnotenKartenTestAnwendung() {
         status = "Auswahl geloescht"
     }
 
-    fun fuehreKontextAktionAus(aktion: KartenKontextAktion) {
-        when (aktion.aktion) {
+    fun fuehreKontextAktionAus(aktion: Any) { // TODO
+        /*when (aktion.aktion) {
             "Knoten erstellen" -> {
                 val nummer = karte.knoten.size + 1
                 val knoten = KnotenDaten(
@@ -133,7 +131,7 @@ private fun KnotenKartenTestAnwendung() {
             else -> {
                 status = "Kontext: ${aktion.aktion}"
             }
-        }
+        }*/
     }
 
     Row(
@@ -152,7 +150,7 @@ private fun KnotenKartenTestAnwendung() {
                 ),
                 aktualisierung = ::verschiebeKnoten,
                 onVerbindungErstellen = ::erstelleVerbindung,
-                onKontextAktion = ::fuehreKontextAktionAus,
+//                onKontextAktion = ::fuehreKontextAktionAus,
                 onAuswahlÄndern = { neueAuswahl ->
                     auswahl.value = neueAuswahl
                     status = neueAuswahl.statusText()

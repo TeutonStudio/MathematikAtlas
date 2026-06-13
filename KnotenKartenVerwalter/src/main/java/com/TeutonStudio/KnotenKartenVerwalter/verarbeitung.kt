@@ -21,9 +21,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.KartenKontextAktion
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import kotlin.math.abs
@@ -268,7 +266,7 @@ typealias VerbindungErstellen = (verbindung: VerbindungDaten) -> Unit
 /**
  * Callback fuer Aktionen aus dem Kontextmenue der Karte.
  */
-typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
+//typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
 
 /**
  * Callback fuer kontrollierte Auswahl von Knoten und Verbindungen.

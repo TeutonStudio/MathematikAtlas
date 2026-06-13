@@ -47,6 +47,8 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     override fun Modifier.modifier(): Modifier = vorher().tapping().position()
         .pointerInput(daten.id) {
             detectDragGestures(
+                orientationLock = null,
+                shouldAwaitTouchSlop = { false },
                 onDragStart = ::beiVerbindungZiehenStart,
                 onDrag = ::beiVerbindungZiehenDelta,
                 onDragEnd = ::beiVerbindungZiehenEnde,
@@ -55,9 +57,9 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
         }
 
 
-    public fun beiVerbindungZiehenStart(klickPos: Offset)
+    public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset)
     public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset)
-    public fun beiVerbindungZiehenEnde()
+    public fun beiVerbindungZiehenEnde(change: PointerInputChange)
     public fun beiVerbindungZiehenAbbruch()
 
 

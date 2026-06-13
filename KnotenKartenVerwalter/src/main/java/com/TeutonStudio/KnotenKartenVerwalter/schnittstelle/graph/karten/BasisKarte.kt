@@ -4,7 +4,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.layout.LayoutCoordinates
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
-import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
 import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
@@ -22,7 +21,7 @@ open class BasisKarte(
     override val zustand: KarteZustand,
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen,
-    override val onKontextAktion: KontextAktionAusführen,
+//    override val onKontextAktion: KontextAktionAusführen,
     override val onAuswahlÄndern: AuswahlÄndern,
 ): Karte(graph,daten) {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik

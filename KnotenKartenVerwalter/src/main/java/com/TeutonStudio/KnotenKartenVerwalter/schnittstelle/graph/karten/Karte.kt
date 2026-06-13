@@ -1,15 +1,11 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,45 +16,33 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
-import com.TeutonStudio.KnotenKartenVerwalter.KontextAktionAusführen
-import com.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten.Companion.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt.Companion.zeigeKontext
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.sichtbar
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.sichtbar
@@ -145,7 +129,9 @@ sealed class Karte(
     }
     override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
         zustand.verschiebe(panDelta)
+//        zustand.verschiebeBildschirm(panDelta)
         zustand.zoome(zoomDelta)
+//        zustand.setzeZoom(zustand.zoom * zoomDelta, centroid + panDelta)
     }
 
     @Composable
@@ -165,25 +151,29 @@ sealed class Karte(
 
     @Composable
     override fun BoxScope.erhalteDarstellung() {
-        Box(
-            modifier = Modifier.graphicsLayer {
-                translationX = zustand.pos.x
-                translationY = zustand.pos.y
-                scaleX = zustand.zoom
-                scaleY = zustand.zoom
-                transformOrigin = TransformOrigin(0f, 0f)
-            }
-        ) {
-            verbindungen.sichtbar().zuComposable()
-            knoten.sichtbar().zuComposable()
-            pseudoVerbindung.value?.zuComposable()
+        KartenWelt(); KartenOverlay()
+    }
+
+    @Composable private fun KartenWelt() = Box(
+        modifier = Modifier.graphicsLayer {
+            translationX = zustand.pos.x
+            translationY = zustand.pos.y
+            scaleX = zustand.zoom
+            scaleY = zustand.zoom
+            transformOrigin = TransformOrigin(0f, 0f)
         }
-        graph.inhalt.zeigeKontext()
+    ) {
+        verbindungen.sichtbar().zuComposable()
+        knoten.sichtbar().zuComposable()
+        pseudoVerbindung.value?.zuComposable()
+    }
+
+    @Composable private fun BoxScope.KartenOverlay() {
+        graph.inhalt.forEach { if (it.öffneKontext.value) it.erhalteKontextFenster() }
         Box(Modifier.align(Alignment.CenterEnd)) {
             zustand.auswahl.erhalteInspektorObjekt()?.erhalteInspektor()
         }
     }
-
 
     public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
         value is EinzelAuswahl -> graph.inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }

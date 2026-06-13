@@ -76,8 +76,4 @@ interface GraphDatenObjekt<D: GraphDaten>{
     // von ist dabei der Anschluss von dem gezogen wurde und nach der auf dem fallen gelassen wurde
     fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit
 
-    public companion object {
-        @Composable public fun Iterable<GraphObjekt>.zeigeKontext() = forEach { if (it.öffneKontext.value) it.erhalteKontextFenster() }
-    }
-
 }

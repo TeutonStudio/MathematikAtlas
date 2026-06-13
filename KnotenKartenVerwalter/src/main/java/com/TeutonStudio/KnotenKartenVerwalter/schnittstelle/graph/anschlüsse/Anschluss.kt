@@ -57,7 +57,8 @@ sealed class Anschluss<D: AnschlussDaten>(
     private var dragPos by mutableStateOf(Offset.Zero)
     private var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
-    public override fun beiVerbindungZiehenStart(klickPos: Offset) {
+    public override fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset) {
+        start.consume()
         karte.keinKontext()
         karte.wähle()
         dragPos = pos
@@ -76,7 +77,7 @@ sealed class Anschluss<D: AnschlussDaten>(
             derivedStateOf { dragZiel?.pos ?: dragPos }
         ).apply {
             startKante = this@Anschluss.daten.kante
-            endeKante = AnschlussKante.Links
+            endeKante = startKante.gegenüber()
         }
     }
     public override fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
@@ -92,7 +93,7 @@ sealed class Anschluss<D: AnschlussDaten>(
                 } else dragZiel = null
             } == null) dragZiel = null
     }
-    public override fun beiVerbindungZiehenEnde() {
+    public override fun beiVerbindungZiehenEnde(change: PointerInputChange) {
         dragZiel?.let { karte.definiereVerbindung(this@Anschluss,it) }
         karte.pseudoVerbindung.value = null
     }

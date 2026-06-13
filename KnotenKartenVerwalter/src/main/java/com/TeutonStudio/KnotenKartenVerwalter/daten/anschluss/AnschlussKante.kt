@@ -8,8 +8,8 @@ enum class AnschlussKante {
     Oben,
     Unten;
 
-    public fun istVertikal(): Boolean = this == AnschlussKante.Links || this == AnschlussKante.Rechts
-    public fun istHorizontal(): Boolean = this == AnschlussKante.Oben || this == AnschlussKante.Unten
+    public fun istVertikal(): Boolean = this == Links || this == Rechts
+    public fun istHorizontal(): Boolean = this == Oben || this == Unten
 
     public fun <A> wertFür(
         links: A,
@@ -17,11 +17,18 @@ enum class AnschlussKante {
         oben: A,
         unten: A,
     ): A = when(this) {
-        AnschlussKante.Links -> links
-        AnschlussKante.Rechts -> rechts
-        AnschlussKante.Oben -> oben
-        AnschlussKante.Unten -> unten
+        Links -> links
+        Rechts -> rechts
+        Oben -> oben
+        Unten -> unten
     }
+
+    public fun gegenüber() = wertFür(
+        Rechts,
+        Links,
+        Unten,
+        Oben,
+    )
 
     public fun alignment(): Alignment = wertFür(
         Alignment.CenterStart,
