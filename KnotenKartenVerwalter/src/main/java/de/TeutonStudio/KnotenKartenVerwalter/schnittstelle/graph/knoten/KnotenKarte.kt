@@ -8,7 +8,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Ans
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.BasisAnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
-open class KartenKnoten(
+open class KnotenKarte(
     override val graph: Graph,
     override val daten: AnschlussKnotenDaten,
     override val besitzer: Karte,

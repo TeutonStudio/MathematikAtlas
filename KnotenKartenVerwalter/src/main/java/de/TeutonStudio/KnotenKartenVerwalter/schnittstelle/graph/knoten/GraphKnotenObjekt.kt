@@ -63,7 +63,7 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
     public fun KartenPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
 
     public companion object {
-        @Composable public fun Iterable<Knoten>.zuComposable(modifier: Modifier = Modifier) = forEach { it.zuComposable(modifier) }
+        @Composable public fun Iterable<Knoten>.zuComposable(/*modifier: Modifier = Modifier*/) = forEach { it.zuComposable(/*modifier*/) }
 
         public fun Iterable<Knoten>.sichtbar() = filter { it.istImViewport() }
 

@@ -21,7 +21,7 @@ open class KnotenDaten<D: AnschlussDaten>(
     override val id: String,
     override val name: String = "",
 ): KnotenAnschlussDaten<D> {
-    override val klasse: KnotenArt? = BasisKnoten.KNOTEN_ART
+    override val klasse = BasisKnoten.KNOTEN_ART
     override val dimension: Rechteck get() = Rect(position,position + Offset(breite,tiefe))
     override var breite: Float = 180f
     override var tiefe: Float = 96f

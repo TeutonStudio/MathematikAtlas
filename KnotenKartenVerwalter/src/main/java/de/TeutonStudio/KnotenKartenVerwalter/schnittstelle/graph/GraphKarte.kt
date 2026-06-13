@@ -38,10 +38,9 @@ interface GraphKarte {
      * Durch Ziehen wird der Hauptviewport auf die gewählte Weltposition zentriert.
      */
     @Composable
-    fun Karte.zuÜbersicht(
-        modifier: Modifier = Modifier,
-    ) {
+    fun Karte.zuÜbersicht(modifier: Modifier = Modifier) {
         if (!zustand.zeigeÜbersicht) return
+        println(zustand.sichtbarerWeltBereich() != null)
 
         val sichtGrenzen = zustand.sichtbarerWeltBereich() ?: return
 

@@ -54,9 +54,7 @@ interface GraphSteuerung {
      * Vertikale Kontrollleiste für die Kartenansicht.
      */
     @Composable
-    fun Karte.zuSteuerung(
-        modifier: Modifier = Modifier,
-    ) {
+    fun Karte.zuSteuerung(modifier: Modifier = Modifier) {
         if (!zustand.zeigeKontrollLeiste) return
 
         val zoomFaktor = 1.2f

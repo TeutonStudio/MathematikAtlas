@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -213,7 +214,7 @@ sealed class Karte(
     }
 
     @Composable private fun KartenWelt() = Box(
-        modifier = Modifier.graphicsLayer {
+        modifier = Modifier.fillMaxSize().graphicsLayer {
             translationX = zustand.pos.x
             translationY = zustand.pos.y
             scaleX = zustand.zoom

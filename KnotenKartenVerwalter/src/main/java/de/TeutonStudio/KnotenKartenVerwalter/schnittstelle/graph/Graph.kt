@@ -61,8 +61,8 @@ class Graph(
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
-    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f) {
-        karte.zuComposable(modifier.matchParentSize())
+    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
+        karte.zuComposable(Modifier.matchParentSize())
         Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
             karte.zuSteuerung()
             karte.zuÜbersicht()

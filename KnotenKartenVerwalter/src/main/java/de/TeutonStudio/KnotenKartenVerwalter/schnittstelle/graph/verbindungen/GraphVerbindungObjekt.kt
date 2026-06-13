@@ -3,6 +3,7 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
@@ -65,7 +66,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
         @Composable
         public fun Iterable<Verbindung>.zuComposable(/*modifier: Modifier = Modifier*/) {
             if (this.count() == 0) return
-            Canvas(modifier = Modifier.zIndex(-1f)) { forEach { verbindung -> verbindung.zeichnung(this) } }
+            Canvas(modifier = Modifier.fillMaxSize().zIndex(-1f)) { forEach { verbindung -> verbindung.zeichnung(this) } }
         }
 
         public fun Iterable<Verbindung>.sichtbar() = filter { it.istImViewport() }
