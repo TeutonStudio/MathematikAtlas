@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -41,7 +43,7 @@ sealed class Knoten(
     override val graph: Graph,
     override val daten: AnschlussKnotenDaten,
 ): GraphKnotenObjekt<AnschlussKnotenDaten> {
-    override var layoutCoordinates: LayoutCoordinates? = null
+    override var layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
     public val anschlüsse by GraphCache(daten.anschlüsse) { d: AnschlussDaten ->
         anschlussFabrik.erzeugeAnschluss(graph,d,this).apply { registriere() }
     }
@@ -96,38 +98,6 @@ sealed class Knoten(
         }
     }
 
-    private fun relAnteilKante(anschlüsse: Iterable<AnschlussDaten>, aId: String, kante: AnschlussKante): Float {
-        val sorter = compareBy<AnschlussDaten> { it.id }
-        val anschluesseAnKante = anschlüsse.filter { it.kante == kante }.sortedWith(sorter)
-        val indexAnKante = anschluesseAnKante.indexOfFirst { it.id == aId }.coerceAtLeast(0)
-        val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
-        return (indexAnKante + 1f) / (anzahlAnKante + 1f)
-    }
-
-    public fun erhalteAnschlussPos(aId: String): KartenPosition {
-        val kante = daten.anschlüsse.find { it.id == aId }?.kante ?: AnschlussKante.Rechts
-        val anteil = relAnteilKante(daten.anschlüsse,aId,kante)
-
-        return Offset(
-            x = kante.wertFür(
-                daten.position.x,
-                daten.position.x + daten.dimension.width,
-                daten.position.x + daten.dimension.width * anteil,
-                daten.position.x + daten.dimension.width * anteil
-            ),
-            y = kante.wertFür(
-                daten.position.y + daten.dimension.height * anteil,
-                daten.position.y + daten.dimension.height * anteil,
-                daten.position.y,
-                daten.position.y + daten.dimension.height
-            ),
-        )
-    }
-
 //    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + daten.position).round()
-
-    public companion object {
-        @Composable public fun Iterable<Knoten>.zuComposable() = forEach { it.zuComposable() }
-    }
 
 }

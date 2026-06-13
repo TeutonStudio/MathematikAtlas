@@ -14,7 +14,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -37,43 +39,12 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObje
 sealed class Verbindung(
     override val graph: Graph,
     override val daten: VerbindungDaten,
-): GraphDatenObjekt<VerbindungDaten> {
-    override var layoutCoordinates: LayoutCoordinates? = null
-    public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
-    public abstract val start: State<KartenPosition>
-    public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
-    public abstract val ende: State<KartenPosition>
-
-    @Composable override fun Modifier.modifier() = this
-
-    @Composable
-    override fun zuComposable(modifier: Modifier) = Canvas(modifier = modifier) { zeichnung() }
-    @Composable override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
-
-    public val zeichnung: DrawScope.() -> Unit
-        get() = {
-            drawPath(
-                path = erhaltePfad(),
-                color = when {
-                    istSelektiert.value -> graph.selektiertFarbe
-                    daten.fehler != null -> Color(0xFFDC2626)
-                    else -> Color(0xFF475569)
-                },
-                style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
-            )
-        }
-
-    public abstract fun erhaltePfad(): Path
-
-    public abstract fun abstand(pos: KartenPosition): Offset
+): GraphVerbindungObjekt<VerbindungDaten> {
+    override var layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
-        Box(
-            modifier = Modifier
-                .offset { pos }
-                .padding(vertical = 4.dp),
-        ) {
+        Box(modifier = Modifier.offset { pos }.padding(vertical = 4.dp)) {
             Card() {
                 Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("id: ${daten.id}",Modifier.scale(.9f),Color.Gray)
@@ -81,26 +52,5 @@ sealed class Verbindung(
                 }
             }
         }
-    }
-
-    fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
-            val puffer = 80f
-            RectF(
-                p.minOf { it.x } - puffer,
-                p.minOf { it.y } - puffer,
-                p.maxOf { it.x } + puffer,
-                p.maxOf { it.y } + puffer,
-            )
-        }.overlaps(viewport)
-
-
-    public companion object {
-        @Composable
-        public fun Iterable<Verbindung>.zuComposable(modifier: Modifier = Modifier) {
-            if (this.count() == 0) return
-            Canvas(modifier = modifier) { forEach { verbindung -> verbindung.zeichnung(this) } }
-        }
-
-        public fun Iterable<Verbindung>.sichtbar() = filter { it.istImViewport() }
     }
 }

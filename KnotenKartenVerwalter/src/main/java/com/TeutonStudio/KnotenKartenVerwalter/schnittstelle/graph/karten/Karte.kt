@@ -56,15 +56,14 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.sichtbar
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.sichtbar
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung.Companion.sichtbar
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung.Companion.zuComposable
-import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
 
 
@@ -72,16 +71,7 @@ sealed class Karte(
     override val graph: Graph,
     override val daten: KarteDaten,
 ): GraphKartenObjekt<KarteDaten> {
-    override var layoutCoordinates: LayoutCoordinates? = null
-    abstract val zustand: KarteZustand
-    abstract val knotenFabrik: KnotenFabrik
-    abstract val verbindungFabrik: VerbindungFabrik
-    abstract val pseudoVerbindung: MutableState<Verbindung?>
-    abstract val aktualisierung: KartenAktualisierung
-    abstract val onVerbindungErstellen: VerbindungErstellen
-    abstract val onKontextAktion: KontextAktionAusführen
-    abstract val onAuswahlÄndern: AuswahlÄndern
-
+    override var layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
     private val VERBINDUNG_TREFFER_RADIUS = 50f
 
     val knoten by GraphCache(daten.knoten) { d: AnschlussKnotenDaten ->
@@ -108,22 +98,22 @@ sealed class Karte(
         onAuswahlÄndern(wahl)
     }
 
-    public fun verschiebeKnoten(id: String, um: Offset) = knoten.filter { it.daten.id == id }.getOrNull(0)
+    public override fun verschiebeKnoten(id: String, um: Offset) = knoten.filter { it.daten.id == id }.getOrNull(0)
         ?.apply { daten.position += um / zustand.zoom }.let { it != null }
 
-    public fun vernichteKnoten(knoten: Knoten) = daten.knoten.remove(knoten.daten).apply {
+    public override fun vernichteKnoten(knoten: Knoten) = daten.knoten.remove(knoten.daten).apply {
         daten.verbindungen.removeIf { it.ids.knotenIdMann == knoten.daten.id || it.ids.knotenIdWeib == knoten.daten.id }
         keinKontext(); wähle()
     }
-    public fun dupliziereKnoten(knoten: Knoten) = daten.knoten.add(knoten.daten.duplizieren()).apply { keinKontext() }
-    public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
+    public override fun dupliziereKnoten(knoten: Knoten) = daten.knoten.add(knoten.daten.duplizieren()).apply { keinKontext() }
+    public override fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
         if (weib.daten is AusgangDaten && mann.besitzer is PullObjekt) (mann.besitzer as PullObjekt).aktualisiereCache()
         if (mann.daten is AusgangDaten && weib.besitzer is PullObjekt) (weib.besitzer as PullObjekt).aktualisiereCache()
         mann.besitzer.definiereVerbindung()
         weib.besitzer.definiereVerbindung()
         keinKontext()
     }
-    public fun vernichteVerbindung(verbindung: Verbindung) = daten.verbindungen.remove(verbindung.daten).apply { keinKontext() }
+    public override fun vernichteVerbindung(verbindung: Verbindung) = daten.verbindungen.remove(verbindung.daten).apply { keinKontext() }
 
     override fun beiKlick(klickPos: Offset) {
         // TODO herausfinden, wie ich it. tranformieren muss
@@ -158,17 +148,11 @@ sealed class Karte(
         zustand.zoome(zoomDelta)
     }
 
-    @Composable override fun Modifier.modifier(): Modifier = Modifier.fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
-
     @Composable
     override fun erhalteKontextFenster(
         pos: BildschirmPosition
     ) {
-        Box(
-            modifier = Modifier
-                .offset { pos }
-                .padding(vertical = 4.dp),
-        ) {
+        Box(modifier = Modifier.offset { pos }.padding(vertical = 4.dp)) {
             Card() {
                 Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("id: ${daten.id}",Modifier.scale(.9f),Color.Gray)

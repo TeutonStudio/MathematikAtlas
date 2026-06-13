@@ -54,10 +54,6 @@ sealed class Anschluss<D: AnschlussDaten>(
 //    public val karte get() = besitzer.besitzer
 //    public abstract val besitzer: Knoten
     //    public var partner: Anschluss?
-    val pos get() = erhaltePos() ?: besitzer.erhalteAnschlussPos(daten.id)
-
-    private fun erhaltePos() = layoutCoordinates?.let { besitzer.layoutCoordinates?.localPositionOf(it,it.size.center.toOffset()) }?.round()?.zuKarte()
-
     private var dragPos by mutableStateOf(Offset.Zero)
     private var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
@@ -143,9 +139,6 @@ sealed class Anschluss<D: AnschlussDaten>(
     public fun istSelbst(zielBesitzer: Knoten?): Boolean = (besitzer.daten.id == zielBesitzer?.daten?.id) ?: false
     public open fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = anschluss != this
 
-
-    public open fun istEingang(): Boolean = false
-    public open fun istAusgang(): Boolean = false
 
     public companion object {
         @Composable

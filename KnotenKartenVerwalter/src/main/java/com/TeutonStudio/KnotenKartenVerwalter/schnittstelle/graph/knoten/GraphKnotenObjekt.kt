@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
@@ -60,9 +61,38 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
         daten.position.y + daten.tiefe,
     ).overlaps(viewport)
 
+    private fun relAnteilKante(anschlüsse: Iterable<AnschlussDaten>, aId: String, kante: AnschlussKante): Float {
+        val sorter = compareBy<AnschlussDaten> { it.id }
+        val anschluesseAnKante = anschlüsse.filter { it.kante == kante }.sortedWith(sorter)
+        val indexAnKante = anschluesseAnKante.indexOfFirst { it.id == aId }.coerceAtLeast(0)
+        val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
+        return (indexAnKante + 1f) / (anzahlAnKante + 1f)
+    }
+
+    public fun erhalteAnschlussPos(aId: String): KartenPosition {
+        val kante = daten.anschlüsse.find { it.id == aId }?.kante ?: AnschlussKante.Rechts
+        val anteil = relAnteilKante(daten.anschlüsse,aId,kante)
+
+        return Offset(
+            x = kante.wertFür(
+                daten.position.x,
+                daten.position.x + daten.dimension.width,
+                daten.position.x + daten.dimension.width * anteil,
+                daten.position.x + daten.dimension.width * anteil
+            ),
+            y = kante.wertFür(
+                daten.position.y + daten.dimension.height * anteil,
+                daten.position.y + daten.dimension.height * anteil,
+                daten.position.y,
+                daten.position.y + daten.dimension.height
+            ),
+        )
+    }
+
     public fun KartenPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
 
     public companion object {
+        @Composable public fun Iterable<Knoten>.zuComposable() = forEach { it.zuComposable() }
 
         public fun Iterable<Knoten>.sichtbar() = filter { it.istImViewport() }
 

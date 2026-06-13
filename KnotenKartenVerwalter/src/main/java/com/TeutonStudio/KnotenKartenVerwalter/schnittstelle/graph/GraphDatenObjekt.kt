@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -31,13 +32,13 @@ interface GraphDatenObjekt<D: GraphDaten>{
     public val daten: D
     public fun registriere() = also { graph.inhalt.add(it) }
 
-    var layoutCoordinates: LayoutCoordinates?
+    var layoutCoordinates: MutableState<LayoutCoordinates?>
 
     @Composable open fun Modifier.modifier() = vorher().position().transform().tapping()
     @Composable public fun Modifier.vorher() = this
     @Composable public fun Modifier.transform() = transformable(rememberTransformableState(::beiTransform))
     @Composable public fun Modifier.tapping() = pointerInput(daten.id) { detectTapGestures(onTap = ::beiKlick,onLongPress = ::beiHalten) }
-    @Composable public fun Modifier.position() = onGloballyPositioned { layoutCoordinates = it }
+    @Composable public fun Modifier.position() = onGloballyPositioned { layoutCoordinates.value = it }
 
     @Composable
     open fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(

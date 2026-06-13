@@ -11,8 +11,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toOffset
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
@@ -25,6 +28,17 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     public val besitzer: Knoten
     public val karte get() = besitzer.besitzer
 
+    val pos get() = erhaltePos() ?: besitzer.erhalteAnschlussPos(daten.id)
+
+    private fun erhaltePos(): KartenPosition? =
+        layoutCoordinates.value?.let { anschlussCoordinates ->
+            besitzer.layoutCoordinates.value?.localPositionOf(
+                sourceCoordinates = anschlussCoordinates,
+                relativeToSource = anschlussCoordinates.size.center.toOffset(),
+            )?.let { lokalePosition ->
+                besitzer.daten.position + lokalePosition
+            }
+        }
 
     @Composable
     override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)
@@ -46,5 +60,8 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     public fun beiVerbindungZiehenEnde()
     public fun beiVerbindungZiehenAbbruch()
 
+
+    public open fun istEingang(): Boolean = false
+    public open fun istAusgang(): Boolean = false
 
 }
