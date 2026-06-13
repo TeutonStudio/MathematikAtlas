@@ -42,7 +42,7 @@ interface GraphDatenObjekt<D: GraphDaten>{
 
     @Composable
     open fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(
-        modifier = Modifier.modifier()
+        modifier = modifier.modifier()
     ) { erhalteDarstellung() }
 
     public open fun beiKlick(klickPos: Offset) {}

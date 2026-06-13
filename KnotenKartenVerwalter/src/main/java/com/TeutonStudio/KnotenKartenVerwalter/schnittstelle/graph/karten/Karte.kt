@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -25,6 +26,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.zIndex
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
@@ -51,6 +53,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.G
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.zuComposable
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
+import kotlin.math.min
 
 
 sealed class Karte(
@@ -103,6 +106,58 @@ sealed class Karte(
         keinKontext()
     }
     public override fun vernichteVerbindung(verbindung: Verbindung) = daten.verbindungen.remove(verbindung.daten).apply { keinKontext() }
+
+    public fun inhaltsGrenzen(
+        puffer: Float = 0f,
+    ): Rect? {
+        val grenzen = knoten.map { it.daten.dimension }.reduceOrNull { bisher, nächstes ->
+            Rect(
+                left = minOf(bisher.left,nächstes.left),
+                top = minOf(bisher.top,nächstes.top),
+                right = maxOf(bisher.right,nächstes.right),
+                bottom = maxOf(bisher.bottom,nächstes.bottom),
+            )
+        } ?: return null
+
+        val sichererPuffer = puffer.coerceAtLeast(0f)
+
+        return Rect(
+            left = grenzen.left - sichererPuffer,
+            top = grenzen.top - sichererPuffer,
+            right = grenzen.right + sichererPuffer,
+            bottom = grenzen.bottom + sichererPuffer,
+        )
+    }
+
+    public fun passeInhaltEin(
+        rand: Float = 64f,
+    ) {
+        val grenzen = inhaltsGrenzen() ?: return
+
+        val breite = zustand.dimension.width.toFloat()
+        val höhe = zustand.dimension.height.toFloat()
+
+        if (breite <= 0f || höhe <= 0f) return
+
+        val verfügbareBreite = (breite - rand * 2f).coerceAtLeast(1f)
+        val verfügbareHöhe = (höhe - rand * 2f).coerceAtLeast(1f)
+
+        val neuerZoom = min(
+            verfügbareBreite / grenzen.width.coerceAtLeast(1f),
+            verfügbareHöhe / grenzen.height.coerceAtLeast(1f),
+        ).coerceIn(
+            KarteZustand.MIN_ZOOM,
+            KarteZustand.MAX_ZOOM,
+        )
+
+        zustand.setzeAnsicht(
+            neuerZoom = neuerZoom,
+            neuePosition = Offset(
+                x = breite / 2f - grenzen.center.x * neuerZoom,
+                y = höhe / 2f - grenzen.center.y * neuerZoom,
+            ),
+        )
+    }
 
     override fun beiKlick(klickPos: Offset) {
         // TODO herausfinden, wie ich it. tranformieren muss
@@ -168,8 +223,8 @@ sealed class Karte(
             transformOrigin = TransformOrigin(0f, 0f)
         }
     ) {
-        verbindungen.sichtbar().zuComposable()
-        knoten.sichtbar().zuComposable()
+        knoten.sichtbar().zuComposable(Modifier.zIndex(2f))
+        verbindungen.sichtbar().zuComposable(Modifier.zIndex(1f))
         pseudoVerbindung.value?.zuComposable()
     }
 

@@ -8,7 +8,6 @@ import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import com.TeutonStudio.KnotenKartenVerwalter.tangente
 import com.TeutonStudio.KnotenKartenVerwalter.times
 import kotlin.math.hypot
 import kotlin.math.max

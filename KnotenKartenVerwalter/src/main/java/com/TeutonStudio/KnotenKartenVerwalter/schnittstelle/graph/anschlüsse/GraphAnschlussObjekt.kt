@@ -24,11 +24,11 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObje
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 
-interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
+internal interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     public val besitzer: Knoten
     public val karte get() = besitzer.besitzer
 
-    val pos get() = erhaltePos() ?: besitzer.erhalteAnschlussPos(daten.id)
+    val pos get() = erhaltePos() ?: Offset.Zero // besitzer.erhalteAnschlussPos(daten.id)
 
     private fun erhaltePos(): KartenPosition? =
         layoutCoordinates.value?.let { anschlussCoordinates ->

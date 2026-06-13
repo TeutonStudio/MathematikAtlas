@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.knoten
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 
 typealias AnschlussKnotenDaten = KnotenAnschlussDaten<out AnschlussDaten>
@@ -15,6 +16,8 @@ interface KnotenAnschlussDaten<D : AnschlussDaten>: KnotenGraphDaten, Anschlüss
     }
 
     public companion object {
+        public fun AnschlussKnotenDaten.erhalteSize(): Size = Size(breite,tiefe)
+
         public fun String.duplizieren(separierer: String = "#") = split(separierer).let {
             setOf(it[0],it.getOrElse(1,{ "0" }).toInt() + 1) }.joinToString(separierer)
     }

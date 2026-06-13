@@ -34,10 +34,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante.Companion.fillMaxKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
-import com.TeutonStudio.KnotenKartenVerwalter.filterKante
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
@@ -156,6 +155,7 @@ sealed class Anschluss<D: AnschlussDaten>(
             else TODO("Sollte nicht passieren")
         }
 
+        public fun Map<Anschluss<out AnschlussDaten>,Int>.filterKante(kante: AnschlussKante): Map<Anschluss<out AnschlussDaten>,Int> = this.filter { (a,idx) -> a.daten.kante == kante }.toMutableMap()
         public fun Iterable<Anschluss<out AnschlussDaten>>.findeNachId(id:String) = find { it.daten.id == id }
     }
 }

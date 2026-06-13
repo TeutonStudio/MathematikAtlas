@@ -14,8 +14,8 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten.Companion.erhalteSize
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-import com.TeutonStudio.KnotenKartenVerwalter.erhalteSize
 import com.TeutonStudio.KnotenKartenVerwalter.overlaps
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.findeNachId
@@ -29,8 +29,7 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
 
     abstract fun definiereVerbindung()
 
-    @Composable
-    override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
+    @Composable override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
 
 
     override fun beiKlick(klickPos: Offset) {
@@ -61,15 +60,15 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
         daten.position.y + daten.tiefe,
     ).overlaps(viewport)
 
-    private fun relAnteilKante(anschlüsse: Iterable<AnschlussDaten>, aId: String, kante: AnschlussKante): Float {
+/*    private fun relAnteilKante(anschlüsse: Iterable<AnschlussDaten>, aId: String, kante: AnschlussKante): Float {
         val sorter = compareBy<AnschlussDaten> { it.id }
         val anschluesseAnKante = anschlüsse.filter { it.kante == kante }.sortedWith(sorter)
         val indexAnKante = anschluesseAnKante.indexOfFirst { it.id == aId }.coerceAtLeast(0)
         val anzahlAnKante = anschluesseAnKante.size.coerceAtLeast(1)
         return (indexAnKante + 1f) / (anzahlAnKante + 1f)
-    }
+    }*/
 
-    public fun erhalteAnschlussPos(aId: String): KartenPosition {
+/*    public fun erhalteAnschlussPos(aId: String): KartenPosition {
         val kante = daten.anschlüsse.find { it.id == aId }?.kante ?: AnschlussKante.Rechts
         val anteil = relAnteilKante(daten.anschlüsse,aId,kante)
 
@@ -87,12 +86,12 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
                 daten.position.y + daten.dimension.height
             ),
         )
-    }
+    }*/
 
     public fun KartenPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
 
     public companion object {
-        @Composable public fun Iterable<Knoten>.zuComposable() = forEach { it.zuComposable() }
+        @Composable public fun Iterable<Knoten>.zuComposable(modifier: Modifier = Modifier) = forEach { it.zuComposable(modifier) }
 
         public fun Iterable<Knoten>.sichtbar() = filter { it.istImViewport() }
 

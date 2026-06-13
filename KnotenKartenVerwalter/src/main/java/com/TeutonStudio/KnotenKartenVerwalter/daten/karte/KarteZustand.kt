@@ -24,13 +24,15 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergru
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterTesselation
 
 open class KarteZustand(
-//    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
-    val zeigeÜbersicht: Boolean = false,
-    val zeigeKontrollLeiste: Boolean = false,
+    zeigeÜbersicht: Boolean = false,
+    zeigeKontrollLeiste: Boolean = false,
     val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten.LEER),
     rasterArt: RasterArt = RasterArt.Punkte,
     rasterTesselation: RasterTesselation = RasterTesselation.Quadgon,
 ) {
+    public var zeigeÜbersicht by mutableStateOf(zeigeÜbersicht)
+
+    public var zeigeKontrollLeiste by mutableStateOf(zeigeKontrollLeiste)
     var rasterEinstellung = Pair(rasterArt,rasterTesselation)
 
     var dimension by mutableStateOf(IntSize.Zero)
@@ -51,33 +53,36 @@ open class KarteZustand(
         this.zoom = zoom ?: zustand.zoom
     }
 
-//    fun verschiebeBildschirm(delta: Offset)
-
     fun setzeZoom(neuerZoom: Float, fokus: Offset) {
-        val MIN_ZOOM = 0.2f
-        val MAX_ZOOM = 200.0f
         val begrenzt = neuerZoom.coerceIn(MIN_ZOOM, MAX_ZOOM)
-        val faktor = begrenzt / zoom
+        val alterZoom = zoom.coerceAtLeast(0.0001f)
+        val faktor = begrenzt / alterZoom
 
         pos = fokus - (fokus - pos) * faktor
         zoom = begrenzt
     }
 
-/*    fun zentriereAuf(
-        weltPosition: Offset,
-    )*/
+    public fun setzeAnsicht(
+        neuerZoom: Float,
+        neuePosition: Offset,
+    ) {
+        zoom = neuerZoom.coerceIn(MIN_ZOOM,MAX_ZOOM)
+        pos = neuePosition
+    }
 
-/*    fun passeInhaltEin(
-        inhalt: Rect,
-        rand: Float = 64f,
-    )*/
+    public fun zentriereAuf(weltPosition: Offset) {
+        pos = Offset(
+            x = dimension.width / 2f - weltPosition.x * zoom,
+            y = dimension.height / 2f - weltPosition.y * zoom,
+        )
+    }
 
     public fun verschiebe(delta: Offset) { pos += delta }
-    public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(.05f,5f) }
+    public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(MIN_ZOOM,MAX_ZOOM) }
     public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
 
-    public fun zuBild(kartePos: KartenPosition): BildschirmPosition = (kartePos + pos * zoom).round()
-    public fun zuKarte(bildPos: BildschirmPosition): KartenPosition = (bildPos.toOffset() - pos * zoom)
+    public fun zuBild(kartePos: KartenPosition): BildschirmPosition = (pos + kartePos * zoom).round()
+    public fun zuKarte(bildPos: BildschirmPosition): KartenPosition = (bildPos.toOffset() - pos) / zoom
 
 //    public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von * zoom + pos).round()
 
@@ -98,4 +103,8 @@ open class KarteZustand(
         return RectF(links, oben, rechts, unten)
     }
 
+    public companion object {
+        public const val MIN_ZOOM = 0.05f
+        public const val MAX_ZOOM = 5f
+    }
 }

@@ -20,7 +20,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenF
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 
-interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
+internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     abstract val zustand: KarteZustand
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik

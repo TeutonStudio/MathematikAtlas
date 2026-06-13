@@ -24,7 +24,7 @@ interface PullSystem<K: KnotenAnschlussDaten<out RichtungsAnschlussDaten>>: Grap
         val cacheAnschluss = verbindungen.filter { v ->
             reinDaten.map { it.id }.enthältAnschlussId(v.daten.ids)
         }.verbundeneAnschlüsse(reinDaten).filter { it.besitzer is PullObjekt }.mapNotNull { (it.besitzer as PullObjekt).cacheAnschlüsse[it.daten] }
-        rausDaten.associateWith { baueCache(it,cacheAnschluss) }
+        cacheAnschlüsse.putAll(rausDaten.associateWith { baueCache(it,cacheAnschluss) })
     }
 
     open fun baueCache(raus: AnschlussDaten, reinCache: Iterable<Cache>): Map<String,Any> {
@@ -40,6 +40,4 @@ interface PullSystem<K: KnotenAnschlussDaten<out RichtungsAnschlussDaten>>: Grap
             if (a.daten in anschlüsse) null else a
         }
     }
-
-//    val eingänge get() = anschlüsse
 }

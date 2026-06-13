@@ -1,6 +1,8 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -12,6 +14,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
@@ -58,8 +61,8 @@ class Graph(
     public val selektiertFarbe = Color(0xFF2563EB)
 
     @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,Modifier) {
-        karte.zuComposable(modifier)
-        Row(Modifier.size(DpSize(200.dp,100.dp)).align(Alignment.BottomEnd)) {
+        karte.zuComposable(modifier.matchParentSize())
+        Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
             karte.zuSteuerung()
             karte.zuÜbersicht()
         }

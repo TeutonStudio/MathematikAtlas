@@ -30,10 +30,9 @@ import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante.Companion.fillMaxKante
+import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante.Companion.offsetKante
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import com.TeutonStudio.KnotenKartenVerwalter.fillMaxKante
-import com.TeutonStudio.KnotenKartenVerwalter.offsetKante
-import com.TeutonStudio.KnotenKartenVerwalter.radius
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.zuLeiste
@@ -56,9 +55,7 @@ sealed class Knoten(
     override fun BoxScope.erhalteDarstellung() {
         Inhalt()
         AnschlussKante.entries.forEach { kante ->
-            val modi = Modifier
-                .fillMaxKante(kante)
-                .offsetKante(kante, radius(kante))
+            val modi = Modifier.fillMaxKante(kante).offsetKante(kante,kante.radius())
             Box(
                 modifier = modi.align(kante.alignment()),
                 contentAlignment = Alignment.Center,

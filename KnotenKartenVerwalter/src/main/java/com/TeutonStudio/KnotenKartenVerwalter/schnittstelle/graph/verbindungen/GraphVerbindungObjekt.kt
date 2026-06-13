@@ -18,7 +18,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.overlaps
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 
-interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
+internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
     public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val start: State<KartenPosition>
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
