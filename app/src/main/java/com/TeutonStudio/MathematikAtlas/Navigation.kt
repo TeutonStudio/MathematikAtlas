@@ -41,6 +41,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund
 
 sealed class Screen(val route: String) {
     data object StartScreen : Screen("start_screen")
@@ -134,12 +135,7 @@ private fun KnotenKartenTestAnwendung() {
         }*/
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF3F4F6))
-            .padding(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-    ) {
+    Row(modifier = Modifier.fillMaxSize().background(Color(0xFFF3F4F6)).padding(16.dp,32.dp,16.dp,16.dp)) {
         val g = remember {
             Graph(
                 daten = karte,
@@ -147,6 +143,8 @@ private fun KnotenKartenTestAnwendung() {
                     zeigeÜbersicht = true,
                     zeigeKontrollLeiste = true,
                     auswahl = auswahl,
+                    rasterArt = GraphHintergrund.RasterArt.Punkte,
+                    rasterTesselation = GraphHintergrund.RasterTesselation.Trigon
                 ),
                 aktualisierung = ::verschiebeKnoten,
                 onVerbindungErstellen = ::erstelleVerbindung,

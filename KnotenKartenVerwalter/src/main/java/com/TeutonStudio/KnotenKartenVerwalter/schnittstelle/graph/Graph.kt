@@ -1,10 +1,17 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import com.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import com.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
@@ -38,7 +45,9 @@ class Graph(
     private val onVerbindungErstellen: VerbindungErstellen = {},
 //    private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
-): GraphHintergrund {
+): GraphHintergrund, GraphKarte, GraphSteuerung {
+    override var aktuell: Int = 0
+    override val verlauf = mutableStateMapOf<Int,Any>()
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
     val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,/*onKontextAktion,*/onAuswahlÄndern).apply { registriere() }
@@ -48,27 +57,13 @@ class Graph(
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
-    public fun erhalteVerbindungNachPos(pos: KartenPosition): Pair<Verbindung,Offset>? = verbindung.map { it to it.abstand(pos) }.minByOrNull { it.second.getDistanceSquared() }
-    public fun erhalteAnschlussNachPos(pos: KartenPosition): Pair<Anschluss<out AnschlussDaten>,Offset>? = anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
-
-/*    public fun wähle(wahl: AuswahlDaten = AuswahlDaten.LEER) {
-        karte.zustand.auswahl.value = wahl
-        karte.onAuswahlÄndern(wahl)
+    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,Modifier) {
+        karte.zuComposable(modifier)
+        Row(Modifier.size(DpSize(200.dp,100.dp)).align(Alignment.BottomEnd)) {
+            karte.zuSteuerung()
+            karte.zuÜbersicht()
+        }
     }
-
-    public fun verschiebeKnoten(id: String, um: Offset) = karte.knoten.filter { it.daten.id == id }.getOrNull(0)
-        ?.apply { daten.position += um / karte.zustand.zoom }.let { it != null }*/
-
-/*    public fun erhaltePseudoAnschlussZiel(): Pair<Anschluss<out AnschlussDaten>,Float> {
-        val p = karte.pseudoVerbindung.value?.ende?.value ?: KartenPosition.Zero
-        val nA = erhalteAnschlussNachKartePos(p)
-        return nA to (p-nA.pos).getDistanceSquared()
-    }*/
-
-//    public fun erhalteAnschlussNachKartePos(pos: BildschirmPosition): Anschluss = erhalteAnschlussNachKartePos(pos.zuKarte(karte.zustand))
-//    public fun erhalteAnschlussNachKartePos(pos: KartenPosition): Anschluss<out AnschlussDaten> = anschlüsse.filter { it.daten.id != "pseudo" }.minBy { (it.pos - pos).getDistanceSquared() }
-
-    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,Modifier) { karte.zuComposable(modifier) }
 
     public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
         value is EinzelAuswahl -> inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }

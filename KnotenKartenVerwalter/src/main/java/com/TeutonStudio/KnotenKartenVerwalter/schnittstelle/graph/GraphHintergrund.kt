@@ -1,6 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -40,7 +41,7 @@ interface GraphHintergrund {
         zustand: KarteZustand,
         rasterGröße: Float,
         modifier: Modifier = Modifier,
-        vordergrund: @Composable () -> Unit,
+        vordergrund: @Composable BoxScope.() -> Unit,
     ) {
         Box(
             modifier = modifier.fillMaxSize().clipToBounds(),
@@ -49,8 +50,8 @@ interface GraphHintergrund {
                 zustand = zustand,
                 rasterGröße = rasterGröße,
                 modifier = Modifier.matchParentSize(),
-                rasterArt = RasterArt.Punkte,
-                rasterTesselation = RasterTesselation.Quadgon,
+                rasterArt = zustand.rasterEinstellung.first,
+                rasterTesselation = zustand.rasterEinstellung.second,
             )
 
             vordergrund()

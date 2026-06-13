@@ -19,13 +19,20 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.MultiAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterArt
+import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterTesselation
 
 open class KarteZustand(
 //    ansicht: AnsichtsfensterDaten = StandardAnsicht(),
     val zeigeÜbersicht: Boolean = false,
     val zeigeKontrollLeiste: Boolean = false,
-    val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten.LEER)
+    val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten.LEER),
+    rasterArt: RasterArt = RasterArt.Punkte,
+    rasterTesselation: RasterTesselation = RasterTesselation.Quadgon,
 ) {
+    var rasterEinstellung = Pair(rasterArt,rasterTesselation)
+
     var dimension by mutableStateOf(IntSize.Zero)
     var zoom by mutableFloatStateOf(1f)
     var pos by mutableStateOf(Offset.Zero)
@@ -69,11 +76,14 @@ open class KarteZustand(
     public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(.05f,5f) }
     public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
 
-    public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von * zoom + pos).round()
+    public fun zuBild(kartePos: KartenPosition): BildschirmPosition = (kartePos + pos * zoom).round()
+    public fun zuKarte(bildPos: BildschirmPosition): KartenPosition = (bildPos.toOffset() - pos * zoom)
+
+//    public fun erhalteTransformiert(von: KartenPosition): BildschirmPosition = (von * zoom + pos).round()
 
 //    public fun erhalteUntransformiert(von: BildschirmPosition): KartenPosition = (von.toOffset() - pos) / zoom
 
-    public fun erhalteDeltaUntransformiert(delta: Offset): Offset = delta / zoom
+//    public fun erhalteDeltaUntransformiert(delta: Offset): Offset = delta / zoom
 
     public fun erhalteViewportRect(
         breite: Float = dimension.width.toFloat(),

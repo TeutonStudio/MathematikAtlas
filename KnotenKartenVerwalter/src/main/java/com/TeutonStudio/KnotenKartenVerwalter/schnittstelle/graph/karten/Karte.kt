@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import com.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
+import com.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten.Companion.zuAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
@@ -34,6 +35,7 @@ import com.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
 import com.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import com.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import com.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import com.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
@@ -82,6 +84,9 @@ sealed class Karte(
         onAuswahlÄndern(wahl)
     }
 
+    public fun erhalteVerbindungNachPos(pos: KartenPosition): Pair<Verbindung,Offset>? = verbindungen.map { it to it.abstand(pos) }.minByOrNull { it.second.getDistanceSquared() }
+    public fun erhalteAnschlussNachPos(pos: KartenPosition): Pair<Anschluss<out AnschlussDaten>,Offset>? = anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
+
     public override fun verschiebeKnoten(id: String, um: Offset) = knoten.filter { it.daten.id == id }.getOrNull(0)
         ?.apply { daten.position += um / zustand.zoom }.let { it != null }
 
@@ -102,7 +107,7 @@ sealed class Karte(
     override fun beiKlick(klickPos: Offset) {
         // TODO herausfinden, wie ich it. tranformieren muss
         val kartePos = klickPos.round().zuKarte()
-        val v = graph.erhalteVerbindungNachPos(kartePos)?.apply {
+        val v = erhalteVerbindungNachPos(kartePos)?.apply {
 //            printLogCat(first, second, second.getDistanceSquared())
             if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
                 wähle(first.daten.zuAuswahl())
@@ -118,7 +123,7 @@ sealed class Karte(
     override fun beiHalten(klickPos: Offset) {
         val karteCTX = { ctx = daten.id to klickPos.round() }
         val kartePos = klickPos.round().zuKarte()
-        if (graph.erhalteVerbindungNachPos(kartePos)?.let {
+        if (erhalteVerbindungNachPos(kartePos)?.let {
                 printLogCat(it.first, it.second, it.second.getDistanceSquared())
                 if (it.second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
                     wähle(it.first.daten.zuAuswahl())

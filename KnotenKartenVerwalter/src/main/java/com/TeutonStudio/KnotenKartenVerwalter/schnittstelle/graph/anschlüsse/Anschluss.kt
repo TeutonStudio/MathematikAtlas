@@ -84,7 +84,7 @@ sealed class Anschluss<D: AnschlussDaten>(
         change.consume()
         dragPos = change.position + pos
         dragAmount.round().zuDelta()
-        if (graph.erhalteAnschlussNachPos(dragPos)?.apply {
+        if (karte.erhalteAnschlussNachPos(dragPos)?.apply {
                 val bedingung = second.getDistanceSquared() < 500f / karte.zustand.zoom && erlaubtVerbindung(first)
                 if (bedingung) {
                     dragZiel = first

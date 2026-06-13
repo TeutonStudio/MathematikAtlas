@@ -60,9 +60,9 @@ interface GraphDatenObjekt<D: GraphDaten>{
     public fun erhalteAnschlussMann(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
     public fun erhalteAnschlussWeib(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
-    public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + zustand.pos * zustand.zoom).round()
-//    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = round()
-    public fun BildschirmPosition.zuKarte(zustand: KarteZustand = graph.karte.zustand): KartenPosition = (this.toOffset() - zustand.pos * zustand.zoom)
+    //    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = zustand.zuBildAusKnoten(this).round()
+    public fun BildschirmPosition.zuKarte(zustand: KarteZustand = graph.karte.zustand): KartenPosition = zustand.zuKarte(this)
+    public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
     public fun BildschirmPosition.zuDelta(zustand: KarteZustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.zoom
     public fun BildschirmPosition.zuKnoten(
         knoten: Knoten,
