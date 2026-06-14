@@ -1,0 +1,7 @@
+package de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.operator
+
+import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischerOperator
+import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
+
+interface ElementOperator: MathematischerOperator, Element {
+}
