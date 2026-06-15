@@ -16,12 +16,12 @@ open class KnotenKarte(
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
 
     @Composable
-    override fun Textzeile() {
+    public override fun Textzeile() {
         Text("Knoten Textzeile")
     }
 
     @Composable
-    override fun Fußzeile() {
+    public override fun Fußzeile() {
         Text("Knoten Fußzeile")
     }
 

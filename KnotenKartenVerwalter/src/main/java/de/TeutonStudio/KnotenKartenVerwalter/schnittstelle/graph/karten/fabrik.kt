@@ -20,7 +20,6 @@ typealias KartenKonstruktor = (
     zustand: KarteZustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
-//    onKontextAktion: KontextAktionAusführen,
     onAuswahlÄndern: AuswahlÄndern,
 ) -> Karte
 
@@ -30,12 +29,11 @@ typealias KartenKonstruktor = (
  * @receiver Fabrikzuordnung der bekannten Kartenarten
  * @throws IllegalStateException wenn keine passende Kartenklasse registriert ist
  */
-fun KartenFabrik.erzeugeKarte(
+public fun KartenFabrik.erzeugeKarte(
     graph: Graph, daten: KarteDaten,
     zustand: KarteZustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
-//    onKontextAktion: KontextAktionAusführen,
     onAuswahlÄndern: AuswahlÄndern,
 ): Karte {
     val klasse = daten.klasse ?: BasisKarte.KARTEN_ART
@@ -49,7 +47,6 @@ fun KartenFabrik.erzeugeKarte(
         zustand,
         aktualisierung,
         onVerbindungErstellen,
-//        onKontextAktion,
         onAuswahlÄndern,
     )
 }

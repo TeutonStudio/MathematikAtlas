@@ -1,7 +1,7 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten.speicher
 
 
-// TODO SpeicherDaten
+/* TODO SpeicherDaten */
 class Karte() {
 
 }

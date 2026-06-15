@@ -47,7 +47,7 @@ open class KarteZustand(
         this.zoom = zoom ?: zustand.zoom
     }
 
-    fun setzeZoom(neuerZoom: Float, fokus: Offset) {
+    public fun setzeZoom(neuerZoom: Float, fokus: Offset) {
         val begrenzt = neuerZoom.coerceIn(MIN_ZOOM, MAX_ZOOM)
         val alterZoom = zoom.coerceAtLeast(0.0001f)
         val faktor = begrenzt / alterZoom

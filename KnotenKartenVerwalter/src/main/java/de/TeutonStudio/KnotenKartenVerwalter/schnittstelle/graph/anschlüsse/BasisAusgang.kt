@@ -15,7 +15,7 @@ open class BasisAusgang(
 ): Anschluss<AusgangDaten>(graph,daten), RichtungsAnschluss<AusgangDaten> {
     override var layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
-    override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = super.erlaubtVerbindung(anschluss) && !anschluss.istAusgang()
+    public override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = super.erlaubtVerbindung(anschluss) && !anschluss.istAusgang()
 
     public companion object {
         public const val ANSCHLUSS_ART = "output"

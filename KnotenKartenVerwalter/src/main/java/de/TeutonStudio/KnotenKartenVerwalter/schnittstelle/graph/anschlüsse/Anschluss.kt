@@ -50,10 +50,7 @@ sealed class Anschluss<D: AnschlussDaten>(
     override val graph: Graph,
     override val daten: D,
 ): GraphAnschlussObjekt<D> {
-//    public val karte get() = besitzer.besitzer
-//    public abstract val besitzer: Knoten
-    //    public var partner: Anschluss?
-var dragPos by mutableStateOf(Offset.Zero)
+    var dragPos by mutableStateOf(Offset.Zero)
     var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
     public override fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset) {
@@ -102,17 +99,15 @@ var dragPos by mutableStateOf(Offset.Zero)
     }
 
 
-    override fun beiKlick(klickPos: Offset) {
-//                        graph.wähle(daten.zuAuswahl())
+    public override fun beiKlick(klickPos: Offset) {
         karte.keinKontext()
     }
 
-    override fun beiHalten(klickPos: Offset) {
+    public override fun beiHalten(klickPos: Offset) {
         karte.ctx = daten.id to klickPos.round()
-//                        graph.wähle(daten.zuAuswahl())
     }
 
-    override fun beiTransform(
+    public override fun beiTransform(
         centroid: Offset,
         zoomDelta: Float,
         panDelta: Offset,
@@ -125,7 +120,7 @@ var dragPos by mutableStateOf(Offset.Zero)
      *
      * @receiver BoxScope der Anschlussdarstellung
      */
-    @Composable override fun BoxScope.erhalteDarstellung() {}
+    @Composable public override fun BoxScope.erhalteDarstellung() {}
 
     /**
      * Erstellt das Kontextfenster dieses Anschlusses.
@@ -134,7 +129,7 @@ var dragPos by mutableStateOf(Offset.Zero)
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    override fun erhalteKontextFenster(pos: BildschirmPosition) {
+    public override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(
             modifier = Modifier
                 .offset { pos }

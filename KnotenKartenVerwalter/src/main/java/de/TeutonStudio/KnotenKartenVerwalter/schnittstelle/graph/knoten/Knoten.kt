@@ -47,7 +47,7 @@ sealed class Knoten(
         anschlussFabrik.erzeugeAnschluss(graph,d,this).apply { registriere() }
     }
 
-    override fun definiereVerbindung() {
+    public override fun definiereVerbindung() {
         println("Verbindung gezogen")
     }
 
@@ -58,7 +58,7 @@ sealed class Knoten(
      * @receiver BoxScope der Knotendarstellung
      */
     @Composable
-    override fun BoxScope.erhalteDarstellung() {
+    public override fun BoxScope.erhalteDarstellung() {
         Inhalt()
         AnschlussKante.entries.forEach { kante ->
             val modi = Modifier.fillMaxKante(kante).offsetKante(kante,kante.radius())
@@ -74,7 +74,7 @@ sealed class Knoten(
      * Sie wird vom Graphsystem für den ausgewählten Knoten eingebunden.
      */
     @Composable
-    override fun erhalteInspektor() {
+    public override fun erhalteInspektor() {
         Card(Modifier.padding(25.dp)) {
             Column(Modifier.padding(15.dp)) {
                 Text("Inpektor: ${daten.name}")
@@ -95,7 +95,7 @@ sealed class Knoten(
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    override fun erhalteKontextFenster(pos: BildschirmPosition) {
+    public override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(
             modifier = Modifier
                 .offset { pos }
@@ -110,6 +110,4 @@ sealed class Knoten(
             }
         }
     }
-
-//    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + daten.position).round()
 }

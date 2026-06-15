@@ -10,6 +10,6 @@ data class EinzelAuswahl(
 ): AuswahlDaten {
     constructor(ausgwählt: GraphObjekt): this(ausgwählt.daten.id)
 
-    override fun enthält(gO: GraphObjekt): Boolean = gO.daten.id == auswahlId
+    public override fun enthält(gO: GraphObjekt): Boolean = gO.daten.id == auswahlId
 
 }

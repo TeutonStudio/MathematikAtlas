@@ -50,11 +50,11 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
 
     /** Erstellt die Standarddarstellung eines Anschlusses. */
     @Composable
-    override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)
+    public override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)
 
     /** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. */
     @Composable
-    override fun Modifier.modifier(): Modifier = vorher().tapping().position()
+    public override fun Modifier.modifier(): Modifier = vorher().tapping().position()
         .pointerInput(daten.id) {
             detectDragGestures(
                 orientationLock = null,

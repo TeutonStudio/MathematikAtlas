@@ -11,11 +11,10 @@ open class BasisAnschluss(
     graph: Graph,
     datenAnschluss: AnschlussDaten,
     override val besitzer: Knoten,
-//    override var partner: Anschluss? = null,
 ): Anschluss<AnschlussDaten>(graph,datenAnschluss) {
     override var layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
-    override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = !istSelbst(anschluss.besitzer)
+    public override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = !istSelbst(anschluss.besitzer)
 
     public companion object {
         public const val ANSCHLUSS_ART = "default"

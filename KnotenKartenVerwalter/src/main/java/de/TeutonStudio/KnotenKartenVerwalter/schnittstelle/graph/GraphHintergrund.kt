@@ -49,7 +49,7 @@ interface GraphHintergrund {
      * @param vordergrund Inhalt, der über dem Raster dargestellt wird
      */
     @Composable
-    fun Hintergrund(
+    public fun Hintergrund(
         zustand: KarteZustand,
         rasterGröße: Float,
         modifier: Modifier = Modifier,
@@ -79,7 +79,7 @@ interface GraphHintergrund {
         val rasterFarbe = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
 
         Canvas(modifier.fillMaxSize()) {
-            val zoom = zustand.zoom //.coerceAtLeast(0.0001f)
+            val zoom = zustand.zoom
             val grundGröße = rasterGröße.coerceAtLeast(0.0001f)
 
             /*
@@ -440,7 +440,7 @@ interface GraphHintergrund {
          */
         val PUNKT_EBENEN_PERIODEN: List<Long> = buildList {
             var periode = 3L
-            add(periode) // Ebene 1
+            add(periode)
 
             for (prime in AUFSTIEGS_PRIMZAHLEN) {
                 if (size >= 15) break
@@ -463,7 +463,9 @@ interface GraphHintergrund {
     private fun punktEbene(index: Int): Int {
         val wert = abs(index.toLong())
 
-        // Die Achse / der Ursprung soll maximal betont werden.
+        /*
+         * Die Achse und der Ursprung sollen maximal betont werden.
+         */
         if (wert == 0L) return PUNKT_EBENEN_PERIODEN.size
 
         var ebene = 0
@@ -472,8 +474,10 @@ interface GraphHintergrund {
             if (wert % periode == 0L) {
                 ebene = i + 1
             } else {
-                // Da jede höhere Ebene ein Vielfaches der vorherigen ist,
-                // können wir hier abbrechen.
+                /*
+                 * Da jede höhere Ebene ein Vielfaches der vorherigen ist,
+                 * können wir hier abbrechen.
+                 */
                 break
             }
         }

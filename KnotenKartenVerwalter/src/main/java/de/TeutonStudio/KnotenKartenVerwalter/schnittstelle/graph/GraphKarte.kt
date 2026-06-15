@@ -38,7 +38,7 @@ interface GraphKarte {
      * @param modifier äußerer Modifier der Übersicht
      */
     @Composable
-    fun Karte.zuÜbersicht(modifier: Modifier = Modifier) {
+    public fun Karte.zuÜbersicht(modifier: Modifier = Modifier) {
         if (!zustand.zeigeÜbersicht) return
         println(zustand.sichtbarerWeltBereich() != null)
 
@@ -258,7 +258,7 @@ private data class MiniMapProjektion(
                 ) / 2f,
     )
 
-    fun zuMiniMap(
+    public fun zuMiniMap(
         weltPosition: Offset,
     ): Offset = Offset(
         x = ursprung.x +
@@ -273,7 +273,7 @@ private data class MiniMapProjektion(
                         ) * skalierung,
     )
 
-    fun zuWelt(
+    public fun zuWelt(
         miniMapPosition: Offset,
     ): Offset = Offset(
         x = grenzen.left +

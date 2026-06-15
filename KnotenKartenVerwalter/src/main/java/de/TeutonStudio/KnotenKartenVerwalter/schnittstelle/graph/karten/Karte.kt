@@ -180,11 +180,10 @@ sealed class Karte(
         )
     }
 
-    override fun beiKlick(klickPos: Offset) {
-        // TODO herausfinden, wie ich it. tranformieren muss
+    public override fun beiKlick(klickPos: Offset) {
+        /* TODO herausfinden, wie ich it. tranformieren muss */
         val kartePos = klickPos.round().zuGraph()
         val v = erhalteVerbindungNachPos(kartePos)?.apply {
-//            printLogCat(first, second, second.getDistanceSquared())
             if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
                 wähle(first.daten.zuAuswahl())
             } else {
@@ -196,7 +195,7 @@ sealed class Karte(
         }
         keinKontext()
     }
-    override fun beiHalten(klickPos: Offset) {
+    public override fun beiHalten(klickPos: Offset) {
         val karteCTX = { ctx = daten.id to klickPos.round() }
         val kartePos = klickPos.round().zuGraph()
         if (erhalteVerbindungNachPos(kartePos)?.let {
@@ -208,11 +207,9 @@ sealed class Karte(
                 } else { return@let null }
             } == null) karteCTX()
     }
-    override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
+    public override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
         zustand.verschiebe(panDelta)
-//        zustand.verschiebeBildschirm(panDelta)
         zustand.zoome(zoomDelta)
-//        zustand.setzeZoom(zustand.zoom * zoomDelta, centroid + panDelta)
     }
 
     /**
@@ -222,7 +219,7 @@ sealed class Karte(
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    override fun erhalteKontextFenster(
+    public override fun erhalteKontextFenster(
         pos: BildschirmPosition
     ) {
         Box(modifier = Modifier.offset { pos }.padding(vertical = 4.dp)) {
@@ -243,7 +240,7 @@ sealed class Karte(
      * @receiver BoxScope der Kartendarstellung
      */
     @Composable
-    override fun BoxScope.erhalteDarstellung() {
+    public override fun BoxScope.erhalteDarstellung() {
         KartenWelt(); KartenOverlay()
     }
 

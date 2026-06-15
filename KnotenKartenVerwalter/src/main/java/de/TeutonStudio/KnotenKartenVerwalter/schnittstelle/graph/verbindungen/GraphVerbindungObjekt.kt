@@ -28,13 +28,15 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
  * und werden gemeinsam auf der Kartenebene gezeichnet.
  */
 internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
-    public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
+    /* TODO herausfinden ob State oder var besser ist */
+    public abstract var startKante: AnschlussKante
     public abstract val start: State<KartenPosition>
-    public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
+    /* TODO herausfinden ob State oder var besser ist */
+    public abstract var endeKante: AnschlussKante
     public abstract val ende: State<KartenPosition>
 
     /** Setzt Verbindungen hinter Knoten und Anschlüsse. */
-    @Composable override fun Modifier.modifier() = this.zIndex(-1f)
+    @Composable public override fun Modifier.modifier() = this.zIndex(-1f)
 
     /**
      * Erstellt die Canvas-Darstellung dieser Verbindung.
@@ -42,7 +44,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
      *
      * @param modifier äußerer Modifier der Darstellung
      */
-    @Composable override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modifier()) { zeichnung() }
+    @Composable public override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modifier()) { zeichnung() }
 
     /**
      * Verbindungen verwenden keine Box-Darstellung.
@@ -50,7 +52,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
      *
      * @receiver BoxScope der lokalen Darstellung
      */
-    @Composable override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
+    @Composable public override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
 
 
     /** Zeichenoperation für den aktuellen Verbindungspfad. */
@@ -73,7 +75,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
     public abstract fun erhaltePfad(): Path
 
     /** Prüft, ob die Verbindung den sichtbaren Kartenbereich überschneidet. */
-    fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
+    public fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
         val puffer = 80f
         RectF(
             p.minOf { it.x } - puffer,

@@ -35,23 +35,23 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
     public val dimension get() = daten.erhalteSize()
 
     /** Aktualisiert den Knoten nach dem Erstellen oder Ändern einer Verbindung. */
-    abstract fun definiereVerbindung()
+    public fun definiereVerbindung()
 
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
-    @Composable override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
+    @Composable public override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
 
 
-    override fun beiKlick(klickPos: Offset) {
+    public override fun beiKlick(klickPos: Offset) {
         besitzer.wähle(EinzelAuswahl(this))
         besitzer.keinKontext()
     }
 
-    override fun beiHalten(klickPos: Offset) {
+    public override fun beiHalten(klickPos: Offset) {
         besitzer.ctx = daten.id to klickPos.zuBildAusKnoten()
         besitzer.wähle(EinzelAuswahl(this))
     }
 
-    override fun beiTransform(
+    public override fun beiTransform(
         centroid: Offset,
         zoomDelta: Float,
         panDelta: Offset,
@@ -63,7 +63,7 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
     }
 
     /** Prüft, ob der Knoten den sichtbaren Kartenbereich überschneidet. */
-    fun istImViewport(viewport: RectF = besitzer.zustand.erhalteViewportRect()): Boolean = RectF(
+    public fun istImViewport(viewport: RectF = besitzer.zustand.erhalteViewportRect()): Boolean = RectF(
         daten.position.x,
         daten.position.y,
         daten.position.x + daten.breite,

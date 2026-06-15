@@ -15,26 +15,26 @@ data class MultiAuswahl(
     /** IDs aller ausgweählten Anschlüsse. */
     val anschlussIds: Set<String> = emptySet()
 ): AuswahlDaten {
-    fun nurKnoten(knotenId: String) = MultiAuswahl(knotenIds = setOf(knotenId))
+    public fun nurKnoten(knotenId: String) = MultiAuswahl(knotenIds = setOf(knotenId))
 
-    fun nurVerbindung(verbindungId: String) = MultiAuswahl(verbindungIds = setOf(verbindungId))
+    public fun nurVerbindung(verbindungId: String) = MultiAuswahl(verbindungIds = setOf(verbindungId))
 
-    fun mitKnoten(knotenId: String) = copy(knotenIds = knotenIds + knotenId)
+    public fun mitKnoten(knotenId: String) = copy(knotenIds = knotenIds + knotenId)
 
-    fun ohneKnoten(knotenId: String) = copy(knotenIds = knotenIds - knotenId)
+    public fun ohneKnoten(knotenId: String) = copy(knotenIds = knotenIds - knotenId)
 
-    fun mitVerbindung(verbindungId: String) = copy(verbindungIds = verbindungIds + verbindungId)
+    public fun mitVerbindung(verbindungId: String) = copy(verbindungIds = verbindungIds + verbindungId)
 
-    fun ohneVerbindung(verbindungId: String) = copy(verbindungIds = verbindungIds - verbindungId)
+    public fun ohneVerbindung(verbindungId: String) = copy(verbindungIds = verbindungIds - verbindungId)
 
-    fun umgeschalteterKnoten(knotenId: String) = if (knotenId in knotenIds) ohneKnoten(knotenId) else mitKnoten(knotenId)
+    public fun umgeschalteterKnoten(knotenId: String) = if (knotenId in knotenIds) ohneKnoten(knotenId) else mitKnoten(knotenId)
 
-    fun umgeschalteteVerbindung(verbindungId: String) = if (verbindungId in verbindungIds) ohneVerbindung(verbindungId) else mitVerbindung(verbindungId)
+    public fun umgeschalteteVerbindung(verbindungId: String) = if (verbindungId in verbindungIds) ohneVerbindung(verbindungId) else mitVerbindung(verbindungId)
 
-    fun plus(andere: MultiAuswahl) = MultiAuswahl(
+    public fun plus(andere: MultiAuswahl) = MultiAuswahl(
         knotenIds = knotenIds + andere.knotenIds,
         verbindungIds = verbindungIds + andere.verbindungIds,
     )
 
-    override fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id) || anschlussIds.contains(gO.daten.id)
+    public override fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id) || anschlussIds.contains(gO.daten.id)
 }

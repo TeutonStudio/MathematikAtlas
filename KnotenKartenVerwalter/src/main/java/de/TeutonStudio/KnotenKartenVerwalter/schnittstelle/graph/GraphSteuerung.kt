@@ -40,7 +40,7 @@ interface GraphSteuerung {
      * Aktionen nach dem aktuellen Punkt werden entfernt, da sie nach
      * einer neuen Aktion nicht mehr wiederholt werden können.
      */
-    fun neueAktion(
+    public fun neueAktion(
         aktion: Any,
     ) {
         verlauf.keys
@@ -61,7 +61,7 @@ interface GraphSteuerung {
      * @param modifier äußerer Modifier der Kontrollleiste
      */
     @Composable
-    fun Karte.zuSteuerung(modifier: Modifier = Modifier) {
+    public fun Karte.zuSteuerung(modifier: Modifier = Modifier) {
         if (!zustand.zeigeKontrollLeiste) return
 
         val zoomFaktor = 1.2f
@@ -133,7 +133,8 @@ interface GraphSteuerung {
 
 @Composable
 private fun KontrollKnopf(
-    text: String, // TODO zu Icons
+    /* TODO zu Icons */
+    text: String,
     beschreibung: String,
     onClick: () -> Unit,
 ) {

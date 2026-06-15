@@ -30,13 +30,13 @@ open class KnotenEingabeDaten(
     override val data: MutableMap<String, Any> = mutableMapOf()
     override val anschlussLabel = mutableMapOf<AnschlussKante, Pair<String, Int>>()
 
-    override fun erzeugeAnschluss(
+    public override fun erzeugeAnschluss(
         id: String,
         kante: AnschlussKante,
         label: String
     ) = AusgangDaten(id,kante,label)
 
-    override fun erzeugeAnschlussId(knotenId: String, idx: Int): String = "${knotenId}-ausgang-${idx}"
+    public override fun erzeugeAnschlussId(knotenId: String, idx: Int): String = "${knotenId}-ausgang-${idx}"
 
     constructor(
         id: String,

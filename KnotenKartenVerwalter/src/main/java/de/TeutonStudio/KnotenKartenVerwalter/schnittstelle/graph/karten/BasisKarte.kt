@@ -21,15 +21,12 @@ open class BasisKarte(
     override val zustand: KarteZustand,
     override val aktualisierung: KartenAktualisierung,
     override val onVerbindungErstellen: VerbindungErstellen,
-//    override val onKontextAktion: KontextAktionAusführen,
     override val onAuswahlÄndern: AuswahlÄndern,
 ): Karte(graph,daten) {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
     override val pseudoVerbindung = mutableStateOf<Verbindung?>(null)
-
-//    private fun pos(arg: Map.Entry<AnschlussDaten, KnotenDaten>): KartenPosition = (arg.value to arg.key).pos()
 
     public companion object {
         public const val KARTEN_ART: KnotenArt = "default"

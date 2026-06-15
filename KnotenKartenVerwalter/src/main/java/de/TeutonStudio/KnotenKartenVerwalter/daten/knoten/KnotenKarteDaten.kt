@@ -30,5 +30,5 @@ class KnotenKarteDaten(
     override val anschlussIdx = mutableStateMapOf<String, Int>()
     override val data: MutableMap<String, Any> = mutableMapOf()
 
-    // TODO
+    /* TODO */
 }

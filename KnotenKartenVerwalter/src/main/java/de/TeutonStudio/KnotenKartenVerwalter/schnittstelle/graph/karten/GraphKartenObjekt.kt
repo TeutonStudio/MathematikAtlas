@@ -34,7 +34,6 @@ internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     abstract val pseudoVerbindung: MutableState<Verbindung?>
     abstract val aktualisierung: KartenAktualisierung
     abstract val onVerbindungErstellen: VerbindungErstellen
-//    abstract val onKontextAktion: KontextAktionAusführen
     abstract val onAuswahlÄndern: AuswahlÄndern
 
     public fun verschiebeKnoten(id: String, um: Offset): Boolean
@@ -46,6 +45,6 @@ internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     public fun vernichteVerbindung(verbindung: Verbindung): Boolean
 
     /** Erstellt den Modifier-Vertrag der Kartenfläche mit Größenmessung, Clipping und Eingabegesten. */
-    @Composable override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
+    @Composable public override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
 
 }

@@ -16,8 +16,6 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
  */
 interface RichtungsAnschluss<D: RichtungsAnschlussDaten>: GraphAnschlussObjekt<D> {
 
-//    override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = super.erlaubtVerbindung(anschluss)
-
     public companion object {
         public const val ANSCHLUSS_ART = "dir"
     }

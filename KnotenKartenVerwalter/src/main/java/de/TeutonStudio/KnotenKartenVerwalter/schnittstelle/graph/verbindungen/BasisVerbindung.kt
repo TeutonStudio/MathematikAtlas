@@ -24,7 +24,7 @@ open class BasisVerbindung(
     override var endeKante: AnschlussKante = AnschlussKante.Links
 
 
-    override fun abstand(pos: KartenPosition): Offset {
+    public override fun abstand(pos: KartenPosition): Offset {
         val delta = ende.value - start.value
         val distSq = delta.x.pow(2) + delta.y.pow(2)
         val t = (if (distSq != 0f) ((pos - start.value)* delta) / distSq else 0f).coerceIn(0f,1f)
@@ -33,7 +33,7 @@ open class BasisVerbindung(
         return diff
     }
 
-    override fun erhaltePfad(): Path = Path().apply {
+    public override fun erhaltePfad(): Path = Path().apply {
         val line = { p: Offset -> lineTo(p.x, p.y) }
         val move = { p: Offset -> moveTo(p.x, p.y) }
         move(start.value); line(ende.value)

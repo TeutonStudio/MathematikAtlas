@@ -49,7 +49,7 @@ sealed class Verbindung(
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    override fun erhalteKontextFenster(pos: BildschirmPosition) {
+    public override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(modifier = Modifier.offset { pos }.padding(vertical = 4.dp)) {
             Card() {
                 Column(Modifier.padding(5.dp),horizontalAlignment = Alignment.CenterHorizontally) {

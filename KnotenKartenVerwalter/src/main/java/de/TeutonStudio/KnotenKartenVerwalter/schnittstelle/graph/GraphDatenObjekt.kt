@@ -57,7 +57,7 @@ interface GraphDatenObjekt<D: GraphDaten>{
     /** Reagiert auf Transformationsgesten des Graphobjekts. */
     public open fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float)
 
-    @Composable open fun Modifier.modiInputEvent() = vorher().position().transform().tapping()
+    @Composable public open fun Modifier.modiInputEvent() = vorher().position().transform().tapping()
 
     /** Liefert den äußeren Modifier, bevor Eingabe-Modifier ergänzt werden. */
     @Composable public fun Modifier.vorher() = zIndex(1f)
@@ -72,7 +72,7 @@ interface GraphDatenObjekt<D: GraphDaten>{
      *
      * @param modifier äußerer Modifier der Darstellung
      */
-    @Composable fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(modifier = modifier.vorher().modiInputEvent()) { erhalteDarstellung() }
+    @Composable public fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(modifier = modifier.vorher().modiInputEvent()) { erhalteDarstellung() }
 
     /**
      * Erstellt den Inhalt des Graphobjekts innerhalb einer Box.
@@ -80,7 +80,7 @@ interface GraphDatenObjekt<D: GraphDaten>{
      *
      * @receiver BoxScope der lokalen Darstellung
      */
-    @Composable fun BoxScope.erhalteDarstellung()
+    @Composable public fun BoxScope.erhalteDarstellung()
 
     /**
      * Erstellt das Kontextfenster dieses Graphobjekts.
@@ -88,13 +88,13 @@ interface GraphDatenObjekt<D: GraphDaten>{
      *
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
-    @Composable fun erhalteKontextFenster(pos: BildschirmPosition = graph.karte.ctx.second)
+    @Composable public fun erhalteKontextFenster(pos: BildschirmPosition = graph.karte.ctx.second)
 
     /**
      * Erstellt die Inspector-Darstellung dieses Graphobjekts.
      * Sie wird vom Graphsystem für das aktuell ausgewählte Objekt eingebunden.
      */
-    @Composable fun erhalteInspektor()
+    @Composable public fun erhalteInspektor()
 
 
     /** Gibt an, ob die Karte das Kontextfenster dieses Objekts öffnet. */
@@ -107,16 +107,11 @@ interface GraphDatenObjekt<D: GraphDaten>{
     public fun erhalteAnschlussMann(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
     public fun erhalteAnschlussWeib(id: IDEhe): Anschluss<out AnschlussDaten>? = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
-    //    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = zustand.zuBildAusKnoten(this).round()
     public fun BildschirmPosition.zuGraph(zustand: KarteZustand = graph.karte.zustand): KartenPosition = zustand.zuKarte(this)
     public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
     public fun BildschirmPosition.zuDelta(zustand: KarteZustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.zoom
     public fun BildschirmPosition.zuKnoten(knoten: Knoten, zustand: KarteZustand = graph.karte.zustand): KnotenPosition = this.toOffset() - knoten.daten.position
 
-    // Auf dem Graph wird von einem Anschluss aus gezogen
-    // fun planeVerbindung(a: Anschluss<out AnschlussDaten>) = Unit
-    // Auf dem Graph wird eine gezogene Verbindung auf einem Anschluss dieses Knoten losgelassen
-    // von ist dabei der Anschluss von dem gezogen wurde und nach der auf dem fallen gelassen wurde
-    fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit
+    public fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit
 
 }

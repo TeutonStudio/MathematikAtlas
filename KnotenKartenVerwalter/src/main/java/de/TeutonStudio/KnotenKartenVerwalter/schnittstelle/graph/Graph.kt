@@ -45,14 +45,13 @@ class Graph(
     private val zustand: KarteZustand,
     private val aktualisierung: KartenAktualisierung = { kId,pos -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
-//    private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
     private val kartenFabrik: KartenFabrik = BasisKartenFabrik,
 ): GraphHintergrund, GraphKarte, GraphSteuerung {
     override var aktuell: Int = 0
     override val verlauf = mutableStateMapOf<Int,Any>()
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
-    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,/*onKontextAktion,*/onAuswahlÄndern).apply { registriere() }
+    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,onAuswahlÄndern).apply { registriere() }
     val knoten get() = karte.knoten
     val anschlüsse get() = karte.anschlüsse
     val verbindung get() = karte.verbindungen

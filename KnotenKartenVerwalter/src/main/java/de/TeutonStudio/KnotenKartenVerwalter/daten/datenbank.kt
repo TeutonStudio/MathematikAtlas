@@ -1,5 +1,5 @@
 package com.TeutonStudio.KnotenKartenVerwalter.daten
 
-// TODO
+/* TODO */
 class datenbank {
 }

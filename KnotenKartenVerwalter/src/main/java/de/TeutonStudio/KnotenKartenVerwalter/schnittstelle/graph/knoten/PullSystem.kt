@@ -67,7 +67,7 @@ interface PullSystem<T : Any> {
      *
      * Quellen erhalten eine leere Eingangsmap.
      */
-    fun berechne(
+    public fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<T>>,
     ): PullErgebnis<T>
@@ -75,7 +75,7 @@ interface PullSystem<T : Any> {
     /**
      * Zieht den Wert eines eigenen Ausgangs.
      */
-    fun pull(
+    public fun pull(
         ausgangId: String,
         kontext: PullKontext = PullKontext(),
     ): PullErgebnis<T> {
@@ -149,7 +149,7 @@ interface PullSystem<T : Any> {
      * Diese Methode kann auch von einem reinen Auswertungs-/Senkenknoten
      * benutzt werden, der selbst keinen Ausgang besitzt.
      */
-    fun pullEingang(
+    public fun pullEingang(
         eingangId: String,
         kontext: PullKontext = PullKontext(),
     ): PullErgebnis<T> {
@@ -225,7 +225,7 @@ interface PullSystem<T : Any> {
     /**
      * Berechnet alle eigenen Ausgänge neu.
      */
-    fun aktualisiereCache() {
+    public fun aktualisiereCache() {
         cacheAnschlüsse.clear()
 
         val kontext = PullKontext()

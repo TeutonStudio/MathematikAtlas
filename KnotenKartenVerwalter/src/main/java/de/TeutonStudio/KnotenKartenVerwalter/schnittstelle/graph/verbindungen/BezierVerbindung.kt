@@ -22,13 +22,13 @@ open class BezierVerbindung(
     override var endeKante: AnschlussKante = AnschlussKante.Links
 
 
-    override fun erhaltePfad(): Path = Path().apply {
+    public override fun erhaltePfad(): Path = Path().apply {
         val cubic = { o1: Offset, o2: Offset, o3:  Offset -> cubicTo(o1.x,o1.y,o2.x,o2.y,o3.x,o3.y) }
         val move = { p: Offset -> moveTo(p.x,p.y) }
         move(start.value); cubic(c1(),c2(),ende.value)
     }
 
-    override fun abstand(pos: KartenPosition): Offset {
+    public override fun abstand(pos: KartenPosition): Offset {
         val p0 = start.value
         val p3 = ende.value
 
@@ -60,7 +60,9 @@ open class BezierVerbindung(
             vorherPunkt = punkt
         }
 
-        // Lokale Verfeinerung um den besten gefundenen Bereich.
+        /*
+         * Lokale Verfeinerung um den besten gefundenen Bereich.
+         */
         val radius = 1f / schritte
         var links = (besterT - radius).coerceIn(0f, 1f)
         var rechts = (besterT + radius).coerceIn(0f, 1f)

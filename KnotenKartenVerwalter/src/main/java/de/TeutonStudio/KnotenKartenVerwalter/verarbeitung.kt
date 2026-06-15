@@ -7,13 +7,13 @@ import androidx.compose.ui.unit.IntOffset
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 
-// Skalarprodukt
-operator fun Offset.times(other: Offset): Float = x * other.x + y * other.y
+/* Skalarprodukt */
+public operator fun Offset.times(other: Offset): Float = x * other.x + y * other.y
 
 public fun printLogCat(vararg arg: Any?) = arg.forEach { println(it) }
 
 
-// Geometrie
+/* Geometrie */
 
 /**
  * Position in der Karte
@@ -32,19 +32,19 @@ typealias BildschirmPosition = IntOffset
  */
 typealias Rechteck = Rect
 
-operator fun Rechteck.times(other: Float): Offset = diagonale() * other
+public operator fun Rechteck.times(other: Float): Offset = diagonale() * other
 public fun Rechteck.diagonale(): Offset = Offset(width,height)
 
 
 
-// Anschluss
+/* Anschluss */
 
 
 public fun RectF.overlaps(other: RectF) = left <= other.right && right >= other.left && top <= other.bottom && bottom >= other.top
 
-// Verbindung
+/* Verbindung */
 
-// Knoten
+/* Knoten */
 
 /**
  * Callback fuer eine geaenderte Knotenposition in Weltkoordinaten.
@@ -57,13 +57,8 @@ typealias KartenAktualisierung = (knotenId: String, position: KartenPosition) ->
 typealias VerbindungErstellen = (verbindung: VerbindungDaten) -> Unit
 
 /**
- * Callback fuer Aktionen aus dem Kontextmenue der Karte.
- */
-//typealias KontextAktionAusführen = (aktion: KartenKontextAktion) -> Unit
-
-/**
  * Callback fuer kontrollierte Auswahl von Knoten und Verbindungen.
  */
 typealias AuswahlÄndern = (auswahl: AuswahlDaten) -> Unit
 
-// Modifier
+/* Modifier */

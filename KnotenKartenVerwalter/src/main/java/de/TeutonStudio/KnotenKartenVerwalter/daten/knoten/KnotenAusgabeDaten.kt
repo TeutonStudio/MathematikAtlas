@@ -27,15 +27,12 @@ open class KnotenAusgabeDaten(
     override val anschlussIdx = mutableStateMapOf<String, Int>()
     override val data: MutableMap<String, Any> = mutableMapOf()
     override val anschlussLabel: MutableMap<AnschlussKante, Pair<String, Int>> = mutableMapOf()
-//    override val anschlüsse get() = erhalteAnschlüsse()
-    override fun erzeugeAnschluss(
+    public override fun erzeugeAnschluss(
         id: String,
         kante: AnschlussKante,
         label: String
     ) = EingangDaten(id,kante,label)
-    override fun erzeugeAnschlussId(knotenId: String, idx: Int) = id(knotenId,idx)
-//    override val anschlüsse: SnapshotStateList<EingangDaten>
-//    override val anschlüsse get() = erhalteAnschlüsse()
+    public override fun erzeugeAnschlussId(knotenId: String, idx: Int) = id(knotenId,idx)
 
     constructor(
         id: String,
