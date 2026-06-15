@@ -36,7 +36,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
     public abstract val ende: State<KartenPosition>
 
     /** Setzt Verbindungen hinter Knoten und Anschlüsse. */
-    @Composable public override fun Modifier.modifier() = this.zIndex(-1f)
+    @Composable public override fun Modifier.modiInputEvent() = this.zIndex(-1f)
 
     /**
      * Erstellt die Canvas-Darstellung dieser Verbindung.
@@ -44,7 +44,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
      *
      * @param modifier äußerer Modifier der Darstellung
      */
-    @Composable public override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modifier()) { zeichnung() }
+    @Composable public override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modiInputEvent()) { zeichnung() }
 
     /**
      * Verbindungen verwenden keine Box-Darstellung.

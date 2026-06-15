@@ -45,6 +45,6 @@ internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     public fun vernichteVerbindung(verbindung: Verbindung): Boolean
 
     /** Erstellt den Modifier-Vertrag der Kartenfläche mit Größenmessung, Clipping und Eingabegesten. */
-    @Composable public override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
+    @Composable public override fun Modifier.modiInputEvent(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
 
 }

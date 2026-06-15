@@ -54,7 +54,7 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
 
     /** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. */
     @Composable
-    public override fun Modifier.modifier(): Modifier = vorher().tapping().position()
+    public override fun Modifier.modiInputEvent(): Modifier = vorher().tapping().position()
         .pointerInput(daten.id) {
             detectDragGestures(
                 orientationLock = null,
