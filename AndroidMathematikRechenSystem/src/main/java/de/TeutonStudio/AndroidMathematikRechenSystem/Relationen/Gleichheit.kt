@@ -1,5 +1,6 @@
 package de.TeutonStudio.AndroidMathematikRechenSystem.Relationen
 
+import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
@@ -16,7 +17,7 @@ class Gleichheit(
         TODO("Not yet implemented")
     }
 
-    override fun auswerten(): Boolean? {
+    override fun auswerten(): Aussage {
         TODO("Not yet implemented")
     }
 }

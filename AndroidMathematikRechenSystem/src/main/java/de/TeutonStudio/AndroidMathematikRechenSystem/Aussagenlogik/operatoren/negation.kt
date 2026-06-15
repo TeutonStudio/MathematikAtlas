@@ -1,12 +1,17 @@
-package de.TeutonStudio.AndroidMathematikRechenSystem.Relationen
+package de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
-import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
-import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
 
-interface Ordnung: binärRelation<Menge<out Element>,Menge<out Element>> {
-    override fun auswerten(): Aussage {
+class negation(
+    val argument: Aussage
+): Prädikat {
+    override fun auswertung(): Aussage {
+        if (argument !is Prädikat) {
+            if (argument.istWahr()) return Aussage.LÜGE
+            if (argument.istLüge()) return Aussage.WAHR
+        }
+
         TODO("Not yet implemented")
     }
 
