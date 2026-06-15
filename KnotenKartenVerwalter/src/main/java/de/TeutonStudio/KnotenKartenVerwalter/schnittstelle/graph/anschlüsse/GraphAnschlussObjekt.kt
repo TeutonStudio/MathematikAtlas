@@ -24,11 +24,19 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 
+/**
+ * Vertrag für Anschlussobjekte, die [AnschlussDaten] an einem [Knoten] darstellen.
+ * [Anschluss], [BasisAnschluss], [BasisEingang] und [BasisAusgang] sind die vorgesehenen Erweiterungspunkte.
+ *
+ * Anschlüsse liefern ihre Kartenposition, behandeln das Ziehen neuer Verbindungen und prüfen,
+ * ob andere Anschlüsse als Verbindungsziel zulässig sind.
+ */
 interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     public val besitzer: Knoten
     public val karte get() = besitzer.besitzer
 
-    val pos get() = erhaltePos() ?: Offset.Zero // besitzer.erhalteAnschlussPos(daten.id)
+    /** Aktuelle Position des Anschlusses im Kartenkoordinatenraum. */
+    val pos get() = erhaltePos() ?: Offset.Zero
 
     private fun erhaltePos(): KartenPosition? =
         layoutCoordinates.value?.let { anschlussCoordinates ->
@@ -40,9 +48,11 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
             }
         }
 
+    /** Erstellt die Standarddarstellung eines Anschlusses. */
     @Composable
     override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)
 
+    /** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. */
     @Composable
     override fun Modifier.modifier(): Modifier = vorher().tapping().position()
         .pointerInput(daten.id) {
@@ -56,14 +66,22 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
             )
         }
 
-
+    /** Startet das Ziehen einer neuen Verbindung an diesem Anschluss. */
     public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset)
+
+    /** Aktualisiert die Zielposition einer gezogenen Verbindung. */
     public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset)
+
+    /** Schließt eine gezogene Verbindung ab. */
     public fun beiVerbindungZiehenEnde(change: PointerInputChange)
+
+    /** Bricht das Ziehen einer Verbindung ab. */
     public fun beiVerbindungZiehenAbbruch()
 
-
+    /** Gibt an, ob dieser Anschluss als Eingang behandelt wird. */
     public open fun istEingang(): Boolean = false
+
+    /** Gibt an, ob dieser Anschluss als Ausgang behandelt wird. */
     public open fun istAusgang(): Boolean = false
 
 }

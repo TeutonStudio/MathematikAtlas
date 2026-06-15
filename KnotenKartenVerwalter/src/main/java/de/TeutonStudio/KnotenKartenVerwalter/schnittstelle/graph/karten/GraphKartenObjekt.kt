@@ -20,6 +20,13 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFa
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 
+/**
+ * Vertrag für das Kartenobjekt, das Knoten, Anschlüsse und Verbindungen der [KarteDaten] verwaltet.
+ * [Karte] und [BasisKarte] sind die vorgesehenen Erweiterungspunkte für konkrete Kartenimplementierungen.
+ *
+ * Die Karte hält den interaktiven [KarteZustand], erzeugt Graphobjekte über Fabriken und koordiniert Auswahl,
+ * Kontextzustand sowie Verbindungserstellung zwischen Anschlüssen.
+ */
 internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     abstract val zustand: KarteZustand
     abstract val knotenFabrik: KnotenFabrik
@@ -38,6 +45,7 @@ internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>): Boolean
     public fun vernichteVerbindung(verbindung: Verbindung): Boolean
 
+    /** Erstellt den Modifier-Vertrag der Kartenfläche mit Größenmessung, Clipping und Eingabegesten. */
     @Composable override fun Modifier.modifier(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
 
 }

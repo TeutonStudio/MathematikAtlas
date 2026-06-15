@@ -8,14 +8,14 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
 
 /**
- * Beschreibt die aktuell ausgewaehlten Graph-Elemente.
+ * Beschreibt die aktuell ausgewählten Graphobjekte.
  *
- * Die Auswahl ist als kontrollierter Zustand gedacht. Die UI kann eine neue Auswahl vorschlagen,
- * aber der aufrufende Code entscheidet, welche Elemente tatsaechlich als ausgewaehlt gespeichert
- * werden.
+ * Die Auswahl ist kontrollierter Zustand der Karte; die UI schlägt Änderungen vor,
+ * der aufrufende Code entscheidet über den gespeicherten Wert.
  */
 interface AuswahlDaten {
 
+    /** Prüft, ob das Graphobjekt in dieser Auswahl enthalten ist. */
     public fun enthält(gO: GraphObjekt): Boolean
 
 

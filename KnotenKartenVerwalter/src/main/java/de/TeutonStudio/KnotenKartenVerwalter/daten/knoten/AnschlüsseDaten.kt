@@ -4,6 +4,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 
+/** Datenvertrag für Graphdaten, die Anschlussdaten besitzen. */
 interface AnschlüsseDaten<D: AnschlussDaten>: GraphDaten {
     val anschlüsse: SnapshotStateList<D>
 }

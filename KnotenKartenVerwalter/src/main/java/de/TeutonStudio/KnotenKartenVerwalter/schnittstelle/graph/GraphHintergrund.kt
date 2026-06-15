@@ -23,6 +23,9 @@ import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+/**
+ * Ergänzt den Graph um den rasterbasierten Hintergrund der Kartenansicht.
+ */
 interface GraphHintergrund {
 
     enum class RasterArt {
@@ -36,6 +39,15 @@ interface GraphHintergrund {
         Hexagon,
     }
 
+    /**
+     * Erstellt den Hintergrund der Kartenansicht.
+     * Er wird vom Graphen hinter der eigentlichen Kartenebene gezeichnet.
+     *
+     * @param zustand aktueller Zustand der Kartenansicht
+     * @param rasterGröße Basisgröße des Rasters in Kartenkoordinaten
+     * @param modifier äußerer Modifier des Hintergrunds
+     * @param vordergrund Inhalt, der über dem Raster dargestellt wird
+     */
     @Composable
     fun Hintergrund(
         zustand: KarteZustand,

@@ -7,8 +7,13 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 
+/** Schlüssel einer Kartenimplementierung in der [KartenFabrik]. */
 typealias KartenArt = String
+
+/** Fabrikvertrag für Kartenimplementierungen. */
 typealias KartenFabrik = Map<KartenArt,KartenKonstruktor>
+
+/** Konstruktorfunktion einer konkreten [Karte]. */
 typealias KartenKonstruktor = (
     graph: Graph,
     daten: KarteDaten,
@@ -19,6 +24,12 @@ typealias KartenKonstruktor = (
     onAuswahlÄndern: AuswahlÄndern,
 ) -> Karte
 
+/**
+ * Erzeugt die zur Datenklasse passende Karte.
+ *
+ * @receiver Fabrikzuordnung der bekannten Kartenarten
+ * @throws IllegalStateException wenn keine passende Kartenklasse registriert ist
+ */
 fun KartenFabrik.erzeugeKarte(
     graph: Graph, daten: KarteDaten,
     zustand: KarteZustand,

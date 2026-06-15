@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
+/**
+ * Ergänzt den Graph um Steuerungszustand und Kontrollleisten für eine [Karte].
+ */
 interface GraphSteuerung {
 
     var aktuell: Int
@@ -51,7 +54,11 @@ interface GraphSteuerung {
     }
 
     /**
-     * Vertikale Kontrollleiste für die Kartenansicht.
+     * Erstellt die Kontrollleiste der Kartenansicht.
+     * Sie wird vom Graphen als Bedienebene über der Karte eingebunden.
+     *
+     * @receiver Karte, deren Ansicht gesteuert wird
+     * @param modifier äußerer Modifier der Kontrollleiste
      */
     @Composable
     fun Karte.zuSteuerung(modifier: Modifier = Modifier) {

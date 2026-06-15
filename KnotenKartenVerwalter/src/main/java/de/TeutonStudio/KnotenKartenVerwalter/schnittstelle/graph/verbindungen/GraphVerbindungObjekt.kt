@@ -20,19 +20,40 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.overlaps
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 
+/**
+ * Vertrag für Verbindungsobjekte zwischen zwei Anschlüssen einer Karte.
+ * [Verbindung], [BasisVerbindung] und [BezierVerbindung] sind die vorgesehenen Erweiterungspunkte.
+ *
+ * Verbindungen berechnen ihre Endpunkte aus den angeschlossenen Graphobjekten, liefern Pfad und Trefferabstand
+ * und werden gemeinsam auf der Kartenebene gezeichnet.
+ */
 internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
     public abstract var startKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val start: State<KartenPosition>
     public abstract var endeKante: AnschlussKante // TODO herausfinden ob State oder var besser ist
     public abstract val ende: State<KartenPosition>
 
-
+    /** Setzt Verbindungen hinter Knoten und Anschlüsse. */
     @Composable override fun Modifier.modifier() = this.zIndex(-1f)
 
+    /**
+     * Erstellt die Canvas-Darstellung dieser Verbindung.
+     * Sie wird innerhalb der Kartenebene unter den Knoten gezeichnet.
+     *
+     * @param modifier äußerer Modifier der Darstellung
+     */
     @Composable override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modifier()) { zeichnung() }
+
+    /**
+     * Verbindungen verwenden keine Box-Darstellung.
+     * Sie werden stattdessen direkt über [zuComposable] auf eine Canvas gezeichnet.
+     *
+     * @receiver BoxScope der lokalen Darstellung
+     */
     @Composable override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
 
 
+    /** Zeichenoperation für den aktuellen Verbindungspfad. */
     public val zeichnung: DrawScope.() -> Unit
         get() = {
             drawPath(
@@ -45,12 +66,13 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
                 style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
             )
         }
-
+    /** Berechnet den Abstand einer Kartenposition zum Verbindungspfad. */
     public abstract fun abstand(pos: KartenPosition): Offset
 
+    /** Liefert den zu zeichnenden Verbindungspfad im Kartenkoordinatenraum. */
     public abstract fun erhaltePfad(): Path
 
-
+    /** Prüft, ob die Verbindung den sichtbaren Kartenbereich überschneidet. */
     fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
         val puffer = 80f
         RectF(

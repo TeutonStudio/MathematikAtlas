@@ -22,13 +22,22 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Ans
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
+/**
+ * Vertrag für Knotenobjekte, die [KnotenAnschlussDaten] in einer [Karte] darstellen.
+ * [Knoten] und [BasisKnoten] sind die vorgesehenen Erweiterungspunkte für konkrete Knoten.
+ *
+ * Ein Knoten verwaltet seine Anschlüsse über eine [AnschlussFabrik], beteiligt sich an Auswahl,
+ * Verschiebung und Verbindungserstellung und liefert seine lokale Darstellung an die Kartenebene.
+ */
 interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphDatenObjekt<K> {
     public abstract val besitzer: Karte
     public abstract val anschlussFabrik: AnschlussFabrik
     public val dimension get() = daten.erhalteSize()
 
+    /** Aktualisiert den Knoten nach dem Erstellen oder Ändern einer Verbindung. */
     abstract fun definiereVerbindung()
 
+    /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
     @Composable override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
 
 
@@ -53,6 +62,7 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
         besitzer.keinKontext()
     }
 
+    /** Prüft, ob der Knoten den sichtbaren Kartenbereich überschneidet. */
     fun istImViewport(viewport: RectF = besitzer.zustand.erhalteViewportRect()): Boolean = RectF(
         daten.position.x,
         daten.position.y,

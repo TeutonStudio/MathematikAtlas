@@ -119,8 +119,20 @@ var dragPos by mutableStateOf(Offset.Zero)
         rotationChange: Float
     ) {}
 
+    /**
+     * Erstellt die lokale Compose-Darstellung dieses Anschlusses.
+     * Die sichtbare Darstellung wird über den Modifier-Vertrag des Anschlusses geliefert.
+     *
+     * @receiver BoxScope der Anschlussdarstellung
+     */
     @Composable override fun BoxScope.erhalteDarstellung() {}
 
+    /**
+     * Erstellt das Kontextfenster dieses Anschlusses.
+     * Es wird von der Karte an der übergebenen Bildschirmposition geöffnet.
+     *
+     * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
+     */
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(
@@ -160,4 +172,3 @@ var dragPos by mutableStateOf(Offset.Zero)
         public fun Iterable<Anschluss<out AnschlussDaten>>.findeNachId(id:String) = find { it.daten.id == id }
     }
 }
-

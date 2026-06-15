@@ -25,17 +25,17 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
+/**
+ * Ergänzt den Graph um eine Übersichtsdarstellung der aktuellen [Karte].
+ */
 interface GraphKarte {
 
     /**
-     * Zeichnet die interaktive Minimap der Karte.
+     * Erstellt die interaktive Minimap der Karte.
+     * Sie wird vom Graphen als Übersichtsebene neben der Kartensteuerung eingebunden.
      *
-     * Die Minimap zeigt:
-     * - alle Knoten,
-     * - die aktuelle Auswahl,
-     * - den sichtbaren Bereich der Hauptkarte.
-     *
-     * Durch Ziehen wird der Hauptviewport auf die gewählte Weltposition zentriert.
+     * @receiver Karte, deren Inhalt zusammengefasst dargestellt wird
+     * @param modifier äußerer Modifier der Übersicht
      */
     @Composable
     fun Karte.zuÜbersicht(modifier: Modifier = Modifier) {

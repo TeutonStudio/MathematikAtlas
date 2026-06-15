@@ -215,6 +215,12 @@ sealed class Karte(
 //        zustand.setzeZoom(zustand.zoom * zoomDelta, centroid + panDelta)
     }
 
+    /**
+     * Erstellt das Kontextfenster dieser Karte.
+     * Es wird von der Kartenebene an der übergebenen Bildschirmposition geöffnet.
+     *
+     * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
+     */
     @Composable
     override fun erhalteKontextFenster(
         pos: BildschirmPosition
@@ -230,6 +236,12 @@ sealed class Karte(
         }
     }
 
+    /**
+     * Erstellt die lokale Compose-Darstellung dieser Karte.
+     * Sie bindet Welt und Overlay der Kartenebene in den Graphen ein.
+     *
+     * @receiver BoxScope der Kartendarstellung
+     */
     @Composable
     override fun BoxScope.erhalteDarstellung() {
         KartenWelt(); KartenOverlay()

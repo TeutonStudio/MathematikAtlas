@@ -51,6 +51,12 @@ sealed class Knoten(
         println("Verbindung gezogen")
     }
 
+    /**
+     * Erstellt die lokale Compose-Darstellung dieses Knotens.
+     * Sie wird innerhalb der zugehörigen Kartenebene eingebunden.
+     *
+     * @receiver BoxScope der Knotendarstellung
+     */
     @Composable
     override fun BoxScope.erhalteDarstellung() {
         Inhalt()
@@ -63,6 +69,10 @@ sealed class Knoten(
         }
     }
 
+    /**
+     * Erstellt die Inspector-Darstellung dieses Knotens.
+     * Sie wird vom Graphsystem für den ausgewählten Knoten eingebunden.
+     */
     @Composable
     override fun erhalteInspektor() {
         Card(Modifier.padding(25.dp)) {
@@ -78,6 +88,12 @@ sealed class Knoten(
     @Composable public abstract fun Textzeile()
     @Composable public abstract fun Fußzeile()
 
+    /**
+     * Erstellt das Kontextfenster dieses Knotens.
+     * Es wird von der Karte an der übergebenen Bildschirmposition geöffnet.
+     *
+     * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
+     */
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(
@@ -96,5 +112,4 @@ sealed class Knoten(
     }
 
 //    public fun KartenPosition.zuBildAusKnoten(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = (this + daten.position).round()
-
 }

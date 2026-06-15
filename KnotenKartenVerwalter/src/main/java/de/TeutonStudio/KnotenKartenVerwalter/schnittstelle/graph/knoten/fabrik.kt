@@ -5,10 +5,20 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
+/** Schlüssel einer Knotenimplementierung in der [KnotenFabrik]. */
 typealias KnotenArt = String
+
+/** Fabrikvertrag für Knotenimplementierungen. */
 typealias KnotenFabrik = Map<KnotenArt,KnotenKonstruktor>
+
+/** Konstruktorfunktion eines konkreten [Knoten]. */
 typealias KnotenKonstruktor = (graph: Graph, daten: AnschlussKnotenDaten, besitzer: Karte) -> Knoten
 
+/**
+ * Erzeugt den zur Datenklasse passenden Knoten.
+ *
+ * @receiver Fabrikzuordnung der bekannten Knotenarten
+ */
 public fun KnotenFabrik.erzeugeKnoten(graph: Graph, daten: AnschlussKnotenDaten, besitzer: Karte): Knoten? = this[daten.klasse]?.invoke(graph,daten,besitzer)
 
 @Suppress("UNCHECKED_CAST")

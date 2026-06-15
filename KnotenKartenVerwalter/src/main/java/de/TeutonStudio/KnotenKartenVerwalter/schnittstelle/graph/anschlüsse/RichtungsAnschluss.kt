@@ -10,6 +10,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
+/**
+ * Anschlussvertrag für gerichtete Eingänge und Ausgänge.
+ * [BasisEingang] und [BasisAusgang] sind die vorgesehenen Standardimplementierungen.
+ */
 interface RichtungsAnschluss<D: RichtungsAnschlussDaten>: GraphAnschlussObjekt<D> {
 
 //    override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean = super.erlaubtVerbindung(anschluss)

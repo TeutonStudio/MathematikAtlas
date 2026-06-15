@@ -6,8 +6,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 
 typealias AnschlussKnotenDaten = KnotenAnschlussDaten<out AnschlussDaten>
 
+/** Datenvertrag für Knoten, die eigene Anschlussdaten enthalten. */
 interface KnotenAnschlussDaten<D : AnschlussDaten>: KnotenGraphDaten, AnschlüsseDaten<D> {
 
+    /** Erstellt eine verschobene Kopie des Knotens mit kopierten Stammdaten. */
     public fun duplizieren() = KnotenDaten<D>(id.duplizieren(),name.duplizieren()).apply {
         this@apply.position = this@KnotenAnschlussDaten.position + Offset(10f,10f)
         this@apply.anschlüsse.addAll(this@KnotenAnschlussDaten.anschlüsse)

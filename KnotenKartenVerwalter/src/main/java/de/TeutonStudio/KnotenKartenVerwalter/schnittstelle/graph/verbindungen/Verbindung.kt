@@ -42,6 +42,12 @@ sealed class Verbindung(
 ): GraphVerbindungObjekt<VerbindungDaten> {
     override var layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
+    /**
+     * Erstellt das Kontextfenster dieser Verbindung.
+     * Es wird von der Karte an der übergebenen Bildschirmposition geöffnet.
+     *
+     * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
+     */
     @Composable
     override fun erhalteKontextFenster(pos: BildschirmPosition) {
         Box(modifier = Modifier.offset { pos }.padding(vertical = 4.dp)) {

@@ -23,17 +23,23 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.GraphAnschlussObjekt
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.GraphKartenObjekt
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt
 
-/**
- * Das GraphDatenObjekt ist die Brücke zwischen der abstrakten daten [GraphDaten] zum unt dem Graph durch [GraphDatenObjekt]
- */
+/** Allgemeiner Vertrag eines darstellbaren Graphobjekts. */
 typealias GraphObjekt = GraphDatenObjekt<out GraphDaten>
 
 /**
+ * Beschreibt die gemeinsame Brücke zwischen fachlichen [GraphDaten] und ihrer Darstellung im [Graph].
+ * Spezialisierte Graphobjekte werden über [GraphKartenObjekt], [GraphKnotenObjekt], [GraphAnschlussObjekt] und [GraphVerbindungObjekt] modelliert.
  *
- * Bei jeder Neuzeichnung durch @Composable wird [layoutCoordinates] aktuelisiert
+ * Standardimplementierungen werden von den Basistypen Karte, Knoten, Anschluss und Verbindung bereitgestellt.
+ * Eigene Implementierungen sollen diese Basistypen erweitern, statt den gesamten Systemvertrag direkt neu zu implementieren.
  *
+ * Das Interface koordiniert Registrierung, Auswahl, Kontextfenster, Inspector-Darstellung und Koordinatenumrechnung.
  */
 interface GraphDatenObjekt<D: GraphDaten>{
     public val graph: Graph
@@ -42,51 +48,59 @@ interface GraphDatenObjekt<D: GraphDaten>{
 
     var layoutCoordinates: MutableState<LayoutCoordinates?>
 
-    /*
-    Wird durchgeführt bevor, durch den [Graph] [zuComposable] geöffnet wird
-     */
+    /** Reagiert auf einen einfachen Klick im lokalen Bildschirmkoordinatenraum. */
     public open fun beiKlick(klickPos: Offset)
-    /*
-    Wird durchgeführt bevor, durch den [Graph] [erhalteKontextFenster] geöffnet wird
-     */
+
+    /** Reagiert auf ein Halten und bereitet typischerweise das Kontextfenster vor. */
     public open fun beiHalten(klickPos: Offset)
+
+    /** Reagiert auf Transformationsgesten des Graphobjekts. */
     public open fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float)
 
     @Composable open fun Modifier.modiInputEvent() = vorher().position().transform().tapping()
-    /*
-    Der erste Modifier vor den [modiInputEvent] InputeEvent modifieren angewendet wird.
-     */
+
+    /** Liefert den äußeren Modifier, bevor Eingabe-Modifier ergänzt werden. */
     @Composable public fun Modifier.vorher() = zIndex(1f)
     @Composable public fun Modifier.transform() = transformable(rememberTransformableState(::beiTransform))
     @Composable public fun Modifier.tapping() = pointerInput(daten.id) { detectTapGestures(onTap = ::beiKlick,onLongPress = ::beiHalten) }
     @Composable public fun Modifier.position() = onGloballyPositioned { layoutCoordinates.value = it }
 
 
+    /**
+     * Erstellt die lokale Compose-Darstellung dieses Graphobjekts.
+     * Sie wird innerhalb der zugehörigen Kartenebene eingebunden.
+     *
+     * @param modifier äußerer Modifier der Darstellung
+     */
     @Composable fun zuComposable(modifier: Modifier = Modifier.Companion) = Box(modifier = modifier.vorher().modiInputEvent()) { erhalteDarstellung() }
 
     /**
-     * Die Lokale @Composable welt des [GraphObjekt].
+     * Erstellt den Inhalt des Graphobjekts innerhalb einer Box.
+     * Die Darstellung wird von [zuComposable] in die Kartenebene eingesetzt.
+     *
+     * @receiver BoxScope der lokalen Darstellung
      */
     @Composable fun BoxScope.erhalteDarstellung()
 
     /**
-     * Die Lokale @Composable welt des [GraphObjekt], in der KontextUmgebung, wird durch die [Karte] [beiHalten] geöffnet.
+     * Erstellt das Kontextfenster dieses Graphobjekts.
+     * Es wird von der Karte an der gespeicherten Kontextposition geöffnet.
+     *
+     * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable fun erhalteKontextFenster(pos: BildschirmPosition = graph.karte.ctx.second)
 
     /**
-     * Die Lokale @Composable welt des [GraphObjekt], in der InspektorUmgebung, wird durch die [Karte] [beiKlick], [beiHalten] und [beiTransform] geöffnet.
+     * Erstellt die Inspector-Darstellung dieses Graphobjekts.
+     * Sie wird vom Graphsystem für das aktuell ausgewählte Objekt eingebunden.
      */
     @Composable fun erhalteInspektor()
 
 
-    /*
-    Wird von der [Karte] genutz um [erhalteKontextFenster] zu öffnen.
-     */
+    /** Gibt an, ob die Karte das Kontextfenster dieses Objekts öffnet. */
     public val öffneKontext get() = derivedStateOf { graph.karte.ctx.first == daten.id }
-    /*
-    Wird von der [Karte] genutz um [erhalteInspektor] zu öffnen
-     */
+
+    /** Gibt an, ob dieses Objekt in der Kartenauswahl enthalten ist. */
     public val istSelektiert get() = derivedStateOf { graph.karte.zustand.auswahl.value.enthält(this) }
 
     public fun erhalteAnschluss(knotenId: String,anschlussId: String): Anschluss<out AnschlussDaten>? = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }
@@ -98,7 +112,6 @@ interface GraphDatenObjekt<D: GraphDaten>{
     public fun KartenPosition.zuBild(zustand: KarteZustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
     public fun BildschirmPosition.zuDelta(zustand: KarteZustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.zoom
     public fun BildschirmPosition.zuKnoten(knoten: Knoten, zustand: KarteZustand = graph.karte.zustand): KnotenPosition = this.toOffset() - knoten.daten.position
-
 
     // Auf dem Graph wird von einem Anschluss aus gezogen
     // fun planeVerbindung(a: Anschluss<out AnschlussDaten>) = Unit

@@ -6,6 +6,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 
+/** Datenvertrag für Knotenposition, Knotenmaße und freie Knotendaten. */
 interface KnotenGraphDaten: GraphDaten {
     val name: String
     var breite: Float

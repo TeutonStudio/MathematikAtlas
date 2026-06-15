@@ -10,11 +10,13 @@ import kotlin.reflect.KClass
 
 typealias PullObjekt = PullSystem<*>
 
+/** Eindeutiger Schlüssel eines Anschlusses innerhalb eines Pull-Pfads. */
 data class PullSchlüssel(
     val knotenId: String,
     val anschlussId: String,
 )
 
+/** Ergebnis einer Pull-Auswertung. */
 sealed interface PullErgebnis<out T : Any> {
 
     data class Wert<T : Any>(
@@ -27,6 +29,7 @@ sealed interface PullErgebnis<out T : Any> {
     ) : PullErgebnis<Nothing>
 }
 
+/** Laufzeitkontext einer Pull-Auswertung mit Zyklus- und Ergebnisverwaltung. */
 class PullKontext {
 
     internal val aktivePfade:
@@ -37,12 +40,8 @@ class PullKontext {
 }
 
 /**
- * T ist der Werttyp, der durch die Anschlüsse transportiert wird.
- *
- * Beispiele:
- * PullSystem<Aussage>
- * PullSystem<Menge>
- * PullSystem<Zahl>
+ * Vertrag für Knoten, deren Ausgangswerte aus verbundenen Eingängen gezogen werden.
+ * Implementierungen werden als Zusatzvertrag auf konkreten Knoten wie [BasisKnoten] verwendet.
  */
 interface PullSystem<T : Any> {
 

@@ -35,16 +35,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Ve
 private const val VERBINDUNG_TREFFER_RADIUS = 10f
 
 /**
- * Graph ist die dünne Render-Brücke zwischen fachlichen [KarteDaten] und
- * der interaktiven Kartenoberfläche, als [GraphObjekt].
+ * Render-Brücke zwischen fachlichen [KarteDaten] und der interaktiven Kartenoberfläche.
  *
- * Graph reguliert die Interaktive Brücke mittels [KarteZustand] zu [Karte]
- *
- * Die Brücke zwischen [GraphObjekt] und dem [Karte] wird mit [kartenFabrik] erzeugt.
- *
- * Die Karte selbst bleibt damit ein konkretes GraphObjekt, aber der aufrufende
- * Code muss nicht mehr direkt BasisKarte kennen. Navigation/Testapps erzeugen
- * nur noch einen Graph aus KarteDaten und Callbacks.
+ * Der Graph erzeugt die konkrete Karte über [kartenFabrik] und stellt Hintergrund,
+ * Übersicht und Steuerung als gemeinsame Compose-Ebene bereit.
  */
 class Graph(
     private val daten: KarteDaten,
@@ -65,6 +59,12 @@ class Graph(
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
+    /**
+     * Erstellt die vollständige Compose-Darstellung des Graphen.
+     * Sie bindet Karte, Hintergrund, Steuerung und Übersicht in einer Oberfläche zusammen.
+     *
+     * @param modifier äußerer Modifier der Graphdarstellung
+     */
     @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
         karte.zuComposable(Modifier.matchParentSize())
         Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
