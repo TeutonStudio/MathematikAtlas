@@ -7,7 +7,7 @@ open class EingangDaten(
     override val kante: AnschlussKante = AnschlussKante.Links,
 ) : RichtungsAnschlussDaten(id,kante,
     AnschlussRichtung.Eingang) {
-    override val klasse: String? = BasisEingang.ANSCHLUSS_ART
+    override var klasse: String? = BasisEingang.ANSCHLUSS_ART
 
     constructor(
         id: String,

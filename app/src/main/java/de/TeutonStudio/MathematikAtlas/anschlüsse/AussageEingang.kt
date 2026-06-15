@@ -17,6 +17,6 @@ class AussageEingang(
     }
 
     public companion object {
-        public const val ANSCHLUSS_ART = "outputAussage"
+        public const val ANSCHLUSS_ART = "inputAussage"
     }
 }

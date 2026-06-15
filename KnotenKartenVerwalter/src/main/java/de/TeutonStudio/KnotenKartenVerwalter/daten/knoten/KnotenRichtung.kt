@@ -15,6 +15,7 @@ interface KnotenRichtung<D : RichtungsAnschlussDaten>: AnschlüsseDaten<D> {
         kante: AnschlussKante,
         label: String,
     ): D
+    public fun anschlussKorrektur(a: D) {}
 
     public fun erzeugeAnschlussId(knotenId: String, idx: Int): String
 
@@ -25,7 +26,7 @@ interface KnotenRichtung<D : RichtungsAnschlussDaten>: AnschlüsseDaten<D> {
                 id = it,
                 kante = kante,
                 label = labelIdx.first,
-            )
+            ).apply { anschlussKorrektur(this) }
         }
     }.toMutableStateList()
 

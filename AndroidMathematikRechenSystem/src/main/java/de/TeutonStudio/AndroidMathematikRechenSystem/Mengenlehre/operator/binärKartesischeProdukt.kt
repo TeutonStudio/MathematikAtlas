@@ -14,7 +14,7 @@ class binärKartesischeProdukt<EL: Element, ER: Element, ML: Menge<EL>, MR: Meng
     }
 
     override fun enthält(element: Element): Boolean {
-        super.enthält(element)
+//        super.enthält(element)
         TODO("Not yet implemented")
     }
 

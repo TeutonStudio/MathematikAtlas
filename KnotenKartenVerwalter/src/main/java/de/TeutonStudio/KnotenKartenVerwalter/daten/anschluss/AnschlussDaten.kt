@@ -5,14 +5,14 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Bas
 
 open class AnschlussDaten(
     override val id: String,
-    open val kante: de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante,
-): de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten {
-    override val klasse: String? = BasisAnschluss.ANSCHLUSS_ART
+    open val kante: AnschlussKante,
+): GraphDaten {
+    override var klasse: String? = BasisAnschluss.ANSCHLUSS_ART
     open var label: String = ""
 
     constructor(
         id: String,
-        kante: de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante,
+        kante: AnschlussKante,
         label: String = "",
     ): this(id,kante) {
         this.label = label

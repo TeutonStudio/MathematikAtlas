@@ -35,8 +35,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Ve
 private const val VERBINDUNG_TREFFER_RADIUS = 10f
 
 /**
- * Graph ist die dünne Render-Brücke zwischen fachlichen Kartendaten und
- * der interaktiven Kartenoberfläche.
+ * Graph ist die dünne Render-Brücke zwischen fachlichen [KarteDaten] und
+ * der interaktiven Kartenoberfläche, als [GraphObjekt].
+ *
+ * Graph reguliert die Interaktive Brücke mittels [KarteZustand] zu [Karte]
+ *
+ * Die Brücke zwischen [GraphObjekt] und dem [Karte] wird mit [kartenFabrik] erzeugt.
  *
  * Die Karte selbst bleibt damit ein konkretes GraphObjekt, aber der aufrufende
  * Code muss nicht mehr direkt BasisKarte kennen. Navigation/Testapps erzeugen
@@ -49,10 +53,10 @@ class Graph(
     private val onVerbindungErstellen: VerbindungErstellen = {},
 //    private val onKontextAktion: KontextAktionAusführen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
+    private val kartenFabrik: KartenFabrik = BasisKartenFabrik,
 ): GraphHintergrund, GraphKarte, GraphSteuerung {
     override var aktuell: Int = 0
     override val verlauf = mutableStateMapOf<Int,Any>()
-    private val kartenFabrik: KartenFabrik = BasisKartenFabrik
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
     val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,aktualisierung,onVerbindungErstellen,/*onKontextAktion,*/onAuswahlÄndern).apply { registriere() }
     val knoten get() = karte.knoten

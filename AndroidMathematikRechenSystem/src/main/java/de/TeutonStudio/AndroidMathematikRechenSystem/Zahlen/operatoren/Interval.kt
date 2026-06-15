@@ -39,7 +39,7 @@ class Interval<T: Menge<Zahl>>: ElementOperator, ZahlenMenge {
     }
 
     override fun enthält(element: Element): Boolean {
-        super.enthält(element)
+//        super.enthält(element)
         TODO("Not yet implemented")
     }
 }

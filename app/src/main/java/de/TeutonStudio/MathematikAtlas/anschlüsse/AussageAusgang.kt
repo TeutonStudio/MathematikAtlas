@@ -14,7 +14,7 @@ class AussageAusgang(
     besitzer: Knoten,
 ): BasisAusgang(graph,daten,besitzer) {
     override fun erlaubtVerbindung(anschluss: Anschluss<out AnschlussDaten>): Boolean {
-        return super.erlaubtVerbindung(anschluss) && anschluss is AussageAusgang
+        return super.erlaubtVerbindung(anschluss) && anschluss is AussageEingang
     }
 
     public companion object {

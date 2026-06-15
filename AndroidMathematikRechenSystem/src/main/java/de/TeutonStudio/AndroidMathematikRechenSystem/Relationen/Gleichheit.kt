@@ -20,4 +20,12 @@ class Gleichheit(
     override fun auswerten(): Aussage {
         TODO("Not yet implemented")
     }
+
+    override fun istWahr(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun istLüge(): Boolean {
+        TODO("Not yet implemented")
+    }
 }

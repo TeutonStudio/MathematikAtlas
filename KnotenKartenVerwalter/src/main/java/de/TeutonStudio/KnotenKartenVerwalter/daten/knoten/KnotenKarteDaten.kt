@@ -11,13 +11,14 @@ import androidx.compose.ui.geometry.Rect
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenKarte
 
 class KnotenKarteDaten(
     override val id: String,
     override val name: String,
 ): KnotenAnschlussDaten<RichtungsAnschlussDaten> {
-    override val klasse = KnotenKarte.KNOTEN_ART
+    override var klasse: KnotenArt? = KnotenKarte.KNOTEN_ART
 
     override val dimension: Rechteck get() = Rect(position,position + Offset(breite,tiefe))
     override var breite: Float = 180f

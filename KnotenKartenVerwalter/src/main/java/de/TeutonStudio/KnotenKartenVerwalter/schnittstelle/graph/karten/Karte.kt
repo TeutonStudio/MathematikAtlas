@@ -27,7 +27,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
@@ -183,7 +182,7 @@ sealed class Karte(
 
     override fun beiKlick(klickPos: Offset) {
         // TODO herausfinden, wie ich it. tranformieren muss
-        val kartePos = klickPos.round().zuKarte()
+        val kartePos = klickPos.round().zuGraph()
         val v = erhalteVerbindungNachPos(kartePos)?.apply {
 //            printLogCat(first, second, second.getDistanceSquared())
             if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
@@ -199,7 +198,7 @@ sealed class Karte(
     }
     override fun beiHalten(klickPos: Offset) {
         val karteCTX = { ctx = daten.id to klickPos.round() }
-        val kartePos = klickPos.round().zuKarte()
+        val kartePos = klickPos.round().zuGraph()
         if (erhalteVerbindungNachPos(kartePos)?.let {
                 printLogCat(it.first, it.second, it.second.getDistanceSquared())
                 if (it.second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {

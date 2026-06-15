@@ -16,7 +16,7 @@ open class KarteDaten(
     initialKnoten: List<AnschlussKnotenDaten> = emptyList(),
     initialVerbindungen: List<VerbindungDaten> = emptyList(),
 ): GraphDaten {
-    override val klasse: KartenArt? = BasisKarte.KARTEN_ART
+    override var klasse: KartenArt? = BasisKarte.KARTEN_ART
 
 //    public val cache: KartenCacheDaten = KartenCacheDaten()
     public val knoten = mutableStateListOf<AnschlussKnotenDaten>().apply { addAll(initialKnoten) }

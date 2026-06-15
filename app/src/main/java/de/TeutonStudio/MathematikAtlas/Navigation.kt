@@ -42,6 +42,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund
+import de.TeutonStudio.MathematikAtlas.karten.MatheKartenFabrik
 
 sealed class Screen(val route: String) {
     data object StartScreen : Screen("start_screen")
@@ -63,7 +64,8 @@ fun Navigation() {
 
 @Composable
 private fun KnotenKartenTestAnwendung() {
-    var karte by remember { mutableStateOf(testKarte()) }
+//    var karte by remember { mutableStateOf(testKarte()) } // StandardKarteTest
+    var karte by remember { mutableStateOf(aussageTestKarte()) } // AussageKarteTest
     var status by remember { mutableStateOf("Bereit") }
     val auswahl = remember { mutableStateOf(AuswahlDaten.LEER) }
 
@@ -153,6 +155,7 @@ private fun KnotenKartenTestAnwendung() {
                     auswahl.value = neueAuswahl
                     status = neueAuswahl.statusText()
                 },
+                kartenFabrik = MatheKartenFabrik
             )
         }
         TestSeitenLeiste(
@@ -161,7 +164,8 @@ private fun KnotenKartenTestAnwendung() {
             status = status,
             zustand = g.karte.zustand,
             onNeueKarte = {
-                karte = testKarte()
+//                karte = testKarte()
+                karte = aussageTestKarte()
                 auswahl.value = AuswahlDaten.LEER
                 status = "Testkarte geladen"
             },
@@ -171,7 +175,7 @@ private fun KnotenKartenTestAnwendung() {
                 status = "Keine Auswahl"
             },
             onNameAendern = { neuerName ->
-                karte = KarteDaten(karte, name = neuerName)
+//                karte = KarteDaten(karte, name = neuerName)
                 status = "Karte umbenannt"
             },
         )

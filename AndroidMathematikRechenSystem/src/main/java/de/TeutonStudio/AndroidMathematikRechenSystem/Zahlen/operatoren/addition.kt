@@ -30,7 +30,11 @@ class addition: Rechnung, Zahl, Element, MathematischerOperator {
         TODO("Not yet implemented")
     }
 
-    override fun istAsoziativ() {
+    override fun istAsoziativ(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun istKommutativ(): Boolean {
         TODO("Not yet implemented")
     }
 
