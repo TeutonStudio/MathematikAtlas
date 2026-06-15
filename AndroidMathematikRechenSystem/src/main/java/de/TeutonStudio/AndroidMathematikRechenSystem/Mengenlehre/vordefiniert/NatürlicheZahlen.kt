@@ -2,6 +2,7 @@ package de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.vordefiniert
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischerOperator
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
+import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.Rechnung
@@ -14,14 +15,15 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
     override fun istKommutativ(arg: Rechnung): Boolean {
         if (arg is addition) return true
         if (arg is subtraktion) return false
+        if (arg is multiplikation) return true
 
         return TODO("Kein Wert für ${arg} definiert.")
-        TODO("Not yet implemented")
     }
 
     override fun istAssoziativ(arg: Rechnung): Boolean {
         if (arg is addition) return true
         if (arg is subtraktion) return false
+        if (arg is multiplikation) return true
 
         return TODO("Kein Wert für ${arg} definiert.")
     }
@@ -50,8 +52,7 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
         if (äußere is subtraktion && innere is subtraktion) return false
         TODO("Not yet implemented")
     }
-    override fun enthält(element: Zahl): Boolean {
-        if (element is addition) element.kleinsteOberMenge()
+    override fun enthält(element: Element): Boolean? {
         TODO("Not yet implemented")
     }
 

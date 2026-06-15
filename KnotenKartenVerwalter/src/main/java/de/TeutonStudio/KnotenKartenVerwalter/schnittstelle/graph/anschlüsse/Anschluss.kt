@@ -53,8 +53,8 @@ sealed class Anschluss<D: AnschlussDaten>(
 //    public val karte get() = besitzer.besitzer
 //    public abstract val besitzer: Knoten
     //    public var partner: Anschluss?
-    private var dragPos by mutableStateOf(Offset.Zero)
-    private var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
+var dragPos by mutableStateOf(Offset.Zero)
+    var dragZiel by mutableStateOf<Anschluss<out AnschlussDaten>?>(null)
 
     public override fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset) {
         start.consume()
@@ -62,6 +62,7 @@ sealed class Anschluss<D: AnschlussDaten>(
         karte.wähle()
         dragPos = pos
 
+        karte.planeVerbindung(this)
         karte.pseudoVerbindung.value = BezierVerbindung(
             graph, VerbindungDaten(
                 "pseudo",

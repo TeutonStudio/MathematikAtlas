@@ -7,6 +7,14 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.Interval
 
 class Tupel<idxM: Interval<NatürlicheZahlen>,O: MathematischesObjekt>(
     private val def: (Int) -> O,
-) {
+): ElementOperator {
     public fun erhalte(idx: Int): O = def(idx)
+
+    override fun zuLatex(): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun vereinfacht(): MathematischesObjekt {
+        TODO("Not yet implemented")
+    }
 }

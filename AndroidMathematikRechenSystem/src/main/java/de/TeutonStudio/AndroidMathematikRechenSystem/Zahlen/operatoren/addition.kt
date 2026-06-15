@@ -30,11 +30,6 @@ class addition: Rechnung, Zahl, Element, MathematischerOperator {
         TODO("Not yet implemented")
     }
 
-    override fun kleinsteOberMenge(): Menge<out Element> {
-        // Todo
-        TODO("Not yet implemented")
-    }
-
     override fun istAsoziativ() {
         TODO("Not yet implemented")
     }

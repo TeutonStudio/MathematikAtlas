@@ -67,7 +67,7 @@ interface GraphDatenObjekt<D: GraphDaten>{
 
 
     // Auf dem Graph wird von einem Anschluss aus gezogen
-    fun planeVerbindung(a: Anschluss<out AnschlussDaten>) = Unit
+    // fun planeVerbindung(a: Anschluss<out AnschlussDaten>) = Unit
     // Auf dem Graph wird eine gezogene Verbindung auf einem Anschluss dieses Knoten losgelassen
     // von ist dabei der Anschluss von dem gezogen wurde und nach der auf dem fallen gelassen wurde
     fun erstelleVerbindung(von: Anschluss<out AnschlussDaten>, zu: Anschluss<out AnschlussDaten>) = Unit

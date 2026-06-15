@@ -39,6 +39,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
@@ -50,6 +51,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKno
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.sichtbar
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.zuComposable
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
@@ -99,6 +101,27 @@ sealed class Karte(
         keinKontext(); wähle()
     }
     public override fun dupliziereKnoten(knoten: Knoten) = daten.knoten.add(knoten.daten.duplizieren()).apply { keinKontext() }
+    public override fun planeVerbindung(a: Anschluss<out AnschlussDaten>) {
+        pseudoVerbindung.value = BezierVerbindung(
+            graph, VerbindungDaten(
+                "pseudo",
+                IDEhe(
+                    a.besitzer.daten.id,
+                    a.besitzer.daten.id,
+                    a.daten.id,
+                    a.daten.id,
+                ),
+            ),
+            derivedStateOf { a.pos },
+            derivedStateOf { a.dragZiel?.pos ?: a.dragPos }
+        ).apply {
+            startKante = a.daten.kante
+            endeKante = startKante.gegenüber()
+        }
+/*        knoten.forEach {
+            it.planeVerbindung
+        }*/
+    }
     public override fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
         if (weib.daten is AusgangDaten && mann.besitzer is PullObjekt) (mann.besitzer as PullObjekt).aktualisiereCache()
         if (mann.daten is AusgangDaten && weib.besitzer is PullObjekt) (weib.besitzer as PullObjekt).aktualisiereCache()

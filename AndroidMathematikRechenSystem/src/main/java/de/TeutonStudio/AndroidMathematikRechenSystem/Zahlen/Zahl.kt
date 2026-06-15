@@ -8,6 +8,5 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.Rechnung
 
 // TODO eine Zahl
 interface Zahl: MathematischesObjekt, Element {
-    public override fun kleinsteOberMenge(): Menge<out Element>
 
 }

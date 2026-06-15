@@ -13,11 +13,11 @@ class binärKartesischeProdukt<EL: Element, ER: Element, ML: Menge<EL>, MR: Meng
         TODO("Not yet implemented")
     }
 
-    override fun enthält(element: Dupel<EL, ER>): Boolean {
+    override fun enthält(element: Element): Boolean {
+        super.enthält(element)
         TODO("Not yet implemented")
     }
 
-    override fun kleinsteOberMenge(): Menge<out Element> = this
     override fun zuLatex(): String {
         TODO("Not yet implemented")
     }

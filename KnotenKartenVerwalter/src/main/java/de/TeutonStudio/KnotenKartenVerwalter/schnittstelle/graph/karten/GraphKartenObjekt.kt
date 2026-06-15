@@ -34,6 +34,7 @@ internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     public fun vernichteKnoten(knoten: Knoten): Boolean
     public fun dupliziereKnoten(knoten: Knoten): Boolean
 
+    public fun planeVerbindung(a: Anschluss<out AnschlussDaten>)
     public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>): Boolean
     public fun vernichteVerbindung(verbindung: Verbindung): Boolean
 

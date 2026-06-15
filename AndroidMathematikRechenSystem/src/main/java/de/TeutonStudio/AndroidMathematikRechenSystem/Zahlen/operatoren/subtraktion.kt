@@ -16,14 +16,6 @@ class subtraktion(
     override fun istAsoziativ(): Boolean = false
     override fun istKommutativ(): Boolean = false
 
-    override fun kleinsteOberMenge(): Menge<out Element> {
-        if (minuend.kleinsteOberMenge() is ReelleZahlen && subtrahend.kleinsteOberMenge() is ReelleZahlen) {
-            if (RelleZahlen.aufsteigend(arg: Pair<Zahl,Zahl>) || RelleZahlen.gleich(ararg: Pair<Zahl,Zahl>)) return NatürlicheZahlen
-            else return GanzeZahlen
-        }
-        TODO("Not yet implemented")
-    }
-
     override fun zuLatex(): String {
         return listOf(minuend,subtrahend).joinToString("-") { it.zuLatex() }
     }

@@ -1,4 +1,4 @@
-package de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.operator
+package de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.iterationen
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischerOperator
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
