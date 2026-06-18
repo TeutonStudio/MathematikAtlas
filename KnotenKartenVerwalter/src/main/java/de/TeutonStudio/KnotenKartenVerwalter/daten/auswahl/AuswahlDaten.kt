@@ -1,8 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.MultiAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
@@ -23,7 +21,7 @@ interface AuswahlDaten {
         public val LEER: AuswahlDaten = MultiAuswahl()
 
         public fun VerbindungDaten.zuAuswahl() = MultiAuswahl(verbindungIds = setOf(id))
-        public fun <D: AnschlussDaten> KnotenDaten<D>.zuAuswahl() = MultiAuswahl(knotenIds = setOf(id))
+        public fun GraphDatenKnoten.zuAuswahl() = MultiAuswahl(knotenIds = setOf(id))
     }
 
 }

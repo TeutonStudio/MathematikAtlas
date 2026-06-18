@@ -9,7 +9,7 @@ import de.TeutonStudio.MathematikAtlas.karten.AussageKarteDaten
 import de.TeutonStudio.MathematikAtlas.knoten.AussageAuswertenDaten
 import de.TeutonStudio.MathematikAtlas.knoten.AussageDefinitionDaten
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.operator
-import de.TeutonStudio.MathematikAtlas.knoten.AussageOperatorDaten
+import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.operator.AussageOperatorDatenBasis
 
 fun aussageTestKarte(): AussageKarteDaten {
     /*
@@ -54,7 +54,7 @@ fun aussageTestKarte(): AussageKarteDaten {
         )
     }
 
-    val undKnoten = AussageOperatorDaten(
+    val undKnoten = AussageOperatorDatenBasis(
         id = "operator-und",
         name = "UND",
     ).apply {
@@ -66,7 +66,7 @@ fun aussageTestKarte(): AussageKarteDaten {
         data[operator.OPERATOR_SCHLÜSSEL] = operator.AussagenVerknüpfung.UND.name
     }
 
-    val oderKnoten = AussageOperatorDaten(
+    val oderKnoten = AussageOperatorDatenBasis(
         id = "operator-oder",
         name = "ODER",
     ).apply {

@@ -19,7 +19,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,7 +37,6 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.MultiAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund
@@ -187,7 +185,7 @@ private fun KnotenKartenTestAnwendung() {
                 .background(Color.White, RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp)),
         ) {
-            g.zuComposable(Modifier.fillMaxSize())
+            g.Composable(Modifier.fillMaxSize())
         }
     }
 }

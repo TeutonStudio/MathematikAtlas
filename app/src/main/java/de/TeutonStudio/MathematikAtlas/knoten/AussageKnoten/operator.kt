@@ -11,28 +11,67 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.disjunktion
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.konjunktion
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.BasisKnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullErgebnis
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullSystem
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullSystem as PullSystemGraph
+import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.PullSystem as PullSystemDaten
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAusgang
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageEingang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
-import de.TeutonStudio.MathematikAtlas.knoten.AussageOperatorDaten
 
 
 class operator(
     graph: Graph,
-    daten: AussageOperatorDaten,
+    daten: AussageOperatorDatenBasis,
     besitzer: Karte,
 ) : BasisKnoten(
     graph = graph,
     daten = daten,
     besitzer = besitzer,
-), PullSystem<Aussage> {
+), PullSystemGraph<Aussage> {
+    class AussageOperatorDatenBasis(
+        id: String,
+        name: String = "Verknüpfung",
+    ): BasisKnotenDaten<AussageAnschlussDaten>(
+        id = id,
+        name = name,
+    ), PullSystemDaten<AussageAnschlussDaten> {
+        override val anschlussCache: SnapshotStateMap<String, PullSystemDaten.PullDaten<*>> = erhalteCache().value
+        override fun baueCache(
+            ausgang: AussageAnschlussDaten,
+            eingänge: List<AussageAnschlussDaten>
+        ): PullSystemDaten.PullDaten<*> {
+            eingänge.map { it.cache }
+            TODO("Not yet implemented")
+        }
+
+        override var klasse: KnotenArt? = operator.KNOTEN_ART
+
+        private fun eingangIdx() = anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
+        private fun eingangId() = listOf(id,"eingang",eingangIdx() + 1).joinToString("-")
+        public fun eingang() = AussageAnschlussDaten(eingangId(),AnschlussKante.Links,AnschlussRichtung.Eingang)
+
+        init {
+            val anschlussListe = listOf(
+                eingang().apply { anschlussIdx[this.id] = eingangIdx() },
+                eingang().apply { anschlussIdx[this.id] = eingangIdx() },
+                AussageAnschlussDaten("$id-ausgang-0",AnschlussKante.Rechts, AnschlussRichtung.Ausgang
+                ),
+            ).apply { forEach { it.apply { klasse = if (richtung == AnschlussRichtung.Eingang) AussageEingang.ANSCHLUSS_ART else AussageAusgang.ANSCHLUSS_ART } } }
+
+            anschlüsse.addAll(anschlussListe)
+            data[operator.OPERATOR_SCHLÜSSEL] = operator.AussagenVerknüpfung.UND.name
+        }
+    }
+
     enum class AussagenVerknüpfung(
         val anzeige: String,
     ) {

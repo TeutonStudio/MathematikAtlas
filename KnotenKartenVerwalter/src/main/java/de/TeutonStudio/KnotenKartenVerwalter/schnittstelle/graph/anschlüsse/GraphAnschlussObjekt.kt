@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -13,16 +12,11 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 
 /**
  * Vertrag für Anschlussobjekte, die [AnschlussDaten] an einem [Knoten] darstellen.
@@ -36,9 +30,9 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     public val karte get() = besitzer.besitzer
 
     /** Aktuelle Position des Anschlusses im Kartenkoordinatenraum. */
-    val pos get() = erhaltePos() ?: Offset.Zero
+//    val pos get() = erhaltePos() ?: Offset.Zero
 
-    private fun erhaltePos(): KartenPosition? =
+/*    private fun erhaltePos(): KartenPosition? =
         layoutCoordinates.value?.let { anschlussCoordinates ->
             besitzer.layoutCoordinates.value?.localPositionOf(
                 sourceCoordinates = anschlussCoordinates,
@@ -46,14 +40,14 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
             )?.let { lokalePosition ->
                 besitzer.daten.position + lokalePosition
             }
-        }
+        }*/
 
     /** Erstellt die Standarddarstellung eines Anschlusses. */
-    @Composable
-    public override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)
+/*    @Composable
+    public override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)*/
 
     /** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. */
-    @Composable
+/*    @Composable
     public override fun Modifier.modiInputEvent(): Modifier = vorher().tapping().position()
         .pointerInput(daten.id) {
             detectDragGestures(
@@ -64,24 +58,24 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
                 onDragEnd = ::beiVerbindungZiehenEnde,
                 onDragCancel = ::beiVerbindungZiehenAbbruch,
             )
-        }
+        }*/
 
     /** Startet das Ziehen einer neuen Verbindung an diesem Anschluss. */
-    public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset)
+//    public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset)
 
     /** Aktualisiert die Zielposition einer gezogenen Verbindung. */
-    public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset)
+//    public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset)
 
     /** Schließt eine gezogene Verbindung ab. */
-    public fun beiVerbindungZiehenEnde(change: PointerInputChange)
+//    public fun beiVerbindungZiehenEnde(change: PointerInputChange)
 
     /** Bricht das Ziehen einer Verbindung ab. */
-    public fun beiVerbindungZiehenAbbruch()
+//    public fun beiVerbindungZiehenAbbruch()
 
     /** Gibt an, ob dieser Anschluss als Eingang behandelt wird. */
-    public open fun istEingang(): Boolean = false
+//    public open fun istEingang(): Boolean = false
 
     /** Gibt an, ob dieser Anschluss als Ausgang behandelt wird. */
-    public open fun istAusgang(): Boolean = false
+//    public open fun istAusgang(): Boolean = false
 
 }

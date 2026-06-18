@@ -1,34 +1,31 @@
-package de.TeutonStudio.KnotenKartenVerwalter.daten.knoten
+package de.TeutonStudio.KnotenKartenVerwalter.daten
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 
 
 
-open class KnotenDaten<D: AnschlussDaten>(
-    override val id: String,
+open class BasisKnotenDaten<D: AnschlussGraphDaten>(
+    override val id: GraphDatenId,
     override val name: String = "",
-): KnotenAnschlussDaten<D> {
+): GraphDatenKnoten {
     override var klasse: KnotenArt? = BasisKnoten.KNOTEN_ART
+
     override val dimension: Rechteck get() = Rect(position,position + Offset(breite,tiefe))
     override var breite: Float = 180f
     override var tiefe: Float = 96f
-
     override var beweglich: Boolean = true
     override var position: KartenPosition by mutableStateOf(KartenPosition.Zero)
-    override val anschlüsse = mutableStateListOf<D>()
+    override val anschlüsse = mutableStateListOf<AnschlussGraphDaten>()
     override val anschlussIdx = mutableStateMapOf<String, Int>()
     override val data: MutableMap<String, Any> = mutableMapOf()
 

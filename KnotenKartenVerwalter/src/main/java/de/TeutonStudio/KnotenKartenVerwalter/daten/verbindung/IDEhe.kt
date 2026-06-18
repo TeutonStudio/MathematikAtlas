@@ -1,6 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 
 data class IDEhe(

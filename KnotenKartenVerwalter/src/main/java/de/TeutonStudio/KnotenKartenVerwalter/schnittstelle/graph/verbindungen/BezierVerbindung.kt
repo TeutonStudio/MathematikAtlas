@@ -3,14 +3,14 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen
 import androidx.compose.runtime.State
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.times
 import kotlin.math.hypot
 import kotlin.math.max
+
+//typealias Kante = AnschlussGraphDaten.AnschlussKante
 
 open class BezierVerbindung(
     graph: Graph,
@@ -18,8 +18,8 @@ open class BezierVerbindung(
     override val start: State<KartenPosition>,
     override val ende: State<KartenPosition>,
 ): Verbindung(graph,daten) {
-    override var startKante: AnschlussKante = AnschlussKante.Rechts
-    override var endeKante: AnschlussKante = AnschlussKante.Links
+    override var startKante = Kante.Rechts
+    override var endeKante = Kante.Links
 
 
     public override fun erhaltePfad(): Path = Path().apply {

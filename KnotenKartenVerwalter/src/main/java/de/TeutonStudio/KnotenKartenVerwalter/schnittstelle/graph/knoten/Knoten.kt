@@ -1,17 +1,12 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten
 
-import android.graphics.RectF
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,18 +15,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante.Companion.fillMaxKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante.Companion.offsetKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante.Companion.fillMaxKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante.Companion.offsetKante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
@@ -58,10 +49,10 @@ sealed class Knoten(
      * @receiver BoxScope der Knotendarstellung
      */
     @Composable
-    public override fun BoxScope.erhalteDarstellung() {
+    public override fun BoxScope.Darstellung() {
         Inhalt()
         AnschlussKante.entries.forEach { kante ->
-            val modi = Modifier.fillMaxKante(kante).offsetKante(kante,kante.radius())
+            val modi = Modifier.fillMaxKante(kante).offsetKante(5.dp)
             Box(
                 modifier = modi.align(kante.alignment()),
                 contentAlignment = Alignment.Center,
@@ -74,7 +65,7 @@ sealed class Knoten(
      * Sie wird vom Graphsystem für den ausgewählten Knoten eingebunden.
      */
     @Composable
-    public override fun erhalteInspektor() {
+    public override fun Inspektor() {
         Card(Modifier.padding(25.dp)) {
             Column(Modifier.padding(15.dp)) {
                 Text("Inpektor: ${daten.name}")
@@ -95,7 +86,7 @@ sealed class Knoten(
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    public override fun erhalteKontextFenster(pos: BildschirmPosition) {
+    public override fun KontextFenster(pos: BildschirmPosition) {
         Box(
             modifier = Modifier
                 .offset { pos }

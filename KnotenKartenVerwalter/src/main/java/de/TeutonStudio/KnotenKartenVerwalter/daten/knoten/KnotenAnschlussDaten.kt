@@ -2,7 +2,6 @@ package de.TeutonStudio.KnotenKartenVerwalter.daten.knoten
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
 
 typealias AnschlussKnotenDaten = KnotenAnschlussDaten<out AnschlussDaten>
 
@@ -10,7 +9,7 @@ typealias AnschlussKnotenDaten = KnotenAnschlussDaten<out AnschlussDaten>
 interface KnotenAnschlussDaten<D : AnschlussDaten>: KnotenGraphDaten, AnschlüsseDaten<D> {
 
     /** Erstellt eine verschobene Kopie des Knotens mit kopierten Stammdaten. */
-    public fun duplizieren() = KnotenDaten<D>(id.duplizieren(),name.duplizieren()).apply {
+    public fun duplizieren() = BasisKnotenDaten<D>(id.duplizieren(), name.duplizieren()).apply {
         this@apply.position = this@KnotenAnschlussDaten.position + Offset(10f,10f)
         this@apply.anschlüsse.addAll(this@KnotenAnschlussDaten.anschlüsse)
         this@apply.anschlussIdx.putAll(this@KnotenAnschlussDaten.anschlussIdx)

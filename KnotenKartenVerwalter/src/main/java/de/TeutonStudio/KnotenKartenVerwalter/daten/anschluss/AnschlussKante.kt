@@ -15,7 +15,7 @@ enum class AnschlussKante {
     Rechts,
     Oben,
     Unten;
-
+/*
     public fun istVertikal(): Boolean = this == Links || this == Rechts
     public fun istHorizontal(): Boolean = this == Oben || this == Unten
 
@@ -69,6 +69,6 @@ enum class AnschlussKante {
 
         private fun radius(kante: AnschlussKante, radius: Dp = (2.5f).dp): Dp = if (kante == AnschlussKante.Rechts || kante == AnschlussKante.Unten) radius else -radius
 
-    }
+    }*/
 }
 

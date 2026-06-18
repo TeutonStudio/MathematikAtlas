@@ -1,8 +1,5 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -10,9 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,23 +16,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante.Companion.fillMaxKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 import kotlin.collections.component1
@@ -46,7 +31,7 @@ import kotlin.collections.component2
 
 typealias GraphAnschluss = Anschluss<out AnschlussDaten>
 
-sealed class Anschluss<D: AnschlussDaten>(
+sealed class Anschluss<D: GraphDatenAnschluss>(
     override val graph: Graph,
     override val daten: D,
 ): GraphAnschlussObjekt<D> {
@@ -120,7 +105,7 @@ sealed class Anschluss<D: AnschlussDaten>(
      *
      * @receiver BoxScope der Anschlussdarstellung
      */
-    @Composable public override fun BoxScope.erhalteDarstellung() {}
+    @Composable public override fun BoxScope.Darstellung() {}
 
     /**
      * Erstellt das Kontextfenster dieses Anschlusses.
@@ -129,7 +114,7 @@ sealed class Anschluss<D: AnschlussDaten>(
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    public override fun erhalteKontextFenster(pos: BildschirmPosition) {
+    public override fun KontextFenster(pos: BildschirmPosition) {
         Box(
             modifier = Modifier
                 .offset { pos }
@@ -152,11 +137,11 @@ sealed class Anschluss<D: AnschlussDaten>(
         @Composable
         public fun Map<Anschluss<out AnschlussDaten>,Int>.zuLeiste(kante: AnschlussKante, leisteModifier: Modifier = Modifier) {
             val listeComposable = this.filterKante(kante).entries.sortedBy { it.value }.map { it.key }.map { @Composable { it.zuComposable() } }
-            if (kante.istVertikal()) Column(
+            if (kante.istVertikal) Column(
                 modifier = leisteModifier.fillMaxKante(kante),
                 verticalArrangement = Arrangement.SpaceEvenly,
             ) { listeComposable.forEach { it() } }
-            else if (kante.istHorizontal()) Row(
+            else if (kante.istHorizontal) Row(
                 modifier = leisteModifier.fillMaxKante(kante),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) { listeComposable.forEach { it() } }

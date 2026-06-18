@@ -10,8 +10,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten.Companion.erhalteSize

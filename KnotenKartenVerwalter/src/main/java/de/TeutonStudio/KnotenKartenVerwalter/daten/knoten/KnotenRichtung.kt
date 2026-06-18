@@ -12,11 +12,7 @@ interface KnotenRichtung<D : RichtungsAnschlussDaten>: AnschlüsseDaten<D> {
     override val anschlüsse get() = erhalteAnschlüsse()
 
     /** Erzeugt einen Anschlussdatensatz für die angegebene Kante und Beschriftung. */
-    public fun erzeugeAnschluss(
-        id: String,
-        kante: AnschlussKante,
-        label: String,
-    ): D
+    public fun erzeugeAnschluss(id: String, kante: AnschlussKante, label: String,): D
     /** Passt einen erzeugten Anschlussdatensatz nachträglich an. */
     public fun anschlussKorrektur(a: D) {}
 

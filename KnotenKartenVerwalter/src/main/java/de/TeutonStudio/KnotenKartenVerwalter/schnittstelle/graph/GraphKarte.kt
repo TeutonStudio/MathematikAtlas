@@ -232,45 +232,24 @@ private data class MiniMapProjektion(
 ) {
     private val padding = 10f
 
-    private val breite =
-        grenzen.width.coerceAtLeast(1f)
-
-    private val höhe =
-        grenzen.height.coerceAtLeast(1f)
+    private val breite = grenzen.width.coerceAtLeast(1f)
+    private val höhe = grenzen.height.coerceAtLeast(1f)
 
     val skalierung: Float = minOf(
-        (
-                größe.width - padding * 2f
-                ).coerceAtLeast(1f) / breite,
-        (
-                größe.height - padding * 2f
-                ).coerceAtLeast(1f) / höhe,
+        (größe.width - padding * 2f).coerceAtLeast(1f) / breite,
+        (größe.height - padding * 2f).coerceAtLeast(1f) / höhe,
     ).coerceAtLeast(0.0001f)
 
     private val ursprung = Offset(
-        x = (
-                größe.width -
-                        breite * skalierung
-                ) / 2f,
-        y = (
-                größe.height -
-                        höhe * skalierung
-                ) / 2f,
+        x = (größe.width - breite * skalierung) / 2f,
+        y = (größe.height - höhe * skalierung) / 2f,
     )
 
     public fun zuMiniMap(
         weltPosition: Offset,
     ): Offset = Offset(
-        x = ursprung.x +
-                (
-                        weltPosition.x -
-                                grenzen.left
-                        ) * skalierung,
-        y = ursprung.y +
-                (
-                        weltPosition.y -
-                                grenzen.top
-                        ) * skalierung,
+        x = ursprung.x + (weltPosition.x - grenzen.left) * skalierung,
+        y = ursprung.y + (weltPosition.y - grenzen.top) * skalierung,
     )
 
     public fun zuWelt(

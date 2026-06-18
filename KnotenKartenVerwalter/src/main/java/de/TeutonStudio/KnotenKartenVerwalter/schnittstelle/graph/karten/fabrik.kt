@@ -3,9 +3,12 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten
 import de.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 
 /** Schlüssel einer Kartenimplementierung in der [KartenFabrik]. */
 typealias KartenArt = String
@@ -16,12 +19,12 @@ typealias KartenFabrik = Map<KartenArt,KartenKonstruktor>
 /** Konstruktorfunktion einer konkreten [Karte]. */
 typealias KartenKonstruktor = (
     graph: Graph,
-    daten: KarteDaten,
+    daten: GraphDatenKarte,
     zustand: KarteZustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
     onAuswahlÄndern: AuswahlÄndern,
-) -> Karte
+) -> GraphDatenObjektKarte<*>
 
 /**
  * Erzeugt die zur Datenklasse passende Karte.
@@ -30,16 +33,14 @@ typealias KartenKonstruktor = (
  * @throws IllegalStateException wenn keine passende Kartenklasse registriert ist
  */
 public fun KartenFabrik.erzeugeKarte(
-    graph: Graph, daten: KarteDaten,
+    graph: Graph, daten: GraphDatenKarte,
     zustand: KarteZustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
     onAuswahlÄndern: AuswahlÄndern,
-): Karte {
+): GraphDatenObjektKarte<*> {
     val klasse = daten.klasse ?: BasisKarte.KARTEN_ART
-
-    val konstruktor = this[klasse]
-        ?: error("Keine Kartenklasse '$klasse'. Bekannte Klassen: ${keys.joinToString()}")
+    val konstruktor = this[klasse] ?: error("Keine Kartenklasse '$klasse'. Bekannte Klassen: ${keys.joinToString()}")
 
     return konstruktor(
         graph,

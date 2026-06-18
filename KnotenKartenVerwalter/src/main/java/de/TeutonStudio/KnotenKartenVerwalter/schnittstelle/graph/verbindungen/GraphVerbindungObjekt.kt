@@ -15,10 +15,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.overlaps
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
+
+typealias Kante = AnschlussGraphDaten.AnschlussKante
 
 /**
  * Vertrag für Verbindungsobjekte zwischen zwei Anschlüssen einer Karte.
@@ -29,10 +31,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
  */
 internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
     /* TODO herausfinden ob State oder var besser ist */
-    public abstract var startKante: AnschlussKante
+    public abstract var startKante: Kante
     public abstract val start: State<KartenPosition>
     /* TODO herausfinden ob State oder var besser ist */
-    public abstract var endeKante: AnschlussKante
+    public abstract var endeKante: Kante
     public abstract val ende: State<KartenPosition>
 
     /** Setzt Verbindungen hinter Knoten und Anschlüsse. */
@@ -52,7 +54,7 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
      *
      * @receiver BoxScope der lokalen Darstellung
      */
-    @Composable public override fun BoxScope.erhalteDarstellung() = TODO("Nicht benötigt für Verbindung")
+    @Composable public override fun BoxScope.Darstellung() = TODO("Nicht benötigt für Verbindung")
 
 
     /** Zeichenoperation für den aktuellen Verbindungspfad. */

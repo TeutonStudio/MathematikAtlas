@@ -100,7 +100,7 @@ class auswerten(
     }
 
     @Composable
-    override fun erhalteInspektor() {
+    override fun Inspektor() {
         Card(Modifier.padding(25.dp)) {
             Column(Modifier.padding(15.dp)) {
                 Text("Inpektor: ${daten.name}")

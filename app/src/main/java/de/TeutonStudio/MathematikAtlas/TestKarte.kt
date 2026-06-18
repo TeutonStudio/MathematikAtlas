@@ -1,13 +1,13 @@
 package de.TeutonStudio.MathematikAtlas
 
 import androidx.compose.ui.geometry.Offset
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAusgabeDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.BasisKnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 
@@ -16,7 +16,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
     id = "test-karte",
     name = "Graph Testkarte",
     initialKnoten = listOf(
-        KnotenDaten(
+        BasisKnotenDaten(
             id = "eingabe",
             name = "Eingabe",
             position = Offset(80f, 120f),
@@ -25,7 +25,7 @@ public fun testKarte(): KarteDaten = KarteDaten(
                 AusgangDaten("out2", AnschlussKante.Rechts, "Ausgang 2") to 1
             )
         ),
-        KnotenDaten(
+        BasisKnotenDaten(
             id = "mitte",
             name = "Mitte",
             position = Offset(360f, 170f),

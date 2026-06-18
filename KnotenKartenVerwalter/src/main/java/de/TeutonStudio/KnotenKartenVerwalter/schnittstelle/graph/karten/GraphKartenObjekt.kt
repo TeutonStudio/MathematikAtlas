@@ -10,7 +10,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import de.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt

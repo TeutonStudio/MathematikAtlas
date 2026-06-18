@@ -17,4 +17,6 @@ class GraphCache<D: GraphDaten, O: GraphDatenObjekt<out D>>(
         thisRef: Any?,
         property: KProperty<*>
     ): Iterable<O> = state.value
+
+    public fun erhalte() = state.value
 }

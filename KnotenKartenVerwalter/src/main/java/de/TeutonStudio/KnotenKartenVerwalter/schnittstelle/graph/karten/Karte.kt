@@ -31,7 +31,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten.Companion.zuAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
@@ -219,7 +219,7 @@ sealed class Karte(
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
      */
     @Composable
-    public override fun erhalteKontextFenster(
+    public override fun KontextFenster(
         pos: BildschirmPosition
     ) {
         Box(modifier = Modifier.offset { pos }.padding(vertical = 4.dp)) {
@@ -240,7 +240,7 @@ sealed class Karte(
      * @receiver BoxScope der Kartendarstellung
      */
     @Composable
-    public override fun BoxScope.erhalteDarstellung() {
+    public override fun BoxScope.Darstellung() {
         KartenWelt(); KartenOverlay()
     }
 
@@ -259,9 +259,9 @@ sealed class Karte(
     }
 
     @Composable private fun BoxScope.KartenOverlay() {
-        graph.inhalt.forEach { if (it.öffneKontext.value) it.erhalteKontextFenster() }
+        graph.inhalt.forEach { if (it.öffneKontext.value) it.KontextFenster() }
         Box(Modifier.align(Alignment.CenterEnd)) {
-            zustand.auswahl.erhalteInspektorObjekt()?.erhalteInspektor()
+            zustand.auswahl.erhalteInspektorObjekt()?.Inspektor()
         }
     }
 

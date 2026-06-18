@@ -1,36 +1,28 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKartenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.erzeugeKarte
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 
 private const val VERBINDUNG_TREFFER_RADIUS = 10f
 
@@ -41,7 +33,7 @@ private const val VERBINDUNG_TREFFER_RADIUS = 10f
  * Übersicht und Steuerung als gemeinsame Compose-Ebene bereit.
  */
 class Graph(
-    private val daten: KarteDaten,
+    private val daten: GraphDatenKarte,
     private val zustand: KarteZustand,
     private val aktualisierung: KartenAktualisierung = { kId,pos -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
@@ -64,8 +56,8 @@ class Graph(
      *
      * @param modifier äußerer Modifier der Graphdarstellung
      */
-    @Composable public fun zuComposable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
-        karte.zuComposable(Modifier.matchParentSize())
+    @Composable public fun Composable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
+        karte.ComposableStandard()
         Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
             karte.zuSteuerung()
             karte.zuÜbersicht()
