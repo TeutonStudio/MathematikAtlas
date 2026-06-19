@@ -16,10 +16,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKarte
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKartenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.erzeugeKarte
@@ -34,7 +34,7 @@ private const val VERBINDUNG_TREFFER_RADIUS = 10f
  */
 class Graph(
     private val daten: GraphDatenKarte,
-    private val zustand: KarteZustand,
+    private val zustand: Zustand,
     private val aktualisierung: KartenAktualisierung = { kId,pos -> },
     private val onVerbindungErstellen: VerbindungErstellen = {},
     private val onAuswahlÄndern: AuswahlÄndern = { a -> },
@@ -56,16 +56,16 @@ class Graph(
      *
      * @param modifier äußerer Modifier der Graphdarstellung
      */
-    @Composable public fun Composable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
+    @Composable public fun Composable(modifier: Modifier) = /*Hintergrund(karte.zustand,75f,modifier)*/ Box {
         karte.ComposableStandard()
         Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
-            karte.zuSteuerung()
-            karte.zuÜbersicht()
+//            karte.zuSteuerung()
+//            karte.zuÜbersicht()
         }
     }
 
-    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
+/*    public fun MutableState<AuswahlDaten>.erhalteInspektorObjekt(): GraphObjekt? = when {
         value is EinzelAuswahl -> inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }
         else -> null
-    }
+    }*/
 }

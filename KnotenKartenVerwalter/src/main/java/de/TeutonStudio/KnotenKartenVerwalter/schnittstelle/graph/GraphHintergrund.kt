@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -50,7 +50,7 @@ interface GraphHintergrund {
      */
     @Composable
     public fun Hintergrund(
-        zustand: KarteZustand,
+        zustand: Zustand,
         rasterGröße: Float,
         modifier: Modifier = Modifier,
         vordergrund: @Composable BoxScope.() -> Unit,

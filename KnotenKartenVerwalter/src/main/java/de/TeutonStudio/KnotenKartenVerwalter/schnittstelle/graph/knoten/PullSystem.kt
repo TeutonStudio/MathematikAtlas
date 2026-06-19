@@ -1,23 +1,23 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten
 
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import kotlin.reflect.KClass
 
-typealias PullObjekt = PullSystem<*>
+//typealias PullObjekt = PullSystem<*>
 
 /** Eindeutiger Schlüssel eines Anschlusses innerhalb eines Pull-Pfads. */
-data class PullSchlüssel(
+/*data class PullSchlüssel(
     val knotenId: String,
     val anschlussId: String,
-)
+)*/
 
 /** Ergebnis einer Pull-Auswertung. */
-sealed interface PullErgebnis<out T : Any> {
+/*sealed interface PullErgebnis<out T : Any> {
 
     data class Wert<T : Any>(
         val wert: T,
@@ -27,54 +27,54 @@ sealed interface PullErgebnis<out T : Any> {
         val meldung: String,
         val ursache: Throwable? = null,
     ) : PullErgebnis<Nothing>
-}
+}*/
 
 /** Laufzeitkontext einer Pull-Auswertung mit Zyklus- und Ergebnisverwaltung. */
-class PullKontext {
+/*class PullKontext {
 
     internal val aktivePfade:
             MutableSet<PullSchlüssel> = mutableSetOf()
 
     internal val ergebnisse:
             MutableMap<PullSchlüssel, PullErgebnis<*>> = mutableMapOf()
-}
+}*/
 
 /**
  * Vertrag für Knoten, deren Ausgangswerte aus verbundenen Eingängen gezogen werden.
  * Implementierungen werden als Zusatzvertrag auf konkreten Knoten wie [BasisKnoten] verwendet.
  */
-interface PullSystem<T : Any> {
+/*interface PullSystem<T : Any> {
 
     val graph: Graph
     val daten: AnschlussKnotenDaten
 
-    /**
+    *//**
      * Nur für UI/Debugging.
      *
      * Der Schlüssel ist die Anschluss-ID, nicht das Anschlussobjekt.
-     */
+     *//*
     val cacheAnschlüsse:
             SnapshotStateMap<String, PullErgebnis<T>>
 
-    /**
+    *//**
      * Dient zur Laufzeitprüfung, wenn ein fremdes PullSystem<*>
      * abgefragt wird.
-     */
+     *//*
     val wertKlasse: KClass<T>
 
-    /**
+    *//**
      * Berechnet einen Ausgang aus den Ergebnissen aller Eingänge.
      *
      * Quellen erhalten eine leere Eingangsmap.
-     */
+     *//*
     public fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<T>>,
     ): PullErgebnis<T>
 
-    /**
+    *//**
      * Zieht den Wert eines eigenen Ausgangs.
-     */
+     *//*
     public fun pull(
         ausgangId: String,
         kontext: PullKontext = PullKontext(),
@@ -143,12 +143,12 @@ interface PullSystem<T : Any> {
         return ergebnis
     }
 
-    /**
+    *//**
      * Zieht den Wert, der mit einem eigenen Eingang verbunden ist.
      *
      * Diese Methode kann auch von einem reinen Auswertungs-/Senkenknoten
      * benutzt werden, der selbst keinen Ausgang besitzt.
-     */
+     *//*
     public fun pullEingang(
         eingangId: String,
         kontext: PullKontext = PullKontext(),
@@ -222,9 +222,9 @@ interface PullSystem<T : Any> {
         return fremdesErgebnis.typisieren()
     }
 
-    /**
+    *//**
      * Berechnet alle eigenen Ausgänge neu.
-     */
+     *//*
     public fun aktualisiereCache() {
         cacheAnschlüsse.clear()
 
@@ -270,4 +270,4 @@ interface PullSystem<T : Any> {
                 knotenIdWeib == knotenId &&
                         anschlussIdWeib == anschlussId
                 )
-}
+}*/

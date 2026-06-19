@@ -1,11 +1,12 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungArt
 
+/*
 open class VerbindungDaten(
     override val id: String,
     open val ids: IDEhe,
@@ -42,4 +43,4 @@ open class VerbindungDaten(
             weib: Anschluss<out AnschlussDaten>,
         ): String = setOf(mann, weib).joinToString("-") { it.daten.id }
     }
-}
+}*/

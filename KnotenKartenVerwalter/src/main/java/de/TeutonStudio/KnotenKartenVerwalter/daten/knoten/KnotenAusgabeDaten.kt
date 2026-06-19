@@ -9,11 +9,11 @@ import androidx.compose.ui.geometry.Rect
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.AusgabeKnoten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.AusgabeKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 
-open class KnotenAusgabeDaten(
+/*open class KnotenAusgabeDaten(
     override val id: String,
     override val name: String,
 ): KnotenAnschlussDaten<EingangDaten>, KnotenRichtung<EingangDaten> {
@@ -60,4 +60,4 @@ open class KnotenAusgabeDaten(
     public companion object {
         public fun id(id: String, idx: Int): String = "${id}-eingang-${idx}"
     }
-}
+}*/

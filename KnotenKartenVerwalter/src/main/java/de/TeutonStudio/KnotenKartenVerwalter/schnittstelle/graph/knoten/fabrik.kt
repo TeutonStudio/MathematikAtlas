@@ -2,12 +2,13 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKnoten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
 /** Schlüssel einer Knotenimplementierung in der [KnotenFabrik]. */
 typealias KnotenArt = String
@@ -27,7 +28,7 @@ public fun KnotenFabrik.erzeugeKnoten(graph: Graph, daten: GraphDatenKnoten, bes
 
 @Suppress("UNCHECKED_CAST")
 val BasisKnotenFabrik: KnotenFabrik = mapOf(
-    BasisKnoten.KNOTEN_ART to ::BasisKnoten as KnotenKonstruktor,
-    EingabeKnoten.KNOTEN_ART to ::EingabeKnoten as KnotenKonstruktor,
-    AusgabeKnoten.KNOTEN_ART to ::AusgabeKnoten as KnotenKonstruktor,
+    BasisObjektKnoten.KNOTEN_ART to ::BasisObjektKnoten as KnotenKonstruktor,
+//    EingabeKnoten.KNOTEN_ART to ::EingabeKnoten as KnotenKonstruktor,
+//    AusgabeKnoten.KNOTEN_ART to ::AusgabeKnoten as KnotenKonstruktor,
 )

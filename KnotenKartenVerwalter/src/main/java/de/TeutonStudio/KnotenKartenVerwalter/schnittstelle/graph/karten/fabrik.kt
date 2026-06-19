@@ -5,10 +5,13 @@ import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKarte
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKarte
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Zustand
 
 /** Schlüssel einer Kartenimplementierung in der [KartenFabrik]. */
 typealias KartenArt = String
@@ -20,7 +23,7 @@ typealias KartenFabrik = Map<KartenArt,KartenKonstruktor>
 typealias KartenKonstruktor = (
     graph: Graph,
     daten: GraphDatenKarte,
-    zustand: KarteZustand,
+    zustand: Zustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
     onAuswahlÄndern: AuswahlÄndern,
@@ -34,12 +37,12 @@ typealias KartenKonstruktor = (
  */
 public fun KartenFabrik.erzeugeKarte(
     graph: Graph, daten: GraphDatenKarte,
-    zustand: KarteZustand,
+    zustand: Zustand,
     aktualisierung: KartenAktualisierung,
     onVerbindungErstellen: VerbindungErstellen,
     onAuswahlÄndern: AuswahlÄndern,
 ): GraphDatenObjektKarte<*> {
-    val klasse = daten.klasse ?: BasisKarte.KARTEN_ART
+    val klasse = daten.klasse ?: BasisObjektKarte.KARTEN_ART
     val konstruktor = this[klasse] ?: error("Keine Kartenklasse '$klasse'. Bekannte Klassen: ${keys.joinToString()}")
 
     return konstruktor(
@@ -53,5 +56,5 @@ public fun KartenFabrik.erzeugeKarte(
 }
 @Suppress("UNCHECKED_CAST")
 val BasisKartenFabrik: KartenFabrik = mapOf(
-    BasisKarte.KARTEN_ART to ::BasisKarte as KartenKonstruktor,
+    BasisObjektKarte.KARTEN_ART to ::BasisObjektKarte as KartenKonstruktor,
 )

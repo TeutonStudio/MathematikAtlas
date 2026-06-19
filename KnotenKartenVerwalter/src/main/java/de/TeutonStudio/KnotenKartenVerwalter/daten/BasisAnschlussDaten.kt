@@ -1,12 +1,12 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten
 
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.BasisAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektAnschluss
 
 open class BasisAnschlussDaten(
     override val id: GraphDatenId,
     override val kante: Kante,
 ): GraphDatenAnschluss {
-    override var klasse: String? = BasisAnschluss.ANSCHLUSS_ART
+    override var klasse: String? = BasisObjektAnschluss.ANSCHLUSS_ART
     override var label: String = ""
 
     constructor(

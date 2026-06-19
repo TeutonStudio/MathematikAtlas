@@ -1,50 +1,93 @@
 package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAusgabeDaten
+import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
+import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullErgebnis
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullSystem
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
-import de.TeutonStudio.MathematikAtlas.knoten.AussageAuswertenDaten
 
 class auswerten(
-    graph: Graph,
-    daten: AussageAuswertenDaten,
-    besitzer: Karte,
-) : BasisKnoten(
-    graph = graph,
-    daten = daten,
-    besitzer = besitzer,
-), PullSystem<Aussage> {
+    override val graph: Graph,
+    override val daten: definition.AussageDefinitionDaten,
+    override val besitzer: GraphDatenObjektKarte<*>,
+    override val layoutCoordinates: MutableState<LayoutCoordinates?>,
+) : GraphDatenObjektKnoten<definition.AussageDefinitionDaten> {
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
-    override val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
-    override val wertKlasse = Aussage::class
+    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
+    override val anschlüsse: List<GraphDatenObjektAnschluss<*>> = emptyList()
+    override fun definiereVerbindung() {
+        TODO("Not yet implemented")
+    }
+
+    class AussageAuswertenDaten(
+        override val id: GraphDatenId,
+        override var beweglich: Boolean,
+        override val anschlussIdx: SnapshotStateMap<String, Int>,
+        override val data: MutableMap<String, Any>,
+        override val name: String = "Auswerten",
+        override var position: KartenPosition,
+        override var breite: Float,
+        override var tiefe: Float,
+        override val richtung: GraphDatenAnschluss.gerichteteGDA.AnschlussRichtung,
+        override val anschlussLabel: SnapshotStateMap<Kante, Map<Int, String>>,
+    ): GraphDatenKnoten, GraphDatenKnoten.gerichteteGDK<AussageAnschlussDaten> {
+        override var klasse: KnotenArt? = auswerten.KNOTEN_ART
+
+/*        fun anschlussKorrektur(a: EingangDaten) {
+            super.anschlussKorrektur(a)
+            a.klasse = AussageEingang.ANSCHLUSS_ART
+            // TODO schlaueren Weg überlegen
+        }*/
+
+        override fun erhateAnschluss(
+            idx: Int,
+            kante: Kante,
+            label: String,
+        ): AussageAnschlussDaten {
+            TODO("Not yet implemented")
+        }
+
+
+        init {
+            anschlussLabel[Kante.Links] = mapOf(0 to "Aussage")
+        }
+    }
 
     private var anzeige by mutableStateOf("Nicht ausgewertet")
 
     /**
      * Dieser Knoten besitzt keinen Ausgang.
      */
-    override fun berechne(
+    fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<Aussage>>,
     ): PullErgebnis<Aussage> =
@@ -53,7 +96,7 @@ class auswerten(
         )
 
     private fun werteAus() {
-        val eingänge = daten.anschlüsse.filterIsInstance<EingangDaten>()
+        val eingänge = daten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }
 
         val eingang = eingänge.singleOrNull()
 
@@ -66,7 +109,7 @@ class auswerten(
             return
         }
 
-        anzeige = when (
+/*        anzeige = when (
             val ergebnis = pullEingang(eingang.id)
         ) {
             is PullErgebnis.Fehler ->
@@ -83,11 +126,11 @@ class auswerten(
                     "Auswertung fehlgeschlagen: " + (fehler.message ?: fehler::class.simpleName)
                 }
             }
-        }
+        }*/
     }
 
     @Composable
-    override fun Textzeile() {
+    fun Textzeile() {
         Column {
             Text(anzeige)
 
@@ -100,7 +143,7 @@ class auswerten(
     }
 
     @Composable
-    override fun Inspektor() {
+    fun Inspektor() {
         Card(Modifier.padding(25.dp)) {
             Column(Modifier.padding(15.dp)) {
                 Text("Inpektor: ${daten.name}")
@@ -115,6 +158,21 @@ class auswerten(
                 }
             }
         }
+    }
+
+    @Composable
+    override fun BoxScope.Darstellung() {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.KontextFenster(pos: BildschirmPosition) {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.Inspektor() {
+        TODO("Not yet implemented")
     }
 
     companion object {

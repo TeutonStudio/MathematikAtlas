@@ -2,11 +2,11 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen
 
 import androidx.compose.runtime.State
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierObjektVerbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
 
 /** Schlüssel einer Verbindungsimplementierung in der [VerbindungFabrik]. */
@@ -30,6 +30,6 @@ public fun VerbindungFabrik.erzeugeVerbindung(
 
 @Suppress("UNCHECKED_CAST")
 val BasisVerbindungFabrik: VerbindungFabrik = mapOf(
-    BasisVerbindung.VERBINDUNG_ART to ::BasisVerbindung as VerbindungKonstruktor,
-    BezierVerbindung.VERBINDUNG_ART to ::BezierVerbindung as VerbindungKonstruktor
+    BasisObjektVerbindung.VERBINDUNG_ART to ::BasisObjektVerbindung as VerbindungKonstruktor,
+    BezierObjektVerbindung.VERBINDUNG_ART to ::BezierObjektVerbindung as VerbindungKonstruktor
 )

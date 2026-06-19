@@ -3,12 +3,12 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.layout.LayoutCoordinates
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
-open class BasisEingang(
+/*open class BasisEingang(
     graph: Graph,
     daten: EingangDaten,
     override val besitzer: Knoten,
@@ -20,4 +20,4 @@ open class BasisEingang(
     public companion object {
         public const val ANSCHLUSS_ART = "input"
     }
-}
+}*/

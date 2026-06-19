@@ -7,7 +7,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKonstruktor
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
 
 typealias GraphDatenId = String

@@ -21,17 +21,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierVerbindung
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-typealias GraphAnschluss = Anschluss<out AnschlussDaten>
+//typealias GraphAnschluss = Anschluss<out AnschlussDaten>
 
-sealed class Anschluss<D: GraphDatenAnschluss>(
+/*sealed class Anschluss<D: GraphDatenAnschluss>(
     override val graph: Graph,
     override val daten: D,
 ): GraphAnschlussObjekt<D> {
@@ -99,20 +99,20 @@ sealed class Anschluss<D: GraphDatenAnschluss>(
         rotationChange: Float
     ) {}
 
-    /**
+    *//**
      * Erstellt die lokale Compose-Darstellung dieses Anschlusses.
      * Die sichtbare Darstellung wird über den Modifier-Vertrag des Anschlusses geliefert.
      *
      * @receiver BoxScope der Anschlussdarstellung
-     */
+     *//*
     @Composable public override fun BoxScope.Darstellung() {}
 
-    /**
+    *//**
      * Erstellt das Kontextfenster dieses Anschlusses.
      * Es wird von der Karte an der übergebenen Bildschirmposition geöffnet.
      *
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
-     */
+     *//*
     @Composable
     public override fun KontextFenster(pos: BildschirmPosition) {
         Box(
@@ -151,4 +151,4 @@ sealed class Anschluss<D: GraphDatenAnschluss>(
         public fun Map<Anschluss<out AnschlussDaten>,Int>.filterKante(kante: AnschlussKante): Map<Anschluss<out AnschlussDaten>,Int> = this.filter { (a,idx) -> a.daten.kante == kante }.toMutableMap()
         public fun Iterable<Anschluss<out AnschlussDaten>>.findeNachId(id:String) = find { it.daten.id == id }
     }
-}
+}*/

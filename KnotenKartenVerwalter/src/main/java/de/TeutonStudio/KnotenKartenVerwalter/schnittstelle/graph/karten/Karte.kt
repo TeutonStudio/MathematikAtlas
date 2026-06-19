@@ -31,34 +31,32 @@ import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten.Companion.zuAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.printLogCat
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.sichtbar
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.zuComposable
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullObjekt
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.sichtbar
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.zuComposable
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.sichtbar
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt.Companion.zuComposable
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierVerbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
 import kotlin.math.min
 
 
-sealed class Karte(
+/*sealed class Karte(
     override val graph: Graph,
     override val daten: KarteDaten,
 ): GraphKartenObjekt<KarteDaten> {
@@ -117,9 +115,9 @@ sealed class Karte(
             startKante = a.daten.kante
             endeKante = startKante.gegenüber()
         }
-/*        knoten.forEach {
+*//*        knoten.forEach {
             it.planeVerbindung
-        }*/
+        }*//*
     }
     public override fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>) = daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
         if (weib.daten is AusgangDaten && mann.besitzer is PullObjekt) (mann.besitzer as PullObjekt).aktualisiereCache()
@@ -181,7 +179,7 @@ sealed class Karte(
     }
 
     public override fun beiKlick(klickPos: Offset) {
-        /* TODO herausfinden, wie ich it. tranformieren muss */
+        *//* TODO herausfinden, wie ich it. tranformieren muss *//*
         val kartePos = klickPos.round().zuGraph()
         val v = erhalteVerbindungNachPos(kartePos)?.apply {
             if (second.getDistanceSquared() < VERBINDUNG_TREFFER_RADIUS) {
@@ -212,12 +210,12 @@ sealed class Karte(
         zustand.zoome(zoomDelta)
     }
 
-    /**
+    *//**
      * Erstellt das Kontextfenster dieser Karte.
      * Es wird von der Kartenebene an der übergebenen Bildschirmposition geöffnet.
      *
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
-     */
+     *//*
     @Composable
     public override fun KontextFenster(
         pos: BildschirmPosition
@@ -233,12 +231,12 @@ sealed class Karte(
         }
     }
 
-    /**
+    *//**
      * Erstellt die lokale Compose-Darstellung dieser Karte.
      * Sie bindet Welt und Overlay der Kartenebene in den Graphen ein.
      *
      * @receiver BoxScope der Kartendarstellung
-     */
+     *//*
     @Composable
     public override fun BoxScope.Darstellung() {
         KartenWelt(); KartenOverlay()
@@ -253,8 +251,8 @@ sealed class Karte(
             transformOrigin = TransformOrigin(0f, 0f)
         }
     ) {
-        knoten.sichtbar().zuComposable(/*Modifier.zIndex(1f)*/)
-        verbindungen.sichtbar().zuComposable(/*Modifier.zIndex(-1f)*/)
+        knoten.sichtbar().zuComposable(*//*Modifier.zIndex(1f)*//*)
+        verbindungen.sichtbar().zuComposable(*//*Modifier.zIndex(-1f)*//*)
         pseudoVerbindung.value?.zuComposable()
     }
 
@@ -269,4 +267,4 @@ sealed class Karte(
         value is EinzelAuswahl -> graph.inhalt.find { it.daten.id == (value as EinzelAuswahl).auswahlId }
         else -> null
     }
-}
+}*/

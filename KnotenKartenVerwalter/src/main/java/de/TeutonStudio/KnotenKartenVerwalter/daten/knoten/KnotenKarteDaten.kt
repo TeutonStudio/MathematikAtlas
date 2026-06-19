@@ -10,11 +10,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenKarte
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenKarte
 
-class KnotenKarteDaten(
+/*class KnotenKarteDaten(
     override val id: String,
     override val name: String,
 ): KnotenAnschlussDaten<RichtungsAnschlussDaten> {
@@ -30,5 +30,5 @@ class KnotenKarteDaten(
     override val anschlussIdx = mutableStateMapOf<String, Int>()
     override val data: MutableMap<String, Any> = mutableMapOf()
 
-    /* TODO */
-}
+    *//* TODO *//*
+}*/

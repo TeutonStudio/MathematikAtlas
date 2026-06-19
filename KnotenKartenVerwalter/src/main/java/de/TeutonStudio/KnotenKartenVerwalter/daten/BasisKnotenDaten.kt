@@ -9,30 +9,32 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 
 
 
-open class BasisKnotenDaten<D: AnschlussGraphDaten>(
+open class BasisKnotenDaten(
     override val id: GraphDatenId,
     override val name: String = "",
 ): GraphDatenKnoten {
-    override var klasse: KnotenArt? = BasisKnoten.KNOTEN_ART
+    override var klasse: KnotenArt? = BasisObjektKnoten.KNOTEN_ART
 
     override val dimension: Rechteck get() = Rect(position,position + Offset(breite,tiefe))
     override var breite: Float = 180f
     override var tiefe: Float = 96f
     override var beweglich: Boolean = true
     override var position: KartenPosition by mutableStateOf(KartenPosition.Zero)
-    override val anschlüsse = mutableStateListOf<AnschlussGraphDaten>()
+    override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
     override val anschlussIdx = mutableStateMapOf<String, Int>()
     override val data: MutableMap<String, Any> = mutableMapOf()
 
     constructor(
         id: String,
         name: String,
-        anschlüsse: MutableMap<D,Int>? = null,
+        anschlüsse: MutableMap<GraphDatenAnschluss,Int>? = null,
         position: KartenPosition? = null,
         breite: Float? = null,
         tiefe: Float? = null,

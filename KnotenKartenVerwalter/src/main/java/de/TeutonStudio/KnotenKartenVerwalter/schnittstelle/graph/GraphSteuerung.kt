@@ -23,7 +23,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
 /**
  * Ergänzt den Graph um Steuerungszustand und Kontrollleisten für eine [Karte].
@@ -61,7 +61,7 @@ interface GraphSteuerung {
      * @param modifier äußerer Modifier der Kontrollleiste
      */
     @Composable
-    public fun Karte.zuSteuerung(modifier: Modifier = Modifier) {
+    public fun GraphDatenObjektKarte<*>.zuSteuerung(modifier: Modifier = Modifier) {
         if (!zustand.zeigeKontrollLeiste) return
 
         val zoomFaktor = 1.2f

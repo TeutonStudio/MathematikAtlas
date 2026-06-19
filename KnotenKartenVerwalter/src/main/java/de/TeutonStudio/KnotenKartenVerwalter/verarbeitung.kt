@@ -4,8 +4,8 @@ import android.graphics.RectF
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 
 /* Skalarprodukt */
 public operator fun Offset.times(other: Offset): Float = x * other.x + y * other.y

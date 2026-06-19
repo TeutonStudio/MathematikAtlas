@@ -5,11 +5,11 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
-data class EinzelAuswahl(
+/*data class EinzelAuswahl(
     val auswahlId: String
 ): AuswahlDaten {
-    constructor(ausgwählt: GraphObjekt): this(ausgwählt.daten.id)
+    constructor(ausgwählt: GraphDatenObjekt<*>): this(ausgwählt.daten.id)
 
-    public override fun enthält(gO: GraphObjekt): Boolean = gO.daten.id == auswahlId
+    public override fun enthält(gO: GraphDatenObjekt<*>): Boolean = gO.daten.id == auswahlId
 
-}
+}*/

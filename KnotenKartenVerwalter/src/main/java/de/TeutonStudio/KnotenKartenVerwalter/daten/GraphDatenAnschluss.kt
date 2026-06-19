@@ -15,6 +15,7 @@ import kotlin.reflect.KProperty
 
 
 typealias Kante = GraphDatenAnschluss.AnschlussKante
+typealias Richtung = GraphDatenAnschluss.gerichteteGDA.AnschlussRichtung
 
 interface GraphDatenAnschluss : GraphDaten {
     override var klasse: AnschlussArt?
@@ -41,7 +42,7 @@ interface GraphDatenAnschluss : GraphDaten {
     }
 
     interface gerichteteGDA: GraphDatenAnschluss {
-        val richtung: AnschlussRichtung
+        val richtung: Richtung
         val istEingang: Boolean get() = richtung.istEingang
         val istAusgang: Boolean get() = richtung.istAusgang
 

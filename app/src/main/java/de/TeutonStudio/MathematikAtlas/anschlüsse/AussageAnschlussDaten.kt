@@ -1,26 +1,32 @@
 package de.TeutonStudio.MathematikAtlas.anschlüsse
 
-import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.PullAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.RichtungsAnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.PullSystem
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Richtung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussArt
 
 class AussageAnschlussDaten(
-    id: String,
-    kante: AnschlussKante,
-    richtung: AnschlussRichtung,
-): RichtungsAnschlussDaten(id,kante,richtung), PullAnschluss {
-    override val cache: PullSystem.PullDaten<*> = AussageDaten()
-    class AussageDaten: PullSystem.PullDaten<Aussage>() {
-        override fun ausSpeicher(wert: String): Aussage {
+    override val id: GraphDatenId,
+    override val kante: Kante,
+    override val richtung: Richtung,
+): GraphDatenAnschluss, GraphDatenAnschluss.gerichteteGDA, GraphDatenAnschluss.auswertbarerGDA {
+    override var label = ""
+    override var cache: GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> = CacheDaten()
+    override var klasse: AnschlussArt? = AussageAnschluss.ANSCHLUSS_ART
+    override fun baueCache(eingangCache: List<GraphDatenAnschluss.auswertbarerGDA.PullDaten<*>?>): GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> {
+        TODO("Not yet implemented")
+    }
+
+    class CacheDaten(): GraphDatenAnschluss.auswertbarerGDA.PullDaten<Any>("") {
+        override fun ausSpeicher(wert: String): Any {
             TODO("Not yet implemented")
         }
 
-        override fun zuSpeicher(wert: Aussage): String {
+        override fun zuSpeicher(wert: Any): String {
             TODO("Not yet implemented")
         }
 
     }
+
 }

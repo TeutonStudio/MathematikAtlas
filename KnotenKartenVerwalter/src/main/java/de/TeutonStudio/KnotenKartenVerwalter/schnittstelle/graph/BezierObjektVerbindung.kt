@@ -1,23 +1,63 @@
-package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen
+package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.LayoutCoordinates
+import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungArt
 import de.TeutonStudio.KnotenKartenVerwalter.times
 import kotlin.math.hypot
 import kotlin.math.max
 
 //typealias Kante = AnschlussGraphDaten.AnschlussKante
 
-open class BezierVerbindung(
-    graph: Graph,
-    daten: VerbindungDaten,
+open class BezierObjektVerbindung(
+    override val graph: Graph,
+    override val daten: GraphDatenVerbindung,
     override val start: State<KartenPosition>,
     override val ende: State<KartenPosition>,
-): Verbindung(graph,daten) {
+): GraphDatenObjektVerbindung<GraphDatenVerbindung> {
+    public override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+    override fun beiKlick(klickPos: Offset) {
+        TODO("Not yet implemented")
+    }
+
+    override fun beiHalten(klickPos: Offset) {
+        TODO("Not yet implemented")
+    }
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.Darstellung() {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.KontextFenster(pos: BildschirmPosition) {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.Inspektor() {
+        TODO("Not yet implemented")
+    }
+
     override var startKante = Kante.Rechts
     override var endeKante = Kante.Links
 
@@ -28,7 +68,7 @@ open class BezierVerbindung(
         move(start.value); cubic(c1(),c2(),ende.value)
     }
 
-    public override fun abstand(pos: KartenPosition): Offset {
+    public fun abstand(pos: KartenPosition): Offset {
         val p0 = start.value
         val p3 = ende.value
 

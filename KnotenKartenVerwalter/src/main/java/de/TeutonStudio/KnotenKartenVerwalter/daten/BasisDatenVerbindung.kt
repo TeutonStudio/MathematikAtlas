@@ -1,7 +1,7 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierObjektVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussArt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.BezierVerbindung
 
 class BasisDatenVerbindung(
     override val id: GraphDatenId,
@@ -9,5 +9,5 @@ class BasisDatenVerbindung(
     override var label: String,
     override val fehler: String?
 ): GraphDatenVerbindung {
-    override var klasse: AnschlussArt? = BezierVerbindung.VERBINDUNG_ART
+    override var klasse: AnschlussArt? = BezierObjektVerbindung.VERBINDUNG_ART
 }

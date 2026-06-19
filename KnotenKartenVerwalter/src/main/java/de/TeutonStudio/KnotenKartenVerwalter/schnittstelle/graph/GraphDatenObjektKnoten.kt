@@ -16,16 +16,16 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.overlaps
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.findeNachId
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.findeNachId
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.erzeugeAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
 
-interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<GraphDatenKnoten> {
+interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     public abstract val besitzer: GraphDatenObjektKarte<*>
     public abstract val anschlussFabrik: AnschlussFabrik
 

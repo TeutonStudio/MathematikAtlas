@@ -1,6 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 
 interface GraphObjekt {
     public val graph: Graph

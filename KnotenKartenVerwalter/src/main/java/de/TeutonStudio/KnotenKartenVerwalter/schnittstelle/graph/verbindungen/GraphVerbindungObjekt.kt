@@ -1,63 +1,43 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen
 
-import android.graphics.RectF
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.zIndex
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import de.TeutonStudio.KnotenKartenVerwalter.overlaps
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
-
-typealias Kante = AnschlussGraphDaten.AnschlussKante
+//typealias Kante = AnschlussGraphDaten.AnschlussKante
 
 /**
  * Vertrag für Verbindungsobjekte zwischen zwei Anschlüssen einer Karte.
- * [Verbindung], [BasisVerbindung] und [BezierVerbindung] sind die vorgesehenen Erweiterungspunkte.
+ * [Verbindung], [de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektVerbindung] und [de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BezierVerbindung] sind die vorgesehenen Erweiterungspunkte.
  *
  * Verbindungen berechnen ihre Endpunkte aus den angeschlossenen Graphobjekten, liefern Pfad und Trefferabstand
  * und werden gemeinsam auf der Kartenebene gezeichnet.
  */
-internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
-    /* TODO herausfinden ob State oder var besser ist */
+/*internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V> {
+    *//* TODO herausfinden ob State oder var besser ist *//*
     public abstract var startKante: Kante
     public abstract val start: State<KartenPosition>
-    /* TODO herausfinden ob State oder var besser ist */
+    *//* TODO herausfinden ob State oder var besser ist *//*
     public abstract var endeKante: Kante
     public abstract val ende: State<KartenPosition>
 
-    /** Setzt Verbindungen hinter Knoten und Anschlüsse. */
+    *//** Setzt Verbindungen hinter Knoten und Anschlüsse. *//*
     @Composable public override fun Modifier.modiInputEvent() = this.zIndex(-1f)
 
-    /**
+    *//**
      * Erstellt die Canvas-Darstellung dieser Verbindung.
      * Sie wird innerhalb der Kartenebene unter den Knoten gezeichnet.
      *
      * @param modifier äußerer Modifier der Darstellung
-     */
+     *//*
     @Composable public override fun zuComposable(modifier: Modifier) = Canvas(modifier = Modifier.modiInputEvent()) { zeichnung() }
 
-    /**
+    *//**
      * Verbindungen verwenden keine Box-Darstellung.
      * Sie werden stattdessen direkt über [zuComposable] auf eine Canvas gezeichnet.
      *
      * @receiver BoxScope der lokalen Darstellung
-     */
+     *//*
     @Composable public override fun BoxScope.Darstellung() = TODO("Nicht benötigt für Verbindung")
 
 
-    /** Zeichenoperation für den aktuellen Verbindungspfad. */
+    *//** Zeichenoperation für den aktuellen Verbindungspfad. *//*
     public val zeichnung: DrawScope.() -> Unit
         get() = {
             drawPath(
@@ -70,13 +50,13 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
                 style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
             )
         }
-    /** Berechnet den Abstand einer Kartenposition zum Verbindungspfad. */
+    *//** Berechnet den Abstand einer Kartenposition zum Verbindungspfad. *//*
     public abstract fun abstand(pos: KartenPosition): Offset
 
-    /** Liefert den zu zeichnenden Verbindungspfad im Kartenkoordinatenraum. */
+    *//** Liefert den zu zeichnenden Verbindungspfad im Kartenkoordinatenraum. *//*
     public abstract fun erhaltePfad(): Path
 
-    /** Prüft, ob die Verbindung den sichtbaren Kartenbereich überschneidet. */
+    *//** Prüft, ob die Verbindung den sichtbaren Kartenbereich überschneidet. *//*
     public fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
         val puffer = 80f
         RectF(
@@ -90,11 +70,11 @@ internal interface GraphVerbindungObjekt<V: VerbindungDaten>: GraphDatenObjekt<V
 
     public companion object {
         @Composable
-        public fun Iterable<Verbindung>.zuComposable(/*modifier: Modifier = Modifier*/) {
+        public fun Iterable<Verbindung>.zuComposable(*//*modifier: Modifier = Modifier*//*) {
             if (this.count() == 0) return
             Canvas(modifier = Modifier.fillMaxSize().zIndex(-1f)) { forEach { verbindung -> verbindung.zeichnung(this) } }
         }
 
         public fun Iterable<Verbindung>.sichtbar() = filter { it.istImViewport() }
     }
-}
+}*/

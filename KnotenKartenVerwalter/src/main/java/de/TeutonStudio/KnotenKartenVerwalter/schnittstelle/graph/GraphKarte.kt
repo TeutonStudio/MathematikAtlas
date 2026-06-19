@@ -145,6 +145,7 @@ interface GraphKarte {
 
                     drawRect(
                         color = if (
+
                             zustand.auswahl.value.enthält(knoten)
                         ) {
                             ausgewähltFarbe

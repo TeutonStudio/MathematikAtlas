@@ -10,14 +10,14 @@ import androidx.compose.ui.layout.onSizeChanged
 import de.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
 import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
 import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 
 /**
@@ -27,7 +27,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Ve
  * Die Karte hält den interaktiven [KarteZustand], erzeugt Graphobjekte über Fabriken und koordiniert Auswahl,
  * Kontextzustand sowie Verbindungserstellung zwischen Anschlüssen.
  */
-internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
+/*internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     abstract val zustand: KarteZustand
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik
@@ -44,7 +44,7 @@ internal interface GraphKartenObjekt<K: KarteDaten>: GraphDatenObjekt<K> {
     public fun definiereVerbindung(mann: Anschluss<out AnschlussDaten>, weib: Anschluss<out AnschlussDaten>): Boolean
     public fun vernichteVerbindung(verbindung: Verbindung): Boolean
 
-    /** Erstellt den Modifier-Vertrag der Kartenfläche mit Größenmessung, Clipping und Eingabegesten. */
+    *//** Erstellt den Modifier-Vertrag der Kartenfläche mit Größenmessung, Clipping und Eingabegesten. *//*
     @Composable public override fun Modifier.modiInputEvent(): Modifier = fillMaxSize().onSizeChanged { zustand.dimension = it }.clipToBounds().transform().tapping()
 
-}
+}*/

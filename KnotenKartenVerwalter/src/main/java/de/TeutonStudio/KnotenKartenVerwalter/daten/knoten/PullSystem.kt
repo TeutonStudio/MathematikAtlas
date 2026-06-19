@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 
 // PullSystem für Daten um transformation von KarteDaten auszuwerten ohne ihren Graph zu erzeugen.
+/*
 interface PullSystem<A: PullAnschluss>: KnotenGraphDaten, AnschlüsseDaten<A> {
     abstract class PullDaten<T: Any>() {
         private lateinit var wert: T
@@ -26,4 +27,4 @@ interface PullSystem<A: PullAnschluss>: KnotenGraphDaten, AnschlüsseDaten<A> {
     }
 
     public fun baueCache(ausgang: A, eingänge: List<A>): PullDaten<*>
-}
+}*/

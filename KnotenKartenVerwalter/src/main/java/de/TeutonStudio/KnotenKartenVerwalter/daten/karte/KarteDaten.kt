@@ -4,16 +4,16 @@ import androidx.compose.runtime.mutableStateListOf
 import de.TeutonStudio.KnotenKartenVerwalter.Rechteck
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKarte
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenArt
 
-open class KarteDaten(
+/*open class KarteDaten(
     override val id: GraphDatenId,
     public val name: String,
-    /* TODO größe des Graphs */
+    *//* TODO größe des Graphs *//*
     public val größe: Rechteck? = null,
     initialKnoten: List<AnschlussKnotenDaten> = emptyList(),
     initialVerbindungen: List<VerbindungDaten> = emptyList(),
@@ -38,4 +38,4 @@ open class KarteDaten(
 
     }
 
-}
+}*/

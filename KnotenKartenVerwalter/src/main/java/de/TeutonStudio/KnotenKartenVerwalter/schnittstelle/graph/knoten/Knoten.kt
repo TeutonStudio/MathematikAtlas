@@ -19,17 +19,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante.Companion.fillMaxKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante.Companion.offsetKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante.Companion.fillMaxKante
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussGraphDaten.AnschlussKante.Companion.offsetKante
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCache
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.zuLeiste
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.zuLeiste
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.erzeugeAnschluss
 
-sealed class Knoten(
+/*sealed class Knoten(
     override val graph: Graph,
     override val daten: AnschlussKnotenDaten,
 ): GraphKnotenObjekt<AnschlussKnotenDaten> {
@@ -42,12 +42,12 @@ sealed class Knoten(
         println("Verbindung gezogen")
     }
 
-    /**
+    *//**
      * Erstellt die lokale Compose-Darstellung dieses Knotens.
      * Sie wird innerhalb der zugehörigen Kartenebene eingebunden.
      *
      * @receiver BoxScope der Knotendarstellung
-     */
+     *//*
     @Composable
     public override fun BoxScope.Darstellung() {
         Inhalt()
@@ -60,10 +60,10 @@ sealed class Knoten(
         }
     }
 
-    /**
+    *//**
      * Erstellt die Inspector-Darstellung dieses Knotens.
      * Sie wird vom Graphsystem für den ausgewählten Knoten eingebunden.
-     */
+     *//*
     @Composable
     public override fun Inspektor() {
         Card(Modifier.padding(25.dp)) {
@@ -79,12 +79,12 @@ sealed class Knoten(
     @Composable public abstract fun Textzeile()
     @Composable public abstract fun Fußzeile()
 
-    /**
+    *//**
      * Erstellt das Kontextfenster dieses Knotens.
      * Es wird von der Karte an der übergebenen Bildschirmposition geöffnet.
      *
      * @param pos Position des Kontextfensters im Bildschirmkoordinatenraum
-     */
+     *//*
     @Composable
     public override fun KontextFenster(pos: BildschirmPosition) {
         Box(
@@ -101,4 +101,4 @@ sealed class Knoten(
             }
         }
     }
-}
+}*/

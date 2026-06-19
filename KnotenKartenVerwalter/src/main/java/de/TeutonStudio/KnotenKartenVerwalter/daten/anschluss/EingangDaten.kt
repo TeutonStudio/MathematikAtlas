@@ -1,6 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss
 
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.BasisEingang
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.BasisEingang
 /*
 
 // TODO zu Vordefinierten Werten, statt überschreibbare AnschlussDaten

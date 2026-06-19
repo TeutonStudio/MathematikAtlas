@@ -1,8 +1,8 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
 
 /**
@@ -11,9 +11,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
  * Die Auswahl ist kontrollierter Zustand der Karte; die UI schlägt Änderungen vor,
  * der aufrufende Code entscheidet über den gespeicherten Wert.
  */
+/*
 interface AuswahlDaten {
 
-    /** Prüft, ob das Graphobjekt in dieser Auswahl enthalten ist. */
+    */
+/** Prüft, ob das Graphobjekt in dieser Auswahl enthalten ist. *//*
+
     public fun enthält(gO: GraphObjekt): Boolean
 
 
@@ -25,3 +28,4 @@ interface AuswahlDaten {
     }
 
 }
+*/

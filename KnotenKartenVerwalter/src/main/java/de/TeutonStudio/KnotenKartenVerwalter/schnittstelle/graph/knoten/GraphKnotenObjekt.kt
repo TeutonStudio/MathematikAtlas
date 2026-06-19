@@ -10,16 +10,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten.Companion.erhalteSize
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAnschlussDaten.Companion.erhalteSize
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.overlaps
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.findeNachId
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.findeNachId
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
 /**
  * Vertrag für Knotenobjekte, die [KnotenAnschlussDaten] in einer [Karte] darstellen.
@@ -28,15 +28,15 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
  * Ein Knoten verwaltet seine Anschlüsse über eine [AnschlussFabrik], beteiligt sich an Auswahl,
  * Verschiebung und Verbindungserstellung und liefert seine lokale Darstellung an die Kartenebene.
  */
-interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphDatenObjekt<K> {
+/*interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphDatenObjekt<K> {
     public abstract val besitzer: Karte
     public abstract val anschlussFabrik: AnschlussFabrik
     public val dimension get() = daten.erhalteSize()
 
-    /** Aktualisiert den Knoten nach dem Erstellen oder Ändern einer Verbindung. */
+    *//** Aktualisiert den Knoten nach dem Erstellen oder Ändern einer Verbindung. *//*
     public fun definiereVerbindung()
 
-    /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
+    *//** Positioniert und skaliert den Knoten innerhalb der Kartenebene. *//*
     @Composable public override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.size(with(LocalDensity.current) { dimension.toDpSize() })
 
 
@@ -61,7 +61,7 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
         besitzer.keinKontext()
     }
 
-    /** Prüft, ob der Knoten den sichtbaren Kartenbereich überschneidet. */
+    *//** Prüft, ob der Knoten den sichtbaren Kartenbereich überschneidet. *//*
     public fun istImViewport(viewport: RectF = besitzer.zustand.erhalteViewportRect()): Boolean = RectF(
         daten.position.x,
         daten.position.y,
@@ -72,7 +72,7 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
     public fun KartenPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
 
     public companion object {
-        @Composable public fun Iterable<Knoten>.zuComposable(/*modifier: Modifier = Modifier*/) = forEach { it.zuComposable(/*modifier*/) }
+        @Composable public fun Iterable<Knoten>.zuComposable(*//*modifier: Modifier = Modifier*//*) = forEach { it.zuComposable(*//*modifier*//*) }
 
         public fun Iterable<Knoten>.sichtbar() = filter { it.istImViewport() }
 
@@ -86,4 +86,4 @@ interface GraphKnotenObjekt<K: KnotenAnschlussDaten<out AnschlussDaten>>: GraphD
                 }
             }
     }
-}
+}*/

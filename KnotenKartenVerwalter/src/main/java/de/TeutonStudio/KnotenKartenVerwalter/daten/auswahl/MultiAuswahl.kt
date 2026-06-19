@@ -5,14 +5,21 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphObjekt
 
+/*
 data class MultiAuswahl(
-    /** IDs aller ausgewählten Knoten. */
+    */
+/** IDs aller ausgewählten Knoten. *//*
+
     val knotenIds: Set<String> = emptySet(),
 
-    /** IDs aller ausgewählten Verbindungen. */
+    */
+/** IDs aller ausgewählten Verbindungen. *//*
+
     val verbindungIds: Set<String> = emptySet(),
 
-    /** IDs aller ausgweählten Anschlüsse. */
+    */
+/** IDs aller ausgweählten Anschlüsse. *//*
+
     val anschlussIds: Set<String> = emptySet()
 ): AuswahlDaten {
     public fun nurKnoten(knotenId: String) = MultiAuswahl(knotenIds = setOf(knotenId))
@@ -38,3 +45,4 @@ data class MultiAuswahl(
 
     public override fun enthält(gO: GraphObjekt): Boolean = knotenIds.contains(gO.daten.id) || verbindungIds.contains(gO.daten.id) || anschlussIds.contains(gO.daten.id)
 }
+*/

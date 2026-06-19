@@ -32,28 +32,29 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObjekt.Companion.Composable as VComposable
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt.Companion.Composable as KComposable
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten.Companion.anschlüsseNachIDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
 
 typealias Zustand = GraphDatenObjektKarte.GraphDatenObjektKarteZustand
 typealias Auswahl = GraphDatenObjektKarte.GraphDatenObjektKarteAuswahl
+typealias Kontext = GraphDatenObjektKarte.GraphDatenObjektKarteKontext
 
 interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik
 
-    val ctx: GraphDatenObjektKarteKontext
+    val ctx: Kontext
     val zustand: Zustand
     val auswahl: Auswahl
     abstract val pseudoVerbindung: MutableState<GraphDatenObjektVerbindung<*>?>

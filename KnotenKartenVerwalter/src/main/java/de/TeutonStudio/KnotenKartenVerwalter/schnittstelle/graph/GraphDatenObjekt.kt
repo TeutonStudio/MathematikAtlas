@@ -20,13 +20,14 @@ import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.KnotenPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.GraphAnschlussObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.GraphKartenObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.GraphAnschlussObjekt
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.GraphKartenObjekt
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt
 
 //typealias GraphObjekt = GraphDatenObjekt<out GraphDaten>
 
@@ -62,12 +63,12 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public val istSelektiert get() = derivedStateOf { graph.karte.auswahl.enthält(this) }
 
     public fun erhalteAnschluss(knotenId: String,anschlussId: String) = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }
-    public fun erhalteAnschlussMann(id: IDEhe) = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
-    public fun erhalteAnschlussWeib(id: IDEhe) = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
+    public fun erhalteAnschlussMann(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
+    public fun erhalteAnschlussWeib(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
     public fun BildschirmPosition.zuGraph(zustand: Zustand = graph.karte.zustand): KartenPosition = zustand.zuKarte(this)
     public fun KartenPosition.zuBild(zustand: Zustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
-    public fun BildschirmPosition.zuDelta(zustand: Zustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.zoom
+    public fun BildschirmPosition.zuDelta(zustand: Zustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.erhalteZoom()
     public fun BildschirmPosition.zuKnoten(knoten: GraphDatenObjekt<GraphDaten.bewegbareGD>, zustand: Zustand = graph.karte.zustand): KnotenPosition = this.toOffset() - knoten.daten.position
 
     public fun erstelleVerbindung(von: Anschluss<out GraphDatenAnschluss>, zu: Anschluss<out GraphDatenAnschluss>) = Unit

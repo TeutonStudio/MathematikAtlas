@@ -17,7 +17,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterTesselation
 
-open class KarteZustand(
+/*open class KarteZustand(
     zeigeÜbersicht: Boolean = false,
     zeigeKontrollLeiste: Boolean = false,
     val auswahl: MutableState<AuswahlDaten> = mutableStateOf(AuswahlDaten.LEER),
@@ -71,9 +71,9 @@ open class KarteZustand(
         )
     }
 
-/*    public fun verschiebe(delta: Offset) { pos += delta }
+*//*    public fun verschiebe(delta: Offset) { pos += delta }
     public fun zoome(delta: Float) { zoom = (zoom * delta).coerceIn(MIN_ZOOM,MAX_ZOOM) }
-    public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }*/
+    public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }*//*
 
     public fun zuBild(kartePos: KartenPosition): BildschirmPosition = (pos + kartePos * zoom).round()
     public fun zuKarte(bildPos: BildschirmPosition): KartenPosition = (bildPos.toOffset() - pos) / zoom
@@ -91,7 +91,7 @@ open class KarteZustand(
         )
     }
 
-/*    public fun erhalteViewportRect(
+*//*    public fun erhalteViewportRect(
         breite: Float = dimension.width.toFloat(),
         höhe: Float = dimension.height.toFloat(),
         puffer: Float = 200f,
@@ -102,10 +102,10 @@ open class KarteZustand(
         val unten = (höhe - pos.y) / zoom + puffer
 
         return RectF(links, oben, rechts, unten)
-    }*/
+    }*//*
 
-/*    public companion object {
+*//*    public companion object {
         public const val MIN_ZOOM = 0.05f
         public const val MAX_ZOOM = 5f
-    }*/
-}
+    }*//*
+}*/

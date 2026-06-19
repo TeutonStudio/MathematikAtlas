@@ -1,71 +1,92 @@
 package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.ui.layout.LayoutCoordinates
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.disjunktion
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.konjunktion
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussRichtung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.BasisKnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
+import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullErgebnis
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullSystem as PullSystemGraph
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.PullSystem as PullSystemDaten
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAusgang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageEingang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
 
+typealias OperatorDaten = operator.AussageOperatorDatenBasis
 
 class operator(
-    graph: Graph,
-    daten: AussageOperatorDatenBasis,
-    besitzer: Karte,
-) : BasisKnoten(
-    graph = graph,
-    daten = daten,
-    besitzer = besitzer,
-), PullSystemGraph<Aussage> {
+    override val graph: Graph,
+    override val daten: OperatorDaten,
+    override val besitzer: GraphDatenObjektKarte<*>,
+): GraphDatenObjektKnoten<OperatorDaten> {
+    override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+
+    @Composable
+    override fun BoxScope.Darstellung() {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.KontextFenster(pos: BildschirmPosition) {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.Inspektor() {
+        TODO("Not yet implemented")
+    }
+
     class AussageOperatorDatenBasis(
-        id: String,
-        name: String = "Verknüpfung",
-    ): BasisKnotenDaten<AussageAnschlussDaten>(
-        id = id,
-        name = name,
-    ), PullSystemDaten<AussageAnschlussDaten> {
-        override val anschlussCache: SnapshotStateMap<String, PullSystemDaten.PullDaten<*>> = erhalteCache().value
-        override fun baueCache(
+        override val id: String,
+        override val name: String = "Verknüpfung",
+    ): GraphDatenKnoten, GraphDatenKnoten.auswertbarerGDK {
+        override var klasse: KnotenArt? = operator.KNOTEN_ART
+//        override val anschlussCache: SnapshotStateMap<String, PullSystemDaten.PullDaten<*>> = erhalteCache().value
+/*        override fun baueCache(
             ausgang: AussageAnschlussDaten,
             eingänge: List<AussageAnschlussDaten>
         ): PullSystemDaten.PullDaten<*> {
             eingänge.map { it.cache }
             TODO("Not yet implemented")
-        }
+        }*/
+        override var beweglich: Boolean = true
+        override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
+        override val anschlussIdx = mutableStateMapOf<String, Int>()
+        override val data = mutableStateMapOf<String,Any>()
+        override var position: KartenPosition = KartenPosition.Zero
+        override var breite: Float = 0f
+        override var tiefe: Float = 0f
 
-        override var klasse: KnotenArt? = operator.KNOTEN_ART
 
-        private fun eingangIdx() = anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
+        private fun eingangIdx() = anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
         private fun eingangId() = listOf(id,"eingang",eingangIdx() + 1).joinToString("-")
-        public fun eingang() = AussageAnschlussDaten(eingangId(),AnschlussKante.Links,AnschlussRichtung.Eingang)
+        public fun eingang() = AussageAnschlussDaten(eingangId(), Kante.Links, Richtung.Eingang)
 
         init {
             val anschlussListe = listOf(
                 eingang().apply { anschlussIdx[this.id] = eingangIdx() },
                 eingang().apply { anschlussIdx[this.id] = eingangIdx() },
-                AussageAnschlussDaten("$id-ausgang-0",AnschlussKante.Rechts, AnschlussRichtung.Ausgang
+                AussageAnschlussDaten("$id-ausgang-0",Kante.Rechts, Richtung.Ausgang
                 ),
-            ).apply { forEach { it.apply { klasse = if (richtung == AnschlussRichtung.Eingang) AussageEingang.ANSCHLUSS_ART else AussageAusgang.ANSCHLUSS_ART } } }
+            ).apply { forEach { it.apply { klasse = if (richtung == Richtung.Eingang) AussageEingang.ANSCHLUSS_ART else AussageAusgang.ANSCHLUSS_ART } } }
 
             anschlüsse.addAll(anschlussListe)
             data[operator.OPERATOR_SCHLÜSSEL] = operator.AussagenVerknüpfung.UND.name
@@ -88,11 +109,15 @@ class operator(
     override val anschlussFabrik: AnschlussFabrik
         get() = MatheAnschlussFabrik
 
-    override val cacheAnschlüsse:
-            SnapshotStateMap<String, PullErgebnis<Aussage>> =
-        mutableStateMapOf()
+    override fun definiereVerbindung() {
+        TODO("Not yet implemented")
+    }
 
-    override val wertKlasse = Aussage::class
+/*    override val cacheAnschlüsse:
+            SnapshotStateMap<String, PullErgebnis<Aussage>> =
+        mutableStateMapOf()*/
+
+//    override val wertKlasse = Aussage::class
 
     private var verknüpfung by mutableStateOf(
         daten.data[OPERATOR_SCHLÜSSEL]
@@ -105,7 +130,7 @@ class operator(
             ?: AussagenVerknüpfung.UND
     )
 
-    override fun berechne(
+    public fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<Aussage>>,
     ): PullErgebnis<Aussage> {
@@ -164,19 +189,19 @@ class operator(
     }
 
     @Composable
-    override fun Textzeile() {
+    public fun Textzeile() {
         Button(
             onClick = {
                 verknüpfung = verknüpfung.nächste()
                 daten.data[OPERATOR_SCHLÜSSEL] = verknüpfung.name
-                cacheAnschlüsse.clear()
+//                cacheAnschlüsse.clear()
             },
         ) {
             Text(verknüpfung.anzeige)
         }
     }
 
-    companion object {
+    public companion object {
         const val KNOTEN_ART: KnotenArt = "operatorAussage"
         const val OPERATOR_SCHLÜSSEL = "aussagen-operator"
     }

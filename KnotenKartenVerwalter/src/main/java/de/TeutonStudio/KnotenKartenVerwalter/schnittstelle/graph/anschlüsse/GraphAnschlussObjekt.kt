@@ -14,9 +14,9 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+//import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
+//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
 
 /**
  * Vertrag für Anschlussobjekte, die [AnschlussDaten] an einem [Knoten] darstellen.
@@ -25,14 +25,14 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
  * Anschlüsse liefern ihre Kartenposition, behandeln das Ziehen neuer Verbindungen und prüfen,
  * ob andere Anschlüsse als Verbindungsziel zulässig sind.
  */
-interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
+/*interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
     public val besitzer: Knoten
     public val karte get() = besitzer.besitzer
 
-    /** Aktuelle Position des Anschlusses im Kartenkoordinatenraum. */
+    *//** Aktuelle Position des Anschlusses im Kartenkoordinatenraum. *//*
 //    val pos get() = erhaltePos() ?: Offset.Zero
 
-/*    private fun erhaltePos(): KartenPosition? =
+*//*    private fun erhaltePos(): KartenPosition? =
         layoutCoordinates.value?.let { anschlussCoordinates ->
             besitzer.layoutCoordinates.value?.localPositionOf(
                 sourceCoordinates = anschlussCoordinates,
@@ -40,14 +40,14 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
             )?.let { lokalePosition ->
                 besitzer.daten.position + lokalePosition
             }
-        }*/
+        }*//*
 
-    /** Erstellt die Standarddarstellung eines Anschlusses. */
-/*    @Composable
-    public override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)*/
+    *//** Erstellt die Standarddarstellung eines Anschlusses. *//*
+*//*    @Composable
+    public override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)*//*
 
-    /** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. */
-/*    @Composable
+    *//** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. *//*
+*//*    @Composable
     public override fun Modifier.modiInputEvent(): Modifier = vorher().tapping().position()
         .pointerInput(daten.id) {
             detectDragGestures(
@@ -58,24 +58,24 @@ interface GraphAnschlussObjekt<D: AnschlussDaten>: GraphDatenObjekt<D> {
                 onDragEnd = ::beiVerbindungZiehenEnde,
                 onDragCancel = ::beiVerbindungZiehenAbbruch,
             )
-        }*/
+        }*//*
 
-    /** Startet das Ziehen einer neuen Verbindung an diesem Anschluss. */
+    *//** Startet das Ziehen einer neuen Verbindung an diesem Anschluss. *//*
 //    public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset)
 
-    /** Aktualisiert die Zielposition einer gezogenen Verbindung. */
+    *//** Aktualisiert die Zielposition einer gezogenen Verbindung. *//*
 //    public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset)
 
-    /** Schließt eine gezogene Verbindung ab. */
+    *//** Schließt eine gezogene Verbindung ab. *//*
 //    public fun beiVerbindungZiehenEnde(change: PointerInputChange)
 
-    /** Bricht das Ziehen einer Verbindung ab. */
+    *//** Bricht das Ziehen einer Verbindung ab. *//*
 //    public fun beiVerbindungZiehenAbbruch()
 
-    /** Gibt an, ob dieser Anschluss als Eingang behandelt wird. */
+    *//** Gibt an, ob dieser Anschluss als Eingang behandelt wird. *//*
 //    public open fun istEingang(): Boolean = false
 
-    /** Gibt an, ob dieser Anschluss als Ausgang behandelt wird. */
+    *//** Gibt an, ob dieser Anschluss als Ausgang behandelt wird. *//*
 //    public open fun istAusgang(): Boolean = false
 
-}
+}*/
