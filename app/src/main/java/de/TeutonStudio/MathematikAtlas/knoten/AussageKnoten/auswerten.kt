@@ -15,25 +15,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
-import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Richtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullErgebnis
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
+
+typealias AussageAuswerten = auswerten.AussageAuswertenDaten
 
 class auswerten(
     override val graph: Graph,
@@ -42,7 +42,7 @@ class auswerten(
     override val layoutCoordinates: MutableState<LayoutCoordinates?>,
 ) : GraphDatenObjektKnoten<definition.AussageDefinitionDaten> {
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
-    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
+//    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
     override val anschlüsse: List<GraphDatenObjektAnschluss<*>> = emptyList()
     override fun definiereVerbindung() {
         TODO("Not yet implemented")
@@ -50,18 +50,18 @@ class auswerten(
 
     class AussageAuswertenDaten(
         override val id: GraphDatenId,
-        override var beweglich: Boolean,
-        override val anschlussIdx: SnapshotStateMap<String, Int>,
-        override val data: MutableMap<String, Any>,
         override val name: String = "Auswerten",
-        override var position: KartenPosition,
-        override var breite: Float,
-        override var tiefe: Float,
-        override val richtung: GraphDatenAnschluss.gerichteteGDA.AnschlussRichtung,
-        override val anschlussLabel: SnapshotStateMap<Kante, Map<Int, String>>,
     ): GraphDatenKnoten, GraphDatenKnoten.gerichteteGDK<AussageAnschlussDaten> {
         override var klasse: KnotenArt? = auswerten.KNOTEN_ART
 
+        override var beweglich = true
+        override val anschlussIdx = mutableStateMapOf<String,Int>()
+        override val data = mutableMapOf<String,Any>()
+        override var position = GraphPosition.Zero
+        override var breite = 0f
+        override var tiefe = 0f
+        override val richtung = Richtung.Eingang
+        override val anschlussLabel = mutableStateMapOf<Kante,Map<Int,String>>()
 /*        fun anschlussKorrektur(a: EingangDaten) {
             super.anschlussKorrektur(a)
             a.klasse = AussageEingang.ANSCHLUSS_ART
@@ -87,13 +87,13 @@ class auswerten(
     /**
      * Dieser Knoten besitzt keinen Ausgang.
      */
-    fun berechne(
+/*    fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<Aussage>>,
     ): PullErgebnis<Aussage> =
         PullErgebnis.Fehler(
             "Der Auswerten-Knoten besitzt keinen Ausgang"
-        )
+        )*/
 
     private fun werteAus() {
         val eingänge = daten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }
@@ -166,7 +166,7 @@ class auswerten(
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: BildschirmPosition) {
+    override fun BoxScope.KontextFenster(pos: IntSize) {
         TODO("Not yet implemented")
     }
 

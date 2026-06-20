@@ -1,17 +1,12 @@
 package de.TeutonStudio.MathematikAtlas
 
 import androidx.compose.ui.geometry.Offset
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AusgangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.EingangDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAusgabeDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.BasisKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisKnotenDaten
 
 
+/*
 public fun testKarte(): KarteDaten = KarteDaten(
     id = "test-karte",
     name = "Graph Testkarte",
@@ -21,8 +16,8 @@ public fun testKarte(): KarteDaten = KarteDaten(
             name = "Eingabe",
             position = Offset(80f, 120f),
             anschlüsse = mutableMapOf(
-                AusgangDaten("out1", AnschlussKante.Rechts, "Ausgang 1") to 0,
-                AusgangDaten("out2", AnschlussKante.Rechts, "Ausgang 2") to 1
+                AusgangDaten("out1", Kante.Rechts, "Ausgang 1") to 0,
+                AusgangDaten("out2", Kante.Rechts, "Ausgang 2") to 1
             )
         ),
         BasisKnotenDaten(
@@ -51,11 +46,16 @@ public fun testKarte(): KarteDaten = KarteDaten(
     initialVerbindungen = listOf(
         VerbindungDaten(
             id = "v-eingabe-mitte",
-            ids = IDEhe("eingabe","mitte","out1","in"),
+            ids = GraphDatenVerbindung.IDEhe("eingabe", "mitte", "out1", "in"),
         ),
         VerbindungDaten(
             id = "v-mitte-ausgabe",
-            ids = IDEhe("mitte","ausgabe","out",KnotenAusgabeDaten.id("ausgabe",0)),
+            ids = GraphDatenVerbindung.IDEhe(
+                "mitte",
+                "ausgabe",
+                "out",
+                KnotenAusgabeDaten.id("ausgabe", 0)
+            ),
         ),
     ),
-)
+)*/

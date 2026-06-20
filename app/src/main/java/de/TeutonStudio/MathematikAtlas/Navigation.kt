@@ -32,14 +32,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.MultiAuswahl
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Auswahl
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Zustand
 import de.TeutonStudio.MathematikAtlas.karten.MatheKartenFabrik
 
 sealed class Screen(val route: String) {
@@ -65,20 +64,22 @@ private fun KnotenKartenTestAnwendung() {
 //    var karte by remember { mutableStateOf(testKarte()) } // StandardKarteTest
     var karte by remember { mutableStateOf(aussageTestKarte()) } // AussageKarteTest
     var status by remember { mutableStateOf("Bereit") }
-    val auswahl = remember { mutableStateOf(AuswahlDaten.LEER) }
+    val auswahl = remember { mutableStateOf(Auswahl()) }
 
-    fun verschiebeKnoten(knotenId: String, position: Offset) {
+    fun veränderung(knotenId: String, position: Offset) {
         status = "Knoten verschoben"
     }
 
-    fun erstelleVerbindung(verbindung: VerbindungDaten) {
-        auswahl.value = MultiAuswahl(verbindungIds = setOf(verbindung.id))
+    fun verbindete(a1: GraphDatenObjektAnschluss<*>, a2: GraphDatenObjektAnschluss<*>) {
+        karte.verbindungen.find { it.ids.enthält(a1.daten) && it.ids.enthält(a2.daten) }?.let {
+            auswahl.value = Auswahl().apply { wähleVerbindung(it.id) }
+        }
         status = "Verbindung erstellt"
     }
 
     fun loescheAuswahl() {
-        auswahl.value = AuswahlDaten.LEER
-        status = "Auswahl geloescht"
+        auswahl.value = Auswahl()
+        status = "Auswahl gelöscht"
     }
 
     fun fuehreKontextAktionAus(aktion: Any) { // TODO
@@ -139,17 +140,17 @@ private fun KnotenKartenTestAnwendung() {
         val g = remember {
             Graph(
                 daten = karte,
-                zustand = KarteZustand(
-                    zeigeÜbersicht = true,
-                    zeigeKontrollLeiste = true,
-                    auswahl = auswahl,
-                    rasterArt = GraphHintergrund.RasterArt.Punkte,
-                    rasterTesselation = GraphHintergrund.RasterTesselation.Trigon
+                zustand = Zustand(
+//                    zeigeÜbersicht = true,
+//                    zeigeKontrollLeiste = true,
+//                    auswahl = auswahl,
+//                    rasterArt = GraphHintergrund.RasterArt.Punkte,
+//                    rasterTesselation = GraphHintergrund.RasterTesselation.Trigon
                 ),
-                aktualisierung = ::verschiebeKnoten,
-                onVerbindungErstellen = ::erstelleVerbindung,
+                veränderung = ::veränderung,
+                verbindete = ::verbindete,
 //                onKontextAktion = ::fuehreKontextAktionAus,
-                onAuswahlÄndern = { neueAuswahl ->
+                wählte = { neueAuswahl ->
                     auswahl.value = neueAuswahl
                     status = neueAuswahl.statusText()
                 },
@@ -164,12 +165,12 @@ private fun KnotenKartenTestAnwendung() {
             onNeueKarte = {
 //                karte = testKarte()
                 karte = aussageTestKarte()
-                auswahl.value = AuswahlDaten.LEER
+                auswahl.value = Auswahl()
                 status = "Testkarte geladen"
             },
             onAuswahlLoeschen = ::loescheAuswahl,
             onAuswahlLeeren = {
-                auswahl.value = AuswahlDaten.LEER
+                auswahl.value = Auswahl()
                 status = "Keine Auswahl"
             },
             onNameAendern = { neuerName ->
@@ -192,10 +193,10 @@ private fun KnotenKartenTestAnwendung() {
 
 @Composable
 private fun TestSeitenLeiste(
-    karte: KarteDaten,
-    auswahl: AuswahlDaten,
+    karte: GraphDatenKarte,
+    auswahl: Auswahl,
     status: String,
-    zustand: KarteZustand,
+    zustand: Zustand,
     onNeueKarte: () -> Unit,
     onAuswahlLoeschen: () -> Unit,
     onAuswahlLeeren: () -> Unit,
@@ -209,7 +210,7 @@ private fun TestSeitenLeiste(
             .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
             .padding(12.dp),
     ) {
-        BasicText(zustand.pos.toString())
+        BasicText(zustand.erhaltePos().toString())
         BasicText(
             text = "Graph Test",
             style = TextStyle(
@@ -333,17 +334,17 @@ private fun TestKnopf(
     }
 }
 
-private fun AuswahlDaten.statusText(): String = when {
+/*private fun Auswahl.statusText(): String = when {
     this is EinzelAuswahl -> statusText()
     this is MultiAuswahl -> statusText()
     else -> "Fehler"
+}*/
+
+private fun Auswahl.statusText(): String = when {
+    this == Auswahl() -> "Keine Auswahl"
+    knotenIds.size == 1 && verbindungIds.isEmpty() -> "Knoten ausgewählt"
+    verbindungIds.size == 1 && knotenIds.isEmpty() -> "Verbindung ausgewählt"
+    else -> "${knotenIds.size} Knoten, ${verbindungIds.size} Verbindungen ausgewählt"
 }
 
-private fun MultiAuswahl.statusText(): String = when {
-    this == AuswahlDaten.LEER -> "Keine Auswahl"
-    knotenIds.size == 1 && verbindungIds.isEmpty() -> "Knoten ausgewaehlt"
-    verbindungIds.size == 1 && knotenIds.isEmpty() -> "Verbindung ausgewaehlt"
-    else -> "${knotenIds.size} Knoten, ${verbindungIds.size} Verbindungen ausgewaehlt"
-}
-
-private fun EinzelAuswahl.statusText(): String = "ausgew#hlt: ${auswahlId}"
+//private fun Auswahl.statusText(): String = "ausgew#hlt: ${auswahlId}"

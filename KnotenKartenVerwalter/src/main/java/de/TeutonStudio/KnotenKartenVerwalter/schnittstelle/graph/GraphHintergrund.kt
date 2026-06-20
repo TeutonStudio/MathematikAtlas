@@ -60,8 +60,8 @@ interface GraphHintergrund {
                 zustand = zustand,
                 rasterGröße = rasterGröße,
                 modifier = Modifier.matchParentSize(),
-                rasterArt = zustand.rasterEinstellung.first,
-                rasterTesselation = zustand.rasterEinstellung.second,
+                rasterArt = zustand.erhalteArt(),
+                rasterTesselation = zustand.erhalteTesselation(),
             )
 
             vordergrund()
@@ -70,7 +70,7 @@ interface GraphHintergrund {
 
     @Composable
     private fun Raster(
-        zustand: KarteZustand,
+        zustand: Zustand,
         rasterGröße: Float,
         modifier: Modifier = Modifier,
         rasterArt: RasterArt,
@@ -79,7 +79,7 @@ interface GraphHintergrund {
         val rasterFarbe = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
 
         Canvas(modifier.fillMaxSize()) {
-            val zoom = zustand.zoom
+            val zoom = zustand.erhalteZoom()
             val grundGröße = rasterGröße.coerceAtLeast(0.0001f)
 
             /*
@@ -102,10 +102,10 @@ interface GraphHintergrund {
             val weltRasterGröße = grundGröße * rasterStufe
 
             val sichtbareWelt = Rect(
-                left = -zustand.pos.x / zoom,
-                top = -zustand.pos.y / zoom,
-                right = (size.width - zustand.pos.x) / zoom,
-                bottom = (size.height - zustand.pos.y) / zoom,
+                left = -zustand.erhaltePos().x / zoom,
+                top = -zustand.erhaltePos().y / zoom,
+                right = (size.width - zustand.erhaltePos().x) / zoom,
+                bottom = (size.height - zustand.erhaltePos().y) / zoom,
             )
 
             val punktRadius = 1.4.dp.toPx()
@@ -115,7 +115,7 @@ interface GraphHintergrund {
                 RasterTesselation.Quadgon -> zeichneQuadRaster(
                     sichtbareWelt = sichtbareWelt,
                     rasterGröße = weltRasterGröße,
-                    verschiebung = zustand.pos,
+                    verschiebung = zustand.erhaltePos(),
                     zoom = zoom,
                     rasterArt = rasterArt,
                     farbe = rasterFarbe,
@@ -126,7 +126,7 @@ interface GraphHintergrund {
                 RasterTesselation.Trigon -> zeichneTrigonRaster(
                     sichtbareWelt = sichtbareWelt,
                     rasterGröße = weltRasterGröße,
-                    verschiebung = zustand.pos,
+                    verschiebung = zustand.erhaltePos(),
                     zoom = zoom,
                     rasterArt = rasterArt,
                     farbe = rasterFarbe,
@@ -137,7 +137,7 @@ interface GraphHintergrund {
                 RasterTesselation.Hexagon -> zeichneHexagonRaster(
                     sichtbareWelt = sichtbareWelt,
                     rasterGröße = weltRasterGröße,
-                    verschiebung = zustand.pos,
+                    verschiebung = zustand.erhaltePos(),
                     zoom = zoom,
                     rasterArt = rasterArt,
                     farbe = rasterFarbe,

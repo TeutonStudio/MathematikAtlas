@@ -22,8 +22,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.Karte
 
 /**
  * Ergänzt den Graph um eine Übersichtsdarstellung der aktuellen [Karte].
@@ -38,20 +36,18 @@ interface GraphKarte {
      * @param modifier äußerer Modifier der Übersicht
      */
     @Composable
-    public fun Karte.zuÜbersicht(modifier: Modifier = Modifier) {
-        if (!zustand.zeigeÜbersicht) return
-        println(zustand.sichtbarerWeltBereich() != null)
+    public fun GraphDatenObjektKarte<*>.zuÜbersicht(modifier: Modifier = Modifier) {
+        if (!zeigeÜbersicht) return
+        println(sichtbarerWeltBereich() != null)
 
-        val sichtGrenzen = zustand.sichtbarerWeltBereich() ?: return
+        val sichtGrenzen = sichtbarerWeltBereich() ?: return
 
         /*
          * Der sichtbare Bereich wird immer einbezogen. Dadurch bleibt der
          * Viewport-Rahmen auch sichtbar, wenn die Ansicht weit vom Inhalt
          * wegbewegt wurde.
          */
-        val miniGrenzen = (
-                inhaltsGrenzen(puffer = 80f) ?: sichtGrenzen
-                ).vereinigtMit(sichtGrenzen)
+        val miniGrenzen = (inhaltsGrenzen(puffer = 80f) ?: sichtGrenzen).vereinigtMit(sichtGrenzen)
 
         var miniFläche by remember(daten.id) {
             mutableStateOf(IntSize.Zero)
@@ -102,9 +98,9 @@ interface GraphKarte {
                                 ),
                             )
 
-                            zustand.zentriereAuf(
+/*                            zustand.zentriereAuf(
                                 projektion.zuWelt(position),
-                            )
+                            )*/
                         }
 
                         detectDragGestures(
@@ -145,8 +141,7 @@ interface GraphKarte {
 
                     drawRect(
                         color = if (
-
-                            zustand.auswahl.value.enthält(knoten)
+                            auswahl.enthält(knoten)
                         ) {
                             ausgewähltFarbe
                         } else {

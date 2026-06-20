@@ -62,13 +62,13 @@ interface GraphSteuerung {
      */
     @Composable
     public fun GraphDatenObjektKarte<*>.zuSteuerung(modifier: Modifier = Modifier) {
-        if (!zustand.zeigeKontrollLeiste) return
+        if (!zeigeKontrollLeiste) return
 
         val zoomFaktor = 1.2f
 
         fun viewportMitte(): Offset = Offset(
-            x = zustand.dimension.width / 2f,
-            y = zustand.dimension.height / 2f,
+            x = daten.dimension.width / 2f,
+            y = daten.dimension.height / 2f,
         )
 
         Card(
@@ -83,11 +83,12 @@ interface GraphSteuerung {
                     text = "+",
                     beschreibung = "Hineinzoomen",
                     onClick = {
-                        zustand.setzeZoom(
+                        zustand.zoome(zoomFaktor)
+/*                        zustand.setzeZoom(
                             neuerZoom =
                                 zustand.zoom * zoomFaktor,
                             fokus = viewportMitte(),
-                        )
+                        )*/
                     },
                 )
 
@@ -95,11 +96,12 @@ interface GraphSteuerung {
                     text = "−",
                     beschreibung = "Herauszoomen",
                     onClick = {
-                        zustand.setzeZoom(
+                        zustand.zoome(zoomFaktor)
+/*                        zustand.setzeZoom(
                             neuerZoom =
                                 zustand.zoom / zoomFaktor,
                             fokus = viewportMitte(),
-                        )
+                        )*/
                     },
                 )
 
@@ -123,7 +125,7 @@ interface GraphSteuerung {
                     text = "□",
                     beschreibung = "Auf Inhalt zoomen",
                     onClick = {
-                        passeInhaltEin()
+//                        passeInhaltEin()
                     },
                 )
             }

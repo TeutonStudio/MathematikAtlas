@@ -1,54 +1,89 @@
 package de.TeutonStudio.MathematikAtlas.karten
 
-import de.TeutonStudio.KnotenKartenVerwalter.AuswahlÄndern
-import de.TeutonStudio.KnotenKartenVerwalter.KartenAktualisierung
-import de.TeutonStudio.KnotenKartenVerwalter.VerbindungErstellen
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntSize
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Auswahl
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKarte
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.BasisKartenFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenArt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.KartenKonstruktor
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.BasisKnotenFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Kontext
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Zustand
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BasisKartenFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BasisKnotenFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BasisVerbindungFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KartenArt
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KartenFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KartenKonstruktor
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.VerbindungFabrik
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageKnotenFabrik
-import de.TeutonStudio.MathematikAtlas.knoten.MatheKnotenFabrik
 
 class AussageKarteDaten(
-    id: String,
-    name: String,
-    initialKnoten: List<AnschlussKnotenDaten> = emptyList(),
-    initialVerbindungen: List<VerbindungDaten> = emptyList(),
-) : KarteDaten(
-    id = id,
-    name = name,
-    initialKnoten = initialKnoten,
-    initialVerbindungen = initialVerbindungen,
-) {
+    override val id: String,
+    override val name: String,
+    initialKnoten: List<GraphDatenKnoten> = emptyList(),
+    initialVerbindungen: List<GraphDatenVerbindung> = emptyList(),
+): GraphDatenKarte{
+    override val knoten = mutableStateListOf<GraphDatenKnoten>()
+    override val verbindungen = mutableStateListOf<GraphDatenVerbindung>()
+    init {
+        knoten.addAll(initialKnoten)
+        verbindungen.addAll(initialVerbindungen)
+    }
+
+    override var breite = 0f
+    override var tiefe = 0f
     override var klasse: KartenArt? = AussageKarte.KARTEN_ART
 }
 
 class AussageKarte(
-    graph: Graph,
-    daten: KarteDaten,
-    zustand: KarteZustand,
-    aktualisierung: KartenAktualisierung,
-    onVerbindungErstellen: VerbindungErstellen,
-    onAuswahlÄndern: AuswahlÄndern,
-) : BasisKarte(
-    graph = graph,
-    daten = daten,
-    zustand = zustand,
-    aktualisierung = aktualisierung,
-    onVerbindungErstellen = onVerbindungErstellen,
-    onAuswahlÄndern = onAuswahlÄndern,
-) {
+    override val graph: Graph,
+    override val daten: AussageKarteDaten,
+    override val zustand: Zustand,
+): GraphDatenObjektKarte<AussageKarteDaten> {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik + AussageKnotenFabrik
+    override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
+
+    override val ctx = Kontext()
+    override val auswahl = Auswahl()
+    override val pseudoVerbindung = mutableStateOf<GraphDatenObjektVerbindung<*>?>(null)
+    override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+    override fun beiKlick(klickPos: Offset) {
+        TODO("Not yet implemented")
+    }
+
+    override fun beiHalten(klickPos: Offset) {
+        TODO("Not yet implemented")
+    }
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.KontextFenster(pos: IntSize) {
+        TODO("Not yet implemented")
+    }
+
+    @Composable
+    override fun BoxScope.Inspektor() {
+        TODO("Not yet implemented")
+    }
 
     companion object {
         const val KARTEN_ART: KartenArt = "aussage-karte"
@@ -56,8 +91,6 @@ class AussageKarte(
 }
 
 @Suppress("UNCHECKED_CAST")
-val MatheKartenFabrik: KartenFabrik =
-    BasisKartenFabrik + mapOf(
-        AussageKarte.KARTEN_ART to
-                (::AussageKarte as KartenKonstruktor)
+val MatheKartenFabrik: KartenFabrik = BasisKartenFabrik + mapOf(
+        AussageKarte.KARTEN_ART to (::AussageKarte as KartenKonstruktor)
     )

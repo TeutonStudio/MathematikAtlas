@@ -13,21 +13,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.toOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
-import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KnotenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.GraphAnschlussObjekt
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.karten.GraphKartenObjekt
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.GraphVerbindungObjekt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 
 //typealias GraphObjekt = GraphDatenObjekt<out GraphDaten>
 
@@ -52,7 +41,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
 
     @Composable public open fun BoxScope.Darstellung()
-    @Composable public open fun BoxScope.KontextFenster(pos: BildschirmPosition = graph.karte.ctx.pos)
+    @Composable public open fun BoxScope.KontextFenster(pos: IntSize = graph.karte.ctx.pos)
     @Composable public open fun BoxScope.Inspektor()
 
     @Composable public fun ComposableStandard() = Box(objektModifier) { Darstellung() }
@@ -66,12 +55,12 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public fun erhalteAnschlussMann(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
     public fun erhalteAnschlussWeib(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
-    public fun BildschirmPosition.zuGraph(zustand: Zustand = graph.karte.zustand): KartenPosition = zustand.zuKarte(this)
-    public fun KartenPosition.zuBild(zustand: Zustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
-    public fun BildschirmPosition.zuDelta(zustand: Zustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.erhalteZoom()
-    public fun BildschirmPosition.zuKnoten(knoten: GraphDatenObjekt<GraphDaten.bewegbareGD>, zustand: Zustand = graph.karte.zustand): KnotenPosition = this.toOffset() - knoten.daten.position
+//    public fun BildschirmPosition.zuGraph(zustand: Zustand = graph.karte.zustand): KartenPosition = zustand.zuKarte(this)
+//    public fun KartenPosition.zuBild(zustand: Zustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
+//    public fun BildschirmPosition.zuDelta(zustand: Zustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.erhalteZoom()
+//    public fun BildschirmPosition.zuKnoten(knoten: GraphDatenObjekt<GraphDaten.bewegbareGD>, zustand: Zustand = graph.karte.zustand): KnotenPosition = this.toOffset() - knoten.daten.position
 
-    public fun erstelleVerbindung(von: Anschluss<out GraphDatenAnschluss>, zu: Anschluss<out GraphDatenAnschluss>) = Unit
+    public fun erstelleVerbindung(von: GraphDatenObjektAnschluss<*>, zu: GraphDatenObjektAnschluss<*>) = Unit
 
     public companion object {
         @Composable public fun Iterable<GraphDatenObjekt<*>>.Composable(/*modifier: Modifier = Modifier*/) = forEach { Box(it.objektModifier) { it.ComposableStandard() } }

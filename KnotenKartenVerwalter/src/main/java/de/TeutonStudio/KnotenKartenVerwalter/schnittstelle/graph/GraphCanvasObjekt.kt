@@ -1,5 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -14,7 +15,8 @@ interface GraphCanvasObjekt: GraphObjekt {
     public val zeichnung: DrawScope.() -> Unit
 
     public companion object {
-        @Composable public fun Iterable<GraphCanvasObjekt>.Composable(/*modifier: Modifier = Modifier*/) = forEach { Canvas(Modifier.fillMaxSize().zIndex(-1f)) { it.zeichnung } }
 
+        public fun RectF.overlaps(other: RectF) = left <= other.right && right >= other.left && top <= other.bottom && bottom >= other.top
+        @Composable public fun Iterable<GraphCanvasObjekt>.Composable() = forEach { Canvas(Modifier.fillMaxSize().zIndex(-1f)) { it.zeichnung } }
     }
 }

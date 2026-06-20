@@ -1,17 +1,2 @@
 package de.TeutonStudio.MathematikAtlas.knoten
 
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateMap
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.anschluss.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.KnotenAusgabeDaten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAusgang
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageEingang
-import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.auswerten
-import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.definition

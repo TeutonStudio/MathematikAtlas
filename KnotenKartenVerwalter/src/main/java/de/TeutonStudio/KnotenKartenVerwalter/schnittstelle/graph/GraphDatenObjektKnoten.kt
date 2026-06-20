@@ -1,29 +1,20 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import android.graphics.RectF
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.round
-import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.EinzelAuswahl
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.IDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.overlaps
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.Anschluss.Companion.findeNachId
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.erzeugeAnschluss
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.Knoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObjekt.Companion.overlaps
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeAnschluss
 
 interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     public abstract val besitzer: GraphDatenObjektKarte<*>
@@ -71,7 +62,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         daten.position.y + daten.tiefe,
     ).overlaps(viewport)
 
-    public fun KartenPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
+//    public fun GraphPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
 
     public companion object {
         public fun Iterable<GraphDatenObjektKnoten<*>>.sichtbar() = filter { it.istImViewport() }

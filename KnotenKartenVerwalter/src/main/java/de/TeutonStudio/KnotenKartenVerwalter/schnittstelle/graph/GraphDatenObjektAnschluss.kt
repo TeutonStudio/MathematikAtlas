@@ -13,8 +13,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
 
 interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D> {
     public val besitzer: GraphDatenObjektKnoten<*>
@@ -25,7 +25,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     public val istEingang get() = false
     public val istAusgang get() = false
 
-    private fun erhaltePos(): KartenPosition? = layoutCoordinates.value?.let { anschlussCoordinates ->
+    private fun erhaltePos(): GraphPosition? = layoutCoordinates.value?.let { anschlussCoordinates ->
         besitzer.layoutCoordinates.value?.localPositionOf(
             anschlussCoordinates,
             anschlussCoordinates.size.center.toOffset(),

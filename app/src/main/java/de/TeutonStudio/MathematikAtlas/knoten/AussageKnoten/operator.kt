@@ -10,21 +10,17 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.LayoutCoordinates
-import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
-import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.disjunktion
-import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.konjunktion
-import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Richtung
+import androidx.compose.ui.unit.IntSize
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullErgebnis
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAusgang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageEingang
@@ -45,7 +41,7 @@ class operator(
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: BildschirmPosition) {
+    override fun BoxScope.KontextFenster(pos: IntSize) {
         TODO("Not yet implemented")
     }
 
@@ -71,7 +67,7 @@ class operator(
         override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
         override val anschlussIdx = mutableStateMapOf<String, Int>()
         override val data = mutableStateMapOf<String,Any>()
-        override var position: KartenPosition = KartenPosition.Zero
+        override var position: GraphPosition = GraphPosition.Zero
         override var breite: Float = 0f
         override var tiefe: Float = 0f
 
@@ -96,8 +92,7 @@ class operator(
     enum class AussagenVerknüpfung(
         val anzeige: String,
     ) {
-        UND("UND"),
-        ODER("ODER");
+        UND("UND"), ODER("ODER");
 
         fun nächste(): AussagenVerknüpfung =
             when (this) {
@@ -129,7 +124,7 @@ class operator(
             }
             ?: AussagenVerknüpfung.UND
     )
-
+/*
     public fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<Aussage>>,
@@ -159,13 +154,13 @@ class operator(
         }
 
         return try {
-            /*
+            *//*
              * Das Prädikat wird sofort ausgewertet.
              *
              * Dadurch liefert dieser Knoten immer Wahr oder Lüge und
              * verschachtelte Operatoren laufen noch nicht in die
              * unvollständige Prädikat-Auswertung des Rechensystems.
-             */
+             *//*
             val ergebnis = when (verknüpfung) {
                 AussagenVerknüpfung.UND ->
                     konjunktion(
@@ -186,7 +181,7 @@ class operator(
                 ursache = fehler,
             )
         }
-    }
+    }*/
 
     @Composable
     public fun Textzeile() {

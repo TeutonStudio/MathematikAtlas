@@ -1,7 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.anschlüsse
 
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussKonstruktor
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussKonstruktor
 
 
 @Suppress("UNCHECKED_CAST")

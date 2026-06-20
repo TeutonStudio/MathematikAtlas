@@ -1,50 +1,37 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
-import android.R.attr.scaleX
-import android.R.attr.scaleY
-import android.R.attr.translationX
-import android.R.attr.translationY
 import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntSize
-import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKarte
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenVerbindung
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.auswahl.AuswahlDaten
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.karte.KarteZustand
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.knoten.AnschlussKnotenDaten
-//import de.TeutonStudio.KnotenKartenVerwalter.daten.verbindung.VerbindungDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObjekt.Companion.Composable as VComposable
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt.Companion.Composable as KComposable
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten.Companion.anschlüsseNachIDEhe
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.GraphKnotenObjekt.Companion.anschlüsseNachIDEhe
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.erzeugeKnoten
-//import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.Verbindung
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.VerbindungFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindungen.erzeugeVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterArt
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterTesselation
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.VerbindungFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeVerbindung
 
 typealias Zustand = GraphDatenObjektKarte.GraphDatenObjektKarteZustand
 typealias Auswahl = GraphDatenObjektKarte.GraphDatenObjektKarteAuswahl
@@ -55,6 +42,8 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     abstract val verbindungFabrik: VerbindungFabrik
 
     val ctx: Kontext
+    val zeigeÜbersicht get() = true
+    val zeigeKontrollLeiste get() = true
     val zustand: Zustand
     val auswahl: Auswahl
     abstract val pseudoVerbindung: MutableState<GraphDatenObjektVerbindung<*>?>
@@ -92,6 +81,37 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         if (auswahl.istEinzel) { Box(Modifier.align(Alignment.CenterEnd)) { erhalteAuswahl().first().ComposableInspektor() } }
     }
 
+    public fun sichtbarerWeltBereich(): Rect? {
+        if (daten.dimension.width <= 0 || daten.dimension.height <= 0) { return null }
+
+        val sichererZoom = zustand.erhalteZoom().coerceAtLeast(0.0001f)
+
+        return Rect(
+            left = -zustand.erhaltePos().x / sichererZoom,
+            top = -zustand.erhaltePos().y / sichererZoom,
+            right = (daten.dimension.width - zustand.erhaltePos().x) / sichererZoom,
+            bottom = (daten.dimension.height - zustand.erhaltePos().y) / sichererZoom,
+        )
+    }
+    public fun inhaltsGrenzen(puffer: Float = 0f): Rect? {
+        val grenzen = knoten.map { it.daten.dimension }.reduceOrNull { bisher, nächstes ->
+            Rect(
+                left = minOf(bisher.left,nächstes.left),
+                top = minOf(bisher.top,nächstes.top),
+                right = maxOf(bisher.right,nächstes.right),
+                bottom = maxOf(bisher.bottom,nächstes.bottom),
+            )
+        } ?: return null
+
+        val sichererPuffer = puffer.coerceAtLeast(0f)
+
+        return Rect(
+            left = grenzen.left - sichererPuffer,
+            top = grenzen.top - sichererPuffer,
+            right = grenzen.right + sichererPuffer,
+            bottom = grenzen.bottom + sichererPuffer,
+        )
+    }
     public fun erhalteAuswahl() = listOf(erhalteKnotenAuswahl(),erhalteVerbindungAuswahl(),erhalteAnschlussAuswahl()).flatten()
     public fun erhalteKnotenAuswahl() = knoten.filter { it.daten.id in auswahl.knotenIds }
     public fun erhalteVerbindungAuswahl() = verbindungen.filter { it.daten.id in auswahl.verbindungIds }
@@ -105,16 +125,19 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
 
     class GraphDatenObjektKarteKontext {
         val objektDatenId = null as GraphDatenId?
-        val pos = BildschirmPosition.Zero
+        val pos = IntSize.Zero
 
     }
     class GraphDatenObjektKarteZustand {
         private val dimension = mutableStateOf(IntSize.Zero)
         private val zoom = mutableFloatStateOf(1f)
         private val pos = mutableStateOf(Offset.Zero)
+        private val einstellung = mutableStateOf(Pair(RasterArt.Punkte,RasterTesselation.Trigon))
 
-        public fun erhaltePos(): Offset = pos.value
-        public fun erhalteZoom(): Float = zoom.floatValue
+        public fun erhaltePos() = pos.value
+        public fun erhalteZoom() = zoom.floatValue
+        public fun erhalteArt() = einstellung.value.first
+        public fun erhalteTesselation() = einstellung.value.second
 
         public fun verschiebe(delta: Offset) { pos.value += delta }
         public fun zoome(delta: Float) { zoom.floatValue = (zoom.floatValue * delta).coerceIn(MIN_ZOOM,MAX_ZOOM) }
@@ -136,7 +159,9 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             public const val MAX_ZOOM = 5f
         }
     }
-    class GraphDatenObjektKarteAuswahl {
+    data class GraphDatenObjektKarteAuswahl(
+        private val auswahl: SnapshotStateMap<String, List<String>> = mutableStateMapOf()
+    ) {
         val knotenIds get() = auswahl.getOrElse("knoten",{ emptyList() })
         val verbindungIds get() = auswahl.getOrElse("verbindung",{ emptyList() })
         val anschlussIds get() = auswahl.getOrElse("anschluss",{ emptyList() })
@@ -145,9 +170,9 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         val istEinzel get() = auswahl.size == 1
         val istMulti get() = auswahl.size > 1
 
-        public fun wähleKnoten(ids: String) { knotenIds.plus(ids) }
-        public fun wähleVerbindung(ids: String) { verbindungIds.plus(ids) }
-        public fun wähleAnschluss(ids: String) { anschlussIds.plus(ids) }
+        public fun wähleKnoten(vararg ids: String) { auswahl["knoten"]?.plus(ids) }
+        public fun wähleVerbindung(vararg ids: String) { auswahl["verbindung"]?.plus(ids) }
+        public fun wähleAnschluss(vararg ids: String) { auswahl["anschluss"]?.plus(ids) }
         public fun enthält(objekt: GraphDatenObjekt<*>) = when {
             objekt is GraphDatenObjektKnoten<*> -> knotenIds
             objekt is GraphDatenObjektVerbindung<*> -> verbindungIds
@@ -155,11 +180,12 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             else -> listOf()
         }.contains(objekt.daten.id)
         public fun leereAuswahl() { auswahl.clear() }
-        private val auswahl: SnapshotStateMap<String, Iterable<String>> = mutableStateMapOf()
     }
 
     public companion object {
+        @JvmName("IterKnoten2inViewport")
         public fun Iterable<GraphDatenObjektKnoten<*>>.sichtbar() = filter { it.istImViewport() }
+        @JvmName("IterVerbindung2inViewport")
         public fun Iterable<GraphDatenObjektVerbindung<*>>.sichtbar() = filter { it.istImViewport() }
     }
 }

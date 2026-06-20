@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,21 +16,20 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
-import de.TeutonStudio.KnotenKartenVerwalter.BildschirmPosition
-import de.TeutonStudio.KnotenKartenVerwalter.KartenPosition
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Kante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.Richtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.anschlüsse.AnschlussFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.KnotenArt
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.knoten.PullErgebnis
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
 import kotlin.collections.set
 
@@ -44,17 +44,17 @@ class definition(
         initialWahr: Boolean = true,
         override val id: GraphDatenId,
         override val name: String = "Aussage",
-        override var beweglich: Boolean,
-        override val anschlüsse: SnapshotStateList<GraphDatenAnschluss>,
-        override val anschlussIdx: SnapshotStateMap<String, Int>,
-        override val data: MutableMap<String, Any>,
-        override var position: KartenPosition,
-        override var breite: Float,
-        override var tiefe: Float,
-        override val richtung: Richtung,
-        override val anschlussLabel: SnapshotStateMap<Kante, Map<Int, String>>,
     ): GraphDatenKnoten, GraphDatenKnoten.gerichteteGDK<GraphDatenAnschluss>, GraphDatenKnoten.auswertbarerGDK {
         override var klasse: KnotenArt? = definition.KNOTEN_ART
+        override var beweglich = true
+        override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
+        override val anschlussIdx = mutableStateMapOf<String,Int>()
+        override val data = mutableMapOf<String,Any>()
+        override var position = GraphPosition.Zero
+        override var breite = 0f
+        override var tiefe = 0f
+        override val richtung = Richtung.Ausgang
+        override val anschlussLabel = mutableStateMapOf<Kante,Map<Int,String>>()
         override fun erhateAnschluss(
             idx: Int,
             kante: Kante,
@@ -83,7 +83,7 @@ class definition(
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: BildschirmPosition) {
+    override fun BoxScope.KontextFenster(pos: IntSize) {
         TODO("Not yet implemented")
     }
 
@@ -99,9 +99,7 @@ class definition(
         TODO("Not yet implemented")
     }
 
-    val cacheAnschlüsse:
-            SnapshotStateMap<String, PullErgebnis<Aussage>> =
-        mutableStateMapOf()
+//    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
 
     val wertKlasse = Aussage::class
 
@@ -109,7 +107,7 @@ class definition(
         daten.data[WERT_SCHLÜSSEL] as? Boolean ?: true
     )
 
-    fun berechne(
+/*    fun berechne(
         ausgangId: String,
         eingänge: Map<String, PullErgebnis<Aussage>>,
     ): PullErgebnis<Aussage> {
@@ -120,7 +118,7 @@ class definition(
         }
 
         return PullErgebnis.Wert(aussage)
-    }
+    }*/
 
     @Composable
     fun Textzeile() {
@@ -139,7 +137,7 @@ class definition(
                     daten.data[WERT_SCHLÜSSEL] = neuerWert
 
                     // Der Cache ist nur Anzeigezustand.
-                    cacheAnschlüsse.clear()
+//                    cacheAnschlüsse.clear()
                 },
             )
         }

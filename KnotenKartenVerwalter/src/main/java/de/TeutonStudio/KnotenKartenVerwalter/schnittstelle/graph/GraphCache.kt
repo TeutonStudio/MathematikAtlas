@@ -2,7 +2,7 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
