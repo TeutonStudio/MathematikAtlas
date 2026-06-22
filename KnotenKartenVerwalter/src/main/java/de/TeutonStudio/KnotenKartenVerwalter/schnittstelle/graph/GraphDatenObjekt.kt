@@ -3,11 +3,19 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
@@ -15,9 +23,11 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 
 //typealias GraphObjekt = GraphDatenObjekt<out GraphDaten>
 
@@ -48,8 +58,21 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     @Composable public fun ComposableStandard() = Box(objektModifier) {
         Darstellung()
         if (this@GraphDatenObjekt is GraphDatenObjektKnoten<*>) {
-            anschlüsse.forEach { anschluss ->
-                Box(anschluss.objektModifier)
+            Kante.entries.forEach {  k ->
+                if (k.istVertikal) {
+                    Column(Modifier.height(daten.tiefe.dp), Arrangement.SpaceEvenly, Alignment.CenterHorizontally) {
+                        anschlüsse.filter { it.daten.kante == k }.forEach { anschluss ->
+                            Box(anschluss.objektModifier)
+                        }
+                    }
+                }
+                if (k.istHorizontal) {
+                    Row(Modifier.width(daten.breite.dp), Arrangement.SpaceEvenly, Alignment.CenterVertically) {
+                        anschlüsse.filter { it.daten.kante == k }.forEach { anschluss ->
+                            Box(anschluss.objektModifier)
+                        }
+                    }
+                }
             }
         }
     }

@@ -28,22 +28,6 @@ open class BasisObjektVerbindung(
     override val ende: State<GraphPosition>,
 ): GraphDatenObjektVerbindung<GraphDatenVerbindung> {
     public override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
-/*    override fun beiKlick(klickPos: Offset) {
-        TODO("Not yet implemented")
-    }*/
-
-/*    override fun beiHalten(klickPos: Offset) {
-        TODO("Not yet implemented")
-    }*/
-
-/*    override fun beiTransform(
-        centroid: Offset,
-        zoomDelta: Float,
-        panDelta: Offset,
-        rotationChange: Float
-    ) {
-        TODO("Not yet implemented")
-    }*/
 
     @Composable
     override fun BoxScope.Darstellung() {

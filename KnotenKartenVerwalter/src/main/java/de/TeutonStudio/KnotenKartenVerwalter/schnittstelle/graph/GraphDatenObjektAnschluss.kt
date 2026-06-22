@@ -60,7 +60,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         } ?: Offset.Zero
 
     @Composable public override fun Modifier.vorher(): Modifier =
-        offset {
+        /*offset {
             val durchmesser = 10
             val radius = durchmesser / 2
             val knotenGröße = besitzer.layoutCoordinates.value?.size
@@ -74,7 +74,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
                 Kante.Oben -> IntOffset((breite * anteil).roundToInt() - radius, -radius)
                 Kante.Unten -> IntOffset((breite * anteil).roundToInt() - radius, tiefe - radius)
             }
-        }.size(10.dp).background(Color.Black, CircleShape)
+        }.*/size(10.dp).background(Color.Black, CircleShape)
 
     private fun anschlussAnteil(): Float {
         val gleicheKante = besitzer.daten.anschlüsse
@@ -130,7 +130,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     }
 
     interface gerichteterGDOA<D: GraphDatenAnschluss.gerichteteGDA>: GraphDatenObjektAnschluss<D> {
-
+        // TODO falls eingang, alle alten verbindung löschen, wenn neue erstellt wird
         public override val istEingang get() = daten.istEingang
         public override val istAusgang get() = daten.istAusgang
 

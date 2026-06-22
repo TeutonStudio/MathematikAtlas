@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.anschlüsse
 
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -80,7 +81,7 @@ open class AussageObjektAnschluss(
 
     @Composable
     override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
+        Text("Inpektor des Aussage Anschluss")
     }
 
     public companion object {

@@ -56,8 +56,8 @@ class auswerten(
         override val anschlussIdx = mutableStateMapOf<String,Int>()
         override val data = mutableMapOf<String,Any>()
         override var position by mutableStateOf(GraphPosition.Zero)
-        override var breite = 0f
-        override var tiefe = 0f
+        override var breite = 30f
+        override var tiefe = 12f
         override val richtung = Richtung.Eingang
         override val anschlussLabel = mutableStateMapOf<Kante,Map<Int,String>>()
 /*        fun anschlussKorrektur(a: EingangDaten) {
@@ -71,11 +71,10 @@ class auswerten(
             kante: Kante,
             label: String,
         ): AussageAnschlussDaten {
-            return AussageAnschlussDaten("$id-eingang-$idx", kante, Richtung.Eingang)
-                .apply {
-                    this.label = label
-                    klasse = AussageObjektEingang.ANSCHLUSS_ART
-                }
+            return AussageAnschlussDaten("$id-eingang-$idx", kante, Richtung.Eingang).apply {
+                this.label = label
+                klasse = AussageObjektEingang.ANSCHLUSS_ART
+            }
         }
 
 

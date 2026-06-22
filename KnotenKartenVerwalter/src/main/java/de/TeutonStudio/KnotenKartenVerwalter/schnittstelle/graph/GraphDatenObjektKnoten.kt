@@ -39,13 +39,9 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     @Composable public override fun Modifier.vorher(): Modifier =
         offset { daten.position.round() }
             .zIndex(1f)
-            .let {
-                if (istSelektiert.value) {
-                    it.border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
-                } else {
-                    it
-                }
-            }
+            .let { if (istSelektiert.value) {
+                it.border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
+            } else { it } }
 
     @Composable public override fun Modifier.modiInputEvent(): Modifier =
         vorher().position().tapping().pointerInput(daten.id) {
@@ -73,19 +69,12 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         besitzer.auswahl.wähleKnoten(daten.id)
         besitzer.ctx.objektDatenId = null
     }
-
     public override fun beiHalten(klickPos: Offset) {
         besitzer.auswahl.wähleKnoten(daten.id)
         besitzer.ctx.pos = klickPos.round()
         besitzer.ctx.objektDatenId = daten.id
     }
-
-    public override fun beiTransform(
-        centroid: Offset,
-        zoomDelta: Float,
-        panDelta: Offset,
-        rotationChange: Float
-    ) {
+    public override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
         besitzer.verschiebeKnoten(daten.id, panDelta / besitzer.zustand.erhalteZoom())
         besitzer.auswahl.wähleKnoten(daten.id)
         besitzer.ctx.objektDatenId = null

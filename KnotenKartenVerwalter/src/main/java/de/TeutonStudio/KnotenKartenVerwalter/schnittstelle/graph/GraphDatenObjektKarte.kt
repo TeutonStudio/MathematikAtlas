@@ -69,18 +69,9 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             scaleY = zustand.erhalteZoom()
             transformOrigin = TransformOrigin(0f, 0f)
         } ) {
-            val sichtbareKnoten = knoten.sichtbar()
-            val sichtbareAnschlüsse = sichtbareKnoten.flatMap { it.anschlüsse }
-            val anschlüsseSindPositioniert =
-                sichtbareKnoten.all { it.layoutCoordinates.value != null } &&
-                sichtbareAnschlüsse.all { it.layoutCoordinates.value != null }
-
-            if (anschlüsseSindPositioniert) {
-                verbindungen.sichtbar().VComposable(/*Modifier.zIndex(-1f)*/)
-                pseudoVerbindung.value?.apply { listOf(this).VComposable() }
-            }
-
-            sichtbareKnoten.KComposable(/*Modifier.zIndex(1f)*/)
+            knoten.sichtbar().KComposable(/*Modifier.zIndex(1f)*/)
+            verbindungen.sichtbar().VComposable(/*Modifier.zIndex(-1f)*/)
+            pseudoVerbindung.value?.apply { listOf(this).VComposable() }
         }
         graph.inhalt.filterIsInstance<GraphDatenObjekt<*>>().forEach { if (it.öffneKontext.value) it.ComposableKontext() }
         if (auswahl.istEinzel) { Box(Modifier.align(Alignment.CenterEnd)) { erhalteAuswahl().first().ComposableInspektor() } }
