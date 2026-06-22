@@ -72,16 +72,15 @@ class operator(
         override var tiefe: Float = 0f
 
 
-        private fun eingangIdx() = anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
-        private fun eingangId() = listOf(id,"eingang",eingangIdx() + 1).joinToString("-")
-        public fun eingang() = AussageAnschlussDaten(eingangId(), Kante.Links, Richtung.Eingang)
+//        private fun eingangIdx() = anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
+        private fun eingangId(idx: Int) = listOf(id,"eingang",idx + 1).joinToString("-")
+        public fun eingang(idx: Int) = AussageAnschlussDaten(eingangId(idx), Kante.Links, Richtung.Eingang)
 
         init {
             val anschlussListe = listOf(
-                eingang().apply { anschlussIdx[this.id] = eingangIdx() },
-                eingang().apply { anschlussIdx[this.id] = eingangIdx() },
-                AussageAnschlussDaten("$id-ausgang-0",Kante.Rechts, Richtung.Ausgang
-                ),
+                eingang(1).apply { anschlussIdx[this.id] = 1 },
+                eingang(2).apply { anschlussIdx[this.id] = 2 },
+                AussageAnschlussDaten("$id-ausgang-0",Kante.Rechts, Richtung.Ausgang),
             ).apply { forEach { it.apply { klasse = if (richtung == Richtung.Eingang) AussageEingang.ANSCHLUSS_ART else AussageAusgang.ANSCHLUSS_ART } } }
 
             anschlüsse.addAll(anschlussListe)

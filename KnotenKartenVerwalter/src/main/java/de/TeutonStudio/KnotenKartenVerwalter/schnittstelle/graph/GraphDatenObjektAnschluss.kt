@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
 
 interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D> {
@@ -60,4 +61,10 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
 /*    interface {
 
     }*/
+
+    public companion object {
+
+        public fun Iterable<GraphDatenObjektAnschluss<*>>.findMann(ids: GraphDatenVerbindung.IDEhe) = find { it.daten.id == ids.anschlussIdMann }
+        public fun Iterable<GraphDatenObjektAnschluss<*>>.findWeib(ids: GraphDatenVerbindung.IDEhe) = find { it.daten.id == ids.anschlussIdWeib }
+    }
 }

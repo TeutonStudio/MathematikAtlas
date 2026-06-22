@@ -2,13 +2,12 @@ package de.TeutonStudio.MathematikAtlas
 
 import androidx.compose.ui.geometry.Offset
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenVerbindung
 import de.TeutonStudio.MathematikAtlas.karten.AussageKarteDaten
-import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.definition
-import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.definition.AussageDefinitionDaten
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.operator
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.operator.AussageOperatorDatenBasis
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageDefinition
@@ -33,6 +32,7 @@ fun aussageTestKarte(): AussageKarteDaten {
             x = 80f,
             y = 80f,
         )
+        anschlussLabel.plus(Kante.Rechts to mapOf(0 to "Aussage"))
     }
 
     val aussageB = AussageDefinition(
@@ -44,6 +44,7 @@ fun aussageTestKarte(): AussageKarteDaten {
             x = 80f,
             y = 260f,
         )
+        anschlussLabel.plus(Kante.Rechts to mapOf(0 to "Aussage"))
     }
 
     val aussageC = AussageDefinition(
@@ -55,6 +56,7 @@ fun aussageTestKarte(): AussageKarteDaten {
             x = 380f,
             y = 420f,
         )
+        anschlussLabel.plus(Kante.Rechts to mapOf(0 to "Aussage"))
     }
 
     val undKnoten = AussageOperatorDatenBasis(
@@ -65,6 +67,9 @@ fun aussageTestKarte(): AussageKarteDaten {
             x = 380f,
             y = 160f,
         )
+        anschlüsse.plus(BasisDatenAnschluss(id + "ausgang", Kante.Rechts))
+        anschlüsse.plus(BasisDatenAnschluss(id + "eingang1", Kante.Links))
+        anschlüsse.plus(BasisDatenAnschluss(id + "eingang2", Kante.Links))
 
         data[operator.OPERATOR_SCHLÜSSEL] = operator.AussagenVerknüpfung.UND.name
     }
@@ -77,6 +82,9 @@ fun aussageTestKarte(): AussageKarteDaten {
             x = 680f,
             y = 260f,
         )
+        anschlüsse.plus(BasisDatenAnschluss(id + "ausgang", Kante.Rechts))
+        anschlüsse.plus(BasisDatenAnschluss(id + "eingang1", Kante.Links))
+        anschlüsse.plus(BasisDatenAnschluss(id + "eingang2", Kante.Links))
 
         data[operator.OPERATOR_SCHLÜSSEL] =
             operator.AussagenVerknüpfung.ODER.name
@@ -90,6 +98,7 @@ fun aussageTestKarte(): AussageKarteDaten {
             x = 980f,
             y = 260f,
         )
+        anschlussLabel.plus(Kante.Links to mapOf(0 to "Aussage"))
     }
 
     /*
@@ -97,9 +106,9 @@ fun aussageTestKarte(): AussageKarteDaten {
      * Damit hängt die Testkarte nicht an nachgebauten ID-Strings.
      */
 
-    val ausgangA = aussageA.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Ausgang }.single()
-    val ausgangB = aussageB.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Ausgang }.single()
-    val ausgangC = aussageC.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Ausgang }.single()
+    val ausgangA = aussageA.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().singleOrNull { it.richtung == Richtung.Ausgang }
+    val ausgangB = aussageB.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().singleOrNull { it.richtung == Richtung.Ausgang }
+    val ausgangC = aussageC.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().singleOrNull { it.richtung == Richtung.Ausgang }
 
     val undEingänge = undKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }
         .sortedBy {
@@ -107,7 +116,7 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ?: Int.MAX_VALUE
         }
 
-    val undAusgang = undKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Ausgang }.single()
+    val undAusgang = undKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().singleOrNull { it.richtung == Richtung.Ausgang }
 
     val oderEingänge = oderKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }
         .sortedBy {
@@ -115,9 +124,9 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ?: Int.MAX_VALUE
         }
 
-    val oderAusgang = oderKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Ausgang }.single()
+    val oderAusgang = oderKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().singleOrNull { it.richtung == Richtung.Ausgang }
 
-    val auswertenEingang = auswertenKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.single()
+    val auswertenEingang = auswertenKnoten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().singleOrNull { it.richtung == Richtung.Eingang }
 
     require(undEingänge.size == 2) {
         "Der UND-Knoten benötigt genau zwei Eingänge"
@@ -149,7 +158,7 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ids = GraphDatenVerbindung.IDEhe(
                     knotenIdMann = aussageA.id,
                     knotenIdWeib = undKnoten.id,
-                    anschlussIdMann = ausgangA.id,
+                    anschlussIdMann = ausgangA?.id ?: "",
                     anschlussIdWeib = undEingänge[0].id,
                 ),
                 label = "", fehler = null,
@@ -163,7 +172,7 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ids = GraphDatenVerbindung.IDEhe(
                     knotenIdMann = aussageB.id,
                     knotenIdWeib = undKnoten.id,
-                    anschlussIdMann = ausgangB.id,
+                    anschlussIdMann = ausgangB?.id ?: "",
                     anschlussIdWeib = undEingänge[1].id,
                 ),
                 label = "", fehler = null,
@@ -177,7 +186,7 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ids = GraphDatenVerbindung.IDEhe(
                     knotenIdMann = undKnoten.id,
                     knotenIdWeib = oderKnoten.id,
-                    anschlussIdMann = undAusgang.id,
+                    anschlussIdMann = undAusgang?.id ?: "",
                     anschlussIdWeib = oderEingänge[0].id,
                 ),
                 label = "", fehler = null,
@@ -191,7 +200,7 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ids = GraphDatenVerbindung.IDEhe(
                     knotenIdMann = aussageC.id,
                     knotenIdWeib = oderKnoten.id,
-                    anschlussIdMann = ausgangC.id,
+                    anschlussIdMann = ausgangC?.id ?: "",
                     anschlussIdWeib = oderEingänge[1].id,
                 ),
                 label = "", fehler = null,
@@ -205,8 +214,8 @@ fun aussageTestKarte(): AussageKarteDaten {
                 ids = GraphDatenVerbindung.IDEhe(
                     knotenIdMann = oderKnoten.id,
                     knotenIdWeib = auswertenKnoten.id,
-                    anschlussIdMann = oderAusgang.id,
-                    anschlussIdWeib = auswertenEingang.id,
+                    anschlussIdMann = oderAusgang?.id ?: "",
+                    anschlussIdWeib = auswertenEingang?.id ?: "",
                 ),
                 label = "", fehler = null,
             ),

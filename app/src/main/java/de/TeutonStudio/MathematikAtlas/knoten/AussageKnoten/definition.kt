@@ -55,7 +55,7 @@ class definition(
         override var tiefe = 0f
         override val richtung = Richtung.Ausgang
         override val anschlussLabel = mutableStateMapOf<Kante,Map<Int,String>>()
-        override fun erhateAnschluss(
+        override fun erhalteAnschluss(
             idx: Int,
             kante: Kante,
             label: String

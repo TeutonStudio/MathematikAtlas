@@ -48,22 +48,10 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     val auswahl: Auswahl
     abstract val pseudoVerbindung: MutableState<GraphDatenObjektVerbindung<*>?>
 
-    val knoten get() = GraphCache(daten.knoten) { d: GraphDatenKnoten ->
-        knotenFabrik.erzeugeKnoten(graph,d,this).apply { registriere() }
-    }.erhalte()
+    val knoten get() = graph.knoten
+    val verbindungen get() = graph.verbindungen
+    val anschlüsse get() = graph.anschlüsse
 
-    val verbindungen get() = GraphCache(daten.verbindungen) { d: GraphDatenVerbindung ->
-        knoten.anschlüsseNachIDEhe(d.ids)?.let { (a1,a2) -> verbindungFabrik.erzeugeVerbindung(
-            graph,d,
-            derivedStateOf { a1.pos },
-            derivedStateOf { a2.pos },
-        )?.apply {
-            startKante = a1.daten.kante
-            endeKante = a2.daten.kante
-        } }?.apply { registriere() }
-    }.erhalte()
-
-    val anschlüsse get() = knoten.flatMap { it.anschlüsse }
 
     @Composable public override fun BoxScope.Darstellung() {
         Box(Modifier.fillMaxSize().graphicsLayer {

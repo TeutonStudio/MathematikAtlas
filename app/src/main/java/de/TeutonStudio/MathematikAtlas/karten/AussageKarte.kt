@@ -1,6 +1,8 @@
 package de.TeutonStudio.MathematikAtlas.karten
 
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
@@ -59,11 +61,12 @@ class AussageKarte(
     override val pseudoVerbindung = mutableStateOf<GraphDatenObjektVerbindung<*>?>(null)
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
     override fun beiKlick(klickPos: Offset) {
-        TODO("Not yet implemented")
+        auswahl.leereAuswahl()
     }
 
     override fun beiHalten(klickPos: Offset) {
-        TODO("Not yet implemented")
+//        super.beiHalten(klickPos)
+//        TODO("Not yet implemented")
     }
 
     override fun beiTransform(
@@ -72,18 +75,18 @@ class AussageKarte(
         panDelta: Offset,
         rotationChange: Float
     ) {
-        TODO("Not yet implemented")
+//        TODO("Not yet implemented")
     }
 
     @Composable
     override fun BoxScope.KontextFenster(pos: IntSize) {
-        TODO("Not yet implemented")
+        Column() {
+            Text("KontextFenster der AussageKarte")
+        }
     }
 
     @Composable
-    override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
-    }
+    override fun BoxScope.Inspektor() {}
 
     companion object {
         const val KARTEN_ART: KartenArt = "aussage-karte"

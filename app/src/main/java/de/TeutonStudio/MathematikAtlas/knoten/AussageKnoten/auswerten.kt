@@ -68,12 +68,12 @@ class auswerten(
             // TODO schlaueren Weg überlegen
         }*/
 
-        override fun erhateAnschluss(
+        override fun erhalteAnschluss(
             idx: Int,
             kante: Kante,
             label: String,
         ): AussageAnschlussDaten {
-            TODO("Not yet implemented")
+            return AussageAnschlussDaten(id+"idx:${idx}",kante, Richtung.Eingang)
         }
 
 

@@ -21,9 +21,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     public abstract val anschlussFabrik: AnschlussFabrik
 
 
-    val anschlüsse get() = GraphCache(daten.anschlüsse) { d: GraphDatenAnschluss ->
-        anschlussFabrik.erzeugeAnschluss(graph,d,this)?.apply { registriere() }
-    }.erhalte()
+    val anschlüsse get() = graph.anschlüsse.filter { it.besitzer.daten.id == daten.id }
     /** Aktualisiert den Knoten nach dem Erstellen oder Ändern einer Verbindung. */
     public fun definiereVerbindung()
 
