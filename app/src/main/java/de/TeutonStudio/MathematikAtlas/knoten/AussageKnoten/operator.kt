@@ -22,9 +22,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAusgang
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageEingang
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss.AussageAnschlussDaten
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAusgang
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektEingang.AussageEingang
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAusgang.AussageAusgang
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektEingang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
 
 typealias OperatorDaten = operator.AussageOperatorDatenBasis
@@ -77,14 +80,18 @@ class operator(
 
 //        private fun eingangIdx() = anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
         private fun eingangId(idx: Int) = listOf(id,"eingang",idx + 1).joinToString("-")
-        public fun eingang(idx: Int) = AussageAnschlussDaten(eingangId(idx), Kante.Links, Richtung.Eingang)
+        public fun eingang(idx: Int) = AussageAnschlussDaten(
+            eingangId(idx),
+            Kante.Links,
+            Richtung.Eingang
+        )
 
         init {
             val anschlussListe = listOf(
                 eingang(1).apply { anschlussIdx[this.id] = 1 },
                 eingang(2).apply { anschlussIdx[this.id] = 2 },
                 AussageAnschlussDaten("$id-ausgang-0",Kante.Rechts, Richtung.Ausgang),
-            ).apply { forEach { it.apply { klasse = if (richtung == Richtung.Eingang) AussageEingang.ANSCHLUSS_ART else AussageAusgang.ANSCHLUSS_ART } } }
+            ).apply { forEach { it.apply { klasse = if (richtung == Richtung.Eingang) AussageObjektEingang.ANSCHLUSS_ART else AussageObjektAusgang.ANSCHLUSS_ART } } }
 
             anschlüsse.addAll(anschlussListe)
             data[operator.OPERATOR_SCHLÜSSEL] = operator.AussagenVerknüpfung.UND.name

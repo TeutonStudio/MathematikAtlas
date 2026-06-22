@@ -6,6 +6,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.Anschlus
 
 @Suppress("UNCHECKED_CAST")
 val MatheAnschlussFabrik: AnschlussFabrik = mapOf(
-    AussageEingang.ANSCHLUSS_ART to ::AussageEingang as AnschlussKonstruktor,
-    AussageAusgang.ANSCHLUSS_ART to ::AussageAusgang as AnschlussKonstruktor,
+    AussageObjektAnschluss.ANSCHLUSS_ART to ::AussageObjektAnschluss as AnschlussKonstruktor,
+//    AussageEingang.ANSCHLUSS_ART to ::AussageEingang as AnschlussKonstruktor,
+//    AussageAusgang.ANSCHLUSS_ART to ::AussageAusgang as AnschlussKonstruktor,
 )

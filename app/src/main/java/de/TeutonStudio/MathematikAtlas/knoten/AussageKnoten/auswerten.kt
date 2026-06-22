@@ -30,7 +30,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
-import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageAnschlussDaten
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss.AussageAnschlussDaten
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
 
 typealias AussageAuswerten = auswerten.AussageAuswertenDaten
