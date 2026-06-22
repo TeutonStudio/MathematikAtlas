@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.InternalComposeApi
 import androidx.compose.runtime.RecomposeScope
@@ -72,7 +71,7 @@ class Graph(
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
-    @Composable public fun Composable(modifier: Modifier) = /*Hintergrund(karte.zustand,75f,modifier)*/ Box(modifier.wrapContentSize()) {
+    @Composable public fun Composable(modifier: Modifier) = /*Hintergrund(karte.zustand,75f,modifier)*/ Box(modifier) {
         karte.ComposableStandard()
         Row(Modifier
             .padding(16.dp)

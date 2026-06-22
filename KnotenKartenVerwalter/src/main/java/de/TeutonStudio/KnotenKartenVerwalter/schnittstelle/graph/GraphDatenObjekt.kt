@@ -1,5 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -8,10 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -21,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -58,17 +60,48 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     @Composable public fun ComposableStandard() = Box(objektModifier) {
         Darstellung()
         if (this@GraphDatenObjekt is GraphDatenObjektKnoten<*>) {
-            Kante.entries.forEach {  k ->
-                if (k.istVertikal) {
-                    Column(Modifier.height(daten.tiefe.dp), Arrangement.SpaceEvenly, Alignment.CenterHorizontally) {
-                        anschlüsse.filter { it.daten.kante == k }.forEach { anschluss ->
+            val dichte = LocalDensity.current
+            val knotenBreite = with(dichte) { daten.breite.toDp() }
+            val knotenTiefe = with(dichte) { daten.tiefe.toDp() }
+
+            if (istSelektiert.value) {
+                Box(
+                    Modifier
+                        .width(knotenBreite)
+                        .height(knotenTiefe)
+                        .border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
+                        .zIndex(1f)
+                )
+            }
+
+            Kante.entries.forEach { k ->
+                val anschlüsseAnKante = anschlüsse.filter { it.daten.kante == k }
+                if (anschlüsseAnKante.isNotEmpty() && k.istVertikal) {
+                    Column(
+                        Modifier
+                            .height(knotenTiefe)
+                            .align(k.alignment())
+                            .offset(x = if (k == Kante.Links) (-5).dp else 5.dp)
+                            .zIndex(2f),
+                        Arrangement.SpaceEvenly,
+                        Alignment.CenterHorizontally,
+                    ) {
+                        anschlüsseAnKante.forEach { anschluss ->
                             Box(anschluss.objektModifier)
                         }
                     }
                 }
-                if (k.istHorizontal) {
-                    Row(Modifier.width(daten.breite.dp), Arrangement.SpaceEvenly, Alignment.CenterVertically) {
-                        anschlüsse.filter { it.daten.kante == k }.forEach { anschluss ->
+                if (anschlüsseAnKante.isNotEmpty() && k.istHorizontal) {
+                    Row(
+                        Modifier
+                            .width(knotenBreite)
+                            .align(k.alignment())
+                            .offset(y = if (k == Kante.Oben) (-5).dp else 5.dp)
+                            .zIndex(2f),
+                        Arrangement.SpaceEvenly,
+                        Alignment.CenterVertically,
+                    ) {
+                        anschlüsseAnKante.forEach { anschluss ->
                             Box(anschluss.objektModifier)
                         }
                     }

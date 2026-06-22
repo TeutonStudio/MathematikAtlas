@@ -1,13 +1,11 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import android.graphics.RectF
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,9 +37,6 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     @Composable public override fun Modifier.vorher(): Modifier =
         offset { daten.position.round() }
             .zIndex(1f)
-            .let { if (istSelektiert.value) {
-                it.border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
-            } else { it } }
 
     @Composable public override fun Modifier.modiInputEvent(): Modifier =
         vorher().position().tapping().pointerInput(daten.id) {

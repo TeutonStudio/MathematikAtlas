@@ -9,6 +9,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -85,8 +86,8 @@ class operator(
         override val anschlussIdx = mutableStateMapOf<String, Int>()
         override val data = mutableStateMapOf<String,Any>()
         override var position: GraphPosition by mutableStateOf(GraphPosition.Zero)
-        override var breite: Float = 0f
-        override var tiefe: Float = 0f
+        override var breite: Float by mutableFloatStateOf(0f)
+        override var tiefe: Float by mutableFloatStateOf(0f)
 
 
 //        private fun eingangIdx() = anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()

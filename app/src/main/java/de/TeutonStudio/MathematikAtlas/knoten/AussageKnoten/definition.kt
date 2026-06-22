@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,8 +55,8 @@ class definition(
         override val anschlussIdx = mutableStateMapOf<String,Int>()
         override val data = mutableMapOf<String,Any>()
         override var position by mutableStateOf(GraphPosition.Zero)
-        override var breite = 0f
-        override var tiefe = 0f
+        override var breite by mutableFloatStateOf(0f)
+        override var tiefe by mutableFloatStateOf(0f)
         override val richtung = Richtung.Ausgang
         override val anschlussLabel = mutableStateMapOf<Kante,Map<Int,String>>()
         override fun erhalteAnschluss(
