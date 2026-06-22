@@ -1,18 +1,27 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import android.graphics.RectF
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.zIndex
@@ -20,21 +29,22 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObjekt.Companion.overlaps
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeAnschluss
 
-interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
+interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, GraphDatenObjekt.Vergrößerbar<D> {
     public abstract val besitzer: GraphDatenObjektKarte<*>
     public abstract val anschlussFabrik: AnschlussFabrik
+    override val vergrößerbarZoom: Float get() = besitzer.zustand.erhalteZoom()
 
 
     val anschlüsse get() = graph.anschlüsse.filter { it.besitzer.daten.id == daten.id }
 
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
     @Composable public override fun Modifier.vorher(): Modifier =
-        offset { daten.position.round() }
-            .zIndex(1f)
+        offset { daten.position.round() }.zIndex(1f).vergrößerbareGröße()
 
     @Composable public override fun Modifier.modiInputEvent(): Modifier =
         vorher().position().tapping().pointerInput(daten.id) {
@@ -71,6 +81,59 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         besitzer.verschiebeKnoten(daten.id, panDelta / besitzer.zustand.erhalteZoom())
         besitzer.auswahl.wähleKnoten(daten.id)
         besitzer.ctx.objektDatenId = null
+    }
+
+    @Composable public override fun ComposableStandard() = Box(objektModifier) {
+        val dichte = LocalDensity.current
+        val knotenBreite = with(dichte) { daten.breite.toDp() }
+        val knotenTiefe = with(dichte) { daten.tiefe.toDp() }
+        val modi = Modifier.width(knotenBreite).height(knotenTiefe).zIndex(1f)
+
+        Box(modi.apply {
+            if (istSelektiert.value) { border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp)) }
+        }) {
+            Darstellung()
+            if (istSelektiert.value) { VergrößerBereiche() }
+        }
+
+/*        if (istSelektiert.value) {
+            Box(
+                Modifier
+                    .width(knotenBreite)
+                    .height(knotenTiefe)
+                    .border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
+                    .zIndex(1f)
+            )
+            VergrößerBereiche()
+        }*/
+
+        Kante.entries.forEach { k ->
+            val anschlüsseAnKante = anschlüsse.filter { it.daten.kante == k }
+            val baseModi = Modifier.offset(x = if (k == Kante.Links) (-5).dp else 5.dp).zIndex(2f)
+            if (anschlüsseAnKante.isNotEmpty() && k.istVertikal) {
+                Column(
+                    baseModi.height(knotenTiefe).align(k.alignment()),
+                    Arrangement.SpaceEvenly,
+                    Alignment.CenterHorizontally,
+                ) {
+                    anschlüsseAnKante.forEach { anschluss ->
+                        Box(anschluss.objektModifier)
+                    }
+                }
+            }
+            if (anschlüsseAnKante.isNotEmpty() && k.istHorizontal) {
+                Row(
+                    baseModi.width(knotenBreite).align(k.alignment()),
+                    Arrangement.SpaceEvenly,
+                    Alignment.CenterVertically,
+                ) {
+                    anschlüsseAnKante.forEach { anschluss ->
+                        Box(anschluss.objektModifier)
+                    }
+                }
+            }
+        }
+
     }
 
     @Composable

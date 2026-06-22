@@ -1,6 +1,7 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +18,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -79,6 +83,11 @@ interface GraphSteuerung {
                 verticalArrangement =
                     Arrangement.spacedBy(4.dp),
             ) {
+                AuswahlModusKnopf(
+                    mehrfachAuswahl = auswahl.istMehrfachAuswahl,
+                    onClick = auswahl::wechsleMehrfachAuswahl,
+                )
+
                 KontrollKnopf(
                     text = "+",
                     beschreibung = "Hineinzoomen",
@@ -96,7 +105,7 @@ interface GraphSteuerung {
                     text = "−",
                     beschreibung = "Herauszoomen",
                     onClick = {
-                        zustand.zoome(zoomFaktor)
+                        zustand.zoome(1f / zoomFaktor)
 /*                        zustand.setzeZoom(
                             neuerZoom =
                                 zustand.zoom / zoomFaktor,
@@ -127,6 +136,64 @@ interface GraphSteuerung {
                     onClick = {
 //                        passeInhaltEin()
                     },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AuswahlModusKnopf(
+    mehrfachAuswahl: Boolean,
+    onClick: () -> Unit,
+) {
+    val farbe = if (mehrfachAuswahl) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val hintergrund = if (mehrfachAuswahl) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(hintergrund)
+            .semantics {
+                contentDescription = if (mehrfachAuswahl) {
+                    "Mehrfachauswahl aktiv"
+                } else {
+                    "Neue Auswahl leert vorherige Auswahl"
+                }
+                role = Role.Button
+            },
+    ) {
+        Canvas(Modifier.size(18.dp)) {
+            val stroke = Stroke(width = 2.dp.toPx())
+            if (mehrfachAuswahl) {
+                drawRect(
+                    color = farbe,
+                    topLeft = androidx.compose.ui.geometry.Offset(1.dp.toPx(), 1.dp.toPx()),
+                    size = Size(8.dp.toPx(), 8.dp.toPx()),
+                    style = stroke,
+                )
+                drawRect(
+                    color = farbe,
+                    topLeft = androidx.compose.ui.geometry.Offset(9.dp.toPx(), 9.dp.toPx()),
+                    size = Size(8.dp.toPx(), 8.dp.toPx()),
+                    style = stroke,
+                )
+            } else {
+                drawRect(
+                    color = farbe,
+                    topLeft = androidx.compose.ui.geometry.Offset(3.dp.toPx(), 3.dp.toPx()),
+                    size = Size(12.dp.toPx(), 12.dp.toPx()),
+                    style = stroke,
                 )
             }
         }

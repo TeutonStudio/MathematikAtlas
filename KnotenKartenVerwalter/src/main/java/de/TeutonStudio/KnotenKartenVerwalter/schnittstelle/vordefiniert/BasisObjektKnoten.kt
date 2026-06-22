@@ -1,44 +1,63 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert
 
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKontext
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektInspektor
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.info
 
 class BasisObjektKnoten(
     override val graph: Graph,
     override val daten: GraphDatenKnoten,
     override val besitzer: GraphDatenObjektKarte<*>,
-) : GraphDatenObjektKnoten<GraphDatenKnoten> {
+) : GraphDatenObjektKnoten<GraphDatenKnoten>, GraphDatenObjektInspektor<GraphDatenKnoten> {
     override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
     @Composable
     override fun BoxScope.Darstellung() {
-        TODO("Not yet implemented")
+        Card {
+            Column {
+                Text(daten.name)
+            }
+        }
     }
 
     @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        TODO("Not yet implemented")
+        StandardKontextFenster(pos)
     }
 
     @Composable
     override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
+        basisKontext().CardColumn(this@BasisObjektKnoten)
+    }
+
+    @Composable
+    override fun Inhalt() {
+        basisKontext().Inhalt()
     }
 
     override val anschlussFabrik: AnschlussFabrik = BasisAnschlussFabrik
     override fun definiereVerbindung() {
         TODO("Not yet implemented")
     }
+
+    private fun basisKontext() = BasisObjektKontext(
+        info("Klasse", daten.klasse ?: "-"),
+        info("Position", "${daten.position.x.toInt()}, ${daten.position.y.toInt()}"),
+        info("Anschlüsse", daten.anschlüsse.size),
+    )
 
     public companion object {
         public const val KNOTEN_ART = "default"

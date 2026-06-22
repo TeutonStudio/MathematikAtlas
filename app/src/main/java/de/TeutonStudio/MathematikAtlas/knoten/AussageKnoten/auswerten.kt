@@ -2,7 +2,6 @@ package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +25,11 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektInspektor
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKontext
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.auswahl
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.info
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
@@ -40,8 +43,11 @@ class auswerten(
     override val graph: Graph,
     override val daten: AussageAuswerten,
     override val besitzer: GraphDatenObjektKarte<*>,
-) : GraphDatenObjektKnoten<AussageAuswerten> {
+) : GraphDatenObjektKnoten<AussageAuswerten>, GraphDatenObjektInspektor<AussageAuswerten> {
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
+    override val minimaleBreite: Float get() = 20f
+    override val minimaleTiefe: Float get() = 8f
+
     override fun definiereVerbindung() {
         TODO("Not yet implemented")
     }
@@ -157,25 +163,6 @@ class auswerten(
     }
 
     @Composable
-    fun InspektorInhalt() {
-        Card(Modifier.padding(25.dp)) {
-            Column(Modifier.padding(15.dp)) {
-                Text("Inpektor: ${daten.name}")
-                daten.anschlüsse.forEach {
-                    Text("${it.label} an der Seite ${it.kante}")
-                }
-
-                LaTeXModusSchalter(daten)
-                LaTeXFormelText(
-                    formel = besitzer.daten.latexFormelFuer(daten),
-                    karte = besitzer.daten,
-                )
-                Text("Wert: ${anzeigeText()}")
-            }
-        }
-    }
-
-    @Composable
     override fun BoxScope.Darstellung() {
         Card {
             Column {
@@ -196,7 +183,26 @@ class auswerten(
 
     @Composable
     override fun BoxScope.Inspektor() {
-        InspektorInhalt()
+        Composable()
+    }
+
+    @Composable
+    override fun Inhalt() {
+        BasisObjektKontext(
+            auswahl(
+                name = "LaTeX",
+                wert = if (daten.latexRekursiv()) "rekursiv" else "implizit",
+                optionen = listOf("rekursiv", "implizit"),
+            ) { auswahl ->
+                daten.setzeLatexRekursiv(auswahl == "rekursiv")
+            },
+            info("Formel", besitzer.daten.latexFormelFuer(daten)),
+            info("Wert", anzeigeText()),
+            info(
+                "Anschlüsse",
+                daten.anschlüsse.joinToString { "${it.label}: ${it.kante}" },
+            ),
+        ).Inhalt()
     }
 
     companion object {

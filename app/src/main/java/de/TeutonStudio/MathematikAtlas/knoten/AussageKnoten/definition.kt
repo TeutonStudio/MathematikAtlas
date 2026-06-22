@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -29,7 +31,11 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektInspektor
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKontext
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.auswahl
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.info
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
@@ -44,7 +50,7 @@ class definition(
     override val graph: Graph,
     override val daten: AussageDefinitionDaten,
     override val besitzer: GraphDatenObjektKarte<*>,
-): GraphDatenObjektKnoten<AussageDefinition> {
+): GraphDatenObjektKnoten<AussageDefinition>, GraphDatenObjektInspektor<AussageDefinition> {
     class AussageDefinitionDaten(
         initialWahr: Boolean = true,
         override val id: GraphDatenId,
@@ -99,7 +105,7 @@ class definition(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Card {
+        Card(Modifier) {
             Column {
                 Text(daten.name)
                 LaTeXFormelText(
@@ -117,15 +123,28 @@ class definition(
 
     @Composable
     override fun BoxScope.Inspektor() {
-        Column {
-            Text(daten.name)
-            LaTeXModusSchalter(daten)
-            LaTeXFormelText(
-                formel = besitzer.daten.latexFormelFuer(daten),
-                karte = besitzer.daten,
-            )
-            Textzeile()
-        }
+        Composable()
+    }
+
+    @Composable
+    override fun Inhalt() {
+        BasisObjektKontext(
+            auswahl(
+                name = "LaTeX",
+                wert = if (daten.latexRekursiv()) "rekursiv" else "implizit",
+                optionen = listOf("rekursiv", "implizit"),
+            ) { auswahl ->
+                daten.setzeLatexRekursiv(auswahl == "rekursiv")
+            },
+            info("Formel", besitzer.daten.latexFormelFuer(daten)),
+            auswahl(
+                name = "Wert",
+                wert = if (istWahr) "Wahr" else "Lüge",
+                optionen = listOf("Wahr", "Lüge"),
+            ) { auswahl ->
+                setzeWert(auswahl == "Wahr")
+            },
+        ).Inhalt()
     }
 
     override val anschlussFabrik: AnschlussFabrik
@@ -142,6 +161,20 @@ class definition(
     private var istWahr by mutableStateOf(
         daten.data[WERT_SCHLÜSSEL] as? Boolean ?: true
     )
+
+    private fun setzeWert(neuerWert: Boolean) {
+        istWahr = neuerWert
+        daten.data[WERT_SCHLÜSSEL] = neuerWert
+        daten.anschlüsse
+            .filterIsInstance<GraphDatenAnschluss.auswertbarerGDA>()
+            .filter { it.richtung == Richtung.Ausgang }
+            .forEach {
+                it.cache = AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten(
+                    AussageWert.ausBoolean(neuerWert)
+                )
+            }
+        (besitzer.daten as? AussageKarte.AussageKarteDaten)?.aktualisierePullCaches()
+    }
 
 /*    fun berechne(
         ausgangId: String,
@@ -169,17 +202,7 @@ class definition(
             Switch(
                 checked = istWahr,
                 onCheckedChange = { neuerWert ->
-                    istWahr = neuerWert
-                    daten.data[WERT_SCHLÜSSEL] = neuerWert
-                    daten.anschlüsse
-                        .filterIsInstance<GraphDatenAnschluss.auswertbarerGDA>()
-                        .filter { it.richtung == Richtung.Ausgang }
-                        .forEach {
-                            it.cache = AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten(
-                                AussageWert.ausBoolean(neuerWert)
-                            )
-                        }
-                    (besitzer.daten as? AussageKarte.AussageKarteDaten)?.aktualisierePullCaches()
+                    setzeWert(neuerWert)
                 },
             )
         }

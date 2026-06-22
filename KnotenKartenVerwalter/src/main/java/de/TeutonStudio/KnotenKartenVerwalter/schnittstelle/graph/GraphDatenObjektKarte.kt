@@ -4,10 +4,8 @@ import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,20 +22,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObjekt.Companion.Composable as VComposable
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt.Companion.Composable as KComposable
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten.Companion.anschlüsseNachIDEhe
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphHintergrund.RasterTesselation
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.VerbindungFabrik
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeKnoten
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeVerbindung
 
 typealias Zustand = GraphDatenObjektKarte.GraphDatenObjektKarteZustand
 typealias Auswahl = GraphDatenObjektKarte.GraphDatenObjektKarteAuswahl
@@ -193,6 +185,12 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         public fun verschiebe(delta: Offset) { pos.value += delta }
         public fun zoome(delta: Float) { zoom.floatValue = (zoom.floatValue * delta).coerceIn(MIN_ZOOM,MAX_ZOOM) }
         public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
+        public fun zentriereAuf(weltPosition: Offset) {
+            pos.value = Offset(
+                x = dimension.value.width / 2f,
+                y = dimension.value.height / 2f,
+            ) - weltPosition * zoom.floatValue
+        }
 
         public fun erhalteViewportRect(
             breite: Float = dimension.value.width.toFloat(),
@@ -211,9 +209,12 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         }
     }
     data class GraphDatenObjektKarteAuswahl( private val auswahl: SnapshotStateMap<String, List<String>> = mutableStateMapOf()) {
+        private val mehrfachAuswahl = mutableStateOf(false)
+
         val knotenIds get() = auswahl.getOrElse("knoten",{ emptyList() })
         val verbindungIds get() = auswahl.getOrElse("verbindung",{ emptyList() })
         val anschlussIds get() = auswahl.getOrElse("anschluss",{ emptyList() })
+        val istMehrfachAuswahl get() = mehrfachAuswahl.value
 
         val anzahl get() = auswahl.values.sumOf { it.size }
         val istLeer get() = anzahl == 0
@@ -221,9 +222,16 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         val istMulti get() = anzahl > 1
 
         private fun wähle(schlüssel: String, ids: Array<out String>) {
+            if (!istMehrfachAuswahl) leereAuswahl()
             auswahl[schlüssel] = (auswahl[schlüssel].orEmpty() + ids).distinct()
         }
 
+        public fun setzeMehrfachAuswahl(aktiv: Boolean) {
+            mehrfachAuswahl.value = aktiv
+        }
+        public fun wechsleMehrfachAuswahl() {
+            setzeMehrfachAuswahl(!istMehrfachAuswahl)
+        }
         public fun wähleKnoten(vararg ids: String) { wähle("knoten", ids) }
         public fun wähleVerbindung(vararg ids: String) { wähle("verbindung", ids) }
         public fun wähleAnschluss(vararg ids: String) { wähle("anschluss", ids) }

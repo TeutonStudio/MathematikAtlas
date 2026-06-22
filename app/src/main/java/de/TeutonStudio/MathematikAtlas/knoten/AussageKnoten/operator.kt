@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -17,6 +18,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -29,9 +31,13 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKontext
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektInspektor
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.auswahl
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.info
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
@@ -49,12 +55,12 @@ class operator(
     override val graph: Graph,
     override val daten: OperatorDaten,
     override val besitzer: GraphDatenObjektKarte<*>,
-): GraphDatenObjektKnoten<OperatorDaten> {
+): GraphDatenObjektKnoten<OperatorDaten>, GraphDatenObjektInspektor<OperatorDaten> {
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Card {
+        Card(Modifier) {
             Column {
                 Text(daten.name)
                 LaTeXFormelText(
@@ -72,15 +78,31 @@ class operator(
 
     @Composable
     override fun BoxScope.Inspektor() {
-        Column {
-            Text(daten.name)
-            LaTeXModusSchalter(daten)
-            LaTeXFormelText(
-                formel = besitzer.daten.latexFormelFuer(daten),
-                karte = besitzer.daten,
-            )
-            Textzeile()
-        }
+        Composable()
+    }
+
+    @Composable
+    override fun Inhalt() {
+        BasisObjektKontext(
+            auswahl(
+                name = "LaTeX",
+                wert = if (daten.latexRekursiv()) "rekursiv" else "implizit",
+                optionen = listOf("rekursiv", "implizit"),
+            ) { auswahl ->
+                daten.setzeLatexRekursiv(auswahl == "rekursiv")
+            },
+            info("Formel", besitzer.daten.latexFormelFuer(daten)),
+            auswahl(
+                name = "Operator",
+                wert = verknüpfung.anzeige,
+                optionen = AussagenVerknüpfung.entries.map { it.anzeige },
+            ) { auswahl ->
+                AussagenVerknüpfung.entries
+                    .firstOrNull { it.anzeige == auswahl }
+                    ?.let(::setzeVerknüpfung)
+            },
+            info("Stelligkeit", verknüpfung.stelligkeit),
+        ).Inhalt()
     }
 
     class AussageOperatorDatenBasis(
@@ -341,6 +363,14 @@ class operator(
             }
             ?: AussagenVerknüpfung.UND
     )
+
+    private fun setzeVerknüpfung(neueVerknüpfung: AussagenVerknüpfung) {
+        verknüpfung = neueVerknüpfung
+        val entfernteAnschlussIds = daten.setzeAussagenVerknüpfung(neueVerknüpfung)
+        val aussageKarte = besitzer.daten as? AussageKarte.AussageKarteDaten
+        aussageKarte?.entferneVerbindungenMitAnschlüssen(entfernteAnschlussIds)
+        aussageKarte?.aktualisierePullCaches()
+    }
 /*
     public fun berechne(
         ausgangId: String,
@@ -419,11 +449,7 @@ class operator(
                         text = { Text(option.anzeige) },
                         onClick = {
                             geöffnet = false
-                            verknüpfung = option
-                            val entfernteAnschlussIds = daten.setzeAussagenVerknüpfung(option)
-                            val aussageKarte = besitzer.daten as? AussageKarte.AussageKarteDaten
-                            aussageKarte?.entferneVerbindungenMitAnschlüssen(entfernteAnschlussIds)
-                            aussageKarte?.aktualisierePullCaches()
+                            setzeVerknüpfung(option)
                         },
                     )
                 }

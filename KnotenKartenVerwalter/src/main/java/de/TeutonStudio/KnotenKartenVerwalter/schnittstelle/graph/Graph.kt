@@ -71,14 +71,14 @@ class Graph(
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
-    @Composable public fun Composable(modifier: Modifier) = /*Hintergrund(karte.zustand,75f,modifier)*/ Box(modifier) {
+    @Composable public fun Composable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
         karte.ComposableStandard()
         Row(Modifier
             .padding(16.dp)
             .zIndex(1f)
             .align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
-//            karte.zuSteuerung()
-//            karte.zuÜbersicht()
+            karte.zuSteuerung()
+            karte.zuÜbersicht()
         }
     }
 

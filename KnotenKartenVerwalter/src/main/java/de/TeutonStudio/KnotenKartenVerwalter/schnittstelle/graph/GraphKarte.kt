@@ -38,16 +38,19 @@ interface GraphKarte {
     @Composable
     public fun GraphDatenObjektKarte<*>.zuÜbersicht(modifier: Modifier = Modifier) {
         if (!zeigeÜbersicht) return
-        println(sichtbarerWeltBereich() != null)
 
-        val sichtGrenzen = sichtbarerWeltBereich() ?: return
+        val sichtGrenzen = sichtbarerWeltBereich()
 
         /*
          * Der sichtbare Bereich wird immer einbezogen. Dadurch bleibt der
          * Viewport-Rahmen auch sichtbar, wenn die Ansicht weit vom Inhalt
          * wegbewegt wurde.
          */
-        val miniGrenzen = (inhaltsGrenzen(puffer = 80f) ?: sichtGrenzen).vereinigtMit(sichtGrenzen)
+        val miniGrenzen = if (sichtGrenzen != null) {
+            (inhaltsGrenzen(puffer = 80f) ?: sichtGrenzen).vereinigtMit(sichtGrenzen)
+        } else {
+            inhaltsGrenzen(puffer = 80f) ?: Rect(0f, 0f, 1f, 1f)
+        }
 
         var miniFläche by remember(daten.id) {
             mutableStateOf(IntSize.Zero)
@@ -85,7 +88,8 @@ interface GraphKarte {
 
                             if (
                                 fläche.width <= 0 ||
-                                fläche.height <= 0
+                                fläche.height <= 0 ||
+                                sichtbarerWeltBereich() == null
                             ) {
                                 return
                             }
@@ -98,9 +102,9 @@ interface GraphKarte {
                                 ),
                             )
 
-/*                            zustand.zentriereAuf(
+                            zustand.zentriereAuf(
                                 projektion.zuWelt(position),
-                            )*/
+                            )
                         }
 
                         detectDragGestures(
@@ -161,51 +165,53 @@ interface GraphKarte {
                     )
                 }
 
-                val viewportLinksOben = projektion.zuMiniMap(
-                    Offset(
-                        x = sichtGrenzen.left,
-                        y = sichtGrenzen.top,
-                    ),
-                )
-
-                val viewportRechtsUnten = projektion.zuMiniMap(
-                    Offset(
-                        x = sichtGrenzen.right,
-                        y = sichtGrenzen.bottom,
-                    ),
-                )
-
-                val viewportGröße = Size(
-                    width = (
-                            viewportRechtsUnten.x -
-                                    viewportLinksOben.x
-                            ).coerceAtLeast(0f),
-                    height = (
-                            viewportRechtsUnten.y -
-                                    viewportLinksOben.y
-                            ).coerceAtLeast(0f),
-                )
-
-                clipRect(
-                    left = 0f,
-                    top = 0f,
-                    right = size.width,
-                    bottom = size.height,
-                ) {
-                    drawRect(
-                        color = viewportFarbe,
-                        topLeft = viewportLinksOben,
-                        size = viewportGröße,
-                    )
-
-                    drawRect(
-                        color = ausgewähltFarbe,
-                        topLeft = viewportLinksOben,
-                        size = viewportGröße,
-                        style = Stroke(
-                            width = 2.dp.toPx(),
+                if (sichtGrenzen != null) {
+                    val viewportLinksOben = projektion.zuMiniMap(
+                        Offset(
+                            x = sichtGrenzen.left,
+                            y = sichtGrenzen.top,
                         ),
                     )
+
+                    val viewportRechtsUnten = projektion.zuMiniMap(
+                        Offset(
+                            x = sichtGrenzen.right,
+                            y = sichtGrenzen.bottom,
+                        ),
+                    )
+
+                    val viewportGröße = Size(
+                        width = (
+                                viewportRechtsUnten.x -
+                                        viewportLinksOben.x
+                                ).coerceAtLeast(0f),
+                        height = (
+                                viewportRechtsUnten.y -
+                                        viewportLinksOben.y
+                                ).coerceAtLeast(0f),
+                    )
+
+                    clipRect(
+                        left = 0f,
+                        top = 0f,
+                        right = size.width,
+                        bottom = size.height,
+                    ) {
+                        drawRect(
+                            color = viewportFarbe,
+                            topLeft = viewportLinksOben,
+                            size = viewportGröße,
+                        )
+
+                        drawRect(
+                            color = ausgewähltFarbe,
+                            topLeft = viewportLinksOben,
+                            size = viewportGröße,
+                            style = Stroke(
+                                width = 2.dp.toPx(),
+                            ),
+                        )
+                    }
                 }
 
                 drawRect(
