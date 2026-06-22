@@ -51,7 +51,9 @@ interface GraphDatenObjektVerbindung<D: GraphDatenVerbindung>: GraphDatenObjekt<
         )
     }.overlaps(viewport)
 
+    // TODO herausfinden wie Path und abstand sich in einer Pfad klasse vereinheitlichen lassen
     public fun erhaltePfad(): Path
+    public fun abstand(pos: Offset): Offset
 
     public companion object {
 

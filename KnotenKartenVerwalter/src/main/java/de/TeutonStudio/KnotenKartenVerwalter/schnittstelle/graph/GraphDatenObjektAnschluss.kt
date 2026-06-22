@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -31,6 +32,9 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     public val istEingang get() = false
     public val istAusgang get() = false
 
+    public var dragPos: MutableState<Offset>
+    public var dragZiel: MutableState<GraphDatenObjektAnschluss<*>?>
+
     override fun beiKlick(klickPos: Offset) {
         karte.auswahl.wähleAnschluss(daten.id)
     }
@@ -45,7 +49,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         zoomDelta: Float,
         panDelta: Offset,
         rotationChange: Float
-    ) {}
+    ) {} // Nicht genutzt
 
     private fun erhaltePos(): GraphPosition? = layoutCoordinates.value?.let { anschlussCoordinates ->
         besitzer.layoutCoordinates.value?.localPositionOf(
@@ -93,10 +97,51 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         )
     }
 
-    public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset)
-    public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset)
-    public fun beiVerbindungZiehenEnde(change: PointerInputChange)
-    public fun beiVerbindungZiehenAbbruch()
+    public fun erhaltePseudoVerbindung(): GraphDatenObjektVerbindung<*>
+
+    public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset) {
+        start.consume()
+        karte.ctx.objektDatenId = null
+        karte.auswahl.wähleAnschluss(daten.id)
+        dragPos.value = pos
+
+        karte.pseudoVerbindung.value = erhaltePseudoVerbindung()
+/*            BezierVerbindung(
+            graph, VerbindungDaten(
+                "pseudo",
+                IDEhe(
+                    besitzer.daten.id,
+                    besitzer.daten.id,
+                    daten.id,
+                    daten.id,
+                ),
+            ),
+            derivedStateOf { pos },
+            derivedStateOf { dragZiel?.pos ?: dragPos }
+        ).apply {
+            startKante = this@Anschluss.daten.kante
+            endeKante = startKante.gegenüber()
+        }*/
+    }
+    public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
+        change.consume()
+        dragPos.value += dragAmount / karte.zustand.erhalteZoom().coerceAtLeast(0.0001f)
+        if (karte.erhalteAnschlussNachPos(dragPos.value)?.apply {
+                val bedingung = second.getDistanceSquared() < 500f / karte.zustand.erhalteZoom() && daten.erlaubeVerbindung(first.daten)
+                if (bedingung) {
+                    dragZiel.value = first
+                    karte.pseudoVerbindung.value?.endeKante = first.daten.kante
+                    return
+                } else dragZiel.value = null
+            } == null) dragZiel.value = null
+    }
+    public fun beiVerbindungZiehenEnde(change: PointerInputChange) {
+        dragZiel.value?.let { karte.definiereVerbindung(this,it) }
+        karte.pseudoVerbindung.value = null
+    }
+    public fun beiVerbindungZiehenAbbruch() {
+        karte.pseudoVerbindung.value = null
+    }
 
     interface gerichteterGDOA<D: GraphDatenAnschluss.gerichteteGDA>: GraphDatenObjektAnschluss<D> {
 

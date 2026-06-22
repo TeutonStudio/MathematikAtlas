@@ -69,7 +69,7 @@ open class BezierObjektVerbindung(
         move(start.value); cubic(c1(),c2(),ende.value)
     }
 
-    public fun abstand(pos: GraphPosition): Offset {
+    public override fun abstand(pos: GraphPosition): Offset {
         val p0 = start.value
         val p3 = ende.value
 

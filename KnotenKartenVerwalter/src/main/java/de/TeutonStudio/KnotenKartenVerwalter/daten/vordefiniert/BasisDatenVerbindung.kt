@@ -8,8 +8,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.Verbindu
 class BasisDatenVerbindung(
     override val id: GraphDatenId,
     override val ids: GraphDatenVerbindung.IDEhe,
-    override var label: String,
-    override val fehler: String?
+    override var label: String = "",
+    override val fehler: String? = null
 ): GraphDatenVerbindung {
     override var klasse: VerbindungArt? = BezierObjektVerbindung.VERBINDUNG_ART
 }

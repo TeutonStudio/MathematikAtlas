@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
@@ -15,8 +14,10 @@ import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Auswahl
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Kontext
@@ -48,6 +49,21 @@ class AussageKarte(
     override val auswahl = Auswahl()
     override val zustand: Zustand = Zustand()
     override val pseudoVerbindung = mutableStateOf<GraphDatenObjektVerbindung<*>?>(null)
+    override fun definiereVerbindung(
+        mann: GraphDatenObjektAnschluss<*>,
+        weib: GraphDatenObjektAnschluss<*>
+    ) {
+        val ids = GraphDatenVerbindung.IDEhe(mann, weib)
+        daten.verbindungen.add(
+            BasisDatenVerbindung(
+                id = "${ids.knotenIdMann}-${ids.anschlussIdMann}-${ids.knotenIdWeib}-${ids.anschlussIdWeib}",
+                ids = ids,
+            )
+        )
+        mann.besitzer.daten.wurdeVerbunden(mann.daten.id, weib.besitzer.daten to weib.daten.id)
+        weib.besitzer.daten.wurdeVerbunden(weib.daten.id, mann.besitzer.daten to mann.daten.id)
+    }
+
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
 
     class AussageKarteDaten(

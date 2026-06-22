@@ -95,6 +95,9 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         zustand.transformiere(panDelta,zoomDelta)
     }
 
+    public fun erhalteVerbindungNachPos(pos: Offset): Pair<GraphDatenObjektVerbindung<*>,Offset>? = verbindungen.map { it to it.abstand(pos) }.minByOrNull { it.second.getDistanceSquared() }
+    public fun erhalteAnschlussNachPos(pos: Offset): Pair<GraphDatenObjektAnschluss<*>,Offset>? = anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
+
     public fun sichtbarerWeltBereich(): Rect? {
         if (daten.dimension.width <= 0 || daten.dimension.height <= 0) { return null }
 
@@ -126,6 +129,14 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             bottom = grenzen.bottom + sichererPuffer,
         )
     }
+    public fun definiereVerbindung(mann: GraphDatenObjektAnschluss<*>, weib: GraphDatenObjektAnschluss<*>) /*= daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
+        if (weib.daten is AusgangDaten && mann.besitzer is PullObjekt) (mann.besitzer as PullObjekt).aktualisiereCache()
+        if (mann.daten is AusgangDaten && weib.besitzer is PullObjekt) (weib.besitzer as PullObjekt).aktualisiereCache()
+        mann.besitzer.definiereVerbindung()
+        weib.besitzer.definiereVerbindung()
+        keinKontext()
+    }*/
+
     public fun erhalteAuswahl() = listOf(erhalteKnotenAuswahl(),erhalteVerbindungAuswahl(),erhalteAnschlussAuswahl()).flatten()
     public fun erhalteKnotenAuswahl() = knoten.filter { it.daten.id in auswahl.knotenIds }
     public fun erhalteVerbindungAuswahl() = verbindungen.filter { it.daten.id in auswahl.verbindungIds }
@@ -142,7 +153,7 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
 
         zielKnoten
             .mapNotNull { it.daten as? GraphDaten.bewegbareGD }
-            .forEach { it.verschiebeKnoten(panDelta) }
+            .forEach { it.verschiebeKnoten(panDelta / zustand.erhalteZoom().coerceAtLeast(0.0001f)) }
     }
 
     class GraphDatenObjektKarteKontext {

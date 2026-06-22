@@ -3,20 +3,23 @@ package de.TeutonStudio.MathematikAtlas.anschlüsse
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussArt
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BezierObjektVerbindung
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageWert
 
 open class AussageObjektAnschluss(
@@ -25,6 +28,8 @@ open class AussageObjektAnschluss(
     override val besitzer: GraphDatenObjektKnoten<*>,
 ) : GraphDatenObjektAnschluss<AussageObjektAnschluss.AussageAnschlussDaten> {
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+    override var dragPos = mutableStateOf<Offset>(Offset.Zero)
+    override var dragZiel = mutableStateOf<GraphDatenObjektAnschluss<*>?>(null)
 
     open class AussageAnschlussDaten(
         override val id: GraphDatenId,
@@ -56,46 +61,13 @@ open class AussageObjektAnschluss(
         }
 
     }
-    override fun beiVerbindungZiehenStart(
-        start: PointerInputChange,
-        change: PointerInputChange,
-        klickPos: Offset
-    ) {
-        TODO("Not yet implemented")
+    override fun erhaltePseudoVerbindung(): GraphDatenObjektVerbindung<*> {
+        return BezierObjektVerbindung(graph, BasisDatenVerbindung(
+            "pseudo",GraphDatenVerbindung.IDEhe(this,this)),
+            derivedStateOf { pos },
+            derivedStateOf { dragZiel.value?.pos ?: dragPos.value },
+        )
     }
-
-    override fun beiVerbindungZiehenDelta(
-        change: PointerInputChange,
-        dragAmount: Offset
-    ) {
-        TODO("Not yet implemented")
-    }
-
-    override fun beiVerbindungZiehenEnde(change: PointerInputChange) {
-        TODO("Not yet implemented")
-    }
-
-    override fun beiVerbindungZiehenAbbruch() {
-        TODO("Not yet implemented")
-    }
-
-    override fun beiKlick(klickPos: Offset) {
-        TODO("Not yet implemented")
-    }
-
-    override fun beiHalten(klickPos: Offset) {
-        TODO("Not yet implemented")
-    }
-
-    override fun beiTransform(
-        centroid: Offset,
-        zoomDelta: Float,
-        panDelta: Offset,
-        rotationChange: Float
-    ) {
-        TODO("Not yet implemented")
-    }
-
     @Composable
     override fun BoxScope.Darstellung() {
         TODO("Not yet implemented")

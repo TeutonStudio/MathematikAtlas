@@ -3,14 +3,18 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Auswahl
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Kontext
@@ -44,6 +48,21 @@ class BasisObjektKarte(
         rotationChange: Float
     ) {
         TODO("Not yet implemented")
+    }
+
+    override fun definiereVerbindung(
+        mann: GraphDatenObjektAnschluss<*>,
+        weib: GraphDatenObjektAnschluss<*>
+    ) {
+        daten.verbindungen.plus(
+            BasisObjektVerbindung(graph, BasisDatenVerbindung(
+                mann.daten.id+"-"+weib.daten.id,
+                GraphDatenVerbindung.IDEhe(mann,weib)
+            ),
+            derivedStateOf { mann.pos },
+            derivedStateOf { weib.pos },
+            )
+        )
     }
 
     @Composable

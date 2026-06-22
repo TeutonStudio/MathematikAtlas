@@ -60,7 +60,7 @@ open class BasisObjektVerbindung(
     public override var endeKante: Kante = Kante.Links
 
 
-    public fun abstand(pos: GraphPosition): Offset {
+    public override fun abstand(pos: GraphPosition): Offset {
         val delta = ende.value - start.value
         val distSq = delta.x.pow(2) + delta.y.pow(2)
         val t = (if (distSq != 0f) (delta.dot(pos - start.value)) / distSq else 0f).coerceIn(0f,1f)
