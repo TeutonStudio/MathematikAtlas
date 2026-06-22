@@ -20,6 +20,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Kontext
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Zustand
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindete
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.veränderung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.wählte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BasisKartenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BasisKnotenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.BasisVerbindungFabrik
@@ -51,13 +54,16 @@ class AussageKarteDaten(
 class AussageKarte(
     override val graph: Graph,
     override val daten: AussageKarteDaten,
-    override val zustand: Zustand,
+    veränderung: veränderung,
+    verbindete: verbindete,
+    wählte: wählte,
 ): GraphDatenObjektKarte<AussageKarteDaten> {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik + AussageKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
     override val ctx = Kontext()
     override val auswahl = Auswahl()
+    override val zustand: Zustand = Zustand()
     override val pseudoVerbindung = mutableStateOf<GraphDatenObjektVerbindung<*>?>(null)
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
     override fun beiKlick(klickPos: Offset) {

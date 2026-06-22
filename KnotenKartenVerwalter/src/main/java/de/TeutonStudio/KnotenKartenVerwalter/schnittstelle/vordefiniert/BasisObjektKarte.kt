@@ -14,10 +14,16 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Kontext
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Zustand
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.verbindete
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.veränderung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.wählte
 
 class BasisObjektKarte(
     override val graph: Graph,
     override val daten: GraphDatenKarte,
+    veränderung: veränderung,
+    verbindete: verbindete,
+    wählte: wählte,
 ) : GraphDatenObjektKarte<GraphDatenKarte> {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik

@@ -140,13 +140,13 @@ private fun KnotenKartenTestAnwendung() {
         val g = remember {
             Graph(
                 daten = karte,
-                zustand = Zustand(
-//                    zeigeÜbersicht = true,
-//                    zeigeKontrollLeiste = true,
-//                    auswahl = auswahl,
-//                    rasterArt = GraphHintergrund.RasterArt.Punkte,
-//                    rasterTesselation = GraphHintergrund.RasterTesselation.Trigon
-                ),
+/*                zustand = Zustand(
+                    zeigeÜbersicht = true,
+                    zeigeKontrollLeiste = true,
+                    auswahl = auswahl,
+                    rasterArt = GraphHintergrund.RasterArt.Punkte,
+                    rasterTesselation = GraphHintergrund.RasterTesselation.Trigon
+                ),*/
                 veränderung = ::veränderung,
                 verbindete = ::verbindete,
 //                onKontextAktion = ::fuehreKontextAktionAus,

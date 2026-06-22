@@ -35,7 +35,7 @@ typealias wählte = (Auswahl) -> Unit
 
 class Graph(
     private val daten: GraphDatenKarte,
-    private val zustand: Zustand,
+//    private val zustand: Zustand,
     private val veränderung: veränderung = { kId, pos -> },
     private val verbindete: verbindete = { a1, a2 -> },
     private val wählte: wählte = { a -> },
@@ -44,7 +44,7 @@ class Graph(
     override var aktuell: Int = 0
     override val verlauf = mutableStateMapOf<Int,Any>()
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
-    val karte = kartenFabrik.erzeugeKarte(this,daten,zustand,veränderung,verbindete,wählte).apply { registriere() }
+    val karte = kartenFabrik.erzeugeKarte(this,daten,veränderung,verbindete,wählte).apply { registriere() }
     val knoten by GraphCache({ daten.knoten }) { k: GraphDatenKnoten ->
         karte.knotenFabrik.erzeugeKnoten(this,k,karte)
     }

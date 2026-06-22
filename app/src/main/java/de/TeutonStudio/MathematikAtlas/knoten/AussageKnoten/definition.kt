@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -79,7 +80,9 @@ class definition(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        TODO("Not yet implemented")
+        Column() {
+            Text(KNOTEN_ART)
+        }
     }
 
     @Composable
@@ -144,7 +147,7 @@ class definition(
     }
 
     companion object {
-        const val KNOTEN_ART: KnotenArt = "eingabeAussage"
+        const val KNOTEN_ART: KnotenArt = "definitionAussage"
         const val WERT_SCHLÜSSEL = "aussage-ist-wahr"
     }
 }

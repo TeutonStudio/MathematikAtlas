@@ -19,11 +19,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.wählte
 
 typealias KartenArt = String
 typealias KartenFabrik = Map<KartenArt,KartenKonstruktor>
-typealias KartenKonstruktor = (Graph,GraphDatenKarte,Zustand,veränderung,verbindete,wählte) -> GraphDatenObjektKarte<*>
+typealias KartenKonstruktor = (Graph,GraphDatenKarte,veränderung,verbindete,wählte) -> GraphDatenObjektKarte<*>
 
 public fun KartenFabrik.erzeugeKarte(
     graph: Graph, daten: GraphDatenKarte,
-    zustand: Zustand,
     veränderung: veränderung,
     verbindete: verbindete,
     wählte: wählte,
@@ -31,14 +30,7 @@ public fun KartenFabrik.erzeugeKarte(
     val klasse = daten.klasse ?: BasisObjektKarte.KARTEN_ART
     val konstruktor = this[klasse] ?: error("Keine Kartenklasse '$klasse'. Bekannte Klassen: ${keys.joinToString()}")
 
-    return konstruktor(
-        graph,
-        daten,
-        zustand,
-        veränderung,
-        verbindete,
-        wählte,
-    )
+    return konstruktor(graph, daten, veränderung, verbindete, wählte)
 }
 @Suppress("UNCHECKED_CAST")
 val BasisKartenFabrik: KartenFabrik = mapOf(

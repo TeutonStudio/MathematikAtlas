@@ -37,10 +37,9 @@ typealias AussageAuswerten = auswerten.AussageAuswertenDaten
 
 class auswerten(
     override val graph: Graph,
-    override val daten: definition.AussageDefinitionDaten,
+    override val daten: AussageAuswerten,
     override val besitzer: GraphDatenObjektKarte<*>,
-    override val layoutCoordinates: MutableState<LayoutCoordinates?>,
-) : GraphDatenObjektKnoten<definition.AussageDefinitionDaten> {
+) : GraphDatenObjektKnoten<AussageAuswerten> {
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
 //    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
     override val anschlüsse: List<GraphDatenObjektAnschluss<*>> = emptyList()
@@ -81,6 +80,7 @@ class auswerten(
             anschlussLabel[Kante.Links] = mapOf(0 to "Aussage")
         }
     }
+    override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
     private var anzeige by mutableStateOf("Nicht ausgewertet")
 
@@ -162,7 +162,9 @@ class auswerten(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        TODO("Not yet implemented")
+        Column() {
+            Text(definition.KNOTEN_ART)
+        }
     }
 
     @Composable
