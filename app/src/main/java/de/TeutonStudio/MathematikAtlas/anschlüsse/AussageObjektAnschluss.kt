@@ -29,7 +29,7 @@ open class AussageObjektAnschluss(
     override val besitzer: GraphDatenObjektKnoten<*>,
 ) : GraphDatenObjektAnschluss<AussageObjektAnschluss.AussageAnschlussDaten> {
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
-    override var dragPos = mutableStateOf<Offset>(Offset.Zero)
+    override var dragPos = mutableStateOf(Offset.Zero)
     override var dragZiel = mutableStateOf<GraphDatenObjektAnschluss<*>?>(null)
 
     open class AussageAnschlussDaten(
@@ -42,10 +42,7 @@ open class AussageObjektAnschluss(
             CacheDaten(AussageWert.UNENTSCHEIDBAR)
         override var klasse: AnschlussArt? = "" // TODO
         override fun baueCache(eingangCache: List<GraphDatenAnschluss.auswertbarerGDA.PullDaten<*>?>): GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> {
-            val ersterEingang = eingangCache
-                .firstNotNullOfOrNull { it as? CacheDaten }
-                ?.wert
-                ?: AussageWert.UNENTSCHEIDBAR
+            val ersterEingang = eingangCache.firstNotNullOfOrNull { it as? CacheDaten }?.wert ?: AussageWert.UNENTSCHEIDBAR
 
             return CacheDaten(ersterEingang)
         }
@@ -67,7 +64,10 @@ open class AussageObjektAnschluss(
             "pseudo",GraphDatenVerbindung.IDEhe(this,this)),
             derivedStateOf { pos },
             derivedStateOf { dragZiel.value?.pos ?: dragPos.value },
-        )
+        ).apply {
+            startKante = this@AussageObjektAnschluss.daten.kante
+            endeKante = startKante.gegenüber()
+        }
     }
     @Composable
     override fun BoxScope.Darstellung() {

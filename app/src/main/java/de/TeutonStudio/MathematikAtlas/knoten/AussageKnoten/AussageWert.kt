@@ -1,6 +1,8 @@
 package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
+import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.disjunktion
+import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren.konjunktion
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
@@ -55,24 +57,23 @@ private fun GraphDatenKarte.werteAussageAnschlussAus(
         ?: return AussageWert.UNENTSCHEIDBAR
 
     if (anschluss is GraphDatenAnschluss.gerichteteGDA && anschluss.richtung == Richtung.Eingang) {
-        val verbindung = verbindungen.firstOrNull {
-            (it.ids.knotenIdWeib == knotenId && it.ids.anschlussIdWeib == anschlussId) ||
-                    (it.ids.knotenIdMann == knotenId && it.ids.anschlussIdMann == anschlussId)
-        } ?: return AussageWert.UNENTSCHEIDBAR
-
-        val quellKnotenId: GraphDatenId
-        val quellAnschlussId: GraphDatenId
-        if (verbindung.ids.knotenIdWeib == knotenId && verbindung.ids.anschlussIdWeib == anschlussId) {
-            quellKnotenId = verbindung.ids.knotenIdMann
-            quellAnschlussId = verbindung.ids.anschlussIdMann
-        } else {
-            quellKnotenId = verbindung.ids.knotenIdWeib
-            quellAnschlussId = verbindung.ids.anschlussIdWeib
-        }
+        val quelle = verbindungen
+            .asSequence()
+            .mapNotNull { verbindung ->
+                verbindung.andereSeiteVon(knotenId, anschlussId)
+            }
+            .firstOrNull { (quellKnotenId, quellAnschlussId) ->
+                val quellKnoten = this.knoten.find { it.id == quellKnotenId }
+                val quellAnschluss = quellKnoten
+                    ?.anschlüsse
+                    ?.find { it.id == quellAnschlussId }
+                quellAnschluss is GraphDatenAnschluss.gerichteteGDA &&
+                        quellAnschluss.richtung == Richtung.Ausgang
+            } ?: return AussageWert.UNENTSCHEIDBAR
 
         return werteAussageAnschlussAus(
-            quellKnotenId,
-            quellAnschlussId,
+            quelle.first,
+            quelle.second,
             besucht + schlüssel,
         )
     }
@@ -100,23 +101,35 @@ private fun GraphDatenKarte.werteAussageKnotenAus(
 
             val links = werteAussageAnschlussAus(knoten.id, eingänge[0].id, besucht)
             val rechts = werteAussageAnschlussAus(knoten.id, eingänge[1].id, besucht)
+            val linkeAussage = links.zuAussage()
+            val rechteAussage = rechts.zuAussage()
 
-            when (knoten.aussagenVerknüpfung()) {
+            if (linkeAussage == null || rechteAussage == null) {
+                return AussageWert.UNENTSCHEIDBAR
+            }
+
+            AussageWert.ausAussage(when (knoten.aussagenVerknüpfung()) {
                 operator.AussagenVerknüpfung.UND ->
-                    when {
-                        links == AussageWert.LUEGE || rechts == AussageWert.LUEGE -> AussageWert.LUEGE
-                        links == AussageWert.WAHR && rechts == AussageWert.WAHR -> AussageWert.WAHR
-                        else -> AussageWert.UNENTSCHEIDBAR
-                    }
+                    konjunktion(linkeAussage, rechteAussage).auswertung()
 
                 operator.AussagenVerknüpfung.ODER ->
-                    when {
-                        links == AussageWert.WAHR || rechts == AussageWert.WAHR -> AussageWert.WAHR
-                        links == AussageWert.LUEGE && rechts == AussageWert.LUEGE -> AussageWert.LUEGE
-                        else -> AussageWert.UNENTSCHEIDBAR
-                    }
-            }
+                    disjunktion(linkeAussage, rechteAussage).auswertung()
+            })
         }
 
         else -> AussageWert.UNENTSCHEIDBAR
+    }
+
+private fun de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung.andereSeiteVon(
+    knotenId: GraphDatenId,
+    anschlussId: GraphDatenId,
+): Pair<GraphDatenId, GraphDatenId>? =
+    when {
+        ids.knotenIdWeib == knotenId && ids.anschlussIdWeib == anschlussId ->
+            ids.knotenIdMann to ids.anschlussIdMann
+
+        ids.knotenIdMann == knotenId && ids.anschlussIdMann == anschlussId ->
+            ids.knotenIdWeib to ids.anschlussIdWeib
+
+        else -> null
     }

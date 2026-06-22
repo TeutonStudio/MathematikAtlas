@@ -38,7 +38,10 @@ open class BasisObjektAnschluss(
             ),
         ),
         derivedStateOf { pos },
-        derivedStateOf { dragZiel.value?.pos ?: dragPos.value } )
+        derivedStateOf { dragZiel.value?.pos ?: dragPos.value } ).apply {
+            startKante = this@BasisObjektAnschluss.daten.kante
+            endeKante = startKante.gegenüber()
+        }
     }
     /*    override fun beiKlick(klickPos: Offset) {
             TODO("Not yet implemented")

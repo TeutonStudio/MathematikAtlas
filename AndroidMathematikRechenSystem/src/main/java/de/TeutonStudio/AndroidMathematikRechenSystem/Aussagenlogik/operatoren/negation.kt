@@ -7,12 +7,7 @@ class negation(
     val argument: Aussage
 ): Prädikat {
     override fun auswertung(): Aussage {
-        if (argument !is Prädikat) {
-            if (argument.istWahr()) return Aussage.LÜGE
-            if (argument.istLüge()) return Aussage.WAHR
-        }
-
-        TODO("Not yet implemented")
+        return if (argument.istWahr()) Aussage.LÜGE else Aussage.WAHR
     }
 
     override fun zuLatex(): String {

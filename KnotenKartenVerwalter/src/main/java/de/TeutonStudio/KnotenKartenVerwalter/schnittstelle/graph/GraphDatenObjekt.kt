@@ -76,13 +76,10 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
             Kante.entries.forEach { k ->
                 val anschlüsseAnKante = anschlüsse.filter { it.daten.kante == k }
+                val baseModi = Modifier.offset(x = if (k == Kante.Links) (-5).dp else 5.dp).zIndex(2f)
                 if (anschlüsseAnKante.isNotEmpty() && k.istVertikal) {
                     Column(
-                        Modifier
-                            .height(knotenTiefe)
-                            .align(k.alignment())
-                            .offset(x = if (k == Kante.Links) (-5).dp else 5.dp)
-                            .zIndex(2f),
+                        baseModi.height(knotenTiefe).align(k.alignment()),
                         Arrangement.SpaceEvenly,
                         Alignment.CenterHorizontally,
                     ) {
@@ -93,11 +90,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
                 }
                 if (anschlüsseAnKante.isNotEmpty() && k.istHorizontal) {
                     Row(
-                        Modifier
-                            .width(knotenBreite)
-                            .align(k.alignment())
-                            .offset(y = if (k == Kante.Oben) (-5).dp else 5.dp)
-                            .zIndex(2f),
+                        baseModi.width(knotenBreite).align(k.alignment()),
                         Arrangement.SpaceEvenly,
                         Alignment.CenterVertically,
                     ) {

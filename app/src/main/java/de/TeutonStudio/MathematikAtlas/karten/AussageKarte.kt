@@ -11,9 +11,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Auswahl
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
@@ -54,6 +56,14 @@ class AussageKarte(
         weib: GraphDatenObjektAnschluss<*>
     ) {
         val ids = GraphDatenVerbindung.IDEhe(mann, weib)
+        listOf(mann, weib)
+            .filter { (it.daten as? GraphDatenAnschluss.gerichteteGDA)?.richtung == Richtung.Eingang }
+            .forEach { eingang ->
+                daten.verbindungen.removeAll { verbindung ->
+                    verbindung.ids.enthält(eingang.daten)
+                }
+            }
+
         daten.verbindungen.add(
             BasisDatenVerbindung(
                 id = "${ids.knotenIdMann}-${ids.anschlussIdMann}-${ids.knotenIdWeib}-${ids.anschlussIdWeib}",

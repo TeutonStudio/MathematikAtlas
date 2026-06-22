@@ -19,13 +19,7 @@ class konjunktion(vararg argumente: Aussage): Prädikat {
 
     override fun auswertung(): Aussage {
         if (aussagen.isEmpty()) return Aussage.WAHR
-        if (aussagen.filterIsInstance<Prädikat>().isEmpty()) {
-            aussagen.forEach {
-                if (it.istLüge()) return Aussage.LÜGE
-            }; return Aussage.WAHR
-        }
-
-        TODO("Not yet implemented")
+        return if (aussagen.any { it.istLüge() }) Aussage.LÜGE else Aussage.WAHR
     }
 
     public companion object: LaTeXOperator {

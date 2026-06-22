@@ -8,15 +8,11 @@ class implikation(
     val behauptung: Aussage,
 ): Prädikat {
     override fun auswertung(): Aussage {
-        if (bedingung !is Prädikat) {
-            if (bedingung.istLüge()) return Aussage.WAHR
-            if (behauptung !is Prädikat) {
-                if (bedingung.istWahr() && behauptung.istWahr()) return Aussage.WAHR
-                if (bedingung.istWahr() && behauptung.istLüge()) return Aussage.LÜGE
-            }
+        return if (bedingung.istLüge() || behauptung.istWahr()) {
+            Aussage.WAHR
+        } else {
+            Aussage.LÜGE
         }
-
-        TODO("Not yet implemented")
     }
 
     override fun zuLatex(): String {
