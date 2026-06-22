@@ -106,26 +106,10 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         dragPos.value = pos
 
         karte.pseudoVerbindung.value = erhaltePseudoVerbindung()
-/*            BezierVerbindung(
-            graph, VerbindungDaten(
-                "pseudo",
-                IDEhe(
-                    besitzer.daten.id,
-                    besitzer.daten.id,
-                    daten.id,
-                    daten.id,
-                ),
-            ),
-            derivedStateOf { pos },
-            derivedStateOf { dragZiel?.pos ?: dragPos }
-        ).apply {
-            startKante = this@Anschluss.daten.kante
-            endeKante = startKante.gegenüber()
-        }*/
     }
     public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
         change.consume()
-        dragPos.value += dragAmount / karte.zustand.erhalteZoom().coerceAtLeast(0.0001f)
+        dragPos.value = change.position + pos
         if (karte.erhalteAnschlussNachPos(dragPos.value)?.apply {
                 val bedingung = second.getDistanceSquared() < 500f / karte.zustand.erhalteZoom() && daten.erlaubeVerbindung(first.daten)
                 if (bedingung) {

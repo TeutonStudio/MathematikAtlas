@@ -151,9 +151,7 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             }
         }
 
-        zielKnoten
-            .mapNotNull { it.daten as? GraphDaten.bewegbareGD }
-            .forEach { it.verschiebeKnoten(panDelta / zustand.erhalteZoom().coerceAtLeast(0.0001f)) }
+        zielKnoten.mapNotNull { it.daten as? GraphDaten.bewegbareGD }.forEach { it.verschiebeKnoten(panDelta) }
     }
 
     class GraphDatenObjektKarteKontext {

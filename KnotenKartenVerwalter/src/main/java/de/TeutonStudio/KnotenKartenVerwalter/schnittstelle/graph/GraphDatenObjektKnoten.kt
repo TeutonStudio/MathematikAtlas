@@ -37,13 +37,14 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
 
 
     public override fun beiKlick(klickPos: Offset) {
-//        besitzer.wähle(EinzelAuswahl(this))
-//        besitzer.keinKontext()
+        besitzer.auswahl.wähleKnoten(daten.id)
+        besitzer.ctx.objektDatenId = null
     }
 
     public override fun beiHalten(klickPos: Offset) {
-//        besitzer.ctx = daten.id to klickPos.zuBildAusKnoten()
-//        besitzer.wähle(EinzelAuswahl(this))
+        besitzer.auswahl.wähleKnoten(daten.id)
+        besitzer.ctx.pos = klickPos.round()
+        besitzer.ctx.objektDatenId = daten.id
     }
 
     public override fun beiTransform(
@@ -52,7 +53,8 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         panDelta: Offset,
         rotationChange: Float
     ) {
-        besitzer.verschiebeKnoten(daten.id, panDelta)
+        besitzer.zustand.transformiere(panDelta,zoomDelta)
+//        besitzer.verschiebeKnoten(daten.id, panDelta)
 //        besitzer.wähle(EinzelAuswahl(this))
 //        besitzer.keinKontext()
     }
