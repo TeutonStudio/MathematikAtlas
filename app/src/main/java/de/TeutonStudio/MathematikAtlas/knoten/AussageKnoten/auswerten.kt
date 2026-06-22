@@ -9,15 +9,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
@@ -25,12 +25,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss.AussageAnschlussDaten
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektEingang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
 
 typealias AussageAuswerten = auswerten.AussageAuswertenDaten
@@ -41,8 +41,6 @@ class auswerten(
     override val besitzer: GraphDatenObjektKarte<*>,
 ) : GraphDatenObjektKnoten<AussageAuswerten> {
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
-//    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
-    override val anschlüsse: List<GraphDatenObjektAnschluss<*>> = emptyList()
     override fun definiereVerbindung() {
         TODO("Not yet implemented")
     }
@@ -54,6 +52,7 @@ class auswerten(
         override var klasse: KnotenArt? = auswerten.KNOTEN_ART
 
         override var beweglich = true
+        override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
         override val anschlussIdx = mutableStateMapOf<String,Int>()
         override val data = mutableMapOf<String,Any>()
         override var position = GraphPosition.Zero
@@ -72,17 +71,25 @@ class auswerten(
             kante: Kante,
             label: String,
         ): AussageAnschlussDaten {
-            return AussageAnschlussDaten(id+"idx:${idx}",kante, Richtung.Eingang)
+            return AussageAnschlussDaten("$id-eingang-$idx", kante, Richtung.Eingang)
+                .apply {
+                    this.label = label
+                    klasse = AussageObjektEingang.ANSCHLUSS_ART
+                }
         }
 
 
         init {
             anschlussLabel[Kante.Links] = mapOf(0 to "Aussage")
+
+            val eingang = erhalteAnschluss(0, Kante.Links, "Aussage")
+            anschlüsse.add(eingang)
+            anschlussIdx[eingang.id] = 0
         }
     }
     override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
-    private var anzeige by mutableStateOf("Nicht ausgewertet")
+    private var anzeige by mutableStateOf(AussageWert.UNENTSCHEIDBAR.anzeige)
 
     /**
      * Dieser Knoten besitzt keinen Ausgang.
@@ -109,24 +116,9 @@ class auswerten(
             return
         }
 
-/*        anzeige = when (
-            val ergebnis = pullEingang(eingang.id)
-        ) {
-            is PullErgebnis.Fehler ->
-                "Fehler: ${ergebnis.meldung}"
-
-            is PullErgebnis.Wert -> {
-                try {
-                    when {
-                        ergebnis.wert.istWahr() -> "Wahr"
-                        ergebnis.wert.istLüge() -> "Lüge"
-                        else -> "Unentscheidbar"
-                    }
-                } catch (fehler: Throwable) {
-                    "Auswertung fehlgeschlagen: " + (fehler.message ?: fehler::class.simpleName)
-                }
-            }
-        }*/
+        anzeige = besitzer.daten
+            .werteAussageAnschlussAus(daten.id, eingang.id)
+            .anzeige
     }
 
     @Composable
@@ -134,16 +126,16 @@ class auswerten(
         Column {
             Text(anzeige)
 
-/*            Button(
+            Button(
                 onClick = ::werteAus,
             ) {
                 Text("Auswerten")
-            }*/
+            }
         }
     }
 
     @Composable
-    fun Inspektor() {
+    fun InspektorInhalt() {
         Card(Modifier.padding(25.dp)) {
             Column(Modifier.padding(15.dp)) {
                 Text("Inpektor: ${daten.name}")
@@ -162,19 +154,22 @@ class auswerten(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Column() {
-            Text(definition.KNOTEN_ART)
+        Card {
+            Column {
+                Text(daten.name)
+                Textzeile()
+            }
         }
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         TODO("Not yet implemented")
     }
 
     @Composable
     override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
+        InspektorInhalt()
     }
 
     companion object {

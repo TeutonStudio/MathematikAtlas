@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
@@ -33,31 +34,13 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenFa
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.VerbindungFabrik
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageKnotenFabrik
 
-class AussageKarteDaten(
-    override val id: String,
-    override val name: String,
-    initialKnoten: List<GraphDatenKnoten> = emptyList(),
-    initialVerbindungen: List<GraphDatenVerbindung> = emptyList(),
-): GraphDatenKarte{
-    override val knoten = mutableStateListOf<GraphDatenKnoten>()
-    override val verbindungen = mutableStateListOf<GraphDatenVerbindung>()
-    init {
-        knoten.addAll(initialKnoten)
-        verbindungen.addAll(initialVerbindungen)
-    }
-
-    override var breite = 0f
-    override var tiefe = 0f
-    override var klasse: KartenArt? = AussageKarte.KARTEN_ART
-}
-
 class AussageKarte(
     override val graph: Graph,
-    override val daten: AussageKarteDaten,
+    override val daten: AussageKarte.AussageKarteDaten,
     veränderung: veränderung,
     verbindete: verbindete,
     wählte: wählte,
-): GraphDatenObjektKarte<AussageKarteDaten> {
+): GraphDatenObjektKarte<AussageKarte.AussageKarteDaten> {
     override val knotenFabrik: KnotenFabrik = BasisKnotenFabrik + AussageKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
@@ -66,26 +49,47 @@ class AussageKarte(
     override val zustand: Zustand = Zustand()
     override val pseudoVerbindung = mutableStateOf<GraphDatenObjektVerbindung<*>?>(null)
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
-    override fun beiKlick(klickPos: Offset) {
-        auswahl.leereAuswahl()
+
+    class AussageKarteDaten(
+        override val id: String,
+        override val name: String,
+        initialKnoten: List<GraphDatenKnoten> = emptyList(),
+        initialVerbindungen: List<GraphDatenVerbindung> = emptyList(),
+    ): GraphDatenKarte{
+        override val knoten = mutableStateListOf<GraphDatenKnoten>()
+        override val verbindungen = mutableStateListOf<GraphDatenVerbindung>()
+        init {
+            knoten.addAll(initialKnoten)
+            verbindungen.addAll(initialVerbindungen)
+        }
+
+        override var breite = 0f
+        override var tiefe = 0f
+        override var klasse: KartenArt? = AussageKarte.KARTEN_ART
     }
 
-    override fun beiHalten(klickPos: Offset) {
+
+/*    override fun beiKlick(klickPos: Offset) {
+        auswahl.leereAuswahl()
+    }*/
+
+/*    override fun beiHalten(klickPos: Offset) {
 //        super.beiHalten(klickPos)
 //        TODO("Not yet implemented")
-    }
+    }*/
 
-    override fun beiTransform(
+/*    override fun beiTransform(
         centroid: Offset,
         zoomDelta: Float,
         panDelta: Offset,
         rotationChange: Float
     ) {
+        zustand.verschiebe(panDelta)
 //        TODO("Not yet implemented")
-    }
+    }*/
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         Column() {
             Text("KontextFenster der AussageKarte")
         }

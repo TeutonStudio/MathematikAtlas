@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Card
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,10 +14,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
@@ -31,6 +31,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAusgang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
 import kotlin.collections.set
 
@@ -61,7 +63,19 @@ class definition(
             kante: Kante,
             label: String
         ): GraphDatenAnschluss {
-            TODO("Not yet implemented")
+            return AussageObjektAusgang.AussageAusgang(
+                id = "$id-ausgang-$idx",
+                kante = kante,
+                richtung = Richtung.Ausgang,
+            ).apply {
+                this.label = label
+                klasse = AussageObjektAusgang.ANSCHLUSS_ART
+                cache = AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten(
+                    AussageWert.ausBoolean(
+                        data[definition.WERT_SCHLÜSSEL] as? Boolean ?: true
+                    )
+                )
+            }
         }
 
         /*    fun anschlussKorrektur(a: AusgangDaten) {
@@ -71,8 +85,11 @@ class definition(
 
         init {
             anschlussLabel[Kante.Rechts] = mapOf(0 to "Aussage")
-
             data[definition.WERT_SCHLÜSSEL] = initialWahr
+
+            val ausgang = erhalteAnschluss(0, Kante.Rechts, "Aussage")
+            anschlüsse.add(ausgang)
+            anschlussIdx[ausgang.id] = 0
         }
     }
 
@@ -80,19 +97,25 @@ class definition(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Column() {
-            Text(KNOTEN_ART)
+        Card {
+            Column {
+                Text(daten.name)
+                Textzeile()
+            }
         }
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         TODO("Not yet implemented")
     }
 
     @Composable
     override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
+        Column {
+            Text(daten.name)
+            Textzeile()
+        }
     }
 
     override val anschlussFabrik: AnschlussFabrik
@@ -138,9 +161,14 @@ class definition(
                 onCheckedChange = { neuerWert ->
                     istWahr = neuerWert
                     daten.data[WERT_SCHLÜSSEL] = neuerWert
-
-                    // Der Cache ist nur Anzeigezustand.
-//                    cacheAnschlüsse.clear()
+                    daten.anschlüsse
+                        .filterIsInstance<GraphDatenAnschluss.auswertbarerGDA>()
+                        .filter { it.richtung == Richtung.Ausgang }
+                        .forEach {
+                            it.cache = AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten(
+                                AussageWert.ausBoolean(neuerWert)
+                            )
+                        }
                 },
             )
         }

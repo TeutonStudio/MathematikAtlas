@@ -4,6 +4,7 @@ import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -17,7 +18,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
@@ -54,7 +58,11 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
 
 
     @Composable public override fun BoxScope.Darstellung() {
-        Box(Modifier.fillMaxSize().graphicsLayer {
+        Box(Modifier.fillMaxSize().onSizeChanged {
+            zustand.setzeDimension(it)
+            daten.breite = it.width.toFloat()
+            daten.tiefe = it.height.toFloat()
+        }.graphicsLayer {
             translationX = zustand.erhaltePos().x
             translationY = zustand.erhaltePos().y
             scaleX = zustand.erhalteZoom()
@@ -67,6 +75,24 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         }
         graph.inhalt.filterIsInstance<GraphDatenObjekt<*>>().forEach { if (it.öffneKontext.value) it.ComposableKontext() }
         if (auswahl.istEinzel) { Box(Modifier.align(Alignment.CenterEnd)) { erhalteAuswahl().first().ComposableInspektor() } }
+    }
+
+    override fun beiKlick(klickPos: Offset) {
+        auswahl.leereAuswahl()
+    }
+
+    override fun beiHalten(klickPos: Offset) {
+        ctx.pos = klickPos.round()
+        ctx.objektDatenId = daten.id
+    }
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {
+        zustand.transformiere(panDelta,zoomDelta)
     }
 
     public fun sichtbarerWeltBereich(): Rect? {
@@ -106,14 +132,22 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     public fun erhalteAnschlussAuswahl() = anschlüsse.filter { it.daten.id in auswahl.anschlussIds }
 
     fun verschiebeKnoten(id: String, panDelta: Offset) {
-        val knoten = knoten.filter { it.daten.id in auswahl.knotenIds }.filterIsInstance<GraphDaten.bewegbareGD>()
-        if (knoten.isEmpty()) TODO("${id} ist kein [GraphDaten.bewegbareGD]")
-        knoten.first().verschiebeKnoten(panDelta)
+        val zielKnoten = knoten.filter {
+            if (id in auswahl.knotenIds) {
+                it.daten.id in auswahl.knotenIds
+            } else {
+                it.daten.id == id
+            }
+        }
+
+        zielKnoten
+            .mapNotNull { it.daten as? GraphDaten.bewegbareGD }
+            .forEach { it.verschiebeKnoten(panDelta) }
     }
 
     class GraphDatenObjektKarteKontext {
-        val objektDatenId = null as GraphDatenId?
-        val pos = IntSize.Zero
+        var objektDatenId = null as GraphDatenId?
+        var pos = IntOffset.Zero
 
     }
     class GraphDatenObjektKarteZustand {
@@ -126,6 +160,7 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         public fun erhalteZoom() = zoom.floatValue
         public fun erhalteArt() = einstellung.value.first
         public fun erhalteTesselation() = einstellung.value.second
+        public fun setzeDimension(neueDimension: IntSize) { dimension.value = neueDimension }
 
         public fun verschiebe(delta: Offset) { pos.value += delta }
         public fun zoome(delta: Float) { zoom.floatValue = (zoom.floatValue * delta).coerceIn(MIN_ZOOM,MAX_ZOOM) }
@@ -147,9 +182,7 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             public const val MAX_ZOOM = 5f
         }
     }
-    data class GraphDatenObjektKarteAuswahl(
-        private val auswahl: SnapshotStateMap<String, List<String>> = mutableStateMapOf()
-    ) {
+    data class GraphDatenObjektKarteAuswahl( private val auswahl: SnapshotStateMap<String, List<String>> = mutableStateMapOf()) {
         val knotenIds get() = auswahl.getOrElse("knoten",{ emptyList() })
         val verbindungIds get() = auswahl.getOrElse("verbindung",{ emptyList() })
         val anschlussIds get() = auswahl.getOrElse("anschluss",{ emptyList() })

@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Auswahl
@@ -46,7 +47,7 @@ class BasisObjektKarte(
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         TODO("Not yet implemented")
     }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
@@ -26,7 +27,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 //    public fun registriere() = also { graph.inhalt.add(it) }
 
     public val layoutCoordinates: MutableState<LayoutCoordinates?>
-    public val objektModifier @Composable get() = Modifier.vorher().modiInputEvent()
+    public val objektModifier @Composable get() = Modifier.modiInputEvent()
 
     public open fun beiKlick(klickPos: Offset)
     public open fun beiHalten(klickPos: Offset)
@@ -41,10 +42,17 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
 
     @Composable public open fun BoxScope.Darstellung()
-    @Composable public open fun BoxScope.KontextFenster(pos: IntSize = graph.karte.ctx.pos)
+    @Composable public open fun BoxScope.KontextFenster(pos: IntOffset = graph.karte.ctx.pos)
     @Composable public open fun BoxScope.Inspektor()
 
-    @Composable public fun ComposableStandard() = Box(objektModifier) { Darstellung() }
+    @Composable public fun ComposableStandard() = Box(objektModifier) {
+        Darstellung()
+        if (this@GraphDatenObjekt is GraphDatenObjektKnoten<*>) {
+            anschlüsse.forEach { anschluss ->
+                Box(anschluss.objektModifier)
+            }
+        }
+    }
     @Composable public fun ComposableKontext() = Box() { KontextFenster() }
     @Composable public fun ComposableInspektor() = Box() { Inspektor() }
 
@@ -63,7 +71,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public fun erstelleVerbindung(von: GraphDatenObjektAnschluss<*>, zu: GraphDatenObjektAnschluss<*>) = Unit
 
     public companion object {
-        @Composable public fun Iterable<GraphDatenObjekt<*>>.Composable(/*modifier: Modifier = Modifier*/) = forEach { Box(it.objektModifier) { it.ComposableStandard() } }
+        @Composable public fun Iterable<GraphDatenObjekt<*>>.Composable(/*modifier: Modifier = Modifier*/) = forEach { it.ComposableStandard() }
 
     }
 }

@@ -2,6 +2,7 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -12,10 +13,14 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
+import kotlin.math.roundToInt
 
 interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D> {
     public val besitzer: GraphDatenObjektKnoten<*>
@@ -26,6 +31,22 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     public val istEingang get() = false
     public val istAusgang get() = false
 
+    override fun beiKlick(klickPos: Offset) {
+        karte.auswahl.wähleAnschluss(daten.id)
+    }
+
+    override fun beiHalten(klickPos: Offset) {
+        karte.ctx.pos = klickPos.round()
+        karte.ctx.objektDatenId = daten.id
+    }
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {}
+
     private fun erhaltePos(): GraphPosition? = layoutCoordinates.value?.let { anschlussCoordinates ->
         besitzer.layoutCoordinates.value?.localPositionOf(
             anschlussCoordinates,
@@ -33,7 +54,32 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         )?.let { lokalePosition -> besitzer.daten.position + lokalePosition }
     }
 
-    @Composable public override fun Modifier.vorher(): Modifier = size(5.dp).background(Color.Black, CircleShape)
+    @Composable public override fun Modifier.vorher(): Modifier =
+        offset {
+            val durchmesser = 10
+            val radius = durchmesser / 2
+            val breite = besitzer.daten.breite.roundToInt()
+            val tiefe = besitzer.daten.tiefe.roundToInt()
+            val anteil = anschlussAnteil()
+
+            when (daten.kante) {
+                Kante.Links -> IntOffset(-radius, (tiefe * anteil).roundToInt() - radius)
+                Kante.Rechts -> IntOffset(breite - radius, (tiefe * anteil).roundToInt() - radius)
+                Kante.Oben -> IntOffset((breite * anteil).roundToInt() - radius, -radius)
+                Kante.Unten -> IntOffset((breite * anteil).roundToInt() - radius, tiefe - radius)
+            }
+        }.size(10.dp).background(Color.Black, CircleShape)
+
+    private fun anschlussAnteil(): Float {
+        val gleicheKante = besitzer.daten.anschlüsse
+            .filter { it.kante == daten.kante }
+            .sortedBy { besitzer.daten.anschlussIdx[it.id] ?: Int.MAX_VALUE }
+        val index = gleicheKante.indexOfFirst { it.id == daten.id }
+            .takeIf { it >= 0 }
+            ?: 0
+
+        return (index + 1).toFloat() / (gleicheKante.size + 1).coerceAtLeast(1).toFloat()
+    }
 
     /** Kombiniert Tap- und Drag-Gesten für das Verbindungsziehen. */
     @Composable public override fun Modifier.modiInputEvent(): Modifier = vorher().tapping().position().pointerInput(daten.id) {

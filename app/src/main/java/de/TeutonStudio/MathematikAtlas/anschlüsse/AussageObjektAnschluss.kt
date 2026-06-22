@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
@@ -16,6 +17,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussArt
+import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageWert
 
 open class AussageObjektAnschluss(
     override val graph: Graph,
@@ -30,20 +32,26 @@ open class AussageObjektAnschluss(
         override val richtung: Richtung,
     ): GraphDatenAnschluss, GraphDatenAnschluss.gerichteteGDA, GraphDatenAnschluss.auswertbarerGDA {
         override var label = ""
-        override var cache: GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> = CacheDaten()
+        override var cache: GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> =
+            CacheDaten(AussageWert.UNENTSCHEIDBAR)
         override var klasse: AnschlussArt? = "" // TODO
         override fun baueCache(eingangCache: List<GraphDatenAnschluss.auswertbarerGDA.PullDaten<*>?>): GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> {
-            return CacheDaten()
+            val ersterEingang = eingangCache
+                .firstNotNullOfOrNull { it as? CacheDaten }
+                ?.wert
+                ?: AussageWert.UNENTSCHEIDBAR
+
+            return CacheDaten(ersterEingang)
         }
 
-        class CacheDaten(): GraphDatenAnschluss.auswertbarerGDA.PullDaten<Any>("") {
-            override fun ausSpeicher(wert: String): Any {
-                return this
-            }
+        class CacheDaten(
+            val wert: AussageWert = AussageWert.UNENTSCHEIDBAR,
+        ): GraphDatenAnschluss.auswertbarerGDA.PullDaten<AussageWert>(wert.name) {
+            override fun ausSpeicher(wert: String): AussageWert =
+                AussageWert.entries.firstOrNull { it.name == wert }
+                    ?: AussageWert.UNENTSCHEIDBAR
 
-            override fun zuSpeicher(wert: Any): String {
-                return ""
-            }
+            override fun zuSpeicher(wert: AussageWert): String = wert.name
 
         }
 
@@ -94,7 +102,7 @@ open class AussageObjektAnschluss(
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         TODO("Not yet implemented")
     }
 

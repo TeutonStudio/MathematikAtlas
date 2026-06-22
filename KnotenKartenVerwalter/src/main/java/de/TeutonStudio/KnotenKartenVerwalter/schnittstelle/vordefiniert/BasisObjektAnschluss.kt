@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
@@ -19,22 +20,22 @@ open class BasisObjektAnschluss(
     override val besitzer: GraphDatenObjektKnoten<*>,
 ): GraphDatenObjektAnschluss<GraphDatenAnschluss> {
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
-    override fun beiKlick(klickPos: Offset) {
+/*    override fun beiKlick(klickPos: Offset) {
         TODO("Not yet implemented")
-    }
+    }*/
 
-    override fun beiHalten(klickPos: Offset) {
+/*    override fun beiHalten(klickPos: Offset) {
         TODO("Not yet implemented")
-    }
+    }*/
 
-    override fun beiTransform(
+/*    override fun beiTransform(
         centroid: Offset,
         zoomDelta: Float,
         panDelta: Offset,
         rotationChange: Float
     ) {
         TODO("Not yet implemented")
-    }
+    }*/
 
     @Composable
     override fun BoxScope.Darstellung() {
@@ -42,7 +43,7 @@ open class BasisObjektAnschluss(
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         TODO("Not yet implemented")
     }
 

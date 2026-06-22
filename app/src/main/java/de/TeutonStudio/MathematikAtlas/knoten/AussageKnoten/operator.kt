@@ -2,7 +2,10 @@ package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,7 +14,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
@@ -41,19 +46,25 @@ class operator(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Column() {
-            Text(definition.KNOTEN_ART)
+        Card {
+            Column {
+                Text(daten.name)
+                Textzeile()
+            }
         }
     }
 
     @Composable
-    override fun BoxScope.KontextFenster(pos: IntSize) {
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
         TODO("Not yet implemented")
     }
 
     @Composable
     override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
+        Column {
+            Text(daten.name)
+            Textzeile()
+        }
     }
 
     class AussageOperatorDatenBasis(
@@ -79,23 +90,42 @@ class operator(
 
 
 //        private fun eingangIdx() = anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }.maxBy { anschlussIdx[it.id] ?: 0 }.id.split("-").last().toInt()
-        private fun eingangId(idx: Int) = listOf(id,"eingang",idx + 1).joinToString("-")
+        private fun eingangId(idx: Int) = listOf(id,"eingang",idx).joinToString("-")
         public fun eingang(idx: Int) = AussageAnschlussDaten(
             eingangId(idx),
             Kante.Links,
             Richtung.Eingang
-        )
+        ).apply {
+            label = "Aussage ${idx + 1}"
+            klasse = AussageObjektEingang.ANSCHLUSS_ART
+        }
 
         init {
+            val ausgang = AussageAnschlussDaten("$id-ausgang-0", Kante.Rechts, Richtung.Ausgang)
+                .apply {
+                    label = "Ergebnis"
+                    klasse = AussageObjektAusgang.ANSCHLUSS_ART
+                }
             val anschlussListe = listOf(
+                eingang(0).apply { anschlussIdx[this.id] = 0 },
                 eingang(1).apply { anschlussIdx[this.id] = 1 },
-                eingang(2).apply { anschlussIdx[this.id] = 2 },
-                AussageAnschlussDaten("$id-ausgang-0",Kante.Rechts, Richtung.Ausgang),
-            ).apply { forEach { it.apply { klasse = if (richtung == Richtung.Eingang) AussageObjektEingang.ANSCHLUSS_ART else AussageObjektAusgang.ANSCHLUSS_ART } } }
+                ausgang,
+            )
 
             anschlüsse.addAll(anschlussListe)
+            anschlussIdx[ausgang.id] = 0
             data[operator.OPERATOR_SCHLÜSSEL] = operator.AussagenVerknüpfung.UND.name
         }
+
+        fun aussagenVerknüpfung(): AussagenVerknüpfung =
+            data[operator.OPERATOR_SCHLÜSSEL]
+                ?.toString()
+                ?.let { gespeicherterWert ->
+                    AussagenVerknüpfung.entries.firstOrNull {
+                        it.name == gespeicherterWert
+                    }
+                }
+                ?: AussagenVerknüpfung.UND
     }
 
     enum class AussagenVerknüpfung(
@@ -194,14 +224,15 @@ class operator(
 
     @Composable
     public fun Textzeile() {
-        Button(
-            onClick = {
-                verknüpfung = verknüpfung.nächste()
-                daten.data[OPERATOR_SCHLÜSSEL] = verknüpfung.name
-//                cacheAnschlüsse.clear()
-            },
-        ) {
-            Text(verknüpfung.anzeige)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = {
+                    verknüpfung = verknüpfung.nächste()
+                    daten.data[OPERATOR_SCHLÜSSEL] = verknüpfung.name
+                },
+            ) {
+                Text(verknüpfung.anzeige)
+            }
         }
     }
 

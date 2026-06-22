@@ -7,7 +7,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.vordefiniert.BasisDatenVerbindung
-import de.TeutonStudio.MathematikAtlas.karten.AussageKarteDaten
+import de.TeutonStudio.MathematikAtlas.karten.AussageKarte.AussageKarteDaten
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.operator
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.operator.AussageOperatorDatenBasis
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageDefinition

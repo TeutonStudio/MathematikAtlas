@@ -31,6 +31,17 @@ interface GraphDatenObjektVerbindung<D: GraphDatenVerbindung>: GraphDatenObjekt<
             style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
         ) }
 
+    override fun beiKlick(klickPos: Offset) {}
+
+    override fun beiHalten(klickPos: Offset) {}
+
+    override fun beiTransform(
+        centroid: Offset,
+        zoomDelta: Float,
+        panDelta: Offset,
+        rotationChange: Float
+    ) {}
+
     public fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
         val puffer = 80f; RectF(
             p.minOf { it.x } - puffer,

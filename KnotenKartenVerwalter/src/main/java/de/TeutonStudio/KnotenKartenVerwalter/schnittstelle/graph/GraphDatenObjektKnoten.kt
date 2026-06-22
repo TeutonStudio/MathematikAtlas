@@ -2,11 +2,10 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import android.graphics.RectF
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
@@ -26,9 +25,15 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     public fun definiereVerbindung()
 
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
-    @Composable public override fun Modifier.vorher(): Modifier = offset { daten.position.round() }.apply {
-        if (daten is GraphDaten.orthogoneGD) size(with(LocalDensity.current) { daten.dimension.size.toDpSize() })
-    }
+    @Composable public override fun Modifier.vorher(): Modifier =
+        offset { daten.position.round() }
+
+    @Composable public override fun Modifier.position(): Modifier =
+        onGloballyPositioned {
+            layoutCoordinates.value = it
+            daten.breite = it.size.width.toFloat()
+            daten.tiefe = it.size.height.toFloat()
+        }
 
 
     public override fun beiKlick(klickPos: Offset) {
@@ -47,7 +52,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         panDelta: Offset,
         rotationChange: Float
     ) {
-        if (daten is GraphDaten.bewegbareGD) besitzer.verschiebeKnoten(daten.id,panDelta)
+        besitzer.verschiebeKnoten(daten.id, panDelta)
 //        besitzer.wähle(EinzelAuswahl(this))
 //        besitzer.keinKontext()
     }
