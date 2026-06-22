@@ -32,15 +32,8 @@ interface GraphDatenObjektVerbindung<D: GraphDatenVerbindung>: GraphDatenObjekt<
         ) }
 
     override fun beiKlick(klickPos: Offset) {}
-
     override fun beiHalten(klickPos: Offset) {}
-
-    override fun beiTransform(
-        centroid: Offset,
-        zoomDelta: Float,
-        panDelta: Offset,
-        rotationChange: Float
-    ) {}
+    override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {}
 
     public fun istImViewport(viewport: RectF = graph.karte.zustand.erhalteViewportRect()): Boolean = listOf(start.value, ende.value).let { p ->
         val puffer = 80f; RectF(

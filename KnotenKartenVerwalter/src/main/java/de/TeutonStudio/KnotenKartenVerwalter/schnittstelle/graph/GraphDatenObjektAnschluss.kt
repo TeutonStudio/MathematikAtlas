@@ -63,8 +63,9 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         offset {
             val durchmesser = 10
             val radius = durchmesser / 2
-            val breite = besitzer.daten.breite.roundToInt()
-            val tiefe = besitzer.daten.tiefe.roundToInt()
+            val knotenGröße = besitzer.layoutCoordinates.value?.size
+            val breite = knotenGröße?.width ?: besitzer.daten.breite.roundToInt()
+            val tiefe = knotenGröße?.height ?: besitzer.daten.tiefe.roundToInt()
             val anteil = anschlussAnteil()
 
             when (daten.kante) {

@@ -84,26 +84,6 @@ class AussageKarte(
         override var klasse: KartenArt? = AussageKarte.KARTEN_ART
     }
 
-
-/*    override fun beiKlick(klickPos: Offset) {
-        auswahl.leereAuswahl()
-    }*/
-
-/*    override fun beiHalten(klickPos: Offset) {
-//        super.beiHalten(klickPos)
-//        TODO("Not yet implemented")
-    }*/
-
-/*    override fun beiTransform(
-        centroid: Offset,
-        zoomDelta: Float,
-        panDelta: Offset,
-        rotationChange: Float
-    ) {
-        zustand.verschiebe(panDelta)
-//        TODO("Not yet implemented")
-    }*/
-
     @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
         Column() {

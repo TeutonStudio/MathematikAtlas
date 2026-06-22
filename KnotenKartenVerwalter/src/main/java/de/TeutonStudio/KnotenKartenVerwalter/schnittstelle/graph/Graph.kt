@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.InternalComposeApi
+import androidx.compose.runtime.RecomposeScope
+import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
@@ -52,7 +55,16 @@ class Graph(
     val anschlüsse by GraphCache({ karte.daten.knoten.flatMap { it.anschlüsse } }) { d: GraphDatenAnschluss ->
         knoten.find { it.daten.anschlüsse.contains(d) }?.let { it.anschlussFabrik.erzeugeAnschluss(this,d,it)?.apply { registriere() } }
     }
-    val verbindungen by GraphCache({ karte.daten.verbindungen }) { v: GraphDatenVerbindung ->
+    private fun verbindungsDatenMitPositioniertenEndpunkten() =
+        karte.daten.verbindungen.filter { verbindung ->
+            val mann = anschlüsse.findMann(verbindung.ids)
+            val weib = anschlüsse.findWeib(verbindung.ids)
+
+            mann?.layoutCoordinates?.value != null &&
+                    weib?.layoutCoordinates?.value != null
+        }
+
+    val verbindungen by GraphCache({ verbindungsDatenMitPositioniertenEndpunkten() }) { v: GraphDatenVerbindung ->
         anschlüsse.findMann(v.ids)?.let { aM -> anschlüsse.findWeib(v.ids)?.let { aW ->
             karte.verbindungFabrik.erzeugeVerbindung(this,v, derivedStateOf { aM.pos }, derivedStateOf { aW.pos })
         } }
