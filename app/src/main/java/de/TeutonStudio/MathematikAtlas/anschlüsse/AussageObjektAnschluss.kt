@@ -5,7 +5,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
@@ -38,8 +40,9 @@ open class AussageObjektAnschluss(
         override val richtung: Richtung,
     ): GraphDatenAnschluss, GraphDatenAnschluss.gerichteteGDA, GraphDatenAnschluss.auswertbarerGDA {
         override var label = ""
-        override var cache: GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> =
+        override var cache: GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> by mutableStateOf(
             CacheDaten(AussageWert.UNENTSCHEIDBAR)
+        )
         override var klasse: AnschlussArt? = "" // TODO
         override fun baueCache(eingangCache: List<GraphDatenAnschluss.auswertbarerGDA.PullDaten<*>?>): GraphDatenAnschluss.auswertbarerGDA.PullDaten<*> {
             val ersterEingang = eingangCache.firstNotNullOfOrNull { it as? CacheDaten }?.wert ?: AussageWert.UNENTSCHEIDBAR

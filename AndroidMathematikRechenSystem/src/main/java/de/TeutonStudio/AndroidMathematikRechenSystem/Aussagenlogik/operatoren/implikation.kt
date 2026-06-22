@@ -7,6 +7,9 @@ class implikation(
     val bedingung: Aussage,
     val behauptung: Aussage,
 ): Prädikat {
+    override val istAssoziativ get() = false
+    override val istKommutativ get() = false
+
     override fun auswertung(): Aussage {
         return if (bedingung.istLüge() || behauptung.istWahr()) {
             Aussage.WAHR

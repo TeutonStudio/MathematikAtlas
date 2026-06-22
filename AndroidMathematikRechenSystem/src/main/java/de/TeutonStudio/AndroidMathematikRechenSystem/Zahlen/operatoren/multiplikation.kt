@@ -5,9 +5,9 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
 
 class multiplikation: Rechnung {
-    override fun istAsoziativ(): Boolean = true
+    override val istAssoziativ get() = true
 
-    override fun istKommutativ(): Boolean = true
+    override val istKommutativ get() = true
 
     override fun zuLatex(): String {
         TODO("Not yet implemented")

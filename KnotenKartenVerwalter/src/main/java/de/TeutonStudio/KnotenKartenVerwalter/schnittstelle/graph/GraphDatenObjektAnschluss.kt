@@ -2,7 +2,6 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -12,16 +11,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.round
-import androidx.compose.ui.unit.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
-import kotlin.math.roundToInt
 
 interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D> {
     public val besitzer: GraphDatenObjektKnoten<*>
@@ -51,13 +46,20 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         rotationChange: Float
     ) {} // Nicht genutzt
 
-    private fun erhaltePos(): GraphPosition =
-        layoutCoordinates.value?.let { anschlussCoordinates ->
-            besitzer.layoutCoordinates.value?.localPositionOf(
-                sourceCoordinates = anschlussCoordinates,
-                relativeToSource = anschlussCoordinates.size.center.toOffset(),
-            )?.let { lokalePosition -> besitzer.daten.position + lokalePosition }
-        } ?: Offset.Zero
+    private fun erhaltePos(): GraphPosition {
+        val breite = besitzer.daten.breite
+        val tiefe = besitzer.daten.tiefe
+        val anteil = anschlussAnteil()
+
+        val lokalePosition = when (daten.kante) {
+            Kante.Links -> Offset(0f, tiefe * anteil)
+            Kante.Rechts -> Offset(breite, tiefe * anteil)
+            Kante.Oben -> Offset(breite * anteil, 0f)
+            Kante.Unten -> Offset(breite * anteil, tiefe)
+        }
+
+        return besitzer.daten.position + lokalePosition
+    }
 
     @Composable public override fun Modifier.vorher(): Modifier =
         /*offset {
@@ -107,6 +109,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         karte.auswahl.wähleAnschluss(daten.id)
         dragPos.value = pos
 
+        karte.planeVerbindung(this, besitzer)
         karte.pseudoVerbindung.value = erhaltePseudoVerbindung()
     }
     public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
@@ -123,9 +126,11 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     }
     public fun beiVerbindungZiehenEnde(change: PointerInputChange) {
         dragZiel.value?.let { karte.definiereVerbindung(this,it) }
+        karte.verwerfeGeplanteVerbindung()
         karte.pseudoVerbindung.value = null
     }
     public fun beiVerbindungZiehenAbbruch() {
+        karte.verwerfeGeplanteVerbindung()
         karte.pseudoVerbindung.value = null
     }
 

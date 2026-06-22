@@ -30,8 +30,6 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
 
 
     val anschlüsse get() = graph.anschlüsse.filter { it.besitzer.daten.id == daten.id }
-    /** Aktualisiert den Knoten nach dem Erstellen oder Ändern einer Verbindung. */
-    public fun definiereVerbindung()
 
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
     @Composable public override fun Modifier.vorher(): Modifier =
@@ -93,6 +91,11 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         daten.position.x + daten.breite,
         daten.position.y + daten.tiefe,
     ).overlaps(viewport)
+
+    public fun planeVerbindung(vonAnschluss: GraphDatenObjektAnschluss<*>, vonKnoten: GraphDatenObjektKnoten<*>) {}
+    public fun verwerfeGeplanteVerbindung() {}
+    public fun definiereVerbindung() {}
+    public fun definiereVerbindung(mann: GraphDatenObjektAnschluss<*>, weib: GraphDatenObjektAnschluss<*>) {}
 
 //    public fun GraphPosition.zuBildAusKnoten(): BildschirmPosition = (this + daten.position).round()
 

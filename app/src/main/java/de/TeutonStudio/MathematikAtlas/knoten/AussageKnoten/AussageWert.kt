@@ -14,12 +14,14 @@ enum class AussageWert(
 ) {
     WAHR("Wahr"),
     LUEGE("Lüge"),
+    UNBEKANNT("Unbekannt"),
     UNENTSCHEIDBAR("Unentscheidbar");
 
     fun zuAussage(): Aussage? =
         when (this) {
             WAHR -> Aussage.WAHR
             LUEGE -> Aussage.LÜGE
+            UNBEKANNT -> null
             UNENTSCHEIDBAR -> null
         }
 
@@ -97,24 +99,49 @@ private fun GraphDatenKarte.werteAussageKnotenAus(
                 .filter { it.richtung == Richtung.Eingang }
                 .sortedBy { knoten.anschlussIdx[it.id] ?: Int.MAX_VALUE }
 
-            if (eingänge.size != 2) return AussageWert.UNENTSCHEIDBAR
-
-            val links = werteAussageAnschlussAus(knoten.id, eingänge[0].id, besucht)
-            val rechts = werteAussageAnschlussAus(knoten.id, eingänge[1].id, besucht)
-            val linkeAussage = links.zuAussage()
-            val rechteAussage = rechts.zuAussage()
-
-            if (linkeAussage == null || rechteAussage == null) {
-                return AussageWert.UNENTSCHEIDBAR
+            val werte = eingänge.map {
+                werteAussageAnschlussAus(knoten.id, it.id, besucht)
             }
 
-            AussageWert.ausAussage(when (knoten.aussagenVerknüpfung()) {
-                operator.AussagenVerknüpfung.UND ->
-                    konjunktion(linkeAussage, rechteAussage).auswertung()
+            when (knoten.aussagenVerknüpfung()) {
+                operator.AussagenVerknüpfung.UND -> when {
+                    werte.any { it == AussageWert.LUEGE } -> AussageWert.LUEGE
+                    werte.any { it == AussageWert.UNBEKANNT } -> AussageWert.UNBEKANNT
+                    werte.all { it == AussageWert.WAHR } -> AussageWert.WAHR
+                    else -> AussageWert.UNENTSCHEIDBAR
+                }
 
-                operator.AussagenVerknüpfung.ODER ->
-                    disjunktion(linkeAussage, rechteAussage).auswertung()
-            })
+                operator.AussagenVerknüpfung.ODER -> when {
+                    werte.any { it == AussageWert.WAHR } -> AussageWert.WAHR
+                    werte.any { it == AussageWert.UNBEKANNT } -> AussageWert.UNBEKANNT
+                    werte.all { it == AussageWert.LUEGE } -> AussageWert.LUEGE
+                    else -> AussageWert.UNENTSCHEIDBAR
+                }
+
+                operator.AussagenVerknüpfung.IMPLIKATION -> when {
+                    werte.size < 2 -> AussageWert.UNBEKANNT
+                    werte[0] == AussageWert.LUEGE -> AussageWert.WAHR
+                    werte[1] == AussageWert.WAHR -> AussageWert.WAHR
+                    werte[0] == AussageWert.WAHR && werte[1] == AussageWert.LUEGE -> AussageWert.LUEGE
+                    werte.any { it == AussageWert.UNBEKANNT } -> AussageWert.UNBEKANNT
+                    else -> AussageWert.UNENTSCHEIDBAR
+                }
+
+                operator.AussagenVerknüpfung.KONTRAJUNKTION -> when {
+                    werte.size < 2 -> AussageWert.UNBEKANNT
+                    werte.any { it == AussageWert.UNBEKANNT } -> AussageWert.UNBEKANNT
+                    werte[0] == AussageWert.UNENTSCHEIDBAR || werte[1] == AussageWert.UNENTSCHEIDBAR -> AussageWert.UNENTSCHEIDBAR
+                    werte[0] != werte[1] -> AussageWert.WAHR
+                    else -> AussageWert.LUEGE
+                }
+
+                operator.AussagenVerknüpfung.NEGATION -> when (werte.firstOrNull()) {
+                    AussageWert.WAHR -> AussageWert.LUEGE
+                    AussageWert.LUEGE -> AussageWert.WAHR
+                    AussageWert.UNBEKANNT, null -> AussageWert.UNBEKANNT
+                    else -> AussageWert.UNENTSCHEIDBAR
+                }
+            }
         }
 
         else -> AussageWert.UNENTSCHEIDBAR

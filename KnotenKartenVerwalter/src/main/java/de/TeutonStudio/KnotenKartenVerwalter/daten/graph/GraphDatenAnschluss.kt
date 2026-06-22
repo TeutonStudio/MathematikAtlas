@@ -71,7 +71,9 @@ interface GraphDatenAnschluss: GraphDaten {
         }
 
         override fun wurdeVerbunden(mit: GraphDatenAnschluss) {
-            if (mit is auswertbarerGDA && mit.istEingang) { cache = mit.cache }
+            if (istEingang && mit is auswertbarerGDA && mit.istAusgang) {
+                cache = mit.cache
+            }
             super<GraphDatenAnschluss>.wurdeVerbunden(mit)
         }
 

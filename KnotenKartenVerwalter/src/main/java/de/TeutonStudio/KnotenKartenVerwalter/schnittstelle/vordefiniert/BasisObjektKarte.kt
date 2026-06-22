@@ -54,6 +54,7 @@ class BasisObjektKarte(
         mann: GraphDatenObjektAnschluss<*>,
         weib: GraphDatenObjektAnschluss<*>
     ) {
+        super.definiereVerbindung(mann, weib)
         daten.verbindungen.plus(
             BasisObjektVerbindung(graph, BasisDatenVerbindung(
                 mann.daten.id+"-"+weib.daten.id,

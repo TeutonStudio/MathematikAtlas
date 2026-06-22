@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
@@ -56,6 +58,8 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     val verbindungen get() = graph.verbindungen
     val anschlüsse get() = graph.anschlüsse
 
+    override val objektModifier: Modifier
+        @Composable get() =  Modifier.modiInputEvent().clipToBounds()
 
     @Composable public override fun BoxScope.Darstellung() {
         Box(Modifier.fillMaxSize().onSizeChanged {
@@ -74,7 +78,9 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             pseudoVerbindung.value?.apply { listOf(this).VComposable() }
         }
         graph.inhalt.filterIsInstance<GraphDatenObjekt<*>>().forEach { if (it.öffneKontext.value) it.ComposableKontext() }
-        if (auswahl.istEinzel) { Box(Modifier.align(Alignment.CenterEnd)) { erhalteAuswahl().first().ComposableInspektor() } }
+        erhalteAuswahl().singleOrNull()?.let {
+            Box(Modifier.align(Alignment.CenterEnd)) { it.ComposableInspektor() }
+        }
     }
 
     override fun beiKlick(klickPos: Offset) {
@@ -129,10 +135,23 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             bottom = grenzen.bottom + sichererPuffer,
         )
     }
-    public fun definiereVerbindung(mann: GraphDatenObjektAnschluss<*>, weib: GraphDatenObjektAnschluss<*>) /*= daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
+
+    public fun planeVerbindung(vonAnschluss: GraphDatenObjektAnschluss<*>,vonKnoten: GraphDatenObjektKnoten<*>) {
+        knoten.forEach { it.planeVerbindung(vonAnschluss,vonKnoten) }
+    }
+    public fun verwerfeGeplanteVerbindung() {
+        knoten.forEach { it.verwerfeGeplanteVerbindung() }
+    }
+    public fun definiereVerbindung(mann: GraphDatenObjektAnschluss<*>, weib: GraphDatenObjektAnschluss<*>) {
+        knoten.forEach { it.definiereVerbindung(mann,weib) }
+    }
+
+
+
+    /*= daten.verbindungen.add(VerbindungDaten(mann,weib,"",null)).apply {
         if (weib.daten is AusgangDaten && mann.besitzer is PullObjekt) (mann.besitzer as PullObjekt).aktualisiereCache()
         if (mann.daten is AusgangDaten && weib.besitzer is PullObjekt) (weib.besitzer as PullObjekt).aktualisiereCache()
-        mann.besitzer.definiereVerbindung()
+//        mann.besitzer.definiereVerbindung()
         weib.besitzer.definiereVerbindung()
         keinKontext()
     }*/
@@ -196,9 +215,10 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         val verbindungIds get() = auswahl.getOrElse("verbindung",{ emptyList() })
         val anschlussIds get() = auswahl.getOrElse("anschluss",{ emptyList() })
 
-        val istLeer get() = auswahl.isEmpty()
-        val istEinzel get() = auswahl.size == 1
-        val istMulti get() = auswahl.size > 1
+        val anzahl get() = auswahl.values.sumOf { it.size }
+        val istLeer get() = anzahl == 0
+        val istEinzel get() = anzahl == 1
+        val istMulti get() = anzahl > 1
 
         private fun wähle(schlüssel: String, ids: Array<out String>) {
             auswahl[schlüssel] = (auswahl[schlüssel].orEmpty() + ids).distinct()

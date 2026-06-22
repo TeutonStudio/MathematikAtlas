@@ -13,8 +13,8 @@ class subtraktion(
     val minuend: Zahl,
     val subtrahend: Zahl,
 ): Zahl, Element, Rechnung {
-    override fun istAsoziativ(): Boolean = false
-    override fun istKommutativ(): Boolean = false
+    override val istAssoziativ get() = false
+    override val istKommutativ get() = false
 
     override fun zuLatex(): String {
         return listOf(minuend,subtrahend).joinToString("-") { it.zuLatex() }

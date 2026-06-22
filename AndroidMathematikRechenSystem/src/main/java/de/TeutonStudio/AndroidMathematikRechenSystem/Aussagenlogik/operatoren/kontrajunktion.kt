@@ -2,15 +2,16 @@ package de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.operatoren
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.AndroidMathematikRechenSystem.LaTeXOperator
-import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischerOperator
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 
-// logisches oder
-class disjunktion(vararg argumente: Aussage): Prädikat {
+class kontrajunktion(
+    val entweder: Aussage,
+    val oder: Aussage,
+): Prädikat {
     override val istAssoziativ get() = true
     override val istKommutativ get() = true
 
-    val aussagen = argumente.toSet()
+//    val aussagen = argumente.toSet()
 
     override fun zuLatex(): String {
         TODO("Not yet implemented")
@@ -21,8 +22,10 @@ class disjunktion(vararg argumente: Aussage): Prädikat {
     }
 
     override fun auswertung(): Aussage {
-        if (aussagen.isEmpty()) return Aussage.LÜGE
-        return if (aussagen.any { it.istWahr() }) Aussage.WAHR else Aussage.LÜGE
+        if (entweder.istWahr() && oder.istWahr() || entweder.istLüge() && oder.istLüge()) return Aussage.LÜGE
+        if (entweder.istWahr() && oder.istLüge() || entweder.istLüge() && oder.istWahr()) return Aussage.WAHR
+
+        return this
     }
 
     public companion object: LaTeXOperator {

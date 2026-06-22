@@ -30,13 +30,15 @@ class addition: Rechnung, Zahl, Element, MathematischerOperator {
         TODO("Not yet implemented")
     }
 
-    override fun istAsoziativ(): Boolean {
+    override val istAssoziativ: Boolean
+        get() {
         TODO("Not yet implemented")
-    }
+        }
 
-    override fun istKommutativ(): Boolean {
+    override val istKommutativ: Boolean
+        get() {
         TODO("Not yet implemented")
-    }
+        }
 
     public companion object {
         val Neutrales_Objekt = 0

@@ -34,19 +34,20 @@ interface GraphDatenKnoten: GraphDaten, GraphDaten.benanntesGD, GraphDaten.beweg
     }
     interface auswertbarerGDK: GraphDatenKnoten {
         override fun wurdeVerbunden(von: String, mit: fremderAnschluss) {
-            val eingangCache = ((this to von).zuAnschluss() to mit.zuAnschluss()).let { (a1, a2) ->
-                listOf(
-                    if (a1 is GraphDatenAnschluss.auswertbarerGDA && a1.istEingang) a1 else null,
-                    if (a2 is GraphDatenAnschluss.auswertbarerGDA && a2.istEingang) a2 else null,
-                )
-            }.map { it?.cache }
-            ((this to von).zuAnschluss() to mit.zuAnschluss()).let { (a1, a2) ->
-                listOf(
-                    if (a1 is GraphDatenAnschluss.auswertbarerGDA && a1.istAusgang) a1 else null,
-                    if (a2 is GraphDatenAnschluss.auswertbarerGDA && a2.istAusgang) a2 else null,
-                )
-            }.filterNotNull().forEach { it.cache = it.baueCache(eingangCache) }
             super.wurdeVerbunden(von, mit)
+
+            val eigenerAnschluss = (this to von).zuAnschluss()
+            val eigenerAusgang = eigenerAnschluss as? GraphDatenAnschluss.auswertbarerGDA
+            if (eigenerAusgang?.istAusgang == true) {
+                val eingangCache = anschlüsse
+                    .filterIsInstance<GraphDatenAnschluss.auswertbarerGDA>()
+                    .filter { it.istEingang }
+                    .map { it.cache }
+
+                if (eingangCache.isNotEmpty()) {
+                    eigenerAusgang.cache = eigenerAusgang.baueCache(eingangCache)
+                }
+            }
         }
     }
 

@@ -6,6 +6,9 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 class negation(
     val argument: Aussage
 ): Prädikat {
+    override val istAssoziativ get() = false
+    override val istKommutativ get() = false
+
     override fun auswertung(): Aussage {
         return if (argument.istWahr()) Aussage.LÜGE else Aussage.WAHR
     }

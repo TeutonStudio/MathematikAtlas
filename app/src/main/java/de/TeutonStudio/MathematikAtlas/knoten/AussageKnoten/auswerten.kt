@@ -3,7 +3,6 @@ package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +29,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
+import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss.AussageAnschlussDaten
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektEingang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
@@ -86,10 +86,42 @@ class auswerten(
             anschlüsse.add(eingang)
             anschlussIdx[eingang.id] = 0
         }
+
+        fun hauptEingang(): GraphDatenAnschluss.auswertbarerGDA? =
+            anschlüsse
+                .filterIsInstance<GraphDatenAnschluss.auswertbarerGDA>()
+                .firstOrNull { it.id == "$id-eingang-0" && it.istEingang }
+
+        fun istUnbekannterEingang(anschluss: GraphDatenAnschluss): Boolean =
+            anschluss.id.startsWith("$id-$UNBEKANNTER_EINGANG_MARKER-")
+
+        fun aktualisiereUnbekannteEingänge(anzahl: Int) {
+            val sichereAnzahl = anzahl.coerceAtLeast(0)
+            val vorhandene = anschlüsse.filter(::istUnbekannterEingang)
+            if (vorhandene.size == sichereAnzahl) return
+
+            vorhandene.forEach {
+                anschlussIdx.remove(it.id)
+            }
+            anschlüsse.removeAll(vorhandene.toSet())
+
+            repeat(sichereAnzahl) { index ->
+                val anschlussIndex = index + 1
+                val anschluss = AussageAnschlussDaten(
+                    "$id-$UNBEKANNTER_EINGANG_MARKER-$anschlussIndex",
+                    Kante.Links,
+                    Richtung.Eingang,
+                ).apply {
+                    label = "Unbekannt $anschlussIndex"
+                    klasse = AussageObjektEingang.ANSCHLUSS_ART
+                    cache = AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten(AussageWert.UNBEKANNT)
+                }
+                anschlüsse.add(anschluss)
+                anschlussIdx[anschluss.id] = anschlussIndex
+            }
+        }
     }
     override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
-
-    private var anzeige by mutableStateOf(AussageWert.UNENTSCHEIDBAR.anzeige)
 
     /**
      * Dieser Knoten besitzt keinen Ausgang.
@@ -102,35 +134,25 @@ class auswerten(
             "Der Auswerten-Knoten besitzt keinen Ausgang"
         )*/
 
-    private fun werteAus() {
-        val eingänge = daten.anschlüsse.filterIsInstance<GraphDatenAnschluss.gerichteteGDA>().filter { it.richtung == Richtung.Eingang }
+    private fun aktuellerWert(): AussageWert {
+        val eingang = daten.hauptEingang() ?: return AussageWert.UNBEKANNT
 
-        val eingang = eingänge.singleOrNull()
+        return eingang
+            .cache
+            .let { it as? AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten }
+            ?.wert
+            ?: AussageWert.UNBEKANNT
+    }
 
-        if (eingang == null) {
-            anzeige = when {
-                eingänge.isEmpty() -> "Kein Eingang vorhanden"
-                else -> "Mehrere Eingänge vorhanden"
-            }
-
-            return
-        }
-
-        anzeige = besitzer.daten
-            .werteAussageAnschlussAus(daten.id, eingang.id)
-            .anzeige
+    private fun anzeigeText(): String = when (aktuellerWert()) {
+        AussageWert.UNENTSCHEIDBAR -> "Soviel Weisheit erlauben die Axiome nicht"
+        else -> aktuellerWert().anzeige
     }
 
     @Composable
     fun Textzeile() {
         Column {
-            Text(anzeige)
-
-            Button(
-                onClick = ::werteAus,
-            ) {
-                Text("Auswerten")
-            }
+            Text(anzeigeText())
         }
     }
 
@@ -143,11 +165,12 @@ class auswerten(
                     Text("${it.label} an der Seite ${it.kante}")
                 }
 
-                Button(
-                    onClick = ::werteAus,
-                ) {
-                    Text("Auswerten")
-                }
+                LaTeXModusSchalter(daten)
+                LaTeXFormelText(
+                    formel = besitzer.daten.latexFormelFuer(daten),
+                    karte = besitzer.daten,
+                )
+                Text("Wert: ${anzeigeText()}")
             }
         }
     }
@@ -157,6 +180,10 @@ class auswerten(
         Card {
             Column {
                 Text(daten.name)
+                LaTeXFormelText(
+                    formel = besitzer.daten.latexFormelFuer(daten),
+                    karte = besitzer.daten,
+                )
                 Textzeile()
             }
         }
@@ -174,5 +201,6 @@ class auswerten(
 
     companion object {
         const val KNOTEN_ART: KnotenArt = "auswertenAussage"
+        private const val UNBEKANNTER_EINGANG_MARKER = "unbekannt-eingang"
     }
 }

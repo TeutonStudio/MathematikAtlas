@@ -25,7 +25,6 @@ fun aussageTestKarte(): AussageKarteDaten {
 
     val aussageA = AussageDefinition(
         id = "aussage-a",
-        name = "A",
         initialWahr = true,
     ).apply {
         position = Offset(
@@ -37,7 +36,6 @@ fun aussageTestKarte(): AussageKarteDaten {
 
     val aussageB = AussageDefinition(
         id = "aussage-b",
-        name = "B",
         initialWahr = false,
     ).apply {
         position = Offset(
@@ -61,7 +59,6 @@ fun aussageTestKarte(): AussageKarteDaten {
 
     val undKnoten = AussageOperatorDatenBasis(
         id = "operator-und",
-        name = "UND",
     ).apply {
         position = Offset(
             x = 380f,
@@ -76,7 +73,6 @@ fun aussageTestKarte(): AussageKarteDaten {
 
     val oderKnoten = AussageOperatorDatenBasis(
         id = "operator-oder",
-        name = "ODER",
     ).apply {
         position = Offset(
             x = 680f,
@@ -92,7 +88,6 @@ fun aussageTestKarte(): AussageKarteDaten {
 
     val auswertenKnoten = AussageAuswerten(
         id = "aussage-auswerten",
-        name = "Auswerten",
     ).apply {
         position = Offset(
             x = 980f,

@@ -44,7 +44,7 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
         äußere: Rechnung,
         innere: Rechnung
     ): Boolean {
-        if (äußere.istKommutativ()) return istDistributiv(äußere,innere)
+        if (äußere.istKommutativ) return istDistributiv(äußere,innere)
         if (äußere is multiplikation && innere is addition) return true
         if (äußere is multiplikation && innere is subtraktion) return true
 

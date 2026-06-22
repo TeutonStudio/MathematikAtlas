@@ -7,6 +7,9 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 
 // logisches Und
 class konjunktion(vararg argumente: Aussage): Prädikat {
+    override val istAssoziativ get() = true
+    override val istKommutativ get() = true
+
     val aussagen = argumente.toSet()
 
     override fun zuLatex(): String {

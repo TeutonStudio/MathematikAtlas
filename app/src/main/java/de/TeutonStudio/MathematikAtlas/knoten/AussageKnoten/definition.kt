@@ -35,6 +35,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenAr
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAnschluss
 import de.TeutonStudio.MathematikAtlas.anschlüsse.AussageObjektAusgang
 import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
+import de.TeutonStudio.MathematikAtlas.karten.AussageKarte
 import kotlin.collections.set
 
 typealias AussageDefinition = definition.AussageDefinitionDaten
@@ -101,7 +102,10 @@ class definition(
         Card {
             Column {
                 Text(daten.name)
-                Textzeile()
+                LaTeXFormelText(
+                    formel = besitzer.daten.latexFormelFuer(daten),
+                    karte = besitzer.daten,
+                )
             }
         }
     }
@@ -115,6 +119,11 @@ class definition(
     override fun BoxScope.Inspektor() {
         Column {
             Text(daten.name)
+            LaTeXModusSchalter(daten)
+            LaTeXFormelText(
+                formel = besitzer.daten.latexFormelFuer(daten),
+                karte = besitzer.daten,
+            )
             Textzeile()
         }
     }
@@ -170,6 +179,7 @@ class definition(
                                 AussageWert.ausBoolean(neuerWert)
                             )
                         }
+                    (besitzer.daten as? AussageKarte.AussageKarteDaten)?.aktualisierePullCaches()
                 },
             )
         }
