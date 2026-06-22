@@ -20,7 +20,7 @@ interface GraphDatenObjektVerbindung<D: GraphDatenVerbindung>: GraphDatenObjekt<
     public abstract var endeKante: Kante
     public abstract val ende: State<GraphPosition>
 
-    public override val zeichnung: DrawScope.() -> Unit
+/*    public override val zeichnung: DrawScope.() -> Unit
         get() = { drawPath(
             path = erhaltePfad(),
             color = when {
@@ -29,7 +29,17 @@ interface GraphDatenObjektVerbindung<D: GraphDatenVerbindung>: GraphDatenObjekt<
                 else -> Color(0xFF475569)
             },
             style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
-        ) }
+        ) }*/
+
+    override fun DrawScope.zeichne() { drawPath(
+        path = erhaltePfad(),
+        color = when {
+            istSelektiert.value -> graph.selektiertFarbe
+            daten.fehler != null -> Color(0xFFDC2626)
+            else -> Color(0xFF475569)
+        },
+        style = Stroke(width = if (istSelektiert.value) 8f else 3f, cap = StrokeCap.Round),
+    ) }
 
     override fun beiKlick(klickPos: Offset) {}
     override fun beiHalten(klickPos: Offset) {}

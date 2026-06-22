@@ -8,17 +8,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.zIndex
 
-/**
- * TODO KDoc: Vertrag und Seiteneffekte dieser Schnittstelle klären.
- */
+
 interface GraphCanvasObjekt: GraphObjekt {
-    public val zeichnung: DrawScope.() -> Unit
+//    public val zeichnung: DrawScope.() -> Unit
+
+    public fun DrawScope.zeichne()
 
     public companion object {
 
         public fun RectF.overlaps(other: RectF) = left <= other.right && right >= other.left && top <= other.bottom && bottom >= other.top
         @Composable public fun Iterable<GraphCanvasObjekt>.Composable() = Canvas(Modifier.fillMaxSize().zIndex(0f)) {
-            forEach { it.zeichnung(this) }
+//            forEach { it.zeichnung(this) }
+            forEach { with(it) { zeichne() } }
         }
     }
 }
