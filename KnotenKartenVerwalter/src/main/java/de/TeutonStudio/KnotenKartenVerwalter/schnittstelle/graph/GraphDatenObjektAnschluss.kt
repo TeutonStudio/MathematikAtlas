@@ -27,7 +27,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     public val besitzer: GraphDatenObjektKnoten<*>
     public val karte get() = besitzer.besitzer
 
-    public val pos get() = erhaltePos() ?: Offset.Zero
+    public val pos get() = erhaltePos()
 
     public val istEingang get() = false
     public val istAusgang get() = false
@@ -51,12 +51,13 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
         rotationChange: Float
     ) {} // Nicht genutzt
 
-    private fun erhaltePos(): GraphPosition? = layoutCoordinates.value?.let { anschlussCoordinates ->
-        besitzer.layoutCoordinates.value?.localPositionOf(
-            anschlussCoordinates,
-            anschlussCoordinates.size.center.toOffset(),
-        )?.let { lokalePosition -> besitzer.daten.position + lokalePosition }
-    }
+    private fun erhaltePos(): GraphPosition =
+        layoutCoordinates.value?.let { anschlussCoordinates ->
+            besitzer.layoutCoordinates.value?.localPositionOf(
+                sourceCoordinates = anschlussCoordinates,
+                relativeToSource = anschlussCoordinates.size.center.toOffset(),
+            )?.let { lokalePosition -> besitzer.daten.position + lokalePosition }
+        } ?: Offset.Zero
 
     @Composable public override fun Modifier.vorher(): Modifier =
         offset {
@@ -109,7 +110,7 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     }
     public fun beiVerbindungZiehenDelta(change: PointerInputChange, dragAmount:Offset) {
         change.consume()
-        dragPos.value = change.position + pos
+        dragPos.value += dragAmount
         if (karte.erhalteAnschlussNachPos(dragPos.value)?.apply {
                 val bedingung = second.getDistanceSquared() < 500f / karte.zustand.erhalteZoom() && daten.erlaubeVerbindung(first.daten)
                 if (bedingung) {

@@ -56,7 +56,7 @@ class operator(
 
     @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        TODO("Not yet implemented")
+        StandardKontextFenster(pos)
     }
 
     @Composable
@@ -84,7 +84,7 @@ class operator(
         override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
         override val anschlussIdx = mutableStateMapOf<String, Int>()
         override val data = mutableStateMapOf<String,Any>()
-        override var position: GraphPosition = GraphPosition.Zero
+        override var position: GraphPosition by mutableStateOf(GraphPosition.Zero)
         override var breite: Float = 0f
         override var tiefe: Float = 0f
 

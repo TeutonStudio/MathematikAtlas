@@ -53,7 +53,7 @@ class definition(
         override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
         override val anschlussIdx = mutableStateMapOf<String,Int>()
         override val data = mutableMapOf<String,Any>()
-        override var position = GraphPosition.Zero
+        override var position by mutableStateOf(GraphPosition.Zero)
         override var breite = 0f
         override var tiefe = 0f
         override val richtung = Richtung.Ausgang
@@ -107,7 +107,7 @@ class definition(
 
     @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        TODO("Not yet implemented")
+        StandardKontextFenster(pos)
     }
 
     @Composable

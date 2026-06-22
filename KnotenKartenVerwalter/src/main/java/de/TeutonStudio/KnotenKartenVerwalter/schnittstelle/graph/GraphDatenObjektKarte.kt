@@ -69,9 +69,9 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
             scaleY = zustand.erhalteZoom()
             transformOrigin = TransformOrigin(0f, 0f)
         } ) {
-            knoten.sichtbar().KComposable(/*Modifier.zIndex(1f)*/)
             verbindungen.sichtbar().VComposable(/*Modifier.zIndex(-1f)*/)
             pseudoVerbindung.value?.apply { listOf(this).VComposable() }
+            knoten.sichtbar().KComposable(/*Modifier.zIndex(1f)*/)
         }
         graph.inhalt.filterIsInstance<GraphDatenObjekt<*>>().forEach { if (it.öffneKontext.value) it.ComposableKontext() }
         if (auswahl.istEinzel) { Box(Modifier.align(Alignment.CenterEnd)) { erhalteAuswahl().first().ComposableInspektor() } }
@@ -200,9 +200,13 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         val istEinzel get() = auswahl.size == 1
         val istMulti get() = auswahl.size > 1
 
-        public fun wähleKnoten(vararg ids: String) { auswahl["knoten"]?.plus(ids) }
-        public fun wähleVerbindung(vararg ids: String) { auswahl["verbindung"]?.plus(ids) }
-        public fun wähleAnschluss(vararg ids: String) { auswahl["anschluss"]?.plus(ids) }
+        private fun wähle(schlüssel: String, ids: Array<out String>) {
+            auswahl[schlüssel] = (auswahl[schlüssel].orEmpty() + ids).distinct()
+        }
+
+        public fun wähleKnoten(vararg ids: String) { wähle("knoten", ids) }
+        public fun wähleVerbindung(vararg ids: String) { wähle("verbindung", ids) }
+        public fun wähleAnschluss(vararg ids: String) { wähle("anschluss", ids) }
         public fun enthält(objekt: GraphDatenObjekt<*>) = when {
             objekt is GraphDatenObjektKnoten<*> -> knotenIds
             objekt is GraphDatenObjektVerbindung<*> -> verbindungIds

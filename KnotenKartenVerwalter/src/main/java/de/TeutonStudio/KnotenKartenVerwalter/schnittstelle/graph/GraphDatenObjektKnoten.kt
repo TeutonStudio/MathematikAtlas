@@ -1,12 +1,23 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import android.graphics.RectF
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
@@ -27,6 +38,28 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
     @Composable public override fun Modifier.vorher(): Modifier =
         offset { daten.position.round() }
+            .zIndex(1f)
+            .let {
+                if (istSelektiert.value) {
+                    it.border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
+                } else {
+                    it
+                }
+            }
+
+    @Composable public override fun Modifier.modiInputEvent(): Modifier =
+        vorher().position().tapping().pointerInput(daten.id) {
+            detectDragGestures(
+                onDragStart = {
+                    besitzer.auswahl.wähleKnoten(daten.id)
+                    besitzer.ctx.objektDatenId = null
+                },
+                onDrag = { change, dragAmount ->
+                    change.consume()
+                    beiTransform(Offset.Zero, 1f, dragAmount, 0f)
+                },
+            )
+        }
 
     @Composable public override fun Modifier.position(): Modifier =
         onGloballyPositioned {
@@ -53,10 +86,20 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D> {
         panDelta: Offset,
         rotationChange: Float
     ) {
-        besitzer.zustand.transformiere(panDelta,zoomDelta)
-//        besitzer.verschiebeKnoten(daten.id, panDelta)
-//        besitzer.wähle(EinzelAuswahl(this))
-//        besitzer.keinKontext()
+        besitzer.verschiebeKnoten(daten.id, panDelta / besitzer.zustand.erhalteZoom())
+        besitzer.auswahl.wähleKnoten(daten.id)
+        besitzer.ctx.objektDatenId = null
+    }
+
+    @Composable
+    public fun BoxScope.StandardKontextFenster(pos: androidx.compose.ui.unit.IntOffset = besitzer.ctx.pos) {
+        Card(Modifier.offset { pos }.padding(4.dp)) {
+            Column(Modifier.padding(12.dp)) {
+                Text(daten.name)
+                Text("Position: ${daten.position.x.toInt()}, ${daten.position.y.toInt()}")
+                Text("Anschlüsse: ${daten.anschlüsse.size}")
+            }
+        }
     }
 
     /** Prüft, ob der Knoten den sichtbaren Kartenbereich überschneidet. */

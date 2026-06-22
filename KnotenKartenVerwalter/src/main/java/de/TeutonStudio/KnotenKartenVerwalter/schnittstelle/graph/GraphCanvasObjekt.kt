@@ -17,6 +17,8 @@ interface GraphCanvasObjekt: GraphObjekt {
     public companion object {
 
         public fun RectF.overlaps(other: RectF) = left <= other.right && right >= other.left && top <= other.bottom && bottom >= other.top
-        @Composable public fun Iterable<GraphCanvasObjekt>.Composable() = forEach { Canvas(Modifier.fillMaxSize().zIndex(-1f)) { it.zeichnung } }
+        @Composable public fun Iterable<GraphCanvasObjekt>.Composable() = Canvas(Modifier.fillMaxSize().zIndex(0f)) {
+            forEach { it.zeichnung(this) }
+        }
     }
 }
