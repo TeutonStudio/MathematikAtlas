@@ -51,6 +51,11 @@ class definition(
     override val daten: AussageDefinitionDaten,
     override val besitzer: GraphDatenObjektKarte<*>,
 ): GraphDatenObjektKnoten<AussageDefinition>, GraphDatenObjektInspektor<AussageDefinition> {
+    override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
+    override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
+    override val minimaleBreite: Float get() = 200f
+    override val minimaleTiefe: Float get() = 80f
+
     class AussageDefinitionDaten(
         initialWahr: Boolean = true,
         override val id: GraphDatenId,
@@ -101,8 +106,6 @@ class definition(
         }
     }
 
-    override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
-
     @Composable
     override fun BoxScope.Darstellung() {
         Card(Modifier) {
@@ -147,16 +150,9 @@ class definition(
         ).Inhalt()
     }
 
-    override val anschlussFabrik: AnschlussFabrik
-        get() = MatheAnschlussFabrik
-
     override fun definiereVerbindung() {
         TODO("Not yet implemented")
     }
-
-//    val cacheAnschlüsse: SnapshotStateMap<String, PullErgebnis<Aussage>> = mutableStateMapOf()
-
-    val wertKlasse = Aussage::class
 
     private var istWahr by mutableStateOf(
         daten.data[WERT_SCHLÜSSEL] as? Boolean ?: true
@@ -175,19 +171,6 @@ class definition(
             }
         (besitzer.daten as? AussageKarte.AussageKarteDaten)?.aktualisierePullCaches()
     }
-
-/*    fun berechne(
-        ausgangId: String,
-        eingänge: Map<String, PullErgebnis<Aussage>>,
-    ): PullErgebnis<Aussage> {
-        val aussage = if (istWahr) {
-            Aussage.WAHR
-        } else {
-            Aussage.LÜGE
-        }
-
-        return PullErgebnis.Wert(aussage)
-    }*/
 
     @Composable
     fun Textzeile() {

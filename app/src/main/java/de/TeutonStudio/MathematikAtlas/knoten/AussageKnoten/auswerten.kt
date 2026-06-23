@@ -44,6 +44,7 @@ class auswerten(
     override val daten: AussageAuswerten,
     override val besitzer: GraphDatenObjektKarte<*>,
 ) : GraphDatenObjektKnoten<AussageAuswerten>, GraphDatenObjektInspektor<AussageAuswerten> {
+    override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
     override val minimaleBreite: Float get() = 200f
     override val minimaleTiefe: Float get() = 80f
@@ -67,11 +68,6 @@ class auswerten(
         override var tiefe by mutableFloatStateOf(12f)
         override val richtung = Richtung.Eingang
         override val anschlussLabel = mutableStateMapOf<Kante,Map<Int,String>>()
-/*        fun anschlussKorrektur(a: EingangDaten) {
-            super.anschlussKorrektur(a)
-            a.klasse = AussageEingang.ANSCHLUSS_ART
-            // TODO schlaueren Weg überlegen
-        }*/
 
         override fun erhalteAnschluss(
             idx: Int,
@@ -127,7 +123,6 @@ class auswerten(
             }
         }
     }
-    override val layoutCoordinates: MutableState<LayoutCoordinates?> = mutableStateOf(null)
 
     /**
      * Dieser Knoten besitzt keinen Ausgang.

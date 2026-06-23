@@ -57,6 +57,10 @@ class operator(
     override val besitzer: GraphDatenObjektKarte<*>,
 ): GraphDatenObjektKnoten<OperatorDaten>, GraphDatenObjektInspektor<OperatorDaten> {
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+    override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
+    override val minimaleBreite: Float get() = 200f
+    override val minimaleTiefe: Float get() = 80f
+
 
     @Composable
     override fun BoxScope.Darstellung() {
@@ -326,9 +330,6 @@ class operator(
         KONTRAJUNKTION("Kontrajunktion", 2, false, true),
         NEGATION("Negation", 1, false, false),
     }
-
-    override val anschlussFabrik: AnschlussFabrik
-        get() = MatheAnschlussFabrik
 
     override fun definiereVerbindung() {
         TODO("Not yet implemented")
