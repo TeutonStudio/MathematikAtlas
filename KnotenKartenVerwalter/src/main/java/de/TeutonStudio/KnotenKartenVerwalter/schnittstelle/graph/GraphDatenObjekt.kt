@@ -1,21 +1,16 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -28,15 +23,11 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
-
-//typealias GraphObjekt = GraphDatenObjekt<out GraphDaten>
 
 interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public val daten: D
@@ -157,23 +148,14 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
          */
         @Composable
         public fun Modifier.vergrößerbareGröße(): Modifier {
-            if (daten.breite <= 0f || daten.tiefe <= 0f) {
-                return this
-            }
-
             val dichte = LocalDensity.current
-
             val breite = with(dichte) {
-                daten.breite.toDp()
+                daten.breite.coerceAtLeast(minimaleBreite).toDp()
             }
-
             val tiefe = with(dichte) {
-                daten.tiefe.toDp()
+                daten.tiefe.coerceAtLeast(minimaleTiefe).toDp()
             }
-
-            return this
-                .width(breite)
-                .height(tiefe)
+            return this.width(breite).height(tiefe)
         }
 
         /**
@@ -190,27 +172,16 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
                     val größenModifier = if (bereich.istVertikal) { Modifier.width(dicke).height(länge) } else { Modifier.width(länge).height(dicke) }
 
-                    Box(
-                        modifier = Modifier
-                            .align(bereich.ausrichtung)
-                            .offset {
-                                bereich.offset.round()
+                    Box(modifier = Modifier.align(bereich.ausrichtung).offset { bereich.offset.round() }
+                        .then(größenModifier)
+                        .background(color = vergrößerbarFarbe, shape = CircleShape)
+                        .zIndex(4f)
+                        .pointerInput(bereich, vergrößerbarZoom) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                vergrößereBereich(bereich, dragAmount)
                             }
-                            .then(größenModifier)
-                            .background(
-                                color = vergrößerbarFarbe,
-                                shape = CircleShape,
-                            )
-                            .zIndex(4f)
-                            .pointerInput(
-                                bereich,
-                                vergrößerbarZoom,
-                            ) {
-                                detectDragGestures { change, dragAmount ->
-                                    change.consume()
-                                    vergrößereBereich(bereich, dragAmount)
-                                }
-                            },
+                        },
                     )
                 }
         }
@@ -222,14 +193,9 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
         public fun istBereichSichtbar(
             bereich: VergrößerBereich,
         ): Boolean = when {
-            bereich.istEcke ->
-                horizontalVergrößerbar && vertikalVergrößerbar
-
-            bereich.links || bereich.rechts ->
-                horizontalVergrößerbar
-
-            bereich.oben || bereich.unten ->
-                vertikalVergrößerbar
+            bereich.istEcke -> horizontalVergrößerbar && vertikalVergrößerbar
+            bereich.links || bereich.rechts -> horizontalVergrößerbar
+            bereich.oben || bereich.unten -> vertikalVergrößerbar
 
             else -> false
         }
@@ -320,8 +286,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
              * Gibt an, ob der Griff als vertikaler Balken dargestellt wird.
              * Bei Eckgriffen sind Länge und Dicke identisch.
              */
-            internal val istVertikal: Boolean
-                get() = links || rechts
+            internal val istVertikal: Boolean get() = links || rechts
         }
     }
 

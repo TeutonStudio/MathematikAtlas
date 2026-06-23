@@ -4,6 +4,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,12 +13,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
+import com.hrm.latex.renderer.Latex
+import com.hrm.latex.renderer.model.LatexConfig
+import com.hrm.latex.renderer.model.LatexTheme
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.InhaltZeile
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.zeile
 
 const val LATEX_REKURSIV_SCHLUESSEL = "latex-rekursiv"
 
@@ -37,11 +45,30 @@ fun LaTeXFormelText(
         ((karte.breite.takeIf { it > 0f } ?: 600f) * 2f / 3f).toDp()
     }
 
-    Text(
-        text = formel,
+    Latex(
+        latex = formel,
         modifier = Modifier
             .widthIn(max = maximaleBreite)
             .horizontalScroll(rememberScrollState()),
+        config = LatexConfig(
+            fontSize = 16.sp,
+            theme = LatexTheme.light(
+                color = MaterialTheme.colorScheme.onSurface,
+                backgroundColor = Color.Transparent,
+            ),
+            accessibilityEnabled = true,
+        ),
+    )
+}
+
+fun latexInfo(
+    name: String,
+    karte: GraphDatenKarte,
+    formel: String,
+): InhaltZeile = zeile(name) {
+    LaTeXFormelText(
+        formel = formel,
+        karte = karte,
     )
 }
 

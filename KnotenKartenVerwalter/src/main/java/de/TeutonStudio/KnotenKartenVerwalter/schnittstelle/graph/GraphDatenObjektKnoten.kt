@@ -43,22 +43,28 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
     val anschlüsse get() = graph.anschlüsse.filter { it.besitzer.daten.id == daten.id }
 
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
-    @Composable public override fun Modifier.vorher(): Modifier =
-        offset { daten.position.round() }.zIndex(1f).vergrößerbareGröße()
+    @Composable public override fun Modifier.vorher(): Modifier = vergrößerbareGröße()
+        .offset { daten.position.round() }.zIndex(1f)
+//        .width(with(LocalDensity.current) { daten.breite.toDp() })
+//        .height(with(LocalDensity.current) { daten.tiefe.toDp() })
+        .apply { if (istSelektiert.value) { border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp)) } }
 
     @Composable public override fun Modifier.modiInputEvent(): Modifier =
-        vorher().position().tapping().pointerInput(daten.id) {
-            detectDragGestures(
-                onDragStart = {
-                    besitzer.auswahl.wähleKnoten(daten.id)
-                    besitzer.ctx.objektDatenId = null
-                },
-                onDrag = { change, dragAmount ->
-                    change.consume()
-                    beiTransform(Offset.Zero, 1f, dragAmount, 0f)
-                },
-            )
-        }
+        vorher()
+            .position()
+            .tapping()
+            .pointerInput(daten.id) {
+                detectDragGestures(
+                    onDragStart = {
+                        besitzer.auswahl.wähleKnoten(daten.id)
+                        besitzer.ctx.objektDatenId = null
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        beiTransform(Offset.Zero, 1f, dragAmount, 0f)
+                    },
+                )
+            }
 
     @Composable public override fun Modifier.position(): Modifier =
         onGloballyPositioned {
@@ -84,61 +90,34 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
     }
 
     @Composable public override fun ComposableStandard() = Box(objektModifier) {
-        val dichte = LocalDensity.current
-        val knotenBreite = with(dichte) { daten.breite.toDp() }
-        val knotenTiefe = with(dichte) { daten.tiefe.toDp() }
-        val modi = Modifier.width(knotenBreite).height(knotenTiefe).zIndex(1f)
-
-        Box(modi.apply {
-            if (istSelektiert.value) { border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp)) }
-        }) {
-            Darstellung()
-            if (istSelektiert.value) { VergrößerBereiche() }
-        }
-
-/*        if (istSelektiert.value) {
-            Box(
-                Modifier
-                    .width(knotenBreite)
-                    .height(knotenTiefe)
-                    .border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp))
-                    .zIndex(1f)
-            )
-            VergrößerBereiche()
-        }*/
-
+        Darstellung()
+        if (istSelektiert.value) { VergrößerBereiche() }
         Kante.entries.forEach { k ->
-            val anschlüsseAnKante = anschlüsse.filter { it.daten.kante == k }
-            val baseModi = Modifier.offset(x = if (k == Kante.Links) (-5).dp else 5.dp).zIndex(2f)
-            if (anschlüsseAnKante.isNotEmpty() && k.istVertikal) {
-                Column(
-                    baseModi.height(knotenTiefe).align(k.alignment()),
-                    Arrangement.SpaceEvenly,
-                    Alignment.CenterHorizontally,
-                ) {
-                    anschlüsseAnKante.forEach { anschluss ->
-                        Box(anschluss.objektModifier)
-                    }
-                }
-            }
-            if (anschlüsseAnKante.isNotEmpty() && k.istHorizontal) {
-                Row(
-                    baseModi.width(knotenBreite).align(k.alignment()),
-                    Arrangement.SpaceEvenly,
-                    Alignment.CenterVertically,
-                ) {
-                    anschlüsseAnKante.forEach { anschluss ->
-                        Box(anschluss.objektModifier)
-                    }
-                }
+            KnotenKante(k,Modifier.offset(x = if (k == Kante.Links) (-5).dp else 5.dp).zIndex(2f),
+                anschlüsse.filter { it.daten.kante == k }.map { { Box(it.objektModifier) } }
+            )
+        }
+    }
+
+    @Composable
+    private fun BoxScope.KnotenKante(kante: Kante, modifier: Modifier, inhalt: Iterable<@Composable () -> Unit>) {
+        if (kante.istVertikal) {
+            Column(modifier.align(kante.alignment()),Arrangement.SpaceEvenly,Alignment.CenterHorizontally) {
+                inhalt.forEach { it() }
             }
         }
-
+        if (kante.istHorizontal) {
+            Row(modifier.align(kante.alignment()),Arrangement.SpaceEvenly,Alignment.CenterVertically) {
+                inhalt.forEach { it() }
+            }
+        }
     }
 
     @Composable
     public fun BoxScope.StandardKontextFenster(pos: androidx.compose.ui.unit.IntOffset = besitzer.ctx.pos) {
-        Card(Modifier.offset { pos }.padding(4.dp)) {
+        Card(Modifier
+            .offset { pos }
+            .padding(4.dp)) {
             Column(Modifier.padding(12.dp)) {
                 Text(daten.name)
                 Text("Position: ${daten.position.x.toInt()}, ${daten.position.y.toInt()}")

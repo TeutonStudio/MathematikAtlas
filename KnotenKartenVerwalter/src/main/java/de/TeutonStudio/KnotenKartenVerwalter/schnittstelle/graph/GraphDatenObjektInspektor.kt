@@ -207,6 +207,16 @@ public data class InfoZeile(
     }
 }
 
+public class InhaltZeile(
+    val name: String,
+    val inhalt: @Composable RowScope.() -> Unit,
+) : GraphDatenObjektInspektorZeile {
+    @Composable
+    override fun Composable() {
+        InspektorZeile(name, inhalt)
+    }
+}
+
 public data class AktionZeile(
     val name: String,
     val aktion: String,
@@ -300,6 +310,11 @@ private fun InspektorZeile(
 
 public fun info(name: String, wert: Any?): InfoZeile =
     InfoZeile(name, wert?.toString().orEmpty())
+
+public fun zeile(
+    name: String,
+    inhalt: @Composable RowScope.() -> Unit,
+): InhaltZeile = InhaltZeile(name, inhalt)
 
 public fun aktion(name: String, aktion: String, beiKlick: () -> Unit): AktionZeile =
     AktionZeile(name, aktion, beiKlick)

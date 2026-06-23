@@ -108,7 +108,7 @@ class definition(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Card(Modifier) {
+        Card(Modifier.matchParentSize()) {
             Column {
                 Text(daten.name)
                 LaTeXFormelText(
@@ -139,7 +139,7 @@ class definition(
             ) { auswahl ->
                 daten.setzeLatexRekursiv(auswahl == "rekursiv")
             },
-            info("Formel", besitzer.daten.latexFormelFuer(daten)),
+            latexInfo("Formel", besitzer.daten, besitzer.daten.latexFormelFuer(daten)),
             auswahl(
                 name = "Wert",
                 wert = if (istWahr) "Wahr" else "Lüge",

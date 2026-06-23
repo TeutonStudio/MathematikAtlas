@@ -1,9 +1,8 @@
-package de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.operator
+package de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.operatoren
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
-import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.iterationen.Dupel
 
 class binärKartesischeProdukt<EL: Element, ER: Element, ML: Menge<EL>, MR: Menge<ER>>(
     val links: ML,

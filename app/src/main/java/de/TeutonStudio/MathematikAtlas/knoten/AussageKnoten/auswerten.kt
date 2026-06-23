@@ -2,6 +2,8 @@ package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -159,7 +161,7 @@ class auswerten(
 
     @Composable
     override fun BoxScope.Darstellung() {
-        Card {
+        Card(Modifier.matchParentSize()) {
             Column {
                 Text(daten.name)
                 LaTeXFormelText(
@@ -191,7 +193,7 @@ class auswerten(
             ) { auswahl ->
                 daten.setzeLatexRekursiv(auswahl == "rekursiv")
             },
-            info("Formel", besitzer.daten.latexFormelFuer(daten)),
+            latexInfo("Formel", besitzer.daten, besitzer.daten.latexFormelFuer(daten)),
             info("Wert", anzeigeText()),
             info(
                 "Anschlüsse",
