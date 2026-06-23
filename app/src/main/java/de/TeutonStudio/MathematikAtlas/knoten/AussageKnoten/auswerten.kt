@@ -45,8 +45,8 @@ class auswerten(
     override val besitzer: GraphDatenObjektKarte<*>,
 ) : GraphDatenObjektKnoten<AussageAuswerten>, GraphDatenObjektInspektor<AussageAuswerten> {
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
-    override val minimaleBreite: Float get() = 20f
-    override val minimaleTiefe: Float get() = 8f
+    override val minimaleBreite: Float get() = 200f
+    override val minimaleTiefe: Float get() = 80f
 
     override fun definiereVerbindung() {
         TODO("Not yet implemented")

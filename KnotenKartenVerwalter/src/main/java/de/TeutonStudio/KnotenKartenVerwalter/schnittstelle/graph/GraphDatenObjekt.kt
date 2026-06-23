@@ -73,12 +73,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public fun erhalteAnschlussMann(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
     public fun erhalteAnschlussWeib(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
-//    public fun BildschirmPosition.zuGraph(zustand: Zustand = graph.karte.zustand): KartenPosition = zustand.zuKarte(this)
-//    public fun KartenPosition.zuBild(zustand: Zustand = graph.karte.zustand): BildschirmPosition = zustand.zuBild(this)
-//    public fun BildschirmPosition.zuDelta(zustand: Zustand = graph.karte.zustand): KartenPosition = this.toOffset() / zustand.erhalteZoom()
-//    public fun BildschirmPosition.zuKnoten(knoten: GraphDatenObjekt<GraphDaten.bewegbareGD>, zustand: Zustand = graph.karte.zustand): KnotenPosition = this.toOffset() - knoten.daten.position
-
-    public fun erstelleVerbindung(von: GraphDatenObjektAnschluss<*>, zu: GraphDatenObjektAnschluss<*>) = Unit
+//    public fun erstelleVerbindung(von: GraphDatenObjektAnschluss<*>, zu: GraphDatenObjektAnschluss<*>) = Unit
 
     public companion object {
         @Composable public fun Iterable<GraphDatenObjekt<*>>.Composable(/*modifier: Modifier = Modifier*/) = forEach { it.ComposableStandard() }
@@ -88,38 +83,14 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public interface Vergrößerbar<D> where D : GraphDaten.bewegbareGD, D : GraphDaten.orthogoneGD {
 
         public val daten: D
-
-        /**
-         * Aktueller Darstellungszoom. Dient dazu, Bildschirmbewegungen
-         * in Weltkoordinaten umzurechnen.
-         */
         public val vergrößerbarZoom: Float
+        public val vergrößerbarFarbe: Color get() = Color(0xFF2563EB)
+        public val minimaleBreite: Float get() = 48f
+        public val minimaleTiefe: Float get() = 32f
+        public val horizontalVergrößerbar: Boolean get() = true
+        public val vertikalVergrößerbar: Boolean get() = true
 
-        public val vergrößerbarFarbe: Color
-            get() = Color(0xFF2563EB)
-
-        public val minimaleBreite: Float
-            get() = 48f
-
-        public val minimaleTiefe: Float
-            get() = 32f
-
-        public val horizontalVergrößerbar: Boolean
-            get() = true
-
-        public val vertikalVergrößerbar: Boolean
-            get() = true
-
-        /**
-         * Verändert die Größe anhand des gezogenen Bereichs.
-         *
-         * Bei der linken und oberen Kante wird zusätzlich die Position
-         * verschoben, damit die gegenüberliegende Kante stehen bleibt.
-         */
-        public fun vergrößereBereich(
-            bereich: VergrößerBereich,
-            delta: Offset,
-        ) {
+        public fun vergrößereBereich(bereich: VergrößerBereich, delta: Offset) {
             val zoom = vergrößerbarZoom.coerceAtLeast(0.0001f)
             val weltDelta = delta / zoom
 
@@ -217,16 +188,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
                     val länge = if (istEcke) 14.dp else 26.dp
                     val dicke = if (istEcke) 14.dp else 8.dp
 
-                    val größenModifier =
-                        if (bereich.istVertikal) {
-                            Modifier
-                                .width(dicke)
-                                .height(länge)
-                        } else {
-                            Modifier
-                                .width(länge)
-                                .height(dicke)
-                        }
+                    val größenModifier = if (bereich.istVertikal) { Modifier.width(dicke).height(länge) } else { Modifier.width(länge).height(dicke) }
 
                     Box(
                         modifier = Modifier
@@ -352,8 +314,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
                 offset = Offset(6f, 6f),
             );
 
-            public val istEcke: Boolean
-                get() = (links || rechts) && (oben || unten)
+            public val istEcke: Boolean get() = (links || rechts) && (oben || unten)
 
             /**
              * Gibt an, ob der Griff als vertikaler Balken dargestellt wird.
