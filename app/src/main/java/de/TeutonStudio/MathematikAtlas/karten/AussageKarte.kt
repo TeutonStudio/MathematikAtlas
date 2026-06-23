@@ -233,11 +233,6 @@ class AussageKarte(
     }
 }
 
-@Suppress("UNCHECKED_CAST")
-val MatheKartenFabrik: KartenFabrik = BasisKartenFabrik + mapOf(
-        AussageKarte.KARTEN_ART to (::AussageKarte as KartenKonstruktor)
-    )
-
 private fun GraphDatenAnschluss.auswertbarerGDA.aussageWert(): AussageWert =
     (cache as? AussageObjektAnschluss.AussageAnschlussDaten.CacheDaten)?.wert
         ?: AussageWert.UNENTSCHEIDBAR

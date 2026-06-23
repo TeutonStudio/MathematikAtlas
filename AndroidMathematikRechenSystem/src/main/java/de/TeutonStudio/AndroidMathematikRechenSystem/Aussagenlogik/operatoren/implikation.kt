@@ -18,12 +18,8 @@ class implikation(
         }
     }
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\left(${bedingung.zuLatex()} \\Rightarrow ${behauptung.zuLatex()}\\right)"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = auswertung()
 
 }

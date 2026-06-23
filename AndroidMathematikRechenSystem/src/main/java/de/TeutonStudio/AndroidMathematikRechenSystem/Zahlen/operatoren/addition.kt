@@ -13,32 +13,36 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
  * Verarbeitet iterative Additionen.
  */
 class addition: Rechnung, Zahl, Element, MathematischerOperator {
+    val argumente: List<Zahl>
+
     constructor( // endliche Argumente
-        vararg arguments: List<Zahl>
-    ) // TODO iteration auflösen, die unnötig ist, solange alle Zahl.kleinsteOberMenge eine additiv komutativ Menge ist.
+        vararg arguments: Zahl,
+    ) {
+        argumente = arguments.toList()
+    }
+
+    constructor(
+        vararg arguments: List<Zahl>,
+    ) {
+        argumente = arguments.toList().flatten()
+    }
+
     constructor( // indexierte Argumente
         argument: (arg: Any) -> Zahl,
         argMenge:Any,
-    )
+    ) {
+        argumente = emptyList()
+    }
     val cache: SnapshotStateMap<String,Any> = mutableStateMapOf<String,Any>()
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String =
+        argumente.joinToString(" + ") { it.zuLatex() }.ifBlank { "0" }.let { "\\left($it\\right)" }
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 
-    override val istAssoziativ: Boolean
-        get() {
-        TODO("Not yet implemented")
-        }
+    override val istAssoziativ: Boolean get() = true
 
-    override val istKommutativ: Boolean
-        get() {
-        TODO("Not yet implemented")
-        }
+    override val istKommutativ: Boolean get() = true
 
     public companion object {
         val Neutrales_Objekt = 0

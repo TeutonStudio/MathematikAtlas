@@ -8,7 +8,5 @@ class LeereMenge: Menge<Element> {
     override fun enthält(element: Element): Boolean = false
     override fun zuLatex(): String = "\\emptyset"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 }

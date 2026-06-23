@@ -10,11 +10,7 @@ class Tupel<idxM: Interval<NatürlicheZahlen>,O: MathematischesObjekt>(
 ): ElementOperator {
     public fun erhalte(idx: Int): O = def(idx)
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\left(${def(0).zuLatex()}, \\ldots\\right)"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 }

@@ -8,16 +8,9 @@ class binärKartesischeProdukt<EL: Element, ER: Element, ML: Menge<EL>, MR: Meng
     val links: ML,
     val rechts: MR,
 ): binärMengenOperator<EL,ER,ML,MR> {
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 
-    override fun enthält(element: Element): Boolean {
-//        super.enthält(element)
-        TODO("Not yet implemented")
-    }
+    override fun enthält(element: Element): Boolean? = null
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\left(${links.zuLatex()} \\times ${rechts.zuLatex()}\\right)"
 }

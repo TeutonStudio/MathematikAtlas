@@ -6,27 +6,26 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.vordefiniert.LeereMenge
 
 class Schnitt<M: Menge<out Element>>(): polyMengenOperator<M> {
-    override val argumente: List<M> = emptyList()
+    override var argumente: List<M> = emptyList()
     override val argument: (Element) -> M = { LeereMenge() as M }
     override val idxMenge: Menge<out Element> = LeereMenge()
 
     constructor(
         links: M,
         rechts: M,
-    ): this()
+    ): this() {
+        argumente = listOf(links, rechts)
+    }
 
     constructor(
         arg: (Element) -> M,
         idxMenge: Menge<out Element>,
     ): this()
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String =
+        argumente.joinToString(" \\cap ") { it.zuLatex() }.ifBlank { "\\emptyset" }.let { "\\left($it\\right)" }
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 
     override fun enthält(element: Element): Boolean? {
         argumente.forEach {
@@ -34,6 +33,6 @@ class Schnitt<M: Menge<out Element>>(): polyMengenOperator<M> {
         }
 
 
-        TODO("Not yet implemented")
+        return null
     }
 }

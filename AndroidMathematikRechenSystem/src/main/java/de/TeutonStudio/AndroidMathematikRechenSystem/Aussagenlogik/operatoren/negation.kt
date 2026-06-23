@@ -13,11 +13,7 @@ class negation(
         return if (argument.istWahr()) Aussage.LÜGE else Aussage.WAHR
     }
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\lnot ${argument.zuLatex()}"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = auswertung()
 }

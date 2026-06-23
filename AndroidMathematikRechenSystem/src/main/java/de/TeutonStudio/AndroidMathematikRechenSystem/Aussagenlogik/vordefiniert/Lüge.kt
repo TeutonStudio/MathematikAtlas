@@ -7,9 +7,7 @@ class Lüge: Aussage {
     override fun istWahr(): Boolean = false
     override fun istLüge(): Boolean = true
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\bot"
 
     override fun vereinfacht(): MathematischesObjekt = this
 }

@@ -20,8 +20,6 @@ class subtraktion(
         return listOf(minuend,subtrahend).joinToString("-") { it.zuLatex() }
     }
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 
 }

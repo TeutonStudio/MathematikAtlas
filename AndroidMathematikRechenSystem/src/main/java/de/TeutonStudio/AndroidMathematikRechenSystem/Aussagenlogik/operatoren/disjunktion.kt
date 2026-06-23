@@ -12,13 +12,10 @@ class disjunktion(vararg argumente: Aussage): Prädikat {
 
     val aussagen = argumente.toSet()
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String =
+        aussagen.joinToString(" \\lor ") { it.zuLatex() }.ifBlank { "\\bot" }.let { "\\left($it\\right)" }
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = auswertung()
 
     override fun auswertung(): Aussage {
         if (aussagen.isEmpty()) return Aussage.LÜGE
@@ -26,7 +23,7 @@ class disjunktion(vararg argumente: Aussage): Prädikat {
     }
 
     public companion object: LaTeXOperator {
-        override val BINÄR_OPERATOR = "\\wedge"
-        override val OPERATOR = "\\bigwedge"
+        override val BINÄR_OPERATOR = "\\lor"
+        override val OPERATOR = "\\bigvee"
     }
 }

@@ -4,7 +4,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenAr
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenKonstruktor
 import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.AussageKnotenFabrik
+import de.TeutonStudio.MathematikAtlas.knoten.MengenKnoten.MengenKnotenFabrik
+import de.TeutonStudio.MathematikAtlas.knoten.ZahlenKnoten.ZahlenKnotenFabrik
 
 
 @Suppress("UNCHECKED_CAST")
-val MatheKnotenFabrik: KnotenFabrik = mapOf<KnotenArt, KnotenKonstruktor>().plus(AussageKnotenFabrik)
+val MatheKnotenFabrik: KnotenFabrik =
+    mapOf<KnotenArt, KnotenKonstruktor>() + AussageKnotenFabrik + ZahlenKnotenFabrik + MengenKnotenFabrik

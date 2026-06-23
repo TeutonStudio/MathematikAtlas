@@ -10,11 +10,7 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Relationen.Ordnung
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.Interval
 
 class Netz<idxM: geordneteMenge<out Element, out Ordnung>,O: MathematischesObjekt>: ElementOperator  {
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\left( x_i \\right)_{i\\in I}"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 }

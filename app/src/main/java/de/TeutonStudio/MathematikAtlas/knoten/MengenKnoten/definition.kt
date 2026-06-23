@@ -1,4 +1,124 @@
 package de.TeutonStudio.MathematikAtlas.knoten.MengenKnoten
 
-class definition {
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.IntOffset
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.BasisObjektKontext
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.Graph
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektInspektor
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKarte
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjektKnoten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.definition as definitionsZeile
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.KnotenArt
+import de.TeutonStudio.MathematikAtlas.anschlüsse.MatheAnschlussFabrik
+import de.TeutonStudio.MathematikAtlas.anschlüsse.MengenObjektAnschluss
+import de.TeutonStudio.MathematikAtlas.karten.MatheKarte
+import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.LaTeXFormelText
+import de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten.latexInfo
+
+typealias MengenDefinitionDaten = definition.MengenDefinitionDaten
+
+class definition(
+    override val graph: Graph,
+    override val daten: MengenDefinitionDaten,
+    override val besitzer: GraphDatenObjektKarte<*>,
+) : GraphDatenObjektKnoten<MengenDefinitionDaten>, GraphDatenObjektInspektor<MengenDefinitionDaten> {
+    override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+    override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
+    override val minimaleBreite = 200f
+    override val minimaleTiefe = 80f
+
+    @Composable
+    override fun BoxScope.Darstellung() {
+        Card(Modifier.matchParentSize()) {
+            Column {
+                Text(daten.name)
+                LaTeXFormelText(daten.formel(), besitzer.daten)
+            }
+        }
+    }
+
+    @Composable override fun BoxScope.KontextFenster(pos: IntOffset) = StandardKontextFenster(pos)
+    @Composable override fun BoxScope.Inspektor() = Composable()
+
+    @Composable
+    override fun Inhalt() {
+        BasisObjektKontext(
+            latexInfo("Formel", besitzer.daten, daten.formel()),
+            definitionsZeile("Menge", daten.latex) {
+                daten.setzeLatex(it)
+                (besitzer.daten as? MatheKarte.MatheKarteDaten)?.aktualisierePullCaches()
+            },
+        ).Inhalt()
+    }
+
+    class MengenDefinitionDaten(
+        initialLatex: String = "\\mathbb{N}",
+        override val id: GraphDatenId,
+        override val name: String = "Menge",
+    ) : GraphDatenKnoten, GraphDatenKnoten.gerichteteGDK<GraphDatenAnschluss>, GraphDatenKnoten.auswertbarerGDK {
+        override var klasse: KnotenArt? = KNOTEN_ART
+        override var beweglich = true
+        override val anschlüsse = mutableStateListOf<GraphDatenAnschluss>()
+        override val anschlussIdx = mutableStateMapOf<String, Int>()
+        override val data = mutableMapOf<String, Any>()
+        override var position by mutableStateOf(GraphPosition.Zero)
+        override var breite by mutableFloatStateOf(0f)
+        override var tiefe by mutableFloatStateOf(0f)
+        override val richtung = Richtung.Ausgang
+        override val anschlussLabel = mutableStateMapOf<Kante, Map<Int, String>>()
+
+        var latex: String
+            get() = data[LATEX_SCHLUESSEL]?.toString() ?: "\\emptyset"
+            set(value) {
+                data[LATEX_SCHLUESSEL] = value
+                ausgang()?.cache = MengenObjektAnschluss.MengenAnschlussDaten.CacheDaten(formel())
+            }
+
+        init {
+            data[LATEX_SCHLUESSEL] = initialLatex
+            val ausgang = erhalteAnschluss(0, Kante.Rechts, "Menge")
+            anschlüsse.add(ausgang)
+            anschlussIdx[ausgang.id] = 0
+            setzeLatex(initialLatex)
+        }
+
+        override fun erhalteAnschluss(idx: Int, kante: Kante, label: String): GraphDatenAnschluss =
+            MengenObjektAnschluss.MengenAnschlussDaten("$id-ausgang-$idx", kante, Richtung.Ausgang).apply {
+                this.label = label
+                klasse = MengenObjektAnschluss.AUSGANG_ART
+            }
+
+        fun formel(): String = latex.ifBlank { "\\emptyset" }
+
+        fun setzeLatex(neuerWert: String) {
+            latex = neuerWert.ifBlank { "\\emptyset" }
+        }
+
+        private fun ausgang(): GraphDatenAnschluss.auswertbarerGDA? =
+            anschlüsse.filterIsInstance<GraphDatenAnschluss.auswertbarerGDA>().firstOrNull { it.istAusgang }
+    }
+
+    companion object {
+        const val KNOTEN_ART: KnotenArt = "definitionMenge"
+        const val LATEX_SCHLUESSEL = "menge-latex"
+    }
 }

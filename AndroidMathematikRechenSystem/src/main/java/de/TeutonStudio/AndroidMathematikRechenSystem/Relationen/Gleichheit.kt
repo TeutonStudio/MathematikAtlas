@@ -9,23 +9,14 @@ class Gleichheit(
     override val links: Element,
     override val rechts: Element,
 ): binärRelation<Menge<out Element>,Menge<out Element>> {
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "${links.zuLatex()} = ${rechts.zuLatex()}"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = auswerten()
 
-    override fun auswerten(): Aussage {
-        TODO("Not yet implemented")
-    }
+    override fun auswerten(): Aussage =
+        if (istWahr()) Aussage.WAHR else Aussage.LÜGE
 
-    override fun istWahr(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun istWahr(): Boolean = links == rechts || links.zuLatex() == rechts.zuLatex()
 
-    override fun istLüge(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun istLüge(): Boolean = !istWahr()
 }

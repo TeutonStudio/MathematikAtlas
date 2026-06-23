@@ -13,13 +13,9 @@ class kontrajunktion(
 
 //    val aussagen = argumente.toSet()
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\left(${entweder.zuLatex()} \\veebar ${oder.zuLatex()}\\right)"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = auswertung()
 
     override fun auswertung(): Aussage {
         if (entweder.istWahr() && oder.istWahr() || entweder.istLüge() && oder.istLüge()) return Aussage.LÜGE
@@ -29,7 +25,7 @@ class kontrajunktion(
     }
 
     public companion object: LaTeXOperator {
-        override val BINÄR_OPERATOR = "\\wedge"
-        override val OPERATOR = "\\bigwedge"
+        override val BINÄR_OPERATOR = "\\veebar"
+        override val OPERATOR = "\\veebar"
     }
 }

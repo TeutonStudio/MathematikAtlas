@@ -17,7 +17,7 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
         if (arg is subtraktion) return false
         if (arg is multiplikation) return true
 
-        return TODO("Kein Wert für ${arg} definiert.")
+        return false
     }
 
     override fun istAssoziativ(arg: Rechnung): Boolean {
@@ -25,7 +25,7 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
         if (arg is subtraktion) return false
         if (arg is multiplikation) return true
 
-        return TODO("Kein Wert für ${arg} definiert.")
+        return false
     }
 
     override fun istDistributiv(
@@ -37,7 +37,7 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
 
         if (äußere is subtraktion && innere is multiplikation) return false
         if (äußere is subtraktion && innere is multiplikation) return false
-        TODO("Not yet implemented")
+        return false
     }
 
     override fun istDistributivInvers(
@@ -50,17 +50,13 @@ open class NatürlicheZahlen: ZahlenMenge, MathematischesObjekt {
 
         if (äußere is subtraktion && innere is multiplikation) return false
         if (äußere is subtraktion && innere is subtraktion) return false
-        TODO("Not yet implemented")
+        return false
     }
     override fun enthält(element: Element): Boolean? {
-        TODO("Not yet implemented")
+        return element is Zahl
     }
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String = "\\mathbb{N}"
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = this
 }

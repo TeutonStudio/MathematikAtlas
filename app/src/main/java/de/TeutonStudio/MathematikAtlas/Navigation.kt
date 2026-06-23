@@ -62,7 +62,7 @@ fun Navigation() {
 @Composable
 private fun KnotenKartenTestAnwendung() {
 //    var karte by remember { mutableStateOf(testKarte()) } // StandardKarteTest
-    var karte by remember { mutableStateOf(aussageTestKarte()) } // AussageKarteTest
+    var karte by remember { mutableStateOf(matheTestKarte()) } // MatheKarteTest
     var status by remember { mutableStateOf("Bereit") }
     val auswahl = remember { mutableStateOf(Auswahl()) }
 
@@ -137,7 +137,7 @@ private fun KnotenKartenTestAnwendung() {
     }
 
     Row(modifier = Modifier.fillMaxSize().background(Color(0xFFF3F4F6)).padding(16.dp,32.dp,16.dp,16.dp)) {
-        val g = remember {
+        val g = remember(karte) {
             Graph(
                 daten = karte,
 /*                zustand = Zustand(
@@ -164,7 +164,7 @@ private fun KnotenKartenTestAnwendung() {
             zustand = g.karte.zustand,
             onNeueKarte = {
 //                karte = testKarte()
-                karte = aussageTestKarte()
+                karte = matheTestKarte()
                 auswahl.value = Auswahl()
                 status = "Testkarte geladen"
             },

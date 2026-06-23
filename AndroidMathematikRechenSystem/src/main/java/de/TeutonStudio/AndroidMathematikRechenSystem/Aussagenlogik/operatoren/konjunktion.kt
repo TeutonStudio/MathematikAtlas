@@ -12,13 +12,10 @@ class konjunktion(vararg argumente: Aussage): Prädikat {
 
     val aussagen = argumente.toSet()
 
-    override fun zuLatex(): String {
-        TODO("Not yet implemented")
-    }
+    override fun zuLatex(): String =
+        aussagen.joinToString(" \\land ") { it.zuLatex() }.ifBlank { "\\top" }.let { "\\left($it\\right)" }
 
-    override fun vereinfacht(): MathematischesObjekt {
-        TODO("Not yet implemented")
-    }
+    override fun vereinfacht(): MathematischesObjekt = auswertung()
 
     override fun auswertung(): Aussage {
         if (aussagen.isEmpty()) return Aussage.WAHR
@@ -26,7 +23,7 @@ class konjunktion(vararg argumente: Aussage): Prädikat {
     }
 
     public companion object: LaTeXOperator {
-        override val BINÄR_OPERATOR = "\\vee"
-        override val OPERATOR = "\\bigvee"
+        override val BINÄR_OPERATOR = "\\land"
+        override val OPERATOR = "\\bigwedge"
     }
 }
