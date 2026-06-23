@@ -1,8 +1,10 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
@@ -14,6 +16,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -75,71 +81,60 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
         public val daten: D
         public val vergrößerbarZoom: Float
+        public val vergrößerbarLayoutCoordinates: MutableState<LayoutCoordinates?>?
+            get() = null
         public val vergrößerbarFarbe: Color get() = Color(0xFF2563EB)
         public val minimaleBreite: Float get() = 48f
         public val minimaleTiefe: Float get() = 32f
         public val horizontalVergrößerbar: Boolean get() = true
         public val vertikalVergrößerbar: Boolean get() = true
 
-        public fun vergrößereBereich(bereich: VergrößerBereich, delta: Offset) {
-            val zoom = vergrößerbarZoom.coerceAtLeast(0.0001f)
-            val weltDelta = delta / zoom
+        public fun vergrößereBereich(bereich: VergrößerBereich, klickPosImKnoten: Offset) {
+            vergrößereBereich(
+                bereich = bereich,
+                startPosition = daten.position,
+                startBreite = daten.breite,
+                startTiefe = daten.tiefe,
+                klickPosImKnoten = klickPosImKnoten,
+            )
+        }
 
-            var neuePosition = daten.position
-            var neueBreite = daten.breite
-            var neueTiefe = daten.tiefe
+        public fun vergrößereBereich(
+            bereich: VergrößerBereich,
+            startPosition: Offset,
+            startBreite: Float,
+            startTiefe: Float,
+            klickPosImKnoten: Offset,
+        ) {
+            val rechteKante = startPosition.x + startBreite
+            val untereKante = startPosition.y + startTiefe
+
+            var neueLinks = startPosition.x
+            var neueOben = startPosition.y
+            var neueRechts = rechteKante
+            var neueUnten = untereKante
 
             if (horizontalVergrößerbar) {
                 when {
-                    bereich.links -> {
-                        val alteBreite = neueBreite
-                        neueBreite =
-                            (alteBreite - weltDelta.x)
-                                .coerceAtLeast(minimaleBreite)
-
-                        val tatsächlicheÄnderung = alteBreite - neueBreite
-
-                        neuePosition += Offset(
-                            x = tatsächlicheÄnderung,
-                            y = 0f,
-                        )
-                    }
-
-                    bereich.rechts -> {
-                        neueBreite =
-                            (neueBreite + weltDelta.x)
-                                .coerceAtLeast(minimaleBreite)
-                    }
+                    bereich.links -> neueLinks = (startPosition.x + klickPosImKnoten.x)
+                        .coerceAtMost(rechteKante - minimaleBreite)
+                    bereich.rechts -> neueRechts = (startPosition.x + klickPosImKnoten.x)
+                        .coerceAtLeast(startPosition.x + minimaleBreite)
                 }
             }
 
             if (vertikalVergrößerbar) {
                 when {
-                    bereich.oben -> {
-                        val alteTiefe = neueTiefe
-                        neueTiefe =
-                            (alteTiefe - weltDelta.y)
-                                .coerceAtLeast(minimaleTiefe)
-
-                        val tatsächlicheÄnderung = alteTiefe - neueTiefe
-
-                        neuePosition += Offset(
-                            x = 0f,
-                            y = tatsächlicheÄnderung,
-                        )
-                    }
-
-                    bereich.unten -> {
-                        neueTiefe =
-                            (neueTiefe + weltDelta.y)
-                                .coerceAtLeast(minimaleTiefe)
-                    }
+                    bereich.oben -> neueOben = (startPosition.y + klickPosImKnoten.y)
+                        .coerceAtMost(untereKante - minimaleTiefe)
+                    bereich.unten -> neueUnten = (startPosition.y + klickPosImKnoten.y)
+                        .coerceAtLeast(startPosition.y + minimaleTiefe)
                 }
             }
 
-            daten.position = neuePosition
-            daten.breite = neueBreite
-            daten.tiefe = neueTiefe
+            daten.position = Offset(neueLinks, neueOben)
+            daten.breite = neueRechts - neueLinks
+            daten.tiefe = neueUnten - neueOben
         }
 
         /**
@@ -166,6 +161,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
             VergrößerBereich.entries
                 .filter(::istBereichSichtbar)
                 .forEach { bereich ->
+                    var griffKoordinaten by remember(bereich) { mutableStateOf<LayoutCoordinates?>(null) }
                     val istEcke = bereich.istEcke
                     val länge = if (istEcke) 14.dp else 26.dp
                     val dicke = if (istEcke) 14.dp else 8.dp
@@ -174,12 +170,53 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
                     Box(modifier = Modifier.align(bereich.ausrichtung).offset { bereich.offset.round() }
                         .then(größenModifier)
+                        .onGloballyPositioned { griffKoordinaten = it }
                         .background(color = vergrößerbarFarbe, shape = CircleShape)
                         .zIndex(4f)
-                        .pointerInput(bereich, vergrößerbarZoom) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                vergrößereBereich(bereich, dragAmount)
+                        .pointerInput(bereich) {
+                            awaitEachGesture {
+                                val start = awaitFirstDown(requireUnconsumed = false)
+                                start.consume()
+
+                                val startPosition = daten.position
+                                val startBreite = daten.breite
+                                val startTiefe = daten.tiefe
+                                val zoom = vergrößerbarZoom.coerceAtLeast(0.0001f)
+                                val knotenUrsprungImRoot = vergrößerbarLayoutCoordinates?.value?.localToRoot(Offset.Zero)
+
+                                val griffUrsprungImKnoten = bereich.griffUrsprung(
+                                        knotenBreite = daten.breite,
+                                        knotenTiefe = daten.tiefe,
+                                        griffBreite = size.width.toFloat(),
+                                        griffHöhe = size.height.toFloat(),
+                                    )
+                                fun klickPositionImStartKnoten(klickPosImGriff: Offset): Offset {
+                                    val klickPosImRoot = griffKoordinaten?.localToRoot(klickPosImGriff)
+                                    return if (knotenUrsprungImRoot != null && klickPosImRoot != null) {
+                                        (klickPosImRoot - knotenUrsprungImRoot) / zoom
+                                    } else {
+                                        griffUrsprungImKnoten + klickPosImGriff
+                                    }
+                                }
+
+                                vergrößereBereich(
+                                    bereich = bereich,
+                                    startPosition = startPosition,
+                                    startBreite = startBreite,
+                                    startTiefe = startTiefe,
+                                    klickPosImKnoten = klickPositionImStartKnoten(start.position),
+                                )
+
+                                drag(start.id) { change ->
+                                    change.consume()
+                                    vergrößereBereich(
+                                        bereich = bereich,
+                                        startPosition = startPosition,
+                                        startBreite = startBreite,
+                                        startTiefe = startTiefe,
+                                        klickPosImKnoten = klickPositionImStartKnoten(change.position),
+                                    )
+                                }
                             }
                         },
                     )
@@ -287,6 +324,25 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
              * Bei Eckgriffen sind Länge und Dicke identisch.
              */
             internal val istVertikal: Boolean get() = links || rechts
+
+            internal fun griffUrsprung(
+                knotenBreite: Float,
+                knotenTiefe: Float,
+                griffBreite: Float,
+                griffHöhe: Float,
+            ): Offset {
+                val x = when {
+                    links -> -griffBreite / 2f
+                    rechts -> knotenBreite - griffBreite / 2f
+                    else -> (knotenBreite - griffBreite) / 2f
+                }
+                val y = when {
+                    oben -> -griffHöhe / 2f
+                    unten -> knotenTiefe - griffHöhe / 2f
+                    else -> (knotenTiefe - griffHöhe) / 2f
+                }
+                return Offset(x, y)
+            }
         }
     }
 

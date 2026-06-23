@@ -38,6 +38,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
     public abstract val besitzer: GraphDatenObjektKarte<*>
     public abstract val anschlussFabrik: AnschlussFabrik
     override val vergrößerbarZoom: Float get() = besitzer.zustand.erhalteZoom()
+    override val vergrößerbarLayoutCoordinates get() = layoutCoordinates
 
 
     val anschlüsse get() = graph.anschlüsse.filter { it.besitzer.daten.id == daten.id }
@@ -84,7 +85,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
         besitzer.ctx.objektDatenId = daten.id
     }
     public override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
-        besitzer.verschiebeKnoten(daten.id, panDelta / besitzer.zustand.erhalteZoom())
+        besitzer.verschiebeKnoten(daten.id, panDelta)
         besitzer.auswahl.wähleKnoten(daten.id)
         besitzer.ctx.objektDatenId = null
     }

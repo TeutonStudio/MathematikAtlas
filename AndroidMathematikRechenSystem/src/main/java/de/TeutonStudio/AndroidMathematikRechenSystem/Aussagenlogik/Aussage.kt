@@ -10,7 +10,9 @@ interface Aussage: MathematischesObjekt {
     public fun istLüge(): Boolean
 
     public companion object {
-        val WAHR = Wahr()
-        val LÜGE = Lüge()
+        val WAHR = Wahr
+        val LÜGE = Lüge
+
+        public fun ausBoolean(arg: Boolean) = if(arg) WAHR else LÜGE
     }
 }

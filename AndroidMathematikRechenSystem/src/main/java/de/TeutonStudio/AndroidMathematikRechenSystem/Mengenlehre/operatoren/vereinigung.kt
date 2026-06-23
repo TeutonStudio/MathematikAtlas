@@ -5,10 +5,10 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.vordefiniert.LeereMenge
 
-class Vereinigung<M: Menge<out Element>>(): polyMengenOperator<M> {
+class vereinigung<M: Menge<out Element>>(): polyMengenOperator<M> {
     override var argumente: List<M> = emptyList()
-    override val argument: (Element) -> M = { LeereMenge() as M }
-    override val idxMenge: Menge<out Element> = LeereMenge()
+    override val argument: (Element) -> M = { LeereMenge as M }
+    override val idxMenge: Menge<out Element> = LeereMenge
 
     constructor(links: M, rechts: M): this() {
         argumente = listOf(links, rechts)
@@ -19,11 +19,13 @@ class Vereinigung<M: Menge<out Element>>(): polyMengenOperator<M> {
 
     override fun vereinfacht(): MathematischesObjekt = this
 
-    override fun enthält(element: Element): Boolean? {
+    override fun enthält(element: Element): Boolean {
         argumente.forEach {
-            if (it.enthält(element) == true) return true
+            if (it !is LeereMenge) {
+                if (it.enthält(element) == true) return true
+            }
         }
 
-        return null
+        return false
     }
 }

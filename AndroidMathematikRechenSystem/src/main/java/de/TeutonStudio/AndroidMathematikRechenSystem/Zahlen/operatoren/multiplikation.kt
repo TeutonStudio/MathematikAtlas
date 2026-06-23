@@ -8,6 +8,23 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 class multiplikation(
     vararg val argumente: Zahl,
 ): Rechnung {
+    override val dimension: Int get() = argumente.maxBy { it.dimension }.dimension
+    override fun negiert(): Zahl {
+        TODO("Not yet implemented")
+    }
+
+    override fun konjugiert(): Zahl {
+        TODO("Not yet implemented")
+    }
+
+    override fun realteil(): Zahl {
+        TODO("Not yet implemented")
+    }
+
+    override fun imaginärteil(): Zahl {
+        TODO("Not yet implemented")
+    }
+
     override val istAssoziativ get() = true
 
     override val istKommutativ get() = true

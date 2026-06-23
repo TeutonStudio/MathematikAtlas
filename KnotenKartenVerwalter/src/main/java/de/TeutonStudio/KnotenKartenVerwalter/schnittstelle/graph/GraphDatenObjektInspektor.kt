@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -44,6 +43,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjek
 
 typealias GraphDatenObjektInspektor<D> = GraphDatenObjekt.Inspektor<D>
 
+private val gespeicherteInspektorBreitePx = mutableFloatStateOf(0f)
+
 interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
     public val daten: D
 
@@ -66,23 +67,29 @@ interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
         modifier: Modifier = Modifier,
         inhalt: @Composable ColumnScope.() -> Unit,
     ) {
-        var höhePx by remember(daten.id) { mutableFloatStateOf(0f) }
+        var breitePx by gespeicherteInspektorBreitePx
         val dichte = LocalDensity.current
+        val minBreite = 280.dp
+        val maxBreite = 720.dp
         val minHöhe = 120.dp
-        val cardModifier = if (höhePx > 0f) {
-            Modifier.height(with(dichte) { höhePx.toDp() })
-        } else {
-            Modifier.heightIn(min = minHöhe)
+        val startBreite = 420.dp
+        val aktuelleBreite = with(dichte) {
+            breitePx
+                .takeIf { it > 0f }
+                ?.toDp()
+                ?.coerceIn(minBreite, maxBreite)
+                ?: startBreite
         }
+        val cardModifier = Modifier.width(aktuelleBreite).heightIn(min = minHöhe)
 
         Box(
             modifier
                 .padding(start = 12.dp, top = 12.dp, end = 28.dp, bottom = 12.dp)
-                .widthIn(min = 280.dp, max = 420.dp)
+                .width(aktuelleBreite + 16.dp)
         ) {
             Card(
                 cardModifier.onSizeChanged {
-                    if (höhePx <= 0f) höhePx = it.height.toFloat()
+                    if (breitePx <= 0f) breitePx = it.width.toFloat()
                 }
             ) {
                 Column(
@@ -94,24 +101,26 @@ interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
                 )
             }
 
-            VertikaleInspektorGriffe(
-                aktuelleHöhe = höhePx,
-                minHöhe = minHöhe,
-                beiÄnderung = { höhePx = it },
+            InspektorGriffe(
+                aktuelleBreite = breitePx,
+                minBreite = minBreite,
+                maxBreite = maxBreite,
+                beiÄnderung = { neueBreite ->
+                    breitePx = neueBreite
+                },
             )
         }
     }
 
     @Composable
-    private fun BoxScope.VertikaleInspektorGriffe(
-        aktuelleHöhe: Float,
-        minHöhe: Dp,
-        beiÄnderung: (Float) -> Unit,
+    private fun BoxScope.InspektorGriffe(
+        aktuelleBreite: Float,
+        minBreite: Dp,
+        maxBreite: Dp,
+        beiÄnderung: (breite: Float) -> Unit,
     ) {
         listOf(
             VergrößerBereich.Links,
-            VergrößerBereich.LinksOben,
-            VergrößerBereich.LinksUnten,
         ).forEach { bereich ->
             val länge = if (bereich.istEcke) 14.dp else 26.dp
             val dicke = if (bereich.istEcke) 14.dp else 8.dp
@@ -127,18 +136,21 @@ interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
                 )
                 .background(farbe, CircleShape)
                 .zIndex(4f)
-                .pointerInput(bereich, aktuelleHöhe) {
+                .pointerInput(bereich) {
+                    var startBreite = 0f
                     detectDragGestures { change, dragAmount ->
                         change.consume()
-                        val bisher = aktuelleHöhe.takeIf { it > 0f } ?: size.height.toFloat()
-                        val minPx = minHöhe.toPx()
-                        val delta = when {
-                            bereich.oben -> -dragAmount.y
-                            bereich.unten -> dragAmount.y
-                            bereich == VergrößerBereich.Links -> dragAmount.y
-                            else -> 0f
+                        if (startBreite <= 0f) {
+                            startBreite = aktuelleBreite.takeIf { it > 0f } ?: this.size.width.toFloat()
                         }
-                        beiÄnderung((bisher + delta).coerceAtLeast(minPx))
+                        val minBreitePx = minBreite.toPx()
+                        val maxBreitePx = maxBreite.toPx()
+                        val neueBreite = when {
+                            bereich.links -> startBreite - dragAmount.x
+                            else -> startBreite
+                        }.coerceIn(minBreitePx, maxBreitePx)
+                        startBreite = neueBreite
+                        beiÄnderung(neueBreite)
                     }
                 }
 

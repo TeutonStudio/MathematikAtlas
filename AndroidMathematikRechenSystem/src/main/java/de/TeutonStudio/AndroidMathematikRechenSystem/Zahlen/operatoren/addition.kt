@@ -14,6 +14,22 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
  */
 class addition: Rechnung, Zahl, Element, MathematischerOperator {
     val argumente: List<Zahl>
+    override val dimension get() = argumente.maxBy { it.dimension }.dimension
+    override fun negiert(): Zahl {
+        TODO("Not yet implemented")
+    }
+
+    override fun konjugiert(): Zahl {
+        TODO("Not yet implemented")
+    }
+
+    override fun realteil(): Zahl {
+        TODO("Not yet implemented")
+    }
+
+    override fun imaginärteil(): Zahl {
+        TODO("Not yet implemented")
+    }
 
     constructor( // endliche Argumente
         vararg arguments: Zahl,
