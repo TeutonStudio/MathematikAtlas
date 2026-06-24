@@ -9,9 +9,9 @@ object eulerscheKonstante: Zahl {
         TODO("Not yet implemented")
     }
 
-    override fun konjugiert(): Zahl = this
     override fun realteil(): Zahl = this
     override fun imaginärteil(): Zahl = addititvNeutral
+    override fun konjugiert(): Zahl = this
 
     override fun zuLatex(): String {
         TODO("Not yet implemented")

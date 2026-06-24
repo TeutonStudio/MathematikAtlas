@@ -6,8 +6,8 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 
 // TODO Eine Aussage die Wahr, Lüge ist
 interface Aussage: MathematischesObjekt {
-    public fun istWahr(): Boolean
-    public fun istLüge(): Boolean
+    public val istWahr: Boolean
+    public val istLüge: Boolean
 
     public companion object {
         val WAHR = Wahr

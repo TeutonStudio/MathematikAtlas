@@ -8,6 +8,10 @@ object addititvNeutral: Zahl {
     override val dimension = 1
 
     override fun negiert(): Zahl = this
+    override fun kehrwert(): Zahl {
+        TODO(" / 0 nicht möglich")
+        return super.kehrwert()
+    }
     override fun konjugiert(): Zahl = this
     override fun realteil(): Zahl = this
     override fun imaginärteil(): Zahl = this

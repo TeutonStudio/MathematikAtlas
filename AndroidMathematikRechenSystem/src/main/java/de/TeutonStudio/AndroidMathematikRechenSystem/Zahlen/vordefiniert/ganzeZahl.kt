@@ -3,10 +3,16 @@ package de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 
-object kreisKonstante: Zahl {
+class ganzeZahl(val wert: Int): Zahl {
     override val dimension = 1
     override fun negiert(): Zahl {
-        TODO("Not yet implemented")
+        if (wert == -1) return multiplikativNeutral
+        return natürlicheZahl(-wert)
+    }
+
+    override fun kehrwert(): Zahl {
+        if (wert == -1) return this
+        return super.kehrwert()
     }
 
     override fun realteil(): Zahl = this

@@ -3,15 +3,15 @@ package de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 
-object kreisKonstante: Zahl {
+class rationaleZahl(val wert: Float): Zahl {
     override val dimension = 1
-    override fun negiert(): Zahl {
-        TODO("Not yet implemented")
-    }
-
     override fun realteil(): Zahl = this
     override fun imaginärteil(): Zahl = addititvNeutral
-    override fun konjugiert(): Zahl = this
+    override fun negiert(): Zahl = rationaleZahl(-wert)
+    override fun kehrwert(): Zahl {
+        // kleinster zähler und nenner für float herausfinden
+        return super.kehrwert()
+    }
 
     override fun zuLatex(): String {
         TODO("Not yet implemented")

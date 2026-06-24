@@ -4,8 +4,8 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 
 object Lüge: Aussage {
-    override fun istWahr(): Boolean = false
-    override fun istLüge(): Boolean = true
+    override val istWahr = false
+    override val istLüge = true
 
     override fun zuLatex(): String = "\\bot"
 

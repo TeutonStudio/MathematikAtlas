@@ -9,12 +9,12 @@ class kleiner(
     val links: Zahl,
     val rechts: Zahl,
 ): Relation {
-    override fun istWahr(): Boolean =
+    override val istWahr get() =
         links.zuLatex().toDoubleOrNull()?.let { l ->
             rechts.zuLatex().toDoubleOrNull()?.let { r -> l < r }
         } ?: false
 
-    override fun istLüge(): Boolean = !istWahr()
+    override val istLüge = !istWahr()
 
     override fun zuLatex(): String = "${links.zuLatex()} < ${rechts.zuLatex()}"
 

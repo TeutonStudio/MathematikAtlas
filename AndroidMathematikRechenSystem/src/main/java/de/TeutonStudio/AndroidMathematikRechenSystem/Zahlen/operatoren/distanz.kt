@@ -6,6 +6,7 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert.additit
 
 class distanz(val argument: Zahl): Rechnung {
     override val dimension = 1
+
     override fun zuLatex(): String {
         TODO("Not yet implemented")
     }
@@ -18,10 +19,7 @@ class distanz(val argument: Zahl): Rechnung {
         TODO("Not yet implemented")
     }
 
-    override fun konjugiert(): Zahl = this
-    override fun realteil(): Zahl {
-        TODO("Not yet implemented")
-    }
-
+    override fun realteil(): Zahl = this
     override fun imaginärteil(): Zahl = addititvNeutral
+    override fun konjugiert(): Zahl = this
 }

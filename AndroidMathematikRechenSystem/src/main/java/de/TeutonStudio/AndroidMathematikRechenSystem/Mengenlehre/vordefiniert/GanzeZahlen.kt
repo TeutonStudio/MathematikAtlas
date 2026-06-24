@@ -4,12 +4,14 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Element
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.Rechnung
+import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert.ganzeZahl
 
 object GanzeZahlen: ZahlenMenge {
     override fun zuLatex(): String = "\\mathbb{Z}"
 
     override fun enthält(element: Element): Boolean {
         if (element !is Zahl) return false
+        if (element is ganzeZahl) return true
         return NatürlicheZahlen.enthält(element) || NatürlicheZahlen.enthält(element.negiert())
     }
 
@@ -17,18 +19,4 @@ object GanzeZahlen: ZahlenMenge {
         TODO("Not yet implemented")
     }
 
-//    override fun istKommutativ(arg: Rechnung): Boolean = arg !is de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.subtraktion
-//
-//    override fun istAssoziativ(arg: Rechnung): Boolean = arg !is de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.subtraktion
-
-//    override fun istDistributiv(
-//        äußere: Rechnung,
-//        innere: Rechnung
-//    ): Boolean = äußere is de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.multiplikation &&
-//            innere !is de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.multiplikation
-//
-//    override fun istDistributivInvers(
-//        äußere: Rechnung,
-//        innere: Rechnung
-//    ): Boolean = istDistributiv(äußere, innere)
 }

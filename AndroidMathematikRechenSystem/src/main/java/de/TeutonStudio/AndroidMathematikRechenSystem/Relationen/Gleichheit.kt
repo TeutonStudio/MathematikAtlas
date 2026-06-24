@@ -16,7 +16,6 @@ class Gleichheit(
     override fun auswerten(): Aussage =
         if (istWahr()) Aussage.WAHR else Aussage.LÜGE
 
-    override fun istWahr(): Boolean = links == rechts || links.zuLatex() == rechts.zuLatex()
-
-    override fun istLüge(): Boolean = !istWahr()
+    override val istWahr get() = links == rechts || links.zuLatex() == rechts.zuLatex()
+    override val istLüge get() = !istWahr()
 }

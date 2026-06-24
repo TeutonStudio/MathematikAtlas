@@ -5,8 +5,8 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert.multiplikativNeutral
 import kotlin.math.max
 
-class quadrat(basis: Zahl): potenz(basis, addition(multiplikativNeutral, multiplikativNeutral)) {
-    override val dimension get() = basis.dimension
+class quadrat(basis: Zahl): multiplikation(basis,basis) {
+    override val dimension get() = faktoren.first().dimension
     override val istAssoziativ get() = false
     override val istKommutativ get() = false
 

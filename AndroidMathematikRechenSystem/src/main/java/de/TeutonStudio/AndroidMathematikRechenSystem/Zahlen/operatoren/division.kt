@@ -2,6 +2,8 @@ package de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren
 
 import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
+import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.relationen.kleiner
+import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert.addititvNeutral
 import kotlin.math.max
 
 class division private constructor(
@@ -14,12 +16,24 @@ class division private constructor(
             divisor: Zahl,
         ): division {
             return when (divisor) {
-                is division -> invoke(
-                    divident = multiplikation(divident, divisor.divisor),
-                    divisor = divisor.divident,
-                )
+                is division ->
+                    if (kleiner(divisor, addititvNeutral).istWahr) {
+                        invoke(
+                            divident = multiplikation(divident, divisor.divisor).negiert(),
+                            divisor = divisor.divident.negiert(),
+                        )
+                    } else {
+                        invoke(
+                            divident = multiplikation(divident, divisor.divisor),
+                            divisor = divisor.divident,
+                        )
+                    }
 
-                else -> division(divident, divisor)
+                else -> if (kleiner(divisor, addititvNeutral).istWahr) {
+                    division(divident.negiert(), divisor.negiert())
+                } else {
+                    division(divident, divisor)
+                }
             }
         }
     }

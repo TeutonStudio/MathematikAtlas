@@ -11,8 +11,8 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 
 class element(
     override val links: Element,
-    override val rechts: Element
-) : binärRelation<Menge<*>, Menge<*>> {
+    override val rechts: Menge<*>
+): binärRelation<Menge<*>, Menge<*>> {
     override fun auswerten(): Aussage {
         if (rechts is LeereMenge) return Aussage.LÜGE
         if (links is Zahl && rechts is ZahlenMenge) return Aussage.ausBoolean(rechts.enthält(links))

@@ -6,7 +6,7 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.Menge
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.vordefiniert.multiplikativNeutral
 
-class multiplikation(
+open class multiplikation(
     vararg argumente: Zahl,
 ): Rechnung {
     override val dimension get() = faktoren.maxBy { it.dimension }.dimension

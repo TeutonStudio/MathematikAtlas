@@ -6,13 +6,12 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 // Die 1
 object multiplikativNeutral: Zahl {
     override val dimension = 1
-    override fun negiert(): Zahl {
-        TODO("Keine -1 implementiert")
-    }
+    override fun negiert(): Zahl = Zahl.erzeuge(-1)
+    override fun kehrwert(): Zahl = this
 
-    override fun konjugiert(): Zahl = this
     override fun realteil(): Zahl = this
     override fun imaginärteil(): Zahl = addititvNeutral
+    override fun konjugiert(): Zahl = this
 
     override fun zuLatex(): String {
         TODO("Not yet implemented")
