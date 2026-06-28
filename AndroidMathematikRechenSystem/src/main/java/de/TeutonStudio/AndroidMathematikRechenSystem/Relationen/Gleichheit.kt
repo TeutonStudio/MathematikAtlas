@@ -9,13 +9,14 @@ class Gleichheit(
     override val links: Element,
     override val rechts: Element,
 ): binärRelation<Menge<out Element>,Menge<out Element>> {
+/*    override val istWahr = false
+    override val istLüge = false*/
     override fun zuLatex(): String = "${links.zuLatex()} = ${rechts.zuLatex()}"
 
     override fun vereinfacht(): MathematischesObjekt = auswerten()
 
-    override fun auswerten(): Aussage =
-        if (istWahr()) Aussage.WAHR else Aussage.LÜGE
+    override fun auswerten(): Aussage = if (istWahr) Aussage.WAHR else Aussage.LÜGE
 
     override val istWahr get() = links == rechts || links.zuLatex() == rechts.zuLatex()
-    override val istLüge get() = !istWahr()
+    override val istLüge get() = !istWahr
 }

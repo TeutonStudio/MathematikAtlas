@@ -11,7 +11,7 @@ class implikation(
     override val istKommutativ get() = false
 
     override fun auswertung(): Aussage {
-        return if (bedingung.istLüge() || behauptung.istWahr()) {
+        return if (bedingung.istLüge || behauptung.istWahr) {
             Aussage.WAHR
         } else {
             Aussage.LÜGE

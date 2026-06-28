@@ -4,8 +4,9 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischesObjekt
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.vordefiniert.GanzeZahlen
 import de.TeutonStudio.AndroidMathematikRechenSystem.Mengenlehre.vordefiniert.NatürlicheZahlen
 import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.operatoren.Interval
+import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.relationen.kleiner
 
-class Tupel<idxM: Interval<NatürlicheZahlen>,O: MathematischesObjekt>(
+class Tupel<idxM: Interval<NatürlicheZahlen, kleiner>,O: MathematischesObjekt>(
     private val def: (Int) -> O,
 ): ElementOperator {
     public fun erhalte(idx: Int): O = def(idx)

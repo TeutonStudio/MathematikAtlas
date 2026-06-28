@@ -11,8 +11,10 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Zahlen.Zahl
 
 class element(
     override val links: Element,
-    override val rechts: Menge<*>
+    override val rechts: Menge<*>,
 ): binärRelation<Menge<*>, Menge<*>> {
+    override val istWahr get() = rechts.enthält(links) ?: false
+    override val istLüge get() = if (rechts is LeereMenge) true else rechts.enthält(links)?.let { !it } ?: false
     override fun auswerten(): Aussage {
         if (rechts is LeereMenge) return Aussage.LÜGE
         if (links is Zahl && rechts is ZahlenMenge) return Aussage.ausBoolean(rechts.enthält(links))
@@ -28,11 +30,4 @@ class element(
         TODO("Not yet implemented")
     }
 
-    override fun istWahr(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun istLüge(): Boolean {
-        TODO("Not yet implemented")
-    }
 }

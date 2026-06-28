@@ -10,7 +10,7 @@ class negation(
     override val istKommutativ get() = false
 
     override fun auswertung(): Aussage {
-        return if (argument.istWahr()) Aussage.LÜGE else Aussage.WAHR
+        return if (argument.istWahr) Aussage.LÜGE else Aussage.WAHR
     }
 
     override fun zuLatex(): String = "\\lnot ${argument.zuLatex()}"

@@ -18,8 +18,8 @@ class kontrajunktion(
     override fun vereinfacht(): MathematischesObjekt = auswertung()
 
     override fun auswertung(): Aussage {
-        if (entweder.istWahr() && oder.istWahr() || entweder.istLüge() && oder.istLüge()) return Aussage.LÜGE
-        if (entweder.istWahr() && oder.istLüge() || entweder.istLüge() && oder.istWahr()) return Aussage.WAHR
+        if (entweder.istWahr && oder.istWahr || entweder.istLüge && oder.istLüge) return Aussage.LÜGE
+        if (entweder.istWahr && oder.istLüge || entweder.istLüge && oder.istWahr) return Aussage.WAHR
 
         return this
     }

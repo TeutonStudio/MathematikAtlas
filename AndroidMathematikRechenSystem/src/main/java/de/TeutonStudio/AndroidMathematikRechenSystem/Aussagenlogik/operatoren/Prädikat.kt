@@ -5,6 +5,6 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.MathematischerOperator
 
 interface Prädikat: MathematischerOperator, Aussage {
     public fun auswertung(): Aussage
-    public override fun istWahr(): Boolean = auswertung().istWahr()
-    public override fun istLüge(): Boolean = auswertung().istLüge()
+    public override val istWahr get() = auswertung().istWahr
+    public override val istLüge get() = auswertung().istLüge
 }

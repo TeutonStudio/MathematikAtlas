@@ -28,8 +28,8 @@ enum class AussageWert(
     companion object {
         fun ausAussage(aussage: Aussage): AussageWert =
             when {
-                aussage.istWahr() -> WAHR
-                aussage.istLüge() -> LUEGE
+                aussage.istWahr -> WAHR
+                aussage.istLüge -> LUEGE
                 else -> UNENTSCHEIDBAR
             }
 

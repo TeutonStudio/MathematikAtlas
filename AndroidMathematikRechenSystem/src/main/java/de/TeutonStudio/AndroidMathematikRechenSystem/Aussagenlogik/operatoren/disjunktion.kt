@@ -19,7 +19,7 @@ class disjunktion(vararg argumente: Aussage): Prädikat {
 
     override fun auswertung(): Aussage {
         if (aussagen.isEmpty()) return Aussage.LÜGE
-        return if (aussagen.any { it.istWahr() }) Aussage.WAHR else Aussage.LÜGE
+        return if (aussagen.any { it.istWahr }) Aussage.WAHR else Aussage.LÜGE
     }
 
     public companion object: LaTeXOperator {

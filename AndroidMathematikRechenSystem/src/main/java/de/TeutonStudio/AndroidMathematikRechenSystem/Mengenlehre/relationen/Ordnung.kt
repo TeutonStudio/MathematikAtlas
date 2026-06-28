@@ -8,7 +8,7 @@ import de.TeutonStudio.AndroidMathematikRechenSystem.Relationen.binärRelation
 
 interface Ordnung: binärRelation<Menge<out Element>, Menge<out Element>> {
     override fun auswerten(): Aussage =
-        if (istWahr()) Aussage.WAHR else Aussage.LÜGE
+        if (istWahr) Aussage.WAHR else Aussage.LÜGE
 
     override fun zuLatex(): String = "${links.zuLatex()} \\le ${rechts.zuLatex()}"
 
