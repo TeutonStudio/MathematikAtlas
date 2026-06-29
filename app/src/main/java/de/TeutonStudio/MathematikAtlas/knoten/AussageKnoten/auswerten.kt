@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas.knoten.AussageKnoten
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +51,12 @@ class auswerten(
     override val anschlussFabrik: AnschlussFabrik get() = MatheAnschlussFabrik
     override val minimaleBreite: Float get() = 200f
     override val minimaleTiefe: Float get() = 80f
+
+    override val kontextData: List<@Composable (() -> Unit)> = listOf(
+        { Text(daten.name,Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Duplizieren",Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Vernichten",Modifier.clickable { TODO("Kein vernichten implementiert") }) },
+    )
 
     override fun definiereVerbindung() {
         TODO("Not yet implemented")

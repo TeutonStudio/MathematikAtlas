@@ -1,14 +1,15 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
-import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,8 +21,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toOffset
+import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten.Companion.toOffset
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObjekt.Companion.Composable as VComposable
@@ -35,7 +40,7 @@ typealias Zustand = GraphDatenObjektKarte.GraphDatenObjektKarteZustand
 typealias Auswahl = GraphDatenObjektKarte.GraphDatenObjektKarteAuswahl
 typealias Kontext = GraphDatenObjektKarte.GraphDatenObjektKarteKontext
 
-interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
+interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D>, GraphDatenObjekt.Kontext<D> {
     abstract val knotenFabrik: KnotenFabrik
     abstract val verbindungFabrik: VerbindungFabrik
 
@@ -50,38 +55,58 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     val verbindungen get() = graph.verbindungen
     val anschlüsse get() = graph.anschlüsse
 
-    override val objektModifier: Modifier
-        @Composable get() =  Modifier.modiInputEvent().clipToBounds()
+//    private fun kontextObjekte(): List<GraphDatenObjekt<*>> = listOf(listOf(this), knoten, verbindungen, anschlüsse).flatten()
+
+    override val objektModifier: Modifier @Composable get() =  Modifier.modiInputEvent().clipToBounds()
 
     @Composable public override fun BoxScope.Darstellung() {
         Box(Modifier.fillMaxSize().onSizeChanged {
-            zustand.setzeDimension(it)
-            daten.breite = it.width.toFloat()
-            daten.tiefe = it.height.toFloat()
-        }.graphicsLayer {
-            translationX = zustand.erhaltePos().x
-            translationY = zustand.erhaltePos().y
-            scaleX = zustand.erhalteZoom()
-            scaleY = zustand.erhalteZoom()
-            transformOrigin = TransformOrigin(0f, 0f)
-        } ) {
+                zustand.setzeDimension(it)
+                daten.breite = it.width.toFloat()
+                daten.tiefe = it.height.toFloat()
+            }
+            .graphicsLayer {
+                translationX = zustand.erhaltePos().x
+                translationY = zustand.erhaltePos().y
+                scaleX = zustand.erhalteZoom()
+                scaleY = zustand.erhalteZoom()
+                transformOrigin = TransformOrigin(0f, 0f)
+            } ) {
             knoten.sichtbar().KComposable(/*Modifier.zIndex(1f)*/)
             verbindungen.sichtbar().VComposable(/*Modifier.zIndex(-1f)*/)
             pseudoVerbindung.value?.apply { listOf(this).VComposable() }
         }
-        graph.inhalt.filterIsInstance<GraphDatenObjekt<*>>().forEach { if (it.öffneKontext.value) it.ComposableKontext() }
-        erhalteAuswahl().singleOrNull()?.let {
-            Box(Modifier.align(Alignment.CenterEnd)) { it.ComposableInspektor() }
-        }
+        with(ctx) { KontextComposable(graph.inhalt) }
+        with(auswahl) { InspektorComposable(graph.inhalt) }
+//        kontextObjekte().forEach { if (it.öffneKontext.value) it.ComposableKontext() }
+//        erhalteAuswahl().singleOrNull()?.let {
+//            Box(Modifier.align(Alignment.CenterEnd)) { it.ComposableInspektor() }
+//        }
     }
 
     override fun beiKlick(klickPos: Offset) {
+        erhalteVerbindungNachPos(klickPos)?.apply { val (v,o) = this
+            if (o.getDistanceSquared() < 50f) {
+                auswahl.wähleVerbindung(v.daten.id)
+                ctx.keinKontext()
+                return
+            }
+        }
+
         auswahl.leereAuswahl()
+        ctx.keinKontext()
     }
 
     override fun beiHalten(klickPos: Offset) {
-        ctx.pos = klickPos.round()
-        ctx.objektDatenId = daten.id
+        erhalteVerbindungNachPos(klickPos)?.apply { val (v,o) = this
+            if (o.getDistanceSquared() < 50f) {
+                auswahl.wähleVerbindung(v.daten.id)
+                ctx.wähle(klickPos,v.daten)
+                return
+            }
+        }
+        auswahl.leereAuswahl()
+        ctx.wähle(klickPos,daten)
     }
 
     override fun beiTransform(
@@ -90,10 +115,12 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         panDelta: Offset,
         rotationChange: Float
     ) {
+        ctx.keinKontext()
         zustand.transformiere(panDelta,zoomDelta)
     }
 
-    public fun erhalteVerbindungNachPos(pos: Offset): Pair<GraphDatenObjektVerbindung<*>,Offset>? = verbindungen.map { it to it.abstand(pos) }.minByOrNull { it.second.getDistanceSquared() }
+    public fun erhalteVerbindungNachPos(pos: Offset): Pair<GraphDatenObjektVerbindung<*>,Offset>? { erhalteVerbindungNachPosPseudo(pos)?.apply { println(second.getDistanceSquared()); return this }; return null }
+    public fun erhalteVerbindungNachPosPseudo(pos: Offset): Pair<GraphDatenObjektVerbindung<*>,Offset>? = verbindungen.map { it to it.abstand(pos) }.minByOrNull { it.second.getDistanceSquared() }
     public fun erhalteAnschlussNachPos(pos: Offset): Pair<GraphDatenObjektAnschluss<*>,Offset>? = anschlüsse.map { it to it.pos - pos  }.minByOrNull { it.second.getDistanceSquared() }
 
     public fun sichtbarerWeltBereich(): Rect? {
@@ -148,10 +175,10 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         keinKontext()
     }*/
 
-    public fun erhalteAuswahl() = listOf(erhalteKnotenAuswahl(),erhalteVerbindungAuswahl(),erhalteAnschlussAuswahl()).flatten()
-    public fun erhalteKnotenAuswahl() = knoten.filter { it.daten.id in auswahl.knotenIds }
-    public fun erhalteVerbindungAuswahl() = verbindungen.filter { it.daten.id in auswahl.verbindungIds }
-    public fun erhalteAnschlussAuswahl() = anschlüsse.filter { it.daten.id in auswahl.anschlussIds }
+//    public fun erhalteAuswahl() = listOf(erhalteKnotenAuswahl(),erhalteVerbindungAuswahl(),erhalteAnschlussAuswahl()).flatten()
+//    public fun erhalteKnotenAuswahl() = knoten.filter { it.daten.id in auswahl.knotenIds }
+//    public fun erhalteVerbindungAuswahl() = verbindungen.filter { it.daten.id in auswahl.verbindungIds }
+//    public fun erhalteAnschlussAuswahl() = anschlüsse.filter { it.daten.id in auswahl.anschlussIds }
 
     fun verschiebeKnoten(id: String, panDelta: Offset) {
         val zielKnoten = knoten.filter {
@@ -166,9 +193,17 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
     }
 
     class GraphDatenObjektKarteKontext {
-        var objektDatenId = null as GraphDatenId?
-        var pos = IntOffset.Zero
+        var objektDatenId by mutableStateOf(null as GraphDatenId?)
+        var pos by mutableStateOf(IntOffset.Zero)
 
+        @Composable public fun BoxScope.KontextComposable(graphInhalt: Iterable<GraphObjekt>) {
+            graphInhalt
+                .filterIsInstance<GraphDatenObjekt.Kontext<*>>()
+                .forEach { if (it.öffneKontext.value) Box(Modifier.zIndex(30f)) { it.ComposableKontext() } }
+        }
+        public fun keinKontext() { objektDatenId = null }
+        public fun wähle(klickPos: Offset, daten: GraphDaten) { pos = klickPos.round(); objektDatenId = daten.id}
+        public fun wähle(klickPos: IntOffset, daten: GraphDaten) { pos = klickPos; objektDatenId = daten.id}
     }
     class GraphDatenObjektKarteZustand {
         private val dimension = mutableStateOf(IntSize.Zero)
@@ -181,34 +216,28 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         public fun erhalteArt() = einstellung.value.first
         public fun erhalteTesselation() = einstellung.value.second
         public fun setzeDimension(neueDimension: IntSize) { dimension.value = neueDimension }
+        public fun bildschirmZuWelt(position: Offset): Offset =
+            (position - pos.value) / zoom.floatValue.coerceAtLeast(0.0001f)
 
         public fun verschiebe(delta: Offset) { pos.value += delta }
         public fun zoome(delta: Float) { zoom.floatValue = (zoom.floatValue * delta).coerceIn(MIN_ZOOM,MAX_ZOOM) }
         public fun transformiere(verschiebung: Offset,zoom: Float) { verschiebe(verschiebung); zoome(zoom) }
-        public fun zentriereAuf(weltPosition: Offset) {
-            pos.value = Offset(
-                x = dimension.value.width / 2f,
-                y = dimension.value.height / 2f,
-            ) - weltPosition * zoom.floatValue
-        }
+        public fun zentriereAuf(weltPosition: Offset) { pos.value = dimension.value.center.toOffset() - weltPosition * zoom.floatValue }
 
         public fun erhalteViewportRect(
             breite: Float = dimension.value.width.toFloat(),
-            höhe: Float = dimension.value.height.toFloat(),
+            tiefe: Float = dimension.value.height.toFloat(),
             puffer: Float = 200f,
-        ) = RectF(
-            -pos.value.x / zoom.floatValue - puffer,
-            -pos.value.y / zoom.floatValue - puffer,
-            (breite - pos.value.x) / zoom.floatValue + puffer,
-            (höhe - pos.value.y) / zoom.floatValue + puffer,
+        ) = Rect(
+            -pos.value / zoom.floatValue - puffer.toOffset(),
+            (Offset(breite,tiefe) - pos.value) / zoom.floatValue + puffer.toOffset()
         )
-
         public companion object {
             public const val MIN_ZOOM = 0.05f
             public const val MAX_ZOOM = 5f
         }
     }
-    data class GraphDatenObjektKarteAuswahl( private val auswahl: SnapshotStateMap<String, List<String>> = mutableStateMapOf()) {
+    data class GraphDatenObjektKarteAuswahl(private val auswahl: SnapshotStateMap<String, List<String>> = mutableStateMapOf()) {
         private val mehrfachAuswahl = mutableStateOf(false)
 
         val knotenIds get() = auswahl.getOrElse("knoten",{ emptyList() })
@@ -220,6 +249,14 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         val istLeer get() = anzahl == 0
         val istEinzel get() = anzahl == 1
         val istMulti get() = anzahl > 1
+
+        @Composable public fun BoxScope.InspektorComposable(graphInhalt: Iterable<GraphObjekt>) {
+            Box(Modifier.align(Alignment.CenterEnd).zIndex(20f)) {
+                graphInhalt
+                    .filterIsInstance<GraphDatenObjekt.Inspektor<*>>()
+                    .forEach { if (it.istSelektiert.value) it.ComposableInspektor() }
+            }
+        }
 
         private fun wähle(schlüssel: String, ids: Array<out String>) {
             if (!istMehrfachAuswahl) leereAuswahl()
@@ -249,5 +286,7 @@ interface GraphDatenObjektKarte<D: GraphDatenKarte>: GraphDatenObjekt<D> {
         public fun Iterable<GraphDatenObjektKnoten<*>>.sichtbar() = filter { it.istImViewport() }
         @JvmName("IterVerbindung2inViewport")
         public fun Iterable<GraphDatenObjektVerbindung<*>>.sichtbar() = filter { it.istImViewport() }
+
+        private const val VERBINDUNG_TREFFER_RADIUS = 14f
     }
 }

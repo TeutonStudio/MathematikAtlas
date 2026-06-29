@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -34,7 +35,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphCanvasObje
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussFabrik
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.erzeugeAnschluss
 
-interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, GraphDatenObjekt.Vergrößerbar<D> {
+interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, GraphDatenObjekt.Vergrößerbar<D>, GraphDatenObjekt.Inspektor<D>, GraphDatenObjekt.Kontext<D> {
     public abstract val besitzer: GraphDatenObjektKarte<*>
     public abstract val anschlussFabrik: AnschlussFabrik
     override val vergrößerbarZoom: Float get() = besitzer.zustand.erhalteZoom()
@@ -46,26 +47,21 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
     /** Positioniert und skaliert den Knoten innerhalb der Kartenebene. */
     @Composable public override fun Modifier.vorher(): Modifier = vergrößerbareGröße()
         .offset { daten.position.round() }.zIndex(1f)
-//        .width(with(LocalDensity.current) { daten.breite.toDp() })
-//        .height(with(LocalDensity.current) { daten.tiefe.toDp() })
         .apply { if (istSelektiert.value) { border(2.dp, graph.selektiertFarbe, RoundedCornerShape(8.dp)) } }
 
     @Composable public override fun Modifier.modiInputEvent(): Modifier =
-        vorher()
-            .position()
-            .tapping()
-            .pointerInput(daten.id) {
-                detectDragGestures(
-                    onDragStart = {
-                        besitzer.auswahl.wähleKnoten(daten.id)
-                        besitzer.ctx.objektDatenId = null
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        beiTransform(Offset.Zero, 1f, dragAmount, 0f)
-                    },
-                )
-            }
+        vorher().position().tapping().pointerInput(daten.id) {
+            detectDragGestures(
+                onDragStart = {
+                    besitzer.auswahl.wähleKnoten(daten.id)
+                    besitzer.ctx.keinKontext()
+                },
+                onDrag = { change, dragAmount ->
+                    change.consume()
+                    beiTransform(Offset.Zero, 1f, dragAmount, 0f)
+                },
+            )
+        }
 
     @Composable public override fun Modifier.position(): Modifier =
         onGloballyPositioned {
@@ -77,25 +73,25 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
 
     public override fun beiKlick(klickPos: Offset) {
         besitzer.auswahl.wähleKnoten(daten.id)
-        besitzer.ctx.objektDatenId = null
+        besitzer.ctx.keinKontext()
     }
     public override fun beiHalten(klickPos: Offset) {
         besitzer.auswahl.wähleKnoten(daten.id)
-        besitzer.ctx.pos = klickPos.round()
-        besitzer.ctx.objektDatenId = daten.id
+        besitzer.ctx.wähle(kontextPosition(klickPos),daten)
     }
     public override fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float) {
         besitzer.verschiebeKnoten(daten.id, panDelta)
         besitzer.auswahl.wähleKnoten(daten.id)
-        besitzer.ctx.objektDatenId = null
+        besitzer.ctx.keinKontext()
     }
 
-    @Composable public override fun ComposableStandard() = Box(objektModifier) {
+    @Composable public override fun ComposableDarstellung() = Box(objektModifier) {
         Darstellung()
         if (istSelektiert.value) { VergrößerBereiche() }
         Kante.entries.forEach { k ->
-            KnotenKante(k,Modifier.offset(x = if (k == Kante.Links) (-5).dp else 5.dp).zIndex(2f),
-                anschlüsse.filter { it.daten.kante == k }.map { { Box(it.objektModifier) } }
+            KnotenKante(k,
+                Modifier.offset(x = if (k == Kante.Links) (-5).dp else 5.dp).zIndex(2f),
+                anschlüsse.filter { it.daten.kante == k }.sortedBy { daten.anschlussIdx[it.daten.id] ?: Int.MAX_VALUE }.map { { Box(it.objektModifier) } }
             )
         }
     }
@@ -116,9 +112,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
 
     @Composable
     public fun BoxScope.StandardKontextFenster(pos: androidx.compose.ui.unit.IntOffset = besitzer.ctx.pos) {
-        Card(Modifier
-            .offset { pos }
-            .padding(4.dp)) {
+        Card(Modifier.offset { pos }.padding(4.dp)) {
             Column(Modifier.padding(12.dp)) {
                 Text(daten.name)
                 Text("Position: ${daten.position.x.toInt()}, ${daten.position.y.toInt()}")
@@ -128,12 +122,7 @@ interface GraphDatenObjektKnoten<D: GraphDatenKnoten>: GraphDatenObjekt<D>, Grap
     }
 
     /** Prüft, ob der Knoten den sichtbaren Kartenbereich überschneidet. */
-    public fun istImViewport(viewport: RectF = besitzer.zustand.erhalteViewportRect()): Boolean = RectF(
-        daten.position.x,
-        daten.position.y,
-        daten.position.x + daten.breite,
-        daten.position.y + daten.tiefe,
-    ).overlaps(viewport)
+    public fun istImViewport(viewport: Rect = besitzer.zustand.erhalteViewportRect()): Boolean = daten.dimension.overlaps(viewport)
 
     public fun planeVerbindung(vonAnschluss: GraphDatenObjektAnschluss<*>, vonKnoten: GraphDatenObjektKnoten<*>) {}
     public fun verwerfeGeplanteVerbindung() {}

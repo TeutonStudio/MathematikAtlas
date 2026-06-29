@@ -1,13 +1,19 @@
 package de.TeutonStudio.MathematikAtlas.karten
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKarte
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenKnoten
@@ -56,6 +62,13 @@ class MatheKarte(
         BasisKnotenFabrik + AussageKnotenFabrik + ZahlenKnotenFabrik + MengenKnotenFabrik
     override val verbindungFabrik: VerbindungFabrik = BasisVerbindungFabrik
 
+    override val kontextData: List<@Composable (() -> Unit)> = listOf(
+        { Text(daten.name,Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Duplizieren",Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Vernichten",Modifier.clickable { TODO("Kein vernichten implementiert") }) },
+    )
+
+
     override val ctx = Kontext()
     override val auswahl = Auswahl()
     override val zustand = Zustand()
@@ -87,13 +100,12 @@ class MatheKarte(
 
     @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        Column {
-            Text("KontextFenster der MatheKarte")
+        Card(Modifier.offset { pos }.padding(4.dp)) {
+            Column(Modifier.padding(12.dp)) {
+                Text("KontextFenster der MatheKarte")
+            }
         }
     }
-
-    @Composable
-    override fun BoxScope.Inspektor() {}
 
     class MatheKarteDaten(
         override val id: String,

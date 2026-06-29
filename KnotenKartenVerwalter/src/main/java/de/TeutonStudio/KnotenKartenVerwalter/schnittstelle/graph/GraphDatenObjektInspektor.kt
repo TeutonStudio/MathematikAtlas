@@ -2,9 +2,9 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -41,9 +41,23 @@ import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph.GraphDatenObjekt.Vergrößerbar.VergrößerBereich
 
-typealias GraphDatenObjektInspektor<D> = GraphDatenObjekt.Inspektor<D>
-
 private val gespeicherteInspektorBreitePx = mutableFloatStateOf(0f)
+
+interface GraphDatenObjektInspektor<D: GraphDaten> :
+    GraphDatenObjekt.Inspektor<D>,
+    GraphDatenObjektInspektorBasis<D> {
+
+    override val inpsektorData: List<@Composable () -> Unit>
+        get() = listOf {
+            KopfZeile()
+            Inhalt()
+        }
+
+    @Composable
+    override fun BoxScope.Inspektor() {
+        Composable()
+    }
+}
 
 interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
     public val daten: D
@@ -105,9 +119,7 @@ interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
                 aktuelleBreite = breitePx,
                 minBreite = minBreite,
                 maxBreite = maxBreite,
-                beiÄnderung = { neueBreite ->
-                    breitePx = neueBreite
-                },
+                beiÄnderung = { neueBreite -> breitePx = neueBreite },
             )
         }
     }
@@ -119,9 +131,7 @@ interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
         maxBreite: Dp,
         beiÄnderung: (breite: Float) -> Unit,
     ) {
-        listOf(
-            VergrößerBereich.Links,
-        ).forEach { bereich ->
+        listOf(VergrößerBereich.Links).forEach { bereich ->
             val länge = if (bereich.istEcke) 14.dp else 26.dp
             val dicke = if (bereich.istEcke) 14.dp else 8.dp
             val farbe = Color(0xFF2563EB)
@@ -183,6 +193,8 @@ interface GraphDatenObjektInspektorBasis<D: GraphDaten> {
 public class BasisObjektKontext(
     private vararg val zeilen: GraphDatenObjektInspektorZeile,
 ) {
+    public val data: List<@Composable () -> Unit> = zeilen.map { zeile -> { zeile.Composable() } }
+
     @Composable
     public fun Inhalt() {
         zeilen.forEach { it.Composable() }

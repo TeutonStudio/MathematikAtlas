@@ -1,10 +1,13 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
@@ -26,6 +29,14 @@ open class BasisObjektAnschluss(
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
     override var dragPos = mutableStateOf<Offset>(Offset.Zero)
     override var dragZiel = mutableStateOf<GraphDatenObjektAnschluss<*>?>(null)
+
+    override val inpsektorData: List<@Composable (() -> Unit)> = listOf()
+    override val kontextData: List<@Composable (() -> Unit)> = listOf(
+        { Text(daten.label,Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Duplizieren",Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Vernichten",Modifier.clickable { TODO("Kein vernichten implementiert") }) },
+    )
+
 
     override fun erhaltePseudoVerbindung(): GraphDatenObjektVerbindung<*> {
         return BasisObjektVerbindung(graph, BasisDatenVerbindung(
@@ -63,15 +74,15 @@ open class BasisObjektAnschluss(
         TODO("Not yet implemented")
     }
 
-    @Composable
+/*    @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        TODO("Not yet implemented")
-    }
+        StandardKontextFenster(pos)
+    }*/
 
-    @Composable
+/*    @Composable
     override fun BoxScope.Inspektor() {
         TODO("Not yet implemented")
-    }
+    }*/
 
     public companion object {
         public const val ANSCHLUSS_ART = "default"

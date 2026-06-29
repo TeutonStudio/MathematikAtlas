@@ -1,13 +1,9 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.InternalComposeApi
-import androidx.compose.runtime.RecomposeScope
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
@@ -49,7 +45,7 @@ class Graph(
     public val inhalt: MutableList<GraphObjekt> = mutableListOf()
     val karte = kartenFabrik.erzeugeKarte(this,daten,veränderung,verbindete,wählte).apply { registriere() }
     val knoten by GraphCache({ daten.knoten }) { k: GraphDatenKnoten ->
-        karte.knotenFabrik.erzeugeKnoten(this,k,karte)
+        karte.knotenFabrik.erzeugeKnoten(this,k,karte)?.apply { registriere() }
     }
     val anschlüsse by GraphCache({ karte.daten.knoten.flatMap { it.anschlüsse } }) { d: GraphDatenAnschluss ->
         knoten.find { it.daten.anschlüsse.contains(d) }?.let { it.anschlussFabrik.erzeugeAnschluss(this,d,it)?.apply { registriere() } }
@@ -65,18 +61,15 @@ class Graph(
 
     val verbindungen by GraphCache({ verbindungsDatenMitPositioniertenEndpunkten() }) { v: GraphDatenVerbindung ->
         anschlüsse.findMann(v.ids)?.let { aM -> anschlüsse.findWeib(v.ids)?.let { aW ->
-            karte.verbindungFabrik.erzeugeVerbindung(this,v, derivedStateOf { aM.pos }, derivedStateOf { aW.pos })
+            karte.verbindungFabrik.erzeugeVerbindung(this,v, derivedStateOf { aM.pos }, derivedStateOf { aW.pos })?.apply { registriere() }
         } }
     }
 
     public val selektiertFarbe = Color(0xFF2563EB)
 
     @Composable public fun Composable(modifier: Modifier) = Hintergrund(karte.zustand,75f,modifier) {
-        karte.ComposableStandard()
-        Row(Modifier
-            .padding(16.dp)
-            .zIndex(1f)
-            .align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
+        karte.ComposableDarstellung()
+        Row(Modifier.padding(16.dp).zIndex(1f).align(Alignment.BottomEnd), Arrangement.spacedBy(8.dp),Alignment.Bottom) {
             karte.zuSteuerung()
             karte.zuÜbersicht()
         }

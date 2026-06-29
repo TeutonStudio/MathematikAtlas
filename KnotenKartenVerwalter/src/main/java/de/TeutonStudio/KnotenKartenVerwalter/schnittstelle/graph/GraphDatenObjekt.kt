@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -34,11 +36,10 @@ import androidx.compose.ui.unit.round
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
+import java.util.Dictionary
 
 interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public val daten: D
-//    public val graph: Graph
-//    public fun registriere() = also { graph.inhalt.add(it) }
 
     public val layoutCoordinates: MutableState<LayoutCoordinates?>
     public val objektModifier @Composable get() = Modifier.modiInputEvent()
@@ -47,7 +48,7 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
     public open fun beiHalten(klickPos: Offset)
     public open fun beiTransform(centroid: Offset, zoomDelta: Float, panDelta: Offset, rotationChange: Float)
 
-    @Composable public open fun Modifier.modiInputEvent() = vorher().position().transform().tapping()
+    @Composable public open fun Modifier.modiInputEvent() = vorher().position().tapping().transform()
     @Composable public open fun Modifier.vorher() = zIndex(1f)
 
     @Composable public fun Modifier.transform() = transformable(rememberTransformableState(::beiTransform))
@@ -56,24 +57,24 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
 
 
     @Composable public open fun BoxScope.Darstellung()
-    @Composable public open fun BoxScope.KontextFenster(pos: IntOffset = graph.karte.ctx.pos)
-    @Composable public open fun BoxScope.Inspektor()
+    @Composable public fun ComposableDarstellung() = Box(objektModifier) { Darstellung() }
 
-    @Composable public fun ComposableStandard() = Box(objektModifier) { Darstellung() }
-    @Composable public fun ComposableKontext() = Box() { KontextFenster() }
-    @Composable public fun ComposableInspektor() = Box() { Inspektor() }
-
-    public val öffneKontext get() = derivedStateOf { graph.karte.ctx.objektDatenId == daten.id }
     public val istSelektiert get() = derivedStateOf { graph.karte.auswahl.enthält(this) }
 
     public fun erhalteAnschluss(knotenId: String,anschlussId: String) = graph.karte.knoten.find { it.daten.id == knotenId }!!.anschlüsse.find { it.daten.id == anschlussId }
     public fun erhalteAnschlussMann(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdMann,id.anschlussIdMann)
     public fun erhalteAnschlussWeib(id: GraphDatenVerbindung.IDEhe) = erhalteAnschluss(id.knotenIdWeib,id.anschlussIdWeib)
 
+    public fun kontextPosition(klickPos: Offset): IntOffset {
+        val objektKoordinaten = layoutCoordinates.value ?: return klickPos.round()
+        val kartenKoordinaten = graph.karte.layoutCoordinates.value ?: return klickPos.round()
+        return kartenKoordinaten.localPositionOf(objektKoordinaten, klickPos).round()
+    }
+
 //    public fun erstelleVerbindung(von: GraphDatenObjektAnschluss<*>, zu: GraphDatenObjektAnschluss<*>) = Unit
 
     public companion object {
-        @Composable public fun Iterable<GraphDatenObjekt<*>>.Composable(/*modifier: Modifier = Modifier*/) = forEach { it.ComposableStandard() }
+        @Composable public fun Iterable<GraphDatenObjekt<*>>.Composable(/*modifier: Modifier = Modifier*/) = forEach { it.ComposableDarstellung() }
 
     }
 
@@ -106,31 +107,23 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
             startTiefe: Float,
             klickPosImKnoten: Offset,
         ) {
-            val rechteKante = startPosition.x + startBreite
-            val untereKante = startPosition.y + startTiefe
+            val pos = startPosition + klickPosImKnoten
+            val kanten = startPosition + Offset(startBreite,startTiefe)
 
             var neueLinks = startPosition.x
             var neueOben = startPosition.y
-            var neueRechts = rechteKante
-            var neueUnten = untereKante
+            var neueRechts = kanten.x
+            var neueUnten = kanten.y
 
-            if (horizontalVergrößerbar) {
-                when {
-                    bereich.links -> neueLinks = (startPosition.x + klickPosImKnoten.x)
-                        .coerceAtMost(rechteKante - minimaleBreite)
-                    bereich.rechts -> neueRechts = (startPosition.x + klickPosImKnoten.x)
-                        .coerceAtLeast(startPosition.x + minimaleBreite)
-                }
-            }
+            if (horizontalVergrößerbar) { when {
+                bereich.links -> neueLinks = pos.x.coerceAtMost(kanten.x - minimaleBreite)
+                bereich.rechts -> neueRechts = pos.x.coerceAtLeast(startPosition.x + minimaleBreite)
+            } }
 
-            if (vertikalVergrößerbar) {
-                when {
-                    bereich.oben -> neueOben = (startPosition.y + klickPosImKnoten.y)
-                        .coerceAtMost(untereKante - minimaleTiefe)
-                    bereich.unten -> neueUnten = (startPosition.y + klickPosImKnoten.y)
-                        .coerceAtLeast(startPosition.y + minimaleTiefe)
-                }
-            }
+            if (vertikalVergrößerbar) { when {
+                bereich.oben -> neueOben = pos.y.coerceAtMost(kanten.y - minimaleTiefe)
+                bereich.unten -> neueUnten = pos.y.coerceAtLeast(startPosition.y + minimaleTiefe)
+            } }
 
             daten.position = Offset(neueLinks, neueOben)
             daten.breite = neueRechts - neueLinks
@@ -141,95 +134,77 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
          * Überträgt die in Weltkoordinaten gespeicherte Größe
          * auf das Compose-Layout.
          */
-        @Composable
-        public fun Modifier.vergrößerbareGröße(): Modifier {
-            val dichte = LocalDensity.current
-            val breite = with(dichte) {
-                daten.breite.coerceAtLeast(minimaleBreite).toDp()
-            }
-            val tiefe = with(dichte) {
-                daten.tiefe.coerceAtLeast(minimaleTiefe).toDp()
-            }
-            return this.width(breite).height(tiefe)
-        }
+        @Composable public fun Modifier.vergrößerbareGröße(): Modifier = daten.dimModi(this,LocalDensity.current,Offset(minimaleBreite,minimaleTiefe))
 
         /**
          * Zeichnet die sichtbaren Griffe zur Größenänderung.
          */
-        @Composable
-        public fun BoxScope.VergrößerBereiche() {
-            VergrößerBereich.entries
-                .filter(::istBereichSichtbar)
-                .forEach { bereich ->
-                    var griffKoordinaten by remember(bereich) { mutableStateOf<LayoutCoordinates?>(null) }
-                    val istEcke = bereich.istEcke
-                    val länge = if (istEcke) 14.dp else 26.dp
-                    val dicke = if (istEcke) 14.dp else 8.dp
+        @Composable public fun BoxScope.VergrößerBereiche() {
+            VergrößerBereich.entries.filter(::istBereichSichtbar).forEach { bereich ->
+                var griffKoordinaten by remember(bereich) { mutableStateOf<LayoutCoordinates?>(null) }
+                val istEcke = bereich.istEcke
+                val länge = if (istEcke) 14.dp else 26.dp
+                val dicke = if (istEcke) 14.dp else 8.dp
 
-                    val größenModifier = if (bereich.istVertikal) { Modifier.width(dicke).height(länge) } else { Modifier.width(länge).height(dicke) }
+                val größenModifier = if (bereich.istVertikal) { Modifier.width(dicke).height(länge) } else { Modifier.width(länge).height(dicke) }
 
-                    Box(modifier = Modifier.align(bereich.ausrichtung).offset { bereich.offset.round() }
-                        .then(größenModifier)
-                        .onGloballyPositioned { griffKoordinaten = it }
-                        .background(color = vergrößerbarFarbe, shape = CircleShape)
-                        .zIndex(4f)
-                        .pointerInput(bereich) {
-                            awaitEachGesture {
-                                val start = awaitFirstDown(requireUnconsumed = false)
-                                start.consume()
+                Box(modifier = Modifier.align(bereich.ausrichtung).offset { bereich.offset.round() }
+                    .then(größenModifier)
+                    .onGloballyPositioned { griffKoordinaten = it }
+                    .background(color = vergrößerbarFarbe, shape = CircleShape)
+                    .zIndex(4f).pointerInput(bereich) {
+                        awaitEachGesture {
+                            val start = awaitFirstDown(requireUnconsumed = false)
+                            start.consume()
 
-                                val startPosition = daten.position
-                                val startBreite = daten.breite
-                                val startTiefe = daten.tiefe
-                                val zoom = vergrößerbarZoom.coerceAtLeast(0.0001f)
-                                val knotenUrsprungImRoot = vergrößerbarLayoutCoordinates?.value?.localToRoot(Offset.Zero)
+                            val startPosition = daten.position
+                            val startBreite = daten.breite
+                            val startTiefe = daten.tiefe
+                            val zoom = vergrößerbarZoom.coerceAtLeast(0.0001f)
+                            val knotenUrsprungImRoot = vergrößerbarLayoutCoordinates?.value?.localToRoot(Offset.Zero)
 
-                                val griffUrsprungImKnoten = bereich.griffUrsprung(
-                                        knotenBreite = daten.breite,
-                                        knotenTiefe = daten.tiefe,
-                                        griffBreite = size.width.toFloat(),
-                                        griffHöhe = size.height.toFloat(),
-                                    )
-                                fun klickPositionImStartKnoten(klickPosImGriff: Offset): Offset {
-                                    val klickPosImRoot = griffKoordinaten?.localToRoot(klickPosImGriff)
-                                    return if (knotenUrsprungImRoot != null && klickPosImRoot != null) {
-                                        (klickPosImRoot - knotenUrsprungImRoot) / zoom
-                                    } else {
-                                        griffUrsprungImKnoten + klickPosImGriff
-                                    }
-                                }
+                            val griffUrsprungImKnoten = bereich.griffUrsprung(
+                                knotenBreite = daten.breite,
+                                knotenTiefe = daten.tiefe,
+                                griffBreite = size.width.toFloat(),
+                                griffHöhe = size.height.toFloat(),
+                            )
+                            fun klickPositionImStartKnoten(klickPosImGriff: Offset): Offset {
+                                val klickPosImRoot = griffKoordinaten?.localToRoot(klickPosImGriff)
+                                return if (knotenUrsprungImRoot != null && klickPosImRoot != null) {
+                                    (klickPosImRoot - knotenUrsprungImRoot) / zoom
+                                } else { griffUrsprungImKnoten + klickPosImGriff }
+                            }
 
+                            vergrößereBereich(
+                                bereich = bereich,
+                                startPosition = startPosition,
+                                startBreite = startBreite,
+                                startTiefe = startTiefe,
+                                klickPosImKnoten = klickPositionImStartKnoten(start.position),
+                            )
+
+                            drag(start.id) { change ->
+                                change.consume()
                                 vergrößereBereich(
                                     bereich = bereich,
                                     startPosition = startPosition,
                                     startBreite = startBreite,
                                     startTiefe = startTiefe,
-                                    klickPosImKnoten = klickPositionImStartKnoten(start.position),
+                                    klickPosImKnoten = klickPositionImStartKnoten(change.position),
                                 )
-
-                                drag(start.id) { change ->
-                                    change.consume()
-                                    vergrößereBereich(
-                                        bereich = bereich,
-                                        startPosition = startPosition,
-                                        startBreite = startBreite,
-                                        startTiefe = startTiefe,
-                                        klickPosImKnoten = klickPositionImStartKnoten(change.position),
-                                    )
-                                }
                             }
-                        },
-                    )
-                }
+                        }
+                    },
+                )
+            }
         }
 
         /**
          * Ecken werden nur benötigt, wenn beide Achsen veränderbar sind.
          * Für einzelne Achsen genügen die jeweiligen Seitengriffe.
          */
-        public fun istBereichSichtbar(
-            bereich: VergrößerBereich,
-        ): Boolean = when {
+        public fun istBereichSichtbar(bereich: VergrößerBereich): Boolean = when {
             bereich.istEcke -> horizontalVergrößerbar && vertikalVergrößerbar
             bereich.links || bereich.rechts -> horizontalVergrößerbar
             bereich.oben || bereich.unten -> vertikalVergrößerbar
@@ -346,5 +321,27 @@ interface GraphDatenObjekt<D: GraphDaten>: GraphObjekt {
         }
     }
 
-    public interface Inspektor<D: GraphDaten>: GraphDatenObjektInspektorBasis<D>
+    public interface Inspektor<D: GraphDaten>: GraphDatenObjekt<D>/*, GraphDatenObjektInspektorBasis<D>*/ {
+//        override val istSelektiert get() = derivedStateOf { graph.karte.auswahl.enthält(this) }
+        public val inpsektorData: List<@Composable () -> Unit>
+
+        @Composable public fun ComposableInspektor() = Box(Modifier.zIndex(20f)) { Inspektor() }
+        @Composable public open fun BoxScope.Inspektor() {
+            Card(Modifier.padding(15.dp)) {
+                inpsektorData.forEach { it() }
+            }
+        }
+    }
+
+    public interface Kontext<D: GraphDaten>: GraphDatenObjekt<D> {
+        public val öffneKontext get() = derivedStateOf { graph.karte.ctx.objektDatenId == daten.id }
+        public val kontextData: List<@Composable () -> Unit>
+
+        @Composable public fun ComposableKontext() = Box(Modifier.zIndex(30f)) { KontextFenster() }
+        @Composable public open fun BoxScope.KontextFenster(pos: IntOffset = graph.karte.ctx.pos) {
+            Card(Modifier.offset { pos }.padding(15.dp)) {
+                kontextData.forEach { it() }
+            }
+        }
+    }
 }

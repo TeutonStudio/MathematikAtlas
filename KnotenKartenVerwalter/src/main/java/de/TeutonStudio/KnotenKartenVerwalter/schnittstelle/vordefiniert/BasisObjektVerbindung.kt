@@ -1,9 +1,12 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -29,20 +32,28 @@ open class BasisObjektVerbindung(
 ): GraphDatenObjektVerbindung<GraphDatenVerbindung> {
     public override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
 
+
+    override val inpsektorData: List<@Composable (() -> Unit)> = listOf()
+    override val kontextData: List<@Composable (() -> Unit)> = listOf(
+        { Text(daten.id,Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Duplizieren",Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Vernichten",Modifier.clickable { TODO("Kein vernichten implementiert") }) },
+    )
+
     @Composable
     override fun BoxScope.Darstellung() {
         TODO("Not yet implemented")
     }
 
-    @Composable
+/*    @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        TODO("Not yet implemented")
-    }
+        StandardKontextFenster(pos)
+    }*/
 
-    @Composable
+/*    @Composable
     override fun BoxScope.Inspektor() {
-        TODO("Not yet implemented")
-    }
+        StandardInspektor()
+    }*/
 
     public override var startKante: Kante = Kante.Rechts
     public override var endeKante: Kante = Kante.Links

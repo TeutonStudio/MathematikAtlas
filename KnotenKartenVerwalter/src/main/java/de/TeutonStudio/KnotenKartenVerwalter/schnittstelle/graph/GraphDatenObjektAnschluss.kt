@@ -2,8 +2,14 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.graph
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
@@ -11,6 +17,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
@@ -18,7 +25,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenVerbindung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphPosition
 import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
 
-interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D> {
+interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>:
+    GraphDatenObjekt<D>,
+    GraphDatenObjekt.Kontext<D>,
+    GraphDatenObjekt.Inspektor<D> {
     public val besitzer: GraphDatenObjektKnoten<*>
     public val karte get() = besitzer.besitzer
 
@@ -35,8 +45,8 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
     }
 
     override fun beiHalten(klickPos: Offset) {
-        karte.ctx.pos = klickPos.round()
-        karte.ctx.objektDatenId = daten.id
+        karte.auswahl.wähleAnschluss(daten.id)
+        karte.ctx.wähle(kontextPosition(klickPos),daten)
     }
 
     override fun beiTransform(
@@ -103,9 +113,41 @@ interface GraphDatenObjektAnschluss<D: GraphDatenAnschluss>: GraphDatenObjekt<D>
 
     public fun erhaltePseudoVerbindung(): GraphDatenObjektVerbindung<*>
 
+    @Composable
+    override fun BoxScope.KontextFenster(pos: IntOffset) {
+        StandardKontextFenster(pos)
+    }
+
+    @Composable
+    override fun BoxScope.Inspektor() {
+        StandardInspektor()
+    }
+
+    @Composable
+    public fun BoxScope.StandardKontextFenster(pos: IntOffset = karte.ctx.pos) {
+        Card(Modifier.offset { pos }.padding(4.dp)) {
+            Column(Modifier.padding(12.dp)) {
+                Text(daten.label.ifBlank { daten.id })
+                Text("Kante: ${daten.kante}")
+                Text("Klasse: ${daten.klasse ?: "-"}")
+            }
+        }
+    }
+
+    @Composable
+    public fun BoxScope.StandardInspektor() {
+        Card(Modifier.padding(12.dp)) {
+            Column(Modifier.padding(20.dp)) {
+                Text(daten.label.ifBlank { daten.id })
+                Text("Kante: ${daten.kante}")
+                Text("Klasse: ${daten.klasse ?: "-"}")
+            }
+        }
+    }
+
     public fun beiVerbindungZiehenStart(start: PointerInputChange,change: PointerInputChange,klickPos: Offset) {
         start.consume()
-        karte.ctx.objektDatenId = null
+        karte.ctx.keinKontext()
         karte.auswahl.wähleAnschluss(daten.id)
         dragPos.value = pos
 

@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas.anschlüsse
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -8,6 +9,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.IntOffset
@@ -33,6 +35,14 @@ open class AussageObjektAnschluss(
     override val layoutCoordinates = mutableStateOf<LayoutCoordinates?>(null)
     override var dragPos = mutableStateOf(Offset.Zero)
     override var dragZiel = mutableStateOf<GraphDatenObjektAnschluss<*>?>(null)
+
+    override val inpsektorData: List<@Composable (() -> Unit)> = listOf()
+    override val kontextData: List<@Composable (() -> Unit)> = listOf(
+        { Text(daten.label,Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Duplizieren",Modifier.clickable { TODO("Kein duplizieren implementiert") }) },
+        { Text("Vernichten",Modifier.clickable { TODO("Kein vernichten implementiert") }) },
+    )
+
 
     open class AussageAnschlussDaten(
         override val id: GraphDatenId,
@@ -77,15 +87,15 @@ open class AussageObjektAnschluss(
         TODO("Not yet implemented")
     }
 
-    @Composable
+/*    @Composable
     override fun BoxScope.KontextFenster(pos: IntOffset) {
-        TODO("Not yet implemented")
-    }
+        StandardKontextFenster(pos)
+    }*/
 
-    @Composable
+/*    @Composable
     override fun BoxScope.Inspektor() {
         Text("Inpektor des Aussage Anschluss")
-    }
+    }*/
 
     public companion object {
         public const val ANSCHLUSS_ART = "outputAussage"
