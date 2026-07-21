@@ -1,4 +1,4 @@
-package com.TeutonStudio.KnotenKartenVerwalter.daten.speicher
+package de.TeutonStudio.KnotenKartenVerwalter.daten.speicher
 
 
 /* TODO SpeicherDaten */

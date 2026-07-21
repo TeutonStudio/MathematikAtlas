@@ -1,1 +1,1 @@
-package com.TeutonStudio.KnotenKartenVerwalter.daten
+package de.TeutonStudio.KnotenKartenVerwalter.daten
