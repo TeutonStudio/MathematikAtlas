@@ -17,7 +17,7 @@ object MathematikKnotenVorlagen {
     val Addition = KnotenVorlage(
         "mathematik.addition", "Addition", "Rechnen", "Addiert zwei oder mehr Zahlterme.", GraphGröße(220f, 130f),
         listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
-        mapOf("festeEingänge" to "2"),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     val Multiplikation = KnotenVorlage(
         "mathematik.multiplikation", "Multiplikation", "Rechnen", "Multipliziert zwei oder mehr Zahlterme.", GraphGröße(220f, 130f),
@@ -58,7 +58,7 @@ object MathematikKnotenVorlagen {
     val Vereinigung = KnotenVorlage(
         "mathematik.vereinigung", "Vereinigung", "Mengen", "Vereinigt zwei Mengen.", GraphGröße(220f, 110f),
         listOf(eingang("a", MathematikAnschlussArten.Menge.id, 0, true), eingang("b", MathematikAnschlussArten.Menge.id, 1, true), ausgang("menge", MathematikAnschlussArten.Menge.id)),
-        mapOf("festeEingänge" to "2"),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     val Vektor = KnotenVorlage(
         "mathematik.vektor", "Vektor", "Lineare Algebra", "Vektor aus exakten Zahlen.", GraphGröße(220f, 105f),

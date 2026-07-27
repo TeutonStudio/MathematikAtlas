@@ -198,7 +198,10 @@ class AtlasZustand(context: Context) {
                     anschlüsse = knoten.anschlüsse.filterNot { it.id in überzähligeFesteEingänge }.map { anschluss ->
                         if (anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(kannSichErweitern = true) else anschluss
                     },
-                    parameter = knoten.parameter + ("festeEingänge" to festeEingänge.toString()),
+                    parameter = knoten.parameter + mapOf(
+                        "festeEingänge" to festeEingänge.toString(),
+                        "operatorAnzeige" to if (knoten.parameter["operatorAnzeige"] == "name") "name" else "wert",
+                    ),
                 )
             }
         },

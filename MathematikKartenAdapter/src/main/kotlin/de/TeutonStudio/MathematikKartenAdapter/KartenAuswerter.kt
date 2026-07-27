@@ -65,10 +65,12 @@ class KartenAuswerter(
         val signatur = 31 * knoten.hashCode() + eingänge.hashCode()
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
         val auswerter = register.finde(knoten.art)
-            ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Kein Auswerter für ${knoten.art} registriert.")
-        val ergebnis = runCatching {
+        val ergebnis = (if (auswerter == null) {
+            KnotenAuswertungsErgebnis(emptyMap(), fehler = "Kein Auswerter für ${knoten.art} registriert.")
+        } else runCatching {
             auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen)))
         }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
+        ).copy(eingänge = eingänge)
         cache[knoten.id] = CacheEintrag(signatur, ergebnis)
         return ergebnis
     }

@@ -12,7 +12,9 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Variable(k.knoten.parameter["name"] ?: "x"))))
         }
         registriere("mathematik.addition") { k ->
-            val werte = k.eingänge.values.mapNotNull { it.objekt as? ZahlAusdruck }
+            val werte = k.operatorEingänge { anschluss, index ->
+                Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
+            }.map { it.objekt as? ZahlAusdruck ?: error("Zahleingang ${it} ist ungültig.") }
             require(werte.size >= 2) { "Mindestens zwei Summanden müssen verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(addition(werte), annahmen(k))))
         }
@@ -51,7 +53,8 @@ object StandardMathematikAuswerter {
                 }
                 is Aussage -> {
                     val ergebnis = objekt.entscheide(k.rechenKontext)
-                    KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(objekt, annahmen(k))), fehler = if (ergebnis.status is EntscheidungsStatus.NichtAuswertbar) "Aussage nicht auswertbar" else null)
+                    val auswertung = ergebnis.wahrheitswert?.let { WahrheitsKonstante(it == Wahrheitswert.Wahr) } ?: objekt
+                    KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(auswertung, annahmen(k))), fehler = if (ergebnis.status is EntscheidungsStatus.NichtAuswertbar) "Aussage nicht auswertbar" else null)
                 }
                 else -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(objekt, annahmen(k))))
             }
@@ -69,7 +72,9 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(EndlicheMenge(elemente))))
         }
         registriere("mathematik.vereinigung") { k ->
-            val mengen = k.eingänge.values.mapNotNull { it.objekt as? MengenAusdruck }
+            val mengen = k.operatorEingänge { anschluss, index ->
+                BenannteMenge(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
+            }.map { it.objekt as? MengenAusdruck ?: error("Mengeneingang ${it} ist ungültig.") }
             require(mengen.size >= 2) { "Mindestens zwei Mengen müssen verbunden sein." }
             val wert = if (mengen.all { it is EndlicheMenge }) {
                 EndlicheMenge(mengen.filterIsInstance<EndlicheMenge>().flatMap { it.elemente }.toSet())
@@ -125,3 +130,23 @@ object StandardMathematikAuswerter {
     }
     private fun parseTerm(text: String): ZahlAusdruck = text.trim().toLongOrNull()?.let(RationaleZahl::von) ?: Variable(text.trim())
 }
+
+/** Formeln für assoziative Operatoren verwenden für fehlende Eingänge stabile, eindeutige Unbekannte. */
+internal fun KnotenAuswertungsKontext.operatorEingänge(
+    unbekannt: (de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten, Int) -> MathematischesObjekt,
+): List<BedingterWert> = knoten.anschlüsse
+    .filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }
+    .sortedBy { it.reihenfolge }
+    .mapIndexed { index, anschluss -> eingänge[anschluss.name] ?: BedingterWert(unbekannt(anschluss, index + 1)) }
+
+internal fun eingabeLatex(index: Int) = "\\mathrm{eingabe}_{${index}}"
+
+internal fun unbekanntesOperatorLatex(
+    knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten,
+    index: Int,
+) = "\\mathrm{${knoten.name}}_{${eingabeLatex(index)}}"
+
+private fun unbekannteKennung(
+    knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten,
+    anschluss: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten,
+) = "unbekannt_${knoten.id.wert}_${anschluss.id.wert}"

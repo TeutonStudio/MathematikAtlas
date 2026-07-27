@@ -35,6 +35,8 @@ data class Gleichheit(val links: MathematischesObjekt, val rechts: Mathematische
         return when {
             l == r -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen, "Beide Seiten sind identisch.")
             l is RationaleZahl && r is RationaleZahl -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+            l is ZahlAusdruck && r is MengenAusdruck || l is MengenAusdruck && r is ZahlAusdruck ->
+                AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt, "Eine Zahl kann nicht mit einer Menge gleich sein.")
             else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
     }

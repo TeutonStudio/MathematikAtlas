@@ -55,9 +55,9 @@ class RationaleZahl private constructor(
     }
 }
 
-data class Variable(val name: String) : ZahlAusdruck {
+data class Variable(val name: String, val latex: String = name) : ZahlAusdruck {
     init { require(name.isNotBlank()) }
-    override fun zuLatex(): String = name
+    override fun zuLatex(): String = latex
 }
 
 data class MathematischeKonstante(val name: String, val latex: String = name) : ZahlAusdruck {

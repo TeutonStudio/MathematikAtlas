@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
@@ -18,8 +20,13 @@ class MathematikKnotenRenderer(
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)
             val objekt = ergebnis?.ausgaben?.values?.firstOrNull()?.objekt
             when {
-                knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, " + "), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.vereinigung" -> LatexText(operatorFormel(knoten, " \\cup "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.vereinigung" -> LatexText(operatorFormel(knoten, ergebnis, " \\cup "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> Text(
+                    if (objekt.wert) "Wahr" else "Lüge",
+                    color = if (objekt.wert) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 objekt != null -> LatexText(objekt.zuLatex(), style = MaterialTheme.typography.bodyLarge)
                 knoten.parameter.isNotEmpty() -> Text(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
@@ -28,9 +35,12 @@ class MathematikKnotenRenderer(
         }
     }
 
-    private fun operatorFormel(knoten: KnotenDaten, zeichen: String): String = knoten.anschlüsse
+    private fun operatorFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, zeichen: String): String = knoten.anschlüsse
         .filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }
         .sortedBy { it.reihenfolge }
-        .mapIndexed { index, _ -> "input_{${index + 1}}" }
+        .mapIndexed { index, anschluss ->
+            if (knoten.parameter["operatorAnzeige"] == "name") eingabeLatex(index + 1)
+            else ergebnis?.eingänge?.get(anschluss.name)?.objekt?.zuLatex() ?: unbekanntesOperatorLatex(knoten, index + 1)
+        }
         .joinToString(zeichen)
 }

@@ -191,8 +191,29 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     supportingText = { Text("Mindestens 2; weitere Eingänge entstehen beim Verbinden.") },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                val zeigeWerte = knoten.parameter["operatorAnzeige"] != "name"
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text("Anzeige: Namen", modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = zeigeWerte,
+                        onCheckedChange = { werte ->
+                            zustand.editor.führeAus(
+                                KartenAktion.KnotenParameterÄndern(
+                                    knoten.id,
+                                    "operatorAnzeige",
+                                    if (werte) "wert" else "name",
+                                ),
+                            )
+                        },
+                    )
+                    Text("Werte")
+                }
             }
-            knoten.parameter.filterKeys { it != "festeEingänge" }.forEach { (schlüssel, wert) ->
+            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige") }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
                     value = text,

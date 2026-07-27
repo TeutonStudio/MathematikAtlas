@@ -12,6 +12,8 @@ data class KnotenAuswertungsErgebnis(
     val ausgaben: Map<String, BedingterWert>,
     val schritte: List<UmformungsSchritt> = emptyList(),
     val fehler: String? = null,
+    /** Die beim Auswerten tatsächlich verwendeten Eingabewerte, auch für die Knotendarstellung. */
+    val eingänge: Map<String, BedingterWert> = emptyMap(),
 )
 
 data class KartenAuswertungsErgebnis(
