@@ -33,7 +33,13 @@ jobs:
           ref: agent/v2.1.15
           fetch-depth: 0
       - name: Kartenparameter und Mengenknoten implementieren
-        run: python3 .github/scripts/apply_v2_1_15.py
+        run: python3 .github/scripts/apply_v2_1_15.py > /tmp/v2_1_15_apply.log 2>&1
+      - name: Fehlerprotokoll sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-1-15-apply-log
+          path: /tmp/v2_1_15_apply.log
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
