@@ -58,4 +58,9 @@ replacement = """replace_once(
 """.splitlines(keepends=True)
 
 lines[start:end] = replacement
-path.write_text("".join(lines), encoding="utf-8")
+text = "".join(lines)
+old_latex = r'        return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"'
+new_latex = r'        return "\\\\left\\\\{${parameter.zuLatex()}\\\\in${menge.zuLatex()}\\\\mid ${bedingung.zuLatex()}\\\\right\\\\}"'
+if text.count(old_latex) != 1:
+    raise RuntimeError(f"LaTeX-Zeile wurde {text.count(old_latex)}-mal gefunden.")
+path.write_text(text.replace(old_latex, new_latex, 1), encoding="utf-8")
