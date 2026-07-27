@@ -25,7 +25,7 @@ jobs:
         run: ./gradlew --stacktrace test :app:assembleDebug
 
   v2114-anwenden:
-    if: github.ref == 'refs/heads/agent/v2.1.14' && github.event.head_commit.message == 'Prepare v2.1.14'
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/v2.1.14'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
