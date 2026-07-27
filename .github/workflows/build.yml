@@ -36,7 +36,7 @@ jobs:
         run: |
           python3 .github/scripts/fix_apply_v2_1_15.py
           python3 .github/scripts/apply_v2_1_15.py > /tmp/v2_1_15_apply.log 2>&1
-      - name: Fehlerprotokoll sichern
+      - name: Patchfehler sichern
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -51,8 +51,15 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Änderungen prüfen
         run: |
-          python3 scripts/pruefe_architektur.py
-          ./gradlew --stacktrace test :app:assembleDebug
+          set -o pipefail
+          python3 scripts/pruefe_architektur.py 2>&1 | tee /tmp/v2_1_15_build.log
+          ./gradlew --stacktrace test :app:assembleDebug 2>&1 | tee -a /tmp/v2_1_15_build.log
+      - name: Buildfehler sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-1-15-build-log
+          path: /tmp/v2_1_15_build.log
       - name: Quelländerungen speichern
         run: |
           git checkout origin/master -- .github/workflows/build.yml
