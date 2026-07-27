@@ -1,14 +1,31 @@
 from pathlib import Path
 
-path = Path('.github/scripts/apply_v2_1_15.py')
-text = path.read_text(encoding='utf-8')
+path = Path(".github/scripts/apply_v2_1_15.py")
+lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
 
-old_anchor = '''        )
-    }
-    is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
-''',
-'''
-new_anchor = '''        )
+start = next(
+    index
+    for index, line in enumerate(lines)
+    if line == "replace_once(\n"
+    and index + 2 < len(lines)
+    and "Funktionen.kt" in lines[index + 1]
+    and "DefinierteMenge" in "".join(lines[index:index + 20])
+)
+end = next(
+    index
+    for index in range(start + 1, len(lines))
+    if lines[index] == "replace_once(\n"
+)
+
+replacement = """replace_once(
+    \"MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt\",
+    '''    is DefinierteMenge -> {
+        val gebundeneNamen = objekt.variablen.map { it.variable.name }.toSet()
+        val freieBindungen = bindungen - gebundeneNamen
+        objekt.copy(
+            variablen = objekt.variablen.map { it.copy(grundMenge = ersetze(it.grundMenge, freieBindungen) as MengenAusdruck) },
+            bedingung = ersetze(objekt.bedingung, freieBindungen),
+        )
     }
     is FallAusdruck -> FallAusdruck(
         wahr = ersetze(objekt.wahr, bindungen),
@@ -17,19 +34,15 @@ new_anchor = '''        )
     )
     is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
 ''',
-'''
-if text.count(old_anchor) != 1:
-    raise RuntimeError(f'Alter Anker wurde {text.count(old_anchor)}-mal gefunden.')
-text = text.replace(old_anchor, new_anchor, 1)
-
-old_result = '''    is GefilterteMenge -> filtereMenge(
-        ersetze(objekt.menge, bindungen) as MengenAusdruck,
-        ersetze(objekt.methode, bindungen) as Funktion,
-    )
-    is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
-''',
-'''
-new_result = '''    is GefilterteMenge -> filtereMenge(
+    '''    is DefinierteMenge -> {
+        val gebundeneNamen = objekt.variablen.map { it.variable.name }.toSet()
+        val freieBindungen = bindungen - gebundeneNamen
+        objekt.copy(
+            variablen = objekt.variablen.map { it.copy(grundMenge = ersetze(it.grundMenge, freieBindungen) as MengenAusdruck) },
+            bedingung = ersetze(objekt.bedingung, freieBindungen),
+        )
+    }
+    is GefilterteMenge -> filtereMenge(
         ersetze(objekt.menge, bindungen) as MengenAusdruck,
         ersetze(objekt.methode, bindungen) as Funktion,
     )
@@ -40,8 +53,9 @@ new_result = '''    is GefilterteMenge -> filtereMenge(
     )
     is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
 ''',
-'''
-if text.count(old_result) != 1:
-    raise RuntimeError(f'Neuer Anker wurde {text.count(old_result)}-mal gefunden.')
-text = text.replace(old_result, new_result, 1)
-path.write_text(text, encoding='utf-8')
+)
+
+""".splitlines(keepends=True)
+
+lines[start:end] = replacement
+path.write_text("".join(lines), encoding="utf-8")
