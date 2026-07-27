@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.speicher
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
@@ -20,5 +21,14 @@ class KartenJsonTest {
         val knoten = KartenJson.lese(text).knoten.single()
         assertEquals(mapOf("wert" to "2"), knoten.parameter)
         assertTrue(knoten.eigenschaften.isEmpty())
+    }
+
+    @Test fun `Extremwert erhält Modus und Anschluss IDs beim Roundtrip`() {
+        val extremwert = MathematikKnotenVorlagen.Minimum.erzeuge(GraphPunkt.Zero)
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(extremwert)))).knoten.single()
+
+        assertEquals("mathematik.extremwert", gelesen.art)
+        assertEquals("minimum", gelesen.parameter.getValue("modus"))
+        assertEquals(extremwert.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
 }

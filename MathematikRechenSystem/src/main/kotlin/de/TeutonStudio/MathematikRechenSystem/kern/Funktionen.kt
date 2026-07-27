@@ -176,6 +176,8 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is Variable -> bindungen[objekt.name] ?: objekt
     is Addition -> addition(objekt.summanden.map { ersetze(it, bindungen) })
     is Multiplikation -> multiplikation(objekt.faktoren.map { ersetze(it, bindungen) })
+    is Maximum -> maximum(objekt.operanden.map { ersetze(it, bindungen) })
+    is Minimum -> minimum(objekt.operanden.map { ersetze(it, bindungen) })
     is Division -> Division(ersetze(objekt.dividend, bindungen), ersetze(objekt.divisor, bindungen))
     is Potenz -> Potenz(ersetze(objekt.basis, bindungen), ersetze(objekt.exponent, bindungen))
     is Betrag -> Betrag(ersetze(objekt.argument, bindungen))

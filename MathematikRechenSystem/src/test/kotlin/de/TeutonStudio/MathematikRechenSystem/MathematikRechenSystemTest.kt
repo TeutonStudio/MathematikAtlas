@@ -16,6 +16,32 @@ class MathematikRechenSystemTest {
         assertEquals(2, term.summanden.size)
     }
 
+    @Test fun extremwerteWertenRationaleZahlenExaktAusUndBleibenSonstSymbolisch() {
+        assertEquals(RationaleZahl.von(7), maximum(RationaleZahl.von(-2), RationaleZahl.von(7), RationaleZahl.von(3)))
+        assertEquals(RationaleZahl.von(-2), minimum(RationaleZahl.von(-2), RationaleZahl.von(7), RationaleZahl.von(3)))
+        assertEquals(RationaleZahl.von(4), maximum(RationaleZahl.von(4), RationaleZahl.von(4)))
+        val x = Variable("x")
+        assertEquals(x, minimum(x, x))
+        assertEquals("\\max\\left\\{x,3\\right\\}", maximum(Variable("x"), RationaleZahl.von(3)).zuLatex())
+    }
+
+    @Test fun extremwerteBenötigenMindestensZweiOperanden() {
+        assertFailsWith<IllegalArgumentException> { maximum(listOf(RationaleZahl.Eins)) }
+        assertFailsWith<IllegalArgumentException> { minimum(emptyList()) }
+    }
+
+    @Test fun reellheitsnachweisRespektiertDefinitionsbedingungenPartiellerOperationen() {
+        assertFalse(istNachweisbarReell(Division(RationaleZahl.Eins, RationaleZahl.Null)))
+        assertFalse(istNachweisbarReell(NatürlicherLogarithmus(RationaleZahl.von(-1))))
+        assertFalse(istNachweisbarReell(Logarithmus(RationaleZahl.von(10), RationaleZahl.von(-1))))
+
+        val x = Variable("x")
+        val y = Variable("y")
+        assertFalse(istNachweisbarReell(Division(x, y), variableIstReell = { true }))
+        assertTrue(istNachweisbarReell(Division(x, y), { true }, setOf(Ungleichheit(y, RationaleZahl.Null))))
+        assertTrue(istNachweisbarReell(NatürlicherLogarithmus(x), { true }, setOf(Vergleich(x, VergleichsArt.Größer, RationaleZahl.Null))))
+    }
+
     @Test fun funktionKannTeilweiseGebundenWerden() {
         val x = Variable("x"); val y = Variable("y")
         val f = Funktion("f", listOf(x, y), mapOf("wert" to addition(x, y)))

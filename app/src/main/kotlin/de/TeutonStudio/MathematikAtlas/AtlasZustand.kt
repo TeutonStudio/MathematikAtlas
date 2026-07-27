@@ -240,48 +240,34 @@ class AtlasZustand(context: Context) {
     }
 
     /** Migriert bekannte Knotendaten, darunter Karten-Schnittstellen, assoziative Eingänge und die Bezeichnung „Differenz“. */
-    private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
-        val migriert = migriereKartenAusgangZuEinzelanschluss(karte)
-        return migriert.copy(
-            knoten = migriert.knoten.map { ursprünglicherKnoten ->
-                val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") {
-                    ursprünglicherKnoten.copy(name = "Differenz")
-                } else ursprünglicherKnoten
-                if (knoten.art !in assoziativeKnotenArten) knoten
-                else {
-                    val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
-                    val verbundeneEingänge = migriert.verbindungen.map { it.zu }.toSet()
-                    val überzähligeFesteEingänge = knoten.anschlüsse
-                        .filter { it.richtung == AnschlussRichtung.Eingang && !it.dynamischErzeugt }
-                        .sortedBy { it.reihenfolge }
-                        .drop(festeEingänge)
-                        .filter { AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge }
-                        .map { it.id }
-                        .toSet()
-                    knoten.copy(
-                        anschlüsse = knoten.anschlüsse.filterNot { it.id in überzähligeFesteEingänge }.map { anschluss ->
-                            if (anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(kannSichErweitern = true) else anschluss
-                        },
-                        parameter = knoten.parameter + mapOf(
-                            "festeEingänge" to festeEingänge.toString(),
-                            "operatorAnzeige" to if (knoten.parameter["operatorAnzeige"] == "name") "name" else "wert",
-                        ),
-                    )
-                }
-            },
-        )
-    }
-
-    private companion object {
-        val assoziativeKnotenArten = setOf(
-            "mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix",
-        )
-    }
+    private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = migriereAssoziativeKnoten(karte)
 
     private fun werteAus() { auswertung = auswerter.auswerten(editor.karte) }
 }
 
 enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler }
+
+/** Reine Lade-Migration für bekannte assoziative Knoten; auch von JVM-Tests prüfbar. */
+internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
+    val migriert = migriereKartenAusgangZuEinzelanschluss(karte)
+    return migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
+        val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
+        if (knoten.art !in assoziativeKnotenArten) knoten else {
+            val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
+            val verbundeneEingänge = migriert.verbindungen.map { it.zu }.toSet()
+            val überzähligeFesteEingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && !it.dynamischErzeugt }
+                .sortedBy { it.reihenfolge }.drop(festeEingänge).filter { AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge }.map { it.id }.toSet()
+            knoten.copy(
+                anschlüsse = knoten.anschlüsse.filterNot { it.id in überzähligeFesteEingänge }.map { anschluss -> if (anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(kannSichErweitern = true) else anschluss },
+                parameter = knoten.parameter + mapOf("festeEingänge" to festeEingänge.toString(), "operatorAnzeige" to if (knoten.parameter["operatorAnzeige"] == "name") "name" else "wert"),
+            )
+        }
+    })
+}
+
+private val assoziativeKnotenArten = setOf(
+    "mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix",
+)
 
 internal fun öffentlicheKartenAnschlüsse(
     karte: KartenDaten,

@@ -23,6 +23,7 @@ class MathematikKnotenRenderer(
             val objekt = ergebnis?.ausgaben?.values?.firstOrNull()?.objekt
             when {
                 knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.extremwert" -> LatexText(extremwertFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.vereinigung" -> LatexText(operatorFormel(knoten, ergebnis, " \\cup "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.schnitt" -> LatexText(operatorFormel(knoten, ergebnis, " \\cap "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.kartesischesProdukt" -> LatexText(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
@@ -71,6 +72,11 @@ class MathematikKnotenRenderer(
             else -> "\\bigcap"
         }
         return "${zeichen}_{$parameter \\in $indexMenge} $name($parameter)"
+    }
+
+    private fun extremwertFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
+        val operator = if (knoten.parameter["modus"] == "minimum") "\\min" else "\\max"
+        return "$operator\\left\\{${operatorFormel(knoten, ergebnis, ",")}\\right\\}"
     }
 
     private companion object {

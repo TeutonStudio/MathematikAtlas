@@ -10,7 +10,24 @@ data class BedingterWert(
     val zielMenge: MengenAusdruck? = null,
     /** Definitionsmenge einer Variable; relevant beim Aufbau einer Methode. */
     val werteVorrat: MengenAusdruck? = null,
+    /** Laufzeitmetadaten für Variablen, deren Wertebereich nachweisbar reell ist. */
+    val reelleVariablen: Map<String, MengenAusdruck> = emptyMap(),
 )
+
+/** Konservativer Laufzeitnachweis für die Zulässigkeit reeller Zahloperationen. */
+fun BedingterWert.istNachweisbarReell(): Boolean = (objekt as? ZahlAusdruck)?.let { ausdruck ->
+    istNachweisbarReell(ausdruck, { variable ->
+        val vorrat = reelleVariablen[variable.name] ?: if (ausdruck == variable) werteVorrat else null
+        vorrat in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+    }, annahmen)
+} ?: false
+
+fun reelleVariablen(werte: Iterable<BedingterWert>): Map<String, MengenAusdruck> = buildMap {
+    werte.forEach { wert ->
+        putAll(wert.reelleVariablen)
+        (wert.objekt as? Variable)?.let { variable -> wert.werteVorrat?.let { put(variable.name, it) } }
+    }
+}
 
 data class KnotenAuswertungsErgebnis(
     val ausgaben: Map<String, BedingterWert>,

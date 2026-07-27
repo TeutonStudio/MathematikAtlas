@@ -1,8 +1,10 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class KartenSchnittstellenTest {
     @Test
@@ -55,6 +57,23 @@ class KartenSchnittstellenTest {
 
         assertEquals(listOf("wert"), migriert.knoten.first { it.id == ausgang.id }.anschlüsse.map { it.name })
         assertEquals(emptyList(), migriert.verbindungen)
+    }
+
+    @Test
+    fun `Migration normalisiert gespeicherten Extremwert mit dynamischen Eingängen`() {
+        val maximum = MathematikKnotenVorlagen.Maximum.erzeuge(GraphPunkt.Zero)
+        val dritterEingang = maximum.anschlüsse.first { it.name == "a" }.copy(id = neueAnschlussId(), name = "input3", reihenfolge = 2)
+        val alt = maximum.copy(
+            anschlüsse = maximum.anschlüsse + dritterEingang,
+            parameter = maximum.parameter + mapOf("festeEingänge" to "2", "operatorAnzeige" to "name"),
+        )
+
+        val migriert = migriereAssoziativeKnoten(KartenDaten(name = "Alt", knoten = listOf(alt))).knoten.single()
+
+        assertEquals("maximum", migriert.parameter.getValue("modus"))
+        assertEquals("name", migriert.parameter.getValue("operatorAnzeige"))
+        assertEquals(2, migriert.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang })
+        assertTrue(migriert.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.all { it.kannSichErweitern })
     }
 
     private fun schnittstelle(

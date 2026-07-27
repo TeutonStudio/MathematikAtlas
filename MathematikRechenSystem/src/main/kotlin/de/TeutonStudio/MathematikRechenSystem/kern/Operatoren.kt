@@ -22,6 +22,22 @@ class Multiplikation private constructor(val faktoren: List<ZahlAusdruck>) : Zah
     companion object { internal fun roh(faktoren: List<ZahlAusdruck>) = Multiplikation(faktoren) }
 }
 
+class Maximum private constructor(val operanden: List<ZahlAusdruck>) : ZahlAusdruck {
+    init { require(operanden.size >= 2) }
+    override fun zuLatex(): String = "\\max\\left\\{${operanden.joinToString(",") { it.zuLatex() }}\\right\\}"
+    override fun equals(other: Any?) = other is Maximum && operanden == other.operanden
+    override fun hashCode() = operanden.hashCode()
+    companion object { internal fun roh(operanden: List<ZahlAusdruck>) = Maximum(operanden) }
+}
+
+class Minimum private constructor(val operanden: List<ZahlAusdruck>) : ZahlAusdruck {
+    init { require(operanden.size >= 2) }
+    override fun zuLatex(): String = "\\min\\left\\{${operanden.joinToString(",") { it.zuLatex() }}\\right\\}"
+    override fun equals(other: Any?) = other is Minimum && operanden == other.operanden
+    override fun hashCode() = operanden.hashCode()
+    companion object { internal fun roh(operanden: List<ZahlAusdruck>) = Minimum(operanden) }
+}
+
 data class Division(val dividend: ZahlAusdruck, val divisor: ZahlAusdruck) : ZahlAusdruck {
     override fun zuLatex() = "\\frac{${dividend.zuLatex()}}{${divisor.zuLatex()}}"
 }
@@ -94,6 +110,29 @@ fun multiplikation(faktoren: Iterable<ZahlAusdruck>): ZahlAusdruck {
     }
 }
 
+fun maximum(vararg operanden: ZahlAusdruck): ZahlAusdruck = maximum(operanden.toList())
+fun maximum(operanden: Iterable<ZahlAusdruck>): ZahlAusdruck = extremwert(operanden, true)
+fun minimum(vararg operanden: ZahlAusdruck): ZahlAusdruck = minimum(operanden.toList())
+fun minimum(operanden: Iterable<ZahlAusdruck>): ZahlAusdruck = extremwert(operanden, false)
+
+private fun extremwert(operanden: Iterable<ZahlAusdruck>, maximum: Boolean): ZahlAusdruck {
+    val flach = operanden.flatMap { operand ->
+        when (operand) {
+            is Maximum if maximum -> operand.operanden
+            is Minimum if !maximum -> operand.operanden
+            else -> listOf(operand)
+        }
+    }
+    require(flach.size >= 2) { "Ein Extremwert benötigt mindestens zwei Operanden." }
+    val eindeutig = flach.distinct()
+    if (eindeutig.size == 1) return eindeutig.single()
+    if (eindeutig.all { it is RationaleZahl }) {
+        @Suppress("UNCHECKED_CAST")
+        return (eindeutig as List<RationaleZahl>).let { werte -> if (maximum) werte.maxOrNull()!! else werte.minOrNull()!! }
+    }
+    return if (maximum) Maximum.roh(eindeutig) else Minimum.roh(eindeutig)
+}
+
 fun negation(ausdruck: ZahlAusdruck) = multiplikation(RationaleZahl.von(-1), ausdruck)
 fun subtraktion(a: ZahlAusdruck, b: ZahlAusdruck) = addition(a, negation(b))
 
@@ -101,6 +140,8 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
     is RationaleZahl, is Variable, is MathematischeKonstante -> ausdruck
     is Addition -> addition(ausdruck.summanden.map { vereinfache(it, kontext) })
     is Multiplikation -> multiplikation(ausdruck.faktoren.map { vereinfache(it, kontext) })
+    is Maximum -> maximum(ausdruck.operanden.map { vereinfache(it, kontext) })
+    is Minimum -> minimum(ausdruck.operanden.map { vereinfache(it, kontext) })
     is Division -> {
         val a = vereinfache(ausdruck.dividend, kontext)
         val b = vereinfache(ausdruck.divisor, kontext)
@@ -134,6 +175,59 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
     is Logarithmus -> Logarithmus(vereinfache(ausdruck.basis, kontext), vereinfache(ausdruck.argument, kontext))
     else -> ausdruck
 }
+
+/** Konservativer Nachweis, dass ein Zahlterm reell ist; unbekannte Variablen bleiben unbeweisbar. */
+fun istNachweisbarReell(
+    ausdruck: ZahlAusdruck,
+    variableIstReell: (Variable) -> Boolean = { false },
+    annahmen: Set<Aussage> = emptySet(),
+): Boolean = when (ausdruck) {
+    is RationaleZahl -> true
+    is MathematischeKonstante -> ausdruck == Pi || ausdruck == EulerscheZahl
+    is Variable -> variableIstReell(ausdruck)
+    is Addition -> ausdruck.summanden.all { istNachweisbarReell(it, variableIstReell, annahmen) }
+    is Multiplikation -> ausdruck.faktoren.all { istNachweisbarReell(it, variableIstReell, annahmen) }
+    is Division -> istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen) &&
+        istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen) && ausdruck.divisor.istNachweisbarNichtNull(annahmen)
+    is Potenz -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
+        (ausdruck.exponent as? RationaleZahl)?.let { exponent ->
+            exponent.nenner == BigInteger.ONE && (exponent.zähler.signum() >= 0 || ausdruck.basis.istNachweisbarNichtNull(annahmen))
+        } == true
+    is Betrag -> true
+    is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+    is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+    is Exponentialfunktion -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+    is NatürlicherLogarithmus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarPositiv(annahmen)
+    is Logarithmus -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
+        istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+        ausdruck.basis.istNachweisbarPositiv(annahmen) && ausdruck.basis.istNachweisbarNichtEins() &&
+        ausdruck.argument.istNachweisbarPositiv(annahmen)
+    is Maximum -> ausdruck.operanden.all { istNachweisbarReell(it, variableIstReell, annahmen) }
+    is Minimum -> ausdruck.operanden.all { istNachweisbarReell(it, variableIstReell, annahmen) }
+    is Argument -> false
+    is Wurzel -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarNichtNegativ(annahmen)
+    is KomplexeZahl -> false
+    is IterierteSumme, is IteriertesProdukt -> false
+}
+
+private fun ZahlAusdruck.istNachweisbarPositiv(annahmen: Set<Aussage>): Boolean = when (this) {
+    is RationaleZahl -> zähler.signum() > 0
+    else -> Vergleich(this, VergleichsArt.Größer, RationaleZahl.Null) in annahmen
+}
+
+private fun ZahlAusdruck.istNachweisbarNichtNegativ(annahmen: Set<Aussage>): Boolean = when (this) {
+    is RationaleZahl -> zähler.signum() >= 0
+    else -> Vergleich(this, VergleichsArt.GrößerGleich, RationaleZahl.Null) in annahmen || istNachweisbarPositiv(annahmen)
+}
+
+private fun ZahlAusdruck.istNachweisbarNichtNull(annahmen: Set<Aussage>): Boolean = when (this) {
+    is RationaleZahl -> !istNull()
+    else -> Ungleichheit(this, RationaleZahl.Null) in annahmen ||
+        istNachweisbarPositiv(annahmen) || Vergleich(this, VergleichsArt.Kleiner, RationaleZahl.Null) in annahmen
+}
+
+private fun ZahlAusdruck.istNachweisbarNichtEins(): Boolean =
+    (this as? RationaleZahl)?.let { it != RationaleZahl.Eins } == true
 
 /** Die Hauptwurzel liefert genau einen Wert; bei negativen reellen Zahlen einen komplexen. */
 fun wurzel(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =

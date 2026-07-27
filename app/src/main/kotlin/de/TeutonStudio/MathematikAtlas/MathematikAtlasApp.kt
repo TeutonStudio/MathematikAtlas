@@ -277,7 +277,7 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 }
                 return@Column
             }
-            if (knoten.art in setOf("mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix")) {
+            if (knoten.art in setOf("mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix")) {
                 val wert = knoten.parameter["festeEingänge"] ?: "2"
                 var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
@@ -312,6 +312,9 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     Text("Werte")
                 }
             }
+            if (knoten.art == "mathematik.extremwert") {
+                Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
+            }
             if (knoten.art == "mathematik.termZuMethode") {
                 HorizontalDivider()
                 Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
@@ -326,7 +329,7 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     }
                 }
             }
-            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige") }.forEach { (schlüssel, wert) ->
+            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige", "modus") }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
                     value = text,

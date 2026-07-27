@@ -17,25 +17,39 @@ object StandardMathematikAuswerter {
                 Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }.map { it.objekt as? ZahlAusdruck ?: error("Zahleingang ${it} ist ungültig.") }
             require(werte.size >= 2) { "Mindestens zwei Summanden müssen verbunden sein." }
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(addition(werte), annahmen(k))))
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(addition(werte), k)))
         }
         registriere("mathematik.multiplikation") { k ->
             val werte = listOf("a", "b", "c").mapNotNull { k.eingänge[it]?.objekt as? ZahlAusdruck }
             require(werte.size >= 2) { "Mindestens zwei Faktoren müssen verbunden sein." }
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(multiplikation(werte), annahmen(k))))
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(multiplikation(werte), k)))
         }
         registriere("mathematik.division") { k ->
             val dividend = k.zahl("dividend"); val divisor = k.zahl("divisor")
             val nullFall = Gleichheit(divisor, RationaleZahl.Null)
             val definiert = Ungleichheit(divisor, RationaleZahl.Null)
             KnotenAuswertungsErgebnis(mapOf(
-                "wert" to BedingterWert(vereinfache(Division(dividend, divisor), k.rechenKontext), annahmen(k) + definiert),
+                "wert" to reellerZahlwert(vereinfache(Division(dividend, divisor), k.rechenKontext), k, setOf(definiert)),
                 "divisorNull" to BedingterWert(nullFall, annahmen(k)),
             ))
         }
         registriere("mathematik.potenz") { k ->
             val basis = k.zahl("basis"); val exponent = k.zahl("exponent")
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Potenz(basis, exponent), annahmen(k))))
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(Potenz(basis, exponent), k)))
+        }
+        registriere("mathematik.extremwert") { k ->
+            val werte = k.operatorEingänge { anschluss, index ->
+                Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
+            }
+            require(werte.size >= 2) { "Ein Extremwert benötigt mindestens zwei Eingänge." }
+            require(werte.all { it.istNachweisbarReell() }) { "Maximum und Minimum sind nur für nachweisbar reelle Zahlen definiert." }
+            val zahlen = werte.map { it.objekt as? ZahlAusdruck ?: error("Extremwert benötigt Zahlen.") }
+            val wert = when (k.knoten.parameter["modus"]) {
+                "maximum" -> maximum(zahlen)
+                "minimum" -> minimum(zahlen)
+                else -> error("Extremwertmodus muss 'maximum' oder 'minimum' sein.")
+            }
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(wert, k)))
         }
         registriere("mathematik.gleichheit") { k ->
             val links = k.eingänge["links"]?.objekt ?: error("Linke Seite fehlt.")
@@ -69,7 +83,7 @@ object StandardMathematikAuswerter {
             when (objekt) {
                 is ZahlAusdruck -> {
                     val e = vereinfacheMitSchritten(objekt, k.rechenKontext)
-                    KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(e.ergebnis, annahmen(k))), e.schritte)
+                    KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(e.ergebnis, k)), e.schritte)
                 }
                 is Aussage -> {
                     val ergebnis = objekt.entscheide(k.rechenKontext)
@@ -81,17 +95,17 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.ableiten") { k ->
             val e = ableiten(k.zahl("term"), Variable(k.knoten.parameter["variable"] ?: "x"))
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(e.ergebnis, annahmen(k))), e.schritte)
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(e.ergebnis, k)), e.schritte)
         }
         registriere("mathematik.integrieren") { k ->
             val e = integrieren(k.zahl("term"), Variable(k.knoten.parameter["variable"] ?: "x"))
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(e.ergebnis, annahmen(k))), e.schritte)
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(e.ergebnis, k)), e.schritte)
         }
         registriere("mathematik.wurzel") { k ->
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(wurzel(k.zahl("radikand"), k.rechenKontext), annahmen(k))))
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(wurzel(k.zahl("radikand"), k.rechenKontext), k)))
         }
         registriere("mathematik.logarithmus") { k ->
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Logarithmus(k.zahl("basis"), k.zahl("argument")), annahmen(k))))
+            KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(Logarithmus(k.zahl("basis"), k.zahl("argument")), k)))
         }
         registriere("mathematik.tupel") { k ->
             val werte = k.operatorEingänge { _, index -> Variable("tupel_$index") }.map { it.objekt as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
@@ -295,6 +309,11 @@ object StandardMathematikAuswerter {
     private fun KnotenAuswertungsKontext.aussage(name: String) = eingänge[name]?.objekt as? Aussage ?: error("Aussage $name fehlt.")
     private fun KnotenAuswertungsKontext.parameterInt(name: String) = knoten.parameter[name]?.toIntOrNull()?.takeIf { it > 0 } ?: error("Parameter $name muss eine positive ganze Zahl sein.")
     private fun annahmen(k: KnotenAuswertungsKontext) = k.eingänge.values.flatMap { it.annahmen }.toSet()
+    private fun reellerZahlwert(
+        objekt: ZahlAusdruck,
+        k: KnotenAuswertungsKontext,
+        zusätzlicheAnnahmen: Set<Aussage> = emptySet(),
+    ) = BedingterWert(objekt, annahmen(k) + zusätzlicheAnnahmen, reelleVariablen = reelleVariablen(k.eingänge.values))
     private fun parseZahlen(text: String) = text.split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it.trim()) }
     private fun grundmenge(name: String): MengenAusdruck = when (name.trim().uppercase()) {
         "N", "ℕ" -> NatürlicheZahlen

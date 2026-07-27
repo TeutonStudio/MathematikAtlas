@@ -79,4 +79,5 @@
 
 | Datum | Änderung | ExecPlan oder ADR | Prüfstatus |
 |---|---|---|---|
+| 2026-07-27 | Gemeinsamer Extremwert-Knoten mit getrennten Maximum-/Minimum-Vorlagen, dynamischen Eingängen und konservativer Reellheitsprüfung | `plans/completed/2026-07-27-extremwert.md` | vollständige JVM-Tests, Debug-Build, Repository-Prüfung und unabhängige Diff-Abnahme erfolgreich |
 | 2026-07-27 | Istzustand und Projektkontext erstmals gegen den vorhandenen Android-/Kotlin-Code abgeglichen | keiner | Repository- und Architekturprüfung erfolgreich; vollständige Gradle-/Kernprüfung lokal nicht ausführbar |
