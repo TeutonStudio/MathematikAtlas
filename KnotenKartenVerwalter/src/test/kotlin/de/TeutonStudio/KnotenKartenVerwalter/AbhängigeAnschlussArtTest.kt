@@ -55,10 +55,10 @@ class AbhängigeAnschlussArtTest {
             ),
         )
 
-        val ergebnis = prüfung.prüfe(karte, ref(mengenQuelle, AnschlussRichtung.Ausgang), aliasEingang)
-
-        assertIs<VerbindungsPrüfung.Abgelehnt>(ergebnis)
-        assertTrue(ergebnis.grund.contains("abhängigen Ausgang"))
+        val abgelehnt = assertIs<VerbindungsPrüfung.Abgelehnt>(
+            prüfung.prüfe(karte, ref(mengenQuelle, AnschlussRichtung.Ausgang), aliasEingang),
+        )
+        assertTrue(abgelehnt.grund.contains("abhängigen Ausgang"))
     }
 
     private fun quelle(name: String, art: AnschlussArtId) = KnotenDaten(
