@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   pruefen:
     runs-on: ubuntu-latest
@@ -20,3 +23,311 @@ jobs:
         run: python3 scripts/pruefe_architektur.py
       - name: Bauen und testen
         run: ./gradlew --stacktrace test :app:assembleDebug
+
+  v2114-anwenden:
+    if: github.ref == 'refs/heads/agent/v2.1.14' && github.event.head_commit.message == 'Prepare v2.1.14'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v2.1.14
+          fetch-depth: 0
+      - name: Symbolische Fallausdrücke implementieren
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Erwarteter Quelltext fehlt in {path}: {old[:80]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          Path('MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/FallAusdruck.kt').write_text(r'''package de.TeutonStudio.MathematikRechenSystem.kern
+
+/**
+ * Symbolischer Ausdruck einer Fallunterscheidung.
+ *
+ * Solange [aussage] nicht entschieden werden kann, bleiben beide Zweige erhalten.
+ * Nach dem Binden einer Methode kann der Ausdruck auf den zutreffenden Zweig
+ * reduziert werden.
+ */
+data class FallAusdruck(
+    val wahr: MathematischesObjekt,
+    val aussage: Aussage,
+    val lüge: MathematischesObjekt,
+) : Ausdruck {
+    override fun zuLatex(): String =
+        "\\begin{cases}${wahr.zuLatex()} & \\text{falls } ${aussage.zuLatex()} \\\\ ${lüge.zuLatex()} & \\text{sonst}\\end{cases}"
+}
+''', encoding='utf-8')
+
+          funktionen = 'MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt'
+          replace(
+              funktionen,
+              '''    is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))''',
+              '''    is FallAusdruck -> FallAusdruck(
+        wahr = ersetze(objekt.wahr, bindungen),
+        aussage = ersetze(objekt.aussage, bindungen),
+        lüge = ersetze(objekt.lüge, bindungen),
+    )
+    is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))''',
+          )
+          replace(
+              funktionen,
+              '''private fun vereinfacheObjekt(objekt: MathematischesObjekt): MathematischesObjekt = when (objekt) {
+    is ZahlAusdruck -> vereinfache(objekt)
+    is EndlicheMenge -> EndlicheMenge(objekt.elemente.map(::vereinfacheObjekt).toSet())
+    is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze)
+    is Vereinigung -> vereinige(objekt.mengen)
+    is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
+    else -> objekt
+}''',
+              '''private fun vereinfacheObjekt(
+    objekt: MathematischesObjekt,
+    kontext: RechenKontext = RechenKontext(),
+): MathematischesObjekt = when (objekt) {
+    is ZahlAusdruck -> vereinfache(objekt, kontext)
+    is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { vereinfacheObjekt(it, kontext) }.toSet())
+    is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze, kontext)
+    is Vereinigung -> vereinige(objekt.mengen)
+    is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
+    is FallAusdruck -> {
+        val wahr = vereinfacheObjekt(objekt.wahr, kontext)
+        val lüge = vereinfacheObjekt(objekt.lüge, kontext)
+        if (wahr == lüge) wahr else when (objekt.aussage.entscheide(kontext).wahrheitswert) {
+            Wahrheitswert.Wahr -> wahr
+            Wahrheitswert.Falsch -> lüge
+            null -> objekt.copy(wahr = wahr, lüge = lüge)
+        }
+    }
+    else -> objekt
+}''',
+          )
+          replace(
+              funktionen,
+              '''    is Gleichheit -> listOf(links, rechts).enthalteneFunktionsParameter()''',
+              '''    is FallAusdruck -> listOf(wahr, aussage, lüge).enthalteneFunktionsParameter()
+    is Gleichheit -> listOf(links, rechts).enthalteneFunktionsParameter()''',
+          )
+
+          wertebereiche = 'MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Wertebereiche.kt'
+          replace(
+              wertebereiche,
+              '''    is MengenAusdruck -> inferiereElementMenge(ausdruck, werteVorräte, annahmen)
+    is Tupel -> Tupelraum(ausdruck.elemente.map { inferiereZielmenge(it, werteVorräte, annahmen) })''',
+              '''    is MengenAusdruck -> inferiereElementMenge(ausdruck, werteVorräte, annahmen)
+    is FallAusdruck -> when (ausdruck.aussage.entscheide(RechenKontext(annahmen)).wahrheitswert) {
+        Wahrheitswert.Wahr -> inferiereZielmenge(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage)
+        Wahrheitswert.Falsch -> inferiereZielmenge(ausdruck.lüge, werteVorräte, annahmen + Negation(ausdruck.aussage))
+        null -> vereinige(listOf(
+            inferiereZielmenge(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage),
+            inferiereZielmenge(ausdruck.lüge, werteVorräte, annahmen + Negation(ausdruck.aussage)),
+        ))
+    }
+    is Tupel -> Tupelraum(ausdruck.elemente.map { inferiereZielmenge(it, werteVorräte, annahmen) })''',
+          )
+
+          auswerter = 'MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/MathematikAuswerter.kt'
+          replace(
+              auswerter,
+              '''        registriere("mathematik.fall") { k ->
+            val wahr = k.eingänge["wahr"] ?: error("Wahr-Eingang fehlt.")
+            val lüge = k.eingänge["lüge"] ?: error("Lüge-Eingang fehlt.")
+            val aussageWert = k.eingänge["aussage"] ?: error("Aussage-Eingang fehlt.")
+            val aussage = aussageWert.objekt as? Aussage ?: error("Der Aussage-Eingang enthält keine Aussage.")
+            val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + aussageWert.annahmen)
+            val ausgewählt = when (aussage.entscheide(kontext).wahrheitswert) {
+                Wahrheitswert.Wahr -> wahr
+                Wahrheitswert.Falsch -> lüge
+                null -> error("Die Aussage der Fallunterscheidung ist im aktuellen Rechenkontext nicht entscheidbar.")
+            }
+            KnotenAuswertungsErgebnis(mapOf(
+                "wert" to ausgewählt.copy(annahmen = ausgewählt.annahmen + aussageWert.annahmen),
+            ))
+        }''',
+              '''        registriere("mathematik.fall") { k ->
+            val wahr = k.eingänge["wahr"] ?: error("Wahr-Eingang fehlt.")
+            val lüge = k.eingänge["lüge"] ?: error("Lüge-Eingang fehlt.")
+            val aussageWert = k.eingänge["aussage"] ?: error("Aussage-Eingang fehlt.")
+            val aussage = aussageWert.objekt as? Aussage ?: error("Der Aussage-Eingang enthält keine Aussage.")
+            val eingangsWerte = listOf(wahr, aussageWert, lüge)
+            val gemeinsameAnnahmen = eingangsWerte.flatMap { it.annahmen }.toSet()
+            val gemeinsameReelleVariablen = reelleVariablen(eingangsWerte)
+            val gemeinsameQuellen = eingangsWerte.flatMap { it.variablenQuellen }
+                .distinctBy { quelle -> Triple(quelle.knotenId, quelle.name, quelle.werteVorrat) }
+            val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + gemeinsameAnnahmen)
+            val basis = when (aussage.entscheide(kontext).wahrheitswert) {
+                Wahrheitswert.Wahr -> wahr
+                Wahrheitswert.Falsch -> lüge
+                null -> BedingterWert(FallAusdruck(wahr.objekt, aussage, lüge.objekt))
+            }
+            KnotenAuswertungsErgebnis(mapOf(
+                "wert" to basis.copy(
+                    annahmen = gemeinsameAnnahmen,
+                    reelleVariablen = gemeinsameReelleVariablen,
+                    variablenQuellen = gemeinsameQuellen,
+                ),
+            ))
+        }''',
+          )
+
+          sampler = 'MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt'
+          replace(
+              sampler,
+              '''private fun numerischeKoordinaten(
+    objekt: MathematischesObjekt,
+    werte: Map<String, Double>,
+): List<Double>? {
+    val ausdrücke = when (objekt) {''',
+              '''private fun numerischeKoordinaten(
+    objekt: MathematischesObjekt,
+    werte: Map<String, Double>,
+): List<Double>? {
+    if (objekt is FallAusdruck) {
+        return when (bewerteAussage(objekt.aussage, werte, 1e-9)) {
+            NumerischeAussage.Wahr -> numerischeKoordinaten(objekt.wahr, werte)
+            NumerischeAussage.Falsch -> numerischeKoordinaten(objekt.lüge, werte)
+            else -> null
+        }
+    }
+    val ausdrücke = when (objekt) {''',
+          )
+
+          Path('MathematikKnoten/src/test/kotlin/de/TeutonStudio/MathematikKnoten/FallunterscheidungTest.kt').write_text(r'''package de.TeutonStudio.MathematikKnoten
+
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
+import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
+import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
+import de.TeutonStudio.MathematikKartenAdapter.VariablenQuelle
+import de.TeutonStudio.MathematikRechenSystem.kern.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+
+class FallunterscheidungTest {
+    private val auswerter = StandardMathematikAuswerter.erzeugeRegister()
+
+    @Test
+    fun `Vorlage ordnet Aussage zwischen Wahr- und Lüge-Eingang an`() {
+        val knoten = MathematikKnotenVorlagen.Fall.erzeuge(GraphPunkt.Zero)
+        val eingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
+        val ausgänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
+
+        assertEquals(listOf("wahr", "aussage", "lüge"), eingänge.map { it.name })
+        assertEquals(listOf(MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Aussage.id, MathematikAnschlussArten.Objekt.id), eingänge.map { it.art })
+        assertEquals(listOf("wert"), ausgänge.map { it.name })
+        assertEquals(MathematikAnschlussArten.Objekt.id, ausgänge.single().art)
+    }
+
+    @Test
+    fun `wahre Aussage wählt ersten Eingang`() {
+        val ergebnis = werteAus(
+            wahr = BedingterWert(RationaleZahl.von(7)),
+            aussage = BedingterWert(WahrheitsKonstante(true)),
+            lüge = BedingterWert(EndlicheMenge(setOf(RationaleZahl.Eins))),
+        )
+
+        assertEquals(RationaleZahl.von(7), ergebnis.objekt)
+    }
+
+    @Test
+    fun `falsche Aussage wählt zweiten Eingang`() {
+        val falschWert = EndlicheMenge(setOf(RationaleZahl.von(2), RationaleZahl.von(3)))
+        val ergebnis = werteAus(
+            wahr = BedingterWert(RationaleZahl.von(7)),
+            aussage = BedingterWert(WahrheitsKonstante(false)),
+            lüge = BedingterWert(falschWert),
+        )
+
+        assertEquals(falschWert, ergebnis.objekt)
+    }
+
+    @Test
+    fun `unentscheidbare Aussage bleibt als Fallausdruck erhalten`() {
+        val x = Variable("x")
+        val ergebnis = werteAus(
+            wahr = BedingterWert(x),
+            aussage = BedingterWert(Gleichheit(x, RationaleZahl.Eins)),
+            lüge = BedingterWert(RationaleZahl.Null),
+        )
+
+        val fall = assertIs<FallAusdruck>(ergebnis.objekt)
+        assertEquals(x, fall.wahr)
+        assertEquals(Gleichheit(x, RationaleZahl.Eins), fall.aussage)
+        assertEquals(RationaleZahl.Null, fall.lüge)
+    }
+
+    @Test
+    fun `symbolischer Fall wird erst beim Anwenden der Methode entschieden`() {
+        val x = Variable("x")
+        val quelle = KnotenId("x-quelle")
+        val variablenQuelle = VariablenQuelle(quelle, x.name, ReelleZahlen)
+        val fallWert = werteAus(
+            wahr = BedingterWert(x, werteVorrat = ReelleZahlen, variablenQuellen = listOf(variablenQuelle)),
+            aussage = BedingterWert(
+                Vergleich(x, VergleichsArt.Größer, RationaleZahl.Null),
+                variablenQuellen = listOf(variablenQuelle),
+            ),
+            lüge = BedingterWert(RationaleZahl.Null),
+        )
+        val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero)
+        val methode = assertIs<Funktion>(auswerter.finde(knoten.art)!!.auswerten(
+            KnotenAuswertungsKontext(
+                knoten = knoten,
+                eingänge = mapOf("term" to fallWert),
+                rechenKontext = RechenKontext(),
+                topologischeReihenfolge = mapOf(quelle to 0),
+            ),
+        ).ausgaben.getValue("methode").objekt)
+
+        assertEquals(listOf(x), methode.parameter)
+        assertEquals(RationaleZahl.von(2), methode.wendeAn(mapOf("x" to RationaleZahl.von(2))).getValue("wert"))
+        assertEquals(RationaleZahl.Null, methode.wendeAn(mapOf("x" to RationaleZahl.von(-2))).getValue("wert"))
+    }
+
+    private fun werteAus(wahr: BedingterWert, aussage: BedingterWert, lüge: BedingterWert): BedingterWert {
+        val knoten = MathematikKnotenVorlagen.Fall.erzeuge(GraphPunkt.Zero)
+        return auswerter.finde(knoten.art)!!.auswerten(
+            KnotenAuswertungsKontext(
+                knoten,
+                mapOf("wahr" to wahr, "aussage" to aussage, "lüge" to lüge),
+                RechenKontext(),
+            ),
+        ).ausgaben.getValue("wert")
+    }
+}
+''', encoding='utf-8')
+          PY
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Änderungen prüfen
+        run: |
+          python3 scripts/pruefe_architektur.py
+          ./gradlew --stacktrace test :app:assembleDebug
+      - name: Quelländerungen speichern
+        shell: bash
+        run: |
+          git checkout origin/master -- .github/workflows/build.yml
+          git config user.name "OpenAI"
+          git config user.email "noreply@openai.com"
+          git add \
+            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/FallAusdruck.kt \
+            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt \
+            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Wertebereiche.kt \
+            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/MathematikAuswerter.kt \
+            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt \
+            MathematikKnoten/src/test/kotlin/de/TeutonStudio/MathematikKnoten/FallunterscheidungTest.kt \
+            .github/workflows/build.yml
+          git diff --cached --check
+          git commit -m "Implementiere symbolische Fallausdrücke"
+          git push origin HEAD:agent/v2.1.14
