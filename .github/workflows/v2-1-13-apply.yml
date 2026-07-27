@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - agent/v2.1.13
+  pull_request:
+    branches:
+      - master
 
 permissions:
   contents: write
 
 jobs:
   apply:
-    if: github.event.head_commit.message == 'Prepare v2.1.13 implementation'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'Prepare v2.1.13 implementation'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
