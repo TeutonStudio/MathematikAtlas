@@ -96,7 +96,7 @@ object MathematikKnotenVorlagen {
     )
     val Schnitt = mengenOperatorVorlage("mathematik.schnitt", "Schnitt", "Schneidet zwei oder mehr Mengen.", "\\cap")
     val Differenz = KnotenVorlage(
-        "mathematik.differenz", "Mengendifferenz", "Mengen", "Entfernt die rechte Menge aus der linken.", GraphGröße(220f, 110f),
+        "mathematik.differenz", "Differenz", "Mengen", "Entfernt die rechte Menge aus der linken.", GraphGröße(220f, 110f),
         listOf(eingang("links", MathematikAnschlussArten.Menge.id, 0), eingang("rechts", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val KartesischesProdukt = mengenOperatorVorlage("mathematik.kartesischesProdukt", "Kartesisches Produkt", "Bildet das kartesische Produkt von zwei oder mehr Mengen.", "\\times")

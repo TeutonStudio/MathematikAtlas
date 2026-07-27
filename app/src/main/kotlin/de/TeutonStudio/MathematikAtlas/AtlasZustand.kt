@@ -109,6 +109,40 @@ class AtlasZustand(context: Context) {
         schließeKnotenAuswahl()
     }
 
+    /** Fügt ein Tupel und dessen Umwandlung zu einem orientierten Vektor als eine zusammenhängende Knotenfolge ein. */
+    fun fügeTupelVektorEin(spalte: Boolean, position: GraphPunkt) {
+        val tupel = MathematikKnotenVorlagen.Tupel.erzeuge(position)
+        val umwandlungVorlage = if (spalte) MathematikKnotenVorlagen.TupelZuSpalte else MathematikKnotenVorlagen.TupelZuZeile
+        val umwandlung = umwandlungVorlage.erzeuge(position + GraphPunkt(270f, 0f))
+        val tupelAusgang = tupel.anschlüsse.firstOrNull { it.name == "tupel" } ?: return
+        val umwandlungsEingang = umwandlung.anschlüsse.firstOrNull { it.name == "tupel" } ?: return
+        val vorläufigeKarte = editor.karte.copy(knoten = editor.karte.knoten + listOf(tupel, umwandlung))
+        val interneVerbindung = verbindungWennErlaubt(
+            vorläufigeKarte,
+            AnschlussVerweis(tupel.id, tupelAusgang.id),
+            AnschlussVerweis(umwandlung.id, umwandlungsEingang.id),
+        ) ?: return
+        val karteMitInternerVerbindung = vorläufigeKarte.copy(verbindungen = vorläufigeKarte.verbindungen + interneVerbindung)
+        val externeVerbindung = knotenAuswahlStart?.let { start ->
+            tupel.anschlüsse.asSequence()
+                .map { AnschlussVerweis(tupel.id, it.id) }
+                .mapNotNull { ziel -> verbindungWennErlaubt(karteMitInternerVerbindung, start, ziel) }
+                .firstOrNull()
+        }
+        if (knotenAuswahlStart != null && externeVerbindung == null) return
+
+        editor.beginneInteraktion()
+        editor.führeAus(KartenAktion.KnotenEinfügen(tupel), mitHistorie = false)
+        editor.führeAus(KartenAktion.KnotenEinfügen(umwandlung), mitHistorie = false)
+        editor.führeAus(KartenAktion.VerbindungEinfügen(interneVerbindung), mitHistorie = false)
+        externeVerbindung?.let { editor.führeAus(KartenAktion.VerbindungEinfügen(it), mitHistorie = false) }
+        editor.beendeInteraktion()
+        editor.wähleKnoten(umwandlung.id)
+        schließeKnotenAuswahl()
+    }
+
+    fun kannTupelVektorEinfügen(): Boolean = istKompatibelMitOffenerVerbindung(MathematikKnotenVorlagen.Tupel)
+
     fun neueKarte() {
         val karte = speicher.speichere(KartenDaten(name = "Neue Karte ${karten.size + 1}"))
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
@@ -137,7 +171,7 @@ class AtlasZustand(context: Context) {
     fun knotenKategorien(): List<String> = alleKnotenVorlagen().map { it.kategorie }.distinct()
 
     fun sichtbareVorlagen(): List<KnotenVorlage> = alleKnotenVorlagen().filter { vorlage ->
-        val suchePasst = suchText.isBlank() || vorlage.name.contains(suchText, ignoreCase = true) || vorlage.kategorie.contains(suchText, ignoreCase = true)
+        val suchePasst = suchText.isBlank() || vorlage.name.contains(suchText, ignoreCase = true) || vorlage.kategorie.contains(suchText, ignoreCase = true) || vorlage.beschreibung.contains(suchText, ignoreCase = true)
         suchePasst && istKompatibelMitOffenerVerbindung(vorlage)
     }
 
@@ -242,9 +276,22 @@ class AtlasZustand(context: Context) {
         }
     }
 
-    /** Migriert alte Karten-Ausgänge und macht ältere assoziative Knoten erweiterbar. */
+    private fun verbindungWennErlaubt(
+        karte: KartenDaten,
+        erster: AnschlussVerweis,
+        zweiter: AnschlussVerweis,
+    ): VerbindungDaten? {
+        if (graphPrüfung.prüfe(karte, erster, zweiter) !is VerbindungsPrüfung.Erlaubt) return null
+        val (von, zu) = graphPrüfung.normalisiere(karte, erster, zweiter) ?: return null
+        return VerbindungDaten(von = von, zu = zu)
+    }
+
+    /** Migriert bekannte Knotendaten, darunter Karten-Ausgänge, assoziative Eingänge und die Bezeichnung „Differenz“. */
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = karte.copy(
-        knoten = karte.knoten.map { knoten ->
+        knoten = karte.knoten.map { ursprünglicherKnoten ->
+            val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") {
+                ursprünglicherKnoten.copy(name = "Differenz")
+            } else ursprünglicherKnoten
             if (knoten.art == "mathematik.kartenAusgang" && knoten.anschlüsse.none { it.name == "zielmenge" }) {
                 knoten.copy(anschlüsse = knoten.anschlüsse + AnschlussDaten(
                     name = "zielmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
