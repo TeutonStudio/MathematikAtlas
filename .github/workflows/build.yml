@@ -4,35 +4,19 @@ on:
   push:
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
-  v2115-speichern:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/v2.1.15'
+  pruefen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          ref: agent/v2.1.15
-          fetch-depth: 0
-      - name: Geprüfte Quelländerungen erzeugen
-        run: |
-          python3 .github/scripts/fix_apply_v2_1_15.py
-          python3 .github/scripts/apply_v2_1_15.py
-      - name: Quelländerungen speichern
-        run: |
-          git config user.name "OpenAI"
-          git config user.email "noreply@openai.com"
-          git add \
-            MathematikKartenAdapter/src/main/kotlin/de/TeutonStudio/MathematikKartenAdapter/Auswertung.kt \
-            MathematikKartenAdapter/src/main/kotlin/de/TeutonStudio/MathematikKartenAdapter/KartenAuswerter.kt \
-            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/MathematikAuswerter.kt \
-            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/MathematikKnotenVorlagen.kt \
-            MathematikKnoten/src/test/kotlin/de/TeutonStudio/MathematikKnoten/MengenKnotenTest.kt \
-            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Mengen.kt \
-            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt \
-            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Wertebereiche.kt
-          git diff --cached --check
-          git commit -m "Implementiere Kartenparameter und Mengenknoten"
-          git push origin HEAD:agent/v2.1.15
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Architektur prüfen
+        run: python3 scripts/pruefe_architektur.py
+      - name: Bauen und testen
+        run: ./gradlew --stacktrace test :app:assembleDebug
