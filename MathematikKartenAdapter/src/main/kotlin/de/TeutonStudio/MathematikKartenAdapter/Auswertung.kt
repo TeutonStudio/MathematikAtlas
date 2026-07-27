@@ -14,7 +14,12 @@ data class BedingterWert(
     val reelleVariablen: Map<String, MengenAusdruck> = emptyMap(),
     /** Nichtpersistierte Herkunft der freien Variablen eines aus dem Graphen abgeleiteten Werts. */
     val variablenQuellen: List<VariablenQuelle> = emptyList(),
+    /** Pfadgebundene Darstellung; verändert das mathematische Objekt ausdrücklich nicht. */
+    val latexDarstellung: String? = null,
 )
+
+/** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die mathematische Standarddarstellung. */
+fun BedingterWert.anzeigeLatex(): String = latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuLatex()
 
 data class VariablenQuelle(
     val knotenId: KnotenId,
