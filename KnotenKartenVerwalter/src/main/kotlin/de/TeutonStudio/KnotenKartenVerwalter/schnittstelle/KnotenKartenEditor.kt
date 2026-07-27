@@ -3,6 +3,7 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
@@ -15,16 +16,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import kotlin.math.*
+
+private const val KNOTEN_VIEWPORT_PUFFER = 200f
+private const val VERBINDUNG_VIEWPORT_PUFFER = 80f
 
 @Composable
 fun KnotenKartenEditor(
@@ -43,10 +49,19 @@ fun KnotenKartenEditor(
     val aktuelleAnsicht by rememberUpdatedState(ansicht)
     val aktuelleDichte by rememberUpdatedState(dichte.density)
     val weltGröße = 6000.dp
+    var anzeigeGröße by remember { mutableStateOf(IntSize.Zero) }
+    val sichtbarerWeltBereich = sichtbarerWeltBereich(ansicht, anzeigeGröße, dichte.density)
+    val sichtbareKnoten = sichtbarerWeltBereich?.let { bereich ->
+        karte.knoten.filter { it.istImBereich(bereich, KNOTEN_VIEWPORT_PUFFER) }
+    } ?: karte.knoten
+    val sichtbareVerbindungen = sichtbarerWeltBereich?.let { bereich ->
+        karte.verbindungen.filter { it.istImBereich(karte, bereich, VERBINDUNG_VIEWPORT_PUFFER) }
+    } ?: karte.verbindungen
 
     Box(
         modifier.background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .clipToBounds()
+            .onSizeChanged { anzeigeGröße = it }
             .pointerInput(zustand) {
                 awaitEachGesture {
                     var gesamterPan = Offset.Zero
@@ -74,7 +89,16 @@ fun KnotenKartenEditor(
                                 if (hintergrundGesteAktiv && (pan != Offset.Zero || zoom != 1f)) {
                                     val bisherigeAnsicht = aktuelleAnsicht
                                     val neuerZoom = (bisherigeAnsicht.zoom * zoom).coerceIn(0.25f, 3.5f)
-                                    val neueVerschiebung = bisherigeAnsicht.verschiebung + GraphPunkt(pan.x, pan.y)
+                                    // Der Mittelpunkt der Finger bleibt beim Skalieren unter
+                                    // demselben visuellen Punkt. Der effektive Faktor berücksichtigt
+                                    // auch die Zoom-Grenzen.
+                                    val zoomFaktor = neuerZoom / bisherigeAnsicht.zoom
+                                    val vorherigerMittelpunkt = ereignis.calculateCentroid(useCurrent = false)
+                                    val aktuellerMittelpunkt = ereignis.calculateCentroid(useCurrent = true)
+                                    val neueVerschiebung = GraphPunkt(
+                                        aktuellerMittelpunkt.x - (vorherigerMittelpunkt.x - bisherigeAnsicht.verschiebung.x) * zoomFaktor,
+                                        aktuellerMittelpunkt.y - (vorherigerMittelpunkt.y - bisherigeAnsicht.verschiebung.y) * zoomFaktor,
+                                    )
                                     zustand.führeAus(KartenAktion.AnsichtÄndern(AnsichtsFenster(neueVerschiebung, neuerZoom)), mitHistorie = false)
                                     ereignis.changes.forEach { änderung -> if (änderung.positionChanged()) änderung.consume() }
                                 }
@@ -109,10 +133,10 @@ fun KnotenKartenEditor(
         ) {
             // Die Schlüssel sorgen dafür, dass die Hintergrundebene bei jedem Drag sofort
             // mit den aktuellen Knotenpositionen neu gezeichnet wird.
-            key(karte.knoten, karte.verbindungen, zustand.verbindungsStart, zustand.verbindungsVorschau) {
-                Verbindungen(karte, zustand)
+            key(sichtbareVerbindungen, zustand.verbindungsStart, zustand.verbindungsVorschau) {
+                Verbindungen(karte, zustand, sichtbareVerbindungen)
             }
-            karte.knoten.forEach { knoten ->
+            sichtbareKnoten.forEach { knoten ->
                 key(knoten.id) {
                     KnotenDarstellung(
                         knoten = knoten,
@@ -152,14 +176,18 @@ private fun Raster(ansicht: AnsichtsFenster) {
 }
 
 @Composable
-private fun Verbindungen(karte: KartenDaten, zustand: KartenEditorZustand) {
+private fun Verbindungen(
+    karte: KartenDaten,
+    zustand: KartenEditorZustand,
+    verbindungen: List<VerbindungDaten>,
+) {
     val dichte = LocalDensity.current
     val standard = MaterialTheme.colorScheme.outline
     val gewählt = MaterialTheme.colorScheme.primary
     Canvas(
-        Modifier.fillMaxSize().pointerInput(karte.verbindungen, karte.knoten) {
+        Modifier.fillMaxSize().pointerInput(verbindungen, karte.knoten) {
             detectTapGestures { pos ->
-                val treffer = karte.verbindungen.minByOrNull { verbindung ->
+                val treffer = verbindungen.minByOrNull { verbindung ->
                     val a = anschlussPosition(karte, verbindung.von, dichte.density)
                     val b = anschlussPosition(karte, verbindung.zu, dichte.density)
                     punktStreckenAbstand(pos, a, b)
@@ -172,7 +200,7 @@ private fun Verbindungen(karte: KartenDaten, zustand: KartenEditorZustand) {
             }
         }
     ) {
-        karte.verbindungen.forEach { verbindung ->
+        verbindungen.forEach { verbindung ->
             val start = anschlussPosition(karte, verbindung.von, dichte.density)
             val ende = anschlussPosition(karte, verbindung.zu, dichte.density)
             val abstand = max(72.dp.toPx(), abs(ende.x - start.x) * .45f)
@@ -224,7 +252,10 @@ private fun KnotenDarstellung(
                             val aktuell = zustand.karte.knoten.firstOrNull { it.id == knoten.id }
                             if (aktuell != null) {
                                 zustand.führeAus(
-                                    KartenAktion.KnotenVerschieben(aktuell.id, aktuell.position + GraphPunkt(delta.x / zoom / density, delta.y / zoom / density)),
+                                    // PointerInput liefert innerhalb des skalierten Layers lokale,
+                                    // bereits entzoomte Koordinaten. Nur die Pixeldichte muss noch
+                                    // in die Graph-Koordinaten umgerechnet werden.
+                                    KartenAktion.KnotenVerschieben(aktuell.id, aktuell.position + GraphPunkt(delta.x / density, delta.y / density)),
                                     mitHistorie = false,
                                 )
                             }
@@ -420,6 +451,65 @@ private fun anschlussPosition(karte: KartenDaten, ref: AnschlussVerweis, dichte:
     }
     return Offset(x * dichte, y * dichte)
 }
+
+/**
+ * Der sichtbare Ausschnitt der Kartenwelt in Graph-Koordinaten.
+ *
+ * Die Verschiebung der Ansicht liegt in Bildschirm-Pixeln vor; die Welt selbst
+ * wird dagegen in dp gespeichert. Deshalb wird nach der Rücktransformation des
+ * Zooms zusätzlich durch die Pixeldichte geteilt.
+ */
+private fun sichtbarerWeltBereich(
+    ansicht: AnsichtsFenster,
+    anzeigeGröße: IntSize,
+    dichte: Float,
+): Rect? {
+    if (anzeigeGröße.width <= 0 || anzeigeGröße.height <= 0 || dichte <= 0f) return null
+    val zoom = ansicht.zoom.coerceAtLeast(0.0001f)
+    return Rect(
+        left = -ansicht.verschiebung.x / zoom / dichte,
+        top = -ansicht.verschiebung.y / zoom / dichte,
+        right = (anzeigeGröße.width - ansicht.verschiebung.x) / zoom / dichte,
+        bottom = (anzeigeGröße.height - ansicht.verschiebung.y) / zoom / dichte,
+    )
+}
+
+private fun KnotenDaten.istImBereich(bereich: Rect, puffer: Float): Boolean = Rect(
+    left = position.x - puffer,
+    top = position.y - puffer,
+    right = position.x + größe.breite + puffer,
+    bottom = position.y + größe.höhe + puffer,
+).überschneidet(bereich)
+
+/**
+ * Die Kontrollpunkte der kubischen Verbindung liegen horizontal neben den
+ * Endpunkten. Ihre Umhüllung ist damit eine sichere, günstige Obergrenze für
+ * das sichtbare Béziersegment.
+ */
+private fun VerbindungDaten.istImBereich(
+    karte: KartenDaten,
+    bereich: Rect,
+    puffer: Float,
+): Boolean {
+    val start = anschlussPositionWelt(karte, von) ?: return false
+    val ende = anschlussPositionWelt(karte, zu) ?: return false
+    val abstand = max(72f, abs(ende.x - start.x) * .45f)
+    return Rect(
+        left = minOf(start.x, ende.x, start.x + abstand, ende.x - abstand) - puffer,
+        top = min(start.y, ende.y) - puffer,
+        right = maxOf(start.x, ende.x, start.x + abstand, ende.x - abstand) + puffer,
+        bottom = max(start.y, ende.y) + puffer,
+    ).überschneidet(bereich)
+}
+
+private fun anschlussPositionWelt(karte: KartenDaten, ref: AnschlussVerweis): GraphPunkt? {
+    val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return null
+    val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return null
+    return anschlussPositionWelt(knoten, anschluss)
+}
+
+private fun Rect.überschneidet(anderer: Rect): Boolean =
+    left <= anderer.right && right >= anderer.left && top <= anderer.bottom && bottom >= anderer.top
 
 private fun punktStreckenAbstand(p: Offset, a: Offset, b: Offset): Float {
     val ab = b - a
