@@ -319,6 +319,9 @@ private fun Verbindungen(
                     val a = anschlussBildschirmPosition(karte, treffer.von, dichte.density, ansicht)
                     val b = anschlussBildschirmPosition(karte, treffer.zu, dichte.density, ansicht)
                     if (punktStreckenAbstand(pos, a, b) <= 14.dp.toPx() * ansicht.zoom) zustand.wähleVerbindung(treffer.id)
+                    else zustand.wähleKnoten(null)
+                } else {
+                    zustand.wähleKnoten(null)
                 }
             }
         }
