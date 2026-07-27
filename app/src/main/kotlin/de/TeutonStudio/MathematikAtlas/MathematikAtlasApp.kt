@@ -265,6 +265,9 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         override fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>) {
                             zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
                         }
+                        override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
+                            zustand.editor.ändereAnschlussArt(verweis, art)
+                        }
                     },
                 )
                 Spacer(Modifier.weight(1f))

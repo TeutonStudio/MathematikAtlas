@@ -268,8 +268,7 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.kartenAusgang") { k ->
             val wert = k.eingänge["wert"] ?: error("Ausgabewert fehlt.")
-            val zielMenge = k.eingänge["zielmenge"]?.objekt as? MengenAusdruck
-            KnotenAuswertungsErgebnis(mapOf("wert" to wert.copy(zielMenge = zielMenge)))
+            KnotenAuswertungsErgebnis(mapOf("wert" to wert))
         }
         registriere("mathematik.fall") { k ->
             val wert = k.eingänge["term"] ?: error("Term fehlt.")

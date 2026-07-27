@@ -90,15 +90,15 @@ class KartenAuswerter(
         val vorgaben = mutableMapOf<KnotenId, Map<String, BedingterWert>>()
         val freie = mutableListOf<Variable>()
         interneEingänge.forEach { eingang ->
-            val name = eingang.parameter["name"] ?: eingang.name
+            val name = öffentlicherKartenName(eingang)
             val wert = außen[name] ?: BedingterWert(Variable(name)).also { freie += it.objekt as Variable }
             vorgaben[eingang.id] = mapOf("wert" to wert)
         }
         val internErgebnis = auswertenIntern(intern, vorgaben, kartenPfad + verweis)
         if (internErgebnis.fehler.isNotEmpty()) return KnotenAuswertungsErgebnis(emptyMap(), fehler = internErgebnis.fehler.joinToString())
-        val ausgänge = intern.knoten.filter { it.art == "mathematik.kartenAusgang" }
+        val ausgänge = intern.knoten.filter { it.art == "mathematik.kartenAusgang" }.distinctBy(::öffentlicherKartenName)
         val werte = ausgänge.mapNotNull { ausgang ->
-            val name = ausgang.parameter["name"] ?: ausgang.name
+            val name = öffentlicherKartenName(ausgang)
             internErgebnis.knoten[ausgang.id]?.ausgaben?.get("wert")?.let { name to it }
         }.toMap()
         if (!knoten.art.startsWith("methode.")) return KnotenAuswertungsErgebnis(werte)
@@ -109,6 +109,9 @@ class KartenAuswerter(
         if (funktion.einzigeAusgabe().second is MengenAusdruck) funktion.prüfeAlsIterationsMethode(erwartetMengenwert = true)
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion)))
     }
+
+    private fun öffentlicherKartenName(knoten: KnotenDaten): String =
+        knoten.parameter["name"]?.trim()?.takeIf(String::isNotEmpty) ?: knoten.name
 
     private fun sammleEingänge(
         knoten: KnotenDaten,

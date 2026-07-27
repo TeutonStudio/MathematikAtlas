@@ -5,9 +5,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 
 interface KnotenInspektor {
@@ -16,13 +19,53 @@ interface KnotenInspektor {
 interface KnotenInspektorAktionen {
     fun parameter(schlüssel: String, wert: String)
     fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
+    fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
         "mathematik.visualisierung" to VisualisierungsInspektor,
+        "mathematik.kartenEingang" to KartenSchnittstellenInspektor,
+        "mathematik.kartenAusgang" to KartenSchnittstellenInspektor,
     )
     fun finde(art: String) = inspektoren[art]
+}
+
+private object KartenSchnittstellenInspektor : KnotenInspektor {
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        val wertAnschluss = knoten.anschlüsse.firstOrNull { it.name == "wert" } ?: return
+        val aktuelleArt = MathematikAnschlussArten.alle.firstOrNull { it.id == wertAnschluss.art }
+        var geöffnet by remember(knoten.id, wertAnschluss.art) { mutableStateOf(false) }
+        ParameterFeld("Name", knoten.parameter["name"] ?: knoten.name) { aktionen.parameter("name", it) }
+        Text("Schnittstellen-Typ", style = MaterialTheme.typography.titleSmall)
+        ExposedDropdownMenuBox(expanded = geöffnet, onExpandedChange = { geöffnet = it }) {
+            OutlinedTextField(
+                value = aktuelleArt?.name ?: wertAnschluss.art.wert,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Typ") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = geöffnet) },
+                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+            )
+            ExposedDropdownMenu(expanded = geöffnet, onDismissRequest = { geöffnet = false }) {
+                MathematikAnschlussArten.alle.forEach { art ->
+                    DropdownMenuItem(
+                        text = { Text(art.name) },
+                        onClick = {
+                            geöffnet = false
+                            aktionen.anschlussArt(AnschlussVerweis(knoten.id, wertAnschluss.id), art.id)
+                        },
+                    )
+                }
+            }
+        }
+        Text(
+            "Der Typ gilt für den Anschluss „wert“ und wird von Gruppenknoten übernommen.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    }
 }
 
 private object LösungsmengeInspektor : KnotenInspektor {

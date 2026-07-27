@@ -202,7 +202,7 @@ object MathematikKnotenVorlagen {
     )
     val KartenAusgang = KnotenVorlage(
         "mathematik.kartenAusgang", "Karten-Ausgang", "Gruppen", "Öffentliche Ausgabe einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
-        listOf(eingang("wert", MathematikAnschlussArten.Objekt.id), eingang("zielmenge", MathematikAnschlussArten.Menge.id, 1)), mapOf("name" to "ergebnis"),
+        listOf(eingang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "ergebnis"),
     )
     val Fall = KnotenVorlage(
         "mathematik.fall", "Fallunterscheidung", "Steuerung", "Verzweigt einen Ausdruck anhand einer Aussage und gibt die Annahmen weiter.", GraphGröße(250f, 140f),

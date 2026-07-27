@@ -92,6 +92,27 @@ class GraphPrüfungTest {
         assertEquals(listOf(ab, bc), zustand.karte.verbindungen)
     }
 
+    @Test fun typwechselEntferntInkompatibleKantenUndIstRückgängigMachbar() {
+        val quelle = knoten("q", AnschlussRichtung.Ausgang, zahl.id)
+        val ziel = knoten("z", AnschlussRichtung.Eingang, zahl.id)
+        val verbindung = VerbindungDaten(von = ref(quelle), zu = ref(ziel))
+        val zustand = KartenEditorZustand(
+            KartenDaten(name = "Test", knoten = listOf(quelle, ziel), verbindungen = listOf(verbindung)),
+            prüfung,
+        )
+
+        zustand.ändereAnschlussArt(ref(quelle), objekt.id)
+
+        val geänderterAnschluss = zustand.karte.knoten.first { it.id == quelle.id }.anschlüsse.single()
+        assertEquals(quelle.anschlüsse.single().id, geänderterAnschluss.id)
+        assertEquals(objekt.id, geänderterAnschluss.art)
+        assertTrue(zustand.karte.verbindungen.isEmpty())
+
+        zustand.rückgängig()
+        assertEquals(zahl.id, zustand.karte.knoten.first { it.id == quelle.id }.anschlüsse.single().art)
+        assertEquals(listOf(verbindung), zustand.karte.verbindungen)
+    }
+
     private fun knoten(name: String, richtung: AnschlussRichtung, art: AnschlussArtId) = KnotenDaten(
         art = "test", name = name, anschlüsse = listOf(AnschlussDaten(name = "wert", richtung = richtung, kante = if (richtung == AnschlussRichtung.Eingang) AnschlussKante.Links else AnschlussKante.Rechts, art = art)),
     )

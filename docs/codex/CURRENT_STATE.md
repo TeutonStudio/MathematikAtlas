@@ -34,7 +34,7 @@
 - mathematisches Modell: `MathematikRechenSystem/.../kern/`; Wurzeltyp ist `MathematischesObjekt` mit `Ausdruck`, `ZahlAusdruck` und `MengenAusdruck`.
 - Auswertung: `MathematikKartenAdapter`; topologischer `KartenAuswerter` mit Cache und `MathematikAuswerterRegister`.
 - Persistenz: `app/.../speicher/KartenJson.kt` und `KartenSpeicher.kt`; Format 2 liest Format-1-Karten mit leerer Eigenschaftsmap rückwärtskompatibel und speichert rekursiv typisierte Eigenschaften. Speicherort ist der App-interne Dateienbereich `MathematikAtlas/karten/<karten-id>/v<version>.json`.
-- Tests: JVM-Unit-Tests in den vier Bibliotheksmodulen unter `src/test/kotlin`; im Repository wurden keine Testquellen für das App-Modul oder Android-Instrumentierungstests gefunden.
+- Tests: JVM-Unit-Tests in den vier Bibliotheksmodulen sowie im App-Modul unter `src/test/kotlin` (dort derzeit Persistenztests); Android-Instrumentierungstests wurden nicht gefunden.
 
 ## Vorhandene Node-Typen
 
@@ -46,12 +46,12 @@
 | Zahlen, Mengen und Aussagen | Tupel, komplexe Zahlen, Mengenoperationen, Zahlbereiche, Vergleiche, Mengenprädikate und Aussagenlogik | Zahl, Menge, Objekt oder Aussage | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
 | Operatoren und Abbildungen | Iterierte Summe/Produkt/Mengenoperationen, Abbild, Term-zu-Methode, Komposition, Iteration und Analysis von Methoden | typisierte Funktions-, Mengen- und Zahlanschlüsse | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
 | Vektoren und Matrizen | orientierte Zeilen-/Spaltenvektoren, Matrixbildung, Produkte, Transposition und Inversion | Zahl, Vektor oder Matrix | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
-| Wiederverwendbare Karten | öffentliche Karten-Ein-/Ausgänge, dynamisch erzeugte Gruppenknoten und Methodenkarten | aus der referenzierten Karte abgeleitet | statisch `mathematik.kartenEingang` / `mathematik.kartenAusgang`; dynamisch `gruppe.<karten-id>` und `methode.<karten-id>` | `MathematikKnotenVorlagen.kt`, `AtlasZustand.kt`, `KartenAuswerter.kt` |
+| Wiederverwendbare Karten | öffentliche Karten-Ein-/Ausgänge und dynamisch erzeugte Gruppenknoten | ein typisierter Anschluss `wert` je Schnittstellenknoten; Gruppenknoten je Richtung eindeutig nach öffentlichem Namen | statisch `mathematik.kartenEingang` / `mathematik.kartenAusgang`; dynamisch `gruppe.<karten-id>` | `MathematikKnotenVorlagen.kt`, `AtlasZustand.kt`, `KartenAuswerter.kt` |
 
 ## Zentrale Architekturpfade
 
 - Node-Erzeugung: `KnotenVorlage.erzeuge` erzeugt `KnotenDaten`; `AtlasZustand.fügeKnotenEin` fügt sie über `KartenAktion.KnotenEinfügen` in den Editorzustand ein.
-- Vorlagenkatalog: `MathematikKnotenVorlagen.alle`; `AtlasZustand` ergänzt daraus abgeleitete Gruppen- und Methodenvorlagen. Es gibt damit keinen einzelnen, universellen Registry-Typ für Darstellung, Vorlagen und Auswertung.
+- Vorlagenkatalog: `MathematikKnotenVorlagen.alle`; `AtlasZustand` ergänzt daraus abgeleitete Gruppenvorlagen. Es gibt damit keinen einzelnen, universellen Registry-Typ für Darstellung, Vorlagen und Auswertung.
 - Auswerter-Registry: `MathematikAuswerterRegister`, befüllt von `StandardMathematikAuswerter.erzeugeRegister` anhand stabiler `mathematik.*`-Schlüssel.
 - Graphzustand: `KartenEditorZustand.karte` hält eine immutable `KartenDaten`-Instanz; Undo/Redo-Historien liegen im Editorzustand. `AtlasZustand` koordiniert Auswahl, Auswertung, Kartenliste und Speicherung.
 - Handle-Vertrag: `AnschlussDaten` enthält stabile Instanz-ID, Richtung, Kante, `AnschlussArtId`, Reihenfolge sowie Kennzeichen für dynamische Eingänge.

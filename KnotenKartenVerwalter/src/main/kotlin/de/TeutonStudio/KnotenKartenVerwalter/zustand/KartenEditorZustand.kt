@@ -209,6 +209,17 @@ class KartenEditorZustand(
         führeAus(KartenAktion.KnotenAnschlüsseÄndern(knotenId, neu))
     }
 
+    /** Ändert die Art eines Anschlusses als einen Undo/Redo-Schritt und bereinigt inkompatible Kanten. */
+    fun ändereAnschlussArt(ref: AnschlussVerweis, art: AnschlussArtId) {
+        val vorher = karte
+        val neu = prüfung.ändereAnschlussArt(vorher, ref, art).ohneUnverbundeneDynamischeEingänge()
+        if (neu == vorher) return
+        rückgängig.addLast(vorher)
+        if (rückgängig.size > 100) rückgängig.removeFirst()
+        wiederholen.clear()
+        karte = neu
+    }
+
     fun kannRückgängig() = rückgängig.isNotEmpty()
     fun kannWiederholen() = wiederholen.isNotEmpty()
 

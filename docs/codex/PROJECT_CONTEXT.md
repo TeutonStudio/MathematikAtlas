@@ -65,7 +65,7 @@ Die folgenden Prinzipien sind durch die vorhandenen Verträge und weite Teile de
 
 | Aufgabe | Bestätigte Symbole | Einordnung |
 |---|---|---|
-| Node-Vorlagenkatalog | `MathematikKnotenVorlagen.alle`, `KnotenVorlage.erzeuge` | Statische mathematische Vorlagen; `AtlasZustand` ergänzt gespeicherte Karten als dynamische Gruppen- und Methodenvorlagen. |
+| Node-Vorlagenkatalog | `MathematikKnotenVorlagen.alle`, `KnotenVorlage.erzeuge` | Statische mathematische Vorlagen; `AtlasZustand` ergänzt gespeicherte Karten als dynamische Gruppenvorlagen. |
 | Auswerter-Registry | `MathematikAuswerterRegister`, `StandardMathematikAuswerter.erzeugeRegister` | Ordnet stabilen Node-Art-Schlüsseln konkrete mathematische Auswerter zu. |
 | Graphzustand | `KartenEditorZustand`, `KartenDaten`, `AtlasZustand` | Editorzustand mit Auswahl, Verbindungsvorschau und Undo/Redo; Appzustand koordiniert Persistenz und Auswertung. |
 | Serialisierungsschema | `KartenJson`, `KartenSpeicher`, `formatVersion` 1 | JSON für Karte, Knoten, Anschlüsse, Verbindungen, Ansicht und Kartenverweise; dateibasierte Versionierung. |

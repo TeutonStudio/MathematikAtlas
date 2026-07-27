@@ -198,24 +198,8 @@ class AtlasZustand(context: Context) {
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }
         .flatMap { karte ->
-            val eingänge = karte.knoten.filter { it.art == "mathematik.kartenEingang" }.mapIndexed { index, intern ->
-                AnschlussDaten(
-                    name = intern.parameter["name"] ?: intern.name,
-                    richtung = AnschlussRichtung.Eingang,
-                    kante = AnschlussKante.Links,
-                    art = intern.anschlüsse.firstOrNull { it.name == "wert" }?.art ?: MathematikAnschlussArten.Objekt.id,
-                    reihenfolge = index,
-                )
-            }
-            val ausgänge = karte.knoten.filter { it.art == "mathematik.kartenAusgang" }.mapIndexed { index, intern ->
-                AnschlussDaten(
-                    name = intern.parameter["name"] ?: intern.name,
-                    richtung = AnschlussRichtung.Ausgang,
-                    kante = AnschlussKante.Rechts,
-                    art = intern.anschlüsse.firstOrNull { it.name == "wert" }?.art ?: MathematikAnschlussArten.Objekt.id,
-                    reihenfolge = index,
-                )
-            }
+            val eingänge = öffentlicheKartenAnschlüsse(karte, "mathematik.kartenEingang", AnschlussRichtung.Eingang, AnschlussKante.Links)
+            val ausgänge = öffentlicheKartenAnschlüsse(karte, "mathematik.kartenAusgang", AnschlussRichtung.Ausgang, AnschlussKante.Rechts)
             val gruppe = KnotenVorlage(
                 art = "gruppe.${karte.id.wert}",
                 name = karte.name,
@@ -225,43 +209,8 @@ class AtlasZustand(context: Context) {
                 anschlüsse = eingänge + ausgänge,
                 kartenVerweis = KartenVerweis(karte.id, karte.version),
             )
-            listOfNotNull(gruppe, methodenVorlage(karte))
+            listOf(gruppe)
         }.toList()
-
-    private fun methodenVorlage(karte: KartenDaten): KnotenVorlage? {
-        val eingänge = karte.knoten.filter { it.art == "mathematik.kartenEingang" }
-        val ausgänge = karte.knoten.filter { it.art == "mathematik.kartenAusgang" }
-        if (eingänge.size != 1 || ausgänge.size != 1) return null
-        val ausgang = ausgänge.single()
-        val wert = ausgang.anschlüsse.firstOrNull { it.name == "wert" } ?: return null
-        val zielmenge = ausgang.anschlüsse.firstOrNull { it.name == "zielmenge" } ?: return null
-        val wertArt = quelleArt(karte, ausgang.id, wert.id) ?: return null
-        val zielMengeArt = quelleArt(karte, ausgang.id, zielmenge.id) ?: return null
-        if (!anschlussArten.istUnterart(zielMengeArt, MathematikAnschlussArten.Menge.id)) return null
-        val funktionsArt = when {
-            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Zahl.id) -> MathematikAnschlussArten.ZahlFunktion.id
-            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Menge.id) -> MathematikAnschlussArten.MengenFunktion.id
-            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.SpaltenVektor.id) -> MathematikAnschlussArten.SpaltenVektorFunktion.id
-            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.ZeilenVektor.id) -> MathematikAnschlussArten.ZeilenVektorFunktion.id
-            else -> return null
-        }
-        return KnotenVorlage(
-            art = "methode.${karte.id.wert}",
-            name = "${karte.name} (Methode)",
-            kategorie = "Methoden",
-            beschreibung = "Einwertige Methode; ihre Grundmenge wird aus der Zielmenge des Karten-Ausgangs abgeleitet.",
-            standardGröße = GraphGröße(240f, 90f),
-            anschlüsse = listOf(AnschlussDaten(
-                name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = funktionsArt,
-            )),
-            kartenVerweis = KartenVerweis(karte.id, karte.version),
-        )
-    }
-
-    private fun quelleArt(karte: KartenDaten, zielKnoten: KnotenId, zielAnschluss: AnschlussId): AnschlussArtId? {
-        val quelle = karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(zielKnoten, zielAnschluss) }?.von ?: return null
-        return karte.knoten.firstOrNull { it.id == quelle.knotenId }?.anschlüsse?.firstOrNull { it.id == quelle.anschlussId }?.art
-    }
 
     private fun referenziertKarte(karte: KartenDaten, gesuchteId: KartenId, besucht: MutableSet<KartenVerweis>): Boolean {
         val refs = karte.knoten.mapNotNull { it.kartenVerweis }
@@ -290,40 +239,38 @@ class AtlasZustand(context: Context) {
         return VerbindungDaten(von = von, zu = zu)
     }
 
-    /** Migriert bekannte Knotendaten, darunter Karten-Ausgänge, assoziative Eingänge und die Bezeichnung „Differenz“. */
-    private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = karte.copy(
-        knoten = karte.knoten.map { ursprünglicherKnoten ->
-            val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") {
-                ursprünglicherKnoten.copy(name = "Differenz")
-            } else ursprünglicherKnoten
-            if (knoten.art == "mathematik.kartenAusgang" && knoten.anschlüsse.none { it.name == "zielmenge" }) {
-                knoten.copy(anschlüsse = knoten.anschlüsse + AnschlussDaten(
-                    name = "zielmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
-                    art = MathematikAnschlussArten.Menge.id, reihenfolge = 1,
-                ))
-            } else if (knoten.art !in assoziativeKnotenArten) knoten
-            else {
-                val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
-                val verbundeneEingänge = karte.verbindungen.map { it.zu }.toSet()
-                val überzähligeFesteEingänge = knoten.anschlüsse
-                    .filter { it.richtung == AnschlussRichtung.Eingang && !it.dynamischErzeugt }
-                    .sortedBy { it.reihenfolge }
-                    .drop(festeEingänge)
-                    .filter { AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge }
-                    .map { it.id }
-                    .toSet()
-                knoten.copy(
-                    anschlüsse = knoten.anschlüsse.filterNot { it.id in überzähligeFesteEingänge }.map { anschluss ->
-                        if (anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(kannSichErweitern = true) else anschluss
-                    },
-                    parameter = knoten.parameter + mapOf(
-                        "festeEingänge" to festeEingänge.toString(),
-                        "operatorAnzeige" to if (knoten.parameter["operatorAnzeige"] == "name") "name" else "wert",
-                    ),
-                )
-            }
-        },
-    )
+    /** Migriert bekannte Knotendaten, darunter Karten-Schnittstellen, assoziative Eingänge und die Bezeichnung „Differenz“. */
+    private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
+        val migriert = migriereKartenAusgangZuEinzelanschluss(karte)
+        return migriert.copy(
+            knoten = migriert.knoten.map { ursprünglicherKnoten ->
+                val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") {
+                    ursprünglicherKnoten.copy(name = "Differenz")
+                } else ursprünglicherKnoten
+                if (knoten.art !in assoziativeKnotenArten) knoten
+                else {
+                    val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
+                    val verbundeneEingänge = migriert.verbindungen.map { it.zu }.toSet()
+                    val überzähligeFesteEingänge = knoten.anschlüsse
+                        .filter { it.richtung == AnschlussRichtung.Eingang && !it.dynamischErzeugt }
+                        .sortedBy { it.reihenfolge }
+                        .drop(festeEingänge)
+                        .filter { AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge }
+                        .map { it.id }
+                        .toSet()
+                    knoten.copy(
+                        anschlüsse = knoten.anschlüsse.filterNot { it.id in überzähligeFesteEingänge }.map { anschluss ->
+                            if (anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(kannSichErweitern = true) else anschluss
+                        },
+                        parameter = knoten.parameter + mapOf(
+                            "festeEingänge" to festeEingänge.toString(),
+                            "operatorAnzeige" to if (knoten.parameter["operatorAnzeige"] == "name") "name" else "wert",
+                        ),
+                    )
+                }
+            },
+        )
+    }
 
     private companion object {
         val assoziativeKnotenArten = setOf(
@@ -335,3 +282,36 @@ class AtlasZustand(context: Context) {
 }
 
 enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler }
+
+internal fun öffentlicheKartenAnschlüsse(
+    karte: KartenDaten,
+    interneArt: String,
+    richtung: AnschlussRichtung,
+    kante: AnschlussKante,
+): List<AnschlussDaten> = karte.knoten.asSequence()
+    .filter { it.art == interneArt }
+    .mapNotNull { intern ->
+        intern.anschlüsse.firstOrNull { it.name == "wert" }?.let { wert -> öffentlicherKartenName(intern) to wert.art }
+    }
+    .distinctBy { it.first }
+    .mapIndexed { index, (name, art) ->
+        AnschlussDaten(name = name, richtung = richtung, kante = kante, art = art, reihenfolge = index)
+    }
+    .toList()
+
+internal fun öffentlicherKartenName(knoten: KnotenDaten): String =
+    knoten.parameter["name"]?.trim()?.takeIf(String::isNotEmpty) ?: knoten.name
+
+internal fun migriereKartenAusgangZuEinzelanschluss(karte: KartenDaten): KartenDaten {
+    val entfernteAnschlüsse = karte.knoten.asSequence()
+        .filter { it.art == "mathematik.kartenAusgang" }
+        .flatMap { knoten -> knoten.anschlüsse.asSequence().filter { it.name == "zielmenge" }.map { AnschlussVerweis(knoten.id, it.id) } }
+        .toSet()
+    if (entfernteAnschlüsse.isEmpty()) return karte
+    return karte.copy(
+        knoten = karte.knoten.map { knoten ->
+            if (knoten.art == "mathematik.kartenAusgang") knoten.copy(anschlüsse = knoten.anschlüsse.filterNot { it.name == "zielmenge" }) else knoten
+        },
+        verbindungen = karte.verbindungen.filter { it.von !in entfernteAnschlüsse && it.zu !in entfernteAnschlüsse },
+    )
+}

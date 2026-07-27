@@ -32,6 +32,22 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         return richte(a, erster, b, zweiter)?.let { it.first.second to it.second.second }
     }
 
+    /**
+     * Ändert die Art eines vorhandenen Anschlusses und entfernt dadurch ungültig gewordene Kanten.
+     * Anschluss-ID, Richtung und alle unveränderten Kanten bleiben erhalten.
+     */
+    fun ändereAnschlussArt(karte: KartenDaten, ref: AnschlussVerweis, art: AnschlussArtId): KartenDaten {
+        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return karte
+        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return karte
+        if (anschluss.art == art) return karte
+        val mitNeuerArt = karte.copy(knoten = karte.knoten.map {
+            if (it.id == knoten.id) it.copy(anschlüsse = it.anschlüsse.map { a ->
+                if (a.id == anschluss.id) a.copy(art = art) else a
+            }) else it
+        })
+        return mitNeuerArt.copy(verbindungen = mitNeuerArt.verbindungen.filter { istTypkompatibel(mitNeuerArt, it) })
+    }
+
     private fun richte(
         a: AnschlussDaten, aRef: AnschlussVerweis,
         b: AnschlussDaten, bRef: AnschlussVerweis,
@@ -42,6 +58,13 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         a.richtung == AnschlussRichtung.Ausgang && b.richtung == AnschlussRichtung.Neutral -> (a to aRef) to (b to bRef)
         b.richtung == AnschlussRichtung.Ausgang && a.richtung == AnschlussRichtung.Neutral -> (b to bRef) to (a to aRef)
         else -> null
+    }
+
+    private fun istTypkompatibel(karte: KartenDaten, verbindung: VerbindungDaten): Boolean {
+        val von = karte.findeAnschluss(verbindung.von) ?: return false
+        val zu = karte.findeAnschluss(verbindung.zu) ?: return false
+        val (ausgang, eingang) = richte(von, verbindung.von, zu, verbindung.zu) ?: return false
+        return arten.istUnterart(ausgang.first.art, eingang.first.art)
     }
 
     private fun erzeugtZyklus(karte: KartenDaten, von: KnotenId, zu: KnotenId): Boolean {
