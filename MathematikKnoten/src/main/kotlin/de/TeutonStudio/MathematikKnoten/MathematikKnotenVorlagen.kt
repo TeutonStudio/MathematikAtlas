@@ -231,8 +231,13 @@ object MathematikKnotenVorlagen {
         listOf(eingang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "ergebnis"),
     )
     val Fall = KnotenVorlage(
-        "mathematik.fall", "Fallunterscheidung", "Steuerung", "Verzweigt einen Ausdruck anhand einer Aussage und gibt die Annahmen weiter.", GraphGröße(250f, 140f),
-        listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), eingang("aussage", MathematikAnschlussArten.Aussage.id, 1), ausgang("fall", MathematikAnschlussArten.Objekt.id, 0), ausgang("sonst", MathematikAnschlussArten.Objekt.id, 1)),
+        "mathematik.fall", "Fallunterscheidung", "Steuerung", "Wählt abhängig vom Wahrheitswert einer Aussage einen von zwei beliebigen Werten aus.", GraphGröße(260f, 150f),
+        listOf(
+            eingang("wahr", MathematikAnschlussArten.Objekt.id, 0),
+            eingang("aussage", MathematikAnschlussArten.Aussage.id, 1),
+            eingang("lüge", MathematikAnschlussArten.Objekt.id, 2),
+            ausgang("wert", MathematikAnschlussArten.Objekt.id),
+        ),
     )
     val Konjunktion = aussagenOperatorVorlage("mathematik.konjunktion", "Konjunktion", "Verknüpft zwei oder mehr Aussagen mit ∧.")
     val Disjunktion = aussagenOperatorVorlage("mathematik.disjunktion", "Disjunktion", "Verknüpft zwei oder mehr Aussagen mit ∨.")

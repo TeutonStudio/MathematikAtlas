@@ -249,7 +249,9 @@ enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler 
 
 /** Reine Lade-Migration für bekannte assoziative Knoten; auch von JVM-Tests prüfbar. */
 internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
-    val migriert = migriereAbbildZuAllgemeinerMethode(migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte)))
+    val migriert = migriereFallunterscheidung(
+        migriereAbbildZuAllgemeinerMethode(migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte))),
+    )
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
         if (knoten.art !in assoziativeKnotenArten) knoten else {
@@ -330,6 +332,43 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
             val ziel = nachId[verbindung.zu.knotenId]?.anschlüsse?.firstOrNull { it.id == verbindung.zu.anschlussId } ?: return@filter false
             ziel.art in setOf(MathematikAnschlussArten.Funktion.id, MathematikAnschlussArten.Objekt.id)
         },
+    )
+}
+
+/** Überführt die alte verzweigende Fall-Karte in einen auswählenden Drei-Eingang-Knoten. */
+internal fun migriereFallunterscheidung(karte: KartenDaten): KartenDaten {
+    val ausgangUmleitungen = mutableMapOf<AnschlussVerweis, AnschlussVerweis>()
+    val knoten = karte.knoten.map { alt ->
+        if (alt.art != "mathematik.fall" || alt.anschlüsse.any { it.name == "wahr" }) return@map alt
+
+        val wahr = alt.anschlüsse.firstOrNull { it.name == "term" && it.richtung == AnschlussRichtung.Eingang }
+            ?: AnschlussDaten(name = "wahr", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id)
+        val aussage = alt.anschlüsse.firstOrNull { it.name == "aussage" && it.richtung == AnschlussRichtung.Eingang }
+            ?: AnschlussDaten(name = "aussage", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Aussage.id)
+        val lüge = AnschlussDaten(name = "lüge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 2)
+        val alterWert = alt.anschlüsse.firstOrNull { it.name == "wert" && it.richtung == AnschlussRichtung.Ausgang }
+            ?: alt.anschlüsse.firstOrNull { it.name == "fall" && it.richtung == AnschlussRichtung.Ausgang }
+            ?: AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Objekt.id)
+        val wert = alterWert.copy(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false)
+        val wertVerweis = AnschlussVerweis(alt.id, wert.id)
+        alt.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang && it.name in setOf("fall", "sonst", "wert") }
+            .forEach { ausgangUmleitungen[AnschlussVerweis(alt.id, it.id)] = wertVerweis }
+
+        alt.copy(
+            anschlüsse = listOf(
+                wahr.copy(name = "wahr", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                aussage.copy(name = "aussage", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Aussage.id, reihenfolge = 1, kannSichErweitern = false, dynamischErzeugt = false),
+                lüge,
+                wert,
+            ),
+        )
+    }
+    val gültigeAnschlüsse = knoten.flatMap { knotenDaten -> knotenDaten.anschlüsse.map { AnschlussVerweis(knotenDaten.id, it.id) } }.toSet()
+    return karte.copy(
+        knoten = knoten,
+        verbindungen = karte.verbindungen.map { verbindung ->
+            verbindung.copy(von = ausgangUmleitungen[verbindung.von] ?: verbindung.von)
+        }.filter { it.von in gültigeAnschlüsse && it.zu in gültigeAnschlüsse }.distinct(),
     )
 }
 
