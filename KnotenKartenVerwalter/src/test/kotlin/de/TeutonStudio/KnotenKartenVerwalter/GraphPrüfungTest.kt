@@ -17,13 +17,18 @@ class GraphPrüfungTest {
         assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karte, ref(quelle), ref(ziel)))
     }
 
-    @Test fun zweiterEingangWirdAbgelehnt() {
+    @Test fun belegterEingangKannAtomarErsetztWerden() {
         val q1 = knoten("q1", AnschlussRichtung.Ausgang, zahl.id)
         val q2 = knoten("q2", AnschlussRichtung.Ausgang, zahl.id)
         val ziel = knoten("z", AnschlussRichtung.Eingang, objekt.id)
         val bestehend = VerbindungDaten(von = ref(q1), zu = ref(ziel))
         val karte = KartenDaten(name = "Test", knoten = listOf(q1, q2, ziel), verbindungen = listOf(bestehend))
-        assertIs<VerbindungsPrüfung.Abgelehnt>(prüfung.prüfe(karte, ref(q2), ref(ziel)))
+        val neu = VerbindungDaten(von = ref(q2), zu = ref(ziel))
+
+        assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karte, neu.von, neu.zu))
+        val ersetzt = karte.wendeAn(KartenAktion.VerbindungEinfügen(neu))
+
+        assertEquals(listOf(neu), ersetzt.verbindungen)
     }
 
     @Test fun zyklusWirdAbgelehnt() {
@@ -32,6 +37,78 @@ class GraphPrüfungTest {
         val ab = VerbindungDaten(von = ref(a, "aus"), zu = ref(b, "ein"))
         val karte = KartenDaten(name = "Test", knoten = listOf(a,b), verbindungen = listOf(ab))
         assertIs<VerbindungsPrüfung.Abgelehnt>(prüfung.prüfe(karte, ref(b,"aus"), ref(a,"ein")))
+    }
+
+    @Test fun neueVerbindungErsetztBelegtenEingangMitEinemUndoSchritt() {
+        val q1 = knoten("q1", AnschlussRichtung.Ausgang, zahl.id)
+        val q2 = knoten("q2", AnschlussRichtung.Ausgang, zahl.id)
+        val ziel = knoten("z", AnschlussRichtung.Eingang, objekt.id)
+        val bestehend = VerbindungDaten(von = ref(q1), zu = ref(ziel))
+        val zustand = KartenEditorZustand(
+            KartenDaten(name = "Test", knoten = listOf(q1, q2, ziel), verbindungen = listOf(bestehend)),
+            prüfung,
+        )
+
+        zustand.beginneVerbindung(ref(q2))
+        assertTrue(zustand.kompatibelMitStart(ref(ziel)))
+        zustand.anschlussAngeklickt(ref(ziel))
+
+        assertEquals(1, zustand.karte.verbindungen.size)
+        assertEquals(ref(q2), zustand.karte.verbindungen.single().von)
+        assertEquals(ref(ziel), zustand.karte.verbindungen.single().zu)
+        zustand.rückgängig()
+        assertEquals(listOf(bestehend), zustand.karte.verbindungen)
+    }
+
+    @Test fun dragVomBelegtenEingangZiehtDieBestehendeVerbindungUm() {
+        val quelle = knoten("q", AnschlussRichtung.Ausgang, zahl.id)
+        val erstesZiel = knoten("z1", AnschlussRichtung.Eingang, objekt.id)
+        val zweitesZiel = knoten("z2", AnschlussRichtung.Eingang, objekt.id)
+        val bestehend = VerbindungDaten(von = ref(quelle), zu = ref(erstesZiel))
+        val zustand = KartenEditorZustand(
+            KartenDaten(name = "Test", knoten = listOf(quelle, erstesZiel, zweitesZiel), verbindungen = listOf(bestehend)),
+            prüfung,
+        )
+
+        zustand.beginneVerbindung(ref(erstesZiel), GraphPunkt.Zero)
+
+        assertEquals(ref(quelle), zustand.verbindungsStart)
+        assertTrue(zustand.kompatibelMitStart(ref(zweitesZiel)))
+        zustand.anschlussAngeklickt(ref(zweitesZiel))
+
+        assertEquals(1, zustand.karte.verbindungen.size)
+        assertEquals(ref(quelle), zustand.karte.verbindungen.single().von)
+        assertEquals(ref(zweitesZiel), zustand.karte.verbindungen.single().zu)
+        zustand.rückgängig()
+        assertEquals(listOf(bestehend), zustand.karte.verbindungen)
+    }
+
+    @Test fun dragVomBelegtenEingangAufHintergrundLöschtDieVerbindung() {
+        val quelle = knoten("q", AnschlussRichtung.Ausgang, zahl.id)
+        val ziel = knoten("z", AnschlussRichtung.Eingang, objekt.id)
+        val bestehend = VerbindungDaten(von = ref(quelle), zu = ref(ziel))
+        val zustand = KartenEditorZustand(
+            KartenDaten(name = "Test", knoten = listOf(quelle, ziel), verbindungen = listOf(bestehend)),
+            prüfung,
+        )
+
+        zustand.beginneVerbindung(ref(ziel), GraphPunkt.Zero)
+        zustand.beendeVerbindungsVorschau()
+
+        assertTrue(zustand.karte.verbindungen.isEmpty())
+        zustand.rückgängig()
+        assertEquals(listOf(bestehend), zustand.karte.verbindungen)
+    }
+
+    @Test fun aktiverStartBleibtZumAbbrechenAnklickbar() {
+        val quelle = knoten("q", AnschlussRichtung.Ausgang, zahl.id)
+        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(quelle)), prüfung)
+
+        zustand.beginneVerbindung(ref(quelle))
+
+        assertTrue(zustand.kompatibelMitStart(ref(quelle)))
+        zustand.anschlussAngeklickt(ref(quelle))
+        assertNull(zustand.verbindungsStart)
     }
 
     @Test fun assoziativerKnotenErhältDynamischenEingangErstNachZweiBelegtenFestenEingängen() {

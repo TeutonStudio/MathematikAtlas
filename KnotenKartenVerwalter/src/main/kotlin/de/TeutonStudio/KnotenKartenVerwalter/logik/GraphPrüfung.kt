@@ -17,10 +17,13 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         if (!arten.istUnterart(ausgang.first.art, eingang.first.art)) {
             return VerbindungsPrüfung.Abgelehnt("${ausgang.first.art} kann nicht an ${eingang.first.art} angeschlossen werden.")
         }
-        if (eingang.first.richtung == AnschlussRichtung.Eingang && karte.verbindungen.any { it.zu == eingang.second }) {
-            return VerbindungsPrüfung.Abgelehnt("Ein Eingang darf nur eine eingehende Verbindung besitzen.")
-        }
-        if (erzeugtZyklus(karte, ausgang.second.knotenId, eingang.second.knotenId)) {
+        // Ein belegter Eingang wird beim Verbinden atomar ersetzt. Die Zyklusprüfung
+        // muss daher bereits den Graphen nach dieser Ersetzung untersuchen, nicht den
+        // vorübergehend noch doppelt gedachten Zwischenstand.
+        val prüfKarte = if (eingang.first.richtung == AnschlussRichtung.Eingang) {
+            karte.copy(verbindungen = karte.verbindungen.filterNot { it.zu == eingang.second })
+        } else karte
+        if (erzeugtZyklus(prüfKarte, ausgang.second.knotenId, eingang.second.knotenId)) {
             return VerbindungsPrüfung.Abgelehnt("Zirkuläre Verbindungen sind nicht erlaubt.")
         }
         return VerbindungsPrüfung.Erlaubt
