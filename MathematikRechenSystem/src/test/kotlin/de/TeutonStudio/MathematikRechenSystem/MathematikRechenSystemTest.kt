@@ -42,4 +42,25 @@ class MathematikRechenSystemTest {
         assertNull(e.wahrheitswert)
         assertIs<EntscheidungsStatus.Unentscheidbar>(e.status)
     }
+
+    @Test fun wurzelLiefertEineKomplexeHauptwurzel() {
+        val wurzel = assertIs<KomplexeZahl>(wurzel(RationaleZahl.von(-1)))
+        assertEquals(RationaleZahl.Null, wurzel.realteil)
+        assertEquals(RationaleZahl.Eins, wurzel.imaginärteil)
+    }
+
+    @Test fun kartesischesProduktEndlicherMengenBildetTupel() {
+        val produkt = assertIs<EndlicheMenge>(kartesischesProdukt(listOf(
+            EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2))),
+            EndlicheMenge(setOf(RationaleZahl.von(3))),
+        )))
+        assertEquals(setOf(Tupel(listOf(RationaleZahl.von(1), RationaleZahl.von(3))), Tupel(listOf(RationaleZahl.von(2), RationaleZahl.von(3)))), produkt.elemente)
+    }
+
+    @Test fun echteTeilmengeUndDisjunktheitWerdenEntschieden() {
+        val a = EndlicheMenge(setOf(RationaleZahl.von(1)))
+        val b = EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2)))
+        assertEquals(Wahrheitswert.Wahr, EchteTeilmengeBeziehung(a, b).entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Wahr, Disjunktheit(a, EndlicheMenge(setOf(RationaleZahl.von(3)))).entscheide().wahrheitswert)
+    }
 }

@@ -6,10 +6,13 @@ data class Funktion(
     val parameter: List<Variable>,
     val ausgaben: Map<String, MathematischesObjekt>,
     val zielMengen: Map<String, MengenAusdruck> = emptyMap(),
+    /** Definitionsmengen der Parameter, in derselben Reihenfolge wie [parameter]. */
+    val werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
 ) : MathematischesObjekt {
     init {
         require(parameter.map { it.name }.distinct().size == parameter.size) { "Funktionsparameter müssen eindeutige Namen haben." }
         require(zielMengen.keys.all { it in ausgaben }) { "Zielmengen dürfen nur für vorhandene Ausgaben definiert werden." }
+        require(werteVorräte.keys.all { key -> parameter.any { it.name == key } }) { "Wertevorräte dürfen nur für Parameter definiert werden." }
     }
 
     override fun zuLatex(): String {
@@ -57,12 +60,28 @@ data class Funktion(
     }
 }
 
+/** Bild einer Menge unter einer einwertigen Methode: f[M] = { f(x) : x ∈ M }. */
+data class Abbild(val menge: MengenAusdruck, val methode: Funktion) : MengenAusdruck {
+    override fun zuLatex() = "${methode.name}[${menge.zuLatex()}]"
+}
+
+fun bildeAb(menge: MengenAusdruck, methode: Funktion): MengenAusdruck {
+    val (ausgabe, _) = methode.prüfeAlsIterationsMethode(erwartetMengenwert = false)
+    if (menge !is EndlicheMenge) return Abbild(menge, methode)
+    val parameter = methode.parameter.single()
+    return EndlicheMenge(menge.elemente.map { element ->
+        val zahl = element as? ZahlAusdruck ?: error("Die abzubildende Menge muss Zahlen enthalten.")
+        methode.wendeAn(mapOf(parameter.name to zahl)).getValue(ausgabe)
+    }.toSet())
+}
+
 data class GebundeneFunktion(val funktion: Funktion, val bindungen: Map<String, ZahlAusdruck>) : MathematischesObjekt {
     val freieParameter get() = funktion.parameter.filterNot { it.name in bindungen }
     override fun zuLatex(): String = funktion.copy(
         parameter = freieParameter,
         ausgaben = funktion.ausgaben.mapValues { ersetze(it.value, bindungen) },
         zielMengen = funktion.zielMengen.mapValues { ersetze(it.value, bindungen) as MengenAusdruck },
+        werteVorräte = funktion.werteVorräte.filterKeys { it !in bindungen }.mapValues { ersetze(it.value, bindungen) as MengenAusdruck },
     ).zuLatex()
     fun binde(weitere: Map<String, ZahlAusdruck>) = GebundeneFunktion(funktion, bindungen + weitere)
     fun auswerten(): Map<String, MathematischesObjekt> {
@@ -86,10 +105,14 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is Cosinus -> Cosinus(ersetze(objekt.argument, bindungen))
     is Exponentialfunktion -> Exponentialfunktion(ersetze(objekt.argument, bindungen))
     is NatürlicherLogarithmus -> NatürlicherLogarithmus(ersetze(objekt.argument, bindungen))
+    is Wurzel -> Wurzel(ersetze(objekt.argument, bindungen))
+    is KomplexeZahl -> KomplexeZahl(ersetze(objekt.realteil, bindungen), ersetze(objekt.imaginärteil, bindungen))
+    is Logarithmus -> Logarithmus(ersetze(objekt.basis, bindungen), ersetze(objekt.argument, bindungen))
     is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { ersetze(it, bindungen) }.toSet())
     is Vereinigung -> vereinige(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
-    is MengenDifferenz -> MengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
+    is MengenDifferenz -> mengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
+    is KartesischesProdukt -> kartesischesProdukt(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Ungleichheit -> Ungleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Vergleich -> Vergleich(ersetze(objekt.links, bindungen), objekt.art, ersetze(objekt.rechts, bindungen))
@@ -98,12 +121,18 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is Disjunktion -> Disjunktion(objekt.aussagen.map { ersetze(it, bindungen) as Aussage })
     is ElementBeziehung -> ElementBeziehung(ersetze(objekt.element, bindungen), ersetze(objekt.menge, bindungen) as MengenAusdruck)
     is TeilmengenBeziehung -> TeilmengenBeziehung(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
+    is EchteTeilmengeBeziehung -> EchteTeilmengeBeziehung(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
+    is ObermengenBeziehung -> ObermengenBeziehung(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck, objekt.echt)
+    is Disjunktheit -> Disjunktheit(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
+    is Tupel -> Tupel(objekt.elemente.map { ersetze(it, bindungen) })
     is Vektor -> Vektor(objekt.werte.map { ersetze(it, bindungen) })
     is Matrix -> Matrix(objekt.zeilen.map { zeile -> zeile.map { ersetze(it, bindungen) } })
     is Funktion -> objekt.copy(
         ausgaben = objekt.ausgaben.mapValues { ersetze(it.value, bindungen - objekt.parameter.map { it.name }.toSet()) },
         zielMengen = objekt.zielMengen.mapValues { ersetze(it.value, bindungen - objekt.parameter.map { it.name }.toSet()) as MengenAusdruck },
+        werteVorräte = objekt.werteVorräte.mapValues { ersetze(it.value, bindungen - objekt.parameter.map { it.name }.toSet()) as MengenAusdruck },
     )
+    is Abbild -> Abbild(ersetze(objekt.menge, bindungen) as MengenAusdruck, ersetze(objekt.methode, bindungen) as Funktion)
     is GebundeneFunktion -> objekt.copy(bindungen = objekt.bindungen.mapValues { ersetze(it.value, bindungen) })
     is IterierteSumme -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
     is IteriertesProdukt -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)

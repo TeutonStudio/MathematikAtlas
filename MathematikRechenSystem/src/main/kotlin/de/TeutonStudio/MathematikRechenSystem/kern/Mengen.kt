@@ -20,6 +20,23 @@ data class MengenDifferenz(val links: MengenAusdruck, val rechts: MengenAusdruck
     override fun zuLatex() = "${links.zuLatex()} \\setminus ${rechts.zuLatex()}"
 }
 
+fun mengenDifferenz(links: MengenAusdruck, rechts: MengenAusdruck): MengenAusdruck = when {
+    links == LeereMenge -> LeereMenge
+    rechts == LeereMenge -> links
+    links is EndlicheMenge && rechts is EndlicheMenge -> EndlicheMenge(links.elemente - rechts.elemente)
+    else -> MengenDifferenz(links, rechts)
+}
+
+/** Ein geordnetes Tupel ist ein Mengenelement, etwa für kartesische Produkte. */
+data class Tupel(val elemente: List<MathematischesObjekt>) : MathematischesObjekt {
+    override fun zuLatex() = elemente.joinToString(prefix = "\\left(", postfix = "\\right)") { it.zuLatex() }
+}
+
+data class KartesischesProdukt(val mengen: List<MengenAusdruck>) : MengenAusdruck {
+    init { require(mengen.size >= 2) }
+    override fun zuLatex() = mengen.joinToString(" \\times ") { it.zuLatex() }
+}
+
 /** Kanonische Mengenvereinigung mit Abflachung und konkreter Auswertung endlicher Mengen. */
 fun vereinige(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
     val flach = mengen.flatMap { if (it is Vereinigung) it.mengen else listOf(it) }.filterNot { it == LeereMenge }
@@ -42,12 +59,34 @@ fun schneide(mengen: Iterable<MengenAusdruck>, grundMenge: MengenAusdruck? = nul
     return if (eindeutig.size == 1) eindeutig.single() else Schnitt(eindeutig, grundMenge)
 }
 
+fun kartesischesProdukt(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
+    val faktoren = mengen.toList()
+    require(faktoren.size >= 2) { "Ein kartesisches Produkt benötigt mindestens zwei Mengen." }
+    if (faktoren.any { it == LeereMenge }) return LeereMenge
+    if (faktoren.all { it is EndlicheMenge }) {
+        val tupel = faktoren.filterIsInstance<EndlicheMenge>().fold(listOf(emptyList<MathematischesObjekt>())) { bisher, menge ->
+            bisher.flatMap { präfix -> menge.elemente.sortedBy(::strukturellerSchlüssel).map { präfix + it } }
+        }
+        return EndlicheMenge(tupel.map(::Tupel).toSet())
+    }
+    return KartesischesProdukt(faktoren)
+}
+
 internal fun strukturellerSchlüssel(objekt: MathematischesObjekt): String = "${objekt::class.qualifiedName}:${objekt.zuLatex()}"
 
 data class ElementBeziehung(val element: MathematischesObjekt, val menge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = when (menge) {
         is EndlicheMenge -> if (element in menge.elemente) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
         LeereMenge -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+        RationaleZahlen, ReelleZahlen -> if (element is RationaleZahl) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        GanzeZahlen -> if (element is RationaleZahl) {
+            val wahr = element.nenner == java.math.BigInteger.ONE
+            AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+        } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        NatürlicheZahlen -> if (element is RationaleZahl) {
+            val wahr = element.nenner == java.math.BigInteger.ONE && element.zähler.signum() >= 0
+            AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+        } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
     override fun zuLatex() = "${element.zuLatex()} \\in ${menge.zuLatex()}"
@@ -62,6 +101,35 @@ data class TeilmengenBeziehung(val links: MengenAusdruck, val rechts: MengenAusd
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
     override fun zuLatex() = "${links.zuLatex()} \\subseteq ${rechts.zuLatex()}"
+}
+
+data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis {
+        if (links is EndlicheMenge && rechts is EndlicheMenge) {
+            val wahr = rechts.elemente.containsAll(links.elemente) && links.elemente != rechts.elemente
+            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+        }
+        return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
+    override fun zuLatex() = "${links.zuLatex()} \\subset ${rechts.zuLatex()}"
+}
+
+data class ObermengenBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck, val echt: Boolean = false) : Aussage {
+    private val umgedreht: Aussage get() = if (echt) EchteTeilmengeBeziehung(rechts, links) else TeilmengenBeziehung(rechts, links)
+    override fun entscheide(kontext: RechenKontext) = umgedreht.entscheide(kontext)
+    override fun zuLatex() = "${links.zuLatex()} ${if (echt) "\\supset" else "\\supseteq"} ${rechts.zuLatex()}"
+}
+
+data class Disjunktheit(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis {
+        if (links is EndlicheMenge && rechts is EndlicheMenge) {
+            val wahr = links.elemente.intersect(rechts.elemente).isEmpty()
+            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+        }
+        if (links == LeereMenge || rechts == LeereMenge) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
+    override fun zuLatex() = "${links.zuLatex()} \\cap ${rechts.zuLatex()} = \\varnothing"
 }
 
 val NatürlicheZahlen = BenannteMenge("Natürliche Zahlen", "\\mathbb{N}")

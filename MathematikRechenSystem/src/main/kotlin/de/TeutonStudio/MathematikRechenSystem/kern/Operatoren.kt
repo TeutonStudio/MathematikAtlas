@@ -38,6 +38,21 @@ data class Sinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLat
 data class Cosinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\cos\\left(${argument.zuLatex()}\\right)" }
 data class Exponentialfunktion(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "e^{${argument.zuLatex()}}" }
 data class NatürlicherLogarithmus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\ln\\left(${argument.zuLatex()}\\right)" }
+data class Wurzel(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\sqrt{${argument.zuLatex()}}" }
+data class KomplexeZahl(val realteil: ZahlAusdruck, val imaginärteil: ZahlAusdruck) : ZahlAusdruck {
+    override fun zuLatex() = when {
+        imaginärteil == RationaleZahl.Eins -> "${realteil.zuLatex()} + i"
+        else -> "${realteil.zuLatex()} + ${imaginärteil.zuLatex()}i"
+    }
+}
+data class Logarithmus(val basis: ZahlAusdruck, val argument: ZahlAusdruck) : ZahlAusdruck {
+    override fun zuLatex() = when (basis) {
+        EulerscheZahl -> "\\ln\\left(${argument.zuLatex()}\\right)"
+        RationaleZahl.von(2) -> "\\operatorname{lb}\\left(${argument.zuLatex()}\\right)"
+        RationaleZahl.von(10) -> "\\log\\left(${argument.zuLatex()}\\right)"
+        else -> "\\log_{${basis.zuLatex()}}\\left(${argument.zuLatex()}\\right)"
+    }
+}
 
 fun addition(vararg summanden: ZahlAusdruck): ZahlAusdruck = addition(summanden.toList())
 fun addition(summanden: Iterable<ZahlAusdruck>): ZahlAusdruck {
@@ -113,5 +128,29 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
     is Cosinus -> Cosinus(vereinfache(ausdruck.argument, kontext))
     is Exponentialfunktion -> Exponentialfunktion(vereinfache(ausdruck.argument, kontext))
     is NatürlicherLogarithmus -> NatürlicherLogarithmus(vereinfache(ausdruck.argument, kontext))
+    is Wurzel -> vereinfacheWurzel(vereinfache(ausdruck.argument, kontext))
+    is KomplexeZahl -> KomplexeZahl(vereinfache(ausdruck.realteil, kontext), vereinfache(ausdruck.imaginärteil, kontext))
+    is Logarithmus -> Logarithmus(vereinfache(ausdruck.basis, kontext), vereinfache(ausdruck.argument, kontext))
     else -> ausdruck
+}
+
+/** Die Hauptwurzel liefert genau einen Wert; bei negativen reellen Zahlen einen komplexen. */
+fun wurzel(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =
+    vereinfacheWurzel(vereinfache(argument, kontext))
+
+private fun vereinfacheWurzel(argument: ZahlAusdruck): ZahlAusdruck {
+    val rational = argument as? RationaleZahl ?: return Wurzel(argument)
+    if (rational.istNull()) return RationaleZahl.Null
+    val negativ = rational.zähler.signum() < 0
+    val zähler = rational.zähler.abs()
+    val zWurzel = zähler.sqrtOrNull()
+    val nWurzel = rational.nenner.sqrtOrNull()
+    val wurzel = if (zWurzel != null && nWurzel != null) RationaleZahl.von(zWurzel, nWurzel) else Wurzel(RationaleZahl.von(zähler, rational.nenner))
+    return if (negativ) KomplexeZahl(RationaleZahl.Null, wurzel) else wurzel
+}
+
+private fun BigInteger.sqrtOrNull(): BigInteger? {
+    if (signum() < 0) return null
+    val wurzel = sqrt()
+    return wurzel.takeIf { it * it == this }
 }

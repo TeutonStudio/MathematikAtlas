@@ -7,6 +7,8 @@ sealed interface KartenAktion {
     data class KnotenVerschieben(val id: KnotenId, val position: GraphPunkt) : KartenAktion
     data class KnotenGrößeÄndern(val id: KnotenId, val größe: GraphGröße) : KartenAktion
     data class KnotenParameterÄndern(val id: KnotenId, val schlüssel: String, val wert: String) : KartenAktion
+    /** Ersetzt die Anschlüsse eines Knotens, etwa um die Reihenfolge von Methodenargumenten zu ändern. */
+    data class KnotenAnschlüsseÄndern(val id: KnotenId, val anschlüsse: List<AnschlussDaten>) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
     /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */
     data class KnotenIsolieren(val id: KnotenId) : KartenAktion
@@ -21,6 +23,9 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
     is KartenAktion.KnotenGrößeÄndern -> copy(knoten = knoten.map { if (it.id == aktion.id) it.copy(größe = aktion.größe) else it })
     is KartenAktion.KnotenParameterÄndern -> copy(knoten = knoten.map {
         if (it.id == aktion.id) it.copy(parameter = it.parameter + (aktion.schlüssel to aktion.wert)) else it
+    })
+    is KartenAktion.KnotenAnschlüsseÄndern -> copy(knoten = knoten.map {
+        if (it.id == aktion.id) it.copy(anschlüsse = aktion.anschlüsse) else it
     })
     is KartenAktion.KnotenLöschen -> copy(
         knoten = knoten.filterNot { it.id == aktion.id },

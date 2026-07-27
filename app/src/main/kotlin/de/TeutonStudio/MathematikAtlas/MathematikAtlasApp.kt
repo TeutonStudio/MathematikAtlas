@@ -254,7 +254,7 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
             Text(knoten.name, style = MaterialTheme.typography.titleLarge)
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
-            if (knoten.art in setOf("mathematik.addition", "mathematik.vereinigung")) {
+            if (knoten.art in setOf("mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt")) {
                 val wert = knoten.parameter["festeEingänge"] ?: "2"
                 var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
@@ -287,6 +287,20 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         },
                     )
                     Text("Werte")
+                }
+            }
+            if (knoten.art == "mathematik.termZuMethode") {
+                HorizontalDivider()
+                Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
+                val argumente = knoten.anschlüsse.filter {
+                    it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang && it.name !in setOf("term", "zielmenge")
+                }.sortedBy { it.reihenfolge }
+                argumente.forEachIndexed { index, anschluss ->
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("${index + 1}. ${anschluss.name}", modifier = Modifier.weight(1f))
+                        OutlinedButton(onClick = { zustand.editor.verschiebeEingang(knoten.id, anschluss.id, -1) }, enabled = index > 0) { Text("↑") }
+                        OutlinedButton(onClick = { zustand.editor.verschiebeEingang(knoten.id, anschluss.id, 1) }, enabled = index < argumente.lastIndex) { Text("↓") }
+                    }
                 }
             }
             knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige") }.forEach { (schlüssel, wert) ->

@@ -12,6 +12,10 @@ data class IterierteVereinigung(val methode: Funktion, val indexMenge: MengenAus
     override fun zuLatex() = "\\bigcup_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 
+data class IteriertesKartesischesProdukt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
+    override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+}
+
 /** Die Grundmenge wird ausschließlich aus [methode.einzigeZielMenge] abgeleitet. */
 data class IterierterSchnitt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
     val grundMenge get() = methode.einzigeZielMenge
@@ -36,6 +40,21 @@ private fun iteriereZahlen(methode: Funktion, indexMenge: MengenAusdruck, produk
 
 fun iterierteVereinigung(methode: Funktion, indexMenge: MengenAusdruck): MengenAusdruck = iteriereMengen(methode, indexMenge, false)
 fun iterierterSchnitt(methode: Funktion, indexMenge: MengenAusdruck): MengenAusdruck = iteriereMengen(methode, indexMenge, true)
+fun iteriertesKartesischesProdukt(methode: Funktion, indexMenge: MengenAusdruck): MengenAusdruck {
+    methode.prüfeAlsIterationsMethode(erwartetMengenwert = true)
+    if (indexMenge !is EndlicheMenge) return IteriertesKartesischesProdukt(methode, indexMenge)
+    val parameter = methode.parameter.single()
+    val mengen = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
+        val zahl = index as? ZahlAusdruck ?: error("Die Indexmenge muss Zahlen enthalten.")
+        methode.wendeAn(mapOf(parameter.name to zahl)).values.single() as? MengenAusdruck
+            ?: error("Die Methode '${methode.name}' muss Mengen liefern.")
+    }
+    return when (mengen.size) {
+        0 -> EndlicheMenge(setOf(Tupel(emptyList())))
+        1 -> mengen.single()
+        else -> kartesischesProdukt(mengen)
+    }
+}
 
 private fun iteriereMengen(methode: Funktion, indexMenge: MengenAusdruck, schnitt: Boolean): MengenAusdruck {
     methode.prüfeAlsIterationsMethode(erwartetMengenwert = true)

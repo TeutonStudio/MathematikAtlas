@@ -247,7 +247,7 @@ class AtlasZustand(context: Context) {
                     name = "zielmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
                     art = MathematikAnschlussArten.Menge.id, reihenfolge = 1,
                 ))
-            } else if (knoten.art !in setOf("mathematik.addition", "mathematik.vereinigung")) knoten
+            } else if (knoten.art !in assoziativeKnotenArten) knoten
             else {
                 val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
                 val verbundeneEingänge = karte.verbindungen.map { it.zu }.toSet()
@@ -270,6 +270,12 @@ class AtlasZustand(context: Context) {
             }
         },
     )
+
+    private companion object {
+        val assoziativeKnotenArten = setOf(
+            "mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt",
+        )
+    }
 
     private fun werteAus() { auswertung = auswerter.auswerten(editor.karte) }
 }

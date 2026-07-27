@@ -190,6 +190,25 @@ class KartenEditorZustand(
         karte = neu
     }
 
+    /** Vertauscht einen Eingang mit seinem direkten Nachbarn und erhält alle Verbindungen über die Anschluss-IDs. */
+    fun verschiebeEingang(knotenId: KnotenId, anschlussId: AnschlussId, richtung: Int) {
+        val knoten = karte.knoten.firstOrNull { it.id == knotenId } ?: return
+        val eingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
+        val index = eingänge.indexOfFirst { it.id == anschlussId }
+        val ziel = index + richtung
+        if (index !in eingänge.indices || ziel !in eingänge.indices) return
+        val links = eingänge[index]
+        val rechts = eingänge[ziel]
+        val neu = knoten.anschlüsse.map {
+            when (it.id) {
+                links.id -> it.copy(reihenfolge = rechts.reihenfolge)
+                rechts.id -> it.copy(reihenfolge = links.reihenfolge)
+                else -> it
+            }
+        }
+        führeAus(KartenAktion.KnotenAnschlüsseÄndern(knotenId, neu))
+    }
+
     fun kannRückgängig() = rückgängig.isNotEmpty()
     fun kannWiederholen() = wiederholen.isNotEmpty()
 
@@ -214,7 +233,10 @@ class KartenEditorZustand(
             } ?: return@forEach
             val neuerAnschluss = vorlage.copy(
                 id = neueAnschlussId(),
-                name = "input${knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang } + 1}",
+                name = if (vorlage.name.matches(Regex("[A-Za-zÄÖÜäöü]+\\d+"))) {
+                    val präfix = vorlage.name.dropLastWhile(Char::isDigit)
+                    "$präfix${knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith(präfix) } + 1}"
+                } else "input${knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang } + 1}",
                 reihenfolge = knoten.anschlüsse.filter { it.kante == vorlage.kante }.maxOfOrNull { it.reihenfolge }?.plus(1) ?: 0,
                 dynamischErzeugt = true,
             )

@@ -8,6 +8,8 @@ data class BedingterWert(
     val annahmen: Set<Aussage> = emptySet(),
     /** Metadaten einer öffentlichen Methodenausgabe, kein zweiter Rückgabewert. */
     val zielMenge: MengenAusdruck? = null,
+    /** Definitionsmenge einer Variable; relevant beim Aufbau einer Methode. */
+    val werteVorrat: MengenAusdruck? = null,
 )
 
 data class KnotenAuswertungsErgebnis(

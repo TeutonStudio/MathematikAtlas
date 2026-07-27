@@ -23,6 +23,8 @@ class MathematikKnotenRenderer(
             when {
                 knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.vereinigung" -> LatexText(operatorFormel(knoten, ergebnis, " \\cup "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.schnitt" -> LatexText(operatorFormel(knoten, ergebnis, " \\cap "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.kartesischesProdukt" -> LatexText(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art in iterativeArten -> LatexText(iterationsFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> Text(
                     if (objekt.wert) "Wahr" else "Lüge",
@@ -61,13 +63,14 @@ class MathematikKnotenRenderer(
             "mathematik.iterierteSumme" -> "\\sum"
             "mathematik.iteriertesProdukt" -> "\\prod"
             "mathematik.iterierteVereinigung" -> "\\bigcup"
+            "mathematik.iteriertesKartesischesProdukt" -> "\\mathop{\\times}"
             else -> "\\bigcap"
         }
         return "${zeichen}_{$parameter \\in $indexMenge} $name($parameter)"
     }
 
     private companion object {
-        val iterativeArten = setOf("mathematik.iterierteSumme", "mathematik.iteriertesProdukt", "mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt")
+        val iterativeArten = setOf("mathematik.iterierteSumme", "mathematik.iteriertesProdukt", "mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt", "mathematik.iteriertesKartesischesProdukt")
         val mengenIterationsArten = setOf("mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt")
     }
 }

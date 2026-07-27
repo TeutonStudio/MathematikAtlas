@@ -11,8 +11,8 @@ object MathematikKnotenVorlagen {
         listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("wert" to "2"),
     )
     val Variable = KnotenVorlage(
-        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable.", GraphGröße(180f, 92f),
-        listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("name" to "x"),
+        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable mit optionalem Wertevorrat.", GraphGröße(190f, 102f),
+        listOf(eingang("wertevorrat", MathematikAnschlussArten.Menge.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("name" to "x"),
     )
     val Addition = KnotenVorlage(
         "mathematik.addition", "Addition", "Rechnen", "Addiert zwei oder mehr Zahlterme.", GraphGröße(220f, 130f),
@@ -24,8 +24,8 @@ object MathematikKnotenVorlagen {
         listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0), eingang("b", MathematikAnschlussArten.Zahl.id, 1), eingang("c", MathematikAnschlussArten.Zahl.id, 2), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
     val Division = KnotenVorlage(
-        "mathematik.division", "Division", "Rechnen", "Teilt einen Zahlterm durch einen anderen.", GraphGröße(220f, 110f),
-        listOf(eingang("dividend", MathematikAnschlussArten.Zahl.id, 0), eingang("divisor", MathematikAnschlussArten.Zahl.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+        "mathematik.division", "Division", "Rechnen", "Teilt durch einen Zahlterm und führt den Fall Divisor = 0 als separaten Ausgang.", GraphGröße(235f, 126f),
+        listOf(eingang("dividend", MathematikAnschlussArten.Zahl.id, 0), eingang("divisor", MathematikAnschlussArten.Zahl.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id), ausgang("divisorNull", MathematikAnschlussArten.Aussage.id, 1)),
     )
     val Potenz = KnotenVorlage(
         "mathematik.potenz", "Potenz", "Rechnen", "Potenz aus Basis und Exponent.", GraphGröße(210f, 110f),
@@ -35,6 +35,16 @@ object MathematikKnotenVorlagen {
         "mathematik.gleichheit", "Gleichheit", "Aussagen", "Vergleicht zwei mathematische Objekte.", GraphGröße(220f, 110f),
         listOf(eingang("links", MathematikAnschlussArten.Objekt.id, 0), eingang("rechts", MathematikAnschlussArten.Objekt.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
+    val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id)
+    val Kleiner = vergleichVorlage("mathematik.kleiner", "Kleiner", "<")
+    val Größer = vergleichVorlage("mathematik.größer", "Größer", ">")
+    val KleinerGleich = vergleichVorlage("mathematik.kleinerGleich", "Kleiner oder gleich", "≤")
+    val GrößerGleich = vergleichVorlage("mathematik.größerGleich", "Größer oder gleich", "≥")
+    val Teilmenge = mengenAussagenVorlage("mathematik.teilmenge", "Teilmenge", "Prüft die echte Teilmengenbeziehung.")
+    val Übermenge = mengenAussagenVorlage("mathematik.übermenge", "Übermenge", "Prüft die echte Übermengenbeziehung.")
+    val TeilOderGleichmenge = mengenAussagenVorlage("mathematik.teilOderGleichmenge", "Teil- oder Gleichmenge", "Prüft ⊆.")
+    val ÜberOderGleichmenge = mengenAussagenVorlage("mathematik.überOderGleichmenge", "Über- oder Gleichmenge", "Prüft ⊇.")
+    val Disjunkt = mengenAussagenVorlage("mathematik.disjunkt", "Disjunkt", "Prüft, ob zwei Mengen keinen gemeinsamen Wert besitzen.")
     val GleichungLösen = KnotenVorlage(
         "mathematik.gleichungLösen", "Gleichung lösen", "Algebra", "Löst eine lineare Gleichung nach der gewählten Variablen.", GraphGröße(240f, 115f),
         listOf(eingang("gleichung", MathematikAnschlussArten.Aussage.id), ausgang("lösungen", MathematikAnschlussArten.Menge.id)), mapOf("variable" to "x"),
@@ -44,12 +54,20 @@ object MathematikKnotenVorlagen {
         listOf(eingang("objekt", MathematikAnschlussArten.Objekt.id), ausgang("wert", MathematikAnschlussArten.Objekt.id)),
     )
     val Ableiten = KnotenVorlage(
-        "mathematik.ableiten", "Ableiten", "Analysis", "Leitet einen Zahlterm symbolisch ab.", GraphGröße(220f, 110f),
+        "mathematik.ableiten", "Differentieren", "Analysis", "Differentiert einen Zahlterm symbolisch.", GraphGröße(220f, 110f),
         listOf(eingang("term", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("variable" to "x"),
     )
     val Integrieren = KnotenVorlage(
         "mathematik.integrieren", "Integrieren", "Analysis", "Bestimmt eine elementare Stammfunktion.", GraphGröße(220f, 110f),
         listOf(eingang("term", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("variable" to "x"),
+    )
+    val Wurzel = KnotenVorlage(
+        "mathematik.wurzel", "Wurzel", "Rechnen", "Bildet genau die Hauptwurzel; für negative reelle Zahlen gegebenenfalls komplex.", GraphGröße(220f, 105f),
+        listOf(eingang("radikand", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+    )
+    val Logarithmus = KnotenVorlage(
+        "mathematik.logarithmus", "Logarithmus", "Rechnen", "Logarithmus mit Basis; e, 2 und 10 werden als ln, lb und log dargestellt.", GraphGröße(230f, 112f),
+        listOf(eingang("basis", MathematikAnschlussArten.Zahl.id, 0), eingang("argument", MathematikAnschlussArten.Zahl.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
     val EndlicheMenge = KnotenVorlage(
         "mathematik.endlicheMenge", "Endliche Menge", "Mengen", "Endliche Menge aus einer kommagetrennten Liste.", GraphGröße(220f, 105f),
@@ -60,6 +78,12 @@ object MathematikKnotenVorlagen {
         listOf(eingang("a", MathematikAnschlussArten.Menge.id, 0, true), eingang("b", MathematikAnschlussArten.Menge.id, 1, true), ausgang("menge", MathematikAnschlussArten.Menge.id)),
         mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
+    val Schnitt = mengenOperatorVorlage("mathematik.schnitt", "Schnitt", "Schneidet zwei oder mehr Mengen.", "\\cap")
+    val Differenz = KnotenVorlage(
+        "mathematik.differenz", "Mengendifferenz", "Mengen", "Entfernt die rechte Menge aus der linken.", GraphGröße(220f, 110f),
+        listOf(eingang("links", MathematikAnschlussArten.Menge.id, 0), eingang("rechts", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val KartesischesProdukt = mengenOperatorVorlage("mathematik.kartesischesProdukt", "Kartesisches Produkt", "Bildet das kartesische Produkt von zwei oder mehr Mengen.", "\\times")
     val NatürlicheZahlen = KnotenVorlage(
         "mathematik.natürlicheZahlen", "Natürliche Zahlen", "Mengen", "Die Menge der natürlichen Zahlen.", GraphGröße(210f, 90f),
         listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)),
@@ -92,6 +116,19 @@ object MathematikKnotenVorlagen {
         "mathematik.iterierterSchnitt", "Iterierter Schnitt", "Mengen", "Schneidet Mengenwerte; die Grundmenge stammt aus der Zielmenge der Methode.", GraphGröße(260f, 120f),
         listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
+    val IteriertesKartesischesProdukt = KnotenVorlage(
+        "mathematik.iteriertesKartesischesProdukt", "Iteriertes kartesisches Produkt", "Mengen", "Bildet das kartesische Produkt der Mengenwerte einer Methode über einer Indexmenge.", GraphGröße(280f, 120f),
+        listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val Abbild = KnotenVorlage(
+        "mathematik.abbild", "Abbild", "Mengen", "Bildet eine Menge mit einer einwertigen Methode ab: f[M] = { f(x) : x ∈ M }.", GraphGröße(255f, 115f),
+        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val TermZuMethode = KnotenVorlage(
+        "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem Term, Variablen und einer Zielmenge eine Methode.", GraphGröße(265f, 135f),
+        listOf(eingang("term", MathematikAnschlussArten.Zahl.id, 0), eingang("argument1", MathematikAnschlussArten.Zahl.id, 1, true), eingang("zielmenge", MathematikAnschlussArten.Menge.id, 2), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)),
+        mapOf("name" to "f"),
+    )
     val Vektor = KnotenVorlage(
         "mathematik.vektor", "Vektor", "Lineare Algebra", "Vektor aus exakten Zahlen.", GraphGröße(220f, 105f),
         listOf(ausgang("vektor", MathematikAnschlussArten.Vektor.id)), mapOf("werte" to "1,2,3"),
@@ -117,10 +154,22 @@ object MathematikKnotenVorlagen {
         listOf(eingang("wert", MathematikAnschlussArten.Objekt.id), eingang("zielmenge", MathematikAnschlussArten.Menge.id, 1)), mapOf("name" to "ergebnis"),
     )
     val Fall = KnotenVorlage(
-        "mathematik.fall", "Fallunterscheidung", "Steuerung", "Verzweigt einen Ausdruck mit weitergegebenen Annahmen.", GraphGröße(250f, 140f),
-        listOf(eingang("term", MathematikAnschlussArten.Objekt.id), ausgang("fall", MathematikAnschlussArten.Objekt.id, 0), ausgang("sonst", MathematikAnschlussArten.Objekt.id, 1)),
-        mapOf("modus" to "verzweigen", "bedingung" to "x=0"),
+        "mathematik.fall", "Fallunterscheidung", "Steuerung", "Verzweigt einen Ausdruck anhand einer Aussage und gibt die Annahmen weiter.", GraphGröße(250f, 140f),
+        listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), eingang("aussage", MathematikAnschlussArten.Aussage.id, 1), ausgang("fall", MathematikAnschlussArten.Objekt.id, 0), ausgang("sonst", MathematikAnschlussArten.Objekt.id, 1)),
     )
 
-    val alle = listOf(Zahl, Variable, Addition, Multiplikation, Division, Potenz, Gleichheit, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Vereinigung, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, Vektor, Matrix, Skalarprodukt, MatrixInvertieren, KartenEingang, KartenAusgang, Fall)
+    val alle = listOf(Zahl, Variable, Addition, Multiplikation, Division, Potenz, Wurzel, Logarithmus, Gleichheit, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, Vektor, Matrix, Skalarprodukt, MatrixInvertieren, KartenEingang, KartenAusgang, Fall)
+
+    private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId) = KnotenVorlage(
+        art, name, "Aussagen", beschreibung, GraphGröße(220f, 110f),
+        listOf(eingang("links", links, 0), eingang("rechts", rechts, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
+    )
+
+    private fun vergleichVorlage(art: String, name: String, zeichen: String) = aussagenVorlage(art, name, "Vergleicht zwei Zahlterme mit $zeichen.", MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Zahl.id)
+    private fun mengenAussagenVorlage(art: String, name: String, beschreibung: String) = aussagenVorlage(art, name, beschreibung, MathematikAnschlussArten.Menge.id, MathematikAnschlussArten.Menge.id)
+    private fun mengenOperatorVorlage(art: String, name: String, beschreibung: String, zeichen: String) = KnotenVorlage(
+        art, name, "Mengen", beschreibung, GraphGröße(230f, 120f),
+        listOf(eingang("a", MathematikAnschlussArten.Menge.id, 0, true), eingang("b", MathematikAnschlussArten.Menge.id, 1, true), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
+    )
 }
