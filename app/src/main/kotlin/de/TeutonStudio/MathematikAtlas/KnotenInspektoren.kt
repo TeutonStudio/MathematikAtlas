@@ -12,6 +12,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
+import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 
 interface KnotenInspektor {
     @Composable fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen)
@@ -27,8 +28,51 @@ object KnotenInspektorRegister {
         "mathematik.visualisierung" to VisualisierungsInspektor,
         "mathematik.kartenEingang" to KartenSchnittstellenInspektor,
         "mathematik.kartenAusgang" to KartenSchnittstellenInspektor,
+        "mathematik.variable" to VariablenInspektor,
+        "mathematik.termZuMethode" to TermZuMethodeInspektor,
     )
     fun finde(art: String) = inspektoren[art]
+}
+
+private object VariablenInspektor : KnotenInspektor {
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
+        GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    }
+}
+
+private object TermZuMethodeInspektor : KnotenInspektor {
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        ParameterFeld("Name", knoten.parameter["name"] ?: "f") { aktionen.parameter("name", it.trim().ifBlank { "f" }) }
+        GrundmengenAuswahl("Zielmenge", knoten.parameter["zielmenge"] ?: "R") { aktionen.parameter("zielmenge", it) }
+        val parameter = (ergebnis?.ausgaben?.get("methode")?.objekt as? Funktion)?.parameter.orEmpty()
+        Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
+        if (parameter.isEmpty()) Text("Keine freien Variablen erkannt.", style = MaterialTheme.typography.bodySmall)
+        parameter.forEachIndexed { index, variable ->
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("${index + 1}. ${variable.name}", modifier = Modifier.weight(1f))
+                OutlinedButton(onClick = {
+                    val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index - 1) }
+                    aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
+                }, enabled = index > 0) { Text("↑") }
+                OutlinedButton(onClick = {
+                    val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index + 1) }
+                    aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
+                }, enabled = index < parameter.lastIndex) { Text("↓") }
+            }
+        }
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    }
+}
+
+@Composable private fun GrundmengenAuswahl(label: String, aktuell: String, ändern: (String) -> Unit) {
+    Text(label, style = MaterialTheme.typography.titleSmall)
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("N", "Z", "Q", "R", "C").forEach { menge ->
+            FilterChip(aktuell == menge, { ändern(menge) }, label = { Text(menge) })
+        }
+    }
 }
 
 private object KartenSchnittstellenInspektor : KnotenInspektor {

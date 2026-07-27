@@ -12,6 +12,14 @@ data class BedingterWert(
     val werteVorrat: MengenAusdruck? = null,
     /** Laufzeitmetadaten für Variablen, deren Wertebereich nachweisbar reell ist. */
     val reelleVariablen: Map<String, MengenAusdruck> = emptyMap(),
+    /** Nichtpersistierte Herkunft der freien Variablen eines aus dem Graphen abgeleiteten Werts. */
+    val variablenQuellen: List<VariablenQuelle> = emptyList(),
+)
+
+data class VariablenQuelle(
+    val knotenId: KnotenId,
+    val name: String,
+    val werteVorrat: MengenAusdruck,
 )
 
 /** Konservativer Laufzeitnachweis für die Zulässigkeit reeller Zahloperationen. */
@@ -46,6 +54,8 @@ data class KnotenAuswertungsKontext(
     val knoten: KnotenDaten,
     val eingänge: Map<String, BedingterWert>,
     val rechenKontext: RechenKontext,
+    /** Deterministische Kahn-Reihenfolge der aktuellen Karte für abgeleitete Argumentlisten. */
+    val topologischeReihenfolge: Map<KnotenId, Int> = emptyMap(),
 )
 
 fun interface MathematikKnotenAuswerter {

@@ -9,8 +9,13 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(RationaleZahl.parse(k.knoten.parameter["wert"] ?: "0"))))
         }
         registriere("mathematik.variable") { k ->
-            val wertevorrat = k.eingänge["wertevorrat"]?.objekt as? MengenAusdruck
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Variable(k.knoten.parameter["name"] ?: "x"), werteVorrat = wertevorrat)))
+            val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
+            val wertevorrat = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
+                Variable(name),
+                werteVorrat = wertevorrat,
+                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat)),
+            )))
         }
         registriere("mathematik.addition") { k ->
             val werte = k.operatorEingänge { anschluss, index ->
@@ -217,14 +222,30 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(bildeAb(k.menge("menge"), methode), annahmen(k))))
         }
         registriere("mathematik.termZuMethode") { k ->
-            val term = k.zahl("term")
-            val argumente = k.knoten.anschlüsse.filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang && it.name !in setOf("term", "zielmenge") }
-                .sortedBy { it.reihenfolge }
-                .map { anschluss -> k.eingänge[anschluss.name] ?: error("Das Methodenargument ${anschluss.name} fehlt.") }
-            val variablen = argumente.map { it.objekt as? Variable ?: error("Methodenargumente müssen Variablen sein.") }
-            require(variablen.map { it.name }.distinct().size == variablen.size) { "Methodenargumente müssen unterschiedliche Variablen sein." }
-            val zielmenge = k.menge("zielmenge")
-            val werteVorräte = argumente.mapNotNull { wert -> (wert.objekt as? Variable)?.let { variable -> wert.werteVorrat?.let { variable.name to it } } }.toMap()
+            val termWert = k.eingänge["term"] ?: error("Term fehlt.")
+            val term = termWert.objekt
+            val freieVariablen = term.freieVariablen().associateBy { it.name }
+            val quellenNachName = termWert.variablenQuellen
+                .filter { it.name in freieVariablen }
+                .groupBy { it.name }
+            val fehlende = freieVariablen.keys.filterNot { it in quellenNachName }
+            require(fehlende.isEmpty()) { "Für die Variablen ${fehlende.joinToString(", ")} fehlt ein verbundener Variablenknoten." }
+            val werteVorräteNachName = quellenNachName.mapValues { (name, quellen) ->
+                val mengen = quellen.map { it.werteVorrat }.distinct()
+                require(mengen.size == 1) { "Die Variable '$name' besitzt widersprüchliche Wertevorräte." }
+                mengen.single()
+            }
+            val automatisch = quellenNachName.entries.sortedWith(
+                compareBy<Map.Entry<String, List<VariablenQuelle>>> { entry ->
+                    entry.value.minOf { quelle -> k.topologischeReihenfolge[quelle.knotenId] ?: Int.MAX_VALUE }
+                }.thenBy { entry -> entry.value.minOf { quelle -> quelle.knotenId.wert } },
+            ).map { it.key }
+            val gespeichert = k.knoten.parameter["argumentReihenfolge"].orEmpty()
+                .split(',').map(String::trim).filter { it.isNotBlank() && it in freieVariablen }.distinct()
+            val namen = gespeichert + automatisch.filterNot { it in gespeichert }
+            val variablen = namen.map { freieVariablen.getValue(it) }
+            val zielmenge = grundmenge(k.knoten.parameter["zielmenge"] ?: "R")
+            val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
             val funktion = Funktion(k.knoten.parameter["name"] ?: "f", variablen, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }
@@ -348,7 +369,8 @@ object StandardMathematikAuswerter {
         "Z", "ℤ" -> GanzeZahlen
         "Q", "ℚ" -> RationaleZahlen
         "R", "ℝ" -> ReelleZahlen
-        else -> error("Unbekannte Grundmenge '$name'. Erlaubt sind N, Z, Q und R.")
+        "C", "ℂ" -> KomplexeZahlen
+        else -> error("Unbekannte Grundmenge '$name'. Erlaubt sind N, Z, Q, R und C.")
     }
     private fun vergleich(k: KnotenAuswertungsKontext, art: VergleichsArt) = KnotenAuswertungsErgebnis(
         mapOf("aussage" to BedingterWert(Vergleich(k.zahl("links"), art, k.zahl("rechts")), annahmen(k))),

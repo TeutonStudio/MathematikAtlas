@@ -18,4 +18,9 @@ class LatexTextTest {
     fun `formelbefehle werden nicht als Latex Quellcode angezeigt`() {
         assertEquals("input2 ∪ (π)⁄(x2)", vereinfacheLatexAnzeige("input_{2} \\cup \\frac{\\pi}{x^{2}}"))
     }
+
+    @Test
+    fun `unterstützt Fallunterscheidungen und Methodenpfeile`() {
+        assertEquals("f:{\nℝ → ℂ\nx ↦ x}", vereinfacheLatexAnzeige("f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto x\\end{cases}"))
+    }
 }

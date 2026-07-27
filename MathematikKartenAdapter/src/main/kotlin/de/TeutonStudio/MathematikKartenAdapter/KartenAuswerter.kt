@@ -27,11 +27,13 @@ class KartenAuswerter(
         val eingehend = karte.verbindungen.groupBy { it.zu.knotenId }
         val nachfolger = karte.verbindungen.groupBy { it.von.knotenId }
         val grad = karte.knoten.associate { knoten -> knoten.id to eingehend[knoten.id].orEmpty().map { it.von.knotenId }.distinct().size }.toMutableMap()
-        val offen = ArrayDeque<KnotenId>()
+        val offen = java.util.PriorityQueue<KnotenId>(compareBy { it.wert })
         grad.filterValues { it == 0 }.keys.forEach { offen.add(it) }
+        val topologischeReihenfolge = mutableMapOf<KnotenId, Int>()
 
         while (offen.isNotEmpty()) {
-            val id = offen.removeFirst()
+            val id = offen.remove()
+            topologischeReihenfolge[id] = topologischeReihenfolge.size
             val knoten = karte.knoten.firstOrNull { it.id == id } ?: continue
             val fest = vorgegebeneAusgaben[id]
             val ergebnis = if (fest != null) {
@@ -39,7 +41,7 @@ class KartenAuswerter(
             } else if (knoten.kartenVerweis != null) {
                 werteGruppenKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, kartenPfad)
             } else {
-                werteKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse)
+                werteKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, topologischeReihenfolge)
             }
             ergebnisse[id] = ergebnis
             ergebnis.fehler?.let { fehler += "${knoten.name}: $it" }
@@ -59,6 +61,7 @@ class KartenAuswerter(
         verbindungen: List<VerbindungDaten>,
         karte: KartenDaten,
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
+        topologischeReihenfolge: Map<KnotenId, Int>,
     ): KnotenAuswertungsErgebnis {
         val eingänge = sammleEingänge(knoten, verbindungen, karte, ergebnisse)
         val annahmen = eingänge.values.flatMap { it.annahmen }.toSet()
@@ -68,9 +71,9 @@ class KartenAuswerter(
         val ergebnis = (if (auswerter == null) {
             KnotenAuswertungsErgebnis(emptyMap(), fehler = "Kein Auswerter für ${knoten.art} registriert.")
         } else runCatching {
-            auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen)))
+            auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen), topologischeReihenfolge))
         }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
-        ).copy(eingänge = eingänge)
+        ).mitVariablenQuellenAusEingängen(eingänge, knoten.art).copy(eingänge = eingänge)
         cache[knoten.id] = CacheEintrag(signatur, ergebnis)
         return ergebnis
     }
@@ -125,5 +128,18 @@ class KartenAuswerter(
             val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId } ?: return@forEach
             ergebnisse[quellKnoten.id]?.ausgaben?.get(quellAnschluss.name)?.let { put(zielAnschluss.name, it) }
         }
+    }
+
+    private fun KnotenAuswertungsErgebnis.mitVariablenQuellenAusEingängen(
+        eingänge: Map<String, BedingterWert>,
+        art: KnotenArtId,
+    ): KnotenAuswertungsErgebnis {
+        if (art == "mathematik.termZuMethode") return this
+        val quellen = eingänge.values.flatMap { it.variablenQuellen }
+        if (quellen.isEmpty()) return this
+        return copy(ausgaben = ausgaben.mapValues { (_, ausgabe) ->
+            ausgabe.copy(variablenQuellen = (ausgabe.variablenQuellen + quellen)
+                .distinctBy { quelle -> Triple(quelle.knotenId, quelle.name, quelle.werteVorrat) })
+        })
     }
 }

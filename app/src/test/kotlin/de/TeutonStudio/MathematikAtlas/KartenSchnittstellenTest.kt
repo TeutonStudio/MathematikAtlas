@@ -2,12 +2,43 @@ package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
+import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class KartenSchnittstellenTest {
+    @Test
+    fun `Migration normalisiert Term zu Methode und Variable auf Inspector-Vertrag`() {
+        val variable = KnotenDaten(
+            art = "mathematik.variable", name = "x", parameter = mapOf("name" to "x"),
+            anschlüsse = listOf(
+                AnschlussDaten(name = "wertevorrat", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Menge.id),
+                AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Zahl.id),
+            ),
+        )
+        val methode = KnotenDaten(
+            art = "mathematik.termZuMethode", name = "f",
+            anschlüsse = listOf(
+                AnschlussDaten(name = "term", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
+                AnschlussDaten(name = "argument1", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
+                AnschlussDaten(name = "zielmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Menge.id),
+                AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlFunktion.id),
+            ),
+        )
+        val migriert = migriereTermZuMethodeUndVariablen(KartenDaten(name = "Alt", knoten = listOf(variable, methode)))
+        val neueVariable = migriert.knoten.first { it.id == variable.id }
+        val neueMethode = migriert.knoten.first { it.id == methode.id }
+
+        assertEquals(listOf("wert"), neueVariable.anschlüsse.map { it.name })
+        assertEquals("R", neueVariable.parameter["werteVorrat"])
+        assertEquals(listOf("term", "methode"), neueMethode.anschlüsse.map { it.name })
+        assertEquals(MathematikAnschlussArten.Objekt.id, neueMethode.anschlüsse.first { it.name == "term" }.art)
+        assertEquals(MathematikAnschlussArten.Funktion.id, neueMethode.anschlüsse.first { it.name == "methode" }.art)
+        assertEquals("R", neueMethode.parameter["zielmenge"])
+    }
+
     @Test
     fun `öffentliche Anschlüsse sind pro Richtung anhand ihres Namens eindeutig`() {
         val objekt = AnschlussArtId("objekt")

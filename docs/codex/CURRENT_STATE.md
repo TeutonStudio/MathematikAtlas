@@ -79,6 +79,7 @@
 
 | Datum | Änderung | ExecPlan oder ADR | Prüfstatus |
 |---|---|---|---|
+| 2026-07-27 | `mathematik.termZuMethode` auf einen allgemeinen Termeingang und einen allgemeinen Methodenausgang umgestellt; freie verbundene Variablen liefern automatisch geordnete Argumente und Inspector-Grundmengen. | `plans/completed/2026-07-27-term-zu-methode.md`, `decisions/2026-07-27-term-zu-methode-allgemeiner-vertrag.md` | vollständige JVM-Tests, Debug-Build und Repository-Prüfung erfolgreich |
 | 2026-07-27 | Neuer Knoten `mathematik.vektorZuPolynom`: orientierter Koeffizientenvektor mit aufsteigender Eingabereihenfolge wird zu einem Zahlterm; beide Vektororientierungen sind zulässig. | `plans/completed/2026-07-27-vektor-zu-polynom.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
 | 2026-07-27 | Neuer Knoten `mathematik.reellesIntervall` für geschlossene reelle Intervalle mit zwei Zahleneingängen, exakter Rationalfall-Normalisierung und JSON-Roundtrip | `plans/completed/2026-07-27-reelles-intervall.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
 | 2026-07-27 | Gemeinsamer Extremwert-Knoten mit getrennten Maximum-/Minimum-Vorlagen, dynamischen Eingängen und konservativer Reellheitsprüfung | `plans/completed/2026-07-27-extremwert.md` | vollständige JVM-Tests, Debug-Build, Repository-Prüfung und unabhängige Diff-Abnahme erfolgreich |

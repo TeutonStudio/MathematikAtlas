@@ -35,6 +35,7 @@ fun vereinfacheLatexAnzeige(latex: String): String = latexZuAnnotiertemText(late
 
 private class LatexParser(private val quelltext: String, private val ausgabe: AnnotatedString.Builder) {
     private var position = 0
+    private var casesTiefe = 0
 
     fun schreibe(bisGruppenEnde: Boolean = false) {
         while (position < quelltext.length) {
@@ -64,7 +65,10 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         if (position >= quelltext.length) return
         if (!quelltext[position].isLetter()) {
             when (val zeichen = quelltext[position++]) {
-                '\\' -> ausgabe.append(";\n")
+                '\\' -> {
+                    ausgabe.append(if (casesTiefe > 0) "\n" else ";\n")
+                    if (casesTiefe > 0) while (position < quelltext.length && quelltext[position] == ' ') position++
+                }
                 '{', '}' -> ausgabe.append(zeichen)
                 // Der Rechenkern verwendet " \\ " als Matrizen-Zeilentrenner.
                 ' ' -> ausgabe.append(";\n")
@@ -77,8 +81,14 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         when (val befehl = quelltext.substring(start, position)) {
             "frac" -> schreibeBruch()
             "mathbb" -> ausgabe.append(zahlbereich(liesGruppenText()))
-            "begin" -> if (liesGruppenText() == "pmatrix") ausgabe.append('[')
-            "end" -> if (liesGruppenText() == "pmatrix") ausgabe.append(']')
+            "begin" -> when (liesGruppenText()) {
+                "pmatrix" -> ausgabe.append('[')
+                "cases" -> { casesTiefe++; ausgabe.append("{\n") }
+            }
+            "end" -> when (liesGruppenText()) {
+                "pmatrix" -> ausgabe.append(']')
+                "cases" -> { casesTiefe = (casesTiefe - 1).coerceAtLeast(0); ausgabe.append('}') }
+            }
             "left", "right", "!", ",", ";", "quad", "qquad" -> Unit
             "operatorname", "text", "mathrm", "mathbf" -> ausgabe.append(liesGruppenText().replace("\\ ", " "))
             else -> ausgabe.append(zeichenFürBefehl(befehl))
@@ -118,6 +128,7 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         "Q" -> "ℚ"
         "Z" -> "ℤ"
         "N" -> "ℕ"
+        "C" -> "ℂ"
         else -> text
     }
 
@@ -126,7 +137,7 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "neq" to "≠", "le" to "≤", "ge" to "≥",
         "varnothing" to "∅", "top" to "wahr", "bot" to "falsch", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂",
-        "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "to" to "→", "implies" to "⇒", "iff" to "⇔",
+        "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦", "implies" to "⇒", "iff" to "⇔",
         "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
         "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",
         "lambda" to "λ", "mu" to "μ", "rho" to "ρ", "sigma" to "σ", "phi" to "φ", "omega" to "ω",

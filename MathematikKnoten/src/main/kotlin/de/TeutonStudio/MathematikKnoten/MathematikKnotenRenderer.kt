@@ -28,6 +28,7 @@ class MathematikKnotenRenderer(
                 knoten.art == "mathematik.schnitt" -> LatexText(operatorFormel(knoten, ergebnis, " \\cap "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.kartesischesProdukt" -> LatexText(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art in iterativeArten -> LatexText(iterationsFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.termZuMethode" -> LatexText(termZuMethodeFormel(ergebnis), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> Text(
                     if (objekt.wert) "Wahr" else "Lüge",
                     color = if (objekt.wert) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
@@ -77,6 +78,20 @@ class MathematikKnotenRenderer(
     private fun extremwertFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
         val operator = if (knoten.parameter["modus"] == "minimum") "\\min" else "\\max"
         return "$operator\\left\\{${operatorFormel(knoten, ergebnis, ",")}\\right\\}"
+    }
+
+    private fun termZuMethodeFormel(ergebnis: KnotenAuswertungsErgebnis?): String {
+        val methode = ergebnis?.ausgaben?.get("methode")?.objekt as? Funktion ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
+        val argumente = methode.parameter.joinToString(",") { it.zuLatex() }
+        val wertevorrat = when (methode.parameter.size) {
+            0 -> "\\left\\{\\left\\right\\}"
+            1 -> methode.werteVorräte[methode.parameter.single().name]?.zuLatex() ?: "?"
+            else -> methode.parameter.joinToString(" \\times ") { parameter -> methode.werteVorräte[parameter.name]?.zuLatex() ?: "?" }
+        }
+        val zielmenge = runCatching { methode.einzigeZielMenge.zuLatex() }.getOrDefault("?")
+        val bild = methode.ausgaben["wert"]?.zuLatex() ?: "?"
+        val tupel = if (methode.parameter.size == 1) argumente else "\\left($argumente\\right)"
+        return "${methode.name}:\\begin{cases}$wertevorrat \\longrightarrow $zielmenge\\\\$tupel \\mapsto $bild\\end{cases}"
     }
 
     private companion object {

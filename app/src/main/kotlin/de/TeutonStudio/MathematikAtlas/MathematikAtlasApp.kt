@@ -319,21 +319,7 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             if (knoten.art == "mathematik.extremwert") {
                 Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
             }
-            if (knoten.art == "mathematik.termZuMethode") {
-                HorizontalDivider()
-                Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
-                val argumente = knoten.anschlüsse.filter {
-                    it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang && it.name !in setOf("term", "zielmenge")
-                }.sortedBy { it.reihenfolge }
-                argumente.forEachIndexed { index, anschluss ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("${index + 1}. ${anschluss.name}", modifier = Modifier.weight(1f))
-                        OutlinedButton(onClick = { zustand.editor.verschiebeEingang(knoten.id, anschluss.id, -1) }, enabled = index > 0) { Text("↑") }
-                        OutlinedButton(onClick = { zustand.editor.verschiebeEingang(knoten.id, anschluss.id, 1) }, enabled = index < argumente.lastIndex) { Text("↓") }
-                    }
-                }
-            }
-            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite") }.forEach { (schlüssel, wert) ->
+            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite", "werteVorrat", "zielmenge", "argumentReihenfolge") }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
                     value = text,

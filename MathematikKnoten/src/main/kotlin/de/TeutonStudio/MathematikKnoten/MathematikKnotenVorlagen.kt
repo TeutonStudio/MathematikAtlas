@@ -12,8 +12,8 @@ object MathematikKnotenVorlagen {
         listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("wert" to "2"),
     )
     val Variable = KnotenVorlage(
-        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable mit optionalem Wertevorrat.", GraphGröße(190f, 102f),
-        listOf(eingang("wertevorrat", MathematikAnschlussArten.Menge.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("name" to "x"),
+        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable mit im Inspector definiertem Wertevorrat.", GraphGröße(190f, 102f),
+        listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("name" to "x", "werteVorrat" to "R"),
     )
     val Addition = KnotenVorlage(
         "mathematik.addition", "Addition", "Rechnen", "Addiert zwei oder mehr Zahlterme.", GraphGröße(220f, 130f),
@@ -164,9 +164,9 @@ object MathematikKnotenVorlagen {
         listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val TermZuMethode = KnotenVorlage(
-        "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem Term, Variablen und einer Zielmenge eine Methode.", GraphGröße(265f, 135f),
-        listOf(eingang("term", MathematikAnschlussArten.Zahl.id, 0), eingang("argument1", MathematikAnschlussArten.Zahl.id, 1, true), eingang("zielmenge", MathematikAnschlussArten.Menge.id, 2), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)),
-        mapOf("name" to "f"),
+        "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem allgemeinen Term eine Methode mit automatisch abgeleiteten Variablen.", GraphGröße(265f, 135f),
+        listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), ausgang("methode", MathematikAnschlussArten.Funktion.id)),
+        mapOf("name" to "f", "zielmenge" to "R", "argumentReihenfolge" to ""),
     )
     val Komposition = KnotenVorlage("mathematik.komposition", "Komposition", "Abbildungen", "Komponiert zwei einwertige skalare Methoden.", GraphGröße(245f, 110f), listOf(eingang("außen", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("innen", MathematikAnschlussArten.ZahlFunktion.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
     val Iteration = KnotenVorlage("mathematik.iteration", "Iteration", "Abbildungen", "Bildet die nichtnegative Iteration einer skalaren Endomorphismus-Methode.", GraphGröße(255f, 110f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))

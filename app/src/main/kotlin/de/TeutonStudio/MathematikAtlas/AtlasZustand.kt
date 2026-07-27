@@ -249,7 +249,7 @@ enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler 
 
 /** Reine Lade-Migration für bekannte assoziative Knoten; auch von JVM-Tests prüfbar. */
 internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
-    val migriert = migriereKartenAusgangZuEinzelanschluss(karte)
+    val migriert = migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte))
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
         if (knoten.art !in assoziativeKnotenArten) knoten else {
@@ -264,6 +264,52 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
         }
     })
     return migriereMatrixKnoten(assoziativAktualisiert)
+}
+
+/** Überführt die alte verkabelte Methodensignatur in die persistierten Inspector-Parameter. */
+internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten {
+    val entfernteAnschlüsse = mutableSetOf<AnschlussVerweis>()
+    val termKnoten = mutableSetOf<KnotenId>()
+    val knoten = karte.knoten.map { alt ->
+        when (alt.art) {
+            "mathematik.variable" -> {
+                alt.anschlüsse.filter { it.name == "wertevorrat" }.forEach { entfernteAnschlüsse += AnschlussVerweis(alt.id, it.id) }
+                alt.copy(
+                    anschlüsse = alt.anschlüsse.filterNot { it.name == "wertevorrat" },
+                    parameter = alt.parameter + ("werteVorrat" to (alt.parameter["werteVorrat"] ?: "R")),
+                )
+            }
+            "mathematik.termZuMethode" -> {
+                termKnoten += alt.id
+                val term = alt.anschlüsse.firstOrNull { it.name == "term" }
+                    ?: AnschlussDaten(name = "term", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id)
+                val methode = alt.anschlüsse.firstOrNull { it.name == "methode" }
+                    ?: AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Funktion.id)
+                alt.anschlüsse.filter { it.id != term.id && it.id != methode.id }.forEach { entfernteAnschlüsse += AnschlussVerweis(alt.id, it.id) }
+                alt.copy(
+                    anschlüsse = listOf(
+                        term.copy(richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                        methode.copy(richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Funktion.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                    ),
+                    parameter = alt.parameter + mapOf(
+                        "zielmenge" to (alt.parameter["zielmenge"] ?: "R"),
+                        "argumentReihenfolge" to (alt.parameter["argumentReihenfolge"] ?: ""),
+                    ),
+                )
+            }
+            else -> alt
+        }
+    }
+    val nachId = knoten.associateBy { it.id }
+    return karte.copy(
+        knoten = knoten,
+        verbindungen = karte.verbindungen.filter { verbindung ->
+            if (verbindung.von in entfernteAnschlüsse || verbindung.zu in entfernteAnschlüsse) return@filter false
+            if (verbindung.von.knotenId !in termKnoten) return@filter true
+            val ziel = nachId[verbindung.zu.knotenId]?.anschlüsse?.firstOrNull { it.id == verbindung.zu.anschlussId } ?: return@filter false
+            ziel.art in setOf(MathematikAnschlussArten.Funktion.id, MathematikAnschlussArten.Objekt.id)
+        },
+    )
 }
 
 private val assoziativeKnotenArten = setOf(
