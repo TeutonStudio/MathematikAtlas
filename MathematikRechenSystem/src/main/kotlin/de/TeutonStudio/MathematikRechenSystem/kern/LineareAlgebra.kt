@@ -22,6 +22,9 @@ data class ZeilenVektor(override val werte: List<ZahlAusdruck>) : OrientierterVe
     fun transponiert() = SpaltenVektor(werte)
 }
 
+// V2_2_MERGE_NOTE: Punktkoordinaten bleiben Tupel. v2.2 ergänzt ausschließlich explizite Tupel↔Spalte-
+// Konvertierungen und Matrix-mal-Spaltenvektor; die bestehende Zeilen-/Spaltenorientierung darf beim Merge nicht vereinheitlicht werden.
+
 /** Bildet die aufsteigend gespeicherten Koeffizienten c₀, …, cₙ auf Σ cᵢ·Xⁱ ab. */
 fun polynomAusKoeffizienten(koeffizienten: List<ZahlAusdruck>, variable: Variable): ZahlAusdruck {
     require(koeffizienten.isNotEmpty()) { "Ein Polynom benötigt mindestens einen Koeffizienten." }
