@@ -339,21 +339,22 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                 OutlinedTextField(zustand.suchText, zustand::setzeSuchText, label = { Text("Suchen") }, modifier = Modifier.fillMaxWidth())
                 val sichtbareVorlagen = zustand.sichtbareVorlagen()
                 var hauptTab by remember { mutableIntStateOf(0) }
-                val rechnen = sichtbareVorlagen.filterNot { it.kategorie.startsWith("Aussagen:") }
+                val mengen = sichtbareVorlagen.filter { it.kategorie == "Mengen" }
+                val tupel = sichtbareVorlagen.filter { it.art == "mathematik.tupel" }
+                val matrizen = sichtbareVorlagen.filter { it.kategorie == "Matrizen" }
                 val aussagen = sichtbareVorlagen.filter { it.kategorie.startsWith("Aussagen:") }
+                val rechnen = sichtbareVorlagen.filterNot { it in mengen || it in tupel || it in matrizen || it in aussagen }
+                val tabs = listOf("Rechnen" to rechnen, "Mengen" to mengen, "Tupel" to tupel, "Matrizen" to matrizen, "Aussagen" to aussagen)
                 PrimaryScrollableTabRow(selectedTabIndex = hauptTab, edgePadding = 0.dp) {
-                    Tab(
-                        selected = hauptTab == 0,
-                        onClick = { hauptTab = 0 },
-                        text = { Text("Rechnen (${rechnen.size})") },
-                    )
-                    Tab(selected = hauptTab == 1, onClick = { hauptTab = 1 }, text = { Text("Aussagen (${aussagen.size})") })
+                    tabs.forEachIndexed { index, (name, vorlagen) ->
+                        Tab(selected = hauptTab == index, onClick = { hauptTab = index }, enabled = vorlagen.isNotEmpty(), text = { Text("$name (${vorlagen.size})") })
+                    }
                 }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val vorlagen = if (hauptTab == 0) rechnen else aussagen
+                    val vorlagen = tabs[hauptTab].second
                     val gruppen = vorlagen.groupBy { kategorieAnzeige(it.kategorie) }.toMutableMap()
                     if (hauptTab == 0) gruppen.putIfAbsent("Tensoren", emptyList())
-                    val reihenfolge = if (hauptTab == 0) listOf("Zahlen", "Vektoren", "Matrizen", "Tensoren", "Abbildungen", "Mengen", "Steuerung", "Karten") else listOf("Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate")
+                    val reihenfolge = if (hauptTab == 4) listOf("Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate") else listOf("Zahlen", "Vektoren", "Matrizen", "Tensoren", "Abbildungen", "Mengen", "Steuerung", "Karten", "Rechnen")
                     reihenfolge.filter { it in gruppen }.forEach { gruppe ->
                         val einträge = gruppen.getValue(gruppe)
                         item { Text(gruppe, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) }

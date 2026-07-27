@@ -42,6 +42,8 @@ object StandardMathematikAuswerter {
             val rechts = k.eingänge["rechts"]?.objekt ?: error("Rechte Seite fehlt.")
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Gleichheit(links, rechts), annahmen(k))))
         }
+        registriere("mathematik.wahr") { KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(WahrheitsKonstante(true)))) }
+        registriere("mathematik.lüge") { KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(WahrheitsKonstante(false)))) }
         registriere("mathematik.element") { k ->
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(ElementBeziehung(k.objekt("links"), k.menge("rechts")), annahmen(k))))
         }
