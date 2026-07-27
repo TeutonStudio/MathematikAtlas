@@ -141,6 +141,24 @@ object StandardMathematikAuswerter {
             val elemente = (k.knoten.parameter["elemente"] ?: "").split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it) }.toSet()
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(EndlicheMenge(elemente))))
         }
+        registriere("mathematik.einzelmenge") { k ->
+            val element = k.eingänge["element"] ?: error("Element fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
+                objekt = EndlicheMenge(setOf(element.objekt)),
+                annahmen = element.annahmen,
+                reelleVariablen = element.reelleVariablen,
+                variablenQuellen = element.variablenQuellen,
+            )))
+        }
+        registriere("mathematik.mengenfilter") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Filtermethode fehlt.")
+            val gefiltert = filtereMenge(k.menge("menge"), methode, k.rechenKontext)
+            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
+                objekt = gefiltert,
+                annahmen = annahmen(k),
+                reelleVariablen = reelleVariablen(k.eingänge.values),
+            )))
+        }
         registriere("mathematik.reellesIntervall") { k ->
             val untereGrenze = k.zahl("untereGrenze")
             val obereGrenze = k.zahl("obereGrenze")
@@ -240,23 +258,24 @@ object StandardMathematikAuswerter {
                 .filter { it.name in freieParameter }
                 .groupBy { it.name }
             val fehlende = freieParameter.keys.filterNot { it in quellenNachName }
-            require(fehlende.isEmpty()) { "Für die Parameter ${fehlende.joinToString(", ")} fehlt ein verbundener Parameterknoten." }
+            require(fehlende.isEmpty()) { "Für die Parameter ${fehlende.joinToString(", ")} fehlt ein verbundener Parameter- oder Karten-Eingang." }
             val werteVorräteNachName = quellenNachName.mapValues { (name, quellen) ->
                 val mengen = quellen.map { it.werteVorrat }.distinct()
                 require(mengen.size == 1) { "Die Variable '$name' besitzt widersprüchliche Wertevorräte." }
                 mengen.single()
             }
-            val automatisch = quellenNachName.entries.sortedWith(
+            val methodenQuellen = quellenNachName.filterValues { quellen -> quellen.any { it.alsMethodenParameter } }
+            val automatisch = methodenQuellen.entries.sortedWith(
                 compareBy<Map.Entry<String, List<VariablenQuelle>>> { entry ->
                     entry.value.minOf { quelle -> k.topologischeReihenfolge[quelle.knotenId] ?: Int.MAX_VALUE }
                 }.thenBy { entry -> entry.value.minOf { quelle -> quelle.knotenId.wert } },
             ).map { it.key }
             val gespeichert = k.knoten.parameter["argumentReihenfolge"].orEmpty()
-                .split(',').map(String::trim).filter { it.isNotBlank() && it in freieParameter }.distinct()
+                .split(',').map(String::trim).filter { it.isNotBlank() && it in methodenQuellen }.distinct()
             val namen = gespeichert + automatisch.filterNot { it in gespeichert }
             val parameter = namen.map { freieParameter.getValue(it) }
             val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
-            val zielmenge = inferiereZielmenge(term, werteVorräte, termWert.annahmen)
+            val zielmenge = inferiereZielmenge(term, werteVorräteNachName, termWert.annahmen)
             val funktion = Funktion(k.knoten.parameter["name"] ?: "f", parameter, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }
@@ -337,8 +356,23 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("inverse" to BedingterWert(matrix.inverseRational(), annahmen(k))))
         }
         registriere("mathematik.kartenEingang") { k ->
-            val name = k.knoten.parameter["name"] ?: "x"
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Variable(name))))
+            val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
+            val ausgangsArt = k.knoten.anschlüsse.firstOrNull {
+                it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
+            }?.art ?: MathematikAnschlussArten.Objekt.id
+            val parameter: FunktionsParameter = if (ausgangsArt == MathematikAnschlussArten.Zahl.id) Variable(name) else AllgemeinerParameter(name)
+            val werteVorrat: MengenAusdruck = when (ausgangsArt) {
+                MathematikAnschlussArten.Zahl.id -> ReelleZahlen
+                MathematikAnschlussArten.Aussage.id -> EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
+                MathematikAnschlussArten.Menge.id -> BenannteMenge("mengen_$name", "\\mathcal{P}(\\mathcal{U})")
+                else -> BenannteMenge("werte_$name", "\\mathcal{W}_{${name}}")
+            }
+            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
+                objekt = parameter,
+                werteVorrat = werteVorrat,
+                reelleVariablen = if (parameter is Variable) mapOf(name to werteVorrat) else emptyMap(),
+                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, werteVorrat, alsMethodenParameter = false)),
+            )))
         }
         registriere("mathematik.kartenAusgang") { k ->
             val wert = k.eingänge["wert"] ?: error("Ausgabewert fehlt.")
@@ -353,7 +387,7 @@ object StandardMathematikAuswerter {
             val gemeinsameAnnahmen = eingangsWerte.flatMap { it.annahmen }.toSet()
             val gemeinsameReelleVariablen = reelleVariablen(eingangsWerte)
             val gemeinsameQuellen = eingangsWerte.flatMap { it.variablenQuellen }
-                .distinctBy { quelle -> Triple(quelle.knotenId, quelle.name, quelle.werteVorrat) }
+                .distinctBy { quelle -> Pair(Triple(quelle.knotenId, quelle.name, quelle.werteVorrat), quelle.alsMethodenParameter) }
             val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + gemeinsameAnnahmen)
             val basis = when (aussage.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> wahr
