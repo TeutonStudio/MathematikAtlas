@@ -250,7 +250,7 @@ enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler 
 /** Reine Lade-Migration für bekannte assoziative Knoten; auch von JVM-Tests prüfbar. */
 internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
     val migriert = migriereKartenAusgangZuEinzelanschluss(karte)
-    return migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
+    val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
         if (knoten.art !in assoziativeKnotenArten) knoten else {
             val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
@@ -263,11 +263,33 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
             )
         }
     })
+    return migriereMatrixKnoten(assoziativAktualisiert)
 }
 
 private val assoziativeKnotenArten = setOf(
-    "mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix",
+    "mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor",
 )
+
+/** Migriert den nicht verlustfrei zerlegbaren alten Zeilenvektor-Modus auf einzelne 2×2-Eingänge. */
+internal fun migriereMatrixKnoten(karte: KartenDaten): KartenDaten {
+    val zuMigrieren = karte.knoten.filter { matrix ->
+        matrix.art == "mathematik.matrix" && "erzeugungsArt" !in matrix.parameter
+    }.map { it.id }.toSet()
+    if (zuMigrieren.isEmpty()) return karte
+    val knoten = karte.knoten.map { matrix ->
+        if (matrix.id in zuMigrieren) {
+            konfiguriereMatrix(matrix, MATRIX_EINZEL_EINGABEN, höhe = 2, breite = 2)
+        } else matrix
+    }
+    val anschlüsse = knoten.associate { matrix -> matrix.id to matrix.anschlüsse.map { it.id }.toSet() }
+    return karte.copy(
+        knoten = knoten,
+        verbindungen = karte.verbindungen.filter { verbindung ->
+            (verbindung.von.knotenId !in zuMigrieren || verbindung.von.anschlussId in anschlüsse[verbindung.von.knotenId].orEmpty()) &&
+                (verbindung.zu.knotenId !in zuMigrieren || verbindung.zu.anschlussId in anschlüsse[verbindung.zu.knotenId].orEmpty())
+        },
+    )
+}
 
 internal fun öffentlicheKartenAnschlüsse(
     karte: KartenDaten,

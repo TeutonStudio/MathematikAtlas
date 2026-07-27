@@ -125,6 +125,18 @@ object StandardMathematikAuswerter {
             val elemente = (k.knoten.parameter["elemente"] ?: "").split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it) }.toSet()
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(EndlicheMenge(elemente))))
         }
+        registriere("mathematik.reellesIntervall") { k ->
+            val untereGrenze = k.zahl("untereGrenze")
+            val obereGrenze = k.zahl("obereGrenze")
+            require(k.eingänge.getValue("untereGrenze").istNachweisbarReell() && k.eingänge.getValue("obereGrenze").istNachweisbarReell()) {
+                "Ein reelles Intervall benötigt zwei nachweisbar reelle Grenzen."
+            }
+            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
+                reellesIntervall(untereGrenze, obereGrenze, k.rechenKontext),
+                annahmen(k),
+                reelleVariablen = reelleVariablen(k.eingänge.values),
+            )))
+        }
         registriere("mathematik.lösungsmenge") { k ->
             val bedingung = k.aussage("bedingung")
             val freie = bedingung.freieVariablen().associateBy { it.name }
@@ -258,8 +270,18 @@ object StandardMathematikAuswerter {
         registriere("mathematik.vektorRadiusSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.spalte("vektor").radius(), annahmen(k)))) }
         registriere("mathematik.vektorRadiusZeile") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.zeile("vektor").radius(), annahmen(k)))) }
         registriere("mathematik.matrix") { k ->
-            val zeilen = k.operatorEingänge { _, _ -> error("Matrixzeile fehlt.") }.map { it.objekt as? ZeilenVektor ?: error("Matrix benötigt Zeilenvektoren.") }.map { it.werte }
-            KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(Matrix(zeilen), annahmen(k))))
+            val höhe = k.parameterInt("höhe")
+            val breite = k.parameterInt("breite")
+            val matrix = if (k.knoten.parameter["erzeugungsArt"] == MATRIX_METHODE) {
+                val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Matrixmethode fehlt.")
+                matrixAusMethode(methode, höhe, breite)
+            } else {
+                Matrix(List(höhe) { zeile -> List(breite) { spalte ->
+                    k.eingänge[matrixEintragName(zeile, spalte)]?.objekt as? ZahlAusdruck
+                        ?: error("Matrixeintrag ($zeile,$spalte) fehlt oder ist keine Zahl.")
+                } })
+            }
+            KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(matrix, annahmen(k))))
         }
         registriere("mathematik.skalarprodukt") { k ->
             val a = k.spalte("a"); val b = k.spalte("b")

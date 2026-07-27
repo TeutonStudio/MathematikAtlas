@@ -12,6 +12,12 @@ sealed interface KartenAktion {
     data class KnotenEigenschaftenErsetzen(val id: KnotenId, val eigenschaften: Map<String, KnotenEigenschaft>) : KartenAktion
     /** Ersetzt die Anschlüsse eines Knotens, etwa um die Reihenfolge von Methodenargumenten zu ändern. */
     data class KnotenAnschlüsseÄndern(val id: KnotenId, val anschlüsse: List<AnschlussDaten>) : KartenAktion
+    /** Ersetzt atomar Konfiguration und Anschlüsse; Verbindungen zu entfernten Anschlüssen entfallen. */
+    data class KnotenKonfigurationErsetzen(
+        val id: KnotenId,
+        val parameter: Map<String, String>,
+        val anschlüsse: List<AnschlussDaten>,
+    ) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
     /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */
     data class KnotenIsolieren(val id: KnotenId) : KartenAktion
@@ -42,6 +48,18 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
     is KartenAktion.KnotenAnschlüsseÄndern -> copy(knoten = knoten.map {
         if (it.id == aktion.id) it.copy(anschlüsse = aktion.anschlüsse) else it
     })
+    is KartenAktion.KnotenKonfigurationErsetzen -> {
+        val gültigeAnschlüsse = aktion.anschlüsse.map { it.id }.toSet()
+        copy(
+            knoten = knoten.map {
+                if (it.id == aktion.id) it.copy(parameter = aktion.parameter, anschlüsse = aktion.anschlüsse) else it
+            },
+            verbindungen = verbindungen.filterNot { verbindung ->
+                (verbindung.von.knotenId == aktion.id && verbindung.von.anschlussId !in gültigeAnschlüsse) ||
+                    (verbindung.zu.knotenId == aktion.id && verbindung.zu.anschlussId !in gültigeAnschlüsse)
+            },
+        )
+    }
     is KartenAktion.KnotenLöschen -> copy(
         knoten = knoten.filterNot { it.id == aktion.id },
         verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },

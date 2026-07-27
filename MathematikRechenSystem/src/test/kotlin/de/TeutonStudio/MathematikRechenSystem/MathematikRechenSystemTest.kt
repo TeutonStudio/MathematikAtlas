@@ -57,6 +57,27 @@ class MathematikRechenSystemTest {
         assertEquals(RationaleZahl.von(1, 4), inv.zeilen[1][1])
     }
 
+    @Test fun matrixAusMethodeVerwendetNullbasierteZeilenUndSpaltenindizes() {
+        val zeile = Variable("i"); val spalte = Variable("j")
+        val methode = Funktion("f", listOf(zeile, spalte), mapOf("wert" to addition(multiplikation(RationaleZahl.von(10), zeile), spalte)))
+
+        val matrix = matrixAusMethode(methode, höhe = 2, breite = 3)
+
+        assertEquals(
+            listOf(
+                listOf(RationaleZahl.von(0), RationaleZahl.von(1), RationaleZahl.von(2)),
+                listOf(RationaleZahl.von(10), RationaleZahl.von(11), RationaleZahl.von(12)),
+            ),
+            matrix.zeilen,
+        )
+    }
+
+    @Test fun matrixAusMethodeBenötigtZweiParameterUndEineZahlAusgabe() {
+        val x = Variable("x")
+        assertFailsWith<IllegalArgumentException> { matrixAusMethode(Funktion("f", listOf(x), mapOf("wert" to x)), 1, 1) }
+        assertFailsWith<IllegalArgumentException> { matrixAusMethode(Funktion("g", listOf(x, Variable("y")), mapOf("wert" to Tupel(listOf(x)))), 1, 1) }
+    }
+
     @Test fun lineareGleichungWirdGelöst() {
         val x = Variable("x")
         val gleichung = Gleichheit(addition(multiplikation(RationaleZahl.von(2), x), RationaleZahl.von(4)), RationaleZahl.von(10))

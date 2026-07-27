@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -74,6 +75,29 @@ class KartenSchnittstellenTest {
         assertEquals("name", migriert.parameter.getValue("operatorAnzeige"))
         assertEquals(2, migriert.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang })
         assertTrue(migriert.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.all { it.kannSichErweitern })
+    }
+
+    @Test
+    fun `Migration ersetzt alte Matrixzeilen durch einzelne Eingänge und entfernt deren Kanten`() {
+        val quelle = schnittstelle("test.quelle", "Quelle", "wert", AnschlussArtId("mathematik.vektor.zeile"), AnschlussRichtung.Ausgang)
+        val alteMatrix = KnotenDaten(
+            art = "mathematik.matrix", name = "Matrix",
+            anschlüsse = listOf(
+                AnschlussDaten(name = "zeile1", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.vektor.zeile")),
+                AnschlussDaten(name = "matrix", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId("mathematik.matrix")),
+            ),
+        )
+        val karte = KartenDaten(
+            name = "Alt", knoten = listOf(quelle, alteMatrix),
+            verbindungen = listOf(VerbindungDaten(von = AnschlussVerweis(quelle.id, quelle.anschlüsse.single().id), zu = AnschlussVerweis(alteMatrix.id, alteMatrix.anschlüsse.first { it.name == "zeile1" }.id))),
+        )
+
+        val migriert = migriereMatrixKnoten(karte)
+        val matrix = migriert.knoten.first { it.id == alteMatrix.id }
+
+        assertEquals(MATRIX_EINZEL_EINGABEN, matrix.parameter["erzeugungsArt"])
+        assertEquals(listOf("eintrag_0_0", "eintrag_0_1", "eintrag_1_0", "eintrag_1_1", "matrix"), matrix.anschlüsse.map { it.name })
+        assertTrue(migriert.verbindungen.isEmpty())
     }
 
     private fun schnittstelle(

@@ -77,6 +77,27 @@ data class Funktion(
     }
 }
 
+/** Erzeugt eine [höhe] mal [breite]-Matrix aus einer Zahlmethode `f(zeile, spalte)`. */
+fun matrixAusMethode(methode: Funktion, höhe: Int, breite: Int): Matrix {
+    require(höhe > 0) { "Die Matrixhöhe muss positiv sein." }
+    require(breite > 0) { "Die Matrixbreite muss positiv sein." }
+    require(methode.parameter.size == 2) { "Die Matrixmethode muss genau zwei Parameter für Zeile und Spalte besitzen." }
+    val (ausgabeName, ausgabe) = methode.einzigeAusgabe()
+    require(ausgabe is ZahlAusdruck) { "Die Matrixmethode muss eine Zahl ausgeben." }
+    val (zeilenParameter, spaltenParameter) = methode.parameter
+    return Matrix(List(höhe) { zeile ->
+        List(breite) { spalte ->
+            methode.wendeAn(
+                mapOf(
+                    zeilenParameter.name to RationaleZahl.von(zeile.toLong()),
+                    spaltenParameter.name to RationaleZahl.von(spalte.toLong()),
+                ),
+            ).getValue(ausgabeName) as? ZahlAusdruck
+                ?: error("Die Matrixmethode muss für jeden Index eine Zahl ausgeben.")
+        }
+    })
+}
+
 /** Bild einer Menge unter einer einwertigen Methode: f[M] = { f(x) : x ∈ M }. */
 data class Abbild(val menge: MengenAusdruck, val methode: Funktion) : MengenAusdruck {
     override fun zuLatex() = "${methode.name}[${menge.zuLatex()}]"
@@ -190,6 +211,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is Logarithmus -> Logarithmus(ersetze(objekt.basis, bindungen), ersetze(objekt.argument, bindungen))
     is Argument -> Argument(ersetze(objekt.zahl, bindungen) as KomplexeZahl)
     is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { ersetze(it, bindungen) }.toSet())
+    is ReellesIntervall -> reellesIntervall(ersetze(objekt.untereGrenze, bindungen), ersetze(objekt.obereGrenze, bindungen))
     is Vereinigung -> vereinige(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
     is MengenDifferenz -> mengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
@@ -239,6 +261,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
 private fun vereinfacheObjekt(objekt: MathematischesObjekt): MathematischesObjekt = when (objekt) {
     is ZahlAusdruck -> vereinfache(objekt)
     is EndlicheMenge -> EndlicheMenge(objekt.elemente.map(::vereinfacheObjekt).toSet())
+    is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze)
     is Vereinigung -> vereinige(objekt.mengen)
     is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
     else -> objekt
@@ -261,6 +284,7 @@ fun MathematischesObjekt.enthalteneVariablen(): Set<Variable> = when (this) {
     is Logarithmus -> listOf(basis, argument).enthalteneVariablen()
     is Argument -> zahl.enthalteneVariablen()
     is EndlicheMenge -> elemente.enthalteneVariablen()
+    is ReellesIntervall -> listOf(untereGrenze, obereGrenze).enthalteneVariablen()
     is Vereinigung -> mengen.enthalteneVariablen()
     is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneVariablen()
     is MengenDifferenz -> listOf(links, rechts).enthalteneVariablen()

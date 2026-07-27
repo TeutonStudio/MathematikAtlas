@@ -92,6 +92,14 @@ object MathematikKnotenVorlagen {
         "mathematik.endlicheMenge", "Endliche Menge", "Mengen", "Endliche Menge aus einer kommagetrennten Liste.", GraphGröße(220f, 105f),
         listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)), mapOf("elemente" to "1,2,3"),
     )
+    val ReellesIntervall = KnotenVorlage(
+        "mathematik.reellesIntervall", "Reelles Intervall", "Mengen", "Bildet das abgeschlossene reelle Intervall [a,b] aus zwei nachweisbar reellen Grenzen.", GraphGröße(270f, 115f),
+        listOf(
+            eingang("untereGrenze", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("obereGrenze", MathematikAnschlussArten.Zahl.id, 1),
+            ausgang("menge", MathematikAnschlussArten.Menge.id),
+        ),
+    )
     val Lösungsmenge = KnotenVorlage(
         "mathematik.lösungsmenge", "Lösungsmenge", "Mengen", "Bildet eine symbolische Menge aller Variablenwerte, die eine Aussage erfüllen.", GraphGröße(270f, 135f),
         listOf(eingang("bedingung", MathematikAnschlussArten.Aussage.id), ausgang("menge", MathematikAnschlussArten.Menge.id)),
@@ -180,8 +188,15 @@ object MathematikKnotenVorlagen {
     val VektorRadiusSpalte = KnotenVorlage("mathematik.vektorRadiusSpalte", "Radius (Spalte)", "Vektoren", "Euklidische Norm eines Spaltenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val VektorRadiusZeile = KnotenVorlage("mathematik.vektorRadiusZeile", "Radius (Zeile)", "Vektoren", "Euklidische Norm eines Zeilenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.ZeilenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val Matrix = KnotenVorlage(
-        "mathematik.matrix", "Matrix", "Matrizen", "Matrix aus dynamischen Zeilenvektoren gleicher Länge.", GraphGröße(250f, 115f),
-        listOf(eingang("zeile1", MathematikAnschlussArten.ZeilenVektor.id, 0, true), eingang("zeile2", MathematikAnschlussArten.ZeilenVektor.id, 1, true), ausgang("matrix", MathematikAnschlussArten.Matrix.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
+        "mathematik.matrix", "Matrix", "Matrizen", "Matrix aus skalaren Einträgen oder einer zweistelligen Zahlmethode.", GraphGröße(250f, 115f),
+        listOf(
+            eingang(matrixEintragName(0, 0), MathematikAnschlussArten.Zahl.id, 0),
+            eingang(matrixEintragName(0, 1), MathematikAnschlussArten.Zahl.id, 1),
+            eingang(matrixEintragName(1, 0), MathematikAnschlussArten.Zahl.id, 2),
+            eingang(matrixEintragName(1, 1), MathematikAnschlussArten.Zahl.id, 3),
+            ausgang("matrix", MathematikAnschlussArten.Matrix.id),
+        ),
+        mapOf("erzeugungsArt" to MATRIX_EINZEL_EINGABEN, "höhe" to "2", "breite" to "2"),
     )
     val Skalarprodukt = KnotenVorlage(
         "mathematik.skalarprodukt", "Skalarprodukt (Spalten)", "Vektoren", "Berechnet das Skalarprodukt zweier Spaltenvektoren.", GraphGröße(230f, 110f),
@@ -216,7 +231,7 @@ object MathematikKnotenVorlagen {
     val Äquivalenz = KnotenVorlage("mathematik.äquivalenz", "Äquivalenz", "Aussage", "Bildet A ⇔ B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Adjunktion = KnotenVorlage("mathematik.adjunktion", "Adjunktion", "Aussage", "Bildet die klassische UND-Verknüpfung A & B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
 
-    val alle = listOf(Zahl, Variable, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Lösungsmenge, Visualisierung, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, TransponiereSpalte, TransponiereZeile, MatrixProdukt, TransponiereMatrix, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
+    val alle = listOf(Zahl, Variable, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, ReellesIntervall, Lösungsmenge, Visualisierung, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, TransponiereSpalte, TransponiereZeile, MatrixProdukt, TransponiereMatrix, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
 
     private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId, kategorie: String = "Aussagen: Aussagenprädikate") = KnotenVorlage(
         art, name, kategorie, beschreibung, GraphGröße(220f, 110f),

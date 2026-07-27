@@ -8,6 +8,35 @@ data object LeereMenge : MengenAusdruck { override fun zuLatex() = "\\varnothing
 
 data class BenannteMenge(val name: String, val latex: String = name) : MengenAusdruck { override fun zuLatex() = latex }
 
+/** Abgeschlossenes Intervall `[untereGrenze, obereGrenze]` innerhalb der reellen Zahlen. */
+data class ReellesIntervall(
+    val untereGrenze: ZahlAusdruck,
+    val obereGrenze: ZahlAusdruck,
+) : MengenAusdruck {
+    override fun zuLatex() = "\\left[${untereGrenze.zuLatex()},${obereGrenze.zuLatex()}\\right]"
+}
+
+/**
+ * Erzeugt ein abgeschlossenes reelles Intervall und normalisiert exakt
+ * entscheidbare rationale Randfälle zu einer Menge mit derselben Bedeutung.
+ */
+fun reellesIntervall(
+    untereGrenze: ZahlAusdruck,
+    obereGrenze: ZahlAusdruck,
+    kontext: RechenKontext = RechenKontext(),
+): MengenAusdruck {
+    val unten = vereinfache(untereGrenze, kontext)
+    val oben = vereinfache(obereGrenze, kontext)
+    if (unten is RationaleZahl && oben is RationaleZahl) {
+        return when {
+            unten > oben -> LeereMenge
+            unten == oben -> EndlicheMenge(setOf(unten))
+            else -> ReellesIntervall(unten, oben)
+        }
+    }
+    return ReellesIntervall(unten, oben)
+}
+
 data class Vereinigung(val mengen: List<MengenAusdruck>) : MengenAusdruck {
     override fun zuLatex() = mengen.joinToString(" \\cup ") { it.zuLatex() }
 }
@@ -123,6 +152,18 @@ internal fun strukturellerSchlüssel(objekt: MathematischesObjekt): String = "${
 data class ElementBeziehung(val element: MathematischesObjekt, val menge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = when (menge) {
         is EndlicheMenge -> if (element in menge.elemente) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+        is ReellesIntervall -> {
+            val wert = element as? RationaleZahl
+            val unten = vereinfache(menge.untereGrenze, kontext) as? RationaleZahl
+            val oben = vereinfache(menge.obereGrenze, kontext) as? RationaleZahl
+            if (wert != null && unten != null && oben != null) {
+                val enthalten = unten <= wert && wert <= oben
+                AussageErgebnis(
+                    if (enthalten) Wahrheitswert.Wahr else Wahrheitswert.Falsch,
+                    if (enthalten) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
+                )
+            } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        }
         LeereMenge -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
         RationaleZahlen, ReelleZahlen -> if (element is RationaleZahl) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         GanzeZahlen -> if (element is RationaleZahl) {

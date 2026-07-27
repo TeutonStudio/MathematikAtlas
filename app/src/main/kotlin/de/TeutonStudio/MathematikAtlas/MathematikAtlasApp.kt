@@ -17,6 +17,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
 import de.TeutonStudio.MathematikKnoten.LatexText
+import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
+import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
+import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
 import kotlinx.coroutines.delay
 
 private sealed interface GraphKontext {
@@ -277,7 +280,8 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 }
                 return@Column
             }
-            if (knoten.art in setOf("mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix")) {
+            if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
+            if (knoten.art in setOf("mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor")) {
                 val wert = knoten.parameter["festeEingänge"] ?: "2"
                 var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
@@ -329,7 +333,7 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     }
                 }
             }
-            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige", "modus") }.forEach { (schlüssel, wert) ->
+            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite") }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
                     value = text,
@@ -353,6 +357,67 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
         }
     }
+}
+
+@Composable
+private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
+    val konfiguration = matrixKonfiguration(knoten)
+    val ausMethode = konfiguration.erzeugungsArt == MATRIX_METHODE
+    var höheText by remember(knoten.id, konfiguration.höhe) { mutableStateOf(konfiguration.höhe.toString()) }
+    var breiteText by remember(knoten.id, konfiguration.breite) { mutableStateOf(konfiguration.breite.toString()) }
+    HorizontalDivider()
+    Text("Matrix erzeugen", style = MaterialTheme.typography.titleSmall)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Einzel-Eingaben", modifier = Modifier.weight(1f))
+        Switch(
+            checked = ausMethode,
+            onCheckedChange = { methode ->
+                zustand.editor.setzeMatrixKonfiguration(
+                    knoten.id,
+                    if (methode) MATRIX_METHODE else "einzelEingaben",
+                    konfiguration.höhe,
+                    konfiguration.breite,
+                )
+            },
+        )
+        Text("Methode")
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = höheText,
+            onValueChange = { text ->
+                höheText = text
+                text.toIntOrNull()?.takeIf { it > 0 }?.let { höhe ->
+                    zustand.editor.setzeMatrixKonfiguration(knoten.id, konfiguration.erzeugungsArt, höhe, konfiguration.breite)
+                }
+            },
+            label = { Text("Höhe") },
+            modifier = Modifier.weight(1f),
+            supportingText = { Text("≥ 1") },
+        )
+        OutlinedTextField(
+            value = breiteText,
+            onValueChange = { text ->
+                breiteText = text
+                text.toIntOrNull()?.takeIf { it > 0 }?.let { breite ->
+                    zustand.editor.setzeMatrixKonfiguration(knoten.id, konfiguration.erzeugungsArt, konfiguration.höhe, breite)
+                }
+            },
+            label = { Text("Breite") },
+            modifier = Modifier.weight(1f),
+            supportingText = { Text("≥ 1") },
+        )
+    }
+    Text(
+        "Indexmenge: {0,…,${konfiguration.höhe - 1}} × {0,…,${konfiguration.breite - 1}} (Zeile, Spalte)",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (ausMethode) Text("Die Zahlmethode wird als f(Zeile, Spalte) ausgewertet.", style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable

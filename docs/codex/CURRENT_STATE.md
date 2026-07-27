@@ -45,7 +45,7 @@
 | Rechnen, Algebra und Analysis | Zahl, Variable, Addition, Multiplikation, Division, Potenz, Gleichung lösen, Auswerten, Ableiten, Integrieren, Wurzel, Logarithmus | überwiegend Zahl oder allgemeines Objekt | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
 | Zahlen, Mengen und Aussagen | Tupel, komplexe Zahlen, Mengenoperationen, Zahlbereiche, Vergleiche, Mengenprädikate und Aussagenlogik | Zahl, Menge, Objekt oder Aussage | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
 | Operatoren und Abbildungen | Iterierte Summe/Produkt/Mengenoperationen, Abbild, Term-zu-Methode, Komposition, Iteration und Analysis von Methoden | typisierte Funktions-, Mengen- und Zahlanschlüsse | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
-| Vektoren und Matrizen | orientierte Zeilen-/Spaltenvektoren, Matrixbildung, Produkte, Transposition und Inversion | Zahl, Vektor oder Matrix | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
+| Vektoren und Matrizen | orientierte Zeilen-/Spaltenvektoren, Matrixbildung aus skalaren Einträgen oder zweistelliger Zahlmethode, Produkte, Transposition und Inversion | Zahl, Vektor, Zahlfunktion oder Matrix | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt`, `MatrixKonfiguration.kt` |
 | Wiederverwendbare Karten | öffentliche Karten-Ein-/Ausgänge und dynamisch erzeugte Gruppenknoten | ein typisierter Anschluss `wert` je Schnittstellenknoten; Gruppenknoten je Richtung eindeutig nach öffentlichem Namen | statisch `mathematik.kartenEingang` / `mathematik.kartenAusgang`; dynamisch `gruppe.<karten-id>` | `MathematikKnotenVorlagen.kt`, `AtlasZustand.kt`, `KartenAuswerter.kt` |
 
 ## Zentrale Architekturpfade
@@ -79,5 +79,6 @@
 
 | Datum | Änderung | ExecPlan oder ADR | Prüfstatus |
 |---|---|---|---|
+| 2026-07-27 | Neuer Knoten `mathematik.reellesIntervall` für geschlossene reelle Intervalle mit zwei Zahleneingängen, exakter Rationalfall-Normalisierung und JSON-Roundtrip | `plans/completed/2026-07-27-reelles-intervall.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
 | 2026-07-27 | Gemeinsamer Extremwert-Knoten mit getrennten Maximum-/Minimum-Vorlagen, dynamischen Eingängen und konservativer Reellheitsprüfung | `plans/completed/2026-07-27-extremwert.md` | vollständige JVM-Tests, Debug-Build, Repository-Prüfung und unabhängige Diff-Abnahme erfolgreich |
 | 2026-07-27 | Istzustand und Projektkontext erstmals gegen den vorhandenen Android-/Kotlin-Code abgeglichen | keiner | Repository- und Architekturprüfung erfolgreich; vollständige Gradle-/Kernprüfung lokal nicht ausführbar |
