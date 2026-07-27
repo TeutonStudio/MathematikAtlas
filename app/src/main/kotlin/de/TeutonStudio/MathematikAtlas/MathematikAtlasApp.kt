@@ -443,11 +443,13 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                 ).any { it.contains(zustand.suchText, ignoreCase = true) }
                 val mengenrechnung = sichtbareVorlagen.filter { it.art in mengenrechnungsArten }
                 val mengen = sichtbareVorlagen.filter { it.kategorie == "Mengen" && it.art !in mengenrechnungsArten }
+                val zahlen = sichtbareVorlagen.filter { it.art in setOf("mathematik.zahl", "mathematik.variable") }
                 val tupel = sichtbareVorlagen.filter { it.art == "mathematik.tupel" }
                 val matrizen = sichtbareVorlagen.filter { it.kategorie == "Matrizen" }
                 val tabs = listOf(
                     KnotenAuswahlTab("Alle", sichtbareVorlagen),
                     KnotenAuswahlTab("Rechnen", sichtbareVorlagen.filter { it.kategorie in rechnenKategorien }),
+                    KnotenAuswahlTab("Zahlen", zahlen),
                     KnotenAuswahlTab("Mengen", mengen),
                     KnotenAuswahlTab("Mengenrechnung", mengenrechnung),
                     KnotenAuswahlTab("Tupel", tupel, zusätzlicheEinträge = if (zeigeTupelVektorAktionen) 2 else 0),
@@ -494,8 +496,8 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                             )
                         }
                     }
-                    val gruppen = aktiverTab.vorlagen.groupBy(::kategorieAnzeige)
-                    gruppen.keys.sortedWith(compareBy({ kategorienReihenfolge.indexOf(it).let { index -> if (index < 0) Int.MAX_VALUE else index } }, { it })).forEach { gruppe ->
+                    val gruppen = if (aktiverTab.name == "Alle") aktiverTab.vorlagen.groupBy(::kategorieAnzeige) else emptyMap<String, List<KnotenVorlage>>()
+                    if (gruppen.isNotEmpty()) gruppen.keys.sortedWith(compareBy({ kategorienReihenfolge.indexOf(it).let { index -> if (index < 0) Int.MAX_VALUE else index } }, { it })).forEach { gruppe ->
                         val einträge = gruppen.getValue(gruppe)
                         item { Text(gruppe, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) }
                         items(einträge.sortedBy { it.name }) { vorlage ->
@@ -504,6 +506,12 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                                 modifier = Modifier.clip(MaterialTheme.shapes.small).clickable { zustand.fügeKnotenEin(vorlage, position) },
                             )
                         }
+                    }
+                    if (aktiverTab.name != "Alle") items(aktiverTab.vorlagen.sortedBy { it.name }) { vorlage ->
+                        ListItem(
+                            headlineContent = { Text(vorlage.name) }, supportingContent = { Text(vorlage.beschreibung) },
+                            modifier = Modifier.clip(MaterialTheme.shapes.small).clickable { zustand.fügeKnotenEin(vorlage, position) },
+                        )
                     }
                     if (aktiverTab.anzahl == 0) item {
                         Text("Keine passenden Knoten", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
