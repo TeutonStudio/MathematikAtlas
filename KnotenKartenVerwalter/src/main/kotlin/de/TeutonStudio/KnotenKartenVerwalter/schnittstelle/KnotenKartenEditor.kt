@@ -568,7 +568,7 @@ private fun BoxScope.AnschlussGriff(
                     },
                     onDragCancel = {
                         zugPosition = null
-                        zustand.beendeVerbindungsVorschau()
+                        zustand.brecheVerbindungsVorschauAb()
                     },
                 )
             }

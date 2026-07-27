@@ -3,7 +3,9 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
+import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
+import de.TeutonStudio.KnotenKartenVerwalter.logik.wendeAn
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.*
@@ -33,7 +35,7 @@ class ReellesIntervallKnotenTest {
     }
 
     @Test
-    fun `Graphprüfung erlaubt die typisierten Kanten und sperrt doppelte Eingänge`() {
+    fun `Graphprüfung erlaubt typisierte Kanten und das Ersetzen belegter Eingänge`() {
         val intervall = MathematikKnotenVorlagen.ReellesIntervall.erzeuge(GraphPunkt.Zero)
         fun quelle(name: String, art: AnschlussArtId) = KnotenDaten(
             art = "test.quelle",
@@ -57,8 +59,12 @@ class ReellesIntervallKnotenTest {
         val ersteKante = VerbindungDaten(von = ref(untereQuelle, "wert"), zu = untereZiel)
         val karteMitUntererGrenze = ersteKarte.copy(verbindungen = listOf(ersteKante))
         assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karteMitUntererGrenze, ref(obereQuelle, "wert"), obereZiel))
-        assertIs<VerbindungsPrüfung.Abgelehnt>(prüfung.prüfe(karteMitUntererGrenze, ref(obereQuelle, "wert"), untereZiel))
-        assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karteMitUntererGrenze, ref(intervall, "menge"), ref(mengenZiel, "menge")))
+        assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karteMitUntererGrenze, ref(obereQuelle, "wert"), untereZiel))
+
+        val ersatzKante = VerbindungDaten(von = ref(obereQuelle, "wert"), zu = untereZiel)
+        val ersetzt = karteMitUntererGrenze.wendeAn(KartenAktion.VerbindungEinfügen(ersatzKante))
+        assertEquals(listOf(ersatzKante), ersetzt.verbindungen)
+        assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(ersetzt, ref(intervall, "menge"), ref(mengenZiel, "menge")))
     }
 
     @Test

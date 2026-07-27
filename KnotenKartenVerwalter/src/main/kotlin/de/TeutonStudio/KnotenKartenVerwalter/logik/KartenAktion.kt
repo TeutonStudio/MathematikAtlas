@@ -21,7 +21,10 @@ sealed interface KartenAktion {
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
     /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */
     data class KnotenIsolieren(val id: KnotenId) : KartenAktion
+    /** Fügt eine Verbindung ein und ersetzt dabei eine bereits am Ziel-Eingang liegende Verbindung. */
     data class VerbindungEinfügen(val verbindung: VerbindungDaten) : KartenAktion
+    /** Verschiebt eine vorhandene Verbindung atomar auf einen neuen Zielanschluss. */
+    data class VerbindungNeuVerbinden(val alteVerbindung: VerbindungsId, val verbindung: VerbindungDaten) : KartenAktion
     data class VerbindungLöschen(val id: VerbindungsId) : KartenAktion
     data class AnsichtÄndern(val ansicht: AnsichtsFenster) : KartenAktion
 }
@@ -67,7 +70,17 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
     is KartenAktion.KnotenIsolieren -> copy(
         verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },
     )
-    is KartenAktion.VerbindungEinfügen -> copy(verbindungen = verbindungen + aktion.verbindung)
+    is KartenAktion.VerbindungEinfügen -> fügeVerbindungEin(aktion.verbindung)
+    is KartenAktion.VerbindungNeuVerbinden -> copy(
+        verbindungen = verbindungen.filterNot { it.id == aktion.alteVerbindung },
+    ).fügeVerbindungEin(aktion.verbindung)
     is KartenAktion.VerbindungLöschen -> copy(verbindungen = verbindungen.filterNot { it.id == aktion.id })
     is KartenAktion.AnsichtÄndern -> copy(ansicht = aktion.ansicht)
+}
+
+/** Erzwingt die Graph-Invariante, dass ein gerichteter Eingang höchstens eine eingehende Kante besitzt. */
+private fun KartenDaten.fügeVerbindungEin(verbindung: VerbindungDaten): KartenDaten {
+    val zielIstEingang = findeAnschluss(verbindung.zu)?.richtung == AnschlussRichtung.Eingang
+    val bereinigt = if (zielIstEingang) verbindungen.filterNot { it.zu == verbindung.zu } else verbindungen
+    return copy(verbindungen = bereinigt + verbindung)
 }

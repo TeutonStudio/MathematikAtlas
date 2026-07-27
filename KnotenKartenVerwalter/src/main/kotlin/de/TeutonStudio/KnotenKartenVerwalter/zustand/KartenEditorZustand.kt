@@ -25,6 +25,8 @@ class KartenEditorZustand(
     private val rückgängig = ArrayDeque<KartenDaten>()
     private val wiederholen = ArrayDeque<KartenDaten>()
     private var interaktionsStart: KartenDaten? = null
+    /** Verbindung, deren Eingangsende während einer Neuverdrahtung gerade frei gezogen wird. */
+    private var neuZuVerdrahtendeVerbindung: VerbindungDaten? = null
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
         karte = neu
@@ -32,6 +34,8 @@ class KartenEditorZustand(
         ausgewählteVerbindung = null
         verbindungsStart = null
         verbindungsVorschau = null
+        neuZuVerdrahtendeVerbindung = null
+        letzteMeldung = null
         interaktionsStart = null
         if (historieLeeren) { rückgängig.clear(); wiederholen.clear() }
     }
@@ -71,48 +75,105 @@ class KartenEditorZustand(
         ausgewählterKnoten = null
     }
 
-
+    /**
+     * Beginnt eine neue Verbindung. Wird ein bereits belegter Eingang gegriffen,
+     * bleibt der bisherige Ausgang verankert und das Eingangsende wird neu gezogen.
+     */
     fun beginneVerbindung(ref: AnschlussVerweis, position: GraphPunkt? = null) {
-        verbindungsStart = ref
+        val anschluss = karte.findeAnschluss(ref)
+        val bestehend = if (anschluss?.richtung == AnschlussRichtung.Eingang) {
+            karte.verbindungen.firstOrNull { it.zu == ref }
+        } else null
+        neuZuVerdrahtendeVerbindung = bestehend
+        val effektiverStart = bestehend?.von ?: ref
+        verbindungsStart = effektiverStart
         verbindungsVorschau = position
-        fügeDynamischeEingängeHinzu(ref)
-        letzteMeldung = "Verbindung ziehen oder einen Gegenanschluss wählen."
+        fügeDynamischeEingängeHinzu(effektiverStart)
+        letzteMeldung = if (bestehend != null) {
+            "Bestehende Verbindung neu verbinden oder auf dem Hintergrund lösen."
+        } else {
+            "Verbindung ziehen oder einen Gegenanschluss wählen."
+        }
     }
 
     fun aktualisiereVerbindungsVorschau(position: GraphPunkt) { verbindungsVorschau = position }
 
+    /**
+     * Beendet einen Drag ohne Ziel. Bei einer Neuverdrahtung entspricht das dem
+     * bewussten Abziehen des Eingangs und löscht die alte Verbindung als einen Undo-Schritt.
+     */
     fun beendeVerbindungsVorschau(startBeibehalten: Boolean = false) {
         verbindungsVorschau = null
-        if (!startBeibehalten) verbindungsStart = null
-        if (!startBeibehalten) entferneUnverbundeneDynamischeEingänge()
+        if (startBeibehalten) return
+
+        val abgezogeneVerbindung = neuZuVerdrahtendeVerbindung
+        verbindungsStart = null
+        neuZuVerdrahtendeVerbindung = null
+        letzteMeldung = null
+        if (abgezogeneVerbindung != null && karte.verbindungen.any { it.id == abgezogeneVerbindung.id }) {
+            führeAus(KartenAktion.VerbindungLöschen(abgezogeneVerbindung.id))
+        } else {
+            entferneUnverbundeneDynamischeEingänge()
+        }
+    }
+
+    /** Bricht einen Pointer-Drag ab, ohne eine bestehende Verbindung zu verändern. */
+    fun brecheVerbindungsVorschauAb() {
+        verwerfeVerbindungsInteraktion()
     }
 
     fun anschlussAngeklickt(ref: AnschlussVerweis) {
         val start = verbindungsStart
         if (start == null) {
-            verbindungsStart = ref
-            fügeDynamischeEingängeHinzu(ref)
-            letzteMeldung = "Anschluss gewählt. Wähle einen kompatiblen Gegenanschluss."
+            beginneVerbindung(ref)
+            letzteMeldung = if (neuZuVerdrahtendeVerbindung != null) {
+                "Bestehende Verbindung gewählt. Wähle einen neuen kompatiblen Eingang."
+            } else {
+                "Anschluss gewählt. Wähle einen kompatiblen Gegenanschluss."
+            }
             return
         }
         if (start == ref) {
-            verbindungsStart = null
-            letzteMeldung = null
-            entferneUnverbundeneDynamischeEingänge()
+            verwerfeVerbindungsInteraktion()
             return
         }
-        when (val ergebnis = prüfung.prüfe(karte, start, ref)) {
+
+        // Die bisher verschobene Kante gehört nicht zum Graphen, gegen den die neue
+        // Position geprüft wird. Andernfalls könnte sie fälschlich einen Zyklus melden.
+        val verschoben = neuZuVerdrahtendeVerbindung
+        val prüfKarte = if (verschoben != null) {
+            karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == verschoben.id })
+        } else karte
+        when (val ergebnis = prüfung.prüfe(prüfKarte, start, ref)) {
             VerbindungsPrüfung.Erlaubt -> {
-                val normal = prüfung.normalisiere(karte, start, ref)
-                if (normal != null) führeAus(KartenAktion.VerbindungEinfügen(VerbindungDaten(von = normal.first, zu = normal.second)))
+                val normal = prüfung.normalisiere(prüfKarte, start, ref)
+                if (normal == null) {
+                    letzteMeldung = "Die Verbindung konnte nicht normalisiert werden."
+                    verwerfeVerbindungsInteraktion(meldungBeibehalten = true)
+                    return
+                }
+                val unverändert = verschoben?.let { it.von == normal.first && it.zu == normal.second } == true ||
+                    verschoben == null && karte.verbindungen.any { it.von == normal.first && it.zu == normal.second }
+                if (!unverändert) {
+                    val neueVerbindung = VerbindungDaten(von = normal.first, zu = normal.second)
+                    if (verschoben != null) {
+                        führeAus(KartenAktion.VerbindungNeuVerbinden(verschoben.id, neueVerbindung))
+                    } else {
+                        führeAus(KartenAktion.VerbindungEinfügen(neueVerbindung))
+                    }
+                } else {
+                    entferneUnverbundeneDynamischeEingänge()
+                }
                 verbindungsStart = null
                 verbindungsVorschau = null
+                neuZuVerdrahtendeVerbindung = null
                 letzteMeldung = null
             }
             is VerbindungsPrüfung.Abgelehnt -> {
                 letzteMeldung = ergebnis.grund
                 verbindungsStart = null
                 verbindungsVorschau = null
+                neuZuVerdrahtendeVerbindung = null
                 entferneUnverbundeneDynamischeEingänge()
             }
         }
@@ -120,7 +181,14 @@ class KartenEditorZustand(
 
     fun kompatibelMitStart(ref: AnschlussVerweis): Boolean {
         val start = verbindungsStart ?: return true
-        return prüfung.prüfe(karte, start, ref) is VerbindungsPrüfung.Erlaubt
+        // Der aktive Start bleibt anklickbar, damit der Zwei-Klick-Modus durch einen
+        // zweiten Klick auf denselben Anschluss zuverlässig abgebrochen werden kann.
+        if (start == ref) return true
+        val verschoben = neuZuVerdrahtendeVerbindung
+        val prüfKarte = if (verschoben != null) {
+            karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == verschoben.id })
+        } else karte
+        return prüfung.prüfe(prüfKarte, start, ref) is VerbindungsPrüfung.Erlaubt
     }
 
     fun löscheAuswahl() {
@@ -225,12 +293,14 @@ class KartenEditorZustand(
 
     fun rückgängig() {
         if (rückgängig.isEmpty()) return
+        verwerfeVerbindungsInteraktion()
         wiederholen.addLast(karte)
         karte = rückgängig.removeLast()
     }
 
     fun wiederholen() {
         if (wiederholen.isEmpty()) return
+        verwerfeVerbindungsInteraktion()
         rückgängig.addLast(karte)
         karte = wiederholen.removeLast()
     }
@@ -241,6 +311,7 @@ class KartenEditorZustand(
      */
     private fun fügeDynamischeEingängeHinzu(start: AnschlussVerweis) {
         var erweitert = karte
+        val zuIgnorierendeVerbindung = neuZuVerdrahtendeVerbindung?.id
         karte.knoten.forEach { knoten ->
             val vorlage = knoten.anschlüsse.firstOrNull {
                 it.richtung == AnschlussRichtung.Eingang && it.kannSichErweitern
@@ -253,7 +324,10 @@ class KartenEditorZustand(
                 }
                 .sortedBy { it.reihenfolge }
                 .toList()
-            val verbundeneEingänge = karte.verbindungen.map { it.zu }.toSet()
+            val verbundeneEingänge = karte.verbindungen.asSequence()
+                .filterNot { it.id == zuIgnorierendeVerbindung }
+                .map { it.zu }
+                .toSet()
             if (festeErweiterbareEingänge.size < 2 || festeErweiterbareEingänge.any {
                     AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge
                 }) return@forEach
@@ -269,11 +343,23 @@ class KartenEditorZustand(
             val probe = erweitert.copy(knoten = erweitert.knoten.map {
                 if (it.id == knoten.id) it.copy(anschlüsse = it.anschlüsse + neuerAnschluss) else it
             })
-            if (prüfung.prüfe(probe, start, AnschlussVerweis(knoten.id, neuerAnschluss.id)) is VerbindungsPrüfung.Erlaubt) {
+            val prüfProbe = if (zuIgnorierendeVerbindung != null) {
+                probe.copy(verbindungen = probe.verbindungen.filterNot { it.id == zuIgnorierendeVerbindung })
+            } else probe
+            if (prüfung.prüfe(prüfProbe, start, AnschlussVerweis(knoten.id, neuerAnschluss.id)) is VerbindungsPrüfung.Erlaubt) {
                 erweitert = probe
             }
         }
         karte = erweitert
+    }
+
+    /** Bricht Auswahl oder Prüfung ab, ohne eine nur vorgemerkte alte Verbindung zu löschen. */
+    private fun verwerfeVerbindungsInteraktion(meldungBeibehalten: Boolean = false) {
+        verbindungsStart = null
+        verbindungsVorschau = null
+        neuZuVerdrahtendeVerbindung = null
+        if (!meldungBeibehalten) letzteMeldung = null
+        entferneUnverbundeneDynamischeEingänge()
     }
 
     private fun entferneUnverbundeneDynamischeEingänge() {
