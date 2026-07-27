@@ -80,6 +80,9 @@ class VisualisierungsKnotenRenderer(
     val raster = MaterialTheme.colorScheme.outlineVariant
     val rahmen = MaterialTheme.colorScheme.outline
     val beschriftung = MaterialTheme.colorScheme.onSurfaceVariant
+    val xAchse = MaterialTheme.colorScheme.primary
+    val yAchse = MaterialTheme.colorScheme.secondary
+    val zAchse = MaterialTheme.colorScheme.tertiary
     Canvas(modifier.pointerInput(konfiguration.dimension, kamera) {
         detectTransformGestures { _, pan, zoom, _ ->
             val neu = if (konfiguration.dimension == RaumDimension.R3) kamera.copy(rotationY = kamera.rotationY + pan.x * 0.5, rotationX = kamera.rotationX + pan.y * 0.5, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
@@ -88,51 +91,94 @@ class VisualisierungsKnotenRenderer(
         }
     }) {
         drawRect(hintergrund)
-        val center = Offset(size.width / 2f, size.height / 2f)
-        drawLine(raster, Offset(0f, center.y), Offset(size.width, center.y), 1f)
-        drawLine(raster, Offset(center.x, 0f), Offset(center.x, size.height), 1f)
+        if (konfiguration.dimension == RaumDimension.R2) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            drawLine(raster, Offset(0f, center.y), Offset(size.width, center.y), 1f)
+            drawLine(raster, Offset(center.x, 0f), Offset(center.x, size.height), 1f)
+            zeichne2DAchsenBeschriftungen(konfiguration, beschriftung)
+        } else {
+            zeichne3DAchsen(konfiguration, xAchse, yAchse, zAchse)
+        }
         val punkte = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.punkte; is VisualisierungsErgebnis.Teilweise -> ergebnis.punkte; else -> emptyList() }
         punkte.forEach { punkt ->
             val projektion = projekt(punkt, konfiguration, size.width, size.height)
             drawCircle(farbeFür(punkt.farbwert, konfiguration), if (konfiguration.dimension == RaumDimension.R3) 2.8f else 2.2f, projektion)
         }
-        zeichneAchsenBeschriftungen(konfiguration, beschriftung)
         drawRect(rahmen, style = Stroke(1f))
     }
 }
 
-private fun DrawScope.zeichneAchsenBeschriftungen(c: VisualisierungsKonfiguration, farbe: Color) {
+private fun DrawScope.achsenPaint(farbe: Color) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    color = farbe.toArgb()
+    textSize = 12.dp.toPx()
+    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+}
+
+private fun DrawScope.zeichne2DAchsenBeschriftungen(c: VisualisierungsKonfiguration, farbe: Color) {
     val abstand = 7.dp.toPx()
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = farbe.toArgb()
-        textSize = 12.dp.toPx()
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-    }
+    val paint = achsenPaint(farbe)
     val canvas = drawContext.canvas.nativeCanvas
-    if (c.dimension == RaumDimension.R2) {
-        val x = c.achsen.x.ifBlank { "x" }
-        val y = c.achsen.y.ifBlank { "y" }
-        canvas.drawText(x, size.width - paint.measureText(x) - abstand, size.height / 2f - abstand, paint)
-        canvas.drawText(y, size.width / 2f + abstand, paint.textSize + abstand, paint)
-    } else {
-        listOf(
-            "X: ${c.achsen.x.ifBlank { "x" }}",
-            "Y: ${c.achsen.y.ifBlank { "y" }}",
-            "Z: ${c.achsen.z?.ifBlank { "z" } ?: "z"}",
-        ).forEachIndexed { index, text ->
-            canvas.drawText(text, abstand, abstand + paint.textSize * (index + 1), paint)
-        }
-    }
+    val x = c.achsen.x.ifBlank { "x" }
+    val y = c.achsen.y.ifBlank { "y" }
+    canvas.drawText(x, size.width - paint.measureText(x) - abstand, size.height / 2f - abstand, paint)
+    canvas.drawText(y, size.width / 2f + abstand, paint.textSize + abstand, paint)
+}
+
+private fun DrawScope.zeichne3DAchsen(c: VisualisierungsKonfiguration, xFarbe: Color, yFarbe: Color, zFarbe: Color) {
+    val zBereich = c.bereiche.z ?: return
+    val xStart = projekt(VisualisierungsPunkt(c.bereiche.x.minimum, 0.0, 0.0), c, size.width, size.height)
+    val xEnde = projekt(VisualisierungsPunkt(c.bereiche.x.maximum, 0.0, 0.0), c, size.width, size.height)
+    val yStart = projekt(VisualisierungsPunkt(0.0, c.bereiche.y.minimum, 0.0), c, size.width, size.height)
+    val yEnde = projekt(VisualisierungsPunkt(0.0, c.bereiche.y.maximum, 0.0), c, size.width, size.height)
+    val zStart = projekt(VisualisierungsPunkt(0.0, 0.0, zBereich.minimum), c, size.width, size.height)
+    val zEnde = projekt(VisualisierungsPunkt(0.0, 0.0, zBereich.maximum), c, size.width, size.height)
+
+    drawLine(xFarbe.copy(alpha = 0.78f), xStart, xEnde, 2f)
+    drawLine(yFarbe.copy(alpha = 0.78f), yStart, yEnde, 2f)
+    drawLine(zFarbe.copy(alpha = 0.78f), zStart, zEnde, 2f)
+
+    zeichneAchsenText(c.achsen.x.ifBlank { "x" }, xEnde, achsenPaint(xFarbe))
+    zeichneAchsenText(c.achsen.y.ifBlank { "y" }, yEnde, achsenPaint(yFarbe))
+    zeichneAchsenText(c.achsen.z?.ifBlank { "z" } ?: "z", zEnde, achsenPaint(zFarbe))
+}
+
+private fun DrawScope.zeichneAchsenText(text: String, position: Offset, paint: Paint) {
+    val rand = 5.dp.toPx()
+    val x = (position.x + rand).coerceIn(rand, (size.width - paint.measureText(text) - rand).coerceAtLeast(rand))
+    val y = (position.y - rand).coerceIn(paint.textSize + rand, size.height - rand)
+    drawContext.canvas.nativeCanvas.drawText(text, x, y, paint)
 }
 
 private fun projekt(p: VisualisierungsPunkt, c: VisualisierungsKonfiguration, breite: Float, höhe: Float): Offset {
-    var x = p.x + c.kamera.translationX; var y = p.y + c.kamera.translationY; var z = (p.z ?: 0.0) + c.kamera.translationZ
+    var x = p.x + c.kamera.translationX
+    var y = p.y + c.kamera.translationY
+    var z = (p.z ?: 0.0) + c.kamera.translationZ
     if (c.dimension == RaumDimension.R3) {
-        val ry = c.kamera.rotationY * Math.PI / 180; val rx = c.kamera.rotationX * Math.PI / 180
-        val nx = x * cos(ry) + z * sin(ry); z = -x * sin(ry) + z * cos(ry); val ny = y * cos(rx) - z * sin(rx); x = nx; y = ny
+        val ry = c.kamera.rotationY * Math.PI / 180
+        val rx = c.kamera.rotationX * Math.PI / 180
+        val rz = c.kamera.rotationZ * Math.PI / 180
+
+        val xNachY = x * cos(ry) + z * sin(ry)
+        val zNachY = -x * sin(ry) + z * cos(ry)
+        x = xNachY
+        z = zNachY
+
+        val yNachX = y * cos(rx) - z * sin(rx)
+        val zNachX = y * sin(rx) + z * cos(rx)
+        y = yNachX
+        z = zNachX
+
+        val xNachZ = x * cos(rz) - y * sin(rz)
+        val yNachZ = x * sin(rz) + y * cos(rz)
+        x = xNachZ
+        y = yNachZ
     }
-    val bx = c.bereiche.x; val by = c.bereiche.y
-    return Offset(((x - bx.minimum) / (bx.maximum - bx.minimum) * breite * c.kamera.zoom).toFloat(), (höhe - (y - by.minimum) / (by.maximum - by.minimum) * höhe * c.kamera.zoom).toFloat())
+    val bx = c.bereiche.x
+    val by = c.bereiche.y
+    return Offset(
+        ((x - bx.minimum) / (bx.maximum - bx.minimum) * breite * c.kamera.zoom).toFloat(),
+        (höhe - (y - by.minimum) / (by.maximum - by.minimum) * höhe * c.kamera.zoom).toFloat(),
+    )
 }
 private fun farbeFür(wert: Double?, c: VisualisierungsKonfiguration): Color {
     if (c.farbe.modus == FarbModus.Keine) return Color.Transparent
