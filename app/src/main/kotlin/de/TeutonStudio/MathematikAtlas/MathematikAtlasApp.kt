@@ -354,7 +354,7 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     val vorlagen = tabs[hauptTab].second
                     val gruppen = vorlagen.groupBy { kategorieAnzeige(it.kategorie) }.toMutableMap()
                     if (hauptTab == 0) gruppen.putIfAbsent("Tensoren", emptyList())
-                    val reihenfolge = if (hauptTab == 4) listOf("Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate") else listOf("Zahlen", "Vektoren", "Matrizen", "Tensoren", "Abbildungen", "Mengen", "Steuerung", "Karten", "Rechnen")
+                    val reihenfolge = if (hauptTab == 4) listOf("Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate") else listOf("Zahlen", "Vektoren", "Matrizen", "Tensoren", "Abbildungen", "Mengen", "Aussage", "Steuerung", "Karten", "Rechnen")
                     reihenfolge.filter { it in gruppen }.forEach { gruppe ->
                         val einträge = gruppen.getValue(gruppe)
                         item { Text(gruppe, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) }
