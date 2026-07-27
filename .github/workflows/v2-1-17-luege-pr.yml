@@ -85,6 +85,10 @@ jobs:
               }
 
           '''.replace('          ', '')
+          testfall = testfall.replace(
+              '        val zustand = KartenEditorZustand(\n  KartenDaten(name = "Test", knoten = listOf(quelle, ziel), verbindungen = listOf(bestehend)),\n  prüfung,\n        )',
+              '        val zustand = KartenEditorZustand(\n            KartenDaten(name = "Test", knoten = listOf(quelle, ziel), verbindungen = listOf(bestehend)),\n            prüfung,\n        )',
+          )
           if text.count(marker) != 1:
               raise SystemExit('Einfügepunkt für den Drag-Abbruchtest ist nicht eindeutig.')
           test.write_text(text.replace(marker, testfall + marker), encoding='utf-8')
@@ -106,6 +110,7 @@ jobs:
           test "$(git log -2 --format=%s | tail -n 1)" = 'v2.1.16'
           ! grep -R -n -w --include='*.kt' 'Falsch' .
           grep -R -n 'brecheVerbindungsVorschauAb' KnotenKartenVerwalter/src/main KnotenKartenVerwalter/src/test
+          ! grep -n '^  KartenDaten(name = "Test", knoten = listOf(quelle, ziel)' KnotenKartenVerwalter/src/test/kotlin/de/TeutonStudio/KnotenKartenVerwalter/GraphPrüfungTest.kt
 
       - name: Tests ausführen und protokollieren
         id: gradle_tests
@@ -135,4 +140,4 @@ jobs:
         shell: bash
         run: |
           rm -f gradle-test.log
-          git push --force-with-lease=refs/heads/master:b0cca6157a0a048f0f62dee4ad14ce7e43f0bb0e origin HEAD:master
+          git push --force-with-lease=refs/heads/master:a92e8493e0767c5ee4eba8f2302178cf89372dd4 origin HEAD:master
