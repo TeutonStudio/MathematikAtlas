@@ -59,8 +59,16 @@ replacement = """replace_once(
 
 lines[start:end] = replacement
 text = "".join(lines)
-old_latex = r'        return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"'
-new_latex = r'        return "\\\\left\\\\{${parameter.zuLatex()}\\\\in${menge.zuLatex()}\\\\mid ${bedingung.zuLatex()}\\\\right\\\\}"'
-if text.count(old_latex) != 1:
-    raise RuntimeError(f"LaTeX-Zeile wurde {text.count(old_latex)}-mal gefunden.")
-path.write_text(text.replace(old_latex, new_latex, 1), encoding="utf-8")
+replacements = {
+    r'        return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"':
+        r'        return "\\\\left\\\\{${parameter.zuLatex()}\\\\in${menge.zuLatex()}\\\\mid ${bedingung.zuLatex()}\\\\right\\\\}"',
+    r'                MathematikAnschlussArten.Menge.id -> BenannteMenge("mengen_$name", "\\mathcal{P}(\\mathcal{U})")':
+        r'                MathematikAnschlussArten.Menge.id -> BenannteMenge("mengen_$name", "\\\\mathcal{P}(\\\\mathcal{U})")',
+    r'                else -> BenannteMenge("werte_$name", "\\mathcal{W}_{${name}}")':
+        r'                else -> BenannteMenge("werte_$name", "\\\\mathcal{W}_{${name}}")',
+}
+for old, new in replacements.items():
+    if text.count(old) != 1:
+        raise RuntimeError(f"Escape-Zeile wurde {text.count(old)}-mal gefunden: {old}")
+    text = text.replace(old, new, 1)
+path.write_text(text, encoding="utf-8")
