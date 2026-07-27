@@ -21,6 +21,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.KomplexeZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
+import de.TeutonStudio.MathematikRechenSystem.kern.AllgemeinerParameter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -195,5 +196,32 @@ class AuswertenTest {
         assertEquals(NatürlicheZahlen, funktion.werteVorräte.getValue("x"))
         assertEquals(ReelleZahlen, funktion.werteVorräte.getValue("y"))
         assertEquals(ReelleZahlen, funktion.einzigeZielMenge)
+    }
+
+    @Test fun `Allgemeiner Parameter wird zu einem allgemeinen Methodenargument`() {
+        val parameter = MathematikKnotenVorlagen.AllgemeinerParameter.erzeuge(GraphPunkt.Zero).copy(
+            id = KnotenId("parameter"), parameter = mapOf("name" to "a", "werteVorrat" to "R"),
+        )
+        val methode = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(id = KnotenId("methode"))
+        val karte = KartenDaten(
+            name = "Allgemeine Methode",
+            knoten = listOf(parameter, methode),
+            verbindungen = listOf(VerbindungDaten(
+                von = AnschlussVerweis(parameter.id, parameter.anschlüsse.single().id),
+                zu = AnschlussVerweis(methode.id, methode.anschlüsse.first { it.name == "term" }.id),
+            )),
+        )
+
+        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
+
+        assertEquals(listOf(AllgemeinerParameter("a")), funktion.parameter)
+        assertEquals(ReelleZahlen, funktion.werteVorräte.getValue("a"))
+    }
+
+    @Test fun `Abbild erwartet einen allgemeinen Funktionsanschluss`() {
+        val abbild = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero)
+
+        assertEquals(MathematikAnschlussArten.Funktion.id, abbild.anschlüsse.first { it.name == "methode" }.art)
     }
 }

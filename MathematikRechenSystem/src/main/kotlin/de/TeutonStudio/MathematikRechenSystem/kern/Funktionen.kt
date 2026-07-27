@@ -3,7 +3,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 /** Eine mathematische Methode mit benannten Ausgaben und deren deklarierten Zielmengen. */
 data class Funktion(
     val name: String,
-    val parameter: List<Variable>,
+    val parameter: List<FunktionsParameter>,
     val ausgaben: Map<String, MathematischesObjekt>,
     val zielMengen: Map<String, MengenAusdruck> = emptyMap(),
     /** Definitionsmengen der Parameter, in derselben Reihenfolge wie [parameter]. */
@@ -24,7 +24,7 @@ data class Funktion(
     fun zielMengeFür(ausgabe: String): MengenAusdruck = zielMengen[ausgabe]
         ?: error("Für die Ausgabe '$ausgabe' der Methode '$name' ist keine Zielmenge definiert.")
 
-    fun zielMengeFür(ausgabe: String, bindungen: Map<String, ZahlAusdruck>): MengenAusdruck =
+    fun zielMengeFür(ausgabe: String, bindungen: Map<String, MathematischesObjekt>): MengenAusdruck =
         ersetze(zielMengeFür(ausgabe), bindungen) as MengenAusdruck
 
     val einzigeZielMenge: MengenAusdruck
@@ -43,7 +43,8 @@ data class Funktion(
         val (ausgabe, wert) = einzigeAusgabe()
         require(wert is MengenAusdruck) { "Die Methode '$name' muss eine Menge ausgeben." }
         val grundMenge = zielMengeFür(ausgabe)
-        val parameter = parameter.single()
+        val parameter = parameter.single() as? Variable
+            ?: error("Die mengenwertige Iterationsmethode '$name' benötigt einen Zahlenparameter.")
         require(!grundMenge.enthältVariable(parameter)) {
             "Die Zielmenge der mengenwertigen Methode '$name' darf nicht vom Iterationsparameter " +
                 "'${parameter.name}' abhängen, da sie als feste Grundmenge für den leeren Schnitt verwendet wird."
@@ -51,10 +52,10 @@ data class Funktion(
         return grundMenge
     }
 
-    fun binde(bindungen: Map<String, ZahlAusdruck>): GebundeneFunktion =
+    fun binde(bindungen: Map<String, MathematischesObjekt>): GebundeneFunktion =
         GebundeneFunktion(this, bindungen.filterKeys { key -> parameter.any { it.name == key } })
 
-    fun wendeAn(argumente: Map<String, ZahlAusdruck>): Map<String, MathematischesObjekt> {
+    fun wendeAn(argumente: Map<String, MathematischesObjekt>): Map<String, MathematischesObjekt> {
         require(parameter.all { it.name in argumente }) { "Nicht alle Parameter sind gebunden." }
         return ausgaben.mapValues { (_, wert) -> vereinfacheObjekt(ersetze(wert, argumente)) }
     }
@@ -66,6 +67,7 @@ data class Funktion(
 
     fun prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> {
         require(parameter.size == 1) { "Die Methode '$name' muss genau einen freien Parameter besitzen." }
+        require(parameter.single() is Variable) { "Die Methode '$name' benötigt für eine Iteration einen Zahlenparameter." }
         val ausgabe = einzigeAusgabe()
         if (erwartetMengenwert) require(ausgabe.second is MengenAusdruck) {
             "Die Methode '$name' muss eine Menge ausgeben."
@@ -109,7 +111,7 @@ fun MengenAusdruck.hatIntegralBegriff() = this == ReelleZahlen
 private fun Funktion.einwertigeZahlMethode(): Triple<Variable, String, ZahlAusdruck> {
     require(parameter.size == 1 && ausgaben.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
     val (name, ausgabe) = einzigeAusgabe()
-    return Triple(parameter.single(), name, ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."))
+    return Triple(parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."), name, ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."))
 }
 
 fun komponiere(außen: Funktion, innen: Funktion): Funktion {
@@ -134,7 +136,7 @@ fun iteriere(methode: Funktion, exponent: Int): Funktion {
 
 fun differenziereMethode(methode: Funktion): Funktion {
     require(methode.parameter.size == 1 && methode.ausgaben.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
-    val x = methode.parameter.single(); val (ausgabe, wert) = methode.einzigeAusgabe()
+    val x = methode.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."); val (ausgabe, wert) = methode.einzigeAusgabe()
     val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
     require(wertevorrat.hatDifferentialBegriff()) { "Der Wertevorrat definiert keinen Differentialbegriff." }
     val abgeleitet = when (wert) {
@@ -148,7 +150,7 @@ fun differenziereMethode(methode: Funktion): Funktion {
 
 fun integriereMethode(methode: Funktion): Funktion {
     require(methode.parameter.size == 1 && methode.ausgaben.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
-    val x = methode.parameter.single(); val (ausgabe, wert) = methode.einzigeAusgabe()
+    val x = methode.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."); val (ausgabe, wert) = methode.einzigeAusgabe()
     val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
     require(wertevorrat.hatIntegralBegriff()) { "Der Wertevorrat definiert keinen Integralbegriff." }
     val integriert = when (wert) {
@@ -161,16 +163,16 @@ fun integriereMethode(methode: Funktion): Funktion {
 }
 
 fun bildeAb(menge: MengenAusdruck, methode: Funktion): MengenAusdruck {
-    val (ausgabe, _) = methode.prüfeAlsIterationsMethode(erwartetMengenwert = false)
+    require(methode.parameter.size == 1) { "Die Abbildung muss genau einen freien Parameter besitzen." }
+    val (ausgabe, _) = methode.einzigeAusgabe()
     if (menge !is EndlicheMenge) return Abbild(menge, methode)
     val parameter = methode.parameter.single()
     return EndlicheMenge(menge.elemente.map { element ->
-        val zahl = element as? ZahlAusdruck ?: error("Die abzubildende Menge muss Zahlen enthalten.")
-        methode.wendeAn(mapOf(parameter.name to zahl)).getValue(ausgabe)
+        methode.wendeAn(mapOf(parameter.name to element)).getValue(ausgabe)
     }.toSet())
 }
 
-data class GebundeneFunktion(val funktion: Funktion, val bindungen: Map<String, ZahlAusdruck>) : MathematischesObjekt {
+data class GebundeneFunktion(val funktion: Funktion, val bindungen: Map<String, MathematischesObjekt>) : MathematischesObjekt {
     val freieParameter get() = funktion.parameter.filterNot { it.name in bindungen }
     override fun zuLatex(): String = funktion.copy(
         parameter = freieParameter,
@@ -178,23 +180,23 @@ data class GebundeneFunktion(val funktion: Funktion, val bindungen: Map<String, 
         zielMengen = funktion.zielMengen.mapValues { ersetze(it.value, bindungen) as MengenAusdruck },
         werteVorräte = funktion.werteVorräte.filterKeys { it !in bindungen }.mapValues { ersetze(it.value, bindungen) as MengenAusdruck },
     ).zuLatex()
-    fun binde(weitere: Map<String, ZahlAusdruck>) = GebundeneFunktion(funktion, bindungen + weitere)
+    fun binde(weitere: Map<String, MathematischesObjekt>) = GebundeneFunktion(funktion, bindungen + weitere)
     fun auswerten(): Map<String, MathematischesObjekt> {
         require(freieParameter.isEmpty()) { "Die Funktion besitzt noch freie Parameter." }
         return funktion.wendeAn(bindungen)
     }
 }
 
-fun ersetze(ausdruck: ZahlAusdruck, bindungen: Map<String, ZahlAusdruck>): ZahlAusdruck =
+fun ersetze(ausdruck: ZahlAusdruck, bindungen: Map<String, MathematischesObjekt>): ZahlAusdruck =
     ersetze(ausdruck as MathematischesObjekt, bindungen) as ZahlAusdruck
 
 /** Typsichere Aussage-Substitution, die die Struktur der Aussage erhält. */
-fun ersetze(aussage: Aussage, bindungen: Map<String, ZahlAusdruck>): Aussage =
+fun ersetze(aussage: Aussage, bindungen: Map<String, MathematischesObjekt>): Aussage =
     ersetze(aussage as MathematischesObjekt, bindungen) as Aussage
 
 /** Rekursive, typübergreifende Substitution für Funktionsausgaben und Zielmengen. */
-fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>): MathematischesObjekt = when (objekt) {
-    is Variable -> bindungen[objekt.name] ?: objekt
+fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesObjekt>): MathematischesObjekt = when (objekt) {
+    is FunktionsParameter -> bindungen[objekt.name] ?: objekt
     is Addition -> addition(objekt.summanden.map { ersetze(it, bindungen) })
     is Multiplikation -> multiplikation(objekt.faktoren.map { ersetze(it, bindungen) })
     is Maximum -> maximum(objekt.operanden.map { ersetze(it, bindungen) })
@@ -267,79 +269,83 @@ private fun vereinfacheObjekt(objekt: MathematischesObjekt): MathematischesObjek
     else -> objekt
 }
 
-/** Rekursive Variablenanalyse für alle bestehenden zusammengesetzten mathematischen Objekte. */
-fun MathematischesObjekt.enthalteneVariablen(): Set<Variable> = when (this) {
-    is Variable -> setOf(this)
-    is Addition -> summanden.enthalteneVariablen()
-    is Multiplikation -> faktoren.enthalteneVariablen()
-    is Division -> listOf(dividend, divisor).enthalteneVariablen()
-    is Potenz -> listOf(basis, exponent).enthalteneVariablen()
-    is Betrag -> argument.enthalteneVariablen()
-    is Sinus -> argument.enthalteneVariablen()
-    is Cosinus -> argument.enthalteneVariablen()
-    is Exponentialfunktion -> argument.enthalteneVariablen()
-    is NatürlicherLogarithmus -> argument.enthalteneVariablen()
-    is Wurzel -> argument.enthalteneVariablen()
-    is KomplexeZahl -> listOf(realteil, imaginärteil).enthalteneVariablen()
-    is Logarithmus -> listOf(basis, argument).enthalteneVariablen()
-    is Argument -> zahl.enthalteneVariablen()
-    is EndlicheMenge -> elemente.enthalteneVariablen()
-    is ReellesIntervall -> listOf(untereGrenze, obereGrenze).enthalteneVariablen()
-    is Vereinigung -> mengen.enthalteneVariablen()
-    is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneVariablen()
-    is MengenDifferenz -> listOf(links, rechts).enthalteneVariablen()
-    is KartesischesProdukt -> mengen.enthalteneVariablen()
+/** Rekursive Analyse aller bindbaren Funktionsparameter. */
+fun MathematischesObjekt.enthalteneFunktionsParameter(): Set<FunktionsParameter> = when (this) {
+    is FunktionsParameter -> setOf(this)
+    is Addition -> summanden.enthalteneFunktionsParameter()
+    is Multiplikation -> faktoren.enthalteneFunktionsParameter()
+    is Division -> listOf(dividend, divisor).enthalteneFunktionsParameter()
+    is Potenz -> listOf(basis, exponent).enthalteneFunktionsParameter()
+    is Betrag -> argument.enthalteneFunktionsParameter()
+    is Sinus -> argument.enthalteneFunktionsParameter()
+    is Cosinus -> argument.enthalteneFunktionsParameter()
+    is Exponentialfunktion -> argument.enthalteneFunktionsParameter()
+    is NatürlicherLogarithmus -> argument.enthalteneFunktionsParameter()
+    is Wurzel -> argument.enthalteneFunktionsParameter()
+    is KomplexeZahl -> listOf(realteil, imaginärteil).enthalteneFunktionsParameter()
+    is Logarithmus -> listOf(basis, argument).enthalteneFunktionsParameter()
+    is Argument -> zahl.enthalteneFunktionsParameter()
+    is EndlicheMenge -> elemente.enthalteneFunktionsParameter()
+    is ReellesIntervall -> listOf(untereGrenze, obereGrenze).enthalteneFunktionsParameter()
+    is Vereinigung -> mengen.enthalteneFunktionsParameter()
+    is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneFunktionsParameter()
+    is MengenDifferenz -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is KartesischesProdukt -> mengen.enthalteneFunktionsParameter()
     is DefinierteMenge -> {
         val gebundeneNamen = variablen.map { it.variable.name }.toSet()
-        variablen.map { it.grundMenge }.enthalteneVariablen() +
-            bedingung.enthalteneVariablen().filterNot { it.name in gebundeneNamen }
+        variablen.map { it.grundMenge }.enthalteneFunktionsParameter() +
+            bedingung.enthalteneFunktionsParameter().filterNot { it.name in gebundeneNamen }
     }
-    is Tupel -> elemente.enthalteneVariablen()
-    is SpaltenVektor -> werte.enthalteneVariablen()
-    is ZeilenVektor -> werte.enthalteneVariablen()
-    is Matrix -> zeilen.flatten().enthalteneVariablen()
-    is Gleichheit -> listOf(links, rechts).enthalteneVariablen()
-    is Ungleichheit -> listOf(links, rechts).enthalteneVariablen()
-    is Vergleich -> listOf(links, rechts).enthalteneVariablen()
-    is Negation -> aussage.enthalteneVariablen()
-    is Konjunktion -> aussagen.enthalteneVariablen()
-    is Disjunktion -> aussagen.enthalteneVariablen()
-    is Implikation -> listOf(voraussetzung, folgerung).enthalteneVariablen()
-    is Äquivalenz -> listOf(links, rechts).enthalteneVariablen()
-    is Adjunktion -> listOf(links, rechts).enthalteneVariablen()
-    is ElementBeziehung -> listOf(element, menge).enthalteneVariablen()
-    is TeilmengenBeziehung -> listOf(links, rechts).enthalteneVariablen()
-    is EchteTeilmengeBeziehung -> listOf(links, rechts).enthalteneVariablen()
-    is ObermengenBeziehung -> listOf(links, rechts).enthalteneVariablen()
-    is Disjunktheit -> listOf(links, rechts).enthalteneVariablen()
+    is Tupel -> elemente.enthalteneFunktionsParameter()
+    is SpaltenVektor -> werte.enthalteneFunktionsParameter()
+    is ZeilenVektor -> werte.enthalteneFunktionsParameter()
+    is Matrix -> zeilen.flatten().enthalteneFunktionsParameter()
+    is Gleichheit -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is Ungleichheit -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is Vergleich -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is Negation -> aussage.enthalteneFunktionsParameter()
+    is Konjunktion -> aussagen.enthalteneFunktionsParameter()
+    is Disjunktion -> aussagen.enthalteneFunktionsParameter()
+    is Implikation -> listOf(voraussetzung, folgerung).enthalteneFunktionsParameter()
+    is Äquivalenz -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is Adjunktion -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is ElementBeziehung -> listOf(element, menge).enthalteneFunktionsParameter()
+    is TeilmengenBeziehung -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is EchteTeilmengeBeziehung -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is ObermengenBeziehung -> listOf(links, rechts).enthalteneFunktionsParameter()
+    is Disjunktheit -> listOf(links, rechts).enthalteneFunktionsParameter()
     is Funktion -> {
         val gebundeneNamen = parameter.map { it.name }.toSet()
         (ausgaben.values + zielMengen.values + werteVorräte.values)
-            .enthalteneVariablen()
+            .enthalteneFunktionsParameter()
             .filterNot { it.name in gebundeneNamen }
             .toSet()
     }
     is GebundeneFunktion -> {
         val gebundeneNamen = bindungen.keys
-        funktion.enthalteneVariablen().filterNot { it.name in gebundeneNamen }.toSet() +
-            bindungen.values.enthalteneVariablen()
+        funktion.enthalteneFunktionsParameter().filterNot { it.name in gebundeneNamen }.toSet() +
+            bindungen.values.enthalteneFunktionsParameter()
     }
-    is Abbild -> setOf(menge, methode).enthalteneVariablen()
-    is IterierteSumme -> setOf(methode, indexMenge).enthalteneVariablen()
-    is IteriertesProdukt -> setOf(methode, indexMenge).enthalteneVariablen()
-    is IterierteVereinigung -> setOf(methode, indexMenge).enthalteneVariablen()
-    is IterierterSchnitt -> setOf(methode, indexMenge).enthalteneVariablen()
-    is IteriertesKartesischesProdukt -> setOf(methode, indexMenge).enthalteneVariablen()
-    is IterierteKonjunktion -> setOf(methode, indexMenge).enthalteneVariablen()
-    is IterierteDisjunktion -> setOf(methode, indexMenge).enthalteneVariablen()
+    is Abbild -> setOf(menge, methode).enthalteneFunktionsParameter()
+    is IterierteSumme -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IteriertesProdukt -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IterierteVereinigung -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IterierterSchnitt -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IteriertesKartesischesProdukt -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IterierteKonjunktion -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IterierteDisjunktion -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
     else -> emptySet()
 }
+
+/** Rekursive Analyse der weiterhin ausschließlich numerischen Variablen. */
+fun MathematischesObjekt.enthalteneVariablen(): Set<Variable> = enthalteneFunktionsParameter().filterIsInstance<Variable>().toSet()
 
 fun MathematischesObjekt.enthältVariable(variable: Variable): Boolean =
     enthalteneVariablen().any { it.name == variable.name }
 
 /** Zentrale Analyse der freien Variablen eines mathematischen Objekts. */
 fun MathematischesObjekt.freieVariablen(): Set<Variable> = enthalteneVariablen()
+fun MathematischesObjekt.freieFunktionsParameter(): Set<FunktionsParameter> = enthalteneFunktionsParameter()
 
-private fun Iterable<MathematischesObjekt>.enthalteneVariablen(): Set<Variable> =
-    flatMap { it.enthalteneVariablen() }.toSet()
+private fun Iterable<MathematischesObjekt>.enthalteneFunktionsParameter(): Set<FunktionsParameter> =
+    flatMap { it.enthalteneFunktionsParameter() }.toSet()

@@ -17,6 +17,15 @@ object StandardMathematikAuswerter {
                 variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat)),
             )))
         }
+        registriere("mathematik.allgemeinerParameter") { k ->
+            val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
+            val wertevorrat = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
+                AllgemeinerParameter(name),
+                werteVorrat = wertevorrat,
+                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat)),
+            )))
+        }
         registriere("mathematik.addition") { k ->
             val werte = k.operatorEingänge { anschluss, index ->
                 Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
@@ -224,12 +233,12 @@ object StandardMathematikAuswerter {
         registriere("mathematik.termZuMethode") { k ->
             val termWert = k.eingänge["term"] ?: error("Term fehlt.")
             val term = termWert.objekt
-            val freieVariablen = term.freieVariablen().associateBy { it.name }
+            val freieParameter = term.freieFunktionsParameter().associateBy { it.name }
             val quellenNachName = termWert.variablenQuellen
-                .filter { it.name in freieVariablen }
+                .filter { it.name in freieParameter }
                 .groupBy { it.name }
-            val fehlende = freieVariablen.keys.filterNot { it in quellenNachName }
-            require(fehlende.isEmpty()) { "Für die Variablen ${fehlende.joinToString(", ")} fehlt ein verbundener Variablenknoten." }
+            val fehlende = freieParameter.keys.filterNot { it in quellenNachName }
+            require(fehlende.isEmpty()) { "Für die Parameter ${fehlende.joinToString(", ")} fehlt ein verbundener Parameterknoten." }
             val werteVorräteNachName = quellenNachName.mapValues { (name, quellen) ->
                 val mengen = quellen.map { it.werteVorrat }.distinct()
                 require(mengen.size == 1) { "Die Variable '$name' besitzt widersprüchliche Wertevorräte." }
@@ -241,9 +250,9 @@ object StandardMathematikAuswerter {
                 }.thenBy { entry -> entry.value.minOf { quelle -> quelle.knotenId.wert } },
             ).map { it.key }
             val gespeichert = k.knoten.parameter["argumentReihenfolge"].orEmpty()
-                .split(',').map(String::trim).filter { it.isNotBlank() && it in freieVariablen }.distinct()
+                .split(',').map(String::trim).filter { it.isNotBlank() && it in freieParameter }.distinct()
             val namen = gespeichert + automatisch.filterNot { it in gespeichert }
-            val variablen = namen.map { freieVariablen.getValue(it) }
+            val parameter = namen.map { freieParameter.getValue(it) }
             val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
             val deklarierteZielmenge = grundmenge(k.knoten.parameter["zielmenge"] ?: "R")
             val zielmenge = (term as? ZahlAusdruck)?.let { zahlterm ->
@@ -252,7 +261,7 @@ object StandardMathematikAuswerter {
                     inferiereZahlenWertevorrat(zahlterm, werteVorräte, termWert.annahmen),
                 ))
             } ?: deklarierteZielmenge
-            val funktion = Funktion(k.knoten.parameter["name"] ?: "f", variablen, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
+            val funktion = Funktion(k.knoten.parameter["name"] ?: "f", parameter, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }
         registriere("mathematik.komposition") { k ->

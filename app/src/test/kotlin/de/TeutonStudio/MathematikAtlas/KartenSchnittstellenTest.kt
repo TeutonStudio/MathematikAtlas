@@ -40,6 +40,30 @@ class KartenSchnittstellenTest {
     }
 
     @Test
+    fun `Migration erweitert den Abbild Methodenanschluss und bewahrt seine ID`() {
+        val abbild = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero)
+        val alteMethode = abbild.anschlüsse.first { it.name == "methode" }
+        val alt = abbild.copy(anschlüsse = abbild.anschlüsse.map { anschluss ->
+            if (anschluss.id == alteMethode.id) anschluss.copy(art = MathematikAnschlussArten.ZahlFunktion.id) else anschluss
+        })
+        val quelle = KnotenDaten(
+            art = "test.methode", name = "Quelle",
+            anschlüsse = listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlFunktion.id)),
+        )
+        val verbindung = VerbindungDaten(
+            von = AnschlussVerweis(quelle.id, quelle.anschlüsse.single().id),
+            zu = AnschlussVerweis(alt.id, alteMethode.id),
+        )
+
+        val migriert = migriereAbbildZuAllgemeinerMethode(KartenDaten(name = "Alt", knoten = listOf(quelle, alt), verbindungen = listOf(verbindung)))
+        val neueMethode = migriert.knoten.first { it.id == alt.id }.anschlüsse.first { it.name == "methode" }
+
+        assertEquals(alteMethode.id, neueMethode.id)
+        assertEquals(MathematikAnschlussArten.Funktion.id, neueMethode.art)
+        assertEquals(listOf(verbindung), migriert.verbindungen)
+    }
+
+    @Test
     fun `öffentliche Anschlüsse sind pro Richtung anhand ihres Namens eindeutig`() {
         val objekt = AnschlussArtId("objekt")
         val zahl = AnschlussArtId("zahl")

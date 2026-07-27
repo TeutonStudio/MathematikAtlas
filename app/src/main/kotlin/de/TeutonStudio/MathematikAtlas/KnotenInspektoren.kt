@@ -29,6 +29,7 @@ object KnotenInspektorRegister {
         "mathematik.kartenEingang" to KartenSchnittstellenInspektor,
         "mathematik.kartenAusgang" to KartenSchnittstellenInspektor,
         "mathematik.variable" to VariablenInspektor,
+        "mathematik.allgemeinerParameter" to AllgemeineParameterInspektor,
         "mathematik.termZuMethode" to TermZuMethodeInspektor,
     )
     fun finde(art: String) = inspektoren[art]
@@ -38,6 +39,15 @@ private object VariablenInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
         GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    }
+}
+
+private object AllgemeineParameterInspektor : KnotenInspektor {
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        ParameterFeld("Name", knoten.parameter["name"] ?: "a") { aktionen.parameter("name", it.trim()) }
+        GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        Text("Der Parameter kann nur an allgemeine Objektanschlüsse verbunden werden.", style = MaterialTheme.typography.bodySmall)
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }

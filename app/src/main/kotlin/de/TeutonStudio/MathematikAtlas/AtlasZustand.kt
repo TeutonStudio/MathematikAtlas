@@ -249,7 +249,7 @@ enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler 
 
 /** Reine Lade-Migration für bekannte assoziative Knoten; auch von JVM-Tests prüfbar. */
 internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
-    val migriert = migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte))
+    val migriert = migriereAbbildZuAllgemeinerMethode(migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte)))
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
         if (knoten.art !in assoziativeKnotenArten) knoten else {
@@ -265,6 +265,19 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
     })
     return migriereMatrixKnoten(assoziativAktualisiert)
 }
+
+/** Erweitert den persistierten Methodenanschluss von Abbild-Knoten ohne Kanten zu verändern. */
+internal fun migriereAbbildZuAllgemeinerMethode(karte: KartenDaten): KartenDaten = karte.copy(
+    knoten = karte.knoten.map { knoten ->
+        if (knoten.art != "mathematik.abbild") knoten else knoten.copy(
+            anschlüsse = knoten.anschlüsse.map { anschluss ->
+                if (anschluss.name == "methode" && anschluss.richtung == AnschlussRichtung.Eingang) {
+                    anschluss.copy(art = MathematikAnschlussArten.Funktion.id)
+                } else anschluss
+            },
+        )
+    },
+)
 
 /** Überführt die alte verkabelte Methodensignatur in die persistierten Inspector-Parameter. */
 internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten {

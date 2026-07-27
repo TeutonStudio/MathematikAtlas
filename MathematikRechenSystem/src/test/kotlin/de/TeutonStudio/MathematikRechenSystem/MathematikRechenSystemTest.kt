@@ -60,6 +60,29 @@ class MathematikRechenSystemTest {
         assertEquals(RationaleZahl.von(7), g.binde(mapOf("y" to RationaleZahl.von(3))).auswerten().getValue("wert"))
     }
 
+    @Test fun abbildAkzeptiertAllgemeineParameterUndBeliebigeEndlicheElemente() {
+        val a = AllgemeinerParameter("a")
+        val identität = Funktion("id", listOf(a), mapOf("wert" to a))
+        val elemente = EndlicheMenge(setOf(
+            Tupel(listOf(RationaleZahl.von(1), RationaleZahl.von(2))),
+            WahrheitsKonstante(true),
+        ))
+
+        assertEquals(elemente, bildeAb(elemente, identität))
+    }
+
+    @Test fun abbildBenötigtEineEinwertigeMethode() {
+        val a = AllgemeinerParameter("a")
+        val menge = EndlicheMenge(setOf(WahrheitsKonstante(true)))
+
+        assertFailsWith<IllegalArgumentException> {
+            bildeAb(menge, Funktion("f", listOf(a, AllgemeinerParameter("b")), mapOf("wert" to a)))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            bildeAb(menge, Funktion("g", listOf(a), mapOf("links" to a, "rechts" to a)))
+        }
+    }
+
     @Test fun matrixWirdExaktInvertiert() {
         val m = Matrix(listOf(listOf(RationaleZahl.von(2), RationaleZahl.von(0)), listOf(RationaleZahl.von(0), RationaleZahl.von(4))))
         val inv = m.inverseRational()
