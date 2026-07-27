@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
-        put("formatVersion", 2)
+        put("formatVersion", 3)
         put("id", karte.id.wert)
         put("name", karte.name)
         put("version", karte.version)
@@ -52,6 +52,7 @@ object KartenJson {
             put("id", a.id.wert); put("name", a.name); put("richtung", a.richtung.name); put("kante", a.kante.name)
             put("art", a.art.wert); put("reihenfolge", a.reihenfolge)
             put("kannSichErweitern", a.kannSichErweitern); put("dynamischErzeugt", a.dynamischErzeugt)
+            a.artFolgtEingang?.let { put("artFolgtEingang", it) }
         }) } })
     }
 
@@ -76,6 +77,7 @@ object KartenJson {
                 reihenfolge = a.optInt("reihenfolge", 0),
                 kannSichErweitern = a.optBoolean("kannSichErweitern", false),
                 dynamischErzeugt = a.optBoolean("dynamischErzeugt", false),
+                artFolgtEingang = a.optString("artFolgtEingang").takeIf(String::isNotBlank),
             ) },
             parameter = parameter, eigenschaften = eigenschaften, kartenVerweis = verweis,
         )

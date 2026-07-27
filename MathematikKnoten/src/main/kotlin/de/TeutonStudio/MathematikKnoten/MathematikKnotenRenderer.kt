@@ -10,6 +10,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 
@@ -20,7 +21,8 @@ class MathematikKnotenRenderer(
         val ergebnis = ergebnisFür(knoten)
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)
-            val objekt = ergebnis?.ausgaben?.values?.firstOrNull()?.objekt
+            val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
+            val objekt = ausgabe?.objekt
             when {
                 knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.extremwert" -> LatexText(extremwertFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
@@ -28,14 +30,17 @@ class MathematikKnotenRenderer(
                 knoten.art == "mathematik.schnitt" -> LatexText(operatorFormel(knoten, ergebnis, " \\cap "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.kartesischesProdukt" -> LatexText(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art in iterativeArten -> LatexText(iterationsFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.termZuMethode" -> LatexText(termZuMethodeFormel(ergebnis), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.termZuMethode" -> LatexText(
+                    ergebnis?.ausgaben?.get("methode")?.latexDarstellung ?: termZuMethodeFormel(ergebnis),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> Text(
                     if (objekt.wert) "Wahr" else "Lüge",
                     color = if (objekt.wert) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                objekt != null -> LatexText(objekt.zuLatex(), style = MaterialTheme.typography.bodyLarge)
-                knoten.parameter.isNotEmpty() -> Text(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
+                ausgabe != null -> LatexText(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)
+                knoten.parameter.isNotEmpty() -> LatexText(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
             }
             if (knoten.art in mengenIterationsArten) {
@@ -56,15 +61,16 @@ class MathematikKnotenRenderer(
         .sortedBy { it.reihenfolge }
         .mapIndexed { index, anschluss ->
             if (knoten.parameter["operatorAnzeige"] == "name") eingabeLatex(index + 1)
-            else ergebnis?.eingänge?.get(anschluss.name)?.objekt?.zuLatex() ?: unbekanntesOperatorLatex(knoten, index + 1)
+            else ergebnis?.eingänge?.get(anschluss.name)?.anzeigeLatex() ?: unbekanntesOperatorLatex(knoten, index + 1)
         }
         .joinToString(zeichen)
 
     private fun iterationsFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
-        val methode = ergebnis?.eingänge?.get("methode")?.objekt as? Funktion
-        val indexMenge = ergebnis?.eingänge?.get("indexmenge")?.objekt?.zuLatex() ?: "I"
+        val methodenWert = ergebnis?.eingänge?.get("methode")
+        val methode = methodenWert?.objekt as? Funktion
+        val indexMenge = ergebnis?.eingänge?.get("indexmenge")?.anzeigeLatex() ?: "I"
         val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "k"
-        val name = methode?.name ?: "f"
+        val name = methodenWert?.latexDarstellung ?: methode?.name ?: "f"
         val zeichen = when (knoten.art) {
             "mathematik.iterierteSumme" -> "\\sum"
             "mathematik.iteriertesProdukt" -> "\\prod"

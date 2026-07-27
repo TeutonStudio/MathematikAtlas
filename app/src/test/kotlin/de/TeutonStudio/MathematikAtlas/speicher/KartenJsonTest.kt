@@ -5,14 +5,14 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
-    @Test fun `Version zwei rundet verschachtelte Eigenschaften`() {
+    @Test fun `Version drei rundet verschachtelte Eigenschaften`() {
         val eigenschaften = mapOf("konfiguration" to KnotenEigenschaft.Objekt(mapOf(
             "kamera" to KnotenEigenschaft.Objekt(mapOf("zoom" to KnotenEigenschaft.Dezimalzahl(1.25), "aktiv" to KnotenEigenschaft.Wahrheitswert(true))),
             "farben" to KnotenEigenschaft.Liste(listOf(KnotenEigenschaft.Farbe(0xFF2563EB), KnotenEigenschaft.Text("Ozean"))),
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 2"))
+        assertTrue(text.contains("\"formatVersion\": 3"))
         assertEquals(karte, KartenJson.lese(text))
     }
 
@@ -55,5 +55,17 @@ class KartenJsonTest {
         assertEquals("t", gelesen.knoten.single { it.id == polynom.id }.parameter.getValue("variable"))
         assertEquals(polynom.anschlüsse.map { it.id }, gelesen.knoten.single { it.id == polynom.id }.anschlüsse.map { it.id })
         assertEquals(listOf(verbindung), gelesen.verbindungen)
+    }
+
+    @Test fun `Darstellungsoptimierung behält abhängige Ausgangsart und LaTeX`() {
+        val alias = MathematikKnotenVorlagen.Darstellungsoptimierung.erzeuge(GraphPunkt.Zero)
+            .copy(parameter = mapOf("latex" to "u_{1}"))
+
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(alias)))).knoten.single()
+        val ausgang = gelesen.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+
+        assertEquals("u_{1}", gelesen.parameter.getValue("latex"))
+        assertEquals("wert", ausgang.artFolgtEingang)
+        assertEquals(alias.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
 }

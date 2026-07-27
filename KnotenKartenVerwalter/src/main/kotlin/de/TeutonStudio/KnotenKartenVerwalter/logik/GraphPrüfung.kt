@@ -14,17 +14,35 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         val b = karte.findeAnschluss(zweiter) ?: return VerbindungsPrüfung.Abgelehnt("Zweiter Anschluss fehlt.")
         val (ausgang, eingang) = richte(a, erster, b, zweiter)
             ?: return VerbindungsPrüfung.Abgelehnt("Die Anschlussrichtungen sind nicht kompatibel.")
-        if (!arten.istUnterart(ausgang.first.art, eingang.first.art)) {
-            return VerbindungsPrüfung.Abgelehnt("${ausgang.first.art} kann nicht an ${eingang.first.art} angeschlossen werden.")
-        }
-        // Ein belegter Eingang wird beim Verbinden atomar ersetzt. Die Zyklusprüfung
-        // muss daher bereits den Graphen nach dieser Ersetzung untersuchen, nicht den
-        // vorübergehend noch doppelt gedachten Zwischenstand.
-        val prüfKarte = if (eingang.first.richtung == AnschlussRichtung.Eingang) {
+
+        // Ein belegter Eingang wird beim Verbinden atomar ersetzt. Die Typ- und
+        // Zyklusprüfung betrachtet deshalb bereits den Graphen nach dieser Ersetzung.
+        val ohneAlteEingangsVerbindung = if (eingang.first.richtung == AnschlussRichtung.Eingang) {
             karte.copy(verbindungen = karte.verbindungen.filterNot { it.zu == eingang.second })
         } else karte
-        if (erzeugtZyklus(prüfKarte, ausgang.second.knotenId, eingang.second.knotenId)) {
+        val neueVerbindung = VerbindungDaten(von = ausgang.second, zu = eingang.second)
+        val probe = ohneAlteEingangsVerbindung.copy(
+            verbindungen = ohneAlteEingangsVerbindung.verbindungen.filterNot {
+                it.von == neueVerbindung.von && it.zu == neueVerbindung.zu
+            } + neueVerbindung,
+        )
+
+        val ausgangsArt = effektiveArt(probe, ausgang.second)
+        val eingangsArt = effektiveArt(probe, eingang.second)
+        if (!arten.istUnterart(ausgangsArt, eingangsArt)) {
+            return VerbindungsPrüfung.Abgelehnt("$ausgangsArt kann nicht an $eingangsArt angeschlossen werden.")
+        }
+        if (erzeugtZyklus(ohneAlteEingangsVerbindung, ausgang.second.knotenId, eingang.second.knotenId)) {
             return VerbindungsPrüfung.Abgelehnt("Zirkuläre Verbindungen sind nicht erlaubt.")
+        }
+
+        val ungültigeFolgeVerbindung = probe.verbindungen.firstOrNull { !istTypkompatibel(probe, it) }
+        if (ungültigeFolgeVerbindung != null) {
+            val von = effektiveArt(probe, ungültigeFolgeVerbindung.von)
+            val zu = effektiveArt(probe, ungültigeFolgeVerbindung.zu)
+            return VerbindungsPrüfung.Abgelehnt(
+                "Die Verbindung würde einen abhängigen Ausgang von $von auf einen mit $zu inkompatiblen Typ ändern.",
+            )
         }
         return VerbindungsPrüfung.Erlaubt
     }
@@ -33,6 +51,30 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         val a = karte.findeAnschluss(erster) ?: return null
         val b = karte.findeAnschluss(zweiter) ?: return null
         return richte(a, erster, b, zweiter)?.let { it.first.second to it.second.second }
+    }
+
+    /**
+     * Liefert die deklarierte Art oder bei [AnschlussDaten.artFolgtEingang] die Art
+     * des tatsächlich mit dem referenzierten Eingang verbundenen Ausgangs.
+     */
+    fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis): AnschlussArtId =
+        effektiveArt(karte, ref, mutableSetOf())
+
+    private fun effektiveArt(
+        karte: KartenDaten,
+        ref: AnschlussVerweis,
+        besucht: MutableSet<AnschlussVerweis>,
+    ): AnschlussArtId {
+        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return AnschlussArtId("unbekannt")
+        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return AnschlussArtId("unbekannt")
+        val eingangsName = anschluss.artFolgtEingang ?: return anschluss.art
+        if (!besucht.add(ref)) return anschluss.art
+        val eingang = knoten.anschlüsse.firstOrNull {
+            it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
+        } ?: return anschluss.art
+        val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
+        val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return anschluss.art
+        return effektiveArt(karte, quelle, besucht)
     }
 
     /**
@@ -66,8 +108,8 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
     private fun istTypkompatibel(karte: KartenDaten, verbindung: VerbindungDaten): Boolean {
         val von = karte.findeAnschluss(verbindung.von) ?: return false
         val zu = karte.findeAnschluss(verbindung.zu) ?: return false
-        val (ausgang, eingang) = richte(von, verbindung.von, zu, verbindung.zu) ?: return false
-        return arten.istUnterart(ausgang.first.art, eingang.first.art)
+        richte(von, verbindung.von, zu, verbindung.zu) ?: return false
+        return arten.istUnterart(effektiveArt(karte, verbindung.von), effektiveArt(karte, verbindung.zu))
     }
 
     private fun erzeugtZyklus(karte: KartenDaten, von: KnotenId, zu: KnotenId): Boolean {
