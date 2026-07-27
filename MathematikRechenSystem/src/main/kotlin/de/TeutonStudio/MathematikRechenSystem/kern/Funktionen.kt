@@ -218,6 +218,10 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
     is MengenDifferenz -> mengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
     is KartesischesProdukt -> kartesischesProdukt(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
+    is Tupelraum -> Tupelraum(objekt.komponenten.map { ersetze(it, bindungen) as MengenAusdruck })
+    is Folgenraum -> Folgenraum(ersetze(objekt.elementMenge, bindungen) as MengenAusdruck)
+    is Vektorraum -> objekt.copy(skalarMenge = ersetze(objekt.skalarMenge, bindungen) as MengenAusdruck)
+    is Matrizenraum -> objekt.copy(skalarMenge = ersetze(objekt.skalarMenge, bindungen) as MengenAusdruck)
     is DefinierteMenge -> {
         val gebundeneNamen = objekt.variablen.map { it.variable.name }.toSet()
         val freieBindungen = bindungen - gebundeneNamen

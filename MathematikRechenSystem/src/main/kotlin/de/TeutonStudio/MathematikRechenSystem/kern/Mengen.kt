@@ -66,6 +66,42 @@ data class KartesischesProdukt(val mengen: List<MengenAusdruck>) : MengenAusdruc
     override fun zuLatex() = mengen.joinToString(" \\times ") { it.zuLatex() }
 }
 
+/** Trägermenge geordneter Tupel, auch für einstellige Tupel. */
+data class Tupelraum(val komponenten: List<MengenAusdruck>) : MengenAusdruck {
+    init { require(komponenten.isNotEmpty()) }
+    override fun zuLatex() = komponenten.joinToString(" \\times ") { it.zuLatex() }
+}
+
+/** Trägermenge endlicher Tupel variabler Länge über einer Elementmenge. */
+data class Folgenraum(val elementMenge: MengenAusdruck) : MengenAusdruck {
+    override fun zuLatex() = "${elementMenge.zuLatex()}^{<\\omega}"
+}
+
+enum class VektorOrientierung { Spalte, Zeile }
+
+/** Raum gleichdimensionierter orientierter Vektoren über einer Zahlgrundmenge. */
+data class Vektorraum(
+    val orientierung: VektorOrientierung,
+    val dimension: Int,
+    val skalarMenge: MengenAusdruck,
+) : MengenAusdruck {
+    init { require(dimension > 0) }
+    override fun zuLatex() = when (orientierung) {
+        VektorOrientierung.Spalte -> "${skalarMenge.zuLatex()}^{${dimension}\\times 1}"
+        VektorOrientierung.Zeile -> "${skalarMenge.zuLatex()}^{1\\times ${dimension}}"
+    }
+}
+
+/** Raum rechteckiger Matrizen über einer Zahlgrundmenge. */
+data class Matrizenraum(
+    val zeilen: Int,
+    val spalten: Int,
+    val skalarMenge: MengenAusdruck,
+) : MengenAusdruck {
+    init { require(zeilen > 0 && spalten > 0) }
+    override fun zuLatex() = "${skalarMenge.zuLatex()}^{${zeilen}\\times ${spalten}}"
+}
+
 /** Eine Variable mit ihrer Grundmenge innerhalb einer [DefinierteMenge]. */
 data class GebundeneMengenVariable(
     val variable: Variable,

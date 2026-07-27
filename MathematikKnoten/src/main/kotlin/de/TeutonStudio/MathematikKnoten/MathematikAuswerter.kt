@@ -19,7 +19,9 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.allgemeinerParameter") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
-            val wertevorrat = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            val wertevorrat = WertebereichKonfiguration.vonEigenschaft(
+                k.knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT],
+            ).zuMenge()
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
                 AllgemeinerParameter(name),
                 werteVorrat = wertevorrat,
@@ -254,13 +256,7 @@ object StandardMathematikAuswerter {
             val namen = gespeichert + automatisch.filterNot { it in gespeichert }
             val parameter = namen.map { freieParameter.getValue(it) }
             val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
-            val deklarierteZielmenge = grundmenge(k.knoten.parameter["zielmenge"] ?: "R")
-            val zielmenge = (term as? ZahlAusdruck)?.let { zahlterm ->
-                maximaleZahlenGrundmenge(listOf(
-                    deklarierteZielmenge,
-                    inferiereZahlenWertevorrat(zahlterm, werteVorräte, termWert.annahmen),
-                ))
-            } ?: deklarierteZielmenge
+            val zielmenge = inferiereZielmenge(term, werteVorräte, termWert.annahmen)
             val funktion = Funktion(k.knoten.parameter["name"] ?: "f", parameter, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }

@@ -52,6 +52,41 @@ class MathematikRechenSystemTest {
         assertEquals(ReelleZahlen, maximaleZahlenGrundmenge(listOf(NatürlicheZahlen, ReelleZahlen)))
     }
 
+    @Test fun allgemeineZielmengenWerdenStrukturellAbgeleitet() {
+        assertEquals(
+            EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false))),
+            inferiereZielmenge(Gleichheit(Variable("x"), Variable("x")), mapOf("x" to NatürlicheZahlen)),
+        )
+        assertEquals(
+            NatürlicheZahlen,
+            inferiereZielmenge(EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2)))),
+        )
+        assertEquals(
+            Tupelraum(listOf(NatürlicheZahlen, ReelleZahlen)),
+            inferiereZielmenge(Tupel(listOf(RationaleZahl.von(1), Pi))),
+        )
+        assertEquals(
+            Vektorraum(VektorOrientierung.Spalte, 2, ReelleZahlen),
+            inferiereZielmenge(SpaltenVektor(listOf(RationaleZahl.von(1), Pi))),
+        )
+        assertEquals(
+            Matrizenraum(1, 2, RationaleZahlen),
+            inferiereZielmenge(Matrix(listOf(listOf(RationaleZahl.von(1), RationaleZahl.von(1, 2))))),
+        )
+        val index = Variable("k")
+        val mengenMethode = Funktion(
+            "A",
+            listOf(index),
+            mapOf("menge" to EndlicheMenge(setOf(index))),
+            mapOf("menge" to NatürlicheZahlen),
+            mapOf("k" to NatürlicheZahlen),
+        )
+        assertEquals(
+            Folgenraum(NatürlicheZahlen),
+            inferiereZielmenge(IteriertesKartesischesProdukt(mengenMethode, NatürlicheZahlen)),
+        )
+    }
+
     @Test fun funktionKannTeilweiseGebundenWerden() {
         val x = Variable("x"); val y = Variable("y")
         val f = Funktion("f", listOf(x, y), mapOf("wert" to addition(x, y)))

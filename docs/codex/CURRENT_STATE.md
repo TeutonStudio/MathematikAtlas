@@ -6,7 +6,7 @@
 
 - Zuletzt verifiziert: 2026-07-27
 - Verifiziert durch: Codex; Quellcodeprüfung sowie Gradle-Tests und Debug-Build mit dem vorhandenen JDK 17
-- Commit vor der Dokumentationsänderung: `718bab7cc1a4916acf9c91a28f95f46aac44f397` (`v2.0.12`)
+- Commit vor der Dokumentationsänderung: `334d797` (`v2.1.9`)
 - Arbeitsbaum vor der Dokumentationsänderung: sauber
 - Verifikationsgrenze: Android-App wurde nicht auf einem Emulator oder Gerät gestartet. JVM-Tests und der Debug-Build wurden lokal ausgeführt.
 
@@ -82,6 +82,7 @@
 | 2026-07-27 | `mathematik.abbild` auf einen allgemeinen Funktionseingang erweitert; ein neuer allgemeiner Parameter erzeugt Methoden über beliebige mathematische Objekte, während numerische Methodenoperationen spezialisiert bleiben. | `plans/completed/2026-07-27-allgemeine-abbildungen.md`, `decisions/2026-07-27-allgemeine-funktionsparameter.md` | vollständige JVM-Tests, Debug-Build und Repository-Prüfung erfolgreich |
 | 2026-07-27 | `mathematik.termZuMethode` auf einen allgemeinen Termeingang und einen allgemeinen Methodenausgang umgestellt; freie verbundene Variablen liefern automatisch geordnete Argumente und Inspector-Grundmengen. | `plans/completed/2026-07-27-term-zu-methode.md`, `decisions/2026-07-27-term-zu-methode-allgemeiner-vertrag.md` | vollständige JVM-Tests, Debug-Build und Repository-Prüfung erfolgreich |
 | 2026-07-27 | Die Zielmenge von `mathematik.termZuMethode` wird für Zahlterme als kleinste gemeinsame Obermenge der Inspector-Grundmenge und des konservativ abgeleiteten Wertebereichs bestimmt; nichtnumerische Terme behalten die Inspector-Grundmenge. | `plans/completed/2026-07-27-term-zu-methode-zielmenge.md`, `decisions/2026-07-27-term-zu-methode-zielmengeninferenz.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung erfolgreich |
+| 2026-07-27 | `mathematik.termZuMethode` leitet seine Zielmenge ausschließlich aus Term und Parameter-Wertebereichen ab; allgemeine Parameter speichern dafür rekursive typisierte Bereiche. | `plans/completed/2026-07-27-term-zu-methode-typisierte-zielmenge.md`, `decisions/2026-07-27-term-zu-methode-typisierte-zielmenge.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung erfolgreich |
 | 2026-07-27 | Neuer Knoten `mathematik.vektorZuPolynom`: orientierter Koeffizientenvektor mit aufsteigender Eingabereihenfolge wird zu einem Zahlterm; beide Vektororientierungen sind zulässig. | `plans/completed/2026-07-27-vektor-zu-polynom.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
 | 2026-07-27 | Neuer Knoten `mathematik.reellesIntervall` für geschlossene reelle Intervalle mit zwei Zahleneingängen, exakter Rationalfall-Normalisierung und JSON-Roundtrip | `plans/completed/2026-07-27-reelles-intervall.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
 | 2026-07-27 | Gemeinsamer Extremwert-Knoten mit getrennten Maximum-/Minimum-Vorlagen, dynamischen Eingängen und konservativer Reellheitsprüfung | `plans/completed/2026-07-27-extremwert.md` | vollständige JVM-Tests, Debug-Build, Repository-Prüfung und unabhängige Diff-Abnahme erfolgreich |

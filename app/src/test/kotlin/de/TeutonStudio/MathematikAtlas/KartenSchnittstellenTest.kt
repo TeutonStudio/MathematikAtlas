@@ -4,19 +4,23 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class KartenSchnittstellenTest {
     @Test
-    fun `Migration normalisiert Term zu Methode und Variable auf Inspector-Vertrag`() {
+    fun `Migration normalisiert Term zu Methode und Parameter auf abgeleitete Zielmengen`() {
         val variable = KnotenDaten(
             art = "mathematik.variable", name = "x", parameter = mapOf("name" to "x"),
             anschlüsse = listOf(
                 AnschlussDaten(name = "wertevorrat", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Menge.id),
                 AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Zahl.id),
             ),
+        )
+        val allgemeinerParameter = KnotenDaten(
+            art = "mathematik.allgemeinerParameter", name = "a", parameter = mapOf("name" to "a", "werteVorrat" to "C"),
         )
         val methode = KnotenDaten(
             art = "mathematik.termZuMethode", name = "f",
@@ -27,8 +31,9 @@ class KartenSchnittstellenTest {
                 AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlFunktion.id),
             ),
         )
-        val migriert = migriereTermZuMethodeUndVariablen(KartenDaten(name = "Alt", knoten = listOf(variable, methode)))
+        val migriert = migriereTermZuMethodeUndVariablen(KartenDaten(name = "Alt", knoten = listOf(variable, allgemeinerParameter, methode)))
         val neueVariable = migriert.knoten.first { it.id == variable.id }
+        val neuerAllgemeinerParameter = migriert.knoten.first { it.id == allgemeinerParameter.id }
         val neueMethode = migriert.knoten.first { it.id == methode.id }
 
         assertEquals(listOf("wert"), neueVariable.anschlüsse.map { it.name })
@@ -36,7 +41,12 @@ class KartenSchnittstellenTest {
         assertEquals(listOf("term", "methode"), neueMethode.anschlüsse.map { it.name })
         assertEquals(MathematikAnschlussArten.Objekt.id, neueMethode.anschlüsse.first { it.name == "term" }.art)
         assertEquals(MathematikAnschlussArten.Funktion.id, neueMethode.anschlüsse.first { it.name == "methode" }.art)
-        assertEquals("R", neueMethode.parameter["zielmenge"])
+        assertEquals(null, neueMethode.parameter["zielmenge"])
+        assertEquals(null, neuerAllgemeinerParameter.parameter["werteVorrat"])
+        assertEquals(
+            WertebereichKonfiguration.Zahl("C").zuEigenschaft(),
+            neuerAllgemeinerParameter.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT],
+        )
     }
 
     @Test

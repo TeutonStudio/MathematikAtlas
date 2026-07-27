@@ -292,6 +292,17 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
                     parameter = alt.parameter + ("werteVorrat" to (alt.parameter["werteVorrat"] ?: "R")),
                 )
             }
+            "mathematik.allgemeinerParameter" -> {
+                val alterWertevorrat = alt.parameter["werteVorrat"] ?: "R"
+                alt.copy(
+                    parameter = alt.parameter - "werteVorrat",
+                    eigenschaften = if (WertebereichKonfiguration.EIGENSCHAFT in alt.eigenschaften) alt.eigenschaften else {
+                        alt.eigenschaften + (
+                            WertebereichKonfiguration.EIGENSCHAFT to WertebereichKonfiguration.Zahl(alterWertevorrat).zuEigenschaft()
+                        )
+                    },
+                )
+            }
             "mathematik.termZuMethode" -> {
                 termKnoten += alt.id
                 val term = alt.anschlüsse.firstOrNull { it.name == "term" }
@@ -304,10 +315,7 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
                         term.copy(richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
                         methode.copy(richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Funktion.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
                     ),
-                    parameter = alt.parameter + mapOf(
-                        "zielmenge" to (alt.parameter["zielmenge"] ?: "R"),
-                        "argumentReihenfolge" to (alt.parameter["argumentReihenfolge"] ?: ""),
-                    ),
+                    parameter = (alt.parameter - "zielmenge") + ("argumentReihenfolge" to (alt.parameter["argumentReihenfolge"] ?: "")),
                 )
             }
             else -> alt

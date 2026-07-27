@@ -59,7 +59,7 @@ class AuswertenTest {
     @Test
     fun `Term zu Methode leitet allgemeine freie Variablen und ihre Reihenfolge ab`() {
         val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
-            parameter = mapOf("name" to "g", "zielmenge" to "C", "argumentReihenfolge" to "y,x"),
+            parameter = mapOf("name" to "g", "argumentReihenfolge" to "y,x"),
         )
         val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
         val xQuelle = KnotenId("x-quelle")
@@ -83,7 +83,7 @@ class AuswertenTest {
         assertEquals(listOf(Variable("y"), Variable("x")), methode.parameter)
         assertEquals(ReelleZahlen, methode.werteVorräte.getValue("y"))
         assertEquals(NatürlicheZahlen, methode.werteVorräte.getValue("x"))
-        assertEquals(KomplexeZahlen, methode.einzigeZielMenge)
+        assertEquals(EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false))), methode.einzigeZielMenge)
         assertIs<Gleichheit>(methode.ausgaben.getValue("wert"))
     }
 
@@ -108,9 +108,9 @@ class AuswertenTest {
     }
 
     @Test
-    fun `Term zu Methode vergrößert die Zielmenge auf den Wertebereich des Zahlterms`() {
+    fun `Term zu Methode leitet die Zielmenge ohne alten Inspectorwert ab`() {
         val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
-            parameter = mapOf("name" to "f", "zielmenge" to "N", "argumentReihenfolge" to ""),
+            parameter = mapOf("name" to "f", "zielmenge" to "C", "argumentReihenfolge" to ""),
         )
         val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
         val xQuelle = KnotenId("x-quelle")
@@ -130,9 +130,9 @@ class AuswertenTest {
     }
 
     @Test
-    fun `Term zu Methode vergrößert die Zielmenge für komplexe Variablen`() {
+    fun `Term zu Methode leitet die Zielmenge für komplexe Variablen ab`() {
         val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
-            parameter = mapOf("name" to "f", "zielmenge" to "R", "argumentReihenfolge" to ""),
+            parameter = mapOf("name" to "f", "zielmenge" to "N", "argumentReihenfolge" to ""),
         )
         val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
         val xQuelle = KnotenId("x-quelle")
@@ -152,7 +152,7 @@ class AuswertenTest {
     }
 
     @Test
-    fun `Term zu Methode behält die deklarierte Zielmenge für nichtnumerische Terme`() {
+    fun `Term zu Methode leitet die Zielmenge für Aussagen ab`() {
         val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("name" to "f", "zielmenge" to "N", "argumentReihenfolge" to ""),
         )
@@ -170,7 +170,7 @@ class AuswertenTest {
         ))
 
         val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
-        assertEquals(NatürlicheZahlen, methode.einzigeZielMenge)
+        assertEquals(EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false))), methode.einzigeZielMenge)
     }
 
     @Test
@@ -217,6 +217,31 @@ class AuswertenTest {
 
         assertEquals(listOf(AllgemeinerParameter("a")), funktion.parameter)
         assertEquals(ReelleZahlen, funktion.werteVorräte.getValue("a"))
+    }
+
+    @Test fun `Allgemeiner Parameter liefert seinen typisierten Wertebereich als Zielmenge`() {
+        val bereich = WertebereichKonfiguration.Menge(
+            WertebereichKonfiguration.Tupel(listOf(WertebereichKonfiguration.Zahl("N"), WertebereichKonfiguration.Zahl("R"))),
+        )
+        val parameter = MathematikKnotenVorlagen.AllgemeinerParameter.erzeuge(GraphPunkt.Zero).copy(
+            id = KnotenId("parameter"),
+            eigenschaften = mapOf(WertebereichKonfiguration.EIGENSCHAFT to bereich.zuEigenschaft()),
+        )
+        val methode = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(id = KnotenId("methode"))
+        val karte = KartenDaten(
+            name = "Typisierter Parameter",
+            knoten = listOf(parameter, methode),
+            verbindungen = listOf(VerbindungDaten(
+                von = AnschlussVerweis(parameter.id, parameter.anschlüsse.single().id),
+                zu = AnschlussVerweis(methode.id, methode.anschlüsse.first { it.name == "term" }.id),
+            )),
+        )
+
+        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
+
+        assertEquals(bereich.elementBereich.zuMenge(), funktion.einzigeZielMenge)
+        assertEquals(bereich.zuMenge(), funktion.werteVorräte.getValue("a"))
     }
 
     @Test fun `Abbild erwartet einen allgemeinen Funktionsanschluss`() {
