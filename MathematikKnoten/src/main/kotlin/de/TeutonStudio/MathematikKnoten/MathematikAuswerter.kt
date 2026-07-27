@@ -138,8 +138,6 @@ object StandardMathematikAuswerter {
         registriere("mathematik.reelleZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(ReelleZahlen))) }
         registriere("mathematik.komplexeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(KomplexeZahlen))) }
         registriere("mathematik.mächtigkeit") { k -> KnotenAuswertungsErgebnis(mapOf("mächtigkeit" to BedingterWert(mächtigkeit(k.menge("menge")), annahmen(k)))) }
-        registriere("mathematik.komplexeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(KomplexeZahlen))) }
-        registriere("mathematik.mächtigkeit") { k -> KnotenAuswertungsErgebnis(mapOf("mächtigkeit" to BedingterWert(mächtigkeit(k.menge("menge")), annahmen(k)))) }
         registriere("mathematik.iterierteSumme") { k ->
             val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")

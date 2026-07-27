@@ -1,75 +1,85 @@
 # Aktueller verifizierter Projektzustand
 
-> Diese Datei ist das aktuelle, evidenzbasierte Projektgedächtnis. Keine Vermutungen, keine Wunscharchitektur und keine erledigten Sitzungsnotizen eintragen.
+> Stand dieser Datei: Befunde aus Quellcode, Gradle-Konfiguration und den unten genannten Diagnosebefehlen. Nicht ausgeführte Builds oder Tests werden ausdrücklich nicht als erfolgreich behandelt.
 
 ## Metadaten
 
-- Zuletzt verifiziert: _noch nicht verifiziert_
-- Verifiziert durch: _noch nicht verifiziert_
-- Commit oder Arbeitsbaumzustand: _noch nicht verifiziert_
+- Zuletzt verifiziert: 2026-07-27
+- Verifiziert durch: Codex; statische Quellcodeprüfung und lokale Diagnosebefehle
+- Commit vor der Dokumentationsänderung: `718bab7cc1a4916acf9c91a28f95f46aac44f397` (`v2.0.12`)
+- Arbeitsbaum vor der Dokumentationsänderung: sauber
+- Verifikationsgrenze: Android-App wurde nicht gestartet; Gradle-Tests und -Builds konnten in der lokalen Umgebung nicht initialisiert werden. Das ist kein Nachweis eines Quellfehlers.
 
 ## Start und Prüfung
 
-| Zweck | Verifizierter Befehl | Ergebnis oder Hinweis |
+| Zweck | Verifizierter Befehl oder Einstieg | Ergebnis oder Hinweis |
 |---|---|---|
-| Abhängigkeiten installieren | _noch nicht verifiziert_ | Paketmanager aus Lockdatei bestimmen |
-| Entwicklung starten | _noch nicht verifiziert_ | |
-| Typprüfung | _noch nicht verifiziert_ | |
-| Lint | _noch nicht verifiziert_ | |
-| Tests | _noch nicht verifiziert_ | |
-| Produktions-Build | _noch nicht verifiziert_ | |
+| Abhängigkeiten auflösen | Gradle Wrapper (`gradle/wrapper/gradle-wrapper.properties`, Gradle 8.13) | Kein separater Paketinstallationsbefehl. Gradle löst Abhängigkeiten beim ersten passenden Task auf. Nicht ausgeführt. |
+| Anwendung starten | `MainActivity` setzt `MathematikAtlasApp` als Compose-Inhalt | Start auf Emulator/Gerät nicht verifiziert. Android Studio kann das Gradle-Projekt öffnen. |
+| Architektur- und Strukturprüfung | `python3 scripts/pruefe_repository.py` | Erfolgreich: XML, Wrapper und Architekturprüfung bestanden. |
+| Zusätzliche Kernprüfung | `python3 scripts/pruefe_kern.py` | Nicht ausführbar: `kotlinc` fehlt in der lokalen Umgebung. |
+| JVM-Tests | `./gradlew test --offline` | Nicht gestartet: Der lokale Standard-JDK 25 lässt Gradle mit Ausgabe `25.0.3` abbrechen. Ein zweiter Versuch mit dem vorhandenen JDK 17 scheiterte beim Laden von `libnative-platform.so`. |
+| Produktions-Build | `./gradlew :app:assembleDebug` | Nicht ausgeführt, weil Gradle in dieser Umgebung nicht initialisiert werden konnte. |
+| Lint | Projektweite Konfiguration durchsucht | Keine dedizierte ktlint-, detekt- oder Android-Lint-Task-Konfiguration in den Buildskripten gefunden. |
 
 ## Repository-Struktur
 
-- Anwendungseinstieg: _noch nicht verifiziert_
-- Graph- oder Canvas-Modul: _noch nicht verifiziert_
-- Nodes: _noch nicht verifiziert_
-- Handles: _noch nicht verifiziert_
-- Edges: _noch nicht verifiziert_
-- Inspector: _noch nicht verifiziert_
-- mathematisches Modell: _noch nicht verifiziert_
-- Persistenz: _noch nicht verifiziert_
-- Tests: _noch nicht verifiziert_
+- Build: Android-Gradle-Multimodulprojekt mit Kotlin-DSL; Root in `settings.gradle.kts`.
+- Module: `app`, `KnotenKartenVerwalter`, `MathematikRechenSystem`, `MathematikKartenAdapter`, `MathematikKnoten`.
+- Anwendungseinstieg: `app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/MainActivity.kt`; die Compose-Wurzel ist `MathematikAtlasApp`.
+- Graph-/Canvas-Modul: `KnotenKartenVerwalter`; Compose-Editor in `schnittstelle/KnotenKartenEditor.kt` und Editorzustand in `zustand/KartenEditorZustand.kt`.
+- Nodes und Handles: persistierbare Modelle `KnotenDaten`, `AnschlussDaten` und `VerbindungDaten` in `KnotenKartenVerwalter/.../daten/`; mathematische Vorlagen in `MathematikKnoten/.../MathematikKnotenVorlagen.kt`.
+- Edges und Validierung: `GraphPrüfung` im neutralen Kartenmodul; sie prüft Richtung, Typ-Hierarchie, belegte Eingänge und Zyklen.
+- Inspector: Eigenschaftenbearbeitung ist als Compose-Bereich in `app/.../MathematikAtlasApp.kt` umgesetzt und schreibt über `KartenAktion` in `KartenEditorZustand`.
+- mathematisches Modell: `MathematikRechenSystem/.../kern/`; Wurzeltyp ist `MathematischesObjekt` mit `Ausdruck`, `ZahlAusdruck` und `MengenAusdruck`.
+- Auswertung: `MathematikKartenAdapter`; topologischer `KartenAuswerter` mit Cache und `MathematikAuswerterRegister`.
+- Persistenz: `app/.../speicher/KartenJson.kt` und `KartenSpeicher.kt`; Speicherort ist der App-interne Dateienbereich `MathematikAtlas/karten/<karten-id>/v<version>.json`.
+- Tests: JVM-Unit-Tests in den vier Bibliotheksmodulen unter `src/test/kotlin`; im Repository wurden keine Testquellen für das App-Modul oder Android-Instrumentierungstests gefunden.
 
 ## Vorhandene Node-Typen
 
-_Noch nicht inventarisiert._
+`MathematikKnotenVorlagen.alle` ist die statische Katalogquelle. Sie enthält Vorlagen für Zahlen und Terme, Aussagen und Prädikate, Mengen, iterative Operatoren, Abbildungen, Vektoren, Matrizen sowie Karten-Ein-/Ausgänge und Fallunterscheidungen. Die Vorlagen erzeugen pro Instanz neue Anschluss-IDs; ihre fachlichen Typen stammen aus `MathematikAnschlussArten`.
 
-Für jeden verifizierten Node eintragen:
-
-| Node-Typ | Fachlicher Zweck | Eingänge | Ausgänge | Registry-Schlüssel | zentrale Dateien |
-|---|---|---|---|---|---|
+| Node-Familie | Fachlicher Zweck | Eingänge / Ausgänge | Registry- oder Typ-Schlüssel | zentrale Dateien |
+|---|---|---|---|---|
+| Rechnen, Algebra und Analysis | Zahl, Variable, Addition, Multiplikation, Division, Potenz, Gleichung lösen, Auswerten, Ableiten, Integrieren, Wurzel, Logarithmus | überwiegend Zahl oder allgemeines Objekt | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
+| Zahlen, Mengen und Aussagen | Tupel, komplexe Zahlen, Mengenoperationen, Zahlbereiche, Vergleiche, Mengenprädikate und Aussagenlogik | Zahl, Menge, Objekt oder Aussage | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
+| Operatoren und Abbildungen | Iterierte Summe/Produkt/Mengenoperationen, Abbild, Term-zu-Methode, Komposition, Iteration und Analysis von Methoden | typisierte Funktions-, Mengen- und Zahlanschlüsse | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
+| Vektoren und Matrizen | orientierte Zeilen-/Spaltenvektoren, Matrixbildung, Produkte, Transposition und Inversion | Zahl, Vektor oder Matrix | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
+| Wiederverwendbare Karten | öffentliche Karten-Ein-/Ausgänge, dynamisch erzeugte Gruppenknoten und Methodenkarten | aus der referenzierten Karte abgeleitet | statisch `mathematik.kartenEingang` / `mathematik.kartenAusgang`; dynamisch `gruppe.<karten-id>` und `methode.<karten-id>` | `MathematikKnotenVorlagen.kt`, `AtlasZustand.kt`, `KartenAuswerter.kt` |
 
 ## Zentrale Architekturpfade
 
-- Node-Erzeugung: _noch nicht verifiziert_
-- Node-Registry: _noch nicht verifiziert_
-- Handle-Definition: _noch nicht verifiziert_
-- Verbindungsvalidierung: _noch nicht verifiziert_
-- Inspector-Bindung: _noch nicht verifiziert_
-- Ausdrucksauswertung: _noch nicht verifiziert_
-- KaTeX-Erzeugung: _noch nicht verifiziert_
-- Serialisierung und Laden: _noch nicht verifiziert_
+- Node-Erzeugung: `KnotenVorlage.erzeuge` erzeugt `KnotenDaten`; `AtlasZustand.fügeKnotenEin` fügt sie über `KartenAktion.KnotenEinfügen` in den Editorzustand ein.
+- Vorlagenkatalog: `MathematikKnotenVorlagen.alle`; `AtlasZustand` ergänzt daraus abgeleitete Gruppen- und Methodenvorlagen. Es gibt damit keinen einzelnen, universellen Registry-Typ für Darstellung, Vorlagen und Auswertung.
+- Auswerter-Registry: `MathematikAuswerterRegister`, befüllt von `StandardMathematikAuswerter.erzeugeRegister` anhand stabiler `mathematik.*`-Schlüssel.
+- Graphzustand: `KartenEditorZustand.karte` hält eine immutable `KartenDaten`-Instanz; Undo/Redo-Historien liegen im Editorzustand. `AtlasZustand` koordiniert Auswahl, Auswertung, Kartenliste und Speicherung.
+- Handle-Vertrag: `AnschlussDaten` enthält stabile Instanz-ID, Richtung, Kante, `AnschlussArtId`, Reihenfolge sowie Kennzeichen für dynamische Eingänge.
+- Verbindungsvalidierung: `GraphPrüfung.prüfe`; Typkompatibilität wird über die Elternhierarchie von `AnschlussArtRegister.istUnterart` bestimmt.
+- Ausdrucksauswertung: `KartenAuswerter.auswerten` verarbeitet den Graph topologisch, sammelt Eingänge über Anschlüsse und ruft registrierte `MathematikKnotenAuswerter` auf.
+- Formeldarstellung: jedes `MathematischesObjekt` liefert `zuLatex()`; `LatexText` rendert einen unterstützten Teilumfang nativ als Compose-Text. Es gibt keine gefundene KaTeX- oder WebView-Abhängigkeit.
+- Serialisierung und Laden: `KartenJson` schreibt `formatVersion` 1 und alle Karten-, Knoten-, Anschluss- und Verbindungsdaten; `KartenSpeicher` liest/schreibt versionierte JSON-Dateien.
 
 ## Bestätigte Einschränkungen
 
-_Noch nicht verifiziert._
+- Das Projekt verwendet Kotlin, Jetpack Compose und Gradle, nicht Vite, React, React Flow, shadcn/ui oder KaTeX.
+- `MathematikRechenSystem` ist ein Kotlin/JVM-Modul ohne Android- oder Compose-Abhängigkeit; die Architekturprüfung bestätigt zudem, dass der neutrale Karteneditor und der Adapter keine verbotenen Modulimporte enthalten.
+- Verbindungen sind azyklisch und für explizite Eingänge auf genau eine eingehende Verbindung beschränkt. Neutrale Anschlüsse sind vom allgemeinen Modell unterstützt.
+- Persistenzdaten sind eigene Datenklassen und JSON-Werte; Compose-Laufzeitobjekte werden nicht serialisiert.
+- Die JSON-Leselogik liest `formatVersion` nicht aus und verzweigt nicht danach. Die vorhandene Migration in `AtlasZustand.aktualisiereAssoziativeKnoten` ergänzt nur den Zielmengen-Eingang alter Karten-Ausgänge und normalisiert bekannte assoziative Knoten beim Öffnen.
+- Der Kartenladepfad `KartenSpeicher.lade` ruft `KartenJson.lese` direkt auf; in diesem Pfad wurde keine nachträgliche `GraphPrüfung` gefunden.
 
 ## Bekannte Blocker und technische Schulden
 
-_Noch nicht verifiziert._
-
-Einträge sollen enthalten:
-
-- beobachtetes Problem,
-- Evidenz,
-- Auswirkung,
-- betroffene Dateien,
-- ob es die aktuelle Aufgabe blockiert.
+| Befund | Evidenz | Auswirkung | betroffene Dateien | Blockiert diese Dokumentationsaufgabe? |
+|---|---|---|---|---|
+| Vollständige Gradle-Verifikation lokal nicht möglich | `./gradlew test --offline` scheiterte unter JDK 25 vor dem Build; JDK-17-Versuch scheiterte beim Laden der Gradle-Native-Library | Testergebnis und Debug-Build bleiben in dieser Umgebung unbestätigt | lokale Laufzeitumgebung, Gradle-Start | Nein |
+| Zusätzliche Kernprüfung lokal nicht möglich | `scripts/pruefe_kern.py` beendet sich mit Code 2, weil `kotlinc` fehlt | Die eigenständige Compiler-/Kernprüfung ist nicht bestätigt | lokale Laufzeitumgebung | Nein |
+| `formatVersion` besitzt keine allgemeine Versionsverzweigung | Schreiben setzt konstant `1`; Lesen verwendet den Wert nicht | Zukünftige Formatmigrationen müssen explizit ergänzt werden; die vorhandene UI-Migration deckt nur bekannte Knotendaten ab | `KartenJson.kt`, `AtlasZustand.kt` | Nein |
+| Keine Persistenz- oder Migrations-Unit-Tests gefunden | Testquellen der vier Bibliotheksmodule enthalten keine Treffer für `KartenJson` oder `KartenSpeicher` | JSON-Roundtrip und Versionsverhalten sind nicht automatisch abgesichert | `app/.../speicher/`, Testverzeichnisse | Nein |
 
 ## Zuletzt abgeschlossene größere Änderungen
 
-_Noch keine verifizierten Einträge._
-
 | Datum | Änderung | ExecPlan oder ADR | Prüfstatus |
 |---|---|---|---|
+| 2026-07-27 | Istzustand und Projektkontext erstmals gegen den vorhandenen Android-/Kotlin-Code abgeglichen | keiner | Repository- und Architekturprüfung erfolgreich; vollständige Gradle-/Kernprüfung lokal nicht ausführbar |

@@ -198,7 +198,8 @@ class AtlasZustand(context: Context) {
         val wert = ausgang.anschlüsse.firstOrNull { it.name == "wert" } ?: return null
         val zielmenge = ausgang.anschlüsse.firstOrNull { it.name == "zielmenge" } ?: return null
         val wertArt = quelleArt(karte, ausgang.id, wert.id) ?: return null
-        if (quelleArt(karte, ausgang.id, zielmenge.id) == null) return null
+        val zielMengeArt = quelleArt(karte, ausgang.id, zielmenge.id) ?: return null
+        if (!anschlussArten.istUnterart(zielMengeArt, MathematikAnschlussArten.Menge.id)) return null
         val funktionsArt = when {
             anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Zahl.id) -> MathematikAnschlussArten.ZahlFunktion.id
             anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Menge.id) -> MathematikAnschlussArten.MengenFunktion.id

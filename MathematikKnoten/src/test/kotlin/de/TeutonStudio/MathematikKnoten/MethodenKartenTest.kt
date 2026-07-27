@@ -8,6 +8,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class MethodenKartenTest {
     @Test
@@ -33,6 +34,28 @@ class MethodenKartenTest {
 
         val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
         assertEquals(ReelleZahlen, funktion.einzigeZielMenge)
+    }
+
+    @Test
+    fun `Karten-Ausgang ohne Zielmenge bleibt Gruppe aber erzeugt keine Methode`() {
+        val eingang = MathematikKnotenVorlagen.KartenEingang.erzeuge(GraphPunkt.Zero)
+        val ausgang = MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero)
+        val intern = KarteBauer("Identität")
+            .knoten(eingang, ausgang)
+            .verbinde(eingang, "wert", ausgang, "wert")
+            .baue()
+        val methode = KnotenDaten(
+            art = "methode.${intern.id.wert}", name = "Identität", position = GraphPunkt.Zero,
+            anschlüsse = listOf(AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlFunktion.id)),
+            kartenVerweis = KartenVerweis(intern.id, intern.version),
+        )
+
+        val ergebnis = KartenAuswerter(
+            StandardMathematikAuswerter.erzeugeRegister(),
+            KartenQuelle { if (it == KartenVerweis(intern.id, intern.version)) intern else null },
+        ).auswerten(KartenDaten(name = "Außen", knoten = listOf(methode)))
+
+        assertTrue(ergebnis.knoten.getValue(methode.id).fehler.orEmpty().contains("fehlt die Zielmenge"))
     }
 
     private class KarteBauer(name: String) {

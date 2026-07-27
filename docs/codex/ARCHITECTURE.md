@@ -25,6 +25,12 @@ Nicht verantwortlich für:
 - Inspector-Layout,
 - Browserereignisse.
 
+### Mengenwertige Iterationsmethoden
+
+Eine einwertige mengenwertige Methode verwendet ihre deklarierte Zielmenge als feste Grundmenge ihrer Mengenausgaben. Das Modell liest `A : I -> G` damit als Familie von Teilmengen von `G`, auch wenn `A : I -> P(G)` mathematisch präziser wäre. Die Grundmenge wird ausschließlich aus der Zielmenge abgeleitet, nie separat gespeichert oder über einen weiteren Anschluss gesetzt.
+
+Die Zielmenge darf nicht vom einzigen Iterationsparameter abhängen. Der Schnitt über eine leere Indexmenge ergibt diese feste Grundmenge. Die Rechenkernvalidierung prüft diese Invariante zentral; Kartenadapter und Renderer verwenden nur die abgesicherte abgeleitete Grundmenge.
+
 ### 2. Anwendungslogik
 
 Verantwortlich für:

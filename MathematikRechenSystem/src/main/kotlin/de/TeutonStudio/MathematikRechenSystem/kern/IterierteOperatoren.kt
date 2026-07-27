@@ -16,9 +16,9 @@ data class IteriertesKartesischesProdukt(val methode: Funktion, val indexMenge: 
     override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 
-/** Die Grundmenge wird ausschließlich aus [methode.einzigeZielMenge] abgeleitet. */
+/** Die Grundmenge wird ausschließlich aus der validierten Zielmenge der Methode abgeleitet. */
 data class IterierterSchnitt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
-    val grundMenge get() = methode.einzigeZielMenge
+    val grundMenge get() = methode.grundMengeFürMengenAusgabe()
     override fun zuLatex() = "\\bigcap_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 data class IterierteKonjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
@@ -79,7 +79,8 @@ private fun iteriereAussagen(methode: Funktion, indexMenge: MengenAusdruck, konj
 
 private fun iteriereMengen(methode: Funktion, indexMenge: MengenAusdruck, schnitt: Boolean): MengenAusdruck {
     methode.prüfeAlsIterationsMethode(erwartetMengenwert = true)
-    if (indexMenge == LeereMenge) return if (schnitt) methode.einzigeZielMenge else LeereMenge
+    val grundMenge = methode.grundMengeFürMengenAusgabe()
+    if (indexMenge == LeereMenge) return if (schnitt) grundMenge else LeereMenge
     if (indexMenge !is EndlicheMenge) return if (schnitt) IterierterSchnitt(methode, indexMenge) else IterierteVereinigung(methode, indexMenge)
     val parameter = methode.parameter.single()
     val werte = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
@@ -89,14 +90,15 @@ private fun iteriereMengen(methode: Funktion, indexMenge: MengenAusdruck, schnit
         prüfeZielmenge(methode, index, menge)
         menge
     }
-    return if (schnitt) schneide(werte, methode.einzigeZielMenge) else vereinige(werte)
+    return if (schnitt) schneide(werte, grundMenge) else vereinige(werte)
 }
 
 private fun prüfeZielmenge(methode: Funktion, index: MathematischesObjekt, ergebnis: MengenAusdruck) {
-    val ausgabe = methode.einzigeAusgabe().first
-    val zahlIndex = index as? ZahlAusdruck ?: return
-    val grundMenge = methode.zielMengeFür(ausgabe, mapOf(methode.parameter.single().name to zahlIndex))
-    if (ergebnis is EndlicheMenge && grundMenge is EndlicheMenge && !grundMenge.elemente.containsAll(ergebnis.elemente)) {
-        error("Die Methode liefert für ${methode.parameter.single().name} = ${index.zuLatex()} eine Menge, die nicht Teil der definierten Grundmenge ist.")
+    val grundMenge = methode.grundMengeFürMengenAusgabe()
+    if (prüfeTeilmenge(ergebnis, grundMenge).wahrheitswert == Wahrheitswert.Falsch) {
+        error(
+            "Die Methode '${methode.name}' liefert für ${methode.parameter.single().name} = ${index.zuLatex()} " +
+                "eine Menge, die nicht Teil der Grundmenge ${grundMenge.zuLatex()} ist.",
+        )
     }
 }

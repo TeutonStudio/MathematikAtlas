@@ -30,9 +30,26 @@ data class Funktion(
     val einzigeZielMenge: MengenAusdruck
         get() = zielMengeFür(einzigeAusgabe().first)
 
-    /** Abgeleitete Bezeichnung für mengenwertige einwertige Methoden; kein eigener Zustand. */
+    /** Abgeleitete Bezeichnung für mengenwertige einwertige Iterationsmethoden; kein eigener Zustand. */
     val grundMenge: MengenAusdruck
-        get() = einzigeZielMenge
+        get() = grundMengeFürMengenAusgabe()
+
+    /**
+     * Die Zielmenge einer mengenwertigen Iterationsmethode ist ihre feste Grundmenge.
+     * Sie darf daher nicht vom gebundenen Iterationsparameter abhängen.
+     */
+    fun grundMengeFürMengenAusgabe(): MengenAusdruck {
+        require(parameter.size == 1) { "Die Methode '$name' muss genau einen freien Parameter besitzen." }
+        val (ausgabe, wert) = einzigeAusgabe()
+        require(wert is MengenAusdruck) { "Die Methode '$name' muss eine Menge ausgeben." }
+        val grundMenge = zielMengeFür(ausgabe)
+        val parameter = parameter.single()
+        require(!grundMenge.enthältVariable(parameter)) {
+            "Die Zielmenge der mengenwertigen Methode '$name' darf nicht vom Iterationsparameter " +
+                "'${parameter.name}' abhängen, da sie als feste Grundmenge für den leeren Schnitt verwendet wird."
+        }
+        return grundMenge
+    }
 
     fun binde(bindungen: Map<String, ZahlAusdruck>): GebundeneFunktion =
         GebundeneFunktion(this, bindungen.filterKeys { key -> parameter.any { it.name == key } })
@@ -50,12 +67,12 @@ data class Funktion(
     fun prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> {
         require(parameter.size == 1) { "Die Methode '$name' muss genau einen freien Parameter besitzen." }
         val ausgabe = einzigeAusgabe()
-        zielMengeFür(ausgabe.first)
         if (erwartetMengenwert) require(ausgabe.second is MengenAusdruck) {
             "Die Methode '$name' muss eine Menge ausgeben."
         } else require(ausgabe.second is ZahlAusdruck) {
             "Die Methode '$name' muss eine Zahl ausgeben."
         }
+        if (erwartetMengenwert) grundMengeFürMengenAusgabe() else zielMengeFür(ausgabe.first)
         return ausgabe
     }
 }
@@ -212,3 +229,71 @@ private fun vereinfacheObjekt(objekt: MathematischesObjekt): MathematischesObjek
     is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
     else -> objekt
 }
+
+/** Rekursive Variablenanalyse für alle bestehenden zusammengesetzten mathematischen Objekte. */
+fun MathematischesObjekt.enthalteneVariablen(): Set<Variable> = when (this) {
+    is Variable -> setOf(this)
+    is Addition -> summanden.enthalteneVariablen()
+    is Multiplikation -> faktoren.enthalteneVariablen()
+    is Division -> listOf(dividend, divisor).enthalteneVariablen()
+    is Potenz -> listOf(basis, exponent).enthalteneVariablen()
+    is Betrag -> argument.enthalteneVariablen()
+    is Sinus -> argument.enthalteneVariablen()
+    is Cosinus -> argument.enthalteneVariablen()
+    is Exponentialfunktion -> argument.enthalteneVariablen()
+    is NatürlicherLogarithmus -> argument.enthalteneVariablen()
+    is Wurzel -> argument.enthalteneVariablen()
+    is KomplexeZahl -> listOf(realteil, imaginärteil).enthalteneVariablen()
+    is Logarithmus -> listOf(basis, argument).enthalteneVariablen()
+    is Argument -> zahl.enthalteneVariablen()
+    is EndlicheMenge -> elemente.enthalteneVariablen()
+    is Vereinigung -> mengen.enthalteneVariablen()
+    is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneVariablen()
+    is MengenDifferenz -> listOf(links, rechts).enthalteneVariablen()
+    is KartesischesProdukt -> mengen.enthalteneVariablen()
+    is Tupel -> elemente.enthalteneVariablen()
+    is SpaltenVektor -> werte.enthalteneVariablen()
+    is ZeilenVektor -> werte.enthalteneVariablen()
+    is Matrix -> zeilen.flatten().enthalteneVariablen()
+    is Gleichheit -> listOf(links, rechts).enthalteneVariablen()
+    is Ungleichheit -> listOf(links, rechts).enthalteneVariablen()
+    is Vergleich -> listOf(links, rechts).enthalteneVariablen()
+    is Negation -> aussage.enthalteneVariablen()
+    is Konjunktion -> aussagen.enthalteneVariablen()
+    is Disjunktion -> aussagen.enthalteneVariablen()
+    is Implikation -> listOf(voraussetzung, folgerung).enthalteneVariablen()
+    is Äquivalenz -> listOf(links, rechts).enthalteneVariablen()
+    is Adjunktion -> listOf(links, rechts).enthalteneVariablen()
+    is ElementBeziehung -> listOf(element, menge).enthalteneVariablen()
+    is TeilmengenBeziehung -> listOf(links, rechts).enthalteneVariablen()
+    is EchteTeilmengeBeziehung -> listOf(links, rechts).enthalteneVariablen()
+    is ObermengenBeziehung -> listOf(links, rechts).enthalteneVariablen()
+    is Disjunktheit -> listOf(links, rechts).enthalteneVariablen()
+    is Funktion -> {
+        val gebundeneNamen = parameter.map { it.name }.toSet()
+        (ausgaben.values + zielMengen.values + werteVorräte.values)
+            .enthalteneVariablen()
+            .filterNot { it.name in gebundeneNamen }
+            .toSet()
+    }
+    is GebundeneFunktion -> {
+        val gebundeneNamen = bindungen.keys
+        funktion.enthalteneVariablen().filterNot { it.name in gebundeneNamen }.toSet() +
+            bindungen.values.enthalteneVariablen()
+    }
+    is Abbild -> setOf(menge, methode).enthalteneVariablen()
+    is IterierteSumme -> setOf(methode, indexMenge).enthalteneVariablen()
+    is IteriertesProdukt -> setOf(methode, indexMenge).enthalteneVariablen()
+    is IterierteVereinigung -> setOf(methode, indexMenge).enthalteneVariablen()
+    is IterierterSchnitt -> setOf(methode, indexMenge).enthalteneVariablen()
+    is IteriertesKartesischesProdukt -> setOf(methode, indexMenge).enthalteneVariablen()
+    is IterierteKonjunktion -> setOf(methode, indexMenge).enthalteneVariablen()
+    is IterierteDisjunktion -> setOf(methode, indexMenge).enthalteneVariablen()
+    else -> emptySet()
+}
+
+fun MathematischesObjekt.enthältVariable(variable: Variable): Boolean =
+    enthalteneVariablen().any { it.name == variable.name }
+
+private fun Iterable<MathematischesObjekt>.enthalteneVariablen(): Set<Variable> =
+    flatMap { it.enthalteneVariablen() }.toSet()

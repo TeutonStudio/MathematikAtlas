@@ -37,8 +37,11 @@ class MathematikKnotenRenderer(
             }
             if (knoten.art in mengenIterationsArten) {
                 val methode = ergebnis?.eingänge?.get("methode")?.objekt as? Funktion
-                runCatching { methode?.einzigeZielMenge?.zuLatex() }.getOrNull()?.let {
-                    Text("Grundmenge: ${vereinfacheLatexAnzeige(it)}", style = MaterialTheme.typography.labelSmall)
+                runCatching { methode?.grundMengeFürMengenAusgabe()?.zuLatex() }.getOrNull()?.let {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Grundmenge:", style = MaterialTheme.typography.labelSmall)
+                        LatexText(it, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
             ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2) }

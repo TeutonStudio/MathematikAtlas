@@ -105,14 +105,39 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
 }
 
 data class TeilmengenBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
-    override fun entscheide(kontext: RechenKontext): AussageErgebnis {
-        if (links is EndlicheMenge && rechts is EndlicheMenge) {
-            val wahr = rechts.elemente.containsAll(links.elemente)
-            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
-        }
-        return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
-    }
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis = prüfeTeilmenge(links, rechts, kontext)
     override fun zuLatex() = "${links.zuLatex()} \\subseteq ${rechts.zuLatex()}"
+}
+
+/**
+ * Entscheidet eine Teilmengenbeziehung nur dann abschließend, wenn sie aus dem
+ * vorhandenen Mengen- und Elementwissen beweisbar oder widerlegbar ist.
+ */
+fun prüfeTeilmenge(
+    teilMenge: MengenAusdruck,
+    grundMenge: MengenAusdruck,
+    kontext: RechenKontext = RechenKontext(),
+): AussageErgebnis = when {
+    teilMenge == LeereMenge || teilMenge == grundMenge ->
+        AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+    teilMenge is EndlicheMenge && grundMenge is EndlicheMenge -> {
+        val wahr = grundMenge.elemente.containsAll(teilMenge.elemente)
+        AussageErgebnis(
+            if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch,
+            if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
+        )
+    }
+    teilMenge is EndlicheMenge -> {
+        val elementErgebnisse = teilMenge.elemente.map { ElementBeziehung(it, grundMenge).entscheide(kontext) }
+        when {
+            elementErgebnisse.any { it.wahrheitswert == Wahrheitswert.Falsch } ->
+                AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+            elementErgebnisse.all { it.wahrheitswert == Wahrheitswert.Wahr } ->
+                AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+            else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        }
+    }
+    else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
 }
 
 data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
