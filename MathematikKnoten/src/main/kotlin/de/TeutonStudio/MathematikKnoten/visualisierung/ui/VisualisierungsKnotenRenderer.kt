@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikKnoten.visualisierung.ui
 
+import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -8,7 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
@@ -74,6 +79,7 @@ class VisualisierungsKnotenRenderer(
     val hintergrund = MaterialTheme.colorScheme.surfaceVariant
     val raster = MaterialTheme.colorScheme.outlineVariant
     val rahmen = MaterialTheme.colorScheme.outline
+    val beschriftung = MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(modifier.pointerInput(konfiguration.dimension, kamera) {
         detectTransformGestures { _, pan, zoom, _ ->
             val neu = if (konfiguration.dimension == RaumDimension.R3) kamera.copy(rotationY = kamera.rotationY + pan.x * 0.5, rotationX = kamera.rotationX + pan.y * 0.5, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
@@ -90,7 +96,32 @@ class VisualisierungsKnotenRenderer(
             val projektion = projekt(punkt, konfiguration, size.width, size.height)
             drawCircle(farbeFür(punkt.farbwert, konfiguration), if (konfiguration.dimension == RaumDimension.R3) 2.8f else 2.2f, projektion)
         }
+        zeichneAchsenBeschriftungen(konfiguration, beschriftung)
         drawRect(rahmen, style = Stroke(1f))
+    }
+}
+
+private fun DrawScope.zeichneAchsenBeschriftungen(c: VisualisierungsKonfiguration, farbe: Color) {
+    val abstand = 7.dp.toPx()
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = farbe.toArgb()
+        textSize = 12.dp.toPx()
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+    val canvas = drawContext.canvas.nativeCanvas
+    if (c.dimension == RaumDimension.R2) {
+        val x = c.achsen.x.ifBlank { "x" }
+        val y = c.achsen.y.ifBlank { "y" }
+        canvas.drawText(x, size.width - paint.measureText(x) - abstand, size.height / 2f - abstand, paint)
+        canvas.drawText(y, size.width / 2f + abstand, paint.textSize + abstand, paint)
+    } else {
+        listOf(
+            "X: ${c.achsen.x.ifBlank { "x" }}",
+            "Y: ${c.achsen.y.ifBlank { "y" }}",
+            "Z: ${c.achsen.z?.ifBlank { "z" } ?: "z"}",
+        ).forEachIndexed { index, text ->
+            canvas.drawText(text, abstand, abstand + paint.textSize * (index + 1), paint)
+        }
     }
 }
 
