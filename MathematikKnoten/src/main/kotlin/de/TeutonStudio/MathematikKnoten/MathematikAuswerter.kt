@@ -136,6 +136,10 @@ object StandardMathematikAuswerter {
         registriere("mathematik.ganzeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(GanzeZahlen))) }
         registriere("mathematik.rationaleZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(RationaleZahlen))) }
         registriere("mathematik.reelleZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(ReelleZahlen))) }
+        registriere("mathematik.komplexeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(KomplexeZahlen))) }
+        registriere("mathematik.mächtigkeit") { k -> KnotenAuswertungsErgebnis(mapOf("mächtigkeit" to BedingterWert(mächtigkeit(k.menge("menge")), annahmen(k)))) }
+        registriere("mathematik.komplexeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(KomplexeZahlen))) }
+        registriere("mathematik.mächtigkeit") { k -> KnotenAuswertungsErgebnis(mapOf("mächtigkeit" to BedingterWert(mächtigkeit(k.menge("menge")), annahmen(k)))) }
         registriere("mathematik.iterierteSumme") { k ->
             val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
@@ -254,6 +258,11 @@ object StandardMathematikAuswerter {
                 "sonst" to wert.copy(annahmen = wert.annahmen + Negation(bedingung)),
             ))
         }
+        registriere("mathematik.konjunktion") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Konjunktion(k.aussagenOperatorEingänge()), annahmen(k)))) }
+        registriere("mathematik.disjunktion") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Disjunktion(k.aussagenOperatorEingänge()), annahmen(k)))) }
+        registriere("mathematik.implikation") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Implikation(k.aussage("a"), k.aussage("b")), annahmen(k)))) }
+        registriere("mathematik.äquivalenz") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Äquivalenz(k.aussage("a"), k.aussage("b")), annahmen(k)))) }
+        registriere("mathematik.adjunktion") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Adjunktion(k.aussage("a"), k.aussage("b")), annahmen(k)))) }
     }
 
     private fun KnotenAuswertungsKontext.zahl(name: String) = eingänge[name]?.objekt as? ZahlAusdruck ?: error("Zahleingang $name fehlt.")
@@ -263,6 +272,7 @@ object StandardMathematikAuswerter {
     private fun KnotenAuswertungsKontext.spalte(name: String) = eingänge[name]?.objekt as? SpaltenVektor ?: error("Spaltenvektor $name fehlt.")
     private fun KnotenAuswertungsKontext.zeile(name: String) = eingänge[name]?.objekt as? ZeilenVektor ?: error("Zeilenvektor $name fehlt.")
     private fun KnotenAuswertungsKontext.matrix(name: String) = eingänge[name]?.objekt as? Matrix ?: error("Matrix $name fehlt.")
+    private fun KnotenAuswertungsKontext.aussage(name: String) = eingänge[name]?.objekt as? Aussage ?: error("Aussage $name fehlt.")
     private fun KnotenAuswertungsKontext.parameterInt(name: String) = knoten.parameter[name]?.toIntOrNull()?.takeIf { it > 0 } ?: error("Parameter $name muss eine positive ganze Zahl sein.")
     private fun annahmen(k: KnotenAuswertungsKontext) = k.eingänge.values.flatMap { it.annahmen }.toSet()
     private fun parseZahlen(text: String) = text.split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it.trim()) }
@@ -293,6 +303,8 @@ private fun KnotenAuswertungsKontext.mengenOperatorEingänge(): List<MengenAusdr
 private fun KnotenAuswertungsKontext.zahlenOperatorEingänge(): List<ZahlAusdruck> = operatorEingänge { _, index -> Variable("vektor_$index") }
     .map { it.objekt as? ZahlAusdruck ?: error("Vektor benötigt Zahlen.") }
 private fun Tupel.zahlen() = elemente.map { it as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
+private fun KnotenAuswertungsKontext.aussagenOperatorEingänge(): List<Aussage> = operatorEingänge { _, index -> UnentscheidbareAussage("A_$index", "unverbunden") }
+    .map { it.objekt as? Aussage ?: error("Aussageneingang ist ungültig.") }
 
 internal fun eingabeLatex(index: Int) = "\\mathrm{eingabe}_{${index}}"
 

@@ -109,6 +109,34 @@ data class Disjunktion(val aussagen: List<Aussage>) : Aussage {
     override fun zuLatex() = aussagen.joinToString(" \\lor ") { it.zuLatex() }
 }
 
+data class Implikation(val voraussetzung: Aussage, val folgerung: Aussage) : Aussage {
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis {
+        val a = voraussetzung.entscheide(kontext).wahrheitswert; val b = folgerung.entscheide(kontext).wahrheitswert
+        return when {
+            a == Wahrheitswert.Falsch || b == Wahrheitswert.Wahr -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+            a == Wahrheitswert.Wahr && b == Wahrheitswert.Falsch -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+            else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        }
+    }
+    override fun zuLatex() = "${voraussetzung.zuLatex()} \\Rightarrow ${folgerung.zuLatex()}"
+}
+
+data class Äquivalenz(val links: Aussage, val rechts: Aussage) : Aussage {
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis {
+        val a = links.entscheide(kontext).wahrheitswert; val b = rechts.entscheide(kontext).wahrheitswert
+        if (a == null || b == null) return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        val wahr = a == b
+        return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+    }
+    override fun zuLatex() = "${links.zuLatex()} \\Leftrightarrow ${rechts.zuLatex()}"
+}
+
+/** Adjunktion ist die klassische UND-Verknüpfung zweier Aussagen. */
+data class Adjunktion(val links: Aussage, val rechts: Aussage) : Aussage {
+    override fun entscheide(kontext: RechenKontext) = Konjunktion(listOf(links, rechts)).entscheide(kontext)
+    override fun zuLatex() = "${links.zuLatex()} \\mathbin{\\&} ${rechts.zuLatex()}"
+}
+
 data class UnentscheidbareAussage(val bezeichnung: String, val system: String) : Aussage {
     override fun entscheide(kontext: RechenKontext) = AussageErgebnis(null, EntscheidungsStatus.Unentscheidbar, "Unentscheidbar in $system")
     override fun zuLatex() = "\\operatorname{${bezeichnung.replace(" ", "\\ ")}}"

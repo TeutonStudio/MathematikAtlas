@@ -21,6 +21,14 @@ data class IterierterSchnitt(val methode: Funktion, val indexMenge: MengenAusdru
     val grundMenge get() = methode.einzigeZielMenge
     override fun zuLatex() = "\\bigcap_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
+data class IterierteKonjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
+    override fun entscheide(kontext: RechenKontext) = iteriereAussagen(methode, indexMenge, true).entscheide(kontext)
+    override fun zuLatex() = "\\bigwedge_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+}
+data class IterierteDisjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
+    override fun entscheide(kontext: RechenKontext) = iteriereAussagen(methode, indexMenge, false).entscheide(kontext)
+    override fun zuLatex() = "\\bigvee_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+}
 
 fun iterierteSumme(methode: Funktion, indexMenge: MengenAusdruck): ZahlAusdruck = iteriereZahlen(methode, indexMenge, false)
 fun iteriertesProdukt(methode: Funktion, indexMenge: MengenAusdruck): ZahlAusdruck = iteriereZahlen(methode, indexMenge, true)
@@ -54,6 +62,19 @@ fun iteriertesKartesischesProdukt(methode: Funktion, indexMenge: MengenAusdruck)
         1 -> mengen.single()
         else -> kartesischesProdukt(mengen)
     }
+}
+
+fun iterierteKonjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage = iteriereAussagen(methode, indexMenge, true)
+fun iterierteDisjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage = iteriereAussagen(methode, indexMenge, false)
+private fun iteriereAussagen(methode: Funktion, indexMenge: MengenAusdruck, konjunktion: Boolean): Aussage {
+    require(methode.parameter.size == 1 && methode.ausgaben.size == 1 && methode.einzigeAusgabe().second is Aussage) { "Die Abbildung muss einwertig eine Aussage liefern." }
+    if (indexMenge !is EndlicheMenge) return if (konjunktion) IterierteKonjunktion(methode, indexMenge) else IterierteDisjunktion(methode, indexMenge)
+    val p = methode.parameter.single()
+    val aussagen = indexMenge.elemente.map { index ->
+        val zahl = index as? ZahlAusdruck ?: error("Indexmenge muss Zahlen enthalten.")
+        methode.wendeAn(mapOf(p.name to zahl)).values.single() as? Aussage ?: error("Abbildung liefert keine Aussage.")
+    }
+    return if (konjunktion) Konjunktion(aussagen) else Disjunktion(aussagen)
 }
 
 private fun iteriereMengen(methode: Funktion, indexMenge: MengenAusdruck, schnitt: Boolean): MengenAusdruck {

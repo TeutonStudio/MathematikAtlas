@@ -37,6 +37,18 @@ data class KartesischesProdukt(val mengen: List<MengenAusdruck>) : MengenAusdruc
     override fun zuLatex() = mengen.joinToString(" \\times ") { it.zuLatex() }
 }
 
+sealed interface Mächtigkeit : MathematischesObjekt
+data class EndlicheMächtigkeit(val wert: RationaleZahl) : Mächtigkeit { override fun zuLatex() = "|M| = ${wert.zuLatex()}" }
+data object AbzählbarUnendlich : Mächtigkeit { override fun zuLatex() = "|M| = \\aleph_0" }
+data object Überabzählbar : Mächtigkeit { override fun zuLatex() = "|M| > \\aleph_0" }
+
+fun mächtigkeit(menge: MengenAusdruck): Mächtigkeit = when (menge) {
+    is EndlicheMenge -> EndlicheMächtigkeit(RationaleZahl.von(menge.elemente.size.toLong()))
+    NatürlicheZahlen, GanzeZahlen, RationaleZahlen -> AbzählbarUnendlich
+    ReelleZahlen, KomplexeZahlen -> Überabzählbar
+    else -> error("Die Mächtigkeit dieser Menge ist noch nicht entscheidbar.")
+}
+
 /** Kanonische Mengenvereinigung mit Abflachung und konkreter Auswertung endlicher Mengen. */
 fun vereinige(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
     val flach = mengen.flatMap { if (it is Vereinigung) it.mengen else listOf(it) }.filterNot { it == LeereMenge }
@@ -136,3 +148,4 @@ val NatürlicheZahlen = BenannteMenge("Natürliche Zahlen", "\\mathbb{N}")
 val GanzeZahlen = BenannteMenge("Ganze Zahlen", "\\mathbb{Z}")
 val RationaleZahlen = BenannteMenge("Rationale Zahlen", "\\mathbb{Q}")
 val ReelleZahlen = BenannteMenge("Reelle Zahlen", "\\mathbb{R}")
+val KomplexeZahlen = BenannteMenge("Komplexe Zahlen", "\\mathbb{C}")
