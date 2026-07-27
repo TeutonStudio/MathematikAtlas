@@ -26,6 +26,8 @@ class AtlasZustand(context: Context) {
     var knotenAuswahlPosition by mutableStateOf<GraphPunkt?>(null)
     var knotenAuswahlStart by mutableStateOf<AnschlussVerweis?>(null)
     var suchText by mutableStateOf("")
+        private set
+    private var ausgewählteKnotenKategorie by mutableStateOf<String?>(null)
 
     val editor: KartenEditorZustand
     private var letzterGespeicherterStand: KartenDaten
@@ -85,6 +87,7 @@ class AtlasZustand(context: Context) {
     fun öffneKnotenAuswahl(position: GraphPunkt, start: AnschlussVerweis? = null) {
         knotenAuswahlPosition = position
         knotenAuswahlStart = start
+        sichereKnotenKategorieAuswahl()
     }
 
     fun schließeKnotenAuswahl() {
@@ -126,10 +129,33 @@ class AtlasZustand(context: Context) {
 
     fun renderer() = MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
 
-    fun sichtbareVorlagen(): List<KnotenVorlage> = (MathematikKnotenVorlagen.alle + gruppenVorlagen()).filter { vorlage ->
+    fun setzeSuchText(text: String) {
+        suchText = text
+        sichereKnotenKategorieAuswahl()
+    }
+
+    fun knotenKategorien(): List<String> = alleKnotenVorlagen().map { it.kategorie }.distinct()
+
+    fun sichtbareVorlagen(): List<KnotenVorlage> = alleKnotenVorlagen().filter { vorlage ->
         val suchePasst = suchText.isBlank() || vorlage.name.contains(suchText, ignoreCase = true) || vorlage.kategorie.contains(suchText, ignoreCase = true)
         suchePasst && istKompatibelMitOffenerVerbindung(vorlage)
     }
+
+    fun aktiveKnotenKategorie(): String? = ausgewählteKnotenKategorie?.takeIf { kategorie ->
+        sichtbareVorlagen().any { it.kategorie == kategorie }
+    }
+
+    fun wähleKnotenKategorie(kategorie: String?) {
+        ausgewählteKnotenKategorie = kategorie?.takeIf { gewählt ->
+            sichtbareVorlagen().any { it.kategorie == gewählt }
+        }
+    }
+
+    private fun sichereKnotenKategorieAuswahl() {
+        if (aktiveKnotenKategorie() == null) ausgewählteKnotenKategorie = null
+    }
+
+    private fun alleKnotenVorlagen(): List<KnotenVorlage> = MathematikKnotenVorlagen.alle + gruppenVorlagen()
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }

@@ -93,7 +93,7 @@ private fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
             Text("Mathematik Atlas", Modifier.padding(18.dp), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-            ScrollableTabRow(selectedTabIndex = zustand.linkerBereich.ordinal, edgePadding = 8.dp) {
+            PrimaryScrollableTabRow(selectedTabIndex = zustand.linkerBereich.ordinal, edgePadding = 8.dp) {
                 VerwaltungsBereich.entries.forEach { bereich ->
                     Tab(selected = zustand.linkerBereich == bereich, onClick = { zustand.linkerBereich = bereich }, text = { Text(bereich.name) })
                 }
@@ -253,17 +253,35 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
         title = { Text("Knoten einfügen") },
         text = {
             Column(Modifier.heightIn(max = 520.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(zustand.suchText, { zustand.suchText = it }, label = { Text("Suchen") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(zustand.suchText, zustand::setzeSuchText, label = { Text("Suchen") }, modifier = Modifier.fillMaxWidth())
+                val sichtbareVorlagen = zustand.sichtbareVorlagen()
+                val kategorien = zustand.knotenKategorien()
+                val anzahlNachKategorie = sichtbareVorlagen.groupingBy { it.kategorie }.eachCount()
+                val aktiveKategorie = zustand.aktiveKnotenKategorie()
+                val ausgewählterTab = aktiveKategorie?.let { kategorien.indexOf(it) + 1 } ?: 0
+                PrimaryScrollableTabRow(selectedTabIndex = ausgewählterTab, edgePadding = 0.dp) {
+                    Tab(
+                        selected = aktiveKategorie == null,
+                        onClick = { zustand.wähleKnotenKategorie(null) },
+                        text = { Text("Alle (${sichtbareVorlagen.size})") },
+                    )
+                    kategorien.forEach { kategorie ->
+                        val anzahl = anzahlNachKategorie[kategorie] ?: 0
+                        Tab(
+                            selected = aktiveKategorie == kategorie,
+                            onClick = { zustand.wähleKnotenKategorie(kategorie) },
+                            enabled = anzahl > 0,
+                            text = { Text("$kategorie ($anzahl)") },
+                        )
+                    }
+                }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val vorlagen = zustand.sichtbareVorlagen().groupBy { it.kategorie }
-                    vorlagen.forEach { (kategorie, einträge) ->
-                        item { Text(kategorie, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp)) }
-                        items(einträge) { vorlage ->
-                            ListItem(
-                                headlineContent = { Text(vorlage.name) }, supportingContent = { Text(vorlage.beschreibung) },
-                                modifier = Modifier.clip(MaterialTheme.shapes.small).clickable { zustand.fügeKnotenEin(vorlage, position) },
-                            )
-                        }
+                    val vorlagen = sichtbareVorlagen.filter { aktiveKategorie == null || it.kategorie == aktiveKategorie }
+                    items(vorlagen) { vorlage ->
+                        ListItem(
+                            headlineContent = { Text(vorlage.name) }, supportingContent = { Text(vorlage.beschreibung) },
+                            modifier = Modifier.clip(MaterialTheme.shapes.small).clickable { zustand.fügeKnotenEin(vorlage, position) },
+                        )
                     }
                 }
             }
