@@ -42,6 +42,16 @@ class MathematikRechenSystemTest {
         assertTrue(istNachweisbarReell(NatürlicherLogarithmus(x), { true }, setOf(Vergleich(x, VergleichsArt.Größer, RationaleZahl.Null))))
     }
 
+    @Test fun zahlenwertebereicheWerdenKonservativAbgeleitet() {
+        val x = Variable("x")
+
+        assertEquals(NatürlicheZahlen, inferiereZahlenWertevorrat(RationaleZahl.von(2)))
+        assertEquals(GanzeZahlen, inferiereZahlenWertevorrat(RationaleZahl.von(-1)))
+        assertEquals(RationaleZahlen, inferiereZahlenWertevorrat(Division(x, RationaleZahl.von(2)), mapOf("x" to NatürlicheZahlen)))
+        assertEquals(KomplexeZahlen, inferiereZahlenWertevorrat(KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins)))
+        assertEquals(ReelleZahlen, maximaleZahlenGrundmenge(listOf(NatürlicheZahlen, ReelleZahlen)))
+    }
+
     @Test fun funktionKannTeilweiseGebundenWerden() {
         val x = Variable("x"); val y = Variable("y")
         val f = Funktion("f", listOf(x, y), mapOf("wert" to addition(x, y)))

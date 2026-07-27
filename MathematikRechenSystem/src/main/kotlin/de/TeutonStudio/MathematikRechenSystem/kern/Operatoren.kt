@@ -210,6 +210,73 @@ fun istNachweisbarReell(
     is IterierteSumme, is IteriertesProdukt -> false
 }
 
+/**
+ * Kleinste der unterstützten Zahlgrundmengen, die alle [mengen] enthält.
+ *
+ * Die fünf Grundmengen bilden im aktuellen Modell die totale Kette
+ * `N ⊂ Z ⊂ Q ⊂ R ⊂ C`. Andere Mengen haben keine vergleichbare
+ * Zahlbereichsordnung und werden deshalb bewusst abgelehnt.
+ */
+fun maximaleZahlenGrundmenge(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
+    val grundmengen = mengen.toList()
+    require(grundmengen.isNotEmpty()) { "Mindestens eine Zahlgrundmenge wird benötigt." }
+    return grundmengen.maxBy { zahlenGrundmengenRang(it) }
+}
+
+/**
+ * Konservative Obermenge der möglichen Werte eines Zahlterms.
+ *
+ * Das Ergebnis ist kein exakter Wertebereich: partielle oder nicht sicher
+ * reelle Operationen werden nach `C` angehoben. Damit bleibt jede daraus
+ * abgeleitete Zielmenge gültig, ohne Bildmengen symbolisch lösen zu müssen.
+ */
+fun inferiereZahlenWertevorrat(
+    ausdruck: ZahlAusdruck,
+    werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
+    annahmen: Set<Aussage> = emptySet(),
+): MengenAusdruck = when (ausdruck) {
+    is RationaleZahl -> when {
+        ausdruck.nenner != BigInteger.ONE -> RationaleZahlen
+        ausdruck.zähler.signum() < 0 -> GanzeZahlen
+        else -> NatürlicheZahlen
+    }
+    is MathematischeKonstante -> if (ausdruck == Pi || ausdruck == EulerscheZahl) ReelleZahlen else KomplexeZahlen
+    is Variable -> werteVorräte[ausdruck.name] ?: KomplexeZahlen
+    is Addition -> maximaleZahlenGrundmenge(ausdruck.summanden.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
+    is Multiplikation -> maximaleZahlenGrundmenge(ausdruck.faktoren.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
+    is Maximum -> maximaleZahlenGrundmenge(ausdruck.operanden.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
+    is Minimum -> maximaleZahlenGrundmenge(ausdruck.operanden.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
+    is Division -> maximaleZahlenGrundmenge(listOf(
+        RationaleZahlen,
+        inferiereZahlenWertevorrat(ausdruck.dividend, werteVorräte, annahmen),
+        inferiereZahlenWertevorrat(ausdruck.divisor, werteVorräte, annahmen),
+    ))
+    is Potenz, is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
+        ausdruck,
+        variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
+        annahmen = annahmen,
+    )) ReelleZahlen else KomplexeZahlen
+    is Betrag, is Argument -> ReelleZahlen
+    is Sinus, is Cosinus, is Exponentialfunktion -> if (istNachweisbarReell(
+        ausdruck,
+        variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
+        annahmen = annahmen,
+    )) ReelleZahlen else KomplexeZahlen
+    is KomplexeZahl -> KomplexeZahlen
+    is IterierteSumme, is IteriertesProdukt -> KomplexeZahlen
+}
+
+private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+
+private fun zahlenGrundmengenRang(menge: MengenAusdruck): Int = when (menge) {
+    NatürlicheZahlen -> 0
+    GanzeZahlen -> 1
+    RationaleZahlen -> 2
+    ReelleZahlen -> 3
+    KomplexeZahlen -> 4
+    else -> error("'$menge' ist keine unterstützte Zahlgrundmenge.")
+}
+
 private fun ZahlAusdruck.istNachweisbarPositiv(annahmen: Set<Aussage>): Boolean = when (this) {
     is RationaleZahl -> zähler.signum() > 0
     else -> Vergleich(this, VergleichsArt.Größer, RationaleZahl.Null) in annahmen

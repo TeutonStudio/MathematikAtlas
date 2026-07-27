@@ -10,6 +10,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KartenAuswerter
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.VariablenQuelle
 import de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge
+import de.TeutonStudio.MathematikRechenSystem.kern.Division
 import de.TeutonStudio.MathematikRechenSystem.kern.Gleichheit
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
@@ -17,6 +18,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen
+import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.KomplexeZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import kotlin.test.Test
@@ -105,6 +107,72 @@ class AuswertenTest {
     }
 
     @Test
+    fun `Term zu Methode vergrößert die Zielmenge auf den Wertebereich des Zahlterms`() {
+        val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
+            parameter = mapOf("name" to "f", "zielmenge" to "N", "argumentReihenfolge" to ""),
+        )
+        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
+        val xQuelle = KnotenId("x-quelle")
+
+        val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(
+            knoten,
+            mapOf("term" to BedingterWert(
+                Division(Variable("x"), RationaleZahl.von(2)),
+                variablenQuellen = listOf(VariablenQuelle(xQuelle, "x", NatürlicheZahlen)),
+            )),
+            RechenKontext(),
+            mapOf(xQuelle to 0),
+        ))
+
+        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        assertEquals(RationaleZahlen, methode.einzigeZielMenge)
+    }
+
+    @Test
+    fun `Term zu Methode vergrößert die Zielmenge für komplexe Variablen`() {
+        val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
+            parameter = mapOf("name" to "f", "zielmenge" to "R", "argumentReihenfolge" to ""),
+        )
+        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
+        val xQuelle = KnotenId("x-quelle")
+
+        val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(
+            knoten,
+            mapOf("term" to BedingterWert(
+                Variable("x"),
+                variablenQuellen = listOf(VariablenQuelle(xQuelle, "x", KomplexeZahlen)),
+            )),
+            RechenKontext(),
+            mapOf(xQuelle to 0),
+        ))
+
+        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        assertEquals(KomplexeZahlen, methode.einzigeZielMenge)
+    }
+
+    @Test
+    fun `Term zu Methode behält die deklarierte Zielmenge für nichtnumerische Terme`() {
+        val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
+            parameter = mapOf("name" to "f", "zielmenge" to "N", "argumentReihenfolge" to ""),
+        )
+        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
+        val xQuelle = KnotenId("x-quelle")
+
+        val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(
+            knoten,
+            mapOf("term" to BedingterWert(
+                Gleichheit(Variable("x"), Variable("x")),
+                variablenQuellen = listOf(VariablenQuelle(xQuelle, "x", NatürlicheZahlen)),
+            )),
+            RechenKontext(),
+            mapOf(xQuelle to 0),
+        ))
+
+        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        assertEquals(NatürlicheZahlen, methode.einzigeZielMenge)
+    }
+
+    @Test
     fun `Term zu Methode übernimmt Variablenherkunft über den verbundenen Termgraph`() {
         val x = MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero).copy(id = KnotenId("x"), parameter = mapOf("name" to "x", "werteVorrat" to "N"))
         val y = MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero).copy(id = KnotenId("y"), parameter = mapOf("name" to "y", "werteVorrat" to "R"))
@@ -126,5 +194,6 @@ class AuswertenTest {
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
         assertEquals(NatürlicheZahlen, funktion.werteVorräte.getValue("x"))
         assertEquals(ReelleZahlen, funktion.werteVorräte.getValue("y"))
+        assertEquals(ReelleZahlen, funktion.einzigeZielMenge)
     }
 }

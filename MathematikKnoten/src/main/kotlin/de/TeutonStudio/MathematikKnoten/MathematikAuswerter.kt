@@ -244,8 +244,14 @@ object StandardMathematikAuswerter {
                 .split(',').map(String::trim).filter { it.isNotBlank() && it in freieVariablen }.distinct()
             val namen = gespeichert + automatisch.filterNot { it in gespeichert }
             val variablen = namen.map { freieVariablen.getValue(it) }
-            val zielmenge = grundmenge(k.knoten.parameter["zielmenge"] ?: "R")
             val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
+            val deklarierteZielmenge = grundmenge(k.knoten.parameter["zielmenge"] ?: "R")
+            val zielmenge = (term as? ZahlAusdruck)?.let { zahlterm ->
+                maximaleZahlenGrundmenge(listOf(
+                    deklarierteZielmenge,
+                    inferiereZahlenWertevorrat(zahlterm, werteVorräte, termWert.annahmen),
+                ))
+            } ?: deklarierteZielmenge
             val funktion = Funktion(k.knoten.parameter["name"] ?: "f", variablen, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }
