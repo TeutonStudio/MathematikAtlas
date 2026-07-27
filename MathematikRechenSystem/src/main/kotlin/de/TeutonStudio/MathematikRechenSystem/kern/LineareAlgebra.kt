@@ -12,13 +12,13 @@ sealed interface OrientierterVektor : Ausdruck {
 
 data class SpaltenVektor(override val werte: List<ZahlAusdruck>) : OrientierterVektor {
     init { require(werte.isNotEmpty()) }
-    override fun zuLatex() = werte.joinToString(prefix = "\\begin{pmatrix}", separator = " \\\\ ", postfix = "\\end{pmatrix}") { it.zuLatex() }
+    override fun zuLatex() = werte.map(::listOf).zuPmatrixLatex()
     fun transponiert() = ZeilenVektor(werte)
 }
 
 data class ZeilenVektor(override val werte: List<ZahlAusdruck>) : OrientierterVektor {
     init { require(werte.isNotEmpty()) }
-    override fun zuLatex() = werte.joinToString(prefix = "\\begin{pmatrix}", separator = " & ", postfix = "\\end{pmatrix}") { it.zuLatex() }
+    override fun zuLatex() = listOf(werte).zuPmatrixLatex()
     fun transponiert() = SpaltenVektor(werte)
 }
 
@@ -49,7 +49,7 @@ data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck {
     }
     val zeilenAnzahl get() = zeilen.size
     val spaltenAnzahl get() = zeilen.first().size
-    override fun zuLatex() = zeilen.joinToString(prefix = "\\begin{pmatrix}", separator = " \\\\ ", postfix = "\\end{pmatrix}") { zeile -> zeile.joinToString(" & ") { it.zuLatex() } }
+    override fun zuLatex() = zeilen.zuPmatrixLatex()
     operator fun plus(andere: Matrix): Matrix {
         require(zeilenAnzahl == andere.zeilenAnzahl && spaltenAnzahl == andere.spaltenAnzahl)
         return Matrix(zeilen.indices.map { z -> zeilen[z].indices.map { s -> addition(zeilen[z][s], andere.zeilen[z][s]) } })
@@ -73,3 +73,10 @@ data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck {
         return Matrix(List(n) { z -> List(n) { s -> a[z][s + n] } })
     }
 }
+
+/** Formatiert Zeilen als LaTeX-`pmatrix`; `\\` trennt die Zeilen, `&` die Spalten. */
+private fun List<List<ZahlAusdruck>>.zuPmatrixLatex(): String = joinToString(
+    prefix = "\\begin{pmatrix}",
+    separator = " \\\\ ",
+    postfix = "\\end{pmatrix}",
+) { zeile -> zeile.joinToString(" & ") { it.zuLatex() } }

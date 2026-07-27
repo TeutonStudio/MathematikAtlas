@@ -75,4 +75,16 @@ class MathematikRechenSystemTest {
         assertEquals(RationaleZahl.von(5), spalte.skalarprodukt(spalte))
         assertFailsWith<IllegalArgumentException> { spalte.skalarprodukt(ZeilenVektor(spalte.werte)) }
     }
+
+    @Test fun vektorenUndMatrizenVerwendenPmatrixLatexMitZeilenUndSpaltenTrennern() {
+        val a = Variable("a_1")
+        val b = Variable("a_2")
+
+        assertEquals("\\begin{pmatrix}a_1 \\\\ a_2\\end{pmatrix}", SpaltenVektor(listOf(a, b)).zuLatex())
+        assertEquals("\\begin{pmatrix}a_1 & a_2\\end{pmatrix}", ZeilenVektor(listOf(a, b)).zuLatex())
+        assertEquals(
+            "\\begin{pmatrix}a_1 & a_2 \\\\ a_2 & a_1\\end{pmatrix}",
+            Matrix(listOf(listOf(a, b), listOf(b, a))).zuLatex(),
+        )
+    }
 }
