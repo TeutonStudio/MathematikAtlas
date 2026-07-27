@@ -6,6 +6,8 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 data class BedingterWert(
     val objekt: MathematischesObjekt,
     val annahmen: Set<Aussage> = emptySet(),
+    /** Metadaten einer öffentlichen Methodenausgabe, kein zweiter Rückgabewert. */
+    val zielMenge: MengenAusdruck? = null,
 )
 
 data class KnotenAuswertungsErgebnis(

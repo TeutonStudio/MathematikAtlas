@@ -76,12 +76,32 @@ object StandardMathematikAuswerter {
                 BenannteMenge(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }.map { it.objekt as? MengenAusdruck ?: error("Mengeneingang ${it} ist ungültig.") }
             require(mengen.size >= 2) { "Mindestens zwei Mengen müssen verbunden sein." }
-            val wert = if (mengen.all { it is EndlicheMenge }) {
-                EndlicheMenge(mengen.filterIsInstance<EndlicheMenge>().flatMap { it.elemente }.toSet())
-            } else {
-                Vereinigung(mengen.flatMap { if (it is Vereinigung) it.mengen else listOf(it) })
-            }
+            val wert = vereinige(mengen)
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(wert, annahmen(k))))
+        }
+        registriere("mathematik.natürlicheZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(NatürlicheZahlen))) }
+        registriere("mathematik.ganzeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(GanzeZahlen))) }
+        registriere("mathematik.rationaleZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(RationaleZahlen))) }
+        registriere("mathematik.reelleZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(ReelleZahlen))) }
+        registriere("mathematik.iterierteSumme") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
+            val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(iterierteSumme(methode, indexMenge), annahmen(k))))
+        }
+        registriere("mathematik.iteriertesProdukt") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
+            val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(iteriertesProdukt(methode, indexMenge), annahmen(k))))
+        }
+        registriere("mathematik.iterierteVereinigung") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Mengenfunktion fehlt.")
+            val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(iterierteVereinigung(methode, indexMenge), annahmen(k))))
+        }
+        registriere("mathematik.iterierterSchnitt") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Mengenfunktion fehlt.")
+            val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(iterierterSchnitt(methode, indexMenge), annahmen(k))))
         }
         registriere("mathematik.vektor") { k ->
             val werte = parseZahlen(k.knoten.parameter["werte"] ?: "")
@@ -106,7 +126,8 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.kartenAusgang") { k ->
             val wert = k.eingänge["wert"] ?: error("Ausgabewert fehlt.")
-            KnotenAuswertungsErgebnis(mapOf("wert" to wert))
+            val zielMenge = k.eingänge["zielmenge"]?.objekt as? MengenAusdruck
+            KnotenAuswertungsErgebnis(mapOf("wert" to wert.copy(zielMenge = zielMenge)))
         }
         registriere("mathematik.fall") { k ->
             val wert = k.eingänge["term"] ?: error("Term fehlt.")

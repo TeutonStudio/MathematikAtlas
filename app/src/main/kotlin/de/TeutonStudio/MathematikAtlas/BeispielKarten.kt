@@ -52,11 +52,11 @@ object BeispielKarten {
     private fun gruppenKnoten(karte: KartenDaten, position: GraphPunkt): KnotenDaten {
         val eingänge = karte.knoten.filter { it.art == "mathematik.kartenEingang" }.mapIndexed { i, k -> AnschlussDaten(
             name = k.parameter["name"] ?: k.name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
-            art = k.anschlüsse.first().art, reihenfolge = i,
+            art = k.anschlüsse.first { it.name == "wert" }.art, reihenfolge = i,
         ) }
         val ausgänge = karte.knoten.filter { it.art == "mathematik.kartenAusgang" }.mapIndexed { i, k -> AnschlussDaten(
             name = k.parameter["name"] ?: k.name, richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts,
-            art = k.anschlüsse.first().art, reihenfolge = i,
+            art = k.anschlüsse.first { it.name == "wert" }.art, reihenfolge = i,
         ) }
         return KnotenDaten(art = "mathematik.gruppe", name = karte.name, position = position, anschlüsse = eingänge + ausgänge, kartenVerweis = KartenVerweis(karte.id, karte.version))
     }

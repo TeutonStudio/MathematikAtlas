@@ -133,13 +133,13 @@ class AtlasZustand(context: Context) {
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }
-        .map { karte ->
+        .flatMap { karte ->
             val eingänge = karte.knoten.filter { it.art == "mathematik.kartenEingang" }.mapIndexed { index, intern ->
                 AnschlussDaten(
                     name = intern.parameter["name"] ?: intern.name,
                     richtung = AnschlussRichtung.Eingang,
                     kante = AnschlussKante.Links,
-                    art = intern.anschlüsse.firstOrNull()?.art ?: MathematikAnschlussArten.Objekt.id,
+                    art = intern.anschlüsse.firstOrNull { it.name == "wert" }?.art ?: MathematikAnschlussArten.Objekt.id,
                     reihenfolge = index,
                 )
             }
@@ -148,11 +148,11 @@ class AtlasZustand(context: Context) {
                     name = intern.parameter["name"] ?: intern.name,
                     richtung = AnschlussRichtung.Ausgang,
                     kante = AnschlussKante.Rechts,
-                    art = intern.anschlüsse.firstOrNull()?.art ?: MathematikAnschlussArten.Objekt.id,
+                    art = intern.anschlüsse.firstOrNull { it.name == "wert" }?.art ?: MathematikAnschlussArten.Objekt.id,
                     reihenfolge = index,
                 )
             }
-            KnotenVorlage(
+            val gruppe = KnotenVorlage(
                 art = "gruppe.${karte.id.wert}",
                 name = karte.name,
                 kategorie = "Gespeicherte Karten",
@@ -161,7 +161,40 @@ class AtlasZustand(context: Context) {
                 anschlüsse = eingänge + ausgänge,
                 kartenVerweis = KartenVerweis(karte.id, karte.version),
             )
+            listOfNotNull(gruppe, methodenVorlage(karte))
         }.toList()
+
+    private fun methodenVorlage(karte: KartenDaten): KnotenVorlage? {
+        val eingänge = karte.knoten.filter { it.art == "mathematik.kartenEingang" }
+        val ausgänge = karte.knoten.filter { it.art == "mathematik.kartenAusgang" }
+        if (eingänge.size != 1 || ausgänge.size != 1) return null
+        val ausgang = ausgänge.single()
+        val wert = ausgang.anschlüsse.firstOrNull { it.name == "wert" } ?: return null
+        val zielmenge = ausgang.anschlüsse.firstOrNull { it.name == "zielmenge" } ?: return null
+        val wertArt = quelleArt(karte, ausgang.id, wert.id) ?: return null
+        if (quelleArt(karte, ausgang.id, zielmenge.id) == null) return null
+        val funktionsArt = when {
+            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Zahl.id) -> MathematikAnschlussArten.ZahlFunktion.id
+            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Menge.id) -> MathematikAnschlussArten.MengenFunktion.id
+            else -> return null
+        }
+        return KnotenVorlage(
+            art = "methode.${karte.id.wert}",
+            name = "${karte.name} (Methode)",
+            kategorie = "Methoden",
+            beschreibung = "Einwertige Methode; ihre Grundmenge wird aus der Zielmenge des Karten-Ausgangs abgeleitet.",
+            standardGröße = GraphGröße(240f, 90f),
+            anschlüsse = listOf(AnschlussDaten(
+                name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = funktionsArt,
+            )),
+            kartenVerweis = KartenVerweis(karte.id, karte.version),
+        )
+    }
+
+    private fun quelleArt(karte: KartenDaten, zielKnoten: KnotenId, zielAnschluss: AnschlussId): AnschlussArtId? {
+        val quelle = karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(zielKnoten, zielAnschluss) }?.von ?: return null
+        return karte.knoten.firstOrNull { it.id == quelle.knotenId }?.anschlüsse?.firstOrNull { it.id == quelle.anschlussId }?.art
+    }
 
     private fun referenziertKarte(karte: KartenDaten, gesuchteId: KartenId, besucht: MutableSet<KartenVerweis>): Boolean {
         val refs = karte.knoten.mapNotNull { it.kartenVerweis }
@@ -180,10 +213,15 @@ class AtlasZustand(context: Context) {
         }
     }
 
-    /** Macht auch vor dieser Version gespeicherte Additions- und Vereinigungs-Knoten erweiterbar. */
+    /** Migriert alte Karten-Ausgänge und macht ältere assoziative Knoten erweiterbar. */
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = karte.copy(
         knoten = karte.knoten.map { knoten ->
-            if (knoten.art !in setOf("mathematik.addition", "mathematik.vereinigung")) knoten
+            if (knoten.art == "mathematik.kartenAusgang" && knoten.anschlüsse.none { it.name == "zielmenge" }) {
+                knoten.copy(anschlüsse = knoten.anschlüsse + AnschlussDaten(
+                    name = "zielmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
+                    art = MathematikAnschlussArten.Menge.id, reihenfolge = 1,
+                ))
+            } else if (knoten.art !in setOf("mathematik.addition", "mathematik.vereinigung")) knoten
             else {
                 val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
                 val verbundeneEingänge = karte.verbindungen.map { it.zu }.toSet()

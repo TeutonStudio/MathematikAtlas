@@ -125,6 +125,7 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "neq" to "≠", "le" to "≤", "ge" to "≥",
         "varnothing" to "∅", "top" to "wahr", "bot" to "falsch", "neg" to "¬", "land" to "∧", "lor" to "∨",
+        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂",
         "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "to" to "→", "implies" to "⇒", "iff" to "⇔",
         "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
         "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",

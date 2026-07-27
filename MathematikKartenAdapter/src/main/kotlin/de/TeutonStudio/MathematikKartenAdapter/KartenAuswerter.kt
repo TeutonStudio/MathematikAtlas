@@ -101,10 +101,12 @@ class KartenAuswerter(
             val name = ausgang.parameter["name"] ?: ausgang.name
             internErgebnis.knoten[ausgang.id]?.ausgaben?.get("wert")?.let { name to it }
         }.toMap()
-        if (freie.isEmpty()) return KnotenAuswertungsErgebnis(werte)
-        val zahlAusgaben = werte.mapValues { (_, wert) -> wert.objekt as? ZahlAusdruck ?: return KnotenAuswertungsErgebnis(werte) }
-        val funktion = Funktion(knoten.name, freie.distinctBy { it.name }, zahlAusgaben)
-        return KnotenAuswertungsErgebnis(mapOf("funktion" to BedingterWert(funktion)))
+        if (!knoten.art.startsWith("methode.")) return KnotenAuswertungsErgebnis(werte)
+        if (interneEingänge.size != 1) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Methode benötigt genau einen öffentlichen Karten-Eingang.")
+        if (ausgänge.size != 1 || werte.size != 1) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Methode benötigt genau einen öffentlichen Karten-Ausgang mit Wert.")
+        val zielMengen = werte.mapValues { (name, wert) -> wert.zielMenge ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.") }
+        val funktion = Funktion(knoten.name, freie.distinctBy { it.name }, werte.mapValues { it.value.objekt }, zielMengen)
+        return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion)))
     }
 
     private fun sammleEingänge(

@@ -60,6 +60,38 @@ object MathematikKnotenVorlagen {
         listOf(eingang("a", MathematikAnschlussArten.Menge.id, 0, true), eingang("b", MathematikAnschlussArten.Menge.id, 1, true), ausgang("menge", MathematikAnschlussArten.Menge.id)),
         mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
+    val NatürlicheZahlen = KnotenVorlage(
+        "mathematik.natürlicheZahlen", "Natürliche Zahlen", "Mengen", "Die Menge der natürlichen Zahlen.", GraphGröße(210f, 90f),
+        listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val GanzeZahlen = KnotenVorlage(
+        "mathematik.ganzeZahlen", "Ganze Zahlen", "Mengen", "Die Menge der ganzen Zahlen.", GraphGröße(210f, 90f),
+        listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val RationaleZahlen = KnotenVorlage(
+        "mathematik.rationaleZahlen", "Rationale Zahlen", "Mengen", "Die Menge der rationalen Zahlen.", GraphGröße(210f, 90f),
+        listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val ReelleZahlen = KnotenVorlage(
+        "mathematik.reelleZahlen", "Reelle Zahlen", "Mengen", "Die Menge der reellen Zahlen.", GraphGröße(210f, 90f),
+        listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val IterierteSumme = KnotenVorlage(
+        "mathematik.iterierteSumme", "Iterierte Summe", "Operatoren", "Summiert die Werte einer Zahlfunktion über einer Indexmenge.", GraphGröße(250f, 120f),
+        listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+    )
+    val IteriertesProdukt = KnotenVorlage(
+        "mathematik.iteriertesProdukt", "Iteriertes Produkt", "Operatoren", "Multipliziert die Werte einer Zahlfunktion über einer Indexmenge.", GraphGröße(250f, 120f),
+        listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+    )
+    val IterierteVereinigung = KnotenVorlage(
+        "mathematik.iterierteVereinigung", "Iterierte Vereinigung", "Mengen", "Vereinigt die Mengenwerte einer Methode über einer Indexmenge.", GraphGröße(260f, 120f),
+        listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
+    val IterierterSchnitt = KnotenVorlage(
+        "mathematik.iterierterSchnitt", "Iterierter Schnitt", "Mengen", "Schneidet Mengenwerte; die Grundmenge stammt aus der Zielmenge der Methode.", GraphGröße(260f, 120f),
+        listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+    )
     val Vektor = KnotenVorlage(
         "mathematik.vektor", "Vektor", "Lineare Algebra", "Vektor aus exakten Zahlen.", GraphGröße(220f, 105f),
         listOf(ausgang("vektor", MathematikAnschlussArten.Vektor.id)), mapOf("werte" to "1,2,3"),
@@ -82,7 +114,7 @@ object MathematikKnotenVorlagen {
     )
     val KartenAusgang = KnotenVorlage(
         "mathematik.kartenAusgang", "Karten-Ausgang", "Gruppen", "Öffentliche Ausgabe einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
-        listOf(eingang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "ergebnis"),
+        listOf(eingang("wert", MathematikAnschlussArten.Objekt.id), eingang("zielmenge", MathematikAnschlussArten.Menge.id, 1)), mapOf("name" to "ergebnis"),
     )
     val Fall = KnotenVorlage(
         "mathematik.fall", "Fallunterscheidung", "Steuerung", "Verzweigt einen Ausdruck mit weitergegebenen Annahmen.", GraphGröße(250f, 140f),
@@ -90,5 +122,5 @@ object MathematikKnotenVorlagen {
         mapOf("modus" to "verzweigen", "bedingung" to "x=0"),
     )
 
-    val alle = listOf(Zahl, Variable, Addition, Multiplikation, Division, Potenz, Gleichheit, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Vereinigung, Vektor, Matrix, Skalarprodukt, MatrixInvertieren, KartenEingang, KartenAusgang, Fall)
+    val alle = listOf(Zahl, Variable, Addition, Multiplikation, Division, Potenz, Gleichheit, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Vereinigung, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, Vektor, Matrix, Skalarprodukt, MatrixInvertieren, KartenEingang, KartenAusgang, Fall)
 }
