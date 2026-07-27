@@ -91,6 +91,20 @@ object StandardMathematikAuswerter {
         registriere("mathematik.logarithmus") { k ->
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Logarithmus(k.zahl("basis"), k.zahl("argument")), annahmen(k))))
         }
+        registriere("mathematik.tupel") { k ->
+            val werte = k.operatorEingänge { _, index -> Variable("tupel_$index") }.map { it.objekt as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
+            KnotenAuswertungsErgebnis(mapOf("tupel" to BedingterWert(Tupel(werte), annahmen(k))))
+        }
+        registriere("mathematik.komplexAusTupel") { k ->
+            val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Zahlentupel fehlt.")
+            val zahl = if (k.knoten.parameter["modus"] == "polar") komplexAusPolar(tupel) else komplexAusKartesisch(tupel)
+            KnotenAuswertungsErgebnis(mapOf("zahl" to BedingterWert(zahl, annahmen(k))))
+        }
+        registriere("mathematik.konjugierte") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.komplex("zahl").let(::konjugiere), annahmen(k)))) }
+        registriere("mathematik.realteil") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.komplex("zahl").realteil, annahmen(k)))) }
+        registriere("mathematik.imaginärteil") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.komplex("zahl").imaginärteil, annahmen(k)))) }
+        registriere("mathematik.komplexerRadius") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(komplexerBetrag(k.komplex("zahl")), annahmen(k)))) }
+        registriere("mathematik.winkel") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Argument(k.komplex("zahl")), annahmen(k)))) }
         registriere("mathematik.endlicheMenge") { k ->
             val elemente = (k.knoten.parameter["elemente"] ?: "").split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it) }.toSet()
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(EndlicheMenge(elemente))))
@@ -161,19 +175,62 @@ object StandardMathematikAuswerter {
             val funktion = Funktion(k.knoten.parameter["name"] ?: "f", variablen, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }
-        registriere("mathematik.vektor") { k ->
-            val werte = parseZahlen(k.knoten.parameter["werte"] ?: "")
-            KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(Vektor(werte))))
+        registriere("mathematik.komposition") { k ->
+            val außen = k.eingänge["außen"]?.objekt as? Funktion ?: error("Äußere Methode fehlt.")
+            val innen = k.eingänge["innen"]?.objekt as? Funktion ?: error("Innere Methode fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(komponiere(außen, innen), annahmen(k))))
         }
+        registriere("mathematik.iteration") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            val exponent = vereinfache(k.zahl("exponent"), k.rechenKontext) as? RationaleZahl ?: error("Iterationsexponent muss ganzzahlig sein.")
+            require(exponent.nenner == java.math.BigInteger.ONE && exponent.zähler.signum() >= 0 && exponent.zähler.bitLength() < 31) { "Iterationsexponent muss eine nichtnegative ganze Zahl sein." }
+            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(iteriere(methode, exponent.zähler.toInt()), annahmen(k))))
+        }
+        registriere("mathematik.methodenDifferentieren") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(differenziereMethode(methode), annahmen(k))))
+        }
+        registriere("mathematik.methodenIntegrieren") { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(integriereMethode(methode), annahmen(k))))
+        }
+        registriere("mathematik.spaltenMethodeDifferentieren") { k -> methodeAnalysis(k, ::differenziereMethode) }
+        registriere("mathematik.zeilenMethodeDifferentieren") { k -> methodeAnalysis(k, ::differenziereMethode) }
+        registriere("mathematik.spaltenMethodeIntegrieren") { k -> methodeAnalysis(k, ::integriereMethode) }
+        registriere("mathematik.zeilenMethodeIntegrieren") { k -> methodeAnalysis(k, ::integriereMethode) }
+        registriere("mathematik.vektor") { k ->
+            KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(SpaltenVektor(k.zahlenOperatorEingänge()), annahmen(k))))
+        }
+        registriere("mathematik.zeilenVektor") { k ->
+            KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(ZeilenVektor(k.zahlenOperatorEingänge()), annahmen(k))))
+        }
+        registriere("mathematik.tupelZuSpalte") { k ->
+            val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Tupel fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(SpaltenVektor(tupel.zahlen()), annahmen(k))))
+        }
+        registriere("mathematik.tupelZuZeile") { k ->
+            val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Tupel fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(ZeilenVektor(tupel.zahlen()), annahmen(k))))
+        }
+        registriere("mathematik.einheitsSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(einheitsSpaltenVektor(k.parameterInt("dimension"), k.parameterInt("index"))))) }
+        registriere("mathematik.einheitsZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(einheitsZeilenVektor(k.parameterInt("dimension"), k.parameterInt("index"))))) }
+        registriere("mathematik.vektorRadiusSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.spalte("vektor").radius(), annahmen(k)))) }
+        registriere("mathematik.vektorRadiusZeile") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.zeile("vektor").radius(), annahmen(k)))) }
         registriere("mathematik.matrix") { k ->
-            val zeilen = (k.knoten.parameter["werte"] ?: "").split(';').filter { it.isNotBlank() }.map(::parseZahlen)
-            KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(Matrix(zeilen))))
+            val zeilen = k.operatorEingänge { _, _ -> error("Matrixzeile fehlt.") }.map { it.objekt as? ZeilenVektor ?: error("Matrix benötigt Zeilenvektoren.") }.map { it.werte }
+            KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(Matrix(zeilen), annahmen(k))))
         }
         registriere("mathematik.skalarprodukt") { k ->
-            val a = k.eingänge["a"]?.objekt as? Vektor ?: error("Vektor a fehlt.")
-            val b = k.eingänge["b"]?.objekt as? Vektor ?: error("Vektor b fehlt.")
+            val a = k.spalte("a"); val b = k.spalte("b")
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(vereinfache(a.skalarprodukt(b)), annahmen(k))))
         }
+        registriere("mathematik.skalarproduktZeile") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(vereinfache(k.zeile("a").skalarprodukt(k.zeile("b"))), annahmen(k)))) }
+        registriere("mathematik.kreuzproduktSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(kreuzprodukt(k.spalte("a"), k.spalte("b")), annahmen(k)))) }
+        registriere("mathematik.kreuzproduktZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(kreuzprodukt(k.zeile("a"), k.zeile("b")), annahmen(k)))) }
+        registriere("mathematik.transponiereSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.spalte("vektor").transponiert(), annahmen(k)))) }
+        registriere("mathematik.transponiereZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.zeile("vektor").transponiert(), annahmen(k)))) }
+        registriere("mathematik.matrixProdukt") { k -> KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(k.matrix("a") * k.matrix("b"), annahmen(k)))) }
+        registriere("mathematik.transponiereMatrix") { k -> KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(k.matrix("matrix").transponiert(), annahmen(k)))) }
         registriere("mathematik.matrixInvertieren") { k ->
             val matrix = k.eingänge["matrix"]?.objekt as? Matrix ?: error("Matrix fehlt.")
             KnotenAuswertungsErgebnis(mapOf("inverse" to BedingterWert(matrix.inverseRational(), annahmen(k))))
@@ -200,6 +257,11 @@ object StandardMathematikAuswerter {
     private fun KnotenAuswertungsKontext.zahl(name: String) = eingänge[name]?.objekt as? ZahlAusdruck ?: error("Zahleingang $name fehlt.")
     private fun KnotenAuswertungsKontext.objekt(name: String) = eingänge[name]?.objekt ?: error("Eingang $name fehlt.")
     private fun KnotenAuswertungsKontext.menge(name: String) = eingänge[name]?.objekt as? MengenAusdruck ?: error("Mengeneingang $name fehlt.")
+    private fun KnotenAuswertungsKontext.komplex(name: String) = eingänge[name]?.objekt as? KomplexeZahl ?: error("Komplexe Zahl $name fehlt.")
+    private fun KnotenAuswertungsKontext.spalte(name: String) = eingänge[name]?.objekt as? SpaltenVektor ?: error("Spaltenvektor $name fehlt.")
+    private fun KnotenAuswertungsKontext.zeile(name: String) = eingänge[name]?.objekt as? ZeilenVektor ?: error("Zeilenvektor $name fehlt.")
+    private fun KnotenAuswertungsKontext.matrix(name: String) = eingänge[name]?.objekt as? Matrix ?: error("Matrix $name fehlt.")
+    private fun KnotenAuswertungsKontext.parameterInt(name: String) = knoten.parameter[name]?.toIntOrNull()?.takeIf { it > 0 } ?: error("Parameter $name muss eine positive ganze Zahl sein.")
     private fun annahmen(k: KnotenAuswertungsKontext) = k.eingänge.values.flatMap { it.annahmen }.toSet()
     private fun parseZahlen(text: String) = text.split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it.trim()) }
     private fun vergleich(k: KnotenAuswertungsKontext, art: VergleichsArt) = KnotenAuswertungsErgebnis(
@@ -208,6 +270,10 @@ object StandardMathematikAuswerter {
     private fun mengenAussage(k: KnotenAuswertungsKontext, erzeuge: (MengenAusdruck, MengenAusdruck) -> Aussage) = KnotenAuswertungsErgebnis(
         mapOf("aussage" to BedingterWert(erzeuge(k.menge("links"), k.menge("rechts")), annahmen(k))),
     )
+    private fun methodeAnalysis(k: KnotenAuswertungsKontext, operation: (Funktion) -> Funktion): KnotenAuswertungsErgebnis {
+        val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+        return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(operation(methode), annahmen(k))))
+    }
 }
 
 /** Formeln für assoziative Operatoren verwenden für fehlende Eingänge stabile, eindeutige Unbekannte. */
@@ -221,6 +287,10 @@ internal fun KnotenAuswertungsKontext.operatorEingänge(
 private fun KnotenAuswertungsKontext.mengenOperatorEingänge(): List<MengenAusdruck> = operatorEingänge { anschluss, index ->
     BenannteMenge(unbekannteKennung(knoten, anschluss), unbekanntesOperatorLatex(knoten, index))
 }.map { it.objekt as? MengenAusdruck ?: error("Mengeneingang ist ungültig.") }
+
+private fun KnotenAuswertungsKontext.zahlenOperatorEingänge(): List<ZahlAusdruck> = operatorEingänge { _, index -> Variable("vektor_$index") }
+    .map { it.objekt as? ZahlAusdruck ?: error("Vektor benötigt Zahlen.") }
+private fun Tupel.zahlen() = elemente.map { it as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
 
 internal fun eingabeLatex(index: Int) = "\\mathrm{eingabe}_{${index}}"
 

@@ -32,10 +32,10 @@ object MathematikKnotenVorlagen {
         listOf(eingang("basis", MathematikAnschlussArten.Zahl.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
     val Gleichheit = KnotenVorlage(
-        "mathematik.gleichheit", "Gleichheit", "Aussagen", "Vergleicht zwei mathematische Objekte.", GraphGröße(220f, 110f),
+        "mathematik.gleichheit", "Gleichheit", "Aussagen: Aussagenprädikate", "Vergleicht zwei mathematische Objekte.", GraphGröße(220f, 110f),
         listOf(eingang("links", MathematikAnschlussArten.Objekt.id, 0), eingang("rechts", MathematikAnschlussArten.Objekt.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
-    val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id)
+    val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
     val Kleiner = vergleichVorlage("mathematik.kleiner", "Kleiner", "<")
     val Größer = vergleichVorlage("mathematik.größer", "Größer", ">")
     val KleinerGleich = vergleichVorlage("mathematik.kleinerGleich", "Kleiner oder gleich", "≤")
@@ -69,6 +69,20 @@ object MathematikKnotenVorlagen {
         "mathematik.logarithmus", "Logarithmus", "Rechnen", "Logarithmus mit Basis; e, 2 und 10 werden als ln, lb und log dargestellt.", GraphGröße(230f, 112f),
         listOf(eingang("basis", MathematikAnschlussArten.Zahl.id, 0), eingang("argument", MathematikAnschlussArten.Zahl.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
+    val Tupel = KnotenVorlage(
+        "mathematik.tupel", "Tupel", "Zahlen", "Geordnetes Tupel aus zwei oder mehr Zahlen.", GraphGröße(220f, 115f),
+        listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("tupel", MathematikAnschlussArten.Tupel.id)),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
+    )
+    val KomplexAusTupel = KnotenVorlage(
+        "mathematik.komplexAusTupel", "Komplexe Zahl aus Tupel", "Zahlen", "Interpretiert ein Tupel als (x,y) oder (r,φ).", GraphGröße(250f, 110f),
+        listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("zahl", MathematikAnschlussArten.Zahl.id)), mapOf("modus" to "kartesisch"),
+    )
+    val Konjugierte = KnotenVorlage("mathematik.konjugierte", "Konjugierte", "Zahlen", "Bildet die komplex konjugierte Zahl.", GraphGröße(220f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
+    val Realteil = KnotenVorlage("mathematik.realteil", "Realteil", "Zahlen", "Liest den Realteil einer komplexen Zahl.", GraphGröße(210f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
+    val Imaginärteil = KnotenVorlage("mathematik.imaginärteil", "Imaginärteil", "Zahlen", "Liest den Imaginärteil einer komplexen Zahl.", GraphGröße(220f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
+    val KomplexerRadius = KnotenVorlage("mathematik.komplexerRadius", "Radius einer Zahl", "Zahlen", "Betrag einer komplexen Zahl.", GraphGröße(220f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
+    val Winkel = KnotenVorlage("mathematik.winkel", "Winkel einer Zahl", "Zahlen", "Hauptargument einer komplexen Zahl.", GraphGröße(220f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val EndlicheMenge = KnotenVorlage(
         "mathematik.endlicheMenge", "Endliche Menge", "Mengen", "Endliche Menge aus einer kommagetrennten Liste.", GraphGröße(220f, 105f),
         listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)), mapOf("elemente" to "1,2,3"),
@@ -129,18 +143,40 @@ object MathematikKnotenVorlagen {
         listOf(eingang("term", MathematikAnschlussArten.Zahl.id, 0), eingang("argument1", MathematikAnschlussArten.Zahl.id, 1, true), eingang("zielmenge", MathematikAnschlussArten.Menge.id, 2), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)),
         mapOf("name" to "f"),
     )
+    val Komposition = KnotenVorlage("mathematik.komposition", "Komposition", "Abbildungen", "Komponiert zwei einwertige skalare Methoden.", GraphGröße(245f, 110f), listOf(eingang("außen", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("innen", MathematikAnschlussArten.ZahlFunktion.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
+    val Iteration = KnotenVorlage("mathematik.iteration", "Iteration", "Abbildungen", "Bildet die nichtnegative Iteration einer skalaren Endomorphismus-Methode.", GraphGröße(255f, 110f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
+    val MethodenDifferentieren = KnotenVorlage("mathematik.methodenDifferentieren", "Methode differentieren", "Abbildungen", "Differentiert eine skalare Methode bei differentialfähigem Wertevorrat.", GraphGröße(260f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
+    val MethodenIntegrieren = KnotenVorlage("mathematik.methodenIntegrieren", "Methode integrieren", "Abbildungen", "Integriert eine skalare Methode bei integralfähigem Wertevorrat.", GraphGröße(255f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
+    val SpaltenMethodeDifferentieren = methodenAnalysisVorlage("mathematik.spaltenMethodeDifferentieren", "Spaltenmethode differentieren", "Differentiert die Komponenten einer Spaltenvektormethode.", MathematikAnschlussArten.SpaltenVektorFunktion.id)
+    val ZeilenMethodeDifferentieren = methodenAnalysisVorlage("mathematik.zeilenMethodeDifferentieren", "Zeilenmethode differentieren", "Differentiert die Komponenten einer Zeilenvektormethode.", MathematikAnschlussArten.ZeilenVektorFunktion.id)
+    val SpaltenMethodeIntegrieren = methodenAnalysisVorlage("mathematik.spaltenMethodeIntegrieren", "Spaltenmethode integrieren", "Integriert die Komponenten einer Spaltenvektormethode.", MathematikAnschlussArten.SpaltenVektorFunktion.id)
+    val ZeilenMethodeIntegrieren = methodenAnalysisVorlage("mathematik.zeilenMethodeIntegrieren", "Zeilenmethode integrieren", "Integriert die Komponenten einer Zeilenvektormethode.", MathematikAnschlussArten.ZeilenVektorFunktion.id)
     val Vektor = KnotenVorlage(
-        "mathematik.vektor", "Vektor", "Lineare Algebra", "Vektor aus exakten Zahlen.", GraphGröße(220f, 105f),
-        listOf(ausgang("vektor", MathematikAnschlussArten.Vektor.id)), mapOf("werte" to "1,2,3"),
+        "mathematik.vektor", "Spaltenvektor", "Vektoren", "Spaltenvektor aus dynamischen Zahl-Eingängen.", GraphGröße(220f, 115f),
+        listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
+    val ZeilenVektor = KnotenVorlage("mathematik.zeilenVektor", "Zeilenvektor", "Vektoren", "Zeilenvektor aus dynamischen Zahl-Eingängen.", GraphGröße(220f, 115f), listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"))
+    val TupelZuSpalte = KnotenVorlage("mathematik.tupelZuSpalte", "Tupel zu Spalte", "Vektoren", "Erzeugt aus einem Zahlentupel einen Spaltenvektor.", GraphGröße(225f, 105f), listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)))
+    val TupelZuZeile = KnotenVorlage("mathematik.tupelZuZeile", "Tupel zu Zeile", "Vektoren", "Erzeugt aus einem Zahlentupel einen Zeilenvektor.", GraphGröße(225f, 105f), listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)))
+    val EinheitsSpalte = KnotenVorlage("mathematik.einheitsSpalte", "Einheitsvektor (Spalte)", "Vektoren", "Standardbasisvektor eᵢ als Spalte.", GraphGröße(225f, 105f), listOf(ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)), mapOf("dimension" to "3", "index" to "1"))
+    val EinheitsZeile = KnotenVorlage("mathematik.einheitsZeile", "Einheitsvektor (Zeile)", "Vektoren", "Standardbasisvektor eᵢ als Zeile.", GraphGröße(225f, 105f), listOf(ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)), mapOf("dimension" to "3", "index" to "1"))
+    val VektorRadiusSpalte = KnotenVorlage("mathematik.vektorRadiusSpalte", "Radius (Spalte)", "Vektoren", "Euklidische Norm eines Spaltenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
+    val VektorRadiusZeile = KnotenVorlage("mathematik.vektorRadiusZeile", "Radius (Zeile)", "Vektoren", "Euklidische Norm eines Zeilenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.ZeilenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val Matrix = KnotenVorlage(
-        "mathematik.matrix", "Matrix", "Lineare Algebra", "Matrix: Zeilen mit Semikolon, Werte mit Komma trennen.", GraphGröße(250f, 115f),
-        listOf(ausgang("matrix", MathematikAnschlussArten.Matrix.id)), mapOf("werte" to "1,0;0,1"),
+        "mathematik.matrix", "Matrix", "Matrizen", "Matrix aus dynamischen Zeilenvektoren gleicher Länge.", GraphGröße(250f, 115f),
+        listOf(eingang("zeile1", MathematikAnschlussArten.ZeilenVektor.id, 0, true), eingang("zeile2", MathematikAnschlussArten.ZeilenVektor.id, 1, true), ausgang("matrix", MathematikAnschlussArten.Matrix.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     val Skalarprodukt = KnotenVorlage(
-        "mathematik.skalarprodukt", "Skalarprodukt", "Lineare Algebra", "Berechnet das Skalarprodukt zweier Vektoren.", GraphGröße(230f, 110f),
-        listOf(eingang("a", MathematikAnschlussArten.Vektor.id, 0), eingang("b", MathematikAnschlussArten.Vektor.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+        "mathematik.skalarprodukt", "Skalarprodukt (Spalten)", "Vektoren", "Berechnet das Skalarprodukt zweier Spaltenvektoren.", GraphGröße(230f, 110f),
+        listOf(eingang("a", MathematikAnschlussArten.SpaltenVektor.id, 0), eingang("b", MathematikAnschlussArten.SpaltenVektor.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
+    val SkalarproduktZeile = KnotenVorlage("mathematik.skalarproduktZeile", "Skalarprodukt (Zeilen)", "Vektoren", "Berechnet das Skalarprodukt zweier Zeilenvektoren.", GraphGröße(230f, 110f), listOf(eingang("a", MathematikAnschlussArten.ZeilenVektor.id, 0), eingang("b", MathematikAnschlussArten.ZeilenVektor.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
+    val KreuzproduktSpalte = KnotenVorlage("mathematik.kreuzproduktSpalte", "Kreuzprodukt (Spalten)", "Vektoren", "Kreuzprodukt reeller 3-Spaltenvektoren.", GraphGröße(235f, 110f), listOf(eingang("a", MathematikAnschlussArten.SpaltenVektor.id, 0), eingang("b", MathematikAnschlussArten.SpaltenVektor.id, 1), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)))
+    val KreuzproduktZeile = KnotenVorlage("mathematik.kreuzproduktZeile", "Kreuzprodukt (Zeilen)", "Vektoren", "Kreuzprodukt reeller 3-Zeilenvektoren.", GraphGröße(235f, 110f), listOf(eingang("a", MathematikAnschlussArten.ZeilenVektor.id, 0), eingang("b", MathematikAnschlussArten.ZeilenVektor.id, 1), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)))
+    val TransponiereSpalte = KnotenVorlage("mathematik.transponiereSpalte", "Transponiere Spalte", "Vektoren", "Wandelt eine Spalte in eine Zeile um.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)))
+    val TransponiereZeile = KnotenVorlage("mathematik.transponiereZeile", "Transponiere Zeile", "Vektoren", "Wandelt eine Zeile in eine Spalte um.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.ZeilenVektor.id), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)))
+    val MatrixProdukt = KnotenVorlage("mathematik.matrixProdukt", "Matrixprodukt", "Matrizen", "Multipliziert zwei kompatible Matrizen.", GraphGröße(230f, 110f), listOf(eingang("a", MathematikAnschlussArten.Matrix.id, 0), eingang("b", MathematikAnschlussArten.Matrix.id, 1), ausgang("matrix", MathematikAnschlussArten.Matrix.id)))
+    val TransponiereMatrix = KnotenVorlage("mathematik.transponiereMatrix", "Transponiere Matrix", "Matrizen", "Transponiert eine Matrix.", GraphGröße(230f, 105f), listOf(eingang("matrix", MathematikAnschlussArten.Matrix.id), ausgang("matrix", MathematikAnschlussArten.Matrix.id)))
     val MatrixInvertieren = KnotenVorlage(
         "mathematik.matrixInvertieren", "Matrix invertieren", "Lineare Algebra", "Invertiert eine rationale quadratische Matrix exakt.", GraphGröße(245f, 110f),
         listOf(eingang("matrix", MathematikAnschlussArten.Matrix.id), ausgang("inverse", MathematikAnschlussArten.Matrix.id)),
@@ -158,18 +194,19 @@ object MathematikKnotenVorlagen {
         listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), eingang("aussage", MathematikAnschlussArten.Aussage.id, 1), ausgang("fall", MathematikAnschlussArten.Objekt.id, 0), ausgang("sonst", MathematikAnschlussArten.Objekt.id, 1)),
     )
 
-    val alle = listOf(Zahl, Variable, Addition, Multiplikation, Division, Potenz, Wurzel, Logarithmus, Gleichheit, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, Vektor, Matrix, Skalarprodukt, MatrixInvertieren, KartenEingang, KartenAusgang, Fall)
+    val alle = listOf(Zahl, Variable, Addition, Multiplikation, Division, Potenz, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Ableiten, Integrieren, EndlicheMenge, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, TransponiereSpalte, TransponiereZeile, MatrixProdukt, TransponiereMatrix, MatrixInvertieren, KartenEingang, KartenAusgang, Fall)
 
-    private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId) = KnotenVorlage(
-        art, name, "Aussagen", beschreibung, GraphGröße(220f, 110f),
+    private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId, kategorie: String = "Aussagen: Aussagenprädikate") = KnotenVorlage(
+        art, name, kategorie, beschreibung, GraphGröße(220f, 110f),
         listOf(eingang("links", links, 0), eingang("rechts", rechts, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
 
-    private fun vergleichVorlage(art: String, name: String, zeichen: String) = aussagenVorlage(art, name, "Vergleicht zwei Zahlterme mit $zeichen.", MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Zahl.id)
-    private fun mengenAussagenVorlage(art: String, name: String, beschreibung: String) = aussagenVorlage(art, name, beschreibung, MathematikAnschlussArten.Menge.id, MathematikAnschlussArten.Menge.id)
+    private fun vergleichVorlage(art: String, name: String, zeichen: String) = aussagenVorlage(art, name, "Vergleicht zwei Zahlterme mit $zeichen.", MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Zahl.id, "Aussagen: Zahlenprädikate")
+    private fun mengenAussagenVorlage(art: String, name: String, beschreibung: String) = aussagenVorlage(art, name, beschreibung, MathematikAnschlussArten.Menge.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
     private fun mengenOperatorVorlage(art: String, name: String, beschreibung: String, zeichen: String) = KnotenVorlage(
         art, name, "Mengen", beschreibung, GraphGröße(230f, 120f),
         listOf(eingang("a", MathematikAnschlussArten.Menge.id, 0, true), eingang("b", MathematikAnschlussArten.Menge.id, 1, true), ausgang("menge", MathematikAnschlussArten.Menge.id)),
         mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
+    private fun methodenAnalysisVorlage(art: String, name: String, beschreibung: String, funktion: AnschlussArtId) = KnotenVorlage(art, name, "Abbildungen", beschreibung, GraphGröße(260f, 105f), listOf(eingang("methode", funktion), ausgang("methode", funktion)))
 }

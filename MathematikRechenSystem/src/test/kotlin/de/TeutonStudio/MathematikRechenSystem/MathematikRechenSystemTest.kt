@@ -63,4 +63,16 @@ class MathematikRechenSystemTest {
         assertEquals(Wahrheitswert.Wahr, EchteTeilmengeBeziehung(a, b).entscheide().wahrheitswert)
         assertEquals(Wahrheitswert.Wahr, Disjunktheit(a, EndlicheMenge(setOf(RationaleZahl.von(3)))).entscheide().wahrheitswert)
     }
+
+    @Test fun komplexeZahlAusTupelUndKonjugation() {
+        val z = komplexAusKartesisch(Tupel(listOf(RationaleZahl.von(2), RationaleZahl.Null)))
+        assertEquals(RationaleZahl.von(2), z.realteil)
+        assertEquals(RationaleZahl.von(-1), konjugiere(KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins)).imaginärteil)
+    }
+
+    @Test fun orientierteVektorenVerhindernFalscheSkalarprodukte() {
+        val spalte = SpaltenVektor(listOf(RationaleZahl.von(1), RationaleZahl.von(2)))
+        assertEquals(RationaleZahl.von(5), spalte.skalarprodukt(spalte))
+        assertFailsWith<IllegalArgumentException> { spalte.skalarprodukt(ZeilenVektor(spalte.werte)) }
+    }
 }

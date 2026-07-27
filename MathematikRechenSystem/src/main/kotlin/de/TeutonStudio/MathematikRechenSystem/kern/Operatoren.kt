@@ -45,6 +45,7 @@ data class KomplexeZahl(val realteil: ZahlAusdruck, val imaginärteil: ZahlAusdr
         else -> "${realteil.zuLatex()} + ${imaginärteil.zuLatex()}i"
     }
 }
+data class Argument(val zahl: KomplexeZahl) : ZahlAusdruck { override fun zuLatex() = "\\arg\\left(${zahl.zuLatex()}\\right)" }
 data class Logarithmus(val basis: ZahlAusdruck, val argument: ZahlAusdruck) : ZahlAusdruck {
     override fun zuLatex() = when (basis) {
         EulerscheZahl -> "\\ln\\left(${argument.zuLatex()}\\right)"
@@ -153,4 +154,16 @@ private fun BigInteger.sqrtOrNull(): BigInteger? {
     if (signum() < 0) return null
     val wurzel = sqrt()
     return wurzel.takeIf { it * it == this }
+}
+
+fun konjugiere(zahl: KomplexeZahl) = KomplexeZahl(zahl.realteil, negation(zahl.imaginärteil))
+fun komplexerBetrag(zahl: KomplexeZahl): ZahlAusdruck = wurzel(addition(Potenz(zahl.realteil, RationaleZahl.von(2)), Potenz(zahl.imaginärteil, RationaleZahl.von(2))))
+fun komplexAusKartesisch(tupel: Tupel): KomplexeZahl {
+    require(tupel.elemente.size == 2 && tupel.elemente.all { it is ZahlAusdruck }) { "Eine komplexe Zahl benötigt ein Tupel aus zwei Zahlen." }
+    return KomplexeZahl(tupel.elemente[0] as ZahlAusdruck, tupel.elemente[1] as ZahlAusdruck)
+}
+fun komplexAusPolar(tupel: Tupel): KomplexeZahl {
+    require(tupel.elemente.size == 2 && tupel.elemente.all { it is ZahlAusdruck }) { "Eine komplexe Zahl benötigt ein Tupel aus Radius und Winkel." }
+    val r = tupel.elemente[0] as ZahlAusdruck; val phi = tupel.elemente[1] as ZahlAusdruck
+    return KomplexeZahl(multiplikation(r, Cosinus(phi)), multiplikation(r, Sinus(phi)))
 }

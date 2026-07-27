@@ -202,6 +202,8 @@ class AtlasZustand(context: Context) {
         val funktionsArt = when {
             anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Zahl.id) -> MathematikAnschlussArten.ZahlFunktion.id
             anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.Menge.id) -> MathematikAnschlussArten.MengenFunktion.id
+            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.SpaltenVektor.id) -> MathematikAnschlussArten.SpaltenVektorFunktion.id
+            anschlussArten.istUnterart(wertArt, MathematikAnschlussArten.ZeilenVektor.id) -> MathematikAnschlussArten.ZeilenVektorFunktion.id
             else -> return null
         }
         return KnotenVorlage(
@@ -273,7 +275,7 @@ class AtlasZustand(context: Context) {
 
     private companion object {
         val assoziativeKnotenArten = setOf(
-            "mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt",
+            "mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix",
         )
     }
 

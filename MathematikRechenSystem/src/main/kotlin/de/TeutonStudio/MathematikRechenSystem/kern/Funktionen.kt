@@ -65,6 +65,63 @@ data class Abbild(val menge: MengenAusdruck, val methode: Funktion) : MengenAusd
     override fun zuLatex() = "${methode.name}[${menge.zuLatex()}]"
 }
 
+fun MengenAusdruck.hatDifferentialBegriff() = this == ReelleZahlen
+fun MengenAusdruck.hatIntegralBegriff() = this == ReelleZahlen
+
+private fun Funktion.einwertigeZahlMethode(): Triple<Variable, String, ZahlAusdruck> {
+    require(parameter.size == 1 && ausgaben.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
+    val (name, ausgabe) = einzigeAusgabe()
+    return Triple(parameter.single(), name, ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."))
+}
+
+fun komponiere(außen: Funktion, innen: Funktion): Funktion {
+    val (x, ausgabeAußen, termAußen) = außen.einwertigeZahlMethode()
+    val (t, ausgabeInnen, termInnen) = innen.einwertigeZahlMethode()
+    val wertevorrat = innen.werteVorräte[t.name] ?: error("Die innere Methode benötigt einen Wertevorrat.")
+    val zielInnen = innen.zielMengeFür(ausgabeInnen)
+    val wertevorratAußen = außen.werteVorräte[x.name] ?: error("Die äußere Methode benötigt einen Wertevorrat.")
+    require(zielInnen == wertevorratAußen) { "Zielmenge der inneren Methode und Wertevorrat der äußeren Methode müssen übereinstimmen." }
+    return Funktion("${außen.name}\\circ${innen.name}", listOf(t), mapOf("wert" to ersetze(termAußen, mapOf(x.name to termInnen))), mapOf("wert" to außen.zielMengeFür(ausgabeAußen)), mapOf(t.name to wertevorrat))
+}
+
+fun iteriere(methode: Funktion, exponent: Int): Funktion {
+    require(exponent >= 0) { "Der Iterationsexponent muss nichtnegativ sein." }
+    val (x, ausgabe, term) = methode.einwertigeZahlMethode()
+    val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
+    require(methode.zielMengeFür(ausgabe) == wertevorrat) { "Iteration ist nur für Endomorphismen definiert." }
+    var ergebnis = Funktion("id", listOf(x), mapOf("wert" to x), mapOf("wert" to wertevorrat), mapOf(x.name to wertevorrat))
+    repeat(exponent) { ergebnis = komponiere(methode, ergebnis) }
+    return ergebnis.copy(name = "${methode.name}^{${exponent}}")
+}
+
+fun differenziereMethode(methode: Funktion): Funktion {
+    require(methode.parameter.size == 1 && methode.ausgaben.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
+    val x = methode.parameter.single(); val (ausgabe, wert) = methode.einzigeAusgabe()
+    val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
+    require(wertevorrat.hatDifferentialBegriff()) { "Der Wertevorrat definiert keinen Differentialbegriff." }
+    val abgeleitet = when (wert) {
+        is ZahlAusdruck -> ableiten(wert, x).ergebnis
+        is SpaltenVektor -> SpaltenVektor(wert.werte.map { ableiten(it, x).ergebnis })
+        is ZeilenVektor -> ZeilenVektor(wert.werte.map { ableiten(it, x).ergebnis })
+        else -> error("Die Methode muss eine Zahl oder einen orientierten Vektor ausgeben.")
+    }
+    return methode.copy(name = "${methode.name}'", ausgaben = mapOf(ausgabe to abgeleitet))
+}
+
+fun integriereMethode(methode: Funktion): Funktion {
+    require(methode.parameter.size == 1 && methode.ausgaben.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
+    val x = methode.parameter.single(); val (ausgabe, wert) = methode.einzigeAusgabe()
+    val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
+    require(wertevorrat.hatIntegralBegriff()) { "Der Wertevorrat definiert keinen Integralbegriff." }
+    val integriert = when (wert) {
+        is ZahlAusdruck -> integrieren(wert, x).ergebnis
+        is SpaltenVektor -> SpaltenVektor(wert.werte.map { integrieren(it, x).ergebnis })
+        is ZeilenVektor -> ZeilenVektor(wert.werte.map { integrieren(it, x).ergebnis })
+        else -> error("Die Methode muss eine Zahl oder einen orientierten Vektor ausgeben.")
+    }
+    return methode.copy(name = "\\int ${methode.name}", ausgaben = mapOf(ausgabe to integriert))
+}
+
 fun bildeAb(menge: MengenAusdruck, methode: Funktion): MengenAusdruck {
     val (ausgabe, _) = methode.prüfeAlsIterationsMethode(erwartetMengenwert = false)
     if (menge !is EndlicheMenge) return Abbild(menge, methode)
@@ -108,6 +165,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is Wurzel -> Wurzel(ersetze(objekt.argument, bindungen))
     is KomplexeZahl -> KomplexeZahl(ersetze(objekt.realteil, bindungen), ersetze(objekt.imaginärteil, bindungen))
     is Logarithmus -> Logarithmus(ersetze(objekt.basis, bindungen), ersetze(objekt.argument, bindungen))
+    is Argument -> Argument(ersetze(objekt.zahl, bindungen) as KomplexeZahl)
     is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { ersetze(it, bindungen) }.toSet())
     is Vereinigung -> vereinige(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
@@ -125,7 +183,8 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is ObermengenBeziehung -> ObermengenBeziehung(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck, objekt.echt)
     is Disjunktheit -> Disjunktheit(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
     is Tupel -> Tupel(objekt.elemente.map { ersetze(it, bindungen) })
-    is Vektor -> Vektor(objekt.werte.map { ersetze(it, bindungen) })
+    is SpaltenVektor -> SpaltenVektor(objekt.werte.map { ersetze(it, bindungen) })
+    is ZeilenVektor -> ZeilenVektor(objekt.werte.map { ersetze(it, bindungen) })
     is Matrix -> Matrix(objekt.zeilen.map { zeile -> zeile.map { ersetze(it, bindungen) } })
     is Funktion -> objekt.copy(
         ausgaben = objekt.ausgaben.mapValues { ersetze(it.value, bindungen - objekt.parameter.map { it.name }.toSet()) },

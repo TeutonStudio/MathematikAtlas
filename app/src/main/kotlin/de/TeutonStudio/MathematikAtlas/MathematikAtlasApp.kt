@@ -254,7 +254,7 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
             Text(knoten.name, style = MaterialTheme.typography.titleLarge)
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
-            if (knoten.art in setOf("mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt")) {
+            if (knoten.art in setOf("mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix")) {
                 val wert = knoten.parameter["festeEingänge"] ?: "2"
                 var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
@@ -338,39 +338,46 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
             Column(Modifier.heightIn(max = 520.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(zustand.suchText, zustand::setzeSuchText, label = { Text("Suchen") }, modifier = Modifier.fillMaxWidth())
                 val sichtbareVorlagen = zustand.sichtbareVorlagen()
-                val kategorien = zustand.knotenKategorien()
-                val anzahlNachKategorie = sichtbareVorlagen.groupingBy { it.kategorie }.eachCount()
-                val aktiveKategorie = zustand.aktiveKnotenKategorie()
-                val ausgewählterTab = aktiveKategorie?.let { kategorien.indexOf(it) + 1 } ?: 0
-                PrimaryScrollableTabRow(selectedTabIndex = ausgewählterTab, edgePadding = 0.dp) {
+                var hauptTab by remember { mutableIntStateOf(0) }
+                val rechnen = sichtbareVorlagen.filterNot { it.kategorie.startsWith("Aussagen:") }
+                val aussagen = sichtbareVorlagen.filter { it.kategorie.startsWith("Aussagen:") }
+                PrimaryScrollableTabRow(selectedTabIndex = hauptTab, edgePadding = 0.dp) {
                     Tab(
-                        selected = aktiveKategorie == null,
-                        onClick = { zustand.wähleKnotenKategorie(null) },
-                        text = { Text("Alle (${sichtbareVorlagen.size})") },
+                        selected = hauptTab == 0,
+                        onClick = { hauptTab = 0 },
+                        text = { Text("Rechnen (${rechnen.size})") },
                     )
-                    kategorien.forEach { kategorie ->
-                        val anzahl = anzahlNachKategorie[kategorie] ?: 0
-                        Tab(
-                            selected = aktiveKategorie == kategorie,
-                            onClick = { zustand.wähleKnotenKategorie(kategorie) },
-                            enabled = anzahl > 0,
-                            text = { Text("$kategorie ($anzahl)") },
-                        )
-                    }
+                    Tab(selected = hauptTab == 1, onClick = { hauptTab = 1 }, text = { Text("Aussagen (${aussagen.size})") })
                 }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val vorlagen = sichtbareVorlagen.filter { aktiveKategorie == null || it.kategorie == aktiveKategorie }
-                    items(vorlagen) { vorlage ->
-                        ListItem(
-                            headlineContent = { Text(vorlage.name) }, supportingContent = { Text(vorlage.beschreibung) },
-                            modifier = Modifier.clip(MaterialTheme.shapes.small).clickable { zustand.fügeKnotenEin(vorlage, position) },
-                        )
+                    val vorlagen = if (hauptTab == 0) rechnen else aussagen
+                    val gruppen = vorlagen.groupBy { kategorieAnzeige(it.kategorie) }.toMutableMap()
+                    if (hauptTab == 0) gruppen.putIfAbsent("Tensoren", emptyList())
+                    val reihenfolge = if (hauptTab == 0) listOf("Zahlen", "Vektoren", "Matrizen", "Tensoren", "Abbildungen", "Mengen", "Steuerung", "Karten") else listOf("Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate")
+                    reihenfolge.filter { it in gruppen }.forEach { gruppe ->
+                        val einträge = gruppen.getValue(gruppe)
+                        item { Text(gruppe, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp, start = 4.dp)) }
+                        if (einträge.isEmpty()) item { Text("Noch keine Knoten", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp)) }
+                        items(einträge) { vorlage ->
+                            ListItem(
+                                headlineContent = { Text(vorlage.name) }, supportingContent = { Text(vorlage.beschreibung) },
+                                modifier = Modifier.clip(MaterialTheme.shapes.small).clickable { zustand.fügeKnotenEin(vorlage, position) },
+                            )
+                        }
                     }
                 }
             }
         },
         confirmButton = { TextButton(onClick = zustand::schließeKnotenAuswahl) { Text("Schließen") } },
     )
+}
+
+private fun kategorieAnzeige(kategorie: String): String = when {
+    kategorie.startsWith("Aussagen:") -> kategorie.substringAfter(": ")
+    kategorie in setOf("Rechnen", "Analysis", "Algebra", "Operatoren") -> "Zahlen"
+    kategorie in setOf("Methoden") -> "Abbildungen"
+    kategorie in setOf("Gruppen", "Gespeicherte Karten") -> "Karten"
+    else -> kategorie
 }
 
 private fun anschlussFarbe(id: String) = when (id) {
