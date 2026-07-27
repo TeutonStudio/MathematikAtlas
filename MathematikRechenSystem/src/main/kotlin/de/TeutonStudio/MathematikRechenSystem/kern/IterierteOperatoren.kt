@@ -95,7 +95,7 @@ private fun iteriereMengen(methode: Funktion, indexMenge: MengenAusdruck, schnit
 
 private fun prüfeZielmenge(methode: Funktion, index: MathematischesObjekt, ergebnis: MengenAusdruck) {
     val grundMenge = methode.grundMengeFürMengenAusgabe()
-    if (prüfeTeilmenge(ergebnis, grundMenge).wahrheitswert == Wahrheitswert.Falsch) {
+    if (prüfeTeilmenge(ergebnis, grundMenge).wahrheitswert == Wahrheitswert.Lüge) {
         error(
             "Die Methode '${methode.name}' liefert für ${methode.parameter.single().name} = ${index.zuLatex()} " +
                 "eine Menge, die nicht Teil der Grundmenge ${grundMenge.zuLatex()} ist.",

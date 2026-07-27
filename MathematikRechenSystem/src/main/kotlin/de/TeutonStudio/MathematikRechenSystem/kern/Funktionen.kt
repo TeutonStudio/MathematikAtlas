@@ -288,7 +288,7 @@ private fun vereinfacheObjekt(
         val lüge = vereinfacheObjekt(objekt.lüge, kontext)
         if (wahr == lüge) wahr else when (objekt.aussage.entscheide(kontext).wahrheitswert) {
             Wahrheitswert.Wahr -> wahr
-            Wahrheitswert.Falsch -> lüge
+            Wahrheitswert.Lüge -> lüge
             null -> objekt.copy(wahr = wahr, lüge = lüge)
         }
     }

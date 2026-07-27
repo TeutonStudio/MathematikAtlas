@@ -391,7 +391,7 @@ object StandardMathematikAuswerter {
             val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + gemeinsameAnnahmen)
             val basis = when (aussage.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> wahr
-                Wahrheitswert.Falsch -> lüge
+                Wahrheitswert.Lüge -> lüge
                 null -> BedingterWert(FallAusdruck(wahr.objekt, aussage, lüge.objekt))
             }
             KnotenAuswertungsErgebnis(mapOf(

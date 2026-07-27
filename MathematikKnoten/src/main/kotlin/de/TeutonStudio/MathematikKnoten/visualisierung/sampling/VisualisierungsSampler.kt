@@ -214,7 +214,7 @@ private fun numerischeKoordinaten(
     if (objekt is FallAusdruck) {
         return when (bewerteAussage(objekt.aussage, werte, 1e-9)) {
             NumerischeAussage.Wahr -> numerischeKoordinaten(objekt.wahr, werte)
-            NumerischeAussage.Falsch -> numerischeKoordinaten(objekt.lüge, werte)
+            NumerischeAussage.Lüge -> numerischeKoordinaten(objekt.lüge, werte)
             else -> null
         }
     }
@@ -229,19 +229,19 @@ private fun numerischeKoordinaten(
     }
 }
 
-private sealed interface NumerischeAussage { data object Wahr : NumerischeAussage; data object Falsch : NumerischeAussage; data object Unbekannt : NumerischeAussage; data class Gleichheit(val residuum: Double) : NumerischeAussage }
+private sealed interface NumerischeAussage { data object Wahr : NumerischeAussage; data object Lüge : NumerischeAussage; data object Unbekannt : NumerischeAussage; data class Gleichheit(val residuum: Double) : NumerischeAussage }
 
 private fun bewerteAussage(a: Aussage, werte: Map<String, Double>, toleranz: Double): NumerischeAussage = when (a) {
     is Gleichheit -> residuum(a.links, a.rechts, werte)?.let(NumerischeAussage::Gleichheit) ?: NumerischeAussage.Unbekannt
-    is Ungleichheit -> residuum(a.links, a.rechts, werte)?.let { if (abs(it) > toleranz) NumerischeAussage.Wahr else NumerischeAussage.Falsch } ?: NumerischeAussage.Unbekannt
-    is Vergleich -> { val l = numerisch(a.links, werte); val r = numerisch(a.rechts, werte); if (l == null || r == null) NumerischeAussage.Unbekannt else if (when (a.art) { VergleichsArt.Kleiner -> l < r; VergleichsArt.KleinerGleich -> l <= r + toleranz; VergleichsArt.Größer -> l > r; VergleichsArt.GrößerGleich -> l >= r - toleranz }) NumerischeAussage.Wahr else NumerischeAussage.Falsch }
-    is Negation -> when (bewerteAussage(a.aussage, werte, toleranz)) { NumerischeAussage.Wahr -> NumerischeAussage.Falsch; NumerischeAussage.Falsch -> NumerischeAussage.Wahr; else -> NumerischeAussage.Unbekannt }
+    is Ungleichheit -> residuum(a.links, a.rechts, werte)?.let { if (abs(it) > toleranz) NumerischeAussage.Wahr else NumerischeAussage.Lüge } ?: NumerischeAussage.Unbekannt
+    is Vergleich -> { val l = numerisch(a.links, werte); val r = numerisch(a.rechts, werte); if (l == null || r == null) NumerischeAussage.Unbekannt else if (when (a.art) { VergleichsArt.Kleiner -> l < r; VergleichsArt.KleinerGleich -> l <= r + toleranz; VergleichsArt.Größer -> l > r; VergleichsArt.GrößerGleich -> l >= r - toleranz }) NumerischeAussage.Wahr else NumerischeAussage.Lüge }
+    is Negation -> when (bewerteAussage(a.aussage, werte, toleranz)) { NumerischeAussage.Wahr -> NumerischeAussage.Lüge; NumerischeAussage.Lüge -> NumerischeAussage.Wahr; else -> NumerischeAussage.Unbekannt }
     is Konjunktion -> kombiniere(a.aussagen.map { bewerteAussage(it, werte, toleranz) }, true)
     is Disjunktion -> kombiniere(a.aussagen.map { bewerteAussage(it, werte, toleranz) }, false)
-    is WahrheitsKonstante -> if (a.wert) NumerischeAussage.Wahr else NumerischeAussage.Falsch
+    is WahrheitsKonstante -> if (a.wert) NumerischeAussage.Wahr else NumerischeAussage.Lüge
     else -> NumerischeAussage.Unbekannt
 }
-private fun kombiniere(werte: List<NumerischeAussage>, und: Boolean) = when { und && werte.any { it == NumerischeAussage.Falsch } -> NumerischeAussage.Falsch; !und && werte.any { it == NumerischeAussage.Wahr } -> NumerischeAussage.Wahr; werte.all { it == NumerischeAussage.Wahr } && und -> NumerischeAussage.Wahr; werte.all { it == NumerischeAussage.Falsch } && !und -> NumerischeAussage.Falsch; else -> NumerischeAussage.Unbekannt }
+private fun kombiniere(werte: List<NumerischeAussage>, und: Boolean) = when { und && werte.any { it == NumerischeAussage.Lüge } -> NumerischeAussage.Lüge; !und && werte.any { it == NumerischeAussage.Wahr } -> NumerischeAussage.Wahr; werte.all { it == NumerischeAussage.Wahr } && und -> NumerischeAussage.Wahr; werte.all { it == NumerischeAussage.Lüge } && !und -> NumerischeAussage.Lüge; else -> NumerischeAussage.Unbekannt }
 private fun residuum(l: MathematischesObjekt, r: MathematischesObjekt, werte: Map<String, Double>) = numerisch(l as? ZahlAusdruck, werte)?.let { links -> numerisch(r as? ZahlAusdruck, werte)?.let { links - it } }
 private fun numerisch(ausdruck: ZahlAusdruck?, werte: Map<String, Double>): Double? = when (ausdruck) {
     null -> null

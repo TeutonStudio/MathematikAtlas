@@ -172,7 +172,7 @@ fun filtereMenge(
             val bedingung = methode.wendeAn(mapOf(parameter.name to element)).getValue(ausgabeName) as Aussage
             when (bedingung.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> behalten += element
-                Wahrheitswert.Falsch -> Unit
+                Wahrheitswert.Lüge -> Unit
                 null -> return GefilterteMenge(menge, methode)
             }
         }
@@ -232,7 +232,7 @@ internal fun strukturellerSchlüssel(objekt: MathematischesObjekt): String = "${
 
 data class ElementBeziehung(val element: MathematischesObjekt, val menge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = when (menge) {
-        is EndlicheMenge -> if (element in menge.elemente) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+        is EndlicheMenge -> if (element in menge.elemente) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         is ReellesIntervall -> {
             val wert = element as? RationaleZahl
             val unten = vereinfache(menge.untereGrenze, kontext) as? RationaleZahl
@@ -240,29 +240,29 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
             if (wert != null && unten != null && oben != null) {
                 val enthalten = unten <= wert && wert <= oben
                 AussageErgebnis(
-                    if (enthalten) Wahrheitswert.Wahr else Wahrheitswert.Falsch,
+                    if (enthalten) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
                     if (enthalten) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
                 )
             } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
-        LeereMenge -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+        LeereMenge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         RationaleZahlen, ReelleZahlen -> if (element is RationaleZahl) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         GanzeZahlen -> if (element is RationaleZahl) {
             val wahr = element.nenner == java.math.BigInteger.ONE
-            AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+            AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
         } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         NatürlicheZahlen -> if (element is RationaleZahl) {
             val wahr = element.nenner == java.math.BigInteger.ONE && element.zähler.signum() >= 0
-            AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+            AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
         } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         is GefilterteMenge -> {
             val grundErgebnis = ElementBeziehung(element, menge.menge).entscheide(kontext)
-            if (grundErgebnis.wahrheitswert == Wahrheitswert.Falsch) grundErgebnis else {
+            if (grundErgebnis.wahrheitswert == Wahrheitswert.Lüge) grundErgebnis else {
                 val parameter = menge.methode.parameter.single()
                 val bedingung = menge.methode.wendeAn(mapOf(parameter.name to element)).values.single() as Aussage
                 val filterErgebnis = bedingung.entscheide(kontext)
                 when {
-                    filterErgebnis.wahrheitswert == Wahrheitswert.Falsch -> filterErgebnis
+                    filterErgebnis.wahrheitswert == Wahrheitswert.Lüge -> filterErgebnis
                     grundErgebnis.wahrheitswert == Wahrheitswert.Wahr && filterErgebnis.wahrheitswert == Wahrheitswert.Wahr ->
                         AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
                     else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
@@ -293,15 +293,15 @@ fun prüfeTeilmenge(
     teilMenge is EndlicheMenge && grundMenge is EndlicheMenge -> {
         val wahr = grundMenge.elemente.containsAll(teilMenge.elemente)
         AussageErgebnis(
-            if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch,
+            if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
             if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
         )
     }
     teilMenge is EndlicheMenge -> {
         val elementErgebnisse = teilMenge.elemente.map { ElementBeziehung(it, grundMenge).entscheide(kontext) }
         when {
-            elementErgebnisse.any { it.wahrheitswert == Wahrheitswert.Falsch } ->
-                AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+            elementErgebnisse.any { it.wahrheitswert == Wahrheitswert.Lüge } ->
+                AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
             elementErgebnisse.all { it.wahrheitswert == Wahrheitswert.Wahr } ->
                 AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
             else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
@@ -314,7 +314,7 @@ data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: Mengen
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         if (links is EndlicheMenge && rechts is EndlicheMenge) {
             val wahr = rechts.elemente.containsAll(links.elemente) && links.elemente != rechts.elemente
-            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
         }
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
@@ -331,7 +331,7 @@ data class Disjunktheit(val links: MengenAusdruck, val rechts: MengenAusdruck) :
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         if (links is EndlicheMenge && rechts is EndlicheMenge) {
             val wahr = links.elemente.intersect(rechts.elemente).isEmpty()
-            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
         }
         if (links == LeereMenge || rechts == LeereMenge) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
