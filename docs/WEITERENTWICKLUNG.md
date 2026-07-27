@@ -11,3 +11,5 @@ Priorisierte nächste Schritte:
 5. UI für den ausdrücklichen Wechsel einer Gruppeninstanz auf eine neuere Kartenversion ergänzen.
 6. Große Karten mit räumlichem Index und gecachten Bézier-Pfaden optimieren.
 7. Compose-UI-Tests für Drag, Verbindungserstellung, Breadcrumbs und Dateidialoge erweitern.
+8. Den R³-Sampler von der aktuellen Oberflächen-Punktwolke auf Marching Cubes oder Marching Tetrahedra erweitern und perspektivische Projektion ergänzen.
+9. Weitere Mengenformen und farbcodierende Ausdrücke ergänzen; die erste Visualisierung unterstützt eine zusätzliche gebundene Variable als kontinuierlichen Farbkanal.

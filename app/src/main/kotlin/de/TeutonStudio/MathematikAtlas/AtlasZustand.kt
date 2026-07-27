@@ -8,6 +8,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikAtlas.speicher.KartenSpeicher
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenRenderer
 
 @Stable
 class AtlasZustand(context: Context) {
@@ -162,6 +163,9 @@ class AtlasZustand(context: Context) {
     }
 
     fun renderer() = MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
+    fun rendererFür(knoten: KnotenDaten) = if (knoten.art == "mathematik.visualisierung") {
+        VisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
+    } else renderer()
 
     fun setzeSuchText(text: String) {
         suchText = text

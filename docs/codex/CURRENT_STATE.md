@@ -5,10 +5,10 @@
 ## Metadaten
 
 - Zuletzt verifiziert: 2026-07-27
-- Verifiziert durch: Codex; statische Quellcodeprüfung und lokale Diagnosebefehle
+- Verifiziert durch: Codex; Quellcodeprüfung sowie Gradle-Tests und Debug-Build mit dem vorhandenen JDK 17
 - Commit vor der Dokumentationsänderung: `718bab7cc1a4916acf9c91a28f95f46aac44f397` (`v2.0.12`)
 - Arbeitsbaum vor der Dokumentationsänderung: sauber
-- Verifikationsgrenze: Android-App wurde nicht gestartet; Gradle-Tests und -Builds konnten in der lokalen Umgebung nicht initialisiert werden. Das ist kein Nachweis eines Quellfehlers.
+- Verifikationsgrenze: Android-App wurde nicht auf einem Emulator oder Gerät gestartet. JVM-Tests und der Debug-Build wurden lokal ausgeführt.
 
 ## Start und Prüfung
 
@@ -18,8 +18,8 @@
 | Anwendung starten | `MainActivity` setzt `MathematikAtlasApp` als Compose-Inhalt | Start auf Emulator/Gerät nicht verifiziert. Android Studio kann das Gradle-Projekt öffnen. |
 | Architektur- und Strukturprüfung | `python3 scripts/pruefe_repository.py` | Erfolgreich: XML, Wrapper und Architekturprüfung bestanden. |
 | Zusätzliche Kernprüfung | `python3 scripts/pruefe_kern.py` | Nicht ausführbar: `kotlinc` fehlt in der lokalen Umgebung. |
-| JVM-Tests | `./gradlew test --offline` | Nicht gestartet: Der lokale Standard-JDK 25 lässt Gradle mit Ausgabe `25.0.3` abbrechen. Ein zweiter Versuch mit dem vorhandenen JDK 17 scheiterte beim Laden von `libnative-platform.so`. |
-| Produktions-Build | `./gradlew :app:assembleDebug` | Nicht ausgeführt, weil Gradle in dieser Umgebung nicht initialisiert werden konnte. |
+| JVM-Tests | `JAVA_HOME=/home/alex/.gradle/jdks/eclipse_adoptium-17-amd64-linux.2 ./gradlew test` | Erfolgreich am 2026-07-27; Kern-, Graph-, Adapter-, Knoten- und App-Persistenztests bestanden. |
+| Produktions-Build | `JAVA_HOME=/home/alex/.gradle/jdks/eclipse_adoptium-17-amd64-linux.2 ./gradlew :app:assembleDebug` | Erfolgreich am 2026-07-27. |
 | Lint | Projektweite Konfiguration durchsucht | Keine dedizierte ktlint-, detekt- oder Android-Lint-Task-Konfiguration in den Buildskripten gefunden. |
 
 ## Repository-Struktur
@@ -33,7 +33,7 @@
 - Inspector: Eigenschaftenbearbeitung ist als Compose-Bereich in `app/.../MathematikAtlasApp.kt` umgesetzt und schreibt über `KartenAktion` in `KartenEditorZustand`.
 - mathematisches Modell: `MathematikRechenSystem/.../kern/`; Wurzeltyp ist `MathematischesObjekt` mit `Ausdruck`, `ZahlAusdruck` und `MengenAusdruck`.
 - Auswertung: `MathematikKartenAdapter`; topologischer `KartenAuswerter` mit Cache und `MathematikAuswerterRegister`.
-- Persistenz: `app/.../speicher/KartenJson.kt` und `KartenSpeicher.kt`; Speicherort ist der App-interne Dateienbereich `MathematikAtlas/karten/<karten-id>/v<version>.json`.
+- Persistenz: `app/.../speicher/KartenJson.kt` und `KartenSpeicher.kt`; Format 2 liest Format-1-Karten mit leerer Eigenschaftsmap rückwärtskompatibel und speichert rekursiv typisierte Eigenschaften. Speicherort ist der App-interne Dateienbereich `MathematikAtlas/karten/<karten-id>/v<version>.json`.
 - Tests: JVM-Unit-Tests in den vier Bibliotheksmodulen unter `src/test/kotlin`; im Repository wurden keine Testquellen für das App-Modul oder Android-Instrumentierungstests gefunden.
 
 ## Vorhandene Node-Typen
@@ -58,7 +58,7 @@
 - Verbindungsvalidierung: `GraphPrüfung.prüfe`; Typkompatibilität wird über die Elternhierarchie von `AnschlussArtRegister.istUnterart` bestimmt.
 - Ausdrucksauswertung: `KartenAuswerter.auswerten` verarbeitet den Graph topologisch, sammelt Eingänge über Anschlüsse und ruft registrierte `MathematikKnotenAuswerter` auf.
 - Formeldarstellung: jedes `MathematischesObjekt` liefert `zuLatex()`; `LatexText` rendert einen unterstützten Teilumfang nativ als Compose-Text. Es gibt keine gefundene KaTeX- oder WebView-Abhängigkeit.
-- Serialisierung und Laden: `KartenJson` schreibt `formatVersion` 1 und alle Karten-, Knoten-, Anschluss- und Verbindungsdaten; `KartenSpeicher` liest/schreibt versionierte JSON-Dateien.
+- Serialisierung und Laden: `KartenJson` schreibt `formatVersion` 2 und alle Karten-, Knoten-, Anschluss-, Verbindungs- und rekursiven Eigenschaftsdaten; fehlende Eigenschaften aus Format 1 werden als leer gelesen.
 
 ## Bestätigte Einschränkungen
 
@@ -66,17 +66,14 @@
 - `MathematikRechenSystem` ist ein Kotlin/JVM-Modul ohne Android- oder Compose-Abhängigkeit; die Architekturprüfung bestätigt zudem, dass der neutrale Karteneditor und der Adapter keine verbotenen Modulimporte enthalten.
 - Verbindungen sind azyklisch und für explizite Eingänge auf genau eine eingehende Verbindung beschränkt. Neutrale Anschlüsse sind vom allgemeinen Modell unterstützt.
 - Persistenzdaten sind eigene Datenklassen und JSON-Werte; Compose-Laufzeitobjekte werden nicht serialisiert.
-- Die JSON-Leselogik liest `formatVersion` nicht aus und verzweigt nicht danach. Die vorhandene Migration in `AtlasZustand.aktualisiereAssoziativeKnoten` ergänzt nur den Zielmengen-Eingang alter Karten-Ausgänge und normalisiert bekannte assoziative Knoten beim Öffnen.
+- `KartenJson` akzeptiert fehlende Eigenschaften aus Format 1 und schreibt Format 2. Die vorhandene UI-Migration in `AtlasZustand.aktualisiereAssoziativeKnoten` ergänzt zusätzlich bekannte Anschlüsse und normalisiert assoziative Knoten beim Öffnen.
 - Der Kartenladepfad `KartenSpeicher.lade` ruft `KartenJson.lese` direkt auf; in diesem Pfad wurde keine nachträgliche `GraphPrüfung` gefunden.
 
 ## Bekannte Blocker und technische Schulden
 
 | Befund | Evidenz | Auswirkung | betroffene Dateien | Blockiert diese Dokumentationsaufgabe? |
 |---|---|---|---|---|
-| Vollständige Gradle-Verifikation lokal nicht möglich | `./gradlew test --offline` scheiterte unter JDK 25 vor dem Build; JDK-17-Versuch scheiterte beim Laden der Gradle-Native-Library | Testergebnis und Debug-Build bleiben in dieser Umgebung unbestätigt | lokale Laufzeitumgebung, Gradle-Start | Nein |
 | Zusätzliche Kernprüfung lokal nicht möglich | `scripts/pruefe_kern.py` beendet sich mit Code 2, weil `kotlinc` fehlt | Die eigenständige Compiler-/Kernprüfung ist nicht bestätigt | lokale Laufzeitumgebung | Nein |
-| `formatVersion` besitzt keine allgemeine Versionsverzweigung | Schreiben setzt konstant `1`; Lesen verwendet den Wert nicht | Zukünftige Formatmigrationen müssen explizit ergänzt werden; die vorhandene UI-Migration deckt nur bekannte Knotendaten ab | `KartenJson.kt`, `AtlasZustand.kt` | Nein |
-| Keine Persistenz- oder Migrations-Unit-Tests gefunden | Testquellen der vier Bibliotheksmodule enthalten keine Treffer für `KartenJson` oder `KartenSpeicher` | JSON-Roundtrip und Versionsverhalten sind nicht automatisch abgesichert | `app/.../speicher/`, Testverzeichnisse | Nein |
 
 ## Zuletzt abgeschlossene größere Änderungen
 

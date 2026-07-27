@@ -58,7 +58,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                 KnotenKartenEditor(
                     zustand = zustand.editor,
                     modifier = Modifier.fillMaxSize(),
-                    rendererFür = { zustand.renderer() },
+                    rendererFür = zustand::rendererFür,
                     farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
                     beiHintergrundKontext = { zustand.öffneKnotenAuswahl(it) },
                     beiKnotenKontext = { graphKontext = GraphKontext.Knoten(it.id) },
@@ -254,6 +254,26 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
             Text(knoten.name, style = MaterialTheme.typography.titleLarge)
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
+            KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
+                inspektor.Inhalt(
+                    knoten,
+                    zustand.auswertung.knoten[knoten.id],
+                    object : KnotenInspektorAktionen {
+                        override fun parameter(schlüssel: String, wert: String) {
+                            zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
+                        }
+                        override fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>) {
+                            zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+                        }
+                    },
+                )
+                Spacer(Modifier.weight(1f))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = zustand.editor::dupliziereAuswahl) { Text("Duplizieren") }
+                    Button(onClick = zustand.editor::löscheAuswahl, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Löschen") }
+                }
+                return@Column
+            }
             if (knoten.art in setOf("mathematik.addition", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor", "mathematik.matrix")) {
                 val wert = knoten.parameter["festeEingänge"] ?: "2"
                 var text by remember(knoten.id, wert) { mutableStateOf(wert) }

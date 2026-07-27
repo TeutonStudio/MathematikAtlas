@@ -8,6 +8,7 @@ data class KnotenVorlage(
     val standardGröße: GraphGröße = GraphGröße(),
     val anschlüsse: List<AnschlussDaten>,
     val standardParameter: Map<String, String> = emptyMap(),
+    val standardEigenschaften: Map<String, KnotenEigenschaft> = emptyMap(),
     val kartenVerweis: KartenVerweis? = null,
 ) {
     fun erzeuge(position: GraphPunkt): KnotenDaten = KnotenDaten(
@@ -17,6 +18,7 @@ data class KnotenVorlage(
         größe = standardGröße,
         anschlüsse = anschlüsse.map { it.copy(id = neueAnschlussId()) },
         parameter = standardParameter,
+        eigenschaften = standardEigenschaften,
         kartenVerweis = kartenVerweis,
     )
 }

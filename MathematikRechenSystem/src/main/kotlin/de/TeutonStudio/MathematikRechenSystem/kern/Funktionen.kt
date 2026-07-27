@@ -167,6 +167,10 @@ data class GebundeneFunktion(val funktion: Funktion, val bindungen: Map<String, 
 fun ersetze(ausdruck: ZahlAusdruck, bindungen: Map<String, ZahlAusdruck>): ZahlAusdruck =
     ersetze(ausdruck as MathematischesObjekt, bindungen) as ZahlAusdruck
 
+/** Typsichere Aussage-Substitution, die die Struktur der Aussage erhält. */
+fun ersetze(aussage: Aussage, bindungen: Map<String, ZahlAusdruck>): Aussage =
+    ersetze(aussage as MathematischesObjekt, bindungen) as Aussage
+
 /** Rekursive, typübergreifende Substitution für Funktionsausgaben und Zielmengen. */
 fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>): MathematischesObjekt = when (objekt) {
     is Variable -> bindungen[objekt.name] ?: objekt
@@ -188,6 +192,14 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, ZahlAusdruck>):
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
     is MengenDifferenz -> mengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
     is KartesischesProdukt -> kartesischesProdukt(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
+    is DefinierteMenge -> {
+        val gebundeneNamen = objekt.variablen.map { it.variable.name }.toSet()
+        val freieBindungen = bindungen - gebundeneNamen
+        objekt.copy(
+            variablen = objekt.variablen.map { it.copy(grundMenge = ersetze(it.grundMenge, freieBindungen) as MengenAusdruck) },
+            bedingung = ersetze(objekt.bedingung, freieBindungen),
+        )
+    }
     is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Ungleichheit -> Ungleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Vergleich -> Vergleich(ersetze(objekt.links, bindungen), objekt.art, ersetze(objekt.rechts, bindungen))
@@ -251,6 +263,11 @@ fun MathematischesObjekt.enthalteneVariablen(): Set<Variable> = when (this) {
     is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneVariablen()
     is MengenDifferenz -> listOf(links, rechts).enthalteneVariablen()
     is KartesischesProdukt -> mengen.enthalteneVariablen()
+    is DefinierteMenge -> {
+        val gebundeneNamen = variablen.map { it.variable.name }.toSet()
+        variablen.map { it.grundMenge }.enthalteneVariablen() +
+            bedingung.enthalteneVariablen().filterNot { it.name in gebundeneNamen }
+    }
     is Tupel -> elemente.enthalteneVariablen()
     is SpaltenVektor -> werte.enthalteneVariablen()
     is ZeilenVektor -> werte.enthalteneVariablen()
@@ -294,6 +311,9 @@ fun MathematischesObjekt.enthalteneVariablen(): Set<Variable> = when (this) {
 
 fun MathematischesObjekt.enthältVariable(variable: Variable): Boolean =
     enthalteneVariablen().any { it.name == variable.name }
+
+/** Zentrale Analyse der freien Variablen eines mathematischen Objekts. */
+fun MathematischesObjekt.freieVariablen(): Set<Variable> = enthalteneVariablen()
 
 private fun Iterable<MathematischesObjekt>.enthalteneVariablen(): Set<Variable> =
     flatMap { it.enthalteneVariablen() }.toSet()

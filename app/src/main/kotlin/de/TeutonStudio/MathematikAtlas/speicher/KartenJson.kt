@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
-        put("formatVersion", 1)
+        put("formatVersion", 2)
         put("id", karte.id.wert)
         put("name", karte.name)
         put("version", karte.version)
@@ -44,6 +44,9 @@ object KartenJson {
         put("position", JSONObject().put("x", k.position.x).put("y", k.position.y))
         put("größe", JSONObject().put("breite", k.größe.breite).put("höhe", k.größe.höhe))
         put("parameter", JSONObject(k.parameter))
+        put("eigenschaften", JSONObject().apply {
+            k.eigenschaften.forEach { (schlüssel, wert) -> put(schlüssel, eigenschaftZuJson(wert)) }
+        })
         k.kartenVerweis?.let { put("kartenVerweis", JSONObject().put("kartenId", it.kartenId.wert).put("version", it.version)) }
         put("anschlüsse", JSONArray().apply { k.anschlüsse.forEach { a -> put(JSONObject().apply {
             put("id", a.id.wert); put("name", a.name); put("richtung", a.richtung.name); put("kante", a.kante.name)
@@ -58,6 +61,10 @@ object KartenJson {
         val verweis = j.optJSONObject("kartenVerweis")?.let { KartenVerweis(KartenId(it.getString("kartenId")), it.getInt("version")) }
         val parameterJson = j.optJSONObject("parameter") ?: JSONObject()
         val parameter = parameterJson.keys().asSequence().associateWith { parameterJson.optString(it) }
+        val eigenschaftenJson = j.optJSONObject("eigenschaften") ?: JSONObject()
+        val eigenschaften = eigenschaftenJson.keys().asSequence().mapNotNull { schlüssel ->
+            eigenschaftVonJson(eigenschaftenJson.optJSONObject(schlüssel))?.let { schlüssel to it }
+        }.toMap()
         return KnotenDaten(
             id = KnotenId(j.getString("id")), art = j.getString("art"), name = j.getString("name"),
             position = GraphPunkt(p.getDouble("x").toFloat(), p.getDouble("y").toFloat()),
@@ -70,8 +77,40 @@ object KartenJson {
                 kannSichErweitern = a.optBoolean("kannSichErweitern", false),
                 dynamischErzeugt = a.optBoolean("dynamischErzeugt", false),
             ) },
-            parameter = parameter, kartenVerweis = verweis,
+            parameter = parameter, eigenschaften = eigenschaften, kartenVerweis = verweis,
         )
+    }
+
+    private fun eigenschaftZuJson(wert: KnotenEigenschaft): JSONObject = JSONObject().apply {
+        when (wert) {
+            is KnotenEigenschaft.Text -> { put("typ", "text"); put("wert", wert.wert) }
+            is KnotenEigenschaft.Ganzzahl -> { put("typ", "ganzzahl"); put("wert", wert.wert) }
+            is KnotenEigenschaft.Dezimalzahl -> { put("typ", "dezimalzahl"); put("wert", wert.wert) }
+            is KnotenEigenschaft.Wahrheitswert -> { put("typ", "wahrheitswert"); put("wert", wert.wert) }
+            is KnotenEigenschaft.Farbe -> { put("typ", "farbe"); put("argb", wert.argb) }
+            is KnotenEigenschaft.Liste -> { put("typ", "liste"); put("werte", JSONArray().apply { wert.werte.forEach { put(eigenschaftZuJson(it)) } }) }
+            is KnotenEigenschaft.Objekt -> { put("typ", "objekt"); put("felder", JSONObject().apply { wert.felder.forEach { (k, v) -> put(k, eigenschaftZuJson(v)) } }) }
+        }
+    }
+
+    /** Liest nur explizit typisierte Werte; unbekannte Daten werden sicher ausgelassen. */
+    private fun eigenschaftVonJson(json: JSONObject?): KnotenEigenschaft? = when (json?.optString("typ")) {
+        "text" -> KnotenEigenschaft.Text(json.optString("wert"))
+        "ganzzahl" -> KnotenEigenschaft.Ganzzahl(json.optInt("wert"))
+        "dezimalzahl" -> json.optDouble("wert", Double.NaN).takeIf { it.isFinite() }?.let(KnotenEigenschaft::Dezimalzahl)
+        "wahrheitswert" -> KnotenEigenschaft.Wahrheitswert(json.optBoolean("wert"))
+        "farbe" -> KnotenEigenschaft.Farbe(json.optLong("argb"))
+        "liste" -> json.optJSONArray("werte")?.let { werte ->
+            KnotenEigenschaft.Liste(List(werte.length()) { index ->
+                eigenschaftVonJson(werte.optJSONObject(index)) ?: KnotenEigenschaft.Text("")
+            })
+        }
+        "objekt" -> json.optJSONObject("felder")?.let { felder ->
+            KnotenEigenschaft.Objekt(felder.keys().asSequence().mapNotNull { key ->
+                eigenschaftVonJson(felder.optJSONObject(key))?.let { key to it }
+            }.toMap())
+        }
+        else -> null
     }
 
     private fun verbindungZuJson(v: VerbindungDaten) = JSONObject().apply {

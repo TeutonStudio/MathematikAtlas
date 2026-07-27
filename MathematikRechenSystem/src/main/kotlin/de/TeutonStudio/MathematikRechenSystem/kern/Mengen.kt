@@ -37,6 +37,40 @@ data class KartesischesProdukt(val mengen: List<MengenAusdruck>) : MengenAusdruc
     override fun zuLatex() = mengen.joinToString(" \\times ") { it.zuLatex() }
 }
 
+/** Eine Variable mit ihrer Grundmenge innerhalb einer [DefinierteMenge]. */
+data class GebundeneMengenVariable(
+    val variable: Variable,
+    val grundMenge: MengenAusdruck,
+)
+
+/**
+ * Symbolische Menge in Mengenschreibweise. Die Bedingung bleibt absichtlich
+ * unverändert im CAS und wird erst von Darstellern gegebenenfalls angenähert.
+ */
+data class DefinierteMenge(
+    val variablen: List<GebundeneMengenVariable>,
+    val bedingung: Aussage,
+) : MengenAusdruck {
+    init {
+        require(variablen.isNotEmpty()) { "Eine definierte Menge benötigt mindestens eine Variable." }
+        require(variablen.map { it.variable.name }.distinct().size == variablen.size) {
+            "Die Variablen einer definierten Menge müssen eindeutige Namen haben."
+        }
+    }
+
+    override fun zuLatex(): String {
+        val links = if (variablen.size == 1) variablen.single().variable.zuLatex()
+        else variablen.joinToString(prefix = "\\left(", postfix = "\\right)") { it.variable.zuLatex() }
+        val gleicheGrundmenge = variablen.map { it.grundMenge }.distinct().singleOrNull()
+        val grundmenge = when {
+            gleicheGrundmenge != null && variablen.size == 1 -> gleicheGrundmenge.zuLatex()
+            gleicheGrundmenge != null -> "${gleicheGrundmenge.zuLatex()}^${variablen.size}"
+            else -> KartesischesProdukt(variablen.map { it.grundMenge }).zuLatex()
+        }
+        return "\\left\\{$links\\in$grundmenge\\mid ${bedingung.zuLatex()}\\right\\}"
+    }
+}
+
 sealed interface Mächtigkeit : MathematischesObjekt
 data class EndlicheMächtigkeit(val wert: RationaleZahl) : Mächtigkeit { override fun zuLatex() = "|M| = ${wert.zuLatex()}" }
 data object AbzählbarUnendlich : Mächtigkeit { override fun zuLatex() = "|M| = \\aleph_0" }

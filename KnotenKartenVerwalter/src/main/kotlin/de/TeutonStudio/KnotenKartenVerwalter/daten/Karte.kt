@@ -10,6 +10,7 @@ data class KnotenDaten(
     val größe: GraphGröße = GraphGröße(),
     val anschlüsse: List<AnschlussDaten> = emptyList(),
     val parameter: Map<String, String> = emptyMap(),
+    val eigenschaften: Map<String, KnotenEigenschaft> = emptyMap(),
     val kartenVerweis: KartenVerweis? = null,
 )
 

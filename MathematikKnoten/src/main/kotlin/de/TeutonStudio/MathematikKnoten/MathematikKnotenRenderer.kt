@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
@@ -15,7 +16,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
 ) : KnotenRenderer {
-    @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean) {
+    @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         val ergebnis = ergebnisFür(knoten)
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)

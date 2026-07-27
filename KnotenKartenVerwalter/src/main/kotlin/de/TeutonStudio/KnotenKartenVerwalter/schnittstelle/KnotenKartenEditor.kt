@@ -32,6 +32,7 @@ import kotlin.math.*
 
 private const val KNOTEN_VIEWPORT_PUFFER = 200f
 private const val VERBINDUNG_VIEWPORT_PUFFER = 80f
+private const val KOPFZEILE_HÖHE_DP = 44f
 
 @Composable
 fun KnotenKartenEditor(
@@ -395,6 +396,7 @@ private fun KnotenDarstellung(
     beiDoppelklick: () -> Unit,
 ) {
     val zoom = zustand.karte.ansicht.zoom
+    var ziehbar by remember(knoten.id) { mutableStateOf(false) }
     val bildschirmPosition = weltZuBildschirm(knoten.position, dichte, ansicht)
     Box(
         Modifier.offset { IntOffset(bildschirmPosition.x.roundToInt(), bildschirmPosition.y.roundToInt()) }
@@ -410,10 +412,14 @@ private fun KnotenDarstellung(
                 .border(if (ausgewählt) 3.dp else 1.dp, if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
                 .pointerInput(knoten.id, zoom) {
                     detectDragGestures(
-                        onDragStart = { zustand.wähleKnoten(knoten.id); zustand.beginneInteraktion() },
-                        onDragEnd = { zustand.beendeInteraktion() },
-                        onDragCancel = { zustand.beendeInteraktion() },
+                        onDragStart = { start ->
+                            ziehbar = renderer.interaktionsModus == KnotenInteraktionsModus.GanzeFlächeZiehbar || start.y <= KOPFZEILE_HÖHE_DP * density
+                            if (ziehbar) { zustand.wähleKnoten(knoten.id); zustand.beginneInteraktion() }
+                        },
+                        onDragEnd = { if (ziehbar) zustand.beendeInteraktion(); ziehbar = false },
+                        onDragCancel = { if (ziehbar) zustand.beendeInteraktion(); ziehbar = false },
                         onDrag = { änderung, delta ->
+                            if (!ziehbar) return@detectDragGestures
                             änderung.consume()
                             val aktuell = zustand.karte.knoten.firstOrNull { it.id == knoten.id }
                             if (aktuell != null) {
@@ -439,7 +445,13 @@ private fun KnotenDarstellung(
                     )
                 },
             elevation = CardDefaults.cardElevation(if (ausgewählt) 8.dp else 2.dp),
-        ) { renderer.Inhalt(knoten, ausgewählt) }
+        ) {
+            renderer.Inhalt(knoten, ausgewählt, object : KnotenRendererAktionen {
+                override fun eigenschaftenErsetzen(eigenschaften: Map<String, KnotenEigenschaft>) {
+                    zustand.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+                }
+            })
+        }
 
         knoten.anschlüsse.groupBy { it.kante }.forEach { (kante, anschlüsse) ->
             anschlüsse.sortedBy { it.reihenfolge }.forEachIndexed { index, anschluss ->

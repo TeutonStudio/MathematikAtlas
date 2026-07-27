@@ -111,6 +111,29 @@ object StandardMathematikAuswerter {
             val elemente = (k.knoten.parameter["elemente"] ?: "").split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it) }.toSet()
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(EndlicheMenge(elemente))))
         }
+        registriere("mathematik.lösungsmenge") { k ->
+            val bedingung = k.aussage("bedingung")
+            val freie = bedingung.freieVariablen().associateBy { it.name }
+            val automatisch = k.knoten.parameter["automatisch"]?.toBooleanStrictOrNull() ?: true
+            val namen = if (automatisch) freie.keys.sorted() else k.knoten.parameter["variablen"].orEmpty()
+                .split(',').map(String::trim).filter(String::isNotBlank)
+            require(namen.isNotEmpty()) { "Für die Lösungsmenge muss mindestens eine Variable angegeben werden." }
+            require(namen.distinct().size == namen.size) { "Die Variablen der Lösungsmenge dürfen nicht doppelt vorkommen." }
+            val unbekannt = namen.filterNot { it in freie }
+            require(unbekannt.isEmpty()) { "Unbekannte Variablen in der Lösungsmenge: ${unbekannt.joinToString(", ")}." }
+            val grundmengen = k.knoten.parameter["grundmengen"].orEmpty().split(',').map(String::trim).filter(String::isNotBlank)
+            require(grundmengen.isEmpty() || grundmengen.size == 1 || grundmengen.size == namen.size) {
+                "Es wird eine Grundmenge oder genau eine Grundmenge je Variable benötigt."
+            }
+            val mengen = if (grundmengen.isEmpty()) List(namen.size) { ReelleZahlen } else if (grundmengen.size == 1) List(namen.size) { grundmenge(grundmengen.single()) } else grundmengen.map(::grundmenge)
+            val variablen = namen.mapIndexed { index, name -> GebundeneMengenVariable(freie.getValue(name), mengen[index]) }
+            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(DefinierteMenge(variablen, bedingung), annahmen(k))))
+        }
+        registriere("mathematik.visualisierung") { k ->
+            val menge = k.eingänge["menge"] ?: error("Für die Visualisierung muss eine Menge verbunden sein.")
+            require(menge.objekt is MengenAusdruck) { "Der Visualisierungseingang enthält keine Menge." }
+            KnotenAuswertungsErgebnis(mapOf("menge" to menge))
+        }
         registriere("mathematik.vereinigung") { k ->
             val mengen = k.operatorEingänge { anschluss, index ->
                 BenannteMenge(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
@@ -274,6 +297,13 @@ object StandardMathematikAuswerter {
     private fun KnotenAuswertungsKontext.parameterInt(name: String) = knoten.parameter[name]?.toIntOrNull()?.takeIf { it > 0 } ?: error("Parameter $name muss eine positive ganze Zahl sein.")
     private fun annahmen(k: KnotenAuswertungsKontext) = k.eingänge.values.flatMap { it.annahmen }.toSet()
     private fun parseZahlen(text: String) = text.split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it.trim()) }
+    private fun grundmenge(name: String): MengenAusdruck = when (name.trim().uppercase()) {
+        "N", "ℕ" -> NatürlicheZahlen
+        "Z", "ℤ" -> GanzeZahlen
+        "Q", "ℚ" -> RationaleZahlen
+        "R", "ℝ" -> ReelleZahlen
+        else -> error("Unbekannte Grundmenge '$name'. Erlaubt sind N, Z, Q und R.")
+    }
     private fun vergleich(k: KnotenAuswertungsKontext, art: VergleichsArt) = KnotenAuswertungsErgebnis(
         mapOf("aussage" to BedingterWert(Vergleich(k.zahl("links"), art, k.zahl("rechts")), annahmen(k))),
     )
