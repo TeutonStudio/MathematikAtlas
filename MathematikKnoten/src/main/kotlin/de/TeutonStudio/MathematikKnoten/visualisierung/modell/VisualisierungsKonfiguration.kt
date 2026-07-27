@@ -6,6 +6,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.ganzzahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.objekt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.text
 
+// V2_2_MERGE_NOTE: Diese Konfiguration gehört zur bestehenden Mengenvisualisierung und behält R2/R3 sowie ihr Persistenzschema.
+// Der 1D/2D/3D-Geometrievisualisierer erhält eine eigene Konfiguration; R1 nicht hier einfügen und alte Karten nicht umdeuten.
 enum class RaumDimension { R2, R3 }
 data class AchsenZuordnung(val x: String, val y: String, val z: String?)
 data class ZahlenBereich(val minimum: Double, val maximum: Double) {
