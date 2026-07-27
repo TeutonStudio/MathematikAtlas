@@ -4,9 +4,6 @@ on:
   push:
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   pruefen:
     runs-on: ubuntu-latest
@@ -23,45 +20,3 @@ jobs:
         run: python3 scripts/pruefe_architektur.py
       - name: Bauen und testen
         run: ./gradlew --stacktrace test :app:assembleDebug
-
-  v2114-anwenden:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/v2.1.14'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: agent/v2.1.14
-          fetch-depth: 0
-      - name: Symbolische Fallausdrücke implementieren
-        run: python3 .github/scripts/apply_v2_1_14.py
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Android SDK 36 installieren
-        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
-      - name: Änderungen prüfen
-        run: |
-          python3 scripts/pruefe_architektur.py
-          ./gradlew --stacktrace test :app:assembleDebug
-      - name: Quelländerungen speichern
-        shell: bash
-        run: |
-          git checkout origin/master -- .github/workflows/build.yml
-          rm -f .github/v2.1.14-trigger .github/scripts/apply_v2_1_14.py
-          git config user.name "OpenAI"
-          git config user.email "noreply@openai.com"
-          git add -A \
-            .github/workflows/build.yml \
-            .github/v2.1.14-trigger \
-            .github/scripts/apply_v2_1_14.py \
-            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/FallAusdruck.kt \
-            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt \
-            MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Wertebereiche.kt \
-            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/MathematikAuswerter.kt \
-            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt \
-            MathematikKnoten/src/test/kotlin/de/TeutonStudio/MathematikKnoten/FallunterscheidungTest.kt
-          git diff --cached --check
-          git commit -m "Implementiere symbolische Fallausdrücke"
-          git push origin HEAD:agent/v2.1.14

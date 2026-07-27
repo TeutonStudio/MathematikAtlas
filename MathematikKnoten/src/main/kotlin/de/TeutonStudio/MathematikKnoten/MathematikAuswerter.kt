@@ -349,14 +349,23 @@ object StandardMathematikAuswerter {
             val lüge = k.eingänge["lüge"] ?: error("Lüge-Eingang fehlt.")
             val aussageWert = k.eingänge["aussage"] ?: error("Aussage-Eingang fehlt.")
             val aussage = aussageWert.objekt as? Aussage ?: error("Der Aussage-Eingang enthält keine Aussage.")
-            val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + aussageWert.annahmen)
-            val ausgewählt = when (aussage.entscheide(kontext).wahrheitswert) {
+            val eingangsWerte = listOf(wahr, aussageWert, lüge)
+            val gemeinsameAnnahmen = eingangsWerte.flatMap { it.annahmen }.toSet()
+            val gemeinsameReelleVariablen = reelleVariablen(eingangsWerte)
+            val gemeinsameQuellen = eingangsWerte.flatMap { it.variablenQuellen }
+                .distinctBy { quelle -> Triple(quelle.knotenId, quelle.name, quelle.werteVorrat) }
+            val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + gemeinsameAnnahmen)
+            val basis = when (aussage.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> wahr
                 Wahrheitswert.Falsch -> lüge
-                null -> error("Die Aussage der Fallunterscheidung ist im aktuellen Rechenkontext nicht entscheidbar.")
+                null -> BedingterWert(FallAusdruck(wahr.objekt, aussage, lüge.objekt))
             }
             KnotenAuswertungsErgebnis(mapOf(
-                "wert" to ausgewählt.copy(annahmen = ausgewählt.annahmen + aussageWert.annahmen),
+                "wert" to basis.copy(
+                    annahmen = gemeinsameAnnahmen,
+                    reelleVariablen = gemeinsameReelleVariablen,
+                    variablenQuellen = gemeinsameQuellen,
+                ),
             ))
         }
         registriere("mathematik.konjunktion") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Konjunktion(k.aussagenOperatorEingänge()), annahmen(k)))) }
