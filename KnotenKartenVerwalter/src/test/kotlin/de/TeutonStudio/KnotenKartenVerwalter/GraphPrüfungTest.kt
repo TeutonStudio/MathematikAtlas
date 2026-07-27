@@ -34,25 +34,38 @@ class GraphPrüfungTest {
         assertIs<VerbindungsPrüfung.Abgelehnt>(prüfung.prüfe(karte, ref(b,"aus"), ref(a,"ein")))
     }
 
-    @Test fun assoziativerKnotenErhältNurBeimZiehenEinenDynamischenEingang() {
-        val quelle = knoten("q", AnschlussRichtung.Ausgang, zahl.id)
+    @Test fun assoziativerKnotenErhältDynamischenEingangErstNachZweiBelegtenFestenEingängen() {
+        val quelle1 = knoten("q1", AnschlussRichtung.Ausgang, zahl.id)
+        val quelle2 = knoten("q2", AnschlussRichtung.Ausgang, zahl.id)
+        val quelle3 = knoten("q3", AnschlussRichtung.Ausgang, zahl.id)
         val operator = KnotenDaten(
             art = "test.addition", name = "Plus", anschlüsse = listOf(
                 AnschlussDaten(name = "a", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = zahl.id, reihenfolge = 0, kannSichErweitern = true),
                 AnschlussDaten(name = "b", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = zahl.id, reihenfolge = 1, kannSichErweitern = true),
             ),
         )
-        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(quelle, operator)), prüfung)
+        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(quelle1, quelle2, quelle3, operator)), prüfung)
 
-        zustand.beginneVerbindung(ref(quelle))
+        zustand.beginneVerbindung(ref(quelle1))
+        assertEquals(2, zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.size)
+        zustand.anschlussAngeklickt(ref(operator, "a"))
+
+        zustand.beginneVerbindung(ref(quelle2))
+        assertEquals(2, zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.size)
+        zustand.anschlussAngeklickt(ref(operator, "b"))
+
+        zustand.beginneVerbindung(ref(quelle3))
         val dynamisch = zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.single { it.dynamischErzeugt }
         assertEquals(3, zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.size)
 
         zustand.anschlussAngeklickt(AnschlussVerweis(operator.id, dynamisch.id))
-        assertEquals(1, zustand.karte.verbindungen.size)
+        assertEquals(3, zustand.karte.verbindungen.size)
         assertEquals(3, zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.size)
 
-        zustand.führeAus(KartenAktion.VerbindungLöschen(zustand.karte.verbindungen.single().id))
+        val dynamischeVerbindung = zustand.karte.verbindungen.single {
+            it.zu == AnschlussVerweis(operator.id, dynamisch.id)
+        }
+        zustand.führeAus(KartenAktion.VerbindungLöschen(dynamischeVerbindung.id))
         assertEquals(2, zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.size)
 
         zustand.setzeFesteEingangAnzahl(operator.id, 4)

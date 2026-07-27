@@ -224,13 +224,28 @@ class KartenEditorZustand(
         karte = wiederholen.removeLast()
     }
 
-    /** Assoziative Knoten bieten beim Ziehen eines passenden Kabels einen vorläufigen Eingang an. */
+    /**
+     * Assoziative Knoten bieten beim Ziehen eines passenden Kabels einen vorläufigen Eingang an,
+     * sobald mindestens zwei feste erweiterbare Eingänge vorhanden und vollständig verbunden sind.
+     */
     private fun fügeDynamischeEingängeHinzu(start: AnschlussVerweis) {
         var erweitert = karte
         karte.knoten.forEach { knoten ->
             val vorlage = knoten.anschlüsse.firstOrNull {
                 it.richtung == AnschlussRichtung.Eingang && it.kannSichErweitern
             } ?: return@forEach
+            val festeErweiterbareEingänge = knoten.anschlüsse.asSequence()
+                .filter {
+                    it.richtung == AnschlussRichtung.Eingang &&
+                        it.kannSichErweitern &&
+                        !it.dynamischErzeugt
+                }
+                .sortedBy { it.reihenfolge }
+                .toList()
+            val verbundeneEingänge = karte.verbindungen.map { it.zu }.toSet()
+            if (festeErweiterbareEingänge.size < 2 || festeErweiterbareEingänge.any {
+                    AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge
+                }) return@forEach
             val neuerAnschluss = vorlage.copy(
                 id = neueAnschlussId(),
                 name = if (vorlage.name.matches(Regex("[A-Za-zÄÖÜäöü]+\\d+"))) {
