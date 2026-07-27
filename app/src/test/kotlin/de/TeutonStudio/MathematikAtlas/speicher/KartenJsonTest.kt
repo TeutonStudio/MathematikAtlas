@@ -40,4 +40,20 @@ class KartenJsonTest {
         assertEquals(listOf("untereGrenze", "obereGrenze", "menge"), gelesen.anschlüsse.map { it.name })
         assertEquals(intervall.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
+
+    @Test fun `Vektor zu Polynom behält Variable und Anschlussverbindung beim Roundtrip`() {
+        val vektor = MathematikKnotenVorlagen.Vektor.erzeuge(GraphPunkt.Zero)
+        val polynom = MathematikKnotenVorlagen.VektorZuPolynom.erzeuge(GraphPunkt(300f, 0f)).copy(parameter = mapOf("variable" to "t"))
+        val verbindung = VerbindungDaten(
+            von = AnschlussVerweis(vektor.id, vektor.anschlüsse.single { it.name == "vektor" }.id),
+            zu = AnschlussVerweis(polynom.id, polynom.anschlüsse.single { it.name == "vektor" }.id),
+        )
+
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(vektor, polynom), verbindungen = listOf(verbindung))))
+
+        assertEquals("mathematik.vektorZuPolynom", gelesen.knoten.single { it.id == polynom.id }.art)
+        assertEquals("t", gelesen.knoten.single { it.id == polynom.id }.parameter.getValue("variable"))
+        assertEquals(polynom.anschlüsse.map { it.id }, gelesen.knoten.single { it.id == polynom.id }.anschlüsse.map { it.id })
+        assertEquals(listOf(verbindung), gelesen.verbindungen)
+    }
 }

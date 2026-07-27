@@ -123,6 +123,24 @@ class MathematikRechenSystemTest {
         assertFailsWith<IllegalArgumentException> { spalte.skalarprodukt(ZeilenVektor(spalte.werte)) }
     }
 
+    @Test fun koeffizientenErzeugenEinPolynomInAufsteigenderEingabereihenfolge() {
+        val polynom = polynomAusKoeffizienten(listOf(RationaleZahl.von(2), RationaleZahl.von(-3), RationaleZahl.von(5)), Variable("x"))
+
+        assertEquals("5 \\cdot {x}^{2} + -3 \\cdot x + 2", polynom.zuLatex())
+        assertEquals(RationaleZahl.Null, polynomAusKoeffizienten(listOf(RationaleZahl.Null, RationaleZahl.Null), Variable("x")))
+        assertEquals(RationaleZahl.von(7), polynomAusKoeffizienten(listOf(RationaleZahl.von(7)), Variable("x")))
+        assertEquals(Variable("x"), polynomAusKoeffizienten(listOf(RationaleZahl.Null, RationaleZahl.Eins), Variable("x")))
+    }
+
+    @Test fun polynomKoeffizientenDuerfenDieUnbestimmteNichtEnthalten() {
+        assertFailsWith<IllegalArgumentException> {
+            polynomAusKoeffizienten(listOf(Variable("y")), Variable("y"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            polynomAusKoeffizienten(emptyList(), Variable("x"))
+        }
+    }
+
     @Test fun vektorenUndMatrizenVerwendenPmatrixLatexMitZeilenUndSpaltenTrennern() {
         val a = Variable("a_1")
         val b = Variable("a_2")

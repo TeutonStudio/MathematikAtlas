@@ -22,6 +22,23 @@ data class ZeilenVektor(override val werte: List<ZahlAusdruck>) : OrientierterVe
     fun transponiert() = SpaltenVektor(werte)
 }
 
+/** Bildet die aufsteigend gespeicherten Koeffizienten c₀, …, cₙ auf Σ cᵢ·Xⁱ ab. */
+fun polynomAusKoeffizienten(koeffizienten: List<ZahlAusdruck>, variable: Variable): ZahlAusdruck {
+    require(koeffizienten.isNotEmpty()) { "Ein Polynom benötigt mindestens einen Koeffizienten." }
+    require(variable.name.isNotBlank()) { "Die Polynomvariable darf nicht leer sein." }
+    require(koeffizienten.none { it.enthältVariable(variable) }) {
+        "Koeffizienten dürfen die Polynomvariable '${variable.name}' nicht enthalten."
+    }
+    val terme = koeffizienten.mapIndexed { index, koeffizient ->
+        when (index) {
+            0 -> koeffizient
+            1 -> multiplikation(koeffizient, variable)
+            else -> multiplikation(koeffizient, Potenz(variable, RationaleZahl.von(index.toLong())))
+        }
+    }
+    return vereinfache(addition(terme.reversed()))
+}
+
 /** Rückwärtskompatible Bezeichnung: ein ungerichteter Altvektor wird als Spaltenvektor geführt. */
 typealias Vektor = SpaltenVektor
 

@@ -257,6 +257,12 @@ object StandardMathematikAuswerter {
         registriere("mathematik.zeilenVektor") { k ->
             KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(ZeilenVektor(k.zahlenOperatorEingänge()), annahmen(k))))
         }
+        registriere("mathematik.vektorZuPolynom") { k ->
+            val vektor = k.eingänge["vektor"]?.objekt as? OrientierterVektor ?: error("Vektoreingang fehlt.")
+            val variablenName = (k.knoten.parameter["variable"] ?: "x").trim()
+            require(variablenName.isNotEmpty()) { "Die Polynomvariable darf nicht leer sein." }
+            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(polynomAusKoeffizienten(vektor.werte, Variable(variablenName)), annahmen(k))))
+        }
         registriere("mathematik.tupelZuSpalte") { k ->
             val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Tupel fehlt.")
             KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(SpaltenVektor(tupel.zahlen()), annahmen(k))))
