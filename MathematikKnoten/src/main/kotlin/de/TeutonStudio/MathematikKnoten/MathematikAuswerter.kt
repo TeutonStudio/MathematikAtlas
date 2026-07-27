@@ -345,11 +345,18 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to wert))
         }
         registriere("mathematik.fall") { k ->
-            val wert = k.eingänge["term"] ?: error("Term fehlt.")
-            val bedingung = k.eingänge["aussage"]?.objekt as? Aussage ?: error("Aussage fehlt.")
+            val wahr = k.eingänge["wahr"] ?: error("Wahr-Eingang fehlt.")
+            val lüge = k.eingänge["lüge"] ?: error("Lüge-Eingang fehlt.")
+            val aussageWert = k.eingänge["aussage"] ?: error("Aussage-Eingang fehlt.")
+            val aussage = aussageWert.objekt as? Aussage ?: error("Der Aussage-Eingang enthält keine Aussage.")
+            val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + aussageWert.annahmen)
+            val ausgewählt = when (aussage.entscheide(kontext).wahrheitswert) {
+                Wahrheitswert.Wahr -> wahr
+                Wahrheitswert.Falsch -> lüge
+                null -> error("Die Aussage der Fallunterscheidung ist im aktuellen Rechenkontext nicht entscheidbar.")
+            }
             KnotenAuswertungsErgebnis(mapOf(
-                "fall" to wert.copy(annahmen = wert.annahmen + bedingung),
-                "sonst" to wert.copy(annahmen = wert.annahmen + Negation(bedingung)),
+                "wert" to ausgewählt.copy(annahmen = ausgewählt.annahmen + aussageWert.annahmen),
             ))
         }
         registriere("mathematik.konjunktion") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Konjunktion(k.aussagenOperatorEingänge()), annahmen(k)))) }
