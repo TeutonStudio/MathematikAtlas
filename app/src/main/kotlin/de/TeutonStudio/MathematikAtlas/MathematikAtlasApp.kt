@@ -35,7 +35,14 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         zustand.speichereAktuell()
     }
 
-    Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    // Ab Android 15 kann der Inhalt standardmäßig bis unter die Systemleisten
+    // reichen. Die gesamte Arbeitsfläche erhält deshalb den Navigationsleisten-
+    // Inset; so bleiben insbesondere die unteren Inspektoraktionen erreichbar.
+    Row(
+        Modifier.fillMaxSize()
+            .navigationBarsPadding()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         VerwaltungsFenster(zustand, Modifier.width(280.dp).fillMaxHeight())
         VerticalDivider()
         Column(Modifier.weight(1f).fillMaxHeight()) {

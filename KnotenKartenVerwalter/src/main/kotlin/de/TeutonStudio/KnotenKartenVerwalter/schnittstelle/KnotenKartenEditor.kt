@@ -17,6 +17,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -48,7 +49,6 @@ fun KnotenKartenEditor(
     val aktuelleKarte by rememberUpdatedState(karte)
     val aktuelleAnsicht by rememberUpdatedState(ansicht)
     val aktuelleDichte by rememberUpdatedState(dichte.density)
-    val weltGröße = 6000.dp
     var anzeigeGröße by remember { mutableStateOf(IntSize.Zero) }
     val sichtbarerWeltBereich = sichtbarerWeltBereich(ansicht, anzeigeGröße, dichte.density)
     val sichtbareKnoten = sichtbarerWeltBereich?.let { bereich ->
@@ -121,20 +121,14 @@ fun KnotenKartenEditor(
             }
     ) {
         Raster(ansicht)
-        Box(
-            Modifier.size(weltGröße)
-                .graphicsLayer {
-                    scaleX = ansicht.zoom
-                    scaleY = ansicht.zoom
-                    translationX = ansicht.verschiebung.x
-                    translationY = ansicht.verschiebung.y
-                    transformOrigin = TransformOrigin(0f, 0f)
-                }
-        ) {
+        // Die Kameratransformation wird je Objekt aus Welt- in Bildschirmkoordinaten
+        // berechnet. Anders als eine große, skalierte Welt-Box begrenzt das die Karte
+        // nicht künstlich auf eine feste Fläche.
+        Box(Modifier.fillMaxSize()) {
             // Die Schlüssel sorgen dafür, dass die Hintergrundebene bei jedem Drag sofort
             // mit den aktuellen Knotenpositionen neu gezeichnet wird.
             key(sichtbareVerbindungen, zustand.verbindungsStart, zustand.verbindungsVorschau) {
-                Verbindungen(karte, zustand, sichtbareVerbindungen)
+                Verbindungen(karte, zustand, sichtbareVerbindungen, ansicht)
             }
             sichtbareKnoten.forEach { knoten ->
                 key(knoten.id) {
@@ -142,6 +136,8 @@ fun KnotenKartenEditor(
                         knoten = knoten,
                         ausgewählt = zustand.ausgewählterKnoten == knoten.id,
                         zustand = zustand,
+                        ansicht = ansicht,
+                        dichte = dichte.density,
                         renderer = rendererFür(knoten),
                         farbeFürAnschluss = farbeFürAnschluss,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
@@ -150,6 +146,24 @@ fun KnotenKartenEditor(
                 }
             }
         }
+        MiniMap(
+            karte = karte,
+            sichtbarerWeltBereich = sichtbarerWeltBereich,
+            anzeigeGröße = anzeigeGröße,
+            dichte = dichte.density,
+            ausgewählterKnoten = zustand.ausgewählterKnoten,
+            beiZentrieren = { weltPosition ->
+                val neueVerschiebung = GraphPunkt(
+                    anzeigeGröße.width / 2f - weltPosition.x * dichte.density * ansicht.zoom,
+                    anzeigeGröße.height / 2f - weltPosition.y * dichte.density * ansicht.zoom,
+                )
+                zustand.führeAus(
+                    KartenAktion.AnsichtÄndern(ansicht.copy(verschiebung = neueVerschiebung)),
+                    mitHistorie = false,
+                )
+            },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+        )
         zustand.letzteMeldung?.let { meldung ->
             Surface(
                 Modifier.align(Alignment.BottomCenter).padding(16.dp),
@@ -164,7 +178,9 @@ fun KnotenKartenEditor(
 private fun Raster(ansicht: AnsichtsFenster) {
     val farbe = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .35f)
     Canvas(Modifier.fillMaxSize()) {
-        val schritt = 32.dp.toPx() * ansicht.zoom
+        val basisSchritt = 32.dp.toPx()
+        val rasterStufe = ceil(12.dp.toPx() / (basisSchritt * ansicht.zoom)).toInt().coerceAtLeast(1)
+        val schritt = basisSchritt * ansicht.zoom * rasterStufe
         if (schritt <= 0f) return@Canvas
         var x = ansicht.verschiebung.x % schritt
         var y = ansicht.verschiebung.y % schritt
@@ -176,10 +192,117 @@ private fun Raster(ansicht: AnsichtsFenster) {
 }
 
 @Composable
+private fun MiniMap(
+    karte: KartenDaten,
+    sichtbarerWeltBereich: Rect?,
+    anzeigeGröße: IntSize,
+    dichte: Float,
+    ausgewählterKnoten: KnotenId?,
+    beiZentrieren: (GraphPunkt) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val inhalt = karte.inhaltsGrenzen(puffer = 80f)
+    val grenzen = when {
+        sichtbarerWeltBereich != null && inhalt != null -> inhalt.vereinigtMit(sichtbarerWeltBereich)
+        sichtbarerWeltBereich != null -> sichtbarerWeltBereich
+        inhalt != null -> inhalt
+        else -> return
+    }
+    var miniGröße by remember(karte.id) { mutableStateOf(IntSize.Zero) }
+    val aktuelleGrenzen by rememberUpdatedState(grenzen)
+    val aktuelleMiniGröße by rememberUpdatedState(miniGröße)
+    val aktuelleDichte by rememberUpdatedState(dichte)
+    val aktuellesZentrieren by rememberUpdatedState(beiZentrieren)
+    val rahmenFarbe = MaterialTheme.colorScheme.outlineVariant
+    val knotenFarbe = MaterialTheme.colorScheme.outline
+    val ausgewähltFarbe = MaterialTheme.colorScheme.primary
+    val viewportFarbe = ausgewähltFarbe.copy(alpha = .18f)
+    val hintergrundFarbe = MaterialTheme.colorScheme.surface
+    val zentriereAufMiniMapPosition: (Offset) -> Unit = { position ->
+        if (aktuelleMiniGröße.width > 0 && aktuelleMiniGröße.height > 0 && aktuelleDichte > 0f) {
+            val projektion = MiniMapProjektion(
+                grenzen = aktuelleGrenzen,
+                größe = Size(aktuelleMiniGröße.width.toFloat(), aktuelleMiniGröße.height.toFloat()),
+            )
+            aktuellesZentrieren(projektion.zuWelt(position))
+        }
+    }
+
+    Card(modifier.size(width = 180.dp, height = 120.dp)) {
+        Canvas(
+            Modifier.fillMaxSize()
+                .onSizeChanged { miniGröße = it }
+                .pointerInput(karte.id) {
+                    detectTapGestures(onTap = zentriereAufMiniMapPosition)
+                }
+                .pointerInput(karte.id) {
+                    detectDragGestures(
+                        onDragStart = zentriereAufMiniMapPosition,
+                        onDrag = { änderung, _ ->
+                            änderung.consume()
+                            zentriereAufMiniMapPosition(änderung.position)
+                        },
+                    )
+                },
+        ) {
+            val projektion = MiniMapProjektion(grenzen, size)
+            drawRect(hintergrundFarbe)
+            karte.knoten.forEach { knoten ->
+                val position = projektion.zuMiniMap(Offset(knoten.position.x, knoten.position.y))
+                drawRect(
+                    color = if (knoten.id == ausgewählterKnoten) ausgewähltFarbe else knotenFarbe,
+                    topLeft = position,
+                    size = Size(
+                        (knoten.größe.breite * projektion.skalierung).coerceAtLeast(3f),
+                        (knoten.größe.höhe * projektion.skalierung).coerceAtLeast(3f),
+                    ),
+                )
+            }
+            sichtbarerWeltBereich?.let { viewport ->
+                val obenLinks = projektion.zuMiniMap(Offset(viewport.left, viewport.top))
+                val untenRechts = projektion.zuMiniMap(Offset(viewport.right, viewport.bottom))
+                val viewportGröße = Size(
+                    (untenRechts.x - obenLinks.x).coerceAtLeast(0f),
+                    (untenRechts.y - obenLinks.y).coerceAtLeast(0f),
+                )
+                drawRect(viewportFarbe, obenLinks, viewportGröße)
+                drawRect(ausgewähltFarbe, obenLinks, viewportGröße, style = Stroke(2.dp.toPx()))
+            }
+            drawRect(rahmenFarbe, style = Stroke(1.dp.toPx()))
+        }
+    }
+}
+
+internal data class MiniMapProjektion(val grenzen: Rect, val größe: Size) {
+    private val puffer = 10f
+    private val breite = grenzen.width.coerceAtLeast(1f)
+    private val höhe = grenzen.height.coerceAtLeast(1f)
+    val skalierung = minOf(
+        (größe.width - 2f * puffer).coerceAtLeast(1f) / breite,
+        (größe.height - 2f * puffer).coerceAtLeast(1f) / höhe,
+    ).coerceAtLeast(0.0001f)
+    private val ursprung = Offset(
+        (größe.width - breite * skalierung) / 2f,
+        (größe.height - höhe * skalierung) / 2f,
+    )
+
+    fun zuMiniMap(welt: Offset): Offset = Offset(
+        ursprung.x + (welt.x - grenzen.left) * skalierung,
+        ursprung.y + (welt.y - grenzen.top) * skalierung,
+    )
+
+    fun zuWelt(miniMap: Offset): GraphPunkt = GraphPunkt(
+        grenzen.left + (miniMap.x - ursprung.x) / skalierung,
+        grenzen.top + (miniMap.y - ursprung.y) / skalierung,
+    )
+}
+
+@Composable
 private fun Verbindungen(
     karte: KartenDaten,
     zustand: KartenEditorZustand,
     verbindungen: List<VerbindungDaten>,
+    ansicht: AnsichtsFenster,
 ) {
     val dichte = LocalDensity.current
     val standard = MaterialTheme.colorScheme.outline
@@ -188,22 +311,22 @@ private fun Verbindungen(
         Modifier.fillMaxSize().pointerInput(verbindungen, karte.knoten) {
             detectTapGestures { pos ->
                 val treffer = verbindungen.minByOrNull { verbindung ->
-                    val a = anschlussPosition(karte, verbindung.von, dichte.density)
-                    val b = anschlussPosition(karte, verbindung.zu, dichte.density)
+                    val a = anschlussBildschirmPosition(karte, verbindung.von, dichte.density, ansicht)
+                    val b = anschlussBildschirmPosition(karte, verbindung.zu, dichte.density, ansicht)
                     punktStreckenAbstand(pos, a, b)
                 }
                 if (treffer != null) {
-                    val a = anschlussPosition(karte, treffer.von, dichte.density)
-                    val b = anschlussPosition(karte, treffer.zu, dichte.density)
-                    if (punktStreckenAbstand(pos, a, b) <= 14.dp.toPx()) zustand.wähleVerbindung(treffer.id)
+                    val a = anschlussBildschirmPosition(karte, treffer.von, dichte.density, ansicht)
+                    val b = anschlussBildschirmPosition(karte, treffer.zu, dichte.density, ansicht)
+                    if (punktStreckenAbstand(pos, a, b) <= 14.dp.toPx() * ansicht.zoom) zustand.wähleVerbindung(treffer.id)
                 }
             }
         }
     ) {
         verbindungen.forEach { verbindung ->
-            val start = anschlussPosition(karte, verbindung.von, dichte.density)
-            val ende = anschlussPosition(karte, verbindung.zu, dichte.density)
-            val abstand = max(72.dp.toPx(), abs(ende.x - start.x) * .45f)
+            val start = anschlussBildschirmPosition(karte, verbindung.von, dichte.density, ansicht)
+            val ende = anschlussBildschirmPosition(karte, verbindung.zu, dichte.density, ansicht)
+            val abstand = max(72.dp.toPx() * ansicht.zoom, abs(ende.x - start.x) * .45f)
             val pfad = Path().apply {
                 moveTo(start.x, start.y)
                 cubicTo(start.x + abstand, start.y, ende.x - abstand, ende.y, ende.x, ende.y)
@@ -211,15 +334,15 @@ private fun Verbindungen(
             drawPath(
                 pfad,
                 if (zustand.ausgewählteVerbindung == verbindung.id) gewählt else standard,
-                style = Stroke(width = if (zustand.ausgewählteVerbindung == verbindung.id) 5.dp.toPx() else 3.dp.toPx(), cap = StrokeCap.Round),
+                style = Stroke(width = (if (zustand.ausgewählteVerbindung == verbindung.id) 5.dp.toPx() else 3.dp.toPx()) * ansicht.zoom, cap = StrokeCap.Round),
             )
         }
         val startRef = zustand.verbindungsStart
         val vorschau = zustand.verbindungsVorschau
         if (startRef != null && vorschau != null) {
-            val start = anschlussPosition(karte, startRef, dichte.density)
-            val ende = Offset(vorschau.x * dichte.density, vorschau.y * dichte.density)
-            drawLine(gewählt.copy(alpha = .75f), start, ende, 3.dp.toPx(), cap = StrokeCap.Round)
+            val start = anschlussBildschirmPosition(karte, startRef, dichte.density, ansicht)
+            val ende = weltZuBildschirm(vorschau, dichte.density, ansicht)
+            drawLine(gewählt.copy(alpha = .75f), start, ende, 3.dp.toPx() * ansicht.zoom, cap = StrokeCap.Round)
         }
     }
 }
@@ -229,14 +352,22 @@ private fun KnotenDarstellung(
     knoten: KnotenDaten,
     ausgewählt: Boolean,
     zustand: KartenEditorZustand,
+    ansicht: AnsichtsFenster,
+    dichte: Float,
     renderer: KnotenRenderer,
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
 ) {
     val zoom = zustand.karte.ansicht.zoom
+    val bildschirmPosition = weltZuBildschirm(knoten.position, dichte, ansicht)
     Box(
-        Modifier.offset(knoten.position.x.dp, knoten.position.y.dp)
+        Modifier.offset { IntOffset(bildschirmPosition.x.roundToInt(), bildschirmPosition.y.roundToInt()) }
+            .graphicsLayer {
+                scaleX = ansicht.zoom
+                scaleY = ansicht.zoom
+                transformOrigin = TransformOrigin(0f, 0f)
+            }
             .size(knoten.größe.breite.dp, knoten.größe.höhe.dp)
     ) {
         Card(
@@ -302,8 +433,8 @@ private fun KnotenDarstellung(
                                         KartenAktion.KnotenGrößeÄndern(
                                             aktuell.id,
                                             GraphGröße(
-                                                (aktuell.größe.breite + delta.x / zoom / density).coerceAtLeast(120f),
-                                                (aktuell.größe.höhe + delta.y / zoom / density).coerceAtLeast(72f),
+                                                (aktuell.größe.breite + delta.x / density).coerceAtLeast(120f),
+                                                (aktuell.größe.höhe + delta.y / density).coerceAtLeast(72f),
                                             ),
                                         ),
                                         mitHistorie = false,
@@ -433,24 +564,17 @@ private fun nächsterKompatiblerAnschluss(
     .filter { it.second <= 28f / zustand.karte.ansicht.zoom }
     .minByOrNull { it.second }?.first
 
-private fun anschlussPosition(karte: KartenDaten, ref: AnschlussVerweis, dichte: Float): Offset {
-    val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return Offset.Zero
-    val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return Offset.Zero
-    val aufKante = knoten.anschlüsse.filter { it.kante == anschluss.kante }.sortedBy { it.reihenfolge }
-    val index = aufKante.indexOfFirst { it.id == anschluss.id }.coerceAtLeast(0)
-    val anteil = (index + 1f) / (aufKante.size + 1f)
-    val x = when (anschluss.kante) {
-        AnschlussKante.Links -> knoten.position.x
-        AnschlussKante.Rechts -> knoten.position.x + knoten.größe.breite
-        AnschlussKante.Oben, AnschlussKante.Unten -> knoten.position.x + knoten.größe.breite * anteil
-    }
-    val y = when (anschluss.kante) {
-        AnschlussKante.Oben -> knoten.position.y
-        AnschlussKante.Unten -> knoten.position.y + knoten.größe.höhe
-        AnschlussKante.Links, AnschlussKante.Rechts -> knoten.position.y + knoten.größe.höhe * anteil
-    }
-    return Offset(x * dichte, y * dichte)
-}
+private fun weltZuBildschirm(welt: GraphPunkt, dichte: Float, ansicht: AnsichtsFenster): Offset = Offset(
+    ansicht.verschiebung.x + welt.x * dichte * ansicht.zoom,
+    ansicht.verschiebung.y + welt.y * dichte * ansicht.zoom,
+)
+
+private fun anschlussBildschirmPosition(
+    karte: KartenDaten,
+    ref: AnschlussVerweis,
+    dichte: Float,
+    ansicht: AnsichtsFenster,
+): Offset = anschlussPositionWelt(karte, ref)?.let { weltZuBildschirm(it, dichte, ansicht) } ?: Offset.Zero
 
 /**
  * Der sichtbare Ausschnitt der Kartenwelt in Graph-Koordinaten.
@@ -459,7 +583,7 @@ private fun anschlussPosition(karte: KartenDaten, ref: AnschlussVerweis, dichte:
  * wird dagegen in dp gespeichert. Deshalb wird nach der Rücktransformation des
  * Zooms zusätzlich durch die Pixeldichte geteilt.
  */
-private fun sichtbarerWeltBereich(
+internal fun sichtbarerWeltBereich(
     ansicht: AnsichtsFenster,
     anzeigeGröße: IntSize,
     dichte: Float,
@@ -474,12 +598,27 @@ private fun sichtbarerWeltBereich(
     )
 }
 
-private fun KnotenDaten.istImBereich(bereich: Rect, puffer: Float): Boolean = Rect(
+internal fun KnotenDaten.istImBereich(bereich: Rect, puffer: Float): Boolean = Rect(
     left = position.x - puffer,
     top = position.y - puffer,
     right = position.x + größe.breite + puffer,
     bottom = position.y + größe.höhe + puffer,
 ).überschneidet(bereich)
+
+private fun KartenDaten.inhaltsGrenzen(puffer: Float): Rect? {
+    val erste = knoten.firstOrNull() ?: return null
+    var links = erste.position.x
+    var oben = erste.position.y
+    var rechts = erste.position.x + erste.größe.breite
+    var unten = erste.position.y + erste.größe.höhe
+    knoten.drop(1).forEach { knoten ->
+        links = min(links, knoten.position.x)
+        oben = min(oben, knoten.position.y)
+        rechts = max(rechts, knoten.position.x + knoten.größe.breite)
+        unten = max(unten, knoten.position.y + knoten.größe.höhe)
+    }
+    return Rect(links - puffer, oben - puffer, rechts + puffer, unten + puffer)
+}
 
 /**
  * Die Kontrollpunkte der kubischen Verbindung liegen horizontal neben den
@@ -510,6 +649,13 @@ private fun anschlussPositionWelt(karte: KartenDaten, ref: AnschlussVerweis): Gr
 
 private fun Rect.überschneidet(anderer: Rect): Boolean =
     left <= anderer.right && right >= anderer.left && top <= anderer.bottom && bottom >= anderer.top
+
+private fun Rect.vereinigtMit(anderer: Rect): Rect = Rect(
+    left = min(left, anderer.left),
+    top = min(top, anderer.top),
+    right = max(right, anderer.right),
+    bottom = max(bottom, anderer.bottom),
+)
 
 private fun punktStreckenAbstand(p: Offset, a: Offset, b: Offset): Float {
     val ab = b - a
