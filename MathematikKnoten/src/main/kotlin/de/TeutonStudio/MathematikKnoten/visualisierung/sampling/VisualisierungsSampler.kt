@@ -211,6 +211,13 @@ private fun numerischeKoordinaten(
     objekt: MathematischesObjekt,
     werte: Map<String, Double>,
 ): List<Double>? {
+    if (objekt is FallAusdruck) {
+        return when (bewerteAussage(objekt.aussage, werte, 1e-9)) {
+            NumerischeAussage.Wahr -> numerischeKoordinaten(objekt.wahr, werte)
+            NumerischeAussage.Falsch -> numerischeKoordinaten(objekt.lüge, werte)
+            else -> null
+        }
+    }
     val ausdrücke = when (objekt) {
         is Tupel -> objekt.elemente.map { it as? ZahlAusdruck ?: return null }
         is SpaltenVektor -> objekt.werte

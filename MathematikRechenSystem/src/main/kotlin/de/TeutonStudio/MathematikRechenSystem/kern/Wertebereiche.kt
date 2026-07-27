@@ -16,6 +16,14 @@ fun inferiereZielmenge(
         ?: error("Für den allgemeinen Parameter '${ausdruck.name}' fehlt ein Wertevorrat.")
     is Aussage -> Wahrheitsmenge
     is MengenAusdruck -> inferiereElementMenge(ausdruck, werteVorräte, annahmen)
+    is FallAusdruck -> when (ausdruck.aussage.entscheide(RechenKontext(annahmen)).wahrheitswert) {
+        Wahrheitswert.Wahr -> inferiereZielmenge(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage)
+        Wahrheitswert.Falsch -> inferiereZielmenge(ausdruck.lüge, werteVorräte, annahmen + Negation(ausdruck.aussage))
+        null -> vereinige(listOf(
+            inferiereZielmenge(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage),
+            inferiereZielmenge(ausdruck.lüge, werteVorräte, annahmen + Negation(ausdruck.aussage)),
+        ))
+    }
     is Tupel -> Tupelraum(ausdruck.elemente.map { inferiereZielmenge(it, werteVorräte, annahmen) })
     is SpaltenVektor -> Vektorraum(
         VektorOrientierung.Spalte,

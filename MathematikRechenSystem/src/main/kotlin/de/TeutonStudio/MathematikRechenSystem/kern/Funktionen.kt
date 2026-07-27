@@ -230,6 +230,11 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
             bedingung = ersetze(objekt.bedingung, freieBindungen),
         )
     }
+    is FallAusdruck -> FallAusdruck(
+        wahr = ersetze(objekt.wahr, bindungen),
+        aussage = ersetze(objekt.aussage, bindungen),
+        lüge = ersetze(objekt.lüge, bindungen),
+    )
     is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Ungleichheit -> Ungleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Vergleich -> Vergleich(ersetze(objekt.links, bindungen), objekt.art, ersetze(objekt.rechts, bindungen))
@@ -264,12 +269,24 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     else -> objekt
 }
 
-private fun vereinfacheObjekt(objekt: MathematischesObjekt): MathematischesObjekt = when (objekt) {
-    is ZahlAusdruck -> vereinfache(objekt)
-    is EndlicheMenge -> EndlicheMenge(objekt.elemente.map(::vereinfacheObjekt).toSet())
-    is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze)
+private fun vereinfacheObjekt(
+    objekt: MathematischesObjekt,
+    kontext: RechenKontext = RechenKontext(),
+): MathematischesObjekt = when (objekt) {
+    is ZahlAusdruck -> vereinfache(objekt, kontext)
+    is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { vereinfacheObjekt(it, kontext) }.toSet())
+    is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze, kontext)
     is Vereinigung -> vereinige(objekt.mengen)
     is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
+    is FallAusdruck -> {
+        val wahr = vereinfacheObjekt(objekt.wahr, kontext)
+        val lüge = vereinfacheObjekt(objekt.lüge, kontext)
+        if (wahr == lüge) wahr else when (objekt.aussage.entscheide(kontext).wahrheitswert) {
+            Wahrheitswert.Wahr -> wahr
+            Wahrheitswert.Falsch -> lüge
+            null -> objekt.copy(wahr = wahr, lüge = lüge)
+        }
+    }
     else -> objekt
 }
 
@@ -304,6 +321,7 @@ fun MathematischesObjekt.enthalteneFunktionsParameter(): Set<FunktionsParameter>
     is SpaltenVektor -> werte.enthalteneFunktionsParameter()
     is ZeilenVektor -> werte.enthalteneFunktionsParameter()
     is Matrix -> zeilen.flatten().enthalteneFunktionsParameter()
+    is FallAusdruck -> listOf(wahr, aussage, lüge).enthalteneFunktionsParameter()
     is Gleichheit -> listOf(links, rechts).enthalteneFunktionsParameter()
     is Ungleichheit -> listOf(links, rechts).enthalteneFunktionsParameter()
     is Vergleich -> listOf(links, rechts).enthalteneFunktionsParameter()
