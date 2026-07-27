@@ -33,7 +33,9 @@ jobs:
           ref: agent/v2.1.15
           fetch-depth: 0
       - name: Kartenparameter und Mengenknoten implementieren
-        run: python3 .github/scripts/apply_v2_1_15.py > /tmp/v2_1_15_apply.log 2>&1
+        run: |
+          python3 .github/scripts/fix_apply_v2_1_15.py
+          python3 .github/scripts/apply_v2_1_15.py > /tmp/v2_1_15_apply.log 2>&1
       - name: Fehlerprotokoll sichern
         if: failure()
         uses: actions/upload-artifact@v4
@@ -54,7 +56,7 @@ jobs:
       - name: Quelländerungen speichern
         run: |
           git checkout origin/master -- .github/workflows/build.yml
-          git rm .github/scripts/apply_v2_1_15.py
+          git rm .github/scripts/apply_v2_1_15.py .github/scripts/fix_apply_v2_1_15.py
           git config user.name "OpenAI"
           git config user.email "noreply@openai.com"
           git add \
