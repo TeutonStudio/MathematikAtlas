@@ -23,7 +23,7 @@ class ReellesIntervallTest {
             assertEquals(Wahrheitswert.Wahr, ElementBeziehung(RationaleZahl.von(wert), intervall).entscheide().wahrheitswert)
         }
         listOf(0L, 4L).forEach { wert ->
-            assertEquals(Wahrheitswert.Falsch, ElementBeziehung(RationaleZahl.von(wert), intervall).entscheide().wahrheitswert)
+            assertEquals(Wahrheitswert.Lüge, ElementBeziehung(RationaleZahl.von(wert), intervall).entscheide().wahrheitswert)
         }
     }
 

@@ -1,6 +1,6 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-enum class Wahrheitswert { Wahr, Falsch }
+enum class Wahrheitswert { Wahr, Lüge }
 
 sealed interface EntscheidungsStatus {
     data object Bewiesen : EntscheidungsStatus
@@ -22,7 +22,7 @@ sealed interface Aussage : Ausdruck {
 
 data class WahrheitsKonstante(val wert: Boolean) : Aussage {
     override fun entscheide(kontext: RechenKontext) = AussageErgebnis(
-        if (wert) Wahrheitswert.Wahr else Wahrheitswert.Falsch,
+        if (wert) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
         if (wert) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
     )
     override fun zuLatex() = if (wert) "\\top" else "\\bot"
@@ -34,9 +34,9 @@ data class Gleichheit(val links: MathematischesObjekt, val rechts: Mathematische
         val r = if (rechts is ZahlAusdruck) vereinfache(rechts, kontext) else rechts
         return when {
             l == r -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen, "Beide Seiten sind identisch.")
-            l is RationaleZahl && r is RationaleZahl -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+            l is RationaleZahl && r is RationaleZahl -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
             l is ZahlAusdruck && r is MengenAusdruck || l is MengenAusdruck && r is ZahlAusdruck ->
-                AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt, "Eine Zahl kann nicht mit einer Menge gleich sein.")
+                AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Eine Zahl kann nicht mit einer Menge gleich sein.")
             else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
     }
@@ -47,8 +47,8 @@ data class Ungleichheit(val links: MathematischesObjekt, val rechts: Mathematisc
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         val gleich = Gleichheit(links, rechts).entscheide(kontext)
         return when (gleich.wahrheitswert) {
-            Wahrheitswert.Wahr -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
-            Wahrheitswert.Falsch -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+            Wahrheitswert.Wahr -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+            Wahrheitswert.Lüge -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
             null -> AussageErgebnis(null, gleich.status)
         }
     }
@@ -68,7 +68,7 @@ data class Vergleich(val links: ZahlAusdruck, val art: VergleichsArt, val rechts
             VergleichsArt.Größer -> l > r
             VergleichsArt.GrößerGleich -> l >= r
         }
-        return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+        return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
     }
     override fun zuLatex() = "${links.zuLatex()} ${art.latex} ${rechts.zuLatex()}"
 }
@@ -77,8 +77,8 @@ data class Negation(val aussage: Aussage) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         val e = aussage.entscheide(kontext)
         return e.copy(wahrheitswert = when (e.wahrheitswert) {
-            Wahrheitswert.Wahr -> Wahrheitswert.Falsch
-            Wahrheitswert.Falsch -> Wahrheitswert.Wahr
+            Wahrheitswert.Wahr -> Wahrheitswert.Lüge
+            Wahrheitswert.Lüge -> Wahrheitswert.Wahr
             null -> null
         }, status = when (e.status) {
             EntscheidungsStatus.Bewiesen -> EntscheidungsStatus.Widerlegt
@@ -92,7 +92,7 @@ data class Negation(val aussage: Aussage) : Aussage {
 data class Konjunktion(val aussagen: List<Aussage>) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         val ergebnisse = aussagen.map { it.entscheide(kontext) }
-        if (ergebnisse.any { it.wahrheitswert == Wahrheitswert.Falsch }) return AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+        if (ergebnisse.any { it.wahrheitswert == Wahrheitswert.Lüge }) return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         if (ergebnisse.all { it.wahrheitswert == Wahrheitswert.Wahr }) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
@@ -103,7 +103,7 @@ data class Disjunktion(val aussagen: List<Aussage>) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         val ergebnisse = aussagen.map { it.entscheide(kontext) }
         if (ergebnisse.any { it.wahrheitswert == Wahrheitswert.Wahr }) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
-        if (ergebnisse.all { it.wahrheitswert == Wahrheitswert.Falsch }) return AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+        if (ergebnisse.all { it.wahrheitswert == Wahrheitswert.Lüge }) return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
     override fun zuLatex() = aussagen.joinToString(" \\lor ") { it.zuLatex() }
@@ -113,8 +113,8 @@ data class Implikation(val voraussetzung: Aussage, val folgerung: Aussage) : Aus
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         val a = voraussetzung.entscheide(kontext).wahrheitswert; val b = folgerung.entscheide(kontext).wahrheitswert
         return when {
-            a == Wahrheitswert.Falsch || b == Wahrheitswert.Wahr -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
-            a == Wahrheitswert.Wahr && b == Wahrheitswert.Falsch -> AussageErgebnis(Wahrheitswert.Falsch, EntscheidungsStatus.Widerlegt)
+            a == Wahrheitswert.Lüge || b == Wahrheitswert.Wahr -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+            a == Wahrheitswert.Wahr && b == Wahrheitswert.Lüge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
             else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
     }
@@ -126,7 +126,7 @@ data class Äquivalenz(val links: Aussage, val rechts: Aussage) : Aussage {
         val a = links.entscheide(kontext).wahrheitswert; val b = rechts.entscheide(kontext).wahrheitswert
         if (a == null || b == null) return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         val wahr = a == b
-        return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+        return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
     }
     override fun zuLatex() = "${links.zuLatex()} \\Leftrightarrow ${rechts.zuLatex()}"
 }
