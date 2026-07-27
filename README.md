@@ -1,64 +1,99 @@
 # Mathematik Atlas
 
-Der Mathematik Atlas ist eine Android-Anwendung zur Darstellung mathematischer Vorgänge als gerichtete Knotenkarten. Das Repository ist als unabhängige, deutsch benannte Modularchitektur aufgebaut. Der allgemeine Karteneditor kennt keine Mathematik; das Rechensystem kennt weder Android noch Compose.
+Mathematik Atlas ist eine native Android-Anwendung, die mathematische Vorgänge als interaktive, gerichtete Knotenkarten darstellt. Mathematische Objekte, Operationen und Umformungen werden als Knoten verbunden, topologisch ausgewertet und als versionierte Karten gespeichert. Gespeicherte Karten können wiederum als wiederverwendbare Gruppenknoten eingesetzt werden.
 
-## Module
+Die Anwendung ist auf Deutsch benannt und implementiert; sie basiert auf Kotlin, Jetpack Compose und Gradle – nicht auf einer Web- oder React-Architektur.
 
-| Modul | Aufgabe |
-|---|---|
-| `KnotenKartenVerwalter` | Wiederverwendbarer Node-Editor für Jetpack Compose, neutrales Kartenmodell, Verbindungen, Auswahl, Zoom, Undo/Redo |
-| `MathematikRechenSystem` | Reines Kotlin-CAS für exakte Zahlen, Terme, Aussagen, Mengen, Funktionen, Vektoren, Matrizen und Umformungen |
-| `MathematikKartenAdapter` | Topologische, inkrementell gecachte Auswertung von Karten mit dem CAS |
-| `MathematikKnoten` | Mathematische Knotenvorlagen, Auswerter, Anschlussarten und nativer LaTeX-Renderer |
-| `app` | Material-3-App, Kartenbibliothek, Inspector, Breadcrumbs, Import/Export und versionierte Dateispeicherung |
+## Funktionen
+
+- mathematische Knoten für Zahlen, Terme, Aussagen, Mengen, Abbildungen, Operatoren, Vektoren und Matrizen
+- typisierte Anschlüsse mit Prüfung von Richtung, Kompatibilität, Eingangskardinalität und Zyklen
+- inkrementelle, topologische Auswertung mit fachlichen Fehlerzuständen
+- nativer Compose-Editor mit Auswahl, Verschieben, Skalieren, Zoom, Verbindungen sowie Undo/Redo
+- Inspector zur Bearbeitung persistierter Knotenparameter und Anschlüsse
+- LaTeX-Ausgabe aus dem mathematischen Modell mit nativem Compose-Renderer
+- JSON-Persistenz mit versionierten Karten, Import/Export und Gruppenknoten
 
 ## Voraussetzungen
 
 - JDK 17 oder neuer
 - Android SDK Platform 36
-- Internetzugriff beim ersten Gradle-Aufruf, damit Gradle und Maven-Abhängigkeiten geladen werden können
+- Internetzugriff beim ersten Gradle-Aufruf, damit der Wrapper und Maven-Abhängigkeiten geladen werden können
 
-Android Studio kann den Ordner unmittelbar als Gradle-Projekt öffnen. Alternativ:
+Das Projekt verwendet den enthaltenen Gradle Wrapper 8.13. Android Studio kann den Repository-Ordner direkt als Gradle-Projekt öffnen.
+
+## Schnellstart
+
+Öffne das Projekt in Android Studio und starte das Modul `app` auf einem Emulator oder Gerät. Für einen Debug-Build in der Konsole:
 
 ```bash
-./gradlew test :app:assembleDebug
+./gradlew :app:assembleDebug
 ```
 
-Das Debug-APK liegt anschließend unter:
+Das erzeugte APK liegt anschließend unter:
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Der enthaltene Wrapper-Bootstrap lädt Gradle 8.13 ausschließlich von `services.gradle.org` und prüft die offizielle SHA-256-Prüfsumme, bevor er die Distribution startet.
-
 ## Bedienung
 
 - Langes Drücken auf die Kartenfläche öffnet die Knotenauswahl.
-- Ein Anschluss kann angeklickt oder auf die Kartenfläche gezogen werden.
-- Beim Ablegen einer Verbindung auf freier Fläche werden nur kompatible Knoten angeboten.
-- Knoten lassen sich verschieben, auswählen, duplizieren, löschen und über den Griff unten rechts skalieren.
-- Verbindungen lassen sich auswählen und löschen.
-- Gespeicherte Karten mit Karten-Ein- und -Ausgängen erscheinen als wiederverwendbare Gruppenknoten.
-- Ein Doppelklick auf einen Gruppenknoten öffnet seine Karte; die Werkzeugleiste zeigt den Breadcrumb.
+- Anschlüsse lassen sich anklicken oder auf die Kartenfläche ziehen.
+- Beim Ablegen auf freier Fläche werden nur kompatible Knoten angeboten.
+- Knoten können verschoben, ausgewählt, dupliziert, gelöscht und über den Griff unten rechts skaliert werden.
+- Verbindungen können ausgewählt und gelöscht werden.
+- Ein Doppelklick auf einen Gruppenknoten öffnet dessen Karte; die Werkzeugleiste zeigt den Navigationspfad.
 - Änderungen werden automatisch ausgewertet und verzögert gespeichert.
 
-## Karten und Versionen
+## Projektstruktur
 
-Jede Kartenversion wird einzeln gespeichert:
+| Modul | Verantwortung |
+|---|---|
+| `MathematikRechenSystem` | Reines Kotlin-CAS für exakte Zahlen, Terme, Aussagen, Mengen, Funktionen, Vektoren, Matrizen und Umformungen |
+| `KnotenKartenVerwalter` | Neutraler Compose-Node-Editor, Graphmodell, Verbindungen, Auswahl, Zoom und Undo/Redo |
+| `MathematikKartenAdapter` | Topologische Auswertung der Karten mit dem Rechenkern und Ergebnis-Cache |
+| `MathematikKnoten` | Mathematische Knotenvorlagen, Auswerter, Anschlussarten und LaTeX-Renderer |
+| `app` | Material-3-Anwendung, Kartenbibliothek, Inspector, Navigation sowie Import/Export und Dateispeicherung |
+
+Die Abhängigkeiten verlaufen von der Darstellung über Graph- und Anwendungslogik zur mathematischen Domäne. Der Rechenkern bleibt unabhängig von Android und Compose.
+
+## Karten und Persistenz
+
+Karten werden im App-internen Dateienbereich gespeichert:
 
 ```text
 MathematikAtlas/karten/<karten-id>/v<version>.json
 ```
 
-Eine bestehende Version wird überschrieben, solange sie in keiner anderen Karte als Gruppenknoten verwendet wird. Sobald sie verwendet wird, erzeugt die nächste Änderung automatisch eine neue Version. Bestehende Gruppenknoten behalten ihren festen Versionsverweis.
+Das JSON-Format wird aktuell als Formatversion 2 geschrieben und kann Karten der Formatversion 1 mit fehlenden Knoteneigenschaften rückwärtskompatibel lesen. Eine Kartenversion wird überschrieben, solange keine andere Karte sie als Gruppenknoten referenziert. Sobald sie verwendet wird, erzeugt die nächste Änderung automatisch eine neue Version; bestehende Gruppenknoten behalten ihren festen Versionsverweis.
 
 ## Prüfungen
 
 ```bash
-python3 scripts/pruefe_architektur.py
-python3 scripts/pruefe_kern.py   # benötigt lokales kotlinc
+# Repository- und Architekturprüfung
+python3 scripts/pruefe_repository.py
+
+# Zusätzliche Kernprüfung; benötigt ein lokal verfügbares kotlinc
+python3 scripts/pruefe_kern.py
+
+# JVM-Unit-Tests aller Module
 ./gradlew test
+
+# Debug-Build der Anwendung
+./gradlew :app:assembleDebug
 ```
 
-Weitere Einzelheiten stehen in `docs/`.
+Die zuletzt verifizierten Ergebnisse und bekannte Einschränkungen stehen in [docs/codex/CURRENT_STATE.md](docs/codex/CURRENT_STATE.md). Insbesondere wurde die App noch nicht auf Emulator oder Gerät verifiziert.
+
+## Weiterführende Dokumentation
+
+- [Projektkontext](docs/codex/PROJECT_CONTEXT.md): Begriffe, Technologie und zentrale Quellpfade
+- [Architektur](docs/codex/ARCHITECTURE.md): Verantwortungsgrenzen und Abhängigkeitsrichtung
+- [Node-Vertrag](docs/codex/NODE_CONTRACT.md): Anforderungen an Knotentypen und Anschlüsse
+- [Teststrategie](docs/codex/TEST_STRATEGY.md): Testebenen und Prüfanforderungen
+- [Dokumentationsübersicht](docs/codex/README.md): Pläne, Architekturentscheidungen und Arbeitsablauf
+
+## Mitwirken
+
+Vor Änderungen bitte die Repository-Anweisungen in [AGENTS.md](AGENTS.md) und die einschlägigen Dokumente unter `docs/codex/` lesen. Neue mathematische Knotentypen folgen dem dokumentierten Workflow mit Planung, fachlicher Prüfung, Implementierung und unabhängiger Verifikation.
