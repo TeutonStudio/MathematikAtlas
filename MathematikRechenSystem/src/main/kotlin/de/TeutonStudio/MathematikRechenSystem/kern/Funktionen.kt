@@ -230,6 +230,10 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
             bedingung = ersetze(objekt.bedingung, freieBindungen),
         )
     }
+    is GefilterteMenge -> filtereMenge(
+        ersetze(objekt.menge, bindungen) as MengenAusdruck,
+        ersetze(objekt.methode, bindungen) as Funktion,
+    )
     is FallAusdruck -> FallAusdruck(
         wahr = ersetze(objekt.wahr, bindungen),
         aussage = ersetze(objekt.aussage, bindungen),
@@ -278,6 +282,7 @@ private fun vereinfacheObjekt(
     is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze, kontext)
     is Vereinigung -> vereinige(objekt.mengen)
     is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
+    is GefilterteMenge -> filtereMenge(objekt.menge, objekt.methode, kontext)
     is FallAusdruck -> {
         val wahr = vereinfacheObjekt(objekt.wahr, kontext)
         val lüge = vereinfacheObjekt(objekt.lüge, kontext)
@@ -317,6 +322,7 @@ fun MathematischesObjekt.enthalteneFunktionsParameter(): Set<FunktionsParameter>
         variablen.map { it.grundMenge }.enthalteneFunktionsParameter() +
             bedingung.enthalteneFunktionsParameter().filterNot { it.name in gebundeneNamen }
     }
+    is GefilterteMenge -> setOf(menge, methode).enthalteneFunktionsParameter()
     is Tupel -> elemente.enthalteneFunktionsParameter()
     is SpaltenVektor -> werte.enthalteneFunktionsParameter()
     is ZeilenVektor -> werte.enthalteneFunktionsParameter()

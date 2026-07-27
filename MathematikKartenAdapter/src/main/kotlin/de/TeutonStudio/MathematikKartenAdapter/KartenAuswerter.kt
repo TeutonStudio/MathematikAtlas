@@ -139,7 +139,7 @@ class KartenAuswerter(
         if (quellen.isEmpty()) return this
         return copy(ausgaben = ausgaben.mapValues { (_, ausgabe) ->
             ausgabe.copy(variablenQuellen = (ausgabe.variablenQuellen + quellen)
-                .distinctBy { quelle -> Triple(quelle.knotenId, quelle.name, quelle.werteVorrat) })
+                .distinctBy { quelle -> Pair(Triple(quelle.knotenId, quelle.name, quelle.werteVorrat), quelle.alsMethodenParameter) })
         })
     }
 }

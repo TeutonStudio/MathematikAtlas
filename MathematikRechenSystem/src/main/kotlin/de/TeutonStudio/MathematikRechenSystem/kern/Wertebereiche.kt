@@ -64,6 +64,7 @@ private fun inferiereElementMenge(
     is KartesischesProdukt -> Tupelraum(menge.mengen)
     is DefinierteMenge -> if (menge.variablen.size == 1) menge.variablen.single().grundMenge
         else Tupelraum(menge.variablen.map { it.grundMenge })
+    is GefilterteMenge -> inferiereElementMenge(menge.menge, werteVorräte, annahmen)
     is Abbild -> menge.methode.einzigeZielMenge
     is IterierteVereinigung -> menge.methode.grundMengeFürMengenAusgabe()
     is IterierterSchnitt -> menge.methode.grundMengeFürMengenAusgabe()

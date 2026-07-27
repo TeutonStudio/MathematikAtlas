@@ -20,6 +20,8 @@ data class VariablenQuelle(
     val knotenId: KnotenId,
     val name: String,
     val werteVorrat: MengenAusdruck,
+    /** Nur echte Parameterknoten werden in die Signatur einer mit „Term zu Methode“ erzeugten Methode übernommen. */
+    val alsMethodenParameter: Boolean = true,
 )
 
 /** Konservativer Laufzeitnachweis für die Zulässigkeit reeller Zahloperationen. */

@@ -136,6 +136,51 @@ data class DefinierteMenge(
     }
 }
 
+/** Symbolischer Filter einer Menge durch eine einstellige aussagewertige Methode. */
+data class GefilterteMenge(
+    val menge: MengenAusdruck,
+    val methode: Funktion,
+) : MengenAusdruck {
+    init {
+        require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
+        require(methode.ausgaben.size == 1 && methode.ausgaben.values.single() is Aussage) {
+            "Eine Filtermethode muss genau eine Aussage ausgeben."
+        }
+    }
+
+    override fun zuLatex(): String {
+        val parameter = methode.parameter.single()
+        val bedingung = methode.ausgaben.values.single() as Aussage
+        return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"
+    }
+}
+
+/** Filtert endliche Mengen exakt und bewahrt andernfalls die symbolische Filterdefinition. */
+fun filtereMenge(
+    menge: MengenAusdruck,
+    methode: Funktion,
+    kontext: RechenKontext = RechenKontext(),
+): MengenAusdruck {
+    require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
+    val (ausgabeName, ausgabe) = methode.einzigeAusgabe()
+    require(ausgabe is Aussage) { "Eine Filtermethode muss eine Aussage ausgeben." }
+    if (menge == LeereMenge) return LeereMenge
+    if (menge is EndlicheMenge) {
+        val parameter = methode.parameter.single()
+        val behalten = linkedSetOf<MathematischesObjekt>()
+        for (element in menge.elemente.sortedBy(::strukturellerSchlüssel)) {
+            val bedingung = methode.wendeAn(mapOf(parameter.name to element)).getValue(ausgabeName) as Aussage
+            when (bedingung.entscheide(kontext).wahrheitswert) {
+                Wahrheitswert.Wahr -> behalten += element
+                Wahrheitswert.Falsch -> Unit
+                null -> return GefilterteMenge(menge, methode)
+            }
+        }
+        return if (behalten.isEmpty()) LeereMenge else EndlicheMenge(behalten)
+    }
+    return GefilterteMenge(menge, methode)
+}
+
 sealed interface Mächtigkeit : MathematischesObjekt
 data class EndlicheMächtigkeit(val wert: RationaleZahl) : Mächtigkeit { override fun zuLatex() = "|M| = ${wert.zuLatex()}" }
 data object AbzählbarUnendlich : Mächtigkeit { override fun zuLatex() = "|M| = \\aleph_0" }
@@ -210,6 +255,20 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
             val wahr = element.nenner == java.math.BigInteger.ONE && element.zähler.signum() >= 0
             AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Falsch, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
         } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        is GefilterteMenge -> {
+            val grundErgebnis = ElementBeziehung(element, menge.menge).entscheide(kontext)
+            if (grundErgebnis.wahrheitswert == Wahrheitswert.Falsch) grundErgebnis else {
+                val parameter = menge.methode.parameter.single()
+                val bedingung = menge.methode.wendeAn(mapOf(parameter.name to element)).values.single() as Aussage
+                val filterErgebnis = bedingung.entscheide(kontext)
+                when {
+                    filterErgebnis.wahrheitswert == Wahrheitswert.Falsch -> filterErgebnis
+                    grundErgebnis.wahrheitswert == Wahrheitswert.Wahr && filterErgebnis.wahrheitswert == Wahrheitswert.Wahr ->
+                        AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+                    else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+                }
+            }
+        }
         else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
     override fun zuLatex() = "${element.zuLatex()} \\in ${menge.zuLatex()}"
