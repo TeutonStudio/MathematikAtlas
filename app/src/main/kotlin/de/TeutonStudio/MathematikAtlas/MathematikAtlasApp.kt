@@ -19,6 +19,11 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
 import de.TeutonStudio.MathematikKnoten.LatexText
 import kotlinx.coroutines.delay
 
+private sealed interface GraphKontext {
+    data class Knoten(val id: KnotenId) : GraphKontext
+    data class Verbindung(val id: VerbindungsId) : GraphKontext
+}
+
 @Composable
 fun MathematikAtlasApp(zustand: AtlasZustand) {
     val context = LocalContext.current
@@ -28,6 +33,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { r -> zustand.importiere(r.readText()) } }
     }
+    var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
 
     LaunchedEffect(zustand.editor.karte) {
         zustand.aktualisiereAuswertung()
@@ -55,15 +61,78 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     rendererFür = { zustand.renderer() },
                     farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
                     beiHintergrundKontext = { zustand.öffneKnotenAuswahl(it) },
+                    beiKnotenKontext = { graphKontext = GraphKontext.Knoten(it.id) },
+                    beiVerbindungKontext = { graphKontext = GraphKontext.Verbindung(it.id) },
                     beiVerbindungAufHintergrund = { start, position -> zustand.öffneKnotenAuswahl(position, start) },
                     beiKnotenDoppelklick = { it.kartenVerweis?.let(zustand::öffne) },
                 )
                 zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
+                graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
             }
         }
         VerticalDivider()
         Inspektor(zustand, Modifier.width(310.dp).fillMaxHeight())
     }
+}
+
+@Composable
+private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließen: () -> Unit) {
+    val id = when (kontext) {
+        is GraphKontext.Knoten -> kontext.id.wert
+        is GraphKontext.Verbindung -> kontext.id.wert
+    }
+    AlertDialog(
+        onDismissRequest = schließen,
+        title = { Text("ID: $id", style = MaterialTheme.typography.titleMedium) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                when (kontext) {
+                    is GraphKontext.Knoten -> {
+                        Text("Knoten", style = MaterialTheme.typography.labelLarge)
+                        Button(
+                            onClick = {
+                                zustand.editor.wähleKnoten(kontext.id)
+                                zustand.editor.dupliziereAuswahl()
+                                schließen()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Duplizieren") }
+                        OutlinedButton(
+                            onClick = {
+                                zustand.editor.wähleKnoten(kontext.id)
+                                zustand.editor.isoliereAusgewähltenKnoten()
+                                schließen()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Isolieren") }
+                        Text("Entfernt alle Verbindungen dieses Knotens.", style = MaterialTheme.typography.bodySmall)
+                        Button(
+                            onClick = {
+                                zustand.editor.wähleKnoten(kontext.id)
+                                zustand.editor.löscheAuswahl()
+                                schließen()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) { Text("Löschen") }
+                    }
+                    is GraphKontext.Verbindung -> {
+                        Text("Verbindung", style = MaterialTheme.typography.labelLarge)
+                        Button(
+                            onClick = {
+                                zustand.editor.wähleVerbindung(kontext.id)
+                                zustand.editor.löscheAuswahl()
+                                schließen()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) { Text("Löschen") }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = schließen) { Text("Schließen") } },
+    )
 }
 
 @Composable

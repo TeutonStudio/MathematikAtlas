@@ -8,6 +8,8 @@ sealed interface KartenAktion {
     data class KnotenGrößeÄndern(val id: KnotenId, val größe: GraphGröße) : KartenAktion
     data class KnotenParameterÄndern(val id: KnotenId, val schlüssel: String, val wert: String) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
+    /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */
+    data class KnotenIsolieren(val id: KnotenId) : KartenAktion
     data class VerbindungEinfügen(val verbindung: VerbindungDaten) : KartenAktion
     data class VerbindungLöschen(val id: VerbindungsId) : KartenAktion
     data class AnsichtÄndern(val ansicht: AnsichtsFenster) : KartenAktion
@@ -22,6 +24,9 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
     })
     is KartenAktion.KnotenLöschen -> copy(
         knoten = knoten.filterNot { it.id == aktion.id },
+        verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },
+    )
+    is KartenAktion.KnotenIsolieren -> copy(
         verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },
     )
     is KartenAktion.VerbindungEinfügen -> copy(verbindungen = verbindungen + aktion.verbindung)

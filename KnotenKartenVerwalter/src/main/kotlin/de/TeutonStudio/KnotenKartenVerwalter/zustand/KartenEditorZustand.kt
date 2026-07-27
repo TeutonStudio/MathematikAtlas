@@ -143,6 +143,12 @@ class KartenEditorZustand(
         wähleKnoten(kopie.id)
     }
 
+    /** Entfernt alle eingehenden und ausgehenden Verbindungen des ausgewählten Knotens. */
+    fun isoliereAusgewähltenKnoten() {
+        val id = ausgewählterKnoten ?: return
+        führeAus(KartenAktion.KnotenIsolieren(id))
+    }
+
     /** Legt die dauerhaft sichtbare Mindestzahl der Eingänge eines erweiterbaren Knotens fest. */
     fun setzeFesteEingangAnzahl(knotenId: KnotenId, anzahl: Int) {
         val gewünschteAnzahl = anzahl.coerceAtLeast(2)

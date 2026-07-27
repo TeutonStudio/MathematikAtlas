@@ -40,6 +40,8 @@ fun KnotenKartenEditor(
     rendererFür: (KnotenDaten) -> KnotenRenderer = { StandardKnotenRenderer },
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color = { MaterialTheme.colorScheme.primary },
     beiHintergrundKontext: (GraphPunkt) -> Unit = {},
+    beiKnotenKontext: (KnotenDaten) -> Unit = {},
+    beiVerbindungKontext: (VerbindungDaten) -> Unit = {},
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit = { _, _ -> },
     beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
 ) {
@@ -111,6 +113,7 @@ fun KnotenKartenEditor(
                 detectTapGestures(
                     onTap = { zustand.wähleKnoten(null) },
                     onLongPress = { pos ->
+                        zustand.wähleKnoten(null)
                         val welt = GraphPunkt(
                             (pos.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.density,
                             (pos.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.density,
@@ -128,7 +131,14 @@ fun KnotenKartenEditor(
             // Die Schlüssel sorgen dafür, dass die Hintergrundebene bei jedem Drag sofort
             // mit den aktuellen Knotenpositionen neu gezeichnet wird.
             key(sichtbareVerbindungen, zustand.verbindungsStart, zustand.verbindungsVorschau) {
-                Verbindungen(karte, zustand, sichtbareVerbindungen, ansicht)
+                Verbindungen(
+                    karte = karte,
+                    zustand = zustand,
+                    verbindungen = sichtbareVerbindungen,
+                    ansicht = ansicht,
+                    beiHintergrundKontext = beiHintergrundKontext,
+                    beiVerbindungKontext = beiVerbindungKontext,
+                )
             }
             sichtbareKnoten.forEach { knoten ->
                 key(knoten.id) {
@@ -140,6 +150,7 @@ fun KnotenKartenEditor(
                         dichte = dichte.density,
                         renderer = rendererFür(knoten),
                         farbeFürAnschluss = farbeFürAnschluss,
+                        beiKnotenKontext = beiKnotenKontext,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                         beiDoppelklick = { beiKnotenDoppelklick(knoten) },
                     )
@@ -303,27 +314,47 @@ private fun Verbindungen(
     zustand: KartenEditorZustand,
     verbindungen: List<VerbindungDaten>,
     ansicht: AnsichtsFenster,
+    beiHintergrundKontext: (GraphPunkt) -> Unit,
+    beiVerbindungKontext: (VerbindungDaten) -> Unit,
 ) {
     val dichte = LocalDensity.current
     val standard = MaterialTheme.colorScheme.outline
     val gewählt = MaterialTheme.colorScheme.primary
     Canvas(
-        Modifier.fillMaxSize().pointerInput(verbindungen, karte.knoten) {
-            detectTapGestures { pos ->
+        Modifier.fillMaxSize().pointerInput(verbindungen, karte.knoten, ansicht) {
+            fun trefferAn(position: Offset): VerbindungDaten? {
                 val treffer = verbindungen.minByOrNull { verbindung ->
                     val a = anschlussBildschirmPosition(karte, verbindung.von, dichte.density, ansicht)
                     val b = anschlussBildschirmPosition(karte, verbindung.zu, dichte.density, ansicht)
-                    punktStreckenAbstand(pos, a, b)
+                    punktStreckenAbstand(position, a, b)
                 }
-                if (treffer != null) {
-                    val a = anschlussBildschirmPosition(karte, treffer.von, dichte.density, ansicht)
-                    val b = anschlussBildschirmPosition(karte, treffer.zu, dichte.density, ansicht)
-                    if (punktStreckenAbstand(pos, a, b) <= 14.dp.toPx() * ansicht.zoom) zustand.wähleVerbindung(treffer.id)
-                    else zustand.wähleKnoten(null)
-                } else {
-                    zustand.wähleKnoten(null)
+                return treffer?.takeIf {
+                    val a = anschlussBildschirmPosition(karte, it.von, dichte.density, ansicht)
+                    val b = anschlussBildschirmPosition(karte, it.zu, dichte.density, ansicht)
+                    punktStreckenAbstand(position, a, b) <= 14.dp.toPx() * ansicht.zoom
                 }
             }
+            fun weltPosition(position: Offset) = GraphPunkt(
+                (position.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.density,
+                (position.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.density,
+            )
+            detectTapGestures(
+                onTap = { pos ->
+                    val treffer = trefferAn(pos)
+                    if (treffer != null) zustand.wähleVerbindung(treffer.id)
+                    else zustand.wähleKnoten(null)
+                },
+                onLongPress = { pos ->
+                    val treffer = trefferAn(pos)
+                    if (treffer != null) {
+                        zustand.wähleVerbindung(treffer.id)
+                        beiVerbindungKontext(treffer)
+                    } else {
+                        zustand.wähleKnoten(null)
+                        beiHintergrundKontext(weltPosition(pos))
+                    }
+                },
+            )
         }
     ) {
         verbindungen.forEach { verbindung ->
@@ -359,6 +390,7 @@ private fun KnotenDarstellung(
     dichte: Float,
     renderer: KnotenRenderer,
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
+    beiKnotenKontext: (KnotenDaten) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
 ) {
@@ -399,6 +431,10 @@ private fun KnotenDarstellung(
                 .pointerInput(knoten.id) {
                     detectTapGestures(
                         onTap = { zustand.wähleKnoten(knoten.id) },
+                        onLongPress = {
+                            zustand.wähleKnoten(knoten.id)
+                            beiKnotenKontext(knoten)
+                        },
                         onDoubleTap = { beiDoppelklick() },
                     )
                 },

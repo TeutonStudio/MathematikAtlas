@@ -61,6 +61,24 @@ class GraphPrüfungTest {
         assertEquals(2, zustand.karte.knoten.first { it.id == operator.id }.anschlüsse.size)
     }
 
+    @Test fun isolierenEntferntNurDieVerbindungenDesGewähltenKnotens() {
+        val a = knotenMitEinUndAus("a")
+        val b = knotenMitEinUndAus("b")
+        val c = knotenMitEinUndAus("c")
+        val ab = VerbindungDaten(von = ref(a, "aus"), zu = ref(b, "ein"))
+        val bc = VerbindungDaten(von = ref(b, "aus"), zu = ref(c, "ein"))
+        val karte = KartenDaten(name = "Test", knoten = listOf(a, b, c), verbindungen = listOf(ab, bc))
+        val zustand = KartenEditorZustand(karte, prüfung)
+
+        zustand.wähleKnoten(b.id)
+        zustand.isoliereAusgewähltenKnoten()
+
+        assertEquals(listOf(a, b, c), zustand.karte.knoten)
+        assertTrue(zustand.karte.verbindungen.isEmpty())
+        zustand.rückgängig()
+        assertEquals(listOf(ab, bc), zustand.karte.verbindungen)
+    }
+
     private fun knoten(name: String, richtung: AnschlussRichtung, art: AnschlussArtId) = KnotenDaten(
         art = "test", name = name, anschlüsse = listOf(AnschlussDaten(name = "wert", richtung = richtung, kante = if (richtung == AnschlussRichtung.Eingang) AnschlussKante.Links else AnschlussKante.Rechts, art = art)),
     )
