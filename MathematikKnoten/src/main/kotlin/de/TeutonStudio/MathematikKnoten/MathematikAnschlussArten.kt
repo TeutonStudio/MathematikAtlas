@@ -18,5 +18,8 @@ object MathematikAnschlussArten {
     val MengenFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.menge"), "Mengenfunktion", Funktion.id)
     val SpaltenVektorFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.spalte"), "Spaltenvektorfunktion", Funktion.id)
     val ZeilenVektorFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.zeile"), "Zeilenvektorfunktion", Funktion.id)
+
+    // V2_2_MERGE_NOTE: Geometrieanschlüsse werden in einem eigenen Register definiert und hier nur additiv eingebunden.
+    // Beim Rebase auf den letzten v2.1.x-Stand bestehende Anschlussarten und deren Reihenfolge nicht durch eine ältere Gesamtliste ersetzen.
     val alle = listOf(Objekt, Zahl, Aussage, Menge, Vektor, SpaltenVektor, ZeilenVektor, Matrix, Tupel, Funktion, AussageFunktion, ZahlFunktion, MengenFunktion, SpaltenVektorFunktion, ZeilenVektorFunktion)
 }
