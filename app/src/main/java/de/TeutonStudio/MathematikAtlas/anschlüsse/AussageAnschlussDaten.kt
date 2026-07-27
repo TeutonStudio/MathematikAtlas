@@ -1,8 +1,0 @@
-package de.TeutonStudio.MathematikAtlas.anschlüsse
-
-import de.TeutonStudio.AndroidMathematikRechenSystem.Aussagenlogik.Aussage
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenAnschluss
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.GraphDatenId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Kante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.graph.Richtung
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.vordefiniert.AnschlussArt
