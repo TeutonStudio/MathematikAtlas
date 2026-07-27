@@ -21,6 +21,11 @@ data class AnschlussDaten(
     val kannSichErweitern: Boolean = false,
     /** Kennzeichnet einen vom Editor erzeugten, nur bei bestehender Verbindung erhaltenen Eingang. */
     val dynamischErzeugt: Boolean = false,
+    /**
+     * Name eines Eingangs desselben Knotens, dessen effektive Art dieser Anschluss übernimmt.
+     * Ohne verbundene Quelle bleibt [art] der konservative Fallback.
+     */
+    val artFolgtEingang: String? = null,
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)
