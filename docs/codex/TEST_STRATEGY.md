@@ -2,92 +2,139 @@
 
 ## Grundsatz
 
-Teste die fachliche Bedeutung auf der niedrigsten sinnvollen Ebene. UI-Tests ersetzen keine Tests der mathematischen Semantik.
+Teste die fachliche Bedeutung auf der niedrigsten sinnvollen Ebene. Compose-Tests ersetzen keine Tests der mathematischen Semantik, und ein erfolgreicher JVM-Test ersetzt keinen Laufzeittest einer Geste auf Emulator oder Gerät.
 
 ## 1. Domänentests
 
-Für mathematische Operationen:
+Für mathematische Operationen im `MathematikRechenSystem`:
 
 - gültige Standardfälle,
 - Grenzfälle,
 - leere Eingaben,
 - undefinierte Zustände,
+- unbekannte und unentscheidbare Zustände,
 - Typinkompatibilität,
 - relevante algebraische Eigenschaften,
-- deterministische Ausgabe.
+- exakte und deterministische Ausgabe.
 
-Diese Tests sollen ohne React Flow ausführbar sein, sofern die Architektur dies ermöglicht.
+Diese Tests müssen ohne Android und Compose ausführbar sein.
 
-## 2. Node-Vertragstests
+## 2. Karteneditor- und Graphvertragstests
+
+Im `KnotenKartenVerwalter` prüfen:
+
+- unveränderliche Kartenzustände nach Aktionen,
+- Richtung und Anschlussart-Kompatibilität,
+- stabile Anschluss- und Verbindungsreferenzen,
+- Eingangskardinalität,
+- Zyklusverhinderung,
+- dynamische Anschlüsse,
+- Auswahl und visuelle Gruppen,
+- atomare Undo/Redo-Schritte.
+
+Tests dieses Moduls dürfen keine mathematischen Knotenschlüssel oder app-spezifischen Parameterkonventionen voraussetzen.
+
+## 3. Knotenvorlagen- und Auswertertests
+
+Im `MathematikKnoten` und `MathematikKartenAdapter` prüfen:
+
+- Standarddaten einer Vorlage,
+- neue Anschluss-IDs pro Instanz,
+- Registrierung im Vorlagenkatalog,
+- Registrierung und Auflösung des Auswerters,
+- Einsammeln der Eingänge anhand der Anschlussnamen,
+- fachlich gültige Ausgabe,
+- Fehlerzustände bei fehlenden oder falschen Eingaben,
+- Cache- und Teilgraphverhalten, sofern betroffen.
+
+## 4. Integrationstests
 
 Prüfen:
 
-- Defaultdaten,
-- Datenvalidierung,
-- stabile Handle-IDs,
-- Richtung und Kardinalität,
-- Registry-Auflösung,
-- Ausgabevertrag,
-- Fehlerzustände.
-
-## 3. Integrationstests
-
-Prüfen:
-
-- Verbindung kompatibler Nodes,
-- Ablehnung inkompatibler Edges,
+- Verbindung kompatibler Knoten,
+- Ablehnung inkompatibler Verbindungen,
+- Ersetzung belegter Eingänge,
 - Propagation von Änderungen,
-- Inspector → Node-Daten → Auswertung,
+- Inspector → Kartenaktion → Knotendaten → Auswertung,
 - Laden und Wiederherstellen,
-- Kopieren und Löschen,
-- Undo/Redo, sofern vorhanden.
+- Kopieren, Duplizieren und Löschen,
+- Undo/Redo,
+- Gruppenknoten und feste Kartenverweise.
 
-## 4. Darstellungstests
+## 5. Darstellungstests
 
 Nur für relevantes Verhalten:
 
-- Handles werden mit korrekter ID und Richtung gerendert,
-- KaTeX oder Formeltext entspricht den Daten,
+- Anschlüsse werden mit korrekter ID, Richtung und Position gerendert,
+- nativer LaTeX- oder Formeltext entspricht den Daten,
 - Fehlerzustand ist sichtbar,
 - Inspector-Felder besitzen korrekte Werte und Validierung,
-- Ereignisse lösen nicht unbeabsichtigt Node-Drag oder Canvas-Aktionen aus.
+- `KnotenInteraktionsModus` trennt Inhaltsgesten vom Knotenziehen,
+- Klick-, Halte-, Drag-, Transformations- und Kontextgesten lösen die vorgesehene Aktion aus,
+- Semantik- und Accessibility-Beschreibungen sind vorhanden, soweit die Komponente sie anbietet.
 
-Vermeide fragile Tests, die nur zufällige DOM-Struktur oder CSS-Klassen festschreiben.
+Vermeide fragile Tests, die nur interne Compose-Hierarchien oder zufällige Layoutdetails festschreiben.
 
-## 5. Persistenztests
+## 6. Persistenztests
 
-Wenn Node-Daten gespeichert werden:
+Wenn Karten- oder Knotendaten gespeichert werden:
 
-- Serialisierungs-Roundtrip,
-- Laden älterer Schemaversionen,
+- JSON-Roundtrip,
+- Laden älterer Formatversionen,
 - Defaultwerte fehlender Felder,
-- stabile Edge-Referenzen,
-- robuste Behandlung unbekannter Typen.
+- stabile Anschluss- und Verbindungsreferenzen,
+- robuste Behandlung unbekannter Typen,
+- Migration geänderter Anschlussstrukturen,
+- Kartenversionsregeln bei Gruppenknoten,
+- Ausschluss von Laufzeit- und Cachedaten.
 
-## 6. Prüfbefehle
+## 7. Laufzeit- und Smoke-Tests
+
+Für Änderungen an Compose-Interaktionen oder Android-Pfaden dokumentiere getrennt:
+
+- JVM- und Unit-Teststatus,
+- erfolgreichen APK-Build,
+- Emulatorprüfung,
+- Prüfung auf physischem Gerät.
+
+Behaupte „funktionsfähig“ für eine neue Geste oder einen Dialog nur, wenn die Interaktion tatsächlich ausgeführt wurde. Kompilieren ist eine nützliche Eigenschaft, aber noch keine Benutzererfahrung.
+
+## 8. Prüfbefehle
 
 Codex bestimmt Befehle aus:
 
-1. Lockdatei,
-2. `package.json`,
-3. Vite- und Testkonfiguration,
+1. Gradle-Wrapper und `*.gradle.kts`,
+2. Skripten unter `scripts/`,
+3. vorhandenen Testquellen,
 4. CI-Konfiguration.
 
-Bevorzugte Reihenfolge, sofern entsprechende Skripte existieren:
+Der derzeit übliche Prüfpfad ist:
 
-1. gezielte Tests,
-2. vollständige Tests,
-3. Typprüfung,
-4. Lint,
-5. Produktions-Build.
+```bash
+python3 scripts/pruefe_repository.py
+python3 scripts/pruefe_kern.py
+./gradlew test
+./gradlew :app:assembleDebug
+```
 
-Ein nicht vorhandenes Skript wird nicht erfunden. Ein wegen externer Umgebung nicht ausführbarer Test wird mit konkretem Grund dokumentiert.
+Bevorzugte Reihenfolge:
 
-## 7. Mindestabdeckung für einen neuen Node
+1. gezielte Modul- oder Testklassentests,
+2. vollständige JVM-Tests,
+3. Repository- und Architekturprüfung,
+4. Android-Lint, sofern im Bestand vorhanden,
+5. Debug- oder Produktions-Build,
+6. Compose-, Emulator- oder Geräteprüfung, sofern für die Änderung erforderlich und verfügbar.
+
+Ein nicht vorhandener Task wird nicht erfunden. Ein wegen externer Umgebung nicht ausführbarer Test wird mit konkretem Grund dokumentiert.
+
+## 9. Mindestabdeckung für einen neuen Knotentyp
 
 - mindestens ein fachlicher Erfolgstest,
 - mindestens ein ungültiger oder unvollständiger Zustand,
-- Handle- und Registry-Vertrag,
-- Inspector-Änderung, falls vorhanden,
+- Anschluss- und Registrierungsvertrag,
+- Auswerterregistrierung,
+- Inspectoränderung, falls vorhanden,
 - Persistenz-Roundtrip, falls vorhanden,
-- Migrationstest, falls das Schema geändert wurde.
+- Migrationstest, falls das Schema geändert wurde,
+- Darstellungstest bei spezialisiertem Renderer, soweit die vorhandene Umgebung dies unterstützt.
