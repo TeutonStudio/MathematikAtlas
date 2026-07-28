@@ -2,28 +2,30 @@
 
 ## Zweck
 
-Dieses Dokument beschreibt die beabsichtigten Verantwortungsgrenzen. Es behauptet nicht, dass der aktuelle Code sie bereits vollständig erfüllt. Abweichungen werden im ExecPlan und gegebenenfalls als technische Schuld dokumentiert.
+Dieses Dokument beschreibt die beabsichtigten Verantwortungsgrenzen der nativen Android-Anwendung. Es behauptet nicht, dass der aktuelle Code sie bereits vollständig erfüllt. Abweichungen werden im ExecPlan und gegebenenfalls als technische Schuld dokumentiert.
 
-## Schichten
+## Module und Verantwortungen
 
-### 1. Mathematische Domäne
+### 1. `MathematikRechenSystem`
 
 Verantwortlich für:
 
 - mathematische Objekte und Ausdrücke,
-- Operationen, Relationen, Mengen und Funktionen,
-- Typen und Gültigkeitsbedingungen,
-- Auswertung oder symbolische Transformation,
-- fachliche Fehlerzustände,
-- Darstellung als LaTeX oder eine neutrale Zwischenrepräsentation.
+- Operationen, Relationen, Mengen, Funktionen und Geometrie,
+- Typen, Gültigkeitsbedingungen und fachliche Fehlerzustände,
+- symbolische oder exakte Auswertung,
+- strukturierte Umformungen,
+- LaTeX-Ausgabe oder eine neutrale Darstellungsrepräsentation.
 
 Nicht verantwortlich für:
 
-- React-Komponenten,
-- React-Flow-Positionen,
-- Auswahlzustand,
+- Android oder Jetpack Compose,
+- Kartenpositionen und Größen,
+- Auswahl- oder Gestenzustand,
 - Inspector-Layout,
-- Browserereignisse.
+- Dateidialoge und App-Navigation.
+
+Der Rechenkern bleibt ein reines Kotlin/JVM-Modul.
 
 ### Mengenwertige Iterationsmethoden
 
@@ -31,111 +33,151 @@ Eine einwertige mengenwertige Methode verwendet ihre deklarierte Zielmenge als f
 
 Die Zielmenge darf nicht vom einzigen Iterationsparameter abhängen. Der Schnitt über eine leere Indexmenge ergibt diese feste Grundmenge. Die Rechenkernvalidierung prüft diese Invariante zentral; Kartenadapter und Renderer verwenden nur die abgesicherte abgeleitete Grundmenge.
 
-### 2. Anwendungslogik
+### 2. `KnotenKartenVerwalter`
 
 Verantwortlich für:
 
-- Erzeugen und Ändern fachlicher Graphobjekte,
-- Kommandos oder Aktionen,
-- Validierung von Benutzeroperationen,
-- Koordination zwischen Graph und mathematischer Domäne,
-- Undo/Redo, sofern vorhanden,
-- Laden, Speichern und Migration auf Anwendungsebene.
+- fachneutrale persistierbare Graphdaten,
+- Knoten-, Anschluss-, Verbindungs- und Gruppen-IDs,
+- Positionen, Größen und Ansichtsdaten,
+- Verbindungskompatibilität anhand registrierter Anschlussarten,
+- Auswahl, Drag, Zoom und Kontextinteraktionen,
+- Kartenaktionen und Undo/Redo,
+- generische Renderer-Verträge.
 
-### 3. Graphintegration
+Nicht verantwortlich für:
 
-Verantwortlich für:
+- mathematische Auswertung,
+- mathematische Knotenschlüssel,
+- knotenspezifische Parameternamen wie `festeEingänge`,
+- LaTeX-Erzeugung,
+- App-Persistenz und Kartenbibliothek.
 
-- Zuordnung zwischen fachlichen Graphobjekten und React Flow,
-- Node-, Handle- und Edge-IDs,
-- Verbindungskompatibilität,
-- Registry oder Fabrik,
-- Graphlayout und Position,
-- Auswahl und Interaktion.
+Das Modul darf fachliche Regeln höherer Module über generische Verträge ermöglichen, aber nicht selbst als zweite mathematische Wahrheit implementieren.
 
-Die Graphintegration darf fachliche Regeln aufrufen, soll sie aber nicht als zweite Wahrheit duplizieren.
-
-### 4. Darstellung
+### 3. `MathematikKartenAdapter`
 
 Verantwortlich für:
 
-- Node-Karten,
-- Handles,
-- Edge-Darstellung,
-- Inspector-Komponenten,
-- KaTeX-Rendering,
-- shadcn/ui-Komponenten,
-- Barrierefreiheit und Interaktionsfeedback.
+- Zuordnung zwischen Kartengraph und mathematischer Domäne,
+- topologische Auswertung azyklischer Karten,
+- Einsammeln und Binden von Anschlusswerten,
+- Auswerterregister,
+- Ergebnis-Cache und Fehleraggregation,
+- Auswertung wiederverwendbarer Karten als Gruppenknoten.
 
-Darstellungskomponenten sollen möglichst deterministisch aus Props und Zustand rendern.
+Der Adapter kennt keine App-Dialoge und besitzt keine Compose-Darstellung.
 
-### 5. Persistenz
+### 4. `MathematikKnoten`
 
 Verantwortlich für:
 
-- serialisierbare Datenformen,
-- Schema- oder Versionsinformationen,
-- Migrationen,
-- robuste Behandlung unbekannter oder älterer Node-Typen.
+- mathematische `KnotenVorlage`-Definitionen,
+- mathematische Anschlussarten,
+- Standardauswerter und deren Registrierung,
+- spezialisierte Compose-Renderer,
+- native Darstellung des vom Rechenkern erzeugten LaTeX-Teilumfangs,
+- fachbezogene Konfigurationen wie Matrix- oder Visualisierungsparameter.
 
-Persistierte Daten enthalten keine React-Komponenten, Callbacks, DOM-Objekte oder sonstige reine Laufzeitwerte.
+Renderer dürfen fachliche Ergebnisse darstellen und Interaktionen melden, aber keine unabhängige mathematische Semantik pflegen.
+
+### 5. `app`
+
+Verantwortlich für:
+
+- Anwendungseinstieg und Material-3-Oberfläche,
+- Kartenbibliothek, Ordner und Navigation,
+- Inspector und anwendungsspezifische Dialoge,
+- Zusammenstellung der Vorlagen- und Renderer-Kataloge,
+- Laden, Speichern, Import, Export und Migration,
+- Koordination von Editorzustand und Auswertung.
 
 ## Abhängigkeitsrichtung
 
-Bevorzugte Richtung:
+Die tatsächlichen Gradle-Abhängigkeiten bilden die erlaubte Richtung:
 
 ```text
-Darstellung -> Graphintegration -> Anwendungslogik -> Mathematische Domäne
-Persistenz  -> serialisierbare Verträge der Anwendung und Domäne
+app
+├── MathematikKnoten
+├── MathematikKartenAdapter
+├── KnotenKartenVerwalter
+└── MathematikRechenSystem
+
+MathematikKnoten
+├── MathematikKartenAdapter
+├── KnotenKartenVerwalter
+└── MathematikRechenSystem
+
+MathematikKartenAdapter
+├── KnotenKartenVerwalter
+└── MathematikRechenSystem
 ```
 
-Die mathematische Domäne kennt React Flow nicht.
+Verboten sind insbesondere:
 
-## Node-Registry
+- Android-, Compose- oder Editorabhängigkeiten im `MathematikRechenSystem`,
+- Mathematikabhängigkeiten im `KnotenKartenVerwalter`,
+- App-Abhängigkeiten in Bibliotheksmodulen,
+- zyklische Modulabhängigkeiten.
 
-Es soll genau einen maßgeblichen Weg geben, einen Node-Typ zu registrieren oder zu erzeugen. Ein Registry-Eintrag sollte, abhängig von der bestehenden Architektur, mindestens zuordnen können:
+## Registrierungswege
 
-- stabiler Typ- oder Schema-Schlüssel,
-- Datenvalidator oder Datenfabrik,
-- React-Komponente,
-- Inspector-Komponente oder Inspector-Schema,
-- Handle-Vertrag,
-- Version oder Migration,
-- optional Icon, Titel und Kategorie.
+Der aktuelle Bestand verwendet bewusst getrennte Mechanismen:
 
-Codex erweitert den vorhandenen Mechanismus. Es führt kein zweites Register ein, nur weil das erste unbequem ist.
+- `MathematikKnotenVorlagen.alle` als statischen Vorlagenkatalog,
+- dynamisch aus Karten abgeleitete Gruppenvorlagen im App-Zustand,
+- `MathematikAuswerterRegister` für mathematische Auswerter,
+- Renderer-Zuordnung über die vorhandenen App- und Knotenpfade,
+- `AnschlussArtRegister` für die Typkompatibilität von Anschlüssen.
+
+Agenten erweitern den jeweils zuständigen vorhandenen Mechanismus. Sie führen kein paralleles Register ein, nur weil mehrere bestehende Register unterschiedliche Verantwortungen besitzen.
 
 ## Zustandsführung
 
 Trenne:
 
-- persistierte fachliche Node-Daten,
-- abgeleitete fachliche Ergebnisse,
-- React-Flow-spezifische Layoutdaten,
-- kurzlebigen UI-Zustand.
+- persistierte `KartenDaten`, `KnotenDaten`, `AnschlussDaten` und `VerbindungDaten`,
+- abgeleitete mathematische Ergebnisse,
+- Editorinteraktion und Auswahl,
+- kurzlebigen Compose-Zustand,
+- anwendungsspezifische Navigations- und Dialogzustände.
 
-Doppelte, unabhängig veränderbare Kopien derselben Information sind zu vermeiden.
+Doppelte, unabhängig veränderbare Kopien derselben Information sind zu vermeiden. Änderungen persistierter Kartendaten erfolgen über die vorgesehenen Kartenaktionen, damit Undo/Redo und Speicherung denselben Zustand sehen.
+
+## Persistenz
+
+Persistierte Daten enthalten ausschließlich serialisierbare eigene Datentypen und rekursive `KnotenEigenschaft`-Werte. Nicht erlaubt sind:
+
+- Composables oder Funktionsreferenzen,
+- Compose-`State`, `MutableState` oder `Modifier`,
+- Android-Kontexte,
+- Canvas- oder Layoutobjekte,
+- Auswertungscaches und abgeleitete Renderdaten.
+
+Änderungen am Schema müssen ältere Karten, stabile Anschlussreferenzen und unbekannte Knotentypen berücksichtigen.
 
 ## Fehlerzustände
 
-Fehler werden klassifiziert:
+Fehler werden mindestens unterschieden in:
 
-1. ungültige Konfiguration des Nodes,
+1. ungültige Knotenkonfiguration,
 2. inkompatible Verbindung,
 3. fehlende Eingabe,
 4. mathematisch undefinierter Zustand,
-5. Auswertungsfehler,
-6. unbekannter oder nicht migrierbarer persistierter Typ.
+5. unbekanntes oder unentscheidbares Ergebnis,
+6. Auswertungsfehler,
+7. unbekannter oder nicht migrierbarer persistierter Typ.
 
-Der Node soll einen fachlich verständlichen Zustand anzeigen, ohne den gesamten Graph zu beschädigen.
+Ein Knoten soll einen fachlich verständlichen Fehlerzustand anzeigen, ohne den gesamten Graph zu beschädigen.
 
 ## Erweiterungsregel
 
 Eine neue Abstraktion ist gerechtfertigt, wenn mindestens eines gilt:
 
-- mehrere vorhandene und neue Nodes benötigen denselben fachlichen Vertrag,
+- mehrere vorhandene und neue Knoten benötigen denselben fachlichen Vertrag,
 - ein aktueller Typ kann die neue Semantik nicht korrekt ausdrücken,
-- eine bestehende Kopplung verhindert Tests oder Persistenz,
+- eine bestehende Kopplung verletzt eine Modulgrenze,
+- die Kopplung verhindert Tests oder Persistenz,
 - eine neue Versionierungs- oder Kompatibilitätsgrenze ist erforderlich.
 
-„Die Datei war lang“ genügt nicht als Architekturbegründung.
+„Die Datei war lang“ genügt weiterhin nicht als Architekturbegründung. Dateien sind keine verängstigten Tiere, die durch bloße Größe ein neues Ökosystem verdienen.
