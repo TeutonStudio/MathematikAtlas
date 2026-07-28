@@ -133,6 +133,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
 @Composable
 private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport: () -> Unit) {
     var umbenennenGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
+    var jsonGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     Row(
         Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -148,6 +149,7 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
         TextButton(onClick = { umbenennenGeöffnet = true }) { Text("Karte umbenennen") }
         TextButton(onClick = zustand.editor::rückgängig, enabled = zustand.editor.kannRückgängig()) { Text("Rückgängig") }
         TextButton(onClick = zustand.editor::wiederholen, enabled = zustand.editor.kannWiederholen()) { Text("Wiederholen") }
+        TextButton(onClick = { jsonGeöffnet = true }) { Text("JSON anzeigen") }
         TextButton(onClick = onImport) { Text("Import") }
         TextButton(onClick = onExport) { Text("Export") }
         Button(onClick = zustand::speichereAktuell) { Text("Speichern") }
@@ -164,6 +166,55 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
             },
         )
     }
+    if (jsonGeöffnet) {
+        KartenJsonDialog(zustand = zustand, schließen = { jsonGeöffnet = false })
+    }
+}
+
+@Composable
+private fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
+    var text by remember(zustand.editor.karte.id, zustand.editor.karte.version) {
+        mutableStateOf(zustand.speicher.exportiere(zustand.editor.karte))
+    }
+    var fehler by remember { mutableStateOf<String?>(null) }
+
+    fun speichernUndSchließen() {
+        fehler = zustand.übernehmeJson(text)
+        if (fehler == null) schließen()
+    }
+
+    AlertDialog(
+        onDismissRequest = ::speichernUndSchließen,
+        title = { Text("JSON der aktuellen Karte") },
+        text = {
+            Column(
+                Modifier.widthIn(min = 520.dp).heightIn(max = 620.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    "Änderungen werden beim Schließen übernommen, sofern daraus eine gültige Karte entsteht.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it; fehler = null },
+                    label = { Text("Karten-JSON") },
+                    minLines = 18,
+                    maxLines = 28,
+                    isError = fehler != null,
+                    supportingText = { fehler?.let { Text(it) } },
+                    modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                    textStyle = MaterialTheme.typography.bodySmall,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = ::speichernUndSchließen) { Text("Schließen und speichern") }
+        },
+        dismissButton = {
+            TextButton(onClick = schließen) { Text("Verwerfen") }
+        },
+    )
 }
 
 @Composable
