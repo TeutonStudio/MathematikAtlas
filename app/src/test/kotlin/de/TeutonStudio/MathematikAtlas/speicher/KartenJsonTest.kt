@@ -5,15 +5,28 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
-    @Test fun `Version drei rundet verschachtelte Eigenschaften`() {
+    @Test fun `Version vier rundet verschachtelte Eigenschaften`() {
         val eigenschaften = mapOf("konfiguration" to KnotenEigenschaft.Objekt(mapOf(
             "kamera" to KnotenEigenschaft.Objekt(mapOf("zoom" to KnotenEigenschaft.Dezimalzahl(1.25), "aktiv" to KnotenEigenschaft.Wahrheitswert(true))),
             "farben" to KnotenEigenschaft.Liste(listOf(KnotenEigenschaft.Farbe(0xFF2563EB), KnotenEigenschaft.Text("Ozean"))),
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 3"))
+        assertTrue(text.contains("\"formatVersion\": 4"))
         assertEquals(karte, KartenJson.lese(text))
+    }
+
+    @Test fun `Visuelle Gruppen bleiben beim Roundtrip erhalten und werden bereinigt`() {
+        val a = KnotenDaten(id = KnotenId("a"), art = "test", name = "A")
+        val b = KnotenDaten(id = KnotenId("b"), art = "test", name = "B")
+        val gruppe = VisuelleKnotenGruppeDaten(VisuelleGruppenId("g"), setOf(a.id, b.id, KnotenId("fehlt")))
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(
+            name = "Test",
+            knoten = listOf(a, b),
+            visuelleGruppen = listOf(gruppe),
+        )))
+
+        assertEquals(setOf(a.id, b.id), gelesen.visuelleGruppen.single().knotenIds)
     }
 
     @Test fun `Version eins ohne Eigenschaften bleibt lesbar`() {
