@@ -1,114 +1,140 @@
-# Vertrag für Node-Typen
+# Vertrag für Knotentypen
 
-Jeder neue oder wesentlich geänderte Node muss die folgenden Punkte ausdrücklich definieren.
+Jeder neue oder wesentlich geänderte mathematische Knotentyp muss die folgenden Punkte ausdrücklich definieren.
 
 ## 1. Identität
 
-- stabiler Node-Typ oder Registry-Schlüssel,
+- stabiler Art- oder Registry-Schlüssel,
 - menschenlesbarer Name,
-- Kategorie,
-- Daten-Schemaversion, falls persistiert,
-- eindeutige Node-ID pro Instanz.
+- Kategorie im Vorlagenkatalog,
+- Daten- oder Kartenformatänderung, falls persistiert,
+- eindeutige `KnotenId` pro Instanz.
 
-Der Typ-Schlüssel darf nicht aus einem übersetzten UI-Label abgeleitet werden.
+Der Art-Schlüssel darf nicht aus einem übersetzten UI-Label abgeleitet werden.
 
 ## 2. Fachliche Bedeutung
 
 Beschreibe:
 
-- welches mathematische Objekt oder welchen Vorgang der Node repräsentiert,
+- welches mathematische Objekt oder welchen Vorgang der Knoten repräsentiert,
 - welche Voraussetzungen gelten,
 - welches Ergebnis erzeugt wird,
-- welche Fälle undefiniert oder ungültig sind,
-- ob der Node rein symbolisch, numerisch, visuell oder kombiniert arbeitet.
+- welche Fälle undefiniert, unbekannt oder ungültig sind,
+- ob der Knoten symbolisch, exakt, näherungsweise, visuell oder kombiniert arbeitet.
 
-## 3. Node-Daten
+## 3. Knotendaten
 
 Trenne mindestens:
 
-- persistierte Konfiguration,
-- Verweise auf Eingaben,
-- abgeleitete Ergebnisse,
-- UI-spezifischen Laufzeitzustand.
+- persistierte Konfiguration in `parameter` oder `eigenschaften`,
+- persistierte Anschlüsse und Kartenverweise,
+- abgeleitete Auswertungsergebnisse,
+- kurzlebigen Compose- und Interaktionszustand.
 
-Persistierte Daten müssen serialisierbar und validierbar sein.
+Persistierte Daten müssen durch `KartenJson` darstellbar, validierbar und rückwärtskompatibel lesbar sein. Laufzeitobjekte gehören nicht in `KnotenDaten`.
 
 ## 4. Anschlüsse
 
-Für jeden Handle:
+Für jeden Anschluss:
 
 | Feld | Bedeutung |
 |---|---|
-| stabile ID | unveränderlicher technischer Schlüssel innerhalb des Node-Typs |
-| Richtung | Eingang oder Ausgang |
-| fachlicher Typ | zum Beispiel Ausdruck, Zahl, Menge, Funktion, Relation oder Visualisierungsdaten |
-| Kardinalität | genau eins, optional, mehrere oder variadisch |
-| Ordnung | relevant oder irrelevant |
-| Label | UI-Bezeichnung |
-| Kompatibilität | erlaubte Quell- oder Zieltypen |
-| Fehlermodus | Verhalten bei fehlender oder falscher Eingabe |
+| Instanz-ID | stabile `AnschlussId`, auf die Verbindungen verweisen |
+| Name | fachlicher Schlüssel für Auswerter und Eingabesammlung |
+| Richtung | `Eingang`, `Ausgang` oder bewusst `Neutral` |
+| Kante | Platzierung am Knoten |
+| Anschlussart | `AnschlussArtId` und Hierarchie für Kompatibilität |
+| Kardinalität | genau eins, optional, mehrfach oder dynamisch erweiterbar |
+| Reihenfolge | fachlich relevant oder nur visuell |
+| Erweiterbarkeit | ob weitere Anschlüsse aus diesem Vertrag entstehen dürfen |
+| Typabhängigkeit | gegebenenfalls `artFolgtEingang` |
+| Fehlermodus | Verhalten bei fehlender oder inkompatibler Eingabe |
 
-Handle-IDs dürfen nicht von Position, Übersetzung oder sichtbarem Label abhängen.
+Anschluss-IDs dürfen nicht aus Position, Übersetzung oder sichtbarem Label abgeleitet werden. Strukturänderungen müssen bestehende IDs und damit vorhandene Verbindungen erhalten, soweit die fachliche Bedeutung bestehen bleibt.
 
-## 5. Edge-Verhalten
+## 5. Verbindungsverhalten
 
 Definiere:
 
-- wann eine Verbindung zulässig ist,
-- ob mehrere Edges an einem Handle erlaubt sind,
-- ob Zyklen zulässig sind,
+- wann eine Verbindung nach Richtung und Anschlussarthierarchie zulässig ist,
+- wie belegte Eingänge behandelt werden,
+- ob und wie dynamische Anschlüsse entstehen,
+- ob die Änderung mit dem azyklischen Kartenmodell vereinbar ist,
 - wie Änderungen propagiert werden,
-- wie inkompatible gespeicherte Edges behandelt werden.
+- wie inkompatible gespeicherte Verbindungen behandelt werden,
+- welches Undo/Redo-Verhalten erwartet wird.
 
 ## 6. Auswertung
 
 Definiere:
 
-- Eingabewerte oder Eingabeausdrücke,
-- Ergebnis,
+- Eingabewerte oder Eingabeausdrücke nach Anschlussnamen,
+- fachliches Ergebnis,
 - Auswertungszeitpunkt,
-- Caching oder Memoisierung, falls relevant,
+- Verhalten des Ergebnis-Caches,
 - deterministische Reihenfolge,
-- Fehler- und Ladezustände,
-- Verhalten bei partiellen Eingaben.
+- Fehler- und Entscheidungszustände,
+- Verhalten bei partiellen Eingaben,
+- Verhalten innerhalb eines Gruppenknotens.
+
+Die mathematische Semantik liegt im `MathematikRechenSystem` oder im zuständigen `MathematikKnotenAuswerter`, nicht im Compose-Renderer.
 
 ## 7. Darstellung
 
 Definiere:
 
 - Titel und kompakte Bedeutung,
-- KaTeX-Ausgabe,
-- Handles und ihre Platzierung,
-- Fehleranzeige,
+- vom fachlichen Objekt erzeugte LaTeX- oder Textdarstellung,
+- nativen Compose-Renderer und dessen unterstützten Formelteilumfang,
+- Anschlüsse und ihre Platzierung,
+- Fehler- und Ladeanzeige,
 - Auswahlzustand,
 - minimale und optionale Größe,
-- Interaktion im Node selbst.
+- `KnotenInteraktionsModus`,
+- Interaktionen innerhalb des Knotens.
 
-Die Node-Komponente darf keine zweite fachliche Semantik pflegen.
+Die Darstellung darf keine zweite fachliche Semantik pflegen. Eine Rendervereinfachung muss als Darstellung erkennbar bleiben und darf das Auswertungsergebnis nicht verändern.
 
 ## 8. Inspector
 
 Definiere:
 
 - editierbare Felder,
+- verwendeten Datenträger (`parameter` oder typisierte `eigenschaften`),
 - Datentyp und Validierung,
 - Standardwerte,
 - unmittelbare oder bestätigte Übernahme,
-- Rückwirkung auf Handles, Auswertung und Persistenz,
+- verwendete `KartenAktion`,
+- Rückwirkung auf Anschlüsse, Auswertung und Persistenz,
 - Verhalten bei ungültiger Eingabe.
 
-## 9. Persistenz und Migration
+Der Inspector schreibt keinen unabhängigen Schattenzustand, der von `KnotenDaten` abweichen kann.
+
+## 9. Registrierung und Erzeugung
 
 Definiere:
 
-- gespeichertes Schema,
-- Defaultwerte für ältere Daten,
-- Migration bei Strukturänderung,
-- Verhalten bei unbekanntem Node-Typ,
-- Kopier- und Duplizierverhalten,
-- stabile Handle-Referenzen nach Laden.
+- Eintrag oder Erweiterung in `MathematikKnotenVorlagen.alle`,
+- Auswerterregistrierung im vorhandenen `MathematikAuswerterRegister`,
+- gegebenenfalls neue Anschlussart im vorhandenen Register,
+- Renderer-Zuordnung im bestehenden Pfad,
+- Kategorie und Suchverhalten in der Knotenauswahl.
 
-## 10. Tests
+Kein Knotentyp führt ein paralleles Register ein.
+
+## 10. Persistenz und Migration
+
+Definiere:
+
+- gespeicherte Parameter und Eigenschaften,
+- Defaultwerte für ältere Daten,
+- Migration bei Anschluss- oder Strukturänderung,
+- Verhalten bei unbekanntem Knotentyp,
+- Kopier- und Duplizierverhalten,
+- stabile Anschlussreferenzen nach Laden,
+- Auswirkungen auf `formatVersion`, sofern tatsächlich erforderlich.
+
+## 11. Tests
 
 Mindestens prüfen:
 
@@ -116,22 +142,23 @@ Mindestens prüfen:
 - fachlich gültige Auswertung,
 - fehlende und inkompatible Eingaben,
 - mathematische Grenzfälle,
-- stabile Handles,
-- Registry-Zuordnung,
-- Inspector-Änderung,
-- Serialisierungs-Roundtrip, sofern Persistenz besteht,
-- Migration, sofern Schema geändert wurde,
-- Rendering eines relevanten Zustands, sofern die bestehende Testumgebung dies unterstützt.
+- stabile Anschluss-IDs und Reihenfolge,
+- Vorlagen- und Auswerterregistrierung,
+- Inspector- oder Kartenaktionsänderung,
+- JSON-Roundtrip, sofern Persistenz besteht,
+- Migration, sofern ein Schema geändert wurde,
+- Rendering oder Interaktion, sofern die bestehende Compose-Testumgebung dies unterstützt.
 
-## 11. Abnahmekriterien
+## 12. Abnahmekriterien
 
-Abnahmekriterien sind beobachtbar und binär formuliert. Beispiel:
+Abnahmekriterien sind beobachtbar und binär formuliert. Beispiele:
 
-- „Eine Edge vom Typ `Menge<T>` kann mit dem Handle `indexSet` verbunden werden.“
-- „Nach Speichern und Laden bleiben Node-Typ, Konfiguration und Handle-Referenzen erhalten.“
+- „Ein Ausgang der Anschlussart `mathematik.menge` kann mit dem Eingang `indexmenge` verbunden werden.“
+- „Nach Speichern und Laden bleiben Knotenart, Konfiguration und Anschlussreferenzen erhalten.“
 - „Eine leere Indexmenge liefert das fachlich definierte neutrale Element oder einen expliziten undefinierten Zustand.“
+- „Eine Inspectoränderung erzeugt genau einen Undo-Schritt.“
 
 Nicht ausreichend:
 
-- „Der Node funktioniert.“
+- „Der Knoten funktioniert.“
 - „Die UI sieht ordentlich aus.“
