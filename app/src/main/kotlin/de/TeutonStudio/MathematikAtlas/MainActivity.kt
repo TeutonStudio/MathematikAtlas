@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme(colorScheme = lightColorScheme()) {
                 val zustand = remember { AtlasZustand(applicationContext) }
-                MathematikAtlasApp(zustand)
+                MathematikAtlasV23App(zustand)
             }
         }
     }
