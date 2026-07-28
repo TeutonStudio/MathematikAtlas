@@ -48,7 +48,9 @@ class GeometrieTest {
     @Test fun `Koordinatenbild und Trägermenge bleiben verschiedene Darstellungen`() {
         val p = punkt("A", 1, 2)
         val system = GeometrischesKoordinatensystem(r2)
-        assertNotEquals(GeometrischeTrägermenge(p), KoordinatenBild(p, system))
+        val träger: Any = GeometrischeTrägermenge(p)
+        val koordinaten: Any = KoordinatenBild(p, system)
+        assertFalse(träger == koordinaten)
     }
 
     @Test fun `Objekte verschiedener Räume dürfen nicht kombiniert werden`() {
