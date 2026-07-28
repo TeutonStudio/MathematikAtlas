@@ -45,6 +45,12 @@ fun MathematikAtlasV23App(zustand: AtlasZustand) {
         zustand.aktualisiereAuswertung()
         delay(650)
         zustand.speichereAktuell()
+        if (konzeptSitzung.istAktiv) konzeptSitzung.schließe()
+    }
+    LaunchedEffect(zustand.linkerBereich) {
+        if (zustand.linkerBereich != VerwaltungsBereich.Konzepte && konzeptSitzung.istAktiv) {
+            konzeptSitzung.schließe()
+        }
     }
 
     Row(
@@ -92,6 +98,8 @@ fun MathematikAtlasV23App(zustand: AtlasZustand) {
                         editor = zustand.editor,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
+                            // Die Minimap ist 180 × 120 dp groß und besitzt 16 dp Rand.
+                            // 180 + 16 klebt die Werkzeugleiste exakt an ihre linke Kante.
                             .offset(x = (-196).dp, y = (-16).dp)
                             .width(104.dp)
                             .height(120.dp),
@@ -119,11 +127,13 @@ private fun V23VerwaltungsFenster(
     Box(modifier) {
         VerwaltungsFenster(zustand, Modifier.fillMaxSize())
         if (zustand.linkerBereich == VerwaltungsBereich.Konzepte) {
-            Surface(
-                Modifier.fillMaxSize().padding(top = 112.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
-                KonzeptBrowser(konzeptSitzung)
+            Box(Modifier.fillMaxSize().padding(top = 112.dp)) {
+                Surface(
+                    Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                ) {
+                    KonzeptBrowser(konzeptSitzung)
+                }
             }
         }
     }
