@@ -1,0 +1,466 @@
+name: Agent v2.2.7
+
+on:
+  push:
+    branches:
+      - agent/v2.2.7-auswahl-gruppen
+
+permissions:
+  contents: write
+
+jobs:
+  implementieren:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v2.2.7-auswahl-gruppen
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Android SDK 36 bereitstellen
+        run: yes | sdkmanager "platforms;android-36" >/dev/null
+
+      - name: v2.2.7 implementieren
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def read(path: str) -> str:
+              return Path(path).read_text(encoding="utf-8")
+
+          def write(path: str, text: str) -> None:
+              Path(path).parent.mkdir(parents=True, exist_ok=True)
+              Path(path).write_text(text, encoding="utf-8")
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              text = read(path)
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f"{path}: erwartete genau einen Treffer, gefunden {count}: {old[:80]!r}")
+              write(path, text.replace(old, new, 1))
+
+          # Identitäten für persistente visuelle Gruppen.
+          replace_once(
+              "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/daten/Identitaeten.kt",
+              "@JvmInline value class VerbindungsId(val wert: String) { override fun toString() = wert }\n@JvmInline value class AnschlussArtId(val wert: String) { override fun toString() = wert }",
+              "@JvmInline value class VerbindungsId(val wert: String) { override fun toString() = wert }\n@JvmInline value class VisuelleGruppenId(val wert: String) { override fun toString() = wert }\n@JvmInline value class AnschlussArtId(val wert: String) { override fun toString() = wert }",
+          )
+          replace_once(
+              "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/daten/Identitaeten.kt",
+              "fun neueVerbindungsId() = VerbindungsId(UUID.randomUUID().toString())",
+              "fun neueVerbindungsId() = VerbindungsId(UUID.randomUUID().toString())\nfun neueVisuelleGruppenId() = VisuelleGruppenId(UUID.randomUUID().toString())",
+          )
+
+          # Persistentes Kartenmodell.
+          replace_once(
+              "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/daten/Karte.kt",
+              "data class VerbindungDaten(\n    val id: VerbindungsId = neueVerbindungsId(),\n    val von: AnschlussVerweis,\n    val zu: AnschlussVerweis,\n)\n\ndata class KartenDaten(",
+              "data class VerbindungDaten(\n    val id: VerbindungsId = neueVerbindungsId(),\n    val von: AnschlussVerweis,\n    val zu: AnschlussVerweis,\n)\n\ndata class VisuelleKnotenGruppeDaten(\n    val id: VisuelleGruppenId = neueVisuelleGruppenId(),\n    val knotenIds: Set<KnotenId>,\n)\n\ndata class KartenDaten(",
+          )
+          replace_once(
+              "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/daten/Karte.kt",
+              "    val verbindungen: List<VerbindungDaten> = emptyList(),\n    val ansicht: AnsichtsFenster = AnsichtsFenster.Standard,",
+              "    val verbindungen: List<VerbindungDaten> = emptyList(),\n    val visuelleGruppen: List<VisuelleKnotenGruppeDaten> = emptyList(),\n    val ansicht: AnsichtsFenster = AnsichtsFenster.Standard,",
+          )
+
+          write(
+              "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/daten/VisuelleGruppen.kt",
+              '''package de.TeutonStudio.KnotenKartenVerwalter.daten
+
+/**
+ * Entfernt verwaiste und mehrdeutige Gruppenmitgliedschaften.
+ * Ein Knoten gehört höchstens einer visuellen Gruppe an; die zuerst gespeicherte Gruppe gewinnt.
+ */
+fun KartenDaten.bereinigteVisuelleGruppen(): KartenDaten {
+    val vorhandeneKnoten = knoten.mapTo(mutableSetOf()) { it.id }
+    val bereitsVerwendet = mutableSetOf<KnotenId>()
+    val bereinigt = visuelleGruppen.mapNotNull { gruppe ->
+        val ids = gruppe.knotenIds.asSequence()
+            .filter { it in vorhandeneKnoten }
+            .filter { bereitsVerwendet.add(it) }
+            .toSet()
+        ids.takeIf { it.size >= 2 }?.let { gruppe.copy(knotenIds = it) }
+    }
+    return if (bereinigt == visuelleGruppen) this else copy(visuelleGruppen = bereinigt)
+}
+''',
+          )
+
+          # Atomare Mehrfach- und Gruppenaktionen.
+          actions = "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/logik/KartenAktion.kt"
+          replace_once(
+              actions,
+              "    data class KnotenVerschieben(val id: KnotenId, val position: GraphPunkt) : KartenAktion\n    data class KnotenGrößeÄndern",
+              "    data class KnotenVerschieben(val id: KnotenId, val position: GraphPunkt) : KartenAktion\n    data class KnotenMehrfachVerschieben(val ids: Set<KnotenId>, val delta: GraphPunkt) : KartenAktion\n    data class KnotenMehrfachEinfügen(val knoten: List<KnotenDaten>, val verbindungen: List<VerbindungDaten>) : KartenAktion\n    data class KnotenGrößeÄndern",
+          )
+          replace_once(
+              actions,
+              "    data class KnotenLöschen(val id: KnotenId) : KartenAktion\n    /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */",
+              "    data class KnotenLöschen(val id: KnotenId) : KartenAktion\n    data class KnotenMehrfachLöschen(val ids: Set<KnotenId>) : KartenAktion\n    data class VisuelleGruppeErstellen(val knotenIds: Set<KnotenId>) : KartenAktion\n    data class VisuelleGruppierungAufheben(val knotenIds: Set<KnotenId>) : KartenAktion\n    /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */",
+          )
+          replace_once(
+              actions,
+              "    is KartenAktion.KnotenVerschieben -> copy(knoten = knoten.map { if (it.id == aktion.id) it.copy(position = aktion.position) else it })\n    is KartenAktion.KnotenGrößeÄndern",
+              "    is KartenAktion.KnotenVerschieben -> copy(knoten = knoten.map { if (it.id == aktion.id) it.copy(position = aktion.position) else it })\n    is KartenAktion.KnotenMehrfachVerschieben -> copy(knoten = knoten.map {\n        if (it.id in aktion.ids) it.copy(position = it.position + aktion.delta) else it\n    })\n    is KartenAktion.KnotenMehrfachEinfügen -> copy(\n        knoten = knoten + aktion.knoten,\n        verbindungen = verbindungen + aktion.verbindungen,\n    )\n    is KartenAktion.KnotenGrößeÄndern",
+          )
+          replace_once(
+              actions,
+              "    is KartenAktion.KnotenLöschen -> copy(\n        knoten = knoten.filterNot { it.id == aktion.id },\n        verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },\n    )\n    is KartenAktion.KnotenIsolieren",
+              "    is KartenAktion.KnotenLöschen -> copy(\n        knoten = knoten.filterNot { it.id == aktion.id },\n        verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },\n    )\n    is KartenAktion.KnotenMehrfachLöschen -> copy(\n        knoten = knoten.filterNot { it.id in aktion.ids },\n        verbindungen = verbindungen.filterNot { it.von.knotenId in aktion.ids || it.zu.knotenId in aktion.ids },\n    )\n    is KartenAktion.VisuelleGruppeErstellen -> {\n        val gültigeIds = aktion.knotenIds.intersect(knoten.mapTo(mutableSetOf()) { it.id })\n        val übrigeGruppen = visuelleGruppen.mapNotNull { gruppe ->\n            (gruppe.knotenIds - gültigeIds).takeIf { it.size >= 2 }?.let { gruppe.copy(knotenIds = it) }\n        }\n        copy(visuelleGruppen = if (gültigeIds.size >= 2) {\n            übrigeGruppen + VisuelleKnotenGruppeDaten(knotenIds = gültigeIds)\n        } else übrigeGruppen)\n    }\n    is KartenAktion.VisuelleGruppierungAufheben -> copy(\n        visuelleGruppen = visuelleGruppen.mapNotNull { gruppe ->\n            (gruppe.knotenIds - aktion.knotenIds).takeIf { it.size >= 2 }?.let { gruppe.copy(knotenIds = it) }\n        },\n    )\n    is KartenAktion.KnotenIsolieren",
+          )
+
+          # Auswahlzustand, Mehrfachdrag, Duplikation und visuelle Gruppen.
+          state = "KnotenKartenVerwalter/src/main/kotlin/de/TeutonStudio/KnotenKartenVerwalter/zustand/KartenEditorZustand.kt"
+          replace_once(
+              state,
+              "@Stable\nclass KartenEditorZustand(",
+              "enum class AuswahlModus { Einzeln, Gruppe }\n\n@Stable\nclass KartenEditorZustand(",
+          )
+          replace_once(
+              state,
+              "    var ausgewählterKnoten by mutableStateOf<KnotenId?>(null)\n        private set\n    var ausgewählteVerbindung by mutableStateOf<VerbindungsId?>(null)",
+              "    var auswahlModus by mutableStateOf(AuswahlModus.Einzeln)\n        private set\n    var ausgewählteKnoten by mutableStateOf<Set<KnotenId>>(emptySet())\n        private set\n    var ausgewählterKnoten by mutableStateOf<KnotenId?>(null)\n        private set\n    var ausgewählteVerbindung by mutableStateOf<VerbindungsId?>(null)",
+          )
+          replace_once(
+              state,
+              "        karte = neu\n        ausgewählterKnoten = null\n        ausgewählteVerbindung = null",
+              "        karte = neu.bereinigteVisuelleGruppen()\n        ausgewählteKnoten = emptySet()\n        ausgewählterKnoten = null\n        ausgewählteVerbindung = null",
+          )
+          replace_once(
+              state,
+              "    fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {\n        val standVorAktion = karte.ohneUnverbundeneDynamischeEingänge()\n        val neu = karte.wendeAn(aktion).ohneUnverbundeneDynamischeEingänge()\n        if (neu == karte) return",
+              "    fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {\n        val wirksameAktion = if (\n            aktion is KartenAktion.KnotenVerschieben &&\n            auswahlModus == AuswahlModus.Gruppe &&\n            aktion.id in ausgewählteKnoten\n        ) {\n            val aktuell = karte.knoten.firstOrNull { it.id == aktion.id }\n            val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero\n            KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)\n        } else aktion\n        val standVorAktion = karte.ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()\n        val neu = karte.wendeAn(wirksameAktion).ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()\n        if (neu == karte) return",
+          )
+          replace_once(
+              state,
+              "    fun wähleKnoten(id: KnotenId?) {\n        ausgewählterKnoten = id\n        ausgewählteVerbindung = null\n    }\n\n    fun wähleVerbindung(id: VerbindungsId?) {\n        ausgewählteVerbindung = id\n        ausgewählterKnoten = null\n    }",
+              "    fun wähleKnoten(id: KnotenId?) {\n        if (id == null) {\n            ausgewählteKnoten = emptySet()\n            ausgewählterKnoten = null\n        } else if (auswahlModus == AuswahlModus.Gruppe) {\n            ausgewählteKnoten = ausgewählteKnoten + id\n            ausgewählterKnoten = id\n        } else {\n            ausgewählteKnoten = setOf(id)\n            ausgewählterKnoten = id\n        }\n        ausgewählteVerbindung = null\n    }\n\n    fun setzeAuswahlModus(modus: AuswahlModus) {\n        if (auswahlModus == modus) return\n        auswahlModus = modus\n        if (modus == AuswahlModus.Einzeln) {\n            ausgewählteKnoten = ausgewählterKnoten?.let(::setOf) ?: emptySet()\n        }\n    }\n\n    fun stelleAuswahlWiederHer(ids: Set<KnotenId>, aktiv: KnotenId?) {\n        val gültigeIds = ids.intersect(karte.knoten.mapTo(mutableSetOf()) { it.id })\n        ausgewählteKnoten = if (auswahlModus == AuswahlModus.Einzeln) {\n            aktiv?.takeIf { it in gültigeIds }?.let(::setOf) ?: emptySet()\n        } else gültigeIds\n        ausgewählterKnoten = aktiv?.takeIf { it in ausgewählteKnoten } ?: ausgewählteKnoten.lastOrNull()\n        ausgewählteVerbindung = null\n    }\n\n    fun wähleVerbindung(id: VerbindungsId?) {\n        ausgewählteVerbindung = id\n        ausgewählteKnoten = emptySet()\n        ausgewählterKnoten = null\n    }",
+          )
+          replace_once(
+              state,
+              "    fun löscheAuswahl() {\n        ausgewählterKnoten?.let { führeAus(KartenAktion.KnotenLöschen(it)) }\n        ausgewählteVerbindung?.let { führeAus(KartenAktion.VerbindungLöschen(it)) }\n        ausgewählterKnoten = null\n        ausgewählteVerbindung = null\n    }\n\n    fun dupliziereAuswahl() {\n        val original = karte.knoten.firstOrNull { it.id == ausgewählterKnoten } ?: return\n        val neueAnschlüsse = original.anschlüsse.map { it.copy(id = neueAnschlussId()) }\n        val kopie = original.copy(\n            id = neueKnotenId(),\n            name = \"${original.name} Kopie\",\n            position = original.position + GraphPunkt(28f, 28f),\n            anschlüsse = neueAnschlüsse,\n        )\n        führeAus(KartenAktion.KnotenEinfügen(kopie))\n        wähleKnoten(kopie.id)\n    }",
+              "    fun löscheAuswahl() {\n        val knotenIds = if (auswahlModus == AuswahlModus.Gruppe) ausgewählteKnoten else setOfNotNull(ausgewählterKnoten)\n        when {\n            knotenIds.isNotEmpty() -> führeAus(KartenAktion.KnotenMehrfachLöschen(knotenIds))\n            ausgewählteVerbindung != null -> führeAus(KartenAktion.VerbindungLöschen(ausgewählteVerbindung!!))\n        }\n        ausgewählteKnoten = emptySet()\n        ausgewählterKnoten = null\n        ausgewählteVerbindung = null\n    }\n\n    fun dupliziereAuswahl() {\n        val ids = if (auswahlModus == AuswahlModus.Gruppe) ausgewählteKnoten else setOfNotNull(ausgewählterKnoten)\n        val originale = karte.knoten.filter { it.id in ids }\n        if (originale.isEmpty()) return\n        val knotenIds = originale.associate { it.id to neueKnotenId() }\n        val anschlussIds = originale.flatMap { it.anschlüsse }.associate { it.id to neueAnschlussId() }\n        val kopien = originale.map { original ->\n            original.copy(\n                id = knotenIds.getValue(original.id),\n                name = \"${original.name} Kopie\",\n                position = original.position + GraphPunkt(28f, 28f),\n                anschlüsse = original.anschlüsse.map { it.copy(id = anschlussIds.getValue(it.id)) },\n            )\n        }\n        val interneVerbindungen = karte.verbindungen.filter {\n            it.von.knotenId in ids && it.zu.knotenId in ids\n        }.map { verbindung ->\n            VerbindungDaten(\n                von = AnschlussVerweis(\n                    knotenIds.getValue(verbindung.von.knotenId),\n                    anschlussIds.getValue(verbindung.von.anschlussId),\n                ),\n                zu = AnschlussVerweis(\n                    knotenIds.getValue(verbindung.zu.knotenId),\n                    anschlussIds.getValue(verbindung.zu.anschlussId),\n                ),\n            )\n        }\n        führeAus(KartenAktion.KnotenMehrfachEinfügen(kopien, interneVerbindungen))\n        ausgewählteKnoten = kopien.mapTo(mutableSetOf()) { it.id }\n        ausgewählterKnoten = kopien.lastOrNull()?.id\n        ausgewählteVerbindung = null\n    }",
+          )
+          replace_once(
+              state,
+              "    /** Entfernt alle eingehenden und ausgehenden Verbindungen des ausgewählten Knotens. */\n    fun isoliereAusgewähltenKnoten()",
+              "    fun gruppiereAuswahlVisuell() {\n        if (ausgewählteKnoten.size < 2) return\n        führeAus(KartenAktion.VisuelleGruppeErstellen(ausgewählteKnoten))\n    }\n\n    fun hebeVisuelleGruppierungDerAuswahlAuf() {\n        if (ausgewählteKnoten.isEmpty()) return\n        führeAus(KartenAktion.VisuelleGruppierungAufheben(ausgewählteKnoten))\n    }\n\n    fun auswahlIstVisuellGruppiert(): Boolean = karte.visuelleGruppen.any { gruppe ->\n        gruppe.knotenIds.any { it in ausgewählteKnoten }\n    }\n\n    /** Entfernt alle eingehenden und ausgehenden Verbindungen des ausgewählten Knotens. */\n    fun isoliereAusgewähltenKnoten()",
+          )
+          replace_once(
+              state,
+              "        wiederholen.addLast(karte)\n        karte = rückgängig.removeLast()\n    }",
+              "        wiederholen.addLast(karte)\n        karte = rückgängig.removeLast().bereinigteVisuelleGruppen()\n        bereinigeAuswahl()\n    }",
+          )
+          replace_once(
+              state,
+              "        rückgängig.addLast(karte)\n        karte = wiederholen.removeLast()\n    }",
+              "        rückgängig.addLast(karte)\n        karte = wiederholen.removeLast().bereinigteVisuelleGruppen()\n        bereinigeAuswahl()\n    }",
+          )
+          replace_once(
+              state,
+              "    private fun KartenDaten.ohneUnverbundeneDynamischeEingänge(): KartenDaten {",
+              "    private fun bereinigeAuswahl() {\n        val gültigeKnoten = karte.knoten.mapTo(mutableSetOf()) { it.id }\n        ausgewählteKnoten = ausgewählteKnoten.intersect(gültigeKnoten)\n        ausgewählterKnoten = ausgewählterKnoten?.takeIf { it in gültigeKnoten }\n            ?: ausgewählteKnoten.lastOrNull()\n        ausgewählteVerbindung = ausgewählteVerbindung?.takeIf { id -> karte.verbindungen.any { it.id == id } }\n    }\n\n    private fun KartenDaten.ohneUnverbundeneDynamischeEingänge(): KartenDaten {",
+          )
+
+          # App: Gruppenkontext, Markierungen und Kartenwerkzeuge.
+          app = "app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/MathematikAtlasApp.kt"
+          replace_once(app, "import androidx.compose.foundation.background", "import androidx.compose.foundation.Canvas\nimport androidx.compose.foundation.background")
+          replace_once(
+              app,
+              "import androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier",
+              "import androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.geometry.CornerRadius\nimport androidx.compose.ui.geometry.Offset\nimport androidx.compose.ui.geometry.Size\nimport androidx.compose.ui.graphics.drawscope.Stroke",
+          )
+          replace_once(
+              app,
+              "import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor",
+              "import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor\nimport de.TeutonStudio.KnotenKartenVerwalter.zustand.AuswahlModus\nimport de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand",
+          )
+          replace_once(
+              app,
+              "private sealed interface GraphKontext {\n    data class Knoten(val id: KnotenId) : GraphKontext\n    data class Verbindung(val id: VerbindungsId) : GraphKontext\n}",
+              "private sealed interface GraphKontext {\n    data class Knoten(val id: KnotenId) : GraphKontext\n    data class Knotengruppe(val knotenIds: Set<KnotenId>) : GraphKontext\n    data class Verbindung(val id: VerbindungsId) : GraphKontext\n}",
+          )
+          replace_once(
+              app,
+              "                    beiKnotenKontext = { graphKontext = GraphKontext.Knoten(it.id) },",
+              "                    beiKnotenKontext = { knoten ->\n                        graphKontext = if (zustand.editor.auswahlModus == AuswahlModus.Gruppe) {\n                            GraphKontext.Knotengruppe(zustand.editor.ausgewählteKnoten + knoten.id)\n                        } else GraphKontext.Knoten(knoten.id)\n                    },",
+          )
+          replace_once(
+              app,
+              "                zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }\n                graphKontext?.let",
+              "                KartenMarkierungen(zustand.editor)\n                KartenWerkzeuge(\n                    editor = zustand.editor,\n                    modifier = Modifier.align(Alignment.TopStart).padding(12.dp),\n                )\n                zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }\n                graphKontext?.let",
+          )
+          replace_once(
+              app,
+              "    val id = when (kontext) {\n        is GraphKontext.Knoten -> kontext.id.wert\n        is GraphKontext.Verbindung -> kontext.id.wert\n    }\n    AlertDialog(\n        onDismissRequest = schließen,\n        title = { Text(\"ID: $id\", style = MaterialTheme.typography.titleMedium) },",
+              "    val titel = when (kontext) {\n        is GraphKontext.Knoten -> \"ID: ${kontext.id.wert}\"\n        is GraphKontext.Knotengruppe -> \"${kontext.knotenIds.size} Knoten ausgewählt\"\n        is GraphKontext.Verbindung -> \"ID: ${kontext.id.wert}\"\n    }\n    AlertDialog(\n        onDismissRequest = schließen,\n        title = { Text(titel, style = MaterialTheme.typography.titleMedium) },",
+          )
+          replace_once(
+              app,
+              "                    is GraphKontext.Verbindung -> {",
+              "                    is GraphKontext.Knotengruppe -> {\n                        Text(\"Gruppenauswahl\", style = MaterialTheme.typography.labelLarge)\n                        Button(\n                            onClick = {\n                                zustand.editor.stelleAuswahlWiederHer(kontext.knotenIds, kontext.knotenIds.lastOrNull())\n                                zustand.editor.gruppiereAuswahlVisuell()\n                                schließen()\n                            },\n                            enabled = kontext.knotenIds.size >= 2,\n                            modifier = Modifier.fillMaxWidth(),\n                        ) { Text(\"Visuell gruppieren\") }\n                        if (kontext.knotenIds.size < 2) {\n                            Text(\"Mindestens zwei Knoten werden benötigt.\", style = MaterialTheme.typography.bodySmall)\n                        }\n                        OutlinedButton(\n                            onClick = {\n                                zustand.editor.stelleAuswahlWiederHer(kontext.knotenIds, kontext.knotenIds.lastOrNull())\n                                zustand.editor.hebeVisuelleGruppierungDerAuswahlAuf()\n                                schließen()\n                            },\n                            enabled = zustand.editor.auswahlIstVisuellGruppiert(),\n                            modifier = Modifier.fillMaxWidth(),\n                        ) { Text(\"Gruppierung aufheben\") }\n                    }\n                    is GraphKontext.Verbindung -> {",
+          )
+          replace_once(
+              app,
+              "        TextButton(onClick = zustand.editor::rückgängig, enabled = zustand.editor.kannRückgängig()) { Text(\"Rückgängig\") }\n        TextButton(onClick = zustand.editor::wiederholen, enabled = zustand.editor.kannWiederholen()) { Text(\"Wiederholen\") }\n",
+              "",
+          )
+          replace_once(
+              app,
+              "@Composable\nprivate fun KartenJsonDialog",
+              '''@Composable
+private fun KartenMarkierungen(editor: KartenEditorZustand) {
+    val gruppenFarbe = MaterialTheme.colorScheme.tertiary
+    val auswahlFarbe = MaterialTheme.colorScheme.primary
+    Canvas(Modifier.fillMaxSize()) {
+        val karte = editor.karte
+        val zoom = karte.ansicht.zoom
+        fun rahmen(ids: Set<KnotenId>, puffer: Float): Pair<Offset, Size>? {
+            val knoten = karte.knoten.filter { it.id in ids }
+            if (knoten.isEmpty()) return null
+            val links = knoten.minOf { it.position.x } - puffer
+            val oben = knoten.minOf { it.position.y } - puffer
+            val rechts = knoten.maxOf { it.position.x + it.größe.breite } + puffer
+            val unten = knoten.maxOf { it.position.y + it.größe.höhe } + puffer
+            val start = Offset(
+                karte.ansicht.verschiebung.x + links * density * zoom,
+                karte.ansicht.verschiebung.y + oben * density * zoom,
+            )
+            return start to Size((rechts - links) * density * zoom, (unten - oben) * density * zoom)
+        }
+        karte.visuelleGruppen.forEach { gruppe ->
+            rahmen(gruppe.knotenIds, 14f)?.let { (start, größe) ->
+                drawRoundRect(
+                    color = gruppenFarbe.copy(alpha = .8f),
+                    topLeft = start,
+                    size = größe,
+                    cornerRadius = CornerRadius(14.dp.toPx() * zoom),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
+        }
+        editor.ausgewählteKnoten.forEach { id ->
+            rahmen(setOf(id), 4f)?.let { (start, größe) ->
+                drawRoundRect(
+                    color = auswahlFarbe,
+                    topLeft = start,
+                    size = größe,
+                    cornerRadius = CornerRadius(10.dp.toPx() * zoom),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun KartenWerkzeuge(editor: KartenEditorZustand, modifier: Modifier = Modifier) {
+    Surface(modifier, shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
+        Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = editor::rückgängig)
+            KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = editor::wiederholen)
+            HorizontalDivider()
+            KartenWerkzeugKnopf(
+                "1",
+                "Einzelauswahl",
+                aktiv = editor.auswahlModus == AuswahlModus.Einzeln,
+                onClick = { editor.setzeAuswahlModus(AuswahlModus.Einzeln) },
+            )
+            KartenWerkzeugKnopf(
+                "▦",
+                "Gruppenauswahl",
+                aktiv = editor.auswahlModus == AuswahlModus.Gruppe,
+                onClick = { editor.setzeAuswahlModus(AuswahlModus.Gruppe) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun KartenWerkzeugKnopf(
+    symbol: String,
+    beschreibung: String,
+    aktiviert: Boolean = true,
+    aktiv: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        enabled = aktiviert,
+        modifier = Modifier.size(42.dp),
+        contentPadding = PaddingValues(0.dp),
+        shape = MaterialTheme.shapes.small,
+        colors = if (aktiv) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
+    ) {
+        Text(symbol, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun KartenJsonDialog''',
+          )
+          replace_once(
+              app,
+              "    val knoten = editor.ausgewählterKnoten\n    val verbindung = editor.ausgewählteVerbindung\n    editor.ersetzeKarte(neueKarte, historieLeeren = false)\n    when {\n        knoten != null -> editor.wähleKnoten(knoten)\n        verbindung != null -> editor.wähleVerbindung(verbindung)\n    }",
+              "    val knoten = editor.ausgewählteKnoten\n    val aktiverKnoten = editor.ausgewählterKnoten\n    val verbindung = editor.ausgewählteVerbindung\n    editor.ersetzeKarte(neueKarte, historieLeeren = false)\n    when {\n        knoten.isNotEmpty() -> editor.stelleAuswahlWiederHer(knoten, aktiverKnoten)\n        verbindung != null -> editor.wähleVerbindung(verbindung)\n    }",
+          )
+
+          # JSON-Format 4 mit visuellen Gruppen.
+          json_file = "app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/speicher/KartenJson.kt"
+          replace_once(json_file, 'put("formatVersion", 3)', 'put("formatVersion", 4)')
+          replace_once(
+              json_file,
+              '        put("verbindungen", JSONArray().apply { karte.verbindungen.forEach { put(verbindungZuJson(it)) } })',
+              '        put("verbindungen", JSONArray().apply { karte.verbindungen.forEach { put(verbindungZuJson(it)) } })\n        put("visuelleGruppen", JSONArray().apply { karte.visuelleGruppen.forEach { put(visuelleGruppeZuJson(it)) } })',
+          )
+          replace_once(
+              json_file,
+              '            verbindungen = json.optJSONArray("verbindungen").zuListe(::verbindungVonJson),\n            ansicht = AnsichtsFenster(',
+              '            verbindungen = json.optJSONArray("verbindungen").zuListe(::verbindungVonJson),\n            visuelleGruppen = json.optJSONArray("visuelleGruppen").zuListe(::visuelleGruppeVonJson),\n            ansicht = AnsichtsFenster(',
+          )
+          replace_once(
+              json_file,
+              "    private fun eigenschaftZuJson(wert: KnotenEigenschaft): JSONObject = JSONObject().apply {",
+              '''    private fun visuelleGruppeZuJson(gruppe: VisuelleKnotenGruppeDaten) = JSONObject().apply {
+        put("id", gruppe.id.wert)
+        put("knotenIds", JSONArray().apply { gruppe.knotenIds.forEach { put(it.wert) } })
+    }
+
+    private fun visuelleGruppeVonJson(json: JSONObject) = VisuelleKnotenGruppeDaten(
+        id = VisuelleGruppenId(json.getString("id")),
+        knotenIds = json.optJSONArray("knotenIds")?.let { ids ->
+            List(ids.length()) { index -> KnotenId(ids.getString(index)) }.toSet()
+        } ?: emptySet(),
+    )
+
+    private fun eigenschaftZuJson(wert: KnotenEigenschaft): JSONObject = JSONObject().apply {''',
+          )
+          replace_once(
+              json_file,
+              "        return KartenDaten(\n            id = KartenId(json.getString(\"id\")),",
+              "        return KartenDaten(\n            id = KartenId(json.getString(\"id\")),",
+          )
+          # Bereinigung erst nach dem vollständigen Einlesen.
+          replace_once(
+              json_file,
+              "            archiviert = json.optBoolean(\"archiviert\", false),\n        )\n    }",
+              "            archiviert = json.optBoolean(\"archiviert\", false),\n        ).bereinigteVisuelleGruppen()\n    }",
+          )
+
+          # JSON-Regressionen auf Format 4 erweitern.
+          json_test = "app/src/test/kotlin/de/TeutonStudio/MathematikAtlas/speicher/KartenJsonTest.kt"
+          replace_once(json_test, "Version drei rundet verschachtelte Eigenschaften", "Version vier rundet verschachtelte Eigenschaften")
+          replace_once(json_test, 'assertTrue(text.contains("\\\"formatVersion\\\": 3"))', 'assertTrue(text.contains("\\\"formatVersion\\\": 4"))')
+          replace_once(
+              json_test,
+              "    @Test fun `Version eins ohne Eigenschaften bleibt lesbar`() {",
+              '''    @Test fun `Visuelle Gruppen bleiben beim Roundtrip erhalten und werden bereinigt`() {
+        val a = KnotenDaten(id = KnotenId("a"), art = "test", name = "A")
+        val b = KnotenDaten(id = KnotenId("b"), art = "test", name = "B")
+        val gruppe = VisuelleKnotenGruppeDaten(VisuelleGruppenId("g"), setOf(a.id, b.id, KnotenId("fehlt")))
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(a, b), visuelleGruppen = listOf(gruppe))))
+
+        assertEquals(setOf(a.id, b.id), gelesen.visuelleGruppen.single().knotenIds)
+    }
+
+    @Test fun `Version eins ohne Eigenschaften bleibt lesbar`() {''',
+          )
+
+          # Zustandsregressionen für Auswahl, Drag, Gruppierung und Duplikation.
+          write(
+              "KnotenKartenVerwalter/src/test/kotlin/de/TeutonStudio/KnotenKartenVerwalter/MehrfachAuswahlTest.kt",
+              '''package de.TeutonStudio.KnotenKartenVerwalter
+
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.*
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
+import kotlin.test.*
+
+class MehrfachAuswahlTest {
+    private val art = AnschlussArt(AnschlussArtId("objekt"), "Objekt")
+    private val prüfung = GraphPrüfung(AnschlussArtRegister(listOf(art)))
+
+    @Test fun `Gruppenauswahl wird gemeinsam verschoben und atomar rueckgaengig gemacht`() {
+        val a = knoten("a", GraphPunkt(0f, 0f))
+        val b = knoten("b", GraphPunkt(100f, 20f))
+        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(a, b)), prüfung)
+        zustand.setzeAuswahlModus(AuswahlModus.Gruppe)
+        zustand.wähleKnoten(a.id)
+        zustand.wähleKnoten(b.id)
+
+        zustand.beginneInteraktion()
+        zustand.führeAus(KartenAktion.KnotenVerschieben(a.id, GraphPunkt(15f, 8f)), mitHistorie = false)
+        zustand.beendeInteraktion()
+
+        assertEquals(GraphPunkt(15f, 8f), zustand.karte.knoten.first { it.id == a.id }.position)
+        assertEquals(GraphPunkt(115f, 28f), zustand.karte.knoten.first { it.id == b.id }.position)
+        zustand.rückgängig()
+        assertEquals(GraphPunkt(0f, 0f), zustand.karte.knoten.first { it.id == a.id }.position)
+        assertEquals(GraphPunkt(100f, 20f), zustand.karte.knoten.first { it.id == b.id }.position)
+    }
+
+    @Test fun `Visuelle Gruppe wird beim Loeschen eines Mitglieds bereinigt`() {
+        val a = knoten("a")
+        val b = knoten("b")
+        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(a, b)), prüfung)
+        zustand.setzeAuswahlModus(AuswahlModus.Gruppe)
+        zustand.wähleKnoten(a.id)
+        zustand.wähleKnoten(b.id)
+        zustand.gruppiereAuswahlVisuell()
+        assertEquals(setOf(a.id, b.id), zustand.karte.visuelleGruppen.single().knotenIds)
+
+        zustand.setzeAuswahlModus(AuswahlModus.Einzeln)
+        zustand.wähleKnoten(a.id)
+        zustand.löscheAuswahl()
+        assertTrue(zustand.karte.visuelleGruppen.isEmpty())
+    }
+
+    @Test fun `Duplikation kopiert nur interne Verbindungen mit neuen IDs`() {
+        val aus = AnschlussDaten(name = "aus", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = art.id)
+        val ein = AnschlussDaten(name = "ein", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = art.id)
+        val a = KnotenDaten(art = "test", name = "A", anschlüsse = listOf(aus))
+        val b = KnotenDaten(art = "test", name = "B", anschlüsse = listOf(ein))
+        val verbindung = VerbindungDaten(AnschlussVerweis(a.id, aus.id), AnschlussVerweis(b.id, ein.id))
+        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(a, b), verbindungen = listOf(verbindung)), prüfung)
+        zustand.setzeAuswahlModus(AuswahlModus.Gruppe)
+        zustand.wähleKnoten(a.id)
+        zustand.wähleKnoten(b.id)
+
+        zustand.dupliziereAuswahl()
+
+        assertEquals(4, zustand.karte.knoten.size)
+        assertEquals(2, zustand.karte.verbindungen.size)
+        val kopie = zustand.karte.verbindungen.single { it.id != verbindung.id }
+        assertNotEquals(a.id, kopie.von.knotenId)
+        assertNotEquals(b.id, kopie.zu.knotenId)
+        assertEquals(zustand.ausgewählteKnoten, setOf(kopie.von.knotenId, kopie.zu.knotenId))
+    }
+
+    private fun knoten(name: String, position: GraphPunkt = GraphPunkt.Zero) =
+        KnotenDaten(art = "test", name = name, position = position)
+}
+''',
+          )
+          PY
+
+      - name: Tests und Android-Build
+        run: ./gradlew test :app:assembleDebug --stacktrace
+
+      - name: Implementierung committen
+        run: |
+          git config user.name "OpenAI Codex"
+          git config user.email "codex@openai.com"
+          git add KnotenKartenVerwalter app
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen zu committen."
+          else
+            git commit -m "Implement v2.2.7"
+            git push origin HEAD:agent/v2.2.7-auswahl-gruppen
+          fi
