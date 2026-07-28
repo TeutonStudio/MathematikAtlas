@@ -4,12 +4,18 @@ import androidx.compose.runtime.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 
+enum class AuswahlModus { Einzeln, Gruppe }
+
 @Stable
 class KartenEditorZustand(
     startKarte: KartenDaten,
     private val prüfung: GraphPrüfung,
 ) {
-    var karte by mutableStateOf(startKarte)
+    var karte by mutableStateOf(startKarte.bereinigteVisuelleGruppen())
+        private set
+    var auswahlModus by mutableStateOf(AuswahlModus.Einzeln)
+        private set
+    var ausgewählteKnoten by mutableStateOf<Set<KnotenId>>(emptySet())
         private set
     var ausgewählterKnoten by mutableStateOf<KnotenId?>(null)
         private set
@@ -29,7 +35,8 @@ class KartenEditorZustand(
     private var neuZuVerdrahtendeVerbindung: VerbindungDaten? = null
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
-        karte = neu
+        karte = neu.bereinigteVisuelleGruppen()
+        ausgewählteKnoten = emptySet()
         ausgewählterKnoten = null
         ausgewählteVerbindung = null
         verbindungsStart = null
@@ -54,8 +61,19 @@ class KartenEditorZustand(
     }
 
     fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {
-        val standVorAktion = karte.ohneUnverbundeneDynamischeEingänge()
-        val neu = karte.wendeAn(aktion).ohneUnverbundeneDynamischeEingänge()
+        val wirksameAktion = if (
+            aktion is KartenAktion.KnotenVerschieben &&
+            auswahlModus == AuswahlModus.Gruppe &&
+            aktion.id in ausgewählteKnoten
+        ) {
+            val aktuell = karte.knoten.firstOrNull { it.id == aktion.id }
+            val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero
+            KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
+        } else aktion
+        val standVorAktion = karte.ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
+        val neu = karte.wendeAn(wirksameAktion)
+            .ohneUnverbundeneDynamischeEingänge()
+            .bereinigteVisuelleGruppen()
         if (neu == karte) return
         if (mitHistorie) {
             rückgängig.addLast(standVorAktion)
@@ -63,15 +81,43 @@ class KartenEditorZustand(
             wiederholen.clear()
         }
         karte = neu
+        bereinigeAuswahl()
     }
 
     fun wähleKnoten(id: KnotenId?) {
-        ausgewählterKnoten = id
+        if (id == null) {
+            ausgewählteKnoten = emptySet()
+            ausgewählterKnoten = null
+        } else if (auswahlModus == AuswahlModus.Gruppe) {
+            ausgewählteKnoten = ausgewählteKnoten + id
+            ausgewählterKnoten = id
+        } else {
+            ausgewählteKnoten = setOf(id)
+            ausgewählterKnoten = id
+        }
+        ausgewählteVerbindung = null
+    }
+
+    fun setzeAuswahlModus(modus: AuswahlModus) {
+        if (auswahlModus == modus) return
+        auswahlModus = modus
+        if (modus == AuswahlModus.Einzeln) {
+            ausgewählteKnoten = ausgewählterKnoten?.let(::setOf) ?: emptySet()
+        }
+    }
+
+    fun stelleAuswahlWiederHer(ids: Set<KnotenId>, aktiv: KnotenId?) {
+        val gültigeIds = ids.intersect(karte.knoten.mapTo(mutableSetOf()) { it.id })
+        ausgewählteKnoten = if (auswahlModus == AuswahlModus.Einzeln) {
+            aktiv?.takeIf { it in gültigeIds }?.let(::setOf) ?: emptySet()
+        } else gültigeIds
+        ausgewählterKnoten = aktiv?.takeIf { it in ausgewählteKnoten } ?: ausgewählteKnoten.lastOrNull()
         ausgewählteVerbindung = null
     }
 
     fun wähleVerbindung(id: VerbindungsId?) {
         ausgewählteVerbindung = id
+        ausgewählteKnoten = emptySet()
         ausgewählterKnoten = null
     }
 
@@ -192,23 +238,62 @@ class KartenEditorZustand(
     }
 
     fun löscheAuswahl() {
-        ausgewählterKnoten?.let { führeAus(KartenAktion.KnotenLöschen(it)) }
-        ausgewählteVerbindung?.let { führeAus(KartenAktion.VerbindungLöschen(it)) }
+        val knotenIds = if (auswahlModus == AuswahlModus.Gruppe) ausgewählteKnoten else setOfNotNull(ausgewählterKnoten)
+        when {
+            knotenIds.isNotEmpty() -> führeAus(KartenAktion.KnotenMehrfachLöschen(knotenIds))
+            ausgewählteVerbindung != null -> führeAus(KartenAktion.VerbindungLöschen(ausgewählteVerbindung!!))
+        }
+        ausgewählteKnoten = emptySet()
         ausgewählterKnoten = null
         ausgewählteVerbindung = null
     }
 
     fun dupliziereAuswahl() {
-        val original = karte.knoten.firstOrNull { it.id == ausgewählterKnoten } ?: return
-        val neueAnschlüsse = original.anschlüsse.map { it.copy(id = neueAnschlussId()) }
-        val kopie = original.copy(
-            id = neueKnotenId(),
-            name = "${original.name} Kopie",
-            position = original.position + GraphPunkt(28f, 28f),
-            anschlüsse = neueAnschlüsse,
-        )
-        führeAus(KartenAktion.KnotenEinfügen(kopie))
-        wähleKnoten(kopie.id)
+        val ids = if (auswahlModus == AuswahlModus.Gruppe) ausgewählteKnoten else setOfNotNull(ausgewählterKnoten)
+        val originale = karte.knoten.filter { it.id in ids }
+        if (originale.isEmpty()) return
+        val knotenIds = originale.associate { it.id to neueKnotenId() }
+        val anschlussIds = originale.flatMap { it.anschlüsse }.associate { it.id to neueAnschlussId() }
+        val kopien = originale.map { original ->
+            original.copy(
+                id = knotenIds.getValue(original.id),
+                name = "${original.name} Kopie",
+                position = original.position + GraphPunkt(28f, 28f),
+                anschlüsse = original.anschlüsse.map { it.copy(id = anschlussIds.getValue(it.id)) },
+            )
+        }
+        val interneVerbindungen = karte.verbindungen.filter {
+            it.von.knotenId in ids && it.zu.knotenId in ids
+        }.map { verbindung ->
+            VerbindungDaten(
+                von = AnschlussVerweis(
+                    knotenIds.getValue(verbindung.von.knotenId),
+                    anschlussIds.getValue(verbindung.von.anschlussId),
+                ),
+                zu = AnschlussVerweis(
+                    knotenIds.getValue(verbindung.zu.knotenId),
+                    anschlussIds.getValue(verbindung.zu.anschlussId),
+                ),
+            )
+        }
+        führeAus(KartenAktion.KnotenMehrfachEinfügen(kopien, interneVerbindungen))
+        ausgewählteKnoten = kopien.mapTo(mutableSetOf()) { it.id }
+        ausgewählterKnoten = kopien.lastOrNull()?.id
+        ausgewählteVerbindung = null
+    }
+
+    fun gruppiereAuswahlVisuell() {
+        if (ausgewählteKnoten.size < 2) return
+        führeAus(KartenAktion.VisuelleGruppeErstellen(ausgewählteKnoten))
+    }
+
+    fun hebeVisuelleGruppierungDerAuswahlAuf() {
+        if (ausgewählteKnoten.isEmpty()) return
+        führeAus(KartenAktion.VisuelleGruppierungAufheben(ausgewählteKnoten))
+    }
+
+    fun auswahlIstVisuellGruppiert(): Boolean = karte.visuelleGruppen.any { gruppe ->
+        gruppe.knotenIds.any { it in ausgewählteKnoten }
     }
 
     /** Entfernt alle eingehenden und ausgehenden Verbindungen des ausgewählten Knotens. */
@@ -250,7 +335,7 @@ class KartenEditorZustand(
                 anschlüsse = (knoten.anschlüsse.filterNot { it.id in zuEntfernen } + zusätzliche),
                 parameter = knoten.parameter + ("festeEingänge" to gewünschteAnzahl.toString()),
             )
-        }).ohneUnverbundeneDynamischeEingänge()
+        }).ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
         if (neu == vorher) return
         rückgängig.addLast(vorher)
         if (rückgängig.size > 100) rückgängig.removeFirst()
@@ -280,7 +365,9 @@ class KartenEditorZustand(
     /** Ändert die Art eines Anschlusses als einen Undo/Redo-Schritt und bereinigt inkompatible Kanten. */
     fun ändereAnschlussArt(ref: AnschlussVerweis, art: AnschlussArtId) {
         val vorher = karte
-        val neu = prüfung.ändereAnschlussArt(vorher, ref, art).ohneUnverbundeneDynamischeEingänge()
+        val neu = prüfung.ändereAnschlussArt(vorher, ref, art)
+            .ohneUnverbundeneDynamischeEingänge()
+            .bereinigteVisuelleGruppen()
         if (neu == vorher) return
         rückgängig.addLast(vorher)
         if (rückgängig.size > 100) rückgängig.removeFirst()
@@ -295,14 +382,16 @@ class KartenEditorZustand(
         if (rückgängig.isEmpty()) return
         verwerfeVerbindungsInteraktion()
         wiederholen.addLast(karte)
-        karte = rückgängig.removeLast()
+        karte = rückgängig.removeLast().bereinigteVisuelleGruppen()
+        bereinigeAuswahl()
     }
 
     fun wiederholen() {
         if (wiederholen.isEmpty()) return
         verwerfeVerbindungsInteraktion()
         rückgängig.addLast(karte)
-        karte = wiederholen.removeLast()
+        karte = wiederholen.removeLast().bereinigteVisuelleGruppen()
+        bereinigeAuswahl()
     }
 
     /**
@@ -364,6 +453,14 @@ class KartenEditorZustand(
 
     private fun entferneUnverbundeneDynamischeEingänge() {
         karte = karte.ohneUnverbundeneDynamischeEingänge()
+    }
+
+    private fun bereinigeAuswahl() {
+        val gültigeKnoten = karte.knoten.mapTo(mutableSetOf()) { it.id }
+        ausgewählteKnoten = ausgewählteKnoten.intersect(gültigeKnoten)
+        ausgewählterKnoten = ausgewählterKnoten?.takeIf { it in gültigeKnoten }
+            ?: ausgewählteKnoten.lastOrNull()
+        ausgewählteVerbindung = ausgewählteVerbindung?.takeIf { id -> karte.verbindungen.any { it.id == id } }
     }
 
     private fun KartenDaten.ohneUnverbundeneDynamischeEingänge(): KartenDaten {
