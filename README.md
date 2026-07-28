@@ -14,6 +14,18 @@ Die Anwendung ist auf Deutsch benannt und implementiert; sie basiert auf Kotlin,
 - LaTeX-Ausgabe aus dem mathematischen Modell mit nativem Compose-Renderer
 - JSON-Persistenz mit versionierten Karten, Import/Export und Gruppenknoten
 
+## Roadmap
+
+![Roadmap des Mathematik Atlas von v2.0.x bis v3.0.0](docs/assets/roadmap-v2-v3.svg)
+
+Die v2-Reihe entwickelt den funktionsfähigen mathematischen Knoteneditor schrittweise zu einem allgemeinen visuellen System für Mathematik, Grafik, Animation und Programmierung:
+
+- **v2.0.x:** funktionsfähige Grundlage
+- **v2.1.x–v2.3.x:** Visualisierungskonzepte, Hilbert-basierte Geometrie und Definitionskarten
+- **v2.4.x–v2.5.x:** Grafik- und Animationserzeugung mit TikZ, SVG und Manim
+- **v2.6.x–v2.9.x:** HTML, JavaScript, TypeScript, Kotlin, Java sowie Godot-Szenen und GDScript
+- **v2.10.x → v3.0.0:** vollständige Überarbeitung und Vereinheitlichung der Knotenkonzepte und ihrer Wechselwirkungen
+
 ## Voraussetzungen
 
 - JDK 17 oder neuer
