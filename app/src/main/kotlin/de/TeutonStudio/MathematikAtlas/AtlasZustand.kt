@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
 import de.TeutonStudio.MathematikAtlas.speicher.KartenSpeicher
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
@@ -151,6 +152,20 @@ class AtlasZustand(context: Context) {
         öffne(karte)
     }
 
+    /** Übernimmt bearbeitetes Karten-JSON. Referenzierte Versionen werden vom Speicher automatisch fortgeschrieben. */
+    fun übernehmeJson(text: String): String? {
+        val gelesen = runCatching { KartenJson.lese(text) }.getOrElse { fehler ->
+            return "Ungültiges JSON: ${fehler.message ?: fehler::class.simpleName}"
+        }
+        gelesen.validierungsFehler()?.let { return it }
+        val gespeichert = runCatching { speicher.speichere(gelesen) }.getOrElse { fehler ->
+            return "Die Karte konnte nicht gespeichert werden: ${fehler.message ?: fehler::class.simpleName}"
+        }
+        karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
+        öffne(gespeichert)
+        return null
+    }
+
     fun archiviereAktuell() {
         speicher.archiviere(editor.karte)
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
@@ -222,6 +237,34 @@ class AtlasZustand(context: Context) {
         if (graphPrüfung.prüfe(karte, erster, zweiter) !is VerbindungsPrüfung.Erlaubt) return null
         val (von, zu) = graphPrüfung.normalisiere(karte, erster, zweiter) ?: return null
         return VerbindungDaten(von = von, zu = zu)
+    }
+
+    private fun KartenDaten.validierungsFehler(): String? {
+        if (id.wert.isBlank()) return "Die Karten-ID darf nicht leer sein."
+        if (name.isBlank()) return "Der Kartenname darf nicht leer sein."
+        if (version < 1) return "Die Kartenversion muss mindestens 1 sein."
+        if (!ansicht.zoom.isFinite() || ansicht.zoom <= 0f) return "Der Ansichtszoom muss eine positive Zahl sein."
+        if (!ansicht.verschiebung.x.isFinite() || !ansicht.verschiebung.y.isFinite()) return "Die Ansichtsposition enthält keine gültigen Zahlen."
+
+        val knotenIds = knoten.map { it.id }
+        if (knotenIds.size != knotenIds.toSet().size) return "Knoten-IDs müssen innerhalb einer Karte eindeutig sein."
+        if (knoten.any { it.id.wert.isBlank() || it.art.isBlank() || it.name.isBlank() }) {
+            return "Jeder Knoten benötigt eine ID, eine Art und einen Namen."
+        }
+        if (knoten.any { !it.position.x.isFinite() || !it.position.y.isFinite() || !it.größe.breite.isFinite() || !it.größe.höhe.isFinite() || it.größe.breite <= 0f || it.größe.höhe <= 0f }) {
+            return "Knotenpositionen und -größen müssen gültige positive Maße enthalten."
+        }
+        if (knoten.any { k -> k.anschlüsse.map { it.id }.let { ids -> ids.size != ids.toSet().size } }) {
+            return "Anschluss-IDs müssen innerhalb eines Knotens eindeutig sein."
+        }
+
+        val verbindungsIds = verbindungen.map { it.id }
+        if (verbindungsIds.size != verbindungsIds.toSet().size) return "Verbindungs-IDs müssen eindeutig sein."
+        val anschlussVerweise = knoten.flatMap { k -> k.anschlüsse.map { AnschlussVerweis(k.id, it.id) } }.toSet()
+        if (verbindungen.any { it.von !in anschlussVerweise || it.zu !in anschlussVerweise }) {
+            return "Mindestens eine Verbindung verweist auf einen nicht vorhandenen Anschluss."
+        }
+        return null
     }
 
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = migriereAssoziativeKnoten(karte)
