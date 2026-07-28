@@ -1,4 +1,4 @@
-# Node-Spezifikation: <Name>
+# Knotenspezifikation: <Name>
 
 ## Status
 
@@ -16,46 +16,104 @@
 
 ### Voraussetzungen
 
-### Undefinierte und leere Fälle
+### Undefinierte, unbekannte und leere Fälle
 
 ### Relevante mathematische Gesetze
 
-## Node-Identität
+## Knotenidentität
 
-- Typ-Schlüssel:
+- Art-Schlüssel:
 - Titel:
 - Kategorie:
-- Schemaversion:
+- zuständiger Vorlagenkatalog:
+- zuständiger Auswerter:
+- Daten- oder Formatversion:
+
+## Modulzuordnung
+
+| Verantwortung | Modul | bestehender Einstiegspunkt |
+|---|---|---|
+| Domänenmodell | `MathematikRechenSystem` | |
+| Graph-/Editorvertrag | `KnotenKartenVerwalter` | |
+| Auswertung | `MathematikKartenAdapter` / `MathematikKnoten` | |
+| Renderer | `MathematikKnoten` | |
+| App und Persistenz | `app` | |
 
 ## Persistierte Daten
 
-```ts
-// an vorhandene Projekttypen anpassen
+```kotlin
+// An vorhandene KnotenDaten-, Parameter- und KnotenEigenschaft-Typen anpassen.
 ```
 
-## Abgeleitete Daten
+## Abgeleitete Daten und Laufzeitzustand
 
 ## Anschlüsse
 
-| ID | Richtung | fachlicher Typ | Kardinalität | Ordnung | Pflicht | Label |
-|---|---|---|---|---|---|---|
+| Name | Richtung | Kante | Anschlussart | Kardinalität | Reihenfolge | erweiterbar | Pflicht |
+|---|---|---|---|---|---|---|---|
 
-## Edge-Kompatibilität
+### ID- und Migrationsregeln
+
+## Verbindungskompatibilität
 
 ## Auswertung
 
-## Darstellung und KaTeX
+### Eingabesammlung
+
+### Ergebnis und Fehlerzustände
+
+### Cacheverhalten
+
+## Darstellung und nativer Formelrenderer
+
+- Renderer:
+- `KnotenInteraktionsModus`:
+- erzeugtes LaTeX oder Formelmodell:
+- benötigter unterstützter Formelteilumfang:
+- Fehler- und Leerzustand:
+- Größenverhalten:
 
 ## Inspector
 
-| Feld | Typ | Default | Validierung | Auswirkung |
-|---|---|---|---|---|
+| Feld | Datenträger | Typ | Default | Validierung | Kartenaktion | Auswirkung |
+|---|---|---|---|---|---|---|
 
-## Registry und Erzeugung
+## Registrierung und Erzeugung
+
+- `MathematikKnotenVorlagen.alle`:
+- `MathematikAuswerterRegister`:
+- `AnschlussArtRegister`:
+- Renderer-Zuordnung:
+- Kategorie und Suche:
 
 ## Persistenz und Migration
 
+- JSON-Felder:
+- Defaultwerte älterer Karten:
+- Anschlussmigration:
+- Auswirkung auf `formatVersion`:
+- Kopieren und Duplizieren:
+- Gruppenknotenverhalten:
+
 ## Tests
+
+### Domäne
+
+### Vorlage und Auswerter
+
+### Graph und Undo/Redo
+
+### Persistenz
+
+### Compose- oder Laufzeitprüfung
+
+## Prüfbefehle
+
+```bash
+# Nur tatsächlich vorhandene Befehle eintragen.
+```
+
+## Risiken und bewusste Grenzen
 
 ## Abnahmekriterien
 
