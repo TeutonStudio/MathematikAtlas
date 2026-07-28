@@ -19,14 +19,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
-import de.TeutonStudio.KnotenKartenVerwalter.zustand.AuswahlModus
-import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
 import kotlinx.coroutines.delay
 
 private sealed interface GraphKontext {
     data class Knoten(val id: KnotenId) : GraphKontext
     data class Knotengruppe(val knotenIds: Set<KnotenId>) : GraphKontext
     data class Verbindung(val id: VerbindungsId) : GraphKontext
+    data class Anschluss(val ref: AnschlussVerweis) : GraphKontext
 }
 
 @Composable
@@ -72,6 +72,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                         } else GraphKontext.Knoten(knoten.id)
                     },
                     beiVerbindungKontext = { graphKontext = GraphKontext.Verbindung(it.id) },
+                    beiAnschlussKontext = { graphKontext = GraphKontext.Anschluss(it) },
                     beiVerbindungAufHintergrund = { start, position -> zustand.öffneKnotenAuswahl(position, start) },
                     beiKnotenDoppelklick = { it.kartenVerweis?.let(zustand::öffne) },
                 )
@@ -95,6 +96,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
         is GraphKontext.Knoten -> "ID: ${kontext.id.wert}"
         is GraphKontext.Knotengruppe -> "${kontext.knotenIds.size} Knoten ausgewählt"
         is GraphKontext.Verbindung -> "ID: ${kontext.id.wert}"
+        is GraphKontext.Anschluss -> "Anschluss: ${kontext.ref.anschlussId.wert}"
     }
     AlertDialog(
         onDismissRequest = schließen,
@@ -166,6 +168,45 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         ) { Text("Löschen") }
+                    }
+                    is GraphKontext.Anschluss -> {
+                        val knoten = zustand.editor.karte.knoten.firstOrNull { it.id == kontext.ref.knotenId }
+                        val anschluss = knoten?.anschlüsse?.firstOrNull { it.id == kontext.ref.anschlussId }
+                        if (knoten == null || anschluss == null) {
+                            Text("Der Anschluss existiert nicht mehr.", style = MaterialTheme.typography.bodySmall)
+                        } else {
+                            Text(knoten.name, style = MaterialTheme.typography.labelLarge)
+                            Text("${anschluss.name} · ${anschluss.richtung.name} · ${anschluss.art.wert}")
+                            val erweiterbar = zustand.editor.kannAnschlussRelativEinfügen(kontext.ref)
+                            Button(
+                                onClick = {
+                                    zustand.editor.fügeAnschlussRelativEin(
+                                        kontext.ref,
+                                        AnschlussEinfügePosition.Davor,
+                                    )
+                                    schließen()
+                                },
+                                enabled = erweiterbar,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Anschluss oberhalb einfügen") }
+                            OutlinedButton(
+                                onClick = {
+                                    zustand.editor.fügeAnschlussRelativEin(
+                                        kontext.ref,
+                                        AnschlussEinfügePosition.Danach,
+                                    )
+                                    schließen()
+                                },
+                                enabled = erweiterbar,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Anschluss unterhalb einfügen") }
+                            if (!erweiterbar) {
+                                Text(
+                                    "Dieser Knoten besitzt eine feste Anschlusszahl.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                        }
                     }
                 }
             }
