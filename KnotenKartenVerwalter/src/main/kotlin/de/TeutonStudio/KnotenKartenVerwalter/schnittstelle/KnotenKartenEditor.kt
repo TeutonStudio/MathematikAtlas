@@ -43,6 +43,7 @@ fun KnotenKartenEditor(
     beiHintergrundKontext: (GraphPunkt) -> Unit = {},
     beiKnotenKontext: (KnotenDaten) -> Unit = {},
     beiVerbindungKontext: (VerbindungDaten) -> Unit = {},
+    beiAnschlussKontext: (AnschlussVerweis) -> Unit = {},
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit = { _, _ -> },
     beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
 ) {
@@ -152,6 +153,7 @@ fun KnotenKartenEditor(
                         renderer = rendererFür(knoten),
                         farbeFürAnschluss = farbeFürAnschluss,
                         beiKnotenKontext = beiKnotenKontext,
+                        beiAnschlussKontext = beiAnschlussKontext,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                         beiDoppelklick = { beiKnotenDoppelklick(knoten) },
                     )
@@ -392,6 +394,7 @@ private fun KnotenDarstellung(
     renderer: KnotenRenderer,
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
     beiKnotenKontext: (KnotenDaten) -> Unit,
+    beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
 ) {
@@ -453,7 +456,7 @@ private fun KnotenDarstellung(
             })
         }
 
-        knoten.anschlüsse.groupBy { it.kante }.forEach { (kante, anschlüsse) ->
+        knoten.anschlüsse.groupBy { it.kante }.forEach { (_, anschlüsse) ->
             anschlüsse.sortedBy { it.reihenfolge }.forEachIndexed { index, anschluss ->
                 AnschlussGriff(
                     knoten = knoten,
@@ -462,6 +465,7 @@ private fun KnotenDarstellung(
                     anzahl = anschlüsse.size,
                     zustand = zustand,
                     farbe = farbeFürAnschluss(anschluss),
+                    beiAnschlussKontext = beiAnschlussKontext,
                     beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                 )
             }
@@ -507,6 +511,7 @@ private fun BoxScope.AnschlussGriff(
     anzahl: Int,
     zustand: KartenEditorZustand,
     farbe: Color,
+    beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
 ) {
     val anteil = (index + 1f) / (anzahl + 1f)
@@ -529,8 +534,15 @@ private fun BoxScope.AnschlussGriff(
         Modifier.align(ausrichtung).offset(x, y).size(14.dp)
             .background(if (kompatibel) farbe else farbe.copy(alpha = .2f), CircleShape)
             .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
-            .clickable(enabled = kompatibel) { zustand.anschlussAngeklickt(ref) }
-            .pointerInput(ref) {
+            .combinedClickable(
+                enabled = kompatibel,
+                onClick = { zustand.anschlussAngeklickt(ref) },
+                onLongClick = {
+                    zustand.brecheVerbindungsVorschauAb()
+                    beiAnschlussKontext(ref)
+                },
+            )
+            .pointerInput(ref, kompatibel) {
                 if (!kompatibel) return@pointerInput
                 detectDragGestures(
                     onDragStart = { druckPosition ->
@@ -574,7 +586,6 @@ private fun BoxScope.AnschlussGriff(
             }
     )
 }
-
 
 private fun anschlussPositionWelt(knoten: KnotenDaten, anschluss: AnschlussDaten): GraphPunkt {
     val aufKante = knoten.anschlüsse.filter { it.kante == anschluss.kante }.sortedBy { it.reihenfolge }
