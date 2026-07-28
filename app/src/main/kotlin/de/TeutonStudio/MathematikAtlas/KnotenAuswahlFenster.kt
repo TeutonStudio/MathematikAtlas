@@ -32,7 +32,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     "Zeilenvektor erzeugen",
                     "Erzeugt ein Tupel und verbindet es mit Tupel zu Spalte oder Tupel zu Zeile",
                 ).any { it.contains(zustand.suchText, ignoreCase = true) }
-                val mengenrechnung = sichtbareVorlagen.filter { it.art in mengenrechnungsArten }
+                val rechnen = sichtbareVorlagen.filter(::istRechenVorlage)
                 val mengen = sichtbareVorlagen.filter { it.kategorie == "Mengen" && it.art !in mengenrechnungsArten }
                 val zahlen = sichtbareVorlagen.filter { it.art in setOf("mathematik.zahl", "mathematik.variable") }
                 val tupel = sichtbareVorlagen.filter { it.art == "mathematik.tupel" }
@@ -40,10 +40,9 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                 val geometrie = sichtbareVorlagen.filter { it.kategorie.startsWith("Geometrie:") }
                 val tabs = listOf(
                     KnotenAuswahlTab("Alle", sichtbareVorlagen),
-                    KnotenAuswahlTab("Rechnen", sichtbareVorlagen.filter { it.kategorie in rechnenKategorien }),
+                    KnotenAuswahlTab("Rechnen", rechnen),
                     KnotenAuswahlTab("Zahlen", zahlen),
                     KnotenAuswahlTab("Mengen", mengen),
-                    KnotenAuswahlTab("Mengenrechnung", mengenrechnung),
                     KnotenAuswahlTab("Tupel", tupel, zusätzlicheEinträge = if (zeigeTupelVektorAktionen) 2 else 0),
                     KnotenAuswahlTab("Abbildungen", sichtbareVorlagen.filter { it.kategorie in abbildungsKategorien }),
                     KnotenAuswahlTab("Vektoren", sichtbareVorlagen.filter { it.kategorie == "Vektoren" }),
@@ -137,10 +136,12 @@ private data class KnotenAuswahlTab(
     val anzahl get() = vorlagen.size + zusätzlicheEinträge
 }
 
+private fun istRechenVorlage(vorlage: KnotenVorlage): Boolean =
+    vorlage.kategorie in rechnenKategorien || vorlage.art in mengenrechnungsArten
+
 private fun kategorieAnzeige(vorlage: KnotenVorlage): String = when {
-    vorlage.art in mengenrechnungsArten -> "Mengenrechnung"
+    istRechenVorlage(vorlage) -> "Rechnen"
     vorlage.kategorie.startsWith("Aussagen:") -> vorlage.kategorie.substringAfter(": ")
-    vorlage.kategorie in rechnenKategorien -> "Rechnen"
     vorlage.kategorie in abbildungsKategorien -> "Abbildungen"
     vorlage.kategorie in kartenKategorien -> "Karten"
     else -> vorlage.kategorie
@@ -161,7 +162,7 @@ private val rechnenKategorien = setOf("Rechnen", "Analysis", "Algebra", "Zahlen"
 private val abbildungsKategorien = setOf("Methoden", "Abbildungen")
 private val kartenKategorien = setOf("Gruppen", "Gespeicherte Karten")
 private val kategorienReihenfolge = listOf(
-    "Rechnen", "Mengen", "Mengenrechnung", "Abbildungen", "Vektoren", "Matrizen",
+    "Rechnen", "Mengen", "Abbildungen", "Vektoren", "Matrizen",
     "Geometrie: Räume", "Geometrie: Grundobjekte", "Geometrie: Konstruktionen", "Geometrie: Relationen",
     "Geometrie: Struktur", "Geometrie: Mengen", "Geometrie: Transformationen", "Geometrie: Darstellung",
     "Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate", "Aussage", "Karten",
