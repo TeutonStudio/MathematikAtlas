@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
-        put("formatVersion", 3)
+        put("formatVersion", 4)
         put("id", karte.id.wert)
         put("name", karte.name)
         put("version", karte.version)
@@ -19,6 +19,7 @@ object KartenJson {
         })
         put("knoten", JSONArray().apply { karte.knoten.forEach { put(knotenZuJson(it)) } })
         put("verbindungen", JSONArray().apply { karte.verbindungen.forEach { put(verbindungZuJson(it)) } })
+        put("visuelleGruppen", JSONArray().apply { karte.visuelleGruppen.forEach { put(visuelleGruppeZuJson(it)) } })
     }.toString(2)
 
     fun lese(text: String): KartenDaten {
@@ -31,12 +32,13 @@ object KartenJson {
             erstelltAm = json.optLong("erstelltAm", System.currentTimeMillis()),
             knoten = json.optJSONArray("knoten").zuListe(::knotenVonJson),
             verbindungen = json.optJSONArray("verbindungen").zuListe(::verbindungVonJson),
+            visuelleGruppen = json.optJSONArray("visuelleGruppen").zuListe(::visuelleGruppeVonJson),
             ansicht = AnsichtsFenster(
                 GraphPunkt(ansicht?.optDouble("x", 0.0)?.toFloat() ?: 0f, ansicht?.optDouble("y", 0.0)?.toFloat() ?: 0f),
                 ansicht?.optDouble("zoom", 1.0)?.toFloat() ?: 1f,
             ),
             archiviert = json.optBoolean("archiviert", false),
-        )
+        ).bereinigteVisuelleGruppen()
     }
 
     private fun knotenZuJson(k: KnotenDaten) = JSONObject().apply {
@@ -82,6 +84,18 @@ object KartenJson {
             parameter = parameter, eigenschaften = eigenschaften, kartenVerweis = verweis,
         )
     }
+
+    private fun visuelleGruppeZuJson(gruppe: VisuelleKnotenGruppeDaten) = JSONObject().apply {
+        put("id", gruppe.id.wert)
+        put("knotenIds", JSONArray().apply { gruppe.knotenIds.forEach { put(it.wert) } })
+    }
+
+    private fun visuelleGruppeVonJson(json: JSONObject) = VisuelleKnotenGruppeDaten(
+        id = VisuelleGruppenId(json.getString("id")),
+        knotenIds = json.optJSONArray("knotenIds")?.let { ids ->
+            List(ids.length()) { index -> KnotenId(ids.getString(index)) }.toSet()
+        } ?: emptySet(),
+    )
 
     private fun eigenschaftZuJson(wert: KnotenEigenschaft): JSONObject = JSONObject().apply {
         when (wert) {
