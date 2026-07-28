@@ -20,6 +20,11 @@ data class VerbindungDaten(
     val zu: AnschlussVerweis,
 )
 
+data class VisuelleKnotenGruppeDaten(
+    val id: VisuelleGruppenId = neueVisuelleGruppenId(),
+    val knotenIds: Set<KnotenId>,
+)
+
 data class KartenDaten(
     val id: KartenId = neueKartenId(),
     val name: String,
@@ -27,6 +32,7 @@ data class KartenDaten(
     val erstelltAm: Long = System.currentTimeMillis(),
     val knoten: List<KnotenDaten> = emptyList(),
     val verbindungen: List<VerbindungDaten> = emptyList(),
+    val visuelleGruppen: List<VisuelleKnotenGruppeDaten> = emptyList(),
     val ansicht: AnsichtsFenster = AnsichtsFenster.Standard,
     val archiviert: Boolean = false,
 )
