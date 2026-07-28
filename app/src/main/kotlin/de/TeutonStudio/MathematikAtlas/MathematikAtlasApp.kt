@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -59,30 +60,33 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         Column(Modifier.weight(1f).fillMaxHeight()) {
             WerkzeugLeiste(zustand, onImport = { import.launch(arrayOf("application/json", "text/plain")) }, onExport = { export.launch("${zustand.editor.karte.name}.json") })
             HorizontalDivider()
-            Box(Modifier.weight(1f)) {
-                KnotenKartenEditor(
-                    zustand = zustand.editor,
-                    modifier = Modifier.fillMaxSize(),
-                    rendererFür = zustand::rendererFür,
-                    farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
-                    beiHintergrundKontext = { zustand.öffneKnotenAuswahl(it) },
-                    beiKnotenKontext = { knoten ->
-                        graphKontext = if (zustand.editor.auswahlModus == AuswahlModus.Gruppe) {
-                            GraphKontext.Knotengruppe(zustand.editor.ausgewählteKnoten + knoten.id)
-                        } else GraphKontext.Knoten(knoten.id)
-                    },
-                    beiVerbindungKontext = { graphKontext = GraphKontext.Verbindung(it.id) },
-                    beiAnschlussKontext = { graphKontext = GraphKontext.Anschluss(it) },
-                    beiVerbindungAufHintergrund = { start, position -> zustand.öffneKnotenAuswahl(position, start) },
-                    beiKnotenDoppelklick = { it.kartenVerweis?.let(zustand::öffne) },
-                )
-                KartenMarkierungen(zustand.editor)
+            Row(Modifier.weight(1f).fillMaxWidth()) {
                 KartenWerkzeuge(
                     editor = zustand.editor,
-                    modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                    modifier = Modifier.width(56.dp).fillMaxHeight(),
                 )
-                zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
-                graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
+                VerticalDivider()
+                Box(Modifier.weight(1f).fillMaxHeight()) {
+                    KnotenKartenEditor(
+                        zustand = zustand.editor,
+                        modifier = Modifier.fillMaxSize(),
+                        rendererFür = zustand::rendererFür,
+                        farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
+                        beiHintergrundKontext = { zustand.öffneKnotenAuswahl(it) },
+                        beiKnotenKontext = { knoten ->
+                            graphKontext = if (zustand.editor.auswahlModus == AuswahlModus.Gruppe) {
+                                GraphKontext.Knotengruppe(zustand.editor.ausgewählteKnoten + knoten.id)
+                            } else GraphKontext.Knoten(knoten.id)
+                        },
+                        beiVerbindungKontext = { graphKontext = GraphKontext.Verbindung(it.id) },
+                        beiAnschlussKontext = { graphKontext = GraphKontext.Anschluss(it) },
+                        beiVerbindungAufHintergrund = { start, position -> zustand.öffneKnotenAuswahl(position, start) },
+                        beiKnotenDoppelklick = { it.kartenVerweis?.let(zustand::öffne) },
+                    )
+                    KartenMarkierungen(zustand.editor)
+                    zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
+                    graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
+                }
             }
         }
         VerticalDivider()
@@ -178,6 +182,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                             Text(knoten.name, style = MaterialTheme.typography.labelLarge)
                             Text("${anschluss.name} · ${anschluss.richtung.name} · ${anschluss.art.wert}")
                             val erweiterbar = zustand.editor.kannAnschlussRelativEinfügen(kontext.ref)
+                            val vernichtbar = zustand.editor.kannAnschlussVernichten(kontext.ref)
                             Button(
                                 onClick = {
                                     zustand.editor.fügeAnschlussRelativEin(
@@ -189,6 +194,15 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                                 enabled = erweiterbar,
                                 modifier = Modifier.fillMaxWidth(),
                             ) { Text("Anschluss oberhalb einfügen") }
+                            Button(
+                                onClick = {
+                                    zustand.editor.vernichteAnschluss(kontext.ref)
+                                    schließen()
+                                },
+                                enabled = vernichtbar,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            ) { Text("Anschluss vernichten") }
                             OutlinedButton(
                                 onClick = {
                                     zustand.editor.fügeAnschlussRelativEin(
@@ -200,9 +214,13 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                                 enabled = erweiterbar,
                                 modifier = Modifier.fillMaxWidth(),
                             ) { Text("Anschluss unterhalb einfügen") }
-                            if (!erweiterbar) {
-                                Text(
+                            when {
+                                !erweiterbar -> Text(
                                     "Dieser Knoten besitzt eine feste Anschlusszahl.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                !vernichtbar -> Text(
+                                    "Der Knoten benötigt mindestens zwei feste Eingänge.",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
@@ -301,8 +319,12 @@ private fun KartenMarkierungen(editor: KartenEditorZustand) {
 
 @Composable
 private fun KartenWerkzeuge(editor: KartenEditorZustand, modifier: Modifier = Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
-        Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Surface(modifier, shape = RectangleShape, tonalElevation = 1.dp) {
+        Column(
+            Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = editor::rückgängig)
             KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = editor::wiederholen)
             HorizontalDivider()
