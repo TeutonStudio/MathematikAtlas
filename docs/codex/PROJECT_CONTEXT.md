@@ -2,89 +2,93 @@
 
 ## Produktvision
 
-Der Mathematik Atlas ist eine Android-Anwendung zur Darstellung mathematischer Vorgänge als gerichtete Knotenkarten. Nutzer können mathematische Objekte und Verarbeitungsschritte als Knoten verbinden, Ergebnisse im Graph auswerten und Karten als versionierte, wiederverwendbare Gruppen speichern.
+Der Mathematik Atlas ist eine native Android-Anwendung zur Darstellung mathematischer Vorgänge als gerichtete Knotenkarten. Nutzer verbinden mathematische Objekte und Verarbeitungsschritte, lassen den azyklischen Graph topologisch auswerten und speichern Karten als versionierte, wiederverwendbare Gruppen.
 
 ## Gemeinsame Sprache
 
 | Projektbegriff | Technischer Begriff | Bedeutung |
 |---|---|---|
-| Knoten | `KnotenDaten` | persistierbare Karte eines Graphen |
-| Anschluss | `AnschlussDaten` | definierter Ein-, Aus- oder Neutralanschluss eines Knotens |
+| Knoten | `KnotenDaten` | persistierbare Instanz innerhalb einer Karte |
+| Anschluss | `AnschlussDaten` | typisierter Ein-, Aus- oder Neutralanschluss eines Knotens |
 | Verbindung | `VerbindungDaten` | Verbindung zwischen zwei `AnschlussVerweis`-Instanzen |
-| Karte | `KartenDaten` | versionierter gerichteter Graph mit Ansichtsdaten |
-| Inspector | Eigenschaftenbereich | Compose-Bereich in `MathematikAtlasApp`, der Knotenparameter und Anschlüsse über `KartenAktion` verändert |
+| Karte | `KartenDaten` | versionierter gerichteter Graph mit Ansicht und visuellen Gruppen |
+| Inspector | Eigenschaftenbereich | Compose-Oberfläche, die Knotendaten über Kartenaktionen verändert |
 | mathematischer Ausdruck | `MathematischesObjekt` / `Ausdruck` | fachliche Repräsentation mit `zuLatex()`, nicht nur ein Formelstring |
-| Darstellung | Compose-Renderer | visuelle Repräsentation durch `KnotenRenderer` bzw. `MathematikKnotenRenderer` |
+| Darstellung | Compose-Renderer | visuelle Repräsentation über `KnotenRenderer` und spezialisierte Renderer |
+| Gruppenknoten | `KartenVerweis` | feste Referenz auf eine bestimmte Version einer anderen Karte |
 
 ## Technischer Rahmen
 
 ### Bestätigte Fakten
 
-- Build-System: Gradle 8.13 Wrapper mit Kotlin-DSL.
-- Sprache: Kotlin 2.3.21; JVM-Toolchain 17 in allen Modulen.
-- Android: Android Gradle Plugin 8.13.2, `compileSdk` und `targetSdk` 36, `minSdk` 26 im App-Modul.
-- UI: Jetpack Compose und Material 3; Compose-BOM `2026.06.00`.
+- Build-System: Gradle Wrapper mit Kotlin-DSL.
+- Sprache: Kotlin; JVM-Toolchain 17 in den Modulen.
+- Plattform: Android mit Jetpack Compose und Material 3.
 - Module: `app`, `KnotenKartenVerwalter`, `MathematikRechenSystem`, `MathematikKartenAdapter` und `MathematikKnoten`.
-- Abhängigkeitsrichtung: Das App-Modul verwendet alle Bibliotheksmodule. `MathematikKartenAdapter` verwendet den neutralen Karteneditor und das Rechensystem. `MathematikKnoten` verwendet Adapter, Karteneditor und Rechensystem. Das Rechensystem bleibt Android-/Compose-frei.
-- Formeldarstellung: Der Rechenkern erzeugt LaTeX-Text; `MathematikKnoten/LatexText.kt` rendert einen unterstützten Teilumfang nativ in Compose.
-- Paketmanager: Gradle Wrapper; es gibt keine Lockdatei oder `package.json` eines JavaScript-Paketmanagers.
+- `MathematikRechenSystem` bleibt Android- und Compose-frei.
+- `KnotenKartenVerwalter` ist der fachneutrale Compose-Karteneditor.
+- `MathematikKartenAdapter` führt Kartengraphen mit dem Rechenkern aus.
+- `MathematikKnoten` enthält mathematische Vorlagen, Auswerter und spezialisierte Renderer.
+- Der Rechenkern erzeugt LaTeX-Text; `MathematikKnoten/LatexText.kt` rendert einen unterstützten Teilumfang nativ in Compose.
+- Die App speichert Karten über `KartenJson`; der aktuelle Schreibpfad verwendet `formatVersion` 4.
+- Es existiert kein JavaScript-Paketmanager, keine `package.json` und keine Webanwendung.
 
 ### Nicht aus diesen Fakten ableiten
 
 - Keine Vite-, React-, React-Flow-, shadcn/ui- oder KaTeX-Architektur annehmen.
-- Keine erfolgreiche lokale Android-Kompilation oder Laufzeit annehmen: Die vorhandene Diagnoseumgebung konnte Gradle nicht starten.
-- Keine allgemeine JSON-Schemamigration annehmen: `formatVersion` 1 wird geschrieben, aber beim Lesen nicht ausgewertet.
+- Einen dokumentierten oder früher erfolgreichen Gradle-Befehl nicht automatisch als im aktuellen Arbeitsstand ausgeführt melden.
+- Einen erfolgreichen JVM-Test oder APK-Build nicht als Emulator- oder Geräteprüfung ausgeben.
+- Nicht annehmen, dass jede alte Karte ohne Migration dieselben Anschlüsse wie eine aktuelle Vorlage besitzt.
+- Nicht annehmen, dass `CURRENT_STATE.md` neuere Commits abdeckt als sein ausdrücklich genannter Stand.
 
 ## Produktprinzipien
 
-Die folgenden Prinzipien sind durch die vorhandenen Verträge und weite Teile des Codes gestützt; sie bleiben dennoch Zielvorgaben, wenn ein konkreter Pfad nicht getestet ist.
-
 1. **Mathematik ist strukturiert.** Der Kern modelliert mathematische Objekte als Kotlin-Typen statt nur als Strings.
-2. **Darstellung leitet sich aus dem Modell ab.** Die Compose-Darstellung erhält Auswertungsergebnisse; LaTeX stammt aus `MathematischesObjekt.zuLatex()`.
-3. **Verbindungen sind typisiert.** `GraphPrüfung` nutzt Richtungen und eine Hierarchie von `AnschlussArt`.
-4. **Fehler werden modelliert.** Auswertungsergebnisse besitzen ein Fehlerfeld; der Adapter sammelt Fehler pro Karte.
-5. **Bearbeitung ist nachvollziehbar.** Der Editor verwendet unveränderliche Kartendaten, Aktionen und eine begrenzte Undo/Redo-Historie.
-6. **Karten sind persistierbar.** Karten werden als JSON mit stabilen IDs und Versionen im App-Dateibereich gespeichert.
+2. **Darstellung leitet sich aus dem Modell ab.** Compose-Renderer erhalten Daten oder Auswertungsergebnisse; LaTeX stammt aus fachlichen Objekten.
+3. **Verbindungen sind typisiert.** `GraphPrüfung` nutzt Richtung, Anschlussarthierarchie, Eingangskardinalität und Zyklusprüfung.
+4. **Fehler werden modelliert.** Auswertungsergebnisse besitzen fachliche Fehler- und Entscheidungszustände.
+5. **Bearbeitung ist nachvollziehbar.** Der Editor verwendet unveränderliche Kartendaten, Kartenaktionen und Undo/Redo.
+6. **Karten sind persistierbar.** Karten besitzen stabile IDs, eigene Versionen und ein versioniertes JSON-Format.
+7. **Module bleiben fachlich getrennt.** Der neutrale Editor kennt keine mathematischen Parameternamen; der Rechenkern kennt keine UI.
+8. **Laufzeitzustand wird nicht persistiert.** Compose-Zustand, Renderer-Caches und berechnete Ergebnisse werden neu abgeleitet.
 
 ## Tatsächliche Quellverzeichnisse
 
 | Bereich | Bestätigter Ort | Zentrale Symbole oder Aufgabe |
 |---|---|---|
 | Anwendungseinstieg | `app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/` | `MainActivity`, `MathematikAtlasApp`, `AtlasZustand` |
-| Node-Komponenten | `KnotenKartenVerwalter/.../schnittstelle/` und `MathematikKnoten/.../` | `KnotenKartenEditor`, `KnotenRenderer`, `MathematikKnotenRenderer` |
-| Node-Datentypen | `KnotenKartenVerwalter/.../daten/` | `KnotenDaten`, `KnotenVorlage`, `KartenDaten` |
-| Handle- und Edge-Typen | `KnotenKartenVerwalter/.../daten/` und `.../logik/` | `AnschlussDaten`, `VerbindungDaten`, `GraphPrüfung`, `AnschlussArtRegister` |
-| Inspector | `app/.../MathematikAtlasApp.kt` | Eigenschaftenbereich für Auswahl, Parameter, Anschlüsse und Kartenverweis |
-| mathematisches Domänenmodell | `MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/` | Zahlen, Mengen, Aussagen, Funktionen, Operatoren, lineare Algebra und Umformungen |
-| Auswertung/Adapter | `MathematikKartenAdapter/src/main/kotlin/de/TeutonStudio/MathematikKartenAdapter/` | `KartenAuswerter`, Ergebnis- und Registertypen |
-| mathematische Knotenvorlagen | `MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/` | Vorlagen, Anschlussarten, Standardauswerter und Renderer |
-| Persistenz | `app/.../speicher/` | `KartenJson`, `KartenSpeicher` |
-| Tests | `*/src/test/kotlin/` der vier Bibliotheksmodule | Kotlin-/JUnit-Tests für Kern, Graph, Adapter und mathematische Knoten |
+| Karteneditor | `KnotenKartenVerwalter/.../schnittstelle/` | `KnotenKartenEditor`, `KnotenRenderer` |
+| Graphdaten | `KnotenKartenVerwalter/.../daten/` | `KartenDaten`, `KnotenDaten`, `AnschlussDaten`, `VerbindungDaten` |
+| Graphlogik | `KnotenKartenVerwalter/.../logik/` und `.../zustand/` | `GraphPrüfung`, `KartenAktion`, `KartenEditorZustand` |
+| Inspector und App-Dialoge | `app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/` | Eigenschaftenbearbeitung und App-Koordination |
+| mathematische Domäne | `MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/` | Zahlen, Mengen, Aussagen, Funktionen, Operatoren, Algebra, Geometrie und Umformungen |
+| Auswertung | `MathematikKartenAdapter/src/main/kotlin/de/TeutonStudio/MathematikKartenAdapter/` | `KartenAuswerter`, Ergebnis- und Registertypen |
+| mathematische Knoten | `MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/` | Vorlagen, Anschlussarten, Standardauswerter und Renderer |
+| Persistenz | `app/.../speicher/` | `KartenJson`, `KartenSpeicher`, Kartenordnung |
+| Migration | `app/.../AtlasMigrationen.kt` und Ladepfade | Normalisierung älterer Karten- und Anschlussdaten |
+| Tests | `*/src/test/kotlin/` | Kotlin-/JUnit-Tests für Kern, Graph, Adapter, Knoten und App-Persistenz |
 
-## Tatsächliche zentrale Symbole
+## Zentrale Symbole
 
-| Aufgabe | Bestätigte Symbole | Einordnung |
+| Aufgabe | Symbole | Einordnung |
 |---|---|---|
-| Node-Vorlagenkatalog | `MathematikKnotenVorlagen.alle`, `KnotenVorlage.erzeuge` | Statische mathematische Vorlagen; `AtlasZustand` ergänzt gespeicherte Karten als dynamische Gruppenvorlagen. |
-| Auswerter-Registry | `MathematikAuswerterRegister`, `StandardMathematikAuswerter.erzeugeRegister` | Ordnet stabilen Node-Art-Schlüsseln konkrete mathematische Auswerter zu. |
-| Graphzustand | `KartenEditorZustand`, `KartenDaten`, `AtlasZustand` | Editorzustand mit Auswahl, Verbindungsvorschau und Undo/Redo; Appzustand koordiniert Persistenz und Auswertung. |
-| Serialisierungsschema | `KartenJson`, `KartenSpeicher`, `formatVersion` 1 | JSON für Karte, Knoten, Anschlüsse, Verbindungen, Ansicht und Kartenverweise; dateibasierte Versionierung. |
-| Ausdruckstyp | `MathematischesObjekt`, `Ausdruck`, `ZahlAusdruck`, `MengenAusdruck` | Fachliche Datenmodelle des reinen Kotlin-Rechenkerns. |
-| Validierungsmechanismus | `GraphPrüfung`, `AnschlussArtRegister` | Prüft Richtung, hierarchische Typkompatibilität, Eingangskardinalität und Zyklen. |
-| Auswertung | `KartenAuswerter`, `MathematikKnotenAuswerter`, `KnotenAuswertungsErgebnis` | Topologische Auswertung mit cachebaren Knotenergebnissen und Fehleraggregation. |
+| Vorlagenkatalog | `MathematikKnotenVorlagen.alle`, `KnotenVorlage.erzeuge` | statische mathematische Vorlagen; App ergänzt Gruppenvorlagen |
+| Auswerterregister | `MathematikAuswerterRegister`, `StandardMathematikAuswerter.erzeugeRegister` | ordnet stabilen Knotenarten Auswerter zu |
+| Graphzustand | `KartenEditorZustand`, `KartenDaten`, `AtlasZustand` | Editorzustand und App-Koordination |
+| Anschlussarten | `AnschlussArtRegister`, `MathematikAnschlussArten` | hierarchische Typkompatibilität |
+| Serialisierung | `KartenJson`, `KartenSpeicher` | JSON und dateibasierte Kartenversionierung |
+| Ausdruckstyp | `MathematischesObjekt`, `Ausdruck`, `ZahlAusdruck`, `MengenAusdruck` | fachliche Datenmodelle des Rechenkerns |
+| Auswertung | `KartenAuswerter`, `MathematikKnotenAuswerter`, `KnotenAuswertungsErgebnis` | topologische Auswertung, Cache und Fehleraggregation |
+| Formelanzeige | `LatexText`, `MathematischesObjekt.zuLatex()` | nativer Compose-Teilrenderer, kein KaTeX |
 
-## Bestätigte Abweichungen von der Codex-Zielarchitektur
+## Arbeitsannahmen für Änderungen
 
-- Die älteren, technologieoffenen Hinweise auf React Flow, shadcn/ui und KaTeX sind für diesen Bestand nicht zutreffend; die Implementierung ist native Android/Compose.
-- Es existieren getrennte Katalog- und Auswerterregister statt eines einzigen Registers, das zugleich Vorlage, Renderer, Inspector und Auswerter enthält.
-- Es gibt Persistenz und eine begrenzte Knoten-Datenmigration, aber keine festgestellte allgemeine schema versionsabhängige Migrationspipeline.
-- Es gibt Undo/Redo im `KartenEditorZustand`; Persistenz-Roundtrips und Migrationen sind derzeit nicht durch gefundene Unit-Tests abgesichert.
+Diese Punkte müssen am konkreten Pfad überprüft werden:
 
-## Arbeitsannahmen für spätere Änderungen
-
-Diese Annahmen sind keine bestätigten Fakten und müssen vor einer Änderung am konkreten Pfad überprüft werden:
-
-- Ob ein neuer Knotentyp eine Migration bestehender gespeicherter Karten benötigt.
-- Ob ein Fachgebiet bereits durch eine vorhandene Vorlage und einen registrierten Auswerter abgedeckt ist.
-- Ob die App auf einem Android-Gerät aktuell baut, startet und alle Compose-Interaktionen wie vorgesehen ausführt.
-- Ob die vorhandene Teilmenge des nativen LaTeX-Renderers jede neue Formelnotation korrekt darstellt.
+- ob ein neuer Knotentyp eine Migration bestehender Karten benötigt,
+- ob ein Fachgebiet bereits durch vorhandene Vorlagen und Auswerter abgedeckt ist,
+- ob eine Anschlussänderung bestehende Verbindungen und Gruppenknoten betrifft,
+- ob der aktuelle Branch alle dokumentierten Prüfungen erfolgreich durchläuft,
+- ob eine Compose-Interaktion auf Emulator oder Gerät verifiziert wurde,
+- ob der native Formelrenderer jede benötigte Notation unterstützt,
+- ob eine Änderung der Persistenz tatsächlich eine neue `formatVersion` benötigt.
