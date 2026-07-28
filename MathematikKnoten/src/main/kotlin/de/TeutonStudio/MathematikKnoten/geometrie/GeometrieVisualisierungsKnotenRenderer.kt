@@ -44,13 +44,7 @@ class GeometrieVisualisierungsKnotenRenderer(
                 dimension !in 1..3 -> Hinweis("R$dimension ist erst nach einer expliziten Projektion in R1, R2 oder R3 darstellbar.")
                 else -> {
                     GeometrieCanvas(
-                        objekt,
-                        kamera,
-                        { kamera = it },
-                        linie,
-                        punkt,
-                        achse,
-                        hintergrund,
+                        objekt, kamera, { kamera = it }, linie, punkt, achse, hintergrund,
                         Modifier.fillMaxWidth().weight(1f),
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -146,7 +140,7 @@ private fun renderDaten(objekt: GeometrischerAusdruck): RenderGeometrie = when (
         val l = if (p.size == objekt.ecken.size) p.indices.map { Linie3(p[it], p[(it + 1) % p.size]) } else emptyList()
         RenderGeometrie(p, l, emptyList())
     }
-    is GeometrieGruppe -> objekt.objekte.map(::renderDaten).reduce(::kombiniere)
+    is GeometrieGruppe -> objekt.objekte.map(::renderDaten).reduce { links, rechts -> kombiniere(links, rechts) }
     is GeometrieEbene -> kombiniere(ausPunktPaar(objekt.a, objekt.b), ausPunktPaar(objekt.b, objekt.c), ausPunktPaar(objekt.c, objekt.a))
     is TransformiertesGeometrieObjekt -> {
         val p = objekt.struktur.stufen.flatMap { it.zellen }.mapNotNull { (it.geometrie as? GeometriePunkt)?.dezimalKoordinaten() }
