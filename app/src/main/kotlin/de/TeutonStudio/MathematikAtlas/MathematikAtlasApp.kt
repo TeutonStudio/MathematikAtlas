@@ -343,52 +343,6 @@ private fun KartenWerkzeugKnopf(
 }
 
 @Composable
-private fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
-    var text by remember(zustand.editor.karte.id, zustand.editor.karte.version) {
-        mutableStateOf(zustand.speicher.exportiere(zustand.editor.karte))
-    }
-    var fehler by remember { mutableStateOf<String?>(null) }
-
-    fun speichernUndSchließen() {
-        fehler = zustand.übernehmeJson(text)
-        if (fehler == null) schließen()
-    }
-
-    AlertDialog(
-        onDismissRequest = ::speichernUndSchließen,
-        title = { Text("JSON der aktuellen Karte") },
-        text = {
-            Column(
-                Modifier.widthIn(min = 520.dp).heightIn(max = 620.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    "Änderungen werden beim Schließen übernommen, sofern daraus eine gültige Karte entsteht.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it; fehler = null },
-                    label = { Text("Karten-JSON") },
-                    minLines = 18,
-                    maxLines = 28,
-                    isError = fehler != null,
-                    supportingText = { fehler?.let { Text(it) } },
-                    modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
-                    textStyle = MaterialTheme.typography.bodySmall,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = ::speichernUndSchließen) { Text("Schließen und speichern") }
-        },
-        dismissButton = {
-            TextButton(onClick = schließen) { Text("Verwerfen") }
-        },
-    )
-}
-
-@Composable
 internal fun NameÄndernDialog(
     titel: String,
     aktuellerName: String,
