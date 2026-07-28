@@ -13,6 +13,17 @@ sealed interface Ausdruck : MathematischesObjekt
 sealed interface ZahlAusdruck : Ausdruck
 sealed interface MengenAusdruck : Ausdruck
 
+/**
+ * Intrinsisches geometrisches Objekt in einem euklidischen Raum.
+ *
+ * Geometrische Objekte sind ausdrücklich keine [MengenAusdruck]-Instanzen. Ihre
+ * Trägermenge, ihr Koordinatenbild und ihre Zellstruktur entstehen nur durch
+ * benannte Konvertierungen.
+ */
+interface GeometrischerAusdruck : Ausdruck {
+    val raum: EuklidischerRaum
+}
+
 interface MathematischesKonzept<T : MathematischesObjekt> {
     val artId: String
     fun passt(objekt: MathematischesObjekt): Boolean

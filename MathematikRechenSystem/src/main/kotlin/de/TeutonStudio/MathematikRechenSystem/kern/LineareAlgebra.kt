@@ -22,6 +22,14 @@ data class ZeilenVektor(override val werte: List<ZahlAusdruck>) : OrientierterVe
     fun transponiert() = SpaltenVektor(werte)
 }
 
+/** Explizite Brücke: Ein Tupel erhält erst für die lineare Algebra eine Spaltenorientierung. */
+fun Tupel.alsSpaltenVektor(): SpaltenVektor = SpaltenVektor(elemente.mapIndexed { index, element ->
+    element as? ZahlAusdruck ?: error("Tupelkomponente ${index + 1} ist keine Zahl.")
+})
+
+/** Beim Rückweg zum Koordinatenobjekt wird die Vektororientierung ausdrücklich abgelegt. */
+fun OrientierterVektor.alsTupel(): Tupel = Tupel(werte)
+
 /** Bildet die aufsteigend gespeicherten Koeffizienten c₀, …, cₙ auf Σ cᵢ·Xⁱ ab. */
 fun polynomAusKoeffizienten(koeffizienten: List<ZahlAusdruck>, variable: Variable): ZahlAusdruck {
     require(koeffizienten.isNotEmpty()) { "Ein Polynom benötigt mindestens einen Koeffizienten." }
@@ -74,6 +82,12 @@ data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck {
     operator fun times(andere: Matrix): Matrix {
         require(spaltenAnzahl == andere.zeilenAnzahl) { "Spaltenzahl der linken Matrix muss zur Zeilenzahl der rechten passen." }
         return Matrix(List(zeilenAnzahl) { z -> List(andere.spaltenAnzahl) { s -> addition((0 until spaltenAnzahl).map { k -> multiplikation(zeilen[z][k], andere.zeilen[k][s]) }) } })
+    }
+    operator fun times(vektor: SpaltenVektor): SpaltenVektor {
+        require(spaltenAnzahl == vektor.werte.size) { "Spaltenzahl der Matrix muss zur Dimension des Spaltenvektors passen." }
+        return SpaltenVektor(zeilen.map { zeile ->
+            vereinfache(addition(zeile.zip(vektor.werte) { matrixWert, vektorWert -> multiplikation(matrixWert, vektorWert) }))
+        })
     }
     fun transponiert() = Matrix(List(spaltenAnzahl) { s -> List(zeilenAnzahl) { z -> zeilen[z][s] } })
     fun inverseRational(): Matrix {

@@ -40,6 +40,11 @@ fun inferiereZielmenge(
         ausdruck.spaltenAnzahl,
         maximaleZahlenGrundmenge(ausdruck.zeilen.flatten().map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) }),
     )
+    is GeometrischerAusdruck -> BenannteMenge("geometrie_${ausdruck.raum.id}", "\\mathcal{G}(${ausdruck.raum.id})")
+    is EuklidischerRaum -> BenannteMenge("euklidische_raeume", "\\mathfrak{E}")
+    is GeometrischesKoordinatensystem -> BenannteMenge("koordinatensysteme_${ausdruck.raum.id}", "\\mathcal{K}(${ausdruck.raum.id})")
+    is GeometrieStruktur -> BenannteMenge("geometriestrukturen_${ausdruck.raum.id}", "\\mathcal{C}(${ausdruck.raum.id})")
+    is GeometrischeTransformation -> BenannteMenge("geometrietransformationen", "\\operatorname{Trans}_{G}")
     is Funktion, is GebundeneFunktion, is Mächtigkeit ->
         error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
 }
@@ -69,5 +74,7 @@ private fun inferiereElementMenge(
     is IterierteVereinigung -> menge.methode.grundMengeFürMengenAusgabe()
     is IterierterSchnitt -> menge.methode.grundMengeFürMengenAusgabe()
     is IteriertesKartesischesProdukt -> Folgenraum(menge.methode.grundMengeFürMengenAusgabe())
+    is GeometrischeTrägermenge -> BenannteMenge("punkte_${menge.objekt.raum.id}", "\\mathcal{P}(${menge.objekt.raum.id})")
+    is KoordinatenBild -> Tupelraum(List(menge.objekt.raum.dimension) { ReelleZahlen })
     is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum -> menge
 }
