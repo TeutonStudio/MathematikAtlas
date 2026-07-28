@@ -47,7 +47,7 @@ object GeometrieKnotenVorlagen {
         GraphGröße(265f, 125f),
         listOf(
             eingang("system", GeometrieAnschlussArten.Koordinatensystem.id, 0),
-            eingang("koordinaten", GeometrieAnschlussArten.KoordinatenTupel.id, 1),
+            eingang("koordinaten", MathematikAnschlussArten.Tupel.id, 1),
             ausgang("punkt", GeometrieAnschlussArten.Punkt.id),
         ),
         mapOf("name" to "A"),
@@ -283,7 +283,7 @@ object GeometrieKnotenVorlagen {
         "Berechnet tupel(Matrix · spalte(tupel)).",
         GraphGröße(285f, 120f),
         listOf(
-            eingang("punkt", GeometrieAnschlussArten.KoordinatenTupel.id, 0),
+            eingang("punkt", MathematikAnschlussArten.Tupel.id, 0),
             eingang("matrix", MathematikAnschlussArten.Matrix.id, 1),
             ausgang("bild", GeometrieAnschlussArten.KoordinatenTupel.id),
         ),
@@ -296,9 +296,9 @@ object GeometrieKnotenVorlagen {
         "Berechnet tupel(Matrix · spalte(punkt) + spalte(translation)).",
         GraphGröße(285f, 135f),
         listOf(
-            eingang("punkt", GeometrieAnschlussArten.KoordinatenTupel.id, 0),
+            eingang("punkt", MathematikAnschlussArten.Tupel.id, 0),
             eingang("matrix", MathematikAnschlussArten.Matrix.id, 1),
-            eingang("translation", GeometrieAnschlussArten.KoordinatenTupel.id, 2),
+            eingang("translation", MathematikAnschlussArten.Tupel.id, 2),
             ausgang("bild", GeometrieAnschlussArten.KoordinatenTupel.id),
         ),
     )
@@ -327,7 +327,7 @@ object GeometrieKnotenVorlagen {
             eingang("quelle", GeometrieAnschlussArten.Raum.id, 0),
             eingang("ziel", GeometrieAnschlussArten.Raum.id, 1),
             eingang("matrix", MathematikAnschlussArten.Matrix.id, 2),
-            eingang("translation", GeometrieAnschlussArten.KoordinatenTupel.id, 3),
+            eingang("translation", MathematikAnschlussArten.Tupel.id, 3),
             ausgang("transformation", GeometrieAnschlussArten.Transformation.id),
         ),
     )

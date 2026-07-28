@@ -432,6 +432,7 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                 val zahlen = sichtbareVorlagen.filter { it.art in setOf("mathematik.zahl", "mathematik.variable") }
                 val tupel = sichtbareVorlagen.filter { it.art == "mathematik.tupel" }
                 val matrizen = sichtbareVorlagen.filter { it.kategorie == "Matrizen" }
+                val geometrie = sichtbareVorlagen.filter { it.kategorie.startsWith("Geometrie:") }
                 val tabs = listOf(
                     KnotenAuswahlTab("Alle", sichtbareVorlagen),
                     KnotenAuswahlTab("Rechnen", sichtbareVorlagen.filter { it.kategorie in rechnenKategorien }),
@@ -442,10 +443,13 @@ private fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     KnotenAuswahlTab("Abbildungen", sichtbareVorlagen.filter { it.kategorie in abbildungsKategorien }),
                     KnotenAuswahlTab("Vektoren", sichtbareVorlagen.filter { it.kategorie == "Vektoren" }),
                     KnotenAuswahlTab("Matrizen", matrizen),
+                    KnotenAuswahlTab("Geometrie", geometrie),
                     KnotenAuswahlTab("Aussagen", sichtbareVorlagen.filter { it.kategorie == "Aussage" || it.kategorie.startsWith("Aussagen:") }),
                     KnotenAuswahlTab("Karten", sichtbareVorlagen.filter { it.kategorie in kartenKategorien }),
                 )
-                val aktiverTab = tabs.firstOrNull { it.name == ausgewählterTab } ?: tabs.first()
+                val aktiverTab = tabs.firstOrNull { it.name == ausgewählterTab && it.anzahl > 0 }
+                    ?: tabs.firstOrNull { it.anzahl > 0 }
+                    ?: tabs.first()
                 PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(aktiverTab), edgePadding = 0.dp) {
                     tabs.forEach { tab ->
                         Tab(
@@ -552,14 +556,18 @@ private val rechnenKategorien = setOf("Rechnen", "Analysis", "Algebra", "Zahlen"
 private val abbildungsKategorien = setOf("Methoden", "Abbildungen")
 private val kartenKategorien = setOf("Gruppen", "Gespeicherte Karten")
 private val kategorienReihenfolge = listOf(
-    "Rechnen", "Mengen", "Mengenrechnung", "Abbildungen", "Vektoren", "Matrizen", "Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate", "Aussage", "Karten",
+    "Rechnen", "Mengen", "Mengenrechnung", "Abbildungen", "Vektoren", "Matrizen",
+    "Geometrie: Räume", "Geometrie: Grundobjekte", "Geometrie: Konstruktionen", "Geometrie: Relationen",
+    "Geometrie: Struktur", "Geometrie: Mengen", "Geometrie: Transformationen", "Geometrie: Darstellung",
+    "Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate", "Aussage", "Karten",
 )
 
-private fun anschlussFarbe(id: String) = when (id) {
-    "mathematik.zahl" -> androidx.compose.ui.graphics.Color(0xFF2563EB)
-    "mathematik.aussage" -> androidx.compose.ui.graphics.Color(0xFF7C3AED)
-    "mathematik.menge" -> androidx.compose.ui.graphics.Color(0xFF059669)
-    "mathematik.vektor", "mathematik.matrix" -> androidx.compose.ui.graphics.Color(0xFFEA580C)
-    "mathematik.funktion" -> androidx.compose.ui.graphics.Color(0xFFDB2777)
+private fun anschlussFarbe(id: String) = when {
+    id.startsWith("mathematik.geometrie.") -> androidx.compose.ui.graphics.Color(0xFF0891B2)
+    id == "mathematik.zahl" -> androidx.compose.ui.graphics.Color(0xFF2563EB)
+    id == "mathematik.aussage" -> androidx.compose.ui.graphics.Color(0xFF7C3AED)
+    id == "mathematik.menge" -> androidx.compose.ui.graphics.Color(0xFF059669)
+    id in setOf("mathematik.vektor", "mathematik.matrix") -> androidx.compose.ui.graphics.Color(0xFFEA580C)
+    id == "mathematik.funktion" -> androidx.compose.ui.graphics.Color(0xFFDB2777)
     else -> androidx.compose.ui.graphics.Color(0xFF475569)
 }
