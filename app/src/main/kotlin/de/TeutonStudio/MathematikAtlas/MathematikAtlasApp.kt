@@ -140,6 +140,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
 
 @Composable
 private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport: () -> Unit) {
+    var umbenennenGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     Row(
         Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -152,11 +153,69 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
         }
         Spacer(Modifier.weight(1f))
         Text("v${zustand.editor.karte.version}", style = MaterialTheme.typography.labelMedium)
+        TextButton(onClick = { umbenennenGeöffnet = true }) { Text("Karte umbenennen") }
         TextButton(onClick = zustand.editor::rückgängig, enabled = zustand.editor.kannRückgängig()) { Text("Rückgängig") }
         TextButton(onClick = zustand.editor::wiederholen, enabled = zustand.editor.kannWiederholen()) { Text("Wiederholen") }
         TextButton(onClick = onImport) { Text("Import") }
         TextButton(onClick = onExport) { Text("Export") }
         Button(onClick = zustand::speichereAktuell) { Text("Speichern") }
+    }
+    if (umbenennenGeöffnet) {
+        NameÄndernDialog(
+            titel = "Karte umbenennen",
+            aktuellerName = zustand.editor.karte.name,
+            schließen = { umbenennenGeöffnet = false },
+            bestätigen = { name ->
+                zustand.ersetzeKarteMitAuswahl(zustand.editor.karte.copy(name = name))
+                zustand.speichereAktuell()
+                umbenennenGeöffnet = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun NameÄndernDialog(
+    titel: String,
+    aktuellerName: String,
+    schließen: () -> Unit,
+    bestätigen: (String) -> Unit,
+) {
+    var text by remember(aktuellerName) { mutableStateOf(aktuellerName) }
+    val bereinigterName = text.trim()
+    AlertDialog(
+        onDismissRequest = schließen,
+        title = { Text(titel) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Name") },
+                singleLine = true,
+                isError = bereinigterName.isEmpty(),
+                supportingText = {
+                    if (bereinigterName.isEmpty()) Text("Der Name darf nicht leer sein.")
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { bestätigen(bereinigterName) },
+                enabled = bereinigterName.isNotEmpty(),
+            ) { Text("Übernehmen") }
+        },
+        dismissButton = { TextButton(onClick = schließen) { Text("Abbrechen") } },
+    )
+}
+
+private fun AtlasZustand.ersetzeKarteMitAuswahl(neueKarte: KartenDaten) {
+    val knoten = editor.ausgewählterKnoten
+    val verbindung = editor.ausgewählteVerbindung
+    editor.ersetzeKarte(neueKarte, historieLeeren = false)
+    when {
+        knoten != null -> editor.wähleKnoten(knoten)
+        verbindung != null -> editor.wähleVerbindung(verbindung)
     }
 }
 
