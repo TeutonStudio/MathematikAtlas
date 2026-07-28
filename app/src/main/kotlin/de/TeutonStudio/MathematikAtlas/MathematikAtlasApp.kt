@@ -304,6 +304,7 @@ private fun KartenListe(zustand: AtlasZustand) {
 private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         val knoten = zustand.ausgewählterKnoten
+        var knotenUmbenennenGeöffnet by remember(knoten?.id) { mutableStateOf(false) }
         Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Inspektor", style = MaterialTheme.typography.headlineSmall)
             if (knoten == null) {
@@ -314,7 +315,32 @@ private fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 }
                 return@Column
             }
-            Text(knoten.name, style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(knoten.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                TextButton(onClick = { knotenUmbenennenGeöffnet = true }) { Text("Umbenennen") }
+            }
+            if (knotenUmbenennenGeöffnet) {
+                NameÄndernDialog(
+                    titel = "Knoten umbenennen",
+                    aktuellerName = knoten.name,
+                    schließen = { knotenUmbenennenGeöffnet = false },
+                    bestätigen = { name ->
+                        zustand.ersetzeKarteMitAuswahl(
+                            zustand.editor.karte.copy(
+                                knoten = zustand.editor.karte.knoten.map { aktuell ->
+                                    if (aktuell.id == knoten.id) aktuell.copy(name = name) else aktuell
+                                },
+                            ),
+                        )
+                        zustand.speichereAktuell()
+                        knotenUmbenennenGeöffnet = false
+                    },
+                )
+            }
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
             KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
                 inspektor.Inhalt(
