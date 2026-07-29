@@ -4,7 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -102,13 +102,14 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     Box(
                         Modifier.fillMaxSize()
                             .pointerInput(zustand.editor.karte.id, werkzeug) {
-                                detectDragGestures { änderung, delta ->
-                                    änderung.consume()
+                                detectTransformGestures { zentrum, pan, zoomFaktor, _ ->
                                     val ansicht = aktuelleAnsicht
                                     zustand.editor.führeAus(
                                         KartenAktion.AnsichtÄndern(
-                                            ansicht.copy(
-                                                verschiebung = ansicht.verschiebung + GraphPunkt(delta.x, delta.y),
+                                            ansicht.transformiereAnsicht(
+                                                zentrum = zentrum,
+                                                pan = pan,
+                                                zoomFaktor = zoomFaktor,
                                             ),
                                         ),
                                         mitHistorie = false,
