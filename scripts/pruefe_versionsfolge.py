@@ -88,9 +88,6 @@ def prüfe_pr(plan: dict, eintrag: dict, event: dict) -> None:
     basis_sha = str(pull_request.get("base", {}).get("sha", ""))
     if not basis_sha:
         fehler("Basis-SHA des Pull Requests fehlt.")
-    if git("merge-base", "--is-ancestor", basis_sha, "HEAD", erforderlich=False) != "":
-        # merge-base --is-ancestor schreibt nichts; der Rückgabecode wird separat geprüft.
-        pass
     ergebnis = subprocess.run(
         ["git", "merge-base", "--is-ancestor", basis_sha, "HEAD"],
         cwd=WURZEL,
