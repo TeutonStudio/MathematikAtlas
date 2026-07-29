@@ -75,6 +75,12 @@
 |---|---|---|---|---|
 | Zusätzliche Kernprüfung lokal nicht möglich | `scripts/pruefe_kern.py` beendet sich mit Code 2, weil `kotlinc` fehlt | Die eigenständige Compiler-/Kernprüfung ist nicht bestätigt | lokale Laufzeitumgebung | Nein |
 
+## Neuere, noch nicht vollständig verifizierte Änderungen
+
+| Datum | Änderung | ExecPlan | Prüfstatus |
+|---|---|---|---|
+| 2026-07-29 | v2.3.10 ergänzt neun Knoten für Primzahlen, gaußsche Zahlen und Primzahlen, Potenz- und Abbildungsmengen, Vektor-, Matrix- und Tensorräume sowie `ℤ/nℤ`. | `plans/completed/2026-07-29-v2.3.10-mengenraeume.md` | Quellcode, Verträge und ergänzte Tests statisch geprüft; Gradle-Test und APK-Build in der Connector-Umgebung mangels lokalem Checkout nicht ausgeführt. |
+
 ## Zuletzt abgeschlossene größere Änderungen
 
 | Datum | Änderung | ExecPlan oder ADR | Prüfstatus |
