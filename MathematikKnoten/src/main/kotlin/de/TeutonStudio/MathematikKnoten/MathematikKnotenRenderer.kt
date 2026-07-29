@@ -77,7 +77,7 @@ class MathematikKnotenRenderer(
             "mathematik.iteriertesKartesischesProdukt" -> "\\mathop{\\times}"
             else -> "\\bigcap"
         }
-        return "${zeichen}_{${parameter} \\in $indexMenge} $name($parameter)"
+        return "${zeichen}_{$parameter \\in $indexMenge} $name($parameter)"
     }
 
     private fun extremwertFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
