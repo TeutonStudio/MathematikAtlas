@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
@@ -36,7 +35,7 @@ class MathematikKnotenRenderer(
                 )
                 knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> Text(
                     if (objekt.wert) "Wahr" else "Lüge",
-                    color = if (objekt.wert) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                    color = if (objekt.wert) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 ausgabe != null -> LatexText(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)

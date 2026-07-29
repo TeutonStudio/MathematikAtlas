@@ -6,9 +6,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
@@ -20,9 +23,52 @@ import de.TeutonStudio.MathematikKnoten.LatexText
 
 @Composable
 internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
+    val darstellung = LocalDarstellungsSteuerung.current
+    var darstellungsMenüGeöffnet by remember { mutableStateOf(false) }
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
-            Text("Mathematik Atlas", Modifier.padding(18.dp), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+            Row(
+                Modifier.fillMaxWidth().padding(start = 18.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Mathematik Atlas",
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Box {
+                    TextButton(
+                        onClick = { darstellungsMenüGeöffnet = true },
+                        modifier = Modifier.semantics {
+                            contentDescription = "Darstellung ändern, aktuell ${darstellung.modus.anzeigeName}"
+                        },
+                    ) { Text("◐", style = MaterialTheme.typography.titleLarge) }
+                    DropdownMenu(
+                        expanded = darstellungsMenüGeöffnet,
+                        onDismissRequest = { darstellungsMenüGeöffnet = false },
+                    ) {
+                        DarstellungsModus.entries.forEach { modus ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        RadioButton(
+                                            selected = darstellung.modus == modus,
+                                            onClick = null,
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(modus.anzeigeName)
+                                    }
+                                },
+                                onClick = {
+                                    darstellungsMenüGeöffnet = false
+                                    darstellung.ändereModus(modus)
+                                },
+                            )
+                        }
+                    }
+                }
+            }
             PrimaryScrollableTabRow(selectedTabIndex = zustand.linkerBereich.ordinal, edgePadding = 8.dp) {
                 VerwaltungsBereich.entries.forEach { bereich ->
                     Tab(selected = zustand.linkerBereich == bereich, onClick = { zustand.linkerBereich = bereich }, text = { Text(bereich.name) })
