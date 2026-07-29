@@ -1,0 +1,22 @@
+name: Release-Guard
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  release-pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Releaseplan und Android-Version prüfen
+        run: python3 scripts/pruefe_releaseplan.py
+      - name: Versionsfolge und Pull-Request-Basis prüfen
+        run: python3 scripts/pruefe_versionsfolge.py
