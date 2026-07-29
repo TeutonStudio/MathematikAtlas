@@ -1,0 +1,106 @@
+schema_version = 1
+project = "MathematikAtlas"
+default_branch = "master"
+current_series = "2.3.x"
+current_version = "2.3.13"
+first_guarded_version = "2.3.13"
+
+[[releases]]
+version = "2.3.1"
+title = "Suche im Knoten-erstellen-Dialog zurücksetzen"
+roadmap = "v2.3.x Definitionskarten"
+status = "released"
+
+[[releases]]
+version = "2.3.2"
+title = "Kehrwert, Division und dynamische Falltypen"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.3"
+title = "JSON-Referenzen und Listenbearbeitung"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.4"
+title = "R¹-Visualisierung und kartesische Intervallprodukte"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.5"
+title = "Ganzzahlige Nachfolger und Subtraktion"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.6"
+title = "Display-LaTeX, Brüche und Intervallketten"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.7"
+title = "Ober- und Untersummen reeller Methoden"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.8"
+title = "Dreieckrechner mit Konsistenzprüfung"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.9"
+title = "Vollständige azyklische Definitionskarten"
+roadmap = "v2.3.x Definitionskarten"
+status = "superseded"
+superseded_by = "2.3.11"
+reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht."
+
+[[releases]]
+version = "2.3.10"
+title = "Mengenräume und spezielle Zahlenmengen"
+roadmap = "v2.3.x Definitionskarten"
+status = "released"
+previous_release = "2.3.1"
+
+[[releases]]
+version = "2.3.11"
+title = "v2.3-Integration, Konzeptdialog und JSON-Dialogreparatur"
+roadmap = "v2.3.x Definitionskarten"
+status = "released"
+previous_release = "2.3.10"
+
+[[releases]]
+version = "2.3.12"
+title = "Karteninhalt automatisch in die Ansicht einpassen"
+roadmap = "v2.3.x Definitionskarten"
+status = "released"
+previous_release = "2.3.11"
+
+[[releases]]
+version = "2.3.13"
+title = "Master-Verwalter und Zoom im Verschieben-Modus"
+roadmap = "v2.3.x Definitionskarten und Projektstabilisierung"
+status = "released"
+previous_release = "2.3.12"
+branch = "agent/v2.3.13-master-verwalter"
+kind = "governance"
