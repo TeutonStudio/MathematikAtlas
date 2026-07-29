@@ -1,11 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestDefinitionsKartenTest {
     @Test
@@ -63,5 +59,48 @@ class TestDefinitionsKartenTest {
         sitzung.springeZu(0)
 
         assertEquals(listOf(KonzeptId("addition")), sitzung.pfad.map { it.konzeptId })
+    }
+
+    @Test
+    fun `Kehrwert besitzt eine eigene Definitionskarte`() {
+        val kehrwert = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("kehrwert")))
+        val definition = kehrwert.sortierteReiter.first().karte
+
+        assertTrue(definition.knoten.any { it.art == "mathematik.kehrwert" })
+        assertTrue(definition.knoten.any { it.art == "mathematik.zahl" })
+    }
+
+    @Test
+    fun `Division wird ohne zirkulären Divisionsknoten definiert`() {
+        val division = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("division")))
+        val definition = division.reiter("definition").karte
+
+        assertTrue(definition.knoten.any { it.art == "mathematik.kehrwert" })
+        assertTrue(definition.knoten.any { it.art == "mathematik.multiplikation" })
+        assertTrue(definition.knoten.any { it.art == "mathematik.fall" })
+        assertFalse(definition.knoten.any { it.art == "mathematik.division" })
+    }
+
+    @Test
+    fun `Divisionsdefinition wählt bei Nenner null den Ersatzwert`() {
+        val definition = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("division"))).reiter("definition").karte
+        val fall = definition.knoten.single { it.art == "mathematik.fall" }
+        val ersatz = definition.knoten.single { it.parameter["name"] == "falls Nenner null" }
+        val produkt = definition.knoten.single { it.art == "mathematik.multiplikation" }
+        val wahr = fall.anschlüsse.single { it.name == "wahr" }.id
+        val lüge = fall.anschlüsse.single { it.name == "lüge" }.id
+
+        assertTrue(definition.verbindungen.any { it.von.knotenId == ersatz.id && it.zu.anschlussId == wahr })
+        assertTrue(definition.verbindungen.any { it.von.knotenId == produkt.id && it.zu.anschlussId == lüge })
+    }
+
+    @Test
+    fun `Komplexer Divisor wird mit der Konjugierten rationalisiert`() {
+        val division = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("division")))
+        val sonderfall = division.reiter("komplexer-divisor").karte
+
+        assertTrue(sonderfall.knoten.any { it.art == "mathematik.konjugierte" })
+        assertEquals(3, sonderfall.knoten.count { it.art == "mathematik.multiplikation" })
+        assertTrue(sonderfall.knoten.any { it.art == "mathematik.kehrwert" })
     }
 }

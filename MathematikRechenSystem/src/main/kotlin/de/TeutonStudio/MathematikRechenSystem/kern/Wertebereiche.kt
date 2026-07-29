@@ -74,6 +74,14 @@ private fun inferiereElementMenge(
     is IterierteVereinigung -> menge.methode.grundMengeFürMengenAusgabe()
     is IterierterSchnitt -> menge.methode.grundMengeFürMengenAusgabe()
     is IteriertesKartesischesProdukt -> Folgenraum(menge.methode.grundMengeFürMengenAusgabe())
+    is MengenFallAusdruck -> when (menge.aussage.entscheide(RechenKontext(annahmen)).wahrheitswert) {
+        Wahrheitswert.Wahr -> inferiereElementMenge(menge.wahr, werteVorräte, annahmen + menge.aussage)
+        Wahrheitswert.Lüge -> inferiereElementMenge(menge.lüge, werteVorräte, annahmen + Negation(menge.aussage))
+        null -> vereinige(listOf(
+            inferiereElementMenge(menge.wahr, werteVorräte, annahmen + menge.aussage),
+            inferiereElementMenge(menge.lüge, werteVorräte, annahmen + Negation(menge.aussage)),
+        ))
+    }
     is GeometrischeTrägermenge -> BenannteMenge("punkte_${menge.objekt.raum.id}", "\\mathcal{P}(${menge.objekt.raum.id})")
     is KoordinatenBild -> Tupelraum(List(menge.objekt.raum.dimension) { ReelleZahlen })
     is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum -> menge

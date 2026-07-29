@@ -26,6 +26,11 @@ data class AnschlussDaten(
      * Ohne verbundene Quelle bleibt [art] der konservative Fallback.
      */
     val artFolgtEingang: String? = null,
+    /**
+     * Namen mehrerer Eingänge desselben Knotens, deren effektive Arten zur kleinsten gemeinsamen
+     * Oberart vereinigt werden. Ohne verbundene Quellen oder gemeinsame Oberart bleibt [art] der Fallback.
+     */
+    val artVereinigtEingänge: List<String> = emptyList(),
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)
