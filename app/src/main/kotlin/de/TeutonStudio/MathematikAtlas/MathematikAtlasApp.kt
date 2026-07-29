@@ -16,9 +16,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -38,6 +41,7 @@ private enum class KartenWerkzeug { Auswahl, Verschieben }
 @Composable
 fun MathematikAtlasApp(zustand: AtlasZustand) {
     val context = LocalContext.current
+    val dichte = LocalDensity.current
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let { context.contentResolver.openOutputStream(it)?.bufferedWriter()?.use { w -> w.write(zustand.speicher.exportiere(zustand.editor.karte)) } }
     }
@@ -46,6 +50,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     }
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
     var werkzeug by remember { mutableStateOf(KartenWerkzeug.Auswahl) }
+    var editorGröße by remember { mutableStateOf(IntSize.Zero) }
     val aktuelleAnsicht by rememberUpdatedState(zustand.editor.karte.ansicht)
 
     LaunchedEffect(zustand.editor.karte) {
@@ -68,7 +73,10 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                 onExport = { export.launch("${zustand.editor.karte.name}.json") },
             )
             HorizontalDivider()
-            Box(Modifier.weight(1f).fillMaxWidth()) {
+            Box(
+                Modifier.weight(1f).fillMaxWidth()
+                    .onSizeChanged { editorGröße = it },
+            ) {
                 KnotenKartenEditor(
                     zustand = zustand.editor,
                     modifier = Modifier.fillMaxSize(),
@@ -120,7 +128,21 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                         editor = zustand.editor,
                         werkzeug = werkzeug,
                         onWerkzeug = { werkzeug = it },
-                        modifier = Modifier.width(104.dp).height(120.dp),
+                        inhaltEinpassenAktiv = zustand.editor.karte.knoten.isNotEmpty() &&
+                            editorGröße.width > 0 && editorGröße.height > 0,
+                        onInhaltEinpassen = {
+                            zustand.editor.karte.ansichtFürInhalt(
+                                anzeigeGröße = editorGröße,
+                                dichte = dichte.density,
+                                pufferPx = with(dichte) { 40.dp.toPx() },
+                            )?.let { ansicht ->
+                                zustand.editor.führeAus(
+                                    KartenAktion.AnsichtÄndern(ansicht),
+                                    mitHistorie = false,
+                                )
+                            }
+                        },
+                        modifier = Modifier.width(152.dp).height(120.dp),
                     )
                     Spacer(Modifier.width(180.dp).height(120.dp))
                 }
@@ -336,6 +358,8 @@ private fun KartenWerkzeuge(
     editor: KartenEditorZustand,
     werkzeug: KartenWerkzeug,
     onWerkzeug: (KartenWerkzeug) -> Unit,
+    inhaltEinpassenAktiv: Boolean,
+    onInhaltEinpassen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier, shape = MaterialTheme.shapes.medium, tonalElevation = 3.dp) {
@@ -373,6 +397,12 @@ private fun KartenWerkzeuge(
                     aktiv = werkzeug == KartenWerkzeug.Verschieben,
                     onClick = { onWerkzeug(KartenWerkzeug.Verschieben) },
                 )
+                KartenWerkzeugKnopf(
+                    symbol = "⛶",
+                    beschreibung = "Gesamten Karteninhalt anzeigen",
+                    aktiviert = inhaltEinpassenAktiv,
+                    onClick = onInhaltEinpassen,
+                )
             }
         }
     }
@@ -396,6 +426,45 @@ private fun KartenWerkzeugKnopf(
     ) {
         Text(symbol, style = MaterialTheme.typography.titleMedium)
     }
+}
+
+private fun KartenDaten.ansichtFürInhalt(
+    anzeigeGröße: IntSize,
+    dichte: Float,
+    pufferPx: Float,
+): AnsichtsFenster? {
+    val ersterKnoten = knoten.firstOrNull() ?: return null
+    if (anzeigeGröße.width <= 0 || anzeigeGröße.height <= 0 || dichte <= 0f) return null
+
+    var links = ersterKnoten.position.x
+    var oben = ersterKnoten.position.y
+    var rechts = ersterKnoten.position.x + ersterKnoten.größe.breite
+    var unten = ersterKnoten.position.y + ersterKnoten.größe.höhe
+    knoten.drop(1).forEach { knoten ->
+        links = minOf(links, knoten.position.x)
+        oben = minOf(oben, knoten.position.y)
+        rechts = maxOf(rechts, knoten.position.x + knoten.größe.breite)
+        unten = maxOf(unten, knoten.position.y + knoten.größe.höhe)
+    }
+
+    val verfügbareBreite = (anzeigeGröße.width.toFloat() - 2f * pufferPx).coerceAtLeast(1f)
+    val verfügbareHöhe = (anzeigeGröße.height.toFloat() - 2f * pufferPx).coerceAtLeast(1f)
+    val inhaltsBreitePx = ((rechts - links) * dichte).coerceAtLeast(1f)
+    val inhaltsHöhePx = ((unten - oben) * dichte).coerceAtLeast(1f)
+    val zoom = minOf(
+        verfügbareBreite / inhaltsBreitePx,
+        verfügbareHöhe / inhaltsHöhePx,
+    ).coerceIn(0.25f, 3.5f)
+    val mitteX = (links + rechts) / 2f
+    val mitteY = (oben + unten) / 2f
+
+    return AnsichtsFenster(
+        verschiebung = GraphPunkt(
+            anzeigeGröße.width / 2f - mitteX * dichte * zoom,
+            anzeigeGröße.height / 2f - mitteY * dichte * zoom,
+        ),
+        zoom = zoom,
+    )
 }
 
 @Composable
