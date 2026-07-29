@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.3.x"
-current_version = "2.3.13"
+current_version = "2.3.15"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -104,3 +104,19 @@ status = "released"
 previous_release = "2.3.12"
 branch = "agent/v2.3.13-master-verwalter"
 kind = "governance"
+
+[[releases]]
+version = "2.3.14"
+title = "Nicht belegte Versionsnummer"
+roadmap = "v2.3.x Definitionskarten und Projektstabilisierung"
+status = "skipped"
+reason = "Die Darkmode-Umsetzung wurde auf ausdrücklichen Nutzerwunsch als v2.3.15 beauftragt."
+
+[[releases]]
+version = "2.3.15"
+title = "Darkmode und Darstellungseinstellungen"
+roadmap = "v2.3.x Definitionskarten und Projektstabilisierung"
+status = "released"
+previous_release = "2.3.13"
+branch = "agent/v2.3.15-darkmode"
+kind = "feature"
