@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 
@@ -23,6 +25,16 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     onValueChange = zustand::setzeSuchText,
                     label = { Text("Knoten suchen") },
                     supportingText = { Text("Name, Kategorie oder Beschreibung") },
+                    trailingIcon = {
+                        if (zustand.suchText.isNotEmpty()) {
+                            IconButton(
+                                onClick = { zustand.setzeSuchText("") },
+                                modifier = Modifier.semantics { contentDescription = "Suche zurücksetzen" },
+                            ) {
+                                Text("×", style = MaterialTheme.typography.titleLarge)
+                            }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 val sichtbareVorlagen = zustand.sichtbareVorlagen()
