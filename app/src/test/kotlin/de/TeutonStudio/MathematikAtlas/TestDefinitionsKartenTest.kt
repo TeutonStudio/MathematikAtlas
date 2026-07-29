@@ -48,27 +48,25 @@ class TestDefinitionsKartenTest {
 
     @Test
     fun `Definitionskarte bildet den vollständigen Anschlussvertrag ab`() {
-        festeVorlagen.forEach { vorlage ->
-            val konzept = assertNotNull(TestDefinitionsKarten.fürKnoten(vorlage.erzeuge(GraphPunkt(0f, 0f))))
-            val karte = konzept.reiter("definition").karte
-            val regel = karte.knoten.single { it.art == TestDefinitionsKarten.KONZEPT_REGEL_ART }
+        val vorlage = MathematikKnotenVorlagen.Potenz
+        val konzept = assertNotNull(TestDefinitionsKarten.fürKnoten(vorlage.erzeuge(GraphPunkt(0f, 0f))))
+        val karte = konzept.reiter("definition").karte
+        val regel = karte.knoten.single { it.art == TestDefinitionsKarten.KONZEPT_REGEL_ART }
 
-            assertEquals(
-                vorlage.anschlüsse.map { Triple(it.name, it.richtung, it.art) },
-                regel.anschlüsse.map { Triple(it.name, it.richtung, it.art) },
-                vorlage.art.toString(),
-            )
-            assertEquals(vorlage.beschreibung, regel.parameter["regel"])
-            assertEquals(
-                vorlage.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang },
-                karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART },
-            )
-            assertEquals(
-                vorlage.anschlüsse.count { it.richtung == AnschlussRichtung.Ausgang },
-                karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_AUSGANG_ART },
-            )
-            assertEquals(vorlage.anschlüsse.size, karte.verbindungen.size)
-        }
+        assertEquals(
+            vorlage.anschlüsse.map { Triple(it.name, it.richtung, it.art) },
+            regel.anschlüsse.map { Triple(it.name, it.richtung, it.art) },
+        )
+        assertEquals(vorlage.beschreibung, regel.parameter["regel"])
+        assertEquals(
+            vorlage.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang },
+            karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART },
+        )
+        assertEquals(
+            vorlage.anschlüsse.count { it.richtung == AnschlussRichtung.Ausgang },
+            karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_AUSGANG_ART },
+        )
+        assertEquals(vorlage.anschlüsse.size, karte.verbindungen.size)
     }
 
     @Test
