@@ -5,9 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
-import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
@@ -20,13 +18,14 @@ interface KnotenInspektor {
 }
 interface KnotenInspektorAktionen {
     fun parameter(schlüssel: String, wert: String)
-    fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
+    fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>)
     fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
         "mathematik.visualisierung" to VisualisierungsInspektor,
+        "mathematik.reelleMethodenSumme" to ReelleMethodenSummeInspektor,
         "mathematik.kartenEingang" to KartenSchnittstellenInspektor,
         "mathematik.kartenAusgang" to KartenSchnittstellenInspektor,
         "mathematik.variable" to VariablenInspektor,
@@ -48,9 +47,7 @@ private object AllgemeineParameterInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "a") { aktionen.parameter("name", it.trim()) }
         val bereich = WertebereichKonfiguration.vonEigenschaft(knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT])
-        WertebereichEditor(bereich) { neu ->
-            aktionen.eigenschaften(knoten.eigenschaften + (WertebereichKonfiguration.EIGENSCHAFT to neu.zuEigenschaft()))
-        }
+        WertebereichEditor(bereich) { neu -> aktionen.eigenschaften(knoten.eigenschaften + (WertebereichKonfiguration.EIGENSCHAFT to neu.zuEigenschaft())) }
         Text("Der Wertebereich bestimmt die Zielmenge von Term zu Methode.", style = MaterialTheme.typography.bodySmall)
         Fehler(ergebnis)
     }
@@ -76,6 +73,30 @@ private object TermZuMethodeInspektor : KnotenInspektor {
                 }, enabled = index < parameter.lastIndex) { Text("↓") }
             }
         }
+        Fehler(ergebnis)
+    }
+}
+
+private object ReelleMethodenSummeInspektor : KnotenInspektor {
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        val art = knoten.parameter["summenArt"] ?: "untersumme"
+        val bereich = knoten.parameter["bereichsArt"] ?: "grenzen"
+        Text("Summenart", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            FilterChip(art == "untersumme", { aktionen.parameter("summenArt", "untersumme") }, label = { Text("Untersumme") })
+            FilterChip(art == "obersumme", { aktionen.parameter("summenArt", "obersumme") }, label = { Text("Obersumme") })
+        }
+        Text("Bereichseingabe", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            FilterChip(bereich == "grenzen", { aktionen.parameter("bereichsArt", "grenzen") }, label = { Text("Min / Max") })
+            FilterChip(bereich == "intervall", { aktionen.parameter("bereichsArt", "intervall") }, label = { Text("Intervall") })
+        }
+        Text(
+            if (bereich == "intervall") "Verwendet den Eingang „intervall“; Minimum und Maximum werden ignoriert."
+            else "Verwendet die Zahleneingänge „minimum“ und „maximum“; der Intervalleingang wird ignoriert.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text("Die Partitionsanzahl muss in ℕ liegen; 0 ist ausgeschlossen.", style = MaterialTheme.typography.bodySmall)
         Fehler(ergebnis)
     }
 }
@@ -148,9 +169,7 @@ private object KartenSchnittstellenInspektor : KnotenInspektor {
                 modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
             )
             ExposedDropdownMenu(expanded = geöffnet, onDismissRequest = { geöffnet = false }) {
-                MathematikAnschlussArten.alle.forEach { art ->
-                    DropdownMenuItem(text = { Text(art.name) }, onClick = { geöffnet = false; aktionen.anschlussArt(AnschlussVerweis(knoten.id, wertAnschluss.id), art.id) })
-                }
+                MathematikAnschlussArten.alle.forEach { art -> DropdownMenuItem(text = { Text(art.name) }, onClick = { geöffnet = false; aktionen.anschlussArt(AnschlussVerweis(knoten.id, wertAnschluss.id), art.id) }) }
             }
         }
         Text("Der Typ gilt für den Anschluss „wert“ und wird von Gruppenknoten übernommen.", style = MaterialTheme.typography.bodySmall)

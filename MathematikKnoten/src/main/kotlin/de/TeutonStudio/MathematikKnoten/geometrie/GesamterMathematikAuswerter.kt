@@ -8,6 +8,7 @@ object GesamterMathematikAuswerter {
         registriereDivisionUndKehrwert()
         registriereSubtraktion()
         registriereOptimierteKonjunktion()
+        registriereReelleMethodenSumme()
         registriereGeometrieGrundobjekte()
         registriereGeometrieRelationen()
         registriereGeometrieTransformationen()
