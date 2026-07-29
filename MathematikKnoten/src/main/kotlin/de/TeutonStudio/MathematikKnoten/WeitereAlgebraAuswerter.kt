@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
@@ -27,3 +28,38 @@ internal fun MathematikAuswerterRegister.registriereSubtraktion() {
         ))
     }
 }
+
+/** Ersetzt Intervallkonjunktionen wie `x < max ∧ min < x` durch die äquivalente Kettendarstellung. */
+internal fun MathematikAuswerterRegister.registriereOptimierteKonjunktion() {
+    registriere("mathematik.konjunktion") { k ->
+        val werte = k.knoten.anschlüsse
+            .filter { it.richtung == AnschlussRichtung.Eingang }
+            .sortedBy { it.reihenfolge }
+            .mapNotNull { k.eingänge[it.name] }
+        val aussagen = werte.map { it.objekt as? Aussage ?: error("Konjunktion benötigt Aussagen.") }
+        require(aussagen.size >= 2) { "Mindestens zwei Aussagen müssen verbunden sein." }
+        val annahmen = werte.flatMap { it.annahmen }.toSet()
+        KnotenAuswertungsErgebnis(mapOf(
+            "aussage" to BedingterWert(
+                objekt = Konjunktion(aussagen),
+                annahmen = annahmen,
+                reelleVariablen = reelleVariablen(werte),
+                latexDarstellung = intervallKette(aussagen),
+            ),
+        ))
+    }
+}
+
+private fun intervallKette(aussagen: List<Aussage>): String? {
+    if (aussagen.size != 2) return null
+    val a = aussagen[0] as? Vergleich ?: return null
+    val b = aussagen[1] as? Vergleich ?: return null
+    if (a.art !in ordnungsVergleiche || b.art !in ordnungsVergleiche) return null
+    return when {
+        a.links == b.rechts -> "${b.links.zuLatex()} ${b.art.latex} ${a.links.zuLatex()} ${a.art.latex} ${a.rechts.zuLatex()}"
+        a.rechts == b.links -> "${a.links.zuLatex()} ${a.art.latex} ${a.rechts.zuLatex()} ${b.art.latex} ${b.rechts.zuLatex()}"
+        else -> null
+    }
+}
+
+private val ordnungsVergleiche = setOf(VergleichsArt.Kleiner, VergleichsArt.KleinerGleich)

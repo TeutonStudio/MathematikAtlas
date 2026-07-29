@@ -7,6 +7,7 @@ object GesamterMathematikAuswerter {
     fun erzeugeRegister(): MathematikAuswerterRegister = StandardMathematikAuswerter.erzeugeRegister().apply {
         registriereDivisionUndKehrwert()
         registriereSubtraktion()
+        registriereOptimierteKonjunktion()
         registriereGeometrieGrundobjekte()
         registriereGeometrieRelationen()
         registriereGeometrieTransformationen()
