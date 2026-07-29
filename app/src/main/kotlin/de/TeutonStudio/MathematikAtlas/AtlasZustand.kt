@@ -202,7 +202,8 @@ class AtlasZustand(context: Context) {
         if (aktiveKnotenKategorie() == null) ausgewählteKnotenKategorie = null
     }
 
-    private fun alleKnotenVorlagen(): List<KnotenVorlage> = MathematikKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle + gruppenVorlagen()
+    private fun alleKnotenVorlagen(): List<KnotenVorlage> =
+        MathematikKnotenVorlagen.alle + ErweiterteMathematikKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle + gruppenVorlagen()
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }
