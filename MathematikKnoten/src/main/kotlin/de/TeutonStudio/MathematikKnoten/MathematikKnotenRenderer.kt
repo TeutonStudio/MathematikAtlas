@@ -20,6 +20,10 @@ class MathematikKnotenRenderer(
     @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         val ergebnis = ergebnisFür(knoten)
         when (knoten.art) {
+            "konzept.regel", "konzept.eingang", "konzept.ausgang" -> {
+                KonzeptDokumentationsKnoten(knoten)
+                return
+            }
             "mathematik.reelleMethodenSumme" -> {
                 Box(Modifier.fillMaxSize().padding(12.dp)) { ReelleMethodenSummeInhalt(ergebnis) }
                 return
@@ -113,5 +117,32 @@ class MathematikKnotenRenderer(
     private companion object {
         val iterativeArten = setOf("mathematik.iterierteSumme", "mathematik.iteriertesProdukt", "mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt", "mathematik.iteriertesKartesischesProdukt")
         val mengenIterationsArten = setOf("mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt")
+    }
+}
+
+@Composable
+private fun KonzeptDokumentationsKnoten(knoten: KnotenDaten) {
+    Column(
+        Modifier.fillMaxSize().padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        when (knoten.art) {
+            "konzept.regel" -> {
+                Text(knoten.name, style = MaterialTheme.typography.titleMedium)
+                Text(knoten.parameter["regel"].orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                Text(knoten.parameter["knotenArt"].orEmpty(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            "konzept.eingang" -> {
+                Text("Eingang", style = MaterialTheme.typography.labelLarge)
+                Text(knoten.name, style = MaterialTheme.typography.titleMedium)
+                Text(knoten.parameter["typ"].orEmpty(), style = MaterialTheme.typography.bodySmall)
+                if (knoten.parameter["variabel"] == "true") Text("erweiterbar", style = MaterialTheme.typography.labelSmall)
+            }
+            else -> {
+                Text("Ausgang", style = MaterialTheme.typography.labelLarge)
+                Text(knoten.name, style = MaterialTheme.typography.titleMedium)
+                Text(knoten.parameter["typ"].orEmpty(), style = MaterialTheme.typography.bodySmall)
+            }
+        }
     }
 }
