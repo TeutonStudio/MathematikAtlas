@@ -7,9 +7,12 @@ Diese Dateien bilden das versionierte Projektgedächtnis und den Workflow für C
 | Datei oder Verzeichnis | Zweck |
 |---|---|
 | `/AGENTS.md` | Kurze, automatisch geladene Repository-Regeln |
-| `/.codex/config.toml` | Projektweite Multi-Agent-Konfiguration |
-| `/.codex/agents/` | Tatsächliche Codex-Subagenten |
+| `/.codex/config.toml` | Projektweite Multi-Agent-Konfiguration, sofern lokal benötigt |
+| `/.codex/agents/` | Tatsächliche Codex-Subagenten einschließlich `master_verwalter` |
 | `/.agents/skills/neuer-knoten/SKILL.md` | Wiederverwendbarer Ablauf für neue Knoten |
+| `/.agents/skills/release-verwalten/SKILL.md` | Verbindlicher Ablauf für Versionen, Branches und master-Integration |
+| `/release/roadmap.toml` | Maschinenlesbarer Versions- und Releasezustand |
+| `/docs/codex/RELEASE_WORKFLOW.md` | Branchmodell, Versionsregeln und Integrationsablauf |
 | `/docs/codex/PROJECT_CONTEXT.md` | Stabile Produkt- und Begriffsgrundlage |
 | `/docs/codex/CURRENT_STATE.md` | Zuletzt verifizierter Istzustand |
 | `/docs/codex/ARCHITECTURE.md` | Architekturgrenzen und Zielprinzipien |
@@ -28,8 +31,9 @@ Kopiere den Inhalt dieses Pakets in das Root-Verzeichnis des Mathematik-Atlas-Re
 Vorhandene Dateien nicht blind überschreiben:
 
 - Eine bestehende `AGENTS.md` zusammenführen.
-- Eine bestehende `.codex/config.toml` um den `[agents]`-Abschnitt ergänzen.
+- Eine bestehende `.codex/config.toml` nur um tatsächlich benötigte Einstellungen ergänzen.
 - Bestehende gleichnamige Agenten prüfen, bevor sie ersetzt werden.
+- Einen vorhandenen Releaseplan nicht aus Vermutungen neu erzeugen, sondern gegen Git und Pull Requests abgleichen.
 
 ## Erstinitialisierung
 
@@ -44,6 +48,18 @@ Danach lässt sich die Konfiguration prüfen:
 ```text
 Fasse die geladenen Repository-Anweisungen zusammen. Nenne die verfügbaren projektspezifischen Subagenten und Skills. Ändere keine Dateien.
 ```
+
+## Release prüfen oder beginnen
+
+Explizit über den Skill:
+
+```text
+$release-verwalten
+
+Prüfe master, offene Pull Requests und release/roadmap.toml. Nenne die nächste zulässige Version, ihren Vorgängerstand und den korrekten Releasebranch. Ändere noch keine Produktionsdateien.
+```
+
+Der `master_verwalter` muss vor jeder Versionsreservierung und vor jedem Merge nach `master` eingesetzt werden. Ein Branchname oder eine Commitnachricht ist kein Beleg dafür, dass eine Version bereits veröffentlicht wurde.
 
 ## Neuen Knoten beauftragen
 
@@ -65,6 +81,7 @@ Verwende den Skill neuer-knoten und entwickle einen Knoten für die Lösungsmeng
 
 - `PROJECT_CONTEXT.md` enthält langfristig stabile Fakten.
 - `CURRENT_STATE.md` enthält den nachweisbaren aktuellen Zustand.
+- `release/roadmap.toml` enthält den maschinenlesbaren Releasezustand.
 - ExecPlans enthalten den Zustand einer konkreten größeren Aufgabe.
 - ADRs enthalten dauerhafte Entscheidungen und ihre Begründung.
 - Flüchtige Sitzungsnotizen gehören nicht in das Projektgedächtnis.

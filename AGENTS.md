@@ -31,10 +31,11 @@ Lies vor Architektur- oder Implementierungsarbeit die für die Aufgabe relevante
 2. `docs/codex/CURRENT_STATE.md`
 3. `docs/codex/ARCHITECTURE.md`
 4. `docs/codex/NODE_CONTRACT.md`
-5. bei neuen Knoten zusätzlich `docs/codex/NEW_NODE_WORKFLOW.md`
-6. bei größeren Änderungen zusätzlich `docs/codex/PLANS.md`
-7. bei Reviews zusätzlich `docs/codex/CODE_REVIEW.md`
-8. bei Tests zusätzlich `docs/codex/TEST_STRATEGY.md`
+5. bei Versions-, Branch- oder Mergearbeit zusätzlich `release/roadmap.toml` und `docs/codex/RELEASE_WORKFLOW.md`
+6. bei neuen Knoten zusätzlich `docs/codex/NEW_NODE_WORKFLOW.md`
+7. bei größeren Änderungen zusätzlich `docs/codex/PLANS.md`
+8. bei Reviews zusätzlich `docs/codex/CODE_REVIEW.md`
+9. bei Tests zusätzlich `docs/codex/TEST_STRATEGY.md`
 
 Dokumente sind Orientierung, nicht Ersatz für Codeprüfung. Wenn Dokumentation und Code einander widersprechen, behandle den Code als aktuellen Istzustand, weise auf den Widerspruch hin und aktualisiere die betroffene Dokumentation im Rahmen der Aufgabe. Ein älterer Verifikationsstand in `CURRENT_STATE.md` darf nicht als Beleg für neuere Commits ausgegeben werden.
 
@@ -77,12 +78,40 @@ Abhängigkeiten dürfen nur in der durch die Gradle-Module vorgegebenen Richtung
 - Halte `docs/codex/CURRENT_STATE.md` nur mit nachweisbaren Fakten aktuell.
 - Halte dauerhafte Architekturentscheidungen als ADR unter `docs/codex/decisions/` fest.
 
+## Release- und Master-Verwaltung
+
+Bei jeder Anfrage, die eine Versionsnummer, einen neuen Branch, einen Pull Request gegen `master` oder eine Veröffentlichung betrifft, verwende den Skill `release-verwalten` und den Agenten `master_verwalter`.
+
+Vor neuer Entwicklungsarbeit mit Versionsnummer:
+
+1. Ermittle den tatsächlichen `master`-HEAD und offene Pull Requests.
+2. Prüfe `release/roadmap.toml` gegen die Git-Historie.
+3. Bestimme die nächste zulässige Version und ihren Vorgängerstand.
+4. Lege Release- und Subbranches ausschließlich nach `docs/codex/RELEASE_WORKFLOW.md` an.
+5. Führe `scripts/pruefe_releaseplan.py` und, in einem Git-Checkout, `scripts/pruefe_versionsfolge.py` aus.
+
+Verbindliche Regeln:
+
+- Keine direkten Produktionscommits auf `master`.
+- Pro Release genau ein finaler Commit mit dem Titel `v<version>` auf `master`.
+- Pro Pull Request gegen `master` genau eine Releaseversion.
+- Keine höhere Version, solange eine niedrigere aktive Version ungeklärt ist.
+- Keine Releasearbeit auf einer veralteten oder falschen Branchbasis.
+- Subbranches bleiben innerhalb ihrer reservierten Version.
+- Android-`versionName`, `versionCode` und `release/roadmap.toml` müssen übereinstimmen.
+- Ein technisch mergebarer Pull Request ist nicht automatisch ein zulässiger Release.
+- Bei einem inkonsistenten Releasezustand wird zuerst ein Reparaturplan erstellt; neue Versionsarbeit bleibt gesperrt.
+
+Der `master_verwalter` verwaltet Versionen, Branches, PR-Basen und Integration. Er ersetzt weder den fachlichen Implementierer noch den unabhängigen Verifizierer.
+
 ## Standardprüfungen
 
 Leite die tatsächlich passenden Befehle aus dem Bestand ab. Der derzeit übliche Prüfpfad ist:
 
 ```bash
 python3 scripts/pruefe_repository.py
+python3 scripts/pruefe_releaseplan.py
+python3 scripts/pruefe_versionsfolge.py
 python3 scripts/pruefe_kern.py
 ./gradlew test
 ./gradlew :app:assembleDebug
@@ -129,7 +158,8 @@ Eine Aufgabe ist nur abgeschlossen, wenn:
 - Persistenz und Migration berücksichtigt wurden, falls Daten verändert wurden,
 - keine unnötigen Duplikate oder parallelen Abstraktionen entstanden sind,
 - Dokumentation und Code denselben Zustand beschreiben,
-- der abschließende Diff auf unbeabsichtigte Änderungen geprüft wurde.
+- der abschließende Diff auf unbeabsichtigte Änderungen geprüft wurde,
+- bei einem Release Versionsplan, Android-Version und Git-Zustand übereinstimmen.
 
 ## Abschlussbericht
 
@@ -139,4 +169,5 @@ Berichte am Ende knapp und überprüfbar:
 2. geänderte zentrale Dateien,
 3. ausgeführte Prüfungen mit Ergebnis,
 4. verbleibende Risiken oder bewusst nicht bearbeitete Punkte,
-5. bei neuen Knoten: Typ-Schlüssel, Anschlüsse, Semantik, Inspector und Persistenz.
+5. bei neuen Knoten: Typ-Schlüssel, Anschlüsse, Semantik, Inspector und Persistenz,
+6. bei Releases: Version, Basis, finaler Commit und Release-Guard-Status.
