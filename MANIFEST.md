@@ -11,7 +11,6 @@ Dieses Manifest beschreibt die versionierten Codex-, Agenten- und Releaseverwalt
 - `.codex/agents/node-implementer.toml`
 - `.codex/agents/node-planner.toml`
 - `.codex/agents/node-verifier.toml`
-- `.codex/config.toml`
 
 ## Repository- und Release-Regeln
 
