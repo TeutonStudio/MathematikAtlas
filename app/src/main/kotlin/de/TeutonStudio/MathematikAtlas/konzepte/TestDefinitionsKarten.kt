@@ -48,6 +48,15 @@ object TestDefinitionsKarten {
 
     private fun konzeptFür(varianten: List<KnotenVorlage>): KonzeptDefinition {
         val erste = varianten.first()
+        return when (erste.art) {
+            "mathematik.zahl" -> SpezielleDefinitionsKarten.zahl()
+            "mathematik.subtraktion" -> SpezielleDefinitionsKarten.subtraktion(erste)
+            else -> generischesKonzept(varianten)
+        }
+    }
+
+    private fun generischesKonzept(varianten: List<KnotenVorlage>): KonzeptDefinition {
+        val erste = varianten.first()
         val reiter = varianten.mapIndexed { index, vorlage ->
             KonzeptReiter(
                 id = if (index == 0) "definition" else "variante-${slug(vorlage.name)}",
@@ -67,7 +76,7 @@ object TestDefinitionsKarten {
         )
     }
 
-    private fun definitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten {
+    internal fun definitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten {
         val prefix = "definition-${slug(vorlage.art.toString())}-${slug(vorlage.name)}-$variantenIndex"
         val eingänge = vorlage.anschlüsse
             .filter { it.richtung == AnschlussRichtung.Eingang }
