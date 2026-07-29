@@ -32,14 +32,15 @@ internal object SpezielleDefinitionsKarten {
         return KonzeptDefinition(
             id = KonzeptId("zahl"),
             name = "Zahl",
-            beschreibung = "Vorzeichen-Ganzzahlen werden als Mengen aufgebaut: 0 = ∅, 1 = {+}, −1 = {−}, positive Nachfolger als {n,+} und negative Nachfolger als {n,−}. Natürliche Zahlen verwenden getrennt die von-Neumann-Konstruktion 0 = ∅ und n+1 = n ∪ {n}.",
+            beschreibung = "Vorzeichen-Ganzzahlen beginnen bei 1 = {+} und −1 = {−}. Jeder weitere Betrag erweitert die bereits aufgebaute Zahl um deren Vorgänger: 3 = {2,1,+}, −6 = {−5,−4,−3,−2,−1,−}. Natürliche Zahlen verwenden getrennt die von-Neumann-Realisierung des Peano-Nachfolgers mit 0 = ∅ und n+1 = n ∪ {n}.",
             pfad = listOf("Grundlagen", "Zahlen"),
             tags = setOf("Zahl", "Nachfolger", "Ganze Zahlen", "Natürliche Zahlen", "Peano", "von Neumann", "Mengen"),
             knotenArten = setOf("mathematik.zahl"),
             reiter = listOf(
                 KonzeptReiter("definition", "Definition", KonzeptReiterRolle.Definition, definition),
-                KonzeptReiter("positiver-nachfolger", "Positiver Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("positiv", "+")),
-                KonzeptReiter("negativer-nachfolger", "Negativer Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("negativ", "−")),
+                KonzeptReiter("ganze-beispiele", "Ganze Zahlen", KonzeptReiterRolle.Beispiel, vorzeichenBeispiele()),
+                KonzeptReiter("positiver-nachfolger", "Positiver Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("positiv")),
+                KonzeptReiter("negativer-nachfolger", "Negativer Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("negativ")),
                 KonzeptReiter("natürliche-beispiele", "Natürliche Zahlen", KonzeptReiterRolle.Beispiel, natürlicheBeispiele()),
                 KonzeptReiter("natürlicher-nachfolger", "Natürlicher Nachfolger", KonzeptReiterRolle.Spezialfall, natürlicherNachfolger()),
                 KonzeptReiter("zahlbereiche", "ℕ, ℕ₀ und ℤ", KonzeptReiterRolle.Äquivalenz, zahlbereiche()),
@@ -78,24 +79,47 @@ internal object SpezielleDefinitionsKarten {
         )
     }
 
-    private fun vorzeichenNachfolger(id: String, operator: String): KartenDaten {
-        val n = schnittstelle("nachfolger-$id-n", "n", MathematikAnschlussArten.Menge.id, true, 30f, 80f)
-        val nMenge = knoten(MathematikKnotenVorlagen.Einzelmenge, "nachfolger-$id-n-menge", 340f, 80f)
-        val op = knoten(MathematikKnotenVorlagen.AllgemeinerParameter, "nachfolger-$id-op", 30f, 280f, mapOf("name" to operator))
-        val opMenge = knoten(MathematikKnotenVorlagen.Einzelmenge, "nachfolger-$id-op-menge", 340f, 280f)
-        val vereinigt = binär(MathematikKnotenVorlagen.Vereinigung, "nachfolger-$id-union", 660f, 170f)
-        val formel = if (id == "positiv") "n+1 = {n,+}" else "n−1 = {n,−}"
-        val aus = schnittstelle("nachfolger-$id-aus", formel, MathematikAnschlussArten.Menge.id, false, 1010f, 170f)
+    private fun vorzeichenBeispiele(): KartenDaten = karte(
+        id = "konzept-zahl-ganze-beispiele",
+        name = "3 = {2,1,+} und −6 = {−5,−4,−3,−2,−1,−}",
+        knoten = listOf(
+            regelHinweis(
+                id = "ganze-beispiel-positiv",
+                name = "Positive ganze Zahl",
+                regel = "3 = {2,1,+}; allgemein enthält n alle positiven Vorgänger bis 1 sowie das Grundelement +.",
+                x = 40f,
+                y = 80f,
+            ),
+            regelHinweis(
+                id = "ganze-beispiel-negativ",
+                name = "Negative ganze Zahl",
+                regel = "−6 = {−5,−4,−3,−2,−1,−}; allgemein enthält −n alle negativen Vorgänger bis −1 sowie das Grundelement −.",
+                x = 520f,
+                y = 80f,
+            ),
+        ),
+        verbindungen = emptyList(),
+    )
+
+    private fun vorzeichenNachfolger(richtung: String): KartenDaten {
+        val n = schnittstelle("nachfolger-$richtung-n", "n", MathematikAnschlussArten.Menge.id, true, 30f, 120f)
+        val nMenge = knoten(MathematikKnotenVorlagen.Einzelmenge, "nachfolger-$richtung-n-menge", 350f, 260f)
+        val vereinigt = binär(MathematikKnotenVorlagen.Vereinigung, "nachfolger-$richtung-union", 680f, 120f)
+        val formel = if (richtung == "positiv") {
+            "n+1 = n ∪ {n}, Basis 1 = {+}"
+        } else {
+            "n−1 = n ∪ {n}, Basis −1 = {−}"
+        }
+        val aus = schnittstelle("nachfolger-$richtung-aus", formel, MathematikAnschlussArten.Menge.id, false, 1030f, 120f)
         return karte(
-            "konzept-zahl-$id",
+            "konzept-zahl-$richtung",
             formel,
-            listOf(n, nMenge, op, opMenge, vereinigt, aus),
+            listOf(n, nMenge, vereinigt, aus),
             listOf(
-                verbindung("nach-$id-1", n, "wert", nMenge, "element"),
-                verbindung("nach-$id-2", op, "wert", opMenge, "element"),
-                verbindung("nach-$id-3", nMenge, "menge", vereinigt, "a"),
-                verbindung("nach-$id-4", opMenge, "menge", vereinigt, "b"),
-                verbindung("nach-$id-5", vereinigt, "menge", aus, "wert"),
+                verbindung("nach-$richtung-1", n, "wert", nMenge, "element"),
+                verbindung("nach-$richtung-2", n, "wert", vereinigt, "a"),
+                verbindung("nach-$richtung-3", nMenge, "menge", vereinigt, "b"),
+                verbindung("nach-$richtung-4", vereinigt, "menge", aus, "wert"),
             ),
         )
     }
@@ -107,10 +131,10 @@ internal object SpezielleDefinitionsKarten {
         val zwei = binär(MathematikKnotenVorlagen.Vereinigung, "nat-zwei", 650f, 80f)
         val nullAusgang = schnittstelle("nat-null-aus", "0 = ∅", MathematikAnschlussArten.Menge.id, false, 1010f, 20f)
         val einsAusgang = schnittstelle("nat-eins-aus", "1 = {0}", MathematikAnschlussArten.Menge.id, false, 1010f, 150f)
-        val zweiAusgang = schnittstelle("nat-zwei-aus", "2 = {0,1}", MathematikAnschlussArten.Menge.id, false, 1010f, 280f)
+        val zweiAusgang = schnittstelle("nat-zwei-aus", "2 = {1,0}", MathematikAnschlussArten.Menge.id, false, 1010f, 280f)
         return karte(
             "konzept-zahl-natürliche-beispiele",
-            "0 = ∅, 1 = {0}, 2 = {0,1}",
+            "0 = ∅, 1 = {0}, 2 = {1,0}",
             listOf(nullMenge, eins, einsMenge, zwei, nullAusgang, einsAusgang, zweiAusgang),
             listOf(
                 verbindung("nat-b-1", nullMenge, "menge", eins, "element"),
@@ -128,10 +152,10 @@ internal object SpezielleDefinitionsKarten {
         val n = schnittstelle("nat-nachfolger-n", "n", MathematikAnschlussArten.Menge.id, true, 30f, 120f)
         val nMenge = knoten(MathematikKnotenVorlagen.Einzelmenge, "nat-nachfolger-einzelmenge", 350f, 260f)
         val vereinigt = binär(MathematikKnotenVorlagen.Vereinigung, "nat-nachfolger-union", 680f, 120f)
-        val aus = schnittstelle("nat-nachfolger-aus", "n+1 = n ∪ {n}", MathematikAnschlussArten.Menge.id, false, 1030f, 120f)
+        val aus = schnittstelle("nat-nachfolger-aus", "n+1 = n ∪ {n}, Basis 0 = ∅", MathematikAnschlussArten.Menge.id, false, 1030f, 120f)
         return karte(
             "konzept-zahl-natürlicher-nachfolger",
-            "n+1 = n ∪ {n}",
+            "n+1 = n ∪ {n}, Basis 0 = ∅",
             listOf(n, nMenge, vereinigt, aus),
             listOf(
                 verbindung("nat-n-1", n, "wert", nMenge, "element"),
@@ -165,6 +189,20 @@ internal object SpezielleDefinitionsKarten {
             ),
         )
     }
+
+    private fun regelHinweis(id: String, name: String, regel: String, x: Float, y: Float) = KnotenDaten(
+        id = KnotenId(id),
+        art = TestDefinitionsKarten.KONZEPT_REGEL_ART,
+        name = name,
+        position = GraphPunkt(x, y),
+        größe = GraphGröße(420f, 180f),
+        anschlüsse = emptyList(),
+        parameter = mapOf(
+            "regel" to regel,
+            "knotenArt" to "Mengendefinition einer ganzen Zahl",
+            "kategorie" to "Grundlagen: Zahlen",
+        ),
+    )
 
     private fun knoten(
         vorlage: KnotenVorlage,
