@@ -54,8 +54,8 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
     }
 
     /**
-     * Liefert die deklarierte Art oder bei [AnschlussDaten.artFolgtEingang] die Art
-     * des tatsächlich mit dem referenzierten Eingang verbundenen Ausgangs.
+     * Liefert die deklarierte Art, die Art eines einzelnen referenzierten Eingangs oder
+     * die kleinste gemeinsame Oberart aller verbundenen Eingänge aus [AnschlussDaten.artVereinigtEingänge].
      */
     fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis): AnschlussArtId =
         effektiveArt(karte, ref, mutableSetOf())
@@ -67,14 +67,28 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
     ): AnschlussArtId {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return AnschlussArtId("unbekannt")
         val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return AnschlussArtId("unbekannt")
-        val eingangsName = anschluss.artFolgtEingang ?: return anschluss.art
+
+        anschluss.artFolgtEingang?.let { eingangsName ->
+            if (!besucht.add(ref)) return anschluss.art
+            val eingang = knoten.anschlüsse.firstOrNull {
+                it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
+            } ?: return anschluss.art
+            val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
+            val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return anschluss.art
+            return effektiveArt(karte, quelle, besucht)
+        }
+
+        if (anschluss.artVereinigtEingänge.isEmpty()) return anschluss.art
         if (!besucht.add(ref)) return anschluss.art
-        val eingang = knoten.anschlüsse.firstOrNull {
-            it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
-        } ?: return anschluss.art
-        val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
-        val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return anschluss.art
-        return effektiveArt(karte, quelle, besucht)
+        val quellArten = anschluss.artVereinigtEingänge.mapNotNull { eingangsName ->
+            val eingang = knoten.anschlüsse.firstOrNull {
+                it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
+            } ?: return@mapNotNull null
+            val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
+            val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return@mapNotNull null
+            effektiveArt(karte, quelle, besucht.toMutableSet())
+        }
+        return arten.gemeinsameOberart(quellArten) ?: anschluss.art
     }
 
     /**
