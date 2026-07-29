@@ -32,21 +32,44 @@ internal object SpezielleDefinitionsKarten {
         return KonzeptDefinition(
             id = KonzeptId("zahl"),
             name = "Zahl",
-            beschreibung = "Vorzeichen-Ganzzahlen beginnen bei 1 = {+} und −1 = {−}. Jeder weitere Betrag erweitert die bereits aufgebaute Zahl um deren Vorgänger: 3 = {2,1,+}, −6 = {−5,−4,−3,−2,−1,−}. Natürliche Zahlen verwenden getrennt die von-Neumann-Realisierung des Peano-Nachfolgers mit 0 = ∅ und n+1 = n ∪ {n}.",
+            beschreibung = "Die elementaren Zahlrepräsentanten sind 0 = ∅, 1 = {+} und −1 = {−}. Die Mengen selbst sind die Zahlen; ihre Mächtigkeit ist nicht ihre Definition.",
             pfad = listOf("Grundlagen", "Zahlen"),
-            tags = setOf("Zahl", "Nachfolger", "Ganze Zahlen", "Natürliche Zahlen", "Peano", "von Neumann", "Mengen"),
+            tags = setOf("Zahl", "Null", "Eins", "Minus Eins", "Vorzeichen", "Mengen"),
             knotenArten = setOf("mathematik.zahl"),
             reiter = listOf(
                 KonzeptReiter("definition", "Definition", KonzeptReiterRolle.Definition, definition),
-                KonzeptReiter("ganze-beispiele", "Ganze Zahlen", KonzeptReiterRolle.Beispiel, vorzeichenBeispiele()),
-                KonzeptReiter("positiver-nachfolger", "Positiver Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("positiv")),
-                KonzeptReiter("negativer-nachfolger", "Negativer Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("negativ")),
-                KonzeptReiter("natürliche-beispiele", "Natürliche Zahlen", KonzeptReiterRolle.Beispiel, natürlicheBeispiele()),
-                KonzeptReiter("natürlicher-nachfolger", "Natürlicher Nachfolger", KonzeptReiterRolle.Spezialfall, natürlicherNachfolger()),
                 KonzeptReiter("zahlbereiche", "ℕ, ℕ₀ und ℤ", KonzeptReiterRolle.Äquivalenz, zahlbereiche()),
             ),
         )
     }
+
+    fun ganzeZahlen(vorlage: KnotenVorlage): KonzeptDefinition = KonzeptDefinition(
+        id = KonzeptId("ganzezahlen"),
+        name = vorlage.name,
+        beschreibung = "Die ganzen Zahlen bestehen aus 0 sowie zwei kumulativen Ästen. Positive Zahlen beginnen bei 1 = {+}, negative bei −1 = {−}; jeder nächste Wert vereinigt die bisherige Zahl mit der Einzelmenge ihres Vorgängers.",
+        pfad = listOf("Grundlagen", "Zahlen", "Ganze Zahlen"),
+        tags = setOf("Ganze Zahlen", "Vorzeichen", "Nachfolger", "Vorgänger", "Mengen"),
+        knotenArten = setOf(vorlage.art),
+        reiter = listOf(
+            KonzeptReiter("definition", "Definition", KonzeptReiterRolle.Definition, ganzeZahlenDefinition()),
+            KonzeptReiter("ganze-beispiele", "Beispiele", KonzeptReiterRolle.Beispiel, vorzeichenBeispiele()),
+            KonzeptReiter("positiver-nachfolger", "Positiver Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("positiv")),
+            KonzeptReiter("negativer-nachfolger", "Negativer Nachfolger", KonzeptReiterRolle.Spezialfall, vorzeichenNachfolger("negativ")),
+        ),
+    )
+
+    fun natürlicheZahlen(vorlage: KnotenVorlage): KonzeptDefinition = KonzeptDefinition(
+        id = KonzeptId("natuerlichezahlen"),
+        name = vorlage.name,
+        beschreibung = "Die natürlichen Zahlen verwenden die von-Neumann-Realisierung des Peano-Nachfolgers: 0 = ∅ und n+1 = n ∪ {n}. Daher gilt 1 = {0} und 2 = {1,0}.",
+        pfad = listOf("Grundlagen", "Zahlen", "Natürliche Zahlen"),
+        tags = setOf("Natürliche Zahlen", "Peano", "von Neumann", "Nachfolger", "Mengen"),
+        knotenArten = setOf(vorlage.art),
+        reiter = listOf(
+            KonzeptReiter("definition", "Definition", KonzeptReiterRolle.Definition, natürlicherNachfolger()),
+            KonzeptReiter("beispiele", "Beispiele", KonzeptReiterRolle.Beispiel, natürlicheBeispiele()),
+        ),
+    )
 
     fun subtraktion(vorlage: KnotenVorlage): KonzeptDefinition {
         val a = knoten(MathematikKnotenVorlagen.Zahl, "sub-z-a", 30f, 50f, mapOf("wert" to "7"))
@@ -78,6 +101,35 @@ internal object SpezielleDefinitionsKarten {
             ),
         )
     }
+
+    private fun ganzeZahlenDefinition(): KartenDaten = karte(
+        id = "konzept-ganze-zahlen-definition",
+        name = "ℤ aus 0 und zwei kumulativen Vorzeichenästen",
+        knoten = listOf(
+            regelHinweis(
+                id = "ganze-definition-null",
+                name = "Null",
+                regel = "0 = ∅",
+                x = 40f,
+                y = 40f,
+            ),
+            regelHinweis(
+                id = "ganze-definition-positiv",
+                name = "Positiver Ast",
+                regel = "Basis 1 = {+}; für n ≥ 1 gilt n+1 = n ∪ {n}.",
+                x = 40f,
+                y = 250f,
+            ),
+            regelHinweis(
+                id = "ganze-definition-negativ",
+                name = "Negativer Ast",
+                regel = "Basis −1 = {−}; für n ≤ −1 gilt n−1 = n ∪ {n}.",
+                x = 520f,
+                y = 250f,
+            ),
+        ),
+        verbindungen = emptyList(),
+    )
 
     private fun vorzeichenBeispiele(): KartenDaten = karte(
         id = "konzept-zahl-ganze-beispiele",
@@ -199,7 +251,7 @@ internal object SpezielleDefinitionsKarten {
         anschlüsse = emptyList(),
         parameter = mapOf(
             "regel" to regel,
-            "knotenArt" to "Mengendefinition einer ganzen Zahl",
+            "knotenArt" to "Mengendefinition einer Zahl",
             "kategorie" to "Grundlagen: Zahlen",
         ),
     )
