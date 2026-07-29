@@ -55,6 +55,7 @@ object KartenJson {
             put("art", a.art.wert); put("reihenfolge", a.reihenfolge)
             put("kannSichErweitern", a.kannSichErweitern); put("dynamischErzeugt", a.dynamischErzeugt)
             a.artFolgtEingang?.let { put("artFolgtEingang", it) }
+            if (a.artVereinigtEingänge.isNotEmpty()) put("artVereinigtEingänge", JSONArray(a.artVereinigtEingänge))
         }) } })
     }
 
@@ -80,6 +81,9 @@ object KartenJson {
                 kannSichErweitern = a.optBoolean("kannSichErweitern", false),
                 dynamischErzeugt = a.optBoolean("dynamischErzeugt", false),
                 artFolgtEingang = a.optString("artFolgtEingang").takeIf(String::isNotBlank),
+                artVereinigtEingänge = a.optJSONArray("artVereinigtEingänge")?.let { namen ->
+                    List(namen.length()) { index -> namen.getString(index) }
+                } ?: emptyList(),
             ) },
             parameter = parameter, eigenschaften = eigenschaften, kartenVerweis = verweis,
         )
