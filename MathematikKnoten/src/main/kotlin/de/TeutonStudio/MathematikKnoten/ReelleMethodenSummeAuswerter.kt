@@ -15,7 +15,6 @@ internal data class ReelleSummenBerechnung(
     val wert: Double,
 )
 
-/** Ober- und Untersummen für einstellige reelle Methoden. */
 internal fun MathematikAuswerterRegister.registriereReelleMethodenSumme() {
     registriere("mathematik.reelleMethodenSumme") { k ->
         val methodenWert = k.eingänge["methode"] ?: error("Eine Methode muss verbunden sein.")
@@ -39,7 +38,6 @@ internal fun MathematikAuswerterRegister.registriereReelleMethodenSumme() {
             "Die Partitionsanzahl muss in ℕ liegen; 0 ist nicht zulässig."
         }
         val partitionen = partitionenZahl.zähler.toInt()
-
         val (minimum, maximum) = grenzen(k)
         require(minimum.isFinite() && maximum.isFinite() && minimum < maximum) {
             "Das Intervall benötigt endliche Grenzen mit Minimum < Maximum."
@@ -50,7 +48,7 @@ internal fun MathematikAuswerterRegister.registriereReelleMethodenSumme() {
         val eingänge = k.eingänge.values
         val annahmen = eingänge.flatMap { it.annahmen }.toSet()
         val symbol = if (art == ReelleSummenArt.Untersumme) "\\underline{S}" else "\\overline{S}"
-        val formel = "$symbol_{${partitionen}}(${methode.name};[${format(minimum)},${format(maximum)}]) \\approx ${format(berechnung.wert)}"
+        val formel = "${symbol}_{${partitionen}}(${methode.name};[${format(minimum)},${format(maximum)}]) \\approx ${format(berechnung.wert)}"
         KnotenAuswertungsErgebnis(mapOf(
             "wert" to BedingterWert(
                 objekt = wert,

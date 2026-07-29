@@ -9,6 +9,7 @@ object GesamterMathematikAuswerter {
         registriereSubtraktion()
         registriereOptimierteKonjunktion()
         registriereReelleMethodenSumme()
+        registriereDreieckRechner()
         registriereGeometrieGrundobjekte()
         registriereGeometrieRelationen()
         registriereGeometrieTransformationen()

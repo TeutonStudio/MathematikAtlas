@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,10 +20,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -46,9 +44,8 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
 
     LaunchedEffect(wert.text) {
         delay(100)
-        val neu = analysiereJson(wert.text)
-        analyse = neu
-        eingeklappt = eingeklappt.intersect(neu.faltungen.mapTo(mutableSetOf()) { it.startOffset })
+        analyse = analysiereJson(wert.text)
+        eingeklappt = eingeklappt.intersect(analyse.faltungen.mapTo(mutableSetOf()) { it.startOffset })
     }
 
     fun formatieren() {
@@ -72,7 +69,11 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
 
     Dialog(
         onDismissRequest = {},
-        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false),
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false,
+        ),
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(.96f).fillMaxHeight(.92f).widthIn(max = 1320.dp),
@@ -108,7 +109,8 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
                     analyse = analyse,
                     eingeklappt = eingeklappt,
                     onFaltung = { faltung ->
-                        eingeklappt = if (faltung.startOffset in eingeklappt) eingeklappt - faltung.startOffset else eingeklappt + faltung.startOffset
+                        eingeklappt = if (faltung.startOffset in eingeklappt) eingeklappt - faltung.startOffset
+                        else eingeklappt + faltung.startOffset
                     },
                     onListePlus = ::listenEintragHinzufügen,
                     übernehmen = ::übernehmen,
@@ -166,9 +168,7 @@ private fun JsonEditor(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(Modifier.fillMaxSize().verticalScroll(vertikal)) {
-            Column(
-                Modifier.width(86.dp).background(farben.zeilenRand).padding(vertical = 8.dp),
-            ) {
+            Column(Modifier.width(86.dp).background(farben.zeilenRand).padding(vertical = 8.dp)) {
                 sichtbareZeilen.forEach { zeile ->
                     val liste = listenNachZeile[zeile.originalZeile]
                     Row(
@@ -182,7 +182,9 @@ private fun JsonEditor(
                                 zeile.eingeklappt -> "▶"
                                 else -> "▼"
                             },
-                            Modifier.width(18.dp).clickable(enabled = zeile.faltung != null) { zeile.faltung?.let(onFaltung) },
+                            Modifier.width(18.dp).clickable(enabled = zeile.faltung != null) {
+                                zeile.faltung?.let(onFaltung)
+                            },
                             color = farben.struktur,
                             fontSize = 10.sp,
                         )
@@ -256,7 +258,11 @@ private fun JsonIdAssistent(
     }
     val optionen = remember(kontext, karte) { idOptionen(kontext, karte) }
     var offen by remember(kontext) { mutableStateOf(false) }
-    Row(modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(
+        modifier.padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Text("${kontext.schlüssel}:", style = MaterialTheme.typography.labelMedium)
         ExposedDropdownMenuBox(expanded = offen, onExpandedChange = { offen = it }, modifier = Modifier.weight(1f)) {
             OutlinedTextField(
@@ -280,8 +286,7 @@ private fun JsonIdAssistent(
                         onClick = {
                             offen = false
                             val neu = wert.text.replaceRange(kontext.wertStart, kontext.wertEnde, option.id)
-                            val cursor = kontext.wertStart + option.id.length
-                            onWertÄnderung(TextFieldValue(neu, TextRange(cursor)))
+                            onWertÄnderung(TextFieldValue(neu, TextRange(kontext.wertStart + option.id.length)))
                         },
                     )
                 }
@@ -346,8 +351,21 @@ internal data class JsonAnalyse(
     val fehler: JsonFehler?,
     val zeilenAnzahl: Int,
 )
-internal data class JsonFaltung(val startOffset: Int, val endeOffset: Int, val startZeile: Int, val endeZeile: Int, val tiefe: Int)
-internal data class JsonListe(val startOffset: Int, val endeOffset: Int, val startZeile: Int, val endeZeile: Int, val tiefe: Int, val schlüssel: String?)
+internal data class JsonFaltung(
+    val startOffset: Int,
+    val endeOffset: Int,
+    val startZeile: Int,
+    val endeZeile: Int,
+    val tiefe: Int,
+)
+internal data class JsonListe(
+    val startOffset: Int,
+    val endeOffset: Int,
+    val startZeile: Int,
+    val endeZeile: Int,
+    val tiefe: Int,
+    val schlüssel: String?,
+)
 internal data class JsonFehler(val meldung: String, val offset: Int?, val zeile: Int?, val spalte: Int?)
 internal data class JsonPosition(val zeile: Int, val spalte: Int)
 internal data class JsonSichtbareZeile(val originalZeile: Int, val faltung: JsonFaltung?, val eingeklappt: Boolean)
@@ -362,9 +380,11 @@ internal data class JsonIdKontext(
 private data class JsonIdOption(val id: String, val titel: String)
 
 internal fun analysiereJson(text: String): JsonAnalyse {
-    val struktur = analysiereJsonStruktur(text)
-    val fehler = runCatching { KartenJson.lese(text) }.exceptionOrNull()?.let { jsonFehler(text, it.message ?: it::class.simpleName.orEmpty()) }
-    return JsonAnalyse(struktur.first, struktur.second, fehler, text.count { it == '\n' } + 1)
+    val (faltungen, listen) = analysiereJsonStruktur(text)
+    val fehler = runCatching { KartenJson.lese(text) }.exceptionOrNull()?.let {
+        jsonFehler(text, it.message ?: it::class.simpleName.orEmpty())
+    }
+    return JsonAnalyse(faltungen, listen, fehler, text.count { it == '\n' } + 1)
 }
 
 internal fun analysiereJsonFaltungen(text: String): List<JsonFaltung> = analysiereJsonStruktur(text).first
@@ -406,9 +426,7 @@ private fun analysiereJsonStruktur(text: String): Pair<List<JsonFaltung>, List<J
                     val offen = stapel.lastOrNull()
                     if (offen?.zeichen == erwartet) {
                         stapel.removeAt(stapel.lastIndex)
-                        if (offen.zeile < zeile) {
-                            faltungen += JsonFaltung(offen.offset, index, offen.zeile, zeile, offen.tiefe)
-                        }
+                        if (offen.zeile < zeile) faltungen += JsonFaltung(offen.offset, index, offen.zeile, zeile, offen.tiefe)
                         if (zeichen == ']') listen += JsonListe(offen.offset, index, offen.zeile, zeile, offen.tiefe, offen.schlüssel)
                     }
                     letzterSchlüssel = null
@@ -423,7 +441,11 @@ private fun analysiereJsonStruktur(text: String): Pair<List<JsonFaltung>, List<J
     return faltungen.sortedBy { it.startOffset } to listen.sortedBy { it.startOffset }
 }
 
-internal fun sichtbareJsonZeilen(zeilenAnzahl: Int, faltungen: List<JsonFaltung>, eingeklappt: Set<Int>): List<JsonSichtbareZeile> {
+internal fun sichtbareJsonZeilen(
+    zeilenAnzahl: Int,
+    faltungen: List<JsonFaltung>,
+    eingeklappt: Set<Int>,
+): List<JsonSichtbareZeile> {
     val nachStart = faltungen.groupBy(JsonFaltung::startZeile).mapValues { (_, werte) -> werte.maxBy(JsonFaltung::endeZeile) }
     val ergebnis = mutableListOf<JsonSichtbareZeile>()
     var zeile = 1
@@ -445,12 +467,15 @@ internal fun offsetZuZeileSpalte(text: String, offset: Int): JsonPosition {
 }
 
 internal fun jsonIdKontext(text: String, cursor: Int): JsonIdKontext? {
-    val regex = Regex("\\\"(knotenId|anschlussId)\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"")
-    val treffer = regex.findAll(text).firstOrNull { cursor in it.groups[2]!!.range.first..(it.groups[2]!!.range.last + 1) } ?: return null
+    val regex = Regex("\"(knotenId|anschlussId)\"\\s*:\\s*\"([^\"]*)\"")
+    val treffer = regex.findAll(text).firstOrNull {
+        cursor in it.groups[2]!!.range.first..(it.groups[2]!!.range.last + 1)
+    } ?: return null
     val wertGruppe = treffer.groups[2]!!
     val objektStart = text.lastIndexOf('{', treffer.range.first).coerceAtLeast(0)
     val objektText = text.substring(objektStart, treffer.range.first)
-    val knotenId = Regex("\\\"knotenId\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"").findAll(objektText).lastOrNull()?.groupValues?.get(1)
+    val knotenId = Regex("\"knotenId\"\\s*:\\s*\"([^\"]+)\"")
+        .findAll(objektText).lastOrNull()?.groupValues?.get(1)
     return JsonIdKontext(
         schlüssel = treffer.groupValues[1],
         aktuellerWert = treffer.groupValues[2],
@@ -488,32 +513,31 @@ internal fun fügeJsonListenEintragEin(text: String, liste: JsonListe, karte: Ka
         "$ohneRechts,\n$kinderEinzug$vorlage$rest"
     }
     val neu = text.replaceRange(innenStart, innenEnde, ersetzt)
-    val cursor = innenStart + ersetzt.indexOf(vorlage) + vorlage.length
-    return JsonEinfügung(neu, cursor)
+    return JsonEinfügung(neu, innenStart + ersetzt.indexOf(vorlage) + vorlage.length)
 }
 
 private fun jsonListenVorlage(schlüssel: String?, karte: KartenDaten): String = when (schlüssel) {
     "knotenIds" -> "\"${karte.knoten.firstOrNull()?.id?.wert.orEmpty()}\""
     "artVereinigtEingänge" -> "\"wahr\""
     "knoten" -> """{
-      \"id\": \"${UUID.randomUUID()}\",
-      \"art\": \"mathematik.zahl\",
-      \"name\": \"Neuer Knoten\",
-      \"position\": { \"x\": 0, \"y\": 0 },
-      \"größe\": { \"breite\": 210, \"höhe\": 100 },
-      \"parameter\": { \"wert\": \"0\" },
-      \"eigenschaften\": {},
-      \"anschlüsse\": []
+      "id": "${UUID.randomUUID()}",
+      "art": "mathematik.zahl",
+      "name": "Neuer Knoten",
+      "position": { "x": 0, "y": 0 },
+      "größe": { "breite": 210, "höhe": 100 },
+      "parameter": { "wert": "0" },
+      "eigenschaften": {},
+      "anschlüsse": []
     }"""
     "anschlüsse" -> """{
-      \"id\": \"${UUID.randomUUID()}\",
-      \"name\": \"wert\",
-      \"richtung\": \"Eingang\",
-      \"kante\": \"Links\",
-      \"art\": \"mathematik.objekt\",
-      \"reihenfolge\": 0,
-      \"kannSichErweitern\": false,
-      \"dynamischErzeugt\": false
+      "id": "${UUID.randomUUID()}",
+      "name": "wert",
+      "richtung": "Eingang",
+      "kante": "Links",
+      "art": "mathematik.objekt",
+      "reihenfolge": 0,
+      "kannSichErweitern": false,
+      "dynamischErzeugt": false
     }"""
     "verbindungen" -> {
         val vonKnoten = karte.knoten.firstOrNull { k -> k.anschlüsse.any { it.richtung == AnschlussRichtung.Ausgang } }
@@ -521,15 +545,15 @@ private fun jsonListenVorlage(schlüssel: String?, karte: KartenDaten): String =
         val von = vonKnoten?.anschlüsse?.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
         val zu = zuKnoten?.anschlüsse?.firstOrNull { it.richtung == AnschlussRichtung.Eingang }
         """{
-      \"id\": \"${UUID.randomUUID()}\",
-      \"von\": { \"knotenId\": \"${vonKnoten?.id?.wert.orEmpty()}\", \"anschlussId\": \"${von?.id?.wert.orEmpty()}\" },
-      \"zu\": { \"knotenId\": \"${zuKnoten?.id?.wert.orEmpty()}\", \"anschlussId\": \"${zu?.id?.wert.orEmpty()}\" }
+      "id": "${UUID.randomUUID()}",
+      "von": { "knotenId": "${vonKnoten?.id?.wert.orEmpty()}", "anschlussId": "${von?.id?.wert.orEmpty()}" },
+      "zu": { "knotenId": "${zuKnoten?.id?.wert.orEmpty()}", "anschlussId": "${zu?.id?.wert.orEmpty()}" }
     }"""
     }
     "visuelleGruppen" -> """{
-      \"id\": \"${UUID.randomUUID()}\",
-      \"name\": \"Neue Gruppe\",
-      \"knotenIds\": []
+      "id": "${UUID.randomUUID()}",
+      "name": "Neue Gruppe",
+      "knotenIds": []
     }"""
     else -> "null"
 }
@@ -558,11 +582,14 @@ private class JsonVisualTransformation(
 }
 
 private data class FaltungsTransformation(val text: String, val offsetMapping: OffsetMapping)
+
 private fun transformiereFaltungen(text: String, faltungen: List<JsonFaltung>): FaltungsTransformation {
     if (faltungen.isEmpty()) return FaltungsTransformation(text, OffsetMapping.Identity)
     val gültige = buildList {
         var verdecktBis = -1
-        faltungen.sortedBy(JsonFaltung::startOffset).forEach { if (it.startOffset > verdecktBis) { add(it); verdecktBis = it.endeOffset } }
+        faltungen.sortedBy(JsonFaltung::startOffset).forEach {
+            if (it.startOffset > verdecktBis) { add(it); verdecktBis = it.endeOffset }
+        }
     }
     val originalZuTransformiert = IntArray(text.length + 1)
     val transformiertZuOriginal = mutableListOf(0)
@@ -597,6 +624,7 @@ private fun transformiereFaltungen(text: String, faltungen: List<JsonFaltung>): 
 
 private enum class JsonTokenArt { Schlüssel, Zeichenkette, Zahl, Literal, Struktur }
 private data class JsonToken(val start: Int, val ende: Int, val art: JsonTokenArt)
+
 private fun jsonHervorheben(text: String, farben: JsonEditorFarben): AnnotatedString {
     val builder = AnnotatedString.Builder(text)
     jsonTokens(text).forEach { token ->
@@ -607,7 +635,14 @@ private fun jsonHervorheben(text: String, farben: JsonEditorFarben): AnnotatedSt
             JsonTokenArt.Literal -> farben.literal
             JsonTokenArt.Struktur -> farben.struktur
         }
-        builder.addStyle(SpanStyle(color = farbe, fontWeight = if (token.art == JsonTokenArt.Schlüssel) FontWeight.SemiBold else FontWeight.Normal), token.start, token.ende)
+        builder.addStyle(
+            SpanStyle(
+                color = farbe,
+                fontWeight = if (token.art == JsonTokenArt.Schlüssel) FontWeight.SemiBold else FontWeight.Normal,
+            ),
+            token.start,
+            token.ende,
+        )
     }
     return builder.toAnnotatedString()
 }
@@ -621,7 +656,9 @@ private fun jsonTokens(text: String): List<JsonToken> {
             var maskiert = false
             while (index < text.length) {
                 val aktuell = text[index++]
-                if (maskiert) maskiert = false else if (aktuell == '\\') maskiert = true else if (aktuell == '"') break
+                if (maskiert) maskiert = false
+                else if (aktuell == '\\') maskiert = true
+                else if (aktuell == '"') break
             }
             val danach = text.indexOfFirstAb(index) { !it.isWhitespace() }
             tokens += JsonToken(start, index, if (danach < text.length && text[danach] == ':') JsonTokenArt.Schlüssel else JsonTokenArt.Zeichenkette)
@@ -634,7 +671,10 @@ private fun jsonTokens(text: String): List<JsonToken> {
         '{', '}', '[', ']', ':', ',' -> { tokens += JsonToken(index, index + 1, JsonTokenArt.Struktur); index++ }
         else -> {
             val literal = listOf("true", "false", "null").firstOrNull { text.startsWith(it, index) }
-            if (literal != null) { tokens += JsonToken(index, index + literal.length, JsonTokenArt.Literal); index += literal.length } else index++
+            if (literal != null) {
+                tokens += JsonToken(index, index + literal.length, JsonTokenArt.Literal)
+                index += literal.length
+            } else index++
         }
     }
     return tokens

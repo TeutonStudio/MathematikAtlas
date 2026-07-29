@@ -19,9 +19,15 @@ class MathematikKnotenRenderer(
 ) : KnotenRenderer {
     @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         val ergebnis = ergebnisFür(knoten)
-        if (knoten.art == "mathematik.reelleMethodenSumme") {
-            Box(Modifier.fillMaxSize().padding(12.dp)) { ReelleMethodenSummeInhalt(ergebnis) }
-            return
+        when (knoten.art) {
+            "mathematik.reelleMethodenSumme" -> {
+                Box(Modifier.fillMaxSize().padding(12.dp)) { ReelleMethodenSummeInhalt(ergebnis) }
+                return
+            }
+            "mathematik.geometrie.dreieckRechner" -> {
+                Box(Modifier.fillMaxSize().padding(12.dp)) { DreieckRechnerInhalt(ergebnis) }
+                return
+            }
         }
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)
