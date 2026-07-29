@@ -20,6 +20,7 @@ class GanzzahlKonzeptTest {
         assertEquals(2, definition.knoten.count { it.art == "mathematik.mächtigkeit" })
         assertTrue(definition.knoten.any { it.parameter["name"] == "+" })
         assertTrue(definition.knoten.any { it.parameter["name"] == "−" })
+        assertFalse(definition.knoten.any { it.art == "mathematik.zahl" })
     }
 
     @Test fun `Zahlbereiche zeigen N und N0 als Teilmengen von Z`() {
@@ -28,12 +29,15 @@ class GanzzahlKonzeptTest {
         assertEquals(2, karte.knoten.count { it.art == "mathematik.teilOderGleichmenge" })
         assertTrue(karte.knoten.any { it.art == "mathematik.natürlicheZahlen" })
         assertTrue(karte.knoten.any { it.art == "mathematik.ganzeZahlen" })
+        assertFalse(karte.knoten.any { it.art == "mathematik.zahl" })
     }
 
-    @Test fun `Subtraktion besitzt Definition und ganzen Sonderfall`() {
+    @Test fun `Subtraktion besitzt selbstbezugsfreie Definition und ganzen Sonderfall`() {
         val konzept = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("subtraktion")))
+        val definition = konzept.reiter("definition").karte
 
-        assertTrue(konzept.reiter("definition").karte.knoten.any { it.art == "mathematik.subtraktion" })
+        assertFalse(definition.knoten.any { it.art == "mathematik.subtraktion" })
+        assertTrue(definition.knoten.any { it.art == TestDefinitionsKarten.KONZEPT_REGEL_ART })
         assertTrue(konzept.reiter("ganze-zahlen").karte.knoten.any { it.art == "mathematik.addition" })
         assertTrue(konzept.reiter("ganze-zahlen").karte.knoten.any { it.art == "mathematik.multiplikation" })
     }

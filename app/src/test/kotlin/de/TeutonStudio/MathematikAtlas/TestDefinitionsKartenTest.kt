@@ -1,11 +1,18 @@
 package de.TeutonStudio.MathematikAtlas
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.MathematikKnoten.*
 import kotlin.test.*
 
 class TestDefinitionsKartenTest {
+    private val festeVorlagen
+        get() = MathematikKnotenVorlagen.alle +
+            ErweiterteMathematikKnotenVorlagen.alle +
+            GeometrieKnotenVorlagen.alle
+
     @Test
-    fun `jedes Testkonzept besitzt genau einen Definitionsreiter`() {
+    fun `jedes Konzept besitzt genau einen Definitionsreiter`() {
         assertTrue(TestDefinitionsKarten.alle.isNotEmpty())
         TestDefinitionsKarten.alle.forEach { konzept ->
             assertEquals(1, konzept.reiter.count { it.rolle == KonzeptReiterRolle.Definition }, konzept.name)
@@ -14,38 +21,78 @@ class TestDefinitionsKartenTest {
     }
 
     @Test
-    fun `alle Navigationsziele existieren im Katalog`() {
-        val ids = TestDefinitionsKarten.alle.map { it.id }.toSet()
-        TestDefinitionsKarten.alle.forEach { konzept ->
-            konzept.navigation.values.forEach { ziel -> assertTrue(ziel in ids, "Fehlendes Ziel $ziel") }
+    fun `jede feste Knotenart besitzt eine Definitionskarte`() {
+        val erwartet = festeVorlagen.map { it.art }.toSet()
+        val tatsächlich = TestDefinitionsKarten.alle.flatMap { it.knotenArten }.toSet()
+
+        assertEquals(erwartet, tatsächlich)
+        festeVorlagen.forEach { vorlage ->
+            assertNotNull(TestDefinitionsKarten.fürKnoten(vorlage.erzeuge(GraphPunkt(0f, 0f))), vorlage.art.toString())
         }
     }
 
     @Test
-    fun `Erkundungsfreigaben verweisen auf vorhandene Parameter`() {
+    fun `keine Konzeptkarte enthält den von ihr definierten Knoten`() {
         TestDefinitionsKarten.alle.forEach { konzept ->
-            konzept.erkundungsFreigaben.forEach { freigabe ->
-                val karte = konzept.reiter(freigabe.reiterId).karte
-                val knoten = assertNotNull(karte.knoten.firstOrNull { it.id == freigabe.knotenId })
-                assertTrue(freigabe.parameter in knoten.parameter, "${konzept.name}: ${freigabe.parameter}")
+            konzept.reiter.forEach { reiter ->
+                val selbstbezüge = reiter.karte.knoten.filter { it.art in konzept.knotenArten }
+                assertTrue(selbstbezüge.isEmpty(), "${konzept.id}/${reiter.id}: ${selbstbezüge.map { it.id }}")
             }
         }
     }
 
     @Test
-    fun `Overlay verändert nicht die originale Testkarte`() {
+    fun `Definitionsabhängigkeiten sind vollständig und azyklisch`() {
+        assertEquals(emptyList(), TestDefinitionsKarten.validierungsFehler())
+    }
+
+    @Test
+    fun `Definitionskarte bildet den vollständigen Anschlussvertrag ab`() {
+        val vorlage = MathematikKnotenVorlagen.Potenz
+        val konzept = assertNotNull(TestDefinitionsKarten.fürKnoten(vorlage.erzeuge(GraphPunkt(0f, 0f))))
+        val karte = konzept.reiter("definition").karte
+        val regel = karte.knoten.single { it.art == TestDefinitionsKarten.KONZEPT_REGEL_ART }
+
+        assertEquals(
+            vorlage.anschlüsse.map { Triple(it.name, it.richtung, it.art) },
+            regel.anschlüsse.map { Triple(it.name, it.richtung, it.art) },
+        )
+        assertEquals(vorlage.beschreibung, regel.parameter["regel"])
+        assertEquals(
+            vorlage.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang },
+            karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART },
+        )
+        assertEquals(
+            vorlage.anschlüsse.count { it.richtung == AnschlussRichtung.Ausgang },
+            karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_AUSGANG_ART },
+        )
+        assertEquals(vorlage.anschlüsse.size, karte.verbindungen.size)
+    }
+
+    @Test
+    fun `Varianten derselben Knotenart teilen ein Konzept`() {
+        val extremwerte = festeVorlagen.filter { it.art == "mathematik.extremwert" }
+        assertTrue(extremwerte.size >= 2)
+
+        val konzepte = extremwerte.map { vorlage ->
+            assertNotNull(TestDefinitionsKarten.fürKnoten(vorlage.erzeuge(GraphPunkt(0f, 0f))))
+        }.distinctBy { it.id }
+
+        assertEquals(1, konzepte.size)
+        assertEquals(extremwerte.size, konzepte.single().reiter.size)
+    }
+
+    @Test
+    fun `nicht freigegebene Änderungen verändern eine Definitionskarte nicht`() {
         val sitzung = KonzeptSitzung()
-        sitzung.öffne(KonzeptId("addition"))
+        sitzung.öffne(KonzeptId("potenz"))
         val original = assertNotNull(sitzung.aktuelleKarte())
-        val zahl = original.knoten.first { it.id == KnotenId("addition-a") }
+        val regel = original.knoten.single { it.art == TestDefinitionsKarten.KONZEPT_REGEL_ART }
 
-        sitzung.wähleKnoten(zahl.id)
-        sitzung.setzeParameter(zahl.id, "wert", "99")
+        sitzung.wähleKnoten(regel.id)
+        sitzung.setzeParameter(regel.id, "regel", "Manipuliert")
 
-        val verändert = assertNotNull(sitzung.aktuelleKarte())
-        assertEquals("99", verändert.knoten.first { it.id == zahl.id }.parameter["wert"])
-        assertEquals("2", original.knoten.first { it.id == zahl.id }.parameter["wert"])
-        assertNotEquals(original, verändert)
+        assertEquals(original, sitzung.aktuelleKarte())
     }
 
     @Test
@@ -62,45 +109,10 @@ class TestDefinitionsKartenTest {
     }
 
     @Test
-    fun `Kehrwert besitzt eine eigene Definitionskarte`() {
-        val kehrwert = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("kehrwert")))
-        val definition = kehrwert.sortierteReiter.first().karte
-
-        assertTrue(definition.knoten.any { it.art == "mathematik.kehrwert" })
-        assertTrue(definition.knoten.any { it.art == "mathematik.zahl" })
-    }
-
-    @Test
-    fun `Division wird ohne zirkulären Divisionsknoten definiert`() {
-        val division = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("division")))
-        val definition = division.reiter("definition").karte
-
-        assertTrue(definition.knoten.any { it.art == "mathematik.kehrwert" })
-        assertTrue(definition.knoten.any { it.art == "mathematik.multiplikation" })
-        assertTrue(definition.knoten.any { it.art == "mathematik.fall" })
-        assertFalse(definition.knoten.any { it.art == "mathematik.division" })
-    }
-
-    @Test
-    fun `Divisionsdefinition wählt bei Nenner null den Ersatzwert`() {
-        val definition = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("division"))).reiter("definition").karte
-        val fall = definition.knoten.single { it.art == "mathematik.fall" }
-        val ersatz = definition.knoten.single { it.parameter["name"] == "falls Nenner null" }
-        val produkt = definition.knoten.single { it.art == "mathematik.multiplikation" }
-        val wahr = fall.anschlüsse.single { it.name == "wahr" }.id
-        val lüge = fall.anschlüsse.single { it.name == "lüge" }.id
-
-        assertTrue(definition.verbindungen.any { it.von.knotenId == ersatz.id && it.zu.anschlussId == wahr })
-        assertTrue(definition.verbindungen.any { it.von.knotenId == produkt.id && it.zu.anschlussId == lüge })
-    }
-
-    @Test
-    fun `Komplexer Divisor wird mit der Konjugierten rationalisiert`() {
-        val division = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("division")))
-        val sonderfall = division.reiter("komplexer-divisor").karte
-
-        assertTrue(sonderfall.knoten.any { it.art == "mathematik.konjugierte" })
-        assertEquals(3, sonderfall.knoten.count { it.art == "mathematik.multiplikation" })
-        assertTrue(sonderfall.knoten.any { it.art == "mathematik.kehrwert" })
+    fun `Dokumentationsknoten sind keine auswählbaren Vorlagen`() {
+        val arten = festeVorlagen.map { it.art }.toSet()
+        assertFalse(TestDefinitionsKarten.KONZEPT_REGEL_ART in arten)
+        assertFalse(TestDefinitionsKarten.KONZEPT_EINGANG_ART in arten)
+        assertFalse(TestDefinitionsKarten.KONZEPT_AUSGANG_ART in arten)
     }
 }
