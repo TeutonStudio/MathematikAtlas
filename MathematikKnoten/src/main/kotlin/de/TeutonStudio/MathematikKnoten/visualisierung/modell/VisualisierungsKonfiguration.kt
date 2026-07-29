@@ -6,7 +6,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.ganzzahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.objekt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.text
 
-enum class RaumDimension { R2, R3 }
+/** Unterstützte kartesische Darstellungsräume. */
+enum class RaumDimension { R1, R2, R3 }
 data class AchsenZuordnung(val x: String, val y: String, val z: String?)
 data class ZahlenBereich(val minimum: Double, val maximum: Double) {
     init { require(minimum < maximum) { "Ein Achsenbereich benötigt ein Minimum kleiner als sein Maximum." } }
@@ -24,13 +25,17 @@ data class KameraZustand(
     val translationZ: Double,
     val zoom: Double,
 ) {
-    fun istStandard(dimension: RaumDimension, epsilon: Double = 1e-6): Boolean =
-        listOf(rotationX, rotationY, rotationZ, translationX, translationY, translationZ, zoom - 1.0)
-            .let { werte -> if (dimension == RaumDimension.R2) werte.filterIndexed { index, _ -> index !in setOf(0, 2, 5) } else werte }
-            .all { kotlin.math.abs(it) < epsilon }
+    fun istStandard(dimension: RaumDimension, epsilon: Double = 1e-6): Boolean {
+        val relevanteWerte = when (dimension) {
+            RaumDimension.R1 -> listOf(translationX, zoom - 1.0)
+            RaumDimension.R2 -> listOf(translationX, translationY, zoom - 1.0)
+            RaumDimension.R3 -> listOf(rotationX, rotationY, rotationZ, translationX, translationY, translationZ, zoom - 1.0)
+        }
+        return relevanteWerte.all { kotlin.math.abs(it) < epsilon }
+    }
 }
 
-/** Persistierbare Konfiguration; Sampling-relevante Werte sind von der Kamera getrennt. */
+/** Persistierbare Konfiguration; R¹ verwendet nur X-Achse und X-Bereich. */
 data class VisualisierungsKonfiguration(
     val dimension: RaumDimension = RaumDimension.R2,
     val achsen: AchsenZuordnung = AchsenZuordnung("x", "y", "z"),
@@ -39,6 +44,7 @@ data class VisualisierungsKonfiguration(
     val sampling: SamplingKonfiguration = SamplingKonfiguration(72, 22, 0.08),
     val kamera: KameraZustand = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
 ) {
+    val dimensionsAnzahl: Int get() = when (dimension) { RaumDimension.R1 -> 1; RaumDimension.R2 -> 2; RaumDimension.R3 -> 3 }
     fun samplingSignatur() = listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling).hashCode()
     fun zuEigenschaften(): Map<String, KnotenEigenschaft> = mapOf(
         "dimension" to KnotenEigenschaft.Text(dimension.name),
@@ -46,7 +52,9 @@ data class VisualisierungsKonfiguration(
         "bereiche" to bereiche.zuEigenschaft(),
         "farbe" to farbe.zuEigenschaft(),
         "sampling" to KnotenEigenschaft.Objekt(mapOf(
-            "auflösung2D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung2D), "auflösung3D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung3D), "toleranz" to KnotenEigenschaft.Dezimalzahl(sampling.toleranz),
+            "auflösung2D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung2D),
+            "auflösung3D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung3D),
+            "toleranz" to KnotenEigenschaft.Dezimalzahl(sampling.toleranz),
         )),
         "kamera" to kamera.zuEigenschaft(),
     )
@@ -64,8 +72,7 @@ data class VisualisierungsKonfiguration(
                 samplingObjekt.ganzzahl("auflösung3D", standard.sampling.auflösung3D).coerceIn(8, 64),
                 samplingObjekt.dezimalzahl("toleranz", standard.sampling.toleranz).coerceIn(1e-5, 2.0),
             )
-            val kamera = eigenschaften.objekt("kamera").zuKamera(standard.kamera)
-            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera)
+            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, eigenschaften.objekt("kamera").zuKamera(standard.kamera))
         }
     }
 }

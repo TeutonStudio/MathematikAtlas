@@ -30,7 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.math.*
 
-/** Compose-Renderer mit abbrechbarem Hintergrundsampling und lokaler Kamerasteuerung. */
+/** Compose-Renderer für eindimensionale, ebene und räumliche Mengen. */
 class VisualisierungsKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis?,
 ) : KnotenRenderer {
@@ -52,15 +52,10 @@ class VisualisierungsKnotenRenderer(
         Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Row(Modifier.fillMaxWidth().height(34.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Visualisierung", style = MaterialTheme.typography.titleMedium)
-                Text(if (konfiguration.dimension == RaumDimension.R2) "R²" else "R³", style = MaterialTheme.typography.titleMedium)
+                Text(dimensionText(konfiguration.dimension), style = MaterialTheme.typography.titleMedium)
             }
             Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Plot(
-                    ergebnis = ergebnis,
-                    konfiguration = konfiguration,
-                    onKamera = { ändern(konfiguration.copy(kamera = it)) },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
+                Plot(ergebnis, konfiguration, { ändern(konfiguration.copy(kamera = it)) }, Modifier.weight(1f).fillMaxHeight())
                 Steuerung(konfiguration, ::ändern, Modifier.width(128.dp).fillMaxHeight())
             }
             LatexText(legende(konfiguration), style = MaterialTheme.typography.bodySmall)
@@ -74,7 +69,15 @@ class VisualisierungsKnotenRenderer(
     }
 }
 
-@Composable private fun Plot(ergebnis: VisualisierungsErgebnis?, konfiguration: VisualisierungsKonfiguration, onKamera: (KameraZustand) -> Unit, modifier: Modifier) {
+private fun dimensionText(dimension: RaumDimension) = when (dimension) { RaumDimension.R1 -> "R¹"; RaumDimension.R2 -> "R²"; RaumDimension.R3 -> "R³" }
+
+@Composable
+private fun Plot(
+    ergebnis: VisualisierungsErgebnis?,
+    konfiguration: VisualisierungsKonfiguration,
+    onKamera: (KameraZustand) -> Unit,
+    modifier: Modifier,
+) {
     val kamera = konfiguration.kamera
     val hintergrund = MaterialTheme.colorScheme.surfaceVariant
     val raster = MaterialTheme.colorScheme.outlineVariant
@@ -85,24 +88,37 @@ class VisualisierungsKnotenRenderer(
     val zAchse = MaterialTheme.colorScheme.tertiary
     Canvas(modifier.pointerInput(konfiguration.dimension, kamera) {
         detectTransformGestures { _, pan, zoom, _ ->
-            val neu = if (konfiguration.dimension == RaumDimension.R3) kamera.copy(rotationY = kamera.rotationY + pan.x * 0.5, rotationX = kamera.rotationX + pan.y * 0.5, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
-            else kamera.copy(translationX = kamera.translationX - pan.x / 20.0, translationY = kamera.translationY + pan.y / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
+            val neu = when (konfiguration.dimension) {
+                RaumDimension.R1 -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
+                RaumDimension.R2 -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, translationY = kamera.translationY + pan.y / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
+                RaumDimension.R3 -> kamera.copy(rotationY = kamera.rotationY + pan.x * 0.5, rotationX = kamera.rotationX + pan.y * 0.5, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
+            }
             onKamera(neu)
         }
     }) {
         drawRect(hintergrund)
-        if (konfiguration.dimension == RaumDimension.R2) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            drawLine(raster, Offset(0f, center.y), Offset(size.width, center.y), 1f)
-            drawLine(raster, Offset(center.x, 0f), Offset(center.x, size.height), 1f)
-            zeichne2DAchsenBeschriftungen(konfiguration, beschriftung)
-        } else {
-            zeichne3DAchsen(konfiguration, xAchse, yAchse, zAchse)
+        when (konfiguration.dimension) {
+            RaumDimension.R1 -> zeichne1DAchse(konfiguration, raster, beschriftung)
+            RaumDimension.R2 -> {
+                val center = Offset(size.width / 2f, size.height / 2f)
+                drawLine(raster, Offset(0f, center.y), Offset(size.width, center.y), 1f)
+                drawLine(raster, Offset(center.x, 0f), Offset(center.x, size.height), 1f)
+                zeichne2DAchsenBeschriftungen(konfiguration, beschriftung)
+            }
+            RaumDimension.R3 -> zeichne3DAchsen(konfiguration, xAchse, yAchse, zAchse)
         }
-        val punkte = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.punkte; is VisualisierungsErgebnis.Teilweise -> ergebnis.punkte; else -> emptyList() }
+        val punkte = when (ergebnis) {
+            is VisualisierungsErgebnis.Erfolgreich -> ergebnis.punkte
+            is VisualisierungsErgebnis.Teilweise -> ergebnis.punkte
+            else -> emptyList()
+        }
         punkte.forEach { punkt ->
             val projektion = projekt(punkt, konfiguration, size.width, size.height)
-            drawCircle(farbeFür(punkt.farbwert, konfiguration), if (konfiguration.dimension == RaumDimension.R3) 2.8f else 2.2f, projektion)
+            val farbe = farbeFür(punkt.farbwert, konfiguration)
+            if (konfiguration.dimension == RaumDimension.R1) {
+                drawLine(farbe, Offset(projektion.x, projektion.y - 8f), Offset(projektion.x, projektion.y + 8f), 2.2f)
+                drawCircle(farbe, 3.2f, projektion)
+            } else drawCircle(farbe, if (konfiguration.dimension == RaumDimension.R3) 2.8f else 2.2f, projektion)
         }
         drawRect(rahmen, style = Stroke(1f))
     }
@@ -112,6 +128,19 @@ private fun DrawScope.achsenPaint(farbe: Color) = Paint(Paint.ANTI_ALIAS_FLAG).a
     color = farbe.toArgb()
     textSize = 12.dp.toPx()
     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+}
+
+private fun DrawScope.zeichne1DAchse(c: VisualisierungsKonfiguration, farbe: Color, textFarbe: Color) {
+    val y = size.height / 2f
+    drawLine(farbe, Offset(0f, y), Offset(size.width, y), 2f)
+    val paint = achsenPaint(textFarbe)
+    val canvas = drawContext.canvas.nativeCanvas
+    val minimum = c.bereiche.x.minimum.toString()
+    val maximum = c.bereiche.x.maximum.toString()
+    canvas.drawText(minimum, 5.dp.toPx(), y - 8.dp.toPx(), paint)
+    canvas.drawText(maximum, size.width - paint.measureText(maximum) - 5.dp.toPx(), y - 8.dp.toPx(), paint)
+    val name = c.achsen.x.ifBlank { "x" }
+    canvas.drawText(name, size.width - paint.measureText(name) - 5.dp.toPx(), y + paint.textSize + 8.dp.toPx(), paint)
 }
 
 private fun DrawScope.zeichne2DAchsenBeschriftungen(c: VisualisierungsKonfiguration, farbe: Color) {
@@ -132,11 +161,9 @@ private fun DrawScope.zeichne3DAchsen(c: VisualisierungsKonfiguration, xFarbe: C
     val yEnde = projekt(VisualisierungsPunkt(0.0, c.bereiche.y.maximum, 0.0), c, size.width, size.height)
     val zStart = projekt(VisualisierungsPunkt(0.0, 0.0, zBereich.minimum), c, size.width, size.height)
     val zEnde = projekt(VisualisierungsPunkt(0.0, 0.0, zBereich.maximum), c, size.width, size.height)
-
-    drawLine(xFarbe.copy(alpha = 0.78f), xStart, xEnde, 2f)
-    drawLine(yFarbe.copy(alpha = 0.78f), yStart, yEnde, 2f)
-    drawLine(zFarbe.copy(alpha = 0.78f), zStart, zEnde, 2f)
-
+    drawLine(xFarbe.copy(alpha = .78f), xStart, xEnde, 2f)
+    drawLine(yFarbe.copy(alpha = .78f), yStart, yEnde, 2f)
+    drawLine(zFarbe.copy(alpha = .78f), zStart, zEnde, 2f)
     zeichneAchsenText(c.achsen.x.ifBlank { "x" }, xEnde, achsenPaint(xFarbe))
     zeichneAchsenText(c.achsen.y.ifBlank { "y" }, yEnde, achsenPaint(yFarbe))
     zeichneAchsenText(c.achsen.z?.ifBlank { "z" } ?: "z", zEnde, achsenPaint(zFarbe))
@@ -157,57 +184,86 @@ private fun projekt(p: VisualisierungsPunkt, c: VisualisierungsKonfiguration, br
         val ry = c.kamera.rotationY * Math.PI / 180
         val rx = c.kamera.rotationX * Math.PI / 180
         val rz = c.kamera.rotationZ * Math.PI / 180
-
         val xNachY = x * cos(ry) + z * sin(ry)
         val zNachY = -x * sin(ry) + z * cos(ry)
-        x = xNachY
-        z = zNachY
-
+        x = xNachY; z = zNachY
         val yNachX = y * cos(rx) - z * sin(rx)
         val zNachX = y * sin(rx) + z * cos(rx)
-        y = yNachX
-        z = zNachX
-
+        y = yNachX; z = zNachX
         val xNachZ = x * cos(rz) - y * sin(rz)
         val yNachZ = x * sin(rz) + y * cos(rz)
-        x = xNachZ
-        y = yNachZ
+        x = xNachZ; y = yNachZ
     }
     val bx = c.bereiche.x
+    val px = ((x - bx.minimum) / (bx.maximum - bx.minimum) * breite * c.kamera.zoom).toFloat()
+    if (c.dimension == RaumDimension.R1) return Offset(px, höhe / 2f)
     val by = c.bereiche.y
-    return Offset(
-        ((x - bx.minimum) / (bx.maximum - bx.minimum) * breite * c.kamera.zoom).toFloat(),
-        (höhe - (y - by.minimum) / (by.maximum - by.minimum) * höhe * c.kamera.zoom).toFloat(),
-    )
+    return Offset(px, (höhe - (y - by.minimum) / (by.maximum - by.minimum) * höhe * c.kamera.zoom).toFloat())
 }
+
 private fun farbeFür(wert: Double?, c: VisualisierungsKonfiguration): Color {
-    if (c.farbe.modus == FarbModus.Keine) return Color.Transparent
+    if (c.farbe.modus == FarbModus.Keine) return Color(c.farbe.festeFarbe ?: 0xFF2563EB)
     if (c.farbe.modus != FarbModus.Spektrum || wert == null) return Color(c.farbe.festeFarbe ?: 0xFF2563EB)
-    val b = c.farbe.bereich ?: ZahlenBereich(-1.0, 1.0); val t = ((wert - b.minimum) / (b.maximum - b.minimum)).coerceIn(0.0, 1.0).toFloat()
+    val b = c.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)
+    val t = ((wert - b.minimum) / (b.maximum - b.minimum)).coerceIn(0.0, 1.0).toFloat()
     return when (c.farbe.palette) {
-        "Sonnenuntergang" -> Color(0.95f, 0.18f + .6f * t, 0.12f + .55f * t)
-        "Wald" -> Color(0.08f + .35f * t, 0.25f + .6f * t, 0.16f + .2f * t)
-        else -> Color(0.1f + .8f * t, 0.25f, 0.9f - .7f * t)
+        "Sonnenuntergang" -> Color(.95f, .18f + .6f * t, .12f + .55f * t)
+        "Wald" -> Color(.08f + .35f * t, .25f + .6f * t, .16f + .2f * t)
+        else -> Color(.1f + .8f * t, .25f, .9f - .7f * t)
     }
 }
 
-@Composable private fun Steuerung(c: VisualisierungsKonfiguration, ändern: (VisualisierungsKonfiguration) -> Unit, modifier: Modifier) {
+@Composable
+private fun Steuerung(c: VisualisierungsKonfiguration, ändern: (VisualisierungsKonfiguration) -> Unit, modifier: Modifier) {
     val standard = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text("Rotation", style = MaterialTheme.typography.labelMedium)
-        listOf("X" to { d: Double -> c.kamera.copy(rotationX = c.kamera.rotationX + d) }, "Y" to { d: Double -> c.kamera.copy(rotationY = c.kamera.rotationY + d) }, "Z" to { d: Double -> c.kamera.copy(rotationZ = c.kamera.rotationZ + d) }).forEach { (name, funktion) -> AchsenTaste(name, c.dimension == RaumDimension.R3) { ändern(c.copy(kamera = funktion(it))) } }
-        OutlinedButton(onClick = { ändern(c.copy(kamera = c.kamera.copy(rotationX = 0.0, rotationY = 0.0, rotationZ = 0.0))) }, enabled = abs(c.kamera.rotationX) + abs(c.kamera.rotationY) + abs(c.kamera.rotationZ) > 1e-6, modifier = Modifier.fillMaxWidth()) { Text("Reset") }
-        Spacer(Modifier.height(5.dp)); Text("Verschiebung", style = MaterialTheme.typography.labelMedium)
+        listOf(
+            "X" to { d: Double -> c.kamera.copy(rotationX = c.kamera.rotationX + d) },
+            "Y" to { d: Double -> c.kamera.copy(rotationY = c.kamera.rotationY + d) },
+            "Z" to { d: Double -> c.kamera.copy(rotationZ = c.kamera.rotationZ + d) },
+        ).forEach { (name, funktion) -> AchsenTaste(name, c.dimension == RaumDimension.R3) { ändern(c.copy(kamera = funktion(it))) } }
+        OutlinedButton(
+            onClick = { ändern(c.copy(kamera = c.kamera.copy(rotationX = 0.0, rotationY = 0.0, rotationZ = 0.0))) },
+            enabled = c.dimension == RaumDimension.R3 && abs(c.kamera.rotationX) + abs(c.kamera.rotationY) + abs(c.kamera.rotationZ) > 1e-6,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Reset") }
+        Spacer(Modifier.height(5.dp))
+        Text("Verschiebung", style = MaterialTheme.typography.labelMedium)
         val schritt = (c.bereiche.x.maximum - c.bereiche.x.minimum) * .1
-        listOf("X" to { d: Double -> c.kamera.copy(translationX = c.kamera.translationX + d) }, "Y" to { d: Double -> c.kamera.copy(translationY = c.kamera.translationY + d) }, "Z" to { d: Double -> c.kamera.copy(translationZ = c.kamera.translationZ + d) }).forEach { (name, funktion) -> AchsenTaste(name, c.dimension == RaumDimension.R3 || name != "Z") { ändern(c.copy(kamera = funktion(it * schritt))) } }
-        OutlinedButton(onClick = { ändern(c.copy(kamera = c.kamera.copy(translationX = 0.0, translationY = 0.0, translationZ = 0.0))) }, enabled = abs(c.kamera.translationX) + abs(c.kamera.translationY) + abs(c.kamera.translationZ) > 1e-6, modifier = Modifier.fillMaxWidth()) { Text("Reset") }
+        listOf(
+            "X" to { d: Double -> c.kamera.copy(translationX = c.kamera.translationX + d) },
+            "Y" to { d: Double -> c.kamera.copy(translationY = c.kamera.translationY + d) },
+            "Z" to { d: Double -> c.kamera.copy(translationZ = c.kamera.translationZ + d) },
+        ).forEach { (name, funktion) ->
+            val aktiv = when (name) { "X" -> true; "Y" -> c.dimension != RaumDimension.R1; else -> c.dimension == RaumDimension.R3 }
+            AchsenTaste(name, aktiv) { ändern(c.copy(kamera = funktion(it * schritt))) }
+        }
+        OutlinedButton(
+            onClick = { ändern(c.copy(kamera = c.kamera.copy(translationX = 0.0, translationY = 0.0, translationZ = 0.0))) },
+            enabled = abs(c.kamera.translationX) + abs(c.kamera.translationY) + abs(c.kamera.translationZ) > 1e-6,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Reset") }
         OutlinedButton(onClick = { ändern(c.copy(kamera = standard)) }, enabled = !c.kamera.istStandard(c.dimension), modifier = Modifier.fillMaxWidth()) { Text("Ansicht zurück") }
     }
 }
-@Composable private fun AchsenTaste(name: String, enabled: Boolean, ändern: (Double) -> Unit) = Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { TextButton(onClick = { ändern(-15.0) }, enabled = enabled) { Text("−") }; Text(name, modifier = Modifier.padding(top = 12.dp)); TextButton(onClick = { ändern(15.0) }, enabled = enabled) { Text("+") } }
+
+@Composable
+private fun AchsenTaste(name: String, enabled: Boolean, ändern: (Double) -> Unit) = Row(
+    Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+) {
+    TextButton(onClick = { ändern(-15.0) }, enabled = enabled) { Text("−") }
+    Text(name, modifier = Modifier.padding(top = 12.dp))
+    TextButton(onClick = { ändern(15.0) }, enabled = enabled) { Text("+") }
+}
+
 private fun legende(c: VisualisierungsKonfiguration): String {
     val farbBereich = c.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)
-    return "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y}" +
-        if (c.dimension == RaumDimension.R3) ",\\quad ${c.achsen.z}\\text{-Achse}: ${c.achsen.z}" else "" +
-        if (c.farbe.modus == FarbModus.Spektrum) ",\\quad \\operatorname{Farbe}: ${c.farbe.variable ?: "t"},\\quad ${farbBereich.minimum}\\le ${c.farbe.variable ?: "t"}\\le ${farbBereich.maximum}" else ""
+    val achsen = when (c.dimension) {
+        RaumDimension.R1 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x}"
+        RaumDimension.R2 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y}"
+        RaumDimension.R3 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y},\\quad ${c.achsen.z}\\text{-Achse}: ${c.achsen.z}"
+    }
+    return achsen + if (c.farbe.modus == FarbModus.Spektrum) ",\\quad \\operatorname{Farbe}: ${c.farbe.variable ?: "t"},\\quad ${farbBereich.minimum}\\le ${c.farbe.variable ?: "t"}\\le ${farbBereich.maximum}" else ""
 }

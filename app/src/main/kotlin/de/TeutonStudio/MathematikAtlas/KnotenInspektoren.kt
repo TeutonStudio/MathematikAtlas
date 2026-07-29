@@ -8,7 +8,6 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
@@ -41,7 +40,7 @@ private object VariablenInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
         GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Fehler(ergebnis)
     }
 }
 
@@ -53,7 +52,7 @@ private object AllgemeineParameterInspektor : KnotenInspektor {
             aktionen.eigenschaften(knoten.eigenschaften + (WertebereichKonfiguration.EIGENSCHAFT to neu.zuEigenschaft()))
         }
         Text("Der Wertebereich bestimmt die Zielmenge von Term zu Methode.", style = MaterialTheme.typography.bodySmall)
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Fehler(ergebnis)
     }
 }
 
@@ -68,23 +67,21 @@ private object TermZuMethodeInspektor : KnotenInspektor {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("${index + 1}. ${variable.name}", modifier = Modifier.weight(1f))
                 OutlinedButton(onClick = {
-                    val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index - 1) }
+                    val neu = parameter.map { it.name }.toMutableList().also { java.util.Collections.swap(it, index, index - 1) }
                     aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
                 }, enabled = index > 0) { Text("↑") }
                 OutlinedButton(onClick = {
-                    val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index + 1) }
+                    val neu = parameter.map { it.name }.toMutableList().also { java.util.Collections.swap(it, index, index + 1) }
                     aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
                 }, enabled = index < parameter.lastIndex) { Text("↓") }
             }
         }
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Fehler(ergebnis)
     }
 }
 
-@Composable private fun WertebereichEditor(
-    bereich: WertebereichKonfiguration,
-    ändern: (WertebereichKonfiguration) -> Unit,
-) {
+@Composable
+private fun WertebereichEditor(bereich: WertebereichKonfiguration, ändern: (WertebereichKonfiguration) -> Unit) {
     Text("Wertebereich", style = MaterialTheme.typography.titleSmall)
     val arten = listOf(
         "Zahl" to WertebereichKonfiguration.Zahl(),
@@ -99,15 +96,18 @@ private object TermZuMethodeInspektor : KnotenInspektor {
         arten.take(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class, { ändern(wert) }, label = { Text(name) }) }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-        arten.drop(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class && (bereich !is WertebereichKonfiguration.Vektor || wert !is WertebereichKonfiguration.Vektor || bereich.orientierung == wert.orientierung), { ändern(wert) }, label = { Text(name) }) }
+        arten.drop(3).forEach { (name, wert) ->
+            FilterChip(
+                bereich::class == wert::class && (bereich !is WertebereichKonfiguration.Vektor || wert !is WertebereichKonfiguration.Vektor || bereich.orientierung == wert.orientierung),
+                { ändern(wert) },
+                label = { Text(name) },
+            )
+        }
     }
     when (bereich) {
         is WertebereichKonfiguration.Zahl -> GrundmengenAuswahl("Zahlgrundmenge", bereich.grundmenge) { ändern(bereich.copy(grundmenge = it)) }
         WertebereichKonfiguration.Aussage -> Text("{⊤, ⊥}", style = MaterialTheme.typography.bodySmall)
-        is WertebereichKonfiguration.Menge -> {
-            Text("Elementbereich", style = MaterialTheme.typography.bodySmall)
-            WertebereichEditor(bereich.elementBereich) { ändern(bereich.copy(elementBereich = it)) }
-        }
+        is WertebereichKonfiguration.Menge -> { Text("Elementbereich", style = MaterialTheme.typography.bodySmall); WertebereichEditor(bereich.elementBereich) { ändern(bereich.copy(elementBereich = it)) } }
         is WertebereichKonfiguration.Tupel -> {
             bereich.komponenten.forEachIndexed { index, komponente ->
                 Text("Komponente ${index + 1}", style = MaterialTheme.typography.bodySmall)
@@ -115,38 +115,19 @@ private object TermZuMethodeInspektor : KnotenInspektor {
             }
             OutlinedButton(onClick = { ändern(bereich.copy(komponenten = bereich.komponenten + WertebereichKonfiguration.Zahl())) }) { Text("Komponente hinzufügen") }
         }
-        is WertebereichKonfiguration.Vektor -> {
-            PositiveGanzzahlFeld("Dimension", bereich.dimension) { ändern(bereich.copy(dimension = it)) }
-            GrundmengenAuswahl("Skalarmenge", bereich.skalarMenge) { ändern(bereich.copy(skalarMenge = it)) }
-        }
-        is WertebereichKonfiguration.Matrix -> {
-            PositiveGanzzahlFeld("Zeilen", bereich.zeilen) { ändern(bereich.copy(zeilen = it)) }
-            PositiveGanzzahlFeld("Spalten", bereich.spalten) { ändern(bereich.copy(spalten = it)) }
-            GrundmengenAuswahl("Skalarmenge", bereich.skalarMenge) { ändern(bereich.copy(skalarMenge = it)) }
-        }
+        is WertebereichKonfiguration.Vektor -> { PositiveGanzzahlFeld("Dimension", bereich.dimension) { ändern(bereich.copy(dimension = it)) }; GrundmengenAuswahl("Skalarmenge", bereich.skalarMenge) { ändern(bereich.copy(skalarMenge = it)) } }
+        is WertebereichKonfiguration.Matrix -> { PositiveGanzzahlFeld("Zeilen", bereich.zeilen) { ändern(bereich.copy(zeilen = it)) }; PositiveGanzzahlFeld("Spalten", bereich.spalten) { ändern(bereich.copy(spalten = it)) }; GrundmengenAuswahl("Skalarmenge", bereich.skalarMenge) { ändern(bereich.copy(skalarMenge = it)) } }
     }
 }
 
 @Composable private fun PositiveGanzzahlFeld(label: String, wert: Int, ändern: (Int) -> Unit) {
     var text by remember(label, wert) { mutableStateOf(wert.toString()) }
-    OutlinedTextField(
-        value = text,
-        onValueChange = { neu ->
-            text = neu
-            neu.toIntOrNull()?.takeIf { it > 0 }?.let(ändern)
-        },
-        label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
-    )
+    OutlinedTextField(text, { neu -> text = neu; neu.toIntOrNull()?.takeIf { it > 0 }?.let(ändern) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth())
 }
 
 @Composable private fun GrundmengenAuswahl(label: String, aktuell: String, ändern: (String) -> Unit) {
     Text(label, style = MaterialTheme.typography.titleSmall)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("N", "Z", "Q", "R", "C").forEach { menge ->
-            FilterChip(aktuell == menge, { ändern(menge) }, label = { Text(menge) })
-        }
-    }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("N", "Z", "Q", "R", "C").forEach { menge -> FilterChip(aktuell == menge, { ändern(menge) }, label = { Text(menge) }) } }
 }
 
 private object KartenSchnittstellenInspektor : KnotenInspektor {
@@ -163,26 +144,17 @@ private object KartenSchnittstellenInspektor : KnotenInspektor {
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Typ") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = geöffnet) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(geöffnet) },
                 modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
             )
             ExposedDropdownMenu(expanded = geöffnet, onDismissRequest = { geöffnet = false }) {
                 MathematikAnschlussArten.alle.forEach { art ->
-                    DropdownMenuItem(
-                        text = { Text(art.name) },
-                        onClick = {
-                            geöffnet = false
-                            aktionen.anschlussArt(AnschlussVerweis(knoten.id, wertAnschluss.id), art.id)
-                        },
-                    )
+                    DropdownMenuItem(text = { Text(art.name) }, onClick = { geöffnet = false; aktionen.anschlussArt(AnschlussVerweis(knoten.id, wertAnschluss.id), art.id) })
                 }
             }
         }
-        Text(
-            "Der Typ gilt für den Anschluss „wert“ und wird von Gruppenknoten übernommen.",
-            style = MaterialTheme.typography.bodySmall,
-        )
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Text("Der Typ gilt für den Anschluss „wert“ und wird von Gruppenknoten übernommen.", style = MaterialTheme.typography.bodySmall)
+        Fehler(ergebnis)
     }
 }
 
@@ -197,7 +169,7 @@ private object LösungsmengeInspektor : KnotenInspektor {
         if (!automatisch) ParameterFeld("Variablen (geordnet, mit Komma)", knoten.parameter["variablen"].orEmpty()) { aktionen.parameter("variablen", it) }
         ParameterFeld("Grundmengen (N, Z, Q, R)", knoten.parameter["grundmengen"] ?: "R") { aktionen.parameter("grundmengen", it) }
         Text("Eine Grundmenge gilt für alle Variablen; mehrere folgen der Variablenreihenfolge.", style = MaterialTheme.typography.bodySmall)
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Fehler(ergebnis)
     }
 }
 
@@ -207,22 +179,25 @@ private object VisualisierungsInspektor : KnotenInspektor {
         fun ändern(neu: VisualisierungsKonfiguration) { config = neu; aktionen.eigenschaften(neu.zuEigenschaften()) }
         Text("Raum", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(config.dimension == RaumDimension.R1, { ändern(config.copy(dimension = RaumDimension.R1)) }, label = { Text("R¹") })
             FilterChip(config.dimension == RaumDimension.R2, { ändern(config.copy(dimension = RaumDimension.R2)) }, label = { Text("R²") })
             FilterChip(config.dimension == RaumDimension.R3, { ändern(config.copy(dimension = RaumDimension.R3)) }, label = { Text("R³") })
         }
         Text("Achsen", style = MaterialTheme.typography.titleSmall)
         ParameterFeld("X-Variable", config.achsen.x) { ändern(config.copy(achsen = config.achsen.copy(x = it.trim()))) }
-        ParameterFeld("Y-Variable", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
+        if (config.dimension != RaumDimension.R1) ParameterFeld("Y-Variable", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
         if (config.dimension == RaumDimension.R3) ParameterFeld("Z-Variable", config.achsen.z.orEmpty()) { ändern(config.copy(achsen = config.achsen.copy(z = it.trim().ifBlank { null }))) }
         BereichFeld("X-Bereich", config.bereiche.x) { ändern(config.copy(bereiche = config.bereiche.copy(x = it))) }
-        BereichFeld("Y-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
+        if (config.dimension != RaumDimension.R1) BereichFeld("Y-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
         if (config.dimension == RaumDimension.R3) BereichFeld("Z-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
         Text("Sampling", style = MaterialTheme.typography.titleSmall)
-        ParameterFeld("R²-Auflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
-        ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
+        ParameterFeld(if (config.dimension == RaumDimension.R1) "R¹-Auflösung" else "R²-Auflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
+        if (config.dimension == RaumDimension.R3) ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
         ParameterFeld("Toleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
         Text("Farbe", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) }
+        }
         if (config.farbe.modus == FarbModus.Spektrum) {
             ParameterFeld("Farbvariable", config.farbe.variable.orEmpty()) { ändern(config.copy(farbe = config.farbe.copy(variable = it.ifBlank { null }))) }
             Text("Palette", style = MaterialTheme.typography.labelMedium)
@@ -233,5 +208,6 @@ private object VisualisierungsInspektor : KnotenInspektor {
     }
 }
 
+@Composable private fun Fehler(ergebnis: KnotenAuswertungsErgebnis?) { ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) } }
 @Composable private fun ParameterFeld(label: String, wert: String, ändern: (String) -> Unit) { var text by remember(label, wert) { mutableStateOf(wert) }; OutlinedTextField(text, { text = it; ändern(it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth()) }
 @Composable private fun BereichFeld(label: String, bereich: ZahlenBereich, ändern: (ZahlenBereich) -> Unit) { var text by remember(label, bereich) { mutableStateOf("${bereich.minimum}, ${bereich.maximum}") }; OutlinedTextField(text, { text = it; val p = it.split(',').map(String::trim); if (p.size == 2) { val a = p[0].toDoubleOrNull(); val b = p[1].toDoubleOrNull(); if (a != null && b != null && a < b) ändern(ZahlenBereich(a, b)) } }, label = { Text("$label: Minimum, Maximum") }, modifier = Modifier.fillMaxWidth()) }
