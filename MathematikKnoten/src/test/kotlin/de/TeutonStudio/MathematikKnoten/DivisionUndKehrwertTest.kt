@@ -55,12 +55,9 @@ class DivisionUndKehrwertTest {
         assertEquals(RationaleZahl.von(99), ergebnis.knoten.getValue(division.id).ausgaben.getValue("wert").objekt)
     }
 
-    @Test fun `Unbekannter Divisor erhält beide Fälle symbolisch`() {
+    @Test fun `Unbekannter Divisor erhält beide Fälle als Zahl symbolisch`() {
         val dividend = zahl("dividend", "8")
-        val divisor = MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt(0f, 170f)).copy(
-            id = KnotenId("divisor"),
-            parameter = mapOf("name" to "y", "werteVorrat" to "R"),
-        )
+        val divisor = variable("divisor", "y", 170f)
         val ersatz = zahl("ersatz", "99", 340f)
         val division = MathematikKnotenVorlagen.Division.erzeuge(GraphPunkt(620f, 100f)).copy(id = KnotenId("division"))
         val karte = KartenDaten(
@@ -77,9 +74,34 @@ class DivisionUndKehrwertTest {
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         val wert = ergebnis.knoten.getValue(division.id).ausgaben.getValue("wert").objekt
-        assertIs<FallAusdruck>(wert)
-        assertEquals(RationaleZahl.von(99), wert.wahr)
-        assertEquals(Gleichheit(Variable("y"), RationaleZahl.Null), wert.aussage)
+        val fall = assertIs<ZahlFallAusdruck>(wert)
+        assertEquals(RationaleZahl.von(99), fall.wahr)
+        assertEquals(Gleichheit(Variable("y"), RationaleZahl.Null), fall.aussage)
+    }
+
+    @Test fun `Unentschiedener Divisionsfall bleibt an einer Addition auswertbar`() {
+        val dividend = zahl("dividend", "8")
+        val divisor = variable("divisor", "y", 170f)
+        val ersatz = zahl("ersatz", "99", 340f)
+        val eins = zahl("eins", "1", 510f)
+        val division = MathematikKnotenVorlagen.Division.erzeuge(GraphPunkt(620f, 120f)).copy(id = KnotenId("division"))
+        val addition = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt(940f, 180f)).copy(id = KnotenId("addition"))
+        val karte = KartenDaten(
+            name = "Typisierter Divisionsfall",
+            knoten = listOf(dividend, divisor, ersatz, eins, division, addition),
+            verbindungen = listOf(
+                VerbindungDaten(von = ausgang(dividend), zu = eingang(division, "dividend")),
+                VerbindungDaten(von = ausgang(divisor), zu = eingang(division, "divisor")),
+                VerbindungDaten(von = ausgang(ersatz), zu = eingang(division, "fallsNennerNull")),
+                VerbindungDaten(von = ausgang(division), zu = eingang(addition, "a")),
+                VerbindungDaten(von = ausgang(eins), zu = eingang(addition, "b")),
+            ),
+        )
+
+        val ergebnis = auswerter.auswerten(karte)
+
+        assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
+        assertIs<Addition>(ergebnis.knoten.getValue(addition.id).ausgaben.getValue("wert").objekt)
     }
 
     @Test fun `Aliase bleiben in der Divisionsfallformel erhalten`() {
@@ -129,6 +151,11 @@ class DivisionUndKehrwertTest {
     private fun zahl(id: String, wert: String, y: Float = 0f) = MathematikKnotenVorlagen.Zahl.erzeuge(GraphPunkt(0f, y)).copy(
         id = KnotenId(id),
         parameter = mapOf("wert" to wert),
+    )
+
+    private fun variable(id: String, name: String, y: Float = 0f) = MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt(0f, y)).copy(
+        id = KnotenId(id),
+        parameter = mapOf("name" to name, "werteVorrat" to "R"),
     )
 
     private fun ausgang(knoten: KnotenDaten) = AnschlussVerweis(
