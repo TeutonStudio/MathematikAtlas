@@ -6,12 +6,13 @@ class GanzzahlKonzeptTest {
     @Test fun `Zahlkonzept trennt Vorzeichenzahlen und natürliche Nachfolger`() {
         val zahl = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl")))
 
+        assertNotNull(zahl.reiter.firstOrNull { it.id == "ganze-beispiele" })
         assertNotNull(zahl.reiter.firstOrNull { it.id == "positiver-nachfolger" })
         assertNotNull(zahl.reiter.firstOrNull { it.id == "negativer-nachfolger" })
         assertNotNull(zahl.reiter.firstOrNull { it.id == "natürliche-beispiele" })
         assertNotNull(zahl.reiter.firstOrNull { it.id == "natürlicher-nachfolger" })
-        assertTrue(zahl.beschreibung.contains("1 = {+}"))
-        assertTrue(zahl.beschreibung.contains("−1 = {−}"))
+        assertTrue(zahl.beschreibung.contains("3 = {2,1,+}"))
+        assertTrue(zahl.beschreibung.contains("−6 = {−5,−4,−3,−2,−1,−}"))
         assertTrue(zahl.beschreibung.contains("n+1 = n ∪ {n}"))
     }
 
@@ -27,17 +28,27 @@ class GanzzahlKonzeptTest {
         assertFalse(definition.knoten.any { it.art == "mathematik.zahl" })
     }
 
-    @Test fun `Vorzeichen Nachfolger erzeugen Mengen aus Vorgänger und Vorzeichen`() {
+    @Test fun `Ganze Zahlen enthalten kumulativ alle Vorgänger und das Vorzeichen`() {
+        val beispiele = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl"))).reiter("ganze-beispiele").karte
+
+        assertEquals("3 = {2,1,+} und −6 = {−5,−4,−3,−2,−1,−}", beispiele.name)
+        assertTrue(beispiele.knoten.any { it.parameter["regel"]?.contains("3 = {2,1,+}") == true })
+        assertTrue(beispiele.knoten.any { it.parameter["regel"]?.contains("−6 = {−5,−4,−3,−2,−1,−}") == true })
+    }
+
+    @Test fun `Vorzeichen Nachfolger erweitern die bestehende Zahl um ihren Vorgänger`() {
         val zahl = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl")))
         val positiv = zahl.reiter("positiver-nachfolger").karte
         val negativ = zahl.reiter("negativer-nachfolger").karte
 
-        assertEquals("n+1 = {n,+}", positiv.name)
-        assertEquals("n−1 = {n,−}", negativ.name)
-        assertEquals(2, positiv.knoten.count { it.art == "mathematik.einzelmenge" })
-        assertEquals(2, negativ.knoten.count { it.art == "mathematik.einzelmenge" })
+        assertEquals("n+1 = n ∪ {n}, Basis 1 = {+}", positiv.name)
+        assertEquals("n−1 = n ∪ {n}, Basis −1 = {−}", negativ.name)
+        assertEquals(1, positiv.knoten.count { it.art == "mathematik.einzelmenge" })
+        assertEquals(1, negativ.knoten.count { it.art == "mathematik.einzelmenge" })
         assertEquals(1, positiv.knoten.count { it.art == "mathematik.vereinigung" })
         assertEquals(1, negativ.knoten.count { it.art == "mathematik.vereinigung" })
+        assertFalse(positiv.knoten.any { it.parameter["name"] == "+" })
+        assertFalse(negativ.knoten.any { it.parameter["name"] == "−" })
     }
 
     @Test fun `Natürliche Zahlen folgen der von Neumann Nachfolgerkonstruktion`() {
@@ -45,11 +56,11 @@ class GanzzahlKonzeptTest {
         val beispiele = zahl.reiter("natürliche-beispiele").karte
         val nachfolger = zahl.reiter("natürlicher-nachfolger").karte
 
-        assertEquals("0 = ∅, 1 = {0}, 2 = {0,1}", beispiele.name)
+        assertEquals("0 = ∅, 1 = {0}, 2 = {1,0}", beispiele.name)
         assertTrue(beispiele.knoten.any { it.name == "0 = ∅" })
         assertTrue(beispiele.knoten.any { it.name == "1 = {0}" })
-        assertTrue(beispiele.knoten.any { it.name == "2 = {0,1}" })
-        assertEquals("n+1 = n ∪ {n}", nachfolger.name)
+        assertTrue(beispiele.knoten.any { it.name == "2 = {1,0}" })
+        assertEquals("n+1 = n ∪ {n}, Basis 0 = ∅", nachfolger.name)
         assertEquals(1, nachfolger.knoten.count { it.art == "mathematik.einzelmenge" })
         assertEquals(1, nachfolger.knoten.count { it.art == "mathematik.vereinigung" })
     }
