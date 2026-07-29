@@ -1,23 +1,28 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class GanzzahlKonzeptTest {
-    @Test fun `Zahlkonzept trennt Vorzeichenzahlen und natürliche Nachfolger`() {
-        val zahl = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl")))
+    @Test fun `Zahlbereiche besitzen eigene fachlich zugeordnete Konzepte`() {
+        val zahl = konzept(MathematikKnotenVorlagen.Zahl)
+        val ganze = konzept(MathematikKnotenVorlagen.GanzeZahlen)
+        val natürliche = konzept(MathematikKnotenVorlagen.NatürlicheZahlen)
 
-        assertNotNull(zahl.reiter.firstOrNull { it.id == "ganze-beispiele" })
-        assertNotNull(zahl.reiter.firstOrNull { it.id == "positiver-nachfolger" })
-        assertNotNull(zahl.reiter.firstOrNull { it.id == "negativer-nachfolger" })
-        assertNotNull(zahl.reiter.firstOrNull { it.id == "natürliche-beispiele" })
-        assertNotNull(zahl.reiter.firstOrNull { it.id == "natürlicher-nachfolger" })
-        assertTrue(zahl.beschreibung.contains("3 = {2,1,+}"))
-        assertTrue(zahl.beschreibung.contains("−6 = {−5,−4,−3,−2,−1,−}"))
-        assertTrue(zahl.beschreibung.contains("n+1 = n ∪ {n}"))
+        assertEquals(KonzeptId("zahl"), zahl.id)
+        assertEquals(KonzeptId("ganzezahlen"), ganze.id)
+        assertEquals(KonzeptId("natuerlichezahlen"), natürliche.id)
+        assertNotNull(ganze.reiter.firstOrNull { it.id == "ganze-beispiele" })
+        assertNotNull(ganze.reiter.firstOrNull { it.id == "positiver-nachfolger" })
+        assertNotNull(ganze.reiter.firstOrNull { it.id == "negativer-nachfolger" })
+        assertNotNull(natürliche.reiter.firstOrNull { it.id == "definition" })
+        assertNotNull(natürliche.reiter.firstOrNull { it.id == "beispiele" })
     }
 
     @Test fun `Eins und minus eins sind die Vorzeichen Einzelmengen und keine Mächtigkeiten`() {
-        val definition = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl"))).reiter("definition").karte
+        val definition = konzept(MathematikKnotenVorlagen.Zahl).reiter("definition").karte
 
         assertEquals(2, definition.knoten.count { it.art == "mathematik.einzelmenge" })
         assertEquals(0, definition.knoten.count { it.art == "mathematik.mächtigkeit" })
@@ -29,17 +34,20 @@ class GanzzahlKonzeptTest {
     }
 
     @Test fun `Ganze Zahlen enthalten kumulativ alle Vorgänger und das Vorzeichen`() {
-        val beispiele = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl"))).reiter("ganze-beispiele").karte
+        val ganze = konzept(MathematikKnotenVorlagen.GanzeZahlen)
+        val beispiele = ganze.reiter("ganze-beispiele").karte
 
+        assertTrue(ganze.beschreibung.contains("1 = {+}"))
+        assertTrue(ganze.beschreibung.contains("−1 = {−}"))
         assertEquals("3 = {2,1,+} und −6 = {−5,−4,−3,−2,−1,−}", beispiele.name)
         assertTrue(beispiele.knoten.any { it.parameter["regel"]?.contains("3 = {2,1,+}") == true })
         assertTrue(beispiele.knoten.any { it.parameter["regel"]?.contains("−6 = {−5,−4,−3,−2,−1,−}") == true })
     }
 
     @Test fun `Vorzeichen Nachfolger erweitern die bestehende Zahl um ihren Vorgänger`() {
-        val zahl = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl")))
-        val positiv = zahl.reiter("positiver-nachfolger").karte
-        val negativ = zahl.reiter("negativer-nachfolger").karte
+        val ganze = konzept(MathematikKnotenVorlagen.GanzeZahlen)
+        val positiv = ganze.reiter("positiver-nachfolger").karte
+        val negativ = ganze.reiter("negativer-nachfolger").karte
 
         assertEquals("n+1 = n ∪ {n}, Basis 1 = {+}", positiv.name)
         assertEquals("n−1 = n ∪ {n}, Basis −1 = {−}", negativ.name)
@@ -52,21 +60,21 @@ class GanzzahlKonzeptTest {
     }
 
     @Test fun `Natürliche Zahlen folgen der von Neumann Nachfolgerkonstruktion`() {
-        val zahl = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl")))
-        val beispiele = zahl.reiter("natürliche-beispiele").karte
-        val nachfolger = zahl.reiter("natürlicher-nachfolger").karte
+        val natürliche = konzept(MathematikKnotenVorlagen.NatürlicheZahlen)
+        val definition = natürliche.reiter("definition").karte
+        val beispiele = natürliche.reiter("beispiele").karte
 
+        assertEquals("n+1 = n ∪ {n}, Basis 0 = ∅", definition.name)
+        assertEquals(1, definition.knoten.count { it.art == "mathematik.einzelmenge" })
+        assertEquals(1, definition.knoten.count { it.art == "mathematik.vereinigung" })
         assertEquals("0 = ∅, 1 = {0}, 2 = {1,0}", beispiele.name)
         assertTrue(beispiele.knoten.any { it.name == "0 = ∅" })
         assertTrue(beispiele.knoten.any { it.name == "1 = {0}" })
         assertTrue(beispiele.knoten.any { it.name == "2 = {1,0}" })
-        assertEquals("n+1 = n ∪ {n}, Basis 0 = ∅", nachfolger.name)
-        assertEquals(1, nachfolger.knoten.count { it.art == "mathematik.einzelmenge" })
-        assertEquals(1, nachfolger.knoten.count { it.art == "mathematik.vereinigung" })
     }
 
     @Test fun `Zahlbereiche zeigen N und N0 als Teilmengen von Z`() {
-        val karte = assertNotNull(TestDefinitionsKarten.finde(KonzeptId("zahl"))).reiter("zahlbereiche").karte
+        val karte = konzept(MathematikKnotenVorlagen.Zahl).reiter("zahlbereiche").karte
 
         assertEquals(2, karte.knoten.count { it.art == "mathematik.teilOderGleichmenge" })
         assertTrue(karte.knoten.any { it.art == "mathematik.natürlicheZahlen" })
@@ -83,4 +91,9 @@ class GanzzahlKonzeptTest {
         assertTrue(konzept.reiter("ganze-zahlen").karte.knoten.any { it.art == "mathematik.addition" })
         assertTrue(konzept.reiter("ganze-zahlen").karte.knoten.any { it.art == "mathematik.multiplikation" })
     }
+
+    private fun konzept(vorlage: KnotenVorlage): KonzeptDefinition = assertNotNull(
+        TestDefinitionsKarten.fürKnoten(vorlage.erzeuge(GraphPunkt(0f, 0f))),
+        vorlage.art.toString(),
+    )
 }
