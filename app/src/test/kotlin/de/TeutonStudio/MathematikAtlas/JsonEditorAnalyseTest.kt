@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import kotlin.test.*
 
 class JsonEditorAnalyseTest {
@@ -38,11 +39,7 @@ class JsonEditorAnalyseTest {
         val faltungen = analysiereJsonFaltungen(text)
         val array = faltungen.single { text[it.startOffset] == '[' }
 
-        val sichtbar = sichtbareJsonZeilen(
-            zeilenAnzahl = text.lines().size,
-            faltungen = faltungen,
-            eingeklappt = setOf(array.startOffset),
-        )
+        val sichtbar = sichtbareJsonZeilen(text.lines().size, faltungen, setOf(array.startOffset))
 
         assertEquals(listOf(1, 2, 7, 8), sichtbar.map { it.originalZeile })
         assertTrue(sichtbar.single { it.originalZeile == 2 }.eingeklappt)
@@ -65,5 +62,64 @@ class JsonEditorAnalyseTest {
         assertNotNull(analyse.fehler)
         assertEquals(4, analyse.zeilenAnzahl)
         assertTrue(analyse.faltungen.isEmpty())
+    }
+
+    @Test
+    fun `Listenanalyse erkennt den zugehörigen Schlüssel`() {
+        val text = """
+            {
+              "knoten": [],
+              "visuelleGruppen": [
+                { "knotenIds": [] }
+              ]
+            }
+        """.trimIndent()
+
+        val listen = analysiereJsonListen(text)
+
+        assertEquals(listOf("knoten", "visuelleGruppen", "knotenIds"), listen.map { it.schlüssel })
+    }
+
+    @Test
+    fun `Plus ergänzt leere Knotenliste als gültiges JSON`() {
+        val text = """
+            {
+              "formatVersion": 4,
+              "id": "karte",
+              "name": "Test",
+              "version": 1,
+              "erstelltAm": 1,
+              "archiviert": false,
+              "ansicht": { "x": 0, "y": 0, "zoom": 1 },
+              "knoten": [],
+              "verbindungen": [],
+              "visuelleGruppen": []
+            }
+        """.trimIndent()
+        val liste = analysiereJsonListen(text).single { it.schlüssel == "knoten" }
+
+        val eingefügt = fügeJsonListenEintragEin(text, liste, KartenDaten(name = "Test"))
+
+        assertNull(analysiereJson(eingefügt.text).fehler)
+        assertTrue(eingefügt.text.contains("mathematik.zahl"))
+    }
+
+    @Test
+    fun `ID Kontext erkennt Knoten und Anschlusswerte`() {
+        val text = """
+            {
+              "von": {
+                "knotenId": "knoten-1",
+                "anschlussId": "anschluss-1"
+              }
+            }
+        """.trimIndent()
+
+        val cursor = text.indexOf("anschluss-1") + 3
+        val kontext = assertNotNull(jsonIdKontext(text, cursor))
+
+        assertEquals("anschlussId", kontext.schlüssel)
+        assertEquals("knoten-1", kontext.knotenId)
+        assertEquals("anschluss-1", kontext.aktuellerWert)
     }
 }
