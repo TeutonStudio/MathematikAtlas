@@ -56,7 +56,8 @@ private fun inferiereElementMenge(
     werteVorräte: Map<String, MengenAusdruck>,
     annahmen: Set<Aussage>,
 ): MengenAusdruck = when (menge) {
-    NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, is BenannteMenge -> menge
+    NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen,
+    Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen, is BenannteMenge -> menge
     LeereMenge -> LeereMenge
     is EndlicheMenge -> if (menge.elemente.isEmpty()) LeereMenge else vereinige(menge.elemente.map {
         inferiereZielmenge(it, werteVorräte, annahmen)
@@ -76,5 +77,6 @@ private fun inferiereElementMenge(
     is IteriertesKartesischesProdukt -> Folgenraum(menge.methode.grundMengeFürMengenAusgabe())
     is GeometrischeTrägermenge -> BenannteMenge("punkte_${menge.objekt.raum.id}", "\\mathcal{P}(${menge.objekt.raum.id})")
     is KoordinatenBild -> Tupelraum(List(menge.objekt.raum.dimension) { ReelleZahlen })
-    is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum -> menge
+    is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum,
+    is Potenzmenge, is Abbildungsmenge, is Tensorraum, is ModuloZahlenraum -> menge
 }
