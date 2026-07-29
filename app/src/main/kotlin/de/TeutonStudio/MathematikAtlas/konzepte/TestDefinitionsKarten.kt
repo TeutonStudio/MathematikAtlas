@@ -50,6 +50,8 @@ object TestDefinitionsKarten {
         val erste = varianten.first()
         return when (erste.art) {
             "mathematik.zahl" -> SpezielleDefinitionsKarten.zahl()
+            "mathematik.ganzeZahlen" -> SpezielleDefinitionsKarten.ganzeZahlen(erste)
+            "mathematik.natürlicheZahlen" -> SpezielleDefinitionsKarten.natürlicheZahlen(erste)
             "mathematik.subtraktion" -> SpezielleDefinitionsKarten.subtraktion(erste)
             else -> generischesKonzept(varianten)
         }
