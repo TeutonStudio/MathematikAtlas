@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,11 +15,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
 import kotlinx.coroutines.delay
@@ -30,6 +33,8 @@ private sealed interface GraphKontext {
     data class Anschluss(val ref: AnschlussVerweis) : GraphKontext
 }
 
+private enum class KartenWerkzeug { Auswahl, Verschieben }
+
 @Composable
 fun MathematikAtlasApp(zustand: AtlasZustand) {
     val context = LocalContext.current
@@ -40,6 +45,8 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { r -> zustand.importiere(r.readText()) } }
     }
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
+    var werkzeug by remember { mutableStateOf(KartenWerkzeug.Auswahl) }
+    val aktuelleAnsicht by rememberUpdatedState(zustand.editor.karte.ansicht)
 
     LaunchedEffect(zustand.editor.karte) {
         zustand.aktualisiereAuswertung()
@@ -47,9 +54,6 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         zustand.speichereAktuell()
     }
 
-    // Ab Android 15 kann der Inhalt standardmäßig bis unter die Systemleisten
-    // reichen. Die gesamte Arbeitsfläche erhält deshalb den Navigationsleisten-
-    // Inset; so bleiben insbesondere die unteren Inspektoraktionen erreichbar.
     Row(
         Modifier.fillMaxSize()
             .navigationBarsPadding()
@@ -58,35 +62,70 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         VerwaltungsFenster(zustand, Modifier.width(280.dp).fillMaxHeight())
         VerticalDivider()
         Column(Modifier.weight(1f).fillMaxHeight()) {
-            WerkzeugLeiste(zustand, onImport = { import.launch(arrayOf("application/json", "text/plain")) }, onExport = { export.launch("${zustand.editor.karte.name}.json") })
+            WerkzeugLeiste(
+                zustand,
+                onImport = { import.launch(arrayOf("application/json", "text/plain")) },
+                onExport = { export.launch("${zustand.editor.karte.name}.json") },
+            )
             HorizontalDivider()
-            Row(Modifier.weight(1f).fillMaxWidth()) {
-                KartenWerkzeuge(
-                    editor = zustand.editor,
-                    modifier = Modifier.width(56.dp).fillMaxHeight(),
-                )
-                VerticalDivider()
-                Box(Modifier.weight(1f).fillMaxHeight()) {
-                    KnotenKartenEditor(
-                        zustand = zustand.editor,
-                        modifier = Modifier.fillMaxSize(),
-                        rendererFür = zustand::rendererFür,
-                        farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
-                        beiHintergrundKontext = { zustand.öffneKnotenAuswahl(it) },
-                        beiKnotenKontext = { knoten ->
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                KnotenKartenEditor(
+                    zustand = zustand.editor,
+                    modifier = Modifier.fillMaxSize(),
+                    rendererFür = zustand::rendererFür,
+                    farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
+                    beiHintergrundKontext = { if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(it) },
+                    beiKnotenKontext = { knoten ->
+                        if (werkzeug == KartenWerkzeug.Auswahl) {
                             graphKontext = if (zustand.editor.auswahlModus == AuswahlModus.Gruppe) {
                                 GraphKontext.Knotengruppe(zustand.editor.ausgewählteKnoten + knoten.id)
                             } else GraphKontext.Knoten(knoten.id)
-                        },
-                        beiVerbindungKontext = { graphKontext = GraphKontext.Verbindung(it.id) },
-                        beiAnschlussKontext = { graphKontext = GraphKontext.Anschluss(it) },
-                        beiVerbindungAufHintergrund = { start, position -> zustand.öffneKnotenAuswahl(position, start) },
-                        beiKnotenDoppelklick = { it.kartenVerweis?.let(zustand::öffne) },
+                        }
+                    },
+                    beiVerbindungKontext = { if (werkzeug == KartenWerkzeug.Auswahl) graphKontext = GraphKontext.Verbindung(it.id) },
+                    beiAnschlussKontext = { if (werkzeug == KartenWerkzeug.Auswahl) graphKontext = GraphKontext.Anschluss(it) },
+                    beiVerbindungAufHintergrund = { start, position ->
+                        if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(position, start)
+                    },
+                    beiKnotenDoppelklick = { if (werkzeug == KartenWerkzeug.Auswahl) it.kartenVerweis?.let(zustand::öffne) },
+                )
+
+                if (werkzeug == KartenWerkzeug.Verschieben) {
+                    Box(
+                        Modifier.fillMaxSize()
+                            .pointerInput(zustand.editor.karte.id, werkzeug) {
+                                detectDragGestures { änderung, delta ->
+                                    änderung.consume()
+                                    val ansicht = aktuelleAnsicht
+                                    zustand.editor.führeAus(
+                                        KartenAktion.AnsichtÄndern(
+                                            ansicht.copy(
+                                                verschiebung = ansicht.verschiebung + GraphPunkt(delta.x, delta.y),
+                                            ),
+                                        ),
+                                        mitHistorie = false,
+                                    )
+                                }
+                            },
                     )
-                    KartenMarkierungen(zustand.editor)
-                    zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
-                    graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
                 }
+
+                KartenMarkierungen(zustand.editor)
+                Row(
+                    Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    KartenWerkzeuge(
+                        editor = zustand.editor,
+                        werkzeug = werkzeug,
+                        onWerkzeug = { werkzeug = it },
+                        modifier = Modifier.width(104.dp).height(120.dp),
+                    )
+                    Spacer(Modifier.width(180.dp).height(120.dp))
+                }
+                zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
+                graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
             }
         }
         VerticalDivider()
@@ -96,8 +135,16 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
 
 @Composable
 private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließen: () -> Unit) {
+    if (kontext is GraphKontext.Knoten) {
+        val knoten = zustand.editor.karte.knoten.firstOrNull { it.id == kontext.id }
+        if (knoten != null) {
+            KnotenKonzeptDialog(zustand, knoten, schließen)
+            return
+        }
+    }
+
     val titel = when (kontext) {
-        is GraphKontext.Knoten -> "ID: ${kontext.id.wert}"
+        is GraphKontext.Knoten -> "Knoten existiert nicht mehr"
         is GraphKontext.Knotengruppe -> "${kontext.knotenIds.size} Knoten ausgewählt"
         is GraphKontext.Verbindung -> "ID: ${kontext.id.wert}"
         is GraphKontext.Anschluss -> "Anschluss: ${kontext.ref.anschlussId.wert}"
@@ -108,35 +155,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (kontext) {
-                    is GraphKontext.Knoten -> {
-                        Text("Knoten", style = MaterialTheme.typography.labelLarge)
-                        Button(
-                            onClick = {
-                                zustand.editor.wähleKnoten(kontext.id)
-                                zustand.editor.dupliziereAuswahl()
-                                schließen()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text("Duplizieren") }
-                        OutlinedButton(
-                            onClick = {
-                                zustand.editor.wähleKnoten(kontext.id)
-                                zustand.editor.isoliereAusgewähltenKnoten()
-                                schließen()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text("Isolieren") }
-                        Text("Entfernt alle Verbindungen dieses Knotens.", style = MaterialTheme.typography.bodySmall)
-                        Button(
-                            onClick = {
-                                zustand.editor.wähleKnoten(kontext.id)
-                                zustand.editor.löscheAuswahl()
-                                schließen()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        ) { Text("Löschen") }
-                    }
+                    is GraphKontext.Knoten -> Text("Der Knoten existiert nicht mehr.")
                     is GraphKontext.Knotengruppe -> {
                         Text("Gruppenauswahl", style = MaterialTheme.typography.labelLarge)
                         Button(
@@ -185,10 +204,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                             val vernichtbar = zustand.editor.kannAnschlussVernichten(kontext.ref)
                             Button(
                                 onClick = {
-                                    zustand.editor.fügeAnschlussRelativEin(
-                                        kontext.ref,
-                                        AnschlussEinfügePosition.Davor,
-                                    )
+                                    zustand.editor.fügeAnschlussRelativEin(kontext.ref, AnschlussEinfügePosition.Davor)
                                     schließen()
                                 },
                                 enabled = erweiterbar,
@@ -205,10 +221,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                             ) { Text("Anschluss vernichten") }
                             OutlinedButton(
                                 onClick = {
-                                    zustand.editor.fügeAnschlussRelativEin(
-                                        kontext.ref,
-                                        AnschlussEinfügePosition.Danach,
-                                    )
+                                    zustand.editor.fügeAnschlussRelativEin(kontext.ref, AnschlussEinfügePosition.Danach)
                                     schließen()
                                 },
                                 enabled = erweiterbar,
@@ -223,6 +236,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                                     "Der Knoten benötigt mindestens zwei feste Eingänge.",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
+                                else -> Unit
                             }
                         }
                     }
@@ -268,7 +282,7 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
         )
     }
     if (jsonGeöffnet) {
-        KartenJsonDialog(zustand = zustand, schließen = { jsonGeöffnet = false })
+        KartenJsonDialogV2311(zustand = zustand, schließen = { jsonGeöffnet = false })
     }
 }
 
@@ -318,28 +332,48 @@ private fun KartenMarkierungen(editor: KartenEditorZustand) {
 }
 
 @Composable
-private fun KartenWerkzeuge(editor: KartenEditorZustand, modifier: Modifier = Modifier) {
-    Surface(modifier, shape = RectangleShape, tonalElevation = 1.dp) {
+private fun KartenWerkzeuge(
+    editor: KartenEditorZustand,
+    werkzeug: KartenWerkzeug,
+    onWerkzeug: (KartenWerkzeug) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(modifier, shape = MaterialTheme.shapes.medium, tonalElevation = 3.dp) {
         Column(
-            Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+            Modifier.fillMaxSize().padding(6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.Center,
         ) {
-            KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = editor::rückgängig)
-            KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = editor::wiederholen)
-            HorizontalDivider()
-            KartenWerkzeugKnopf(
-                "1",
-                "Einzelauswahl",
-                aktiv = editor.auswahlModus == AuswahlModus.Einzeln,
-                onClick = { editor.setzeAuswahlModus(AuswahlModus.Einzeln) },
-            )
-            KartenWerkzeugKnopf(
-                "▦",
-                "Gruppenauswahl",
-                aktiv = editor.auswahlModus == AuswahlModus.Gruppe,
-                onClick = { editor.setzeAuswahlModus(AuswahlModus.Gruppe) },
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = editor::rückgängig)
+                KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = editor::wiederholen)
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                val gruppenmodus = editor.auswahlModus == AuswahlModus.Gruppe
+                KartenWerkzeugKnopf(
+                    symbol = if (gruppenmodus) "▦" else "1",
+                    beschreibung = if (gruppenmodus) {
+                        "Gruppenauswahl aktiv; zu Einzelauswahl wechseln"
+                    } else {
+                        "Einzelauswahl aktiv; zu Gruppenauswahl wechseln"
+                    },
+                    aktiv = werkzeug == KartenWerkzeug.Auswahl,
+                    onClick = {
+                        if (werkzeug != KartenWerkzeug.Auswahl) {
+                            onWerkzeug(KartenWerkzeug.Auswahl)
+                        } else {
+                            editor.setzeAuswahlModus(if (gruppenmodus) AuswahlModus.Einzeln else AuswahlModus.Gruppe)
+                        }
+                    },
+                )
+                KartenWerkzeugKnopf(
+                    symbol = "✥",
+                    beschreibung = "Kartenansicht verschieben",
+                    aktiv = werkzeug == KartenWerkzeug.Verschieben,
+                    onClick = { onWerkzeug(KartenWerkzeug.Verschieben) },
+                )
+            }
         }
     }
 }
