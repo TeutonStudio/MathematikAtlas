@@ -9,6 +9,9 @@ internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
         val eingang = k.eingänge["zahl"] ?: error("Für den Kehrwert muss eine Zahl verbunden sein.")
         val zahl = eingang.objekt as? ZahlAusdruck ?: error("Der Kehrwert ist nur für Zahlen definiert.")
         val nichtNull = Ungleichheit(zahl, RationaleZahl.Null)
+        require(nichtNull.entscheide(k.rechenKontext).wahrheitswert != Wahrheitswert.Lüge) {
+            "Der Kehrwert von 0 ist nicht definiert."
+        }
         val kontext = k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + eingang.annahmen + nichtNull)
         val kehrwert = vereinfache(Potenz(zahl, RationaleZahl.von(-1)), kontext)
         KnotenAuswertungsErgebnis(mapOf(
@@ -47,25 +50,32 @@ internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
             variablenQuellen = quellen,
         )
 
-        val basis = when (divisorNull.entscheide(kontext).wahrheitswert) {
-            Wahrheitswert.Wahr -> nullErsatz ?: error("Für Nenner 0 muss der Eingang „falls Nenner null“ verbunden sein.")
-            Wahrheitswert.Lüge -> quotientWert
-            null -> if (nullErsatz == null) quotientWert else BedingterWert(
-                objekt = FallAusdruck(nullErsatz.objekt, divisorNull, quotient),
-                annahmen = annahmen,
-                reelleVariablen = reelle,
-                variablenQuellen = quellen,
-            )
+        val (basis, ausgabeAnnahmen) = when (divisorNull.entscheide(kontext).wahrheitswert) {
+            Wahrheitswert.Wahr -> {
+                val ersatz = nullErsatz ?: error("Für Nenner 0 muss der Eingang „falls Nenner null“ verbunden sein.")
+                ersatz to annahmen
+            }
+            Wahrheitswert.Lüge -> quotientWert to quotientWert.annahmen
+            null -> if (nullErsatz == null) {
+                quotientWert to quotientWert.annahmen
+            } else {
+                BedingterWert(
+                    objekt = FallAusdruck(nullErsatz.objekt, divisorNull, quotient),
+                    annahmen = annahmen,
+                    reelleVariablen = reelle,
+                    variablenQuellen = quellen,
+                ) to annahmen
+            }
         }
 
         val latex = if (nullErsatz == null) {
             "\\frac{${dividendWert.anzeigeLatex()}}{${divisorWert.anzeigeLatex()}}"
         } else {
-            "\\begin{cases}${nullErsatz.anzeigeLatex()},&${divisorWert.anzeigeLatex()}=0\\\\\\frac{${dividendWert.anzeigeLatex()}}{${divisorWert.anzeigeLatex()}},&${divisorWert.anzeigeLatex()}\\ne0\\end{cases}"
+            """\begin{cases}${nullErsatz.anzeigeLatex()},&${divisorWert.anzeigeLatex()}=0\\\frac{${dividendWert.anzeigeLatex()}}{${divisorWert.anzeigeLatex()}},&${divisorWert.anzeigeLatex()}\ne0\end{cases}"""
         }
         KnotenAuswertungsErgebnis(mapOf(
             "wert" to basis.copy(
-                annahmen = if (basis === quotientWert) quotientWert.annahmen else annahmen,
+                annahmen = ausgabeAnnahmen,
                 reelleVariablen = reelle,
                 variablenQuellen = quellen,
                 latexDarstellung = latex,
