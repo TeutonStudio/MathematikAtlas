@@ -81,4 +81,15 @@ class KartenJsonTest {
         assertEquals("wert", ausgang.artFolgtEingang)
         assertEquals(alias.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
+
+    @Test fun `Fallunterscheidung behält vereinigte Zweigarten`() {
+        val fall = MathematikKnotenVorlagen.Fall.erzeuge(GraphPunkt.Zero)
+
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(fall)))).knoten.single()
+        val ausgang = gelesen.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+
+        assertEquals(listOf("wahr", "lüge"), ausgang.artVereinigtEingänge)
+        assertEquals(fall.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
+    }
+
 }

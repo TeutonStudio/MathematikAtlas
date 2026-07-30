@@ -40,15 +40,6 @@ object StandardMathematikAuswerter {
             require(werte.size >= 2) { "Mindestens zwei Faktoren müssen verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(multiplikation(werte), k)))
         }
-        registriere("mathematik.division") { k ->
-            val dividend = k.zahl("dividend"); val divisor = k.zahl("divisor")
-            val nullFall = Gleichheit(divisor, RationaleZahl.Null)
-            val definiert = Ungleichheit(divisor, RationaleZahl.Null)
-            KnotenAuswertungsErgebnis(mapOf(
-                "wert" to reellerZahlwert(vereinfache(Division(dividend, divisor), k.rechenKontext), k, setOf(definiert)),
-                "divisorNull" to BedingterWert(nullFall, annahmen(k)),
-            ))
-        }
         registriere("mathematik.potenz") { k ->
             val basis = k.zahl("basis"); val exponent = k.zahl("exponent")
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(Potenz(basis, exponent), k)))
@@ -407,6 +398,7 @@ object StandardMathematikAuswerter {
         registriere("mathematik.implikation") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Implikation(k.aussage("a"), k.aussage("b")), annahmen(k)))) }
         registriere("mathematik.äquivalenz") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Äquivalenz(k.aussage("a"), k.aussage("b")), annahmen(k)))) }
         registriere("mathematik.adjunktion") { k -> KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Adjunktion(k.aussage("a"), k.aussage("b")), annahmen(k)))) }
+        registriereDivisionUndKehrwert()
     }
 
     private fun KnotenAuswertungsKontext.zahl(name: String) = eingänge[name]?.objekt as? ZahlAusdruck ?: error("Zahleingang $name fehlt.")

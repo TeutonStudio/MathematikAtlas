@@ -173,6 +173,16 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
     is Wurzel -> vereinfacheWurzel(vereinfache(ausdruck.argument, kontext))
     is KomplexeZahl -> KomplexeZahl(vereinfache(ausdruck.realteil, kontext), vereinfache(ausdruck.imaginärteil, kontext))
     is Logarithmus -> Logarithmus(vereinfache(ausdruck.basis, kontext), vereinfache(ausdruck.argument, kontext))
+    is ZahlFallAusdruck -> {
+        val wahr = vereinfache(ausdruck.wahr, kontext.copy(annahmen = kontext.annahmen + ausdruck.aussage))
+        val lüge = vereinfache(ausdruck.lüge, kontext.copy(annahmen = kontext.annahmen + Negation(ausdruck.aussage)))
+        when {
+            wahr == lüge -> wahr
+            ausdruck.aussage.entscheide(kontext).wahrheitswert == Wahrheitswert.Wahr -> wahr
+            ausdruck.aussage.entscheide(kontext).wahrheitswert == Wahrheitswert.Lüge -> lüge
+            else -> FallAusdruck(wahr, ausdruck.aussage, lüge) as ZahlAusdruck
+        }
+    }
     else -> ausdruck
 }
 
@@ -207,6 +217,9 @@ fun istNachweisbarReell(
     is Argument -> false
     is Wurzel -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarNichtNegativ(annahmen)
     is KomplexeZahl -> false
+    is ZahlFallAusdruck ->
+        istNachweisbarReell(ausdruck.wahr, variableIstReell, annahmen + ausdruck.aussage) &&
+            istNachweisbarReell(ausdruck.lüge, variableIstReell, annahmen + Negation(ausdruck.aussage))
     is IterierteSumme, is IteriertesProdukt -> false
 }
 
@@ -263,6 +276,10 @@ fun inferiereZahlenWertevorrat(
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
     is KomplexeZahl -> KomplexeZahlen
+    is ZahlFallAusdruck -> maximaleZahlenGrundmenge(listOf(
+        inferiereZahlenWertevorrat(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage),
+        inferiereZahlenWertevorrat(ausdruck.lüge, werteVorräte, annahmen + Negation(ausdruck.aussage)),
+    ))
     is IterierteSumme, is IteriertesProdukt -> KomplexeZahlen
 }
 

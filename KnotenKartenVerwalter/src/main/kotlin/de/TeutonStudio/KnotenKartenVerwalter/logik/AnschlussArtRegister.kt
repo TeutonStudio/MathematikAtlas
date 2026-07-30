@@ -21,4 +21,19 @@ class AnschlussArtRegister(arten: Iterable<AnschlussArt> = emptyList()) {
         }
         return false
     }
+
+    /** Liefert die spezifischste Art, die Oberart aller angegebenen Arten ist. */
+    fun gemeinsameOberart(arten: Iterable<AnschlussArtId>): AnschlussArtId? {
+        val eindeutig = arten.distinct()
+        if (eindeutig.isEmpty()) return null
+
+        val kandidaten = mutableListOf<AnschlussArtId>()
+        var aktuell: AnschlussArtId? = eindeutig.first()
+        val besucht = mutableSetOf<AnschlussArtId>()
+        while (aktuell != null && besucht.add(aktuell)) {
+            kandidaten += aktuell
+            aktuell = nachId[aktuell]?.elternArt
+        }
+        return kandidaten.firstOrNull { kandidat -> eindeutig.all { art -> istUnterart(art, kandidat) } }
+    }
 }
