@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.3.x"
-current_version = "2.3.17"
+current_version = "2.3.18"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -140,3 +140,14 @@ branch = "agent/v2.3.17-roadmap-agenten"
 kind = "governance"
 version_axis = "x"
 reason = "Dokumentations- und Agentenänderung ohne neuen registrierten Knotentyp."
+
+[[releases]]
+version = "2.3.18"
+title = "Standardwerte, reelle Konjugation und binäre Multiplikation"
+roadmap = "v2.3.x Definitionskarten und Projektstabilisierung"
+status = "released"
+previous_release = "2.3.17"
+branch = "agent/v2.3.18-standardwerte-konjugation"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert bestehende Rechenknoten und den Inspektor ohne neuen registrierten Knotentyp."
