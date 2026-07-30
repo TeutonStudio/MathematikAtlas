@@ -23,6 +23,7 @@ internal fun KnotenKonzeptDialog(
 ) {
     val konzept = remember(knoten.art) { TestDefinitionsKarten.fürKnoten(knoten) }
     var reiterIndex by remember(knoten.art) { mutableIntStateOf(0) }
+    var komplexDarstellung by remember(knoten.id) { mutableStateOf(KomplexDarstellung.Kartesisch) }
 
     Dialog(
         onDismissRequest = schließen,
@@ -66,10 +67,27 @@ internal fun KnotenKonzeptDialog(
                             }
                         }
                     }
+                    if (konzept.reiter.any(KonzeptReiter::besitztDarstellungsVarianten)) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            FilterChip(
+                                selected = komplexDarstellung == KomplexDarstellung.Kartesisch,
+                                onClick = { komplexDarstellung = KomplexDarstellung.Kartesisch },
+                                label = { Text("Kartesisch") },
+                            )
+                            FilterChip(
+                                selected = komplexDarstellung == KomplexDarstellung.Polar,
+                                onClick = { komplexDarstellung = KomplexDarstellung.Polar },
+                                label = { Text("Polar") },
+                            )
+                        }
+                    }
                     val reiter = konzept.reiter[reiterIndex.coerceIn(0, konzept.reiter.lastIndex)]
                     UnveränderlicheKonzeptKarte(
                         zustand = zustand,
-                        karte = reiter.karte,
+                        karte = reiter.karteFür(komplexDarstellung),
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                     )
                 }

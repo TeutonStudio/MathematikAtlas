@@ -8,7 +8,9 @@ enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler 
 /** Reine Lade-Migration für bekannte assoziative Knoten; auch von JVM-Tests prüfbar. */
 internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
     val migriert = migriereFallunterscheidung(
-        migriereAbbildZuAllgemeinerMethode(migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte))),
+        migriereDivisionV240(
+            migriereAbbildZuAllgemeinerMethode(migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte))),
+        ),
     )
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
@@ -89,11 +91,130 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
     )
 }
 
+/**
+ * Ersetzt den früheren Null-Aussage-Ausgang der Division durch den optionalen Null-Ersatz-Eingang.
+ *
+ * Bestehende Verbindungen des Aussageausgangs werden nicht verworfen: Die Migration erzeugt dafür
+ * einen expliziten Gleichheitsknoten `Nenner = 0` und leitet die Verbindungen auf dessen Ausgang um.
+ */
+internal fun migriereDivisionV240(karte: KartenDaten): KartenDaten {
+    val entfernteAnschlüsse = mutableSetOf<AnschlussVerweis>()
+    val ausgangUmleitungen = mutableMapOf<AnschlussVerweis, AnschlussVerweis>()
+    val ergänzteKnoten = mutableListOf<KnotenDaten>()
+    val ergänzteVerbindungen = mutableListOf<VerbindungDaten>()
+
+    fun migrationsKnoten(
+        vorlage: KnotenVorlage,
+        id: String,
+        position: GraphPunkt,
+        parameter: Map<String, String> = emptyMap(),
+    ): KnotenDaten {
+        val erzeugt = vorlage.erzeuge(position)
+        return erzeugt.copy(
+            id = KnotenId(id),
+            anschlüsse = erzeugt.anschlüsse.map { anschluss ->
+                anschluss.copy(id = AnschlussId("$id-${anschluss.richtung.name.lowercase()}-${anschluss.name}"))
+            },
+            parameter = erzeugt.parameter + parameter,
+        )
+    }
+
+    val knoten = karte.knoten.map { alt ->
+        if (alt.art != "mathematik.division") return@map alt
+        val dividend = alt.anschlüsse.firstOrNull { it.name == "dividend" && it.richtung == AnschlussRichtung.Eingang }
+            ?: AnschlussDaten(name = "dividend", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id)
+        val divisor = alt.anschlüsse.firstOrNull { it.name == "divisor" && it.richtung == AnschlussRichtung.Eingang }
+            ?: AnschlussDaten(name = "divisor", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id, reihenfolge = 1)
+        val ersatz = alt.anschlüsse.firstOrNull { it.name == "fallsNennerNull" && it.richtung == AnschlussRichtung.Eingang }
+            ?: AnschlussDaten(name = "fallsNennerNull", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id, reihenfolge = 2)
+        val wert = alt.anschlüsse.firstOrNull { it.name == "wert" && it.richtung == AnschlussRichtung.Ausgang }
+            ?: AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Zahl.id)
+        val alterNullAusgang = alt.anschlüsse.firstOrNull {
+            it.name == "divisorNull" && it.richtung == AnschlussRichtung.Ausgang
+        }
+
+        if (alterNullAusgang != null) {
+            val alterNullVerweis = AnschlussVerweis(alt.id, alterNullAusgang.id)
+            val divisorVerweis = AnschlussVerweis(alt.id, divisor.id)
+            val divisorQuelle = karte.verbindungen.firstOrNull { it.zu == divisorVerweis }?.von
+            val besitztFolgeverbindung = karte.verbindungen.any { it.von == alterNullVerweis }
+            if (besitztFolgeverbindung && divisorQuelle != null) {
+                val prefix = "migration-v240-${alt.id.wert}-divisor-null"
+                val nullKnoten = migrationsKnoten(
+                    MathematikKnotenVorlagen.Zahl,
+                    "$prefix-null",
+                    alt.position + GraphPunkt(0f, alt.größe.höhe + 70f),
+                    mapOf("wert" to "0"),
+                )
+                val gleichheit = migrationsKnoten(
+                    MathematikKnotenVorlagen.Gleichheit,
+                    "$prefix-gleichheit",
+                    alt.position + GraphPunkt(300f, alt.größe.höhe + 70f),
+                )
+                val links = gleichheit.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang && it.name == "links" }
+                val rechts = gleichheit.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang && it.name == "rechts" }
+                val aussage = gleichheit.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang && it.name == "aussage" }
+                val nullWert = nullKnoten.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang && it.name == "wert" }
+                ergänzteKnoten += listOf(nullKnoten, gleichheit)
+                ergänzteVerbindungen += VerbindungDaten(
+                    id = VerbindungsId("$prefix-divisor"),
+                    von = divisorQuelle,
+                    zu = AnschlussVerweis(gleichheit.id, links.id),
+                )
+                ergänzteVerbindungen += VerbindungDaten(
+                    id = VerbindungsId("$prefix-nullwert"),
+                    von = AnschlussVerweis(nullKnoten.id, nullWert.id),
+                    zu = AnschlussVerweis(gleichheit.id, rechts.id),
+                )
+                ausgangUmleitungen[alterNullVerweis] = AnschlussVerweis(gleichheit.id, aussage.id)
+            } else {
+                entfernteAnschlüsse += alterNullVerweis
+            }
+        }
+
+        val behalten = setOf(dividend.id, divisor.id, ersatz.id, wert.id)
+        alt.anschlüsse.filterNot { it.id in behalten || it == alterNullAusgang }.forEach {
+            entfernteAnschlüsse += AnschlussVerweis(alt.id, it.id)
+        }
+        alt.copy(
+            anschlüsse = listOf(
+                dividend.copy(name = "dividend", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                divisor.copy(name = "divisor", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id, reihenfolge = 1, kannSichErweitern = false, dynamischErzeugt = false),
+                ersatz.copy(name = "fallsNennerNull", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id, reihenfolge = 2, kannSichErweitern = false, dynamischErzeugt = false),
+                wert.copy(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Zahl.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+            ),
+        )
+    }
+
+    val alleKnoten = knoten + ergänzteKnoten
+    val gültigeAnschlüsse = alleKnoten.flatMap { k -> k.anschlüsse.map { AnschlussVerweis(k.id, it.id) } }.toSet()
+    val migrierteVerbindungen = karte.verbindungen.mapNotNull { verbindung ->
+        val von = ausgangUmleitungen[verbindung.von] ?: verbindung.von
+        val migriert = verbindung.copy(von = von)
+        migriert.takeIf {
+            it.von !in entfernteAnschlüsse && it.zu !in entfernteAnschlüsse &&
+                it.von in gültigeAnschlüsse && it.zu in gültigeAnschlüsse
+        }
+    }
+    return karte.copy(
+        knoten = alleKnoten,
+        verbindungen = (migrierteVerbindungen + ergänzteVerbindungen).distinctBy(VerbindungDaten::id),
+    )
+}
+
 /** Überführt die alte verzweigende Fall-Karte in einen auswählenden Drei-Eingang-Knoten. */
 internal fun migriereFallunterscheidung(karte: KartenDaten): KartenDaten {
     val ausgangUmleitungen = mutableMapOf<AnschlussVerweis, AnschlussVerweis>()
     val knoten = karte.knoten.map { alt ->
-        if (alt.art != "mathematik.fall" || alt.anschlüsse.any { it.name == "wahr" }) return@map alt
+        if (alt.art != "mathematik.fall") return@map alt
+        if (alt.anschlüsse.any { it.name == "wahr" }) {
+            return@map alt.copy(anschlüsse = alt.anschlüsse.map { anschluss ->
+                if (anschluss.name == "wert" && anschluss.richtung == AnschlussRichtung.Ausgang) anschluss.copy(
+                    art = MathematikAnschlussArten.Objekt.id,
+                    artVereinigtEingänge = listOf("wahr", "lüge"),
+                ) else anschluss
+            })
+        }
         val wahr = alt.anschlüsse.firstOrNull { it.name == "term" && it.richtung == AnschlussRichtung.Eingang }
             ?: AnschlussDaten(name = "wahr", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id)
         val aussage = alt.anschlüsse.firstOrNull { it.name == "aussage" && it.richtung == AnschlussRichtung.Eingang }
@@ -102,7 +223,12 @@ internal fun migriereFallunterscheidung(karte: KartenDaten): KartenDaten {
         val alterWert = alt.anschlüsse.firstOrNull { it.name == "wert" && it.richtung == AnschlussRichtung.Ausgang }
             ?: alt.anschlüsse.firstOrNull { it.name == "fall" && it.richtung == AnschlussRichtung.Ausgang }
             ?: AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Objekt.id)
-        val wert = alterWert.copy(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false)
+        val wert = alterWert.copy(
+            name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts,
+            art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0,
+            kannSichErweitern = false, dynamischErzeugt = false,
+            artVereinigtEingänge = listOf("wahr", "lüge"),
+        )
         val wertVerweis = AnschlussVerweis(alt.id, wert.id)
         alt.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang && it.name in setOf("fall", "sonst", "wert") }
             .forEach { ausgangUmleitungen[AnschlussVerweis(alt.id, it.id)] = wertVerweis }

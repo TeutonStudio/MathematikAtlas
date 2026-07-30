@@ -12,12 +12,21 @@ value class KonzeptId(val wert: String) {
 
 enum class KonzeptReiterRolle { Definition, Spezialfall, Beispiel, Äquivalenz }
 
+enum class KomplexDarstellung { Kartesisch, Polar }
+
 data class KonzeptReiter(
     val id: String,
     val titel: String,
     val rolle: KonzeptReiterRolle,
     val karte: KartenDaten,
-)
+    val darstellungsVarianten: Map<KomplexDarstellung, KartenDaten> = emptyMap(),
+) {
+    fun karteFür(darstellung: KomplexDarstellung): KartenDaten =
+        darstellungsVarianten[darstellung] ?: karte
+
+    val besitztDarstellungsVarianten: Boolean
+        get() = darstellungsVarianten.isNotEmpty()
+}
 
 data class KonzeptDefinition(
     val id: KonzeptId,
@@ -49,7 +58,13 @@ object TestDefinitionsKarten {
         festeVorlagen
             .groupBy(KnotenVorlage::art)
             .values
-            .map(::konzeptFür)
+            .map { varianten ->
+                if (varianten.first().art == MathematikKnotenVorlagen.Division.art) {
+                    DivisionDefinitionsKarten.konzept
+                } else {
+                    konzeptFür(varianten)
+                }
+            }
             .sortedWith(compareBy<KonzeptDefinition> { it.pfad.joinToString("/") }.thenBy { it.name })
             .also { katalog ->
                 val fehler = validierungsFehler(katalog)
@@ -191,8 +206,11 @@ object TestDefinitionsKarten {
         }
         katalog.forEach { konzept ->
             konzept.reiter.forEach { reiter ->
-                reiter.karte.knoten.filter { it.art in konzept.knotenArten }.forEach { knoten ->
-                    add("Selbstbezug in ${konzept.id}/${reiter.id}: ${knoten.id}")
+                val karten = listOf(reiter.karte) + reiter.darstellungsVarianten.values
+                karten.distinctBy(KartenDaten::id).forEach { karte ->
+                    karte.knoten.filter { it.art in konzept.knotenArten }.forEach { knoten ->
+                        add("Selbstbezug in ${konzept.id}/${reiter.id}/${karte.id}: ${knoten.id}")
+                    }
                 }
             }
         }
