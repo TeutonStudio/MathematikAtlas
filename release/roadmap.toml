@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.4.x"
-current_version = "2.4.0"
+current_series = "2.5.x"
+current_version = "2.5.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -163,3 +163,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.kehrwert"]
 reason = "Führt mit mathematik.kehrwert einen neuen registrierten und separat erzeugbaren Knotentyp ein und erweitert Division sowie Definitionskarten."
+
+[[releases]]
+version = "2.5.0"
+title = "Reelle Intervalle und verkettete Ordnungsrelationen"
+roadmap = "v2.5.x Reelle Intervalle und Relationsdarstellung"
+status = "released"
+previous_release = "2.4.0"
+branch = "release/v2.5.0-reelle-intervalle-relationsketten"
+kind = "feature"
+version_axis = "y"
+reason = "Auf ausdrücklichen Nutzerauftrag als neuer fachlicher Versionsschritt veröffentlicht. Der Release erweitert einen vorhandenen Knotentyp und führt eine globale strukturelle Relationsketten-Darstellung ein, ohne einen neuen registrierten Knotentyp vorzutäuschen."

@@ -45,12 +45,12 @@ class KartenJsonTest {
         assertEquals(extremwert.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
 
-    @Test fun `Reelles Intervall behält Art und Anschluss IDs beim Roundtrip`() {
+    @Test fun `Reelles Intervall behält Art und vier Eingangs IDs beim Roundtrip`() {
         val intervall = MathematikKnotenVorlagen.ReellesIntervall.erzeuge(GraphPunkt.Zero)
         val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(intervall)))).knoten.single()
 
         assertEquals("mathematik.reellesIntervall", gelesen.art)
-        assertEquals(listOf("untereGrenze", "obereGrenze", "menge"), gelesen.anschlüsse.map { it.name })
+        assertEquals(listOf("links", "linksOffen", "rechts", "rechtsOffen", "menge"), gelesen.anschlüsse.map { it.name })
         assertEquals(intervall.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
 
