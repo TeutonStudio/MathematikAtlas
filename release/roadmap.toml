@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.3.x"
-current_version = "2.3.16"
+current_version = "2.3.17"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -129,3 +129,14 @@ status = "released"
 previous_release = "2.3.15"
 branch = "agent/v2.3.16-profil-einstellungen"
 kind = "feature"
+
+[[releases]]
+version = "2.3.17"
+title = "Roadmap und Agenten-Versionierung"
+roadmap = "v2.3.x Definitionskarten und Projektstabilisierung"
+status = "released"
+previous_release = "2.3.16"
+branch = "agent/v2.3.17-roadmap-agenten"
+kind = "governance"
+version_axis = "x"
+reason = "Dokumentations- und Agentenänderung ohne neuen registrierten Knotentyp."
