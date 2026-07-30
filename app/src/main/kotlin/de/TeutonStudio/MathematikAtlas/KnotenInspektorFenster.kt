@@ -9,8 +9,11 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
+import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
 import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
+
+private const val STANDARDWERT_PREFIX = "standardwert."
 
 @Composable
 internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
@@ -54,6 +57,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 )
             }
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
+            StandardwerteEditor(knoten, zustand)
             KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
                 inspektor.Inhalt(
                     knoten,
@@ -78,7 +82,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 return@Column
             }
             if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
-            if (knoten.art in setOf("mathematik.addition", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor")) {
+            if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor")) {
                 val wert = knoten.parameter["festeEingänge"] ?: "2"
                 var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
@@ -116,7 +120,10 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             if (knoten.art == "mathematik.extremwert") {
                 Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
             }
-            knoten.parameter.filterKeys { it !in setOf("festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite", "werteVorrat", "zielmenge", "argumentReihenfolge") }.forEach { (schlüssel, wert) ->
+            knoten.parameter.filterKeys {
+                it !in setOf("festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite", "werteVorrat", "zielmenge", "argumentReihenfolge") &&
+                    !it.startsWith(STANDARDWERT_PREFIX)
+            }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
                     value = text,
@@ -139,6 +146,40 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 Button(onClick = zustand.editor::löscheAuswahl, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Löschen") }
             }
         }
+    }
+}
+
+@Composable
+private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
+    val zahlEingänge = knoten.anschlüsse.filter {
+        it.richtung == AnschlussRichtung.Eingang &&
+            it.art == MathematikAnschlussArten.Zahl.id &&
+            !it.dynamischErzeugt
+    }
+    if (zahlEingänge.isEmpty()) return
+
+    HorizontalDivider()
+    Text("Standardwerte", style = MaterialTheme.typography.titleSmall)
+    Text(
+        "Ein Standardwert wird nur verwendet, solange der zugehörige Zahl-Eingang nicht verbunden ist.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    zahlEingänge.forEach { anschluss ->
+        val schlüssel = "$STANDARDWERT_PREFIX${anschluss.name}"
+        val wert = knoten.parameter[schlüssel].orEmpty()
+        var text by remember(knoten.id, anschluss.id, wert) { mutableStateOf(wert) }
+        OutlinedTextField(
+            value = text,
+            onValueChange = {
+                text = it
+                zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+            },
+            label = { Text("Standardwert: ${anschluss.name}") },
+            supportingText = { Text("Ganze Zahl oder Bruch, beispielsweise -1 oder 1/2.") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
