@@ -62,9 +62,9 @@ def prüfe_vorgänger(eintrag: dict) -> None:
     if not vorgänger:
         return
     titel = f"v{vorgänger}"
-    protokoll = git("log", "--format=%s", "--all")
-    if titel not in protokoll.splitlines():
-        fehler(f"Der finale Vorgängercommit {titel!r} ist in der Git-Historie nicht vorhanden.")
+    protokoll = git("log", "--format=%s", "--all").splitlines()
+    if not any(subject == titel or subject.startswith(f"{titel}:") for subject in protokoll):
+        fehler(f"Der Vorgängerrelease {titel!r} ist in der Git-Historie nicht vorhanden.")
 
 
 def prüfe_pr(plan: dict, eintrag: dict, event: dict) -> None:
