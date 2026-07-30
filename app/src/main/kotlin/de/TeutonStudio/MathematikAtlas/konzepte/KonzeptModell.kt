@@ -86,7 +86,14 @@ object TestDefinitionsKarten {
         )
     }
 
-    internal fun definitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten {
+    internal fun definitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten =
+        if (vorlage.art == MathematikKnotenVorlagen.ReellesIntervall.art) {
+            reellesIntervallDefinitionsKarte(vorlage, variantenIndex)
+        } else {
+            generischeDefinitionsKarte(vorlage, variantenIndex)
+        }
+
+    private fun generischeDefinitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten {
         val prefix = "definition-${slug(vorlage.art)}-${slug(vorlage.name)}-$variantenIndex"
         val eingänge = vorlage.anschlüsse
             .filter { it.richtung == AnschlussRichtung.Eingang }
