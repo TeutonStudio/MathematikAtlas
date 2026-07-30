@@ -389,3 +389,79 @@ private fun OrdnerPfadDialog(
         dismissButton = { TextButton(onClick = schließen) { Text("Abbrechen") } },
     )
 }
+
+private sealed interface KartenOrdnerDialog {
+    data object OrdnerAnlegen : KartenOrdnerDialog
+    data class KarteVerschieben(val karte: KartenDaten) : KartenOrdnerDialog
+    data class OrdnerVerschieben(val pfad: List<String>) : KartenOrdnerDialog
+}
+
+private sealed interface KartenListenEintrag {
+    val tiefe: Int
+    val schlüssel: String
+
+    data class Ordner(val pfad: List<String>, override val tiefe: Int) : KartenListenEintrag {
+        override val schlüssel = "ordner:${formatiereOrdnerPfad(pfad)}"
+    }
+
+    data class Karte(val karte: KartenDaten, override val tiefe: Int) : KartenListenEintrag {
+        override val schlüssel = "karte:${karte.id.wert}"
+    }
+}
+
+private fun kartenListenEinträge(karten: List<KartenDaten>, ordnung: KartenOrdnung): List<KartenListenEintrag> = buildList {
+    fun fügeEbeneHinzu(eltern: List<String>, tiefe: Int) {
+        ordnung.ordner.asSequence()
+            .filter { it.size == eltern.size + 1 && it.take(eltern.size) == eltern }
+            .sortedBy { it.last().lowercase() }
+            .forEach { pfad ->
+                add(KartenListenEintrag.Ordner(pfad, tiefe))
+                fügeEbeneHinzu(pfad, tiefe + 1)
+            }
+        karten.asSequence()
+            .filter { ordnung.ordnerFür(it.id) == eltern }
+            .sortedBy { it.name.lowercase() }
+            .forEach { add(KartenListenEintrag.Karte(it, tiefe)) }
+    }
+    fügeEbeneHinzu(emptyList(), 0)
+}
+
+@Composable private fun KonzeptListe() {
+    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Text("Mathematische Systeme", style = MaterialTheme.typography.titleMedium) }
+        items(listOf("Standardanalysis", "Nichtstandardanalysis", "Aussagenlogik", "Mengenlehre", "Lineare Algebra")) { name ->
+            ListItem(headlineContent = { Text(name) }, supportingContent = { Text("Definitionen, Kurzverfahren und Beispiele können als Karten hinterlegt werden.") })
+        }
+    }
+}
+
+@Composable private fun VariablenListe(zustand: AtlasZustand) {
+    val variablen = zustand.auswertung.knoten.values.flatMap { it.ausgaben.values }.mapNotNull { it.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.Variable }.distinctBy { it.name }
+    LazyColumn(contentPadding = PaddingValues(12.dp)) {
+        if (variablen.isEmpty()) item { Text("Keine freien Variablen in der aktuellen Karte.") }
+        items(variablen) { ListItem(headlineContent = { Text(it.name) }) }
+    }
+}
+
+@Composable private fun AuswertungsListe(zustand: AtlasZustand) {
+    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(zustand.editor.karte.knoten) { knoten ->
+            val e = zustand.auswertung.knoten[knoten.id]
+            ListItem(
+                headlineContent = { Text(knoten.name) },
+                supportingContent = {
+                    val latex = e?.ausgaben?.values?.joinToString { it.objekt.zuLatex() }
+                    if (latex != null) LatexText(latex, style = MaterialTheme.typography.bodyMedium)
+                    else Text(e?.fehler ?: "Noch kein Ergebnis")
+                },
+            )
+        }
+    }
+}
+
+@Composable private fun FehlerListe(zustand: AtlasZustand) {
+    LazyColumn(contentPadding = PaddingValues(12.dp)) {
+        if (zustand.auswertung.fehler.isEmpty()) item { Text("Keine Auswertungsfehler.") }
+        items(zustand.auswertung.fehler) { fehler -> ListItem(headlineContent = { Text(fehler, color = MaterialTheme.colorScheme.error) }) }
+    }
+}
