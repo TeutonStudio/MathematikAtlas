@@ -16,15 +16,51 @@ Die Anwendung ist auf Deutsch benannt und implementiert; sie basiert auf Kotlin,
 
 ## Roadmap
 
-![Roadmap des Mathematik Atlas von v2.0.x bis v3.0.0](docs/assets/roadmap-v2-v3.svg)
+![Roadmap des Mathematik Atlas von v2.y.x bis v8.y.x mit Erklärung der Knoten- und Änderungs-Versionen](docs/assets/roadmap.svg)
 
-Die v2-Reihe entwickelt den funktionsfähigen mathematischen Knoteneditor schrittweise zu einem allgemeinen visuellen System für Mathematik, Grafik, Animation und Programmierung:
+### Versionsschema
 
-- **v2.0.x:** funktionsfähige Grundlage
-- **v2.1.x–v2.3.x:** Visualisierungskonzepte, Hilbert-basierte Geometrie und Definitionskarten
-- **v2.4.x–v2.5.x:** Grafik- und Animationserzeugung mit TikZ, SVG und Manim
-- **v2.6.x–v2.9.x:** HTML, JavaScript, TypeScript, Kotlin, Java sowie Godot-Szenen und GDScript
-- **v2.10.x → v3.0.0:** vollständige Überarbeitung und Vereinheitlichung der Knotenkonzepte und ihrer Wechselwirkungen
+Die Roadmap verwendet das Schema `vM.y.x`:
+
+- **`M` – Versionsraum:** ein größerer, ausdrücklich in der Roadmap festgelegter fachlicher oder technischer Entwicklungsabschnitt
+- **`y` – Knoten-Version:** eine Veröffentlichung, die mindestens einen neuen, eigenständig registrierten Knotentyp oder eine neue Knotenfamilie ergänzt
+- **`x` – Änderungs-Version:** eine Veröffentlichung ohne neue Knotentypen, etwa für Fehlerkorrekturen, Bedienungsverbesserungen, Refactorings, Dokumentation oder den Ausbau bestehender Knoten
+
+Für die nächste Version gilt:
+
+| Inhalt des Releases | Versionsänderung |
+|---|---|
+| keine neuen Knoten | `vM.y.(x+1)` |
+| mindestens ein neuer Knoten | `vM.(y+1).0` |
+| neue Knoten und weitere Änderungen gemeinsam | `vM.(y+1).0` |
+| Beginn eines neuen Versionsraums | ausdrücklich geplantes `v(M+1).0.0` |
+
+Eine zusätzliche Inspector-Einstellung, ein neuer Anschluss, eine Verhaltensänderung oder eine Erweiterung eines bestehenden Knotens zählt allein noch nicht als neuer Knoten. Entscheidend ist ein neuer, separat erzeugbarer und registrierter Knotentyp. Enthält ein Release sowohl neue Knoten als auch andere Änderungen, hat die `y`-Einordnung Vorrang und `x` wird auf `0` zurückgesetzt.
+
+Beispiel ausgehend von `v2.3.16`:
+
+- neue Knotentypen führen zu `v2.4.0`
+- sonstige Änderungen führen zu `v2.3.17`
+
+Die Regel gilt für zukünftige Versionsreservierungen. Bereits veröffentlichte oder historisch als `superseded` markierte Versionen werden nicht nachträglich umnummeriert.
+
+### Versionsräume
+
+- **v2.y.x – Mathematischer Kern**
+  - **v2.0.x:** funktionsfähige Grundlage
+  - **v2.1.x:** Ergänzung von Visualisierungskonzepten
+  - **v2.2.x:** Hilbert-basierte Geometrie
+  - **v2.3.x:** Definitionskarten für vordefinierte Knoten
+- **v3.y.x – Grafik, Auszeichnung und Dokumente:** SVG, TikZ, LaTeX, Mermaid und HTML
+- **v4.y.x – Animation:** Manim und geeignete Alternativen
+- **v5.y.x – Web-Programmierung:** JavaScript und TypeScript
+- **v6.y.x – JVM-Programmierung:** Kotlin und Java
+- **v7.y.x – Godot-Grundintegration:** Godot-Szenen, GDScript und ein Orchestrator als Vorlage
+- **v8.y.x – Godot-Erweiterungen:** NobodyWho, Voxel Tools und LimboAI
+
+### Noch keinem Versionsraum zugeordnet
+
+C#, C++, C, Rust, Python und weitere Sprachen sind geplant. Ihre Versionsräume werden erst festgelegt, wenn Umfang, gemeinsame Sprachkonzepte und Abhängigkeiten ausreichend geklärt sind.
 
 ## Voraussetzungen
 

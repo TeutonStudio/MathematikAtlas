@@ -86,11 +86,34 @@ Vor neuer Entwicklungsarbeit mit Versionsnummer:
 
 1. Ermittle den tatsächlichen `master`-HEAD und offene Pull Requests.
 2. Prüfe `release/roadmap.toml` gegen die Git-Historie.
-3. Bestimme die nächste zulässige Version und ihren Vorgängerstand.
-4. Lege Release- und Subbranches ausschließlich nach `docs/codex/RELEASE_WORKFLOW.md` an.
-5. Führe `scripts/pruefe_releaseplan.py` und, in einem Git-Checkout, `scripts/pruefe_versionsfolge.py` aus.
+3. Klassifiziere den beauftragten Umfang als neuer Versionsraum, Knoten-Version oder Änderungs-Version.
+4. Bestimme daraus die nächste zulässige Version und ihren Vorgängerstand.
+5. Lege Release- und Subbranches ausschließlich nach `docs/codex/RELEASE_WORKFLOW.md` an.
+6. Führe `scripts/pruefe_releaseplan.py` und, in einem Git-Checkout, `scripts/pruefe_versionsfolge.py` aus.
 
-Verbindliche Regeln:
+### Versionsklassifikation `vM.y.x`
+
+Die drei Stellen haben im Mathematik Atlas eine projektspezifische Bedeutung:
+
+- **`M` – Versionsraum:** größerer fachlicher oder technischer Entwicklungsabschnitt. `M` wird nur aufgrund einer ausdrücklichen Roadmap-Entscheidung erhöht und niemals automatisch aus einem gewöhnlichen Auftrag abgeleitet.
+- **`y` – Knoten-Version:** Veröffentlichung mit mindestens einem neuen, eigenständig registrierten und separat erzeugbaren Knotentyp oder einer neuen Knotenfamilie.
+- **`x` – Änderungs-Version:** Veröffentlichung ohne neuen Knotentyp, beispielsweise Fehlerkorrektur, UI-Änderung, Refactoring, Dokumentation, neue Inspector-Option, zusätzlicher Anschluss oder Verhaltensänderung eines vorhandenen Knotens.
+
+Verbindliche Entscheidungsregeln:
+
+1. Enthält der vollständige Releaseumfang mindestens einen neuen Knotentyp, erhöhe `y` und setze `x` auf `0`.
+2. Enthält der Releaseumfang keine neuen Knotentypen, behalte `M` und `y` bei und erhöhe nur `x`.
+3. Enthält ein Release neue Knoten und sonstige Änderungen, gilt es insgesamt als Knoten-Version; `y` hat Vorrang und `x` bleibt `0`.
+4. Ein neuer Anschluss, Parameter, Inspector-Eintrag, Renderer oder Sonderfall eines bestehenden Knotentyps ist allein keine Knoten-Version.
+5. Maßgeblich sind der vollständige geplante Umfang und der Abschlussdiff, nicht nur Titel oder Commitnachricht.
+6. Bereits veröffentlichte oder als `superseded` dokumentierte historische Versionen werden durch diese Regel nicht nachträglich umnummeriert.
+
+Beispiel ausgehend von `v2.3.16`:
+
+- neuer registrierter Knotentyp → `v2.4.0`
+- keine neuen Knotentypen → `v2.3.17`
+
+Verbindliche Release-Regeln:
 
 - Keine direkten Produktionscommits auf `master`.
 - Pro Release genau ein finaler Commit mit dem Titel `v<version>` auf `master`.
@@ -101,6 +124,7 @@ Verbindliche Regeln:
 - Android-`versionName`, `versionCode` und `release/roadmap.toml` müssen übereinstimmen.
 - Ein technisch mergebarer Pull Request ist nicht automatisch ein zulässiger Release.
 - Bei einem inkonsistenten Releasezustand wird zuerst ein Reparaturplan erstellt; neue Versionsarbeit bleibt gesperrt.
+- Vor Abschluss wird die ursprüngliche Versionsklassifikation gegen den tatsächlichen Diff erneut geprüft.
 
 Der `master_verwalter` verwaltet Versionen, Branches, PR-Basen und Integration. Er ersetzt weder den fachlichen Implementierer noch den unabhängigen Verifizierer.
 
@@ -123,14 +147,17 @@ Ein nicht ausführbarer Befehl wird mit konkretem Grund dokumentiert. Ein erfolg
 
 Bei der Planung oder Implementierung eines neuen Knotentyps verwende den Skill `neuer-knoten`.
 
+Jeder tatsächlich neue, registrierte Knotentyp löst eine Knoten-Version aus. Vor der Implementierung muss der `master_verwalter` daher prüfen, ob eine passende `y`-Version reserviert ist. Ein Knotenimplementierer darf einen neuen Typ nicht stillschweigend in einen bereits als reine `x`-Version reservierten Release aufnehmen.
+
 Die Rollen werden grundsätzlich in dieser Reihenfolge eingesetzt:
 
-1. `node_planner` untersucht den Bestand und erstellt eine ausführbare Spezifikation.
-2. `math_reviewer` prüft bei mathematisch nicht trivialen Knoten die fachliche Semantik.
-3. `node_implementer` setzt den bestätigten Plan um.
-4. `node_verifier` prüft unabhängig Diff, Verhalten, Architektur und Tests.
-5. Blockierende Findings gehen zurück an `node_implementer`.
-6. `node_verifier` führt anschließend die Abschlussprüfung durch.
+1. `master_verwalter` klassifiziert die Änderung und reserviert bei neuen Knotentypen eine `y`-Version.
+2. `node_planner` untersucht den Bestand, nennt alle neu geplanten Typ-Schlüssel und erstellt eine ausführbare Spezifikation.
+3. `math_reviewer` prüft bei mathematisch nicht trivialen Knoten die fachliche Semantik.
+4. `node_implementer` setzt den bestätigten Plan innerhalb der reservierten Version um.
+5. `node_verifier` prüft unabhängig Diff, Verhalten, Architektur, Tests und die korrekte `y`-Klassifikation.
+6. Blockierende Findings gehen zurück an `node_implementer`.
+7. `node_verifier` führt anschließend die Abschlussprüfung durch.
 
 Planer, Mathematikprüfer und Verifizierer dürfen keine Produktionsdateien verändern. Es arbeitet höchstens ein schreibender Implementierungsagent gleichzeitig.
 
@@ -159,7 +186,7 @@ Eine Aufgabe ist nur abgeschlossen, wenn:
 - keine unnötigen Duplikate oder parallelen Abstraktionen entstanden sind,
 - Dokumentation und Code denselben Zustand beschreiben,
 - der abschließende Diff auf unbeabsichtigte Änderungen geprüft wurde,
-- bei einem Release Versionsplan, Android-Version und Git-Zustand übereinstimmen.
+- bei einem Release Versionsplan, Android-Version, Git-Zustand und `y`/`x`-Klassifikation übereinstimmen.
 
 ## Abschlussbericht
 
@@ -170,4 +197,4 @@ Berichte am Ende knapp und überprüfbar:
 3. ausgeführte Prüfungen mit Ergebnis,
 4. verbleibende Risiken oder bewusst nicht bearbeitete Punkte,
 5. bei neuen Knoten: Typ-Schlüssel, Anschlüsse, Semantik, Inspector und Persistenz,
-6. bei Releases: Version, Basis, finaler Commit und Release-Guard-Status.
+6. bei Releases: Version, Klassifikation als Versionsraum/Knoten-Version/Änderungs-Version, Basis, finaler Commit und Release-Guard-Status.
