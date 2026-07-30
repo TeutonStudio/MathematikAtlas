@@ -4,6 +4,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,66 +24,195 @@ import de.TeutonStudio.MathematikKnoten.LatexText
 
 @Composable
 internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
-    val darstellung = LocalDarstellungsSteuerung.current
-    var darstellungsMenüGeöffnet by remember { mutableStateOf(false) }
+    var profilGeöffnet by remember { mutableStateOf(false) }
+    var einstellungenGeöffnet by remember { mutableStateOf(false) }
+
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
-            Row(
-                Modifier.fillMaxWidth().padding(start = 18.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            Text(
+                "Mathematik Atlas",
+                Modifier.padding(18.dp),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            PrimaryScrollableTabRow(selectedTabIndex = zustand.linkerBereich.ordinal, edgePadding = 8.dp) {
+                VerwaltungsBereich.entries.forEach { bereich ->
+                    Tab(
+                        selected = zustand.linkerBereich == bereich,
+                        onClick = { zustand.linkerBereich = bereich },
+                        text = { Text(bereich.name) },
+                    )
+                }
+            }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                when (zustand.linkerBereich) {
+                    VerwaltungsBereich.Karten -> KartenListe(zustand)
+                    VerwaltungsBereich.Konzepte -> KonzeptListe()
+                    VerwaltungsBereich.Variablen -> VariablenListe(zustand)
+                    VerwaltungsBereich.Auswertung -> AuswertungsListe(zustand)
+                    VerwaltungsBereich.Fehler -> FehlerListe(zustand)
+                }
+            }
+            HorizontalDivider()
+            ProfilLeiste(onClick = { profilGeöffnet = true })
+        }
+    }
+
+    if (profilGeöffnet) {
+        ProfilDialog(
+            schließen = { profilGeöffnet = false },
+            einstellungenÖffnen = {
+                profilGeöffnet = false
+                einstellungenGeöffnet = true
+            },
+        )
+    }
+    if (einstellungenGeöffnet) {
+        EinstellungenDialog(schließen = { einstellungenGeöffnet = false })
+    }
+}
+
+@Composable
+private fun ProfilLeiste(onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth()
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = "Profil und Einstellungen öffnen" },
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                Modifier.size(40.dp).clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "Mathematik Atlas",
-                    Modifier.weight(1f),
-                    style = MaterialTheme.typography.headlineSmall,
+                    "P",
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
-                Box {
-                    TextButton(
-                        onClick = { darstellungsMenüGeöffnet = true },
-                        modifier = Modifier.semantics {
-                            contentDescription = "Darstellung ändern, aktuell ${darstellung.modus.anzeigeName}"
-                        },
-                    ) { Text("◐", style = MaterialTheme.typography.titleLarge) }
-                    DropdownMenu(
-                        expanded = darstellungsMenüGeöffnet,
-                        onDismissRequest = { darstellungsMenüGeöffnet = false },
+            }
+            Column(Modifier.weight(1f)) {
+                Text("Lokales Profil", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    "Profilverwaltung folgt",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ProfilDialog(schließen: () -> Unit, einstellungenÖffnen: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = schließen,
+        title = { Text("Profil") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(
+                        Modifier.size(52.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        DarstellungsModus.entries.forEach { modus ->
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        RadioButton(
-                                            selected = darstellung.modus == modus,
-                                            onClick = null,
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(modus.anzeigeName)
-                                    }
-                                },
-                                onClick = {
-                                    darstellungsMenüGeöffnet = false
-                                    darstellung.ändereModus(modus)
-                                },
+                        Text(
+                            "P",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Column {
+                        Text("Lokales Profil", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Noch nicht mit einem Benutzerkonto verknüpft",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Text(
+                    "Die Profilleiste ist für die spätere Profilerstellung vorbereitet. " +
+                        "Derzeit enthält sie den zentralen Zugang zu den Anwendungseinstellungen.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                OutlinedButton(
+                    onClick = einstellungenÖffnen,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Einstellungen") }
+            }
+        },
+        confirmButton = { TextButton(onClick = schließen) { Text("Schließen") } },
+    )
+}
+
+@Composable
+private fun EinstellungenDialog(schließen: () -> Unit) {
+    val darstellung = LocalDarstellungsSteuerung.current
+    AlertDialog(
+        onDismissRequest = schließen,
+        title = { Text("Einstellungen") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Darstellung", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "Wähle, ob die App dem System folgt oder dauerhaft hell beziehungsweise dunkel dargestellt wird.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                DarstellungsModus.entries.forEach { modus ->
+                    val ausgewählt = darstellung.modus == modus
+                    Surface(
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(MaterialTheme.shapes.medium)
+                            .clickable { darstellung.ändereModus(modus) },
+                        shape = MaterialTheme.shapes.medium,
+                        color = if (ausgewählt) {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = ausgewählt,
+                                onClick = { darstellung.ändereModus(modus) },
                             )
+                            Column(Modifier.padding(vertical = 8.dp)) {
+                                Text(modus.anzeigeName, style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    modus.beschreibung(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
             }
-            PrimaryScrollableTabRow(selectedTabIndex = zustand.linkerBereich.ordinal, edgePadding = 8.dp) {
-                VerwaltungsBereich.entries.forEach { bereich ->
-                    Tab(selected = zustand.linkerBereich == bereich, onClick = { zustand.linkerBereich = bereich }, text = { Text(bereich.name) })
-                }
-            }
-            when (zustand.linkerBereich) {
-                VerwaltungsBereich.Karten -> KartenListe(zustand)
-                VerwaltungsBereich.Konzepte -> KonzeptListe()
-                VerwaltungsBereich.Variablen -> VariablenListe(zustand)
-                VerwaltungsBereich.Auswertung -> AuswertungsListe(zustand)
-                VerwaltungsBereich.Fehler -> FehlerListe(zustand)
-            }
-        }
-    }
+        },
+        confirmButton = { TextButton(onClick = schließen) { Text("Fertig") } },
+    )
+}
+
+private fun DarstellungsModus.beschreibung(): String = when (this) {
+    DarstellungsModus.System -> "Verwendet die Darstellung des Betriebssystems."
+    DarstellungsModus.Hell -> "Verwendet immer den Lightmode."
+    DarstellungsModus.Dunkel -> "Verwendet immer den Darkmode."
 }
 
 @Composable
@@ -258,80 +388,4 @@ private fun OrdnerPfadDialog(
         },
         dismissButton = { TextButton(onClick = schließen) { Text("Abbrechen") } },
     )
-}
-
-private sealed interface KartenOrdnerDialog {
-    data object OrdnerAnlegen : KartenOrdnerDialog
-    data class KarteVerschieben(val karte: KartenDaten) : KartenOrdnerDialog
-    data class OrdnerVerschieben(val pfad: List<String>) : KartenOrdnerDialog
-}
-
-private sealed interface KartenListenEintrag {
-    val tiefe: Int
-    val schlüssel: String
-
-    data class Ordner(val pfad: List<String>, override val tiefe: Int) : KartenListenEintrag {
-        override val schlüssel = "ordner:${formatiereOrdnerPfad(pfad)}"
-    }
-
-    data class Karte(val karte: KartenDaten, override val tiefe: Int) : KartenListenEintrag {
-        override val schlüssel = "karte:${karte.id.wert}"
-    }
-}
-
-private fun kartenListenEinträge(karten: List<KartenDaten>, ordnung: KartenOrdnung): List<KartenListenEintrag> = buildList {
-    fun fügeEbeneHinzu(eltern: List<String>, tiefe: Int) {
-        ordnung.ordner.asSequence()
-            .filter { it.size == eltern.size + 1 && it.take(eltern.size) == eltern }
-            .sortedBy { it.last().lowercase() }
-            .forEach { pfad ->
-                add(KartenListenEintrag.Ordner(pfad, tiefe))
-                fügeEbeneHinzu(pfad, tiefe + 1)
-            }
-        karten.asSequence()
-            .filter { ordnung.ordnerFür(it.id) == eltern }
-            .sortedBy { it.name.lowercase() }
-            .forEach { add(KartenListenEintrag.Karte(it, tiefe)) }
-    }
-    fügeEbeneHinzu(emptyList(), 0)
-}
-
-@Composable private fun KonzeptListe() {
-    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text("Mathematische Systeme", style = MaterialTheme.typography.titleMedium) }
-        items(listOf("Standardanalysis", "Nichtstandardanalysis", "Aussagenlogik", "Mengenlehre", "Lineare Algebra")) { name ->
-            ListItem(headlineContent = { Text(name) }, supportingContent = { Text("Definitionen, Kurzverfahren und Beispiele können als Karten hinterlegt werden.") })
-        }
-    }
-}
-
-@Composable private fun VariablenListe(zustand: AtlasZustand) {
-    val variablen = zustand.auswertung.knoten.values.flatMap { it.ausgaben.values }.mapNotNull { it.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.Variable }.distinctBy { it.name }
-    LazyColumn(contentPadding = PaddingValues(12.dp)) {
-        if (variablen.isEmpty()) item { Text("Keine freien Variablen in der aktuellen Karte.") }
-        items(variablen) { ListItem(headlineContent = { Text(it.name) }) }
-    }
-}
-
-@Composable private fun AuswertungsListe(zustand: AtlasZustand) {
-    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(zustand.editor.karte.knoten) { knoten ->
-            val e = zustand.auswertung.knoten[knoten.id]
-            ListItem(
-                headlineContent = { Text(knoten.name) },
-                supportingContent = {
-                    val latex = e?.ausgaben?.values?.joinToString { it.objekt.zuLatex() }
-                    if (latex != null) LatexText(latex, style = MaterialTheme.typography.bodyMedium)
-                    else Text(e?.fehler ?: "Noch kein Ergebnis")
-                },
-            )
-        }
-    }
-}
-
-@Composable private fun FehlerListe(zustand: AtlasZustand) {
-    LazyColumn(contentPadding = PaddingValues(12.dp)) {
-        if (zustand.auswertung.fehler.isEmpty()) item { Text("Keine Auswertungsfehler.") }
-        items(zustand.auswertung.fehler) { fehler -> ListItem(headlineContent = { Text(fehler, color = MaterialTheme.colorScheme.error) }) }
-    }
 }
