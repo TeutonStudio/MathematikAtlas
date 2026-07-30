@@ -120,10 +120,12 @@ object MathematikKnotenVorlagen {
         listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Funktion.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val ReellesIntervall = KnotenVorlage(
-        "mathematik.reellesIntervall", "Reelles Intervall", "Mengen", "Bildet das abgeschlossene reelle Intervall [a,b] aus zwei nachweisbar reellen Grenzen.", GraphGröße(270f, 115f),
+        "mathematik.reellesIntervall", "Reelles Intervall", "Mengen", "Bildet ein reelles Intervall aus zwei nachweisbar reellen Grenzen und Aussagen über offene Randpunkte.", GraphGröße(280f, 165f),
         listOf(
-            eingang("untereGrenze", MathematikAnschlussArten.Zahl.id, 0),
-            eingang("obereGrenze", MathematikAnschlussArten.Zahl.id, 1),
+            eingang("links", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("linksOffen", MathematikAnschlussArten.Aussage.id, 1),
+            eingang("rechts", MathematikAnschlussArten.Zahl.id, 2),
+            eingang("rechtsOffen", MathematikAnschlussArten.Aussage.id, 3),
             ausgang("menge", MathematikAnschlussArten.Menge.id),
         ),
     )
