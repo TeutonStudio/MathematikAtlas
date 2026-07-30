@@ -63,26 +63,37 @@ class KartenAuswerter(
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
         topologischeReihenfolge: Map<KnotenId, Int>,
     ): KnotenAuswertungsErgebnis {
-        val eingänge = sammleEingänge(knoten, verbindungen, karte, ergebnisse)
+        val eingänge = runCatching {
+            sammleEingänge(knoten, verbindungen, karte, ergebnisse)
+        }.getOrElse {
+            return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
+        }
         val annahmen = eingänge.values.flatMap { it.annahmen }.toSet()
         val signatur = 31 * knoten.hashCode() + eingänge.hashCode()
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
 
-        val basis = if (knoten.art == DARSTELLUNGSOPTIMIERUNG) {
-            runCatching {
+        val basis = when {
+            knoten.art == DARSTELLUNGSOPTIMIERUNG -> runCatching {
                 val wert = eingänge["wert"] ?: error("Ein Wert muss verbunden sein.")
                 val latex = knoten.parameter["latex"].orEmpty().trim()
                 KnotenAuswertungsErgebnis(
                     mapOf("wert" to wert.copy(latexDarstellung = latex.ifBlank { wert.latexDarstellung })),
                 )
             }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
-        } else {
-            val auswerter = register.finde(knoten.art)
-            if (auswerter == null) {
-                KnotenAuswertungsErgebnis(emptyMap(), fehler = "Kein Auswerter für ${knoten.art} registriert.")
-            } else runCatching {
-                auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen), topologischeReihenfolge))
-            }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
+
+            knoten.art == MULTIPLIKATION -> werteMultiplikationAus(knoten, eingänge, annahmen)
+
+            knoten.art == KONJUGIERTE && eingänge["zahl"]?.istNachweisbarReell() == true ->
+                KnotenAuswertungsErgebnis(mapOf("wert" to eingänge.getValue("zahl")))
+
+            else -> {
+                val auswerter = register.finde(knoten.art)
+                if (auswerter == null) {
+                    KnotenAuswertungsErgebnis(emptyMap(), fehler = "Kein Auswerter für ${knoten.art} registriert.")
+                } else runCatching {
+                    auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen), topologischeReihenfolge))
+                }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
+            }
         }
 
         val ergebnis = basis
@@ -92,6 +103,26 @@ class KartenAuswerter(
         cache[knoten.id] = CacheEintrag(signatur, ergebnis)
         return ergebnis
     }
+
+    private fun werteMultiplikationAus(
+        knoten: KnotenDaten,
+        eingänge: Map<String, BedingterWert>,
+        annahmen: Set<Aussage>,
+    ): KnotenAuswertungsErgebnis = runCatching {
+        val werte = knoten.anschlüsse
+            .filter { it.richtung == AnschlussRichtung.Eingang }
+            .sortedBy { it.reihenfolge }
+            .mapNotNull { eingänge[it.name] }
+        val zahlen = werte.map { it.objekt as? ZahlAusdruck ?: error("Multiplikation benötigt Zahlen.") }
+        require(zahlen.size >= 2) { "Mindestens zwei Faktoren müssen verbunden sein oder einen Standardwert besitzen." }
+        KnotenAuswertungsErgebnis(mapOf(
+            "wert" to BedingterWert(
+                objekt = multiplikation(zahlen),
+                annahmen = annahmen,
+                reelleVariablen = reelleVariablen(werte),
+            ),
+        ))
+    }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
 
     private fun werteGruppenKnotenAus(
         knoten: KnotenDaten,
@@ -103,7 +134,11 @@ class KartenAuswerter(
         val verweis = knoten.kartenVerweis!!
         if (verweis in kartenPfad) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Zyklischer Kartenverweis erkannt.")
         val intern = kartenQuelle.lade(verweis) ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Referenzierte Karte fehlt.")
-        val außen = sammleEingänge(knoten, verbindungen, karte, ergebnisse)
+        val außen = runCatching {
+            sammleEingänge(knoten, verbindungen, karte, ergebnisse)
+        }.getOrElse {
+            return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
+        }
         val interneEingänge = intern.knoten.filter { it.art == "mathematik.kartenEingang" }
         val vorgaben = mutableMapOf<KnotenId, Map<String, BedingterWert>>()
         val freie = mutableListOf<Variable>()
@@ -143,6 +178,16 @@ class KartenAuswerter(
             val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId } ?: return@forEach
             ergebnisse[quellKnoten.id]?.ausgaben?.get(quellAnschluss.name)?.let { put(zielAnschluss.name, it) }
         }
+        knoten.anschlüsse
+            .filter { it.richtung == AnschlussRichtung.Eingang && it.art == ZAHL_ART && it.name !in this }
+            .forEach { anschluss ->
+                val text = knoten.parameter[standardwertSchlüssel(anschluss.name)]?.trim().orEmpty()
+                if (text.isBlank()) return@forEach
+                val zahl = runCatching { RationaleZahl.parse(text) }.getOrElse {
+                    error("Standardwert für '${anschluss.name}' ist keine gültige ganze oder rationale Zahl: '$text'.")
+                }
+                put(anschluss.name, BedingterWert(zahl))
+            }
     }
 
     private fun KnotenAuswertungsErgebnis.mitVariablenQuellenAusEingängen(
@@ -235,7 +280,13 @@ class KartenAuswerter(
         return this
     }
 
+    private fun standardwertSchlüssel(name: String) = "$STANDARDWERT_PREFIX$name"
+
     private companion object {
         const val DARSTELLUNGSOPTIMIERUNG = "mathematik.darstellungsoptimierung"
+        const val MULTIPLIKATION = "mathematik.multiplikation"
+        const val KONJUGIERTE = "mathematik.konjugierte"
+        const val STANDARDWERT_PREFIX = "standardwert."
+        val ZAHL_ART = AnschlussArtId("mathematik.zahl")
     }
 }
