@@ -221,10 +221,14 @@ class KartenAuswerter(
             "mathematik.addition" -> mapOf("wert" to geordnet().joinToString(" + "))
             "mathematik.multiplikation" -> mapOf("wert" to geordnet().joinToString(" \\cdot "))
             "mathematik.division" -> mapOf(
-                "wert" to "\\frac{${wert("dividend")}}{${wert("divisor")}}",
-                "divisorNull" to "${wert("divisor")} = 0",
+                "wert" to if (eingänge["fallsNennerNull"] == null) {
+                    "\\frac{${wert("dividend")}}{${wert("divisor")}}"
+                } else {
+                    """\begin{cases}${wert("fallsNennerNull")},&${wert("divisor")}=0\\\frac{${wert("dividend")}}{${wert("divisor")}},&${wert("divisor")}\ne0\end{cases}"""
+                },
             )
             "mathematik.potenz" -> mapOf("wert" to "\\left(${wert("basis")}\\right)^{${wert("exponent")}}")
+            "mathematik.kehrwert" -> mapOf("wert" to "\\left(${wert("zahl")}\\right)^{-1}")
             "mathematik.wurzel" -> mapOf("wert" to "\\sqrt{${wert("radikand")}}")
             "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}}\\left(${wert("argument")}\\right)")
             "mathematik.ableiten" -> mapOf("wert" to "\\frac{d}{d${knoten.parameter["variable"] ?: "x"}}\\left(${wert("term")}\\right)")

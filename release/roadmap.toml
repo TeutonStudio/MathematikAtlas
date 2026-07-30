@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.3.x"
-current_version = "2.3.18"
+current_series = "2.4.x"
+current_version = "2.4.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -151,3 +151,15 @@ branch = "agent/v2.3.18-standardwerte-konjugation"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert bestehende Rechenknoten und den Inspektor ohne neuen registrierten Knotentyp."
+
+[[releases]]
+version = "2.4.0"
+title = "Division, Kehrwert und komplexe Definitionskarten"
+roadmap = "v2.4.x Definitionskarten und Projektstabilisierung"
+status = "released"
+previous_release = "2.3.18"
+branch = "release/v2.4.0-division-definitionskarten"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.kehrwert"]
+reason = "Führt mit mathematik.kehrwert einen neuen registrierten und separat erzeugbaren Knotentyp ein und erweitert Division sowie Definitionskarten."
