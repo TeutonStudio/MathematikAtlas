@@ -17,7 +17,12 @@ class FallAusdruckTypTest {
         val fall = FallAusdruck(
             EndlicheMenge(setOf(RationaleZahl.Eins)),
             bedingung,
-            ReellesIntervall(RationaleZahl.Null, RationaleZahl.Eins),
+            ReellesIntervall(
+                links = RationaleZahl.Null,
+                linksOffen = false,
+                rechts = RationaleZahl.Eins,
+                rechtsOffen = false,
+            ),
         )
 
         assertIs<MengenFallAusdruck>(fall)
