@@ -29,7 +29,8 @@ object MathematikKnotenVorlagen {
     val Minimum = extremwertVorlage("Minimum", "Minimum von zwei oder mehr nachweisbar reellen Zahlen.", "minimum")
     val Multiplikation = KnotenVorlage(
         "mathematik.multiplikation", "Multiplikation", "Rechnen", "Multipliziert zwei oder mehr Zahlterme.", GraphGröße(220f, 130f),
-        listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0), eingang("b", MathematikAnschlussArten.Zahl.id, 1), eingang("c", MathematikAnschlussArten.Zahl.id, 2), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+        listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     val Division = KnotenVorlage(
         "mathematik.division", "Division", "Rechnen", "Teilt durch einen Zahlterm und führt den Fall Divisor = 0 als separaten Ausgang.", GraphGröße(235f, 126f),
@@ -51,7 +52,7 @@ object MathematikKnotenVorlagen {
     val KleinerGleich = vergleichVorlage("mathematik.kleinerGleich", "Kleiner oder gleich", "≤")
     val GrößerGleich = vergleichVorlage("mathematik.größerGleich", "Größer oder gleich", "≥")
     val Teilmenge = mengenAussagenVorlage("mathematik.teilmenge", "Teilmenge", "Prüft die echte Teilmengenbeziehung.")
-    val Übermenge = mengenAussagenVorlage("mathematik.übermenge", "Übermenge", "Prüft die echte Übermengenbeziehung.")
+    val Übermenge = mengenAussagenVorlage("mathematik.übermenge", "Übermenge", "Prüft die echte Obermengenbeziehung.")
     val TeilOderGleichmenge = mengenAussagenVorlage("mathematik.teilOderGleichmenge", "Teil- oder Gleichmenge", "Prüft ⊆.")
     val ÜberOderGleichmenge = mengenAussagenVorlage("mathematik.überOderGleichmenge", "Über- oder Gleichmenge", "Prüft ⊇.")
     val Disjunkt = mengenAussagenVorlage("mathematik.disjunkt", "Disjunkt", "Prüft, ob zwei Mengen keinen gemeinsamen Wert besitzen.")
