@@ -26,7 +26,7 @@ Die Roadmap verwendet das Schema `vM.y.x`:
 - **`y` – Knoten-Version:** ergänzt neue Knoten oder vollständige Knotenfamilien innerhalb des Versionsraums
 - **`x` – Änderungs-Version:** enthält sonstige Änderungen, Fehlerkorrekturen, Bedienungsverbesserungen und Ausbau bestehender Konzepte
 
-Eine neue `y`-Version bedeutet damit nicht bloß „mehr Änderungen“, sondern ausdrücklich eine Erweiterung des verfügbaren Knotenvokabulars. Menschen haben Versionsnummern erfunden und benötigen nun Regeln, damit sie nicht sofort wieder bedeutungslos werden.
+Eine neue `y`-Version erweitert damit ausdrücklich das verfügbare Knotenvokabular. Eine neue `x`-Version verändert oder verbessert vorhandene Funktionen, ohne diesen Anspruch zu erheben.
 
 ### Versionsräume
 
