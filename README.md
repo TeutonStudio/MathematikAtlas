@@ -16,17 +16,33 @@ Die Anwendung ist auf Deutsch benannt und implementiert; sie basiert auf Kotlin,
 
 ## Roadmap
 
-![Roadmap des Mathematik Atlas von v2.y.x bis v8.y.x](docs/assets/roadmap.svg)
+![Roadmap des Mathematik Atlas von v2.y.x bis v8.y.x mit Erklärung der Knoten- und Änderungs-Versionen](docs/assets/roadmap.svg)
 
 ### Versionsschema
 
 Die Roadmap verwendet das Schema `vM.y.x`:
 
-- **`M` – Versionsraum:** ein größerer fachlicher oder technischer Entwicklungsabschnitt
-- **`y` – Knoten-Version:** ergänzt neue Knoten oder vollständige Knotenfamilien innerhalb des Versionsraums
-- **`x` – Änderungs-Version:** enthält sonstige Änderungen, Fehlerkorrekturen, Bedienungsverbesserungen und Ausbau bestehender Konzepte
+- **`M` – Versionsraum:** ein größerer, ausdrücklich in der Roadmap festgelegter fachlicher oder technischer Entwicklungsabschnitt
+- **`y` – Knoten-Version:** eine Veröffentlichung, die mindestens einen neuen, eigenständig registrierten Knotentyp oder eine neue Knotenfamilie ergänzt
+- **`x` – Änderungs-Version:** eine Veröffentlichung ohne neue Knotentypen, etwa für Fehlerkorrekturen, Bedienungsverbesserungen, Refactorings, Dokumentation oder den Ausbau bestehender Knoten
 
-Eine neue `y`-Version erweitert damit ausdrücklich das verfügbare Knotenvokabular. Eine neue `x`-Version verändert oder verbessert vorhandene Funktionen, ohne diesen Anspruch zu erheben.
+Für die nächste Version gilt:
+
+| Inhalt des Releases | Versionsänderung |
+|---|---|
+| keine neuen Knoten | `vM.y.(x+1)` |
+| mindestens ein neuer Knoten | `vM.(y+1).0` |
+| neue Knoten und weitere Änderungen gemeinsam | `vM.(y+1).0` |
+| Beginn eines neuen Versionsraums | ausdrücklich geplantes `v(M+1).0.0` |
+
+Eine zusätzliche Inspector-Einstellung, ein neuer Anschluss, eine Verhaltensänderung oder eine Erweiterung eines bestehenden Knotens zählt allein noch nicht als neuer Knoten. Entscheidend ist ein neuer, separat erzeugbarer und registrierter Knotentyp. Enthält ein Release sowohl neue Knoten als auch andere Änderungen, hat die `y`-Einordnung Vorrang und `x` wird auf `0` zurückgesetzt.
+
+Beispiel ausgehend von `v2.3.16`:
+
+- neue Knotentypen führen zu `v2.4.0`
+- sonstige Änderungen führen zu `v2.3.17`
+
+Die Regel gilt für zukünftige Versionsreservierungen. Bereits veröffentlichte oder historisch als `superseded` markierte Versionen werden nicht nachträglich umnummeriert.
 
 ### Versionsräume
 
