@@ -8,33 +8,42 @@ data object LeereMenge : MengenAusdruck { override fun zuLatex() = "\\varnothing
 
 data class BenannteMenge(val name: String, val latex: String = name) : MengenAusdruck { override fun zuLatex() = latex }
 
-/** Abgeschlossenes Intervall `[untereGrenze, obereGrenze]` innerhalb der reellen Zahlen. */
+/** Reelles Intervall mit unabhängig offenen oder geschlossenen Grenzen. */
 data class ReellesIntervall(
-    val untereGrenze: ZahlAusdruck,
-    val obereGrenze: ZahlAusdruck,
+    val links: ZahlAusdruck,
+    val linksOffen: Boolean,
+    val rechts: ZahlAusdruck,
+    val rechtsOffen: Boolean,
 ) : MengenAusdruck {
-    override fun zuLatex() = "\\left[${untereGrenze.zuLatex()},${obereGrenze.zuLatex()}\\right]"
+    override fun zuLatex(): String {
+        val linkeKlammer = if (linksOffen) "\\mathopen{]}" else "\\mathopen{[}"
+        val rechteKlammer = if (rechtsOffen) "\\mathclose{[}" else "\\mathclose{]}"
+        return "$linkeKlammer${links.zuLatex()},${rechts.zuLatex()}$rechteKlammer"
+    }
 }
 
 /**
- * Erzeugt ein abgeschlossenes reelles Intervall und normalisiert exakt
- * entscheidbare rationale Randfälle zu einer Menge mit derselben Bedeutung.
+ * Erzeugt ein reelles Intervall und normalisiert exakt entscheidbare rationale
+ * Randfälle zu einer Menge mit derselben Bedeutung.
  */
 fun reellesIntervall(
-    untereGrenze: ZahlAusdruck,
-    obereGrenze: ZahlAusdruck,
+    links: ZahlAusdruck,
+    linksOffen: Boolean,
+    rechts: ZahlAusdruck,
+    rechtsOffen: Boolean,
     kontext: RechenKontext = RechenKontext(),
 ): MengenAusdruck {
-    val unten = vereinfache(untereGrenze, kontext)
-    val oben = vereinfache(obereGrenze, kontext)
-    if (unten is RationaleZahl && oben is RationaleZahl) {
+    val linkeGrenze = vereinfache(links, kontext)
+    val rechteGrenze = vereinfache(rechts, kontext)
+    if (linkeGrenze is RationaleZahl && rechteGrenze is RationaleZahl) {
         return when {
-            unten > oben -> LeereMenge
-            unten == oben -> EndlicheMenge(setOf(unten))
-            else -> ReellesIntervall(unten, oben)
+            linkeGrenze > rechteGrenze -> LeereMenge
+            linkeGrenze == rechteGrenze && (linksOffen || rechtsOffen) -> LeereMenge
+            linkeGrenze == rechteGrenze -> EndlicheMenge(setOf(linkeGrenze))
+            else -> ReellesIntervall(linkeGrenze, linksOffen, rechteGrenze, rechtsOffen)
         }
     }
-    return ReellesIntervall(unten, oben)
+    return ReellesIntervall(linkeGrenze, linksOffen, rechteGrenze, rechtsOffen)
 }
 
 data class Vereinigung(val mengen: List<MengenAusdruck>) : MengenAusdruck {
@@ -235,10 +244,12 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         is EndlicheMenge -> if (element in menge.elemente) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         is ReellesIntervall -> {
             val wert = element as? RationaleZahl
-            val unten = vereinfache(menge.untereGrenze, kontext) as? RationaleZahl
-            val oben = vereinfache(menge.obereGrenze, kontext) as? RationaleZahl
-            if (wert != null && unten != null && oben != null) {
-                val enthalten = unten <= wert && wert <= oben
+            val links = vereinfache(menge.links, kontext) as? RationaleZahl
+            val rechts = vereinfache(menge.rechts, kontext) as? RationaleZahl
+            if (wert != null && links != null && rechts != null) {
+                val linkeBedingung = if (menge.linksOffen) links < wert else links <= wert
+                val rechteBedingung = if (menge.rechtsOffen) wert < rechts else wert <= rechts
+                val enthalten = linkeBedingung && rechteBedingung
                 AussageErgebnis(
                     if (enthalten) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
                     if (enthalten) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,

@@ -6,33 +6,43 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 class ReellesIntervallTest {
-    @Test
-    fun `rationale Grenzen werden kanonisch normalisiert`() {
-        val intervall = assertIs<ReellesIntervall>(reellesIntervall(RationaleZahl.von(1), RationaleZahl.von(3)))
+    private fun z(wert: Long) = RationaleZahl.von(wert)
 
-        assertEquals("\\left[1,3\\right]", intervall.zuLatex())
-        assertEquals(LeereMenge, reellesIntervall(RationaleZahl.von(3), RationaleZahl.von(1)))
-        assertEquals(EndlicheMenge(setOf(RationaleZahl.von(2))), reellesIntervall(RationaleZahl.von(2), RationaleZahl.von(2)))
+    @Test
+    fun `alle vier Randkombinationen verwenden deutsche Intervallschreibweise`() {
+        assertEquals("\\mathopen{[}1,3\\mathclose{]}", assertIs<ReellesIntervall>(reellesIntervall(z(1), false, z(3), false)).zuLatex())
+        assertEquals("\\mathopen{]}1,3\\mathclose{]}", assertIs<ReellesIntervall>(reellesIntervall(z(1), true, z(3), false)).zuLatex())
+        assertEquals("\\mathopen{[}1,3\\mathclose{[}", assertIs<ReellesIntervall>(reellesIntervall(z(1), false, z(3), true)).zuLatex())
+        assertEquals("\\mathopen{]}1,3\\mathclose{[}", assertIs<ReellesIntervall>(reellesIntervall(z(1), true, z(3), true)).zuLatex())
     }
 
     @Test
-    fun `rationale Mitgliedschaft im Intervall wird exakt entschieden`() {
-        val intervall = ReellesIntervall(RationaleZahl.von(1), RationaleZahl.von(3))
+    fun `rationale Grenzfälle werden nach Offenheit normalisiert`() {
+        assertEquals(LeereMenge, reellesIntervall(z(3), false, z(1), false))
+        assertEquals(EndlicheMenge(setOf(z(2))), reellesIntervall(z(2), false, z(2), false))
+        assertEquals(LeereMenge, reellesIntervall(z(2), true, z(2), false))
+        assertEquals(LeereMenge, reellesIntervall(z(2), false, z(2), true))
+        assertEquals(LeereMenge, reellesIntervall(z(2), true, z(2), true))
+    }
 
-        listOf(1L, 2L, 3L).forEach { wert ->
-            assertEquals(Wahrheitswert.Wahr, ElementBeziehung(RationaleZahl.von(wert), intervall).entscheide().wahrheitswert)
-        }
-        listOf(0L, 4L).forEach { wert ->
-            assertEquals(Wahrheitswert.Lüge, ElementBeziehung(RationaleZahl.von(wert), intervall).entscheide().wahrheitswert)
-        }
+    @Test
+    fun `rationale Mitgliedschaft berücksichtigt beide Randarten`() {
+        val offen = ReellesIntervall(z(1), true, z(3), true)
+        val geschlossen = ReellesIntervall(z(1), false, z(3), false)
+
+        assertEquals(Wahrheitswert.Lüge, ElementBeziehung(z(1), offen).entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Wahr, ElementBeziehung(z(2), offen).entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Lüge, ElementBeziehung(z(3), offen).entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Wahr, ElementBeziehung(z(1), geschlossen).entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Wahr, ElementBeziehung(z(3), geschlossen).entscheide().wahrheitswert)
     }
 
     @Test
     fun `symbolische Grenzen bleiben substituierbar und variablenhaltig`() {
-        val unten = Variable("a")
-        val symbolisch = ReellesIntervall(unten, RationaleZahl.von(2))
+        val links = Variable("a")
+        val symbolisch = ReellesIntervall(links, true, z(2), false)
 
-        assertEquals(setOf(unten), symbolisch.freieVariablen())
-        assertEquals(EndlicheMenge(setOf(RationaleZahl.von(2))), ersetze(symbolisch, mapOf("a" to RationaleZahl.von(2))))
+        assertEquals(setOf(links), symbolisch.freieVariablen())
+        assertEquals(LeereMenge, ersetze(symbolisch, mapOf("a" to z(2))))
     }
 }

@@ -3,6 +3,8 @@ package de.TeutonStudio.MathematikKartenAdapter
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
+const val DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG = "@mathematik.definitionsmenge.doppelpunkt"
+
 data class BedingterWert(
     val objekt: MathematischesObjekt,
     val annahmen: Set<Aussage> = emptySet(),
@@ -19,7 +21,11 @@ data class BedingterWert(
 )
 
 /** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die mathematische Standarddarstellung. */
-fun BedingterWert.anzeigeLatex(): String = latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuLatex()
+fun BedingterWert.anzeigeLatex(): String = when {
+    latexDarstellung == DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG && objekt is DefinierteMenge ->
+        objekt.zuDoppelpunktLatex()
+    else -> latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuLatex()
+}
 
 data class VariablenQuelle(
     val knotenId: KnotenId,
@@ -72,7 +78,10 @@ fun interface MathematikKnotenAuswerter {
 class MathematikAuswerterRegister {
     private val auswerter = linkedMapOf<KnotenArtId, MathematikKnotenAuswerter>()
     fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = wert }
-    fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = auswerter[art]
+    fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
+        "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
+        else -> auswerter[art]
+    }
     fun arten(): Set<KnotenArtId> = auswerter.keys
 }
 

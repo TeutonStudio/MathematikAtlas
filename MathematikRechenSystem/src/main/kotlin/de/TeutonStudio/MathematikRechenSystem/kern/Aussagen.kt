@@ -96,7 +96,7 @@ data class Konjunktion(val aussagen: List<Aussage>) : Aussage {
         if (ergebnisse.all { it.wahrheitswert == Wahrheitswert.Wahr }) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
-    override fun zuLatex() = aussagen.joinToString(" \\land ") { it.zuLatex() }
+    override fun zuLatex() = zuRelationsKettenLatex()
 }
 
 data class Disjunktion(val aussagen: List<Aussage>) : Aussage {

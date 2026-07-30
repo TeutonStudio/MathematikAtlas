@@ -213,7 +213,12 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Logarithmus -> Logarithmus(ersetze(objekt.basis, bindungen), ersetze(objekt.argument, bindungen))
     is Argument -> Argument(ersetze(objekt.zahl, bindungen) as KomplexeZahl)
     is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { ersetze(it, bindungen) }.toSet())
-    is ReellesIntervall -> reellesIntervall(ersetze(objekt.untereGrenze, bindungen), ersetze(objekt.obereGrenze, bindungen))
+    is ReellesIntervall -> reellesIntervall(
+        links = ersetze(objekt.links, bindungen),
+        linksOffen = objekt.linksOffen,
+        rechts = ersetze(objekt.rechts, bindungen),
+        rechtsOffen = objekt.rechtsOffen,
+    )
     is Vereinigung -> vereinige(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
     is MengenDifferenz -> mengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
@@ -279,7 +284,7 @@ private fun vereinfacheObjekt(
 ): MathematischesObjekt = when (objekt) {
     is ZahlAusdruck -> vereinfache(objekt, kontext)
     is EndlicheMenge -> EndlicheMenge(objekt.elemente.map { vereinfacheObjekt(it, kontext) }.toSet())
-    is ReellesIntervall -> reellesIntervall(objekt.untereGrenze, objekt.obereGrenze, kontext)
+    is ReellesIntervall -> reellesIntervall(objekt.links, objekt.linksOffen, objekt.rechts, objekt.rechtsOffen, kontext)
     is Vereinigung -> vereinige(objekt.mengen)
     is Schnitt -> schneide(objekt.mengen, objekt.grundMenge)
     is GefilterteMenge -> filtereMenge(objekt.menge, objekt.methode, kontext)
@@ -312,7 +317,7 @@ fun MathematischesObjekt.enthalteneFunktionsParameter(): Set<FunktionsParameter>
     is Logarithmus -> listOf(basis, argument).enthalteneFunktionsParameter()
     is Argument -> zahl.enthalteneFunktionsParameter()
     is EndlicheMenge -> elemente.enthalteneFunktionsParameter()
-    is ReellesIntervall -> listOf(untereGrenze, obereGrenze).enthalteneFunktionsParameter()
+    is ReellesIntervall -> listOf(links, rechts).enthalteneFunktionsParameter()
     is Vereinigung -> mengen.enthalteneFunktionsParameter()
     is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneFunktionsParameter()
     is MengenDifferenz -> listOf(links, rechts).enthalteneFunktionsParameter()
