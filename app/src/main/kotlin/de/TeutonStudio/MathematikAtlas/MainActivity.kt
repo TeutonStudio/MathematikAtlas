@@ -3,10 +3,14 @@ package de.TeutonStudio.MathematikAtlas
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,7 +27,9 @@ class MainActivity : ComponentActivity() {
                     darstellungsSpeicher.speichere(modus)
                 },
             ) {
-                MathematikAtlasApp(zustand)
+                Box(Modifier.fillMaxSize().statusBarsPadding()) {
+                    MathematikAtlasApp(zustand)
+                }
             }
         }
     }
