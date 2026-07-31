@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.10.x"
-current_version = "2.10.3"
+current_series = "2.11.x"
+current_version = "2.11.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -333,3 +333,15 @@ branch = "agent/v2.10.3-karten-wahrheitstabellen"
 kind = "fix"
 version_axis = "x"
 reason = "Erweitert den Wahrheitstabellendialog auf fest versionierte Karten-Knoten mit Aussageausgängen, gemischten Eingaben und mehreren Ausgabespalten, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.11.0"
+title = "Mengendefinitionskarten für Mengenoperatoren"
+roadmap = "v2.11.x Symbolische Mengenoperatoren und Definitionskarten"
+status = "released"
+previous_release = "2.10.3"
+branch = "agent/v2.11.0-mengenoperator-definitionskarten"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.symmetrischeDifferenz"]
+reason = "Ergänzt ausführbare, selbstbezugfreie Definitionskarten für Vereinigung, Schnitt, Differenz und symmetrische Differenz und führt den fehlenden symmetrischen Differenzknoten mit exakter endlicher Auswertung ein."
