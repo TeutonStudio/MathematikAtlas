@@ -25,32 +25,32 @@ class OrdnungsrelationDefinitionsKarteTest {
         )
     }
 
+    @Test
+    fun `alte Vergleichsarten werden ohne Anschlussverlust migriert`() {
+        val alt = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero).copy(
+            art = "mathematik.kleiner",
+            parameter = emptyMap(),
+        )
+        val verbindung = VerbindungDaten(
+            von = AnschlussVerweis(KnotenId("quelle"), AnschlussId("ausgang")),
+            zu = AnschlussVerweis(alt.id, alt.anschlüsse.first { it.name == "links" }.id),
+        )
+        val migriert = migriereOrdnungsrelation(
+            KartenDaten(
+                name = "Migration",
+                knoten = listOf(alt),
+                verbindungen = listOf(verbindung),
+            ),
+        )
+        val neu = migriert.knoten.single()
 
-@Test
-fun `alte Vergleichsarten werden ohne Anschlussverlust migriert`() {
-    val alt = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero).copy(
-        art = "mathematik.kleiner",
-        parameter = emptyMap(),
-    )
-    val verbindung = VerbindungDaten(
-        von = AnschlussVerweis(KnotenId("quelle"), AnschlussId("ausgang")),
-        zu = AnschlussVerweis(alt.id, alt.anschlüsse.first { it.name == "links" }.id),
-    )
-    val migriert = migriereOrdnungsrelation(
-        KartenDaten(
-            name = "Migration",
-            knoten = listOf(alt),
-            verbindungen = listOf(verbindung),
-        ),
-    )
-    val neu = migriert.knoten.single()
+        assertEquals(MathematikKnotenVorlagen.ORDNUNGSRELATION_ART, neu.art)
+        assertEquals("kleiner", neu.parameter["relation"])
+        assertEquals(alt.id, neu.id)
+        assertEquals(alt.anschlüsse, neu.anschlüsse)
+        assertEquals(listOf(verbindung), migriert.verbindungen)
+    }
 
-    assertEquals(MathematikKnotenVorlagen.ORDNUNGSRELATION_ART, neu.art)
-    assertEquals("kleiner", neu.parameter["relation"])
-    assertEquals(alt.id, neu.id)
-    assertEquals(alt.anschlüsse, neu.anschlüsse)
-    assertEquals(listOf(verbindung), migriert.verbindungen)
-}
     @Test
     fun `Knotendefinition folgt der ausgewählten Relation`() {
         val kleiner = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero)
