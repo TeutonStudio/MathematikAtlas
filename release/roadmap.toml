@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.6.x"
-current_version = "2.6.0"
+current_version = "2.6.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -208,3 +208,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.ungleichheit"]
 reason = "Führt mit mathematik.ungleichheit einen neuen registrierten und separat erzeugbaren Aussagenprädikat-Knoten analog zur Gleichheit ein."
+
+[[releases]]
+version = "2.6.1"
+title = "Auswertbare Intervall-Definitionskarte"
+roadmap = "v2.6.x Definitionskarten und Konzeptkatalog"
+status = "released"
+previous_release = "2.6.0"
+branch = "agent/v2.6.1-konzeptauswertung"
+kind = "fix"
+version_axis = "x"
+reason = "Wertet die vorhandene Intervall-Definitionskarte mit typisierten Vorschauwerten aus, sodass Konjunktion, reeller Wertevorrat und Wahrheitszielmenge aus der mathematischen Semantik statt aus Parameter-Fallbacks entstehen."
