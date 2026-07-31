@@ -6,7 +6,10 @@ if skript.exists():
     alt = '''    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }, { it.first.id.wert }))
     .distinctBy { it.second }
 '''
-    neu = '''    .distinctBy { it.second }
+    neu = '''    .groupBy { it.second }
+    .values
+    .asSequence()
+    .map { it.first() }
     .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }))
 '''
     if text.count(alt) != 1:
