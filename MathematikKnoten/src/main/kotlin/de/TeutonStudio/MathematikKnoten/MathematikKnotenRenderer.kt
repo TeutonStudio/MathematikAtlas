@@ -12,13 +12,18 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
-import de.TeutonStudio.MathematikRechenSystem.kern.grundmenge
 
 internal fun variablenFormel(knoten: KnotenDaten): String {
     val name = knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
     val werteVorratKennung = knoten.parameter["werteVorrat"]?.trim().orEmpty().ifBlank { "R" }
-    val werteVorrat = runCatching { grundmenge(werteVorratKennung).zuLatex() }
-        .getOrDefault(werteVorratKennung)
+    val werteVorrat = when (werteVorratKennung.uppercase()) {
+        "N", "ℕ" -> "\\mathbb{N}"
+        "Z", "ℤ" -> "\\mathbb{Z}"
+        "Q", "ℚ" -> "\\mathbb{Q}"
+        "R", "ℝ" -> "\\mathbb{R}"
+        "C", "ℂ" -> "\\mathbb{C}"
+        else -> werteVorratKennung
+    }
     return "$name \\in $werteVorrat"
 }
 
