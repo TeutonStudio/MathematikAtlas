@@ -14,7 +14,6 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun KnotenKonzeptDialog(
     zustand: AtlasZustand,
@@ -22,8 +21,42 @@ internal fun KnotenKonzeptDialog(
     schließen: () -> Unit,
 ) {
     val konzept = remember(knoten.art) { TestDefinitionsKarten.fürKnoten(knoten) }
-    var reiterIndex by remember(knoten.art) { mutableIntStateOf(0) }
-    var komplexDarstellung by remember(knoten.id) { mutableStateOf(KomplexDarstellung.Kartesisch) }
+    KonzeptDialog(
+        zustand = zustand,
+        konzept = konzept,
+        ursprungsKnoten = knoten,
+        schließen = schließen,
+    )
+}
+
+@Composable
+internal fun KonzeptKatalogDialog(
+    zustand: AtlasZustand,
+    konzept: KonzeptDefinition,
+    schließen: () -> Unit,
+) {
+    KonzeptDialog(
+        zustand = zustand,
+        konzept = konzept,
+        ursprungsKnoten = null,
+        schließen = schließen,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KonzeptDialog(
+    zustand: AtlasZustand,
+    konzept: KonzeptDefinition?,
+    ursprungsKnoten: KnotenDaten?,
+    schließen: () -> Unit,
+) {
+    var reiterIndex by remember(konzept?.id, ursprungsKnoten?.art) { mutableIntStateOf(0) }
+    var komplexDarstellung by remember(konzept?.id, ursprungsKnoten?.id) {
+        mutableStateOf(KomplexDarstellung.Kartesisch)
+    }
+    val aktiverReiter = konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
+    val aktiveKarte = aktiverReiter?.karteFür(komplexDarstellung)
 
     Dialog(
         onDismissRequest = schließen,
@@ -40,7 +73,7 @@ internal fun KnotenKonzeptDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(konzept?.name ?: knoten.name, style = MaterialTheme.typography.titleLarge)
+                        Text(konzept?.name ?: ursprungsKnoten?.name.orEmpty(), style = MaterialTheme.typography.titleLarge)
                         Text(
                             konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert.",
                             style = MaterialTheme.typography.bodySmall,
@@ -53,7 +86,10 @@ internal fun KnotenKonzeptDialog(
 
                 if (konzept == null) {
                     Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp)) {
-                        Text("Fehlende Definition für ${knoten.art}", color = MaterialTheme.colorScheme.error)
+                        Text(
+                            "Fehlende Definition für ${ursprungsKnoten?.art.orEmpty()}",
+                            color = MaterialTheme.colorScheme.error,
+                        )
                     }
                 } else {
                     if (konzept.reiter.size > 1) {
@@ -84,12 +120,13 @@ internal fun KnotenKonzeptDialog(
                             )
                         }
                     }
-                    val reiter = konzept.reiter[reiterIndex.coerceIn(0, konzept.reiter.lastIndex)]
-                    UnveränderlicheKonzeptKarte(
-                        zustand = zustand,
-                        karte = reiter.karteFür(komplexDarstellung),
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                    )
+                    aktiveKarte?.let { karte ->
+                        UnveränderlicheKonzeptKarte(
+                            zustand = zustand,
+                            karte = karte,
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                        )
+                    }
                 }
 
                 HorizontalDivider()
@@ -97,29 +134,39 @@ internal fun KnotenKonzeptDialog(
                     Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.dupliziereAuswahl()
-                            schließen()
-                        },
-                    ) { Text("Duplizieren") }
-                    OutlinedButton(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.isoliereAusgewähltenKnoten()
-                            schließen()
-                        },
-                    ) { Text("Isolieren") }
-                    Spacer(Modifier.weight(1f))
-                    Button(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.löscheAuswahl()
-                            schließen()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    ) { Text("Löschen") }
+                    aktiveKarte?.let { karte ->
+                        Button(
+                            onClick = {
+                                zustand.öffneBearbeitbareKopie(karte)
+                                schließen()
+                            },
+                        ) { Text("Als bearbeitbare Karte kopieren") }
+                    }
+                    ursprungsKnoten?.let { knoten ->
+                        OutlinedButton(
+                            onClick = {
+                                zustand.editor.wähleKnoten(knoten.id)
+                                zustand.editor.dupliziereAuswahl()
+                                schließen()
+                            },
+                        ) { Text("Knoten duplizieren") }
+                        OutlinedButton(
+                            onClick = {
+                                zustand.editor.wähleKnoten(knoten.id)
+                                zustand.editor.isoliereAusgewähltenKnoten()
+                                schließen()
+                            },
+                        ) { Text("Knoten isolieren") }
+                        Spacer(Modifier.weight(1f))
+                        Button(
+                            onClick = {
+                                zustand.editor.wähleKnoten(knoten.id)
+                                zustand.editor.löscheAuswahl()
+                                schließen()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) { Text("Knoten löschen") }
+                    } ?: Spacer(Modifier.weight(1f))
                 }
             }
         }
@@ -146,15 +193,12 @@ private fun UnveränderlicheKonzeptKarte(
     KnotenKartenEditor(
         zustand = editor,
         modifier = modifier,
-        rendererFür = { dokumentationsKnoten ->
-            if (dokumentationsKnoten.art.startsWith("konzept.")) KonzeptDokumentationsRenderer
-            else zustand.rendererFür(dokumentationsKnoten)
-        },
+        rendererFür = zustand::rendererFür,
         farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
     )
 }
 
-private object KonzeptDokumentationsRenderer : KnotenRenderer {
+internal object KonzeptDokumentationsRenderer : KnotenRenderer {
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         Column(

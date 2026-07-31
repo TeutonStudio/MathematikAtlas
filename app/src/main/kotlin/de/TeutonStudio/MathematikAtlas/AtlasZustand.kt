@@ -83,6 +83,21 @@ class AtlasZustand(context: Context) {
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
     }
 
+    fun öffneBearbeitbareKopie(vorlage: KartenDaten) {
+        val basisName = "${vorlage.name} – Kopie"
+        val vorhandeneNamen = karten.mapTo(mutableSetOf()) { it.name }
+        var name = basisName
+        var nummer = 2
+        while (name in vorhandeneNamen) {
+            name = "$basisName $nummer"
+            nummer += 1
+        }
+        val gespeichert = speicher.speichere(vorlage.alsNeueKarte(name))
+        karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
+        linkerBereich = VerwaltungsBereich.Karten
+        öffne(gespeichert)
+    }
+
     fun öffneKnotenAuswahl(position: GraphPunkt, start: AnschlussVerweis? = null) {
         knotenAuswahlPosition = position
         knotenAuswahlStart = start
@@ -174,9 +189,10 @@ class AtlasZustand(context: Context) {
 
     fun renderer() = MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
 
-    fun rendererFür(knoten: KnotenDaten) = when (knoten.art) {
-        "mathematik.visualisierung" -> VisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
-        "mathematik.geometrie.visualisierung" -> GeometrieVisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
+    fun rendererFür(knoten: KnotenDaten) = when {
+        knoten.art.startsWith("konzept.") -> KonzeptDokumentationsRenderer
+        knoten.art == "mathematik.visualisierung" -> VisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
+        knoten.art == "mathematik.geometrie.visualisierung" -> GeometrieVisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
         else -> renderer()
     }
 
@@ -268,5 +284,12 @@ class AtlasZustand(context: Context) {
     }
 
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = migriereAssoziativeKnoten(karte)
-    private fun werteAus() { auswertung = auswerter.auswerten(editor.karte) }
+
+    private fun werteAus() {
+        auswertung = if (editor.karte.knoten.any { it.art.startsWith("konzept.") }) {
+            KartenAuswertungsErgebnis(emptyMap(), emptyList())
+        } else {
+            auswerter.auswerten(editor.karte)
+        }
+    }
 }

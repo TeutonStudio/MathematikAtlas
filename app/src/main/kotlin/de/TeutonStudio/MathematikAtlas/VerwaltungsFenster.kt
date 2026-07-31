@@ -47,7 +47,7 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (zustand.linkerBereich) {
                     VerwaltungsBereich.Karten -> KartenListe(zustand)
-                    VerwaltungsBereich.Konzepte -> KonzeptListe()
+                    VerwaltungsBereich.Konzepte -> KonzeptListe(zustand)
                     VerwaltungsBereich.Variablen -> VariablenListe(zustand)
                     VerwaltungsBereich.Auswertung -> AuswertungsListe(zustand)
                     VerwaltungsBereich.Fehler -> FehlerListe(zustand)
@@ -426,12 +426,86 @@ private fun kartenListenEinträge(karten: List<KartenDaten>, ordnung: KartenOrdn
     fügeEbeneHinzu(emptyList(), 0)
 }
 
-@Composable private fun KonzeptListe() {
-    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text("Mathematische Systeme", style = MaterialTheme.typography.titleMedium) }
-        items(listOf("Standardanalysis", "Nichtstandardanalysis", "Aussagenlogik", "Mengenlehre", "Lineare Algebra")) { name ->
-            ListItem(headlineContent = { Text(name) }, supportingContent = { Text("Definitionen, Kurzverfahren und Beispiele können als Karten hinterlegt werden.") })
+@Composable
+private fun KonzeptListe(zustand: AtlasZustand) {
+    var suche by remember { mutableStateOf("") }
+    var geöffnetesKonzept by remember { mutableStateOf<KonzeptDefinition?>(null) }
+    val konzepte = remember(suche) {
+        val begriff = suche.trim()
+        TestDefinitionsKarten.alle.filter { konzept ->
+            begriff.isBlank() || listOf(
+                konzept.name,
+                konzept.beschreibung,
+                konzept.pfad.joinToString(" "),
+                konzept.tags.joinToString(" "),
+                konzept.knotenArten.joinToString(" "),
+            ).any { it.contains(begriff, ignoreCase = true) }
         }
+    }
+    val gruppiert = remember(konzepte) {
+        konzepte.groupBy { konzept ->
+            konzept.pfad.takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: "Allgemein"
+        }
+    }
+
+    Column(Modifier.fillMaxSize()) {
+        OutlinedTextField(
+            value = suche,
+            onValueChange = { suche = it },
+            label = { Text("Konzepte durchsuchen") },
+            placeholder = { Text("Name, Kategorie oder Knotenart") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+        )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            if (konzepte.isEmpty()) {
+                item {
+                    Text(
+                        "Keine Definitionskarte passt zur Suche.",
+                        Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            gruppiert.forEach { (pfad, einträge) ->
+                item(key = "konzept-pfad:$pfad") {
+                    Text(
+                        pfad,
+                        modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                items(einträge, key = { it.id.wert }) { konzept ->
+                    ListItem(
+                        headlineContent = { Text(konzept.name) },
+                        supportingContent = { Text(konzept.beschreibung) },
+                        trailingContent = {
+                            Text(
+                                if (konzept.reiter.size == 1) "1 Karte" else "${konzept.reiter.size} Karten",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.medium)
+                            .clickable { geöffnetesKonzept = konzept },
+                    )
+                }
+            }
+        }
+    }
+
+    geöffnetesKonzept?.let { konzept ->
+        KonzeptKatalogDialog(
+            zustand = zustand,
+            konzept = konzept,
+            schließen = { geöffnetesKonzept = null },
+        )
     }
 }
 
