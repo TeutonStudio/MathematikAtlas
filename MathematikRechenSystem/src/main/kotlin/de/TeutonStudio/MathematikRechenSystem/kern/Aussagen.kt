@@ -1,6 +1,9 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-enum class Wahrheitswert { Wahr, Lüge }
+enum class Wahrheitswert(val latex: String) {
+    Wahr("\\mathcal{Wahr}"),
+    Lüge("\\mathcal{Lüge}"),
+}
 
 sealed interface EntscheidungsStatus {
     data object Bewiesen : EntscheidungsStatus
@@ -25,7 +28,7 @@ data class WahrheitsKonstante(val wert: Boolean) : Aussage {
         if (wert) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
         if (wert) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
     )
-    override fun zuLatex() = if (wert) "\\top" else "\\bot"
+    override fun zuLatex() = if (wert) Wahrheitswert.Wahr.latex else Wahrheitswert.Lüge.latex
 }
 
 data class Gleichheit(val links: MathematischesObjekt, val rechts: MathematischesObjekt) : Aussage {
