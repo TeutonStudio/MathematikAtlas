@@ -12,6 +12,15 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
+import de.TeutonStudio.MathematikRechenSystem.kern.grundmenge
+
+internal fun variablenFormel(knoten: KnotenDaten): String {
+    val name = knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
+    val werteVorratKennung = knoten.parameter["werteVorrat"]?.trim().orEmpty().ifBlank { "R" }
+    val werteVorrat = runCatching { grundmenge(werteVorratKennung).zuLatex() }
+        .getOrDefault(werteVorratKennung)
+    return "$name \\in $werteVorrat"
+}
 
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
@@ -23,6 +32,10 @@ class MathematikKnotenRenderer(
             val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
             val objekt = ausgabe?.objekt
             when {
+                knoten.art == "mathematik.variable" -> LatexText(
+                    variablenFormel(knoten),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.extremwert" -> LatexText(extremwertFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.vereinigung" -> LatexText(operatorFormel(knoten, ergebnis, " \\cup "), style = MaterialTheme.typography.bodyLarge)
