@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.10.x"
-current_version = "2.10.2"
+current_version = "2.10.3"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -322,3 +322,14 @@ branch = "agent/v2.10.2-profil-freigaben"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert lokale Identität, Freigabepakete, Löschverwaltung und Papierkorb ohne neuen registrierten Knotentyp."
+
+[[releases]]
+version = "2.10.3"
+title = "Wahrheitstabellen für Karten-Knoten"
+roadmap = "v2.10.x Aussagenlogik und Definitionsdialoge"
+status = "released"
+previous_release = "2.10.2"
+branch = "agent/v2.10.3-karten-wahrheitstabellen"
+kind = "fix"
+version_axis = "x"
+reason = "Erweitert den Wahrheitstabellendialog auf fest versionierte Karten-Knoten mit Aussageausgängen, gemischten Eingaben und mehreren Ausgabespalten, ohne einen neuen Knotentyp einzuführen."
