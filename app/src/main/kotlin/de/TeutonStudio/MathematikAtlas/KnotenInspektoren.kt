@@ -21,6 +21,7 @@ interface KnotenInspektor {
 }
 interface KnotenInspektorAktionen {
     fun parameter(schlüssel: String, wert: String)
+    fun name(wert: String)
     fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
     fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
 }
@@ -33,8 +34,48 @@ object KnotenInspektorRegister {
         "mathematik.variable" to VariablenInspektor,
         "mathematik.allgemeinerParameter" to AllgemeineParameterInspektor,
         "mathematik.termZuMethode" to TermZuMethodeInspektor,
+        "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
     )
     fun finde(art: String) = inspektoren[art]
+}
+
+private object OrdnungsrelationInspektor : KnotenInspektor {
+    private val relationen = listOf(
+        Triple("kleiner", "<", "Kleiner"),
+        Triple("kleinerGleich", "≤", "Kleiner oder gleich"),
+        Triple("größer", ">", "Größer"),
+        Triple("größerGleich", "≥", "Größer oder gleich"),
+    )
+
+    @Composable
+    override fun Inhalt(
+        knoten: KnotenDaten,
+        ergebnis: KnotenAuswertungsErgebnis?,
+        aktionen: KnotenInspektorAktionen,
+    ) {
+        val aktuell = knoten.parameter["relation"] ?: "kleiner"
+        Text("Relation", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            relationen.forEach { (schlüssel, zeichen, standardName) ->
+                FilterChip(
+                    selected = aktuell == schlüssel,
+                    onClick = {
+                        val bisherStandard = relationen.any { it.third == knoten.name }
+                        aktionen.parameter("relation", schlüssel)
+                        if (bisherStandard) aktionen.name(standardName)
+                    },
+                    label = { Text(zeichen) },
+                )
+            }
+        }
+        Text(
+            "Die mathematische Definition im Knotendialog folgt der ausgewählten Relation.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        ergebnis?.fehler?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
+    }
 }
 
 private object VariablenInspektor : KnotenInspektor {

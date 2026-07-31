@@ -23,7 +23,7 @@ internal fun KnotenKonzeptDialog(
     knoten: KnotenDaten,
     schließen: () -> Unit,
 ) {
-    val konzept = remember(knoten.art) { TestDefinitionsKarten.fürKnoten(knoten) }
+    val konzept = remember(knoten.art, knoten.parameter) { TestDefinitionsKarten.fürKnoten(knoten) }
     KonzeptDialog(
         zustand = zustand,
         konzept = konzept,

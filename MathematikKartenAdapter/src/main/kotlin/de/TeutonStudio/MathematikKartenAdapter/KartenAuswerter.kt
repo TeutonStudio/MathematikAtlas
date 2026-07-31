@@ -234,6 +234,15 @@ class KartenAuswerter(
             "mathematik.ableiten" -> mapOf("wert" to "\\frac{d}{d${knoten.parameter["variable"] ?: "x"}}\\left(${wert("term")}\\right)")
             "mathematik.integrieren" -> mapOf("wert" to "\\int ${wert("term")}\\,d${knoten.parameter["variable"] ?: "x"}")
             "mathematik.gleichheit" -> mapOf("aussage" to binär("="))
+            "mathematik.ordnungsrelation" -> mapOf(
+                "aussage" to binär(when (knoten.parameter["relation"]) {
+                    "kleiner" -> "<"
+                    "kleinerGleich" -> "\\le"
+                    "größer" -> ">"
+                    "größerGleich" -> "\\ge"
+                    else -> error("Unbekannte Ordnungsrelation.")
+                }),
+            )
             "mathematik.kleiner" -> mapOf("aussage" to binär("<"))
             "mathematik.größer" -> mapOf("aussage" to binär(">"))
             "mathematik.kleinerGleich" -> mapOf("aussage" to binär("\\le"))

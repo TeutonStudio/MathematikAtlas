@@ -68,6 +68,10 @@ object StandardMathematikAuswerter {
         registriere("mathematik.element") { k ->
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(ElementBeziehung(k.objekt("links"), k.menge("rechts")), annahmen(k))))
         }
+        registriere(MathematikKnotenVorlagen.ORDNUNGSRELATION_ART) { k ->
+            vergleich(k, vergleichsArt(k.knoten.parameter["relation"]))
+        }
+        // Alte Schlüssel bleiben für importierte Karten bis zur Lade-Migration auswertbar.
         registriere("mathematik.kleiner") { k -> vergleich(k, VergleichsArt.Kleiner) }
         registriere("mathematik.größer") { k -> vergleich(k, VergleichsArt.Größer) }
         registriere("mathematik.kleinerGleich") { k -> vergleich(k, VergleichsArt.KleinerGleich) }
@@ -221,6 +225,17 @@ object StandardMathematikAuswerter {
             val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(iteriertesProdukt(methode, indexMenge), annahmen(k))))
+        }
+        registriere(MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART) { k ->
+            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Aussagenmethode fehlt.")
+            val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
+            val aussage = when (k.knoten.parameter["operator"]) {
+                "konjunktion" -> iterierteKonjunktion(methode, indexMenge)
+                "disjunktion" -> iterierteDisjunktion(methode, indexMenge)
+                "adjunktion" -> iterierteAdjunktion(methode, indexMenge)
+                else -> error("Unbekannte iterierte Aussagenverknüpfung.")
+            }
+            KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(aussage, annahmen(k))))
         }
         registriere("mathematik.iterierteVereinigung") { k ->
             val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Mengenfunktion fehlt.")
@@ -424,6 +439,13 @@ object StandardMathematikAuswerter {
         "R", "ℝ" -> ReelleZahlen
         "C", "ℂ" -> KomplexeZahlen
         else -> error("Unbekannte Grundmenge '$name'. Erlaubt sind N, Z, Q, R und C.")
+    }
+    private fun vergleichsArt(wert: String?): VergleichsArt = when (wert) {
+        "kleiner" -> VergleichsArt.Kleiner
+        "kleinerGleich" -> VergleichsArt.KleinerGleich
+        "größer" -> VergleichsArt.Größer
+        "größerGleich" -> VergleichsArt.GrößerGleich
+        else -> error("Unbekannte Ordnungsrelation '$wert'.")
     }
     private fun vergleich(k: KnotenAuswertungsKontext, art: VergleichsArt) = KnotenAuswertungsErgebnis(
         mapOf("aussage" to BedingterWert(Vergleich(k.zahl("links"), art, k.zahl("rechts")), annahmen(k))),
