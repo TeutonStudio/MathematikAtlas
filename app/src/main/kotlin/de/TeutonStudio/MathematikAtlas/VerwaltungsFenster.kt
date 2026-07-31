@@ -16,14 +16,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikAtlas.speicher.KartenOrdnung
-import de.TeutonStudio.MathematikAtlas.speicher.KartenOrdnungSpeicher
-import de.TeutonStudio.MathematikAtlas.speicher.formatiereOrdnerPfad
-import de.TeutonStudio.MathematikAtlas.speicher.parseOrdnerPfad
+import de.TeutonStudio.MathematikAtlas.speicher.*
 import de.TeutonStudio.MathematikKnoten.LatexText
 
 @Composable
 internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
+    val context = LocalContext.current
+    val profilSpeicher = remember(context) { LokalesProfilSpeicher(context) }
+    var profil by remember { mutableStateOf(profilSpeicher.lade()) }
     var profilGeöffnet by remember { mutableStateOf(false) }
     var einstellungenGeöffnet by remember { mutableStateOf(false) }
 
@@ -54,17 +54,19 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
                 }
             }
             HorizontalDivider()
-            ProfilLeiste(onClick = { profilGeöffnet = true })
+            ProfilLeiste(profil = profil, onClick = { profilGeöffnet = true })
         }
     }
 
     if (profilGeöffnet) {
-        ProfilDialog(
+        ProfilVerwaltungDialog(
+            zustand = zustand,
             schließen = { profilGeöffnet = false },
             einstellungenÖffnen = {
                 profilGeöffnet = false
                 einstellungenGeöffnet = true
             },
+            profilGeändert = { profil = it },
         )
     }
     if (einstellungenGeöffnet) {
@@ -73,11 +75,11 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
 }
 
 @Composable
-private fun ProfilLeiste(onClick: () -> Unit) {
+private fun ProfilLeiste(profil: LokalesProfil, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth()
             .clickable(onClick = onClick)
-            .semantics { contentDescription = "Profil und Einstellungen öffnen" },
+            .semantics { contentDescription = "Profil, Löschverwaltung und Einstellungen öffnen" },
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Row(
@@ -91,16 +93,16 @@ private fun ProfilLeiste(onClick: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "P",
+                    profil.pseudonym.firstOrNull()?.uppercaseChar()?.toString() ?: "P",
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text("Lokales Profil", style = MaterialTheme.typography.labelLarge)
+                Text(profil.pseudonym, style = MaterialTheme.typography.labelLarge)
                 Text(
-                    "Profilverwaltung folgt",
+                    "Lokale Identität",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -108,53 +110,6 @@ private fun ProfilLeiste(onClick: () -> Unit) {
             Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-}
-
-@Composable
-private fun ProfilDialog(schließen: () -> Unit, einstellungenÖffnen: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = schließen,
-        title = { Text("Profil") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Box(
-                        Modifier.size(52.dp).clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            "P",
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Column {
-                        Text("Lokales Profil", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            "Noch nicht mit einem Benutzerkonto verknüpft",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                Text(
-                    "Die Profilleiste ist für die spätere Profilerstellung vorbereitet. " +
-                        "Derzeit enthält sie den zentralen Zugang zu den Anwendungseinstellungen.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                OutlinedButton(
-                    onClick = einstellungenÖffnen,
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Einstellungen") }
-            }
-        },
-        confirmButton = { TextButton(onClick = schließen) { Text("Schließen") } },
-    )
 }
 
 @Composable
@@ -222,11 +177,20 @@ private fun KartenListe(zustand: AtlasZustand) {
     var ordnung by remember(ordnungsSpeicher) { mutableStateOf(ordnungsSpeicher.lade()) }
     var dialog by remember { mutableStateOf<KartenOrdnerDialog?>(null) }
     var ordnerMenü by remember { mutableStateOf<List<String>?>(null) }
+    var kartenMenü by remember { mutableStateOf<KartenId?>(null) }
+    var freigabeFehler by remember { mutableStateOf<String?>(null) }
 
     fun speichere(neu: KartenOrdnung) {
         val normalisiert = neu.normalisiert()
         ordnungsSpeicher.speichere(normalisiert)
         ordnung = normalisiert
+    }
+
+    fun freigeben(dateiname: String, paketErzeugen: () -> String) {
+        runCatching { context.teileMathematikAtlasPaket(dateiname, paketErzeugen()) }.fold(
+            onSuccess = {},
+            onFailure = { fehler -> freigabeFehler = fehler.message ?: "Die Freigabe konnte nicht erstellt werden." },
+        )
     }
 
     val einträge = remember(zustand.karten, ordnung) { kartenListenEinträge(zustand.karten, ordnung) }
@@ -268,6 +232,24 @@ private fun KartenListe(zustand: AtlasZustand) {
                                             dialog = KartenOrdnerDialog.OrdnerVerschieben(eintrag.pfad)
                                         },
                                     )
+                                    val enthalteneKarten = ordnung.kartenUnter(eintrag.pfad)
+                                        .mapNotNull(zustand.speicher::ladeAktuell)
+                                    DropdownMenuItem(
+                                        text = { Text("Sammlung freigeben") },
+                                        enabled = enthalteneKarten.isNotEmpty(),
+                                        onClick = {
+                                            ordnerMenü = null
+                                            freigeben(eintrag.pfad.last()) {
+                                                zustand.speicher.erstelleFreigabePaket(
+                                                    name = eintrag.pfad.last(),
+                                                    art = FreigabeArt.Sammlung,
+                                                    wurzelKarten = enthalteneKarten,
+                                                    ordnung = ordnung,
+                                                    sammlungsPfad = eintrag.pfad,
+                                                )
+                                            }
+                                        },
+                                    )
                                     DropdownMenuItem(
                                         text = { Text("Leeren Ordner löschen") },
                                         enabled = ordnung.kannOrdnerLöschen(eintrag.pfad),
@@ -287,7 +269,35 @@ private fun KartenListe(zustand: AtlasZustand) {
                         headlineContent = { Text(eintrag.karte.name) },
                         supportingContent = { Text("Version ${eintrag.karte.version}") },
                         trailingContent = {
-                            TextButton(onClick = { dialog = KartenOrdnerDialog.KarteVerschieben(eintrag.karte) }) { Text("Ordner") }
+                            Box {
+                                TextButton(onClick = { kartenMenü = eintrag.karte.id }) { Text("⋮") }
+                                DropdownMenu(
+                                    expanded = kartenMenü == eintrag.karte.id,
+                                    onDismissRequest = { kartenMenü = null },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Ordner ändern") },
+                                        onClick = {
+                                            kartenMenü = null
+                                            dialog = KartenOrdnerDialog.KarteVerschieben(eintrag.karte)
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Karte freigeben") },
+                                        onClick = {
+                                            kartenMenü = null
+                                            freigeben(eintrag.karte.name) {
+                                                zustand.speicher.erstelleFreigabePaket(
+                                                    name = eintrag.karte.name,
+                                                    art = FreigabeArt.Karte,
+                                                    wurzelKarten = listOf(eintrag.karte),
+                                                    ordnung = ordnung,
+                                                )
+                                            }
+                                        },
+                                    )
+                                }
+                            }
                         },
                         modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                             .clip(MaterialTheme.shapes.medium)
@@ -340,6 +350,15 @@ private fun KartenListe(zustand: AtlasZustand) {
             },
         )
         null -> Unit
+    }
+
+    freigabeFehler?.let { fehler ->
+        AlertDialog(
+            onDismissRequest = { freigabeFehler = null },
+            title = { Text("Freigabe fehlgeschlagen") },
+            text = { Text(fehler) },
+            confirmButton = { TextButton(onClick = { freigabeFehler = null }) { Text("Schließen") } },
+        )
     }
 }
 

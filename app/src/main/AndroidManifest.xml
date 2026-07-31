@@ -3,6 +3,15 @@
         android:allowBackup="true"
         android:label="Mathematik Atlas"
         android:theme="@style/Theme.MathematikAtlas">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.dateien"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/freigabe_pfade" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true">
