@@ -19,6 +19,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.ModuloZahlenraum
 import de.TeutonStudio.MathematikRechenSystem.kern.Potenzmenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensorraum
+import de.TeutonStudio.MathematikRechenSystem.kern.symmetrischeDifferenz
 
 /** Vorlagen und Auswerter der Mengen- und Koordinatenräume. */
 object MengenraumKnotenVorlagen {
@@ -131,6 +132,15 @@ object MengenraumKnotenVorlagen {
         mapOf("modul" to "2"),
     )
 
+    val SymmetrischeDifferenz = KnotenVorlage(
+        "mathematik.symmetrischeDifferenz",
+        "Symmetrische Differenz",
+        "Mengen",
+        "Enthält genau die Elemente, die in genau einer der beiden Mengen liegen.",
+        GraphGröße(250f, 112f),
+        listOf(eingang("links", 0), eingang("rechts", 1), ausgang()),
+    )
+
     val alle = listOf(
         LeereMenge,
         GaußscheZahlen,
@@ -142,6 +152,7 @@ object MengenraumKnotenVorlagen {
         Matrizenraum,
         Tensorraum,
         ModuloZahlenraum,
+        SymmetrischeDifferenz,
     )
 }
 
@@ -191,6 +202,15 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
     }
     registriere("mathematik.moduloZahlenraum") { k ->
         mengenraumErgebnis(ModuloZahlenraum(k.mengenraumPositiveGanzzahl("modul", minimum = 2)))
+    }
+    registriere("mathematik.symmetrischeDifferenz") { k ->
+        mengenraumErgebnis(
+            symmetrischeDifferenz(
+                k.mengenraumEingabe("links"),
+                k.mengenraumEingabe("rechts"),
+            ),
+            k,
+        )
     }
 }
 

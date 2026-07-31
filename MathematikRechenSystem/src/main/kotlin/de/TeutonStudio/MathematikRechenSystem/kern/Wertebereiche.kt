@@ -72,6 +72,10 @@ private fun inferiereElementMenge(
     is Schnitt -> menge.grundMenge?.let { inferiereElementMenge(it, werteVorräte, annahmen) }
         ?: vereinige(menge.mengen.map { inferiereElementMenge(it, werteVorräte, annahmen) })
     is MengenDifferenz -> inferiereElementMenge(menge.links, werteVorräte, annahmen)
+    is SymmetrischeDifferenz -> vereinige(listOf(
+        inferiereElementMenge(menge.links, werteVorräte, annahmen),
+        inferiereElementMenge(menge.rechts, werteVorräte, annahmen),
+    ))
     is KartesischesProdukt -> Tupelraum(menge.mengen)
     is DefinierteMenge -> if (menge.variablen.size == 1) menge.variablen.single().grundMenge
         else Tupelraum(menge.variablen.map { it.grundMenge })
