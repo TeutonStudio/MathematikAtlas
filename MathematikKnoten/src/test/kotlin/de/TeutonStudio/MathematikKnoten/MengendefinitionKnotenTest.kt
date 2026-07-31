@@ -150,7 +150,7 @@ class MengendefinitionKnotenTest {
         val menge = werteAus(paar.definator, mapOf("aussage" to element))
             .ausgaben.getValue("menge")
         assertEquals(EndlicheMenge(setOf(WahrheitsKonstante(true))), menge.objekt)
-        assertEquals("M=\\{\\top\\}", menge.anzeigeLatex())
+        assertEquals("M=\\{\\mathcal{Wahr}\\}", menge.anzeigeLatex())
     }
 
     @Test
