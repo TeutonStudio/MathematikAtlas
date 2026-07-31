@@ -13,6 +13,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.MathematikKartenAdapter.KartenAuswerter
+import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
 
 @Composable
 internal fun KnotenKonzeptDialog(
@@ -182,6 +185,13 @@ private fun UnveränderlicheKonzeptKarte(
     val editor = remember(karte.id) {
         KartenEditorZustand(karte, GraphPrüfung(zustand.anschlussArten))
     }
+    val auswertung = remember(karte) {
+        KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister())
+            .werteKonzeptKarteAus(karte)
+    }
+    val mathematikRenderer = remember(auswertung) {
+        MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
+    }
 
     LaunchedEffect(editor.karte) {
         val ohneAnsicht = editor.karte.copy(ansicht = karte.ansicht)
@@ -193,7 +203,9 @@ private fun UnveränderlicheKonzeptKarte(
     KnotenKartenEditor(
         zustand = editor,
         modifier = modifier,
-        rendererFür = zustand::rendererFür,
+        rendererFür = { knoten ->
+            if (knoten.art.startsWith("konzept.")) KonzeptDokumentationsRenderer else mathematikRenderer
+        },
         farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
     )
 }
