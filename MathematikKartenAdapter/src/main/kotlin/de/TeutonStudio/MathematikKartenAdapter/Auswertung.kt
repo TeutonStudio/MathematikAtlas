@@ -85,12 +85,17 @@ class MathematikAuswerterRegister {
     private val auswerter = linkedMapOf<KnotenArtId, MathematikKnotenAuswerter>()
     fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = wert }
     fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
+        KARTEN_EINGANG_ART -> KartenEingangAuswerter
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
         MENGENKONSTRUKTOR_ART -> MengenkonstruktorAuswerter
         MENGENDEFINATOR_ART -> MengendefinatorAuswerter
         else -> auswerter[art]
     }
-    fun arten(): Set<KnotenArtId> = auswerter.keys + setOf(MENGENKONSTRUKTOR_ART, MENGENDEFINATOR_ART)
+    fun arten(): Set<KnotenArtId> = auswerter.keys + setOf(
+        KARTEN_EINGANG_ART,
+        MENGENKONSTRUKTOR_ART,
+        MENGENDEFINATOR_ART,
+    )
 }
 
 fun interface KartenQuelle {
