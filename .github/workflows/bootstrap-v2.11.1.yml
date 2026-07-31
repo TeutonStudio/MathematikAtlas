@@ -39,6 +39,7 @@ jobs:
           p.write_text(text)
           PY
           python3 scripts/bootstrap_v2111.py
+          sed -i '/import androidx.compose.ui.input.pointer.consume/d' app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/KartenDrag.kt
       - name: Releaseplan prüfen
         run: |
           python3 scripts/pruefe_releaseplan.py
