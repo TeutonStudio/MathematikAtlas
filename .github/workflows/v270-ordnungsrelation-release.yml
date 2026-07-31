@@ -47,7 +47,7 @@ jobs:
           new_node_types = ["mathematik.ordnungsrelation", "mathematik.iterierteAussagenverknüpfung"]
           reason = "Vereinigt vier separat registrierte Vergleichsknoten zu einer parametrierten Ordnungsrelation und führt mit der iterierten Aussagenverknüpfung einen neuen erzeugbaren Knotentyp ein."
           '''
-          if 'version = "2.7.0"' not in plan:
+          if '\nversion = "2.7.0"\n' not in plan:
               plan = plan.rstrip() + eintrag
           plan_pfad.write_text(plan.rstrip() + '\n')
 
