@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.5.x"
-current_version = "2.5.2"
+current_version = "2.5.3"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -196,3 +196,14 @@ branch = "agent/v2.5.2-reelles-intervall-definition"
 kind = "fix"
 version_axis = "x"
 reason = "Passt die vorhandene Definitionskarte des reellen Intervalls an die Filterkonstruktion über die reellen Zahlen an und korrigiert die Darstellung vorhandener Variablenknoten, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.5.3"
+title = "Auswertbare Intervall-Definitionskarte"
+roadmap = "v2.5.x Definitionskarten und Konzeptkatalog"
+status = "released"
+previous_release = "2.5.2"
+branch = "agent/v2.5.3-konzeptauswertung"
+kind = "fix"
+version_axis = "x"
+reason = "Wertet die vorhandene Intervall-Definitionskarte mit typisierten Vorschauwerten aus, sodass Konjunktion, reeller Wertevorrat und Wahrheitszielmenge aus der mathematischen Semantik statt aus Parameter-Fallbacks entstehen."
