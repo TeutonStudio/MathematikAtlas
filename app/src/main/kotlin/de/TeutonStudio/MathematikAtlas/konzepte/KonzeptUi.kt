@@ -14,8 +14,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswerter
+import de.TeutonStudio.MathematikKnoten.AussagenOperatorArt
 import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
 @Composable
 internal fun KnotenKonzeptDialog(
@@ -23,6 +25,19 @@ internal fun KnotenKonzeptDialog(
     knoten: KnotenDaten,
     schließen: () -> Unit,
 ) {
+    val besitztAussagenDialog = AussagenOperatorArt.für(knoten) != null ||
+        knoten.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
+    var definitionAnzeigen by remember(knoten.id) { mutableStateOf(false) }
+    if (besitztAussagenDialog && !definitionAnzeigen) {
+        AussagenOperatorDialog(
+            zustand = zustand,
+            knoten = knoten,
+            definitionÖffnen = { definitionAnzeigen = true },
+            schließen = schließen,
+        )
+        return
+    }
+
     val konzept = remember(knoten.art, knoten.parameter) { TestDefinitionsKarten.fürKnoten(knoten) }
     KonzeptDialog(
         zustand = zustand,
