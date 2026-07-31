@@ -33,8 +33,52 @@ jobs:
           workflow = Path('.github/workflows/agent-ordnungsrelation.yml').read_text()
           marker_start = "          python3 <<'PY'\n"
           marker_end = "\n          PY\n"
-          script = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
-          exec(compile(dedent(script), '<ordnungsrelation-agent>', 'exec'))
+          script = dedent(workflow.split(marker_start, 1)[1].split(marker_end, 1)[0])
+
+          alte_hilfe = '''def replace(path: str, old: str, new: str, count: int = 1) -> None:
+              datei = Path(path)
+              text = datei.read_text()
+              gefunden = text.count(old)
+              if gefunden != count:
+                  raise SystemExit(f"{path}: erwartete {count} Vorkommen, gefunden {gefunden}\\n--- gesucht ---\\n{old}")
+              datei.write_text(text.replace(old, new, count))
+          '''
+          neue_hilfe = '''import re
+
+          def replace(path: str, old: str, new: str, count: int = 1) -> None:
+              datei = Path(path)
+              text = datei.read_text()
+              gefunden = text.count(old)
+              if gefunden == count:
+                  datei.write_text(text.replace(old, new, count))
+                  return
+
+              zeilen = old.splitlines()
+              muster = []
+              for zeile in zeilen:
+                  if zeile.strip():
+                      muster.append(r"^[ \\t]*" + re.escape(zeile.strip()) + r"[ \\t]*$")
+                  else:
+                      muster.append(r"^[ \\t]*$")
+              regex = re.compile("\\n".join(muster), re.MULTILINE)
+              treffer = list(regex.finditer(text))
+              if len(treffer) != count:
+                  raise SystemExit(
+                      f"{path}: erwartete {count} einrückungstolerante Vorkommen, gefunden {len(treffer)}"
+                      f"\\n--- gesucht ---\\n{old}"
+                  )
+              for treffer_objekt in reversed(treffer):
+                  erste_zeile = treffer_objekt.group(0).splitlines()[0]
+                  einzug = re.match(r"[ \\t]*", erste_zeile).group(0)
+                  ersatz = dedent(new).strip("\\n")
+                  ersatz = "\\n".join(einzug + zeile if zeile else zeile for zeile in ersatz.splitlines())
+                  text = text[:treffer_objekt.start()] + ersatz + text[treffer_objekt.end():]
+              datei.write_text(text)
+          '''
+          if alte_hilfe not in script:
+              raise SystemExit('Die ursprüngliche replace-Hilfe wurde im Patchskript nicht gefunden.')
+          script = script.replace(alte_hilfe, dedent(neue_hilfe), 1)
+          exec(compile(script, '<ordnungsrelation-agent>', 'exec'))
           PY
 
       - name: Repository prüfen
