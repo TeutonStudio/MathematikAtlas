@@ -93,6 +93,12 @@ class MathematikKnotenRenderer(
             "mathematik.iteriertesProdukt" -> "\\prod"
             "mathematik.iterierteVereinigung" -> "\\bigcup"
             "mathematik.iteriertesKartesischesProdukt" -> "\\mathop{\\times}"
+            MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART -> when (knoten.parameter["operator"]) {
+                "konjunktion" -> "\\bigwedge"
+                "disjunktion" -> "\\bigvee"
+                "adjunktion" -> "\\mathop{\\&}"
+                else -> "?"
+            }
             else -> "\\bigcap"
         }
         return "${zeichen}_{$parameter \\in $indexMenge} $name($parameter)"
@@ -118,7 +124,7 @@ class MathematikKnotenRenderer(
     }
 
     private companion object {
-        val iterativeArten = setOf("mathematik.iterierteSumme", "mathematik.iteriertesProdukt", "mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt", "mathematik.iteriertesKartesischesProdukt")
+        val iterativeArten = setOf("mathematik.iterierteSumme", "mathematik.iteriertesProdukt", "mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt", "mathematik.iteriertesKartesischesProdukt", MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART)
         val mengenIterationsArten = setOf("mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt")
     }
 }

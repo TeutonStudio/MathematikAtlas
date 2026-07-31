@@ -59,10 +59,11 @@ object TestDefinitionsKarten {
             .groupBy(KnotenVorlage::art)
             .values
             .map { varianten ->
-                if (varianten.first().art == MathematikKnotenVorlagen.Division.art) {
-                    DivisionDefinitionsKarten.konzept
-                } else {
-                    konzeptFür(varianten)
+                when (varianten.first().art) {
+                    MathematikKnotenVorlagen.Division.art -> DivisionDefinitionsKarten.konzept
+                    MathematikKnotenVorlagen.ORDNUNGSRELATION_ART ->
+                        OrdnungsrelationDefinitionsKarten.katalogKonzept(varianten)
+                    else -> konzeptFür(varianten)
                 }
             }
             .sortedWith(compareBy<KonzeptDefinition> { it.pfad.joinToString("/") }.thenBy { it.name })
@@ -76,7 +77,12 @@ object TestDefinitionsKarten {
         alle.flatMap { konzept -> konzept.knotenArten.map { art -> art to konzept } }.toMap()
     }
 
-    fun fürKnoten(knoten: KnotenDaten): KonzeptDefinition? = nachArt[knoten.art]
+fun fürKnoten(knoten: KnotenDaten): KonzeptDefinition? =
+    if (knoten.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART) {
+        OrdnungsrelationDefinitionsKarten.fürKnoten(knoten)
+    } else {
+        nachArt[knoten.art]
+    }
 
     fun validierungsFehler(): List<String> = validierungsFehler(alle)
 
@@ -101,12 +107,13 @@ object TestDefinitionsKarten {
         )
     }
 
-    internal fun definitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten =
-        if (vorlage.art == MathematikKnotenVorlagen.ReellesIntervall.art) {
+    internal fun definitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten = when (vorlage.art) {
+        MathematikKnotenVorlagen.ReellesIntervall.art ->
             reellesIntervallDefinitionsKarte(vorlage, variantenIndex)
-        } else {
-            generischeDefinitionsKarte(vorlage, variantenIndex)
-        }
+        MathematikKnotenVorlagen.ORDNUNGSRELATION_ART ->
+            ordnungsrelationDefinitionsKarte(vorlage, variantenIndex)
+        else -> generischeDefinitionsKarte(vorlage, variantenIndex)
+    }
 
     private fun generischeDefinitionsKarte(vorlage: KnotenVorlage, variantenIndex: Int): KartenDaten {
         val prefix = "definition-${slug(vorlage.art)}-${slug(vorlage.name)}-$variantenIndex"

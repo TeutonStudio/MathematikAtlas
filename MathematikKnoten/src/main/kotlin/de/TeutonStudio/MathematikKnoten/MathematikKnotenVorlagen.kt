@@ -4,6 +4,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration
 
 object MathematikKnotenVorlagen {
+    const val ORDNUNGSRELATION_ART = "mathematik.ordnungsrelation"
+    const val ITERIERTE_AUSSAGENVERKNÜPFUNG_ART = "mathematik.iterierteAussagenverknüpfung"
     private fun eingang(name: String, art: AnschlussArtId, reihe: Int = 0, erweiterbar: Boolean = false) = AnschlussDaten(name = name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = art, reihenfolge = reihe, kannSichErweitern = erweiterbar)
     private fun ausgang(name: String, art: AnschlussArtId, reihe: Int = 0) = AnschlussDaten(name = name, richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = art, reihenfolge = reihe)
 
@@ -60,10 +62,10 @@ object MathematikKnotenVorlagen {
     val Wahr = KnotenVorlage("mathematik.wahr", "Wahr", "Aussagen: Aussagenlogik", "Die wahre Aussage ⊤.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Lüge = KnotenVorlage("mathematik.lüge", "Lüge", "Aussagen: Aussagenlogik", "Die falsche Aussage ⊥.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
-    val Kleiner = vergleichVorlage("mathematik.kleiner", "Kleiner", "<")
-    val Größer = vergleichVorlage("mathematik.größer", "Größer", ">")
-    val KleinerGleich = vergleichVorlage("mathematik.kleinerGleich", "Kleiner oder gleich", "≤")
-    val GrößerGleich = vergleichVorlage("mathematik.größerGleich", "Größer oder gleich", "≥")
+    val Kleiner = vergleichVorlage("Kleiner", "<", "kleiner")
+    val Größer = vergleichVorlage("Größer", ">", "größer")
+    val KleinerGleich = vergleichVorlage("Kleiner oder gleich", "≤", "kleinerGleich")
+    val GrößerGleich = vergleichVorlage("Größer oder gleich", "≥", "größerGleich")
     val Teilmenge = mengenAussagenVorlage("mathematik.teilmenge", "Teilmenge", "Prüft die echte Teilmengenbeziehung.")
     val Übermenge = mengenAussagenVorlage("mathematik.übermenge", "Übermenge", "Prüft die echte Obermengenbeziehung.")
     val TeilOderGleichmenge = mengenAussagenVorlage("mathematik.teilOderGleichmenge", "Teil- oder Gleichmenge", "Prüft ⊆.")
@@ -190,6 +192,21 @@ object MathematikKnotenVorlagen {
         "mathematik.iteriertesProdukt", "Iteriertes Produkt", "Operatoren", "Multipliziert die Werte einer Zahlfunktion über einer Indexmenge.", GraphGröße(250f, 120f),
         listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
+    val IterierteKonjunktion = iterierteAussagenVorlage(
+        "Iterierte Konjunktion",
+        "Verknüpft die Aussagenwerte einer Methode über einer Indexmenge mit ∧.",
+        "konjunktion",
+    )
+    val IterierteDisjunktion = iterierteAussagenVorlage(
+        "Iterierte Disjunktion",
+        "Verknüpft die Aussagenwerte einer Methode über einer Indexmenge mit ∨.",
+        "disjunktion",
+    )
+    val IterierteAdjunktion = iterierteAussagenVorlage(
+        "Iterierte Adjunktion",
+        "Verknüpft die Aussagenwerte einer Methode über einer Indexmenge als iteriertes binäres UND.",
+        "adjunktion",
+    )
     val IterierteVereinigung = KnotenVorlage(
         "mathematik.iterierteVereinigung", "Iterierte Vereinigung", "Mengen", "Vereinigt die Mengenwerte einer Methode über einer Indexmenge.", GraphGröße(260f, 120f),
         listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
@@ -210,6 +227,11 @@ object MathematikKnotenVorlagen {
         "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem allgemeinen Term eine Methode mit automatisch abgeleiteten Variablen und Zielmenge.", GraphGröße(265f, 135f),
         listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), ausgang("methode", MathematikAnschlussArten.Funktion.id)),
         mapOf("name" to "f", "argumentReihenfolge" to ""),
+    )
+    val AussageZuMethode = KnotenVorlage(
+        "mathematik.termZuMethode", "Aussage zu Methode", "Methoden", "Erzeugt aus einer Aussage eine typisierte Aussagenmethode.", GraphGröße(265f, 135f),
+        listOf(eingang("term", MathematikAnschlussArten.Aussage.id, 0), ausgang("methode", MathematikAnschlussArten.AussageFunktion.id)),
+        mapOf("name" to "P", "argumentReihenfolge" to ""),
     )
     val Komposition = KnotenVorlage("mathematik.komposition", "Komposition", "Abbildungen", "Komponiert zwei einwertige skalare Methoden.", GraphGröße(245f, 110f), listOf(eingang("außen", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("innen", MathematikAnschlussArten.ZahlFunktion.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
     val Iteration = KnotenVorlage("mathematik.iteration", "Iteration", "Abbildungen", "Bildet die nichtnegative Iteration einer skalaren Endomorphismus-Methode.", GraphGröße(255f, 110f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
@@ -289,14 +311,26 @@ object MathematikKnotenVorlagen {
     val Äquivalenz = KnotenVorlage("mathematik.äquivalenz", "Äquivalenz", "Aussage", "Bildet A ⇔ B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Adjunktion = KnotenVorlage("mathematik.adjunktion", "Adjunktion", "Aussage", "Bildet die klassische UND-Verknüpfung A & B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
 
-    val alle = listOf(Zahl, Variable, AllgemeinerParameter, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Kehrwert, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Ungleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Darstellungsoptimierung, Ableiten, Integrieren, EndlicheMenge, Einzelmenge, Mengenfilter, ReellesIntervall, Lösungsmenge, Visualisierung, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, VektorZuPolynom, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, TransponiereSpalte, TransponiereZeile, MatrixProdukt, TransponiereMatrix, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
+    val alle = listOf(Zahl, Variable, AllgemeinerParameter, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Kehrwert, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Ungleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Darstellungsoptimierung, Ableiten, Integrieren, EndlicheMenge, Einzelmenge, Mengenfilter, ReellesIntervall, Lösungsmenge, Visualisierung, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteKonjunktion, IterierteDisjunktion, IterierteAdjunktion, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, AussageZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, VektorZuPolynom, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, TransponiereSpalte, TransponiereZeile, MatrixProdukt, TransponiereMatrix, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
 
     private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId, kategorie: String = "Aussagen: Aussagenprädikate") = KnotenVorlage(
         art, name, kategorie, beschreibung, GraphGröße(220f, 110f),
         listOf(eingang("links", links, 0), eingang("rechts", rechts, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
 
-    private fun vergleichVorlage(art: String, name: String, zeichen: String) = aussagenVorlage(art, name, "Vergleicht zwei Zahlterme mit $zeichen.", MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Zahl.id, "Aussagen: Zahlenprädikate")
+    private fun vergleichVorlage(name: String, zeichen: String, relation: String) = KnotenVorlage(
+    ORDNUNGSRELATION_ART,
+    name,
+    "Aussagen: Zahlenprädikate",
+    "Vergleicht zwei Zahlterme mit $zeichen.",
+    GraphGröße(220f, 110f),
+    listOf(
+        eingang("links", MathematikAnschlussArten.Zahl.id, 0),
+        eingang("rechts", MathematikAnschlussArten.Zahl.id, 1),
+        ausgang("aussage", MathematikAnschlussArten.Aussage.id),
+    ),
+    mapOf("relation" to relation),
+)
     private fun mengenAussagenVorlage(art: String, name: String, beschreibung: String) = aussagenVorlage(art, name, beschreibung, MathematikAnschlussArten.Menge.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
     private fun mengenOperatorVorlage(art: String, name: String, beschreibung: String, zeichen: String) = KnotenVorlage(
         art, name, "Mengen", beschreibung, GraphGröße(230f, 120f),
@@ -309,5 +343,18 @@ object MathematikKnotenVorlagen {
         mapOf("modus" to modus, "festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     private fun methodenAnalysisVorlage(art: String, name: String, beschreibung: String, funktion: AnschlussArtId) = KnotenVorlage(art, name, "Abbildungen", beschreibung, GraphGröße(260f, 105f), listOf(eingang("methode", funktion), ausgang("methode", funktion)))
+private fun iterierteAussagenVorlage(name: String, beschreibung: String, operator: String) = KnotenVorlage(
+    ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,
+    name,
+    "Operatoren",
+    beschreibung,
+    GraphGröße(270f, 120f),
+    listOf(
+        eingang("methode", MathematikAnschlussArten.AussageFunktion.id),
+        eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1),
+        ausgang("aussage", MathematikAnschlussArten.Aussage.id),
+    ),
+    mapOf("operator" to operator),
+)
     private fun aussagenOperatorVorlage(art: String, name: String, beschreibung: String) = KnotenVorlage(art, name, "Aussage", beschreibung, GraphGröße(230f, 115f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0, true), eingang("b", MathematikAnschlussArten.Aussage.id, 1, true), ausgang("aussage", MathematikAnschlussArten.Aussage.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"))
 }

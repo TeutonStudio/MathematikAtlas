@@ -275,6 +275,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is IterierterSchnitt -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
     is IterierteKonjunktion -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
     is IterierteDisjunktion -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
+    is IterierteAdjunktion -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
     else -> objekt
 }
 
@@ -367,6 +368,7 @@ fun MathematischesObjekt.enthalteneFunktionsParameter(): Set<FunktionsParameter>
     is IteriertesKartesischesProdukt -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
     is IterierteKonjunktion -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
     is IterierteDisjunktion -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
+    is IterierteAdjunktion -> setOf(methode, indexMenge).enthalteneFunktionsParameter()
     else -> emptySet()
 }
 

@@ -19,8 +19,12 @@ class ReellesIntervallDefinitionsKarteTest {
 
         assertFalse(karte.knoten.any { it.art == MathematikKnotenVorlagen.ReellesIntervall.art })
         assertEquals(4, karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART })
-        assertEquals(2, karte.knoten.count { it.art == MathematikKnotenVorlagen.Kleiner.art })
-        assertEquals(2, karte.knoten.count { it.art == MathematikKnotenVorlagen.KleinerGleich.art })
+        assertEquals(2, karte.knoten.count {
+            it.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART && it.parameter["relation"] == "kleiner"
+        })
+        assertEquals(2, karte.knoten.count {
+            it.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART && it.parameter["relation"] == "kleinerGleich"
+        })
         assertEquals(2, karte.knoten.count { it.art == MathematikKnotenVorlagen.Fall.art })
         assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.Konjunktion.art })
         assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.TermZuMethode.art })

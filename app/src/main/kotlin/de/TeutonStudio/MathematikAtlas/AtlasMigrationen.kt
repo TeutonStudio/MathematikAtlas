@@ -9,7 +9,11 @@ enum class VerwaltungsBereich { Karten, Konzepte, Variablen, Auswertung, Fehler 
 internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
     val migriert = migriereFallunterscheidung(
         migriereDivisionV240(
-            migriereAbbildZuAllgemeinerMethode(migriereTermZuMethodeUndVariablen(migriereKartenAusgangZuEinzelanschluss(karte))),
+            migriereAbbildZuAllgemeinerMethode(
+                migriereTermZuMethodeUndVariablen(
+                    migriereKartenAusgangZuEinzelanschluss(migriereOrdnungsrelation(karte)),
+                ),
+            ),
         ),
     )
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
@@ -27,6 +31,23 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
     })
     return migriereMatrixKnoten(assoziativAktualisiert)
 }
+
+/** Vereinigt die vier historischen Vergleichsarten zu einem parametrierten Knoten. */
+internal fun migriereOrdnungsrelation(karte: KartenDaten): KartenDaten = karte.copy(
+    knoten = karte.knoten.map { knoten ->
+        val relation = when (knoten.art) {
+            "mathematik.kleiner" -> "kleiner"
+            "mathematik.kleinerGleich" -> "kleinerGleich"
+            "mathematik.größer" -> "größer"
+            "mathematik.größerGleich" -> "größerGleich"
+            else -> null
+        }
+        if (relation == null) knoten else knoten.copy(
+            art = MathematikKnotenVorlagen.ORDNUNGSRELATION_ART,
+            parameter = knoten.parameter + ("relation" to relation),
+        )
+    },
+)
 
 /** Erweitert den persistierten Methodenanschluss von Abbild-Knoten ohne Kanten zu verändern. */
 internal fun migriereAbbildZuAllgemeinerMethode(karte: KartenDaten): KartenDaten = karte.copy(
@@ -70,8 +91,8 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
                 alt.anschlüsse.filter { it.id != term.id && it.id != methode.id }.forEach { entfernteAnschlüsse += AnschlussVerweis(alt.id, it.id) }
                 alt.copy(
                     anschlüsse = listOf(
-                        term.copy(richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
-                        methode.copy(richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Funktion.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                        term.copy(richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = if (term.art == MathematikAnschlussArten.Aussage.id) MathematikAnschlussArten.Aussage.id else MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                        methode.copy(richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = if (methode.art == MathematikAnschlussArten.AussageFunktion.id) MathematikAnschlussArten.AussageFunktion.id else MathematikAnschlussArten.Funktion.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
                     ),
                     parameter = (alt.parameter - "zielmenge") + ("argumentReihenfolge" to (alt.parameter["argumentReihenfolge"] ?: "")),
                 )
@@ -86,7 +107,7 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
             if (verbindung.von in entfernteAnschlüsse || verbindung.zu in entfernteAnschlüsse) return@filter false
             if (verbindung.von.knotenId !in termKnoten) return@filter true
             val ziel = nachId[verbindung.zu.knotenId]?.anschlüsse?.firstOrNull { it.id == verbindung.zu.anschlussId } ?: return@filter false
-            ziel.art in setOf(MathematikAnschlussArten.Funktion.id, MathematikAnschlussArten.Objekt.id)
+            ziel.art in setOf(MathematikAnschlussArten.Funktion.id, MathematikAnschlussArten.AussageFunktion.id, MathematikAnschlussArten.Objekt.id)
         },
     )
 }

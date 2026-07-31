@@ -22,13 +22,29 @@ data class IterierterSchnitt(val methode: Funktion, val indexMenge: MengenAusdru
     override fun zuLatex() = "\\bigcap_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 data class IterierteKonjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
-    override fun entscheide(kontext: RechenKontext) = iteriereAussagen(methode, indexMenge, true).entscheide(kontext)
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis =
+        if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Konjunktion).entscheide(kontext)
+        else symbolischeAussagenIteration()
     override fun zuLatex() = "\\bigwedge_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 data class IterierteDisjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
-    override fun entscheide(kontext: RechenKontext) = iteriereAussagen(methode, indexMenge, false).entscheide(kontext)
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis =
+        if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Disjunktion).entscheide(kontext)
+        else symbolischeAussagenIteration()
     override fun zuLatex() = "\\bigvee_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
+data class IterierteAdjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis =
+        if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion).entscheide(kontext)
+        else symbolischeAussagenIteration()
+    override fun zuLatex() = "\\mathop{\\&}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+}
+
+private fun symbolischeAussagenIteration() = AussageErgebnis(
+    wahrheitswert = null,
+    status = EntscheidungsStatus.Unbekannt,
+    begründung = "Die Aussage wird über einer nicht endlich auswertbaren Indexmenge symbolisch dargestellt.",
+)
 
 fun iterierteSumme(methode: Funktion, indexMenge: MengenAusdruck): ZahlAusdruck = iteriereZahlen(methode, indexMenge, false)
 fun iteriertesProdukt(methode: Funktion, indexMenge: MengenAusdruck): ZahlAusdruck = iteriereZahlen(methode, indexMenge, true)
@@ -64,17 +80,40 @@ fun iteriertesKartesischesProdukt(methode: Funktion, indexMenge: MengenAusdruck)
     }
 }
 
-fun iterierteKonjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage = iteriereAussagen(methode, indexMenge, true)
-fun iterierteDisjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage = iteriereAussagen(methode, indexMenge, false)
-private fun iteriereAussagen(methode: Funktion, indexMenge: MengenAusdruck, konjunktion: Boolean): Aussage {
-    require(methode.parameter.size == 1 && methode.ausgaben.size == 1 && methode.einzigeAusgabe().second is Aussage) { "Die Abbildung muss einwertig eine Aussage liefern." }
-    if (indexMenge !is EndlicheMenge) return if (konjunktion) IterierteKonjunktion(methode, indexMenge) else IterierteDisjunktion(methode, indexMenge)
+private enum class IterierteAussagenArt { Konjunktion, Disjunktion, Adjunktion }
+
+fun iterierteKonjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage =
+    iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Konjunktion)
+fun iterierteDisjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage =
+    iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Disjunktion)
+fun iterierteAdjunktion(methode: Funktion, indexMenge: MengenAusdruck): Aussage =
+    iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion)
+
+private fun iteriereAussagen(
+    methode: Funktion,
+    indexMenge: MengenAusdruck,
+    art: IterierteAussagenArt,
+): Aussage {
+    require(methode.parameter.size == 1 && methode.ausgaben.size == 1 && methode.einzigeAusgabe().second is Aussage) {
+        "Die Abbildung muss einwertig eine Aussage liefern."
+    }
+    if (indexMenge !is EndlicheMenge) return when (art) {
+        IterierteAussagenArt.Konjunktion -> IterierteKonjunktion(methode, indexMenge)
+        IterierteAussagenArt.Disjunktion -> IterierteDisjunktion(methode, indexMenge)
+        IterierteAussagenArt.Adjunktion -> IterierteAdjunktion(methode, indexMenge)
+    }
     val p = methode.parameter.single()
     val aussagen = indexMenge.elemente.map { index ->
         val zahl = index as? ZahlAusdruck ?: error("Indexmenge muss Zahlen enthalten.")
-        methode.wendeAn(mapOf(p.name to zahl)).values.single() as? Aussage ?: error("Abbildung liefert keine Aussage.")
+        methode.wendeAn(mapOf(p.name to zahl)).values.single() as? Aussage
+            ?: error("Abbildung liefert keine Aussage.")
     }
-    return if (konjunktion) Konjunktion(aussagen) else Disjunktion(aussagen)
+    return when (art) {
+        IterierteAussagenArt.Konjunktion -> Konjunktion(aussagen)
+        IterierteAussagenArt.Disjunktion -> Disjunktion(aussagen)
+        IterierteAussagenArt.Adjunktion -> aussagen.reduceOrNull { links, rechts -> Adjunktion(links, rechts) }
+            ?: WahrheitsKonstante(true)
+    }
 }
 
 private fun iteriereMengen(methode: Funktion, indexMenge: MengenAusdruck, schnitt: Boolean): MengenAusdruck {

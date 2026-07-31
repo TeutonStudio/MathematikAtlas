@@ -66,6 +66,15 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         override fun parameter(schlüssel: String, wert: String) {
                             zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
                         }
+                        override fun name(wert: String) {
+                            zustand.ersetzeKarteMitAuswahl(
+                                zustand.editor.karte.copy(
+                                    knoten = zustand.editor.karte.knoten.map { aktuell ->
+                                        if (aktuell.id == knoten.id) aktuell.copy(name = wert) else aktuell
+                                    },
+                                ),
+                            )
+                        }
                         override fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>) {
                             zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
                         }
