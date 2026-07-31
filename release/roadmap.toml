@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.5.x"
-current_version = "2.5.0"
+current_version = "2.5.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -174,3 +174,14 @@ branch = "release/v2.5.0-reelle-intervalle-relationsketten"
 kind = "feature"
 version_axis = "y"
 reason = "Auf ausdrücklichen Nutzerauftrag als neuer fachlicher Versionsschritt veröffentlicht. Der Release erweitert einen vorhandenen Knotentyp und führt eine globale strukturelle Relationsketten-Darstellung ein, ohne einen neuen registrierten Knotentyp vorzutäuschen."
+
+[[releases]]
+version = "2.5.1"
+title = "Konzeptkatalog und bearbeitbare Definitionskartenkopien"
+roadmap = "v2.5.x Definitionskarten und Konzeptkatalog"
+status = "released"
+previous_release = "2.5.0"
+branch = "agent/v2.5.1-konzeptkatalog"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert die Verwaltung und Bearbeitung vorhandener Definitionskarten, ohne einen neuen registrierten Knotentyp einzuführen."
