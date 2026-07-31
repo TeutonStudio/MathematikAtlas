@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikKnoten
 
+import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -33,6 +34,20 @@ class LatexTextTest {
             vereinfacheLatexAnzeige("\\stackrel{\\circ}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)"),
         )
         assertEquals("⋀idx ∈ {A} P(idx)", vereinfacheLatexAnzeige("\\bigwedge_{idx \\in \\Set{A}} P(idx)"))
+    }
+
+    @Test
+    fun `Wahrheitswerte verwenden universelle Symbole und Farben`() {
+        val wahr = latexZuAnnotiertemText("\\mathcal{Wahr}", Color.Green, Color.Red)
+        val lüge = latexZuAnnotiertemText("\\mathcal{Lüge}", Color.Green, Color.Red)
+        val historisch = latexZuAnnotiertemText("\\top \\land \\bot", Color.Green, Color.Red)
+
+        assertEquals("Wahr", wahr.text)
+        assertEquals(Color.Green, wahr.spanStyles.single().item.color)
+        assertEquals("Lüge", lüge.text)
+        assertEquals(Color.Red, lüge.spanStyles.single().item.color)
+        assertEquals("Wahr ∧ Lüge", historisch.text)
+        assertEquals(listOf(Color.Green, Color.Red), historisch.spanStyles.map { it.item.color })
     }
 
     @Test

@@ -62,9 +62,9 @@ def prüfe_vorgänger(eintrag: dict) -> None:
     if not vorgänger:
         return
     titel = f"v{vorgänger}"
-    protokoll = git("log", "--format=%s", "--all").splitlines()
+    protokoll = git("log", "--format=%B", "--all").splitlines()
     erlaubte_präfixe = (f"{titel}:", f"{titel} ")
-    if not any(subject == titel or subject.startswith(erlaubte_präfixe) for subject in protokoll):
+    if not any(zeile == titel or zeile.startswith(erlaubte_präfixe) for zeile in protokoll):
         fehler(f"Der Vorgängerrelease {titel!r} ist in der Git-Historie nicht vorhanden.")
 
 

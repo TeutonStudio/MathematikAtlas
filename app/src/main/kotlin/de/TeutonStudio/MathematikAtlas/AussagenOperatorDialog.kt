@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -19,10 +20,15 @@ import de.TeutonStudio.MathematikKnoten.AussagenOperatorArt
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.Wahrheitstabelle
+import de.TeutonStudio.MathematikRechenSystem.kern.Wahrheitswert
 import java.math.BigInteger
 
 private val WAHRHEITSTABELLEN_SEITENGRÖSSE = BigInteger.valueOf(256)
+private val EINGANGS_ZELLEN_BREITE = 104.dp
+private val ERGEBNIS_ZELLEN_BREITE = 136.dp
+private val TABELLEN_TRENNER_BREITE = 2.dp
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun AussagenOperatorDialog(
     zustand: AtlasZustand,
@@ -34,69 +40,87 @@ internal fun AussagenOperatorDialog(
     val istIteration = knoten.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
     if (direkteArt == null && !istIteration) return
 
+    val anzahlEingänge = knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang }
+    val tabellenBreite = EINGANGS_ZELLEN_BREITE * anzahlEingänge.toFloat() +
+        TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
+
     Dialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            Modifier.fillMaxWidth(.92f).fillMaxHeight(.88f),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 8.dp,
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
-            Column(Modifier.fillMaxSize()) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(knoten.name, style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            if (istIteration) "Iterationsregel" else "Wahrheitstabelle",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+            val gewünschteBreite = if (direkteArt != null) {
+                (tabellenBreite + 40.dp).coerceAtLeast(520.dp)
+            } else {
+                680.dp
+            }
+            val dialogBreite = gewünschteBreite.coerceAtMost(maxWidth * .92f)
+
+            Surface(
+                Modifier
+                    .width(dialogBreite)
+                    .heightIn(max = maxHeight * .88f)
+                    .wrapContentHeight(),
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = 8.dp,
+            ) {
+                Column(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(knoten.name, style = MaterialTheme.typography.titleLarge)
+                            Text(
+                                if (istIteration) "Iterationsregel" else "Wahrheitstabelle",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(onClick = schließen) { Text("Schließen") }
                     }
-                    TextButton(onClick = schließen) { Text("Schließen") }
-                }
-                HorizontalDivider()
+                    HorizontalDivider()
 
-                if (direkteArt != null) {
-                    WahrheitstabellenInhalt(knoten, direkteArt, Modifier.weight(1f).fillMaxWidth())
-                } else {
-                    IterationsInhalt(knoten, Modifier.weight(1f).fillMaxWidth())
-                }
+                    if (direkteArt != null) {
+                        WahrheitstabellenInhalt(knoten, direkteArt, Modifier.fillMaxWidth())
+                    } else {
+                        IterationsInhalt(knoten, Modifier.fillMaxWidth())
+                    }
 
-                HorizontalDivider()
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Button(onClick = definitionÖffnen) { Text("Definition") }
-                    OutlinedButton(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.dupliziereAuswahl()
-                            schließen()
-                        },
-                    ) { Text("Knoten duplizieren") }
-                    OutlinedButton(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.isoliereAusgewähltenKnoten()
-                            schließen()
-                        },
-                    ) { Text("Knoten isolieren") }
-                    Spacer(Modifier.weight(1f))
-                    Button(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.löscheAuswahl()
-                            schließen()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    ) { Text("Knoten löschen") }
+                    HorizontalDivider()
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(onClick = definitionÖffnen) { Text("Definition") }
+                        OutlinedButton(
+                            onClick = {
+                                zustand.editor.wähleKnoten(knoten.id)
+                                zustand.editor.dupliziereAuswahl()
+                                schließen()
+                            },
+                        ) { Text("Knoten duplizieren") }
+                        OutlinedButton(
+                            onClick = {
+                                zustand.editor.wähleKnoten(knoten.id)
+                                zustand.editor.isoliereAusgewähltenKnoten()
+                                schließen()
+                            },
+                        ) { Text("Knoten isolieren") }
+                        Button(
+                            onClick = {
+                                zustand.editor.wähleKnoten(knoten.id)
+                                zustand.editor.löscheAuswahl()
+                                schließen()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) { Text("Knoten löschen") }
+                    }
                 }
             }
         }
@@ -125,44 +149,70 @@ private fun WahrheitstabellenInhalt(
     val zeilen = remember(tabelle, seitenStart) {
         List(zeilenAufSeite) { offset -> tabelle.zeile(seitenStart + BigInteger.valueOf(offset.toLong())) }
     }
+    val tabellenBreite = EINGANGS_ZELLEN_BREITE * eingänge.size.toFloat() +
+        TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
+    val listenHöhe = (zeilenAufSeite.coerceIn(1, 10) * 42).dp
 
     Column(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        LatexText(art.ergebnisLatex(eingänge.size), style = MaterialTheme.typography.titleMedium)
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "Zeilen ${seitenStart + BigInteger.ONE}–${seitenStart + BigInteger.valueOf(zeilenAufSeite.toLong())} von ${tabelle.zeilenAnzahl}",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            TextButton(onClick = { seitenStart = BigInteger.ZERO }, enabled = seitenStart > BigInteger.ZERO) { Text("Erste") }
-            TextButton(
-                onClick = { seitenStart = seitenStart.subtract(WAHRHEITSTABELLEN_SEITENGRÖSSE).max(BigInteger.ZERO) },
-                enabled = seitenStart > BigInteger.ZERO,
-            ) { Text("Zurück") }
-            TextButton(
-                onClick = { seitenStart = seitenStart.add(WAHRHEITSTABELLEN_SEITENGRÖSSE).min(letzterStart) },
-                enabled = seitenStart < letzterStart,
-            ) { Text("Weiter") }
-            TextButton(onClick = { seitenStart = letzterStart }, enabled = seitenStart < letzterStart) { Text("Letzte") }
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            LatexText(art.ergebnisLatex(eingänge.size), style = MaterialTheme.typography.titleMedium)
+        }
+        Text(
+            "Zeilen ${seitenStart + BigInteger.ONE}–${seitenStart + BigInteger.valueOf(zeilenAufSeite.toLong())} von ${tabelle.zeilenAnzahl}",
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        if (tabelle.zeilenAnzahl > WAHRHEITSTABELLEN_SEITENGRÖSSE) {
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = { seitenStart = BigInteger.ZERO }, enabled = seitenStart > BigInteger.ZERO) { Text("Erste") }
+                TextButton(
+                    onClick = { seitenStart = seitenStart.subtract(WAHRHEITSTABELLEN_SEITENGRÖSSE).max(BigInteger.ZERO) },
+                    enabled = seitenStart > BigInteger.ZERO,
+                ) { Text("Zurück") }
+                TextButton(
+                    onClick = { seitenStart = seitenStart.add(WAHRHEITSTABELLEN_SEITENGRÖSSE).min(letzterStart) },
+                    enabled = seitenStart < letzterStart,
+                ) { Text("Weiter") }
+                TextButton(onClick = { seitenStart = letzterStart }, enabled = seitenStart < letzterStart) { Text("Letzte") }
+            }
         }
 
-        Column(Modifier.fillMaxSize().horizontalScroll(rememberScrollState())) {
-            Row {
-                eingänge.indices.forEach { index -> TabellenZelle("A${index + 1}", kopf = true) }
-                TabellenZelle("Ergebnis", kopf = true, breite = 120.dp)
-            }
-            HorizontalDivider()
-            LazyColumn(Modifier.fillMaxHeight()) {
-                items(zeilen, key = { it.index.toString() }) { zeile ->
-                    Row {
-                        zeile.eingänge.forEach { wert -> TabellenZelle(if (wert) "W" else "L") }
-                        TabellenZelle(if (zeile.ergebnis) "W" else "L", breite = 120.dp)
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            val sichtbareBreite = tabellenBreite.coerceAtMost(maxWidth)
+            Box(
+                Modifier
+                    .width(sichtbareBreite)
+                    .horizontalScroll(rememberScrollState()),
+            ) {
+                Column(Modifier.width(tabellenBreite)) {
+                    Row(Modifier.height(IntrinsicSize.Min)) {
+                        eingänge.indices.forEach { index -> TabellenKopfZelle("A${index + 1}") }
+                        VerticalDivider(
+                            modifier = Modifier.fillMaxHeight(),
+                            thickness = TABELLEN_TRENNER_BREITE,
+                        )
+                        TabellenKopfZelle("Ergebnis", ERGEBNIS_ZELLEN_BREITE)
                     }
-                    HorizontalDivider()
+                    HorizontalDivider(thickness = TABELLEN_TRENNER_BREITE)
+                    LazyColumn(Modifier.height(listenHöhe)) {
+                        items(zeilen, key = { it.index.toString() }) { zeile ->
+                            Row(Modifier.height(IntrinsicSize.Min)) {
+                                zeile.eingänge.forEach { wert -> WahrheitswertZelle(wert) }
+                                VerticalDivider(
+                                    modifier = Modifier.fillMaxHeight(),
+                                    thickness = TABELLEN_TRENNER_BREITE,
+                                )
+                                WahrheitswertZelle(zeile.ergebnis, ERGEBNIS_ZELLEN_BREITE)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -170,12 +220,25 @@ private fun WahrheitstabellenInhalt(
 }
 
 @Composable
-private fun TabellenZelle(text: String, kopf: Boolean = false, breite: androidx.compose.ui.unit.Dp = 72.dp) {
+private fun TabellenKopfZelle(text: String, breite: Dp = EINGANGS_ZELLEN_BREITE) {
     Box(
         Modifier.width(breite).padding(horizontal = 10.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, fontWeight = if (kopf) FontWeight.SemiBold else FontWeight.Normal)
+        Text(text, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun WahrheitswertZelle(wert: Boolean, breite: Dp = EINGANGS_ZELLEN_BREITE) {
+    Box(
+        Modifier.width(breite).padding(horizontal = 8.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        LatexText(
+            if (wert) Wahrheitswert.Wahr.latex else Wahrheitswert.Lüge.latex,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 
@@ -185,20 +248,20 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
     val (formel, neutralesElement, erklärung) = when (operator) {
         "konjunktion" -> Triple(
             "\\bigwedge_{idx \\in \\Set{A}} methode(idx)",
-            "\\top",
+            Wahrheitswert.Wahr,
             "Wahr genau dann, wenn alle von der Methode erzeugten Aussagen wahr sind.",
         )
         "disjunktion" -> Triple(
             "\\bigvee_{idx \\in \\Set{A}} methode(idx)",
-            "\\bot",
+            Wahrheitswert.Lüge,
             "Wahr, sobald mindestens eine von der Methode erzeugte Aussage wahr ist.",
         )
         "adjunktion" -> Triple(
             "\\stackrel{\\circ}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)",
-            "\\bot",
+            Wahrheitswert.Lüge,
             "Wahr genau dann, wenn eine ungerade Anzahl der erzeugten Aussagen wahr ist.",
         )
-        else -> Triple("?", "?", "Unbekannte iterierte Aussagenverknüpfung.")
+        else -> Triple("?", null, "Unbekannte iterierte Aussagenverknüpfung.")
     }
 
     Column(
@@ -209,7 +272,9 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
         Text(erklärung, style = MaterialTheme.typography.bodyLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Neutrales Element der leeren Indexmenge:")
-            LatexText(neutralesElement, style = MaterialTheme.typography.titleMedium)
+            neutralesElement?.let {
+                LatexText(it.latex, style = MaterialTheme.typography.titleMedium)
+            } ?: Text("?")
         }
         if (operator == "adjunktion") {
             Text("Binäre Definition", style = MaterialTheme.typography.titleMedium)

@@ -57,9 +57,8 @@ class MathematikKnotenRenderer(
                     ergebnis?.ausgaben?.get("methode")?.latexDarstellung ?: termZuMethodeFormel(ergebnis),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> Text(
-                    if (objekt.wert) "Wahr" else "Lüge",
-                    color = if (objekt.wert) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
+                knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> LatexText(
+                    objekt.zuLatex(),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 ausgabe != null -> LatexText(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)
