@@ -12,17 +12,33 @@ data class KartenOrdnung(
 ) {
     fun ordnerFür(kartenId: KartenId): List<String> = kartenOrdner[kartenId].orEmpty()
 
+    fun kartenUnter(pfad: List<String>): Set<KartenId> {
+        val normalisiert = normalisierePfad(pfad)
+        return kartenOrdner.filterValues { it.beginntMit(normalisiert) }.keys
+    }
+
+    fun ordnerUnter(pfad: List<String>): Set<List<String>> {
+        val normalisiert = normalisierePfad(pfad)
+        return ordner.filter { it.beginntMit(normalisiert) }.toSet()
+    }
+
     fun mitOrdner(pfad: List<String>): KartenOrdnung {
         val normalisiert = normalisierePfad(pfad)
         if (normalisiert.isEmpty()) return this
         return copy(ordner = ordner + normalisiert.präfixe()).normalisiert()
     }
 
+    fun mitOrdnern(pfade: Iterable<List<String>>): KartenOrdnung =
+        pfade.fold(this) { aktuell, pfad -> aktuell.mitOrdner(pfad) }
+
     fun mitKarteInOrdner(kartenId: KartenId, pfad: List<String>): KartenOrdnung {
         val normalisiert = normalisierePfad(pfad)
         val zuordnung = if (normalisiert.isEmpty()) kartenOrdner - kartenId else kartenOrdner + (kartenId to normalisiert)
         return copy(ordner = ordner + normalisiert.präfixe(), kartenOrdner = zuordnung).normalisiert()
     }
+
+    fun mitKartenInOrdnern(zuordnungen: Map<KartenId, List<String>>): KartenOrdnung =
+        zuordnungen.entries.fold(this) { aktuell, (id, pfad) -> aktuell.mitKarteInOrdner(id, pfad) }
 
     fun verschiebeOrdner(von: List<String>, nach: List<String>): KartenOrdnung {
         val quelle = normalisierePfad(von)
@@ -53,6 +69,19 @@ data class KartenOrdnung(
         val normalisiert = normalisierePfad(pfad)
         if (!kannOrdnerLöschen(normalisiert)) return this
         return copy(ordner = ordner.filterNot { it == normalisiert }.toSet()).normalisiert()
+    }
+
+    fun ohneKarten(kartenIds: Set<KartenId>): KartenOrdnung =
+        copy(kartenOrdner = kartenOrdner.filterKeys { it !in kartenIds }).normalisiert()
+
+    fun ohneOrdnerBaum(pfad: List<String>): KartenOrdnung {
+        val normalisiert = normalisierePfad(pfad)
+        if (normalisiert.isEmpty()) return this
+        val kartenIds = kartenUnter(normalisiert)
+        return KartenOrdnung(
+            ordner = ordner.filterNot { it.beginntMit(normalisiert) }.toSet(),
+            kartenOrdner = kartenOrdner.filterKeys { it !in kartenIds },
+        ).normalisiert()
     }
 
     fun normalisiert(): KartenOrdnung {

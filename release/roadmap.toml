@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.10.x"
-current_version = "2.10.1"
+current_version = "2.10.2"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -311,3 +311,14 @@ branch = "agent/v2.10.1-wahrheitswerte-dialog"
 kind = "fix"
 version_axis = "x"
 reason = "Vereinheitlicht Wahr und Lüge als farbige mathcal-Symbole und passt Größe, Zentrierung sowie Trennlinien des Wahrheitstabellen-Dialogs an, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.10.2"
+title = "Lokales Profil, Freigaben und Papierkorb"
+roadmap = "v2.10.x Profil und Bibliotheksverwaltung"
+status = "released"
+previous_release = "2.10.1"
+branch = "agent/v2.10.2-profil-freigaben"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert lokale Identität, Freigabepakete, Löschverwaltung und Papierkorb ohne neuen registrierten Knotentyp."
