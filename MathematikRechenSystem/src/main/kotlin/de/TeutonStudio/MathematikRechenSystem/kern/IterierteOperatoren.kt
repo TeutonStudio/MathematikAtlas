@@ -13,7 +13,7 @@ data class IterierteVereinigung(val methode: Funktion, val indexMenge: MengenAus
 }
 
 data class IteriertesKartesischesProdukt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
-    override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLateX()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 
 /** Die Grundmenge wird ausschließlich aus der validierten Zielmenge der Methode abgeleitet. */
@@ -21,23 +21,38 @@ data class IterierterSchnitt(val methode: Funktion, val indexMenge: MengenAusdru
     val grundMenge get() = methode.grundMengeFürMengenAusgabe()
     override fun zuLatex() = "\\bigcap_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
+
 data class IterierteKonjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis =
         if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Konjunktion).entscheide(kontext)
         else symbolischeAussagenIteration()
-    override fun zuLatex() = "\\bigwedge_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+
+    override fun zuLatex() = iterationsLatex("\\bigwedge", methode, indexMenge)
 }
+
 data class IterierteDisjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis =
         if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Disjunktion).entscheide(kontext)
         else symbolischeAussagenIteration()
-    override fun zuLatex() = "\\bigvee_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+
+    override fun zuLatex() = iterationsLatex("\\bigvee", methode, indexMenge)
 }
+
 data class IterierteAdjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis =
         if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion).entscheide(kontext)
         else symbolischeAussagenIteration()
-    override fun zuLatex() = "\\mathop{\\&}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+
+    override fun zuLatex() = iterationsLatex("\\stackrel{\\circ}{\\bigvee}", methode, indexMenge)
+}
+
+private fun iterationsLatex(operator: String, methode: Funktion, indexMenge: MengenAusdruck): String {
+    val parameter = methode.parameter.single().zuLatex()
+    val menge = when (indexMenge) {
+        is BenannteMenge -> "\\Set{${indexMenge.zuLatex()}}"
+        else -> indexMenge.zuLatex()
+    }
+    return "${operator}_{${parameter} \\in $menge} ${methode.name}($parameter)"
 }
 
 private fun symbolischeAussagenIteration() = AussageErgebnis(
@@ -97,22 +112,25 @@ private fun iteriereAussagen(
     require(methode.parameter.size == 1 && methode.ausgaben.size == 1 && methode.einzigeAusgabe().second is Aussage) {
         "Die Abbildung muss einwertig eine Aussage liefern."
     }
+    if (indexMenge == LeereMenge) return when (art) {
+        IterierteAussagenArt.Konjunktion -> WahrheitsKonstante(true)
+        IterierteAussagenArt.Disjunktion -> WahrheitsKonstante(false)
+        IterierteAussagenArt.Adjunktion -> WahrheitsKonstante(false)
+    }
     if (indexMenge !is EndlicheMenge) return when (art) {
         IterierteAussagenArt.Konjunktion -> IterierteKonjunktion(methode, indexMenge)
         IterierteAussagenArt.Disjunktion -> IterierteDisjunktion(methode, indexMenge)
         IterierteAussagenArt.Adjunktion -> IterierteAdjunktion(methode, indexMenge)
     }
-    val p = methode.parameter.single()
-    val aussagen = indexMenge.elemente.map { index ->
-        val zahl = index as? ZahlAusdruck ?: error("Indexmenge muss Zahlen enthalten.")
-        methode.wendeAn(mapOf(p.name to zahl)).values.single() as? Aussage
-            ?: error("Abbildung liefert keine Aussage.")
+    val parameter = methode.parameter.single()
+    val aussagen = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
+        methode.wendeAn(mapOf(parameter.name to index)).values.single() as? Aussage
+            ?: error("Die Methode '${methode.name}' liefert keine Aussage.")
     }
     return when (art) {
         IterierteAussagenArt.Konjunktion -> Konjunktion(aussagen)
         IterierteAussagenArt.Disjunktion -> Disjunktion(aussagen)
-        IterierteAussagenArt.Adjunktion -> aussagen.reduceOrNull { links, rechts -> Adjunktion(links, rechts) }
-            ?: WahrheitsKonstante(true)
+        IterierteAussagenArt.Adjunktion -> adjunktion(aussagen)
     }
 }
 
