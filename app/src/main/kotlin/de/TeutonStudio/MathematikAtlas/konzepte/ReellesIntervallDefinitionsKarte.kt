@@ -1,7 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKartenAdapter.DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
@@ -21,7 +20,7 @@ internal fun reellesIntervallDefinitionsKarte(
         prefix,
         "variable-x",
         MathematikKnotenVorlagen.Variable,
-        GraphPunkt(310f, 420f),
+        GraphPunkt(240.20312f, 374.42264f),
         mapOf("name" to "x", "werteVorrat" to "R"),
     )
     val linksKleiner = vorlagenKnoten(prefix, "links-kleiner", MathematikKnotenVorlagen.Kleiner, GraphPunkt(560f, 40f))
@@ -32,25 +31,30 @@ internal fun reellesIntervallDefinitionsKarte(
     val linkerFall = vorlagenKnoten(prefix, "linker-fall", MathematikKnotenVorlagen.Fall, GraphPunkt(850f, 140f))
     val rechterFall = vorlagenKnoten(prefix, "rechter-fall", MathematikKnotenVorlagen.Fall, GraphPunkt(850f, 690f))
     val konjunktion = vorlagenKnoten(prefix, "konjunktion", MathematikKnotenVorlagen.Konjunktion, GraphPunkt(1160f, 420f))
-    val lösungsmenge = vorlagenKnoten(
+    val termZuMethode = vorlagenKnoten(
         prefix,
-        "loesungsmenge",
-        MathematikKnotenVorlagen.Lösungsmenge,
-        GraphPunkt(1450f, 420f),
-        mapOf("automatisch" to "false", "variablen" to "x", "grundmengen" to "R"),
+        "term-zu-methode",
+        MathematikKnotenVorlagen.TermZuMethode,
+        GraphPunkt(1533.1195f, 395.10303f),
+        mapOf("name" to "f", "argumentReihenfolge" to ""),
     )
-    val darstellung = vorlagenKnoten(
+    val reelleZahlen = vorlagenKnoten(
         prefix,
-        "darstellung",
-        MathematikKnotenVorlagen.Darstellungsoptimierung,
-        GraphPunkt(1760f, 420f),
-        mapOf("latex" to DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG),
+        "reelle-zahlen",
+        MathematikKnotenVorlagen.ReelleZahlen,
+        GraphPunkt(1568.4684f, 262.04926f),
+    )
+    val mengenfilter = vorlagenKnoten(
+        prefix,
+        "mengenfilter",
+        MathematikKnotenVorlagen.Mengenfilter,
+        GraphPunkt(1971.1384f, 325.91025f),
     )
     val ausgang = vorlagenKnoten(
         prefix,
         "karten-ausgang",
         MathematikKnotenVorlagen.KartenAusgang,
-        GraphPunkt(2070f, 420f),
+        GraphPunkt(2362.3706f, 318.3821f),
         mapOf("name" to "menge"),
     )
 
@@ -59,7 +63,6 @@ internal fun reellesIntervallDefinitionsKarte(
         linksOffen,
         rechts,
         rechtsOffen,
-        x,
         linksKleiner,
         linksKleinerGleich,
         rechtsKleiner,
@@ -67,9 +70,11 @@ internal fun reellesIntervallDefinitionsKarte(
         linkerFall,
         rechterFall,
         konjunktion,
-        lösungsmenge,
-        darstellung,
         ausgang,
+        x,
+        termZuMethode,
+        mengenfilter,
+        reelleZahlen,
     )
 
     val verbindungen = buildList {
@@ -109,9 +114,10 @@ internal fun reellesIntervallDefinitionsKarte(
 
         verbinde(linkerFall, "wert", konjunktion, "a", "konjunktion-links")
         verbinde(rechterFall, "wert", konjunktion, "b", "konjunktion-rechts")
-        verbinde(konjunktion, "aussage", lösungsmenge, "bedingung", "loesungsmenge-bedingung")
-        verbinde(lösungsmenge, "menge", darstellung, "wert", "darstellung-menge")
-        verbinde(darstellung, "wert", ausgang, "wert", "karten-ausgang")
+        verbinde(konjunktion, "aussage", termZuMethode, "term", "term-zu-methode")
+        verbinde(termZuMethode, "methode", mengenfilter, "methode", "mengenfilter-methode")
+        verbinde(reelleZahlen, "menge", mengenfilter, "menge", "mengenfilter-reelle-zahlen")
+        verbinde(mengenfilter, "menge", ausgang, "wert", "karten-ausgang")
     }
 
     return KartenDaten(
