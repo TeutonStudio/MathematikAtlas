@@ -9,6 +9,7 @@ const val MENGENDEFINITION_PAAR = "mengendefinition.paar"
 const val MENGENDEFINITION_MENGENNAME = "mengenName"
 const val MENGENDEFINITION_ELEMENTNAME = "elementName"
 const val MENGENDEFINITION_ELEMENTART = "elementArt"
+/** Altparameter aus v2.8.0; wird nur noch beim Laden verborgen und fachlich ignoriert. */
 const val MENGENDEFINITION_ELEMENTMENGE = "elementMenge"
 
 internal object MengenkonstruktorAuswerter : MathematikKnotenAuswerter {
@@ -24,26 +25,18 @@ internal object MengenkonstruktorAuswerter : MathematikKnotenAuswerter {
             kontext.knoten.parameter[MENGENDEFINITION_ELEMENTART]
                 ?.trim().orEmpty().ifBlank { "mathematik.zahl" },
         )
-        val grundMenge = elementGrundMenge(
-            elementArt,
-            kontext.knoten.parameter[MENGENDEFINITION_ELEMENTMENGE].orEmpty(),
-        )
         val element = elementAusdruck(elementName, elementArt)
-        val reelleVariable = if (
-            elementArt.wert == "mathematik.zahl" &&
-            grundMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
-        ) mapOf(elementName to grundMenge) else emptyMap()
+        val fehlendeObermenge = FehlendeObermenge(elementArt.wert)
 
         return KnotenAuswertungsErgebnis(mapOf(
             "element" to BedingterWert(
                 objekt = element,
-                werteVorrat = grundMenge,
-                reelleVariablen = reelleVariable,
+                werteVorrat = null,
                 variablenQuellen = listOf(
                     VariablenQuelle(
                         knotenId = kontext.knoten.id,
                         name = elementName,
-                        werteVorrat = grundMenge,
+                        werteVorrat = fehlendeObermenge,
                         alsMethodenParameter = false,
                         bindungsId = paarId,
                         bindungsName = mengenName,
@@ -66,7 +59,7 @@ internal object MengendefinatorAuswerter : MathematikKnotenAuswerter {
             ?: error("Der Mengendefinator akzeptiert ausschließlich Aussagen.")
         val quellen = aussageWert.variablenQuellen
             .filter { it.bindungsId == paarId }
-            .distinctBy { Triple(it.name, it.werteVorrat, it.gebundeneArt) }
+            .distinctBy { Triple(it.name, it.bindungsId, it.gebundeneArt) }
         require(quellen.size == 1) {
             when {
                 quellen.isEmpty() -> "Die Aussage verwendet das Element des gekoppelten Mengenkonstruktors nicht."
@@ -75,10 +68,9 @@ internal object MengendefinatorAuswerter : MathematikKnotenAuswerter {
         }
         val quelle = quellen.single()
         val mengenName = quelle.bindungsName?.trim().orEmpty().ifBlank { "M" }
-        val menge = DefinierteMenge(
-            variablen = listOf(GebundeneMengenVariable(Variable(quelle.name), quelle.werteVorrat)),
-            bedingung = aussage,
-        )
+        val elementArt = quelle.gebundeneArt ?: AnschlussArtId("mathematik.objekt")
+        val element = elementAusdruck(quelle.name, elementArt)
+        val menge = definierePrädikatsMenge(element, aussage, kontext.rechenKontext)
         return KnotenAuswertungsErgebnis(mapOf(
             "menge" to BedingterWert(
                 objekt = menge,
@@ -91,23 +83,9 @@ internal object MengendefinatorAuswerter : MathematikKnotenAuswerter {
     }
 }
 
-private fun elementAusdruck(name: String, art: AnschlussArtId): MathematischesObjekt = when (art.wert) {
+private fun elementAusdruck(name: String, art: AnschlussArtId): FunktionsParameter = when (art.wert) {
     "mathematik.zahl" -> Variable(name)
-    "mathematik.aussage" -> Gleichheit(Variable(name), WahrheitsKonstante(true))
-    else -> error("Unbekannter Mengenelementtyp '${art.wert}'.")
-}
-
-private fun elementGrundMenge(art: AnschlussArtId, text: String): MengenAusdruck {
-    if (art.wert == "mathematik.aussage") {
-        return EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
-    }
-    val name = text.trim().ifBlank { if (art.wert == "mathematik.zahl") "R" else "U" }
-    return when (name.uppercase()) {
-        "N", "ℕ" -> NatürlicheZahlen
-        "Z", "ℤ" -> GanzeZahlen
-        "Q", "ℚ" -> RationaleZahlen
-        "R", "ℝ" -> ReelleZahlen
-        "C", "ℂ" -> KomplexeZahlen
-        else -> BenannteMenge(name)
-    }
+    "mathematik.aussage" -> AussagenParameter(name)
+    "mathematik.menge" -> MengenParameter(name)
+    else -> TypisiertesElement(name, art.wert)
 }
