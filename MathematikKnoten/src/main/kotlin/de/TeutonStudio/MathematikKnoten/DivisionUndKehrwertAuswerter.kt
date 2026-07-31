@@ -3,8 +3,20 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
-/** Registriert die mit v2.3.2 eingeführte Kehrwert- und Divisionssemantik. */
+/** Registriert fachlich ausgelagerte Auswerter für Prädikate, Kehrwert und Division. */
 internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
+    registriere("mathematik.ungleichheit") { k ->
+        val links = k.eingänge["links"] ?: error("Linke Seite fehlt.")
+        val rechts = k.eingänge["rechts"] ?: error("Rechte Seite fehlt.")
+        KnotenAuswertungsErgebnis(mapOf(
+            "aussage" to BedingterWert(
+                objekt = Ungleichheit(links.objekt, rechts.objekt),
+                annahmen = links.annahmen + rechts.annahmen,
+                latexDarstellung = "${links.anzeigeLatex()} \\ne ${rechts.anzeigeLatex()}",
+            ),
+        ))
+    }
+
     registriere("mathematik.kehrwert") { k ->
         val eingang = k.eingänge["zahl"] ?: error("Für den Kehrwert muss eine Zahl verbunden sein.")
         val zahl = eingang.objekt as? ZahlAusdruck ?: error("Der Kehrwert ist nur für Zahlen definiert.")
