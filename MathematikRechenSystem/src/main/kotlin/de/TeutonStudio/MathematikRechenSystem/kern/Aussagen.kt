@@ -111,7 +111,8 @@ data class Disjunktion(val aussagen: List<Aussage>) : Aussage {
 
 data class Implikation(val voraussetzung: Aussage, val folgerung: Aussage) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
-        val a = voraussetzung.entscheide(kontext).wahrheitswert; val b = folgerung.entscheide(kontext).wahrheitswert
+        val a = voraussetzung.entscheide(kontext).wahrheitswert
+        val b = folgerung.entscheide(kontext).wahrheitswert
         return when {
             a == Wahrheitswert.Lüge || b == Wahrheitswert.Wahr -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
             a == Wahrheitswert.Wahr && b == Wahrheitswert.Lüge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
@@ -123,7 +124,8 @@ data class Implikation(val voraussetzung: Aussage, val folgerung: Aussage) : Aus
 
 data class Äquivalenz(val links: Aussage, val rechts: Aussage) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
-        val a = links.entscheide(kontext).wahrheitswert; val b = rechts.entscheide(kontext).wahrheitswert
+        val a = links.entscheide(kontext).wahrheitswert
+        val b = rechts.entscheide(kontext).wahrheitswert
         if (a == null || b == null) return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         val wahr = a == b
         return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
@@ -131,10 +133,26 @@ data class Äquivalenz(val links: Aussage, val rechts: Aussage) : Aussage {
     override fun zuLatex() = "${links.zuLatex()} \\Leftrightarrow ${rechts.zuLatex()}"
 }
 
-/** Adjunktion ist die klassische UND-Verknüpfung zweier Aussagen. */
+/** Ausschließendes Oder: genau einer der beiden Wahrheitswerte ist wahr. */
 data class Adjunktion(val links: Aussage, val rechts: Aussage) : Aussage {
-    override fun entscheide(kontext: RechenKontext) = Konjunktion(listOf(links, rechts)).entscheide(kontext)
-    override fun zuLatex() = "${links.zuLatex()} \\mathbin{\\&} ${rechts.zuLatex()}"
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis {
+        val linksWert = links.entscheide(kontext).wahrheitswert
+        val rechtsWert = rechts.entscheide(kontext).wahrheitswert
+        if (linksWert == null || rechtsWert == null) return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        val wahr = linksWert != rechtsWert
+        return AussageErgebnis(
+            wahrheitswert = if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
+            status = if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
+        )
+    }
+    override fun zuLatex() = "${links.zuLatex()} \\stackrel{\\circ}{\\lor} ${rechts.zuLatex()}"
+}
+
+/** Assoziative Paritätsfortsetzung der binären Adjunktion. */
+fun adjunktion(aussagen: List<Aussage>): Aussage = when (aussagen.size) {
+    0 -> WahrheitsKonstante(false)
+    1 -> aussagen.single()
+    else -> aussagen.reduce(::Adjunktion)
 }
 
 data class UnentscheidbareAussage(val bezeichnung: String, val system: String) : Aussage {

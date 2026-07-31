@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.9.x"
-current_version = "2.9.1"
+current_series = "2.10.x"
+current_version = "2.10.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -288,3 +288,15 @@ branch = "release/v2.9.1-mengenkarten-eingaenge"
 kind = "fix"
 version_axis = "x"
 reason = "Erzeugt für öffentliche Karten-Eingänge Symbole passend zu ihrer Anschlussart, sodass Mengenparameter in Elementbeziehungen und gekoppelten Prädikatsdefinitionen auswertbar bleiben."
+
+[[releases]]
+version = "2.10.0"
+title = "Wahrheitstabellen, XOR-Adjunktion und Negation"
+roadmap = "v2.10.x Aussagenlogik und Definitionsdialoge"
+status = "released"
+previous_release = "2.9.1"
+branch = "release/v2.10.0-aussagenoperatoren"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.negation"]
+reason = "Führt den separat erzeugbaren Negationsknoten ein, korrigiert Adjunktion und ihre Iteration zum ausschließenden Oder und ergänzt dynamische Wahrheitstabellen für Aussagenoperatoren."

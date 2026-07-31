@@ -26,6 +26,16 @@ class LatexTextTest {
     }
 
     @Test
+    fun `rendert große und gepunktete Aussagenoperatoren`() {
+        assertEquals("a ∨̊ b", vereinfacheLatexAnzeige("a \\stackrel{\\circ}{\\lor} b"))
+        assertEquals(
+            "⋁̊idx ∈ {A} methode(idx)",
+            vereinfacheLatexAnzeige("\\stackrel{\\circ}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)"),
+        )
+        assertEquals("⋀idx ∈ {A} P(idx)", vereinfacheLatexAnzeige("\\bigwedge_{idx \\in \\Set{A}} P(idx)"))
+    }
+
+    @Test
     fun `unterstützt Fallunterscheidungen und Methodenpfeile`() {
         assertEquals("f:{\nℝ → ℂ\nx ↦ x}", vereinfacheLatexAnzeige("f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto x\\end{cases}"))
     }

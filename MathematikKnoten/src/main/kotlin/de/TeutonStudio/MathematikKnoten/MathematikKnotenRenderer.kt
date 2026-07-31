@@ -11,6 +11,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktione
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MENGENKONSTRUKTOR_ART
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
+import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 
@@ -90,9 +91,13 @@ class MathematikKnotenRenderer(
     private fun iterationsFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
         val methodenWert = ergebnis?.eingänge?.get("methode")
         val methode = methodenWert?.objekt as? Funktion
-        val indexMenge = ergebnis?.eingänge?.get("indexmenge")?.anzeigeLatex() ?: "I"
-        val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "k"
-        val name = methodenWert?.latexDarstellung ?: methode?.name ?: "f"
+        val indexWert = ergebnis?.eingänge?.get("indexmenge")
+        val indexMenge = when (indexWert?.objekt) {
+            is BenannteMenge -> "\\Set{${indexWert.anzeigeLatex()}}"
+            else -> indexWert?.anzeigeLatex() ?: "\\Set{A}"
+        }
+        val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "idx"
+        val name = methodenWert?.latexDarstellung ?: methode?.name ?: "methode"
         val zeichen = when (knoten.art) {
             "mathematik.iterierteSumme" -> "\\sum"
             "mathematik.iteriertesProdukt" -> "\\prod"
@@ -101,7 +106,7 @@ class MathematikKnotenRenderer(
             MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART -> when (knoten.parameter["operator"]) {
                 "konjunktion" -> "\\bigwedge"
                 "disjunktion" -> "\\bigvee"
-                "adjunktion" -> "\\mathop{\\&}"
+                "adjunktion" -> "\\stackrel{\\circ}{\\bigvee}"
                 else -> "?"
             }
             else -> "\\bigcap"
