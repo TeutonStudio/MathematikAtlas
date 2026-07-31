@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -313,7 +314,7 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
 private fun KartenMarkierungen(editor: KartenEditorZustand) {
     val gruppenFarbe = MaterialTheme.colorScheme.tertiary
     val auswahlFarbe = MaterialTheme.colorScheme.primary
-    Canvas(Modifier.fillMaxSize()) {
+    Canvas(Modifier.fillMaxSize().clipToBounds()) {
         val karte = editor.karte
         val zoom = karte.ansicht.zoom
         fun rahmen(ids: Set<KnotenId>, puffer: Float): Pair<Offset, Size>? {
