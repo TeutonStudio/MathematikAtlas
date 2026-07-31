@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.7.x"
-current_version = "2.7.0"
+current_version = "2.7.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -231,3 +231,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.ordnungsrelation", "mathematik.iterierteAussagenverknüpfung"]
 reason = "Vereinigt vier separat registrierte Vergleichsknoten zu einer parametrierten Ordnungsrelation und führt mit der iterierten Aussagenverknüpfung einen neuen erzeugbaren Knotentyp ein."
+
+[[releases]]
+version = "2.7.1"
+title = "Auswahlrahmen hinter Verwaltungsbereichen"
+roadmap = "v2.7.x Karteneditor und Bedienoberfläche"
+status = "released"
+previous_release = "2.7.0"
+branch = "agent/v2.7.1-auswahlrahmen-ebenen"
+kind = "fix"
+version_axis = "x"
+reason = "Begrenzt sämtliche Zeichenebenen des Karteneditors auf dessen Layoutbereich und legt Verwaltungsfenster sowie Inspektor explizit darüber, ohne einen neuen Knotentyp einzuführen."

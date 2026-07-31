@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -23,6 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
@@ -64,7 +66,10 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             .navigationBarsPadding()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        VerwaltungsFenster(zustand, Modifier.width(280.dp).fillMaxHeight())
+        VerwaltungsFenster(
+            zustand,
+            Modifier.width(280.dp).fillMaxHeight().zIndex(1f),
+        )
         VerticalDivider()
         Column(Modifier.weight(1f).fillMaxHeight()) {
             WerkzeugLeiste(
@@ -75,6 +80,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             HorizontalDivider()
             Box(
                 Modifier.weight(1f).fillMaxWidth()
+                    .clipToBounds()
                     .onSizeChanged { editorGröße = it },
             ) {
                 KnotenKartenEditor(
@@ -152,7 +158,10 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             }
         }
         VerticalDivider()
-        Inspektor(zustand, Modifier.width(310.dp).fillMaxHeight())
+        Inspektor(
+            zustand,
+            Modifier.width(310.dp).fillMaxHeight().zIndex(1f),
+        )
     }
 }
 
