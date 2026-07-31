@@ -1,6 +1,12 @@
 name: Bootstrap v2.11.1 KartenKnoten
 
 on:
+  push:
+    branches:
+      - agent/v2.11.1-kartenknoten
+    paths:
+      - scripts/bootstrap_v2111.py
+      - .github/workflows/bootstrap-v2.11.1.yml
   pull_request:
     branches:
       - master
