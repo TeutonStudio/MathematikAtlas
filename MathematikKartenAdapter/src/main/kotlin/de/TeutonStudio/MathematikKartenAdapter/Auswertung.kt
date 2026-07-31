@@ -80,9 +80,10 @@ class MathematikAuswerterRegister {
     fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = wert }
     fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
+        "mathematik.ungleichheit" -> UngleichheitAuswerter
         else -> auswerter[art]
     }
-    fun arten(): Set<KnotenArtId> = auswerter.keys
+    fun arten(): Set<KnotenArtId> = auswerter.keys + setOf("mathematik.reellesIntervall", "mathematik.ungleichheit")
 }
 
 fun interface KartenQuelle {
