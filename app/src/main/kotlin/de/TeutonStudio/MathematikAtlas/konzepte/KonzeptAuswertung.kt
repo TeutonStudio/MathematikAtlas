@@ -3,7 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
-import de.TeutonStudio.MathematikRechenSystem.kern.*
+import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 
 /**
  * Wertet ausführbare Definitionskarten mit symbolischen Vorschauwerten aus.
@@ -29,46 +29,17 @@ internal fun KartenAuswerter.werteKonzeptKarteAus(karte: KartenDaten): KartenAus
 
 private fun KnotenDaten.vorschauWert(ausgang: AnschlussDaten): BedingterWert {
     val parameterName = name.trim().ifBlank { "eingang" }
-    return when (ausgang.art) {
-        MathematikAnschlussArten.Zahl.id -> {
-            val variable = Variable(parameterName)
-            BedingterWert(
-                objekt = variable,
-                werteVorrat = ReelleZahlen,
-                reelleVariablen = mapOf(parameterName to ReelleZahlen),
-                variablenQuellen = listOf(
-                    VariablenQuelle(id, parameterName, ReelleZahlen, alsMethodenParameter = false),
-                ),
-            )
-        }
-
-        MathematikAnschlussArten.Aussage.id -> {
-            val wahrheitsMenge = EndlicheMenge(
-                setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)),
-            )
-            val aussage = parameter["vorschauWert"]
-                ?.toBooleanStrictOrNull()
-                ?.let(::WahrheitsKonstante)
-                ?: UnentscheidbareAussage(parameterName, "Definitionskarte")
-            BedingterWert(
-                objekt = aussage,
-                werteVorrat = wahrheitsMenge,
-            )
-        }
-
-        else -> {
-            val wert = AllgemeinerParameter(parameterName)
-            val werteVorrat = BenannteMenge(
-                "definitionswerte_$parameterName",
-                "\\mathcal{W}_{${parameterName}}",
-            )
-            BedingterWert(
-                objekt = wert,
-                werteVorrat = werteVorrat,
-                variablenQuellen = listOf(
-                    VariablenQuelle(id, parameterName, werteVorrat, alsMethodenParameter = false),
-                ),
-            )
-        }
+    val aussagenVorschau = if (ausgang.art == MathematikAnschlussArten.Aussage.id) {
+        parameter["vorschauWert"]
+            ?.toBooleanStrictOrNull()
+            ?.let(::WahrheitsKonstante)
+    } else {
+        null
     }
+    return symbolischerEingangswert(
+        art = ausgang.art,
+        name = parameterName,
+        knotenId = id,
+        aussagenVorschau = aussagenVorschau,
+    )
 }
