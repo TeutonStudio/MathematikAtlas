@@ -1,21 +1,18 @@
 package de.TeutonStudio.MathematikAtlas
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
-import de.TeutonStudio.MathematikKartenAdapter.DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG
-import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
-import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ReellesIntervallDefinitionsKarteTest {
     @Test
-    fun `Definitionskarte enthält die vollständige Fallstruktur ohne Selbstbezug`() {
+    fun `Definitionskarte verwendet die vollständige Filterstruktur ohne Selbstbezug`() {
         val karte = TestDefinitionsKarten
-            .fürKnoten(MathematikKnotenVorlagen.ReellesIntervall.erzeuge(de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt.Zero))
+            .fürKnoten(MathematikKnotenVorlagen.ReellesIntervall.erzeuge(GraphPunkt.Zero))
             ?.reiter
             ?.single { it.rolle == KonzeptReiterRolle.Definition }
             ?.karte
@@ -27,45 +24,36 @@ class ReellesIntervallDefinitionsKarteTest {
         assertEquals(2, karte.knoten.count { it.art == MathematikKnotenVorlagen.KleinerGleich.art })
         assertEquals(2, karte.knoten.count { it.art == MathematikKnotenVorlagen.Fall.art })
         assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.Konjunktion.art })
-        assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.Lösungsmenge.art })
-        assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.Darstellungsoptimierung.art })
+        assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.TermZuMethode.art })
+        assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.ReelleZahlen.art })
+        assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.Mengenfilter.art })
         assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.KartenAusgang.art })
+        assertEquals(16, karte.knoten.size)
+        assertEquals(20, karte.verbindungen.size)
 
         val eingänge = karte.knoten
             .filter { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART }
             .sortedBy { knoten -> knoten.position.y }
         assertEquals(listOf("links", "linksOffen", "rechts", "rechtsOffen"), eingänge.map { it.name })
 
-        val darstellung = karte.knoten.single { it.art == MathematikKnotenVorlagen.Darstellungsoptimierung.art }
-        assertEquals(DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG, darstellung.parameter["latex"])
+        val variable = karte.knoten.single { it.art == MathematikKnotenVorlagen.Variable.art }
+        assertEquals("x", variable.parameter["name"])
+        assertEquals("R", variable.parameter["werteVorrat"])
+        assertEquals(GraphPunkt(240.20312f, 374.42264f), variable.position)
+
+        val konjunktion = karte.knoten.single { it.art == MathematikKnotenVorlagen.Konjunktion.art }
+        val termZuMethode = karte.knoten.single { it.art == MathematikKnotenVorlagen.TermZuMethode.art }
+        val reelleZahlen = karte.knoten.single { it.art == MathematikKnotenVorlagen.ReelleZahlen.art }
+        val mengenfilter = karte.knoten.single { it.art == MathematikKnotenVorlagen.Mengenfilter.art }
+        val ausgang = karte.knoten.single { it.art == MathematikKnotenVorlagen.KartenAusgang.art }
+
+        assertTrue(karte.istVerbunden(konjunktion, "aussage", termZuMethode, "term"))
+        assertTrue(karte.istVerbunden(termZuMethode, "methode", mengenfilter, "methode"))
+        assertTrue(karte.istVerbunden(reelleZahlen, "menge", mengenfilter, "menge"))
+        assertTrue(karte.istVerbunden(mengenfilter, "menge", ausgang, "wert"))
         assertEquals(
             1,
-            karte.knoten.single { it.art == MathematikKnotenVorlagen.KartenAusgang.art }
-                .anschlüsse.count { it.richtung == AnschlussRichtung.Eingang },
-        )
-    }
-
-    @Test
-    fun `Definitionsausgabe verwendet Doppelpunkt und verkettete Relationen`() {
-        val x = Variable("x")
-        val a = Variable("a")
-        val b = Variable("b")
-        val menge = DefinierteMenge(
-            variablen = listOf(GebundeneMengenVariable(x, ReelleZahlen)),
-            bedingung = Konjunktion(
-                listOf(
-                    Vergleich(a, VergleichsArt.Kleiner, x),
-                    Vergleich(x, VergleichsArt.KleinerGleich, b),
-                ),
-            ),
-        )
-
-        assertEquals(
-            "\\left\\{x\\in\\mathbb{R}:a < x \\le b\\right\\}",
-            BedingterWert(
-                objekt = menge,
-                latexDarstellung = DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG,
-            ).anzeigeLatex(),
+            ausgang.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang },
         )
     }
 
@@ -80,5 +68,23 @@ class ReellesIntervallDefinitionsKarteTest {
             zweite.knoten.flatMap { it.anschlüsse }.map { it.id },
         )
         assertEquals(erste.verbindungen.map { it.id }, zweite.verbindungen.map { it.id })
+    }
+}
+
+private fun KartenDaten.istVerbunden(
+    von: KnotenDaten,
+    vonName: String,
+    zu: KnotenDaten,
+    zuName: String,
+): Boolean {
+    val vonAnschluss = von.anschlüsse.single {
+        it.name == vonName && it.richtung == AnschlussRichtung.Ausgang
+    }
+    val zuAnschluss = zu.anschlüsse.single {
+        it.name == zuName && it.richtung == AnschlussRichtung.Eingang
+    }
+    return verbindungen.any { verbindung ->
+        verbindung.von == AnschlussVerweis(von.id, vonAnschluss.id) &&
+            verbindung.zu == AnschlussVerweis(zu.id, zuAnschluss.id)
     }
 }
