@@ -9,6 +9,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKartenAdapter.MENGENKONSTRUKTOR_ART
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
@@ -37,6 +38,10 @@ class MathematikKnotenRenderer(
             val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
             val objekt = ausgabe?.objekt
             when {
+                knoten.art == MENGENKONSTRUKTOR_ART -> LatexText(
+                    mengenkonstruktorFormel(knoten),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 knoten.art == "mathematik.variable" -> LatexText(
                     variablenFormel(knoten),
                     style = MaterialTheme.typography.bodyLarge,

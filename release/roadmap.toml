@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.7.x"
-current_version = "2.7.2"
+current_series = "2.8.x"
+current_version = "2.8.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -253,3 +253,15 @@ branch = "agent/v2.7.2-ungleichheits-latex"
 kind = "fix"
 version_axis = "x"
 reason = "Verwendet für Ungleichheiten kanonisch den unterstützten LaTeX-Befehl neq und rendert den Alias ne rückwärtskompatibel als Ungleichheitszeichen, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.8.0"
+title = "Gekoppelte Mengendefinition"
+roadmap = "v2.8.x Symbolische Mengenkonstruktionen"
+status = "released"
+previous_release = "2.7.2"
+branch = "release/v2.8.0-mengendefinition"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.mengenkonstruktor", "mathematik.mengendefinator"]
+reason = "Führt zwei gekoppelte Knotentypen für symbolische Mengendefinitionen ein und erzeugt sie über einen gemeinsamen Dialogeintrag ohne ungültige Direktverbindung."

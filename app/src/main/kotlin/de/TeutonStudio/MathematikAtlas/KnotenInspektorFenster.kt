@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
@@ -58,6 +59,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
             StandardwerteEditor(knoten, zustand)
+            if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
             KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
                 inspektor.Inhalt(
                     knoten,
@@ -75,7 +77,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                                 ),
                             )
                         }
-                        override fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>) {
+                        override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) {
                             zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
                         }
                         override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
@@ -85,8 +87,11 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 )
                 Spacer(Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = zustand.editor::dupliziereAuswahl) { Text("Duplizieren") }
-                    Button(onClick = zustand.editor::löscheAuswahl, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Löschen") }
+                    OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
+                    Button(
+                        onClick = zustand::löscheAuswahlMitMengendefinition,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    ) { Text("Löschen") }
                 }
                 return@Column
             }
@@ -130,8 +135,12 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
             }
             knoten.parameter.filterKeys {
-                it !in setOf("festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite", "werteVorrat", "zielmenge", "argumentReihenfolge") &&
-                    !it.startsWith(STANDARDWERT_PREFIX)
+                it !in setOf(
+                    "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
+                    "werteVorrat", "zielmenge", "argumentReihenfolge", MENGENDEFINITION_PAAR,
+                    MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
+                    MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
+                ) && !it.startsWith(STANDARDWERT_PREFIX)
             }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
@@ -151,11 +160,96 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
             Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = zustand.editor::dupliziereAuswahl) { Text("Duplizieren") }
-                Button(onClick = zustand.editor::löscheAuswahl, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Löschen") }
+                OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
+                Button(
+                    onClick = zustand::löscheAuswahlMitMengendefinition,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) { Text("Löschen") }
             }
         }
     }
+}
+
+@Composable
+private fun MengenkonstruktorEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
+    HorizontalDivider()
+    Text("Mengendefinition", style = MaterialTheme.typography.titleSmall)
+    ParameterTextFeld("Mengenname", knoten, MENGENDEFINITION_MENGENNAME, "M", zustand)
+    ParameterTextFeld("Elementname", knoten, MENGENDEFINITION_ELEMENTNAME, "x", zustand)
+
+    val aktuelleArt = AnschlussArtId(
+        knoten.parameter[MENGENDEFINITION_ELEMENTART]?.takeIf(String::isNotBlank)
+            ?: MathematikAnschlussArten.Zahl.id.wert,
+    )
+    Text("Elementtyp", style = MaterialTheme.typography.titleSmall)
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        listOf(
+            "Zahl" to MathematikAnschlussArten.Zahl.id,
+            "Aussage" to MathematikAnschlussArten.Aussage.id,
+        ).forEach { (name, art) ->
+            FilterChip(
+                selected = aktuelleArt == art,
+                onClick = {
+                    val elementAusgang = knoten.anschlüsse.firstOrNull {
+                        it.richtung == AnschlussRichtung.Ausgang && it.name == "element"
+                    }
+                    if (elementAusgang == null) return@FilterChip
+                    val neueMenge = when {
+                        art == MathematikAnschlussArten.Aussage.id -> "Wahrheitswerte"
+                        knoten.parameter[MENGENDEFINITION_ELEMENTMENGE] == "Wahrheitswerte" -> "R"
+                        else -> knoten.parameter[MENGENDEFINITION_ELEMENTMENGE] ?: "R"
+                    }
+                    zustand.editor.führeAus(
+                        KartenAktion.KnotenKonfigurationErsetzen(
+                            id = knoten.id,
+                            parameter = knoten.parameter + mapOf(
+                                MENGENDEFINITION_ELEMENTART to art.wert,
+                                MENGENDEFINITION_ELEMENTMENGE to neueMenge,
+                            ),
+                            anschlüsse = knoten.anschlüsse,
+                        ),
+                    )
+                    zustand.editor.ändereAnschlussArt(
+                        AnschlussVerweis(knoten.id, elementAusgang.id),
+                        art,
+                    )
+                },
+                label = { Text(name) },
+            )
+        }
+    }
+    if (aktuelleArt != MathematikAnschlussArten.Aussage.id) {
+        ParameterTextFeld("Elementmenge", knoten, MENGENDEFINITION_ELEMENTMENGE, "R", zustand)
+    } else {
+        Text("Elementmenge: {Wahr, Lüge}", style = MaterialTheme.typography.bodySmall)
+    }
+    Text(
+        "Der Elementausgang wird durch eine Prädikatkette geführt. Nur bei Elementtyp Aussage darf er direkt an den Aussageeingang des Definators angeschlossen werden.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun ParameterTextFeld(
+    label: String,
+    knoten: KnotenDaten,
+    schlüssel: String,
+    standard: String,
+    zustand: AtlasZustand,
+) {
+    val wert = knoten.parameter[schlüssel] ?: standard
+    var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it
+            zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+        },
+        label = { Text(label) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable

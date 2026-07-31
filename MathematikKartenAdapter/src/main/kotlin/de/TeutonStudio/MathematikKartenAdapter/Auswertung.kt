@@ -33,6 +33,12 @@ data class VariablenQuelle(
     val werteVorrat: MengenAusdruck,
     /** Nur echte Parameterknoten werden in die Signatur einer mit „Term zu Methode“ erzeugten Methode übernommen. */
     val alsMethodenParameter: Boolean = true,
+    /** Semantische Bindung eines gekoppelten Konstruktor-/Definator-Paares. */
+    val bindungsId: String? = null,
+    /** Sichtbarer Name des durch die Bindung erzeugten Objekts, etwa der Mengenname M. */
+    val bindungsName: String? = null,
+    /** Anschlussart des gebundenen Elements; relevant für nichtnumerische Elemente. */
+    val gebundeneArt: AnschlussArtId? = null,
 )
 
 /** Konservativer Laufzeitnachweis für die Zulässigkeit reeller Zahloperationen. */
@@ -80,9 +86,11 @@ class MathematikAuswerterRegister {
     fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = wert }
     fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
+        MENGENKONSTRUKTOR_ART -> MengenkonstruktorAuswerter
+        MENGENDEFINATOR_ART -> MengendefinatorAuswerter
         else -> auswerter[art]
     }
-    fun arten(): Set<KnotenArtId> = auswerter.keys
+    fun arten(): Set<KnotenArtId> = auswerter.keys + setOf(MENGENKONSTRUKTOR_ART, MENGENDEFINATOR_ART)
 }
 
 fun interface KartenQuelle {
