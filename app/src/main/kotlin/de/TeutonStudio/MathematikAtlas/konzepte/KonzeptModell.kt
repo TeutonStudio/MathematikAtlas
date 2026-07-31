@@ -113,6 +113,11 @@ object TestDefinitionsKarten {
             reellesIntervallDefinitionsKarte(vorlage, variantenIndex)
         MathematikKnotenVorlagen.ORDNUNGSRELATION_ART ->
             ordnungsrelationDefinitionsKarte(vorlage, variantenIndex)
+        MathematikKnotenVorlagen.Vereinigung.art,
+        MathematikKnotenVorlagen.Schnitt.art,
+        MathematikKnotenVorlagen.Differenz.art,
+        MengenraumKnotenVorlagen.SymmetrischeDifferenz.art ->
+            mengenoperatorDefinitionsKarte(vorlage, variantenIndex)
         else -> generischeDefinitionsKarte(vorlage, variantenIndex)
     }
 
