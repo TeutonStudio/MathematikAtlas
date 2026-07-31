@@ -79,6 +79,18 @@ jobs:
               raise SystemExit('Die ursprüngliche replace-Hilfe wurde im Patchskript nicht gefunden.')
           script = script.replace(alte_hilfe, dedent(neue_hilfe), 1)
           exec(compile(script, '<ordnungsrelation-agent>', 'exec'))
+
+          definitionspfad = Path(
+              'app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/konzepte/'
+              'OrdnungsrelationDefinitionsKarte.kt'
+          )
+          definition = definitionspfad.read_text()
+          if definition.startswith('\\\n'):
+              definition = definition[2:]
+          definition = definition.replace('val null = ordnungsVorlagenKnoten(', 'val nullKnoten = ordnungsVorlagenKnoten(')
+          definition = definition.replace('listOf(null, einzelNull, differenz)', 'listOf(nullKnoten, einzelNull, differenz)')
+          definition = definition.replace('verbinde(null, "wert", einzelNull', 'verbinde(nullKnoten, "wert", einzelNull')
+          definitionspfad.write_text(definition)
           PY
 
       - name: Repository prüfen
