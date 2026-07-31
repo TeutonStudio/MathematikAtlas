@@ -13,7 +13,7 @@ data class IterierteVereinigung(val methode: Funktion, val indexMenge: MengenAus
 }
 
 data class IteriertesKartesischesProdukt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
-    override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLateX()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
 }
 
 /** Die Grundmenge wird ausschließlich aus der validierten Zielmenge der Methode abgeleitet. */
