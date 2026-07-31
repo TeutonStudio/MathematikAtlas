@@ -318,19 +318,19 @@ object MathematikKnotenVorlagen {
         listOf(eingang("links", links, 0), eingang("rechts", rechts, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
 
-private fun vergleichVorlage(name: String, zeichen: String, relation: String) = KnotenVorlage(
-    ORDNUNGSRELATION_ART,
-    name,
-    "Aussagen: Zahlenprädikate",
-    "Vergleicht zwei Zahlterme mit $zeichen.",
-    GraphGröße(220f, 110f),
-    listOf(
-        eingang("links", MathematikAnschlussArten.Zahl.id, 0),
-        eingang("rechts", MathematikAnschlussArten.Zahl.id, 1),
-        ausgang("aussage", MathematikAnschlussArten.Aussage.id),
-    ),
-    mapOf("relation" to relation),
-)
+    private fun vergleichVorlage(name: String, zeichen: String, relation: String) = KnotenVorlage(
+        ORDNUNGSRELATION_ART,
+        name,
+        "Aussagen: Zahlenprädikate",
+        "Vergleicht zwei Zahlterme mit $zeichen.",
+        GraphGröße(220f, 110f),
+        listOf(
+            eingang("links", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("rechts", MathematikAnschlussArten.Zahl.id, 1),
+            ausgang("aussage", MathematikAnschlussArten.Aussage.id),
+        ),
+        mapOf("relation" to relation),
+    )
     private fun mengenAussagenVorlage(art: String, name: String, beschreibung: String) = aussagenVorlage(art, name, beschreibung, MathematikAnschlussArten.Menge.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
     private fun mengenOperatorVorlage(art: String, name: String, beschreibung: String, zeichen: String) = KnotenVorlage(
         art, name, "Mengen", beschreibung, GraphGröße(230f, 120f),
@@ -343,18 +343,18 @@ private fun vergleichVorlage(name: String, zeichen: String, relation: String) = 
         mapOf("modus" to modus, "festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     private fun methodenAnalysisVorlage(art: String, name: String, beschreibung: String, funktion: AnschlussArtId) = KnotenVorlage(art, name, "Abbildungen", beschreibung, GraphGröße(260f, 105f), listOf(eingang("methode", funktion), ausgang("methode", funktion)))
-private fun iterierteAussagenVorlage(name: String, beschreibung: String, operator: String) = KnotenVorlage(
-    ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,
-    name,
-    "Operatoren",
-    beschreibung,
-    GraphGröße(270f, 120f),
-    listOf(
-        eingang("methode", MathematikAnschlussArten.AussageFunktion.id),
-        eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1),
-        ausgang("aussage", MathematikAnschlussArten.Aussage.id),
-    ),
-    mapOf("operator" to operator),
-)
+    private fun iterierteAussagenVorlage(name: String, beschreibung: String, operator: String) = KnotenVorlage(
+        ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,
+        name,
+        "Operatoren",
+        beschreibung,
+        GraphGröße(270f, 120f),
+        listOf(
+            eingang("methode", MathematikAnschlussArten.AussageFunktion.id),
+            eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1),
+            ausgang("aussage", MathematikAnschlussArten.Aussage.id),
+        ),
+        mapOf("operator" to operator),
+    )
     private fun aussagenOperatorVorlage(art: String, name: String, beschreibung: String) = KnotenVorlage(art, name, "Aussage", beschreibung, GraphGröße(230f, 115f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0, true), eingang("b", MathematikAnschlussArten.Aussage.id, 1, true), ausgang("aussage", MathematikAnschlussArten.Aussage.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"))
 }

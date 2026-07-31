@@ -77,12 +77,12 @@ object TestDefinitionsKarten {
         alle.flatMap { konzept -> konzept.knotenArten.map { art -> art to konzept } }.toMap()
     }
 
-fun fürKnoten(knoten: KnotenDaten): KonzeptDefinition? =
-    if (knoten.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART) {
-        OrdnungsrelationDefinitionsKarten.fürKnoten(knoten)
-    } else {
-        nachArt[knoten.art]
-    }
+    fun fürKnoten(knoten: KnotenDaten): KonzeptDefinition? =
+        if (knoten.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART) {
+            OrdnungsrelationDefinitionsKarten.fürKnoten(knoten)
+        } else {
+            nachArt[knoten.art]
+        }
 
     fun validierungsFehler(): List<String> = validierungsFehler(alle)
 
