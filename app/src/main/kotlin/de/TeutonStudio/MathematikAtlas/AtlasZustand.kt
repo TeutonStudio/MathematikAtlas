@@ -218,7 +218,7 @@ class AtlasZustand(context: Context) {
         if (aktiveKnotenKategorie() == null) ausgewählteKnotenKategorie = null
     }
 
-    private fun alleKnotenVorlagen(): List<KnotenVorlage> = MathematikKnotenVorlagen.alle + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle + gruppenVorlagen()
+    private fun alleKnotenVorlagen(): List<KnotenVorlage> = alleMathematikKnotenVorlagen() + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle + gruppenVorlagen()
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }
@@ -283,7 +283,8 @@ class AtlasZustand(context: Context) {
         return null
     }
 
-    private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten = migriereAssoziativeKnoten(karte)
+    private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten =
+        migriereAssoziativeKnoten(migriereAussagenOperatoren(karte))
 
     private fun werteAus() {
         auswertung = if (editor.karte.knoten.any { it.art.startsWith("konzept.") }) {
