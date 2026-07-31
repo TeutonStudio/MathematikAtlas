@@ -27,7 +27,18 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Änderungen anwenden
-        run: python3 scripts/bootstrap_v2111.py
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/bootstrap_v2111.py')
+          text = p.read_text()
+          text = text.replace(
+              "append_once('release/roadmap.toml', 'version = \"2.11.1\"',",
+              "append_once('release/roadmap.toml', 'title = \"Versionierte KartenKnoten und Karten-Drag-and-drop\"',",
+          )
+          p.write_text(text)
+          PY
+          python3 scripts/bootstrap_v2111.py
       - name: Releaseplan prüfen
         run: |
           python3 scripts/pruefe_releaseplan.py
