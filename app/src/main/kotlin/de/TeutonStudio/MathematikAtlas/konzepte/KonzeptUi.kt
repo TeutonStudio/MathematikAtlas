@@ -25,6 +25,21 @@ internal fun KnotenKonzeptDialog(
     knoten: KnotenDaten,
     schließen: () -> Unit,
 ) {
+    val kartenTabellenQuelle = remember(knoten.kartenVerweis, knoten.anschlüsse) {
+        knoten.kartenVerweis
+            ?.let(zustand.speicher::lade)
+            ?.let { karte -> ermittleKartenWahrheitstabellenQuelle(zustand.anschlussArten, knoten, karte) }
+    }
+    if (kartenTabellenQuelle != null) {
+        KartenWahrheitstabellenDialog(
+            zustand = zustand,
+            knoten = knoten,
+            quelle = kartenTabellenQuelle,
+            schließen = schließen,
+        )
+        return
+    }
+
     val besitztAussagenDialog = AussagenOperatorArt.für(knoten) != null ||
         knoten.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
     var definitionAnzeigen by remember(knoten.id) { mutableStateOf(false) }
