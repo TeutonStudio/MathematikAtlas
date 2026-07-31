@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.9.x"
-current_version = "2.9.0"
+current_version = "2.9.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -277,3 +277,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.leereMenge"]
 reason = "Entfernt die Obermenge aus dem Mengenkonstruktor, öffnet den Elementtyp für alle Anschlussarten, normalisiert eindeutig endliche Prädikatsmengen und ergänzt einen separat erzeugbaren Knoten für die leere Menge."
+
+[[releases]]
+version = "2.9.1"
+title = "Typisierte Mengen-Karteneingänge"
+roadmap = "v2.9.x Symbolische Mengenkonstruktionen"
+status = "released"
+previous_release = "2.9.0"
+branch = "release/v2.9.1-mengenkarten-eingaenge"
+kind = "fix"
+version_axis = "x"
+reason = "Erzeugt für öffentliche Karten-Eingänge Symbole passend zu ihrer Anschlussart, sodass Mengenparameter in Elementbeziehungen und gekoppelten Prädikatsdefinitionen auswertbar bleiben."
