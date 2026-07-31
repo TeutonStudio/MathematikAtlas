@@ -7,7 +7,7 @@ if skript.exists():
     .distinctBy { it.second }
 '''
     neu = '''    .distinctBy { it.second }
-    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }, { it.first.id.wert }))
+    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }))
 '''
     if text.count(alt) != 1:
         raise RuntimeError("Die Schnittstellen-Deduplizierung konnte nicht eindeutig korrigiert werden.")
