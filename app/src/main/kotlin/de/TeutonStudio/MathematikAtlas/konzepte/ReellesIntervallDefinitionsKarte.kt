@@ -12,9 +12,23 @@ internal fun reellesIntervallDefinitionsKarte(
     val prefix = "definition-reelles-intervall-$variantenIndex"
 
     val links = dokumentationsEingang(prefix, "links", MathematikAnschlussArten.Zahl.id, GraphPunkt(20f, 40f), 0)
-    val linksOffen = dokumentationsEingang(prefix, "linksOffen", MathematikAnschlussArten.Aussage.id, GraphPunkt(20f, 230f), 1)
+    val linksOffen = dokumentationsEingang(
+        prefix,
+        "linksOffen",
+        MathematikAnschlussArten.Aussage.id,
+        GraphPunkt(20f, 230f),
+        1,
+        vorschauWahrheitswert = false,
+    )
     val rechts = dokumentationsEingang(prefix, "rechts", MathematikAnschlussArten.Zahl.id, GraphPunkt(20f, 610f), 2)
-    val rechtsOffen = dokumentationsEingang(prefix, "rechtsOffen", MathematikAnschlussArten.Aussage.id, GraphPunkt(20f, 800f), 3)
+    val rechtsOffen = dokumentationsEingang(
+        prefix,
+        "rechtsOffen",
+        MathematikAnschlussArten.Aussage.id,
+        GraphPunkt(20f, 800f),
+        3,
+        vorschauWahrheitswert = false,
+    )
 
     val x = vorlagenKnoten(
         prefix,
@@ -134,6 +148,7 @@ private fun dokumentationsEingang(
     art: AnschlussArtId,
     position: GraphPunkt,
     index: Int,
+    vorschauWahrheitswert: Boolean? = null,
 ): KnotenDaten {
     val id = KnotenId("$prefix-eingang-$index")
     return KnotenDaten(
@@ -151,7 +166,12 @@ private fun dokumentationsEingang(
                 art = art,
             ),
         ),
-        parameter = mapOf("typ" to art.wert, "variabel" to "false", "folgtEingang" to ""),
+        parameter = buildMap {
+            put("typ", art.wert)
+            put("variabel", "false")
+            put("folgtEingang", "")
+            vorschauWahrheitswert?.let { put("vorschauWert", it.toString()) }
+        },
     )
 }
 
