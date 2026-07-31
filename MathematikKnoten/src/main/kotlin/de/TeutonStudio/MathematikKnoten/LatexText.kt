@@ -80,6 +80,13 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         while (position < quelltext.length && quelltext[position].isLetter()) position++
         when (val befehl = quelltext.substring(start, position)) {
             "frac" -> schreibeBruch()
+            "stackrel" -> schreibeStackrel()
+            "Set" -> {
+                ausgabe.append('{')
+                schreibeArgument()
+                ausgabe.append('}')
+            }
+            "mathop", "mathbin" -> schreibeArgument()
             "mathbb" -> ausgabe.append(zahlbereich(liesGruppenText()))
             "begin" -> when (liesGruppenText()) {
                 "pmatrix" -> ausgabe.append('[')
@@ -101,6 +108,21 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         ausgabe.append(")⁄(")
         mitStil(SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 0.86.em)) { schreibeArgument() }
         ausgabe.append(')')
+    }
+
+    private fun schreibeStackrel() {
+        val oben = liesGruppenText()
+        val unten = liesGruppenText()
+        when (oben to unten) {
+            "\\circ" to "\\lor" -> ausgabe.append("∨̊")
+            "\\circ" to "\\bigvee" -> ausgabe.append("⋁̊")
+            else -> {
+                mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.66.em)) {
+                    LatexParser(oben, ausgabe).schreibe()
+                }
+                LatexParser(unten, ausgabe).schreibe()
+            }
+        }
     }
 
     private fun liesGruppenText(): String {
@@ -136,8 +158,9 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
         "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "ge" to "≥",
         "varnothing" to "∅", "top" to "wahr", "bot" to "falsch", "neg" to "¬", "land" to "∧", "lor" to "∨",
-        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂",
-        "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦", "implies" to "⇒", "iff" to "⇔",
+        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁",
+        "circ" to "∘", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
+        "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
         "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
         "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",
         "lambda" to "λ", "mu" to "μ", "rho" to "ρ", "sigma" to "σ", "phi" to "φ", "omega" to "ω",
