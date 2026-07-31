@@ -5,6 +5,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.Abbildungsmenge
+import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Matrizenraum
 import de.TeutonStudio.MathematikRechenSystem.kern.ModuloZahlenraum
 import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
@@ -27,6 +28,17 @@ class MengenraumKnotenTest {
             assertTrue(knoten.anschlüsse.any { it.name == "menge" && it.richtung == AnschlussRichtung.Ausgang })
             assertNotNull(register.finde(knoten.art), "Auswerter für ${knoten.art} fehlt.")
         }
+    }
+
+    @Test
+    fun `Leere Menge Knoten gibt die kanonische leere Menge aus`() {
+        val knoten = MengenraumKnotenVorlagen.LeereMenge.erzeuge(GraphPunkt.Zero)
+        val menge = register.finde(knoten.art)!!.auswerten(
+            KnotenAuswertungsKontext(knoten, emptyMap(), RechenKontext()),
+        ).ausgaben.getValue("menge").objekt
+
+        assertEquals(LeereMenge, menge)
+        assertEquals("\\varnothing", menge.zuLatex())
     }
 
     @Test
