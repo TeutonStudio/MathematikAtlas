@@ -12,7 +12,7 @@ internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
             "aussage" to BedingterWert(
                 objekt = Ungleichheit(links.objekt, rechts.objekt),
                 annahmen = links.annahmen + rechts.annahmen,
-                latexDarstellung = "${links.anzeigeLatex()} \\ne ${rechts.anzeigeLatex()}",
+                latexDarstellung = "${links.anzeigeLatex()} \\neq ${rechts.anzeigeLatex()}",
             ),
         ))
     }
@@ -83,7 +83,7 @@ internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
         val latex = if (nullErsatz == null) {
             "\\frac{${dividendWert.anzeigeLatex()}}{${divisorWert.anzeigeLatex()}}"
         } else {
-            """\begin{cases}${nullErsatz.anzeigeLatex()},&${divisorWert.anzeigeLatex()}=0\\\frac{${dividendWert.anzeigeLatex()}}{${divisorWert.anzeigeLatex()}},&${divisorWert.anzeigeLatex()}\ne0\end{cases}"""
+            """\begin{cases}${nullErsatz.anzeigeLatex()},&${divisorWert.anzeigeLatex()}=0\\\frac{${dividendWert.anzeigeLatex()}}{${divisorWert.anzeigeLatex()}},&${divisorWert.anzeigeLatex()}\neq0\end{cases}"""
         }
         KnotenAuswertungsErgebnis(mapOf(
             "wert" to basis.copy(
