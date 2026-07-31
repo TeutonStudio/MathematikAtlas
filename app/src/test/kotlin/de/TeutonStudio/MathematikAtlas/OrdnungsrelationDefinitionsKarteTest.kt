@@ -47,6 +47,7 @@ class OrdnungsrelationDefinitionsKarteTest {
         assertEquals(MathematikKnotenVorlagen.ORDNUNGSRELATION_ART, neu.art)
         assertEquals("kleiner", neu.parameter["relation"])
         assertEquals(alt.id, neu.id)
+        assertEquals(alt.name, neu.name)
         assertEquals(alt.anschlüsse, neu.anschlüsse)
         assertEquals(listOf(verbindung), migriert.verbindungen)
     }
@@ -66,6 +67,14 @@ class OrdnungsrelationDefinitionsKarteTest {
         assertTrue(größerKarte.id.wert.contains("größerGleich"))
         assertEquals(1, kleinerKarte.knoten.count { it.art == MathematikKnotenVorlagen.Differenz.art })
         assertEquals(0, größerKarte.knoten.count { it.art == MathematikKnotenVorlagen.Differenz.art })
+        assertEquals(1, kleinerKarte.knoten.count {
+            it.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART &&
+                it.parameter["operator"] == "disjunktion"
+        })
+        assertEquals(1, größerKarte.knoten.count {
+            it.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART &&
+                it.parameter["operator"] == "disjunktion"
+        })
         assertFalse(kleinerKarte.knoten.any { it.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART })
         assertFalse(größerKarte.knoten.any { it.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART })
     }
