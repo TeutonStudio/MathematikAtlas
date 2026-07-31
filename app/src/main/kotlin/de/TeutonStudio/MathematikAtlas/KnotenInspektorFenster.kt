@@ -170,6 +170,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MengenkonstruktorEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
     HorizontalDivider()
@@ -177,54 +178,58 @@ private fun MengenkonstruktorEditor(knoten: KnotenDaten, zustand: AtlasZustand) 
     ParameterTextFeld("Mengenname", knoten, MENGENDEFINITION_MENGENNAME, "M", zustand)
     ParameterTextFeld("Elementname", knoten, MENGENDEFINITION_ELEMENTNAME, "x", zustand)
 
-    val aktuelleArt = AnschlussArtId(
+    val aktuelleArtId = AnschlussArtId(
         knoten.parameter[MENGENDEFINITION_ELEMENTART]?.takeIf(String::isNotBlank)
             ?: MathematikAnschlussArten.Zahl.id.wert,
     )
+    val aktuelleArt = MathematikAnschlussArten.alle.firstOrNull { it.id == aktuelleArtId }
+    var geöffnet by remember(knoten.id, aktuelleArtId) { mutableStateOf(false) }
+
     Text("Elementtyp", style = MaterialTheme.typography.titleSmall)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-        listOf(
-            "Zahl" to MathematikAnschlussArten.Zahl.id,
-            "Aussage" to MathematikAnschlussArten.Aussage.id,
-        ).forEach { (name, art) ->
-            FilterChip(
-                selected = aktuelleArt == art,
-                onClick = {
-                    val elementAusgang = knoten.anschlüsse.firstOrNull {
-                        it.richtung == AnschlussRichtung.Ausgang && it.name == "element"
-                    }
-                    if (elementAusgang == null) return@FilterChip
-                    val neueMenge = when {
-                        art == MathematikAnschlussArten.Aussage.id -> "Wahrheitswerte"
-                        knoten.parameter[MENGENDEFINITION_ELEMENTMENGE] == "Wahrheitswerte" -> "R"
-                        else -> knoten.parameter[MENGENDEFINITION_ELEMENTMENGE] ?: "R"
-                    }
-                    zustand.editor.führeAus(
-                        KartenAktion.KnotenKonfigurationErsetzen(
-                            id = knoten.id,
-                            parameter = knoten.parameter + mapOf(
-                                MENGENDEFINITION_ELEMENTART to art.wert,
-                                MENGENDEFINITION_ELEMENTMENGE to neueMenge,
+    ExposedDropdownMenuBox(expanded = geöffnet, onExpandedChange = { geöffnet = it }) {
+        OutlinedTextField(
+            value = aktuelleArt?.name ?: aktuelleArtId.wert,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Anschlussart") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = geöffnet) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(expanded = geöffnet, onDismissRequest = { geöffnet = false }) {
+            MathematikAnschlussArten.alle.forEach { art ->
+                DropdownMenuItem(
+                    text = { Text(art.name) },
+                    onClick = {
+                        geöffnet = false
+                        val elementAusgang = knoten.anschlüsse.firstOrNull {
+                            it.richtung == AnschlussRichtung.Ausgang && it.name == "element"
+                        } ?: return@DropdownMenuItem
+                        zustand.editor.führeAus(
+                            KartenAktion.KnotenKonfigurationErsetzen(
+                                id = knoten.id,
+                                parameter = (knoten.parameter - MENGENDEFINITION_ELEMENTMENGE) +
+                                    (MENGENDEFINITION_ELEMENTART to art.id.wert),
+                                anschlüsse = knoten.anschlüsse,
                             ),
-                            anschlüsse = knoten.anschlüsse,
-                        ),
-                    )
-                    zustand.editor.ändereAnschlussArt(
-                        AnschlussVerweis(knoten.id, elementAusgang.id),
-                        art,
-                    )
-                },
-                label = { Text(name) },
-            )
+                        )
+                        zustand.editor.ändereAnschlussArt(
+                            AnschlussVerweis(knoten.id, elementAusgang.id),
+                            art.id,
+                        )
+                    },
+                )
+            }
         }
     }
-    if (aktuelleArt != MathematikAnschlussArten.Aussage.id) {
-        ParameterTextFeld("Elementmenge", knoten, MENGENDEFINITION_ELEMENTMENGE, "R", zustand)
-    } else {
-        Text("Elementmenge: {Wahr, Lüge}", style = MaterialTheme.typography.bodySmall)
-    }
     Text(
-        "Der Elementausgang wird durch eine Prädikatkette geführt. Nur bei Elementtyp Aussage darf er direkt an den Aussageeingang des Definators angeschlossen werden.",
+        "Der Konstruktor bindet nur Name und Anschlussart des Arguments. Eine Obermenge wird bei Bedarf als Prädikat wie x ∈ A in der Aussagekette modelliert; Operationen mit zwingender Obermenge melden deren Fehlen.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Text(
+        "Nur ein Aussageelement kann direkt an den Aussageeingang des Definators angeschlossen werden.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
