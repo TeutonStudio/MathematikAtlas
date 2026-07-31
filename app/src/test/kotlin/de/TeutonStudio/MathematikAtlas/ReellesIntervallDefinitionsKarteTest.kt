@@ -1,7 +1,11 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKartenAdapter.KartenAuswerter
+import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
+import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -11,12 +15,7 @@ import kotlin.test.assertTrue
 class ReellesIntervallDefinitionsKarteTest {
     @Test
     fun `Definitionskarte verwendet die vollständige Filterstruktur ohne Selbstbezug`() {
-        val karte = TestDefinitionsKarten
-            .fürKnoten(MathematikKnotenVorlagen.ReellesIntervall.erzeuge(GraphPunkt.Zero))
-            ?.reiter
-            ?.single { it.rolle == KonzeptReiterRolle.Definition }
-            ?.karte
-        assertNotNull(karte)
+        val karte = definitionsKarte()
 
         assertFalse(karte.knoten.any { it.art == MathematikKnotenVorlagen.ReellesIntervall.art })
         assertEquals(4, karte.knoten.count { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART })
@@ -35,6 +34,8 @@ class ReellesIntervallDefinitionsKarteTest {
             .filter { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART }
             .sortedBy { knoten -> knoten.position.y }
         assertEquals(listOf("links", "linksOffen", "rechts", "rechtsOffen"), eingänge.map { it.name })
+        assertEquals("false", eingänge.single { it.name == "linksOffen" }.parameter["vorschauWert"])
+        assertEquals("false", eingänge.single { it.name == "rechtsOffen" }.parameter["vorschauWert"])
 
         val variable = karte.knoten.single { it.art == MathematikKnotenVorlagen.Variable.art }
         assertEquals("x", variable.parameter["name"])
@@ -58,6 +59,28 @@ class ReellesIntervallDefinitionsKarteTest {
     }
 
     @Test
+    fun `Definitionskarte zeigt die geschlossene Relationskette und typisiert ihre Filtermethode`() {
+        val karte = definitionsKarte()
+        val auswertung = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister())
+            .werteKonzeptKarteAus(karte)
+
+        assertTrue(auswertung.fehler.isEmpty(), auswertung.fehler.joinToString())
+
+        val konjunktion = karte.knoten.single { it.art == MathematikKnotenVorlagen.Konjunktion.art }
+        val konjunktionsWert = auswertung.knoten.getValue(konjunktion.id).ausgaben.getValue("aussage")
+        assertEquals("links \\le x \\le rechts", konjunktionsWert.anzeigeLatex())
+
+        val termZuMethode = karte.knoten.single { it.art == MathematikKnotenVorlagen.TermZuMethode.art }
+        val methode = auswertung.knoten.getValue(termZuMethode.id).ausgaben.getValue("methode").objekt as Funktion
+        assertEquals(listOf(Variable("x")), methode.parameter)
+        assertEquals(ReelleZahlen, methode.werteVorräte.getValue("x"))
+        assertEquals(
+            EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false))),
+            methode.einzigeZielMenge,
+        )
+    }
+
+    @Test
     fun `Knoten und Anschluss IDs der Definition bleiben stabil`() {
         val erste = TestDefinitionsKarten.definitionsKarte(MathematikKnotenVorlagen.ReellesIntervall, 0)
         val zweite = TestDefinitionsKarten.definitionsKarte(MathematikKnotenVorlagen.ReellesIntervall, 0)
@@ -68,6 +91,15 @@ class ReellesIntervallDefinitionsKarteTest {
             zweite.knoten.flatMap { it.anschlüsse }.map { it.id },
         )
         assertEquals(erste.verbindungen.map { it.id }, zweite.verbindungen.map { it.id })
+    }
+
+    private fun definitionsKarte(): KartenDaten {
+        val karte = TestDefinitionsKarten
+            .fürKnoten(MathematikKnotenVorlagen.ReellesIntervall.erzeuge(GraphPunkt.Zero))
+            ?.reiter
+            ?.single { it.rolle == KonzeptReiterRolle.Definition }
+            ?.karte
+        return assertNotNull(karte)
     }
 }
 
