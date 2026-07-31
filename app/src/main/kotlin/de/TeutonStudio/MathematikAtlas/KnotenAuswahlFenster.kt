@@ -44,17 +44,24 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     "Zeilenvektor erzeugen",
                     "Erzeugt ein Tupel und verbindet es mit Tupel zu Spalte oder Tupel zu Zeile",
                 ).any { it.contains(zustand.suchText, ignoreCase = true) }
+                val zeigeMengendefinition = zustand.suchText.isBlank() || listOf(
+                    "Mengendefinition",
+                    "Mengenkonstruktor",
+                    "Mengendefinator",
+                    "Erzeugt ein gekoppeltes Paar für eine symbolische Menge mit Prädikat",
+                ).any { it.contains(zustand.suchText, ignoreCase = true) }
                 val rechnen = sichtbareVorlagen.filter(::istRechenVorlage)
                 val mengen = sichtbareVorlagen.filter { it.kategorie == "Mengen" && it.art !in mengenrechnungsArten }
                 val zahlen = sichtbareVorlagen.filter { it.art in setOf("mathematik.zahl", "mathematik.variable") }
                 val tupel = sichtbareVorlagen.filter { it.art == "mathematik.tupel" }
                 val matrizen = sichtbareVorlagen.filter { it.kategorie == "Matrizen" }
                 val geometrie = sichtbareVorlagen.filter { it.kategorie.startsWith("Geometrie:") }
+                val mengenZusatz = if (zeigeMengendefinition) 1 else 0
                 val tabs = listOf(
-                    KnotenAuswahlTab("Alle", sichtbareVorlagen),
+                    KnotenAuswahlTab("Alle", sichtbareVorlagen, zusätzlicheEinträge = mengenZusatz),
                     KnotenAuswahlTab("Rechnen", rechnen),
                     KnotenAuswahlTab("Zahlen", zahlen),
-                    KnotenAuswahlTab("Mengen", mengen),
+                    KnotenAuswahlTab("Mengen", mengen, zusätzlicheEinträge = mengenZusatz),
                     KnotenAuswahlTab("Tupel", tupel, zusätzlicheEinträge = if (zeigeTupelVektorAktionen) 2 else 0),
                     KnotenAuswahlTab("Abbildungen", sichtbareVorlagen.filter { it.kategorie in abbildungsKategorien }),
                     KnotenAuswahlTab("Vektoren", sichtbareVorlagen.filter { it.kategorie == "Vektoren" }),
@@ -77,6 +84,23 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     }
                 }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (aktiverTab.name in setOf("Alle", "Mengen") && zeigeMengendefinition) {
+                        item {
+                            Text(
+                                "Mengendefinition",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                            )
+                        }
+                        item {
+                            ZusammengesetzterEintrag(
+                                name = "Mengendefinition",
+                                beschreibung = "Erzeugt einen gekoppelten Mengenkonstruktor und Mengendefinator ohne ungültige Direktverbindung.",
+                                enabled = zustand.kannMengendefinitionEinfügen(),
+                                onClick = { zustand.fügeMengendefinitionEin(position) },
+                            )
+                        }
+                    }
                     if (aktiverTab.name == "Tupel" && zeigeTupelVektorAktionen) {
                         item {
                             Text(
@@ -86,7 +110,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                             )
                         }
                         item {
-                            TupelVektorEintrag(
+                            ZusammengesetzterEintrag(
                                 name = "Spaltenvektor erzeugen",
                                 beschreibung = "Erzeugt ein Tupel und verbindet es mit „Tupel zu Spalte“.",
                                 enabled = zustand.kannTupelVektorEinfügen(),
@@ -94,7 +118,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                             )
                         }
                         item {
-                            TupelVektorEintrag(
+                            ZusammengesetzterEintrag(
                                 name = "Zeilenvektor erzeugen",
                                 beschreibung = "Erzeugt ein Tupel und verbindet es mit „Tupel zu Zeile“.",
                                 enabled = zustand.kannTupelVektorEinfügen(),
@@ -130,7 +154,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
 }
 
 @Composable
-private fun TupelVektorEintrag(name: String, beschreibung: String, enabled: Boolean, onClick: () -> Unit) {
+private fun ZusammengesetzterEintrag(name: String, beschreibung: String, enabled: Boolean, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(name) },
         supportingContent = { Text(beschreibung) },
