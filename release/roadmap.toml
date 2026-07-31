@@ -150,7 +150,7 @@ previous_release = "2.3.17"
 branch = "agent/v2.3.18-standardwerte-konjugation"
 kind = "feature"
 version_axis = "x"
-reason = "Erweitert bestehende Rechenknoten und den Inspektor ohne einen neuen registrierten Knotentyp einzuführen."
+reason = "Erweitert bestehende Rechenknoten und den Inspektor ohne neuen registrierten Knotentyp."
 
 [[releases]]
 version = "2.4.0"
