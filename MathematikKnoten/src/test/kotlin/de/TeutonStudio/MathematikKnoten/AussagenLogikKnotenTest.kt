@@ -47,7 +47,7 @@ class AussagenLogikKnotenTest {
 
         assertIs<Negation>(ausgabe)
         assertEquals(Wahrheitswert.Lüge, ausgabe.entscheide().wahrheitswert)
-        assertEquals("\\neg\\left(\\top\\right)", ausgabe.zuLatex())
+        assertEquals("\\neg\\left(\\mathcal{Wahr}\\right)", ausgabe.zuLatex())
     }
 
     @Test
@@ -89,7 +89,10 @@ class AussagenLogikKnotenTest {
         ).ausgaben.getValue("aussage").objekt
 
         assertEquals(Wahrheitswert.Wahr, assertIs<de.TeutonStudio.MathematikRechenSystem.kern.Aussage>(ausgabe).entscheide().wahrheitswert)
-        assertEquals("\\top \\stackrel{\\circ}{\\lor} \\top \\stackrel{\\circ}{\\lor} \\top", ausgabe.zuLatex())
+        assertEquals(
+            "\\mathcal{Wahr} \\stackrel{\\circ}{\\lor} \\mathcal{Wahr} \\stackrel{\\circ}{\\lor} \\mathcal{Wahr}",
+            ausgabe.zuLatex(),
+        )
     }
 
     @Test
