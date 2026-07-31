@@ -20,6 +20,12 @@ class LatexTextTest {
     }
 
     @Test
+    fun `ungleichheitsbefehle werden als Symbol dargestellt`() {
+        assertEquals("2 ≠ -2", vereinfacheLatexAnzeige("2 \\neq -2"))
+        assertEquals("2 ≠ -2", vereinfacheLatexAnzeige("2 \\ne -2"))
+    }
+
+    @Test
     fun `unterstützt Fallunterscheidungen und Methodenpfeile`() {
         assertEquals("f:{\nℝ → ℂ\nx ↦ x}", vereinfacheLatexAnzeige("f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto x\\end{cases}"))
     }
