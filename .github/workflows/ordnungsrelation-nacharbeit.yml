@@ -172,7 +172,11 @@ jobs:
                       zu = AnschlussVerweis(alt.id, alt.anschlüsse.first { it.name == "links" }.id),
                   )
                   val migriert = migriereOrdnungsrelation(
-                      KartenDaten(knoten = listOf(alt), verbindungen = listOf(verbindung)),
+                      KartenDaten(
+                          name = "Migration",
+                          knoten = listOf(alt),
+                          verbindungen = listOf(verbindung),
+                      ),
                   )
                   val neu = migriert.knoten.single()
 
