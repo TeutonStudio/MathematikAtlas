@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.10.x"
-current_version = "2.10.0"
+current_version = "2.10.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -300,3 +300,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.negation"]
 reason = "Führt den separat erzeugbaren Negationsknoten ein, korrigiert Adjunktion und ihre Iteration zum ausschließenden Oder und ergänzt dynamische Wahrheitstabellen für Aussagenoperatoren."
+
+[[releases]]
+version = "2.10.1"
+title = "Universelle Wahrheitswerte und kompakte Wahrheitstabellen"
+roadmap = "v2.10.x Aussagenlogik und Definitionsdialoge"
+status = "released"
+previous_release = "2.10.0"
+branch = "agent/v2.10.1-wahrheitswerte-dialog"
+kind = "fix"
+version_axis = "x"
+reason = "Vereinheitlicht Wahr und Lüge als farbige mathcal-Symbole und passt Größe, Zentrierung sowie Trennlinien des Wahrheitstabellen-Dialogs an, ohne einen neuen Knotentyp einzuführen."
