@@ -14,6 +14,11 @@ fun inferiereZielmenge(
     is ZahlAusdruck -> inferiereZahlenWertevorrat(ausdruck, werteVorräte, annahmen)
     is AllgemeinerParameter -> werteVorräte[ausdruck.name]
         ?: error("Für den allgemeinen Parameter '${ausdruck.name}' fehlt ein Wertevorrat.")
+    is TypisiertesElement -> werteVorräte[ausdruck.name]
+        ?: error(
+            "Für das gebundene Element '${ausdruck.name}' der Anschlussart " +
+                "'${ausdruck.anschlussArt}' ist keine Obermenge festgelegt.",
+        )
     is Aussage -> Wahrheitsmenge
     is MengenAusdruck -> inferiereElementMenge(ausdruck, werteVorräte, annahmen)
     is FallAusdruck -> when (ausdruck.aussage.entscheide(RechenKontext(annahmen)).wahrheitswert) {
@@ -71,6 +76,16 @@ private fun inferiereElementMenge(
     is DefinierteMenge -> if (menge.variablen.size == 1) menge.variablen.single().grundMenge
         else Tupelraum(menge.variablen.map { it.grundMenge })
     is GefilterteMenge -> inferiereElementMenge(menge.menge, werteVorräte, annahmen)
+    is MengenParameter -> error(
+        "Für die Mengenvariable '${menge.name}' ist keine Element- oder Obermenge festgelegt.",
+    )
+    is PrädikatsMenge -> error(
+        "Die Prädikatsmenge ${menge.zuLatex()} legt bewusst keine Obermenge fest. " +
+            "Die aktuelle Operation benötigt jedoch eine.",
+    )
+    is FehlendeObermenge -> error(
+        "Für die Anschlussart '${menge.anschlussArt}' ist keine Obermenge festgelegt.",
+    )
     is Abbild -> menge.methode.einzigeZielMenge
     is IterierteVereinigung -> menge.methode.grundMengeFürMengenAusgabe()
     is IterierterSchnitt -> menge.methode.grundMengeFürMengenAusgabe()
