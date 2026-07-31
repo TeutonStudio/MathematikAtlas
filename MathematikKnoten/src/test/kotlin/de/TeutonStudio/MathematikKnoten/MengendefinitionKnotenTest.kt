@@ -83,7 +83,7 @@ class MengendefinitionKnotenTest {
 
         val menge = werteAus(paar.definator, mapOf("aussage" to element))
             .ausgaben.getValue("menge")
-        assertEquals("M=\\left\\{x\\in\\{\\bot,\\top\\}\\mid x = \\top\\right\\}", menge.anzeigeLatex())
+        assertEquals("M=\\left\\{x\\in\\{\\bot, \\top\\}\\mid x = \\top\\right\\}", menge.anzeigeLatex())
     }
 
     @Test
