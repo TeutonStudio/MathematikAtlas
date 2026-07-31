@@ -1,16 +1,23 @@
 package de.TeutonStudio.MathematikKnoten
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.em
+
+private val STANDARD_WAHR_FARBE = Color(0xFF2E7D32)
+private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
 
 /**
  * Stellt den vom Rechenkern erzeugten LaTeX-Teilumfang nativ dar. Es bleibt bewusst
@@ -23,17 +30,34 @@ fun LatexText(
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
-    Text(latexZuAnnotiertemText(latex), modifier = modifier, style = style, color = LocalContentColor.current)
+    val dunklesSchema = isSystemInDarkTheme()
+    val wahrFarbe = if (dunklesSchema) Color(0xFF81C784) else Color(0xFF1B5E20)
+    val lügeFarbe = if (dunklesSchema) Color(0xFFEF9A9A) else Color(0xFFB71C1C)
+    Text(
+        latexZuAnnotiertemText(latex, wahrFarbe, lügeFarbe),
+        modifier = modifier,
+        style = style,
+        color = LocalContentColor.current,
+    )
 }
 
-fun latexZuAnnotiertemText(latex: String): AnnotatedString = buildAnnotatedString {
-    LatexParser(latex, this).schreibe()
+fun latexZuAnnotiertemText(
+    latex: String,
+    wahrFarbe: Color = STANDARD_WAHR_FARBE,
+    lügeFarbe: Color = STANDARD_LÜGE_FARBE,
+): AnnotatedString = buildAnnotatedString {
+    LatexParser(latex, this, wahrFarbe, lügeFarbe).schreibe()
 }
 
 /** Kompakte Klartextvariante für Stellen, an denen kein Compose-Text verfügbar ist. */
 fun vereinfacheLatexAnzeige(latex: String): String = latexZuAnnotiertemText(latex).text
 
-private class LatexParser(private val quelltext: String, private val ausgabe: AnnotatedString.Builder) {
+private class LatexParser(
+    private val quelltext: String,
+    private val ausgabe: AnnotatedString.Builder,
+    private val wahrFarbe: Color,
+    private val lügeFarbe: Color,
+) {
     private var position = 0
     private var casesTiefe = 0
 
@@ -86,6 +110,9 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
                 schreibeArgument()
                 ausgabe.append('}')
             }
+            "mathcal" -> schreibeMathcal()
+            "top" -> schreibeWahrheitswert("Wahr", wahrFarbe)
+            "bot" -> schreibeWahrheitswert("Lüge", lügeFarbe)
             "mathop", "mathbin" -> schreibeArgument()
             "mathbb" -> ausgabe.append(zahlbereich(liesGruppenText()))
             "begin" -> when (liesGruppenText()) {
@@ -99,6 +126,29 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
             "left", "right", "!", ",", ";", "quad", "qquad" -> Unit
             "operatorname", "text", "mathrm", "mathbf" -> ausgabe.append(liesGruppenText().replace("\\ ", " "))
             else -> ausgabe.append(zeichenFürBefehl(befehl))
+        }
+    }
+
+    private fun schreibeMathcal() {
+        val inhalt = liesGruppenText()
+        when (inhalt) {
+            "Wahr" -> schreibeWahrheitswert(inhalt, wahrFarbe)
+            "Lüge" -> schreibeWahrheitswert(inhalt, lügeFarbe)
+            else -> mitStil(SpanStyle(fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic)) {
+                LatexParser(inhalt, ausgabe, wahrFarbe, lügeFarbe).schreibe()
+            }
+        }
+    }
+
+    private fun schreibeWahrheitswert(text: String, farbe: Color) {
+        mitStil(
+            SpanStyle(
+                color = farbe,
+                fontFamily = FontFamily.Serif,
+                fontStyle = FontStyle.Italic,
+            ),
+        ) {
+            ausgabe.append(text)
         }
     }
 
@@ -118,9 +168,9 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
             "\\circ" to "\\bigvee" -> ausgabe.append("⋁̊")
             else -> {
                 mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.66.em)) {
-                    LatexParser(oben, ausgabe).schreibe()
+                    LatexParser(oben, ausgabe, wahrFarbe, lügeFarbe).schreibe()
                 }
-                LatexParser(unten, ausgabe).schreibe()
+                LatexParser(unten, ausgabe, wahrFarbe, lügeFarbe).schreibe()
             }
         }
     }
@@ -157,7 +207,7 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
     private fun zeichenFürBefehl(befehl: String) = mapOf(
         "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "ge" to "≥",
-        "varnothing" to "∅", "top" to "wahr", "bot" to "falsch", "neg" to "¬", "land" to "∧", "lor" to "∨",
+        "varnothing" to "∅", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁",
         "circ" to "∘", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
         "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
