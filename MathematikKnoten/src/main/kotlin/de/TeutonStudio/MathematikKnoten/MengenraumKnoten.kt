@@ -12,6 +12,7 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikRechenSystem.kern.Abbildungsmenge
 import de.TeutonStudio.MathematikRechenSystem.kern.GaußscheGanzeZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.GaußschePrimzahlen
+import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge as LeereMengeWert
 import de.TeutonStudio.MathematikRechenSystem.kern.Matrizenraum
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.ModuloZahlenraum
@@ -19,7 +20,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Potenzmenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensorraum
 
-/** Vorlagen und Auswerter der in v2.3.10 ergänzten Mengen- und Koordinatenräume. */
+/** Vorlagen und Auswerter der Mengen- und Koordinatenräume. */
 object MengenraumKnotenVorlagen {
     private fun eingang(name: String, reihe: Int = 0) = AnschlussDaten(
         name = name,
@@ -34,6 +35,15 @@ object MengenraumKnotenVorlagen {
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
         art = MathematikAnschlussArten.Menge.id,
+    )
+
+    val LeereMenge = KnotenVorlage(
+        "mathematik.leereMenge",
+        "Leere Menge",
+        "Mengen",
+        "Die eindeutig bestimmte Menge ohne Elemente.",
+        GraphGröße(190f, 90f),
+        listOf(ausgang()),
     )
 
     val GaußscheZahlen = KnotenVorlage(
@@ -122,6 +132,7 @@ object MengenraumKnotenVorlagen {
     )
 
     val alle = listOf(
+        LeereMenge,
         GaußscheZahlen,
         Primzahlen,
         GaußschePrimzahlen,
@@ -135,6 +146,9 @@ object MengenraumKnotenVorlagen {
 }
 
 internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
+    registriere("mathematik.leereMenge") {
+        mengenraumErgebnis(LeereMengeWert)
+    }
     registriere("mathematik.gaussZahlen") {
         mengenraumErgebnis(GaußscheGanzeZahlen)
     }

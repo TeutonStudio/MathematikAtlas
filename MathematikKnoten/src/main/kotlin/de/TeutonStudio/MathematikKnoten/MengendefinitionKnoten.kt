@@ -9,7 +9,7 @@ object MengendefinitionKnotenVorlagen {
         art = MENGENKONSTRUKTOR_ART,
         name = "Mengenkonstruktor",
         kategorie = "Mengen",
-        beschreibung = "Beginnt eine gebundene Mengendefinition und stellt ihr typisiertes Element bereit.",
+        beschreibung = "Beginnt eine gebundene Mengendefinition und stellt ihr typisiertes Argument bereit.",
         standardGröße = GraphGröße(275f, 125f),
         anschlüsse = listOf(
             AnschlussDaten(
@@ -23,7 +23,6 @@ object MengendefinitionKnotenVorlagen {
             MENGENDEFINITION_MENGENNAME to "M",
             MENGENDEFINITION_ELEMENTNAME to "x",
             MENGENDEFINITION_ELEMENTART to MathematikAnschlussArten.Zahl.id.wert,
-            MENGENDEFINITION_ELEMENTMENGE to "R",
         ),
     )
 
@@ -77,16 +76,5 @@ fun KnotenDaten.mengendefinitionsPaarId(): String? =
 fun mengenkonstruktorFormel(knoten: KnotenDaten): String {
     val mengenName = knoten.parameter[MENGENDEFINITION_MENGENNAME]?.trim().orEmpty().ifBlank { "M" }
     val elementName = knoten.parameter[MENGENDEFINITION_ELEMENTNAME]?.trim().orEmpty().ifBlank { "x" }
-    val art = knoten.parameter[MENGENDEFINITION_ELEMENTART].orEmpty()
-    val menge = if (art == MathematikAnschlussArten.Aussage.id.wert) {
-        "\\left\\{\\top,\\bot\\right\\}"
-    } else when (knoten.parameter[MENGENDEFINITION_ELEMENTMENGE]?.trim().orEmpty().ifBlank { "R" }.uppercase()) {
-        "N", "ℕ" -> "\\mathbb{N}"
-        "Z", "ℤ" -> "\\mathbb{Z}"
-        "Q", "ℚ" -> "\\mathbb{Q}"
-        "R", "ℝ" -> "\\mathbb{R}"
-        "C", "ℂ" -> "\\mathbb{C}"
-        else -> knoten.parameter[MENGENDEFINITION_ELEMENTMENGE]?.trim().orEmpty().ifBlank { "U" }
-    }
-    return "$mengenName=\\left\\{$elementName\\in$menge\\mid"
+    return "$mengenName=\\left\\{$elementName\\mid"
 }

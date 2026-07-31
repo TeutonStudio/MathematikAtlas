@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.8.x"
-current_version = "2.8.0"
+current_series = "2.9.x"
+current_version = "2.9.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -265,3 +265,15 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.mengenkonstruktor", "mathematik.mengendefinator"]
 reason = "Führt zwei gekoppelte Knotentypen für symbolische Mengendefinitionen ein und erzeugt sie über einen gemeinsamen Dialogeintrag ohne ungültige Direktverbindung."
+
+[[releases]]
+version = "2.9.0"
+title = "Grundmengenfreie Prädikatsmengen und leere Menge"
+roadmap = "v2.9.x Symbolische Mengenkonstruktionen"
+status = "released"
+previous_release = "2.8.0"
+branch = "release/v2.9.0-praedikatsmengen"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.leereMenge"]
+reason = "Entfernt die Obermenge aus dem Mengenkonstruktor, öffnet den Elementtyp für alle Anschlussarten, normalisiert eindeutig endliche Prädikatsmengen und ergänzt einen separat erzeugbaren Knoten für die leere Menge."
