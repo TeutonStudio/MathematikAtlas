@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.7.x"
-current_version = "2.7.1"
+current_version = "2.7.2"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -242,3 +242,14 @@ branch = "agent/v2.7.1-auswahlrahmen-ebenen"
 kind = "fix"
 version_axis = "x"
 reason = "Begrenzt sämtliche Zeichenebenen des Karteneditors auf dessen Layoutbereich und legt Verwaltungsfenster sowie Inspektor explizit darüber, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.7.2"
+title = "Ungleichheitszeichen in LaTeX-Darstellungen"
+roadmap = "v2.7.x Aussagenoperatoren und Formelanzeige"
+status = "released"
+previous_release = "2.7.1"
+branch = "agent/v2.7.2-ungleichheits-latex"
+kind = "fix"
+version_axis = "x"
+reason = "Verwendet für Ungleichheiten kanonisch den unterstützten LaTeX-Befehl neq und rendert den Alias ne rückwärtskompatibel als Ungleichheitszeichen, ohne einen neuen Knotentyp einzuführen."
