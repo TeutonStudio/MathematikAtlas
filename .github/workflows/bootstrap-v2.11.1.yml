@@ -40,6 +40,20 @@ jobs:
           PY
           python3 scripts/bootstrap_v2111.py
           sed -i '/import androidx.compose.ui.input.pointer.consume/d' app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/KartenDrag.kt
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/AtlasMigrationen.kt')
+          text = p.read_text()
+          alt = '''    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }, { it.first.id.wert }))
+    .distinctBy { it.second }
+'''
+          neu = '''    .distinctBy { it.second }
+    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }, { it.first.id.wert }))
+'''
+          if text.count(alt) != 1:
+              raise RuntimeError('Reihenfolge der Schnittstellen-Deduplizierung nicht eindeutig gefunden.')
+          p.write_text(text.replace(alt, neu, 1))
+          PY
       - name: Releaseplan prüfen
         run: |
           python3 scripts/pruefe_releaseplan.py
