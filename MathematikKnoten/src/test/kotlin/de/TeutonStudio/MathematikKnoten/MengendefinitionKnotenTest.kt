@@ -18,22 +18,40 @@ class MengendefinitionKnotenTest {
         assertEquals(paar.paarId, paar.konstruktor.mengendefinitionsPaarId())
         assertEquals(paar.paarId, paar.definator.mengendefinitionsPaarId())
         assertEquals(GraphPunkt(510f, 200f), paar.definator.position)
+        assertFalse(MENGENDEFINITION_ELEMENTMENGE in paar.konstruktor.parameter)
     }
 
     @Test
-    fun `Konstruktor liefert gebundene reelle Variable mit Paarherkunft`() {
+    fun `Konstruktor liefert gebundene Variable ohne behauptete Obermenge`() {
         val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
         val ergebnis = werteAus(paar.konstruktor)
         val element = ergebnis.ausgaben.getValue("element")
 
         assertEquals(Variable("x"), element.objekt)
-        assertEquals(ReelleZahlen, element.werteVorrat)
+        assertNull(element.werteVorrat)
+        assertTrue(element.reelleVariablen.isEmpty())
+        assertIs<FehlendeObermenge>(element.variablenQuellen.single().werteVorrat)
         assertEquals(paar.paarId, element.variablenQuellen.single().bindungsId)
         assertFalse(element.variablenQuellen.single().alsMethodenParameter)
     }
 
     @Test
-    fun `Definator bindet ausschließlich das Element seines Konstruktorpaares`() {
+    fun `Konstruktor akzeptiert jede registrierte Anschlussart`() {
+        val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
+        val ausgang = paar.konstruktor.anschlüsse.single()
+
+        MathematikAnschlussArten.alle.forEach { art ->
+            val konstruktor = paar.konstruktor.copy(
+                parameter = paar.konstruktor.parameter + (MENGENDEFINITION_ELEMENTART to art.id.wert),
+                anschlüsse = listOf(ausgang.copy(art = art.id)),
+            )
+            val element = werteAus(konstruktor).ausgaben.getValue("element")
+            assertEquals(art.id, element.variablenQuellen.single().gebundeneArt)
+        }
+    }
+
+    @Test
+    fun `Definator erzeugt ohne Obermenge eine Prädikatsmenge`() {
         val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
         val element = werteAus(paar.konstruktor).ausgaben.getValue("element")
         val aussage = Vergleich(element.objekt as Variable, VergleichsArt.Kleiner, RationaleZahl.von(3))
@@ -41,10 +59,58 @@ class MengendefinitionKnotenTest {
 
         val ergebnis = werteAus(paar.definator, mapOf("aussage" to aussageWert))
         val mengeWert = ergebnis.ausgaben.getValue("menge")
-        assertIs<DefinierteMenge>(mengeWert.objekt)
+        assertIs<PrädikatsMenge>(mengeWert.objekt)
 
-        assertEquals("M=\\left\\{x\\in\\mathbb{R}\\mid x < 3\\right\\}", mengeWert.anzeigeLatex())
-        assertTrue(ergebnis.ausgaben.getValue("menge").variablenQuellen.isEmpty())
+        assertEquals("M=\\left\\{x\\mid x < 3\\right\\}", mengeWert.anzeigeLatex())
+        assertTrue(mengeWert.variablenQuellen.isEmpty())
+    }
+
+    @Test
+    fun `Gleichheit mit reeller Mitgliedschaft wird zur Einzelmenge und Mächtigkeit eins`() {
+        val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
+        val element = werteAus(paar.konstruktor).ausgaben.getValue("element")
+        val x = element.objekt as Variable
+        val zwei = RationaleZahl.von(2)
+        val aussage = Konjunktion(listOf(
+            ElementBeziehung(x, ReelleZahlen),
+            Gleichheit(x, zwei),
+        ))
+
+        val mengeWert = werteAus(
+            paar.definator,
+            mapOf("aussage" to element.copy(objekt = aussage)),
+        ).ausgaben.getValue("menge")
+
+        assertEquals(EndlicheMenge(setOf(zwei)), mengeWert.objekt)
+        assertEquals(EndlicheMächtigkeit(RationaleZahl.Eins), mächtigkeit(mengeWert.objekt as MengenAusdruck))
+        assertEquals("M=\\{2\\}", mengeWert.anzeigeLatex())
+    }
+
+    @Test
+    fun `Vereinigung lässt sich ohne gemeinsame Obermenge als Prädikat definieren`() {
+        val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
+        val ausgang = paar.konstruktor.anschlüsse.single()
+        val konstruktor = paar.konstruktor.copy(
+            parameter = paar.konstruktor.parameter +
+                (MENGENDEFINITION_ELEMENTART to MathematikAnschlussArten.Objekt.id.wert),
+            anschlüsse = listOf(ausgang.copy(art = MathematikAnschlussArten.Objekt.id)),
+        )
+        val element = werteAus(konstruktor).ausgaben.getValue("element")
+        val aussage = Disjunktion(listOf(
+            ElementBeziehung(element.objekt, MengenParameter("A")),
+            ElementBeziehung(element.objekt, MengenParameter("B")),
+        ))
+
+        val menge = werteAus(
+            paar.definator,
+            mapOf("aussage" to element.copy(objekt = aussage)),
+        ).ausgaben.getValue("menge")
+
+        assertIs<PrädikatsMenge>(menge.objekt)
+        assertEquals(
+            "M=\\left\\{x\\mid x \\in A \\lor x \\in B\\right\\}",
+            menge.anzeigeLatex(),
+        )
     }
 
     @Test
@@ -70,7 +136,7 @@ class MengendefinitionKnotenTest {
             anschlüsse = listOf(elementAusgang.copy(art = MathematikAnschlussArten.Aussage.id)),
         )
         val element = werteAus(aussageKonstruktor).ausgaben.getValue("element")
-        assertIs<Gleichheit>(element.objekt)
+        assertIs<AussagenParameter>(element.objekt)
 
         val karte = KartenDaten(name = "Test", knoten = listOf(aussageKonstruktor, paar.definator))
         val prüfung = GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle))
@@ -83,7 +149,8 @@ class MengendefinitionKnotenTest {
 
         val menge = werteAus(paar.definator, mapOf("aussage" to element))
             .ausgaben.getValue("menge")
-        assertEquals("M=\\left\\{x\\in\\{\\bot, \\top\\}\\mid x = \\top\\right\\}", menge.anzeigeLatex())
+        assertEquals(EndlicheMenge(setOf(WahrheitsKonstante(true))), menge.objekt)
+        assertEquals("M=\\{\\top\\}", menge.anzeigeLatex())
     }
 
     @Test
