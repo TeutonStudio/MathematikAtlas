@@ -318,7 +318,7 @@ object MathematikKnotenVorlagen {
         listOf(eingang("links", links, 0), eingang("rechts", rechts, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
 
-    private fun vergleichVorlage(name: String, zeichen: String, relation: String) = KnotenVorlage(
+private fun vergleichVorlage(name: String, zeichen: String, relation: String) = KnotenVorlage(
     ORDNUNGSRELATION_ART,
     name,
     "Aussagen: Zahlenprädikate",
