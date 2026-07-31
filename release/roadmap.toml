@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.6.x"
-current_version = "2.6.1"
+current_series = "2.7.x"
+current_version = "2.7.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -219,3 +219,15 @@ branch = "agent/v2.6.1-konzeptauswertung"
 kind = "fix"
 version_axis = "x"
 reason = "Wertet die vorhandene Intervall-Definitionskarte mit typisierten Vorschauwerten aus, sodass Konjunktion, reeller Wertevorrat und Wahrheitszielmenge aus der mathematischen Semantik statt aus Parameter-Fallbacks entstehen."
+
+[[releases]]
+version = "2.7.0"
+title = "Ordnungsrelation und iterierte Aussagenverknüpfungen"
+roadmap = "v2.7.x Ordnungsrelationen und Aussagenoperatoren"
+status = "released"
+previous_release = "2.6.1"
+branch = "release/v2.7.0-ordnungsrelation"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.ordnungsrelation", "mathematik.iterierteAussagenverknüpfung"]
+reason = "Vereinigt vier separat registrierte Vergleichsknoten zu einer parametrierten Ordnungsrelation und führt mit der iterierten Aussagenverknüpfung einen neuen erzeugbaren Knotentyp ein."
