@@ -47,6 +47,25 @@ class UngleichheitKnotenTest {
     }
 
     @Test
+    fun `Knotenausgabe verwendet darstellbares Ungleichheitszeichen`() {
+        val knoten = MathematikKnotenVorlagen.Ungleichheit.erzeuge(GraphPunkt.Zero)
+        val auswerter = requireNotNull(register.finde(knoten.art))
+        val ausgabe = auswerter.auswerten(
+            KnotenAuswertungsKontext(
+                knoten = knoten,
+                eingänge = mapOf(
+                    "links" to BedingterWert(RationaleZahl.parse("2")),
+                    "rechts" to BedingterWert(RationaleZahl.parse("-2")),
+                ),
+                rechenKontext = RechenKontext(),
+            ),
+        ).ausgaben.getValue("aussage")
+
+        assertEquals("2 \\neq -2", ausgabe.latexDarstellung)
+        assertEquals("2 ≠ -2", vereinfacheLatexAnzeige(requireNotNull(ausgabe.latexDarstellung)))
+    }
+
+    @Test
     fun `gleiche rationale Zahlen widerlegen die Ungleichheit`() {
         val entscheidung = werteAus("2/4", "1/2").entscheide()
 

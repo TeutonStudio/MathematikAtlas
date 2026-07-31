@@ -134,7 +134,7 @@ private class LatexParser(private val quelltext: String, private val ausgabe: An
 
     private fun zeichenFürBefehl(befehl: String) = mapOf(
         "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩",
-        "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "neq" to "≠", "le" to "≤", "ge" to "≥",
+        "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "ge" to "≥",
         "varnothing" to "∅", "top" to "wahr", "bot" to "falsch", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂",
         "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦", "implies" to "⇒", "iff" to "⇔",
