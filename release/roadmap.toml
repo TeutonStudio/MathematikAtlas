@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.5.x"
-current_version = "2.5.2"
+current_series = "2.6.x"
+current_version = "2.6.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -196,3 +196,15 @@ branch = "agent/v2.5.2-reelles-intervall-definition"
 kind = "fix"
 version_axis = "x"
 reason = "Passt die vorhandene Definitionskarte des reellen Intervalls an die Filterkonstruktion über die reellen Zahlen an und korrigiert die Darstellung vorhandener Variablenknoten, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.6.0"
+title = "Ungleichheitsknoten"
+roadmap = "v2.6.x Aussagenprädikate"
+status = "released"
+previous_release = "2.5.2"
+branch = "release/v2.6.0-ungleichheitsknoten"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.ungleichheit"]
+reason = "Führt mit mathematik.ungleichheit einen neuen registrierten und separat erzeugbaren Aussagenprädikat-Knoten analog zur Gleichheit ein."
