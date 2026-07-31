@@ -24,9 +24,9 @@ fun symbolischerEingangswert(
     aussagenVorschau: Aussage? = null,
 ): BedingterWert {
     val parameterName = name.trim().ifBlank { "x" }
-    val parameter: FunktionsParameter = when (art) {
+    val objekt: MathematischesObjekt = when (art) {
         ZAHL_KARTEN_ART -> Variable(parameterName)
-        AUSSAGE_KARTEN_ART -> aussagenVorschau as? FunktionsParameter ?: AussagenParameter(parameterName)
+        AUSSAGE_KARTEN_ART -> aussagenVorschau ?: AussagenParameter(parameterName)
         MENGE_KARTEN_ART -> MengenParameter(parameterName)
         else -> TypisiertesElement(parameterName, art.wert)
     }
@@ -40,9 +40,9 @@ fun symbolischerEingangswert(
     }
 
     return BedingterWert(
-        objekt = parameter,
+        objekt = objekt,
         werteVorrat = werteVorrat,
-        reelleVariablen = if (parameter is Variable) mapOf(parameterName to werteVorrat) else emptyMap(),
+        reelleVariablen = if (objekt is Variable) mapOf(parameterName to werteVorrat) else emptyMap(),
         variablenQuellen = listOf(
             VariablenQuelle(
                 knotenId = knotenId,
