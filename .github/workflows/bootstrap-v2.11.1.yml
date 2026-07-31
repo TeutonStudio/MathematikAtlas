@@ -1,12 +1,6 @@
 name: Bootstrap v2.11.1 KartenKnoten
 
 on:
-  push:
-    branches:
-      - agent/v2.11.1-kartenknoten
-    paths:
-      - scripts/bootstrap_v2111.py
-      - .github/workflows/bootstrap-v2.11.1.yml
   pull_request:
     branches:
       - master
@@ -42,17 +36,33 @@ jobs:
           sed -i '/import androidx.compose.ui.input.pointer.consume/d' app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/KartenDrag.kt
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/AtlasMigrationen.kt')
-          text = p.read_text()
+
+          migration = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/AtlasMigrationen.kt')
+          text = migration.read_text()
           alt = '''    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }, { it.first.id.wert }))
     .distinctBy { it.second }
 '''
-          neu = '''    .distinctBy { it.second }
-    .sortedWith(compareBy({ it.first.position.y }, { it.first.position.x }, { it.first.id.wert }))
+          neu = '''    .withIndex()
+    .distinctBy { it.value.second }
+    .sortedWith(compareBy({ it.value.first.position.y }, { it.value.first.position.x }, { it.index }))
+    .map { it.value }
 '''
           if text.count(alt) != 1:
-              raise RuntimeError('Reihenfolge der Schnittstellen-Deduplizierung nicht eindeutig gefunden.')
-          p.write_text(text.replace(alt, neu, 1))
+              raise RuntimeError('Schnittstellen-Deduplizierung nicht eindeutig gefunden.')
+          migration.write_text(text.replace(alt, neu, 1))
+
+          kartenknoten = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/KartenKnoten.kt')
+          text = kartenknoten.read_text()
+          alt = '''    return refs.any { ref -> !besucht.add(ref) || speicher.lade(ref)?.let { referenziertKarte(it, gesuchteId, besucht) } == true }
+'''
+          neu = '''    return refs.any { ref ->
+        if (!besucht.add(ref)) false
+        else speicher.lade(ref)?.let { referenziertKarte(it, gesuchteId, besucht) } == true
+    }
+'''
+          if text.count(alt) != 1:
+              raise RuntimeError('Kartenreferenz-Rekursion nicht eindeutig gefunden.')
+          kartenknoten.write_text(text.replace(alt, neu, 1))
           PY
       - name: Releaseplan prüfen
         run: |
@@ -64,7 +74,7 @@ jobs:
         run: ./gradlew test :app:assembleDebug --stacktrace
       - name: Finalen Commit erzeugen
         run: |
-          rm scripts/bootstrap_v2111.py .github/workflows/bootstrap-v2.11.1.yml
+          rm -f scripts/bootstrap_v2111.py .github/workflows/bootstrap-v2.11.1.yml sitecustomize.py
           git config user.name "Mathematik-Atlas Agent"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
