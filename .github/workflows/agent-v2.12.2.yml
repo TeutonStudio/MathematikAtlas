@@ -26,17 +26,23 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Umsetzungsskript zusammensetzen
         run: cat .github/agent-v2.12.2/part-* > .github/agent-v2.12.2.py
-      - name: Releaseeintrag-Erkennung korrigieren
+      - name: Umsetzungsskript korrigieren
         run: |
           python3 - <<'PY'
           from pathlib import Path
           pfad = Path('.github/agent-v2.12.2.py')
           text = pfad.read_text(encoding='utf-8')
-          alt = "if 'version = \"2.12.2\"' not in roadmap_text:"
-          neu = "if '\\nversion = \"2.12.2\"\\n' not in roadmap_text:"
-          if alt not in text:
-              raise SystemExit('Erwartete Releaseeintrag-Prüfung fehlt.')
-          pfad.write_text(text.replace(alt, neu, 1), encoding='utf-8')
+          ersetzungen = {
+              "if 'version = \"2.12.2\"' not in roadmap_text:":
+                  "if '\\nversion = \"2.12.2\"\\n' not in roadmap_text:",
+              'assertEquals("\\\\{2,\\\\mathbb{N}\\\\}", wert.latexDarstellung)':
+                  'assertEquals("\\\\{2, \\\\mathbb{N}\\\\}", wert.latexDarstellung)',
+          }
+          for alt, neu in ersetzungen.items():
+              if alt not in text:
+                  raise SystemExit(f'Erwarteter Skripttext fehlt: {alt}')
+              text = text.replace(alt, neu, 1)
+          pfad.write_text(text, encoding='utf-8')
           PY
       - name: Issue 63 umsetzen
         run: python3 .github/agent-v2.12.2.py
