@@ -88,6 +88,9 @@ object TestDefinitionsKarten {
     fun validierungsFehler(): List<String> = validierungsFehler(alle)
 
     private fun konzeptFür(varianten: List<KnotenVorlage>): KonzeptDefinition {
+        if (varianten.first().art in ITERIERTE_KONZEPT_ARTEN) {
+            return iteriertesOperatorKonzept(varianten)
+        }
         val erste = varianten.first()
         val reiter = varianten.mapIndexed { index, vorlage ->
             KonzeptReiter(
