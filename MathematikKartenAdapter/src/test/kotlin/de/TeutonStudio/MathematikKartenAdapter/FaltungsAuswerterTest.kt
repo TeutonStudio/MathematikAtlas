@@ -119,7 +119,7 @@ class FaltungsAuswerterTest {
         )
 
         assertEquals(RationaleZahl.von(5), ergebnis.ausgaben.getValue("wert").objekt)
-        assertEquals("f(4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals("${methode.zuLatex()}(4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test
@@ -147,11 +147,8 @@ class FaltungsAuswerterTest {
             ),
         )
 
-        assertEquals(
-            Division(RationaleZahl.von(2), RationaleZahl.von(4)),
-            ergebnis.ausgaben.getValue("wert").objekt,
-        )
-        assertEquals("f(2,4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals(RationaleZahl.von(1, 2), ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals("${methode.zuLatex()}(2,4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test
