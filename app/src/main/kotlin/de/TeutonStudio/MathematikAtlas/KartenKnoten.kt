@@ -137,6 +137,7 @@ private fun AtlasZustand.knotenFürKarte(
         position = alt.position,
         parameter = alt.parameter,
         eigenschaften = alt.eigenschaften,
+        eingangsKartenVerweise = alt.eingangsKartenVerweise,
         anschlüsse = neu.anschlüsse.map { anschluss ->
             ids[anschluss.richtung to anschluss.name]?.let { anschluss.copy(id = it) } ?: anschluss
         },
@@ -151,7 +152,7 @@ private fun AtlasZustand.referenziertKarte(
     gesuchteId: KartenId,
     besucht: MutableSet<KartenVerweis>,
 ): Boolean {
-    val refs = karte.knoten.mapNotNull { it.kartenVerweis }
+    val refs = karte.knoten.flatMap(KnotenDaten::alleKartenVerweise)
     if (refs.any { it.kartenId == gesuchteId }) return true
     return refs.any { ref ->
         if (!besucht.add(ref)) false
