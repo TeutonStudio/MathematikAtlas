@@ -34,6 +34,7 @@ object KnotenInspektorRegister {
         "mathematik.variable" to VariablenInspektor,
         "mathematik.allgemeinerParameter" to AllgemeineParameterInspektor,
         "mathematik.termZuMethode" to TermZuMethodeInspektor,
+        "mathematik.methodeAufrufen" to MethodenAufrufInspektor,
         "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
     )
@@ -118,6 +119,57 @@ private object TermZuMethodeInspektor : KnotenInspektor {
                     aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
                 }, enabled = index < parameter.lastIndex) { Text("↓") }
             }
+        }
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    }
+}
+
+private object MethodenAufrufInspektor : KnotenInspektor {
+    @Composable
+    override fun Inhalt(
+        knoten: KnotenDaten,
+        ergebnis: KnotenAuswertungsErgebnis?,
+        aktionen: KnotenInspektorAktionen,
+    ) {
+        Text("Methodenvertrag", style = MaterialTheme.typography.titleSmall)
+        knoten.parameter[METHODEN_AUFRUF_VERTRAGSFEHLER]?.let { fehler ->
+            Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
+        val stelligkeit = knoten.parameter[METHODEN_AUFRUF_STELLIGKEIT]?.toIntOrNull()
+        if (stelligkeit == null) {
+            Text(
+                "Noch kein konkreter Methodenvertrag erkannt. Die allgemeinen Argumentanschlüsse bleiben erweiterbar.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Text("Stelligkeit: $stelligkeit", style = MaterialTheme.typography.bodyMedium)
+            if (stelligkeit == 0) {
+                Text("Die Methode besitzt keine Argumente.", style = MaterialTheme.typography.bodySmall)
+            }
+            repeat(stelligkeit) { index ->
+                val präfix = "$METHODEN_AUFRUF_PARAMETER_PREFIX$index."
+                val name = knoten.parameter["${präfix}name"] ?: "Argument ${index + 1}"
+                val artId = AnschlussArtId(knoten.parameter["${präfix}art"].orEmpty())
+                val art = MathematikAnschlussArten.alle.firstOrNull { it.id == artId }?.name
+                    ?: artId.wert.ifBlank { "Mathematisches Objekt" }
+                val werteVorrat = knoten.parameter["${präfix}werteVorrat"]
+                Text(
+                    buildString {
+                        append("${index + 1}. $name: $art")
+                        if (!werteVorrat.isNullOrBlank()) append(" ∈ $werteVorrat")
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            knoten.parameter[METHODEN_AUFRUF_ZIELMENGE]?.let { zielMenge ->
+                Text("Zielmenge: $zielMenge", style = MaterialTheme.typography.bodyMedium)
+            }
+            Text(
+                "Stelligkeit, Anschlussarten und Zielmenge werden aus der verbundenen Methode übernommen.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
