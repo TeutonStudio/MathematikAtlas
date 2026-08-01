@@ -137,7 +137,7 @@ object KartenFreigabePaket {
             "Das Freigabepaket besitzt keine gültige Wurzelkarte."
         }
         karten.forEach { karte ->
-            karte.knoten.mapNotNull(KnotenDaten::kartenVerweis).forEach { verweis ->
+            karte.knoten.flatMap(KnotenDaten::alleKartenVerweise).forEach { verweis ->
                 require(verweis in vorhandeneVerweise) {
                     "Die Abhängigkeit ${verweis.kartenId} v${verweis.version} fehlt im Freigabepaket."
                 }
@@ -167,7 +167,7 @@ object KartenFreigabePaket {
                 "Die benötigte Karte ${verweis.kartenId} v${verweis.version} wurde nicht gefunden."
             }
             ergebnis[verweis] = karte
-            karte.knoten.mapNotNull(KnotenDaten::kartenVerweis).forEach(offen::addLast)
+            karte.knoten.flatMap(KnotenDaten::alleKartenVerweise).forEach(offen::addLast)
         }
         return ergebnis
     }
