@@ -23,6 +23,8 @@ sealed interface KartenAktion {
         val parameter: Map<String, String>,
         val anschlüsse: List<AnschlussDaten>,
     ) : KartenAktion
+    /** Ersetzt einen vollständigen Knoten atomar und entfernt nur Verbindungen zu entfallenen Anschlüssen. */
+    data class KnotenErsetzen(val knoten: KnotenDaten) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
     data class KnotenMehrfachLöschen(val ids: Set<KnotenId>) : KartenAktion
     data class VisuelleGruppeErstellen(val knotenIds: Set<KnotenId>) : KartenAktion
@@ -75,6 +77,16 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
             verbindungen = verbindungen.filterNot { verbindung ->
                 (verbindung.von.knotenId == aktion.id && verbindung.von.anschlussId !in gültigeAnschlüsse) ||
                     (verbindung.zu.knotenId == aktion.id && verbindung.zu.anschlussId !in gültigeAnschlüsse)
+            },
+        )
+    }
+    is KartenAktion.KnotenErsetzen -> {
+        val gültigeAnschlüsse = aktion.knoten.anschlüsse.map { it.id }.toSet()
+        copy(
+            knoten = knoten.map { if (it.id == aktion.knoten.id) aktion.knoten else it },
+            verbindungen = verbindungen.filterNot { verbindung ->
+                (verbindung.von.knotenId == aktion.knoten.id && verbindung.von.anschlussId !in gültigeAnschlüsse) ||
+                    (verbindung.zu.knotenId == aktion.knoten.id && verbindung.zu.anschlussId !in gültigeAnschlüsse)
             },
         )
     }

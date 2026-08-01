@@ -297,9 +297,18 @@ internal fun öffentlicheKartenAnschlüsse(
     kante: AnschlussKante,
 ): List<AnschlussDaten> = karte.knoten.asSequence()
     .filter { it.art == interneArt }
-    .mapNotNull { intern -> intern.anschlüsse.firstOrNull { it.name == "wert" }?.let { wert -> öffentlicherKartenName(intern) to wert.art } }
-    .distinctBy { it.first }
-    .mapIndexed { index, (name, art) -> AnschlussDaten(name = name, richtung = richtung, kante = kante, art = art, reihenfolge = index) }
+    .mapNotNull { intern ->
+        intern.anschlüsse.firstOrNull { it.name == "wert" }?.let { wert ->
+            Triple(intern, öffentlicherKartenName(intern), wert.art)
+        }
+    }
+    .withIndex()
+    .distinctBy { it.value.second }
+    .sortedWith(compareBy({ it.value.first.position.y }, { it.value.first.position.x }, { it.index }))
+    .map { it.value }
+    .mapIndexed { index, (_, name, art) ->
+        AnschlussDaten(name = name, richtung = richtung, kante = kante, art = art, reihenfolge = index)
+    }
     .toList()
 
 internal fun öffentlicherKartenName(knoten: KnotenDaten): String = knoten.parameter["name"]?.trim()?.takeIf(String::isNotEmpty) ?: knoten.name

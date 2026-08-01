@@ -301,6 +301,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                         },
                         modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                             .clip(MaterialTheme.shapes.medium)
+                            .kartenDragQuelle(zustand, eintrag.karte)
                             .clickable { zustand.öffne(eintrag.karte) }
                             .background(
                                 if (eintrag.karte.id == zustand.editor.karte.id) MaterialTheme.colorScheme.secondaryContainer

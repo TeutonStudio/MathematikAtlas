@@ -139,27 +139,51 @@ class KartenAuswerter(
         }.getOrElse {
             return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
         }
-        val interneEingänge = intern.knoten.filter { it.art == "mathematik.kartenEingang" }
+        val sortierung = compareBy<KnotenDaten>({ it.position.y }, { it.position.x }, { it.id.wert })
+        val interneEingänge = intern.knoten.filter { it.art == "mathematik.kartenEingang" }.sortedWith(sortierung)
+        val eingangsNamen = interneEingänge.map(::öffentlicherKartenName)
+        if (eingangsNamen.distinct().size != eingangsNamen.size) {
+            return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Öffentliche Karten-Eingänge benötigen eindeutige Namen.")
+        }
         val vorgaben = mutableMapOf<KnotenId, Map<String, BedingterWert>>()
-        val freie = mutableListOf<Variable>()
+        val freie = mutableListOf<FunktionsParameter>()
+        val werteVorräte = linkedMapOf<String, MengenAusdruck>()
         interneEingänge.forEach { eingang ->
             val name = öffentlicherKartenName(eingang)
-            val wert = außen[name] ?: BedingterWert(Variable(name)).also { freie += it.objekt as Variable }
+            val ausgangsArt = eingang.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }?.art
+                ?: AnschlussArtId("mathematik.objekt")
+            val wert = außen[name] ?: symbolischerEingangswert(ausgangsArt, name, eingang.id).also { symbolisch ->
+                val parameter = symbolisch.objekt as? FunktionsParameter
+                    ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Karteneingang '$name' ist kein Methodenparameter.")
+                freie += parameter
+                symbolisch.werteVorrat?.let { werteVorräte[name] = it }
+            }
             vorgaben[eingang.id] = mapOf("wert" to wert)
         }
         val internErgebnis = auswertenIntern(intern, vorgaben, kartenPfad + verweis)
         if (internErgebnis.fehler.isNotEmpty()) return KnotenAuswertungsErgebnis(emptyMap(), fehler = internErgebnis.fehler.joinToString())
-        val ausgänge = intern.knoten.filter { it.art == "mathematik.kartenAusgang" }.distinctBy(::öffentlicherKartenName)
+        val ausgänge = intern.knoten.filter { it.art == "mathematik.kartenAusgang" }.sortedWith(sortierung)
+        val ausgangsNamen = ausgänge.map(::öffentlicherKartenName)
+        if (ausgangsNamen.distinct().size != ausgangsNamen.size) {
+            return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Öffentliche Karten-Ausgänge benötigen eindeutige Namen.")
+        }
         val werte = ausgänge.mapNotNull { ausgang ->
             val name = öffentlicherKartenName(ausgang)
             internErgebnis.knoten[ausgang.id]?.ausgaben?.get("wert")?.let { name to it }
-        }.toMap()
+        }.toMap(LinkedHashMap())
         if (!knoten.art.startsWith("methode.")) return KnotenAuswertungsErgebnis(werte)
-        if (interneEingänge.size != 1) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Methode benötigt genau einen öffentlichen Karten-Eingang.")
-        if (ausgänge.size != 1 || werte.size != 1) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Methode benötigt genau einen öffentlichen Karten-Ausgang mit Wert.")
-        val zielMengen = werte.mapValues { (name, wert) -> wert.zielMenge ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.") }
-        val funktion = Funktion(knoten.name, freie.distinctBy { it.name }, werte.mapValues { it.value.objekt }, zielMengen)
-        if (funktion.einzigeAusgabe().second is MengenAusdruck) funktion.prüfeAlsIterationsMethode(erwartetMengenwert = true)
+        if (ausgänge.isEmpty()) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Kartenmethode benötigt mindestens einen öffentlichen Ausgang.")
+        if (werte.size != ausgänge.size) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Nicht alle öffentlichen Kartenausgänge liefern einen Wert.")
+        val zielMengen = werte.mapValues { (name, wert) ->
+            wert.zielMenge ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.")
+        }
+        val funktion = Funktion(
+            name = knoten.name,
+            parameter = freie.distinctBy { it.name },
+            ausgaben = werte.mapValues { it.value.objekt },
+            zielMengen = zielMengen,
+            werteVorräte = werteVorräte,
+        )
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion)))
     }
 

@@ -59,6 +59,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             }
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
             StandardwerteEditor(knoten, zustand)
+            if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
             if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
             KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
                 inspektor.Inhalt(
@@ -152,11 +153,6 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     label = { Text(schlüssel) },
                     modifier = Modifier.fillMaxWidth(),
                 )
-            }
-            knoten.kartenVerweis?.let { ref ->
-                HorizontalDivider()
-                Text("Kartenverweis: ${ref.kartenId.wert.take(8)}, Version ${ref.version}")
-                Button(onClick = { zustand.öffne(ref) }) { Text("Unterkarte öffnen") }
             }
             Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
