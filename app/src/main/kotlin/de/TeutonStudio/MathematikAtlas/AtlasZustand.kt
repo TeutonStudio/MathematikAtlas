@@ -222,19 +222,8 @@ class AtlasZustand(context: Context) {
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }
-        .flatMap { karte ->
-            val eingänge = öffentlicheKartenAnschlüsse(karte, "mathematik.kartenEingang", AnschlussRichtung.Eingang, AnschlussKante.Links)
-            val ausgänge = öffentlicheKartenAnschlüsse(karte, "mathematik.kartenAusgang", AnschlussRichtung.Ausgang, AnschlussKante.Rechts)
-            listOf(KnotenVorlage(
-                art = "gruppe.${karte.id.wert}",
-                name = karte.name,
-                kategorie = "Gespeicherte Karten",
-                beschreibung = "Wiederverwendbare Karte, fest auf Version ${karte.version} verwiesen.",
-                standardGröße = GraphGröße(240f, maxOf(100f, 54f + maxOf(eingänge.size, ausgänge.size) * 28f)),
-                anschlüsse = eingänge + ausgänge,
-                kartenVerweis = KartenVerweis(karte.id, karte.version),
-            ))
-        }.toList()
+        .map { kartenVorlage(it) }
+        .toList()
 
     private fun referenziertKarte(karte: KartenDaten, gesuchteId: KartenId, besucht: MutableSet<KartenVerweis>): Boolean {
         val refs = karte.knoten.mapNotNull { it.kartenVerweis }

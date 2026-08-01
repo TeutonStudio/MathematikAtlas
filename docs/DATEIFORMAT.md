@@ -38,3 +38,12 @@ Da das Editorformat Knotentypen generisch als Artkennung plus Parameter speicher
 - Wird sie referenziert, erzeugt die nächste Speicherung eine neue Version mit neuem Erstellungsdatum.
 - Bestehende Referenzen werden niemals automatisch umgebogen.
 - Archivierte Karten bleiben für vorhandene Referenzen lesbar, werden aber nicht mehr als neue Gruppenknoten angeboten.
+
+## KartenKnoten-Zustände
+
+Ein fest versionierter Kartenverweis besitzt zwei kompatible Darstellungen, ohne das JSON-Schema zu erweitern:
+
+- `gruppe.<karten-id>` spiegelt die öffentlichen `KartenEingang`- und `KartenAusgang`-Knoten als Anschlüsse.
+- `methode.<karten-id>` besitzt keine Eingänge und genau einen Funktionsausgang. Alle öffentlichen Karteneingänge werden geordnet nach ihrer Kartenposition zu Methodenparametern; mehrere benannte Kartenausgänge bleiben erhalten.
+
+Karten- und Versionswechsel behalten Anschluss-IDs nur bei gleicher Richtung und gleichem öffentlichen Namen. Dadurch bleiben ausschließlich weiterhin gültige Verbindungen bestehen. Ein Zustandswechsel ersetzt die Schnittstelle atomar und entfernt die betroffenen Verbindungen in einem Undo-Schritt.

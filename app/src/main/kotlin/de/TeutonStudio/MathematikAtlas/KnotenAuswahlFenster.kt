@@ -58,7 +58,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                 val geometrie = sichtbareVorlagen.filter { it.kategorie.startsWith("Geometrie:") }
                 val mengenZusatz = if (zeigeMengendefinition) 1 else 0
                 val tabs = listOf(
-                    KnotenAuswahlTab("Alle", sichtbareVorlagen, zusätzlicheEinträge = mengenZusatz),
+                    KnotenAuswahlTab("Alle", sichtbareVorlagen.filterNot { it.kategorie in kartenKategorien }, zusätzlicheEinträge = mengenZusatz),
                     KnotenAuswahlTab("Rechnen", rechnen),
                     KnotenAuswahlTab("Zahlen", zahlen),
                     KnotenAuswahlTab("Mengen", mengen, zusätzlicheEinträge = mengenZusatz),

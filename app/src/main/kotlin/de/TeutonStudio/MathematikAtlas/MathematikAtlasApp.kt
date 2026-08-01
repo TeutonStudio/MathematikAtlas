@@ -81,6 +81,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             Box(
                 Modifier.weight(1f).fillMaxWidth()
                     .clipToBounds()
+                    .kartenDropZiel(zustand, dichte.density)
                     .onSizeChanged { editorGröße = it },
             ) {
                 KnotenKartenEditor(

@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.11.x"
-current_version = "2.11.0"
+current_version = "2.11.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -345,3 +345,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.symmetrischeDifferenz"]
 reason = "Ergänzt ausführbare, selbstbezugfreie Definitionskarten für Vereinigung, Schnitt, Differenz und symmetrische Differenz und führt den fehlenden symmetrischen Differenzknoten mit exakter endlicher Auswertung ein."
+
+[[releases]]
+version = "2.11.1"
+title = "Versionierte KartenKnoten und Karten-Drag-and-drop"
+roadmap = "v2.11.x Wiederverwendbare Karten und Methodenknoten"
+status = "released"
+previous_release = "2.11.0"
+branch = "agent/v2.11.1-kartenknoten"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert den vorhandenen Kartenverweis-Knoten um Schnittstellen- und Methodenzustand, Versionswechsel, Kompatibilitätsprüfung und Drag-and-drop, ohne einen neuen registrierten Knotentyp einzuführen."
