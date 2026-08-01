@@ -3,29 +3,39 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.AuswahlModus
+import de.TeutonStudio.MathematikKartenAdapter.FALTUNG_PAAR
 import de.TeutonStudio.MathematikKartenAdapter.MENGENDEFINITION_PAAR
+import de.TeutonStudio.MathematikKnoten.erzeugeFaltungsPaar
 import de.TeutonStudio.MathematikKnoten.erzeugeMengendefinitionsPaar
+import de.TeutonStudio.MathematikKnoten.faltungsPaarId
 import de.TeutonStudio.MathematikKnoten.mengendefinitionsPaarId
 import java.util.UUID
 
 fun AtlasZustand.kannMengendefinitionEinfügen(): Boolean = knotenAuswahlStart == null
+fun AtlasZustand.kannFaltungEinfügen(): Boolean = knotenAuswahlStart == null
 
 fun AtlasZustand.fügeMengendefinitionEin(position: GraphPunkt) {
     if (!kannMengendefinitionEinfügen()) return
     val paar = erzeugeMengendefinitionsPaar(position)
-    val ids = setOf(paar.konstruktor.id, paar.definator.id)
+    fügeGekoppeltesPaarEin(listOf(paar.konstruktor, paar.definator), paar.konstruktor.id)
+}
 
+fun AtlasZustand.fügeFaltungEin(position: GraphPunkt) {
+    if (!kannFaltungEinfügen()) return
+    val paar = erzeugeFaltungsPaar(position)
+    fügeGekoppeltesPaarEin(listOf(paar.konstruktor, paar.definator), paar.konstruktor.id)
+}
+
+private fun AtlasZustand.fügeGekoppeltesPaarEin(knoten: List<KnotenDaten>, hauptKnoten: KnotenId) {
+    val ids = knoten.mapTo(linkedSetOf()) { it.id }
     editor.beginneInteraktion()
     editor.führeAus(
-        KartenAktion.KnotenMehrfachEinfügen(
-            knoten = listOf(paar.konstruktor, paar.definator),
-            verbindungen = emptyList(),
-        ),
+        KartenAktion.KnotenMehrfachEinfügen(knoten = knoten, verbindungen = emptyList()),
         mitHistorie = false,
     )
     editor.führeAus(KartenAktion.VisuelleGruppeErstellen(ids), mitHistorie = false)
     editor.beendeInteraktion()
-    editor.stelleAuswahlWiederHer(ids, paar.konstruktor.id)
+    editor.stelleAuswahlWiederHer(ids, hauptKnoten)
     schließeKnotenAuswahl()
 }
 
@@ -35,7 +45,7 @@ fun AtlasZustand.löscheAuswahlMitMengendefinition() {
         editor.löscheAuswahl()
         return
     }
-    val erweitert = erweitereUmMengendefinitionsPaare(basis)
+    val erweitert = erweitereUmGekoppeltePaare(basis)
     if (erweitert == basis) {
         editor.löscheAuswahl()
         return
@@ -47,8 +57,11 @@ fun AtlasZustand.löscheAuswahlMitMengendefinition() {
 fun AtlasZustand.dupliziereAuswahlMitMengendefinition() {
     val basis = ausgewählteKnotenIds()
     if (basis.isEmpty()) return
-    val ids = erweitereUmMengendefinitionsPaare(basis)
-    if (ids == basis && basis.none { id -> editor.karte.knoten.firstOrNull { it.id == id }?.mengendefinitionsPaarId() != null }) {
+    val ids = erweitereUmGekoppeltePaare(basis)
+    val besitztKopplung = ids.any { id ->
+        editor.karte.knoten.firstOrNull { it.id == id }?.gekoppeltePaarKennung() != null
+    }
+    if (ids == basis && !besitztKopplung) {
         editor.dupliziereAuswahl()
         return
     }
@@ -57,12 +70,12 @@ fun AtlasZustand.dupliziereAuswahlMitMengendefinition() {
     val knotenIds = originale.associate { it.id to neueKnotenId() }
     val anschlussIds = originale.flatMap { knoten -> knoten.anschlüsse.map { it.id } }
         .associateWith { neueAnschlussId() }
-    val neuePaarIds = originale.mapNotNull { it.mengendefinitionsPaarId() }
+    val neuePaarIds = originale.mapNotNull(KnotenDaten::gekoppeltePaarKennung)
         .distinct()
         .associateWith { UUID.randomUUID().toString() }
 
     val kopien = originale.map { original ->
-        val altePaarId = original.mengendefinitionsPaarId()
+        val kennung = original.gekoppeltePaarKennung()
         original.copy(
             id = knotenIds.getValue(original.id),
             name = "${original.name} Kopie",
@@ -70,8 +83,12 @@ fun AtlasZustand.dupliziereAuswahlMitMengendefinition() {
             anschlüsse = original.anschlüsse.map { anschluss ->
                 anschluss.copy(id = anschlussIds.getValue(anschluss.id))
             },
-            parameter = if (altePaarId == null) original.parameter else
-                original.parameter + (MENGENDEFINITION_PAAR to neuePaarIds.getValue(altePaarId)),
+            parameter = when {
+                kennung == null -> original.parameter
+                kennung.startsWith("menge:") -> original.parameter +
+                    (MENGENDEFINITION_PAAR to neuePaarIds.getValue(kennung))
+                else -> original.parameter + (FALTUNG_PAAR to neuePaarIds.getValue(kennung))
+            },
         )
     }
     val interneVerbindungen = editor.karte.verbindungen.filter {
@@ -91,7 +108,7 @@ fun AtlasZustand.dupliziereAuswahlMitMengendefinition() {
 
     editor.beginneInteraktion()
     editor.führeAus(KartenAktion.KnotenMehrfachEinfügen(kopien, interneVerbindungen), mitHistorie = false)
-    kopien.groupBy { it.mengendefinitionsPaarId() }
+    kopien.groupBy(KnotenDaten::gekoppeltePaarKennung)
         .filterKeys { it != null }
         .values
         .map { gruppe -> gruppe.mapTo(linkedSetOf()) { it.id } }
@@ -105,13 +122,19 @@ private fun AtlasZustand.ausgewählteKnotenIds(): Set<KnotenId> =
     if (editor.auswahlModus == AuswahlModus.Gruppe) editor.ausgewählteKnoten
     else setOfNotNull(editor.ausgewählterKnoten)
 
-private fun AtlasZustand.erweitereUmMengendefinitionsPaare(ids: Set<KnotenId>): Set<KnotenId> {
-    val paarIds = editor.karte.knoten
+private fun AtlasZustand.erweitereUmGekoppeltePaare(ids: Set<KnotenId>): Set<KnotenId> {
+    val paarKennungen = editor.karte.knoten
         .filter { it.id in ids }
-        .mapNotNull { it.mengendefinitionsPaarId() }
+        .mapNotNull(KnotenDaten::gekoppeltePaarKennung)
         .toSet()
-    if (paarIds.isEmpty()) return ids
+    if (paarKennungen.isEmpty()) return ids
     return ids + editor.karte.knoten
-        .filter { it.mengendefinitionsPaarId() in paarIds }
+        .filter { it.gekoppeltePaarKennung() in paarKennungen }
         .map { it.id }
+}
+
+private fun KnotenDaten.gekoppeltePaarKennung(): String? = when {
+    mengendefinitionsPaarId() != null -> "menge:${mengendefinitionsPaarId()}"
+    faltungsPaarId() != null -> "faltung:${faltungsPaarId()}"
+    else -> null
 }
