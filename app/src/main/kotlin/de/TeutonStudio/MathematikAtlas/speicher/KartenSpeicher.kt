@@ -51,7 +51,7 @@ class KartenSpeicher(private val context: Context) {
     fun importiere(text: String): KartenDaten = if (KartenFreigabePaket.istFreigabePaket(text)) {
         importierePaket(text)
     } else {
-        val gelesen = KartenJson.lese(text)
+        val gelesen = KartenJson.lese(text).migriereMethodenAnschlüsse()
         val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
@@ -126,7 +126,7 @@ class KartenSpeicher(private val context: Context) {
                 ?: neueKartenId()
         }
         val remappteKarten = paket.karten.map { karte ->
-            karte.copy(
+            karte.migriereMethodenAnschlüsse().copy(
                 id = idAbbildung.getValue(karte.id),
                 knoten = karte.knoten.map { knoten ->
                     knoten.copy(
@@ -206,5 +206,7 @@ class KartenSpeicher(private val context: Context) {
 
     private fun dateiFür(id: KartenId, version: Int) = File(File(kartenOrdner, id.wert), "v$version.json")
     private fun versionAusDatei(file: File) = file.name.removePrefix("v").removeSuffix(".json").toIntOrNull() ?: 0
-    private fun leseDatei(file: File): KartenDaten? = runCatching { if (file.exists()) KartenJson.lese(file.readText()) else null }.getOrNull()
+    private fun leseDatei(file: File): KartenDaten? = runCatching {
+        if (file.exists()) KartenJson.lese(file.readText()).migriereMethodenAnschlüsse() else null
+    }.getOrNull()
 }

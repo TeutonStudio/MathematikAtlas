@@ -11,7 +11,8 @@ private val ZAHL_KARTEN_ART = AnschlussArtId("mathematik.zahl")
 private val AUSSAGE_KARTEN_ART = AnschlussArtId("mathematik.aussage")
 private val MENGE_KARTEN_ART = AnschlussArtId("mathematik.menge")
 private val OBJEKT_KARTEN_ART = AnschlussArtId("mathematik.objekt")
-private val FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion")
+private val METHODE_KARTEN_ART = AnschlussArtId("mathematik.methode")
+private val LEGACY_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion")
 private val ZAHL_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.zahl")
 private val AUSSAGE_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.aussage")
 private val MENGEN_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.menge")
@@ -28,9 +29,9 @@ fun symbolischerEingangswert(
     aussagenVorschau: Aussage? = null,
 ): BedingterWert {
     val parameterName = name.trim().ifBlank { "x" }
-    symbolischeFunktion(art, parameterName)?.let { funktion ->
+    symbolischeMethode(art, parameterName)?.let { methode ->
         return BedingterWert(
-            objekt = funktion,
+            objekt = methode,
             latexDarstellung = parameterName,
         )
     }
@@ -43,7 +44,7 @@ fun symbolischerEingangswert(
     }
     val werteVorrat: MengenAusdruck = when (art) {
         ZAHL_KARTEN_ART -> ReelleZahlen
-        AUSSAGE_KARTEN_ART -> wahrheitsMenge()
+        AUSSAGE_KARTEN_ART -> WahrheitsMenge
         MENGE_KARTEN_ART -> BenannteMenge("mengen_$parameterName", "\\mathcal{P}(\\mathcal{U})")
         else -> BenannteMenge("werte_$parameterName", "\\mathcal{W}_{${parameterName}}")
     }
@@ -63,21 +64,27 @@ fun symbolischerEingangswert(
     )
 }
 
-private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
-    if (art !in setOf(FUNKTION_KARTEN_ART, ZAHL_FUNKTION_KARTEN_ART, AUSSAGE_FUNKTION_KARTEN_ART, MENGEN_FUNKTION_KARTEN_ART)) {
-        return null
-    }
+private fun symbolischeMethode(art: AnschlussArtId, name: String): Methode? {
+    if (art !in setOf(
+            METHODE_KARTEN_ART,
+            LEGACY_FUNKTION_KARTEN_ART,
+            ZAHL_FUNKTION_KARTEN_ART,
+            AUSSAGE_FUNKTION_KARTEN_ART,
+            MENGEN_FUNKTION_KARTEN_ART,
+        )
+    ) return null
+
     val index = Variable("i")
     val anwendungsLatex = "$name(${index.zuLatex()})"
     val kennung = "${name}_von_${index.name}"
     val (wert, zielMenge) = when (art) {
         ZAHL_FUNKTION_KARTEN_ART -> Variable(kennung) to ReelleZahlen
-        AUSSAGE_FUNKTION_KARTEN_ART -> AussagenParameter(kennung, anwendungsLatex) to wahrheitsMenge()
+        AUSSAGE_FUNKTION_KARTEN_ART -> AussagenParameter(kennung, anwendungsLatex) to WahrheitsMenge
         MENGEN_FUNKTION_KARTEN_ART -> MengenParameter(kennung, anwendungsLatex) to BenannteMenge("G_$name", "G")
         else -> TypisiertesElement(kennung, OBJEKT_KARTEN_ART.wert, anwendungsLatex) to
             BenannteMenge("W_$name", "\\mathcal{W}")
     }
-    return Funktion(
+    return Methode(
         name = name,
         parameter = listOf(index),
         ausgaben = mapOf("wert" to wert),
@@ -85,10 +92,6 @@ private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
         werteVorräte = mapOf(index.name to ReelleZahlen),
     )
 }
-
-private fun wahrheitsMenge(): MengenAusdruck = EndlicheMenge(
-    setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)),
-)
 
 /** Erzeugt für öffentliche Karten-Eingänge ein Symbol, das ihrer Anschlussart tatsächlich entspricht. */
 internal object KartenEingangAuswerter : MathematikKnotenAuswerter {
