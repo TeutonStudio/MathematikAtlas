@@ -11,9 +11,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktione
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MENGENKONSTRUKTOR_ART
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
-import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
+import de.TeutonStudio.MathematikRechenSystem.kern.großerOperatorLatex
 
 internal fun variablenFormel(knoten: KnotenDaten): String {
     val name = knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
@@ -91,12 +91,9 @@ class MathematikKnotenRenderer(
         val methodenWert = ergebnis?.eingänge?.get("methode")
         val methode = methodenWert?.objekt as? Funktion
         val indexWert = ergebnis?.eingänge?.get("indexmenge")
-        val indexMenge = when (indexWert?.objekt) {
-            is BenannteMenge -> "\\Set{${indexWert.anzeigeLatex()}}"
-            else -> indexWert?.anzeigeLatex() ?: "\\Set{A}"
-        }
-        val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "idx"
-        val name = methodenWert?.latexDarstellung ?: methode?.name ?: "methode"
+        val indexMenge = indexWert?.anzeigeLatex() ?: "I"
+        val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "i"
+        val name = methodenWert?.latexDarstellung ?: methode?.name ?: "f"
         val zeichen = when (knoten.art) {
             "mathematik.iterierteSumme" -> "\\sum"
             "mathematik.iteriertesProdukt" -> "\\prod"
@@ -105,12 +102,16 @@ class MathematikKnotenRenderer(
             MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART -> when (knoten.parameter["operator"]) {
                 "konjunktion" -> "\\bigwedge"
                 "disjunktion" -> "\\bigvee"
-                "adjunktion" -> "\\stackrel{\\circ}{\\bigvee}"
+                "adjunktion" -> "\\mathop{\\stackrel{\\circ}{\\bigvee}}"
                 else -> "?"
             }
             else -> "\\bigcap"
         }
-        return "${zeichen}_{$parameter \\in $indexMenge} $name($parameter)"
+        return großerOperatorLatex(
+            operator = zeichen,
+            indexBedingung = "$parameter \\in $indexMenge",
+            rumpf = "$name($parameter)",
+        )
     }
 
     private fun extremwertFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
