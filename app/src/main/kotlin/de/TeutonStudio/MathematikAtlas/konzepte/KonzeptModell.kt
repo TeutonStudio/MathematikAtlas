@@ -118,6 +118,13 @@ object TestDefinitionsKarten {
         MathematikKnotenVorlagen.Differenz.art,
         MengenraumKnotenVorlagen.SymmetrischeDifferenz.art ->
             mengenoperatorDefinitionsKarte(vorlage, variantenIndex)
+        MathematikKnotenVorlagen.IterierteSumme.art,
+        MathematikKnotenVorlagen.IteriertesProdukt.art,
+        MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,
+        MathematikKnotenVorlagen.IterierteVereinigung.art,
+        MathematikKnotenVorlagen.IterierterSchnitt.art,
+        MathematikKnotenVorlagen.IteriertesKartesischesProdukt.art ->
+            iterierteOperatorDefinitionsKarte(vorlage, variantenIndex)
         else -> generischeDefinitionsKarte(vorlage, variantenIndex)
     }
 
