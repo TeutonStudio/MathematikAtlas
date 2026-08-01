@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
-        put("formatVersion", 4)
+        put("formatVersion", 5)
         put("id", karte.id.wert)
         put("name", karte.name)
         put("version", karte.version)
@@ -49,7 +49,12 @@ object KartenJson {
         put("eigenschaften", JSONObject().apply {
             k.eigenschaften.forEach { (schlüssel, wert) -> put(schlüssel, eigenschaftZuJson(wert)) }
         })
-        k.kartenVerweis?.let { put("kartenVerweis", JSONObject().put("kartenId", it.kartenId.wert).put("version", it.version)) }
+        k.kartenVerweis?.let { put("kartenVerweis", it.zuJson()) }
+        if (k.eingangsKartenVerweise.isNotEmpty()) {
+            put("eingangsKartenVerweise", JSONObject().apply {
+                k.eingangsKartenVerweise.toSortedMap().forEach { (name, verweis) -> put(name, verweis.zuJson()) }
+            })
+        }
         put("anschlüsse", JSONArray().apply { k.anschlüsse.forEach { a -> put(JSONObject().apply {
             put("id", a.id.wert); put("name", a.name); put("richtung", a.richtung.name); put("kante", a.kante.name)
             put("art", a.art.wert); put("reihenfolge", a.reihenfolge)
@@ -62,7 +67,11 @@ object KartenJson {
     private fun knotenVonJson(j: JSONObject): KnotenDaten {
         val p = j.getJSONObject("position")
         val g = j.getJSONObject("größe")
-        val verweis = j.optJSONObject("kartenVerweis")?.let { KartenVerweis(KartenId(it.getString("kartenId")), it.getInt("version")) }
+        val verweis = j.optJSONObject("kartenVerweis")?.zuKartenVerweis()
+        val eingangsVerweiseJson = j.optJSONObject("eingangsKartenVerweise") ?: JSONObject()
+        val eingangsVerweise = eingangsVerweiseJson.keys().asSequence().mapNotNull { name ->
+            eingangsVerweiseJson.optJSONObject(name)?.zuKartenVerweis()?.let { name to it }
+        }.toMap()
         val parameterJson = j.optJSONObject("parameter") ?: JSONObject()
         val parameter = parameterJson.keys().asSequence().associateWith { parameterJson.optString(it) }
         val eigenschaftenJson = j.optJSONObject("eigenschaften") ?: JSONObject()
@@ -85,9 +94,19 @@ object KartenJson {
                     List(namen.length()) { index -> namen.getString(index) }
                 } ?: emptyList(),
             ) },
-            parameter = parameter, eigenschaften = eigenschaften, kartenVerweis = verweis,
+            parameter = parameter,
+            eigenschaften = eigenschaften,
+            kartenVerweis = verweis,
+            eingangsKartenVerweise = eingangsVerweise,
         )
     }
+
+    private fun KartenVerweis.zuJson() = JSONObject()
+        .put("kartenId", kartenId.wert)
+        .put("version", version)
+
+    private fun JSONObject.zuKartenVerweis() =
+        KartenVerweis(KartenId(getString("kartenId")), getInt("version"))
 
     private fun visuelleGruppeZuJson(gruppe: VisuelleKnotenGruppeDaten) = JSONObject().apply {
         put("id", gruppe.id.wert)
