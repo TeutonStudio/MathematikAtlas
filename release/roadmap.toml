@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.12.x"
-current_version = "2.12.0"
+current_version = "2.12.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -368,3 +368,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.faltungskonstruktor", "mathematik.faltungsdefinator", "mathematik.methodenAnwendung", "mathematik.methodenZielmenge"]
 reason = "Führt ausführbare Definitionskarten für iterierte Operatoren, gekoppelte Faltungszonen, symbolische Methoden-Anwendungen, echte Limits-Darstellung und versionsfeste Kartenmethoden als Eingangs-Fallback ein."
+
+[[releases]]
+version = "2.12.1"
+title = "Adjunktionssymbol und nummerierte Wahrheitstabellen"
+roadmap = "v2.12.x Aussagenlogik und Bedienoberfläche"
+status = "released"
+previous_release = "2.12.0"
+branch = "agent/v2.12.1-aktuelle-issues"
+kind = "fix"
+version_axis = "x"
+reason = "Korrigiert die sichtbare Adjunktion konsistent auf einen ausgefüllten Punkt, behebt die fehlerhafte UND-Darstellung im Kartenadapter und ergänzt graue Zeilenindizes in direkten sowie kartenbasierten Wahrheitstabellen, ohne einen neuen Knotentyp einzuführen."

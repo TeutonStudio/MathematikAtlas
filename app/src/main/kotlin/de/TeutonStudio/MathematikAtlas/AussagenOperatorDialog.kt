@@ -26,6 +26,7 @@ import java.math.BigInteger
 private val WAHRHEITSTABELLEN_SEITENGRÖSSE = BigInteger.valueOf(256)
 private val EINGANGS_ZELLEN_BREITE = 104.dp
 private val ERGEBNIS_ZELLEN_BREITE = 136.dp
+private val ZEILENINDEX_ZELLEN_BREITE = 56.dp
 private val TABELLEN_TRENNER_BREITE = 2.dp
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -41,7 +42,8 @@ internal fun AussagenOperatorDialog(
     if (direkteArt == null && !istIteration) return
 
     val anzahlEingänge = knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang }
-    val tabellenBreite = EINGANGS_ZELLEN_BREITE * anzahlEingänge.toFloat() +
+    val tabellenBreite = ZEILENINDEX_ZELLEN_BREITE +
+        EINGANGS_ZELLEN_BREITE * anzahlEingänge.toFloat() +
         TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
 
     Dialog(
@@ -149,7 +151,8 @@ private fun WahrheitstabellenInhalt(
     val zeilen = remember(tabelle, seitenStart) {
         List(zeilenAufSeite) { offset -> tabelle.zeile(seitenStart + BigInteger.valueOf(offset.toLong())) }
     }
-    val tabellenBreite = EINGANGS_ZELLEN_BREITE * eingänge.size.toFloat() +
+    val tabellenBreite = ZEILENINDEX_ZELLEN_BREITE +
+        EINGANGS_ZELLEN_BREITE * eingänge.size.toFloat() +
         TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
     val listenHöhe = (zeilenAufSeite.coerceIn(1, 10) * 42).dp
 
@@ -193,6 +196,7 @@ private fun WahrheitstabellenInhalt(
             ) {
                 Column(Modifier.width(tabellenBreite)) {
                     Row(Modifier.height(IntrinsicSize.Min)) {
+                        TabellenKopfZelle("Nr.", ZEILENINDEX_ZELLEN_BREITE)
                         eingänge.indices.forEach { index -> TabellenKopfZelle("A${index + 1}") }
                         VerticalDivider(
                             modifier = Modifier.fillMaxHeight(),
@@ -204,6 +208,7 @@ private fun WahrheitstabellenInhalt(
                     LazyColumn(Modifier.height(listenHöhe)) {
                         items(zeilen, key = { it.index.toString() }) { zeile ->
                             Row(Modifier.height(IntrinsicSize.Min)) {
+                                TabellenIndexZelle(zeile.index + BigInteger.ONE)
                                 zeile.eingänge.forEach { wert -> WahrheitswertZelle(wert) }
                                 VerticalDivider(
                                     modifier = Modifier.fillMaxHeight(),
@@ -216,6 +221,20 @@ private fun WahrheitstabellenInhalt(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TabellenIndexZelle(index: BigInteger) {
+    Box(
+        Modifier.width(ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = 8.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+  index.toString(),
+  style = MaterialTheme.typography.bodySmall,
+  color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -257,7 +276,7 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
             "Wahr, sobald mindestens eine von der Methode erzeugte Aussage wahr ist.",
         )
         "adjunktion" -> Triple(
-            "\\stackrel{\\circ}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)",
+            "\\stackrel{\\bullet}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)",
             Wahrheitswert.Lüge,
             "Wahr genau dann, wenn eine ungerade Anzahl der erzeugten Aussagen wahr ist.",
         )
@@ -279,7 +298,7 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
         if (operator == "adjunktion") {
             Text("Binäre Definition", style = MaterialTheme.typography.titleMedium)
             LatexText(
-                "a \\stackrel{\\circ}{\\lor} b \\Leftrightarrow (a \\lor b) \\land \\neg(a \\land b)",
+                "a \\stackrel{\\bullet}{\\lor} b \\Leftrightarrow (a \\lor b) \\land \\neg(a \\land b)",
                 style = MaterialTheme.typography.titleMedium,
             )
         }

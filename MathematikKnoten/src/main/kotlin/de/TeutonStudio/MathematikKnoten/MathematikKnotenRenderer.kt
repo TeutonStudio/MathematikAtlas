@@ -102,7 +102,7 @@ class MathematikKnotenRenderer(
             MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART -> when (knoten.parameter["operator"]) {
                 "konjunktion" -> "\\bigwedge"
                 "disjunktion" -> "\\bigvee"
-                "adjunktion" -> "\\mathop{\\stackrel{\\circ}{\\bigvee}}"
+                "adjunktion" -> "\\mathop{\\stackrel{\\bullet}{\\bigvee}}"
                 else -> "?"
             }
             else -> "\\bigcap"
