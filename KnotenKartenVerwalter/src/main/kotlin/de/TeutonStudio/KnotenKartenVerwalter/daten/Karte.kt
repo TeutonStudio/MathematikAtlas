@@ -12,6 +12,8 @@ data class KnotenDaten(
     val parameter: Map<String, String> = emptyMap(),
     val eigenschaften: Map<String, KnotenEigenschaft> = emptyMap(),
     val kartenVerweis: KartenVerweis? = null,
+    /** Versionsfeste Karten-Fallbacks für einzelne Eingänge; eine Edge besitzt stets Vorrang. */
+    val eingangsKartenVerweise: Map<String, KartenVerweis> = emptyMap(),
 )
 
 data class VerbindungDaten(
