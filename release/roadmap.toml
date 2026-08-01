@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.13.x"
-current_version = "2.13.0"
+current_version = "2.13.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -402,3 +402,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.methodeAufrufen"]
 reason = "Führt einen separat erzeugbaren allgemeinen Methodenaufruf mit geordneten dynamischen Argumenten, konkreter und symbolischer Auswertung sowie Zielmengenweitergabe ein."
+
+[[releases]]
+version = "2.13.1"
+title = "Methodenaufruf aus Methodenvertrag"
+roadmap = "v2.13.x Methoden und wiederverwendbare Karten"
+status = "released"
+previous_release = "2.13.0"
+branch = "agent/v2.13.1-methode-aufruf-vertrag"
+kind = "fix"
+version_axis = "x"
+reason = "Vervollständigt den vorhandenen Methodenaufruf um automatische Stelligkeit, stabile Argumentanschlüsse, Typ- und Zielmengeninferenz sowie eine schreibgeschützte Vertragsanzeige im Inspector, ohne einen weiteren Knotentyp einzuführen."
