@@ -248,8 +248,8 @@ private class LatexParser(
         val oben = liesGruppenText()
         val unten = liesGruppenText()
         when (oben to unten) {
-            "\\circ" to "\\lor" -> ausgabe.append("∨̊")
-            "\\circ" to "\\bigvee" -> ausgabe.append("⋁̊")
+            "\\bullet" to "\\lor" -> ausgabe.append("∨̊")
+            "\\bullet" to "\\bigvee" -> ausgabe.append("⋁̊")
             else -> {
                 mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.66.em)) {
                     LatexParser(oben, ausgabe, wahrFarbe, lügeFarbe).schreibe()
