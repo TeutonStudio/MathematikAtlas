@@ -88,19 +88,13 @@ fun iterierteVereinigung(methode: Funktion, indexMenge: MengenAusdruck): MengenA
 fun iterierterSchnitt(methode: Funktion, indexMenge: MengenAusdruck): MengenAusdruck = iteriereMengen(methode, indexMenge, true)
 fun iteriertesKartesischesProdukt(methode: Funktion, indexMenge: MengenAusdruck): MengenAusdruck {
     methode.prüfeAlsIterationsMethode(erwartetMengenwert = true)
+    if (indexMenge == LeereMenge) return leeresIndexProdukt()
     if (indexMenge !is EndlicheMenge) return IteriertesKartesischesProdukt(methode, indexMenge)
     val parameter = methode.parameter.single()
     val indexe = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
         index as? ZahlAusdruck ?: error("Die Indexmenge muss Zahlen enthalten.")
     }
-    if (indexe.isEmpty()) {
-        val leereAuswahl = Funktion(
-            name = "\\varnothing",
-            parameter = emptyList(),
-            ausgaben = emptyMap(),
-        )
-        return EndlicheMenge(setOf(leereAuswahl))
-    }
+    if (indexe.isEmpty()) return leeresIndexProdukt()
     val mengen = indexe.map { index ->
         methode.wendeAn(mapOf(parameter.name to index)).values.single() as? MengenAusdruck
             ?: error("Die Methode '${methode.name}' muss Mengen liefern.")
@@ -125,6 +119,16 @@ fun iteriertesKartesischesProdukt(methode: Funktion, indexMenge: MengenAusdruck)
     }.toSet()
     return EndlicheMenge(auswahlFunktionen)
 }
+
+private fun leeresIndexProdukt(): EndlicheMenge = EndlicheMenge(
+    setOf(
+        Funktion(
+            name = "\\varnothing",
+            parameter = emptyList(),
+            ausgaben = emptyMap(),
+        ),
+    ),
+)
 
 private fun auswahlKörper(
     index: Variable,
