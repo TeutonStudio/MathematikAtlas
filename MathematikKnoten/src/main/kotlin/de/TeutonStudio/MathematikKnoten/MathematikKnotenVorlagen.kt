@@ -124,8 +124,9 @@ object MathematikKnotenVorlagen {
     val KomplexerRadius = KnotenVorlage("mathematik.komplexerRadius", "Radius einer Zahl", "Zahlen", "Betrag einer komplexen Zahl.", GraphGröße(220f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val Winkel = KnotenVorlage("mathematik.winkel", "Winkel einer Zahl", "Zahlen", "Hauptargument einer komplexen Zahl.", GraphGröße(220f, 105f), listOf(eingang("zahl", MathematikAnschlussArten.Zahl.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val EndlicheMenge = KnotenVorlage(
-        "mathematik.endlicheMenge", "Endliche Menge", "Mengen", "Endliche Menge aus einer kommagetrennten Liste.", GraphGröße(220f, 105f),
-        listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)), mapOf("elemente" to "1,2,3"),
+        "mathematik.endlicheMenge", "Endliche Menge", "Mengen", "Endliche Menge aus einer geordnet bearbeitbaren Liste typisierter Elemente.", GraphGröße(240f, 118f),
+        listOf(ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        mapOf(ENDLICHE_MENGE_KONFIGURATION_PARAMETER to EndlicheMengeKonfiguration.standard().zuParameter()),
     )
     val Einzelmenge = KnotenVorlage(
         "mathematik.einzelmenge", "Einzelmenge", "Mengen", "Bildet aus einem beliebigen mathematischen Objekt die Menge, die genau dieses Element enthält.", GraphGröße(225f, 105f),

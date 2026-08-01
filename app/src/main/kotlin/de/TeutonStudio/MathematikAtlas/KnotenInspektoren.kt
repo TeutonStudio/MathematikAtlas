@@ -35,6 +35,7 @@ object KnotenInspektorRegister {
         "mathematik.allgemeinerParameter" to AllgemeineParameterInspektor,
         "mathematik.termZuMethode" to TermZuMethodeInspektor,
         "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
+        "mathematik.endlicheMenge" to EndlicheMengeInspektor,
     )
     fun finde(art: String) = inspektoren[art]
 }

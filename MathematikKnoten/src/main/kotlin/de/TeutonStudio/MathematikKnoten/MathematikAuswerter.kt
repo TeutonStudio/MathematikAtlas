@@ -132,10 +132,7 @@ object StandardMathematikAuswerter {
         registriere("mathematik.imaginärteil") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(k.komplex("zahl").imaginärteil, annahmen(k)))) }
         registriere("mathematik.komplexerRadius") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(komplexerBetrag(k.komplex("zahl")), annahmen(k)))) }
         registriere("mathematik.winkel") { k -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(Argument(k.komplex("zahl")), annahmen(k)))) }
-        registriere("mathematik.endlicheMenge") { k ->
-            val elemente = (k.knoten.parameter["elemente"] ?: "").split(',').filter { it.isNotBlank() }.map { RationaleZahl.parse(it) }.toSet()
-            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(EndlicheMenge(elemente))))
-        }
+        registriere("mathematik.endlicheMenge") { k -> EndlicheMengeAuswerter.auswerten(k) }
         registriere("mathematik.einzelmenge") { k ->
             val element = k.eingänge["element"] ?: error("Element fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
