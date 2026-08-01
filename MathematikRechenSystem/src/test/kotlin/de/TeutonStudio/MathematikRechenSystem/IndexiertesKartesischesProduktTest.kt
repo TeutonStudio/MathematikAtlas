@@ -11,35 +11,36 @@ class IndexiertesKartesischesProduktTest {
 
     @Test
     fun `endliches indexiertes Produkt besteht aus Auswahlfunktionen`() {
-        val ziel = EndlicheMenge((1L..4L).map(RationaleZahl::von).toSet())
+        val werte = EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2)))
         val methode = Funktion(
             name = "A",
             parameter = listOf(i),
-            ausgaben = mapOf(
-                "wert" to FallAusdruck(
-                    wahr = EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2))),
-                    aussage = Gleichheit(i, RationaleZahl.von(1)),
-                    lüge = EndlicheMenge(setOf(RationaleZahl.von(3))),
-                ),
-            ),
-            zielMengen = mapOf("wert" to ziel),
-            werteVorräte = mapOf(i.name to EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2)))),
+            ausgaben = mapOf("wert" to werte),
+            zielMengen = mapOf("wert" to werte),
+            werteVorräte = mapOf(i.name to werte),
         )
         val indexMenge = EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2)))
 
         val produkt = assertIs<EndlicheMenge>(iteriertesKartesischesProdukt(methode, indexMenge))
 
-        assertEquals(2, produkt.elemente.size)
+        assertEquals(4, produkt.elemente.size)
         assertTrue(produkt.elemente.all { it is Funktion })
-        val ersteKoordinaten = produkt.elemente.map { it as Funktion }.map { auswahl ->
+        val koordinaten = produkt.elemente.map { it as Funktion }.map { auswahl ->
             assertEquals(indexMenge, auswahl.werteVorräte.getValue(i.name))
-            assertEquals(
-                RationaleZahl.von(3),
+            listOf(
+                auswahl.wendeAn(mapOf(i.name to RationaleZahl.von(1))).getValue("wert"),
                 auswahl.wendeAn(mapOf(i.name to RationaleZahl.von(2))).getValue("wert"),
             )
-            auswahl.wendeAn(mapOf(i.name to RationaleZahl.von(1))).getValue("wert")
         }.toSet()
-        assertEquals(setOf(RationaleZahl.von(1), RationaleZahl.von(2)), ersteKoordinaten)
+        assertEquals(
+            setOf(
+                listOf(RationaleZahl.von(1), RationaleZahl.von(1)),
+                listOf(RationaleZahl.von(1), RationaleZahl.von(2)),
+                listOf(RationaleZahl.von(2), RationaleZahl.von(1)),
+                listOf(RationaleZahl.von(2), RationaleZahl.von(2)),
+            ),
+            koordinaten,
+        )
     }
 
     @Test
