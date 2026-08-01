@@ -1,0 +1,140 @@
+           einträge.forEach { eintrag ->
+                val grunddaten = listOf(kodieren(eintrag.id), kodieren(eintrag.art))
+                add(
+                    when (val quelle = eintrag.quelle) {
+                        is EndlicheMengeQuelle.ZahlLiteral ->
+                            (listOf("z") + grunddaten + kodieren(quelle.wert)).joinToString(":")
+                        is EndlicheMengeQuelle.TupelLiteral ->
+                            (listOf("t") + grunddaten + quelle.werte.size.toString() + quelle.werte.map(::kodieren)).joinToString(":")
+                        is EndlicheMengeQuelle.Konstante ->
+                            (listOf("k") + grunddaten + kodieren(quelle.id)).joinToString(":")
+                    },
+                )
+            }
+        }.joinToString("|")
+
+        companion object {
+            fun standard(): EndlicheMengeKonfiguration = EndlicheMengeKonfiguration(
+                einträge = listOf("1", "2", "3").mapIndexed { index, wert ->
+                    EndlicheMengeEintrag(
+                        id = "standard-${index + 1}",
+                        art = MathematikAnschlussArten.Zahl.id.wert,
+                        quelle = EndlicheMengeQuelle.ZahlLiteral(wert),
+                    )
+                },
+            ).mitErkannterGemeinsamerArt()
+        }
+    }
+
+    data class EndlicheMengeEintrag(
+        val id: String,
+        val art: String,
+        val quelle: EndlicheMengeQuelle,
+    )
+
+    sealed interface EndlicheMengeQuelle {
+        data class ZahlLiteral(val wert: String) : EndlicheMengeQuelle
+        data class TupelLiteral(val werte: List<String>) : EndlicheMengeQuelle
+        data class Konstante(val id: String) : EndlicheMengeQuelle
+    }
+
+    data class EndlicheMengeLeseErgebnis(
+        val konfiguration: EndlicheMengeKonfiguration,
+        val altformat: Boolean = false,
+        val fehler: String? = null,
+    )
+
+    data class EndlicheMengeElementAuswertung(
+        val objekt: MathematischesObjekt? = null,
+        val art: AnschlussArtId? = null,
+        val fehler: String? = null,
+    )
+
+    data class EndlicheMengeNormalisierung(
+        val konfiguration: EndlicheMengeKonfiguration,
+        val warnungen: List<String> = emptyList(),
+    )
+
+    data class EndlicheMengeKonstante(
+        val id: String,
+        val name: String,
+        val art: AnschlussArtId,
+        val objekt: MathematischesObjekt,
+    )
+
+    object EndlicheMengeKonstanten {
+        val alle: List<EndlicheMengeKonstante> = listOf(
+            EndlicheMengeKonstante("zahl.pi", "π", MathematikAnschlussArten.Zahl.id, Pi),
+            EndlicheMengeKonstante("zahl.e", "e", MathematikAnschlussArten.Zahl.id, EulerscheZahl),
+            EndlicheMengeKonstante(
+                "zahl.i",
+                "i",
+                MathematikAnschlussArten.Zahl.id,
+                KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins),
+            ),
+            EndlicheMengeKonstante(
+                "aussage.wahr",
+                "Wahr",
+                MathematikAnschlussArten.Aussage.id,
+                WahrheitsKonstante(true),
+            ),
+            EndlicheMengeKonstante(
+                "aussage.lüge",
+                "Lüge",
+                MathematikAnschlussArten.Aussage.id,
+                WahrheitsKonstante(false),
+            ),
+            EndlicheMengeKonstante("menge.leer", "∅", MathematikAnschlussArten.Menge.id, LeereMenge),
+            EndlicheMengeKonstante("menge.n", "ℕ", MathematikAnschlussArten.Menge.id, NatürlicheZahlen),
+            EndlicheMengeKonstante("menge.z", "ℤ", MathematikAnschlussArten.Menge.id, GanzeZahlen),
+            EndlicheMengeKonstante("menge.q", "ℚ", MathematikAnschlussArten.Menge.id, RationaleZahlen),
+            EndlicheMengeKonstante("menge.r", "ℝ", MathematikAnschlussArten.Menge.id, ReelleZahlen),
+            EndlicheMengeKonstante("menge.c", "ℂ", MathematikAnschlussArten.Menge.id, KomplexeZahlen),
+            EndlicheMengeKonstante("menge.prim", "Primzahlen", MathematikAnschlussArten.Menge.id, Primzahlen),
+            EndlicheMengeKonstante(
+                "menge.gauss",
+                "Gaußsche ganze Zahlen",
+                MathematikAnschlussArten.Menge.id,
+                GaußscheGanzeZahlen,
+            ),
+            EndlicheMengeKonstante(
+                "menge.gaussPrim",
+                "Gaußsche Primzahlen",
+                MathematikAnschlussArten.Menge.id,
+                GaußschePrimzahlen,
+            ),
+        )
+
+        fun finde(id: String): EndlicheMengeKonstante? = alle.firstOrNull { it.id == id }
+    }
+
+    private val encoder = Base64.getUrlEncoder().withoutPadding()
+    private val decoder = Base64.getUrlDecoder()
+    private val artRegister by lazy { AnschlussArtRegister(MathematikAnschlussArten.alle) }
+
+    fun neuerEndlicheMengeEintrag(): EndlicheMengeEintrag = EndlicheMengeEintrag(
+        id = UUID.randomUUID().toString(),
+        art = MathematikAnschlussArten.Zahl.id.wert,
+        quelle = EndlicheMengeQuelle.ZahlLiteral(""),
+    )
+
+    fun leseEndlicheMengeKonfiguration(knoten: KnotenDaten): EndlicheMengeLeseErgebnis {
+        val neu = knoten.parameter[ENDLICHE_MENGE_KONFIGURATION_PARAMETER]
+        if (!neu.isNullOrBlank()) {
+            return runCatching { EndlicheMengeLeseErgebnis(parseKonfiguration(neu)) }
+                .getOrElse { EndlicheMengeLeseErgebnis(EndlicheMengeKonfiguration(), fehler = it.message) }
+        }
+
+        val alt = knoten.parameter[ENDLICHE_MENGE_ALT_PARAMETER]
+        if (alt != null) {
+            val einträge = alt.split(',')
+                .map(String::trim)
+                .filter(String::isNotBlank)
+                .mapIndexed { index, wert ->
+                    EndlicheMengeEintrag(
+                        id = "legacy-${index + 1}",
+                        art = MathematikAnschlussArten.Zahl.id.wert,
+                        quelle = EndlicheMengeQuelle.ZahlLiteral(wert),
+                    )
+                }
+           

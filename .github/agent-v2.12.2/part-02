@@ -1,0 +1,126 @@
+ return EndlicheMengeLeseErgebnis(
+                EndlicheMengeKonfiguration(einträge = einträge).mitErkannterGemeinsamerArt(),
+                altformat = true,
+            )
+        }
+        return EndlicheMengeLeseErgebnis(EndlicheMengeKonfiguration())
+    }
+
+    fun EndlicheMengeKonfiguration.mitErkannterGemeinsamerArt(): EndlicheMengeKonfiguration {
+        val arten = einträge.mapNotNull { it.tatsächlicheArt() }
+        return copy(gemeinsameArt = artRegister.gemeinsameOberart(arten)?.wert)
+    }
+
+    fun EndlicheMengeEintrag.tatsächlicheArt(): AnschlussArtId? = when (val quelle = quelle) {
+        is EndlicheMengeQuelle.ZahlLiteral -> MathematikAnschlussArten.Zahl.id
+        is EndlicheMengeQuelle.TupelLiteral -> MathematikAnschlussArten.Tupel.id
+        is EndlicheMengeQuelle.Konstante -> EndlicheMengeKonstanten.finde(quelle.id)?.art
+    }
+
+    fun EndlicheMengeEintrag.auswerten(): EndlicheMengeElementAuswertung = runCatching {
+        when (val quelle = quelle) {
+            is EndlicheMengeQuelle.ZahlLiteral -> {
+                require(art == MathematikAnschlussArten.Zahl.id.wert) {
+                    "Ein direkt eingegebener Zahlwert benötigt den Typ Zahl."
+                }
+                EndlicheMengeElementAuswertung(
+                    objekt = parseEndlicheMengeZahl(quelle.wert),
+                    art = MathematikAnschlussArten.Zahl.id,
+                )
+            }
+            is EndlicheMengeQuelle.TupelLiteral -> {
+                require(art == MathematikAnschlussArten.Tupel.id.wert) {
+                    "Ein direkt eingegebenes Tupel benötigt den Typ Tupel."
+                }
+                require(quelle.werte.isNotEmpty()) { "Ein Tupel benötigt mindestens eine Komponente." }
+                EndlicheMengeElementAuswertung(
+                    objekt = Tupel(quelle.werte.mapIndexed { index, wert ->
+                        runCatching { parseEndlicheMengeZahl(wert) }
+                            .getOrElse { error("Tupelkomponente ${index + 1}: ${it.message}") }
+                    }),
+                    art = MathematikAnschlussArten.Tupel.id,
+                )
+            }
+            is EndlicheMengeQuelle.Konstante -> {
+                val konstante = EndlicheMengeKonstanten.finde(quelle.id)
+                    ?: error("Die ausgewählte Konstante ist nicht mehr verfügbar.")
+                val ausgewählteArt = AnschlussArtId(art)
+                require(artRegister.istUnterart(konstante.art, ausgewählteArt)) {
+                    "${konstante.name} ist nicht mit dem Typ ${ausgewählteArt.wert} kompatibel."
+                }
+                EndlicheMengeElementAuswertung(konstante.objekt, konstante.art)
+            }
+        }
+    }.getOrElse { EndlicheMengeElementAuswertung(fehler = it.message ?: "Ungültiges Mengenelement.") }
+
+    fun normalisiereEndlicheMengeKonfiguration(
+        konfiguration: EndlicheMengeKonfiguration,
+    ): EndlicheMengeNormalisierung {
+        val gesehen = linkedSetOf<MathematischesObjekt>()
+        var duplikate = 0
+        val eindeutig = konfiguration.einträge.filter { eintrag ->
+            val objekt = eintrag.auswerten().objekt ?: return@filter true
+            if (gesehen.add(objekt)) true else {
+                duplikate += 1
+                false
+            }
+        }
+        val warnungen = when (duplikate) {
+            0 -> emptyList()
+            1 -> listOf("Ein doppeltes Element wurde zusammengeführt.")
+            else -> listOf("$duplikate doppelte Elemente wurden zusammengeführt.")
+        }
+        return EndlicheMengeNormalisierung(
+            konfiguration.copy(einträge = eindeutig).mitErkannterGemeinsamerArt(),
+            warnungen,
+        )
+    }
+
+    fun parseEndlicheMengeZahl(text: String): ZahlAusdruck {
+        val kompakt = text.trim().replace(" ", "")
+        require(kompakt.isNotEmpty()) { "Zahlwert fehlt." }
+        if (!kompakt.endsWith('i')) return parseReelleKomponente(kompakt)
+
+        val ohneI = kompakt.dropLast(1)
+        if (ohneI.isEmpty() || ohneI == "+") return KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins)
+        if (ohneI == "-") return KomplexeZahl(RationaleZahl.Null, RationaleZahl.von(-1))
+
+        val trennung = (1 until ohneI.length).lastOrNull { ohneI[it] == '+' || ohneI[it] == '-' }
+        return if (trennung == null) {
+            KomplexeZahl(RationaleZahl.Null, parseReelleKomponente(ohneI))
+        } else {
+            val real = parseReelleKomponente(ohneI.substring(0, trennung))
+            val imaginärText = ohneI.substring(trennung)
+            val imaginär = when (imaginärText) {
+                "+" -> RationaleZahl.Eins
+                "-" -> RationaleZahl.von(-1)
+                else -> parseReelleKomponente(imaginärText)
+            }
+            KomplexeZahl(real, imaginär)
+        }
+    }
+
+    private fun parseReelleKomponente(text: String): ZahlAusdruck = when (text.lowercase()) {
+        "pi", "π" -> Pi
+        "e" -> EulerscheZahl
+        else -> if ('.' in text) {
+            val dezimal = BigDecimal(text)
+            val skaliert = dezimal.stripTrailingZeros()
+            val nenner = BigInteger.TEN.pow(skaliert.scale().coerceAtLeast(0))
+            RationaleZahl.von(skaliert.unscaledValue(), nenner)
+        } else RationaleZahl.parse(text)
+    }
+
+    private fun parseKonfiguration(text: String): EndlicheMengeKonfiguration {
+        val segmente = text.split('|')
+        require(segmente.isNotEmpty() && segmente.first().startsWith("v2:")) {
+            "Ungültiges Format der Endliche-Menge-Konfiguration."
+        }
+        val gemeinsameArt = dekodieren(segmente.first().substringAfter("v2:")).ifBlank { null }
+        val einträge = segmente.drop(1).filter(String::isNotBlank).map(::parseEintrag)
+        return EndlicheMengeKonfiguration(einträge = einträge, gemeinsameArt = gemeinsameArt)
+    }
+
+    private fun parseEintrag(text: String): EndlicheMengeEintrag {
+        val teile = text.split(':')
+        require(teile.si

@@ -1,0 +1,47 @@
+name: Agent v2.12.2 Umsetzung
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  implementieren:
+    if: github.head_ref == 'agent/v2.12.2-endliche-menge'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Umsetzungsskript zusammensetzen
+        run: cat .github/agent-v2.12.2/part-* > .github/agent-v2.12.2.py
+      - name: Issue 63 umsetzen
+        run: python3 .github/agent-v2.12.2.py
+      - name: Temporäre Agentendateien entfernen
+        run: rm -rf .github/agent-v2.12.2 .github/agent-v2.12.2.py .github/workflows/agent-v2.12.2.yml
+      - name: Repository und Release prüfen
+        run: |
+          python3 scripts/pruefe_repository.py
+          python3 scripts/pruefe_releaseplan.py
+          python3 scripts/pruefe_versionsfolge.py
+          git diff --check
+      - name: Bauen und testen
+        run: ./gradlew --stacktrace test :app:assembleDebug
+      - name: Umsetzung veröffentlichen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Implementiere typisierte endliche Mengen"
+          git push origin HEAD:${{ github.head_ref }}

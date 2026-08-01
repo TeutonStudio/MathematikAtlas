@@ -1,0 +1,130 @@
+ze >= 4) { "Unvollständiger Endliche-Menge-Eintrag." }
+        val id = dekodieren(teile[1])
+        val art = dekodieren(teile[2])
+        require(id.isNotBlank() && art.isNotBlank()) { "Element-ID und Typ dürfen nicht leer sein." }
+        val quelle = when (teile[0]) {
+            "z" -> {
+                require(teile.size == 4) { "Ungültiger Zahleneintrag." }
+                EndlicheMengeQuelle.ZahlLiteral(dekodieren(teile[3]))
+            }
+            "k" -> {
+                require(teile.size == 4) { "Ungültiger Konstanteneintrag." }
+                EndlicheMengeQuelle.Konstante(dekodieren(teile[3]))
+            }
+            "t" -> {
+                require(teile.size >= 5) { "Ungültiger Tupeleintrag." }
+                val anzahl = teile[3].toIntOrNull() ?: error("Ungültige Tupeldimension.")
+                require(anzahl >= 1 && teile.size == 4 + anzahl) { "Tupeldimension und Komponenten stimmen nicht überein." }
+                EndlicheMengeQuelle.TupelLiteral(teile.drop(4).map(::dekodieren))
+            }
+            else -> error("Unbekannte Elementquelle ${teile[0]}.")
+        }
+        return EndlicheMengeEintrag(id, art, quelle)
+    }
+
+    private fun kodieren(text: String): String = if (text.isEmpty()) "~" else
+        encoder.encodeToString(text.toByteArray(Charsets.UTF_8))
+
+    private fun dekodieren(text: String): String = if (text == "~") "" else
+        String(decoder.decode(text), Charsets.UTF_8)
+    ''',
+)
+
+write(
+    "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/EndlicheMengeAuswerter.kt",
+    r'''
+    package de.TeutonStudio.MathematikKnoten
+
+    import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+    import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
+    import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+    import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
+    import de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge
+    import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
+    import de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt
+
+    object EndlicheMengeAuswerter {
+        fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+            val gelesen = leseEndlicheMengeKonfiguration(kontext.knoten)
+            val fehler = linkedMapOf<String, String>()
+            val elemente = linkedMapOf<MathematischesObjekt, EndlicheMengeEintrag>()
+            var duplikate = 0
+
+            gelesen.konfiguration.einträge.forEach { eintrag ->
+                val auswertung = eintrag.auswerten()
+                val objekt = auswertung.objekt
+                when {
+                    auswertung.fehler != null -> fehler[eintrag.id] = auswertung.fehler
+                    objekt == null -> fehler[eintrag.id] = "Das Element konnte nicht erzeugt werden."
+                    objekt in elemente -> duplikate += 1
+                    else -> elemente[objekt] = eintrag
+                }
+            }
+
+            val menge = if (elemente.isEmpty()) LeereMenge else EndlicheMenge(elemente.keys)
+            val latex = if (elemente.isEmpty()) "\\varnothing" else elemente.keys
+                .joinToString(prefix = "\\{", postfix = "\\}") { it.zuLatex() }
+            val gemeinsameArt = gelesen.konfiguration.mitErkannterGemeinsamerArt().gemeinsameArt
+                ?.let(::AnschlussArtId)
+            val warnungen = when (duplikate) {
+                0 -> emptyList()
+                1 -> listOf("Ein doppeltes Element wurde zusammengeführt.")
+                else -> listOf("$duplikate doppelte Elemente wurden zusammengeführt.")
+            }
+            val gesamtFehler = gelesen.fehler ?: when (fehler.size) {
+                0 -> null
+                1 -> fehler.values.single()
+                else -> "${fehler.size} Mengenelemente sind ungültig."
+            }
+
+            return KnotenAuswertungsErgebnis(
+                ausgaben = mapOf(
+                    "menge" to BedingterWert(
+                        objekt = menge,
+                        latexDarstellung = latex,
+                        elementArt = gemeinsameArt,
+                    ),
+                ),
+                fehler = gesamtFehler,
+                elementFehler = fehler,
+                warnungen = warnungen,
+            )
+        }
+    }
+    ''',
+)
+
+write(
+    "app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/EndlicheMengeInspektor.kt",
+    r'''
+    package de.TeutonStudio.MathematikAtlas
+
+    import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+    import androidx.compose.foundation.layout.*
+    import androidx.compose.foundation.rememberScrollState
+    import androidx.compose.foundation.verticalScroll
+    import androidx.compose.material3.*
+    import androidx.compose.runtime.*
+    import androidx.compose.ui.Alignment
+    import androidx.compose.ui.Modifier
+    import androidx.compose.ui.input.pointer.pointerInput
+    import androidx.compose.ui.platform.LocalDensity
+    import androidx.compose.ui.unit.dp
+    import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+    import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+    import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
+    import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+    import de.TeutonStudio.MathematikKnoten.*
+
+    internal object EndlicheMengeInspektor : KnotenInspektor {
+        private val artRegister = AnschlussArtRegister(MathematikAnschlussArten.alle)
+
+        @Composable
+        override fun Inhalt(
+            knoten: KnotenDaten,
+            ergebnis: KnotenAuswertungsErgebnis?,
+            aktionen: KnotenInspektorAktionen,
+        ) {
+            val rohdaten = knoten.parameter[ENDLICHE_MENGE_KONFIGURATION_PARAMETER]
+            val altwert = knoten.parameter[ENDLICHE_MENGE_ALT_PARAMETER]
+            val gelesen = remember(knoten.id, rohdaten, altwert) { leseEndlicheMengeKonfiguration(knoten) 
