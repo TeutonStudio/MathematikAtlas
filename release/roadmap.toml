@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.12.x"
-current_version = "2.12.2"
+current_series = "2.13.x"
+current_version = "2.13.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -380,7 +380,6 @@ kind = "fix"
 version_axis = "x"
 reason = "Korrigiert die sichtbare Adjunktion konsistent auf einen ausgefüllten Punkt, behebt die fehlerhafte UND-Darstellung im Kartenadapter und ergänzt graue Zeilenindizes in direkten sowie kartenbasierten Wahrheitstabellen, ohne einen neuen Knotentyp einzuführen."
 
-
 [[releases]]
 version = "2.12.2"
 title = "Typisierte endliche Mengen im Inspector"
@@ -391,3 +390,15 @@ branch = "agent/v2.12.2-endliche-menge"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert den vorhandenen Endliche-Menge-Knoten um eine strukturierte typisierte Elementliste, Migration und Elementtyp-Metadaten, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.13.0"
+title = "Allgemeiner Methodenaufruf"
+roadmap = "v2.13.x Methoden und wiederverwendbare Karten"
+status = "released"
+previous_release = "2.12.2"
+branch = "agent/v2.13.0-methode-aufrufen"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.methodeAufrufen"]
+reason = "Führt einen separat erzeugbaren allgemeinen Methodenaufruf mit geordneten dynamischen Argumenten, konkreter und symbolischer Auswertung sowie Zielmengenweitergabe ein."
