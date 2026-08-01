@@ -10,6 +10,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class MethodenAufrufSynchronisierungTest {
@@ -33,6 +34,7 @@ class MethodenAufrufSynchronisierungTest {
 
         assertEquals(1, argumente.size)
         assertEquals("argument-0", argumente.single().name)
+        assertEquals(AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"), argumente.single().id)
         assertEquals(MathematikAnschlussArten.Zahl.id, argumente.single().art)
         assertEquals(MathematikAnschlussArten.Zahl.id, ergebnisKnoten.wertAusgang().art)
         assertEquals("1", ergebnisKnoten.parameter[METHODEN_AUFRUF_STELLIGKEIT])
@@ -42,7 +44,7 @@ class MethodenAufrufSynchronisierungTest {
     }
 
     @Test
-    fun `mehrstellige Methode erhält Anschluss IDs indexstabil und in Parameterreihenfolge`() {
+    fun `mehrstellige Methode erhält deterministische Anschluss IDs und Parameterreihenfolge`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
         val ursprünglicheIds = knoten.argumente().map { it.id }
         val x = Variable("x")
@@ -58,12 +60,66 @@ class MethodenAufrufSynchronisierungTest {
         val einmal = synchronisiere(knoten, methode)
         val zweimal = synchronisiere(einmal.knoten.single(), methode)
         val argumente = zweimal.knoten.single().argumente()
+        val erwarteteIds = listOf(
+            AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"),
+            AnschlussId("${knoten.id.wert}:methodenAufruf:argument:1"),
+        )
 
         assertEquals(listOf("argument-0", "argument-1"), argumente.map { it.name })
         assertEquals(listOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Menge.id), argumente.map { it.art })
-        assertEquals(ursprünglicheIds, argumente.map { it.id })
+        assertNotEquals(ursprünglicheIds, argumente.map { it.id })
+        assertEquals(erwarteteIds, argumente.map { it.id })
         assertEquals(einmal.knoten.single().anschlüsse.map { it.id }, zweimal.knoten.single().anschlüsse.map { it.id })
         assertEquals(MathematikAnschlussArten.Menge.id, zweimal.knoten.single().wertAusgang().art)
+    }
+
+    @Test
+    fun `bestehende Argumentkante wird auf deterministische Anschluss ID migriert`() {
+        val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
+        val altesArgument = knoten.argumente().first()
+        val quelle = KnotenDaten(
+            id = KnotenId("quelle"),
+            art = "test.zahl",
+            name = "Zahl",
+            anschlüsse = listOf(
+                AnschlussDaten(
+                    id = AnschlussId("quelle-wert"),
+                    name = "wert",
+                    richtung = AnschlussRichtung.Ausgang,
+                    kante = AnschlussKante.Rechts,
+                    art = MathematikAnschlussArten.Zahl.id,
+                ),
+            ),
+        )
+        val verbindung = VerbindungDaten(
+            von = AnschlussVerweis(quelle.id, quelle.anschlüsse.single().id),
+            zu = AnschlussVerweis(knoten.id, altesArgument.id),
+        )
+        val x = Variable("x")
+        val methode = Funktion(
+            name = "f",
+            parameter = listOf(x),
+            ausgaben = mapOf("wert" to x),
+            zielMengen = mapOf("wert" to ReelleZahlen),
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+        val ergebnis = KnotenAuswertungsErgebnis(
+            ausgaben = emptyMap(),
+            eingänge = mapOf("methode" to BedingterWert(methode)),
+        )
+        val karte = KartenDaten(name = "Test", knoten = listOf(quelle, knoten), verbindungen = listOf(verbindung))
+
+        val synchronisiert = synchronisiereMethodenAufrufe(
+            karte,
+            KartenAuswertungsErgebnis(mapOf(knoten.id to ergebnis), emptyList()),
+            prüfung,
+        )
+
+        assertEquals(1, synchronisiert.verbindungen.size)
+        assertEquals(
+            AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"),
+            synchronisiert.verbindungen.single().zu.anschlussId,
+        )
     }
 
     @Test
@@ -84,7 +140,7 @@ class MethodenAufrufSynchronisierungTest {
     }
 
     @Test
-    fun `unbekannter Vertrag fällt auf einen allgemeinen erweiterbaren Anschluss zurück`() {
+    fun `unbekannter Vertrag behält eine erweiterbare allgemeine Argumentliste`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
         val karte = KartenDaten(name = "Test", knoten = listOf(knoten))
 
@@ -94,9 +150,9 @@ class MethodenAufrufSynchronisierungTest {
             prüfung,
         ).knoten.single()
 
-        assertEquals(1, synchronisiert.argumente().size)
-        assertTrue(synchronisiert.argumente().single().kannSichErweitern)
-        assertEquals(MathematikAnschlussArten.Objekt.id, synchronisiert.argumente().single().art)
+        assertEquals(listOf("argument-0", "argument-1"), synchronisiert.argumente().map { it.name })
+        assertTrue(synchronisiert.argumente().all { it.kannSichErweitern })
+        assertTrue(synchronisiert.argumente().all { it.art == MathematikAnschlussArten.Objekt.id })
         assertEquals(MathematikAnschlussArten.Objekt.id, synchronisiert.wertAusgang().art)
         assertFalse(METHODEN_AUFRUF_STELLIGKEIT in synchronisiert.parameter)
     }
