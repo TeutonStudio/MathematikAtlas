@@ -172,6 +172,7 @@ private fun anschlussArtFürParameter(parameter: FunktionsParameter): AnschlussA
     is AussagenParameter -> MathematikAnschlussArten.Aussage.id
     is MengenParameter -> MathematikAnschlussArten.Menge.id
     is TypisiertesElement -> AnschlussArtId(parameter.anschlussArt)
+    is AllgemeinerParameter -> MathematikAnschlussArten.Objekt.id
 }
 
 private fun anschlussArtFürObjekt(objekt: MathematischesObjekt): AnschlussArtId = when (objekt) {
