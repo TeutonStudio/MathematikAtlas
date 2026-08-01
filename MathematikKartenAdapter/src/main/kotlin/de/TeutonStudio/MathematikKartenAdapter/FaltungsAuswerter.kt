@@ -166,6 +166,7 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
         } else {
             symbolischerAnwendungsWert(methode, argumente, ergebnisArt) to null
         }
+        val anwendungsLatex = "${methodenWert.anzeigeLatex()}(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
@@ -174,7 +175,7 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
                     zielMenge = zielMenge,
                     reelleVariablen = reelleVariablen(argumentWerte),
                     variablenQuellen = (listOf(methodenWert) + argumentWerte).flatMap { it.variablenQuellen },
-                    latexDarstellung = "${methodenWert.anzeigeLatex()}(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})",
+                    latexDarstellung = anwendungsLatex.takeIf { ergebnisArt == "mathematik.zahl" },
                 ),
             ),
         )
