@@ -32,11 +32,11 @@ class IterierteAussagenOperatorenTest {
     }
 
     @Test
-    fun `iterierte Adjunktion verwendet stackrel bigvee und Set Notation`() {
+    fun `iterierte Adjunktion verwendet stackrel bigvee limits und echte Indexmenge`() {
         val aussage = assertIs<IterierteAdjunktion>(iterierteAdjunktion(methode, BenannteMenge("A")))
 
         assertEquals(
-            "\\stackrel{\\circ}{\\bigvee}_{c \\in \\Set{A}} P(c)",
+            "\\mathop{\\stackrel{\\circ}{\\bigvee}}\\limits_{c \\in A} P(c)",
             aussage.zuLatex(),
         )
     }
