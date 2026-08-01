@@ -16,14 +16,23 @@ internal const val METHODEN_AUFRUF_PARAMETER_PREFIX = "methodenAufruf.parameter.
 
 /**
  * Gleicht die persistierte Anschlussstruktur eines allgemeinen Methodenaufrufs mit dem
- * ausgewerteten Methodenvertrag ab. Anschluss-IDs werden indexstabil erhalten, neue IDs
- * werden deterministisch aus Knoten-ID und Argumentindex gebildet.
+ * ausgewerteten Methodenvertrag ab. Argument-IDs werden deterministisch aus Knoten-ID
+ * und Index gebildet; bestehende Kanten werden beim ersten Abgleich entsprechend migriert.
  */
 internal fun synchronisiereMethodenAufrufe(
     karte: KartenDaten,
     auswertung: KartenAuswertungsErgebnis,
     prüfung: GraphPrüfung,
 ): KartenDaten {
+    val argumentIdErsetzungen = buildMap {
+        karte.knoten.filter { it.art == METHODEN_AUFRUF_ART }.forEach { knoten ->
+            knoten.argumentAnschlüsse().forEachIndexed { index, anschluss ->
+                val alt = AnschlussVerweis(knoten.id, anschluss.id)
+                val neu = AnschlussVerweis(knoten.id, argumentId(knoten.id, index))
+                if (alt != neu) put(alt, neu)
+            }
+        }
+    }
     val synchronisierteKnoten = karte.knoten.map { knoten ->
         if (knoten.art != METHODEN_AUFRUF_ART) return@map knoten
         val methode = auswertung.knoten[knoten.id]
@@ -32,7 +41,15 @@ internal fun synchronisiereMethodenAufrufe(
             ?.objekt as? Funktion
         synchronisiereMethodenAufruf(knoten, methode)
     }
-    var ergebnis = karte.copy(knoten = synchronisierteKnoten)
+    var ergebnis = karte.copy(
+        knoten = synchronisierteKnoten,
+        verbindungen = karte.verbindungen.map { verbindung ->
+            verbindung.copy(
+                von = argumentIdErsetzungen[verbindung.von] ?: verbindung.von,
+                zu = argumentIdErsetzungen[verbindung.zu] ?: verbindung.zu,
+            )
+        },
+    )
     val vorhandeneAnschlüsse = ergebnis.knoten.flatMap { knoten ->
         knoten.anschlüsse.map { AnschlussVerweis(knoten.id, it.id) }
     }.toSet()
@@ -58,38 +75,37 @@ private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Funktion?
     val ausgang = knoten.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Ausgang && it.name == "wert"
     } ?: return knoten
-    val bisherigeArgumente = knoten.anschlüsse
-        .filter { it.richtung == AnschlussRichtung.Eingang && it.name != "methode" }
-        .sortedBy { it.reihenfolge }
+    val bisherigeArgumente = knoten.argumentAnschlüsse()
 
     if (methode == null) {
-        val argument = (bisherigeArgumente.firstOrNull() ?: AnschlussDaten(
-            id = argumentId(knoten.id, 0),
-            name = "argument-0",
-            richtung = AnschlussRichtung.Eingang,
-            kante = AnschlussKante.Links,
-            art = MathematikAnschlussArten.Objekt.id,
-        )).copy(
-            name = "argument-0",
-            art = MathematikAnschlussArten.Objekt.id,
-            reihenfolge = 1,
-            kannSichErweitern = true,
-            dynamischErzeugt = false,
-        )
+        val anzahl = maxOf(2, bisherigeArgumente.size)
+        val argumente = List(anzahl) { index ->
+            val bisher = bisherigeArgumente.getOrNull(index)
+            (bisher ?: AnschlussDaten(
+                id = argumentId(knoten.id, index),
+                name = "argument-$index",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.Objekt.id,
+            )).copy(
+                id = argumentId(knoten.id, index),
+                name = "argument-$index",
+                art = MathematikAnschlussArten.Objekt.id,
+                reihenfolge = index + 1,
+                kannSichErweitern = true,
+                dynamischErzeugt = index >= 2,
+            )
+        }
         return knoten.copy(
-            anschlüsse = listOf(
-                methodenEingang.copy(reihenfolge = 0),
-                argument,
+            anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
                 ausgang.copy(art = MathematikAnschlussArten.Objekt.id),
-            ),
             parameter = knoten.parameter
                 .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }
                 .minus(METHODEN_AUFRUF_STELLIGKEIT)
                 .minus(METHODEN_AUFRUF_ZIELMENGE)
                 .minus(METHODEN_AUFRUF_VERTRAGSFEHLER)
                 .plus(METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Objekt.id.wert)
-                .plus("festeEingänge" to "1")
-                .plus("minimaleErweiterbareEingänge" to "1"),
+                .plus("festeEingänge" to "2"),
         )
     }
 
@@ -113,6 +129,7 @@ private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Funktion?
             kante = AnschlussKante.Links,
             art = anschlussArtFürParameter(parameter),
         )).copy(
+            id = argumentId(knoten.id, index),
             name = "argument-$index",
             art = anschlussArtFürParameter(parameter),
             reihenfolge = index + 1,
@@ -142,6 +159,10 @@ private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Funktion?
             .minus(METHODEN_AUFRUF_VERTRAGSFEHLER) + vertragsParameter,
     )
 }
+
+private fun KnotenDaten.argumentAnschlüsse() = anschlüsse
+    .filter { it.richtung == AnschlussRichtung.Eingang && it.name != "methode" }
+    .sortedBy { it.reihenfolge }
 
 private fun argumentId(knotenId: KnotenId, index: Int) =
     AnschlussId("${knotenId.wert}:methodenAufruf:argument:$index")
