@@ -105,7 +105,8 @@ internal fun KartenWahrheitstabellenDialog(
 
     val ausgänge = quelle.aussageAusgänge +
         if (weitereAnzeigen) quelle.weitereAusgänge else emptyList()
-    val tabellenBreite = KARTEN_EINGANGS_ZELLEN_BREITE * freieLogischeEingänge.size.toFloat() +
+    val tabellenBreite = KARTEN_ZEILENINDEX_ZELLEN_BREITE +
+        KARTEN_EINGANGS_ZELLEN_BREITE * freieLogischeEingänge.size.toFloat() +
         (if (freieLogischeEingänge.isNotEmpty()) KARTEN_TABELLEN_TRENNER_BREITE else 0.dp) +
         KARTEN_ERGEBNIS_ZELLEN_BREITE * ausgänge.size.toFloat()
 

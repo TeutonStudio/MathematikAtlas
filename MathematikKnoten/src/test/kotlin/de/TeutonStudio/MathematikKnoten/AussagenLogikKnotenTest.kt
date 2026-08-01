@@ -90,7 +90,7 @@ class AussagenLogikKnotenTest {
 
         assertEquals(Wahrheitswert.Wahr, assertIs<de.TeutonStudio.MathematikRechenSystem.kern.Aussage>(ausgabe).entscheide().wahrheitswert)
         assertEquals(
-            "\\mathcal{Wahr} \\stackrel{\\circ}{\\lor} \\mathcal{Wahr} \\stackrel{\\circ}{\\lor} \\mathcal{Wahr}",
+            "\\mathcal{Wahr} \\stackrel{\\bullet}{\\lor} \\mathcal{Wahr} \\stackrel{\\bullet}{\\lor} \\mathcal{Wahr}",
             ausgabe.zuLatex(),
         )
     }

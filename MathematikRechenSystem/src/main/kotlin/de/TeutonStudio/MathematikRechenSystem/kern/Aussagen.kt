@@ -148,7 +148,7 @@ data class Adjunktion(val links: Aussage, val rechts: Aussage) : Aussage {
             status = if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
         )
     }
-    override fun zuLatex() = "${links.zuLatex()} \\stackrel{\\circ}{\\lor} ${rechts.zuLatex()}"
+    override fun zuLatex() = "${links.zuLatex()} \\stackrel{\\bullet}{\\lor} ${rechts.zuLatex()}"
 }
 
 /** Assoziative Paritätsfortsetzung der binären Adjunktion. */

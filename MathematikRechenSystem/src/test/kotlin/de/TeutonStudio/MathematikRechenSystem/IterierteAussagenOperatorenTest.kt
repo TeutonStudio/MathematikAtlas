@@ -36,7 +36,7 @@ class IterierteAussagenOperatorenTest {
         val aussage = assertIs<IterierteAdjunktion>(iterierteAdjunktion(methode, BenannteMenge("A")))
 
         assertEquals(
-            "\\mathop{\\stackrel{\\circ}{\\bigvee}}\\limits_{c \\in A} P(c)",
+            "\\mathop{\\stackrel{\\bullet}{\\bigvee}}\\limits_{c \\in A} P(c)",
             aussage.zuLatex(),
         )
     }

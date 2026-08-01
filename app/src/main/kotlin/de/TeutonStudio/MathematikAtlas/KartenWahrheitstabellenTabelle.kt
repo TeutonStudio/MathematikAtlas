@@ -16,6 +16,7 @@ import java.math.BigInteger
 
 internal val KARTEN_EINGANGS_ZELLEN_BREITE = 124.dp
 internal val KARTEN_ERGEBNIS_ZELLEN_BREITE = 152.dp
+internal val KARTEN_ZEILENINDEX_ZELLEN_BREITE = 56.dp
 internal val KARTEN_TABELLEN_TRENNER_BREITE = 2.dp
 internal val KARTEN_TABELLEN_SEITENGRÖSSE = BigInteger.valueOf(32)
 
@@ -32,6 +33,7 @@ internal fun KartenTabelle(
         Box(Modifier.width(breite.coerceAtMost(920.dp)).horizontalScroll(rememberScrollState())) {
             Column(Modifier.width(breite)) {
                 Row(Modifier.height(IntrinsicSize.Min)) {
+                    KartenTabellenKopfZelle("Nr.", KARTEN_ZEILENINDEX_ZELLEN_BREITE)
                     for (feld in eingänge) {
                         val titel = if (feld in freiePrädikate) {
                             val mengen = parseKartenTabellenMengenListe(
@@ -60,6 +62,7 @@ internal fun KartenTabelle(
                 HorizontalDivider(thickness = KARTEN_TABELLEN_TRENNER_BREITE)
                 for (zeile in zeilen) {
                     Row(Modifier.height(IntrinsicSize.Min)) {
+                        KartenTabellenIndexZelle(zeile.index + BigInteger.ONE)
                         for (wert in zeile.eingänge) {
                             KartenAussageZelle(if (wert) Wahrheitswert.Wahr else Wahrheitswert.Lüge)
                         }
@@ -74,6 +77,20 @@ internal fun KartenTabelle(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun KartenTabellenIndexZelle(index: BigInteger) {
+    Box(
+        Modifier.width(KARTEN_ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = 8.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+  index.toString(),
+  style = MaterialTheme.typography.bodySmall,
+  color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

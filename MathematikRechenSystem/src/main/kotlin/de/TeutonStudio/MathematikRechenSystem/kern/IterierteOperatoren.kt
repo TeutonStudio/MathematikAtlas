@@ -43,7 +43,7 @@ data class IterierteAdjunktion(val methode: Funktion, val indexMenge: MengenAusd
         if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion).entscheide(kontext)
         else symbolischeAussagenIteration()
 
-    override fun zuLatex() = iterationsLatex("\\mathop{\\stackrel{\\circ}{\\bigvee}}", methode, indexMenge)
+    override fun zuLatex() = iterationsLatex("\\mathop{\\stackrel{\\bullet}{\\bigvee}}", methode, indexMenge)
 }
 
 /** Gemeinsame kanonische Darstellung großer Operatoren für Rechenkern und UI. */

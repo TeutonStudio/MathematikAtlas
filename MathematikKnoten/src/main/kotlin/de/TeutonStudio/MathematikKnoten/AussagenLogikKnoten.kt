@@ -119,7 +119,7 @@ enum class AussagenOperatorArt(
     Negation("mathematik.negation", "Negation", 1, 1, "\\neg"),
     Konjunktion("mathematik.konjunktion", "Konjunktion", 2, null, "\\land"),
     Disjunktion("mathematik.disjunktion", "Disjunktion", 2, null, "\\lor"),
-    Adjunktion("mathematik.adjunktion", "Adjunktion", 2, null, "\\stackrel{\\circ}{\\lor}"),
+    Adjunktion("mathematik.adjunktion", "Adjunktion", 2, null, "\\stackrel{\\bullet}{\\lor}"),
     Implikation("mathematik.implikation", "Implikation", 2, 2, "\\Rightarrow"),
     Äquivalenz("mathematik.äquivalenz", "Äquivalenz", 2, 2, "\\Leftrightarrow"),
     ;

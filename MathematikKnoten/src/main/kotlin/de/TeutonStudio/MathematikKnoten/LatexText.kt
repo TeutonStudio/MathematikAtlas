@@ -90,7 +90,7 @@ private data class GroßerOperatorTeile(
 
 private fun zerlegeGroßenOperator(latex: String): GroßerOperatorTeile? {
     val operatoren = listOf(
-        "\\mathop{\\stackrel{\\circ}{\\bigvee}}" to "\\stackrel{\\circ}{\\bigvee}",
+        "\\mathop{\\stackrel{\\bullet}{\\bigvee}}" to "\\stackrel{\\bullet}{\\bigvee}",
         "\\mathop{\\times}" to "\\times",
         "\\sum" to "\\sum",
         "\\prod" to "\\prod",
@@ -248,8 +248,8 @@ private class LatexParser(
         val oben = liesGruppenText()
         val unten = liesGruppenText()
         when (oben to unten) {
-            "\\circ" to "\\lor" -> ausgabe.append("∨̊")
-            "\\circ" to "\\bigvee" -> ausgabe.append("⋁̊")
+            "\\bullet" to "\\lor" -> ausgabe.append("∨̇")
+            "\\bullet" to "\\bigvee" -> ausgabe.append("⋁̇")
             else -> {
                 mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.66.em)) {
                     LatexParser(oben, ausgabe, wahrFarbe, lügeFarbe).schreibe()
@@ -293,7 +293,7 @@ private class LatexParser(
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "ge" to "≥",
         "varnothing" to "∅", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁",
-        "circ" to "∘", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
+        "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
         "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
         "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
         "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",

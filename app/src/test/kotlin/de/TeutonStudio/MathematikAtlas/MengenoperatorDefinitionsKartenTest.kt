@@ -48,7 +48,7 @@ class MengenoperatorDefinitionsKartenTest {
             MengenraumKnotenVorlagen.SymmetrischeDifferenz,
             AussagenLogikKnotenVorlagen.Adjunktion.art,
             "A\\triangle B",
-            "\\stackrel{\\circ}{\\lor}",
+            "\\stackrel{\\bullet}{\\lor}",
         ),
     )
 
