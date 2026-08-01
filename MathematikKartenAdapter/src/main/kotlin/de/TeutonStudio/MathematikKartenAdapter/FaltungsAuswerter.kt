@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 const val FALTUNGSKONSTRUKTOR_ART = "mathematik.faltungskonstruktor"
 const val FALTUNGSDEFINATOR_ART = "mathematik.faltungsdefinator"
 const val METHODEN_ANWENDUNG_ART = "mathematik.methodenAnwendung"
+const val METHODEN_AUFRUF_ART = "mathematik.methodeAufrufen"
 const val METHODEN_ZIELMENGE_ART = "mathematik.methodenZielmenge"
 const val FALTUNG_PAAR = "faltung.paar"
 const val FALTUNG_OPERATOR = "faltung.operator"
@@ -148,18 +149,40 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
 internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
-        val argumentWerte = kontext.knoten.anschlüsse
+        val argumentAnschlüsse = kontext.knoten.anschlüsse
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
-            .map { anschluss -> kontext.eingänge[anschluss.name] ?: error("Das Argument '${anschluss.name}' fehlt.") }
+        val methode = methodenWert.objekt
+        val argumentWerte = if (methode is Funktion) {
+            val benötigteAnschlüsse = argumentAnschlüsse.take(methode.parameter.size)
+            require(benötigteAnschlüsse.size == methode.parameter.size) {
+                "Die Methode '${methode.name}' benötigt ${methode.parameter.size} Argumentanschlüsse, vorhanden sind ${argumentAnschlüsse.size}."
+            }
+            val fehlende = benötigteAnschlüsse.filter { kontext.eingänge[it.name] == null }
+            require(fehlende.isEmpty()) {
+                "Der Methode '${methode.name}' fehlen die Argumente ${fehlende.joinToString { "'${it.name}'" }}."
+            }
+            val überzählige = argumentAnschlüsse.drop(methode.parameter.size)
+                .filter { kontext.eingänge[it.name] != null }
+            require(überzählige.isEmpty()) {
+                "Die Methode '${methode.name}' benötigt ${methode.parameter.size} Argumente; überzählig verbunden sind ${überzählige.joinToString { "'${it.name}'" }}."
+            }
+            benötigteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
+        } else {
+            val letztesVerbundenesArgument = argumentAnschlüsse.indexOfLast { kontext.eingänge[it.name] != null }
+            if (letztesVerbundenesArgument < 0) emptyList() else {
+                val verwendeteAnschlüsse = argumentAnschlüsse.take(letztesVerbundenesArgument + 1)
+                val fehlendes = verwendeteAnschlüsse.firstOrNull { kontext.eingänge[it.name] == null }
+                require(fehlendes == null) {
+                    "Vor dem verbundenen Argument '${verwendeteAnschlüsse.last().name}' fehlt '${fehlendes?.name}'."
+                }
+                verwendeteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
+            }
+        }
         val argumente = argumentWerte.map(BedingterWert::objekt)
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
-        val methode = methodenWert.objekt
         val (wert, zielMenge) = if (methode is Funktion) {
-            require(methode.parameter.size == argumente.size) {
-                "Die Methode '${methode.name}' benötigt ${methode.parameter.size} Argumente, verbunden sind ${argumente.size}."
-            }
             val ausgabe = methode.einzigeAusgabe()
             val bindungen = methode.parameter.mapIndexed { index, parameter -> parameter.name to argumente[index] }.toMap()
             methode.wendeAn(bindungen).getValue(ausgabe.first) to methode.zielMengeFür(ausgabe.first, bindungen)
@@ -175,7 +198,7 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
                     zielMenge = zielMenge,
                     reelleVariablen = reelleVariablen(argumentWerte),
                     variablenQuellen = (listOf(methodenWert) + argumentWerte).flatMap { it.variablenQuellen },
-                    latexDarstellung = anwendungsLatex.takeIf { ergebnisArt == "mathematik.zahl" },
+                    latexDarstellung = anwendungsLatex,
                 ),
             ),
         )
