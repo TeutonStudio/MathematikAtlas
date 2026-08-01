@@ -86,3 +86,5 @@ jobs:
           git add -A
           git commit -m "v2.11.1 KartenKnoten und Karten-Drag-and-drop"
           git push origin HEAD:agent/v2.11.1-kartenknoten
+
+# Separater Push-Commit startet diesen Workflow mit der bereits registrierten Definition.
