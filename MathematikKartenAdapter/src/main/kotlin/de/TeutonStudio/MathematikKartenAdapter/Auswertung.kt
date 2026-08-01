@@ -5,6 +5,13 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 const val DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG = "@mathematik.definitionsmenge.doppelpunkt"
 
+data class ArgumentIdentität(
+    val quelle: String,
+    val rolle: String,
+)
+
+enum class ArgumentQuellenArt { Wert, Aussage }
+
 data class BedingterWert(
     val objekt: MathematischesObjekt,
     val annahmen: Set<Aussage> = emptySet(),
@@ -14,7 +21,13 @@ data class BedingterWert(
     val werteVorrat: MengenAusdruck? = null,
     /** Laufzeitmetadaten für Variablen, deren Wertebereich nachweisbar reell ist. */
     val reelleVariablen: Map<String, MengenAusdruck> = emptyMap(),
-    /** Nichtpersistierte Herkunft der freien Variablen eines aus dem Graphen abgeleiteten Werts. */
+    /**
+     * Nichtpersistierte Herkunft aller freien Methodenargumente.
+     *
+     * Der historische Name bleibt aus Quellkompatibilitätsgründen bestehen. Die
+     * Einträge unterscheiden nun gewöhnliche Werte- und Aussageargumente und
+     * besitzen eine stabile semantische Identität.
+     */
     val variablenQuellen: List<VariablenQuelle> = emptyList(),
     /** Pfadgebundene Darstellung; verändert das mathematische Objekt ausdrücklich nicht. */
     val latexDarstellung: String? = null,
@@ -43,7 +56,45 @@ data class VariablenQuelle(
     val gebundeneArt: AnschlussArtId? = null,
     /** Nichtpersistierter Ausgangswert einer Bindung, etwa Indexmenge oder neutrales Element. */
     val bindungsWert: MathematischesObjekt? = null,
-)
+    /** Ordnung des ersten Auftretens in der Methodensignatur. */
+    val reihenfolge: Int = 0,
+    /** Aussageargumente erscheinen in gemischten Prädikatssignaturen als Einermengen. */
+    val argumentArt: ArgumentQuellenArt = ArgumentQuellenArt.Wert,
+    /** Vollständige symbolische Aussage eines Aussagearguments. */
+    val aussage: Aussage? = null,
+) {
+    val identität: ArgumentIdentität = ArgumentIdentität(
+        quelle = bindungsId ?: knotenId.wert,
+        rolle = bindungsName ?: name,
+    )
+}
+
+/** Stabile Deduplizierung beim ersten Auftreten unter Erhalt der fachlichen Reihenfolge. */
+fun Iterable<VariablenQuelle>.geordnetEindeutig(): List<VariablenQuelle> = buildList {
+    val gesehen = mutableSetOf<ArgumentIdentität>()
+    this@geordnetEindeutig
+        .sortedWith(compareBy<VariablenQuelle>({ it.reihenfolge }, { it.identität.quelle }, { it.identität.rolle }))
+        .forEach { quelle -> if (gesehen.add(quelle.identität)) add(quelle) }
+}
+
+/** Wandelt Adapterquellen in das Android-freie Prädikatsmodell des Rechenkerns um. */
+fun BedingterWert.prädikatsArgumente(): List<PrädikatsArgument> = variablenQuellen
+    .geordnetEindeutig()
+    .filter { it.alsMethodenParameter }
+    .map { quelle ->
+        when (quelle.argumentArt) {
+            ArgumentQuellenArt.Aussage -> PrädikatsArgument.AussageWert(
+                name = quelle.name,
+                latex = quelle.aussage?.zuLatex() ?: quelle.name,
+                identität = "${quelle.identität.quelle}:${quelle.identität.rolle}",
+            )
+            ArgumentQuellenArt.Wert -> PrädikatsArgument.Wert(
+                name = quelle.name,
+                werteVorrat = quelle.werteVorrat,
+                identität = "${quelle.identität.quelle}:${quelle.identität.rolle}",
+            )
+        }
+    }
 
 /** Konservativer Laufzeitnachweis für die Zulässigkeit reeller Zahloperationen. */
 fun BedingterWert.istNachweisbarReell(): Boolean = (objekt as? ZahlAusdruck)?.let { ausdruck ->
@@ -74,8 +125,34 @@ data class KnotenAuswertungsErgebnis(
 
 data class KartenAuswertungsErgebnis(
     val knoten: Map<KnotenId, KnotenAuswertungsErgebnis>,
-    val fehler: List<String>,
-)
+    private val basisFehler: List<String>,
+) {
+    /**
+     * Defensiver Kartenfehler für doppelte offene Prädikatsnamen.
+     *
+     * Identische Methodenobjekte, die lediglich durch weitere Knoten gereicht
+     * werden, zählen einmal. Verschiedene Definitionen mit demselben Namen
+     * werden nicht automatisch umbenannt.
+     */
+    val fehler: List<String> = basisFehler + knoten.values
+        .flatMap { it.ausgaben.values }
+        .mapNotNull { it.objekt as? Methode }
+        .filter { it.istOffenesPrädikat() }
+        .eindeutigNachIdentität()
+        .groupBy { it.name.trim() }
+        .filter { (name, methoden) -> name.isNotEmpty() && methoden.size > 1 }
+        .keys
+        .sorted()
+        .map { name -> "Der Prädikatsname '$name' wird innerhalb der Karte mehrfach definiert." }
+}
+
+
+private fun Iterable<Methode>.eindeutigNachIdentität(): List<Methode> {
+    val gesehen = java.util.Collections.newSetFromMap(
+        java.util.IdentityHashMap<Methode, Boolean>(),
+    )
+    return filter(gesehen::add)
+}
 
 data class KnotenAuswertungsKontext(
     val knoten: KnotenDaten,

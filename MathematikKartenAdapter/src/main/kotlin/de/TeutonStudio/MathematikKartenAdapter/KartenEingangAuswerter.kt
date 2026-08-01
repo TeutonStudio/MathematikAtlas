@@ -48,6 +48,7 @@ fun symbolischerEingangswert(
         MENGE_KARTEN_ART -> BenannteMenge("mengen_$parameterName", "\\mathcal{P}(\\mathcal{U})")
         else -> BenannteMenge("werte_$parameterName", "\\mathcal{W}_{${parameterName}}")
     }
+    val argumentArt = if (objekt is Aussage) ArgumentQuellenArt.Aussage else ArgumentQuellenArt.Wert
 
     return BedingterWert(
         objekt = objekt,
@@ -59,6 +60,8 @@ fun symbolischerEingangswert(
                 name = parameterName,
                 werteVorrat = werteVorrat,
                 alsMethodenParameter = false,
+                argumentArt = argumentArt,
+                aussage = objekt as? Aussage,
             ),
         ),
     )

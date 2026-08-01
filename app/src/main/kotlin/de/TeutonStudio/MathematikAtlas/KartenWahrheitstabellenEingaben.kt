@@ -9,9 +9,7 @@ import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
-import de.TeutonStudio.MathematikRechenSystem.kern.Aussage
-import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
-import de.TeutonStudio.MathematikRechenSystem.kern.FunktionsParameter
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 @Composable
 internal fun KartenTabellenEingabeKonfiguration(
@@ -42,7 +40,7 @@ internal fun KartenTabellenEingabeKonfiguration(
             )
             zustand.anschlussArten.istUnterart(feld.art, MathematikAnschlussArten.Aussage.id) ->
                 Text("${feld.name}: freie Aussage", style = MaterialTheme.typography.bodySmall)
-            zustand.anschlussArten.istUnterart(feld.art, MathematikAnschlussArten.AussageFunktion.id) ->
+            feld.art == MathematikAnschlussArten.Methode.id ->
                 FreieKartenTabellenPrädikatKonfiguration(feld, text, speichereText)
             else -> {
                 val schlüssel = kartenTabellenWertSchlüssel(feld)
@@ -70,21 +68,39 @@ private fun VerbundenerKartenTabellenEingang(
         Text("${feld.name}: verbunden und festgesetzt", style = MaterialTheme.typography.labelLarge)
         when (val objekt = wert.objekt) {
             is Aussage -> KartenAussageZelle(objekt.entscheide().wahrheitswert)
-            is Funktion -> {
-                val parameterListe: List<FunktionsParameter> = objekt.parameter
-                LatexText(
-                    kartenTabellenPrädikatSignatur(objekt),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                parameterListe.forEachIndexed { index: Int, parameter: FunktionsParameter ->
-                    val schlüssel = kartenTabellenPrädikatArgumentSchlüssel(feld, index)
-                    OutlinedTextField(
-                        value = text(schlüssel, "0"),
-                        onValueChange = { speichereText(schlüssel, it) },
-                        label = { Text("Argument ${index + 1}: ${parameter.name}") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
+            is Methode -> {
+                Text(objekt.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
+                if (!objekt.istPrädikat()) {
+                    Text(
+                        "Diese Methode erfüllt das Prädikatskriterium nicht.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
                     )
+                    LatexText(objekt.zuLatex(), style = MaterialTheme.typography.bodyMedium)
+                } else {
+                    LatexText(
+                        runCatching { kartenTabellenPrädikatSignatur(objekt) }.getOrElse { objekt.zuLatex() },
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    objekt.parameter.forEachIndexed { index, parameter ->
+                        val schlüssel = kartenTabellenPrädikatArgumentSchlüssel(feld, index)
+                        val standard = when (parameter) {
+                            is AussagenParameter -> "wahr"
+                            else -> objekt.werteVorräte[parameter.name]
+                                ?.let(::standardArgumentFürKartenTabelle)
+                                ?: ""
+                        }
+                        OutlinedTextField(
+                            value = text(schlüssel, standard),
+                            onValueChange = { speichereText(schlüssel, it) },
+                            label = { Text("Argument ${index + 1}: ${parameter.name}") },
+                            supportingText = {
+                                objekt.werteVorräte[parameter.name]?.let { Text("Wertevorrat: ${it.zuLatex()}") }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                    }
                 }
             }
             else -> LatexText(wert.anzeigeLatex(), style = MaterialTheme.typography.bodyMedium)
@@ -111,7 +127,7 @@ private fun FreieKartenTabellenPrädikatKonfiguration(
             value = mengenText,
             onValueChange = { speichereText(mengenSchlüssel, it) },
             label = { Text("Definitionsmengen, mit Komma") },
-            supportingText = { Text("Beispiel: M, K, R") },
+            supportingText = { Text("Fallback für einen noch unverbundenen Methodenanschluss, Beispiel: M, K, R") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )

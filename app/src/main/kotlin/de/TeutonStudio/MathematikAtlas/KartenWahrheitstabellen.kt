@@ -70,10 +70,10 @@ internal fun erzeugeTabellenPrädikat(
     definitionsMengen: List<MengenAusdruck>,
     argumente: List<MathematischesObjekt>,
     wert: Boolean,
-): Funktion {
+): Methode {
     require(definitionsMengen.isNotEmpty()) { "Ein Prädikat benötigt mindestens eine Definitionsmenge." }
     require(definitionsMengen.size == argumente.size) { "Für jede Definitionsmenge wird genau ein Argument benötigt." }
-    val parameter: List<FunktionsParameter> = definitionsMengen.indices.map { AllgemeinerParameter("x${it + 1}") }
+    val parameter: List<MethodenParameter> = definitionsMengen.indices.map { AllgemeinerParameter("x${it + 1}") }
     val treffer = parameter.zip(argumente)
         .map { (parameterWert, argument) -> Gleichheit(parameterWert, argument) }
         .let { aussagen -> if (aussagen.size == 1) aussagen.single() else Konjunktion(aussagen) }
@@ -82,12 +82,11 @@ internal fun erzeugeTabellenPrädikat(
         aussage = treffer,
         lüge = UnentscheidbareAussage("$name außerhalb der Tabellenbelegung", "Wahrheitstabelle"),
     ) as Aussage
-    val wahrheitsMenge = EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
-    return Funktion(
+    return Methode(
         name = name,
         parameter = parameter,
         ausgaben = mapOf("aussage" to ausgabe),
-        zielMengen = mapOf("aussage" to wahrheitsMenge),
+        zielMengen = mapOf("aussage" to WahrheitsMenge),
         werteVorräte = parameter.zip(definitionsMengen).associate { (variable, menge) -> variable.name to menge },
     )
 }
@@ -163,12 +162,9 @@ internal fun parseKartenTabellenMengenListe(text: String): List<MengenAusdruck> 
         .map(::parseKartenTabellenMenge)
         .ifEmpty { listOf(ReelleZahlen) }
 
-internal fun kartenTabellenPrädikatSignatur(funktion: Funktion): String {
-    val mengen = funktion.parameter.map { parameter ->
-        funktion.werteVorräte[parameter.name] ?: BenannteMenge("?")
-    }
-    return "${kartenTabellenLatexName(funktion.name)}:${mengen.joinToString("\\times") { it.zuLatex() }}"
-}
+/** Verwendet dieselbe Prädikatsdarstellung wie Knoten und Inspektor. */
+internal fun kartenTabellenPrädikatSignatur(methode: Methode): String =
+    methode.kompaktePrädikatsDarstellung()
 
 internal fun kartenTabellenLatexName(name: String): String =
     name.trim().ifEmpty { "P" }.replace(" ", "\\ ")
@@ -180,6 +176,7 @@ internal data class KartenTabellenZeile(
 )
 
 internal sealed interface KartenTabellenZelle {
+    /** `null` ist ein regulärer unbekannter oder unentscheidbarer Zustand. */
     data class WahrheitswertZelle(val wert: Wahrheitswert?) : KartenTabellenZelle
     data class ObjektZelle(val latex: String) : KartenTabellenZelle
     data class FehlerZelle(val text: String) : KartenTabellenZelle
@@ -208,7 +205,13 @@ internal fun berechneKartenTabellenZeile(
     quelle.eingänge.forEach { feld ->
         val verbundenerWert = verbundeneWerte[feld]
         val wert = when {
-            feld in verbundeneFelder && verbundenerWert != null -> verbundenerWert
+            feld in verbundeneFelder && verbundenerWert != null -> {
+                val methode = verbundenerWert.objekt as? Methode
+                if (methode != null && !methode.istPrädikat() && feld.art == MathematikAnschlussArten.Methode.id) {
+                    fehler += "${feld.name}: Die verbundene Methode erfüllt das Prädikatskriterium nicht."
+                }
+                verbundenerWert
+            }
             feld in verbundeneFelder -> {
                 fehler += "${feld.name}: Der verbundene Wert ist nicht auswertbar."
                 BedingterWert(AllgemeinerParameter(feld.name))

@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.12.x"
-current_version = "2.12.2"
+current_version = "2.12.3"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -332,11 +332,11 @@ previous_release = "2.10.2"
 branch = "agent/v2.10.3-karten-wahrheitstabellen"
 kind = "fix"
 version_axis = "x"
-reason = "Erweitert den Wahrheitstabellendialog auf fest versionierte Karten-Knoten mit Aussageausgängen, gemischten Eingaben und mehreren Ausgabespalten, ohne einen neuen Knotentyp einzuführen."
+reason = "Erweitert den Wahrheitstabellendialog auf fest versionierte Karten-Knoten mit Aussageausgängen, gemischten Eingängen und mehreren Ausgabespalten, ohne einen neuen Knotentyp einzuführen."
 
 [[releases]]
 version = "2.11.0"
-title = "Mengendefinitionskarten für Mengenoperatoren"
+title = "Mengendefinitionskarten für Mengenoperatore"
 roadmap = "v2.11.x Symbolische Mengenoperatoren und Definitionskarten"
 status = "released"
 previous_release = "2.10.3"
@@ -355,7 +355,7 @@ previous_release = "2.11.0"
 branch = "agent/v2.11.1-kartenknoten"
 kind = "feature"
 version_axis = "x"
-reason = "Erweitert den vorhandenen Kartenverweis-Knoten um Schnittstellen- und Methodenzustand, Versionswechsel, Kompatibilitätsprüfung und Drag-and-drop, ohne einen neuen registrierten Knotentyp einzuführen."
+reason = "Erweitert den vorhandenen Kartenverweis-Knoten um Schnittstellen- und Methodenzustand, Versionwechsel, Kompatibilitätsprüfung und Drag-and-drop, ohne einen neuen registrierten Knotentyp einzuführen."
 
 [[releases]]
 version = "2.12.0"
@@ -391,3 +391,15 @@ branch = "agent/v2.12.2-endliche-menge"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert den vorhandenen Endliche-Menge-Knoten um eine strukturierte typisierte Elementliste, Migration und Elementtyp-Metadaten, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.12.3"
+title = "Einheitliches Methodenmodell und Prädikatsdarstellung"
+roadmap = "v2.12.x Methodenfundament und Aussagenlogik"
+status = "released"
+previous_release = "2.12.2"
+branch = "agent/v2.12.3-methoden-praedikate"
+kind = "feature"
+version_axis = "x"
+reason = "Vereinheitlicht methodenartige Objekte und Prädikatsdarstellung ohne einen neuen registrierten Knotentyp einzuführen."
+
