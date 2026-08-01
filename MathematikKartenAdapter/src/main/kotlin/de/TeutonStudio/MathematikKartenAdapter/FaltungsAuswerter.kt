@@ -97,7 +97,7 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
             akkumulatorQuelle.gebundeneArt ?: AnschlussArtId("mathematik.objekt"),
         )
         val ergebnis = if (indexMenge is EndlicheMenge) {
-            indexMenge.elemente.sortedBy(::strukturellerSchlüssel).fold(neutral) { aktueller, indexWert ->
+            indexMenge.elemente.sortedBy { it.zuLatex() }.fold(neutral) { aktueller, indexWert ->
                 ersetze(
                     nächster.objekt,
                     mapOf(index.name to indexWert, akkumulator.name to aktueller),
