@@ -90,16 +90,57 @@ fun iteriertesKartesischesProdukt(methode: Funktion, indexMenge: MengenAusdruck)
     methode.prüfeAlsIterationsMethode(erwartetMengenwert = true)
     if (indexMenge !is EndlicheMenge) return IteriertesKartesischesProdukt(methode, indexMenge)
     val parameter = methode.parameter.single()
-    val mengen = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
-        val zahl = index as? ZahlAusdruck ?: error("Die Indexmenge muss Zahlen enthalten.")
-        methode.wendeAn(mapOf(parameter.name to zahl)).values.single() as? MengenAusdruck
+    val indexe = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
+        index as? ZahlAusdruck ?: error("Die Indexmenge muss Zahlen enthalten.")
+    }
+    if (indexe.isEmpty()) {
+        val leereAuswahl = Funktion(
+            name = "\\varnothing",
+            parameter = emptyList(),
+            ausgaben = emptyMap(),
+        )
+        return EndlicheMenge(setOf(leereAuswahl))
+    }
+    val mengen = indexe.map { index ->
+        methode.wendeAn(mapOf(parameter.name to index)).values.single() as? MengenAusdruck
             ?: error("Die Methode '${methode.name}' muss Mengen liefern.")
     }
-    return when (mengen.size) {
-        0 -> EndlicheMenge(setOf(Tupel(emptyList())))
-        1 -> mengen.single()
-        else -> kartesischesProdukt(mengen)
+    if (mengen.any { it !is EndlicheMenge }) return IteriertesKartesischesProdukt(methode, indexMenge)
+    val endlicheMengen = mengen.map { it as EndlicheMenge }
+    val kombinationen = endlicheMengen.fold(listOf(emptyList<MathematischesObjekt>())) { bisher, menge ->
+        val elemente = menge.elemente.sortedBy(::strukturellerSchlüssel)
+        bisher.flatMap { präfix -> elemente.map { element -> präfix + element } }
     }
+    val zielMenge = vereinige(endlicheMengen)
+    val auswahlIndex = Variable(parameter.name)
+    val auswahlFunktionen = kombinationen.map { werte ->
+        val körper = auswahlKörper(auswahlIndex, indexe, werte)
+        Funktion(
+            name = "g",
+            parameter = listOf(auswahlIndex),
+            ausgaben = mapOf("wert" to körper),
+            zielMengen = mapOf("wert" to zielMenge),
+            werteVorräte = mapOf(auswahlIndex.name to indexMenge),
+        )
+    }.toSet()
+    return EndlicheMenge(auswahlFunktionen)
+}
+
+private fun auswahlKörper(
+    index: Variable,
+    indexe: List<ZahlAusdruck>,
+    werte: List<MathematischesObjekt>,
+): MathematischesObjekt {
+    require(indexe.isNotEmpty() && indexe.size == werte.size)
+    var körper = werte.last()
+    for (position in indexe.lastIndex - 1 downTo 0) {
+        körper = FallAusdruck(
+            wahr = werte[position],
+            aussage = Gleichheit(index, indexe[position]),
+            lüge = körper,
+        )
+    }
+    return körper
 }
 
 private enum class IterierteAussagenArt { Konjunktion, Disjunktion, Adjunktion }
