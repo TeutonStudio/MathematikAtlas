@@ -5,12 +5,18 @@ import de.TeutonStudio.MathematikKartenAdapter.*
 import java.util.UUID
 
 object FaltungsKnotenVorlagen {
-    private fun eingang(name: String, art: AnschlussArtId, reihe: Int = 0) = AnschlussDaten(
+    private fun eingang(
+        name: String,
+        art: AnschlussArtId,
+        reihe: Int = 0,
+        erweiterbar: Boolean = false,
+    ) = AnschlussDaten(
         name = name,
         richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links,
         art = art,
         reihenfolge = reihe,
+        kannSichErweitern = erweiterbar,
     )
 
     private fun ausgang(name: String, art: AnschlussArtId, folgt: String? = null) = AnschlussDaten(
@@ -53,6 +59,24 @@ object FaltungsKnotenVorlagen {
         standardParameter = mapOf(FALTUNG_OPERATOR to "summe"),
     )
 
+    val MethodeAufrufen = KnotenVorlage(
+        art = METHODEN_AUFRUF_ART,
+        name = "Methode aufrufen",
+        kategorie = "Methoden",
+        beschreibung = "Wendet eine Methode geordnet auf konkrete oder symbolische Argumente an.",
+        standardGröße = GraphGröße(285f, 135f),
+        anschlüsse = listOf(
+            eingang("methode", MathematikAnschlussArten.Funktion.id, 0),
+            eingang("argument1", MathematikAnschlussArten.Objekt.id, 1, erweiterbar = true),
+            eingang("argument2", MathematikAnschlussArten.Objekt.id, 2, erweiterbar = true),
+            ausgang("wert", MathematikAnschlussArten.Objekt.id),
+        ),
+        standardParameter = mapOf(
+            METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Objekt.id.wert,
+            "festeEingänge" to "2",
+        ),
+    )
+
     val MethodenAnwendungZahl = methodenAnwendung(
         name = "Zahlmethode anwenden",
         methodeArt = MathematikAnschlussArten.ZahlFunktion.id,
@@ -87,6 +111,7 @@ object FaltungsKnotenVorlagen {
     )
 
     val alle = listOf(
+        MethodeAufrufen,
         MethodenAnwendungZahl,
         MethodenAnwendungAussage,
         MethodenAnwendungMenge,
