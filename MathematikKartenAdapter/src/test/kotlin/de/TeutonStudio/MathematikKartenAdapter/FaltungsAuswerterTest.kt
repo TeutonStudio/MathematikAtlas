@@ -22,10 +22,10 @@ class FaltungsAuswerterTest {
                 FALTUNG_AKKUMULATORNAME to "a",
             ),
             anschlüsse = listOf(
-                AnschlussDaten(name = "indexmenge", richtung = AnschlussRichtung.Eingang, art = AnschlussArtId("mathematik.menge")),
-                AnschlussDaten(name = "neutral", richtung = AnschlussRichtung.Eingang, art = AnschlussArtId("mathematik.zahl")),
-                AnschlussDaten(name = "index", richtung = AnschlussRichtung.Ausgang, art = AnschlussArtId("mathematik.zahl")),
-                AnschlussDaten(name = "akkumulator", richtung = AnschlussRichtung.Ausgang, art = AnschlussArtId("mathematik.zahl")),
+                AnschlussDaten(name = "indexmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.menge")),
+                AnschlussDaten(name = "neutral", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.zahl")),
+                AnschlussDaten(name = "index", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId("mathematik.zahl")),
+                AnschlussDaten(name = "akkumulator", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId("mathematik.zahl")),
             ),
         )
         val gebunden = FaltungskonstruktorAuswerter.auswerten(
@@ -76,9 +76,9 @@ class FaltungsAuswerterTest {
             name = "Methode anwenden",
             parameter = mapOf(METHODEN_ANWENDUNG_ERGEBNIS_ART to "mathematik.zahl"),
             anschlüsse = listOf(
-                AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Eingang, art = AnschlussArtId("mathematik.funktion.zahl"), reihenfolge = 0),
-                AnschlussDaten(name = "argument", richtung = AnschlussRichtung.Eingang, art = AnschlussArtId("mathematik.zahl"), reihenfolge = 1),
-                AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, art = AnschlussArtId("mathematik.zahl")),
+                AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.funktion.zahl"), reihenfolge = 0),
+                AnschlussDaten(name = "argument", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.zahl"), reihenfolge = 1),
+                AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId("mathematik.zahl")),
             ),
         )
 
