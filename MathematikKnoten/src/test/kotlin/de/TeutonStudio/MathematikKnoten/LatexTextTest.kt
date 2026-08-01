@@ -29,9 +29,9 @@ class LatexTextTest {
 
     @Test
     fun `rendert große und gepunktete Aussagenoperatoren`() {
-        assertEquals("a ∨̊ b", vereinfacheLatexAnzeige("a \\stackrel{\\circ}{\\lor} b"))
+        assertEquals("a ∨̇ b", vereinfacheLatexAnzeige("a \\stackrel{\\circ}{\\lor} b"))
         assertEquals(
-            "⋁̊idx ∈ {A} methode(idx)",
+            "⋁̇idx ∈ {A} methode(idx)",
             vereinfacheLatexAnzeige("\\stackrel{\\circ}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)"),
         )
         assertEquals("⋀idx ∈ {A} P(idx)", vereinfacheLatexAnzeige("\\bigwedge_{idx \\in \\Set{A}} P(idx)"))
