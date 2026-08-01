@@ -99,7 +99,7 @@ class MathematikAuswerterRegister {
         MENGENDEFINATOR_ART -> MengendefinatorAuswerter
         FALTUNGSKONSTRUKTOR_ART -> FaltungskonstruktorAuswerter
         FALTUNGSDEFINATOR_ART -> FaltungsdefinatorAuswerter
-        METHODEN_ANWENDUNG_ART -> MethodenAnwendungAuswerter
+        METHODEN_ANWENDUNG_ART, METHODEN_AUFRUF_ART -> MethodenAnwendungAuswerter
         METHODEN_ZIELMENGE_ART -> MethodenZielmengeAuswerter
         else -> auswerter[art]
     }
@@ -110,6 +110,7 @@ class MathematikAuswerterRegister {
         FALTUNGSKONSTRUKTOR_ART,
         FALTUNGSDEFINATOR_ART,
         METHODEN_ANWENDUNG_ART,
+        METHODEN_AUFRUF_ART,
         METHODEN_ZIELMENGE_ART,
     )
 }
