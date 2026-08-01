@@ -18,6 +18,8 @@ data class BedingterWert(
     val variablenQuellen: List<VariablenQuelle> = emptyList(),
     /** Pfadgebundene Darstellung; verändert das mathematische Objekt ausdrücklich nicht. */
     val latexDarstellung: String? = null,
+    /** Gemeinsame Anschlussart der Elemente einer mengenwertigen Ausgabe. */
+    val elementArt: AnschlussArtId? = null,
 )
 
 /** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die mathematische Standarddarstellung. */
@@ -64,6 +66,10 @@ data class KnotenAuswertungsErgebnis(
     val fehler: String? = null,
     /** Die beim Auswerten tatsächlich verwendeten Eingabewerte, auch für die Knotendarstellung. */
     val eingänge: Map<String, BedingterWert> = emptyMap(),
+    /** Feldbezogene Konfigurationsfehler, indiziert durch stabile Element-IDs. */
+    val elementFehler: Map<String, String> = emptyMap(),
+    /** Nichtpersistierte Hinweise, etwa über zusammengeführte Mengenelemente. */
+    val warnungen: List<String> = emptyList(),
 )
 
 data class KartenAuswertungsErgebnis(

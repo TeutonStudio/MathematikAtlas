@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.12.x"
-current_version = "2.12.1"
+current_version = "2.12.2"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -379,3 +379,15 @@ branch = "agent/v2.12.1-aktuelle-issues"
 kind = "fix"
 version_axis = "x"
 reason = "Korrigiert die sichtbare Adjunktion konsistent auf einen ausgefüllten Punkt, behebt die fehlerhafte UND-Darstellung im Kartenadapter und ergänzt graue Zeilenindizes in direkten sowie kartenbasierten Wahrheitstabellen, ohne einen neuen Knotentyp einzuführen."
+
+
+[[releases]]
+version = "2.12.2"
+title = "Typisierte endliche Mengen im Inspector"
+roadmap = "v2.12.x Mengenbearbeitung und Bedienoberfläche"
+status = "released"
+previous_release = "2.12.1"
+branch = "agent/v2.12.2-endliche-menge"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert den vorhandenen Endliche-Menge-Knoten um eine strukturierte typisierte Elementliste, Migration und Elementtyp-Metadaten, ohne einen neuen Knotentyp einzuführen."
