@@ -5,6 +5,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 
 class FaltungsAuswerterTest {
     @Test
@@ -96,4 +97,96 @@ class FaltungsAuswerterTest {
         assertEquals(RationaleZahl.von(3), ergebnis.ausgaben.getValue("wert").objekt)
         assertEquals(ReelleZahlen, ergebnis.ausgaben.getValue("wert").zielMenge)
     }
+
+    @Test
+    fun `allgemeiner Methodenaufruf ignoriert unverbundenen Platzhalter bei einstelliger Methode`() {
+        val x = Variable("x")
+        val methode = Funktion(
+            "f", listOf(x), mapOf("wert" to addition(x, RationaleZahl.Eins)),
+            mapOf("wert" to ReelleZahlen), mapOf(x.name to ReelleZahlen),
+        )
+        val knoten = methodenAufrufKnoten()
+
+        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+            KnotenAuswertungsKontext(
+                knoten,
+                mapOf(
+                    "methode" to BedingterWert(methode),
+                    "argument1" to BedingterWert(RationaleZahl.von(4)),
+                ),
+                RechenKontext(),
+            ),
+        )
+
+        assertEquals(RationaleZahl.von(5), ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals("${methode.zuLatex()}(4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+    }
+
+    @Test
+    fun `allgemeiner Methodenaufruf erhält Argumentreihenfolge bei mehrstelliger Methode`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val methode = Funktion(
+            "f",
+            listOf(x, y),
+            mapOf("wert" to Division(x, y)),
+            mapOf("wert" to ReelleZahlen),
+            mapOf(x.name to ReelleZahlen, y.name to ReelleZahlen),
+        )
+        val knoten = methodenAufrufKnoten()
+
+        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+            KnotenAuswertungsKontext(
+                knoten,
+                mapOf(
+                    "methode" to BedingterWert(methode),
+                    "argument1" to BedingterWert(RationaleZahl.von(2)),
+                    "argument2" to BedingterWert(RationaleZahl.von(4)),
+                ),
+                RechenKontext(),
+            ),
+        )
+
+        assertEquals(RationaleZahl.von(1, 2), ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals("${methode.zuLatex()}(2,4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+    }
+
+    @Test
+    fun `allgemeiner Methodenaufruf bleibt mit symbolischem Argument eine Menge`() {
+        val methode = TypisiertesElement("A", "mathematik.funktion", "A")
+        val i = Variable("i")
+        val knoten = methodenAufrufKnoten("mathematik.menge")
+
+        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+            KnotenAuswertungsKontext(
+                knoten,
+                mapOf(
+                    "methode" to BedingterWert(methode),
+                    "argument1" to BedingterWert(i, werteVorrat = NatürlicheZahlen),
+                ),
+                RechenKontext(),
+            ),
+        )
+
+        val wert = assertIs<MengenParameter>(ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals("A(i)", wert.zuLatex())
+        assertEquals("A(i)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+    }
+
+    @Test
+    fun `allgemeiner Methodenaufruf verwendet denselben Auswerter wie bestehende Anwendung`() {
+        assertSame(MethodenAnwendungAuswerter, MathematikAuswerterRegister().finde(METHODEN_AUFRUF_ART))
+    }
+
+    private fun methodenAufrufKnoten(ergebnisArt: String = "mathematik.zahl") = KnotenDaten(
+        art = METHODEN_AUFRUF_ART,
+        name = "Methode aufrufen",
+        parameter = mapOf(METHODEN_ANWENDUNG_ERGEBNIS_ART to ergebnisArt),
+        anschlüsse = listOf(
+            AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.funktion"), reihenfolge = 0),
+            AnschlussDaten(name = "argument1", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.objekt"), reihenfolge = 1, kannSichErweitern = true),
+            AnschlussDaten(name = "argument2", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.objekt"), reihenfolge = 2, kannSichErweitern = true),
+            AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId(ergebnisArt)),
+        ),
+    )
 }
