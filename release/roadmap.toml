@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.11.x"
-current_version = "2.11.1"
+current_series = "2.12.x"
+current_version = "2.12.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -356,3 +356,15 @@ branch = "agent/v2.11.1-kartenknoten"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert den vorhandenen Kartenverweis-Knoten um Schnittstellen- und Methodenzustand, Versionswechsel, Kompatibilitätsprüfung und Drag-and-drop, ohne einen neuen registrierten Knotentyp einzuführen."
+
+[[releases]]
+version = "2.12.0"
+title = "Iterierte Definitionskarten, Faltungszone und echte Limits"
+roadmap = "v2.12.x Iterierte Operatoren und wiederverwendbare Kartenmethoden"
+status = "released"
+previous_release = "2.11.1"
+branch = "agent/v2.12.0-iterierte-definitionskarten"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.faltungskonstruktor", "mathematik.faltungsdefinator", "mathematik.methodenAnwendung", "mathematik.methodenZielmenge"]
+reason = "Führt ausführbare Definitionskarten für iterierte Operatoren, gekoppelte Faltungszonen, symbolische Methoden-Anwendungen, echte Limits-Darstellung und versionsfeste Kartenmethoden als Eingangs-Fallback ein."
