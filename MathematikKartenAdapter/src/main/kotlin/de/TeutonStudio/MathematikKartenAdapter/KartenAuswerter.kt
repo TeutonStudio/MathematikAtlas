@@ -41,7 +41,7 @@ class KartenAuswerter(
             } else if (knoten.kartenVerweis != null) {
                 werteGruppenKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, kartenPfad)
             } else {
-                werteKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, topologischeReihenfolge)
+                werteKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, topologischeReihenfolge, kartenPfad)
             }
             ergebnisse[id] = ergebnis
             ergebnis.fehler?.let { fehler += "${knoten.name}: $it" }
@@ -62,11 +62,33 @@ class KartenAuswerter(
         karte: KartenDaten,
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
         topologischeReihenfolge: Map<KnotenId, Int>,
+        kartenPfad: Set<KartenVerweis>,
     ): KnotenAuswertungsErgebnis {
-        val eingänge = runCatching {
+        val verbundeneEingänge = runCatching {
             sammleEingänge(knoten, verbindungen, karte, ergebnisse)
         }.getOrElse {
             return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
+        }
+        val eingänge = knoten.eingangsKartenVerweise.entries.fold(verbundeneEingänge) { aktuell, (name, verweis) ->
+            if (name in aktuell) return@fold aktuell
+            val anschluss = knoten.anschlüsse.firstOrNull {
+                it.richtung == AnschlussRichtung.Eingang && it.name == name
+            } ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Der Karten-Fallback verweist auf den unbekannten Eingang '$name'.")
+            val fallback = werteReferenzierteKarteAus(
+                verweis = verweis,
+                außen = emptyMap(),
+                kartenPfad = kartenPfad,
+                alsMethode = true,
+            )
+            fallback.fehler?.let { fehler ->
+                return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Karten-Fallback für '$name': $fehler")
+            }
+            val wert = fallback.ausgaben["methode"]
+                ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Der Karten-Fallback für '$name' liefert keine Methode.")
+            if (!anschlussAkzeptiertMethode(anschluss.art, wert.objekt)) {
+                return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
+            }
+            aktuell + (name to wert)
         }
         val annahmen = eingänge.values.flatMap { it.annahmen }.toSet()
         val signatur = 31 * knoten.hashCode() + eingänge.hashCode()
@@ -104,6 +126,18 @@ class KartenAuswerter(
         return ergebnis
     }
 
+    private fun anschlussAkzeptiertMethode(art: AnschlussArtId, objekt: MathematischesObjekt): Boolean {
+        val funktion = objekt as? Funktion ?: return false
+        val ausgabe = runCatching { funktion.einzigeAusgabe().second }.getOrNull() ?: return false
+        return when (art.wert) {
+            "mathematik.funktion.zahl" -> ausgabe is ZahlAusdruck
+            "mathematik.funktion.aussage" -> ausgabe is Aussage
+            "mathematik.funktion.menge" -> ausgabe is MengenAusdruck
+            "mathematik.funktion" -> true
+            else -> false
+        }
+    }
+
     private fun werteMultiplikationAus(
         knoten: KnotenDaten,
         eingänge: Map<String, BedingterWert>,
@@ -131,14 +165,29 @@ class KartenAuswerter(
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
         kartenPfad: Set<KartenVerweis>,
     ): KnotenAuswertungsErgebnis {
-        val verweis = knoten.kartenVerweis!!
-        if (verweis in kartenPfad) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Zyklischer Kartenverweis erkannt.")
-        val intern = kartenQuelle.lade(verweis) ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Referenzierte Karte fehlt.")
         val außen = runCatching {
             sammleEingänge(knoten, verbindungen, karte, ergebnisse)
         }.getOrElse {
             return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
         }
+        return werteReferenzierteKarteAus(
+            verweis = knoten.kartenVerweis!!,
+            außen = außen,
+            kartenPfad = kartenPfad,
+            alsMethode = knoten.art.startsWith("methode."),
+            methodenName = knoten.name,
+        )
+    }
+
+    private fun werteReferenzierteKarteAus(
+        verweis: KartenVerweis,
+        außen: Map<String, BedingterWert>,
+        kartenPfad: Set<KartenVerweis>,
+        alsMethode: Boolean,
+        methodenName: String? = null,
+    ): KnotenAuswertungsErgebnis {
+        if (verweis in kartenPfad) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Zyklischer Kartenverweis erkannt.")
+        val intern = kartenQuelle.lade(verweis) ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Referenzierte Karte fehlt.")
         val sortierung = compareBy<KnotenDaten>({ it.position.y }, { it.position.x }, { it.id.wert })
         val interneEingänge = intern.knoten.filter { it.art == "mathematik.kartenEingang" }.sortedWith(sortierung)
         val eingangsNamen = interneEingänge.map(::öffentlicherKartenName)
@@ -153,6 +202,7 @@ class KartenAuswerter(
             val ausgangsArt = eingang.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }?.art
                 ?: AnschlussArtId("mathematik.objekt")
             val wert = außen[name] ?: symbolischerEingangswert(ausgangsArt, name, eingang.id).also { symbolisch ->
+                if (!alsMethode) return@also
                 val parameter = symbolisch.objekt as? FunktionsParameter
                     ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Karteneingang '$name' ist kein Methodenparameter.")
                 freie += parameter
@@ -171,20 +221,20 @@ class KartenAuswerter(
             val name = öffentlicherKartenName(ausgang)
             internErgebnis.knoten[ausgang.id]?.ausgaben?.get("wert")?.let { name to it }
         }.toMap(LinkedHashMap())
-        if (!knoten.art.startsWith("methode.")) return KnotenAuswertungsErgebnis(werte)
+        if (!alsMethode) return KnotenAuswertungsErgebnis(werte)
         if (ausgänge.isEmpty()) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Kartenmethode benötigt mindestens einen öffentlichen Ausgang.")
         if (werte.size != ausgänge.size) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Nicht alle öffentlichen Kartenausgänge liefern einen Wert.")
         val zielMengen = werte.mapValues { (name, wert) ->
             wert.zielMenge ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.")
         }
         val funktion = Funktion(
-            name = knoten.name,
+            name = methodenName?.trim().orEmpty().ifBlank { intern.name },
             parameter = freie.distinctBy { it.name },
             ausgaben = werte.mapValues { it.value.objekt },
             zielMengen = zielMengen,
             werteVorräte = werteVorräte,
         )
-        return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion)))
+        return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, latexDarstellung = funktion.name)))
     }
 
     private fun öffentlicherKartenName(knoten: KnotenDaten): String =
