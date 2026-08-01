@@ -164,7 +164,7 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
             val bindungen = methode.parameter.mapIndexed { index, parameter -> parameter.name to argumente[index] }.toMap()
             methode.wendeAn(bindungen).getValue(ausgabe.first) to methode.zielMengeFür(ausgabe.first, bindungen)
         } else {
-            symbolischeAnwendung(methode, argumente, ergebnisArt) to null
+            symbolischerAnwendungsWert(methode, argumente, ergebnisArt) to null
         }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
@@ -202,6 +202,21 @@ private fun gebundenerParameter(name: String, art: AnschlussArtId): FunktionsPar
     "mathematik.aussage" -> AussagenParameter(name)
     "mathematik.menge" -> MengenParameter(name)
     else -> TypisiertesElement(name, art.wert)
+}
+
+private fun symbolischerAnwendungsWert(
+    methode: MathematischesObjekt,
+    argumente: List<MathematischesObjekt>,
+    ergebnisArt: String,
+): MathematischesObjekt {
+    val latex = "${methode.zuLatex()}(${argumente.joinToString(",") { it.zuLatex() }})"
+    val kennung = latex.replace("\\", "_").replace(Regex("[^\\p{L}\\p{N}_]+"), "_")
+    return when (ergebnisArt) {
+        "mathematik.zahl" -> Variable(kennung)
+        "mathematik.aussage" -> AussagenParameter(kennung, latex)
+        "mathematik.menge" -> MengenParameter(kennung, latex)
+        else -> TypisiertesElement(kennung, ergebnisArt, latex)
+    }
 }
 
 private fun entferneAkkumulator(
