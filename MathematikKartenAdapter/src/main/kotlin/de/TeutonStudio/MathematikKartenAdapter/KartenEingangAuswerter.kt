@@ -68,12 +68,14 @@ private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
         return null
     }
     val index = Variable("i")
-    val symbol = TypisiertesElement(name, art.wert, name)
+    val anwendungsLatex = "$name(${index.zuLatex()})"
+    val kennung = "${name}_von_${index.name}"
     val (wert, zielMenge) = when (art) {
-        ZAHL_FUNKTION_KARTEN_ART -> SymbolischeZahlAnwendung(symbol, listOf(index)) to ReelleZahlen
-        AUSSAGE_FUNKTION_KARTEN_ART -> SymbolischeAussagenAnwendung(symbol, listOf(index)) to wahrheitsMenge()
-        MENGEN_FUNKTION_KARTEN_ART -> SymbolischeMengenAnwendung(symbol, listOf(index)) to BenannteMenge("G_$name", "G")
-        else -> SymbolischeObjektAnwendung(symbol, listOf(index)) to BenannteMenge("W_$name", "\\mathcal{W}")
+        ZAHL_FUNKTION_KARTEN_ART -> Variable(kennung) to ReelleZahlen
+        AUSSAGE_FUNKTION_KARTEN_ART -> AussagenParameter(kennung, anwendungsLatex) to wahrheitsMenge()
+        MENGEN_FUNKTION_KARTEN_ART -> MengenParameter(kennung, anwendungsLatex) to BenannteMenge("G_$name", "G")
+        else -> TypisiertesElement(kennung, OBJEKT_KARTEN_ART.wert, anwendungsLatex) to
+            BenannteMenge("W_$name", "\\mathcal{W}")
     }
     return Funktion(
         name = name,
