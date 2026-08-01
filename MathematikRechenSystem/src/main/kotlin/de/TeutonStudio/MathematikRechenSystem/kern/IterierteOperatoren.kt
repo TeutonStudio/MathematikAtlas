@@ -1,25 +1,25 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 data class IterierteSumme(val methode: Funktion, val indexMenge: MengenAusdruck) : ZahlAusdruck {
-    override fun zuLatex() = "\\sum_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = iterationsLatex("\\sum", methode, indexMenge)
 }
 
 data class IteriertesProdukt(val methode: Funktion, val indexMenge: MengenAusdruck) : ZahlAusdruck {
-    override fun zuLatex() = "\\prod_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = iterationsLatex("\\prod", methode, indexMenge)
 }
 
 data class IterierteVereinigung(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
-    override fun zuLatex() = "\\bigcup_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = iterationsLatex("\\bigcup", methode, indexMenge)
 }
 
 data class IteriertesKartesischesProdukt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
-    override fun zuLatex() = "\\mathop{\\times}_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = iterationsLatex("\\mathop{\\times}", methode, indexMenge)
 }
 
 /** Die Grundmenge wird ausschließlich aus der validierten Zielmenge der Methode abgeleitet. */
 data class IterierterSchnitt(val methode: Funktion, val indexMenge: MengenAusdruck) : MengenAusdruck {
     val grundMenge get() = methode.grundMengeFürMengenAusgabe()
-    override fun zuLatex() = "\\bigcap_{${methode.parameter.single().zuLatex()} \\in ${indexMenge.zuLatex()}} ${methode.name}(${methode.parameter.single().zuLatex()})"
+    override fun zuLatex() = iterationsLatex("\\bigcap", methode, indexMenge)
 }
 
 data class IterierteKonjunktion(val methode: Funktion, val indexMenge: MengenAusdruck) : Aussage {
@@ -43,16 +43,23 @@ data class IterierteAdjunktion(val methode: Funktion, val indexMenge: MengenAusd
         if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion).entscheide(kontext)
         else symbolischeAussagenIteration()
 
-    override fun zuLatex() = iterationsLatex("\\stackrel{\\circ}{\\bigvee}", methode, indexMenge)
+    override fun zuLatex() = iterationsLatex("\\mathop{\\stackrel{\\circ}{\\bigvee}}", methode, indexMenge)
 }
+
+/** Gemeinsame kanonische Darstellung großer Operatoren für Rechenkern und UI. */
+fun großerOperatorLatex(
+    operator: String,
+    indexBedingung: String,
+    rumpf: String,
+): String = "$operator\\limits_{${indexBedingung}} $rumpf"
 
 private fun iterationsLatex(operator: String, methode: Funktion, indexMenge: MengenAusdruck): String {
     val parameter = methode.parameter.single().zuLatex()
-    val menge = when (indexMenge) {
-        is BenannteMenge -> "\\Set{${indexMenge.zuLatex()}}"
-        else -> indexMenge.zuLatex()
-    }
-    return "${operator}_{${parameter} \\in $menge} ${methode.name}($parameter)"
+    return großerOperatorLatex(
+        operator = operator,
+        indexBedingung = "$parameter \\in ${indexMenge.zuLatex()}",
+        rumpf = "${methode.name}($parameter)",
+    )
 }
 
 private fun symbolischeAussagenIteration() = AussageErgebnis(
