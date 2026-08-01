@@ -60,6 +60,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             Text(knoten.art, style = MaterialTheme.typography.labelMedium)
             StandardwerteEditor(knoten, zustand)
             if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
+            IterierteMethodenKartenInspektor(knoten, zustand)
             if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
             KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
                 inspektor.Inhalt(
@@ -141,7 +142,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     "werteVorrat", "zielmenge", "argumentReihenfolge", MENGENDEFINITION_PAAR,
                     MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
                     MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
-                ) && !it.startsWith(STANDARDWERT_PREFIX)
+                ) && !it.startsWith(STANDARDWERT_PREFIX) &&
+                    !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.")
             }.forEach { (schlüssel, wert) ->
                 var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                 OutlinedTextField(
