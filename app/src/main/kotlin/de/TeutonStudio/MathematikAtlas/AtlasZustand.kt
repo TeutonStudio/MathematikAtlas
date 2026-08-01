@@ -276,10 +276,23 @@ class AtlasZustand(context: Context) {
         migriereAssoziativeKnoten(migriereAussagenOperatoren(karte))
 
     private fun werteAus() {
-        auswertung = if (editor.karte.knoten.any { it.art.startsWith("konzept.") }) {
-            KartenAuswertungsErgebnis(emptyMap(), emptyList())
-        } else {
-            auswerter.auswerten(editor.karte)
+        if (editor.karte.knoten.any { it.art.startsWith("konzept.") }) {
+            auswertung = KartenAuswertungsErgebnis(emptyMap(), emptyList())
+            return
         }
+
+        val ersteAuswertung = auswerter.auswerten(editor.karte)
+        val synchronisiert = synchronisiereMethodenAufrufe(editor.karte, ersteAuswertung, graphPrüfung)
+        if (synchronisiert == editor.karte) {
+            auswertung = ersteAuswertung
+            return
+        }
+
+        val auswahl = editor.ausgewählteKnoten
+        val aktiverKnoten = editor.ausgewählterKnoten
+        editor.ersetzeKarte(synchronisiert, historieLeeren = false)
+        editor.stelleAuswahlWiederHer(auswahl, aktiverKnoten)
+        auswerter.leereCache()
+        auswertung = auswerter.auswerten(editor.karte)
     }
 }
