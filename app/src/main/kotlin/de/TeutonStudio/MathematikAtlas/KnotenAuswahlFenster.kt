@@ -50,6 +50,12 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     "Mengendefinator",
                     "Erzeugt ein gekoppeltes Paar für eine symbolische Menge mit Prädikat",
                 ).any { it.contains(zustand.suchText, ignoreCase = true) }
+                val zeigeFaltung = zustand.suchText.isBlank() || listOf(
+                    "Endliche Faltung",
+                    "Faltungskonstruktor",
+                    "Faltungsdefinator",
+                    "Bindet Index und Akkumulator für iterierte Operatoren",
+                ).any { it.contains(zustand.suchText, ignoreCase = true) }
                 val rechnen = sichtbareVorlagen.filter(::istRechenVorlage)
                 val mengen = sichtbareVorlagen.filter { it.kategorie == "Mengen" && it.art !in mengenrechnungsArten }
                 val zahlen = sichtbareVorlagen.filter { it.art in setOf("mathematik.zahl", "mathematik.variable") }
@@ -57,9 +63,10 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                 val matrizen = sichtbareVorlagen.filter { it.kategorie == "Matrizen" }
                 val geometrie = sichtbareVorlagen.filter { it.kategorie.startsWith("Geometrie:") }
                 val mengenZusatz = if (zeigeMengendefinition) 1 else 0
+                val faltungsZusatz = if (zeigeFaltung) 1 else 0
                 val tabs = listOf(
-                    KnotenAuswahlTab("Alle", sichtbareVorlagen.filterNot { it.kategorie in kartenKategorien }, zusätzlicheEinträge = mengenZusatz),
-                    KnotenAuswahlTab("Rechnen", rechnen),
+                    KnotenAuswahlTab("Alle", sichtbareVorlagen.filterNot { it.kategorie in kartenKategorien }, zusätzlicheEinträge = mengenZusatz + faltungsZusatz),
+                    KnotenAuswahlTab("Rechnen", rechnen, zusätzlicheEinträge = faltungsZusatz),
                     KnotenAuswahlTab("Zahlen", zahlen),
                     KnotenAuswahlTab("Mengen", mengen, zusätzlicheEinträge = mengenZusatz),
                     KnotenAuswahlTab("Tupel", tupel, zusätzlicheEinträge = if (zeigeTupelVektorAktionen) 2 else 0),
@@ -84,6 +91,23 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
                     }
                 }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (aktiverTab.name in setOf("Alle", "Rechnen") && zeigeFaltung) {
+                        item {
+                            Text(
+                                "Iterierte Operatoren",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                            )
+                        }
+                        item {
+                            ZusammengesetzterEintrag(
+                                name = "Endliche Faltung",
+                                beschreibung = "Erzeugt einen gekoppelten Faltungskonstruktor und Faltungsdefinator für Index, neutrales Element und Akkumulator.",
+                                enabled = zustand.kannFaltungEinfügen(),
+                                onClick = { zustand.fügeFaltungEin(position) },
+                            )
+                        }
+                    }
                     if (aktiverTab.name in setOf("Alle", "Mengen") && zeigeMengendefinition) {
                         item {
                             Text(

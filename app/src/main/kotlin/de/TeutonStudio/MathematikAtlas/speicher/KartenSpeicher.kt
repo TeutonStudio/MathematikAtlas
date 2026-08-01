@@ -85,10 +85,10 @@ class KartenSpeicher(private val context: Context) {
     fun blockierendeVerwendungen(kartenIds: Set<KartenId>): List<KartenVerwendung> {
         if (kartenIds.isEmpty()) return emptyList()
         return alleVersionen().filter { it.id !in kartenIds }.flatMap { karte ->
-            karte.knoten.mapNotNull { knoten ->
-                knoten.kartenVerweis
-                    ?.takeIf { it.kartenId in kartenIds }
-                    ?.let { KartenVerwendung(karte, it) }
+            karte.knoten.asSequence().flatMap { knoten ->
+                knoten.alleKartenVerweise().asSequence()
+                    .filter { it.kartenId in kartenIds }
+                    .map { KartenVerwendung(karte, it) }
             }
         }.distinctBy { Triple(it.verwendendeKarte.id, it.verwendendeKarte.version, it.verwendeterVerweis) }.toList()
     }
@@ -108,11 +108,11 @@ class KartenSpeicher(private val context: Context) {
     }
 
     fun versionWirdVerwendet(verweis: KartenVerweis): Boolean = alleVersionen().any { karte ->
-        karte.id != verweis.kartenId && karte.knoten.any { it.kartenVerweis == verweis }
+        karte.id != verweis.kartenId && karte.knoten.any { verweis in it.alleKartenVerweise() }
     }
 
     fun verwendungen(verweis: KartenVerweis): List<KartenDaten> =
-        alleVersionen().filter { karte -> karte.knoten.any { it.kartenVerweis == verweis } }.toList()
+        alleVersionen().filter { karte -> karte.knoten.any { verweis in it.alleKartenVerweise() } }.toList()
 
     private fun importierePaket(text: String): KartenDaten {
         val paket = KartenFreigabePaket.lese(text)
@@ -129,9 +129,12 @@ class KartenSpeicher(private val context: Context) {
             karte.copy(
                 id = idAbbildung.getValue(karte.id),
                 knoten = karte.knoten.map { knoten ->
-                    knoten.copy(kartenVerweis = knoten.kartenVerweis?.let { verweis ->
-                        verweis.copy(kartenId = idAbbildung[verweis.kartenId] ?: verweis.kartenId)
-                    })
+                    knoten.copy(
+                        kartenVerweis = knoten.kartenVerweis?.remappe(idAbbildung),
+                        eingangsKartenVerweise = knoten.eingangsKartenVerweise.mapValues { (_, verweis) ->
+                            verweis.remappe(idAbbildung)
+                        },
+                    )
                 },
             )
         }
@@ -166,6 +169,9 @@ class KartenSpeicher(private val context: Context) {
             "Die importierte Wurzelkarte konnte nicht geladen werden."
         }
     }
+
+    private fun KartenVerweis.remappe(idAbbildung: Map<KartenId, KartenId>): KartenVerweis =
+        copy(kartenId = idAbbildung[kartenId] ?: kartenId)
 
     private fun eindeutigerImportPfad(ordnung: KartenOrdnung, basisPfad: List<String>): List<String> {
         if (basisPfad !in ordnung.ordner) return basisPfad

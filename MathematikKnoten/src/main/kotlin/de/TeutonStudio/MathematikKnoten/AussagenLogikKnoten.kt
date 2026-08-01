@@ -100,12 +100,13 @@ object AussagenLogikKnotenVorlagen {
 private fun vorlagenSchlüssel(vorlage: KnotenVorlage): Pair<String, String> =
     vorlage.art to (vorlage.standardParameter["operator"] ?: vorlage.name)
 
-/** Ersetzt ausschließlich die korrigierten Varianten und hängt tatsächlich neue Typen an. */
+/** Ersetzt korrigierte Varianten und hängt additive Knotendomänen an. */
 fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val ersatz = AussagenLogikKnotenVorlagen.alle.associateBy(::vorlagenSchlüssel)
     val vorhandeneSchlüssel = MathematikKnotenVorlagen.alle.mapTo(mutableSetOf(), ::vorlagenSchlüssel)
-    return MathematikKnotenVorlagen.alle.map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
+    val basis = MathematikKnotenVorlagen.alle.map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
+    return (basis + FaltungsKnotenVorlagen.alle).distinctBy(::vorlagenSchlüssel)
 }
 
 enum class AussagenOperatorArt(

@@ -5,14 +5,14 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
-    @Test fun `Version vier rundet verschachtelte Eigenschaften`() {
+    @Test fun `Version fünf rundet verschachtelte Eigenschaften`() {
         val eigenschaften = mapOf("konfiguration" to KnotenEigenschaft.Objekt(mapOf(
             "kamera" to KnotenEigenschaft.Objekt(mapOf("zoom" to KnotenEigenschaft.Dezimalzahl(1.25), "aktiv" to KnotenEigenschaft.Wahrheitswert(true))),
             "farben" to KnotenEigenschaft.Liste(listOf(KnotenEigenschaft.Farbe(0xFF2563EB), KnotenEigenschaft.Text("Ozean"))),
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 4"))
+        assertTrue(text.contains("\"formatVersion\": 5"))
         assertEquals(karte, KartenJson.lese(text))
     }
 

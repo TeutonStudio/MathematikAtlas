@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikKnoten
 import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class LatexTextTest {
     @Test
@@ -34,6 +35,14 @@ class LatexTextTest {
             vereinfacheLatexAnzeige("\\stackrel{\\circ}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)"),
         )
         assertEquals("⋀idx ∈ {A} P(idx)", vereinfacheLatexAnzeige("\\bigwedge_{idx \\in \\Set{A}} P(idx)"))
+    }
+
+    @Test
+    fun `limits erscheint nie als Klartext und die Indexbedingung bleibt erhalten`() {
+        val text = vereinfacheLatexAnzeige("\\sum\\limits_{i \\in I} f(i)")
+
+        assertEquals("∑i ∈ I f(i)", text)
+        assertFalse("limits" in text)
     }
 
     @Test

@@ -88,6 +88,9 @@ object TestDefinitionsKarten {
     fun validierungsFehler(): List<String> = validierungsFehler(alle)
 
     private fun konzeptFür(varianten: List<KnotenVorlage>): KonzeptDefinition {
+        if (varianten.first().art in ITERIERTE_KONZEPT_ARTEN) {
+            return iteriertesOperatorKonzept(varianten)
+        }
         val erste = varianten.first()
         val reiter = varianten.mapIndexed { index, vorlage ->
             KonzeptReiter(
@@ -118,6 +121,13 @@ object TestDefinitionsKarten {
         MathematikKnotenVorlagen.Differenz.art,
         MengenraumKnotenVorlagen.SymmetrischeDifferenz.art ->
             mengenoperatorDefinitionsKarte(vorlage, variantenIndex)
+        MathematikKnotenVorlagen.IterierteSumme.art,
+        MathematikKnotenVorlagen.IteriertesProdukt.art,
+        MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,
+        MathematikKnotenVorlagen.IterierteVereinigung.art,
+        MathematikKnotenVorlagen.IterierterSchnitt.art,
+        MathematikKnotenVorlagen.IteriertesKartesischesProdukt.art ->
+            iterierteOperatorDefinitionsKarte(vorlage, variantenIndex)
         else -> generischeDefinitionsKarte(vorlage, variantenIndex)
     }
 

@@ -35,10 +35,12 @@ data class VariablenQuelle(
     val alsMethodenParameter: Boolean = true,
     /** Semantische Bindung eines gekoppelten Konstruktor-/Definator-Paares. */
     val bindungsId: String? = null,
-    /** Sichtbarer Name des durch die Bindung erzeugten Objekts, etwa der Mengenname M. */
+    /** Sichtbarer Name oder Rolle des durch die Bindung erzeugten Objekts. */
     val bindungsName: String? = null,
     /** Anschlussart des gebundenen Elements; relevant für nichtnumerische Elemente. */
     val gebundeneArt: AnschlussArtId? = null,
+    /** Nichtpersistierter Ausgangswert einer Bindung, etwa Indexmenge oder neutrales Element. */
+    val bindungsWert: MathematischesObjekt? = null,
 )
 
 /** Konservativer Laufzeitnachweis für die Zulässigkeit reeller Zahloperationen. */
@@ -89,12 +91,20 @@ class MathematikAuswerterRegister {
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
         MENGENKONSTRUKTOR_ART -> MengenkonstruktorAuswerter
         MENGENDEFINATOR_ART -> MengendefinatorAuswerter
+        FALTUNGSKONSTRUKTOR_ART -> FaltungskonstruktorAuswerter
+        FALTUNGSDEFINATOR_ART -> FaltungsdefinatorAuswerter
+        METHODEN_ANWENDUNG_ART -> MethodenAnwendungAuswerter
+        METHODEN_ZIELMENGE_ART -> MethodenZielmengeAuswerter
         else -> auswerter[art]
     }
     fun arten(): Set<KnotenArtId> = auswerter.keys + setOf(
         KARTEN_EINGANG_ART,
         MENGENKONSTRUKTOR_ART,
         MENGENDEFINATOR_ART,
+        FALTUNGSKONSTRUKTOR_ART,
+        FALTUNGSDEFINATOR_ART,
+        METHODEN_ANWENDUNG_ART,
+        METHODEN_ZIELMENGE_ART,
     )
 }
 

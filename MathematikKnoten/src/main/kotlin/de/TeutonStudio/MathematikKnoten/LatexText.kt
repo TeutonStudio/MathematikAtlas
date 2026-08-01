@@ -1,10 +1,14 @@
 package de.TeutonStudio.MathematikKnoten
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -14,6 +18,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 
 private val STANDARD_WAHR_FARBE = Color(0xFF2E7D32)
@@ -33,11 +38,90 @@ fun LatexText(
     val dunklesSchema = isSystemInDarkTheme()
     val wahrFarbe = if (dunklesSchema) Color(0xFF81C784) else Color(0xFF1B5E20)
     val lügeFarbe = if (dunklesSchema) Color(0xFFEF9A9A) else Color(0xFFB71C1C)
+    val großerOperator = zerlegeGroßenOperator(latex)
+    if (großerOperator != null) {
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            if (großerOperator.vorher.isNotBlank()) {
+                Text(
+                    latexZuAnnotiertemText(großerOperator.vorher, wahrFarbe, lügeFarbe),
+                    style = style,
+                    color = LocalContentColor.current,
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    latexZuAnnotiertemText(großerOperator.operator, wahrFarbe, lügeFarbe),
+                    style = style,
+                    color = LocalContentColor.current,
+                )
+                Text(
+                    latexZuAnnotiertemText(großerOperator.index, wahrFarbe, lügeFarbe),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = LocalContentColor.current,
+                )
+            }
+            if (großerOperator.nachher.isNotBlank()) {
+                LatexText(
+                    latex = großerOperator.nachher,
+                    style = style,
+                )
+            }
+        }
+        return
+    }
     Text(
         latexZuAnnotiertemText(latex, wahrFarbe, lügeFarbe),
         modifier = modifier,
         style = style,
         color = LocalContentColor.current,
+    )
+}
+
+private data class GroßerOperatorTeile(
+    val vorher: String,
+    val operator: String,
+    val index: String,
+    val nachher: String,
+)
+
+private fun zerlegeGroßenOperator(latex: String): GroßerOperatorTeile? {
+    val operatoren = listOf(
+        "\\mathop{\\stackrel{\\circ}{\\bigvee}}" to "\\stackrel{\\circ}{\\bigvee}",
+        "\\mathop{\\times}" to "\\times",
+        "\\sum" to "\\sum",
+        "\\prod" to "\\prod",
+        "\\bigcup" to "\\bigcup",
+        "\\bigcap" to "\\bigcap",
+        "\\bigwedge" to "\\bigwedge",
+        "\\bigvee" to "\\bigvee",
+    )
+    val treffer = operatoren.mapNotNull { (quelle, anzeige) ->
+        latex.indexOf(quelle).takeIf { it >= 0 }?.let { Triple(it, quelle, anzeige) }
+    }.minByOrNull { it.first } ?: return null
+    val limitsStart = treffer.first + treffer.second.length
+    val limits = "\\limits_"
+    if (!latex.startsWith(limits, limitsStart)) return null
+    var position = limitsStart + limits.length
+    if (position >= latex.length || latex[position] != '{') return null
+    val indexStart = ++position
+    var tiefe = 1
+    while (position < latex.length && tiefe > 0) {
+        when (latex[position++]) {
+            '{' -> tiefe++
+            '}' -> tiefe--
+        }
+    }
+    if (tiefe != 0) return null
+    val indexEnde = position - 1
+    return GroßerOperatorTeile(
+        vorher = latex.substring(0, treffer.first).trimEnd(),
+        operator = treffer.third,
+        index = latex.substring(indexStart, indexEnde),
+        nachher = latex.substring(position).trimStart(),
     )
 }
 
@@ -94,7 +178,6 @@ private class LatexParser(
                     if (casesTiefe > 0) while (position < quelltext.length && quelltext[position] == ' ') position++
                 }
                 '{', '}' -> ausgabe.append(zeichen)
-                // Der Rechenkern verwendet " \\ " als Matrizen-Zeilentrenner.
                 ' ' -> ausgabe.append(";\n")
                 else -> ausgabe.append(zeichen)
             }
@@ -114,6 +197,7 @@ private class LatexParser(
             "top" -> schreibeWahrheitswert("Wahr", wahrFarbe)
             "bot" -> schreibeWahrheitswert("Lüge", lügeFarbe)
             "mathop", "mathbin" -> schreibeArgument()
+            "limits" -> Unit
             "mathbb" -> ausgabe.append(zahlbereich(liesGruppenText()))
             "begin" -> when (liesGruppenText()) {
                 "pmatrix" -> ausgabe.append('[')
