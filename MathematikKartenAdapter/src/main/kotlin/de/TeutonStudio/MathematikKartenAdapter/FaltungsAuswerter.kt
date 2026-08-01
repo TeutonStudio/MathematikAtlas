@@ -80,11 +80,13 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
         val operator = kontext.knoten.parameter[FALTUNG_OPERATOR]?.trim().orEmpty()
         val nächster = kontext.eingänge["nächsterAkkumulator"]
             ?: error("Der nächste Akkumulatorwert fehlt.")
-        val gebundeneQuellen = nächster.variablenQuellen.filter { it.bindungsId == paarId }
+        val gebundeneQuellen = nächster.variablenQuellen
+            .filter { it.bindungsId == paarId }
+            .distinctBy { Triple(it.bindungsName, it.name, it.knotenId) }
         val indexQuelle = gebundeneQuellen.singleOrNull { it.bindungsName == FALTUNG_ROLLE_INDEX }
-            ?: error("Der Faltungskörper muss den gebundenen Index genau einmal verwenden.")
+            ?: error("Der Faltungskörper muss den gebundenen Index verwenden.")
         val akkumulatorQuelle = gebundeneQuellen.singleOrNull { it.bindungsName == FALTUNG_ROLLE_AKKUMULATOR }
-            ?: error("Der Faltungskörper muss den gebundenen Akkumulator genau einmal verwenden.")
+            ?: error("Der Faltungskörper muss den gebundenen Akkumulator verwenden.")
         val indexMenge = indexQuelle.bindungsWert as? MengenAusdruck
             ?: error("Die gebundene Indexmenge fehlt.")
         val neutral = akkumulatorQuelle.bindungsWert
@@ -215,9 +217,10 @@ private fun entferneAkkumulator(
         ?: error("Der Konjunktions-Faltungskörper muss eine Konjunktion sein."))
     "disjunktion" -> Disjunktion((körper as? Disjunktion)?.aussagen?.filterNot { it == akkumulator }
         ?: error("Der Disjunktions-Faltungskörper muss eine Disjunktion sein."))
-    "adjunktion" -> when (val xor = körper as? Adjunktion
-        ?: error("Der Adjunktions-Faltungskörper muss eine Adjunktion sein.")) {
-        else -> when (akkumulator) {
+    "adjunktion" -> {
+        val xor = körper as? Adjunktion
+            ?: error("Der Adjunktions-Faltungskörper muss eine Adjunktion sein.")
+        when (akkumulator) {
             xor.links -> xor.rechts
             xor.rechts -> xor.links
             else -> error("Die Adjunktion verwendet den gebundenen Akkumulator nicht.")
