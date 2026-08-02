@@ -32,8 +32,13 @@ class TensorTest {
         assertNull(parseTensorPermutationOderNull("a,0,2", 3))
     }
 
+    @Test fun `Standardpermutation ist für jeden Rang kanonisch`() {
+        assertEquals(listOf(0), standardTensorPermutation(1))
+        assertEquals(listOf(1, 0), standardTensorPermutation(2))
+        assertEquals(listOf(1, 0, 2, 3), standardTensorPermutation(4))
+    }
+
     @Test fun `Veraltete Konfiguration fällt auf Standard zurück`() {
         assertEquals(listOf(1, 0, 2), parseTensorPermutation("1,0", 3))
-        assertEquals(listOf(1, 0, 2, 3), standardTensorPermutation(4))
     }
 }
