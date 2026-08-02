@@ -16,12 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fachcommit anwenden
+      - name: Fachcommit auf aktuellen Master anwenden
         shell: bash
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           base64 --decode .github/issue-publish/114.patch.xz.b64 | xz --decompress > "$RUNNER_TEMP/114.patch"
-          git reset --hard b986d43bd70806f4ee117720a29e09a8a0cdd36a
-          git am "$RUNNER_TEMP/114.patch"
+          git reset --hard 151e5384ea9b3c11afc32a18d5403383057f62a8
+          git am --3way "$RUNNER_TEMP/114.patch"
 
       - uses: actions/setup-java@v4
         with:
@@ -45,7 +47,7 @@ jobs:
       - name: Geprüften Git-Commit ohne Ref erzeugen
         env:
           GH_TOKEN: ${{ github.token }}
-          BASE_SHA: b986d43bd70806f4ee117720a29e09a8a0cdd36a
+          BASE_SHA: 151e5384ea9b3c11afc32a18d5403383057f62a8
         shell: bash
         run: |
           python3 - <<'PY'
