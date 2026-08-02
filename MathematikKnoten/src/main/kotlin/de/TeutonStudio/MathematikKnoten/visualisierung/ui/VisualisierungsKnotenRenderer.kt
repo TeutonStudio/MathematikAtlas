@@ -285,11 +285,11 @@ private fun farbeFür(wert: Double?, c: VisualisierungsKonfiguration): Color {
 private fun legende(c: VisualisierungsKonfiguration): String {
     val farbBereich = c.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)
     val achsen = when (c.dimension) {
-        RaumDimension.R1 -> "${c.achsen.x}\text{-Achse}: ${c.achsen.x}"
-        RaumDimension.R2 -> "${c.achsen.x}\text{-Achse}: ${c.achsen.x},\quad ${c.achsen.y}\text{-Achse}: ${c.achsen.y}"
-        RaumDimension.R3 -> "${c.achsen.x}\text{-Achse}: ${c.achsen.x},\quad ${c.achsen.y}\text{-Achse}: ${c.achsen.y},\quad ${c.achsen.z}\text{-Achse}: ${c.achsen.z}"
+        RaumDimension.R1 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x}"
+        RaumDimension.R2 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y}"
+        RaumDimension.R3 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y},\\quad ${c.achsen.z}\\text{-Achse}: ${c.achsen.z}"
     }
-    return achsen + if (c.farbe.modus == FarbModus.Spektrum) ",\quad \operatorname{Farbe}: ${c.farbe.variable ?: "t"},\quad ${farbBereich.minimum}\le ${c.farbe.variable ?: "t"}\le ${farbBereich.maximum}" else ""
+    return achsen + if (c.farbe.modus == FarbModus.Spektrum) ",\\quad \\operatorname{Farbe}: ${c.farbe.variable ?: "t"},\\quad ${farbBereich.minimum}\\le ${c.farbe.variable ?: "t"}\\le ${farbBereich.maximum}" else ""
 }
 
 private fun raumName(dimension: RaumDimension): String = when (dimension) {

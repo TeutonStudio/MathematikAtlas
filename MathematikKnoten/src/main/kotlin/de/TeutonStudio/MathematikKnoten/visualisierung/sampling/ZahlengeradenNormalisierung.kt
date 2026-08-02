@@ -54,8 +54,8 @@ internal object ZahlengeradenNormalisierer {
         is Vereinigung -> kombiniereListe(menge.mengen, c, toleranz, ::vereinigung)
         is Schnitt -> kombiniereListe(menge.mengen, c, toleranz, ::schnitt)
         is MengenDifferenz -> binär(menge.links, menge.rechts, c, toleranz, ::differenz)
-        is SymmetrischeDifferenz -> binär(menge.links, menge.rechts, c, toleranz) { a, b ->
-            vereinigung(differenz(a, b, toleranz), differenz(b, a, toleranz), toleranz)
+        is SymmetrischeDifferenz -> binär(menge.links, menge.rechts, c, toleranz) { a, b, epsilon ->
+            vereinigung(differenz(a, b, epsilon), differenz(b, a, epsilon), epsilon)
         }
         is MengenFallAusdruck -> when (menge.aussage.entscheide(RechenKontext()).wahrheitswert) {
             Wahrheitswert.Wahr -> lineareMenge(menge.wahr, c, toleranz)
