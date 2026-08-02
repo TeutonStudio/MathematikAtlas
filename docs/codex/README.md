@@ -18,6 +18,7 @@ Diese Dateien bilden das versionierte Projektgedächtnis und den Arbeitsablauf f
 | `/AGENTS.md` | automatisch geladene Repository-Regeln |
 | `/.codex/config.toml` | projektweite Multi-Agent-Konfiguration, sofern lokal benötigt |
 | `/.codex/agents/` | Codex-Subagenten einschließlich `master_verwalter` |
+| `/.codex/agents/issue-verwalter.toml` | klärt Anforderungen, erstellt Issues und pflegt den kanonischen technischen Lösungsplan |
 | `/.agents/skills/neuer-knoten/SKILL.md` | wiederverwendbarer Ablauf für neue Knoten |
 | `/.agents/skills/release-verwalten/SKILL.md` | verbindlicher Ablauf für Versionen, Branches und `master`-Integration |
 | `/release/roadmap.toml` | maschinenlesbarer Versions- und Releasezustand |
