@@ -6,7 +6,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.ganzzahl
 import de.TeutonStudio.KnotenKartenVerwalter.daten.objekt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.text
 
-enum class RaumDimension { R2, R3 }
+enum class RaumDimension { R1, R2, R3 }
 data class AchsenZuordnung(val x: String, val y: String, val z: String?)
 data class ZahlenBereich(val minimum: Double, val maximum: Double) {
     init { require(minimum < maximum) { "Ein Achsenbereich benötigt ein Minimum kleiner als sein Maximum." } }
@@ -18,6 +18,7 @@ data class SamplingKonfiguration(
     val auflösung2D: Int,
     val auflösung3D: Int,
     val toleranz: Double,
+    val auflösung1D: Int = 160,
     val maximalesRasterBudget: Int = 250_000,
     val fensterBegrenztePrädikatsMengen: Boolean = false,
 )
@@ -30,10 +31,14 @@ data class KameraZustand(
     val translationZ: Double,
     val zoom: Double,
 ) {
-    fun istStandard(dimension: RaumDimension, epsilon: Double = 1e-6): Boolean =
-        listOf(rotationX, rotationY, rotationZ, translationX, translationY, translationZ, zoom - 1.0)
-            .let { werte -> if (dimension == RaumDimension.R2) werte.filterIndexed { index, _ -> index !in setOf(0, 2, 5) } else werte }
-            .all { kotlin.math.abs(it) < epsilon }
+    fun istStandard(dimension: RaumDimension, epsilon: Double = 1e-6): Boolean {
+        val relevanteWerte = when (dimension) {
+            RaumDimension.R1 -> listOf(translationX, zoom - 1.0)
+            RaumDimension.R2 -> listOf(translationX, translationY, zoom - 1.0)
+            RaumDimension.R3 -> listOf(rotationX, rotationY, rotationZ, translationX, translationY, translationZ, zoom - 1.0)
+        }
+        return relevanteWerte.all { kotlin.math.abs(it) < epsilon }
+    }
 }
 
 /** Persistierbare Konfiguration; Sampling-relevante Werte sind von der Kamera getrennt. */
@@ -42,7 +47,7 @@ data class VisualisierungsKonfiguration(
     val achsen: AchsenZuordnung = AchsenZuordnung("x", "y", "z"),
     val bereiche: AchsenBereiche = AchsenBereiche(ZahlenBereich(-10.0, 10.0), ZahlenBereich(-10.0, 10.0), ZahlenBereich(-10.0, 10.0)),
     val farbe: FarbZuordnung = FarbZuordnung(FarbModus.FesteFarbe, null, 0xFF2563EB, "Ozean", null),
-    val sampling: SamplingKonfiguration = SamplingKonfiguration(72, 22, 0.08),
+    val sampling: SamplingKonfiguration = SamplingKonfiguration(72, 22, 0.08, auflösung1D = 160),
     val kamera: KameraZustand = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
 ) {
     fun samplingSignatur() = listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling).hashCode()
@@ -52,6 +57,7 @@ data class VisualisierungsKonfiguration(
         "bereiche" to bereiche.zuEigenschaft(),
         "farbe" to farbe.zuEigenschaft(),
         "sampling" to KnotenEigenschaft.Objekt(mapOf(
+            "auflösung1D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung1D),
             "auflösung2D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung2D),
             "auflösung3D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung3D),
             "toleranz" to KnotenEigenschaft.Dezimalzahl(sampling.toleranz),
@@ -73,6 +79,7 @@ data class VisualisierungsKonfiguration(
                 samplingObjekt.ganzzahl("auflösung2D", standard.sampling.auflösung2D).coerceIn(16, 240),
                 samplingObjekt.ganzzahl("auflösung3D", standard.sampling.auflösung3D).coerceIn(8, 64),
                 samplingObjekt.dezimalzahl("toleranz", standard.sampling.toleranz).coerceIn(1e-5, 2.0),
+                samplingObjekt.ganzzahl("auflösung1D", standard.sampling.auflösung1D).coerceIn(16, 2_000),
                 samplingObjekt.ganzzahl("maximalesRasterBudget", standard.sampling.maximalesRasterBudget).coerceIn(1_000, 2_000_000),
                 samplingObjekt.text("fensterBegrenztePrädikatsMengen", standard.sampling.fensterBegrenztePrädikatsMengen.toString()).toBooleanStrictOrNull()
                     ?: standard.sampling.fensterBegrenztePrädikatsMengen,

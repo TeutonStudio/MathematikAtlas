@@ -247,9 +247,10 @@ class KartenAuswerter(
         val methode = Methode(
             name = methodenName?.trim().orEmpty().ifBlank { intern.name },
             parameter = freie.distinctBy { it.name },
-            ausgaben = mapOf("wert" to vorschrift),
-            zielMengen = mapOf("wert" to zielMenge),
+            vorschrift = vorschrift,
+            zielMenge = zielMenge,
             werteVorräte = werteVorräte,
+            ausgabeNamen = ausgangsNamen,
         )
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, latexDarstellung = methode.name)))
     }

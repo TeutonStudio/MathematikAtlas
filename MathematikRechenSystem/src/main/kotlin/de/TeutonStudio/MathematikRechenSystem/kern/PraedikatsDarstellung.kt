@@ -30,7 +30,7 @@ data class AufgelöstesPrädikat(
 fun Methode.istOffenesPrädikat(): Boolean = istPrädikat() && parameter.isNotEmpty()
 
 fun GebundeneMethode.istOffenesPrädikat(): Boolean =
-    funktion.istPrädikat() && freieParameter.isNotEmpty()
+    methode.istPrädikat() && freieParameter.isNotEmpty()
 
 /**
  * Löst eine Prädikatsmethode ohne Wahrheitsentscheidung auf.
@@ -116,10 +116,10 @@ fun AufgelöstesPrädikat.kompaktZuLatex(): String {
 
 /** Vollständige Anwendung liefert eine Aussage, selbst wenn diese unentscheidbar bleibt. */
 fun GebundeneMethode.wertePrädikatAus(): Aussage {
-    require(funktion.istPrädikat()) { "Die gebundene Methode '${funktion.name}' ist kein Prädikat." }
-    require(freieParameter.isEmpty()) { "Das Prädikat '${funktion.name}' besitzt noch freie Argumente." }
-    return funktion.wendeKanonischAn(bindungen) as? Aussage
-        ?: error("Das Prädikat '${funktion.name}' hat keine Aussage geliefert.")
+    require(methode.istPrädikat()) { "Die gebundene Methode '${methode.name}' ist kein Prädikat." }
+    require(freieParameter.isEmpty()) { "Das Prädikat '${methode.name}' besitzt noch freie Argumente." }
+    return methode.wendeKanonischAn(bindungen) as? Aussage
+        ?: error("Das Prädikat '${methode.name}' hat keine Aussage geliefert.")
 }
 
 fun GebundeneMethode.wahrheitstabellenErgebnis(

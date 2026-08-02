@@ -13,6 +13,15 @@ data class VisualisierungsPunkt(
     val farbwert: Double? = null,
 )
 
+data class VisualisierungsIntervall(
+    val von: Double,
+    val bis: Double,
+    val linksGeschlossen: Boolean,
+    val rechtsGeschlossen: Boolean,
+    val linksAmFensterrand: Boolean = false,
+    val rechtsAmFensterrand: Boolean = false,
+)
+
 enum class VisualisierungsQualität {
     Exakt,
     Approximation,
@@ -28,12 +37,14 @@ sealed interface VisualisierungsErgebnis {
         val istApproximation: Boolean = true,
         val hinweise: List<String> = emptyList(),
         val qualität: VisualisierungsQualität = if (istApproximation) VisualisierungsQualität.Approximation else VisualisierungsQualität.Exakt,
+        val intervalle: List<VisualisierungsIntervall> = emptyList(),
     ) : VisualisierungsErgebnis
 
     data class Teilweise(
         val punkte: List<VisualisierungsPunkt>,
         val hinweise: List<String>,
         val qualität: VisualisierungsQualität = VisualisierungsQualität.Teilweise,
+        val intervalle: List<VisualisierungsIntervall> = emptyList(),
     ) : VisualisierungsErgebnis
 
     data class NichtDarstellbar(val grund: String) : VisualisierungsErgebnis
@@ -55,6 +66,13 @@ sealed interface VisualisierungsDefinition {
 
     data class ProduktDomänen(
         val faktoren: List<NumerischeDomäne>,
+    ) : VisualisierungsDefinition
+
+    data class Zahlengerade(
+        val punkte: List<Double>,
+        val intervalle: List<VisualisierungsIntervall>,
+        val hinweise: List<String> = emptyList(),
+        val mathematischLeer: Boolean = false,
     ) : VisualisierungsDefinition
 
     data class NichtRäumlich(val grund: String) : VisualisierungsDefinition
@@ -83,6 +101,9 @@ object VisualisierungsSampler {
         konfiguration: VisualisierungsKonfiguration,
     ): VisualisierungsDefinition {
         val dimension = konfiguration.raumDimension
+        if (konfiguration.dimension == RaumDimension.R1) {
+            return ZahlengeradenNormalisierer.normalisiere(menge, konfiguration)
+        }
         if (konfiguration.dimension == RaumDimension.R3 && (konfiguration.achsen.z.isNullOrBlank() || konfiguration.bereiche.z == null)) {
             return VisualisierungsDefinition.NichtRäumlich("Für R³ fehlen eine Z-Achse oder ein Z-Achsenbereich.")
         }
@@ -115,7 +136,37 @@ object VisualisierungsSampler {
         is VisualisierungsDefinition.NichtRäumlich -> VisualisierungsErgebnis.NichtDarstellbar(definition.grund)
         is VisualisierungsDefinition.ExaktePunkte -> materialisiereExaktePunkte(definition, konfiguration)
         is VisualisierungsDefinition.ProduktDomänen -> materialisiereProdukt(definition, konfiguration)
+        is VisualisierungsDefinition.Zahlengerade -> materialisiereZahlengerade(definition, konfiguration)
         is VisualisierungsDefinition.Region -> sampleRegion(definition, konfiguration)
+    }
+
+    private fun materialisiereZahlengerade(
+        definition: VisualisierungsDefinition.Zahlengerade,
+        konfiguration: VisualisierungsKonfiguration,
+    ): VisualisierungsErgebnis {
+        if (definition.mathematischLeer) {
+            return VisualisierungsErgebnis.Erfolgreich(
+                punkte = emptyList(),
+                istApproximation = false,
+                hinweise = definition.hinweise.ifEmpty { listOf("Die Menge ist mathematisch leer.") },
+                qualität = VisualisierungsQualität.MathematischLeer,
+            )
+        }
+        if (definition.punkte.isEmpty() && definition.intervalle.isEmpty()) {
+            return VisualisierungsErgebnis.Erfolgreich(
+                punkte = emptyList(),
+                istApproximation = false,
+                hinweise = definition.hinweise.ifEmpty { listOf("Im sichtbaren Zahlenbereich liegen keine Mengenelemente.") },
+                qualität = VisualisierungsQualität.KeineTrefferImFenster,
+            )
+        }
+        return VisualisierungsErgebnis.Erfolgreich(
+            punkte = definition.punkte.map { VisualisierungsPunkt(it, 0.0) },
+            istApproximation = false,
+            hinweise = definition.hinweise,
+            qualität = VisualisierungsQualität.Exakt,
+            intervalle = definition.intervalle,
+        )
     }
 
     private fun normalisiereEndlicheMenge(
@@ -354,7 +405,7 @@ object VisualisierungsSampler {
     ): VisualisierungsErgebnis {
         val parameter = abbild.methode.parameter.singleOrNull() as? Variable
             ?: return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Abbildung benötigt genau einen numerischen Parameter.")
-        val ausgabe = abbild.methode.ausgaben.values.singleOrNull()
+        val ausgabe = abbild.methode.vorschrift.takeIf { abbild.methode.ausgabeNamen.size == 1 }
             ?: return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Abbildung benötigt genau eine Ausgabe.")
         val domäne = when (val ergebnis = faktorDomäne(abbild.menge, konfiguration.bereiche.x, konfiguration)) {
             is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
@@ -427,7 +478,7 @@ object VisualisierungsSampler {
         c: VisualisierungsKonfiguration,
     ): NumerischeMitgliedschaft = runCatching {
         val parameter = menge.methode.parameter.single()
-        val aussage = menge.methode.ausgaben.values.single() as Aussage
+        val aussage = menge.methode.vorschrift as Aussage
         val gebunden = ersetze(aussage, mapOf(parameter.name to punktObjekt(punkt)))
         werteAussage(gebunden, c.achsenNamen.zip(punkt).toMap(), c.sampling.toleranz)
     }.getOrElse { NumerischeMitgliedschaft.Unbekannt("Filtermethode: ${it.message ?: "nicht auswertbar"}") }
@@ -645,6 +696,7 @@ object VisualisierungsSampler {
             }
         }
         val ausdrücke = when (objekt) {
+            is ZahlAusdruck -> if (dimension == 1) listOf(objekt) else return KoordinatenErgebnis.Fehler("Ein skalares Element ist nur in R¹ eine Koordinate")
             is Tupel -> objekt.elemente.mapIndexed { index, element ->
                 element as? ZahlAusdruck ?: return KoordinatenErgebnis.Fehler("Tupelkomponente ${index + 1} ist keine Zahl")
             }
@@ -705,23 +757,39 @@ object VisualisierungsSampler {
         val umgebung = zusätzlicheUmgebung + c.achsenNamen.zip(this).toMap()
         return VisualisierungsPunkt(
             x = this[0],
-            y = this[1],
+            y = getOrElse(1) { 0.0 },
             z = getOrNull(2),
             farbwert = if (c.farbe.modus == FarbModus.Spektrum) c.farbe.variable?.let(umgebung::get) else null,
         )
     }
 
     private val VisualisierungsKonfiguration.raumDimension: Int
-        get() = if (dimension == RaumDimension.R3) 3 else 2
+        get() = when (dimension) {
+            RaumDimension.R1 -> 1
+            RaumDimension.R2 -> 2
+            RaumDimension.R3 -> 3
+        }
 
     private val VisualisierungsKonfiguration.achsenNamen: List<String>
-        get() = if (dimension == RaumDimension.R3) listOf(achsen.x, achsen.y, achsen.z.orEmpty()) else listOf(achsen.x, achsen.y)
+        get() = when (dimension) {
+            RaumDimension.R1 -> listOf(achsen.x)
+            RaumDimension.R2 -> listOf(achsen.x, achsen.y)
+            RaumDimension.R3 -> listOf(achsen.x, achsen.y, achsen.z.orEmpty())
+        }
 
     private val VisualisierungsKonfiguration.achsenBereiche: List<ZahlenBereich>
-        get() = if (dimension == RaumDimension.R3) listOfNotNull(bereiche.x, bereiche.y, bereiche.z) else listOf(bereiche.x, bereiche.y)
+        get() = when (dimension) {
+            RaumDimension.R1 -> listOf(bereiche.x)
+            RaumDimension.R2 -> listOf(bereiche.x, bereiche.y)
+            RaumDimension.R3 -> listOfNotNull(bereiche.x, bereiche.y, bereiche.z)
+        }
 
     private val VisualisierungsKonfiguration.achsenAuflösung: Int
-        get() = if (dimension == RaumDimension.R3) sampling.auflösung3D else sampling.auflösung2D
+        get() = when (dimension) {
+            RaumDimension.R1 -> sampling.auflösung1D
+            RaumDimension.R2 -> sampling.auflösung2D
+            RaumDimension.R3 -> sampling.auflösung3D
+        }
 
     private fun rasterWerte(bereich: ZahlenBereich, anzahl: Int): List<Double> =
         List(anzahl) { index -> lerp(bereich, index.toDouble() / (anzahl - 1)) }

@@ -44,7 +44,7 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
         prefix = prefix,
         kennung = "methode",
         name = "A",
-        art = MathematikAnschlussArten.MengenFunktion.id,
+        art = MathematikAnschlussArten.MengenMethode.id,
         position = GraphPunkt(20f, 80f),
         index = 0,
     )
@@ -201,7 +201,7 @@ private fun iterierterMengenMethodenAufruf(
         anschlüsse = listOf(
             methodenEingang.copy(
                 id = AnschlussId("${id.wert}-methode"),
-                art = MathematikAnschlussArten.MengenFunktion.id,
+                art = MathematikAnschlussArten.MengenMethode.id,
                 reihenfolge = 0,
             ),
             AnschlussDaten(

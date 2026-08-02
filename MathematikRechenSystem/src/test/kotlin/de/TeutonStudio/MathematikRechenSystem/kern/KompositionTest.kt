@@ -11,11 +11,11 @@ class KompositionTest {
 
     private fun methode(
         name: String,
-        parameter: List<FunktionsParameter>,
+        parameter: List<MethodenParameter>,
         ausdruck: MathematischesObjekt,
         definitionsmenge: MengenAusdruck = ReelleZahlen,
         zielmenge: MengenAusdruck = ReelleZahlen,
-    ) = Funktion(
+    ) = Methode(
         name = name,
         parameter = parameter,
         ausgaben = mapOf("wert" to ausdruck),

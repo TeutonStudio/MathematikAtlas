@@ -27,7 +27,7 @@ private fun alteMethodenErgebnisArt(art: String): String? = when (art) {
  *
  * Knoten-, Anschluss- und Verbindungs-IDs bleiben unverändert. Die ehemalige
  * Methodenunterart wird als semantischer Ergebnisvertrag am jeweiligen
- * Anschlussnamen bewahrt. Die Funktion ist idempotent.
+ * Anschlussnamen bewahrt. Die Methode ist idempotent.
  */
 internal fun KartenDaten.migriereMethodenAnschlüsse(): KartenDaten {
     var verändert = false

@@ -14,7 +14,7 @@ import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
-import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensor
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorOrientierung
 import de.TeutonStudio.MathematikRechenSystem.kern.parseTensorPermutationOderNull
@@ -112,7 +112,7 @@ private object TermZuMethodeInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "f") { aktionen.parameter("name", it.trim().ifBlank { "f" }) }
         Text("Die Zielmenge wird aus dem Term und den Wertebereichen seiner Parameter abgeleitet.", style = MaterialTheme.typography.bodySmall)
-        val parameter = (ergebnis?.ausgaben?.get("methode")?.objekt as? Funktion)?.parameter.orEmpty()
+        val parameter = (ergebnis?.ausgaben?.get("methode")?.objekt as? Methode)?.parameter.orEmpty()
         Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
         if (parameter.isEmpty()) Text("Keine freien Variablen erkannt.", style = MaterialTheme.typography.bodySmall)
         parameter.forEachIndexed { index, variable ->
@@ -403,19 +403,21 @@ private object VisualisierungsInspektor : KnotenInspektor {
         fun ändern(neu: VisualisierungsKonfiguration) { config = neu; aktionen.eigenschaften(neu.zuEigenschaften()) }
         Text("Raum", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(config.dimension == RaumDimension.R1, { ändern(config.copy(dimension = RaumDimension.R1)) }, label = { Text("R¹") })
             FilterChip(config.dimension == RaumDimension.R2, { ändern(config.copy(dimension = RaumDimension.R2)) }, label = { Text("R²") })
             FilterChip(config.dimension == RaumDimension.R3, { ändern(config.copy(dimension = RaumDimension.R3)) }, label = { Text("R³") })
         }
         Text("Achsen", style = MaterialTheme.typography.titleSmall)
         ParameterFeld("X-Variable", config.achsen.x) { ändern(config.copy(achsen = config.achsen.copy(x = it.trim()))) }
-        ParameterFeld("Y-Variable", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
+        if (config.dimension != RaumDimension.R1) ParameterFeld("Y-Variable", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
         if (config.dimension == RaumDimension.R3) ParameterFeld("Z-Variable", config.achsen.z.orEmpty()) { ändern(config.copy(achsen = config.achsen.copy(z = it.trim().ifBlank { null }))) }
         BereichFeld("X-Bereich", config.bereiche.x) { ändern(config.copy(bereiche = config.bereiche.copy(x = it))) }
-        BereichFeld("Y-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
+        if (config.dimension != RaumDimension.R1) BereichFeld("Y-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
         if (config.dimension == RaumDimension.R3) BereichFeld("Z-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
         Text("Sampling", style = MaterialTheme.typography.titleSmall)
-        ParameterFeld("R²-Auflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
-        ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
+        if (config.dimension == RaumDimension.R1) ParameterFeld("R¹-Auflösung", config.sampling.auflösung1D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung1D = n.coerceIn(16, 2_000)))) } }
+        if (config.dimension == RaumDimension.R2) ParameterFeld("R²-Auflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
+        if (config.dimension == RaumDimension.R3) ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
         ParameterFeld("Toleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
         Text("Farbe", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }

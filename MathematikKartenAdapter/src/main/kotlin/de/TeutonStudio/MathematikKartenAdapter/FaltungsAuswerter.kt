@@ -112,11 +112,11 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
                 "vereinigung", "schnitt" -> "A"
                 else -> "f"
             }
-            val methode = Funktion(
+            val methode = Methode(
                 name = methodenName,
                 parameter = listOf(index),
-                ausgaben = mapOf("wert" to iterationsTerm),
-                zielMengen = mapOf("wert" to zielMenge),
+                vorschrift = iterationsTerm,
+                zielMenge = zielMenge,
                 werteVorräte = mapOf(index.name to indexMenge),
             )
             when (operator) {
@@ -153,7 +153,7 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
         val methode = methodenWert.objekt
-        val argumentWerte = if (methode is Funktion) {
+        val argumentWerte = if (methode is Methode) {
             val benötigteAnschlüsse = argumentAnschlüsse.take(methode.parameter.size)
             require(benötigteAnschlüsse.size == methode.parameter.size) {
                 "Die Methode '${methode.name}' benötigt ${methode.parameter.size} Argumentanschlüsse, vorhanden sind ${argumentAnschlüsse.size}."
@@ -182,10 +182,10 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
         val argumente = argumentWerte.map(BedingterWert::objekt)
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
-        val (wert, zielMenge) = if (methode is Funktion) {
+        val (wert, zielMenge) = if (methode is Methode) {
             val ausgabe = methode.einzigeAusgabe()
             val bindungen = methode.parameter.mapIndexed { index, parameter -> parameter.name to argumente[index] }.toMap()
-            methode.wendeAn(bindungen).getValue(ausgabe.first) to methode.zielMengeFür(ausgabe.first, bindungen)
+            methode.wendeAn(bindungen) to methode.zielMengeFür(ausgabe.first, bindungen)
         } else {
             symbolischerAnwendungsWert(methode, argumente, ergebnisArt) to null
         }
@@ -207,7 +207,7 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
 
 internal object MethodenZielmengeAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
-        val methode = kontext.eingänge["methode"]?.objekt as? Funktion
+        val methode = kontext.eingänge["methode"]?.objekt as? Methode
             ?: error("Eine konkrete Methode fehlt.")
         val zielMenge = methode.einzigeZielMenge
         return KnotenAuswertungsErgebnis(
@@ -221,7 +221,7 @@ internal object MethodenZielmengeAuswerter : MathematikKnotenAuswerter {
     }
 }
 
-private fun gebundenerParameter(name: String, art: AnschlussArtId): FunktionsParameter = when (art.wert) {
+private fun gebundenerParameter(name: String, art: AnschlussArtId): MethodenParameter = when (art.wert) {
     "mathematik.zahl" -> Variable(name)
     "mathematik.aussage" -> AussagenParameter(name)
     "mathematik.menge" -> MengenParameter(name)
@@ -245,7 +245,7 @@ private fun symbolischerAnwendungsWert(
 
 private fun entferneAkkumulator(
     körper: MathematischesObjekt,
-    akkumulator: FunktionsParameter,
+    akkumulator: MethodenParameter,
     operator: String,
 ): MathematischesObjekt = when (operator) {
     "summe" -> addition((körper as? Addition)?.summanden?.filterNot { it == akkumulator }

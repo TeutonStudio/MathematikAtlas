@@ -55,14 +55,14 @@ internal fun KartenWahrheitstabellenDialog(
     val freieLogischeEingänge = quelle.eingänge.filter { feld ->
         feld !in verbundeneFelder && (
             zustand.anschlussArten.istUnterart(feld.art, MathematikAnschlussArten.Aussage.id) ||
-                zustand.anschlussArten.istUnterart(feld.art, MathematikAnschlussArten.AussageFunktion.id)
+                zustand.anschlussArten.istUnterart(feld.art, MathematikAnschlussArten.AussageMethode.id)
             )
     }
     val freieAussagen = freieLogischeEingänge.filter {
         zustand.anschlussArten.istUnterart(it.art, MathematikAnschlussArten.Aussage.id)
     }
     val freiePrädikate = freieLogischeEingänge.filter {
-        zustand.anschlussArten.istUnterart(it.art, MathematikAnschlussArten.AussageFunktion.id)
+        zustand.anschlussArten.istUnterart(it.art, MathematikAnschlussArten.AussageMethode.id)
     }
     val zeilenAnzahl = kartenWahrheitstabellenZeilenAnzahl(freieLogischeEingänge.size)
     var seitenStart by remember(knoten.id, freieLogischeEingänge.map { it.äußererAnschluss.id }) {

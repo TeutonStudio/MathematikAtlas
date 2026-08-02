@@ -12,12 +12,12 @@ private val AUSSAGE_KARTEN_ART = AnschlussArtId("mathematik.aussage")
 private val MENGE_KARTEN_ART = AnschlussArtId("mathematik.menge")
 private val OBJEKT_KARTEN_ART = AnschlussArtId("mathematik.objekt")
 private val METHODE_KARTEN_ART = AnschlussArtId("mathematik.methode")
-private val LEGACY_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion")
-private val ZAHL_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.zahl")
-private val AUSSAGE_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.aussage")
-private val MENGEN_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.menge")
-private val SPALTEN_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.vektor.spalte")
-private val ZEILEN_FUNKTION_KARTEN_ART = AnschlussArtId("mathematik.funktion.vektor.zeile")
+private val LEGACY_METHODE_KARTEN_ART = AnschlussArtId("mathematik.funktion")
+private val ZAHL_METHODE_KARTEN_ART = AnschlussArtId("mathematik.funktion.zahl")
+private val AUSSAGE_METHODE_KARTEN_ART = AnschlussArtId("mathematik.funktion.aussage")
+private val MENGEN_METHODE_KARTEN_ART = AnschlussArtId("mathematik.funktion.menge")
+private val SPALTEN_METHODE_KARTEN_ART = AnschlussArtId("mathematik.funktion.vektor.spalte")
+private val ZEILEN_METHODE_KARTEN_ART = AnschlussArtId("mathematik.funktion.vektor.zeile")
 
 /**
  * Erzeugt einen symbolischen Eingabewert, dessen Laufzeitobjekt zur deklarierten
@@ -78,21 +78,21 @@ private fun symbolischeMethode(
 ): Methode? {
     if (art !in setOf(
             METHODE_KARTEN_ART,
-            LEGACY_FUNKTION_KARTEN_ART,
-            ZAHL_FUNKTION_KARTEN_ART,
-            AUSSAGE_FUNKTION_KARTEN_ART,
-            MENGEN_FUNKTION_KARTEN_ART,
-            SPALTEN_FUNKTION_KARTEN_ART,
-            ZEILEN_FUNKTION_KARTEN_ART,
+            LEGACY_METHODE_KARTEN_ART,
+            ZAHL_METHODE_KARTEN_ART,
+            AUSSAGE_METHODE_KARTEN_ART,
+            MENGEN_METHODE_KARTEN_ART,
+            SPALTEN_METHODE_KARTEN_ART,
+            ZEILEN_METHODE_KARTEN_ART,
         )
     ) return null
 
     val ergebnisArt = vertragErgebnisArt ?: when (art) {
-        ZAHL_FUNKTION_KARTEN_ART -> "mathematik.zahl"
-        AUSSAGE_FUNKTION_KARTEN_ART -> "mathematik.aussage"
-        MENGEN_FUNKTION_KARTEN_ART -> "mathematik.menge"
-        SPALTEN_FUNKTION_KARTEN_ART -> "mathematik.vektor.spalte"
-        ZEILEN_FUNKTION_KARTEN_ART -> "mathematik.vektor.zeile"
+        ZAHL_METHODE_KARTEN_ART -> "mathematik.zahl"
+        AUSSAGE_METHODE_KARTEN_ART -> "mathematik.aussage"
+        MENGEN_METHODE_KARTEN_ART -> "mathematik.menge"
+        SPALTEN_METHODE_KARTEN_ART -> "mathematik.vektor.spalte"
+        ZEILEN_METHODE_KARTEN_ART -> "mathematik.vektor.zeile"
         else -> "mathematik.objekt"
     }
     val index = Variable("i")
@@ -108,8 +108,8 @@ private fun symbolischeMethode(
     return Methode(
         name = name,
         parameter = listOf(index),
-        ausgaben = mapOf("wert" to wert),
-        zielMengen = mapOf("wert" to zielMenge),
+        vorschrift = wert,
+        zielMenge = zielMenge,
         werteVorräte = mapOf(index.name to ReelleZahlen),
     )
 }
@@ -150,8 +150,8 @@ private fun symbolischerMengenMethodenwert(
     val prädikat = Methode(
         name = "${name}_graph",
         parameter = listOf(element),
-        ausgaben = mapOf("wert" to bedingung),
-        zielMengen = mapOf("wert" to WahrheitsMenge),
+        vorschrift = bedingung,
+        zielMenge = WahrheitsMenge,
         werteVorräte = mapOf(element.name to grundMenge),
     )
     return GefilterteMenge(grundMenge, prädikat) to grundMenge

@@ -12,7 +12,7 @@ class IndexiertesKartesischesProduktTest {
     @Test
     fun `endliches indexiertes Produkt besteht aus Auswahlfunktionen`() {
         val werte = EndlicheMenge(setOf(RationaleZahl.von(1), RationaleZahl.von(2)))
-        val methode = Funktion(
+        val methode = Methode(
             name = "A",
             parameter = listOf(i),
             ausgaben = mapOf("wert" to werte),
@@ -24,12 +24,12 @@ class IndexiertesKartesischesProduktTest {
         val produkt = assertIs<EndlicheMenge>(iteriertesKartesischesProdukt(methode, indexMenge))
 
         assertEquals(4, produkt.elemente.size)
-        assertTrue(produkt.elemente.all { it is Funktion })
-        val koordinaten = produkt.elemente.map { it as Funktion }.map { auswahl ->
+        assertTrue(produkt.elemente.all { it is Methode })
+        val koordinaten = produkt.elemente.map { it as Methode }.map { auswahl ->
             assertEquals(indexMenge, auswahl.werteVorräte.getValue(i.name))
             listOf(
-                auswahl.wendeAn(mapOf(i.name to RationaleZahl.von(1))).getValue("wert"),
-                auswahl.wendeAn(mapOf(i.name to RationaleZahl.von(2))).getValue("wert"),
+                auswahl.wendeAn(listOf(RationaleZahl.von(1))),
+                auswahl.wendeAn(listOf(RationaleZahl.von(2))),
             )
         }.toSet()
         assertEquals(
@@ -44,8 +44,8 @@ class IndexiertesKartesischesProduktTest {
     }
 
     @Test
-    fun `leeres indexiertes Produkt enthält genau die leere Funktion`() {
-        val methode = Funktion(
+    fun `leeres indexiertes Produkt enthält genau die leere Methode`() {
+        val methode = Methode(
             name = "A",
             parameter = listOf(i),
             ausgaben = mapOf("wert" to EndlicheMenge(setOf(RationaleZahl.Eins))),
@@ -54,15 +54,15 @@ class IndexiertesKartesischesProduktTest {
         )
 
         val produkt = assertIs<EndlicheMenge>(iteriertesKartesischesProdukt(methode, LeereMenge))
-        val leereFunktion = assertIs<Funktion>(produkt.elemente.single())
+        val leereFunktion = assertIs<Methode>(produkt.elemente.single())
 
         assertTrue(leereFunktion.parameter.isEmpty())
-        assertTrue(leereFunktion.ausgaben.isEmpty())
+        assertEquals(Tupel(emptyList()), leereFunktion.vorschrift)
     }
 
     @Test
     fun `Ergebnis ist unabhängig von Einfügereihenfolge der Indexmenge`() {
-        val methode = Funktion(
+        val methode = Methode(
             name = "A",
             parameter = listOf(i),
             ausgaben = mapOf("wert" to EndlicheMenge(setOf(i))),

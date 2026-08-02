@@ -34,6 +34,7 @@ data class GeometrischeInzidenz(
             if (radius != null && distanz != null) ergebnis(radius == distanz) else unbekannt()
         }
         is GeometriePolygon -> if (objekt.ecken.any { geometrischGleich(it, punkt) == true }) wahr("Der Punkt ist eine Polygonecke.") else unbekannt()
+        is GeometrieDreieck -> GeometrischeInzidenz(punkt, objekt.polygon).entscheide(kontext)
         is GeometrieGruppe -> {
             val werte = objekt.objekte.map { GeometrischeInzidenz(punkt, it).entscheide(kontext).wahrheitswert }
             when {
@@ -152,6 +153,7 @@ fun geometrischGleich(links: GeometrischerAusdruck, rechts: GeometrischerAusdruc
             if (gleicheMitte == false) false else if (gleicheMitte == true && l != null && r != null) l == r else null
         }
         links is GeometriePolygon && rechts is GeometriePolygon -> links.ecken == rechts.ecken
+        links is GeometrieDreieck && rechts is GeometrieDreieck -> geometrischGleich(links.polygon, rechts.polygon)
         else -> null
     }
 }

@@ -56,7 +56,7 @@ fun inferiereZielmenge(
     is GeometrischesKoordinatensystem -> BenannteMenge("koordinatensysteme_${ausdruck.raum.id}", "\\mathcal{K}(${ausdruck.raum.id})")
     is GeometrieStruktur -> BenannteMenge("geometriestrukturen_${ausdruck.raum.id}", "\\mathcal{C}(${ausdruck.raum.id})")
     is GeometrischeTransformation -> BenannteMenge("geometrietransformationen", "\\operatorname{Trans}_{G}")
-    is Funktion, is GebundeneFunktion, is Mächtigkeit ->
+    is Methode, is GebundeneMethode, is Mächtigkeit ->
         error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
 }
 

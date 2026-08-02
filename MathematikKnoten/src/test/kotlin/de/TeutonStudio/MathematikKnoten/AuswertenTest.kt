@@ -20,7 +20,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.KomplexeZahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.AllgemeinerParameter
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -79,12 +79,12 @@ class AuswertenTest {
             mapOf(xQuelle to 0, yQuelle to 1),
         ))
 
-        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        val methode = assertIs<Methode>(ergebnis.ausgaben.getValue("methode").objekt)
         assertEquals(listOf(Variable("y"), Variable("x")), methode.parameter)
         assertEquals(ReelleZahlen, methode.werteVorräte.getValue("y"))
         assertEquals(NatürlicheZahlen, methode.werteVorräte.getValue("x"))
         assertEquals(EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false))), methode.einzigeZielMenge)
-        assertIs<Gleichheit>(methode.ausgaben.getValue("wert"))
+        assertIs<Gleichheit>(methode.vorschrift)
     }
 
     @Test
@@ -125,7 +125,7 @@ class AuswertenTest {
             mapOf(xQuelle to 0),
         ))
 
-        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        val methode = assertIs<Methode>(ergebnis.ausgaben.getValue("methode").objekt)
         assertEquals(RationaleZahlen, methode.einzigeZielMenge)
     }
 
@@ -147,7 +147,7 @@ class AuswertenTest {
             mapOf(xQuelle to 0),
         ))
 
-        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        val methode = assertIs<Methode>(ergebnis.ausgaben.getValue("methode").objekt)
         assertEquals(KomplexeZahlen, methode.einzigeZielMenge)
     }
 
@@ -169,7 +169,7 @@ class AuswertenTest {
             mapOf(xQuelle to 0),
         ))
 
-        val methode = assertIs<Funktion>(ergebnis.ausgaben.getValue("methode").objekt)
+        val methode = assertIs<Methode>(ergebnis.ausgaben.getValue("methode").objekt)
         assertEquals(EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false))), methode.einzigeZielMenge)
     }
 
@@ -190,7 +190,7 @@ class AuswertenTest {
         )
 
         val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
-        val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
+        val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
         assertEquals(NatürlicheZahlen, funktion.werteVorräte.getValue("x"))
@@ -213,7 +213,7 @@ class AuswertenTest {
         )
 
         val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
-        val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
+        val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf(AllgemeinerParameter("a")), funktion.parameter)
         assertEquals(ReelleZahlen, funktion.werteVorräte.getValue("a"))
@@ -238,7 +238,7 @@ class AuswertenTest {
         )
 
         val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
-        val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
+        val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(bereich.elementBereich.zuMenge(), funktion.einzigeZielMenge)
         assertEquals(bereich.zuMenge(), funktion.werteVorräte.getValue("a"))
@@ -247,6 +247,6 @@ class AuswertenTest {
     @Test fun `Abbild erwartet einen allgemeinen Funktionsanschluss`() {
         val abbild = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero)
 
-        assertEquals(MathematikAnschlussArten.Funktion.id, abbild.anschlüsse.first { it.name == "methode" }.art)
+        assertEquals(MathematikAnschlussArten.Methode.id, abbild.anschlüsse.first { it.name == "methode" }.art)
     }
 }

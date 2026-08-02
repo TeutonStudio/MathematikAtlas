@@ -18,28 +18,27 @@ object MathematikAnschlussArten {
     val Methode = AnschlussArt(AnschlussArtId("mathematik.methode"), "Methode", Objekt.id)
 
     /** Quellkompatible Namen; alle liefern dieselbe produktive Anschlussart. */
-    val Funktion = Methode
-    val AussageFunktion = Methode
-    val ZahlFunktion = Methode
-    val MengenFunktion = Methode
-    val SpaltenVektorFunktion = Methode
-    val ZeilenVektorFunktion = Methode
+    val AussageMethode = Methode
+    val ZahlMethode = Methode
+    val MengenMethode = Methode
+    val SpaltenVektorMethode = Methode
+    val ZeilenVektorMethode = Methode
 
     /** Ausschließlich zum verlustfreien Laden alter Karten registrierte IDs. */
-    val LegacyFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion"), "Methode (alt)", Methode.id)
-    val LegacyAussageFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.aussage"), "Prädikatsmethode (alt)", Methode.id)
-    val LegacyZahlFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.zahl"), "Zahlmethode (alt)", Methode.id)
-    val LegacyMengenFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.menge"), "Mengenmethode (alt)", Methode.id)
-    val LegacySpaltenVektorFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.spalte"), "Spaltenvektormethode (alt)", Methode.id)
-    val LegacyZeilenVektorFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.zeile"), "Zeilenvektormethode (alt)", Methode.id)
+    val LegacyMethode = AnschlussArt(AnschlussArtId("mathematik.funktion"), "Methode (alt)", Methode.id)
+    val LegacyAussageMethode = AnschlussArt(AnschlussArtId("mathematik.funktion.aussage"), "Prädikatsmethode (alt)", Methode.id)
+    val LegacyZahlMethode = AnschlussArt(AnschlussArtId("mathematik.funktion.zahl"), "Zahlmethode (alt)", Methode.id)
+    val LegacyMengenMethode = AnschlussArt(AnschlussArtId("mathematik.funktion.menge"), "Mengenmethode (alt)", Methode.id)
+    val LegacySpaltenVektorMethode = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.spalte"), "Spaltenvektormethode (alt)", Methode.id)
+    val LegacyZeilenVektorMethode = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.zeile"), "Zeilenvektormethode (alt)", Methode.id)
 
     val historischeMethodenIds: Set<AnschlussArtId> = setOf(
-        LegacyFunktion.id,
-        LegacyAussageFunktion.id,
-        LegacyZahlFunktion.id,
-        LegacyMengenFunktion.id,
-        LegacySpaltenVektorFunktion.id,
-        LegacyZeilenVektorFunktion.id,
+        LegacyMethode.id,
+        LegacyAussageMethode.id,
+        LegacyZahlMethode.id,
+        LegacyMengenMethode.id,
+        LegacySpaltenVektorMethode.id,
+        LegacyZeilenVektorMethode.id,
     )
 
     fun normalisiereMethodenArt(art: AnschlussArtId): AnschlussArtId =
@@ -57,11 +56,11 @@ object MathematikAnschlussArten {
         Tensor,
         Tupel,
         Methode,
-        LegacyFunktion,
-        LegacyAussageFunktion,
-        LegacyZahlFunktion,
-        LegacyMengenFunktion,
-        LegacySpaltenVektorFunktion,
-        LegacyZeilenVektorFunktion,
+        LegacyMethode,
+        LegacyAussageMethode,
+        LegacyZahlMethode,
+        LegacyMengenMethode,
+        LegacySpaltenVektorMethode,
+        LegacyZeilenVektorMethode,
     ) + GeometrieAnschlussArten.alle
 }

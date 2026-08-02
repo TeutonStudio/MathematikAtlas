@@ -138,6 +138,29 @@ object GeometrieKnotenVorlagen {
         ),
     )
 
+    val Dreieck = KnotenVorlage(
+        "mathematik.geometrie.dreieck",
+        "Dreieck",
+        "Geometrie: Berechnungen",
+        "Bestimmt Seiten und Winkel eines Dreiecks partiell oder vollständig und erzeugt bei eindeutiger Lösung ein Geometrieobjekt.",
+        GraphGröße(285f, 215f),
+        listOf(
+            eingang("a", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("b", MathematikAnschlussArten.Zahl.id, 1),
+            eingang("c", MathematikAnschlussArten.Zahl.id, 2),
+            eingang("α", MathematikAnschlussArten.Zahl.id, 3),
+            eingang("β", MathematikAnschlussArten.Zahl.id, 4),
+            eingang("γ", MathematikAnschlussArten.Zahl.id, 5),
+            ausgang("a", MathematikAnschlussArten.Zahl.id, 0),
+            ausgang("b", MathematikAnschlussArten.Zahl.id, 1),
+            ausgang("c", MathematikAnschlussArten.Zahl.id, 2),
+            ausgang("α", MathematikAnschlussArten.Zahl.id, 3),
+            ausgang("β", MathematikAnschlussArten.Zahl.id, 4),
+            ausgang("γ", MathematikAnschlussArten.Zahl.id, 5),
+            ausgang("dreieck", GeometrieAnschlussArten.Dreieck.id, 6),
+        ),
+    )
+
     val Gruppe = KnotenVorlage(
         "mathematik.geometrie.gruppe",
         "Geometriegruppe",
@@ -382,6 +405,7 @@ object GeometrieKnotenVorlagen {
         Winkel,
         Kreislinie,
         Polygon,
+        Dreieck,
         Gruppe,
         Inzidenz,
         Zwischen,

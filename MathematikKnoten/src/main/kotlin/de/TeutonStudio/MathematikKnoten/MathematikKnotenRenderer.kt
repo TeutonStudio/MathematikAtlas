@@ -37,7 +37,7 @@ class MathematikKnotenRenderer(
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)
             val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
             val objekt = ausgabe?.objekt
-            (objekt as? Funktion)?.let { methode ->
+            (objekt as? Methode)?.let { methode ->
                 Text(methode.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
             }
             when {
@@ -69,7 +69,7 @@ class MathematikKnotenRenderer(
             }
             if (knoten.art in mengenIterationsArten) {
                 val methodenEingang = ergebnis?.eingänge?.get("methode")
-                val methode = methodenEingang?.objekt as? Funktion
+                val methode = methodenEingang?.objekt as? Methode
                 runCatching { methode?.grundMengeFürMengenAusgabe()?.zuLatex() }.getOrNull()?.let {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Grundmenge:", style = MaterialTheme.typography.labelSmall)
@@ -93,7 +93,7 @@ class MathematikKnotenRenderer(
 
     private fun iterationsFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?): String {
         val methodenWert = ergebnis?.eingänge?.get("methode")
-        val methode = methodenWert?.objekt as? Funktion
+        val methode = methodenWert?.objekt as? Methode
         val indexWert = ergebnis?.eingänge?.get("indexmenge")
         val indexMenge = indexWert?.let { it.anzeigeLatex() } ?: "I"
         val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "i"
@@ -126,7 +126,7 @@ class MathematikKnotenRenderer(
     private fun termZuMethodeFormel(ergebnis: KnotenAuswertungsErgebnis?): String {
         val ausgewertet = ergebnis
             ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
-        val methode = ausgewertet.ausgaben["methode"]?.objekt as? Funktion
+        val methode = ausgewertet.ausgaben["methode"]?.objekt as? Methode
             ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
         if (methode.istPrädikat()) {
             val termEingang = ausgewertet.eingänge["term"]

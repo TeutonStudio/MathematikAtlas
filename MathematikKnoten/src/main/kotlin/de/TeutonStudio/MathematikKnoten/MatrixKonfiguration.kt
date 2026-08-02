@@ -40,7 +40,7 @@ fun konfiguriereMatrix(
             matrixEingang(
                 vorhanden = vorhandene["methode"],
                 name = "methode",
-                art = MathematikAnschlussArten.ZahlFunktion.id,
+                art = MathematikAnschlussArten.ZahlMethode.id,
                 reihenfolge = 0,
             ),
         )

@@ -77,7 +77,7 @@ object AussagenLogikKnotenVorlagen {
                 name = "methode",
                 richtung = AnschlussRichtung.Eingang,
                 kante = AnschlussKante.Links,
-                art = MathematikAnschlussArten.AussageFunktion.id,
+                art = MathematikAnschlussArten.AussageMethode.id,
             ),
             AnschlussDaten(
                 name = "indexmenge",

@@ -8,7 +8,7 @@ import kotlin.test.assertIs
 class IterierteAussagenOperatorenTest {
     private val c = Variable("c")
     private val wahrheitsMenge = EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
-    private val methode = Funktion(
+    private val methode = Methode(
         name = "P",
         parameter = listOf(c),
         ausgaben = mapOf("aussage" to Vergleich(c, VergleichsArt.Kleiner, RationaleZahl.Eins)),
@@ -44,7 +44,7 @@ class IterierteAussagenOperatorenTest {
     @Test
     fun `Aussageniteration akzeptiert allgemeine Mengenelemente`() {
         val element = AllgemeinerParameter("element")
-        val objektMethode = Funktion(
+        val objektMethode = Methode(
             name = "Q",
             parameter = listOf(element),
             ausgaben = mapOf("aussage" to Gleichheit(element, element)),

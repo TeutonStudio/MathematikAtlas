@@ -54,7 +54,7 @@ internal fun migriereAbbildZuAllgemeinerMethode(karte: KartenDaten): KartenDaten
     knoten = karte.knoten.map { knoten ->
         if (knoten.art != "mathematik.abbild") knoten else knoten.copy(
             anschlüsse = knoten.anschlüsse.map { anschluss ->
-                if (anschluss.name == "methode" && anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(art = MathematikAnschlussArten.Funktion.id) else anschluss
+                if (anschluss.name == "methode" && anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(art = MathematikAnschlussArten.Methode.id) else anschluss
             },
         )
     },
@@ -87,12 +87,12 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
                 val term = alt.anschlüsse.firstOrNull { it.name == "term" }
                     ?: AnschlussDaten(name = "term", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id)
                 val methode = alt.anschlüsse.firstOrNull { it.name == "methode" }
-                    ?: AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Funktion.id)
+                    ?: AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Methode.id)
                 alt.anschlüsse.filter { it.id != term.id && it.id != methode.id }.forEach { entfernteAnschlüsse += AnschlussVerweis(alt.id, it.id) }
                 alt.copy(
                     anschlüsse = listOf(
                         term.copy(richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = if (term.art == MathematikAnschlussArten.Aussage.id) MathematikAnschlussArten.Aussage.id else MathematikAnschlussArten.Objekt.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
-                        methode.copy(richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = if (methode.art == MathematikAnschlussArten.AussageFunktion.id) MathematikAnschlussArten.AussageFunktion.id else MathematikAnschlussArten.Funktion.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
+                        methode.copy(richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = if (methode.art == MathematikAnschlussArten.AussageMethode.id) MathematikAnschlussArten.AussageMethode.id else MathematikAnschlussArten.Methode.id, reihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false),
                     ),
                     parameter = (alt.parameter - "zielmenge") + ("argumentReihenfolge" to (alt.parameter["argumentReihenfolge"] ?: "")),
                 )
@@ -107,7 +107,7 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
             if (verbindung.von in entfernteAnschlüsse || verbindung.zu in entfernteAnschlüsse) return@filter false
             if (verbindung.von.knotenId !in termKnoten) return@filter true
             val ziel = nachId[verbindung.zu.knotenId]?.anschlüsse?.firstOrNull { it.id == verbindung.zu.anschlussId } ?: return@filter false
-            ziel.art in setOf(MathematikAnschlussArten.Funktion.id, MathematikAnschlussArten.AussageFunktion.id, MathematikAnschlussArten.Objekt.id)
+            ziel.art in setOf(MathematikAnschlussArten.Methode.id, MathematikAnschlussArten.AussageMethode.id, MathematikAnschlussArten.Objekt.id)
         },
     )
 }

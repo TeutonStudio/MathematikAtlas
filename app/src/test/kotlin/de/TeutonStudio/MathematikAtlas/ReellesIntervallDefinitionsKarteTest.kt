@@ -75,7 +75,7 @@ class ReellesIntervallDefinitionsKarteTest {
         assertEquals("links \\le x \\le rechts", konjunktionsWert.anzeigeLatex())
 
         val termZuMethode = karte.knoten.single { it.art == MathematikKnotenVorlagen.TermZuMethode.art }
-        val methode = auswertung.knoten.getValue(termZuMethode.id).ausgaben.getValue("methode").objekt as Funktion
+        val methode = auswertung.knoten.getValue(termZuMethode.id).ausgaben.getValue("methode").objekt as Methode
         assertEquals(listOf(Variable("x")), methode.parameter)
         assertEquals(ReelleZahlen, methode.werteVorräte.getValue("x"))
         assertEquals(

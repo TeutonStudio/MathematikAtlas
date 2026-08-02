@@ -143,7 +143,7 @@ object StandardMathematikAuswerter {
             )))
         }
         registriere("mathematik.mengenfilter") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Filtermethode fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Filtermethode fehlt.")
             val gefiltert = filtereMenge(k.menge("menge"), methode, k.rechenKontext)
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
                 objekt = gefiltert,
@@ -214,17 +214,17 @@ object StandardMathematikAuswerter {
         registriere("mathematik.komplexeZahlen") { KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(KomplexeZahlen))) }
         registriere("mathematik.mächtigkeit") { k -> KnotenAuswertungsErgebnis(mapOf("mächtigkeit" to BedingterWert(mächtigkeit(k.menge("menge")), annahmen(k)))) }
         registriere("mathematik.iterierteSumme") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Zahlfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(iterierteSumme(methode, indexMenge), annahmen(k))))
         }
         registriere("mathematik.iteriertesProdukt") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Zahlfunktion fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Zahlfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(iteriertesProdukt(methode, indexMenge), annahmen(k))))
         }
         registriere(MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART) { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Aussagenmethode fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Aussagenmethode fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             val aussage = when (k.knoten.parameter["operator"]) {
                 "konjunktion" -> iterierteKonjunktion(methode, indexMenge)
@@ -235,28 +235,28 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(aussage, annahmen(k))))
         }
         registriere("mathematik.iterierteVereinigung") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Mengenfunktion fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Mengenfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(iterierteVereinigung(methode, indexMenge), annahmen(k))))
         }
         registriere("mathematik.iterierterSchnitt") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Mengenfunktion fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Mengenfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(iterierterSchnitt(methode, indexMenge), annahmen(k))))
         }
         registriere("mathematik.iteriertesKartesischesProdukt") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Mengenfunktion fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Mengenfunktion fehlt.")
             val indexMenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(iteriertesKartesischesProdukt(methode, indexMenge), annahmen(k))))
         }
         registriere("mathematik.abbild") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Methode fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(bildeAb(k.menge("menge"), methode), annahmen(k))))
         }
         registriere("mathematik.termZuMethode") { k ->
             val termWert = k.eingänge["term"] ?: error("Term fehlt.")
             val term = termWert.objekt
-            val freieParameter = term.freieFunktionsParameter().associateBy { it.name }
+            val freieParameter = term.freieMethodenParameter().associateBy { it.name }
             val quellenNachName = termWert.variablenQuellen
                 .filter { it.name in freieParameter }
                 .groupBy { it.name }
@@ -279,8 +279,14 @@ object StandardMathematikAuswerter {
             val parameter = namen.map { freieParameter.getValue(it) }
             val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
             val zielmenge = inferiereZielmenge(term, werteVorräteNachName, termWert.annahmen)
-            val funktion = Funktion(k.knoten.parameter["name"] ?: "f", parameter, mapOf("wert" to term), mapOf("wert" to zielmenge), werteVorräte)
-            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
+            val methode = Methode(
+                name = k.knoten.parameter["name"] ?: "f",
+                parameter = parameter,
+                vorschrift = term,
+                zielMenge = zielmenge,
+                werteVorräte = werteVorräte,
+            )
+            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, annahmen(k))))
         }
         registriere("mathematik.komposition") { k ->
             val anschlüsse = k.knoten.anschlüsse
@@ -288,7 +294,7 @@ object StandardMathematikAuswerter {
                 .sortedBy { it.reihenfolge }
             require(anschlüsse.size >= 2) { "Eine Komposition benötigt mindestens zwei Methodeneingänge." }
             val methoden = anschlüsse.mapIndexed { index, anschluss ->
-                k.eingänge[anschluss.name]?.objekt as? Funktion
+                k.eingänge[anschluss.name]?.objekt as? Methode
                     ?: error("Methodeneingang ${index + 1} ist nicht verbunden oder enthält keine Methode.")
             }
             KnotenAuswertungsErgebnis(
@@ -296,17 +302,17 @@ object StandardMathematikAuswerter {
             )
         }
         registriere("mathematik.iteration") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Methode fehlt.")
             val exponent = vereinfache(k.zahl("exponent"), k.rechenKontext) as? RationaleZahl ?: error("Iterationsexponent muss ganzzahlig sein.")
             require(exponent.nenner == java.math.BigInteger.ONE && exponent.zähler.signum() >= 0 && exponent.zähler.bitLength() < 31) { "Iterationsexponent muss eine nichtnegative ganze Zahl sein." }
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(iteriere(methode, exponent.zähler.toInt()), annahmen(k))))
         }
         registriere("mathematik.methodenDifferentieren") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Methode fehlt.")
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(differenziereMethode(methode), annahmen(k))))
         }
         registriere("mathematik.methodenIntegrieren") { k ->
-            val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Methode fehlt.")
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(integriereMethode(methode), annahmen(k))))
         }
         registriere("mathematik.spaltenMethodeDifferentieren") { k -> methodeAnalysis(k, ::differenziereMethode) }
@@ -342,7 +348,7 @@ object StandardMathematikAuswerter {
             val breite = k.parameterInt("breite")
             val matrix = when (k.knoten.parameter["erzeugungsArt"] ?: MATRIX_EINZEL_EINGABEN) {
                 MATRIX_METHODE -> {
-                    val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Matrixmethode fehlt.")
+                    val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Matrixmethode fehlt.")
                     matrixAusMethode(methode, höhe, breite)
                 }
                 MATRIX_ZEILEN -> Matrix(List(höhe) { zeile ->
@@ -391,7 +397,7 @@ object StandardMathematikAuswerter {
             val ausgangsArt = k.knoten.anschlüsse.firstOrNull {
                 it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
             }?.art ?: MathematikAnschlussArten.Objekt.id
-            val parameter: FunktionsParameter = if (ausgangsArt == MathematikAnschlussArten.Zahl.id) Variable(name) else AllgemeinerParameter(name)
+            val parameter: MethodenParameter = if (ausgangsArt == MathematikAnschlussArten.Zahl.id) Variable(name) else AllgemeinerParameter(name)
             val werteVorrat: MengenAusdruck = when (ausgangsArt) {
                 MathematikAnschlussArten.Zahl.id -> ReelleZahlen
                 MathematikAnschlussArten.Aussage.id -> EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
@@ -478,8 +484,8 @@ object StandardMathematikAuswerter {
     private fun mengenAussage(k: KnotenAuswertungsKontext, erzeuge: (MengenAusdruck, MengenAusdruck) -> Aussage) = KnotenAuswertungsErgebnis(
         mapOf("aussage" to BedingterWert(erzeuge(k.menge("links"), k.menge("rechts")), annahmen(k))),
     )
-    private fun methodeAnalysis(k: KnotenAuswertungsKontext, operation: (Funktion) -> Funktion): KnotenAuswertungsErgebnis {
-        val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
+    private fun methodeAnalysis(k: KnotenAuswertungsKontext, operation: (Methode) -> Methode): KnotenAuswertungsErgebnis {
+        val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Methode fehlt.")
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(operation(methode), annahmen(k))))
     }
 }

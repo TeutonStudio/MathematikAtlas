@@ -38,7 +38,7 @@ internal fun synchronisiereMethodenAufrufe(
         val methode = auswertung.knoten[knoten.id]
             ?.eingänge
             ?.get("methode")
-            ?.objekt as? Funktion
+            ?.objekt as? Methode
         synchronisiereMethodenAufruf(knoten, methode)
     }
     var ergebnis = karte.copy(
@@ -68,7 +68,7 @@ internal fun synchronisiereMethodenAufrufe(
     return ergebnis.copy(verbindungen = gültigeVerbindungen)
 }
 
-private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Funktion?): KnotenDaten {
+private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Methode?): KnotenDaten {
     val methodenEingang = knoten.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
     } ?: return knoten
@@ -167,7 +167,7 @@ private fun KnotenDaten.argumentAnschlüsse() = anschlüsse
 private fun argumentId(knotenId: KnotenId, index: Int) =
     AnschlussId("${knotenId.wert}:methodenAufruf:argument:$index")
 
-private fun anschlussArtFürParameter(parameter: FunktionsParameter): AnschlussArtId = when (parameter) {
+private fun anschlussArtFürParameter(parameter: MethodenParameter): AnschlussArtId = when (parameter) {
     is Variable -> MathematikAnschlussArten.Zahl.id
     is AussagenParameter -> MathematikAnschlussArten.Aussage.id
     is MengenParameter -> MathematikAnschlussArten.Menge.id
@@ -183,7 +183,7 @@ private fun anschlussArtFürObjekt(objekt: MathematischesObjekt): AnschlussArtId
     is ZeilenVektor -> MathematikAnschlussArten.ZeilenVektor.id
     is Matrix -> MathematikAnschlussArten.Matrix.id
     is Tupel -> MathematikAnschlussArten.Tupel.id
-    is Funktion -> MathematikAnschlussArten.Funktion.id
+    is Methode -> MathematikAnschlussArten.Methode.id
     is TypisiertesElement -> AnschlussArtId(objekt.anschlussArt)
     else -> MathematikAnschlussArten.Objekt.id
 }

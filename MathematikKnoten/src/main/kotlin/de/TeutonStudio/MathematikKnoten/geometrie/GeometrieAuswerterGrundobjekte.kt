@@ -64,6 +64,44 @@ internal fun MathematikAuswerterRegister.registriereGeometrieGrundobjekte() {
             k.geometriePunkt("a"), k.geometriePunkt("b"), k.geometriePunkt("c"),
         )), k)
     }
+    registriere("mathematik.geometrie.dreieck") { k ->
+        val angaben = DreiecksWerte(
+            a = k.optionaleZahl("a"),
+            b = k.optionaleZahl("b"),
+            c = k.optionaleZahl("c"),
+            alpha = k.optionaleZahl("α"),
+            beta = k.optionaleZahl("β"),
+            gamma = k.optionaleZahl("γ"),
+        )
+        val lösung = löseDreieck(angaben)
+        val zusätzlicheAnnahmen = when (lösung) {
+            is DreiecksLösung.Vollständig -> lösung.annahmen
+            is DreiecksLösung.Unentscheidbar -> lösung.annahmen
+            else -> lösung.werte.notwendigeDreiecksAnnahmen()
+        }
+        val ausgaben = linkedMapOf<String, BedingterWert>()
+        lösung.werte.a?.let { ausgaben["a"] = k.dreiecksWert(it, zusätzlicheAnnahmen) }
+        lösung.werte.b?.let { ausgaben["b"] = k.dreiecksWert(it, zusätzlicheAnnahmen) }
+        lösung.werte.c?.let { ausgaben["c"] = k.dreiecksWert(it, zusätzlicheAnnahmen) }
+        lösung.werte.alpha?.let { ausgaben["α"] = k.dreiecksWert(it, zusätzlicheAnnahmen) }
+        lösung.werte.beta?.let { ausgaben["β"] = k.dreiecksWert(it, zusätzlicheAnnahmen) }
+        lösung.werte.gamma?.let { ausgaben["γ"] = k.dreiecksWert(it, zusätzlicheAnnahmen) }
+        if (lösung is DreiecksLösung.Vollständig) {
+            ausgaben["dreieck"] = k.dreiecksWert(lösung.dreieck, zusätzlicheAnnahmen)
+        }
+
+        KnotenAuswertungsErgebnis(
+            ausgaben = ausgaben,
+            fehler = (lösung as? DreiecksLösung.Ungültig)?.grund,
+            eingänge = k.eingänge,
+            warnungen = when (lösung) {
+                is DreiecksLösung.Partiell -> listOf(lösung.hinweis)
+                is DreiecksLösung.Mehrdeutig -> listOf("Die Angaben bestimmen zwei mögliche Dreiecke.")
+                is DreiecksLösung.Unentscheidbar -> listOf(lösung.grund)
+                else -> emptyList()
+            },
+        )
+    }
     registriere("mathematik.geometrie.gruppe") { k ->
         geometrieErgebnis("gruppe", GeometrieGruppe(listOf(k.geometrieObjekt("a"), k.geometrieObjekt("b"))), k)
     }
@@ -81,4 +119,20 @@ internal fun MathematikAuswerterRegister.registriereGeometrieGrundobjekte() {
         require(wert.objekt is GeometrischerAusdruck)
         KnotenAuswertungsErgebnis(mapOf("objekt" to wert))
     }
+}
+
+private fun KnotenAuswertungsKontext.optionaleZahl(name: String): ZahlAusdruck? =
+    eingänge[name]?.objekt as? ZahlAusdruck
+
+private fun KnotenAuswertungsKontext.dreiecksWert(
+    objekt: MathematischesObjekt,
+    zusätzlicheAnnahmen: Set<Aussage>,
+): BedingterWert {
+    val werte = eingänge.values
+    return BedingterWert(
+        objekt = objekt,
+        annahmen = geometrieAnnahmen() + zusätzlicheAnnahmen,
+        reelleVariablen = werte.flatMap { it.reelleVariablen.entries }.associate { it.toPair() },
+        variablenQuellen = werte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
+    )
 }

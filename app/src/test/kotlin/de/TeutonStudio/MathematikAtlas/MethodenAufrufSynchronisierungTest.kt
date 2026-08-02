@@ -20,7 +20,7 @@ class MethodenAufrufSynchronisierungTest {
     fun `einstellige Zahlmethode erzeugt genau einen typisierten Argumentanschluss`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
         val x = Variable("x")
-        val methode = Funktion(
+        val methode = Methode(
             name = "f",
             parameter = listOf(x),
             ausgaben = mapOf("wert" to addition(x, RationaleZahl.Eins)),
@@ -49,7 +49,7 @@ class MethodenAufrufSynchronisierungTest {
         val ursprünglicheIds = knoten.argumente().map { it.id }
         val x = Variable("x")
         val menge = MengenParameter("A")
-        val methode = Funktion(
+        val methode = Methode(
             name = "g",
             parameter = listOf(x, menge),
             ausgaben = mapOf("wert" to menge),
@@ -96,7 +96,7 @@ class MethodenAufrufSynchronisierungTest {
             zu = AnschlussVerweis(knoten.id, altesArgument.id),
         )
         val x = Variable("x")
-        val methode = Funktion(
+        val methode = Methode(
             name = "f",
             parameter = listOf(x),
             ausgaben = mapOf("wert" to x),
@@ -125,7 +125,7 @@ class MethodenAufrufSynchronisierungTest {
     @Test
     fun `nullstellige Methode entfernt Argumentanschlüsse`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
-        val methode = Funktion(
+        val methode = Methode(
             name = "c",
             parameter = emptyList(),
             ausgaben = mapOf("wert" to RationaleZahl.von(7)),
@@ -157,7 +157,7 @@ class MethodenAufrufSynchronisierungTest {
         assertFalse(METHODEN_AUFRUF_STELLIGKEIT in synchronisiert.parameter)
     }
 
-    private fun synchronisiere(knoten: KnotenDaten, methode: Funktion): KartenDaten {
+    private fun synchronisiere(knoten: KnotenDaten, methode: Methode): KartenDaten {
         val karte = KartenDaten(name = "Test", knoten = listOf(knoten))
         val ergebnis = KnotenAuswertungsErgebnis(
             ausgaben = emptyMap(),

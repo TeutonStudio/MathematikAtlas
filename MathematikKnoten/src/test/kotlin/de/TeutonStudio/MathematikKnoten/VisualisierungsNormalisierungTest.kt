@@ -219,7 +219,7 @@ class VisualisierungsNormalisierungTest {
     @Test
     fun `Filter Grundmenge und Mengenfall werden gemeinsam ausgewertet`() {
         val element = TypisiertesElement("p", "tupel")
-        val filter = Funktion("immer", listOf(element), mapOf("aussage" to WahrheitsKonstante(true)))
+        val filter = Methode("immer", listOf(element), mapOf("aussage" to WahrheitsKonstante(true)))
         val basis = KartesischesProdukt(
             listOf(
                 EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins)),

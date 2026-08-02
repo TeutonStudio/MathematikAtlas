@@ -63,6 +63,7 @@ fun geometrieAnschlussArt(objekt: GeometrischerAusdruck): AnschlussArtId = when 
     is GeometrieWinkel -> GeometrieAnschlussArten.Winkel.id
     is GeometrieKreislinie -> GeometrieAnschlussArten.Kreislinie.id
     is GeometriePolygon -> GeometrieAnschlussArten.Polygon.id
+    is GeometrieDreieck -> GeometrieAnschlussArten.Dreieck.id
     is GeometrieGruppe -> GeometrieAnschlussArten.Gruppe.id
     is TransformiertesGeometrieObjekt -> GeometrieAnschlussArten.Objekt.id
     else -> GeometrieAnschlussArten.Objekt.id

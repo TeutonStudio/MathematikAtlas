@@ -66,9 +66,9 @@ class FaltungsAuswerterTest {
     }
 
     @Test
-    fun `Methoden Anwendung wertet konkrete einwertige Funktion aus`() {
+    fun `Methoden Anwendung wertet konkrete einwertige Methode aus`() {
         val x = Variable("x")
-        val methode = Funktion(
+        val methode = Methode(
             "f", listOf(x), mapOf("wert" to addition(x, RationaleZahl.Eins)),
             mapOf("wert" to ReelleZahlen), mapOf(x.name to ReelleZahlen),
         )
@@ -101,7 +101,7 @@ class FaltungsAuswerterTest {
     @Test
     fun `allgemeiner Methodenaufruf ignoriert unverbundenen Platzhalter bei einstelliger Methode`() {
         val x = Variable("x")
-        val methode = Funktion(
+        val methode = Methode(
             "f", listOf(x), mapOf("wert" to addition(x, RationaleZahl.Eins)),
             mapOf("wert" to ReelleZahlen), mapOf(x.name to ReelleZahlen),
         )
@@ -126,7 +126,7 @@ class FaltungsAuswerterTest {
     fun `allgemeiner Methodenaufruf erhält Argumentreihenfolge bei mehrstelliger Methode`() {
         val x = Variable("x")
         val y = Variable("y")
-        val methode = Funktion(
+        val methode = Methode(
             "f",
             listOf(x, y),
             mapOf("wert" to Division(x, y)),

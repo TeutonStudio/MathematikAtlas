@@ -64,13 +64,13 @@ class KartenWahrheitstabellenTest {
                 parameter[0].name to AllgemeinerParameter("a"),
                 parameter[1].name to RationaleZahl.von(2),
             ),
-        ).getValue("aussage") as Aussage
+        ) as Aussage
         val andererFall = methode.wendeAn(
             mapOf(
                 parameter[0].name to AllgemeinerParameter("b"),
                 parameter[1].name to RationaleZahl.von(2),
             ),
-        ).getValue("aussage") as Aussage
+        ) as Aussage
 
         assertEquals(Wahrheitswert.Wahr, treffer.entscheide().wahrheitswert)
         assertNull(andererFall.entscheide().wahrheitswert)
