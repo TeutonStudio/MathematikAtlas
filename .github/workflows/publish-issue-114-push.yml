@@ -1,0 +1,159 @@
+name: Issue 114 aus Werkzeugbranch veröffentlichen
+
+on:
+  push:
+    branches:
+      - agent/issue-114-strukturvertraege
+
+permissions:
+  contents: write
+
+jobs:
+  pruefen-und-veroeffentlichen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fachcommit auf aktuellen Master anwenden
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          base64 --decode .github/issue-publish/114.patch.xz.b64 | xz --decompress > "$RUNNER_TEMP/114.patch"
+          git reset --hard 151e5384ea9b3c11afc32a18d5403383057f62a8
+          git am --3way "$RUNNER_TEMP/114.patch"
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/StrukturVertraegeTest.kt')
+          text = path.read_text()
+          alt = 'Tupel(listOf('
+          if alt not in text:
+              raise SystemExit('Erwartete Tupel-Testkonstruktion nicht gefunden.')
+          path.write_text(text.replace(alt, 'Tupel(listOf<MathematischesObjekt>(', 1))
+          PY
+          git add MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/StrukturVertraegeTest.kt
+          git commit --amend --no-edit
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Vollständig prüfen
+        run: |
+          python3 scripts/pruefe_repository.py
+          python3 scripts/pruefe_architektur.py
+          ./gradlew --stacktrace test :app:assembleDebug
+
+      - name: Geprüften Einzelcommit und Issue-Branch erzeugen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: 151e5384ea9b3c11afc32a18d5403383057f62a8
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, json, os, pathlib, subprocess, urllib.error, urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          base_sha = os.environ['BASE_SHA']
+          api = f'https://api.github.com/repos/{repo}/git'
+
+          def request(method, path, payload=None):
+              data = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  api + path,
+                  data=data,
+                  method=method,
+                  headers={
+                      'Authorization': f'Bearer {token}',
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'Content-Type': 'application/json',
+                  },
+              )
+              with urllib.request.urlopen(req) as response:
+                  return json.load(response)
+
+          base_tree = request('GET', f'/commits/{base_sha}')['tree']['sha']
+          paths = subprocess.check_output(
+              ['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'], text=True
+          ).splitlines()
+          entries = []
+          for path in paths:
+              raw = pathlib.Path(path).read_bytes()
+              blob = request('POST', '/blobs', {
+                  'content': base64.b64encode(raw).decode(), 'encoding': 'base64'
+              })['sha']
+              mode = subprocess.check_output(['git', 'ls-files', '-s', path], text=True).split()[0]
+              entries.append({'path': path, 'mode': mode, 'type': 'blob', 'sha': blob})
+
+          tree = request('POST', '/trees', {'base_tree': base_tree, 'tree': entries})['sha']
+          message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'], text=True).rstrip()
+          commit = request('POST', '/commits', {
+              'message': message, 'tree': tree, 'parents': [base_sha]
+          })['sha']
+          try:
+              request('POST', '/refs', {
+                  'ref': 'refs/heads/agent/v2.16.1/issue-114-strukturvertraege',
+                  'sha': commit,
+              })
+          except urllib.error.HTTPError as exc:
+              if exc.code != 422:
+                  raise
+              request('PATCH', '/refs/heads/agent/v2.16.1/issue-114-strukturvertraege', {
+                  'sha': commit, 'force': True
+              })
+          pathlib.Path('issue-114-commit-sha.txt').write_text(commit + '\n')
+          print(f'Geprüfter Einzelcommit: {commit}')
+          PY
+
+      - name: v2.16.1 im Releaseplan reservieren
+        shell: bash
+        run: |
+          git fetch origin release/v2.16.1-strukturvertraege
+          git switch -C release-v2.16.1 origin/release/v2.16.1-strukturvertraege
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('release/roadmap.toml')
+          text = path.read_text().replace(
+              'current_version = "2.16.0"', 'current_version = "2.16.1"', 1
+          )
+          block = '''
+
+[[releases]]
+version = "2.16.1"
+title = "Kartesische Tupel und gemeinsame Strukturverträge"
+roadmap = "v2.16.x Strukturverträge und lineare Algebra"
+status = "planned"
+previous_release = "2.16.0"
+branch = "release/v2.16.1-strukturvertraege"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert bestehende mathematische Laufzeittypen um zentrale Struktur-, Komponenten- und Tensorverträge, ohne einen neuen registrierten Knotentyp einzuführen."
+'''
+          if 'version = "2.16.1"' not in text:
+              text = text.rstrip() + block + '\n'
+          path.write_text(text)
+          PY
+          if [ -f .github/workflows/reserve-v2.16.1.yml ]; then
+            git rm .github/workflows/reserve-v2.16.1.yml
+          fi
+          git add release/roadmap.toml
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: v2.16.1 im Releaseplan reservieren"
+            git push origin HEAD:release/v2.16.1-strukturvertraege
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue-114-commit-sha
+          path: issue-114-commit-sha.txt
+          retention-days: 1
