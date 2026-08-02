@@ -1,0 +1,8 @@
+Matrix aus Zeilen und Spalten erzeugen (#90)
+
+- Matrix-Knoten um Einzel-, Zeilen-, Spalten- und Methodenmodus erweitern
+- stabile Zeilen- und Spaltenanschlüsse mit orientierten Vektortypen erzeugen
+- nichtquadratische Matrizen aus vollständigen Zeilen beziehungsweise Spalten auswerten
+- konkrete Längen- und Belegungsfehler liefern
+- Inspector auf eine vierstufige Modusauswahl mit Undo-Hinweis umstellen
+- Moduswechsel, Anschlussstabilität und 2×3-Matrizen mit Tests absichern
