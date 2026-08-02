@@ -48,7 +48,7 @@ class MatrixDiagonaleTest {
 
         assertIs<Tupel>(diagonale)
         assertEquals(2, vertrag.laenge)
-        assertEquals(RationaleZahlen, vertrag.zahlBereich)
+        assertEquals(NatürlicheZahlen, vertrag.zahlBereich)
     }
 
     @Test
