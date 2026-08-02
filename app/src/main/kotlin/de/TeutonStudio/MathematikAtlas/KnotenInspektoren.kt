@@ -14,6 +14,7 @@ import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
+import de.TeutonStudio.MathematikRechenSystem.kern.Abbild
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensor
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorOrientierung
@@ -402,23 +403,56 @@ private object VisualisierungsInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         var config by remember(knoten.id, knoten.eigenschaften) { mutableStateOf(VisualisierungsKonfiguration.aus(knoten.eigenschaften)) }
         fun ändern(neu: VisualisierungsKonfiguration) { config = neu; aktionen.eigenschaften(neu.zuEigenschaften()) }
+        val methode = ergebnis?.eingänge?.values
+            ?.mapNotNull { wert -> (wert.objekt as? Abbild)?.methode }
+            ?.firstOrNull()
         Text("Raum", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(config.dimension == RaumDimension.R1, { ändern(config.copy(dimension = RaumDimension.R1)) }, label = { Text("R¹") })
             FilterChip(config.dimension == RaumDimension.R2, { ändern(config.copy(dimension = RaumDimension.R2)) }, label = { Text("R²") })
             FilterChip(config.dimension == RaumDimension.R3, { ändern(config.copy(dimension = RaumDimension.R3)) }, label = { Text("R³") })
         }
-        Text("Achsen", style = MaterialTheme.typography.titleSmall)
-        ParameterFeld("X-Variable", config.achsen.x) { ändern(config.copy(achsen = config.achsen.copy(x = it.trim()))) }
-        if (config.dimension != RaumDimension.R1) ParameterFeld("Y-Variable", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
-        if (config.dimension == RaumDimension.R3) ParameterFeld("Z-Variable", config.achsen.z.orEmpty()) { ändern(config.copy(achsen = config.achsen.copy(z = it.trim().ifBlank { null }))) }
-        BereichFeld("X-Bereich", config.bereiche.x) { ändern(config.copy(bereiche = config.bereiche.copy(x = it))) }
-        if (config.dimension != RaumDimension.R1) BereichFeld("Y-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
-        if (config.dimension == RaumDimension.R3) BereichFeld("Z-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
+        Text("Methodenvisualisierung", style = MaterialTheme.typography.titleSmall)
+        if (methode == null) {
+            Text("Noch keine Methodensignatur erkannt.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            Text(
+                "${methode.name}(${methode.parameter.joinToString { it.name }}) → ${methode.ausgabeNamen.joinToString()}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            methode.parameter.forEachIndexed { index, parameter ->
+                Text(
+                    "${index + 1}. ${parameter.name} ∈ ${methode.werteVorräte[parameter.name]?.zuLatex() ?: "nicht angegeben"}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            listOf(
+                MethodenDarstellungsModus.Automatisch to "Auto",
+                MethodenDarstellungsModus.Bild to "Bild",
+                MethodenDarstellungsModus.Funktionsgraph to "Graph",
+            ).forEach { (modus, label) ->
+                FilterChip(config.methodenModus == modus, { ändern(config.copy(methodenModus = modus)) }, label = { Text(label) })
+            }
+        }
+        FilterChip(
+            config.methodenModus == MethodenDarstellungsModus.Koordinatenausgabe,
+            { ändern(config.copy(methodenModus = MethodenDarstellungsModus.Koordinatenausgabe)) },
+            label = { Text("Koordinatenausgabe") },
+        )
+        Text("Achsen und Parameterfenster", style = MaterialTheme.typography.titleSmall)
+        ParameterFeld("X-Achse / erste Ausgabe", config.achsen.x) { ändern(config.copy(achsen = config.achsen.copy(x = it.trim()))) }
+        if (config.dimension != RaumDimension.R1) ParameterFeld("Y-Achse / zweite Ausgabe", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
+        if (config.dimension == RaumDimension.R3) ParameterFeld("Z-Achse / dritte Ausgabe", config.achsen.z.orEmpty()) { ändern(config.copy(achsen = config.achsen.copy(z = it.trim().ifBlank { null }))) }
+        BereichFeld("${methode?.parameter?.getOrNull(0)?.name ?: "X"}-Bereich", config.bereiche.x) { ändern(config.copy(bereiche = config.bereiche.copy(x = it))) }
+        if (config.dimension != RaumDimension.R1) BereichFeld("${methode?.parameter?.getOrNull(1)?.name ?: "Y"}-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
+        if (config.dimension == RaumDimension.R3) BereichFeld("${methode?.parameter?.getOrNull(2)?.name ?: "Z"}-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
         Text("Sampling", style = MaterialTheme.typography.titleSmall)
         if (config.dimension == RaumDimension.R1) ParameterFeld("R¹-Auflösung", config.sampling.auflösung1D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung1D = n.coerceIn(16, 2_000)))) } }
         if (config.dimension == RaumDimension.R2) ParameterFeld("R²-Auflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
         if (config.dimension == RaumDimension.R3) ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
+        ParameterFeld("Gesamtbudget", config.sampling.maximalesRasterBudget.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximalesRasterBudget = n.coerceIn(1_000, 2_000_000)))) } }
         ParameterFeld("Toleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
         Text("Farbe", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
@@ -428,6 +462,7 @@ private object VisualisierungsInspektor : KnotenInspektor {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { listOf("Ozean", "Sonnenuntergang", "Wald").forEach { palette -> FilterChip(config.farbe.palette == palette, { ändern(config.copy(farbe = config.farbe.copy(palette = palette))) }, label = { Text(palette) }) } }
             BereichFeld("Farbwertbereich", config.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)) { ändern(config.copy(farbe = config.farbe.copy(bereich = it))) }
         }
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         OutlinedButton(onClick = { ändern(config.copy(kamera = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0))) }) { Text("Standardansicht wiederherstellen") }
     }
 }
