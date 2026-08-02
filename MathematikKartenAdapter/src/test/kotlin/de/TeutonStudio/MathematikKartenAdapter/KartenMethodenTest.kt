@@ -45,7 +45,7 @@ class KartenMethodenTest {
         val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
-        assertEquals(listOf("wert"), funktion.ausgabeNamen)
+        assertEquals(listOf("summe", "erster"), funktion.ausgabeNamen)
         assertEquals(Tupel(listOf(Variable("x"), Variable("x"))), funktion.vorschrift)
         assertEquals(Tupelraum(listOf(ReelleZahlen, ReelleZahlen)), funktion.zielMenge)
     }
