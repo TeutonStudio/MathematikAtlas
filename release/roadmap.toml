@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.13.x"
-current_version = "2.13.2"
+current_series = "2.14.x"
+current_version = "2.14.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -424,3 +424,15 @@ branch = "agent/v2.13.2-readme-issue-verwalter"
 kind = "governance"
 version_axis = "x"
 reason = "Überarbeitet die öffentliche Projektdokumentation, ergänzt die Apache License 2.0 und führt den Issue-Verwalter-Agenten ein, ohne einen neuen registrierten Knotentyp hinzuzufügen."
+
+[[releases]]
+version = "2.14.0"
+title = "Auswahl geometrischer Ecken, Kanten und Flächen"
+roadmap = "v2.14.x Geometrische Strukturen und Teilobjekte"
+status = "released"
+previous_release = "2.13.2"
+branch = "release/v2.14.0-geometrie-teilobjekte"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.geometrie.eckeVon", "mathematik.geometrie.kanteVon", "mathematik.geometrie.flaecheVon"]
+reason = "Führt drei separat erzeugbare Geometrieknoten ein, die 0-, 1- und 2-Zellen eines geometrischen Objekts über stabile Zell-IDs auswählen und konkret typisiert ausgeben."
