@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 object GesamterMathematikAuswerter {
     fun erzeugeRegister(): MathematikAuswerterRegister = StandardMathematikAuswerter.erzeugeRegister().apply {
         registriereGeometrieGrundobjekte()
+        registriereGeometrieTeilobjekte()
         registriereGeometrieRelationen()
         registriereGeometrieTransformationen()
         registriereMengenraumKnoten()

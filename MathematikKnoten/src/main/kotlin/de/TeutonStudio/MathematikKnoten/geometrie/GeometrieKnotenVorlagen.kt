@@ -236,6 +236,21 @@ object GeometrieKnotenVorlagen {
         listOf(eingang("objekt", GeometrieAnschlussArten.Objekt.id), ausgang("struktur", GeometrieAnschlussArten.Struktur.id)),
     )
 
+    val EckeVon = teilobjektVorlage(
+        typ = GeometrieTeilobjektTyp.Ecke,
+        standardAusgangsArt = GeometrieAnschlussArten.Punkt.id,
+    )
+
+    val KanteVon = teilobjektVorlage(
+        typ = GeometrieTeilobjektTyp.Kante,
+        standardAusgangsArt = GeometrieAnschlussArten.Strecke.id,
+    )
+
+    val FlächeVon = teilobjektVorlage(
+        typ = GeometrieTeilobjektTyp.Fläche,
+        standardAusgangsArt = GeometrieAnschlussArten.Polygon.id,
+    )
+
     val ZuTrägermenge = KnotenVorlage(
         "mathematik.geometrie.zuTrägermenge",
         "Geometrie zu Trägermenge",
@@ -377,6 +392,9 @@ object GeometrieKnotenVorlagen {
         StreckenKongruenz,
         WinkelKongruenz,
         ZuStruktur,
+        EckeVon,
+        KanteVon,
+        FlächeVon,
         ZuTrägermenge,
         KoordinatenBild,
         SpalteZuTupel,
@@ -387,6 +405,22 @@ object GeometrieKnotenVorlagen {
         AffineTransformation,
         Transformieren,
         Visualisierung,
+    )
+
+    private fun teilobjektVorlage(
+        typ: GeometrieTeilobjektTyp,
+        standardAusgangsArt: AnschlussArtId,
+    ) = KnotenVorlage(
+        art = typ.knotenArt,
+        name = "${typ.bezeichnung} von",
+        kategorie = "Geometrie: Struktur",
+        beschreibung = "Wählt im Inspektor eine ${typ.bezeichnung.lowercase()} des verbundenen geometrischen Objekts aus.",
+        standardGröße = GraphGröße(245f, 110f),
+        anschlüsse = listOf(
+            eingang("objekt", GeometrieAnschlussArten.Objekt.id),
+            ausgang(typ.ausgangName, standardAusgangsArt),
+        ),
+        standardParameter = mapOf(GEOMETRIE_TEILOBJEKT_ZELL_ID to ""),
     )
 
     private fun aussageVorlage(

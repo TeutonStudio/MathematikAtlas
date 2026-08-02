@@ -10,6 +10,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
@@ -37,6 +38,9 @@ object KnotenInspektorRegister {
         "mathematik.methodeAufrufen" to MethodenAufrufInspektor,
         "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
+        GeometrieTeilobjektTyp.Ecke.knotenArt to GeometrieTeilobjektInspektor,
+        GeometrieTeilobjektTyp.Kante.knotenArt to GeometrieTeilobjektInspektor,
+        GeometrieTeilobjektTyp.Fläche.knotenArt to GeometrieTeilobjektInspektor,
     )
     fun finde(art: String) = inspektoren[art]
 }
