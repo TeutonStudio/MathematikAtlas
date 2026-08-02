@@ -1,9 +1,6 @@
-Dreieck partiell auswerten und als Geometrieobjekt ausgeben (#91)
+Release-Metadaten für v2.16.0 abschließen
 
-- sechs optionale Seiten- und Winkeleingänge mit unabhängigen Ausgaben ergänzen
-- Winkelsumme, SSS, SAS, ASA, AAS und SSA symbolisch beziehungsweise numerisch ableiten
-- mehrdeutige SSA-Fälle ohne willkürliche Kandidatenauswahl erhalten
-- GeometrieDreieck nur bei eindeutiger vollständiger Lösung erzeugen
-- kanonische lokale Realisierung und stabile Ecken-, Kanten- und Flächenzellen bereitstellen
-- Dreiecksanschluss, Renderer, Teilobjektauswahl und geometrische Relationen integrieren
-- Solver-, Knoten-, Struktur- und Grenzfalltests ergänzen
+- Android-Version auf 2.16.0 und versionCode 2016000 erhöhen
+- aktuelle Roadmap-Serie auf v2.16.x umstellen
+- Releaseeintrag für R¹-Zahlengerade, Dreieck und physisches Methodenmodell ergänzen
+- mathematik.geometrie.dreieck als neuen registrierten Knotentyp dokumentieren
