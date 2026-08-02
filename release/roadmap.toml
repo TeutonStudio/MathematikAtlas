@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.15.x"
-current_version = "2.15.0"
+current_version = "2.15.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -448,3 +448,14 @@ version_axis = "y"
 new_node_types = ["mathematik.transponieren"]
 reason = "Führt mit mathematik.transponieren einen neuen separat erzeugbaren Universalknoten für Vektoren, Matrizen und Tensoren ein. Die dynamische Kompositionskette erweitert den bestehenden Kompositionsknoten ohne einen weiteren Typ-Schlüssel."
 branch_exception = "Der bereits geöffnete Draft-PR #89 verwendet den vor der Releaseklassifikation angelegten Branch agent/issues-80-81-85; GitHub erlaubt den Headbranch eines bestehenden PRs nicht nachträglich auszutauschen."
+
+[[releases]]
+version = "2.15.1"
+title = "Einheitliches Methodenfundament und Prädikatsdarstellung"
+roadmap = "v2.15.x Methodenmodell, Prädikate und Wahrheitstabellen"
+status = "released"
+previous_release = "2.15.0"
+kind = "feature"
+version_axis = "x"
+reason = "Vereinheitlicht bestehende Methodenanschlüsse, ergänzt semantische Ergebnisverträge, abgeleitete Aliase und Prädikatsdarstellungen sowie die zugehörigen Wahrheitstabellen, ohne einen neuen registrierten Knotentyp einzuführen."
+branch_exception = "Der bereits vor der aktuellen Releasefolge geöffnete PR #72 behält den historischen Headbranch agent/v2.12.3-methoden-praedikate; sein Inhalt wurde konfliktfrei auf v2.15.0 aktualisiert."

@@ -5,7 +5,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.*
 
 class KartenMethodenTest {
-    @Test fun `Kartenmethode unterstützt mehrere Argumente und Ausgaben`() {
+    @Test fun `Kartenmethode fasst mehrere Ausgänge zu einem Ergebnistupel zusammen`() {
         val zahlArt = AnschlussArtId("mathematik.zahl")
         fun eingang(id: String, name: String, y: Float) = KnotenDaten(
             id = KnotenId(id), art = "mathematik.kartenEingang", name = name, position = GraphPunkt(0f, y),
@@ -31,7 +31,7 @@ class KartenMethodenTest {
         )
         val methode = KnotenDaten(
             art = "methode.intern", name = "f", kartenVerweis = KartenVerweis(intern.id, intern.version),
-            anschlüsse = listOf(AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId("mathematik.funktion"))),
+            anschlüsse = listOf(AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = AnschlussArtId("mathematik.methode"))),
         )
         val register = MathematikAuswerterRegister().apply {
             registriere("mathematik.kartenAusgang") { kontext ->
@@ -45,7 +45,9 @@ class KartenMethodenTest {
         val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
-        assertEquals(listOf("summe", "erster"), funktion.ausgaben.keys.toList())
-        assertEquals(setOf("summe", "erster"), funktion.zielMengen.keys)
+        assertEquals(listOf("wert"), funktion.ausgaben.keys.toList())
+        assertEquals(setOf("wert"), funktion.zielMengen.keys)
+        assertEquals(Tupel(listOf(Variable("x"), Variable("x"))), funktion.vorschrift)
+        assertEquals(Tupelraum(listOf(ReelleZahlen, ReelleZahlen)), funktion.zielMenge)
     }
 }

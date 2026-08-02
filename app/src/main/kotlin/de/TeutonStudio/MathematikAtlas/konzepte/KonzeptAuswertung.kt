@@ -21,13 +21,37 @@ internal fun KartenAuswerter.werteKonzeptKarteAus(karte: KartenDaten): KartenAus
         .filter { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART }
         .associate { knoten ->
             val ausgang = knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
-            knoten.id to mapOf(ausgang.name to knoten.vorschauWert(ausgang))
+            val methodenErgebnisArt = karte.inferiereMethodenErgebnisArt(knoten, ausgang)
+            knoten.id to mapOf(ausgang.name to knoten.vorschauWert(ausgang, methodenErgebnisArt))
         }
 
     return auswerten(karte, vorgaben)
 }
 
-private fun KnotenDaten.vorschauWert(ausgang: AnschlussDaten): BedingterWert {
+private fun KartenDaten.inferiereMethodenErgebnisArt(
+    knoten: KnotenDaten,
+    ausgang: AnschlussDaten,
+): String? {
+    if (ausgang.art.wert != "mathematik.methode") return null
+    knoten.parameter[methodenErgebnisArtSchlüssel(ausgang.name)]?.let { return it }
+    val quelle = AnschlussVerweis(knoten.id, ausgang.id)
+    return verbindungen.asSequence()
+        .filter { it.von == quelle }
+        .mapNotNull { verbindung ->
+            val zielKnoten = this.knoten.firstOrNull { it.id == verbindung.zu.knotenId } ?: return@mapNotNull null
+            val zielAnschluss = zielKnoten.anschlüsse.firstOrNull { it.id == verbindung.zu.anschlussId }
+                ?: return@mapNotNull null
+            zielKnoten.parameter[methodenErgebnisArtSchlüssel(zielAnschluss.name)]
+                ?: zielKnoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
+        }
+        .distinct()
+        .singleOrNull()
+}
+
+private fun KnotenDaten.vorschauWert(
+    ausgang: AnschlussDaten,
+    methodenErgebnisArt: String?,
+): BedingterWert {
     val parameterName = name.trim().ifBlank { "eingang" }
     val aussagenVorschau = if (ausgang.art == MathematikAnschlussArten.Aussage.id) {
         parameter["vorschauWert"]
@@ -41,5 +65,6 @@ private fun KnotenDaten.vorschauWert(ausgang: AnschlussDaten): BedingterWert {
         name = parameterName,
         knotenId = id,
         aussagenVorschau = aussagenVorschau,
+        methodenErgebnisArt = methodenErgebnisArt,
     )
 }

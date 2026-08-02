@@ -11,9 +11,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktione
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MENGENKONSTRUKTOR_ART
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
-import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
-import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
-import de.TeutonStudio.MathematikRechenSystem.kern.großerOperatorLatex
+import de.TeutonStudio.MathematikKartenAdapter.prädikatsArgumente
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 internal fun variablenFormel(knoten: KnotenDaten): String {
     val name = knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
@@ -38,6 +37,9 @@ class MathematikKnotenRenderer(
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)
             val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
             val objekt = ausgabe?.objekt
+            (objekt as? Funktion)?.let { methode ->
+                Text(methode.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
+            }
             when {
                 knoten.art == MENGENKONSTRUKTOR_ART -> LatexText(
                     mengenkonstruktorFormel(knoten),
@@ -54,7 +56,7 @@ class MathematikKnotenRenderer(
                 knoten.art == "mathematik.kartesischesProdukt" -> LatexText(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
                 knoten.art in iterativeArten -> LatexText(iterationsFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
                 knoten.art == "mathematik.termZuMethode" -> LatexText(
-                    ergebnis?.ausgaben?.get("methode")?.latexDarstellung ?: termZuMethodeFormel(ergebnis),
+                    termZuMethodeFormel(ergebnis),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> LatexText(
@@ -66,7 +68,8 @@ class MathematikKnotenRenderer(
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
             }
             if (knoten.art in mengenIterationsArten) {
-                val methode = ergebnis?.eingänge?.get("methode")?.objekt as? Funktion
+                val methodenEingang = ergebnis?.eingänge?.get("methode")
+                val methode = methodenEingang?.objekt as? Funktion
                 runCatching { methode?.grundMengeFürMengenAusgabe()?.zuLatex() }.getOrNull()?.let {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Grundmenge:", style = MaterialTheme.typography.labelSmall)
@@ -83,7 +86,8 @@ class MathematikKnotenRenderer(
         .sortedBy { it.reihenfolge }
         .mapIndexed { index, anschluss ->
             if (knoten.parameter["operatorAnzeige"] == "name") eingabeLatex(index + 1)
-            else ergebnis?.eingänge?.get(anschluss.name)?.anzeigeLatex() ?: unbekanntesOperatorLatex(knoten, index + 1)
+            else ergebnis?.eingänge?.get(anschluss.name)?.let { it.anzeigeLatex() }
+                ?: unbekanntesOperatorLatex(knoten, index + 1)
         }
         .joinToString(zeichen)
 
@@ -91,9 +95,9 @@ class MathematikKnotenRenderer(
         val methodenWert = ergebnis?.eingänge?.get("methode")
         val methode = methodenWert?.objekt as? Funktion
         val indexWert = ergebnis?.eingänge?.get("indexmenge")
-        val indexMenge = indexWert?.anzeigeLatex() ?: "I"
+        val indexMenge = indexWert?.let { it.anzeigeLatex() } ?: "I"
         val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "i"
-        val name = methodenWert?.latexDarstellung ?: methode?.name ?: "f"
+        val name = methodenWert?.let { it.latexDarstellung } ?: methode?.name ?: "f"
         val zeichen = when (knoten.art) {
             "mathematik.iterierteSumme" -> "\\sum"
             "mathematik.iteriertesProdukt" -> "\\prod"
@@ -120,16 +124,27 @@ class MathematikKnotenRenderer(
     }
 
     private fun termZuMethodeFormel(ergebnis: KnotenAuswertungsErgebnis?): String {
-        val methode = ergebnis?.ausgaben?.get("methode")?.objekt as? Funktion ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
-        val argumente = methode.parameter.joinToString(",") { it.zuLatex() }
-        val wertevorrat = when (methode.parameter.size) {
-            0 -> "\\left\\{\\left\\right\\}"
-            1 -> methode.werteVorräte[methode.parameter.single().name]?.zuLatex() ?: "?"
-            else -> methode.parameter.joinToString(" \\times ") { parameter -> methode.werteVorräte[parameter.name]?.zuLatex() ?: "?" }
+        val ausgewertet = ergebnis
+            ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
+        val methode = ausgewertet.ausgaben["methode"]?.objekt as? Funktion
+            ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
+        if (methode.istPrädikat()) {
+            val termEingang = ausgewertet.eingänge["term"]
+            val argumentQuellen = termEingang?.let { it.prädikatsArgumente() }.orEmpty()
+            return runCatching { methode.kompaktePrädikatsDarstellung(argumentQuellen = argumentQuellen) }
+                .getOrElse { methode.zuLatex() }
         }
-        val zielmenge = runCatching { methode.einzigeZielMenge.zuLatex() }.getOrDefault("?")
-        val bild = methode.ausgaben["wert"]?.zuLatex() ?: "?"
-        val tupel = if (methode.parameter.size == 1) argumente else "\\left($argumente\\right)"
+
+        val signatur = runCatching { methode.methodenSignatur() }.getOrNull()
+        val argumente = methode.parameter.joinToString(",") { it.zuLatex() }
+        val wertevorrat = signatur?.werteVorrat?.zuLatex() ?: "?"
+        val zielmenge = signatur?.zielMenge?.zuLatex() ?: "?"
+        val bild = runCatching { methode.vorschrift.zuLatex() }.getOrDefault("?")
+        val tupel = when (methode.parameter.size) {
+            0 -> "\\left\\right"
+            1 -> argumente
+            else -> "\\left($argumente\\right)"
+        }
         return "${methode.name}:\\begin{cases}$wertevorrat \\longrightarrow $zielmenge\\\\$tupel \\mapsto $bild\\end{cases}"
     }
 

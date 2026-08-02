@@ -19,7 +19,7 @@ fun inferiereZielmenge(
             "Für das gebundene Element '${ausdruck.name}' der Anschlussart " +
                 "'${ausdruck.anschlussArt}' ist keine Obermenge festgelegt.",
         )
-    is Aussage -> Wahrheitsmenge
+    is Aussage -> WahrheitsMenge
     is MengenAusdruck -> inferiereElementMenge(ausdruck, werteVorräte, annahmen)
     is FallAusdruck -> when (ausdruck.aussage.entscheide(RechenKontext(annahmen)).wahrheitswert) {
         Wahrheitswert.Wahr -> inferiereZielmenge(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage)
@@ -59,8 +59,6 @@ fun inferiereZielmenge(
     is Funktion, is GebundeneFunktion, is Mächtigkeit ->
         error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
 }
-
-private val Wahrheitsmenge = EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
 
 private fun inferiereElementMenge(
     menge: MengenAusdruck,
