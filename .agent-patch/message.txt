@@ -1,0 +1,9 @@
+Dreieck partiell auswerten und als Geometrieobjekt ausgeben (#91)
+
+- sechs optionale Seiten- und Winkeleingänge mit unabhängigen Ausgaben ergänzen
+- Winkelsumme, SSS, SAS, ASA, AAS und SSA symbolisch beziehungsweise numerisch ableiten
+- mehrdeutige SSA-Fälle ohne willkürliche Kandidatenauswahl erhalten
+- GeometrieDreieck nur bei eindeutiger vollständiger Lösung erzeugen
+- kanonische lokale Realisierung und stabile Ecken-, Kanten- und Flächenzellen bereitstellen
+- Dreiecksanschluss, Renderer, Teilobjektauswahl und geometrische Relationen integrieren
+- Solver-, Knoten-, Struktur- und Grenzfalltests ergänzen
