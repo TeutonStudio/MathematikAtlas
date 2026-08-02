@@ -46,7 +46,6 @@ class KartenMethodenTest {
 
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
         assertEquals(listOf("wert"), funktion.ausgabeNamen)
-        assertEquals(ReelleZahlen, funktion.zielMenge)
         assertEquals(Tupel(listOf(Variable("x"), Variable("x"))), funktion.vorschrift)
         assertEquals(Tupelraum(listOf(ReelleZahlen, ReelleZahlen)), funktion.zielMenge)
     }
