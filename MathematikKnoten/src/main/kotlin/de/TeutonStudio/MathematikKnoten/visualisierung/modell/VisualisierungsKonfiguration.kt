@@ -14,7 +14,13 @@ data class ZahlenBereich(val minimum: Double, val maximum: Double) {
 data class AchsenBereiche(val x: ZahlenBereich, val y: ZahlenBereich, val z: ZahlenBereich?)
 enum class FarbModus { Keine, FesteFarbe, Spektrum }
 data class FarbZuordnung(val modus: FarbModus, val variable: String?, val festeFarbe: Long?, val palette: String, val bereich: ZahlenBereich?)
-data class SamplingKonfiguration(val auflösung2D: Int, val auflösung3D: Int, val toleranz: Double)
+data class SamplingKonfiguration(
+    val auflösung2D: Int,
+    val auflösung3D: Int,
+    val toleranz: Double,
+    val maximalesRasterBudget: Int = 250_000,
+    val fensterBegrenztePrädikatsMengen: Boolean = false,
+)
 data class KameraZustand(
     val rotationX: Double,
     val rotationY: Double,
@@ -46,7 +52,11 @@ data class VisualisierungsKonfiguration(
         "bereiche" to bereiche.zuEigenschaft(),
         "farbe" to farbe.zuEigenschaft(),
         "sampling" to KnotenEigenschaft.Objekt(mapOf(
-            "auflösung2D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung2D), "auflösung3D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung3D), "toleranz" to KnotenEigenschaft.Dezimalzahl(sampling.toleranz),
+            "auflösung2D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung2D),
+            "auflösung3D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung3D),
+            "toleranz" to KnotenEigenschaft.Dezimalzahl(sampling.toleranz),
+            "maximalesRasterBudget" to KnotenEigenschaft.Ganzzahl(sampling.maximalesRasterBudget),
+            "fensterBegrenztePrädikatsMengen" to KnotenEigenschaft.Text(sampling.fensterBegrenztePrädikatsMengen.toString()),
         )),
         "kamera" to kamera.zuEigenschaft(),
     )
@@ -63,6 +73,9 @@ data class VisualisierungsKonfiguration(
                 samplingObjekt.ganzzahl("auflösung2D", standard.sampling.auflösung2D).coerceIn(16, 240),
                 samplingObjekt.ganzzahl("auflösung3D", standard.sampling.auflösung3D).coerceIn(8, 64),
                 samplingObjekt.dezimalzahl("toleranz", standard.sampling.toleranz).coerceIn(1e-5, 2.0),
+                samplingObjekt.ganzzahl("maximalesRasterBudget", standard.sampling.maximalesRasterBudget).coerceIn(1_000, 2_000_000),
+                samplingObjekt.text("fensterBegrenztePrädikatsMengen", standard.sampling.fensterBegrenztePrädikatsMengen.toString()).toBooleanStrictOrNull()
+                    ?: standard.sampling.fensterBegrenztePrädikatsMengen,
             )
             val kamera = eigenschaften.objekt("kamera").zuKamera(standard.kamera)
             return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera)
