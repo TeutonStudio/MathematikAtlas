@@ -9,6 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Kompilierungsfehler im Abschlussquellbaum korrigieren
+        run: git apply .github/patches/pr-116-build-fix.patch
+      - name: Quellbaum verpacken
+        run: tar --exclude=.git -czf "$RUNNER_TEMP/MathematikAtlas-abschluss-source.tar.gz" .
+      - name: Quellbaum als Artefakt bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: MathematikAtlas-abschluss-source
+          path: ${{ runner.temp }}/MathematikAtlas-abschluss-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
