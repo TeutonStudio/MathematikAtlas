@@ -1,6 +1,8 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.ln
@@ -107,6 +109,8 @@ private fun wertIntern(
     is Betrag -> wertIntern(ausdruck.argument, umgebung, optionen).map(::abs)
     is Sinus -> wertIntern(ausdruck.argument, umgebung, optionen).map(::sin)
     is Cosinus -> wertIntern(ausdruck.argument, umgebung, optionen).map(::cos)
+    is ArcSinus -> inverseTrigonometrischeAuswertung(ausdruck.argument, umgebung, optionen, "ArcSinus", ::asin)
+    is ArcCosinus -> inverseTrigonometrischeAuswertung(ausdruck.argument, umgebung, optionen, "ArcCosinus", ::acos)
     is Exponentialfunktion -> wertIntern(ausdruck.argument, umgebung, optionen).map(::exp)
     is NatürlicherLogarithmus -> wertIntern(ausdruck.argument, umgebung, optionen).flatMap { argument ->
         if (argument <= 0.0) NumerischesErgebnis.Definitionsbereich("Der natürliche Logarithmus ist im Reellen nur für positive Argumente definiert.")
@@ -134,6 +138,22 @@ private fun wertIntern(
     else -> NumerischesErgebnis.NichtUnterstützt(
         "Der Zahlterm ${ausdruck.zuLatex()} wird numerisch noch nicht unterstützt.",
     )
+}
+
+private fun inverseTrigonometrischeAuswertung(
+    argument: ZahlAusdruck,
+    umgebung: NumerischeUmgebung,
+    optionen: NumerischeOptionen,
+    name: String,
+    funktion: (Double) -> Double,
+): NumerischesErgebnis<Double> = wertIntern(argument, umgebung, optionen).flatMap { wert ->
+    when {
+        wert < -1.0 - optionen.toleranz || wert > 1.0 + optionen.toleranz ->
+            NumerischesErgebnis.Definitionsbereich(
+                "$name ist im Reellen nur für Argumente im Intervall [-1,1] definiert.",
+            )
+        else -> NumerischesErgebnis.Wert(funktion(wert.coerceIn(-1.0, 1.0)))
+    }
 }
 
 private fun aussageIntern(

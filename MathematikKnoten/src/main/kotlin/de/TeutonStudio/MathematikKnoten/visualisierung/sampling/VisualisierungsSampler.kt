@@ -259,6 +259,8 @@ private fun numerisch(ausdruck: ZahlAusdruck?, werte: Map<String, Double>): Doub
     is Betrag -> numerisch(ausdruck.argument, werte)?.let(::abs)
     is Sinus -> numerisch(ausdruck.argument, werte)?.let(::sin)
     is Cosinus -> numerisch(ausdruck.argument, werte)?.let(::cos)
+    is ArcSinus -> numerisch(ausdruck.argument, werte)?.takeIf { it in -1.0..1.0 }?.let(::asin)
+    is ArcCosinus -> numerisch(ausdruck.argument, werte)?.takeIf { it in -1.0..1.0 }?.let(::acos)
     is Exponentialfunktion -> numerisch(ausdruck.argument, werte)?.let(::exp)
     is NatürlicherLogarithmus -> numerisch(ausdruck.argument, werte)?.takeIf { it > 0 }?.let(::ln)
     is Wurzel -> numerisch(ausdruck.argument, werte)?.takeIf { it >= 0 }?.let(::sqrt)
