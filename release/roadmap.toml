@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.13.x"
-current_version = "2.13.1"
+current_version = "2.13.2"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -413,3 +413,14 @@ branch = "agent/v2.13.1-methode-aufruf-vertrag"
 kind = "fix"
 version_axis = "x"
 reason = "Vervollständigt den vorhandenen Methodenaufruf um automatische Stelligkeit, stabile Argumentanschlüsse, Typ- und Zielmengeninferenz sowie eine schreibgeschützte Vertragsanzeige im Inspector, ohne einen weiteren Knotentyp einzuführen."
+
+[[releases]]
+version = "2.13.2"
+title = "README, Apache-2.0 und Issue-Verwalter"
+roadmap = "v2.13.x Dokumentation und Projektsteuerung"
+status = "released"
+previous_release = "2.13.1"
+branch = "agent/v2.13.2-readme-issue-verwalter"
+kind = "governance"
+version_axis = "x"
+reason = "Überarbeitet die öffentliche Projektdokumentation, ergänzt die Apache License 2.0 und führt den Issue-Verwalter-Agenten ein, ohne einen neuen registrierten Knotentyp hinzuzufügen."
