@@ -1,0 +1,68 @@
+name: Prepare v2.13.2
+
+on:
+  push:
+    branches:
+      - agent/v2.13.2-readme-issue-verwalter
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v2.13.2-readme-issue-verwalter
+          fetch-depth: 0
+
+      - name: Release-Metadaten und Agentenübersicht ergänzen
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          roadmap = Path("release/roadmap.toml")
+          text = roadmap.read_text(encoding="utf-8")
+          text = text.replace('current_version = "2.13.1"', 'current_version = "2.13.2"', 1)
+          eintrag = '''
+
+          [[releases]]
+          version = "2.13.2"
+          title = "README, Apache-2.0 und Issue-Verwalter"
+          roadmap = "v2.13.x Dokumentation und Projektsteuerung"
+          status = "released"
+          previous_release = "2.13.1"
+          branch = "agent/v2.13.2-readme-issue-verwalter"
+          kind = "governance"
+          version_axis = "x"
+          reason = "Überarbeitet die öffentliche Projektdokumentation, ergänzt die Apache License 2.0 und führt den Issue-Verwalter-Agenten ein, ohne einen neuen registrierten Knotentyp hinzuzufügen."
+          '''.strip()
+          if 'version = "2.13.2"' not in text:
+              text = text.rstrip() + "\n\n" + eintrag + "\n"
+          roadmap.write_text(text, encoding="utf-8")
+
+          docs = Path("docs/codex/README.md")
+          text = docs.read_text(encoding="utf-8")
+          zeile = '| `/.codex/agents/issue-verwalter.toml` | klärt Anforderungen, erstellt Issues und pflegt den kanonischen technischen Lösungsplan |'
+          marker = '| `/.codex/agents/` | Codex-Subagenten einschließlich `master_verwalter` |'
+          if zeile not in text:
+              text = text.replace(marker, marker + "\n" + zeile)
+          docs.write_text(text, encoding="utf-8")
+
+          workflow = Path(".github/workflows/prepare-v2.13.2.yml")
+          workflow.unlink()
+          PY
+
+      - name: Metadaten prüfen
+        run: |
+          python3 scripts/pruefe_releaseplan.py
+
+      - name: Änderungen committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Release v2.13.2 vorbereiten"
+          git push origin HEAD:agent/v2.13.2-readme-issue-verwalter
