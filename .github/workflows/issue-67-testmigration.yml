@@ -1,0 +1,68 @@
+name: Issue 67 Testmigration
+
+on:
+  pull_request:
+    branches:
+      - release/v2.16.0-abschluss
+
+permissions:
+  contents: write
+
+jobs:
+  korrigieren-und-pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Veraltete Mehrfachausgabezugriffe korrigieren
+        shell: bash
+        run: |
+          git reset --hard 7e39bed00c8aa22c24ac126dedc46895f7c4e303
+          python3 - <<'PY'
+          from pathlib import Path
+
+          dateien = [
+              Path("MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/IterierteOperatorenTest.kt"),
+              Path("MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/MathematikRechenSystemTest.kt"),
+          ]
+          for datei in dateien:
+              text = datei.read_text()
+              neu = text.replace('.auswerten().getValue("wert")', '.auswerten()')
+              if neu == text:
+                  raise SystemExit(f"Kein veralteter Zugriff in {datei}")
+              datei.write_text(neu)
+          PY
+          git add MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/IterierteOperatorenTest.kt
+          git add MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/MathematikRechenSystemTest.kt
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Repository und Architektur prüfen
+        run: |
+          python3 scripts/pruefe_repository.py
+          python3 scripts/pruefe_architektur.py
+
+      - name: Bauen und testen
+        run: ./gradlew --stacktrace test :app:assembleDebug
+
+      - name: Einzelcommit veröffentlichen
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Methodentests auf kanonischen Einzelrückgabewert migrieren (#67)" \
+            -m "- gebundene Methoden direkt als MathematischesObjekt prüfen" \
+            -m "- veraltete getValue-Zugriffe aus der früheren Mehrfachausgabe-API entfernen" \
+            -m "- vollständigen Test- und Android-Debug-Build absichern"
+          git push --force origin HEAD:agent/issue-67-testmigration
