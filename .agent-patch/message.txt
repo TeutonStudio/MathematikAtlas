@@ -1,0 +1,9 @@
+R¹-Zahlengerade für skalare Mengen ergänzen (#93)
+
+- R¹ als eigenen Visualisierungsmodus einführen
+- Intervalle mit offenen und geschlossenen Grenzen darstellen
+- endliche skalare Mengen und sichtbare Ausschnitte diskreter Zahlmengen unterstützen
+- eindimensionale Mengenoperationen über gemeinsame Mitgliedschaft auswerten
+- R¹-Konfiguration persistieren und R²/R³ rückwärtskompatibel erhalten
+- leere Mengen als erfolgreich leere Darstellung behandeln
+- Sampling und Regressionstests für die Zahlengerade ergänzen
