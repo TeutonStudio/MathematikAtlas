@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.14.x"
-current_version = "2.14.0"
+current_series = "2.15.x"
+current_version = "2.15.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -436,3 +436,15 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.geometrie.eckeVon", "mathematik.geometrie.kanteVon", "mathematik.geometrie.flaecheVon"]
 reason = "Führt drei separat erzeugbare Geometrieknoten ein, die 0-, 1- und 2-Zellen eines geometrischen Objekts über stabile Zell-IDs auswählen und konkret typisiert ausgeben."
+
+[[releases]]
+version = "2.15.0"
+title = "Universelles Transponieren und dynamische Kompositionsketten"
+roadmap = "v2.15.x Lineare Algebra und Methodenoperationen"
+status = "released"
+previous_release = "2.14.0"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.transponieren"]
+reason = "Führt mit mathematik.transponieren einen neuen separat erzeugbaren Universalknoten für Vektoren, Matrizen und Tensoren ein. Die dynamische Kompositionskette erweitert den bestehenden Kompositionsknoten ohne einen weiteren Typ-Schlüssel."
+branch_exception = "Der bereits geöffnete Draft-PR #89 verwendet den vor der Releaseklassifikation angelegten Branch agent/issues-80-81-85; GitHub erlaubt den Headbranch eines bestehenden PRs nicht nachträglich auszutauschen."
