@@ -13,6 +13,7 @@ data class ZahlenBereich(val minimum: Double, val maximum: Double) {
 }
 data class AchsenBereiche(val x: ZahlenBereich, val y: ZahlenBereich, val z: ZahlenBereich?)
 enum class FarbModus { Keine, FesteFarbe, Spektrum }
+enum class MethodenDarstellungsModus { Automatisch, Bild, Funktionsgraph, Koordinatenausgabe }
 data class FarbZuordnung(val modus: FarbModus, val variable: String?, val festeFarbe: Long?, val palette: String, val bereich: ZahlenBereich?)
 data class SamplingKonfiguration(
     val auflösung2D: Int,
@@ -49,13 +50,15 @@ data class VisualisierungsKonfiguration(
     val farbe: FarbZuordnung = FarbZuordnung(FarbModus.FesteFarbe, null, 0xFF2563EB, "Ozean", null),
     val sampling: SamplingKonfiguration = SamplingKonfiguration(72, 22, 0.08, auflösung1D = 160),
     val kamera: KameraZustand = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
+    val methodenModus: MethodenDarstellungsModus = MethodenDarstellungsModus.Automatisch,
 ) {
-    fun samplingSignatur() = listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling).hashCode()
+    fun samplingSignatur() = listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling, methodenModus).hashCode()
     fun zuEigenschaften(): Map<String, KnotenEigenschaft> = mapOf(
         "dimension" to KnotenEigenschaft.Text(dimension.name),
         "achsen" to achsen.zuEigenschaft(),
         "bereiche" to bereiche.zuEigenschaft(),
         "farbe" to farbe.zuEigenschaft(),
+        "methodenModus" to KnotenEigenschaft.Text(methodenModus.name),
         "sampling" to KnotenEigenschaft.Objekt(mapOf(
             "auflösung1D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung1D),
             "auflösung2D" to KnotenEigenschaft.Ganzzahl(sampling.auflösung2D),
@@ -74,6 +77,9 @@ data class VisualisierungsKonfiguration(
             val achsen = eigenschaften.objekt("achsen").zuAchsen(standard.achsen)
             val bereiche = eigenschaften.objekt("bereiche").zuBereiche(standard.bereiche)
             val farbe = eigenschaften.objekt("farbe").zuFarbe(standard.farbe)
+            val methodenModus = runCatching {
+                MethodenDarstellungsModus.valueOf(eigenschaften.text("methodenModus", standard.methodenModus.name))
+            }.getOrDefault(standard.methodenModus)
             val samplingObjekt = eigenschaften.objekt("sampling")?.felder.orEmpty()
             val sampling = SamplingKonfiguration(
                 samplingObjekt.ganzzahl("auflösung2D", standard.sampling.auflösung2D).coerceIn(16, 240),
@@ -85,7 +91,7 @@ data class VisualisierungsKonfiguration(
                     ?: standard.sampling.fensterBegrenztePrädikatsMengen,
             )
             val kamera = eigenschaften.objekt("kamera").zuKamera(standard.kamera)
-            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera)
+            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus)
         }
     }
 }
