@@ -1,39 +1,49 @@
 # Codex-Struktur des Mathematik Atlas
 
-Diese Dateien bilden das versionierte Projektgedächtnis und den Workflow für Codex.
+Diese Dateien bilden das versionierte Projektgedächtnis und den Arbeitsablauf für Codex und andere Projektagenten. Sie sind **nicht** der allgemeine Einstieg für Nutzer oder menschliche Mitwirkende.
+
+Öffentliche Einstiege:
+
+- `/README.md`: Produkt und Grundkonzepte
+- `/ROADMAP.md`: langfristige Vision
+- `/CONTRIBUTING.md`: Beitragsablauf
+- `/docs/DEVELOPMENT.md`: Technik und Architektur
+- `/docs/VERSIONING.md`: verständliches Versionsschema
+- `/docs/TESTKARTEN.md`: eingebaute Beispielkarten
 
 ## Zuständigkeiten
 
 | Datei oder Verzeichnis | Zweck |
 |---|---|
-| `/AGENTS.md` | Kurze, automatisch geladene Repository-Regeln |
-| `/.codex/config.toml` | Projektweite Multi-Agent-Konfiguration, sofern lokal benötigt |
-| `/.codex/agents/` | Tatsächliche Codex-Subagenten einschließlich `master_verwalter` |
-| `/.agents/skills/neuer-knoten/SKILL.md` | Wiederverwendbarer Ablauf für neue Knoten |
-| `/.agents/skills/release-verwalten/SKILL.md` | Verbindlicher Ablauf für Versionen, Branches und master-Integration |
-| `/release/roadmap.toml` | Maschinenlesbarer Versions- und Releasezustand |
+| `/AGENTS.md` | automatisch geladene Repository-Regeln |
+| `/.codex/config.toml` | projektweite Multi-Agent-Konfiguration, sofern lokal benötigt |
+| `/.codex/agents/` | Codex-Subagenten einschließlich `master_verwalter` |
+| `/.agents/skills/neuer-knoten/SKILL.md` | wiederverwendbarer Ablauf für neue Knoten |
+| `/.agents/skills/release-verwalten/SKILL.md` | verbindlicher Ablauf für Versionen, Branches und `master`-Integration |
+| `/release/roadmap.toml` | maschinenlesbarer Versions- und Releasezustand |
 | `/docs/codex/RELEASE_WORKFLOW.md` | Branchmodell, Versionsregeln und Integrationsablauf |
-| `/docs/codex/PROJECT_CONTEXT.md` | Stabile Produkt- und Begriffsgrundlage |
-| `/docs/codex/CURRENT_STATE.md` | Zuletzt verifizierter Istzustand |
+| `/docs/codex/PROJECT_CONTEXT.md` | stabile Produkt- und Begriffsgrundlage |
+| `/docs/codex/CURRENT_STATE.md` | zuletzt verifizierter Istzustand |
 | `/docs/codex/ARCHITECTURE.md` | Architekturgrenzen und Zielprinzipien |
-| `/docs/codex/NODE_CONTRACT.md` | Vertrag für jeden Node-Typ |
+| `/docs/codex/NODE_CONTRACT.md` | Vertrag für jeden Knotentyp |
 | `/docs/codex/PLANS.md` | Anforderungen an ausführbare Pläne |
 | `/docs/codex/CODE_REVIEW.md` | Prüfkriterien |
 | `/docs/codex/TEST_STRATEGY.md` | Testebenen und Mindestabdeckung |
-| `/docs/codex/plans/` | Aktive und abgeschlossene ExecPlans |
-| `/docs/codex/decisions/` | Dauerhafte Architekturentscheidungen |
+| `/docs/codex/plans/` | aktive und abgeschlossene ExecPlans |
+| `/docs/codex/decisions/` | dauerhafte Architekturentscheidungen |
 | `/docs/codex/templates/` | Vorlagen |
 
-## Einfügen
+## Dokumentationsgrenzen
 
-Kopiere den Inhalt dieses Pakets in das Root-Verzeichnis des Mathematik-Atlas-Repositories. Versteckte Ordner wie `.codex` und `.agents` müssen mitkopiert werden.
+- Öffentliche Dokumentation erklärt Produkt, Nutzung und Mitwirkung ohne Agentenvorkenntnisse.
+- `PROJECT_CONTEXT.md` enthält langfristig stabile technische Fakten.
+- `CURRENT_STATE.md` enthält ausschließlich nachweisbaren, datierten Verifikationsstand.
+- `release/roadmap.toml` beschreibt den maschinenlesbaren Releasezustand.
+- ExecPlans dokumentieren konkrete größere Aufgaben.
+- ADRs dokumentieren dauerhafte Entscheidungen und ihre Begründung.
+- Flüchtige Sitzungsnotizen gehören nicht in das Projektgedächtnis.
 
-Vorhandene Dateien nicht blind überschreiben:
-
-- Eine bestehende `AGENTS.md` zusammenführen.
-- Eine bestehende `.codex/config.toml` nur um tatsächlich benötigte Einstellungen ergänzen.
-- Bestehende gleichnamige Agenten prüfen, bevor sie ersetzt werden.
-- Einen vorhandenen Releaseplan nicht aus Vermutungen neu erzeugen, sondern gegen Git und Pull Requests abgleichen.
+Wenn eine öffentliche Datei und `docs/codex/` denselben Sachverhalt beschreiben, müssen beide auf dieselbe Quelle der Wahrheit verweisen, statt voneinander kopierte Versionszahlen dauerhaft auseinanderlaufen zu lassen.
 
 ## Erstinitialisierung
 
@@ -51,19 +61,15 @@ Fasse die geladenen Repository-Anweisungen zusammen. Nenne die verfügbaren proj
 
 ## Release prüfen oder beginnen
 
-Explizit über den Skill:
-
 ```text
 $release-verwalten
 
 Prüfe master, offene Pull Requests und release/roadmap.toml. Nenne die nächste zulässige Version, ihren Vorgängerstand und den korrekten Releasebranch. Ändere noch keine Produktionsdateien.
 ```
 
-Der `master_verwalter` muss vor jeder Versionsreservierung und vor jedem Merge nach `master` eingesetzt werden. Ein Branchname oder eine Commitnachricht ist kein Beleg dafür, dass eine Version bereits veröffentlicht wurde.
+Der `master_verwalter` muss vor jeder Versionsreservierung und vor jedem Merge nach `master` eingesetzt werden. Ein Branchname oder eine Commitnachricht ist kein Beleg dafür, dass eine Version veröffentlicht wurde.
 
 ## Neuen Knoten beauftragen
-
-Explizit über den Skill:
 
 ```text
 $neuer-knoten
@@ -71,19 +77,4 @@ $neuer-knoten
 Plane und implementiere einen Knoten für einen iterativen Summenoperator. Er erhält eine Indexmenge und einen parametrierten Ausdruck, bindet den Index und gibt den resultierenden Ausdruck aus. Verwende den vollständigen Planer-, Mathematikprüfer-, Implementierer- und Verifizierer-Ablauf.
 ```
 
-Oder natürlichsprachlich:
-
-```text
-Verwende den Skill neuer-knoten und entwickle einen Knoten für die Lösungsmenge einer Gleichung.
-```
-
-## Pflegeprinzip
-
-- `PROJECT_CONTEXT.md` enthält langfristig stabile Fakten.
-- `CURRENT_STATE.md` enthält den nachweisbaren aktuellen Zustand.
-- `release/roadmap.toml` enthält den maschinenlesbaren Releasezustand.
-- ExecPlans enthalten den Zustand einer konkreten größeren Aufgabe.
-- ADRs enthalten dauerhafte Entscheidungen und ihre Begründung.
-- Flüchtige Sitzungsnotizen gehören nicht in das Projektgedächtnis.
-
-Damit bleibt der Kontext klein genug, um nützlich zu sein, statt sich in eine feierlich versionierte Gerüchtesammlung zu verwandeln.
+Damit bleibt das Agentengedächtnis präzise, während die öffentliche README lesbar bleibt. Offenbar benötigt selbst Dokumentation inzwischen eine Gewaltenteilung.
