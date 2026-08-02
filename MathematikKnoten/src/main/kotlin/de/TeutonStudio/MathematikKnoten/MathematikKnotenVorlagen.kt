@@ -234,7 +234,19 @@ object MathematikKnotenVorlagen {
         listOf(eingang("term", MathematikAnschlussArten.Aussage.id, 0), ausgang("methode", MathematikAnschlussArten.AussageFunktion.id)),
         mapOf("name" to "P", "argumentReihenfolge" to ""),
     )
-    val Komposition = KnotenVorlage("mathematik.komposition", "Komposition", "Abbildungen", "Komponiert zwei einwertige skalare Methoden.", GraphGröße(245f, 110f), listOf(eingang("außen", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("innen", MathematikAnschlussArten.ZahlFunktion.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
+    val Komposition = KnotenVorlage(
+        "mathematik.komposition",
+        "Komposition",
+        "Abbildungen",
+        "Komponiert zwei oder mehr Methoden in sichtbarer Reihenfolge und prüft jeden Übergang semantisch.",
+        GraphGröße(270f, 130f),
+        listOf(
+            eingang("außen", MathematikAnschlussArten.Funktion.id, 0, true),
+            eingang("innen", MathematikAnschlussArten.Funktion.id, 1, true),
+            ausgang("methode", MathematikAnschlussArten.Funktion.id),
+        ),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
+    )
     val Iteration = KnotenVorlage("mathematik.iteration", "Iteration", "Abbildungen", "Bildet die nichtnegative Iteration einer skalaren Endomorphismus-Methode.", GraphGröße(255f, 110f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
     val MethodenDifferentieren = KnotenVorlage("mathematik.methodenDifferentieren", "Methode differentieren", "Abbildungen", "Differentiert eine skalare Methode bei differentialfähigem Wertevorrat.", GraphGröße(260f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
     val MethodenIntegrieren = KnotenVorlage("mathematik.methodenIntegrieren", "Methode integrieren", "Abbildungen", "Integriert eine skalare Methode bei integralfähigem Wertevorrat.", GraphGröße(255f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
