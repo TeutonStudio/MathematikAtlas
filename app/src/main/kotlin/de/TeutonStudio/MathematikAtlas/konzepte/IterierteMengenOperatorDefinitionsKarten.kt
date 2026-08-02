@@ -63,6 +63,12 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
         position = GraphPunkt(350f, 350f),
         parameter = mapOf("name" to "i"),
     )
+    val methodenZielmenge = iterierterMengenVorlagenKnoten(
+        prefix = prefix,
+        kennung = "methoden-zielmenge",
+        vorlage = FaltungsKnotenVorlagen.MethodenZielmenge,
+        position = GraphPunkt(350f, 80f),
+    )
     val methodenAufruf = iterierterMengenMethodenAufruf(
         prefix = prefix,
         position = GraphPunkt(650f, 110f),
@@ -79,7 +85,18 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
             MENGENDEFINITION_ELEMENTART to MathematikAnschlussArten.Objekt.id.wert,
         ),
         anschlussArten = mapOf("element" to MathematikAnschlussArten.Objekt.id),
-    )
+    ).let { knoten ->
+        knoten.copy(
+            anschlüsse = knoten.anschlüsse + AnschlussDaten(
+                id = AnschlussId("${knoten.id.wert}-obermenge"),
+                name = "oberMenge",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.Menge.id,
+                reihenfolge = 0,
+            ),
+        )
+    }
     val element = iterierterMengenVorlagenKnoten(
         prefix = prefix,
         kennung = "element",
@@ -133,6 +150,8 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
         fun verbinde(von: KnotenDaten, vonName: String, zu: KnotenDaten, zuName: String, kennung: String) {
             add(iterierteMengenVerbindung(prefix, von, vonName, zu, zuName, kennung))
         }
+        verbinde(methode, "wert", methodenZielmenge, "methode", "methode-zielmenge")
+        verbinde(methodenZielmenge, "menge", mengenKonstruktor, "oberMenge", "zielmenge-obermenge")
         verbinde(methode, "wert", methodenAufruf, "methode", "methode-aufruf")
         verbinde(index, "wert", methodenAufruf, "argument-0", "index-aufruf")
         verbinde(mengenKonstruktor, "element", element, "links", "element-links")
@@ -152,6 +171,7 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
             methode,
             indexMenge,
             index,
+            methodenZielmenge,
             methodenAufruf,
             mengenKonstruktor,
             element,
