@@ -1,0 +1,41 @@
+name: Agent Patch Runner
+
+on:
+  pull_request:
+    branches:
+      - agent/patch-runner
+
+permissions:
+  contents: write
+
+jobs:
+  anwenden:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Patch-Pull-Request auschecken
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch und Commitnachricht sichern
+        run: |
+          if [[ -f .agent-patch/change.patch.gz.b64 ]]; then
+            base64 --decode .agent-patch/change.patch.gz.b64 | gzip --decompress > "$RUNNER_TEMP/change.patch"
+          else
+            cp .agent-patch/change.patch "$RUNNER_TEMP/change.patch"
+          fi
+          cp .agent-patch/message.txt "$RUNNER_TEMP/message.txt"
+      - name: Aktuellen Abschlussbranch auschecken
+        run: |
+          git fetch origin release/v2.16.0-abschluss
+          git checkout -B release/v2.16.0-abschluss origin/release/v2.16.0-abschluss
+      - name: Patch prüfen und anwenden
+        run: |
+          git apply --check --whitespace=error-all "$RUNNER_TEMP/change.patch"
+          git apply --index --whitespace=error-all "$RUNNER_TEMP/change.patch"
+      - name: Einzelnen Issue-Commit veröffentlichen
+        run: |
+          git config user.name "TeutonStudio Agent"
+          git config user.email "46108494+TeutonStudio@users.noreply.github.com"
+          git commit -F "$RUNNER_TEMP/message.txt"
+          git push origin HEAD:release/v2.16.0-abschluss
