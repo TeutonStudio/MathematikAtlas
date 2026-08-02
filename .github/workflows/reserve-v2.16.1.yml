@@ -1,15 +1,16 @@
 name: v2.16.1 im Releaseplan reservieren
 
 on:
-  pull_request:
+  push:
     branches:
-      - master
+      - release/v2.16.1-strukturvertraege
 
 permissions:
   contents: write
 
 jobs:
   reservieren:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +18,7 @@ jobs:
           ref: release/v2.16.1-strukturvertraege
           fetch-depth: 0
 
-      - name: Roadmap aktualisieren
+      - name: Roadmap aktualisieren und Werkzeug entfernen
         shell: bash
         run: |
           python3 - <<'PY'
@@ -46,7 +47,7 @@ reason = "Erweitert bestehende mathematische Laufzeittypen um zentrale Struktur-
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/reserve-v2.16.1.yml
+          git rm .github/workflows/reserve-v2.16.1.yml .github/release-v2.16.1.trigger
           git add release/roadmap.toml
           git commit -m "chore: v2.16.1 im Releaseplan reservieren"
           git push origin HEAD:release/v2.16.1-strukturvertraege
