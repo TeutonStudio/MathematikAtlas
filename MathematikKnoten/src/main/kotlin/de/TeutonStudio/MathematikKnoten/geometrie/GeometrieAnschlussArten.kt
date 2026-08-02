@@ -16,6 +16,7 @@ object GeometrieAnschlussArten {
     val Winkel = AnschlussArt(AnschlussArtId("mathematik.geometrie.winkel"), "Winkel", Objekt.id)
     val Kreislinie = AnschlussArt(AnschlussArtId("mathematik.geometrie.kreislinie"), "Kreislinie", Objekt.id)
     val Polygon = AnschlussArt(AnschlussArtId("mathematik.geometrie.polygon"), "Polygon", Objekt.id)
+    val Dreieck = AnschlussArt(AnschlussArtId("mathematik.geometrie.dreieck"), "Dreieck", Objekt.id)
     val Gruppe = AnschlussArt(AnschlussArtId("mathematik.geometrie.gruppe"), "Geometriegruppe", Objekt.id)
     val Struktur = AnschlussArt(AnschlussArtId("mathematik.geometrie.struktur"), "Geometriestruktur", MathematikAnschlussArten.Objekt.id)
     val Transformation = AnschlussArt(AnschlussArtId("mathematik.geometrie.transformation"), "Geometrische Transformation", MathematikAnschlussArten.Objekt.id)
@@ -33,6 +34,7 @@ object GeometrieAnschlussArten {
         Winkel,
         Kreislinie,
         Polygon,
+        Dreieck,
         Gruppe,
         Struktur,
         Transformation,

@@ -215,7 +215,7 @@ fun GeometriePunkt.dezimalKoordinaten(): List<Double>? = zahlKoordinaten()?.map 
 fun GeometrischerAusdruck.objektDimension(): Int = when (this) {
     is GeometriePunkt -> 0
     is GeometrieGerade, is GeometrieStrecke, is GeometrieStrahl, is GeometrieKreislinie -> 1
-    is GeometrieEbene, is GeometriePolygon -> 2
+    is GeometrieEbene, is GeometriePolygon, is GeometrieDreieck -> 2
     is GeometrieGruppe -> objekte.maxOf { it.objektDimension() }
     is TransformiertesGeometrieObjekt -> struktur.dimension
     else -> raum.dimension
@@ -225,6 +225,7 @@ fun strukturVon(objekt: GeometrischerAusdruck): GeometrieStruktur = when (objekt
     is GeometriePunkt -> GeometrieStruktur(objekt.raum, listOf(ZellStufe(0, listOf(GeometrischeZelle("p", 0, geometrie = objekt)))))
     is GeometrieStrecke -> strukturAusStrecke(objekt)
     is GeometriePolygon -> strukturAusPolygon(objekt)
+    is GeometrieDreieck -> strukturAusDreieck(objekt)
     is GeometrieGruppe -> strukturAusGruppe(objekt)
     is TransformiertesGeometrieObjekt -> objekt.struktur
     else -> GeometrieStruktur(
@@ -239,6 +240,48 @@ private fun strukturAusStrecke(strecke: GeometrieStrecke): GeometrieStruktur {
     val b = GeometrischeZelle("p1", 0, geometrie = strecke.ende)
     val kante = GeometrischeZelle("e0", 1, listOf(OrientierterZellVerweis(a.id), OrientierterZellVerweis(b.id, -1)), strecke)
     return GeometrieStruktur(strecke.raum, listOf(ZellStufe(0, listOf(a, b)), ZellStufe(1, listOf(kante))))
+}
+
+private fun strukturAusDreieck(dreieck: GeometrieDreieck): GeometrieStruktur {
+    val a = GeometrischeZelle("A", 0, geometrie = dreieck.punktA)
+    val b = GeometrischeZelle("B", 0, geometrie = dreieck.punktB)
+    val c = GeometrischeZelle("C", 0, geometrie = dreieck.punktC)
+    val seiteA = GeometrischeZelle(
+        "a",
+        1,
+        listOf(OrientierterZellVerweis("B"), OrientierterZellVerweis("C", -1)),
+        GeometrieStrecke(dreieck.punktB, dreieck.punktC),
+    )
+    val seiteB = GeometrischeZelle(
+        "b",
+        1,
+        listOf(OrientierterZellVerweis("A"), OrientierterZellVerweis("C", -1)),
+        GeometrieStrecke(dreieck.punktA, dreieck.punktC),
+    )
+    val seiteC = GeometrischeZelle(
+        "c",
+        1,
+        listOf(OrientierterZellVerweis("A"), OrientierterZellVerweis("B", -1)),
+        GeometrieStrecke(dreieck.punktA, dreieck.punktB),
+    )
+    val fläche = GeometrischeZelle(
+        "flaeche",
+        2,
+        listOf(
+            OrientierterZellVerweis("c"),
+            OrientierterZellVerweis("a"),
+            OrientierterZellVerweis("b", -1),
+        ),
+        dreieck.polygon,
+    )
+    return GeometrieStruktur(
+        dreieck.raum,
+        listOf(
+            ZellStufe(0, listOf(a, b, c)),
+            ZellStufe(1, listOf(seiteA, seiteB, seiteC)),
+            ZellStufe(2, listOf(fläche)),
+        ),
+    )
 }
 
 private fun strukturAusPolygon(polygon: GeometriePolygon): GeometrieStruktur {

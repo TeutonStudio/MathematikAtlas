@@ -135,6 +135,7 @@ private fun renderDaten(objekt: GeometrischerAusdruck): RenderGeometrie = when (
         val radius = if (mitte != null && rand != null) sqrt(mitte.zip(rand) { a, b -> (a - b).pow(2) }.sum()) else null
         RenderGeometrie(listOfNotNull(mitte, rand), emptyList(), if (mitte != null && radius != null && objekt.raum.dimension == 2) listOf(mitte to radius) else emptyList())
     }
+    is GeometrieDreieck -> renderDaten(objekt.polygon)
     is GeometriePolygon -> {
         val p = objekt.ecken.mapNotNull { it.dezimalKoordinaten() }
         val l = if (p.size == objekt.ecken.size) p.indices.map { Linie3(p[it], p[(it + 1) % p.size]) } else emptyList()
