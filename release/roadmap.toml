@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.15.x"
-current_version = "2.15.1"
+current_series = "2.16.x"
+current_version = "2.16.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -459,3 +459,15 @@ kind = "feature"
 version_axis = "x"
 reason = "Vereinheitlicht bestehende Methodenanschlüsse, ergänzt semantische Ergebnisverträge, abgeleitete Aliase und Prädikatsdarstellungen sowie die zugehörigen Wahrheitstabellen, ohne einen neuen registrierten Knotentyp einzuführen."
 branch_exception = "Der bereits vor der aktuellen Releasefolge geöffnete PR #72 behält den historischen Headbranch agent/v2.12.3-methoden-praedikate; sein Inhalt wurde konfliktfrei auf v2.15.0 aktualisiert."
+
+[[releases]]
+version = "2.16.0"
+title = "R¹-Zahlengerade, Dreieck und physisches Methodenmodell"
+roadmap = "v2.16.x Visualisierung, Geometrie und Methodenkern"
+status = "released"
+previous_release = "2.15.1"
+branch = "release/v2.16.0-abschluss"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.geometrie.dreieck"]
+reason = "Ergänzt den R¹-Visualisierungsmodus, führt den separat erzeugbaren Dreieck-Knoten mit partieller symbolischer Auswertung ein und ersetzt das historische Funktions-Übergangsmodell physisch durch den kanonischen Laufzeittyp Methode."
