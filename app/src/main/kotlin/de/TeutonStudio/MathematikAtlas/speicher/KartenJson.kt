@@ -1,12 +1,13 @@
 package de.TeutonStudio.MathematikAtlas.speicher
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikAtlas.migriereTranspositionsKnoten
 import org.json.JSONArray
 import org.json.JSONObject
 
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
-        put("formatVersion", 5)
+        put("formatVersion", 6)
         put("id", karte.id.wert)
         put("name", karte.name)
         put("version", karte.version)
@@ -38,7 +39,7 @@ object KartenJson {
                 ansicht?.optDouble("zoom", 1.0)?.toFloat() ?: 1f,
             ),
             archiviert = json.optBoolean("archiviert", false),
-        ).bereinigteVisuelleGruppen()
+        ).bereinigteVisuelleGruppen().let(::migriereTranspositionsKnoten)
     }
 
     private fun knotenZuJson(k: KnotenDaten) = JSONObject().apply {
@@ -61,6 +62,15 @@ object KartenJson {
             put("kannSichErweitern", a.kannSichErweitern); put("dynamischErzeugt", a.dynamischErzeugt)
             a.artFolgtEingang?.let { put("artFolgtEingang", it) }
             if (a.artVereinigtEingänge.isNotEmpty()) put("artVereinigtEingänge", JSONArray(a.artVereinigtEingänge))
+            if (a.zulässigeArten.isNotEmpty()) put("zulässigeArten", JSONArray(a.zulässigeArten.map { it.wert }.sorted()))
+            a.artAbbildungVonEingang?.let { regel ->
+                put("artAbbildungVonEingang", JSONObject().apply {
+                    put("eingang", regel.eingang)
+                    put("abbildung", JSONObject().apply {
+                        regel.abbildung.entries.sortedBy { it.key.wert }.forEach { (von, zu) -> put(von.wert, zu.wert) }
+                    })
+                })
+            }
         }) } })
     }
 
@@ -93,6 +103,18 @@ object KartenJson {
                 artVereinigtEingänge = a.optJSONArray("artVereinigtEingänge")?.let { namen ->
                     List(namen.length()) { index -> namen.getString(index) }
                 } ?: emptyList(),
+                zulässigeArten = a.optJSONArray("zulässigeArten")?.let { arten ->
+                    List(arten.length()) { index -> AnschlussArtId(arten.getString(index)) }.toSet()
+                } ?: emptySet(),
+                artAbbildungVonEingang = a.optJSONObject("artAbbildungVonEingang")?.let { regel ->
+                    val abbildung = regel.optJSONObject("abbildung") ?: JSONObject()
+                    AnschlussArtAbbildung(
+                        eingang = regel.getString("eingang"),
+                        abbildung = abbildung.keys().asSequence().associate { von ->
+                            AnschlussArtId(von) to AnschlussArtId(abbildung.getString(von))
+                        },
+                    )
+                },
             ) },
             parameter = parameter,
             eigenschaften = eigenschaften,
@@ -132,7 +154,6 @@ object KartenJson {
         }
     }
 
-    /** Liest nur explizit typisierte Werte; unbekannte Daten werden sicher ausgelassen. */
     private fun eigenschaftVonJson(json: JSONObject?): KnotenEigenschaft? = when (json?.optString("typ")) {
         "text" -> KnotenEigenschaft.Text(json.optString("wert"))
         "ganzzahl" -> KnotenEigenschaft.Ganzzahl(json.optInt("wert"))

@@ -15,7 +15,10 @@ import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
+import de.TeutonStudio.MathematikRechenSystem.kern.Tensor
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorOrientierung
+import de.TeutonStudio.MathematikRechenSystem.kern.parseTensorPermutationOderNull
+import de.TeutonStudio.MathematikRechenSystem.kern.standardTensorPermutation
 
 interface KnotenInspektor {
     @Composable fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen)
@@ -38,6 +41,7 @@ object KnotenInspektorRegister {
         "mathematik.methodeAufrufen" to MethodenAufrufInspektor,
         "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
+        "mathematik.transponieren" to TransponierenInspektor,
         GeometrieTeilobjektTyp.Ecke.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Kante.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Fläche.knotenArt to GeometrieTeilobjektInspektor,
@@ -177,6 +181,100 @@ private object MethodenAufrufInspektor : KnotenInspektor {
         }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
+}
+
+private object TransponierenInspektor : KnotenInspektor {
+    @Composable
+    override fun Inhalt(
+        knoten: KnotenDaten,
+        ergebnis: KnotenAuswertungsErgebnis?,
+        aktionen: KnotenInspektorAktionen,
+    ) {
+        Text("Transposition", style = MaterialTheme.typography.titleSmall)
+        val tensor = ergebnis?.ausgaben?.get("wert")?.objekt as? Tensor
+        val rang = tensor?.rang
+        when {
+            rang == null -> Text(
+                "Vektoren und Matrizen benötigen keine Konfiguration. Bei einem Tensor höheren Rangs erscheint hier seine Achsenpermutation.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            rang <= 2 -> {
+                val standard = standardTensorPermutation(rang).joinToString(",")
+                LaunchedEffect(knoten.id, rang, knoten.parameter["achsenPermutation"]) {
+                    if (knoten.parameter["achsenPermutation"] != standard) {
+                        aktionen.parameter("achsenPermutation", standard)
+                    }
+                }
+                Text(
+                    "Tensor Rang $rang verwendet die kanonische Transposition [$standard].",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            else -> TensorPermutationEditor(knoten, rang, aktionen)
+        }
+        ergebnis?.fehler?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun TensorPermutationEditor(
+    knoten: KnotenDaten,
+    rang: Int,
+    aktionen: KnotenInspektorAktionen,
+) {
+    val standard = standardTensorPermutation(rang)
+    val standardText = standard.joinToString(",")
+    val gespeichert = knoten.parameter["achsenPermutation"]
+    val gespeichertGültig = parseTensorPermutationOderNull(gespeichert, rang)
+    var text by remember(knoten.id, rang) {
+        mutableStateOf((gespeichertGültig ?: standard).joinToString(","))
+    }
+    var zurückgesetzt by remember(knoten.id, rang) { mutableStateOf(false) }
+
+    LaunchedEffect(knoten.id, rang, gespeichert) {
+        val gültig = parseTensorPermutationOderNull(gespeichert, rang)
+        if (gültig == null) {
+            text = standardText
+            zurückgesetzt = true
+            aktionen.parameter("achsenPermutation", standardText)
+        } else {
+            text = gültig.joinToString(",")
+        }
+    }
+
+    val eingabeGültig = parseTensorPermutationOderNull(text, rang) != null
+    OutlinedTextField(
+        value = text,
+        onValueChange = { neu ->
+            text = neu
+            parseTensorPermutationOderNull(neu, rang)?.let { permutation ->
+                zurückgesetzt = false
+                aktionen.parameter("achsenPermutation", permutation.joinToString(","))
+            }
+        },
+        label = { Text("Achsenpermutation") },
+        isError = !eingabeGültig,
+        supportingText = {
+            Text(
+                when {
+                    !eingabeGültig -> "Jede Achse von 0 bis ${rang - 1} muss genau einmal vorkommen."
+                    zurückgesetzt -> "Eine veraltete Permutation wurde auf den Standard [$standardText] zurückgesetzt."
+                    else -> "Eintrag i gibt an, welche alte Achse zur neuen Achse i wird."
+                },
+            )
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedButton(
+        onClick = {
+            text = standardText
+            zurückgesetzt = false
+            aktionen.parameter("achsenPermutation", standardText)
+        },
+    ) { Text("Standardpermutation") }
 }
 
 @Composable private fun WertebereichEditor(

@@ -283,9 +283,17 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(funktion, annahmen(k))))
         }
         registriere("mathematik.komposition") { k ->
-            val außen = k.eingänge["außen"]?.objekt as? Funktion ?: error("Äußere Methode fehlt.")
-            val innen = k.eingänge["innen"]?.objekt as? Funktion ?: error("Innere Methode fehlt.")
-            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(komponiere(außen, innen), annahmen(k))))
+            val anschlüsse = k.knoten.anschlüsse
+                .filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }
+                .sortedBy { it.reihenfolge }
+            require(anschlüsse.size >= 2) { "Eine Komposition benötigt mindestens zwei Methodeneingänge." }
+            val methoden = anschlüsse.mapIndexed { index, anschluss ->
+                k.eingänge[anschluss.name]?.objekt as? Funktion
+                    ?: error("Methodeneingang ${index + 1} ist nicht verbunden oder enthält keine Methode.")
+            }
+            KnotenAuswertungsErgebnis(
+                mapOf("methode" to BedingterWert(komponiere(methoden), annahmen(k))),
+            )
         }
         registriere("mathematik.iteration") { k ->
             val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Methode fehlt.")
