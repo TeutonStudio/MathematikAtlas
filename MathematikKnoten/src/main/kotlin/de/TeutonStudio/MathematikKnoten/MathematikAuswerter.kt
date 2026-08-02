@@ -340,13 +340,33 @@ object StandardMathematikAuswerter {
         registriere("mathematik.matrix") { k ->
             val höhe = k.parameterInt("höhe")
             val breite = k.parameterInt("breite")
-            val matrix = if (k.knoten.parameter["erzeugungsArt"] == MATRIX_METHODE) {
-                val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Matrixmethode fehlt.")
-                matrixAusMethode(methode, höhe, breite)
-            } else {
-                Matrix(List(höhe) { zeile -> List(breite) { spalte ->
+            val matrix = when (k.knoten.parameter["erzeugungsArt"] ?: MATRIX_EINZEL_EINGABEN) {
+                MATRIX_METHODE -> {
+                    val methode = k.eingänge["methode"]?.objekt as? Funktion ?: error("Matrixmethode fehlt.")
+                    matrixAusMethode(methode, höhe, breite)
+                }
+                MATRIX_ZEILEN -> Matrix(List(höhe) { zeile ->
+                    val vektor = k.eingänge[matrixZeileName(zeile)]?.objekt as? ZeilenVektor
+                        ?: error("Zeile ${zeile + 1} fehlt oder ist kein Zeilenvektor.")
+                    require(vektor.werte.size == breite) {
+                        "Zeile ${zeile + 1} muss $breite Elemente besitzen, hat aber ${vektor.werte.size}."
+                    }
+                    vektor.werte
+                })
+                MATRIX_SPALTEN -> {
+                    val spalten = List(breite) { spalte ->
+                        val vektor = k.eingänge[matrixSpalteName(spalte)]?.objekt as? SpaltenVektor
+                            ?: error("Spalte ${spalte + 1} fehlt oder ist kein Spaltenvektor.")
+                        require(vektor.werte.size == höhe) {
+                            "Spalte ${spalte + 1} muss $höhe Elemente besitzen, hat aber ${vektor.werte.size}."
+                        }
+                        vektor.werte
+                    }
+                    Matrix(List(höhe) { zeile -> List(breite) { spalte -> spalten[spalte][zeile] } })
+                }
+                else -> Matrix(List(höhe) { zeile -> List(breite) { spalte ->
                     k.eingänge[matrixEintragName(zeile, spalte)]?.objekt as? ZahlAusdruck
-                        ?: error("Matrixeintrag ($zeile,$spalte) fehlt oder ist keine Zahl.")
+                        ?: error("Matrixeintrag (${zeile + 1},${spalte + 1}) fehlt oder ist keine Zahl.")
                 } })
             }
             KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(matrix, annahmen(k))))

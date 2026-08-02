@@ -86,4 +86,138 @@ class MatrixKnotenTest {
         assertEquals(emptyList(), zustand.karte.verbindungen)
         assertEquals(listOf("methode", "matrix"), konfiguriert.anschlüsse.map { it.name })
     }
+
+    @Test fun `nichtquadratische Matrix wird aus Zeilenvektoren aufgebaut`() {
+        val matrix = konfiguriereMatrix(MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero), MATRIX_ZEILEN, höhe = 2, breite = 3)
+        val eingänge = mapOf(
+            matrixZeileName(0) to BedingterWert(ZeilenVektor(listOf(zahl(1), zahl(2), zahl(3)))),
+            matrixZeileName(1) to BedingterWert(ZeilenVektor(listOf(zahl(4), zahl(5), zahl(6)))),
+        )
+
+        val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(matrix, eingänge, RechenKontext()))
+
+        assertEquals(
+            listOf(listOf(zahl(1), zahl(2), zahl(3)), listOf(zahl(4), zahl(5), zahl(6))),
+            assertIs<Matrix>(ergebnis.ausgaben.getValue("matrix").objekt).zeilen,
+        )
+        assertEquals(listOf("zeile_0", "zeile_1", "matrix"), matrix.anschlüsse.map { it.name })
+        assertTrue(matrix.anschlüsse.take(2).all { it.art == MathematikAnschlussArten.ZeilenVektor.id })
+    }
+
+    @Test fun `nichtquadratische Matrix wird aus Spaltenvektoren aufgebaut`() {
+        val matrix = konfiguriereMatrix(MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero), MATRIX_SPALTEN, höhe = 2, breite = 3)
+        val eingänge = mapOf(
+            matrixSpalteName(0) to BedingterWert(SpaltenVektor(listOf(zahl(1), zahl(4)))),
+            matrixSpalteName(1) to BedingterWert(SpaltenVektor(listOf(zahl(2), zahl(5)))),
+            matrixSpalteName(2) to BedingterWert(SpaltenVektor(listOf(zahl(3), zahl(6)))),
+        )
+
+        val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(matrix, eingänge, RechenKontext()))
+
+        assertEquals(
+            listOf(listOf(zahl(1), zahl(2), zahl(3)), listOf(zahl(4), zahl(5), zahl(6))),
+            assertIs<Matrix>(ergebnis.ausgaben.getValue("matrix").objekt).zeilen,
+        )
+        assertEquals(listOf("spalte_0", "spalte_1", "spalte_2", "matrix"), matrix.anschlüsse.map { it.name })
+        assertTrue(matrix.anschlüsse.take(3).all { it.art == MathematikAnschlussArten.SpaltenVektor.id })
+    }
+
+    @Test fun `Zeilen und Spalten melden fehlende Eingänge und falsche Längen konkret`() {
+        val zeilenMatrix = konfiguriereMatrix(MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero), MATRIX_ZEILEN, 2, 3)
+        val fehlendeZeile = assertFailsWith<IllegalStateException> {
+            auswerter.auswerten(
+                KnotenAuswertungsKontext(
+                    zeilenMatrix,
+                    mapOf(matrixZeileName(0) to BedingterWert(ZeilenVektor(listOf(zahl(1), zahl(2), zahl(3))))),
+                    RechenKontext(),
+                ),
+            )
+        }
+        assertContains(fehlendeZeile.message.orEmpty(), "Zeile 2 fehlt")
+
+        val falscheZeile = assertFailsWith<IllegalArgumentException> {
+            auswerter.auswerten(
+                KnotenAuswertungsKontext(
+                    zeilenMatrix,
+                    mapOf(
+                        matrixZeileName(0) to BedingterWert(ZeilenVektor(listOf(zahl(1), zahl(2)))),
+                        matrixZeileName(1) to BedingterWert(ZeilenVektor(listOf(zahl(3), zahl(4), zahl(5)))),
+                    ),
+                    RechenKontext(),
+                ),
+            )
+        }
+        assertContains(falscheZeile.message.orEmpty(), "muss 3 Elemente besitzen, hat aber 2")
+
+        val spaltenMatrix = konfiguriereMatrix(MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero), MATRIX_SPALTEN, 2, 3)
+        val falscheSpalte = assertFailsWith<IllegalArgumentException> {
+            auswerter.auswerten(
+                KnotenAuswertungsKontext(
+                    spaltenMatrix,
+                    mapOf(
+                        matrixSpalteName(0) to BedingterWert(SpaltenVektor(listOf(zahl(1)))),
+                        matrixSpalteName(1) to BedingterWert(SpaltenVektor(listOf(zahl(2), zahl(3)))),
+                        matrixSpalteName(2) to BedingterWert(SpaltenVektor(listOf(zahl(4), zahl(5)))),
+                    ),
+                    RechenKontext(),
+                ),
+            )
+        }
+        assertContains(falscheSpalte.message.orEmpty(), "muss 2 Elemente besitzen, hat aber 1")
+    }
+
+    @Test fun `Größenänderung bewahrt gültige Zeilen- und Spaltenanschlüsse`() {
+        val basis = MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero)
+        val zeilen = konfiguriereMatrix(basis, MATRIX_ZEILEN, 2, 3)
+        val ersteZeile = zeilen.anschlüsse.first { it.name == matrixZeileName(0) }
+        val erweitert = konfiguriereMatrix(zeilen, MATRIX_ZEILEN, 3, 4)
+        assertEquals(ersteZeile.id, erweitert.anschlüsse.first { it.name == matrixZeileName(0) }.id)
+
+        val spalten = konfiguriereMatrix(erweitert, MATRIX_SPALTEN, 3, 2)
+        val ersteSpalte = spalten.anschlüsse.first { it.name == matrixSpalteName(0) }
+        val verkleinert = konfiguriereMatrix(spalten, MATRIX_SPALTEN, 2, 1)
+        assertEquals(ersteSpalte.id, verkleinert.anschlüsse.first { it.name == matrixSpalteName(0) }.id)
+        assertEquals(listOf("spalte_0", "matrix"), verkleinert.anschlüsse.map { it.name })
+    }
+
+    @Test fun `Moduswechsel zwischen Zeilen und Spalten entfernt Kanten in einer Undo Aktion`() {
+        val zeilenMatrix = konfiguriereMatrix(MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero), MATRIX_ZEILEN, 2, 3)
+        val quelle = KnotenDaten(
+            art = "test.zeile",
+            name = "Zeile",
+            anschlüsse = listOf(
+                AnschlussDaten(
+                    name = "vektor",
+                    richtung = AnschlussRichtung.Ausgang,
+                    kante = AnschlussKante.Rechts,
+                    art = MathematikAnschlussArten.ZeilenVektor.id,
+                ),
+            ),
+        )
+        val zeile0 = zeilenMatrix.anschlüsse.first { it.name == matrixZeileName(0) }
+        val zustand = KartenEditorZustand(
+            KartenDaten(
+                name = "Test",
+                knoten = listOf(quelle, zeilenMatrix),
+                verbindungen = listOf(
+                    VerbindungDaten(
+                        von = AnschlussVerweis(quelle.id, quelle.anschlüsse.single().id),
+                        zu = AnschlussVerweis(zeilenMatrix.id, zeile0.id),
+                    ),
+                ),
+            ),
+            GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle)),
+        )
+
+        zustand.setzeMatrixKonfiguration(zeilenMatrix.id, MATRIX_SPALTEN, 2, 3)
+
+        assertTrue(zustand.karte.verbindungen.isEmpty())
+        assertEquals(MATRIX_SPALTEN, matrixKonfiguration(zustand.karte.knoten.first { it.id == zeilenMatrix.id }).erzeugungsArt)
+        zustand.rückgängig()
+        assertEquals(1, zustand.karte.verbindungen.size)
+        assertEquals(MATRIX_ZEILEN, matrixKonfiguration(zustand.karte.knoten.first { it.id == zeilenMatrix.id }).erzeugungsArt)
+    }
+
+    private fun zahl(wert: Long): RationaleZahl = RationaleZahl.von(wert)
+
 }

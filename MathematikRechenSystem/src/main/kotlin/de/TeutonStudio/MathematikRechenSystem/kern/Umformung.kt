@@ -55,6 +55,16 @@ fun ableiten(ausdruck: ZahlAusdruck, variable: Variable): UmformungsErgebnis<Zah
         } else error("Allgemeine Potenzableitung ist noch nicht registriert.")
         is Sinus -> multiplikation(Cosinus(ausdruck.argument), ableiten(ausdruck.argument, variable).ergebnis)
         is Cosinus -> negation(multiplikation(Sinus(ausdruck.argument), ableiten(ausdruck.argument, variable).ergebnis))
+        is ArcSinus -> Division(
+            ableiten(ausdruck.argument, variable).ergebnis,
+            wurzel(subtraktion(RationaleZahl.Eins, Potenz(ausdruck.argument, RationaleZahl.von(2)))),
+        )
+        is ArcCosinus -> negation(
+            Division(
+                ableiten(ausdruck.argument, variable).ergebnis,
+                wurzel(subtraktion(RationaleZahl.Eins, Potenz(ausdruck.argument, RationaleZahl.von(2)))),
+            ),
+        )
         is Exponentialfunktion -> multiplikation(ausdruck, ableiten(ausdruck.argument, variable).ergebnis)
         is NatürlicherLogarithmus -> Division(ableiten(ausdruck.argument, variable).ergebnis, ausdruck.argument)
         else -> error("Für ${ausdruck::class.simpleName} ist keine Ableitungsregel registriert.")

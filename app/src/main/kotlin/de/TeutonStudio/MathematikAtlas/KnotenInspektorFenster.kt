@@ -9,7 +9,10 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKartenAdapter.*
+import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
+import de.TeutonStudio.MathematikKnoten.MATRIX_SPALTEN
+import de.TeutonStudio.MathematikKnoten.MATRIX_ZEILEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
 import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
@@ -289,33 +292,62 @@ private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
     val konfiguration = matrixKonfiguration(knoten)
-    val ausMethode = konfiguration.erzeugungsArt == MATRIX_METHODE
+    val erzeugungsArten = listOf(
+        MATRIX_EINZEL_EINGABEN to "Elemente einzeln",
+        MATRIX_ZEILEN to "Zeilen anschließen",
+        MATRIX_SPALTEN to "Spalten anschließen",
+        MATRIX_METHODE to "Indexfunktion f(x, y)",
+    )
+    var artMenüGeöffnet by remember(knoten.id, konfiguration.erzeugungsArt) { mutableStateOf(false) }
     var höheText by remember(knoten.id, konfiguration.höhe) { mutableStateOf(konfiguration.höhe.toString()) }
     var breiteText by remember(knoten.id, konfiguration.breite) { mutableStateOf(konfiguration.breite.toString()) }
     HorizontalDivider()
     Text("Matrix erzeugen", style = MaterialTheme.typography.titleSmall)
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ExposedDropdownMenuBox(
+        expanded = artMenüGeöffnet,
+        onExpandedChange = { artMenüGeöffnet = it },
     ) {
-        Text("Einzel-Eingaben", modifier = Modifier.weight(1f))
-        Switch(
-            checked = ausMethode,
-            onCheckedChange = { methode ->
-                zustand.editor.setzeMatrixKonfiguration(
-                    knoten.id,
-                    if (methode) MATRIX_METHODE else "einzelEingaben",
-                    konfiguration.höhe,
-                    konfiguration.breite,
-                )
-            },
+        OutlinedTextField(
+            value = erzeugungsArten.first { it.first == konfiguration.erzeugungsArt }.second,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Erzeugungsart") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = artMenüGeöffnet) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
         )
-        Text("Methode")
+        ExposedDropdownMenu(
+            expanded = artMenüGeöffnet,
+            onDismissRequest = { artMenüGeöffnet = false },
+        ) {
+            erzeugungsArten.forEach { (art, bezeichnung) ->
+                DropdownMenuItem(
+                    text = { Text(bezeichnung) },
+                    onClick = {
+                        artMenüGeöffnet = false
+                        if (art != konfiguration.erzeugungsArt) {
+                            zustand.editor.setzeMatrixKonfiguration(
+                                knoten.id,
+                                art,
+                                konfiguration.höhe,
+                                konfiguration.breite,
+                            )
+                        }
+                    },
+                )
+            }
+        }
     }
+    Text(
+        "Beim Wechsel der Erzeugungsart werden inkompatible Verbindungen gemeinsam mit der Änderung entfernt und können per Rückgängig wiederhergestellt werden.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = höheText,
@@ -342,10 +374,22 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
             supportingText = { Text("≥ 1") },
         )
     }
-    Text(
-        "Indexmenge: {0,…,${konfiguration.höhe - 1}} × {0,…,${konfiguration.breite - 1}} (Zeile, Spalte)",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    if (ausMethode) Text("Die Zahlmethode wird als f(Zeile, Spalte) ausgewertet.", style = MaterialTheme.typography.bodySmall)
+    when (konfiguration.erzeugungsArt) {
+        MATRIX_METHODE -> Text(
+            "Indexmenge: {0,…,${konfiguration.höhe - 1}} × {0,…,${konfiguration.breite - 1}}. Die Zahlmethode wird als f(Zeile, Spalte) ausgewertet.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        MATRIX_ZEILEN -> Text(
+            "Erwartet ${konfiguration.höhe} Zeilenvektoren mit jeweils ${konfiguration.breite} Elementen.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        MATRIX_SPALTEN -> Text(
+            "Erwartet ${konfiguration.breite} Spaltenvektoren mit jeweils ${konfiguration.höhe} Elementen.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        else -> Text(
+            "Erwartet ${konfiguration.höhe * konfiguration.breite} einzelne Zahlwerte.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
 }

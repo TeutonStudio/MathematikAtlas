@@ -52,6 +52,14 @@ data class Betrag(val argument: ZahlAusdruck) : ZahlAusdruck {
 
 data class Sinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\sin\\left(${argument.zuLatex()}\\right)" }
 data class Cosinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\cos\\left(${argument.zuLatex()}\\right)" }
+data class ArcSinus(val argument: ZahlAusdruck) : ZahlAusdruck {
+    override fun zuLatex() = "\\arcsin\\left(${argument.zuLatex()}\\right)"
+    override fun toString() = "arcsin(${argument.zuLatex()})"
+}
+data class ArcCosinus(val argument: ZahlAusdruck) : ZahlAusdruck {
+    override fun zuLatex() = "\\arccos\\left(${argument.zuLatex()}\\right)"
+    override fun toString() = "arccos(${argument.zuLatex()})"
+}
 data class Exponentialfunktion(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "e^{${argument.zuLatex()}}" }
 data class NatürlicherLogarithmus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\ln\\left(${argument.zuLatex()}\\right)" }
 data class Wurzel(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\sqrt{${argument.zuLatex()}}" }
@@ -136,6 +144,23 @@ private fun extremwert(operanden: Iterable<ZahlAusdruck>, maximum: Boolean): Zah
 fun negation(ausdruck: ZahlAusdruck) = multiplikation(RationaleZahl.von(-1), ausdruck)
 fun subtraktion(a: ZahlAusdruck, b: ZahlAusdruck) = addition(a, negation(b))
 
+/** Reelle Definitionsbedingung der inversen Sinus- und Cosinusfunktionen. */
+fun inverseTrigonometrischeDefinitionsBedingung(argument: ZahlAusdruck): Aussage = Konjunktion(
+    listOf(
+        Vergleich(RationaleZahl.von(-1), VergleichsArt.KleinerGleich, argument),
+        Vergleich(argument, VergleichsArt.KleinerGleich, RationaleZahl.Eins),
+    ),
+)
+
+fun ArcSinus.reelleDefinitionsBedingung(): Aussage = inverseTrigonometrischeDefinitionsBedingung(argument)
+fun ArcCosinus.reelleDefinitionsBedingung(): Aussage = inverseTrigonometrischeDefinitionsBedingung(argument)
+
+fun arcSinus(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =
+    vereinfache(ArcSinus(argument), kontext)
+
+fun arcCosinus(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =
+    vereinfache(ArcCosinus(argument), kontext)
+
 fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck = when (ausdruck) {
     is RationaleZahl, is Variable, is MathematischeKonstante -> ausdruck
     is Addition -> addition(ausdruck.summanden.map { vereinfache(it, kontext) })
@@ -168,6 +193,8 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
     is Betrag -> Betrag(vereinfache(ausdruck.argument, kontext))
     is Sinus -> Sinus(vereinfache(ausdruck.argument, kontext))
     is Cosinus -> Cosinus(vereinfache(ausdruck.argument, kontext))
+    is ArcSinus -> vereinfacheArcSinus(vereinfache(ausdruck.argument, kontext))
+    is ArcCosinus -> vereinfacheArcCosinus(vereinfache(ausdruck.argument, kontext))
     is Exponentialfunktion -> Exponentialfunktion(vereinfache(ausdruck.argument, kontext))
     is NatürlicherLogarithmus -> NatürlicherLogarithmus(vereinfache(ausdruck.argument, kontext))
     is Wurzel -> vereinfacheWurzel(vereinfache(ausdruck.argument, kontext))
@@ -206,6 +233,10 @@ fun istNachweisbarReell(
     is Betrag -> true
     is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+    is ArcSinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+        ausdruck.argument.istNachweisbarImEinheitsIntervall(annahmen)
+    is ArcCosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+        ausdruck.argument.istNachweisbarImEinheitsIntervall(annahmen)
     is Exponentialfunktion -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is NatürlicherLogarithmus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarPositiv(annahmen)
     is Logarithmus -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
@@ -269,7 +300,7 @@ fun inferiereZahlenWertevorrat(
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
-    is Betrag, is Argument -> ReelleZahlen
+    is Betrag, is Argument, is ArcSinus, is ArcCosinus -> ReelleZahlen
     is Sinus, is Cosinus, is Exponentialfunktion -> if (istNachweisbarReell(
         ausdruck,
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
@@ -304,6 +335,15 @@ private fun ZahlAusdruck.istNachweisbarNichtNegativ(annahmen: Set<Aussage>): Boo
     else -> Vergleich(this, VergleichsArt.GrößerGleich, RationaleZahl.Null) in annahmen || istNachweisbarPositiv(annahmen)
 }
 
+private fun ZahlAusdruck.istNachweisbarImEinheitsIntervall(annahmen: Set<Aussage>): Boolean = when (this) {
+    is RationaleZahl -> this >= RationaleZahl.von(-1) && this <= RationaleZahl.Eins
+    else -> inverseTrigonometrischeDefinitionsBedingung(this) in annahmen ||
+        (Vergleich(RationaleZahl.von(-1), VergleichsArt.KleinerGleich, this) in annahmen &&
+            Vergleich(this, VergleichsArt.KleinerGleich, RationaleZahl.Eins) in annahmen) ||
+        (Vergleich(this, VergleichsArt.GrößerGleich, RationaleZahl.von(-1)) in annahmen &&
+            Vergleich(RationaleZahl.Eins, VergleichsArt.GrößerGleich, this) in annahmen)
+}
+
 private fun ZahlAusdruck.istNachweisbarNichtNull(annahmen: Set<Aussage>): Boolean = when (this) {
     is RationaleZahl -> !istNull()
     else -> Ungleichheit(this, RationaleZahl.Null) in annahmen ||
@@ -312,6 +352,32 @@ private fun ZahlAusdruck.istNachweisbarNichtNull(annahmen: Set<Aussage>): Boolea
 
 private fun ZahlAusdruck.istNachweisbarNichtEins(): Boolean =
     (this as? RationaleZahl)?.let { it != RationaleZahl.Eins } == true
+
+private fun vereinfacheArcSinus(argument: ZahlAusdruck): ZahlAusdruck = when (argument) {
+    RationaleZahl.Null -> RationaleZahl.Null
+    RationaleZahl.Eins -> Division(Pi, RationaleZahl.von(2))
+    RationaleZahl.von(-1) -> negation(Division(Pi, RationaleZahl.von(2)))
+    is RationaleZahl -> {
+        require(argument >= RationaleZahl.von(-1) && argument <= RationaleZahl.Eins) {
+            "Der reelle ArcSinus ist nur für Argumente im Intervall [-1,1] definiert."
+        }
+        ArcSinus(argument)
+    }
+    else -> ArcSinus(argument)
+}
+
+private fun vereinfacheArcCosinus(argument: ZahlAusdruck): ZahlAusdruck = when (argument) {
+    RationaleZahl.Eins -> RationaleZahl.Null
+    RationaleZahl.Null -> Division(Pi, RationaleZahl.von(2))
+    RationaleZahl.von(-1) -> Pi
+    is RationaleZahl -> {
+        require(argument >= RationaleZahl.von(-1) && argument <= RationaleZahl.Eins) {
+            "Der reelle ArcCosinus ist nur für Argumente im Intervall [-1,1] definiert."
+        }
+        ArcCosinus(argument)
+    }
+    else -> ArcCosinus(argument)
+}
 
 /** Die Hauptwurzel liefert genau einen Wert; bei negativen reellen Zahlen einen komplexen. */
 fun wurzel(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =

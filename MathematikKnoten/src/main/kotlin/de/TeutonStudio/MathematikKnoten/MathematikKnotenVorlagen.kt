@@ -270,7 +270,7 @@ object MathematikKnotenVorlagen {
     val VektorRadiusSpalte = KnotenVorlage("mathematik.vektorRadiusSpalte", "Radius (Spalte)", "Vektoren", "Euklidische Norm eines Spaltenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val VektorRadiusZeile = KnotenVorlage("mathematik.vektorRadiusZeile", "Radius (Zeile)", "Vektoren", "Euklidische Norm eines Zeilenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.ZeilenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))
     val Matrix = KnotenVorlage(
-        "mathematik.matrix", "Matrix", "Matrizen", "Matrix aus skalaren Einträgen oder einer zweistelligen Zahlmethode.", GraphGröße(250f, 115f),
+        "mathematik.matrix", "Matrix", "Matrizen", "Matrix aus Einzelwerten, Zeilen, Spalten oder einer zweistelligen Indexfunktion.", GraphGröße(250f, 115f),
         listOf(
             eingang(matrixEintragName(0, 0), MathematikAnschlussArten.Zahl.id, 0),
             eingang(matrixEintragName(0, 1), MathematikAnschlussArten.Zahl.id, 1),
