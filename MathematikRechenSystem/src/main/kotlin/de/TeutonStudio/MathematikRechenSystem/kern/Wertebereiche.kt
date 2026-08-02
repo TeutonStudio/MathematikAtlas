@@ -51,6 +51,10 @@ fun inferiereZielmenge(
         ),
         dimensionen = ausdruck.dimensionen,
     )
+    is Tensorartig -> Tensorraum(
+        elementMenge = ausdruck.tensorZahlBereich,
+        dimensionen = ausdruck.tensorForm,
+    )
     is GeometrischerAusdruck -> BenannteMenge("geometrie_${ausdruck.raum.id}", "\\mathcal{G}(${ausdruck.raum.id})")
     is EuklidischerRaum -> BenannteMenge("euklidische_raeume", "\\mathfrak{E}")
     is GeometrischesKoordinatensystem -> BenannteMenge("koordinatensysteme_${ausdruck.raum.id}", "\\mathcal{K}(${ausdruck.raum.id})")
