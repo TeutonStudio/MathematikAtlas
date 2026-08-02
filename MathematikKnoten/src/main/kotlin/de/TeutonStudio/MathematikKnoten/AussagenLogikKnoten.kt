@@ -106,7 +106,8 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val vorhandeneSchlüssel = MathematikKnotenVorlagen.alle.mapTo(mutableSetOf(), ::vorlagenSchlüssel)
     val basis = MathematikKnotenVorlagen.alle.map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
-    return (basis + FaltungsKnotenVorlagen.alle).distinctBy(::vorlagenSchlüssel)
+    return (basis + FaltungsKnotenVorlagen.alle + MatrixdiagonaleKnotenVorlagen.alle)
+        .distinctBy(::vorlagenSchlüssel)
 }
 
 enum class AussagenOperatorArt(
