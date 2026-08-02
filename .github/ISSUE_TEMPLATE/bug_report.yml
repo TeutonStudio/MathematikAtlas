@@ -1,0 +1,71 @@
+name: Fehler melden
+description: Reproduzierbares fehlerhaftes Verhalten im Mathematik Atlas melden
+title: "[Fehler] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für die Meldung. Bitte beschreibe den Fehler so konkret, dass er ohne hellseherische Begabung reproduziert werden kann.
+  - type: input
+    id: version
+    attributes:
+      label: Version oder Commit
+      description: Welche Version, welcher Branch oder welcher Commit ist betroffen?
+      placeholder: v2.13.1 oder Commit-SHA
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Fehlerbeschreibung
+      description: Was ist passiert?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Schritte zur Reproduktion
+      placeholder: |
+        1. Karte öffnen …
+        2. Knoten hinzufügen …
+        3. Anschluss verbinden …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Betroffene Karte, Knoten und zusätzliche Informationen
+      description: Nenne Knotentypen, Fehlermeldungen, Screenshots oder ein minimales Karten-JSON ohne vertrauliche Daten.
+  - type: dropdown
+    id: device_test
+    attributes:
+      label: Wo wurde der Fehler beobachtet?
+      options:
+        - Android-Gerät
+        - Android-Emulator
+        - JVM-Test oder Build
+        - Nur Quellcodeprüfung
+        - Nicht sicher
+    validations:
+      required: true
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Sicherheitsprüfung
+      options:
+        - label: Die Meldung enthält keine vertraulichen Sicherheitsdetails. Sicherheitsprobleme melde ich nach SECURITY.md privat.
+          required: true
