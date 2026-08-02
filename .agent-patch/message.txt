@@ -1,0 +1,7 @@
+ArcSinus und ArcCosinus im Rechenkern ergänzen (#96)
+
+- inverse trigonometrische Zahlterme mit LaTeX- und Klartextdarstellung einführen
+- Hauptwerte und reelle Definitionsbereiche exakt beziehungsweise symbolisch behandeln
+- Substitution, Variablenanalyse, Reellheitsnachweis und Zielmengeninferenz integrieren
+- numerische Auswertung und Ableitungsregeln ergänzen
+- Kern- und Visualisierungspfade durch automatisierte Tests absichern
