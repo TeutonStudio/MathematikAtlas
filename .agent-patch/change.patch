@@ -1,0 +1,45 @@
+diff --git a/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt b/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt
+index fddd73a..a10c1ae 100644
+--- a/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt
++++ b/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt
+@@ -213,17 +213,7 @@ object VisualisierungsSampler {
+         menge: MengenAusdruck,
+         konfiguration: VisualisierungsKonfiguration,
+     ): VisualisierungsDefinition {
+-        val exakte = when (menge) {
+-            is GefilterteMenge -> exaktePunkte(menge.menge, konfiguration.raumDimension)?.filter { punkt ->
+-                werteFilter(menge, punkt, konfiguration) == NumerischeMitgliedschaft.Enthalten
+-            }
+-            is MengenFallAusdruck -> when (menge.aussage.entscheide(RechenKontext()).wahrheitswert) {
+-                Wahrheitswert.Wahr -> exaktePunkte(menge.wahr, konfiguration.raumDimension)
+-                Wahrheitswert.Lüge -> exaktePunkte(menge.lüge, konfiguration.raumDimension)
+-                null -> null
+-            }
+-            else -> exaktePunkte(menge, konfiguration.raumDimension)
+-        }
++        val exakte = exaktePunkteMitSemantik(menge, konfiguration)
+         exakte?.let { return VisualisierungsDefinition.ExaktePunkte(konfiguration.raumDimension, it) }
+         val hinweise = if (menge is PrädikatsMenge && konfiguration.sampling.fensterBegrenztePrädikatsMengen) {
+             listOf("Fensterbegrenzte Approximation einer grundmengenfreien Prädikatsmenge.")
+@@ -466,6 +456,21 @@ object VisualisierungsSampler {
+         }
+     }
+ 
++    private fun exaktePunkteMitSemantik(
++        menge: MengenAusdruck,
++        konfiguration: VisualisierungsKonfiguration,
++    ): List<List<Double>>? = when (menge) {
++        is GefilterteMenge -> exaktePunkteMitSemantik(menge.menge, konfiguration)?.filter { punkt ->
++            werteFilter(menge, punkt, konfiguration) == NumerischeMitgliedschaft.Enthalten
++        }
++        is MengenFallAusdruck -> when (menge.aussage.entscheide(RechenKontext()).wahrheitswert) {
++            Wahrheitswert.Wahr -> exaktePunkteMitSemantik(menge.wahr, konfiguration)
++            Wahrheitswert.Lüge -> exaktePunkteMitSemantik(menge.lüge, konfiguration)
++            null -> null
++        }
++        else -> exaktePunkte(menge, konfiguration.raumDimension)
++    }
++
+     private fun exaktePunkte(menge: MengenAusdruck, dimension: Int): List<List<Double>>? = when (menge) {
+         LeereMenge -> emptyList()
+         is EndlicheMenge -> normalisiereEndlicheMenge(menge, dimension).takeIf { it.verworfeneElemente.isEmpty() }?.punkte
