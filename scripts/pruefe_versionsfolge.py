@@ -47,6 +47,18 @@ def lade_plan() -> tuple[dict, dict]:
     return plan, eintrag
 
 
+def version_in_ref(ref: str) -> str | None:
+    if not ref or set(ref) == {"0"}:
+        return None
+    inhalt = git("show", f"{ref}:release/roadmap.toml", erforderlich=False)
+    if not inhalt:
+        return None
+    try:
+        return str(tomllib.loads(inhalt)["current_version"])
+    except (KeyError, tomllib.TOMLDecodeError):
+        fehler(f"Releaseplan in Git-Ref {ref!r} ist ungültig.")
+
+
 def lese_event() -> dict | None:
     pfad = os.environ.get("GITHUB_EVENT_PATH")
     if not pfad:
@@ -80,11 +92,7 @@ def prüfe_pr(plan: dict, eintrag: dict, event: dict) -> None:
     erwarteter_branch = str(eintrag.get("branch", ""))
 
     if basis != str(plan.get("default_branch", "master")):
-        fehler(f"Release-PR zielt auf {basis!r} statt auf master.")
-    if erwarteter_branch and kopf != erwarteter_branch:
-        fehler(f"PR-Branch {kopf!r} stimmt nicht mit {erwarteter_branch!r} überein.")
-    if not titel.startswith(f"v{version}"):
-        fehler(f"PR-Titel muss mit v{version} beginnen.")
+        fehler(f"Pull Request zielt auf {basis!r} statt auf master.")
 
     basis_sha = str(pull_request.get("base", {}).get("sha", ""))
     if not basis_sha:
@@ -94,22 +102,40 @@ def prüfe_pr(plan: dict, eintrag: dict, event: dict) -> None:
         cwd=WURZEL,
     )
     if ergebnis.returncode != 0:
-        fehler("Der Releasebranch enthält die angegebene PR-Basis nicht als Vorfahren.")
+        fehler("Der Pull-Request-Branch enthält die angegebene PR-Basis nicht als Vorfahren.")
 
     subjects = git("log", "--format=%s", f"{basis_sha}..HEAD").splitlines()
     zusätzliche_finale = [subject for subject in subjects if FINALER_TITEL.fullmatch(subject)]
     if zusätzliche_finale:
         fehler(
-            "Der Releasebranch enthält bereits finale Versionscommits: "
+            "Der Pull-Request-Branch enthält bereits finale Versionscommits: "
             + ", ".join(zusätzliche_finale)
         )
 
+    basis_version = version_in_ref(basis_sha)
+    if basis_version == version:
+        print(f"Arbeits-PR ohne Versionswechsel erkannt: v{version} bleibt unverändert.")
+        return
 
-def prüfe_master_push(plan: dict) -> None:
+    if erwarteter_branch and kopf != erwarteter_branch:
+        fehler(f"Release-PR-Branch {kopf!r} stimmt nicht mit {erwarteter_branch!r} überein.")
+    if not titel.startswith(f"v{version}"):
+        fehler(f"Release-PR-Titel muss mit v{version} beginnen.")
+
+
+def prüfe_master_push(plan: dict, event: dict | None) -> None:
     version = str(plan["current_version"])
     branch = os.environ.get("GITHUB_REF_NAME", "")
     if branch and branch != str(plan.get("default_branch", "master")):
         return
+
+    vorherige_version = None
+    if isinstance(event, dict):
+        vorherige_version = version_in_ref(str(event.get("before", "")))
+    if vorherige_version == version:
+        print(f"Arbeitscommit auf master ohne Versionswechsel erkannt: v{version} bleibt unverändert.")
+        return
+
     titel = git("log", "-1", "--format=%s")
     if titel != f"v{version}":
         fehler(f"HEAD auf master muss den finalen Titel v{version!s} besitzen, gefunden wurde {titel!r}.")
@@ -129,12 +155,15 @@ def main() -> None:
             fehler("Pull-Request-Prüfung ohne Eventdaten.")
         prüfe_pr(plan, eintrag, event)
     elif event_name == "push":
-        prüfe_master_push(plan)
+        prüfe_master_push(plan, event)
     else:
         branch = git("branch", "--show-current", erforderlich=False)
         erwarteter_branch = str(eintrag.get("branch", ""))
         if branch and erwarteter_branch and branch not in {erwarteter_branch, "master"}:
-            fehler(f"Lokaler Branch {branch!r} passt nicht zum Releasebranch {erwarteter_branch!r}.")
+            print(
+                f"Arbeitsbranch {branch!r} verwendet weiterhin die veröffentlichte Version "
+                f"v{plan['current_version']}; Release-Metadaten werden erst im Releasebranch geändert."
+            )
 
     print(f"Versionsfolge für v{plan['current_version']} erfolgreich geprüft.")
 

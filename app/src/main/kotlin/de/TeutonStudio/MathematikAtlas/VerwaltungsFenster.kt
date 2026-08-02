@@ -115,11 +115,15 @@ private fun ProfilLeiste(profil: LokalesProfil, onClick: () -> Unit) {
 @Composable
 private fun EinstellungenDialog(schließen: () -> Unit) {
     val darstellung = LocalDarstellungsSteuerung.current
+    val buildInformation = remember { aktuelleAppBuildInformation() }
     AlertDialog(
         onDismissRequest = schließen,
         title = { Text("Einstellungen") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Text("Darstellung", style = MaterialTheme.typography.titleSmall)
                 Text(
                     "Wähle, ob die App dem System folgt oder dauerhaft hell beziehungsweise dunkel dargestellt wird.",
@@ -158,6 +162,14 @@ private fun EinstellungenDialog(schließen: () -> Unit) {
                         }
                     }
                 }
+                HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                Text("Über die Anwendung", style = MaterialTheme.typography.titleSmall)
+                Text(buildInformation.versionsZeile, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    buildInformation.buildZeile,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = { TextButton(onClick = schließen) { Text("Fertig") } },
