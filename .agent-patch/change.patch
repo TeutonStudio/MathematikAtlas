@@ -1,0 +1,341 @@
+diff --git a/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt b/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt
+index 9d0fcd6..cd42179 100644
+--- a/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt
++++ b/MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/visualisierung/sampling/VisualisierungsSampler.kt
+@@ -259,6 +259,8 @@ private fun numerisch(ausdruck: ZahlAusdruck?, werte: Map<String, Double>): Doub
+     is Betrag -> numerisch(ausdruck.argument, werte)?.let(::abs)
+     is Sinus -> numerisch(ausdruck.argument, werte)?.let(::sin)
+     is Cosinus -> numerisch(ausdruck.argument, werte)?.let(::cos)
++    is ArcSinus -> numerisch(ausdruck.argument, werte)?.takeIf { it in -1.0..1.0 }?.let(::asin)
++    is ArcCosinus -> numerisch(ausdruck.argument, werte)?.takeIf { it in -1.0..1.0 }?.let(::acos)
+     is Exponentialfunktion -> numerisch(ausdruck.argument, werte)?.let(::exp)
+     is NatürlicherLogarithmus -> numerisch(ausdruck.argument, werte)?.takeIf { it > 0 }?.let(::ln)
+     is Wurzel -> numerisch(ausdruck.argument, werte)?.takeIf { it >= 0 }?.let(::sqrt)
+diff --git a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt
+index 2ef078d..412f2fb 100644
+--- a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt
++++ b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Funktionen.kt
+@@ -206,6 +206,8 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
+     is Betrag -> Betrag(ersetze(objekt.argument, bindungen))
+     is Sinus -> Sinus(ersetze(objekt.argument, bindungen))
+     is Cosinus -> Cosinus(ersetze(objekt.argument, bindungen))
++    is ArcSinus -> ArcSinus(ersetze(objekt.argument, bindungen))
++    is ArcCosinus -> ArcCosinus(ersetze(objekt.argument, bindungen))
+     is Exponentialfunktion -> Exponentialfunktion(ersetze(objekt.argument, bindungen))
+     is NatürlicherLogarithmus -> NatürlicherLogarithmus(ersetze(objekt.argument, bindungen))
+     is Wurzel -> Wurzel(ersetze(objekt.argument, bindungen))
+@@ -311,6 +313,8 @@ fun MathematischesObjekt.enthalteneFunktionsParameter(): Set<FunktionsParameter>
+     is Betrag -> argument.enthalteneFunktionsParameter()
+     is Sinus -> argument.enthalteneFunktionsParameter()
+     is Cosinus -> argument.enthalteneFunktionsParameter()
++    is ArcSinus -> argument.enthalteneFunktionsParameter()
++    is ArcCosinus -> argument.enthalteneFunktionsParameter()
+     is Exponentialfunktion -> argument.enthalteneFunktionsParameter()
+     is NatürlicherLogarithmus -> argument.enthalteneFunktionsParameter()
+     is Wurzel -> argument.enthalteneFunktionsParameter()
+diff --git a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/NumerischeAuswertung.kt b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/NumerischeAuswertung.kt
+index b1fab9c..337e717 100644
+--- a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/NumerischeAuswertung.kt
++++ b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/NumerischeAuswertung.kt
+@@ -1,6 +1,8 @@
+ package de.TeutonStudio.MathematikRechenSystem.kern
+ 
+ import kotlin.math.abs
++import kotlin.math.acos
++import kotlin.math.asin
+ import kotlin.math.cos
+ import kotlin.math.exp
+ import kotlin.math.ln
+@@ -107,6 +109,8 @@ private fun wertIntern(
+     is Betrag -> wertIntern(ausdruck.argument, umgebung, optionen).map(::abs)
+     is Sinus -> wertIntern(ausdruck.argument, umgebung, optionen).map(::sin)
+     is Cosinus -> wertIntern(ausdruck.argument, umgebung, optionen).map(::cos)
++    is ArcSinus -> inverseTrigonometrischeAuswertung(ausdruck.argument, umgebung, optionen, "ArcSinus", ::asin)
++    is ArcCosinus -> inverseTrigonometrischeAuswertung(ausdruck.argument, umgebung, optionen, "ArcCosinus", ::acos)
+     is Exponentialfunktion -> wertIntern(ausdruck.argument, umgebung, optionen).map(::exp)
+     is NatürlicherLogarithmus -> wertIntern(ausdruck.argument, umgebung, optionen).flatMap { argument ->
+         if (argument <= 0.0) NumerischesErgebnis.Definitionsbereich("Der natürliche Logarithmus ist im Reellen nur für positive Argumente definiert.")
+@@ -136,6 +140,22 @@ private fun wertIntern(
+     )
+ }
+ 
++private fun inverseTrigonometrischeAuswertung(
++    argument: ZahlAusdruck,
++    umgebung: NumerischeUmgebung,
++    optionen: NumerischeOptionen,
++    name: String,
++    funktion: (Double) -> Double,
++): NumerischesErgebnis<Double> = wertIntern(argument, umgebung, optionen).flatMap { wert ->
++    when {
++        wert < -1.0 - optionen.toleranz || wert > 1.0 + optionen.toleranz ->
++            NumerischesErgebnis.Definitionsbereich(
++                "$name ist im Reellen nur für Argumente im Intervall [-1,1] definiert.",
++            )
++        else -> NumerischesErgebnis.Wert(funktion(wert.coerceIn(-1.0, 1.0)))
++    }
++}
++
+ private fun aussageIntern(
+     aussage: Aussage,
+     umgebung: NumerischeUmgebung,
+diff --git a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt
+index be50db6..262d470 100644
+--- a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt
++++ b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt
+@@ -52,6 +52,14 @@ data class Betrag(val argument: ZahlAusdruck) : ZahlAusdruck {
+ 
+ data class Sinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\sin\\left(${argument.zuLatex()}\\right)" }
+ data class Cosinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\cos\\left(${argument.zuLatex()}\\right)" }
++data class ArcSinus(val argument: ZahlAusdruck) : ZahlAusdruck {
++    override fun zuLatex() = "\\arcsin\\left(${argument.zuLatex()}\\right)"
++    override fun toString() = "arcsin($argument)"
++}
++data class ArcCosinus(val argument: ZahlAusdruck) : ZahlAusdruck {
++    override fun zuLatex() = "\\arccos\\left(${argument.zuLatex()}\\right)"
++    override fun toString() = "arccos($argument)"
++}
+ data class Exponentialfunktion(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "e^{${argument.zuLatex()}}" }
+ data class NatürlicherLogarithmus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\ln\\left(${argument.zuLatex()}\\right)" }
+ data class Wurzel(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\sqrt{${argument.zuLatex()}}" }
+@@ -136,6 +144,23 @@ private fun extremwert(operanden: Iterable<ZahlAusdruck>, maximum: Boolean): Zah
+ fun negation(ausdruck: ZahlAusdruck) = multiplikation(RationaleZahl.von(-1), ausdruck)
+ fun subtraktion(a: ZahlAusdruck, b: ZahlAusdruck) = addition(a, negation(b))
+ 
++/** Reelle Definitionsbedingung der inversen Sinus- und Cosinusfunktionen. */
++fun inverseTrigonometrischeDefinitionsBedingung(argument: ZahlAusdruck): Aussage = Konjunktion(
++    listOf(
++        Vergleich(RationaleZahl.von(-1), VergleichsArt.KleinerGleich, argument),
++        Vergleich(argument, VergleichsArt.KleinerGleich, RationaleZahl.Eins),
++    ),
++)
++
++fun ArcSinus.reelleDefinitionsBedingung(): Aussage = inverseTrigonometrischeDefinitionsBedingung(argument)
++fun ArcCosinus.reelleDefinitionsBedingung(): Aussage = inverseTrigonometrischeDefinitionsBedingung(argument)
++
++fun arcSinus(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =
++    vereinfache(ArcSinus(argument), kontext)
++
++fun arcCosinus(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =
++    vereinfache(ArcCosinus(argument), kontext)
++
+ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck = when (ausdruck) {
+     is RationaleZahl, is Variable, is MathematischeKonstante -> ausdruck
+     is Addition -> addition(ausdruck.summanden.map { vereinfache(it, kontext) })
+@@ -168,6 +193,8 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
+     is Betrag -> Betrag(vereinfache(ausdruck.argument, kontext))
+     is Sinus -> Sinus(vereinfache(ausdruck.argument, kontext))
+     is Cosinus -> Cosinus(vereinfache(ausdruck.argument, kontext))
++    is ArcSinus -> vereinfacheArcSinus(vereinfache(ausdruck.argument, kontext))
++    is ArcCosinus -> vereinfacheArcCosinus(vereinfache(ausdruck.argument, kontext))
+     is Exponentialfunktion -> Exponentialfunktion(vereinfache(ausdruck.argument, kontext))
+     is NatürlicherLogarithmus -> NatürlicherLogarithmus(vereinfache(ausdruck.argument, kontext))
+     is Wurzel -> vereinfacheWurzel(vereinfache(ausdruck.argument, kontext))
+@@ -206,6 +233,10 @@ fun istNachweisbarReell(
+     is Betrag -> true
+     is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+     is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
++    is ArcSinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
++        ausdruck.argument.istNachweisbarImEinheitsIntervall(annahmen)
++    is ArcCosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
++        ausdruck.argument.istNachweisbarImEinheitsIntervall(annahmen)
+     is Exponentialfunktion -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+     is NatürlicherLogarithmus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarPositiv(annahmen)
+     is Logarithmus -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
+@@ -269,7 +300,7 @@ fun inferiereZahlenWertevorrat(
+         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
+         annahmen = annahmen,
+     )) ReelleZahlen else KomplexeZahlen
+-    is Betrag, is Argument -> ReelleZahlen
++    is Betrag, is Argument, is ArcSinus, is ArcCosinus -> ReelleZahlen
+     is Sinus, is Cosinus, is Exponentialfunktion -> if (istNachweisbarReell(
+         ausdruck,
+         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
+@@ -304,6 +335,15 @@ private fun ZahlAusdruck.istNachweisbarNichtNegativ(annahmen: Set<Aussage>): Boo
+     else -> Vergleich(this, VergleichsArt.GrößerGleich, RationaleZahl.Null) in annahmen || istNachweisbarPositiv(annahmen)
+ }
+ 
++private fun ZahlAusdruck.istNachweisbarImEinheitsIntervall(annahmen: Set<Aussage>): Boolean = when (this) {
++    is RationaleZahl -> this >= RationaleZahl.von(-1) && this <= RationaleZahl.Eins
++    else -> inverseTrigonometrischeDefinitionsBedingung(this) in annahmen ||
++        (Vergleich(RationaleZahl.von(-1), VergleichsArt.KleinerGleich, this) in annahmen &&
++            Vergleich(this, VergleichsArt.KleinerGleich, RationaleZahl.Eins) in annahmen) ||
++        (Vergleich(this, VergleichsArt.GrößerGleich, RationaleZahl.von(-1)) in annahmen &&
++            Vergleich(RationaleZahl.Eins, VergleichsArt.GrößerGleich, this) in annahmen)
++}
++
+ private fun ZahlAusdruck.istNachweisbarNichtNull(annahmen: Set<Aussage>): Boolean = when (this) {
+     is RationaleZahl -> !istNull()
+     else -> Ungleichheit(this, RationaleZahl.Null) in annahmen ||
+@@ -313,6 +353,32 @@ private fun ZahlAusdruck.istNachweisbarNichtNull(annahmen: Set<Aussage>): Boolea
+ private fun ZahlAusdruck.istNachweisbarNichtEins(): Boolean =
+     (this as? RationaleZahl)?.let { it != RationaleZahl.Eins } == true
+ 
++private fun vereinfacheArcSinus(argument: ZahlAusdruck): ZahlAusdruck = when (argument) {
++    RationaleZahl.Null -> RationaleZahl.Null
++    RationaleZahl.Eins -> Division(Pi, RationaleZahl.von(2))
++    RationaleZahl.von(-1) -> negation(Division(Pi, RationaleZahl.von(2)))
++    is RationaleZahl -> {
++        require(argument >= RationaleZahl.von(-1) && argument <= RationaleZahl.Eins) {
++            "Der reelle ArcSinus ist nur für Argumente im Intervall [-1,1] definiert."
++        }
++        ArcSinus(argument)
++    }
++    else -> ArcSinus(argument)
++}
++
++private fun vereinfacheArcCosinus(argument: ZahlAusdruck): ZahlAusdruck = when (argument) {
++    RationaleZahl.Eins -> RationaleZahl.Null
++    RationaleZahl.Null -> Division(Pi, RationaleZahl.von(2))
++    RationaleZahl.von(-1) -> Pi
++    is RationaleZahl -> {
++        require(argument >= RationaleZahl.von(-1) && argument <= RationaleZahl.Eins) {
++            "Der reelle ArcCosinus ist nur für Argumente im Intervall [-1,1] definiert."
++        }
++        ArcCosinus(argument)
++    }
++    else -> ArcCosinus(argument)
++}
++
+ /** Die Hauptwurzel liefert genau einen Wert; bei negativen reellen Zahlen einen komplexen. */
+ fun wurzel(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck =
+     vereinfacheWurzel(vereinfache(argument, kontext))
+diff --git a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Umformung.kt b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Umformung.kt
+index 883ffab..483196c 100644
+--- a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Umformung.kt
++++ b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Umformung.kt
+@@ -55,6 +55,16 @@ fun ableiten(ausdruck: ZahlAusdruck, variable: Variable): UmformungsErgebnis<Zah
+         } else error("Allgemeine Potenzableitung ist noch nicht registriert.")
+         is Sinus -> multiplikation(Cosinus(ausdruck.argument), ableiten(ausdruck.argument, variable).ergebnis)
+         is Cosinus -> negation(multiplikation(Sinus(ausdruck.argument), ableiten(ausdruck.argument, variable).ergebnis))
++        is ArcSinus -> Division(
++            ableiten(ausdruck.argument, variable).ergebnis,
++            wurzel(subtraktion(RationaleZahl.Eins, Potenz(ausdruck.argument, RationaleZahl.von(2)))),
++        )
++        is ArcCosinus -> negation(
++            Division(
++                ableiten(ausdruck.argument, variable).ergebnis,
++                wurzel(subtraktion(RationaleZahl.Eins, Potenz(ausdruck.argument, RationaleZahl.von(2)))),
++            ),
++        )
+         is Exponentialfunktion -> multiplikation(ausdruck, ableiten(ausdruck.argument, variable).ergebnis)
+         is NatürlicherLogarithmus -> Division(ableiten(ausdruck.argument, variable).ergebnis, ausdruck.argument)
+         else -> error("Für ${ausdruck::class.simpleName} ist keine Ableitungsregel registriert.")
+diff --git a/MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/InverseTrigonometrieTest.kt b/MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/InverseTrigonometrieTest.kt
+new file mode 100644
+index 0000000..152d700
+--- /dev/null
++++ b/MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/InverseTrigonometrieTest.kt
+@@ -0,0 +1,113 @@
++package de.TeutonStudio.MathematikRechenSystem
++
++import de.TeutonStudio.MathematikRechenSystem.kern.*
++import kotlin.math.PI
++import kotlin.test.Test
++import kotlin.test.assertEquals
++import kotlin.test.assertFailsWith
++import kotlin.test.assertFalse
++import kotlin.test.assertIs
++import kotlin.test.assertTrue
++
++class InverseTrigonometrieTest {
++    @Test
++    fun `latex und klartext verwenden mathematische Namen`() {
++        val x = Variable("x")
++
++        assertEquals("\\arcsin\\left(x\\right)", ArcSinus(x).zuLatex())
++        assertEquals("\\arccos\\left(x\\right)", ArcCosinus(x).zuLatex())
++        assertEquals("arcsin(x)", ArcSinus(x).toString())
++        assertEquals("arccos(x)", ArcCosinus(x).toString())
++    }
++
++    @Test
++    fun `kanonische Hauptwerte werden exakt vereinfacht`() {
++        val halbesPi = Division(Pi, RationaleZahl.von(2))
++
++        assertEquals(RationaleZahl.Null, vereinfache(ArcSinus(RationaleZahl.Null)))
++        assertEquals(halbesPi, vereinfache(ArcSinus(RationaleZahl.Eins)))
++        assertEquals(negation(halbesPi), vereinfache(ArcSinus(RationaleZahl.von(-1))))
++        assertEquals(RationaleZahl.Null, vereinfache(ArcCosinus(RationaleZahl.Eins)))
++        assertEquals(halbesPi, vereinfache(ArcCosinus(RationaleZahl.Null)))
++        assertEquals(Pi, vereinfache(ArcCosinus(RationaleZahl.von(-1))))
++    }
++
++    @Test
++    fun `bekannte Argumente ausserhalb des reellen Bereichs schlagen konkret fehl`() {
++        assertFailsWith<IllegalArgumentException> { vereinfache(ArcSinus(RationaleZahl.von(2))) }
++        assertFailsWith<IllegalArgumentException> { vereinfache(ArcCosinus(RationaleZahl.von(-2))) }
++
++        assertIs<NumerischesErgebnis.Definitionsbereich>(
++            NumerischerAuswerter.wert(ArcSinus(RationaleZahl.von(2))),
++        )
++        assertIs<NumerischesErgebnis.Definitionsbereich>(
++            NumerischerAuswerter.wert(ArcCosinus(RationaleZahl.von(-2))),
++        )
++    }
++
++    @Test
++    fun `numerische Auswertung respektiert Hauptwerte und Randtoleranz`() {
++        assertEquals(
++            PI / 6.0,
++            assertIs<NumerischesErgebnis.Wert<Double>>(
++                NumerischerAuswerter.wert(ArcSinus(RationaleZahl.von(1, 2))),
++            ).wert,
++            1e-12,
++        )
++        assertEquals(
++            2.0 * PI / 3.0,
++            assertIs<NumerischesErgebnis.Wert<Double>>(
++                NumerischerAuswerter.wert(ArcCosinus(RationaleZahl.von(-1, 2))),
++            ).wert,
++            1e-12,
++        )
++    }
++
++    @Test
++    fun `Substitution und Variablenanalyse folgen dem Argument`() {
++        val x = Variable("x")
++        val ausdruck = ArcSinus(addition(x, RationaleZahl.Eins))
++
++        assertEquals(setOf(x), ausdruck.enthalteneVariablen())
++        assertEquals(
++            ArcSinus(RationaleZahl.von(3)),
++            ersetze(ausdruck, mapOf("x" to RationaleZahl.von(2))),
++        )
++    }
++
++    @Test
++    fun `symbolische Definitionsbedingung bleibt explizit und steuert Reellheitsnachweis`() {
++        val x = Variable("x")
++        val bedingung = inverseTrigonometrischeDefinitionsBedingung(x)
++
++        assertEquals(
++            Konjunktion(
++                listOf(
++                    Vergleich(RationaleZahl.von(-1), VergleichsArt.KleinerGleich, x),
++                    Vergleich(x, VergleichsArt.KleinerGleich, RationaleZahl.Eins),
++                ),
++            ),
++            bedingung,
++        )
++        assertFalse(istNachweisbarReell(ArcSinus(x), variableIstReell = { true }))
++        assertTrue(istNachweisbarReell(ArcSinus(x), { true }, setOf(bedingung)))
++        assertEquals(ReelleZahlen, inferiereZahlenWertevorrat(ArcCosinus(x), mapOf("x" to ReelleZahlen)))
++    }
++
++    @Test
++    fun `trigonometrische Funktionen werden ohne Bereichsannahmen nicht naiv gekuerzt`() {
++        val x = Variable("x")
++
++        assertEquals(ArcSinus(Sinus(x)), vereinfache(ArcSinus(Sinus(x))))
++        assertEquals(ArcCosinus(Cosinus(x)), vereinfache(ArcCosinus(Cosinus(x))))
++    }
++
++    @Test
++    fun `Ableitungen verwenden die Hauptzweigformeln`() {
++        val x = Variable("x")
++        val nenner = wurzel(subtraktion(RationaleZahl.Eins, Potenz(x, RationaleZahl.von(2))))
++
++        assertEquals(Division(RationaleZahl.Eins, nenner), ableiten(ArcSinus(x), x).ergebnis)
++        assertEquals(negation(Division(RationaleZahl.Eins, nenner)), ableiten(ArcCosinus(x), x).ergebnis)
++    }
++}
