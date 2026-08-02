@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Veraltete Mehrfachausgabezugriffe korrigieren
+      - name: Methodentests auf den kanonischen Vertrag migrieren
         shell: bash
         run: |
           git reset --hard 7e39bed00c8aa22c24ac126dedc46895f7c4e303
@@ -33,9 +33,17 @@ jobs:
               if neu == text:
                   raise SystemExit(f"Kein veralteter Zugriff in {datei}")
               datei.write_text(neu)
+
+          karten_test = Path("MathematikKartenAdapter/src/test/kotlin/de/TeutonStudio/MathematikKartenAdapter/KartenMethodenTest.kt")
+          text = karten_test.read_text()
+          veraltet = "        assertEquals(ReelleZahlen, methode.zielMenge)\n"
+          if text.count(veraltet) != 1:
+              raise SystemExit("Der widersprüchliche Einzelzielmengen-Test wurde nicht eindeutig gefunden")
+          karten_test.write_text(text.replace(veraltet, ""))
           PY
           git add MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/IterierteOperatorenTest.kt
           git add MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/MathematikRechenSystemTest.kt
+          git add MathematikKartenAdapter/src/test/kotlin/de/TeutonStudio/MathematikKartenAdapter/KartenMethodenTest.kt
 
       - uses: actions/setup-java@v4
         with:
@@ -61,8 +69,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Methodentests auf kanonischen Einzelrückgabewert migrieren (#67)" \
-            -m "- gebundene Methoden direkt als MathematischesObjekt prüfen" \
+          git commit -m "Methodentests auf kanonischen Rückgabevertrag migrieren (#67)" \
+            -m "- gebundene Einzelmethoden direkt als MathematischesObjekt prüfen" \
             -m "- veraltete getValue-Zugriffe aus der früheren Mehrfachausgabe-API entfernen" \
+            -m "- Karten mit mehreren Ausgängen ausschließlich gegen ihre Produktzielmenge prüfen" \
             -m "- vollständigen Test- und Android-Debug-Build absichern"
           git push --force origin HEAD:agent/issue-67-testmigration
