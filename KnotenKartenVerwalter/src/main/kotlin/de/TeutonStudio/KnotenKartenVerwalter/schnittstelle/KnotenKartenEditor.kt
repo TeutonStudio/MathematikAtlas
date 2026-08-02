@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
@@ -33,6 +34,11 @@ import kotlin.math.*
 private const val KNOTEN_VIEWPORT_PUFFER = 200f
 private const val VERBINDUNG_VIEWPORT_PUFFER = 80f
 private const val KOPFZEILE_HÖHE_DP = 44f
+private const val VERBINDUNG_TREFFER_RADIUS_DP = 14f
+private const val ANSCHLUSS_TREFFER_GRÖSSE_DP = 28f
+private const val ANSCHLUSS_SICHTBAR_GRÖSSE_DP = 14f
+private const val SNAP_EINTRITT_DP = 28f
+private const val SNAP_AUSTRITT_DP = 34f
 
 @Composable
 fun KnotenKartenEditor(
@@ -54,6 +60,10 @@ fun KnotenKartenEditor(
     val aktuelleAnsicht by rememberUpdatedState(ansicht)
     val aktuelleDichte by rememberUpdatedState(dichte.density)
     var anzeigeGröße by remember { mutableStateOf(IntSize.Zero) }
+    var magnetischesZiel by remember(karte.id) { mutableStateOf<AnschlussVerweis?>(null) }
+    LaunchedEffect(zustand.verbindungsStart) {
+        if (zustand.verbindungsStart == null) magnetischesZiel = null
+    }
     val sichtbarerWeltBereich = sichtbarerWeltBereich(ansicht, anzeigeGröße, dichte.density)
     val sichtbareKnoten = sichtbarerWeltBereich?.let { bereich ->
         karte.knoten.filter { it.istImBereich(bereich, KNOTEN_VIEWPORT_PUFFER) }
@@ -152,6 +162,8 @@ fun KnotenKartenEditor(
                         dichte = dichte.density,
                         renderer = rendererFür(knoten),
                         farbeFürAnschluss = farbeFürAnschluss,
+                        magnetischesZiel = magnetischesZiel,
+                        beiMagnetischemZiel = { magnetischesZiel = it },
                         beiKnotenKontext = beiKnotenKontext,
                         beiAnschlussKontext = beiAnschlussKontext,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
@@ -311,6 +323,85 @@ internal data class MiniMapProjektion(val grenzen: Rect, val größe: Size) {
     )
 }
 
+internal data class VerbindungsGeometrie(
+    val start: Offset,
+    val kontrollpunkt1: Offset,
+    val kontrollpunkt2: Offset,
+    val ende: Offset,
+) {
+    val pfad: Path by lazy(LazyThreadSafetyMode.NONE) {
+        Path().apply {
+            moveTo(start.x, start.y)
+            cubicTo(
+                kontrollpunkt1.x,
+                kontrollpunkt1.y,
+                kontrollpunkt2.x,
+                kontrollpunkt2.y,
+                ende.x,
+                ende.y,
+            )
+        }
+    }
+
+    val umhüllung: Rect = Rect(
+        left = minOf(start.x, kontrollpunkt1.x, kontrollpunkt2.x, ende.x),
+        top = minOf(start.y, kontrollpunkt1.y, kontrollpunkt2.y, ende.y),
+        right = maxOf(start.x, kontrollpunkt1.x, kontrollpunkt2.x, ende.x),
+        bottom = maxOf(start.y, kontrollpunkt1.y, kontrollpunkt2.y, ende.y),
+    )
+
+    fun punktBei(t: Float): Offset {
+        val geklemmt = t.coerceIn(0f, 1f)
+        val gegen = 1f - geklemmt
+        val a = gegen * gegen * gegen
+        val b = 3f * gegen * gegen * geklemmt
+        val c = 3f * gegen * geklemmt * geklemmt
+        val d = geklemmt * geklemmt * geklemmt
+        return Offset(
+            start.x * a + kontrollpunkt1.x * b + kontrollpunkt2.x * c + ende.x * d,
+            start.y * a + kontrollpunkt1.y * b + kontrollpunkt2.y * c + ende.y * d,
+        )
+    }
+
+    fun abstandZu(position: Offset, maximaleSegmentLänge: Float = 8f): Float {
+        val kontrollPolygonLänge =
+            (kontrollpunkt1 - start).getDistance() +
+                (kontrollpunkt2 - kontrollpunkt1).getDistance() +
+                (ende - kontrollpunkt2).getDistance()
+        val schritte = ceil(kontrollPolygonLänge / maximaleSegmentLänge.coerceAtLeast(1f))
+            .toInt()
+            .coerceIn(1, 256)
+        var vorher = start
+        var kleinsterAbstand = Float.POSITIVE_INFINITY
+        for (index in 1..schritte) {
+            val aktuell = punktBei(index.toFloat() / schritte)
+            kleinsterAbstand = min(kleinsterAbstand, punktStreckenAbstand(position, vorher, aktuell))
+            vorher = aktuell
+        }
+        return kleinsterAbstand
+    }
+}
+
+internal fun berechneVerbindungsGeometrie(
+    start: Offset,
+    ende: Offset,
+    mindestKontrollAbstand: Float,
+): VerbindungsGeometrie {
+    val abstand = max(mindestKontrollAbstand, abs(ende.x - start.x) * .45f)
+    return VerbindungsGeometrie(
+        start = start,
+        kontrollpunkt1 = Offset(start.x + abstand, start.y),
+        kontrollpunkt2 = Offset(ende.x - abstand, ende.y),
+        ende = ende,
+    )
+}
+
+private data class SichtbareVerbindungsGeometrie(
+    val verbindung: VerbindungDaten,
+    val geometrie: VerbindungsGeometrie,
+    val zeichnungsIndex: Int,
+)
+
 @Composable
 private fun Verbindungen(
     karte: KartenDaten,
@@ -323,55 +414,102 @@ private fun Verbindungen(
     val dichte = LocalDensity.current
     val standard = MaterialTheme.colorScheme.outline
     val gewählt = MaterialTheme.colorScheme.primary
-    Canvas(
-        Modifier.fillMaxSize().pointerInput(verbindungen, karte.knoten, ansicht) {
-            fun trefferAn(position: Offset): VerbindungDaten? {
-                val treffer = verbindungen.minByOrNull { verbindung ->
-                    val a = anschlussBildschirmPosition(karte, verbindung.von, dichte.density, ansicht)
-                    val b = anschlussBildschirmPosition(karte, verbindung.zu, dichte.density, ansicht)
-                    punktStreckenAbstand(position, a, b)
-                }
-                return treffer?.takeIf {
-                    val a = anschlussBildschirmPosition(karte, it.von, dichte.density, ansicht)
-                    val b = anschlussBildschirmPosition(karte, it.zu, dichte.density, ansicht)
-                    punktStreckenAbstand(position, a, b) <= 14.dp.toPx() * ansicht.zoom
-                }
-            }
-            fun weltPosition(position: Offset) = GraphPunkt(
-                (position.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.density,
-                (position.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.density,
-            )
-            detectTapGestures(
-                onTap = { pos ->
-                    val treffer = trefferAn(pos)
-                    if (treffer != null) zustand.wähleVerbindung(treffer.id)
-                    else zustand.wähleKnoten(null)
-                },
-                onLongPress = { pos ->
-                    val treffer = trefferAn(pos)
-                    if (treffer != null) {
-                        zustand.wähleVerbindung(treffer.id)
-                        beiVerbindungKontext(treffer)
-                    } else {
-                        zustand.wähleKnoten(null)
-                        beiHintergrundKontext(weltPosition(pos))
-                    }
-                },
+    var schwebendeVerbindung by remember { mutableStateOf<VerbindungsId?>(null) }
+    val geometrien = remember(verbindungen, karte.knoten, ansicht, dichte.density) {
+        verbindungen.mapIndexedNotNull { index, verbindung ->
+            val start = anschlussPositionWelt(karte, verbindung.von) ?: return@mapIndexedNotNull null
+            val ende = anschlussPositionWelt(karte, verbindung.zu) ?: return@mapIndexedNotNull null
+            SichtbareVerbindungsGeometrie(
+                verbindung = verbindung,
+                geometrie = berechneVerbindungsGeometrie(
+                    start = weltZuBildschirm(start, dichte.density, ansicht),
+                    ende = weltZuBildschirm(ende, dichte.density, ansicht),
+                    mindestKontrollAbstand = 72f * dichte.density * ansicht.zoom,
+                ),
+                zeichnungsIndex = index,
             )
         }
+    }
+    val aktuelleGeometrien by rememberUpdatedState(geometrien)
+    val aktuelleAuswahl by rememberUpdatedState(zustand.ausgewählteVerbindung)
+    val trefferRadius = with(dichte) { VERBINDUNG_TREFFER_RADIUS_DP.dp.toPx() }
+
+    Canvas(
+        Modifier.fillMaxSize()
+            .pointerInput(verbindungen, karte.knoten, ansicht) {
+                fun trefferAn(position: Offset): VerbindungDaten? = findeVerbindungsTreffer(
+                    position = position,
+                    geometrien = aktuelleGeometrien,
+                    trefferRadius = trefferRadius,
+                    ausgewählteVerbindung = aktuelleAuswahl,
+                )
+                fun weltPosition(position: Offset) = GraphPunkt(
+                    (position.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.density,
+                    (position.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.density,
+                )
+                detectTapGestures(
+                    onTap = { pos ->
+                        val treffer = trefferAn(pos)
+                        if (treffer != null) zustand.wähleVerbindung(treffer.id)
+                        else zustand.wähleKnoten(null)
+                    },
+                    onLongPress = { pos ->
+                        val treffer = trefferAn(pos)
+                        if (treffer != null) {
+                            zustand.wähleVerbindung(treffer.id)
+                            beiVerbindungKontext(treffer)
+                        } else {
+                            zustand.wähleKnoten(null)
+                            beiHintergrundKontext(weltPosition(pos))
+                        }
+                    },
+                )
+            }
+            .pointerInput(verbindungen, karte.knoten, ansicht) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val ereignis = awaitPointerEvent()
+                        schwebendeVerbindung = when (ereignis.type) {
+                            PointerEventType.Exit -> null
+                            PointerEventType.Move, PointerEventType.Enter -> ereignis.changes.firstOrNull()?.position?.let { position ->
+                                findeVerbindungsTreffer(
+                                    position = position,
+                                    geometrien = aktuelleGeometrien,
+                                    trefferRadius = trefferRadius,
+                                    ausgewählteVerbindung = aktuelleAuswahl,
+                                )?.id
+                            }
+                            else -> schwebendeVerbindung
+                        }
+                    }
+                }
+            }
     ) {
-        verbindungen.forEach { verbindung ->
-            val start = anschlussBildschirmPosition(karte, verbindung.von, dichte.density, ansicht)
-            val ende = anschlussBildschirmPosition(karte, verbindung.zu, dichte.density, ansicht)
-            val abstand = max(72.dp.toPx() * ansicht.zoom, abs(ende.x - start.x) * .45f)
-            val pfad = Path().apply {
-                moveTo(start.x, start.y)
-                cubicTo(start.x + abstand, start.y, ende.x - abstand, ende.y, ende.x, ende.y)
+        geometrien.forEach { eintrag ->
+            val verbindung = eintrag.verbindung
+            val istAusgewählt = zustand.ausgewählteVerbindung == verbindung.id
+            val istSchwebend = schwebendeVerbindung == verbindung.id
+            val basisBreite = when {
+                istAusgewählt -> 5.dp.toPx()
+                istSchwebend -> 4.dp.toPx()
+                else -> 3.dp.toPx()
+            }
+            val mindestBreite = when {
+                istAusgewählt -> 3.dp.toPx()
+                istSchwebend -> 2.5.dp.toPx()
+                else -> 1.5.dp.toPx()
             }
             drawPath(
-                pfad,
-                if (zustand.ausgewählteVerbindung == verbindung.id) gewählt else standard,
-                style = Stroke(width = (if (zustand.ausgewählteVerbindung == verbindung.id) 5.dp.toPx() else 3.dp.toPx()) * ansicht.zoom, cap = StrokeCap.Round),
+                eintrag.geometrie.pfad,
+                when {
+                    istAusgewählt -> gewählt
+                    istSchwebend -> gewählt.copy(alpha = .75f)
+                    else -> standard
+                },
+                style = Stroke(
+                    width = max(basisBreite * ansicht.zoom, mindestBreite),
+                    cap = StrokeCap.Round,
+                ),
             )
         }
         val startRef = zustand.verbindungsStart
@@ -379,9 +517,38 @@ private fun Verbindungen(
         if (startRef != null && vorschau != null) {
             val start = anschlussBildschirmPosition(karte, startRef, dichte.density, ansicht)
             val ende = weltZuBildschirm(vorschau, dichte.density, ansicht)
-            drawLine(gewählt.copy(alpha = .75f), start, ende, 3.dp.toPx() * ansicht.zoom, cap = StrokeCap.Round)
+            val geometrie = berechneVerbindungsGeometrie(
+                start = start,
+                ende = ende,
+                mindestKontrollAbstand = 72.dp.toPx() * ansicht.zoom,
+            )
+            drawPath(
+                geometrie.pfad,
+                gewählt.copy(alpha = .75f),
+                style = Stroke(
+                    width = max(3.dp.toPx() * ansicht.zoom, 2.dp.toPx()),
+                    cap = StrokeCap.Round,
+                ),
+            )
         }
     }
+}
+
+private fun findeVerbindungsTreffer(
+    position: Offset,
+    geometrien: List<SichtbareVerbindungsGeometrie>,
+    trefferRadius: Float,
+    ausgewählteVerbindung: VerbindungsId?,
+): VerbindungDaten? {
+    val kandidaten = geometrien.mapNotNull { eintrag ->
+        if (!eintrag.geometrie.umhüllung.erweitert(trefferRadius).enthält(position)) return@mapNotNull null
+        val abstand = eintrag.geometrie.abstandZu(position)
+        if (abstand <= trefferRadius) eintrag to abstand else null
+    }
+    val kleinsterAbstand = kandidaten.minOfOrNull { it.second } ?: return null
+    val gleichNahe = kandidaten.filter { it.second <= kleinsterAbstand + .5f }
+    return gleichNahe.firstOrNull { it.first.verbindung.id == ausgewählteVerbindung }?.first?.verbindung
+        ?: gleichNahe.maxByOrNull { it.first.zeichnungsIndex }?.first?.verbindung
 }
 
 @Composable
@@ -393,6 +560,8 @@ private fun KnotenDarstellung(
     dichte: Float,
     renderer: KnotenRenderer,
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
+    magnetischesZiel: AnschlussVerweis?,
+    beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiKnotenKontext: (KnotenDaten) -> Unit,
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
@@ -465,6 +634,8 @@ private fun KnotenDarstellung(
                     anzahl = anschlüsse.size,
                     zustand = zustand,
                     farbe = farbeFürAnschluss(anschluss),
+                    magnetischesZiel = magnetischesZiel,
+                    beiMagnetischemZiel = beiMagnetischemZiel,
                     beiAnschlussKontext = beiAnschlussKontext,
                     beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                 )
@@ -511,65 +682,80 @@ private fun BoxScope.AnschlussGriff(
     anzahl: Int,
     zustand: KartenEditorZustand,
     farbe: Color,
+    magnetischesZiel: AnschlussVerweis?,
+    beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
 ) {
     val anteil = (index + 1f) / (anzahl + 1f)
+    val zoom = zustand.karte.ansicht.zoom.coerceAtLeast(.0001f)
+    val interaktionsGröße = ANSCHLUSS_TREFFER_GRÖSSE_DP / zoom
+    val sichtbareGröße = ANSCHLUSS_SICHTBAR_GRÖSSE_DP / zoom
+    val interaktionsHalbe = interaktionsGröße / 2f
     val ausrichtung = Alignment.TopStart
     val x = when (anschluss.kante) {
-        AnschlussKante.Links -> (-7).dp
-        AnschlussKante.Rechts -> (knoten.größe.breite - 7).dp
-        AnschlussKante.Oben, AnschlussKante.Unten -> (knoten.größe.breite * anteil - 7).dp
+        AnschlussKante.Links -> (-interaktionsHalbe).dp
+        AnschlussKante.Rechts -> (knoten.größe.breite - interaktionsHalbe).dp
+        AnschlussKante.Oben, AnschlussKante.Unten -> (knoten.größe.breite * anteil - interaktionsHalbe).dp
     }
     val y = when (anschluss.kante) {
-        AnschlussKante.Oben -> (-7).dp
-        AnschlussKante.Unten -> (knoten.größe.höhe - 7).dp
-        AnschlussKante.Links, AnschlussKante.Rechts -> (knoten.größe.höhe * anteil - 7).dp
+        AnschlussKante.Oben -> (-interaktionsHalbe).dp
+        AnschlussKante.Unten -> (knoten.größe.höhe - interaktionsHalbe).dp
+        AnschlussKante.Links, AnschlussKante.Rechts -> (knoten.größe.höhe * anteil - interaktionsHalbe).dp
     }
     val ref = AnschlussVerweis(knoten.id, anschluss.id)
     val kompatibel = zustand.kompatibelMitStart(ref)
+    val eingerastet = magnetischesZiel == ref
+    val aktuellesZielSetzen by rememberUpdatedState(beiMagnetischemZiel)
     var zugPosition by remember(knoten.id, anschluss.id) { mutableStateOf<GraphPunkt?>(null) }
+    var zugZiel by remember(knoten.id, anschluss.id) { mutableStateOf<AnschlussVerweis?>(null) }
     val startWelt = anschlussPositionWelt(knoten, anschluss)
+    val interaktionsObenLinks = startWelt - GraphPunkt(interaktionsHalbe, interaktionsHalbe)
     Box(
-        Modifier.align(ausrichtung).offset(x, y).size(14.dp)
-            .background(if (kompatibel) farbe else farbe.copy(alpha = .2f), CircleShape)
-            .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+        Modifier.align(ausrichtung).offset(x, y).size(interaktionsGröße.dp)
             .combinedClickable(
                 enabled = kompatibel,
                 onClick = { zustand.anschlussAngeklickt(ref) },
                 onLongClick = {
+                    aktuellesZielSetzen(null)
                     zustand.brecheVerbindungsVorschauAb()
                     beiAnschlussKontext(ref)
                 },
             )
-            .pointerInput(ref, kompatibel) {
+            .pointerInput(ref, kompatibel, zoom) {
                 if (!kompatibel) return@pointerInput
                 detectDragGestures(
-                    onDragStart = { druckPosition ->
-                        // Der Griff ist um den Anschluss zentriert. Der Vorschauendpunkt
-                        // beginnt deshalb an der tatsächlichen Druckposition, nicht pauschal
-                        // in der Griffmitte.
-                        val start = startWelt + GraphPunkt(
-                            (druckPosition.x - 7.dp.toPx()) / density,
-                            (druckPosition.y - 7.dp.toPx()) / density,
-                        )
-                        zugPosition = start
-                        zustand.beginneVerbindung(ref, start)
+                    onDragStart = {
+                        zugPosition = startWelt
+                        zugZiel = null
+                        aktuellesZielSetzen(null)
+                        zustand.beginneVerbindung(ref, startWelt)
                     },
-                    onDrag = { änderung, delta ->
+                    onDrag = { änderung, _ ->
                         änderung.consume()
-                        val aktuell = (zugPosition ?: startWelt) + GraphPunkt(
-                            // PointerInput liefert bereits in den lokalen, also nicht mehr
-                            // gezoomten Koordinaten des Griffs.
-                            delta.x / density,
-                            delta.y / density,
+                        val zeigerWelt = interaktionsObenLinks + GraphPunkt(
+                            // Absolute lokale Pointerposition statt Delta-Akkumulation:
+                            // dadurch werden Touch-Slop und Overslop nicht doppelt addiert.
+                            änderung.position.x / density,
+                            änderung.position.y / density,
                         )
-                        zugPosition = aktuell
-                        zustand.aktualisiereVerbindungsVorschau(aktuell)
+                        zugPosition = zeigerWelt
+                        val ziel = nächsterKompatiblerAnschluss(
+                            zustand = zustand,
+                            start = ref,
+                            ende = zeigerWelt,
+                            bisherigesZiel = zugZiel,
+                        )
+                        zugZiel = ziel
+                        aktuellesZielSetzen(ziel)
+                        val vorschau = ziel?.let { anschlussPositionWelt(zustand.karte, it) } ?: zeigerWelt
+                        zustand.aktualisiereVerbindungsVorschau(vorschau)
                     },
                     onDragEnd = {
                         val ende = zugPosition ?: startWelt
-                        val ziel = nächsterKompatiblerAnschluss(zustand, ref, ende)
+                        val ziel = zugZiel
+                        zugZiel = null
+                        aktuellesZielSetzen(null)
                         if (ziel != null) {
                             zustand.anschlussAngeklickt(ziel)
                         } else {
@@ -580,11 +766,26 @@ private fun BoxScope.AnschlussGriff(
                     },
                     onDragCancel = {
                         zugPosition = null
+                        zugZiel = null
+                        aktuellesZielSetzen(null)
                         zustand.brecheVerbindungsVorschauAb()
                     },
                 )
-            }
-    )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier.size(sichtbareGröße.dp)
+                .background(if (kompatibel) farbe else farbe.copy(alpha = .2f), CircleShape)
+                .border((2f / zoom).dp, MaterialTheme.colorScheme.surface, CircleShape)
+        )
+        if (eingerastet) {
+            Box(
+                Modifier.size((24f / zoom).dp)
+                    .border((3f / zoom).dp, MaterialTheme.colorScheme.tertiary, CircleShape)
+            )
+        }
+    }
 }
 
 private fun anschlussPositionWelt(knoten: KnotenDaten, anschluss: AnschlussDaten): GraphPunkt {
@@ -619,12 +820,27 @@ private fun nächsterKompatiblerAnschluss(
     zustand: KartenEditorZustand,
     start: AnschlussVerweis,
     ende: GraphPunkt,
-): AnschlussVerweis? = zustand.karte.knoten.asSequence().flatMap { knoten ->
-    knoten.anschlüsse.asSequence().map { anschluss -> AnschlussVerweis(knoten.id, anschluss.id) to anschlussPositionWelt(knoten, anschluss) }
-}.filter { (ref, _) -> ref != start && zustand.kompatibelMitStart(ref) }
-    .map { (ref, pos) -> ref to hypot((pos.x - ende.x).toDouble(), (pos.y - ende.y).toDouble()).toFloat() }
-    .filter { it.second <= 28f / zustand.karte.ansicht.zoom }
-    .minByOrNull { it.second }?.first
+    bisherigesZiel: AnschlussVerweis?,
+): AnschlussVerweis? {
+    val zoom = zustand.karte.ansicht.zoom.coerceAtLeast(.0001f)
+    fun abstandZu(ref: AnschlussVerweis): Float? {
+        if (ref == start || !zustand.kompatibelMitStart(ref)) return null
+        val position = anschlussPositionWelt(zustand.karte, ref) ?: return null
+        return hypot((position.x - ende.x).toDouble(), (position.y - ende.y).toDouble()).toFloat()
+    }
+
+    if (bisherigesZiel != null) {
+        val abstand = abstandZu(bisherigesZiel)
+        if (abstand != null && abstand <= SNAP_AUSTRITT_DP / zoom) return bisherigesZiel
+    }
+
+    return zustand.karte.knoten.asSequence().flatMap { knoten ->
+        knoten.anschlüsse.asSequence().map { anschluss -> AnschlussVerweis(knoten.id, anschluss.id) }
+    }.mapNotNull { ref -> abstandZu(ref)?.let { abstand -> ref to abstand } }
+        .filter { it.second <= SNAP_EINTRITT_DP / zoom }
+        .minByOrNull { it.second }
+        ?.first
+}
 
 private fun weltZuBildschirm(welt: GraphPunkt, dichte: Float, ansicht: AnsichtsFenster): Offset = Offset(
     ansicht.verschiebung.x + welt.x * dichte * ansicht.zoom,
@@ -682,11 +898,7 @@ private fun KartenDaten.inhaltsGrenzen(puffer: Float): Rect? {
     return Rect(links - puffer, oben - puffer, rechts + puffer, unten + puffer)
 }
 
-/**
- * Die Kontrollpunkte der kubischen Verbindung liegen horizontal neben den
- * Endpunkten. Ihre Umhüllung ist damit eine sichere, günstige Obergrenze für
- * das sichtbare Béziersegment.
- */
+/** Zeichnung und Viewport-Culling verwenden dieselbe kubische Verbindungsgeometrie. */
 private fun VerbindungDaten.istImBereich(
     karte: KartenDaten,
     bereich: Rect,
@@ -694,13 +906,12 @@ private fun VerbindungDaten.istImBereich(
 ): Boolean {
     val start = anschlussPositionWelt(karte, von) ?: return false
     val ende = anschlussPositionWelt(karte, zu) ?: return false
-    val abstand = max(72f, abs(ende.x - start.x) * .45f)
-    return Rect(
-        left = minOf(start.x, ende.x, start.x + abstand, ende.x - abstand) - puffer,
-        top = min(start.y, ende.y) - puffer,
-        right = maxOf(start.x, ende.x, start.x + abstand, ende.x - abstand) + puffer,
-        bottom = max(start.y, ende.y) + puffer,
-    ).überschneidet(bereich)
+    val geometrie = berechneVerbindungsGeometrie(
+        start = Offset(start.x, start.y),
+        ende = Offset(ende.x, ende.y),
+        mindestKontrollAbstand = 72f,
+    )
+    return geometrie.umhüllung.erweitert(puffer).überschneidet(bereich)
 }
 
 private fun anschlussPositionWelt(karte: KartenDaten, ref: AnschlussVerweis): GraphPunkt? {
@@ -708,6 +919,16 @@ private fun anschlussPositionWelt(karte: KartenDaten, ref: AnschlussVerweis): Gr
     val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return null
     return anschlussPositionWelt(knoten, anschluss)
 }
+
+private fun Rect.enthält(punkt: Offset): Boolean =
+    punkt.x in left..right && punkt.y in top..bottom
+
+private fun Rect.erweitert(puffer: Float): Rect = Rect(
+    left = left - puffer,
+    top = top - puffer,
+    right = right + puffer,
+    bottom = bottom + puffer,
+)
 
 private fun Rect.überschneidet(anderer: Rect): Boolean =
     left <= anderer.right && right >= anderer.left && top <= anderer.bottom && bottom >= anderer.top
