@@ -30,7 +30,7 @@ Der Mathematik Atlas ist eine native Android-Anwendung zur Darstellung mathemati
 - `MathematikKartenAdapter` führt Kartengraphen mit dem Rechenkern aus.
 - `MathematikKnoten` enthält mathematische Vorlagen, Auswerter und spezialisierte Renderer.
 - Der Rechenkern erzeugt LaTeX-Text; `MathematikKnoten/LatexText.kt` rendert einen unterstützten Teilumfang nativ in Compose.
-- Die App speichert Karten über `KartenJson`; der aktuelle Schreibpfad verwendet `formatVersion` 4.
+- Die App speichert Karten über `KartenJson`; der aktuelle Schreibpfad verwendet `formatVersion` 5.
 - Es existiert kein JavaScript-Paketmanager, keine `package.json` und keine Webanwendung.
 
 ### Nicht aus diesen Fakten ableiten
