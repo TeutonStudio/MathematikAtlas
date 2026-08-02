@@ -92,7 +92,7 @@ class MathematikRechenSystemTest {
         val f = Methode("f", listOf(x, y), mapOf("wert" to addition(x, y)))
         val g = f.binde(mapOf("x" to RationaleZahl.von(4)))
         assertEquals(listOf(y), g.freieParameter)
-        assertEquals(RationaleZahl.von(7), g.binde(mapOf("y" to RationaleZahl.von(3))).auswerten().getValue("wert"))
+        assertEquals(RationaleZahl.von(7), g.binde(mapOf("y" to RationaleZahl.von(3))).auswerten())
     }
 
     @Test fun abbildAkzeptiertAllgemeineParameterUndBeliebigeEndlicheElemente() {

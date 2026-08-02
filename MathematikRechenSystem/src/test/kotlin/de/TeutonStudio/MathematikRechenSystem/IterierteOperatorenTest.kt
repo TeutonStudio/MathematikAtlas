@@ -19,7 +19,7 @@ class IterierteOperatorenTest {
         val gebunden = f.binde(mapOf("x" to RationaleZahl.von(2)))
 
         assertEquals(ReelleZahlen, gebunden.methode.zielMengeFür("wert"))
-        assertEquals(RationaleZahl.von(5), gebunden.binde(mapOf("k" to RationaleZahl.von(3))).auswerten().getValue("wert"))
+        assertEquals(RationaleZahl.von(5), gebunden.binde(mapOf("k" to RationaleZahl.von(3))).auswerten())
     }
 
     @Test
