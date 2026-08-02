@@ -69,10 +69,22 @@ class IterierteOperatorDefinitionsKartenTest {
             val iteration = karte.knoten.single {
                 it.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
             }
+            val elementbindung = iteration.anschlüsse.single {
+                it.richtung == AnschlussRichtung.Eingang && it.name == "elementbindung"
+            }
 
             assertEquals(listOf("A", "I"), eingänge.map { it.name }, vorlage.name)
             assertEquals(konstruktor.parameter[MENGENDEFINITION_PAAR], definator.parameter[MENGENDEFINITION_PAAR])
             assertEquals(MathematikAnschlussArten.Objekt.id.wert, konstruktor.parameter[MENGENDEFINITION_ELEMENTART])
+            assertEquals(MathematikAnschlussArten.Objekt.id, elementbindung.art, vorlage.name)
+            assertTrue(
+                karte.verbindungen.any { verbindung ->
+                    verbindung.von.knotenId == konstruktor.id &&
+                        verbindung.zu.knotenId == iteration.id &&
+                        verbindung.zu.anschlussId == elementbindung.id
+                },
+                vorlage.name,
+            )
             assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.Element.art }, vorlage.name)
             assertEquals(1, karte.knoten.count { it.art == MathematikKnotenVorlagen.AussageZuMethode.art }, vorlage.name)
             assertEquals(erwarteteOperatoren.getValue(vorlage.art), iteration.parameter["operator"], vorlage.name)
