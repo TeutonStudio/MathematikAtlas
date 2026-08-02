@@ -403,38 +403,165 @@ object VisualisierungsSampler {
         abbild: Abbild,
         konfiguration: VisualisierungsKonfiguration,
     ): VisualisierungsErgebnis {
-        val parameter = abbild.methode.parameter.singleOrNull() as? Variable
-            ?: return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Abbildung benötigt genau einen numerischen Parameter.")
-        val ausgabe = abbild.methode.vorschrift.takeIf { abbild.methode.ausgabeNamen.size == 1 }
-            ?: return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Abbildung benötigt genau eine Ausgabe.")
-        val domäne = when (val ergebnis = faktorDomäne(abbild.menge, konfiguration.bereiche.x, konfiguration)) {
-            is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
-            is DomänenErgebnis.Fehler -> return VisualisierungsErgebnis.NichtDarstellbar(ergebnis.grund)
+        val methode = abbild.methode
+        if (methode.parameter.isEmpty()) {
+            return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Methode benötigt mindestens einen numerischen Parameter.")
         }
-        if (domäne.werte.isEmpty()) {
-            return VisualisierungsErgebnis.Erfolgreich(
-                emptyList(), false, listOf("Die Definitionsmenge der Abbildung ist leer."), VisualisierungsQualität.MathematischLeer,
+        if (methode.parameter.size > 3) {
+            return VisualisierungsErgebnis.NichtDarstellbar(
+                "Die Methode besitzt ${methode.parameter.size} Parameter. Ohne ausdrücklich konfigurierte Projektion sind höchstens drei Parameter räumlich darstellbar.",
             )
         }
-        val punkte = mutableListOf<VisualisierungsPunkt>()
-        var übersprungen = 0
-        domäne.werte.forEach { parameterWert ->
-            val umgebung = mapOf(parameter.name to parameterWert)
-            when (val koordinaten = koordinaten(ausgabe, konfiguration.raumDimension, umgebung)) {
-                is KoordinatenErgebnis.Erfolgreich -> punkte += koordinaten.werte.alsPunkt(konfiguration, umgebung)
-                is KoordinatenErgebnis.Fehler -> übersprungen++
+        val parameter = methode.parameter.mapIndexed { index, wert ->
+            wert as? Variable ?: return VisualisierungsErgebnis.NichtDarstellbar(
+                "Parameter ${index + 1} '${wert.name}' ist kein numerischer Variablenparameter.",
+            )
+        }
+        val modus = when (konfiguration.methodenModus) {
+            MethodenDarstellungsModus.Automatisch -> when {
+                methode.ausgabeNamen.size == 1 && methode.vorschrift is ZahlAusdruck && parameter.size <= 2 ->
+                    MethodenDarstellungsModus.Funktionsgraph
+                methode.ausgabeNamen.size == 1 &&
+                    (methode.vorschrift is Tupel || methode.vorschrift is SpaltenVektor || methode.vorschrift is ZeilenVektor) ->
+                    MethodenDarstellungsModus.Bild
+                methode.ausgabeNamen.size > 1 && konfiguration.achsenNamen.all(methode.ausgabeNamen::contains) ->
+                    MethodenDarstellungsModus.Koordinatenausgabe
+                else -> return VisualisierungsErgebnis.NichtDarstellbar(
+                    "Die Methodensignatur ist nicht eindeutig als Funktionsgraph, Bild oder Koordinatenausgabe erkennbar. Wähle den Darstellungsmodus im Inspector ausdrücklich.",
+                )
+            }
+            else -> konfiguration.methodenModus
+        }
+        val faktoren = when {
+            parameter.size == 1 -> listOf(abbild.menge)
+            abbild.menge is KartesischesProdukt && abbild.menge.mengen.size == parameter.size -> abbild.menge.mengen
+            abbild.menge is KartesischesProdukt -> return VisualisierungsErgebnis.NichtDarstellbar(
+                "Die Parameterdomäne besitzt ${abbild.menge.mengen.size} Faktoren, die Methode aber ${parameter.size} Parameter. Tupelwerte werden nicht implizit in Argumente aufgespalten.",
+            )
+            else -> return VisualisierungsErgebnis.NichtDarstellbar(
+                "Eine ${parameter.size}-stellige Methode benötigt eine kartesische Parameterdomäne mit genau ${parameter.size} Faktoren. Tupelwerte werden nicht implizit in Argumente aufgespalten.",
+            )
+        }
+        val basisAuflösung = when (parameter.size) {
+            1 -> konfiguration.sampling.auflösung1D
+            2 -> konfiguration.sampling.auflösung2D
+            else -> konfiguration.sampling.auflösung3D
+        }
+        val budgetAuflösung = floor(
+            konfiguration.sampling.maximalesRasterBudget.toDouble().pow(1.0 / parameter.size),
+        ).toInt().coerceAtLeast(2)
+        val parameterAuflösung = min(basisAuflösung, budgetAuflösung).coerceAtLeast(2)
+        val domänenKonfiguration = konfiguration.copy(
+            sampling = konfiguration.sampling.copy(
+                auflösung1D = parameterAuflösung,
+                auflösung2D = parameterAuflösung,
+                auflösung3D = parameterAuflösung,
+            ),
+        )
+        val bereiche = konfiguration.achsenBereiche
+        val domänen = faktoren.mapIndexed { index, faktor ->
+            val bereich = bereiche.getOrNull(index)
+                ?: return VisualisierungsErgebnis.NichtDarstellbar("Für Parameter ${index + 1} fehlt ein Inspectorbereich.")
+            when (val ergebnis = faktorDomäne(faktor, bereich, domänenKonfiguration)) {
+                is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
+                is DomänenErgebnis.Fehler -> return VisualisierungsErgebnis.NichtDarstellbar(
+                    "Parameter '${parameter[index].name}' ist nicht darstellbar: ${ergebnis.grund}",
+                )
             }
         }
+        if (domänen.any { it.werte.isEmpty() }) {
+            return VisualisierungsErgebnis.Erfolgreich(
+                emptyList(), false, listOf("Mindestens eine Parameterdomäne ist leer."), VisualisierungsQualität.MathematischLeer,
+            )
+        }
+        val erwartetePunkte = domänen.fold(1L) { akk, domäne ->
+            if (akk > Long.MAX_VALUE / domäne.werte.size) Long.MAX_VALUE else akk * domäne.werte.size
+        }
+        if (erwartetePunkte > konfiguration.sampling.maximalesRasterBudget) {
+            return VisualisierungsErgebnis.NichtDarstellbar(
+                "Das Methodensampling würde $erwartetePunkte Parameterkombinationen materialisieren und überschreitet das Gesamtbudget von ${konfiguration.sampling.maximalesRasterBudget}.",
+            )
+        }
+        var kombinationen = listOf(emptyList<Double>())
+        domänen.forEach { domäne ->
+            kombinationen = kombinationen.flatMap { präfix -> domäne.werte.map { präfix + it } }
+        }
+        val punkte = mutableListOf<VisualisierungsPunkt>()
+        val verworfen = linkedMapOf<String, Int>()
+        kombinationen.forEach { argumente ->
+            val umgebung = parameter.map { it.name }.zip(argumente).toMap()
+            val koordinaten = when (modus) {
+                MethodenDarstellungsModus.Funktionsgraph -> funktionsgraphKoordinaten(methode, argumente, umgebung, konfiguration)
+                MethodenDarstellungsModus.Bild -> {
+                    if (methode.ausgabeNamen.size != 1) {
+                        KoordinatenErgebnis.Fehler("Der Bildmodus benötigt genau eine zusammengesetzte Methodenausgabe")
+                    } else koordinaten(methode.vorschrift, konfiguration.raumDimension, umgebung)
+                }
+                MethodenDarstellungsModus.Koordinatenausgabe -> koordinatenausgabe(methode, umgebung, konfiguration)
+                MethodenDarstellungsModus.Automatisch -> error("Der automatische Methodenmodus muss vor dem Sampling aufgelöst sein.")
+            }
+            when (koordinaten) {
+                is KoordinatenErgebnis.Erfolgreich -> punkte += koordinaten.werte.alsPunkt(konfiguration, umgebung)
+                is KoordinatenErgebnis.Fehler -> verworfen[koordinaten.grund] = verworfen.getOrDefault(koordinaten.grund, 0) + 1
+            }
+        }
+        val domänenHinweise = domänen.flatMap { it.hinweise }.distinct() +
+            "Methodenmodus: ${modus.name}; ${parameter.size} Parameter; $erwartetePunkte Kombinationen."
+        val fehlerHinweise = verworfen.map { (grund, anzahl) -> "$anzahl × $grund" }
         return when {
             punkte.isEmpty() -> VisualisierungsErgebnis.NichtDarstellbar(
-                "Die Abbildung erzeugt keine numerischen ${konfiguration.raumDimension}-dimensionalen Tupel oder Vektoren.",
+                "Die Methode erzeugt keine darstellbaren Werte. ${fehlerHinweise.joinToString(" ")}",
             )
-            übersprungen > 0 -> VisualisierungsErgebnis.Teilweise(
+            verworfen.isNotEmpty() -> VisualisierungsErgebnis.Teilweise(punkte, domänenHinweise + fehlerHinweise)
+            else -> VisualisierungsErgebnis.Erfolgreich(
                 punkte,
-                domäne.hinweise + "$übersprungen nicht numerisch auswertbare Bildpunkte wurden übersprungen.",
+                domänen.any { it.istApproximation },
+                domänenHinweise,
             )
-            else -> VisualisierungsErgebnis.Erfolgreich(punkte, domäne.istApproximation, domäne.hinweise)
         }
+    }
+
+    private fun funktionsgraphKoordinaten(
+        methode: Methode,
+        argumente: List<Double>,
+        umgebung: Map<String, Double>,
+        konfiguration: VisualisierungsKonfiguration,
+    ): KoordinatenErgebnis {
+        if (methode.ausgabeNamen.size != 1 || methode.vorschrift !is ZahlAusdruck) {
+            return KoordinatenErgebnis.Fehler("Der Funktionsgraphmodus benötigt genau eine skalare Ausgabe")
+        }
+        val erwarteteDimension = argumente.size + 1
+        if (argumente.size !in 1..2 || konfiguration.raumDimension != erwarteteDimension) {
+            return KoordinatenErgebnis.Fehler(
+                "Ein Funktionsgraph mit ${argumente.size} Parametern benötigt R$erwarteteDimension",
+            )
+        }
+        val wert = numerischerWert(methode.vorschrift as ZahlAusdruck, umgebung)
+            ?: return KoordinatenErgebnis.Fehler("Funktionswert ist nicht numerisch definiert")
+        if (!wert.isFinite()) return KoordinatenErgebnis.Fehler("Funktionswert ist nicht endlich")
+        return KoordinatenErgebnis.Erfolgreich(argumente + wert)
+    }
+
+    private fun koordinatenausgabe(
+        methode: Methode,
+        umgebung: Map<String, Double>,
+        konfiguration: VisualisierungsKonfiguration,
+    ): KoordinatenErgebnis {
+        if (methode.ausgabeNamen.size == 1) {
+            return koordinaten(methode.vorschrift, konfiguration.raumDimension, umgebung)
+        }
+        val achsen = konfiguration.achsenNamen
+        val fehlend = achsen.filterNot(methode.ausgabeNamen::contains)
+        if (fehlend.isNotEmpty()) {
+            return KoordinatenErgebnis.Fehler(
+                "Für die Achsen ${fehlend.joinToString()} fehlen gleichnamige Methodenausgaben",
+            )
+        }
+        return koordinaten(
+            Tupel(achsen.map(methode::vorschriftFür)),
+            konfiguration.raumDimension,
+            umgebung,
+        )
     }
 
     private fun mitgliedschaft(
