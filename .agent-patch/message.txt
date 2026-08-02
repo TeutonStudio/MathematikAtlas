@@ -1,4 +1,0 @@
-R¹-Kompilierungsfehler korrigieren (#93)
-
-- Mengenoperationen mit dem vollständigen Toleranzvertrag kombinieren
-- LaTeX-Befehle in Kotlin-Strings korrekt maskieren
