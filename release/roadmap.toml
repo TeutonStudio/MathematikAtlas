@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.18.x"
-current_version = "2.18.0"
+current_series = "2.19.x"
+current_version = "2.19.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -517,3 +517,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.spur"]
 reason = "Führt einen separat erzeugbaren Spur-Knoten ein, erweitert die iterierte Summe um kartesische Tupel und definiert die Spur selbstbezugsfrei als Hauptdiagonale mit gemeinsamer Addition."
+
+[[releases]]
+version = "2.19.0"
+title = "Funktionsgraphen und mehrparametrige Methoden"
+roadmap = "v2.19.x Methodenvisualisierung und Sampling"
+status = "released"
+previous_release = "2.18.0"
+branch = "release/v2.19.0-funktionsgraphen"
+kind = "feature"
+version_axis = "y"
+reason = "Erweitert den vorhandenen Visualisierungsknoten um persistierte Methodenmodi, gewöhnliche R²-Funktionsgraphen, zweiparametrige R³-Flächen, benannte Koordinatenausgaben und ein gemeinsames Gesamtbudget, ohne einen neuen Knotentyp vorzutäuschen."
