@@ -1,9 +1,10 @@
-Dreieck partiell auswerten und als Geometrieobjekt ausgeben (#91)
+Methode-Datenmodell physisch konsolidieren (#67)
 
-- sechs optionale Seiten- und Winkeleingänge mit unabhängigen Ausgaben ergänzen
-- Winkelsumme, SSS, SAS, ASA, AAS und SSA symbolisch beziehungsweise numerisch ableiten
-- mehrdeutige SSA-Fälle ohne willkürliche Kandidatenauswahl erhalten
-- GeometrieDreieck nur bei eindeutiger vollständiger Lösung erzeugen
-- kanonische lokale Realisierung und stabile Ecken-, Kanten- und Flächenzellen bereitstellen
-- Dreiecksanschluss, Renderer, Teilobjektauswahl und geometrische Relationen integrieren
-- Solver-, Knoten-, Struktur- und Grenzfalltests ergänzen
+- historische Klasse Funktion durch den physischen Laufzeittyp Methode ersetzen
+- FunktionsParameter und GebundeneFunktion vollständig auf Methodenbegriffe migrieren
+- jede Methode auf genau eine Vorschrift und eine Zielmenge reduzieren
+- mehrere Kartenausgänge als geordnetes Ergebnistupel mit Produktzielmenge speichern
+- Methodenaufrufe auf ein einzelnes Ergebnisobjekt vereinheitlichen
+- Adapter, Komposition, Iteration, Prädikate, Karten und Knoten auf das neue Modell umstellen
+- historische Anschluss-IDs ausschließlich über die bestehende Lademigration erhalten
+- Quellcodeprüfung gegen zurückkehrende Übergangstypen ergänzen
