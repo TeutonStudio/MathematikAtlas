@@ -25,10 +25,10 @@ jobs:
             cp .agent-patch/change.patch "$RUNNER_TEMP/change.patch"
           fi
           cp .agent-patch/message.txt "$RUNNER_TEMP/message.txt"
-      - name: Aktuellen Releasebranch auschecken
+      - name: Aktuellen Abschlussbranch auschecken
         run: |
-          git fetch origin release/v2.16.0-offene-issues
-          git checkout -B release/v2.16.0-offene-issues origin/release/v2.16.0-offene-issues
+          git fetch origin release/v2.16.0-abschluss
+          git checkout -B release/v2.16.0-abschluss origin/release/v2.16.0-abschluss
       - name: Patch prüfen und anwenden
         run: |
           git apply --check --whitespace=error-all "$RUNNER_TEMP/change.patch"
@@ -38,4 +38,4 @@ jobs:
           git config user.name "TeutonStudio Agent"
           git config user.email "46108494+TeutonStudio@users.noreply.github.com"
           git commit -F "$RUNNER_TEMP/message.txt"
-          git push origin HEAD:release/v2.16.0-offene-issues
+          git push origin HEAD:release/v2.16.0-abschluss
