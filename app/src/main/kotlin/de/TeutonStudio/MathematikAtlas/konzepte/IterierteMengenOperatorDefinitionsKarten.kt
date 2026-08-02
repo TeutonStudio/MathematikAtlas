@@ -101,7 +101,18 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
         kennung = "iterierte-aussage",
         vorlage = konfiguration.iteration,
         position = GraphPunkt(1660f, 300f),
-    )
+    ).let { knoten ->
+        knoten.copy(
+            anschlüsse = knoten.anschlüsse + AnschlussDaten(
+                id = AnschlussId("${knoten.id.wert}-elementbindung"),
+                name = "elementbindung",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.Objekt.id,
+                reihenfolge = 2,
+            ),
+        )
+    }
     val mengenDefinator = iterierterMengenVorlagenKnoten(
         prefix = prefix,
         kennung = "mengendefinator",
@@ -129,6 +140,7 @@ internal fun iterierteMengenOperatorDefinitionsKarte(
         verbinde(element, "aussage", aussageZuMethode, "term", "element-praedikat")
         verbinde(aussageZuMethode, "methode", iteration, "methode", "praedikat-iteration")
         verbinde(indexMenge, "wert", iteration, "indexmenge", "indexmenge-iteration")
+        verbinde(mengenKonstruktor, "element", iteration, "elementbindung", "elementbindung-iteration")
         verbinde(iteration, "aussage", mengenDefinator, "aussage", "iteration-definator")
         verbinde(mengenDefinator, "menge", ausgang, "wert", "definator-ausgang")
     }
