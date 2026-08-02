@@ -68,12 +68,13 @@ private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
         return null
     }
     val index = Variable("i")
+    val indexMenge = ReelleZahlen
     val anwendungsLatex = "$name(${index.zuLatex()})"
     val kennung = "${name}_von_${index.name}"
     val (wert, zielMenge) = when (art) {
         ZAHL_FUNKTION_KARTEN_ART -> Variable(kennung) to ReelleZahlen
         AUSSAGE_FUNKTION_KARTEN_ART -> AussagenParameter(kennung, anwendungsLatex) to wahrheitsMenge()
-        MENGEN_FUNKTION_KARTEN_ART -> MengenParameter(kennung, anwendungsLatex) to BenannteMenge("G_$name", "G")
+        MENGEN_FUNKTION_KARTEN_ART -> symbolischerMengenFunktionswert(name, index)
         else -> TypisiertesElement(kennung, OBJEKT_KARTEN_ART.wert, anwendungsLatex) to
             BenannteMenge("W_$name", "\\mathcal{W}")
     }
@@ -82,8 +83,31 @@ private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
         parameter = listOf(index),
         ausgaben = mapOf("wert" to wert),
         zielMengen = mapOf("wert" to zielMenge),
-        werteVorräte = mapOf(index.name to ReelleZahlen),
+        werteVorräte = mapOf(index.name to indexMenge),
     )
+}
+
+/**
+ * Repräsentiert eine unbekannte mengenwertige Methode über ihren Graphen:
+ * A(i) = {x in G | (i,x) in Graph(A)}. Dadurch bleibt i ein echter freier
+ * Parameter, ohne Mengenindizes künstlich auf Zahlenwerte der Elemente zu beschränken.
+ */
+private fun symbolischerMengenFunktionswert(
+    name: String,
+    index: Variable,
+): Pair<MengenAusdruck, MengenAusdruck> {
+    val grundMenge = BenannteMenge("G_$name", "G")
+    val element = TypisiertesElement("${name}_element", OBJEKT_KARTEN_ART.wert, "x")
+    val graph = BenannteMenge("graph_$name", "\\operatorname{Graph}($name)")
+    val bedingung = ElementBeziehung(Tupel(listOf(index, element)), graph)
+    val prädikat = Funktion(
+        name = "${name}_graph",
+        parameter = listOf(element),
+        ausgaben = mapOf("wert" to bedingung),
+        zielMengen = mapOf("wert" to wahrheitsMenge()),
+        werteVorräte = mapOf(element.name to grundMenge),
+    )
+    return GefilterteMenge(grundMenge, prädikat) to grundMenge
 }
 
 private fun wahrheitsMenge(): MengenAusdruck = EndlicheMenge(
