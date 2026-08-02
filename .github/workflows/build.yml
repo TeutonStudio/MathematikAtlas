@@ -20,3 +20,14 @@ jobs:
         run: python3 scripts/pruefe_architektur.py
       - name: Bauen und testen
         run: ./gradlew --stacktrace test :app:assembleDebug
+      - name: Quellbaum verpacken
+        if: always()
+        run: tar --exclude=.git -czf "$RUNNER_TEMP/MathematikAtlas-source.tar.gz" .
+      - name: Quellbaum als Artefakt bereitstellen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MathematikAtlas-source
+          path: ${{ runner.temp }}/MathematikAtlas-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
