@@ -1,0 +1,69 @@
+name: Issue 67 Methodenmodell
+
+on:
+  pull_request:
+    branches:
+      - release/v2.16.0-abschluss
+
+permissions:
+  contents: write
+
+jobs:
+  anwenden-und-pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Änderung als Einzelcommit vorbereiten
+        shell: bash
+        run: |
+          cat .github/issue-67/part-* | base64 --decode | xz --decompress > "$RUNNER_TEMP/issue-67.patch"
+          git reset --hard 07f6b673ada30d55b3671ee74b17cabe759fdd11
+          git apply --index "$RUNNER_TEMP/issue-67.patch"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Alte physische Methodentypen ausschließen
+        shell: bash
+        run: |
+          if grep -R -n -E '\b(class|data class|typealias)[[:space:]]+(Funktion|FunktionsParameter|GebundeneFunktion)\b' \
+            --include='*.kt' \
+            MathematikRechenSystem/src/main \
+            MathematikKnoten/src/main \
+            MathematikKartenAdapter/src/main \
+            app/src/main; then
+            echo 'Historischer Methodentyp ist noch produktiv vorhanden.' >&2
+            exit 1
+          fi
+
+      - name: Repository und Architektur prüfen
+        run: |
+          python3 scripts/pruefe_repository.py
+          python3 scripts/pruefe_architektur.py
+
+      - name: Bauen und testen
+        run: ./gradlew --stacktrace test :app:assembleDebug
+
+      - name: Einzelcommit veröffentlichen
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Methoden-Datenmodell physisch konsolidieren (#67)" \
+            -m "- historische Funktion-, FunktionsParameter- und GebundeneFunktion-Typen entfernen" \
+            -m "- Methode auf genau eine geordnete Signatur, Vorschrift und Zielmenge reduzieren" \
+            -m "- mehrere Kartenausgänge als stabiles Ergebnistupel mit Produktzielmenge modellieren" \
+            -m "- Anwendung, Bindung, Komposition, Kartenadapter und Knoten vollständig migrieren" \
+            -m "- Kern-, Adapter-, Knoten- und Migrationstests auf das physische Methodenmodell umstellen"
+          git push --force origin HEAD:agent/issue-67-methodenmodell
