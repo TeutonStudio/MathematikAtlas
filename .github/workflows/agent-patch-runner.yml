@@ -19,7 +19,11 @@ jobs:
           fetch-depth: 0
       - name: Patch und Commitnachricht sichern
         run: |
-          cp .agent-patch/change.patch "$RUNNER_TEMP/change.patch"
+          if [[ -f .agent-patch/change.patch.gz.b64 ]]; then
+            base64 --decode .agent-patch/change.patch.gz.b64 | gzip --decompress > "$RUNNER_TEMP/change.patch"
+          else
+            cp .agent-patch/change.patch "$RUNNER_TEMP/change.patch"
+          fi
           cp .agent-patch/message.txt "$RUNNER_TEMP/message.txt"
       - name: Aktuellen Releasebranch auschecken
         run: |
