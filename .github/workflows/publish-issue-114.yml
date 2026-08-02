@@ -19,8 +19,8 @@ jobs:
       - name: Fachcommit anwenden
         shell: bash
         run: |
-          git reset --hard b986d43bd70806f4ee117720a29e09a8a0cdd36a
           base64 --decode .github/issue-publish/114.patch.xz.b64 | xz --decompress > "$RUNNER_TEMP/114.patch"
+          git reset --hard b986d43bd70806f4ee117720a29e09a8a0cdd36a
           git am "$RUNNER_TEMP/114.patch"
 
       - uses: actions/setup-java@v4
