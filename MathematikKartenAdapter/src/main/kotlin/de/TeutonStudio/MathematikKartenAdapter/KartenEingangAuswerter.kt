@@ -67,7 +67,14 @@ private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
     if (art !in setOf(FUNKTION_KARTEN_ART, ZAHL_FUNKTION_KARTEN_ART, AUSSAGE_FUNKTION_KARTEN_ART, MENGEN_FUNKTION_KARTEN_ART)) {
         return null
     }
-    val index = Variable("i")
+    val index: FunktionsParameter = when (art) {
+        FUNKTION_KARTEN_ART, MENGEN_FUNKTION_KARTEN_ART -> AllgemeinerParameter("i")
+        else -> Variable("i")
+    }
+    val indexMenge = when (index) {
+        is Variable -> ReelleZahlen
+        else -> BenannteMenge("I_$name", "I")
+    }
     val anwendungsLatex = "$name(${index.zuLatex()})"
     val kennung = "${name}_von_${index.name}"
     val (wert, zielMenge) = when (art) {
@@ -82,7 +89,7 @@ private fun symbolischeFunktion(art: AnschlussArtId, name: String): Funktion? {
         parameter = listOf(index),
         ausgaben = mapOf("wert" to wert),
         zielMengen = mapOf("wert" to zielMenge),
-        werteVorräte = mapOf(index.name to ReelleZahlen),
+        werteVorräte = mapOf(index.name to indexMenge),
     )
 }
 
