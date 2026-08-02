@@ -9,14 +9,14 @@ class GrosseOperatorenLimitsTest {
     private val i = Variable("i")
     private val indexMenge = BenannteMenge("I")
     private val wahrheitsMenge = EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
-    private val zahlMethode = Funktion(
+    private val zahlMethode = Methode(
         "f", listOf(i), mapOf("wert" to i), mapOf("wert" to ReelleZahlen), mapOf(i.name to ReelleZahlen),
     )
-    private val aussageMethode = Funktion(
+    private val aussageMethode = Methode(
         "P", listOf(i), mapOf("wert" to AussagenParameter("P_i")),
         mapOf("wert" to wahrheitsMenge), mapOf(i.name to ReelleZahlen),
     )
-    private val mengenMethode = Funktion(
+    private val mengenMethode = Methode(
         "A", listOf(i), mapOf("wert" to MengenParameter("A_i")),
         mapOf("wert" to BenannteMenge("G")), mapOf(i.name to ReelleZahlen),
     )

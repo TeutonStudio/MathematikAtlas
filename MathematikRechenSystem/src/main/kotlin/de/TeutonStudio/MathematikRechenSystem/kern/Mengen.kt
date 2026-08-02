@@ -148,18 +148,18 @@ data class DefinierteMenge(
 /** Symbolischer Filter einer Menge durch eine einstellige aussagewertige Methode. */
 data class GefilterteMenge(
     val menge: MengenAusdruck,
-    val methode: Funktion,
+    val methode: Methode,
 ) : MengenAusdruck {
     init {
         require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
-        require(methode.ausgaben.size == 1 && methode.ausgaben.values.single() is Aussage) {
+        require(methode.ausgabeNamen.size == 1 && methode.vorschrift is Aussage) {
             "Eine Filtermethode muss genau eine Aussage ausgeben."
         }
     }
 
     override fun zuLatex(): String {
         val parameter = methode.parameter.single()
-        val bedingung = methode.ausgaben.values.single() as Aussage
+        val bedingung = methode.vorschrift as Aussage
         return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"
     }
 }
@@ -167,7 +167,7 @@ data class GefilterteMenge(
 /** Filtert endliche Mengen exakt und bewahrt andernfalls die symbolische Filterdefinition. */
 fun filtereMenge(
     menge: MengenAusdruck,
-    methode: Funktion,
+    methode: Methode,
     kontext: RechenKontext = RechenKontext(),
 ): MengenAusdruck {
     require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
@@ -178,7 +178,7 @@ fun filtereMenge(
         val parameter = methode.parameter.single()
         val behalten = linkedSetOf<MathematischesObjekt>()
         for (element in menge.elemente.sortedBy(::strukturellerSchlüssel)) {
-            val bedingung = methode.wendeAn(mapOf(parameter.name to element)).getValue(ausgabeName) as Aussage
+            val bedingung = methode.wendeAn(listOf(element)) as Aussage
             when (bedingung.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> behalten += element
                 Wahrheitswert.Lüge -> Unit
@@ -270,7 +270,7 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
             val grundErgebnis = ElementBeziehung(element, menge.menge).entscheide(kontext)
             if (grundErgebnis.wahrheitswert == Wahrheitswert.Lüge) grundErgebnis else {
                 val parameter = menge.methode.parameter.single()
-                val bedingung = menge.methode.wendeAn(mapOf(parameter.name to element)).values.single() as Aussage
+                val bedingung = menge.methode.wendeAn(listOf(element)) as Aussage
                 val filterErgebnis = bedingung.entscheide(kontext)
                 when {
                     filterErgebnis.wahrheitswert == Wahrheitswert.Lüge -> filterErgebnis

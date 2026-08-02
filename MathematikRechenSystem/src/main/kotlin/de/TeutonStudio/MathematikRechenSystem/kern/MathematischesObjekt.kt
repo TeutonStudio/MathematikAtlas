@@ -4,8 +4,8 @@ sealed interface MathematischesObjekt {
     fun zuLatex(): String
 }
 
-/** Ein benannter, bei einer [Funktion] bindbarer Parameter. */
-sealed interface FunktionsParameter : MathematischesObjekt {
+/** Ein benannter, bei einer [Methode] bindbarer Parameter. */
+sealed interface MethodenParameter : MathematischesObjekt {
     val name: String
 }
 

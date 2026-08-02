@@ -179,7 +179,7 @@ class IterierteOperatorDefinitionsKartenTest {
 
     private fun werteMengenDefinitionAus(
         karte: de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten,
-        familie: Funktion,
+        familie: Methode,
         indexMenge: MengenAusdruck,
     ): AusgewerteteMengenDefinition {
         val a = karte.knoten.single { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART && it.name == "A" }
@@ -201,11 +201,11 @@ class IterierteOperatorDefinitionsKartenTest {
     private fun symbolischeMengenFamilie(
         grundMenge: MengenAusdruck,
         indexMenge: MengenAusdruck,
-    ): Funktion {
+    ): Methode {
         val index = Variable("i")
         val element = TypisiertesElement("familienElement", "test.objekt", "x")
         val graph = BenannteMenge("graph_A", "\\operatorname{Graph}(A)")
-        val prädikat = Funktion(
+        val prädikat = Methode(
             name = "A_graph",
             parameter = listOf(element),
             ausgaben = mapOf("wert" to ElementBeziehung(Tupel(listOf(index, element)), graph)),
@@ -216,7 +216,7 @@ class IterierteOperatorDefinitionsKartenTest {
             ),
             werteVorräte = mapOf(element.name to grundMenge),
         )
-        return Funktion(
+        return Methode(
             name = "A",
             parameter = listOf(index),
             ausgaben = mapOf("wert" to GefilterteMenge(grundMenge, prädikat)),

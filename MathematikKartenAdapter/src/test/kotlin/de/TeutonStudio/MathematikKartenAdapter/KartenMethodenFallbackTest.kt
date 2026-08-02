@@ -8,7 +8,7 @@ import kotlin.test.assertIs
 
 class KartenMethodenFallbackTest {
     private val zahlArt = AnschlussArtId("mathematik.zahl")
-    private val zahlFunktionArt = AnschlussArtId("mathematik.funktion.zahl")
+    private val zahlMethodeArt = AnschlussArtId("mathematik.funktion.zahl")
 
     @Test
     fun `unverbundener Methodeneingang verwendet Kartenfallback und Edge hat Vorrang`() {
@@ -44,7 +44,7 @@ class KartenMethodenFallbackTest {
         )
         val intern = KartenDaten(
             id = KartenId("fallback-karte"),
-            name = "Fallback-Funktion",
+            name = "Fallback-Methode",
             version = 3,
             knoten = listOf(internerEingang, internerAusgang),
             verbindungen = listOf(
@@ -59,7 +59,7 @@ class KartenMethodenFallbackTest {
             name = "methode",
             richtung = AnschlussRichtung.Eingang,
             kante = AnschlussKante.Links,
-            art = zahlFunktionArt,
+            art = zahlMethodeArt,
         )
         val iteration = KnotenDaten(
             id = KnotenId("iteration"),
@@ -68,7 +68,7 @@ class KartenMethodenFallbackTest {
             anschlüsse = listOf(methodenEingang),
             eingangsKartenVerweise = mapOf("methode" to KartenVerweis(intern.id, intern.version)),
         )
-        val expliziteMethode = Funktion(
+        val expliziteMethode = Methode(
             name = "g",
             parameter = listOf(Variable("t")),
             ausgaben = mapOf("wert" to RationaleZahl.Eins),
@@ -85,7 +85,7 @@ class KartenMethodenFallbackTest {
                     name = "methode",
                     richtung = AnschlussRichtung.Ausgang,
                     kante = AnschlussKante.Rechts,
-                    art = zahlFunktionArt,
+                    art = zahlMethodeArt,
                 ),
             ),
         )
@@ -109,10 +109,10 @@ class KartenMethodenFallbackTest {
         )
 
         val ohneEdge = auswerter.auswerten(KartenDaten(name = "Außen", knoten = listOf(iteration)))
-        val fallback = assertIs<Funktion>(
+        val fallback = assertIs<Methode>(
             ohneEdge.knoten.getValue(iteration.id).ausgaben.getValue("methode").objekt,
         )
-        assertEquals("Fallback-Funktion", fallback.name)
+        assertEquals("Fallback-Methode", fallback.name)
 
         val mitEdge = auswerter.auswerten(
             KartenDaten(
@@ -126,7 +126,7 @@ class KartenMethodenFallbackTest {
                 ),
             ),
         )
-        val verbunden = assertIs<Funktion>(
+        val verbunden = assertIs<Methode>(
             mitEdge.knoten.getValue(iteration.id).ausgaben.getValue("methode").objekt,
         )
         assertEquals("g", verbunden.name)

@@ -28,7 +28,7 @@ class KartenSchnittstellenTest {
                 AnschlussDaten(name = "term", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
                 AnschlussDaten(name = "argument1", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
                 AnschlussDaten(name = "zielmenge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Menge.id),
-                AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlFunktion.id),
+                AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlMethode.id),
             ),
         )
         val migriert = migriereTermZuMethodeUndVariablen(KartenDaten(name = "Alt", knoten = listOf(variable, allgemeinerParameter, methode)))
@@ -40,7 +40,7 @@ class KartenSchnittstellenTest {
         assertEquals("R", neueVariable.parameter["werteVorrat"])
         assertEquals(listOf("term", "methode"), neueMethode.anschlüsse.map { it.name })
         assertEquals(MathematikAnschlussArten.Objekt.id, neueMethode.anschlüsse.first { it.name == "term" }.art)
-        assertEquals(MathematikAnschlussArten.Funktion.id, neueMethode.anschlüsse.first { it.name == "methode" }.art)
+        assertEquals(MathematikAnschlussArten.Methode.id, neueMethode.anschlüsse.first { it.name == "methode" }.art)
         assertEquals(null, neueMethode.parameter["zielmenge"])
         assertEquals(null, neuerAllgemeinerParameter.parameter["werteVorrat"])
         assertEquals(
@@ -54,11 +54,11 @@ class KartenSchnittstellenTest {
         val abbild = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero)
         val alteMethode = abbild.anschlüsse.first { it.name == "methode" }
         val alt = abbild.copy(anschlüsse = abbild.anschlüsse.map { anschluss ->
-            if (anschluss.id == alteMethode.id) anschluss.copy(art = MathematikAnschlussArten.ZahlFunktion.id) else anschluss
+            if (anschluss.id == alteMethode.id) anschluss.copy(art = MathematikAnschlussArten.ZahlMethode.id) else anschluss
         })
         val quelle = KnotenDaten(
             art = "test.methode", name = "Quelle",
-            anschlüsse = listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlFunktion.id)),
+            anschlüsse = listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlMethode.id)),
         )
         val verbindung = VerbindungDaten(
             von = AnschlussVerweis(quelle.id, quelle.anschlüsse.single().id),
@@ -69,7 +69,7 @@ class KartenSchnittstellenTest {
         val neueMethode = migriert.knoten.first { it.id == alt.id }.anschlüsse.first { it.name == "methode" }
 
         assertEquals(alteMethode.id, neueMethode.id)
-        assertEquals(MathematikAnschlussArten.Funktion.id, neueMethode.art)
+        assertEquals(MathematikAnschlussArten.Methode.id, neueMethode.art)
         assertEquals(listOf(verbindung), migriert.verbindungen)
     }
 

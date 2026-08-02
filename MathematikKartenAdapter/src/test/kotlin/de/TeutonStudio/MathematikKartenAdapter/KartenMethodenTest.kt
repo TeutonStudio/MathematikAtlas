@@ -42,11 +42,11 @@ class KartenMethodenTest {
 
         val ergebnis = KartenAuswerter(register, KartenQuelle { if (it == methode.kartenVerweis) intern else null })
             .auswerten(KartenDaten(name = "Außen", knoten = listOf(methode)))
-        val funktion = assertIs<Funktion>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
+        val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
-        assertEquals(listOf("wert"), funktion.ausgaben.keys.toList())
-        assertEquals(setOf("wert"), funktion.zielMengen.keys)
+        assertEquals(listOf("wert"), funktion.ausgabeNamen)
+        assertEquals(ReelleZahlen, funktion.zielMenge)
         assertEquals(Tupel(listOf(Variable("x"), Variable("x"))), funktion.vorschrift)
         assertEquals(Tupelraum(listOf(ReelleZahlen, ReelleZahlen)), funktion.zielMenge)
     }

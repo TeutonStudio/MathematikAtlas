@@ -30,13 +30,13 @@ class MatrixKnotenTest {
         val basis = MathematikKnotenVorlagen.Matrix.erzeuge(GraphPunkt.Zero)
         val matrix = konfiguriereMatrix(basis, MATRIX_METHODE, höhe = 2, breite = 2)
         val i = Variable("i"); val j = Variable("j")
-        val methode = Funktion("f", listOf(i, j), mapOf("wert" to addition(multiplikation(RationaleZahl.von(10), i), j)))
+        val methode = Methode("f", listOf(i, j), mapOf("wert" to addition(multiplikation(RationaleZahl.von(10), i), j)))
 
         val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(matrix, mapOf("methode" to BedingterWert(methode)), RechenKontext()))
 
         assertEquals(listOf(listOf(RationaleZahl.von(0), RationaleZahl.von(1)), listOf(RationaleZahl.von(10), RationaleZahl.von(11))), assertIs<Matrix>(ergebnis.ausgaben.getValue("matrix").objekt).zeilen)
         assertFailsWith<IllegalArgumentException> {
-            auswerter.auswerten(KnotenAuswertungsKontext(matrix, mapOf("methode" to BedingterWert(Funktion("g", listOf(i), mapOf("wert" to i)))), RechenKontext()))
+            auswerter.auswerten(KnotenAuswertungsKontext(matrix, mapOf("methode" to BedingterWert(Methode("g", listOf(i), mapOf("wert" to i)))), RechenKontext()))
         }
     }
 

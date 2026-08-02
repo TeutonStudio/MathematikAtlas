@@ -78,7 +78,7 @@ class FallunterscheidungTest {
             lüge = BedingterWert(RationaleZahl.Null),
         )
         val knoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero)
-        val methode = assertIs<Funktion>(auswerter.finde(knoten.art)!!.auswerten(
+        val methode = assertIs<Methode>(auswerter.finde(knoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
                 eingänge = mapOf("term" to fallWert),
@@ -88,8 +88,8 @@ class FallunterscheidungTest {
         ).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf(x), methode.parameter)
-        assertEquals(RationaleZahl.von(2), methode.wendeAn(mapOf("x" to RationaleZahl.von(2))).getValue("wert"))
-        assertEquals(RationaleZahl.Null, methode.wendeAn(mapOf("x" to RationaleZahl.von(-2))).getValue("wert"))
+        assertEquals(RationaleZahl.von(2), methode.wendeAn(listOf(RationaleZahl.von(2))))
+        assertEquals(RationaleZahl.Null, methode.wendeAn(listOf(RationaleZahl.von(-2))))
     }
 
     private fun werteAus(wahr: BedingterWert, aussage: BedingterWert, lüge: BedingterWert): BedingterWert {

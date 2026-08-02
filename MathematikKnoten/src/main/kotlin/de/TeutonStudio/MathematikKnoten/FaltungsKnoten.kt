@@ -66,7 +66,7 @@ object FaltungsKnotenVorlagen {
         beschreibung = "Wendet eine Methode geordnet auf konkrete oder symbolische Argumente an.",
         standardGröße = GraphGröße(285f, 135f),
         anschlüsse = listOf(
-            eingang("methode", MathematikAnschlussArten.Funktion.id, 0),
+            eingang("methode", MathematikAnschlussArten.Methode.id, 0),
             eingang("argument1", MathematikAnschlussArten.Objekt.id, 1, erweiterbar = true),
             eingang("argument2", MathematikAnschlussArten.Objekt.id, 2, erweiterbar = true),
             ausgang("wert", MathematikAnschlussArten.Objekt.id),
@@ -79,22 +79,22 @@ object FaltungsKnotenVorlagen {
 
     val MethodenAnwendungZahl = methodenAnwendung(
         name = "Zahlmethode anwenden",
-        methodeArt = MathematikAnschlussArten.ZahlFunktion.id,
+        methodeArt = MathematikAnschlussArten.ZahlMethode.id,
         ergebnisArt = MathematikAnschlussArten.Zahl.id,
     )
     val MethodenAnwendungAussage = methodenAnwendung(
         name = "Aussagenmethode anwenden",
-        methodeArt = MathematikAnschlussArten.AussageFunktion.id,
+        methodeArt = MathematikAnschlussArten.AussageMethode.id,
         ergebnisArt = MathematikAnschlussArten.Aussage.id,
     )
     val MethodenAnwendungMenge = methodenAnwendung(
         name = "Mengenmethode anwenden",
-        methodeArt = MathematikAnschlussArten.MengenFunktion.id,
+        methodeArt = MathematikAnschlussArten.MengenMethode.id,
         ergebnisArt = MathematikAnschlussArten.Menge.id,
     )
     val MethodenAnwendungObjekt = methodenAnwendung(
         name = "Methode allgemein anwenden",
-        methodeArt = MathematikAnschlussArten.Funktion.id,
+        methodeArt = MathematikAnschlussArten.Methode.id,
         ergebnisArt = MathematikAnschlussArten.Objekt.id,
     )
 
@@ -105,7 +105,7 @@ object FaltungsKnotenVorlagen {
         beschreibung = "Gibt die deklarierte Zielmenge einer einwertigen Methode aus.",
         standardGröße = GraphGröße(250f, 105f),
         anschlüsse = listOf(
-            eingang("methode", MathematikAnschlussArten.Funktion.id),
+            eingang("methode", MathematikAnschlussArten.Methode.id),
             ausgang("menge", MathematikAnschlussArten.Menge.id),
         ),
     )

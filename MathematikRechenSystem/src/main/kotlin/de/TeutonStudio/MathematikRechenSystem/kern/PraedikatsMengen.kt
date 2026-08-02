@@ -8,7 +8,7 @@ data class TypisiertesElement(
     override val name: String,
     val anschlussArt: String,
     val latex: String = name,
-) : FunktionsParameter {
+) : MethodenParameter {
     init {
         require(name.isNotBlank()) { "Der Name eines gebundenen Elements darf nicht leer sein." }
         require(anschlussArt.isNotBlank()) { "Ein gebundenes Element benötigt eine Anschlussart." }
@@ -21,7 +21,7 @@ data class TypisiertesElement(
 data class AussagenParameter(
     override val name: String,
     val latex: String = name,
-) : Aussage, FunktionsParameter {
+) : Aussage, MethodenParameter {
     init { require(name.isNotBlank()) { "Der Name einer Aussagevariable darf nicht leer sein." } }
 
     override fun entscheide(kontext: RechenKontext) = AussageErgebnis(
@@ -37,7 +37,7 @@ data class AussagenParameter(
 data class MengenParameter(
     override val name: String,
     val latex: String = name,
-) : MengenAusdruck, FunktionsParameter {
+) : MengenAusdruck, MethodenParameter {
     init { require(name.isNotBlank()) { "Der Name einer Mengenvariable darf nicht leer sein." } }
     override fun zuLatex(): String = latex
 }
@@ -53,7 +53,7 @@ data class FehlendeObermenge(val anschlussArt: String) : MengenAusdruck {
 
 /** Mengendefinition ausschließlich durch ein gebundenes Element und ein Prädikat. */
 data class PrädikatsMenge(
-    val element: FunktionsParameter,
+    val element: MethodenParameter,
     val bedingung: Aussage,
 ) : MengenAusdruck {
     override fun zuLatex(): String =
@@ -66,7 +66,7 @@ data class PrädikatsMenge(
  * der konstant wahren Bedingung zum gesamten Wertevorrat.
  */
 fun definierePrädikatsMenge(
-    element: FunktionsParameter,
+    element: MethodenParameter,
     bedingung: Aussage,
     kontext: RechenKontext = RechenKontext(),
     oberMenge: MengenAusdruck? = null,
@@ -100,7 +100,7 @@ private sealed interface FallLösung {
 }
 
 private fun löseEindeutigenFall(
-    element: FunktionsParameter,
+    element: MethodenParameter,
     fall: Aussage,
     kontext: RechenKontext,
 ): FallLösung {
@@ -111,7 +111,7 @@ private fun löseEindeutigenFall(
     if (kandidaten.size != 1) return FallLösung.Offen
 
     val kandidat = kandidaten.single()
-    if (kandidat.freieFunktionsParameter().any { it.name == element.name }) return FallLösung.Offen
+    if (kandidat.freieMethodenParameter().any { it.name == element.name }) return FallLösung.Offen
 
     val bindung = mapOf(element.name to kandidat)
     val ergebnisse = teile.map { teil -> ersetze(teil, bindung).entscheide(kontext) }
@@ -122,7 +122,7 @@ private fun löseEindeutigenFall(
     }
 }
 
-private fun Gleichheit.kandidatFür(element: FunktionsParameter): MathematischesObjekt? = when {
+private fun Gleichheit.kandidatFür(element: MethodenParameter): MathematischesObjekt? = when {
     links == element -> rechts
     rechts == element -> links
     else -> null

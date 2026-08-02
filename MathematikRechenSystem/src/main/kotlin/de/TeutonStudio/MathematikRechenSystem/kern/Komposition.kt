@@ -24,7 +24,7 @@ data class KompositionsPrüfung(
  * Methode muss genau einen Parameter und jede weiter innen liegende Methode genau
  * eine Ausgabe besitzen, damit das Ergebnis eindeutig weitergereicht werden kann.
  */
-fun prüfeKompositionsKette(methoden: List<Funktion>): KompositionsPrüfung {
+fun prüfeKompositionsKette(methoden: List<Methode>): KompositionsPrüfung {
     if (methoden.size < 2) {
         return KompositionsPrüfung(
             listOf(KompositionsFehler(1, 1, "Es werden mindestens zwei Methoden benötigt.")),
@@ -41,10 +41,10 @@ fun prüfeKompositionsKette(methoden: List<Funktion>): KompositionsPrüfung {
                 "Die äußere Methode '${außen.name}' benötigt genau einen Parameter, besitzt aber ${außen.parameter.size}.",
             )
 
-            innen.ausgaben.size != 1 -> KompositionsFehler(
+            innen.ausgabeNamen.size != 1 -> KompositionsFehler(
                 äußerePosition,
                 innerePosition,
-                "Die innere Methode '${innen.name}' benötigt genau eine Ausgabe, besitzt aber ${innen.ausgaben.size}.",
+                "Die innere Methode '${innen.name}' benötigt genau eine Ausgabe, besitzt aber ${innen.ausgabeNamen.size}.",
             )
 
             außen.werteVorräte[außen.parameter.single().name] == null -> KompositionsFehler(
@@ -53,17 +53,17 @@ fun prüfeKompositionsKette(methoden: List<Funktion>): KompositionsPrüfung {
                 "Für den Parameter '${außen.parameter.single().name}' der äußeren Methode fehlt der Wertevorrat.",
             )
 
-            innen.zielMengen[innen.ausgaben.keys.single()] == null -> KompositionsFehler(
+            innen.zielMenge is FehlendeObermenge -> KompositionsFehler(
                 äußerePosition,
                 innerePosition,
-                "Für die Ausgabe '${innen.ausgaben.keys.single()}' der inneren Methode fehlt die Zielmenge.",
+                "Für die Ausgabe '${innen.ausgabeNamen.single()}' der inneren Methode fehlt die Zielmenge.",
             )
 
-            innen.zielMengen.getValue(innen.ausgaben.keys.single()) !=
+            innen.zielMenge !=
                 außen.werteVorräte.getValue(außen.parameter.single().name) -> KompositionsFehler(
                 äußerePosition,
                 innerePosition,
-                "Zielmenge ${innen.zielMengen.getValue(innen.ausgaben.keys.single()).zuLatex()} " +
+                "Zielmenge ${innen.zielMenge.zuLatex()} " +
                     "von '${innen.name}' passt nicht zum Wertevorrat " +
                     "${außen.werteVorräte.getValue(außen.parameter.single().name).zuLatex()} von '${außen.name}'.",
             )
@@ -75,7 +75,7 @@ fun prüfeKompositionsKette(methoden: List<Funktion>): KompositionsPrüfung {
 }
 
 /** Bildet eine beliebig lange, semantisch geprüfte Methodenkette. */
-fun komponiere(methoden: List<Funktion>): Funktion {
+fun komponiere(methoden: List<Methode>): Methode {
     val prüfung = prüfeKompositionsKette(methoden)
     require(prüfung.istGültig) { prüfung.fehler.joinToString("\n") }
 
@@ -91,12 +91,12 @@ fun komponiere(methoden: List<Funktion>): Funktion {
     }
 
     val äußerste = methoden.first()
-    val äußererAusgabeName = äußerste.ausgaben.keys.single()
-    return Funktion(
+    val äußererAusgabeName = äußerste.ausgabeNamen.single()
+    return Methode(
         name = methoden.joinToString("\\circ") { it.name },
         parameter = innerste.parameter,
-        ausgaben = mapOf("wert" to ausdruck),
-        zielMengen = mapOf("wert" to äußerste.zielMengeFür(äußererAusgabeName)),
+        vorschrift = ausdruck,
+        zielMenge = äußerste.zielMengeFür(äußererAusgabeName),
         werteVorräte = innerste.werteVorräte,
     )
 }

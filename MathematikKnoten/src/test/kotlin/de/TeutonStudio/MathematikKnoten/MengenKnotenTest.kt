@@ -30,7 +30,7 @@ class MengenKnotenTest {
     fun `Mengenfilter wertet endliche Menge exakt aus`() {
         val x = Variable("x")
         val wahrheitsmenge = EndlicheMenge(setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)))
-        val methode = Funktion(
+        val methode = Methode(
             name = "positiv",
             parameter = listOf(x),
             ausgaben = mapOf("aussage" to Vergleich(x, VergleichsArt.Größer, RationaleZahl.Null)),
@@ -53,7 +53,7 @@ class MengenKnotenTest {
     @Test
     fun `Mengenfilter bewahrt unendliche Filter symbolisch`() {
         val x = Variable("x")
-        val methode = Funktion(
+        val methode = Methode(
             name = "positiv",
             parameter = listOf(x),
             ausgaben = mapOf("aussage" to Vergleich(x, VergleichsArt.Größer, RationaleZahl.Null)),
@@ -89,7 +89,7 @@ class MengenKnotenTest {
             ),
         )
         val termZuMethode = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero)
-        val methode = assertIs<Funktion>(register.finde(termZuMethode.art)!!.auswerten(
+        val methode = assertIs<Methode>(register.finde(termZuMethode.art)!!.auswerten(
             KnotenAuswertungsKontext(
                 termZuMethode,
                 mapOf("term" to termWert),

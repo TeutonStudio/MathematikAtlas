@@ -90,7 +90,7 @@ internal object MengendefinatorAuswerter : MathematikKnotenAuswerter {
     }
 }
 
-private fun elementAusdruck(name: String, art: AnschlussArtId): FunktionsParameter = when (art.wert) {
+private fun elementAusdruck(name: String, art: AnschlussArtId): MethodenParameter = when (art.wert) {
     "mathematik.zahl" -> Variable(name)
     "mathematik.aussage" -> AussagenParameter(name)
     "mathematik.menge" -> MengenParameter(name)

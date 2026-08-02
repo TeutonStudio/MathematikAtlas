@@ -14,7 +14,7 @@ import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
-import de.TeutonStudio.MathematikRechenSystem.kern.Funktion
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensor
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorOrientierung
 import de.TeutonStudio.MathematikRechenSystem.kern.parseTensorPermutationOderNull
@@ -112,7 +112,7 @@ private object TermZuMethodeInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "f") { aktionen.parameter("name", it.trim().ifBlank { "f" }) }
         Text("Die Zielmenge wird aus dem Term und den Wertebereichen seiner Parameter abgeleitet.", style = MaterialTheme.typography.bodySmall)
-        val parameter = (ergebnis?.ausgaben?.get("methode")?.objekt as? Funktion)?.parameter.orEmpty()
+        val parameter = (ergebnis?.ausgaben?.get("methode")?.objekt as? Methode)?.parameter.orEmpty()
         Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
         if (parameter.isEmpty()) Text("Keine freien Variablen erkannt.", style = MaterialTheme.typography.bodySmall)
         parameter.forEachIndexed { index, variable ->

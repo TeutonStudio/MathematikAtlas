@@ -28,7 +28,7 @@ internal fun AtlasZustand.kartenVorlage(
                 name = "methode",
                 richtung = AnschlussRichtung.Ausgang,
                 kante = AnschlussKante.Rechts,
-                art = MathematikAnschlussArten.Funktion.id,
+                art = MathematikAnschlussArten.Methode.id,
             ),
         )
     }

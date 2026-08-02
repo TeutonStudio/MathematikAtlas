@@ -85,8 +85,9 @@ internal fun erzeugeTabellenPrädikat(
     return Methode(
         name = name,
         parameter = parameter,
-        ausgaben = mapOf("aussage" to ausgabe),
-        zielMengen = mapOf("aussage" to WahrheitsMenge),
+        vorschrift = ausgabe,
+        zielMenge = WahrheitsMenge,
+        ausgabeNamen = listOf("aussage"),
         werteVorräte = parameter.zip(definitionsMengen).associate { (variable, menge) -> variable.name to menge },
     )
 }

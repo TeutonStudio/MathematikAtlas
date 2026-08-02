@@ -86,4 +86,35 @@ class MethodenFundamentTest {
         assertTrue(MethodenAlias.Prädikat in prädikat.aliase())
         assertEquals("Methode · Prädikat", prädikat.aliasAnzeige())
     }
+    @Test
+    fun `kanonische methode besitzt genau eine vorschrift und zielmenge`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = addition(x, RationaleZahl.Eins),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+
+        assertEquals(addition(RationaleZahl.von(2), RationaleZahl.Eins), methode.wendeAn(listOf(RationaleZahl.von(2))))
+        assertEquals(ReelleZahlen, methode.zielMenge)
+        assertEquals(listOf("wert"), methode.ausgabeNamen)
+    }
+
+    @Test
+    fun `mehrere kartenausgaenge bleiben ein geordnetes ergebnistupel`() {
+        val methode = Methode(
+            name = "paar",
+            parameter = emptyList(),
+            vorschrift = Tupel(listOf(RationaleZahl.Null, RationaleZahl.Eins)),
+            zielMenge = Tupelraum(listOf(GanzeZahlen, GanzeZahlen)),
+            ausgabeNamen = listOf("links", "rechts"),
+        )
+
+        assertEquals(Tupel(listOf(RationaleZahl.Null, RationaleZahl.Eins)), methode.wendeAn(emptyList()))
+        assertEquals(RationaleZahl.Null, methode.vorschriftFür("links"))
+        assertEquals(GanzeZahlen, methode.zielMengeFür("rechts"))
+    }
+
 }

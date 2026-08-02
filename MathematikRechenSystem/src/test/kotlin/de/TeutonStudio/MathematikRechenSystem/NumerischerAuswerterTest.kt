@@ -119,7 +119,7 @@ class NumerischerAuswerterTest {
 
     @Test
     fun `nicht unterstuetzte symbolische Objekte liefern strukturierte Fehler`() {
-        val methode = Funktion(
+        val methode = Methode(
             name = "f",
             parameter = listOf(Variable("x")),
             ausgaben = mapOf("wert" to Variable("x")),

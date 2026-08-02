@@ -134,7 +134,7 @@ object MathematikKnotenVorlagen {
     )
     val Mengenfilter = KnotenVorlage(
         "mathematik.mengenfilter", "Mengenfilter", "Mengen", "Behält genau die Elemente einer Menge, für die eine einstellige Methode eine wahre Aussage liefert.", GraphGröße(270f, 120f),
-        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Funktion.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Methode.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val ReellesIntervall = KnotenVorlage(
         "mathematik.reellesIntervall", "Reelles Intervall", "Mengen", "Bildet ein reelles Intervall aus zwei nachweisbar reellen Grenzen und Aussagen über offene Randpunkte.", GraphGröße(280f, 165f),
@@ -187,11 +187,11 @@ object MathematikKnotenVorlagen {
     val Mächtigkeit = KnotenVorlage("mathematik.mächtigkeit", "Mächtigkeit", "Mengen", "Bestimmt endlich, abzählbar unendlich oder überabzählbar.", GraphGröße(230f, 105f), listOf(eingang("menge", MathematikAnschlussArten.Menge.id), ausgang("mächtigkeit", MathematikAnschlussArten.Objekt.id)))
     val IterierteSumme = KnotenVorlage(
         "mathematik.iterierteSumme", "Iterierte Summe", "Operatoren", "Summiert die Werte einer Zahlfunktion über einer Indexmenge.", GraphGröße(250f, 120f),
-        listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+        listOf(eingang("methode", MathematikAnschlussArten.ZahlMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
     val IteriertesProdukt = KnotenVorlage(
         "mathematik.iteriertesProdukt", "Iteriertes Produkt", "Operatoren", "Multipliziert die Werte einer Zahlfunktion über einer Indexmenge.", GraphGröße(250f, 120f),
-        listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
+        listOf(eingang("methode", MathematikAnschlussArten.ZahlMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
     val IterierteKonjunktion = iterierteAussagenVorlage(
         "Iterierte Konjunktion",
@@ -210,28 +210,28 @@ object MathematikKnotenVorlagen {
     )
     val IterierteVereinigung = KnotenVorlage(
         "mathematik.iterierteVereinigung", "Iterierte Vereinigung", "Mengen", "Vereinigt die Mengenwerte einer Methode über einer Indexmenge.", GraphGröße(260f, 120f),
-        listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        listOf(eingang("methode", MathematikAnschlussArten.MengenMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val IterierterSchnitt = KnotenVorlage(
         "mathematik.iterierterSchnitt", "Iterierter Schnitt", "Mengen", "Schneidet Mengenwerte; die Grundmenge stammt aus der Zielmenge der Methode.", GraphGröße(260f, 120f),
-        listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        listOf(eingang("methode", MathematikAnschlussArten.MengenMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val IteriertesKartesischesProdukt = KnotenVorlage(
         "mathematik.iteriertesKartesischesProdukt", "Iteriertes kartesisches Produkt", "Mengen", "Bildet das kartesische Produkt der Mengenwerte einer Methode über einer Indexmenge.", GraphGröße(280f, 120f),
-        listOf(eingang("methode", MathematikAnschlussArten.MengenFunktion.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        listOf(eingang("methode", MathematikAnschlussArten.MengenMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val Abbild = KnotenVorlage(
         "mathematik.abbild", "Abbild", "Mengen", "Bildet eine Menge mit einer einwertigen Methode ab: f[M] = { f(x) : x ∈ M }.", GraphGröße(255f, 115f),
-        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Funktion.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Methode.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val TermZuMethode = KnotenVorlage(
         "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem allgemeinen Term eine Methode mit automatisch abgeleiteten Variablen und Zielmenge.", GraphGröße(265f, 135f),
-        listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), ausgang("methode", MathematikAnschlussArten.Funktion.id)),
+        listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), ausgang("methode", MathematikAnschlussArten.Methode.id)),
         mapOf("name" to "f", "argumentReihenfolge" to ""),
     )
     val AussageZuMethode = KnotenVorlage(
         "mathematik.termZuMethode", "Aussage zu Methode", "Methoden", "Erzeugt aus einer Aussage eine typisierte Aussagenmethode.", GraphGröße(265f, 135f),
-        listOf(eingang("term", MathematikAnschlussArten.Aussage.id, 0), ausgang("methode", MathematikAnschlussArten.AussageFunktion.id)),
+        listOf(eingang("term", MathematikAnschlussArten.Aussage.id, 0), ausgang("methode", MathematikAnschlussArten.AussageMethode.id)),
         mapOf("name" to "P", "argumentReihenfolge" to ""),
     )
     val Komposition = KnotenVorlage(
@@ -241,19 +241,19 @@ object MathematikKnotenVorlagen {
         "Komponiert zwei oder mehr Methoden in sichtbarer Reihenfolge und prüft jeden Übergang semantisch.",
         GraphGröße(270f, 130f),
         listOf(
-            eingang("außen", MathematikAnschlussArten.Funktion.id, 0, true),
-            eingang("innen", MathematikAnschlussArten.Funktion.id, 1, true),
-            ausgang("methode", MathematikAnschlussArten.Funktion.id),
+            eingang("außen", MathematikAnschlussArten.Methode.id, 0, true),
+            eingang("innen", MathematikAnschlussArten.Methode.id, 1, true),
+            ausgang("methode", MathematikAnschlussArten.Methode.id),
         ),
         mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
-    val Iteration = KnotenVorlage("mathematik.iteration", "Iteration", "Abbildungen", "Bildet die nichtnegative Iteration einer skalaren Endomorphismus-Methode.", GraphGröße(255f, 110f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
-    val MethodenDifferentieren = KnotenVorlage("mathematik.methodenDifferentieren", "Methode differentieren", "Abbildungen", "Differentiert eine skalare Methode bei differentialfähigem Wertevorrat.", GraphGröße(260f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
-    val MethodenIntegrieren = KnotenVorlage("mathematik.methodenIntegrieren", "Methode integrieren", "Abbildungen", "Integriert eine skalare Methode bei integralfähigem Wertevorrat.", GraphGröße(255f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlFunktion.id), ausgang("methode", MathematikAnschlussArten.ZahlFunktion.id)))
-    val SpaltenMethodeDifferentieren = methodenAnalysisVorlage("mathematik.spaltenMethodeDifferentieren", "Spaltenmethode differentieren", "Differentiert die Komponenten einer Spaltenvektormethode.", MathematikAnschlussArten.SpaltenVektorFunktion.id)
-    val ZeilenMethodeDifferentieren = methodenAnalysisVorlage("mathematik.zeilenMethodeDifferentieren", "Zeilenmethode differentieren", "Differentiert die Komponenten einer Zeilenvektormethode.", MathematikAnschlussArten.ZeilenVektorFunktion.id)
-    val SpaltenMethodeIntegrieren = methodenAnalysisVorlage("mathematik.spaltenMethodeIntegrieren", "Spaltenmethode integrieren", "Integriert die Komponenten einer Spaltenvektormethode.", MathematikAnschlussArten.SpaltenVektorFunktion.id)
-    val ZeilenMethodeIntegrieren = methodenAnalysisVorlage("mathematik.zeilenMethodeIntegrieren", "Zeilenmethode integrieren", "Integriert die Komponenten einer Zeilenvektormethode.", MathematikAnschlussArten.ZeilenVektorFunktion.id)
+    val Iteration = KnotenVorlage("mathematik.iteration", "Iteration", "Abbildungen", "Bildet die nichtnegative Iteration einer skalaren Endomorphismus-Methode.", GraphGröße(255f, 110f), listOf(eingang("methode", MathematikAnschlussArten.ZahlMethode.id, 0), eingang("exponent", MathematikAnschlussArten.Zahl.id, 1), ausgang("methode", MathematikAnschlussArten.ZahlMethode.id)))
+    val MethodenDifferentieren = KnotenVorlage("mathematik.methodenDifferentieren", "Methode differentieren", "Abbildungen", "Differentiert eine skalare Methode bei differentialfähigem Wertevorrat.", GraphGröße(260f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlMethode.id), ausgang("methode", MathematikAnschlussArten.ZahlMethode.id)))
+    val MethodenIntegrieren = KnotenVorlage("mathematik.methodenIntegrieren", "Methode integrieren", "Abbildungen", "Integriert eine skalare Methode bei integralfähigem Wertevorrat.", GraphGröße(255f, 105f), listOf(eingang("methode", MathematikAnschlussArten.ZahlMethode.id), ausgang("methode", MathematikAnschlussArten.ZahlMethode.id)))
+    val SpaltenMethodeDifferentieren = methodenAnalysisVorlage("mathematik.spaltenMethodeDifferentieren", "Spaltenmethode differentieren", "Differentiert die Komponenten einer Spaltenvektormethode.", MathematikAnschlussArten.SpaltenVektorMethode.id)
+    val ZeilenMethodeDifferentieren = methodenAnalysisVorlage("mathematik.zeilenMethodeDifferentieren", "Zeilenmethode differentieren", "Differentiert die Komponenten einer Zeilenvektormethode.", MathematikAnschlussArten.ZeilenVektorMethode.id)
+    val SpaltenMethodeIntegrieren = methodenAnalysisVorlage("mathematik.spaltenMethodeIntegrieren", "Spaltenmethode integrieren", "Integriert die Komponenten einer Spaltenvektormethode.", MathematikAnschlussArten.SpaltenVektorMethode.id)
+    val ZeilenMethodeIntegrieren = methodenAnalysisVorlage("mathematik.zeilenMethodeIntegrieren", "Zeilenmethode integrieren", "Integriert die Komponenten einer Zeilenvektormethode.", MathematikAnschlussArten.ZeilenVektorMethode.id)
     val Vektor = KnotenVorlage(
         "mathematik.vektor", "Spaltenvektor", "Vektoren", "Spaltenvektor aus dynamischen Zahl-Eingängen.", GraphGröße(220f, 115f),
         listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)), mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
@@ -393,7 +393,7 @@ object MathematikKnotenVorlagen {
         listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
         mapOf("modus" to modus, "festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
-    private fun methodenAnalysisVorlage(art: String, name: String, beschreibung: String, funktion: AnschlussArtId) = KnotenVorlage(art, name, "Abbildungen", beschreibung, GraphGröße(260f, 105f), listOf(eingang("methode", funktion), ausgang("methode", funktion)))
+    private fun methodenAnalysisVorlage(art: String, name: String, beschreibung: String, methodenArt: AnschlussArtId) = KnotenVorlage(art, name, "Abbildungen", beschreibung, GraphGröße(260f, 105f), listOf(eingang("methode", methodenArt), ausgang("methode", methodenArt)))
     private fun iterierteAussagenVorlage(name: String, beschreibung: String, operator: String) = KnotenVorlage(
         ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,
         name,
@@ -401,7 +401,7 @@ object MathematikKnotenVorlagen {
         beschreibung,
         GraphGröße(270f, 120f),
         listOf(
-            eingang("methode", MathematikAnschlussArten.AussageFunktion.id),
+            eingang("methode", MathematikAnschlussArten.AussageMethode.id),
             eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1),
             ausgang("aussage", MathematikAnschlussArten.Aussage.id),
         ),

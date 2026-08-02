@@ -24,4 +24,5 @@ with zipfile.ZipFile(wurzel / "gradle/wrapper/gradle-wrapper.jar") as jar:
         raise SystemExit("Wrapper-Hauptklasse fehlt")
 
 subprocess.run([sys.executable, str(wurzel / "scripts/pruefe_architektur.py")], check=True)
+subprocess.run([sys.executable, str(wurzel / "scripts/pruefe_methodenmodell.py")], check=True)
 print("Repository-Struktur, XML und Wrapper erfolgreich geprüft.")

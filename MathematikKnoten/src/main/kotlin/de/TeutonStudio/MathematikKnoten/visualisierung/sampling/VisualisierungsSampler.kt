@@ -405,7 +405,7 @@ object VisualisierungsSampler {
     ): VisualisierungsErgebnis {
         val parameter = abbild.methode.parameter.singleOrNull() as? Variable
             ?: return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Abbildung benötigt genau einen numerischen Parameter.")
-        val ausgabe = abbild.methode.ausgaben.values.singleOrNull()
+        val ausgabe = abbild.methode.vorschrift.takeIf { abbild.methode.ausgabeNamen.size == 1 }
             ?: return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Abbildung benötigt genau eine Ausgabe.")
         val domäne = when (val ergebnis = faktorDomäne(abbild.menge, konfiguration.bereiche.x, konfiguration)) {
             is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
@@ -478,7 +478,7 @@ object VisualisierungsSampler {
         c: VisualisierungsKonfiguration,
     ): NumerischeMitgliedschaft = runCatching {
         val parameter = menge.methode.parameter.single()
-        val aussage = menge.methode.ausgaben.values.single() as Aussage
+        val aussage = menge.methode.vorschrift as Aussage
         val gebunden = ersetze(aussage, mapOf(parameter.name to punktObjekt(punkt)))
         werteAussage(gebunden, c.achsenNamen.zip(punkt).toMap(), c.sampling.toleranz)
     }.getOrElse { NumerischeMitgliedschaft.Unbekannt("Filtermethode: ${it.message ?: "nicht auswertbar"}") }

@@ -150,7 +150,7 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
     "mathematik.iterierteSumme" -> IterierteDefinitionsKonfiguration(
         operator = "summe",
         methodenName = "f",
-        methodenArt = MathematikAnschlussArten.ZahlFunktion.id,
+        methodenArt = MathematikAnschlussArten.ZahlMethode.id,
         ergebnisArt = MathematikAnschlussArten.Zahl.id,
         anwendung = FaltungsKnotenVorlagen.MethodenAnwendungZahl,
         verknüpfung = MathematikKnotenVorlagen.Addition,
@@ -161,7 +161,7 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
     "mathematik.iteriertesProdukt" -> IterierteDefinitionsKonfiguration(
         operator = "produkt",
         methodenName = "f",
-        methodenArt = MathematikAnschlussArten.ZahlFunktion.id,
+        methodenArt = MathematikAnschlussArten.ZahlMethode.id,
         ergebnisArt = MathematikAnschlussArten.Zahl.id,
         anwendung = FaltungsKnotenVorlagen.MethodenAnwendungZahl,
         verknüpfung = MathematikKnotenVorlagen.Multiplikation,
@@ -171,19 +171,19 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
     )
     MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART -> when (vorlage.standardParameter["operator"]) {
         "konjunktion" -> IterierteDefinitionsKonfiguration(
-            "konjunktion", "P", MathematikAnschlussArten.AussageFunktion.id,
+            "konjunktion", "P", MathematikAnschlussArten.AussageMethode.id,
             MathematikAnschlussArten.Aussage.id, FaltungsKnotenVorlagen.MethodenAnwendungAussage,
             MathematikKnotenVorlagen.Konjunktion, MathematikKnotenVorlagen.Wahr,
             verknüpfungsAusgang = "aussage",
         )
         "disjunktion" -> IterierteDefinitionsKonfiguration(
-            "disjunktion", "P", MathematikAnschlussArten.AussageFunktion.id,
+            "disjunktion", "P", MathematikAnschlussArten.AussageMethode.id,
             MathematikAnschlussArten.Aussage.id, FaltungsKnotenVorlagen.MethodenAnwendungAussage,
             MathematikKnotenVorlagen.Disjunktion, MathematikKnotenVorlagen.Lüge,
             verknüpfungsAusgang = "aussage",
         )
         "adjunktion" -> IterierteDefinitionsKonfiguration(
-            "adjunktion", "P", MathematikAnschlussArten.AussageFunktion.id,
+            "adjunktion", "P", MathematikAnschlussArten.AussageMethode.id,
             MathematikAnschlussArten.Aussage.id, FaltungsKnotenVorlagen.MethodenAnwendungAussage,
             AussagenLogikKnotenVorlagen.Adjunktion, MathematikKnotenVorlagen.Lüge,
             verknüpfungsAusgang = "aussage",
@@ -193,7 +193,7 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
     "mathematik.iterierteVereinigung" -> IterierteDefinitionsKonfiguration(
         operator = "vereinigung",
         methodenName = "A",
-        methodenArt = MathematikAnschlussArten.MengenFunktion.id,
+        methodenArt = MathematikAnschlussArten.MengenMethode.id,
         ergebnisArt = MathematikAnschlussArten.Menge.id,
         anwendung = FaltungsKnotenVorlagen.MethodenAnwendungMenge,
         verknüpfung = MathematikKnotenVorlagen.Vereinigung,
@@ -203,7 +203,7 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
     "mathematik.iterierterSchnitt" -> IterierteDefinitionsKonfiguration(
         operator = "schnitt",
         methodenName = "A",
-        methodenArt = MathematikAnschlussArten.MengenFunktion.id,
+        methodenArt = MathematikAnschlussArten.MengenMethode.id,
         ergebnisArt = MathematikAnschlussArten.Menge.id,
         anwendung = FaltungsKnotenVorlagen.MethodenAnwendungMenge,
         verknüpfung = MathematikKnotenVorlagen.Schnitt,
@@ -220,7 +220,7 @@ private fun iteriertesKartesischesProduktDefinitionsKarte(
     val prefix = "definition-iteriertes-kartesisches-produkt-$variantenIndex"
     val faltungsId = "$prefix-faltung"
     val mengenPaarId = "$prefix-mengendefinition"
-    val methode = konzeptEingang(prefix, "methode", "A", MathematikAnschlussArten.MengenFunktion.id, GraphPunkt(20f, 80f), 0)
+    val methode = konzeptEingang(prefix, "methode", "A", MathematikAnschlussArten.MengenMethode.id, GraphPunkt(20f, 80f), 0)
     val indexMenge = konzeptEingang(prefix, "indexmenge", "I", MathematikAnschlussArten.Menge.id, GraphPunkt(20f, 510f), 1)
     val vereinigung = definitionsVorlagenKnoten(prefix, "iterierte-vereinigung", MathematikKnotenVorlagen.IterierteVereinigung, GraphPunkt(330f, 60f))
     val funktionsRaum = definitionsVorlagenKnoten(prefix, "abbildungsmenge", MengenraumKnotenVorlagen.Abbildungsmenge, GraphPunkt(670f, 100f))
@@ -230,9 +230,9 @@ private fun iteriertesKartesischesProduktDefinitionsKarte(
             MENGENDEFINITION_PAAR to mengenPaarId,
             MENGENDEFINITION_MENGENNAME to "\\mathop{\\times}\\limits_{i\\in I}A(i)",
             MENGENDEFINITION_ELEMENTNAME to "g",
-            MENGENDEFINITION_ELEMENTART to MathematikAnschlussArten.Funktion.id.wert,
+            MENGENDEFINITION_ELEMENTART to MathematikAnschlussArten.Methode.id.wert,
         ),
-        anschlussArten = mapOf("element" to MathematikAnschlussArten.Funktion.id),
+        anschlussArten = mapOf("element" to MathematikAnschlussArten.Methode.id),
     )
     val gImRaum = definitionsVorlagenKnoten(prefix, "g-im-funktionsraum", MathematikKnotenVorlagen.Element, GraphPunkt(1330f, 90f))
     val wahr = definitionsVorlagenKnoten(prefix, "wahr", MathematikKnotenVorlagen.Wahr, GraphPunkt(1040f, 650f))

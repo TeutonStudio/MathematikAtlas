@@ -74,7 +74,7 @@ class MathematikRechenSystemTest {
             inferiereZielmenge(Matrix(listOf(listOf(RationaleZahl.von(1), RationaleZahl.von(1, 2))))),
         )
         val index = Variable("k")
-        val mengenMethode = Funktion(
+        val mengenMethode = Methode(
             "A",
             listOf(index),
             mapOf("menge" to EndlicheMenge(setOf(index))),
@@ -89,7 +89,7 @@ class MathematikRechenSystemTest {
 
     @Test fun funktionKannTeilweiseGebundenWerden() {
         val x = Variable("x"); val y = Variable("y")
-        val f = Funktion("f", listOf(x, y), mapOf("wert" to addition(x, y)))
+        val f = Methode("f", listOf(x, y), mapOf("wert" to addition(x, y)))
         val g = f.binde(mapOf("x" to RationaleZahl.von(4)))
         assertEquals(listOf(y), g.freieParameter)
         assertEquals(RationaleZahl.von(7), g.binde(mapOf("y" to RationaleZahl.von(3))).auswerten().getValue("wert"))
@@ -97,7 +97,7 @@ class MathematikRechenSystemTest {
 
     @Test fun abbildAkzeptiertAllgemeineParameterUndBeliebigeEndlicheElemente() {
         val a = AllgemeinerParameter("a")
-        val identität = Funktion("id", listOf(a), mapOf("wert" to a))
+        val identität = Methode("id", listOf(a), mapOf("wert" to a))
         val elemente = EndlicheMenge(setOf(
             Tupel(listOf(RationaleZahl.von(1), RationaleZahl.von(2))),
             WahrheitsKonstante(true),
@@ -111,10 +111,10 @@ class MathematikRechenSystemTest {
         val menge = EndlicheMenge(setOf(WahrheitsKonstante(true)))
 
         assertFailsWith<IllegalArgumentException> {
-            bildeAb(menge, Funktion("f", listOf(a, AllgemeinerParameter("b")), mapOf("wert" to a)))
+            bildeAb(menge, Methode("f", listOf(a, AllgemeinerParameter("b")), mapOf("wert" to a)))
         }
         assertFailsWith<IllegalArgumentException> {
-            bildeAb(menge, Funktion("g", listOf(a), mapOf("links" to a, "rechts" to a)))
+            bildeAb(menge, Methode("g", listOf(a), mapOf("links" to a, "rechts" to a)))
         }
     }
 
@@ -127,7 +127,7 @@ class MathematikRechenSystemTest {
 
     @Test fun matrixAusMethodeVerwendetNullbasierteZeilenUndSpaltenindizes() {
         val zeile = Variable("i"); val spalte = Variable("j")
-        val methode = Funktion("f", listOf(zeile, spalte), mapOf("wert" to addition(multiplikation(RationaleZahl.von(10), zeile), spalte)))
+        val methode = Methode("f", listOf(zeile, spalte), mapOf("wert" to addition(multiplikation(RationaleZahl.von(10), zeile), spalte)))
 
         val matrix = matrixAusMethode(methode, höhe = 2, breite = 3)
 
@@ -142,8 +142,8 @@ class MathematikRechenSystemTest {
 
     @Test fun matrixAusMethodeBenötigtZweiParameterUndEineZahlAusgabe() {
         val x = Variable("x")
-        assertFailsWith<IllegalArgumentException> { matrixAusMethode(Funktion("f", listOf(x), mapOf("wert" to x)), 1, 1) }
-        assertFailsWith<IllegalArgumentException> { matrixAusMethode(Funktion("g", listOf(x, Variable("y")), mapOf("wert" to Tupel(listOf(x)))), 1, 1) }
+        assertFailsWith<IllegalArgumentException> { matrixAusMethode(Methode("f", listOf(x), mapOf("wert" to x)), 1, 1) }
+        assertFailsWith<IllegalArgumentException> { matrixAusMethode(Methode("g", listOf(x, Variable("y")), mapOf("wert" to Tupel(listOf(x)))), 1, 1) }
     }
 
     @Test fun lineareGleichungWirdGelöst() {
