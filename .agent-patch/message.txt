@@ -1,9 +1,9 @@
-R¹-Zahlengerade für skalare Mengen ergänzen (#93)
+Dreieck partiell auswerten und als Geometrieobjekt ausgeben (#91)
 
-- R¹ als eigenen Visualisierungsmodus einführen
-- Intervalle mit offenen und geschlossenen Grenzen darstellen
-- endliche skalare Mengen und sichtbare Ausschnitte diskreter Zahlmengen unterstützen
-- eindimensionale Mengenoperationen über die gemeinsame Mitgliedschaft auswerten
-- R¹-Konfiguration persistieren und R²/R³ rückwärtskompatibel erhalten
-- leere Mengen als erfolgreich leere Darstellung behandeln
-- Sampling und Regressionstests für die Zahlengerade ergänzen
+- sechs optionale Seiten- und Winkeleingänge mit unabhängigen Ausgaben ergänzen
+- Winkelsumme, SSS, SAS, ASA, AAS und SSA symbolisch beziehungsweise numerisch ableiten
+- mehrdeutige SSA-Fälle ohne willkürliche Kandidatenauswahl erhalten
+- GeometrieDreieck nur bei eindeutiger vollständiger Lösung erzeugen
+- kanonische lokale Realisierung und stabile Ecken-, Kanten- und Flächenzellen bereitstellen
+- Dreiecksanschluss, Renderer, Teilobjektauswahl und geometrische Relationen integrieren
+- Solver-, Knoten-, Struktur- und Grenzfalltests ergänzen
