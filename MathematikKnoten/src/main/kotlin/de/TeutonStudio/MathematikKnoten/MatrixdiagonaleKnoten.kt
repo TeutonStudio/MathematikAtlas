@@ -41,7 +41,7 @@ object MatrixdiagonaleKnotenVorlagen {
         ),
     )
 
-    val alle = listOf(Matrixdiagonale)
+    val alle = listOf(Matrixdiagonale) + SpurKnotenVorlagen.alle
 }
 
 internal fun MathematikAuswerterRegister.registriereMatrixdiagonale() {

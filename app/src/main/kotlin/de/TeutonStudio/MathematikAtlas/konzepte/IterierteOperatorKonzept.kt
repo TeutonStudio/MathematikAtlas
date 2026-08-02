@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
+import de.TeutonStudio.MathematikKnoten.ITERIERTE_SUMME_TUPEL_MODUS
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
 internal val ITERIERTE_KONZEPT_ARTEN: Set<String> = setOf(
@@ -13,11 +14,15 @@ internal val ITERIERTE_KONZEPT_ARTEN: Set<String> = setOf(
 )
 
 internal fun iteriertesOperatorKonzept(varianten: List<KnotenVorlage>): KonzeptDefinition {
-    require(varianten.isNotEmpty())
-    val erste = varianten.first()
-    val mehrereVarianten = varianten.size > 1
+    val konzeptVarianten = varianten.filterNot { vorlage ->
+        vorlage.art == MathematikKnotenVorlagen.IterierteSumme.art &&
+            vorlage.standardParameter["eingabeModus"] == ITERIERTE_SUMME_TUPEL_MODUS
+    }
+    require(konzeptVarianten.isNotEmpty())
+    val erste = konzeptVarianten.first()
+    val mehrereVarianten = konzeptVarianten.size > 1
     val reiter = buildList {
-        varianten.forEachIndexed { index, vorlage ->
+        konzeptVarianten.forEachIndexed { index, vorlage ->
             val namensPrefix = if (mehrereVarianten) "${vorlage.name}: " else ""
             add(
                 KonzeptReiter(
@@ -56,10 +61,10 @@ internal fun iteriertesOperatorKonzept(varianten: List<KnotenVorlage>): KonzeptD
 
     return KonzeptDefinition(
         id = KonzeptId(iterierterSlug(erste.art.removePrefix("mathematik."))),
-        name = varianten.joinToString(" / ") { it.name },
-        beschreibung = varianten.map(KnotenVorlage::beschreibung).distinct().joinToString(" "),
+        name = konzeptVarianten.joinToString(" / ") { it.name },
+        beschreibung = konzeptVarianten.map(KnotenVorlage::beschreibung).distinct().joinToString(" "),
         pfad = erste.kategorie.split(':').map(String::trim).filter(String::isNotBlank),
-        tags = varianten.flatMap { listOf(it.name, it.kategorie, it.art) }.toSet(),
+        tags = konzeptVarianten.flatMap { listOf(it.name, it.kategorie, it.art) }.toSet(),
         knotenArten = setOf(erste.art),
         reiter = reiter,
     )

@@ -14,8 +14,8 @@ android {
         applicationId = "de.TeutonStudio.MathematikAtlas"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2017001
-        versionName = "2.17.1"
+        versionCode = 2018000
+        versionName = "2.18.0"
     }
 
     buildFeatures { compose = true }

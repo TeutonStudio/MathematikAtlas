@@ -4,6 +4,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.GeometrieKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MengenraumKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.SPUR_ART
 import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
 
 @JvmInline
@@ -121,6 +122,7 @@ object TestDefinitionsKarten {
         MathematikKnotenVorlagen.Differenz.art,
         MengenraumKnotenVorlagen.SymmetrischeDifferenz.art ->
             mengenoperatorDefinitionsKarte(vorlage, variantenIndex)
+        SPUR_ART -> spurDefinitionsKarte(vorlage, variantenIndex)
         MathematikKnotenVorlagen.IterierteSumme.art,
         MathematikKnotenVorlagen.IteriertesProdukt.art,
         MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART,

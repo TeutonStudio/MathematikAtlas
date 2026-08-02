@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.17.x"
-current_version = "2.17.1"
+current_series = "2.18.x"
+current_version = "2.18.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -505,3 +505,15 @@ branch = "release/v2.17.1-verbindungsinteraktion"
 kind = "fix"
 version_axis = "x"
 reason = "Korrigiert Bézier-Hittest, Pointerkoordinaten, zoombeständige Anschlussflächen und magnetisches Einrasten im vorhandenen Karteneditor, ohne einen neuen Knotentyp einzuführen."
+
+[[releases]]
+version = "2.18.0"
+title = "Spur als Diagonalsumme"
+roadmap = "v2.18.x Lineare Algebra und Matrixoperationen"
+status = "released"
+previous_release = "2.17.1"
+branch = "release/v2.18.0-spur"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.spur"]
+reason = "Führt einen separat erzeugbaren Spur-Knoten ein, erweitert die iterierte Summe um kartesische Tupel und definiert die Spur selbstbezugsfrei als Hauptdiagonale mit gemeinsamer Addition."
