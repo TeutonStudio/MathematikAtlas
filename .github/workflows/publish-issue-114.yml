@@ -1,0 +1,105 @@
+name: Issue 114 prüfen und Einzelcommit erzeugen
+
+on:
+  pull_request:
+    branches:
+      - fix/issue-67-kartenausgangsnamen
+
+permissions:
+  contents: write
+
+jobs:
+  pruefen-und-erzeugen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fachcommit anwenden
+        shell: bash
+        run: |
+          git reset --hard 96d927cbaddeb7425f0563a9e4a835dce20eac9d
+          base64 --decode .github/issue-publish/114.patch.xz.b64 | xz --decompress > "$RUNNER_TEMP/114.patch"
+          git am "$RUNNER_TEMP/114.patch"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android SDK 36 installieren
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Repository und Architektur prüfen
+        run: |
+          python3 scripts/pruefe_repository.py
+          python3 scripts/pruefe_architektur.py
+
+      - name: Bauen und testen
+        run: ./gradlew --stacktrace test :app:assembleDebug
+
+      - name: Geprüften Git-Commit ohne Ref erzeugen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: 96d927cbaddeb7425f0563a9e4a835dce20eac9d
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, json, os, pathlib, subprocess, urllib.request
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          base_sha = os.environ['BASE_SHA']
+          api = f'https://api.github.com/repos/{repo}/git'
+
+          def request(method, path, payload=None):
+              data = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  api + path,
+                  data=data,
+                  method=method,
+                  headers={
+                      'Authorization': f'Bearer {token}',
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'Content-Type': 'application/json',
+                  },
+              )
+              with urllib.request.urlopen(req) as response:
+                  return json.load(response)
+
+          base_tree = request('GET', f'/commits/{base_sha}')['tree']['sha']
+          paths = subprocess.check_output(
+              ['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'],
+              text=True,
+          ).splitlines()
+          entries = []
+          for path in paths:
+              raw = pathlib.Path(path).read_bytes()
+              blob = request('POST', '/blobs', {
+                  'content': base64.b64encode(raw).decode(),
+                  'encoding': 'base64',
+              })['sha']
+              mode = subprocess.check_output(['git', 'ls-files', '-s', path], text=True).split()[0]
+              entries.append({'path': path, 'mode': mode, 'type': 'blob', 'sha': blob})
+
+          tree = request('POST', '/trees', {'base_tree': base_tree, 'tree': entries})['sha']
+          message = subprocess.check_output(['git', 'log', '-1', '--pretty=%B'], text=True).rstrip()
+          commit = request('POST', '/commits', {
+              'message': message,
+              'tree': tree,
+              'parents': [base_sha],
+          })['sha']
+          pathlib.Path('issue-114-commit-sha.txt').write_text(commit + '\n')
+          print(f'Geprüfter Einzelcommit: {commit}')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue-114-commit-sha
+          path: issue-114-commit-sha.txt
+          retention-days: 1
