@@ -4,7 +4,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 data class Tensor(
     val dimensionen: List<Int>,
     val werte: List<ZahlAusdruck>,
-) : Ausdruck {
+) : Ausdruck, Tensorartig {
     init {
         require(dimensionen.isNotEmpty()) { "Ein Tensor benötigt mindestens eine Achse." }
         require(dimensionen.all { it > 0 }) { "Tensordimensionen müssen positiv sein." }
@@ -14,6 +14,10 @@ data class Tensor(
     }
 
     val rang: Int get() = dimensionen.size
+    override val tensorForm: List<Int> get() = dimensionen
+    override val tensorZahlBereich: MengenAusdruck
+        get() = maximaleZahlenGrundmenge(werte.map(::inferiereZahlenWertevorrat))
+    override fun tensorKomponente(indizes: List<Int>): ZahlAusdruck = wertAn(indizes)
 
     fun wertAn(indizes: List<Int>): ZahlAusdruck = werte[linearerIndex(indizes, dimensionen)]
 

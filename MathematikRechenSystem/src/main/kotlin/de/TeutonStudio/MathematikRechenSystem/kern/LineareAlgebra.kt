@@ -1,7 +1,14 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-sealed interface OrientierterVektor : Ausdruck {
+sealed interface OrientierterVektor : Ausdruck, Tensorartig {
     val werte: List<ZahlAusdruck>
+    override val tensorForm: List<Int> get() = listOf(werte.size)
+    override val tensorZahlBereich: MengenAusdruck
+        get() = maximaleZahlenGrundmenge(werte.map(::inferiereZahlenWertevorrat))
+    override fun tensorKomponente(indizes: List<Int>): ZahlAusdruck {
+        require(indizes.size == 1) { "Ein Vektor besitzt genau eine Tensorachse." }
+        return werte[indizes.single()]
+    }
     fun skalarprodukt(andere: OrientierterVektor): ZahlAusdruck {
         require(this::class == andere::class) { "Das Skalarprodukt benötigt zwei gleich orientierte Vektoren." }
         require(werte.size == andere.werte.size) { "Vektoren müssen dieselbe Dimension haben." }
@@ -67,13 +74,20 @@ fun kreuzprodukt(a: OrientierterVektor, b: OrientierterVektor): OrientierterVekt
     return if (a is ZeilenVektor) ZeilenVektor(w) else SpaltenVektor(w)
 }
 
-data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck {
+data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck, Tensorartig {
     init {
         require(zeilen.isNotEmpty() && zeilen.first().isNotEmpty())
         require(zeilen.all { it.size == zeilen.first().size })
     }
     val zeilenAnzahl get() = zeilen.size
     val spaltenAnzahl get() = zeilen.first().size
+    override val tensorForm: List<Int> get() = listOf(zeilenAnzahl, spaltenAnzahl)
+    override val tensorZahlBereich: MengenAusdruck
+        get() = maximaleZahlenGrundmenge(zeilen.flatten().map(::inferiereZahlenWertevorrat))
+    override fun tensorKomponente(indizes: List<Int>): ZahlAusdruck {
+        require(indizes.size == 2) { "Eine Matrix besitzt genau zwei Tensorachsen." }
+        return zeilen[indizes[0]][indizes[1]]
+    }
     override fun zuLatex() = zeilen.zuPmatrixLatex()
     operator fun plus(andere: Matrix): Matrix {
         require(zeilenAnzahl == andere.zeilenAnzahl && spaltenAnzahl == andere.spaltenAnzahl)
