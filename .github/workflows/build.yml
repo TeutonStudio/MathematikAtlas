@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Kompilierungsfehler im Abschlussquellbaum korrigieren
+        run: git apply .github/patches/pr-116-build-fix.patch
       - name: Quellbaum verpacken
         run: tar --exclude=.git -czf "$RUNNER_TEMP/MathematikAtlas-abschluss-source.tar.gz" .
       - name: Quellbaum als Artefakt bereitstellen
