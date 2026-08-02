@@ -19,7 +19,9 @@ jobs:
           fetch-depth: 0
       - name: Patch und Commitnachricht sichern
         run: |
-          if [[ -f .agent-patch/change.patch.gz.b64 ]]; then
+          if compgen -G ".agent-patch/change.patch.gz.b64.part*" > /dev/null; then
+            cat .agent-patch/change.patch.gz.b64.part* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/change.patch"
+          elif [[ -f .agent-patch/change.patch.gz.b64 ]]; then
             base64 --decode .agent-patch/change.patch.gz.b64 | gzip --decompress > "$RUNNER_TEMP/change.patch"
           else
             cp .agent-patch/change.patch "$RUNNER_TEMP/change.patch"
