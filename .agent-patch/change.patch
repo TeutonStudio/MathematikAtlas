@@ -1,0 +1,18 @@
+diff --git a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt
+index 262d470..52313d3 100644
+--- a/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt
++++ b/MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/Operatoren.kt
+@@ -54,11 +54,11 @@ data class Sinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLat
+ data class Cosinus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\cos\\left(${argument.zuLatex()}\\right)" }
+ data class ArcSinus(val argument: ZahlAusdruck) : ZahlAusdruck {
+     override fun zuLatex() = "\\arcsin\\left(${argument.zuLatex()}\\right)"
+-    override fun toString() = "arcsin($argument)"
++    override fun toString() = "arcsin(${argument.zuLatex()})"
+ }
+ data class ArcCosinus(val argument: ZahlAusdruck) : ZahlAusdruck {
+     override fun zuLatex() = "\\arccos\\left(${argument.zuLatex()}\\right)"
+-    override fun toString() = "arccos($argument)"
++    override fun toString() = "arccos(${argument.zuLatex()})"
+ }
+ data class Exponentialfunktion(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "e^{${argument.zuLatex()}}" }
+ data class NatürlicherLogarithmus(val argument: ZahlAusdruck) : ZahlAusdruck { override fun zuLatex() = "\\ln\\left(${argument.zuLatex()}\\right)" }
