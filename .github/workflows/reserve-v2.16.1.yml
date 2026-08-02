@@ -1,16 +1,15 @@
 name: v2.16.1 im Releaseplan reservieren
 
 on:
-  push:
+  pull_request:
     branches:
-      - release/v2.16.1-strukturvertraege
+      - master
 
 permissions:
   contents: write
 
 jobs:
   reservieren:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
