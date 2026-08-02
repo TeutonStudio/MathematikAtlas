@@ -5,14 +5,14 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
-    @Test fun `Version fünf rundet verschachtelte Eigenschaften`() {
+    @Test fun `Version sechs rundet verschachtelte Eigenschaften`() {
         val eigenschaften = mapOf("konfiguration" to KnotenEigenschaft.Objekt(mapOf(
             "kamera" to KnotenEigenschaft.Objekt(mapOf("zoom" to KnotenEigenschaft.Dezimalzahl(1.25), "aktiv" to KnotenEigenschaft.Wahrheitswert(true))),
             "farben" to KnotenEigenschaft.Liste(listOf(KnotenEigenschaft.Farbe(0xFF2563EB), KnotenEigenschaft.Text("Ozean"))),
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 5"))
+        assertTrue(text.contains("\"formatVersion\": 6"))
         assertEquals(karte, KartenJson.lese(text))
     }
 
@@ -92,4 +92,14 @@ class KartenJsonTest {
         assertEquals(fall.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
     }
 
+    @Test fun `Transponieren behält Whitelist und Typabbildung`() {
+        val transponieren = MathematikKnotenVorlagen.Transponieren.erzeuge(GraphPunkt.Zero)
+
+        val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(transponieren)))).knoten.single()
+        val eingang = gelesen.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }
+        val ausgang = gelesen.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+
+        assertEquals(transponieren.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }.zulässigeArten, eingang.zulässigeArten)
+        assertEquals(transponieren.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.artAbbildungVonEingang, ausgang.artAbbildungVonEingang)
+    }
 }

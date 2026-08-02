@@ -11,6 +11,7 @@ object MathematikAnschlussArten {
     val SpaltenVektor = AnschlussArt(AnschlussArtId("mathematik.vektor.spalte"), "Spaltenvektor", Vektor.id)
     val ZeilenVektor = AnschlussArt(AnschlussArtId("mathematik.vektor.zeile"), "Zeilenvektor", Vektor.id)
     val Matrix = AnschlussArt(AnschlussArtId("mathematik.matrix"), "Matrix", Objekt.id)
+    val Tensor = AnschlussArt(AnschlussArtId("mathematik.tensor"), "Tensor", Objekt.id)
     val Tupel = AnschlussArt(AnschlussArtId("mathematik.tupel"), "Tupel", Objekt.id)
     val Funktion = AnschlussArt(AnschlussArtId("mathematik.funktion"), "Funktion", Objekt.id)
     val AussageFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.aussage"), "Aussagenabbildung", Funktion.id)
@@ -18,5 +19,5 @@ object MathematikAnschlussArten {
     val MengenFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.menge"), "Mengenfunktion", Funktion.id)
     val SpaltenVektorFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.spalte"), "Spaltenvektorfunktion", Funktion.id)
     val ZeilenVektorFunktion = AnschlussArt(AnschlussArtId("mathematik.funktion.vektor.zeile"), "Zeilenvektorfunktion", Funktion.id)
-    val alle = listOf(Objekt, Zahl, Aussage, Menge, Vektor, SpaltenVektor, ZeilenVektor, Matrix, Tupel, Funktion, AussageFunktion, ZahlFunktion, MengenFunktion, SpaltenVektorFunktion, ZeilenVektorFunktion) + GeometrieAnschlussArten.alle
+    val alle = listOf(Objekt, Zahl, Aussage, Menge, Vektor, SpaltenVektor, ZeilenVektor, Matrix, Tensor, Tupel, Funktion, AussageFunktion, ZahlFunktion, MengenFunktion, SpaltenVektorFunktion, ZeilenVektorFunktion) + GeometrieAnschlussArten.alle
 }

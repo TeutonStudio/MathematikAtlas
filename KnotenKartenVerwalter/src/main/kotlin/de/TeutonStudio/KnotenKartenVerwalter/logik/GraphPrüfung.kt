@@ -15,8 +15,6 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         val (ausgang, eingang) = richte(a, erster, b, zweiter)
             ?: return VerbindungsPrüfung.Abgelehnt("Die Anschlussrichtungen sind nicht kompatibel.")
 
-        // Ein belegter Eingang wird beim Verbinden atomar ersetzt. Die Typ- und
-        // Zyklusprüfung betrachtet deshalb bereits den Graphen nach dieser Ersetzung.
         val ohneAlteEingangsVerbindung = if (eingang.first.richtung == AnschlussRichtung.Eingang) {
             karte.copy(verbindungen = karte.verbindungen.filterNot { it.zu == eingang.second })
         } else karte
@@ -29,6 +27,9 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
 
         val ausgangsArt = effektiveArt(probe, ausgang.second)
         val eingangsArt = effektiveArt(probe, eingang.second)
+        if (eingang.first.zulässigeArten.isNotEmpty() && eingang.first.zulässigeArten.none { erlaubt -> arten.istUnterart(ausgangsArt, erlaubt) }) {
+            return VerbindungsPrüfung.Abgelehnt("$ausgangsArt ist für diesen Eingang nicht zulässig.")
+        }
         if (!arten.istUnterart(ausgangsArt, eingangsArt)) {
             return VerbindungsPrüfung.Abgelehnt("$ausgangsArt kann nicht an $eingangsArt angeschlossen werden.")
         }
@@ -53,10 +54,7 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         return richte(a, erster, b, zweiter)?.let { it.first.second to it.second.second }
     }
 
-    /**
-     * Liefert die deklarierte Art, die Art eines einzelnen referenzierten Eingangs oder
-     * die kleinste gemeinsame Oberart aller verbundenen Eingänge aus [AnschlussDaten.artVereinigtEingänge].
-     */
+    /** Liefert die deklarierte oder aus verbundenen Eingängen zentral abgeleitete Anschlussart. */
     fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis): AnschlussArtId =
         effektiveArt(karte, ref, mutableSetOf())
 
@@ -67,6 +65,19 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
     ): AnschlussArtId {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return AnschlussArtId("unbekannt")
         val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return AnschlussArtId("unbekannt")
+
+        anschluss.artAbbildungVonEingang?.let { regel ->
+            if (!besucht.add(ref)) return anschluss.art
+            val eingang = knoten.anschlüsse.firstOrNull {
+                it.name == regel.eingang && it.richtung == AnschlussRichtung.Eingang
+            } ?: return anschluss.art
+            val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
+            val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return anschluss.art
+            val quellArt = effektiveArt(karte, quelle, besucht)
+            return regel.abbildung[quellArt]
+                ?: regel.abbildung.entries.firstOrNull { (von, _) -> arten.istUnterart(quellArt, von) }?.value
+                ?: anschluss.art
+        }
 
         anschluss.artFolgtEingang?.let { eingangsName ->
             if (!besucht.add(ref)) return anschluss.art
@@ -91,10 +102,6 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         return arten.gemeinsameOberart(quellArten) ?: anschluss.art
     }
 
-    /**
-     * Ändert die Art eines vorhandenen Anschlusses und entfernt dadurch ungültig gewordene Kanten.
-     * Anschluss-ID, Richtung und alle unveränderten Kanten bleiben erhalten.
-     */
     fun ändereAnschlussArt(karte: KartenDaten, ref: AnschlussVerweis, art: AnschlussArtId): KartenDaten {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return karte
         val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return karte
@@ -122,8 +129,10 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
     private fun istTypkompatibel(karte: KartenDaten, verbindung: VerbindungDaten): Boolean {
         val von = karte.findeAnschluss(verbindung.von) ?: return false
         val zu = karte.findeAnschluss(verbindung.zu) ?: return false
-        richte(von, verbindung.von, zu, verbindung.zu) ?: return false
-        return arten.istUnterart(effektiveArt(karte, verbindung.von), effektiveArt(karte, verbindung.zu))
+        val (_, eingang) = richte(von, verbindung.von, zu, verbindung.zu) ?: return false
+        val ausgangsArt = effektiveArt(karte, verbindung.von)
+        if (eingang.first.zulässigeArten.isNotEmpty() && eingang.first.zulässigeArten.none { erlaubt -> arten.istUnterart(ausgangsArt, erlaubt) }) return false
+        return arten.istUnterart(ausgangsArt, effektiveArt(karte, verbindung.zu))
     }
 
     private fun erzeugtZyklus(karte: KartenDaten, von: KnotenId, zu: KnotenId): Boolean {
