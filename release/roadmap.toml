@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.19.x"
-current_version = "2.19.0"
+current_version = "2.19.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -528,3 +528,14 @@ branch = "release/v2.19.0-funktionsgraphen"
 kind = "feature"
 version_axis = "y"
 reason = "Erweitert den vorhandenen Visualisierungsknoten um persistierte Methodenmodi, gewöhnliche R²-Funktionsgraphen, zweiparametrige R³-Flächen, benannte Koordinatenausgaben und ein gemeinsames Gesamtbudget, ohne einen neuen Knotentyp vorzutäuschen."
+
+[[releases]]
+version = "2.19.1"
+title = "Rechnerfamilien, Formeleditor und Profilfarben"
+roadmap = "v2.19.x Rechnerfamilien und Bedienoberfläche"
+status = "released"
+previous_release = "2.19.0"
+branch = "release/v2.19.1-rechnerfamilien"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert den mathematischen Rechenkern um gemeinsame Definitions-, Zahlbereichs-, Formel-, Mengen-, Vektor-, Matrix- und Folgenverträge, ergänzt atomare Edge-Einfügung sowie profilbasierte Farbrollen, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen."
