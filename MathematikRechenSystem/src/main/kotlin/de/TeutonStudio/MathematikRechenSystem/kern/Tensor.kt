@@ -45,11 +45,17 @@ fun standardTensorPermutation(rang: Int): List<Int> {
     return if (rang == 1) listOf(0) else listOf(1, 0) + (2 until rang)
 }
 
-fun parseTensorPermutation(text: String?, rang: Int): List<Int> {
-    val standard = standardTensorPermutation(rang)
-    val gelesen = text.orEmpty().split(',').mapNotNull { it.trim().toIntOrNull() }
-    return gelesen.takeIf { runCatching { prüfePermutation(it, rang) }.isSuccess } ?: standard
+/** Liest eine vollständige, nullbasierte Achsenpermutation oder liefert bei ungültiger Eingabe `null`. */
+fun parseTensorPermutationOderNull(text: String?, rang: Int): List<Int>? {
+    if (rang <= 0 || text.isNullOrBlank()) return null
+    val teile = text.split(',').map(String::trim)
+    if (teile.size != rang || teile.any(String::isBlank)) return null
+    val gelesen = teile.map { it.toIntOrNull() ?: return null }
+    return gelesen.takeIf { runCatching { prüfePermutation(it, rang) }.isSuccess }
 }
+
+fun parseTensorPermutation(text: String?, rang: Int): List<Int> =
+    parseTensorPermutationOderNull(text, rang) ?: standardTensorPermutation(rang)
 
 fun prüfePermutation(permutation: List<Int>, rang: Int) {
     require(permutation.size == rang && permutation.toSet() == (0 until rang).toSet()) {

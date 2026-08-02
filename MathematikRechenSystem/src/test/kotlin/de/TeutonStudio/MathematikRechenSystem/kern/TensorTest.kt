@@ -24,7 +24,16 @@ class TensorTest {
         assertFailsWith<IllegalArgumentException> { tensor.permutiereAchsen(listOf(0, 1)) }
     }
 
+    @Test fun `Parser akzeptiert nur vollständige Permutationen`() {
+        assertEquals(listOf(1, 0, 2), parseTensorPermutationOderNull("1, 0, 2", 3))
+        assertNull(parseTensorPermutationOderNull("1,0", 3))
+        assertNull(parseTensorPermutationOderNull("1,1,2", 3))
+        assertNull(parseTensorPermutationOderNull("1,,2", 3))
+        assertNull(parseTensorPermutationOderNull("a,0,2", 3))
+    }
+
     @Test fun `Veraltete Konfiguration fällt auf Standard zurück`() {
         assertEquals(listOf(1, 0, 2), parseTensorPermutation("1,0", 3))
+        assertEquals(listOf(1, 0, 2, 3), standardTensorPermutation(4))
     }
 }
