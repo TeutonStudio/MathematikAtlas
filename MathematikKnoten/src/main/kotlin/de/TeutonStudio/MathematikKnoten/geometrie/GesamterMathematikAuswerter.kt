@@ -5,6 +5,7 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 /** Bestehender Standardauswerter plus additive lineare, Geometrie-, Mengenraum- und Aussagenlogikdomänen. */
 object GesamterMathematikAuswerter {
     fun erzeugeRegister(): MathematikAuswerterRegister = StandardMathematikAuswerter.erzeugeRegister().apply {
+        registriereMatrixdiagonale()
         registriereTransponieren()
         registriereGeometrieGrundobjekte()
         registriereGeometrieTeilobjekte()
