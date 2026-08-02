@@ -127,7 +127,7 @@ object TestDefinitionsKarten {
         MathematikKnotenVorlagen.IterierteVereinigung.art,
         MathematikKnotenVorlagen.IterierterSchnitt.art,
         MathematikKnotenVorlagen.IteriertesKartesischesProdukt.art ->
-            iterierteOperatorDefinitionsKarte(vorlage, variantenIndex)
+            iterierteDefinitionsKarte(vorlage, variantenIndex)
         else -> generischeDefinitionsKarte(vorlage, variantenIndex)
     }
 

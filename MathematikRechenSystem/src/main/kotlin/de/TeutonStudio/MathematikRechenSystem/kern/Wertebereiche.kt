@@ -45,6 +45,12 @@ fun inferiereZielmenge(
         ausdruck.spaltenAnzahl,
         maximaleZahlenGrundmenge(ausdruck.zeilen.flatten().map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) }),
     )
+    is Tensor -> Tensorraum(
+        elementMenge = maximaleZahlenGrundmenge(
+            ausdruck.werte.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) },
+        ),
+        dimensionen = ausdruck.dimensionen,
+    )
     is GeometrischerAusdruck -> BenannteMenge("geometrie_${ausdruck.raum.id}", "\\mathcal{G}(${ausdruck.raum.id})")
     is EuklidischerRaum -> BenannteMenge("euklidische_raeume", "\\mathfrak{E}")
     is GeometrischesKoordinatensystem -> BenannteMenge("koordinatensysteme_${ausdruck.raum.id}", "\\mathcal{K}(${ausdruck.raum.id})")

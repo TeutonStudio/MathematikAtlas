@@ -3,9 +3,8 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 /**
  * Kanonischer Fachname des einzigen methodenartigen Laufzeitobjekts.
  *
- * Der bisherige Quellname [Funktion] bleibt als identischer Typ bestehen, damit
- * bestehende Karten, Tests und Erweiterungen nicht durch eine reine Umbenennung
- * gebrochen werden. Es entsteht ausdrücklich keine zweite Objektklasse.
+ * Der bisherige Quellname [Funktion] bleibt vorübergehend als identischer Typ
+ * bestehen. Es entsteht ausdrücklich keine zweite Objektklasse.
  */
 typealias Methode = Funktion
 typealias MethodenParameter = FunktionsParameter
@@ -133,8 +132,9 @@ private fun MengenAusdruck.istFunktionalerRaum(): Boolean = when (this) {
     KomplexeZahlen -> true
     is Vektorraum -> skalarMenge.istFunktionalerRaum()
     is Matrizenraum -> skalarMenge.istFunktionalerRaum()
+    is Tensorraum -> elementMenge.istFunktionalerRaum()
     is Tupelraum -> komponenten.all { it.istFunktionalerRaum() }
-    else -> this::class.simpleName?.contains("Tensor", ignoreCase = true) == true
+    else -> false
 }
 
 /** Semantische Eingangsprüfung statt immer weiterer Methoden-Anschlussunterarten. */
@@ -150,6 +150,24 @@ fun interface MethodenAnforderung {
         override fun prüfe(methode: Funktion): String? =
             if (methode.parameter.size == anzahl) null
             else "Die Methode '${methode.name}' muss genau $anzahl Argumente besitzen."
+    }
+
+    data class ErgebnisArt(val anschlussArt: String) : MethodenAnforderung {
+        override fun prüfe(methode: Funktion): String? {
+            val passt = when (anschlussArt) {
+                "mathematik.objekt" -> true
+                "mathematik.zahl" -> methode.vorschrift is ZahlAusdruck
+                "mathematik.aussage" -> methode.istPrädikat()
+                "mathematik.menge" -> methode.vorschrift is MengenAusdruck
+                "mathematik.vektor.spalte" -> methode.vorschrift is SpaltenVektor
+                "mathematik.vektor.zeile" -> methode.vorschrift is ZeilenVektor
+                "mathematik.matrix" -> methode.vorschrift is Matrix
+                "mathematik.tensor" -> methode.vorschrift is Tensor
+                else -> (methode.vorschrift as? TypisiertesElement)?.anschlussArt == anschlussArt
+            }
+            return if (passt) null else
+                "Die Methode '${methode.name}' liefert kein Ergebnis der Anschlussart '$anschlussArt'."
+        }
     }
 
     data object Prädikat : MethodenAnforderung {

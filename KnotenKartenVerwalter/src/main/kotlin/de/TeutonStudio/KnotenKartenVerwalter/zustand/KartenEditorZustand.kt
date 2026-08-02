@@ -30,6 +30,8 @@ class KartenEditorZustand(
 
     private val rückgängig = ArrayDeque<KartenDaten>()
     private val wiederholen = ArrayDeque<KartenDaten>()
+    private var rückgängigVerfügbar by mutableStateOf(false)
+    private var wiederholenVerfügbar by mutableStateOf(false)
     private var interaktionsStart: KartenDaten? = null
     /** Verbindung, deren Eingangsende während einer Neuverdrahtung gerade frei gezogen wird. */
     private var neuZuVerdrahtendeVerbindung: VerbindungDaten? = null
@@ -44,7 +46,7 @@ class KartenEditorZustand(
         neuZuVerdrahtendeVerbindung = null
         letzteMeldung = null
         interaktionsStart = null
-        if (historieLeeren) { rückgängig.clear(); wiederholen.clear() }
+        if (historieLeeren) leereHistorie()
     }
 
     fun beginneInteraktion() {
@@ -55,9 +57,7 @@ class KartenEditorZustand(
         val start = interaktionsStart ?: return
         interaktionsStart = null
         if (start == karte) return
-        rückgängig.addLast(start)
-        if (rückgängig.size > 100) rückgängig.removeFirst()
-        wiederholen.clear()
+        merkeFürRückgängig(start)
     }
 
     fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {
@@ -75,11 +75,7 @@ class KartenEditorZustand(
             .ohneUnverbundeneDynamischeEingänge()
             .bereinigteVisuelleGruppen()
         if (neu == karte) return
-        if (mitHistorie) {
-            rückgängig.addLast(standVorAktion)
-            if (rückgängig.size > 100) rückgängig.removeFirst()
-            wiederholen.clear()
-        }
+        if (mitHistorie) merkeFürRückgängig(standVorAktion)
         karte = neu
         bereinigeAuswahl()
     }
@@ -337,9 +333,7 @@ class KartenEditorZustand(
             )
         }).ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
         if (neu == vorher) return
-        rückgängig.addLast(vorher)
-        if (rückgängig.size > 100) rückgängig.removeFirst()
-        wiederholen.clear()
+        merkeFürRückgängig(vorher)
         karte = neu
     }
 
@@ -369,29 +363,51 @@ class KartenEditorZustand(
             .ohneUnverbundeneDynamischeEingänge()
             .bereinigteVisuelleGruppen()
         if (neu == vorher) return
-        rückgängig.addLast(vorher)
-        if (rückgängig.size > 100) rückgängig.removeFirst()
-        wiederholen.clear()
+        merkeFürRückgängig(vorher)
         karte = neu
     }
 
-    fun kannRückgängig() = rückgängig.isNotEmpty()
-    fun kannWiederholen() = wiederholen.isNotEmpty()
+    fun kannRückgängig() = rückgängigVerfügbar
+    fun kannWiederholen() = wiederholenVerfügbar
 
     fun rückgängig() {
         if (rückgängig.isEmpty()) return
         verwerfeVerbindungsInteraktion()
-        wiederholen.addLast(karte)
+        wiederholen.fügeBegrenztHinzu(karte)
         karte = rückgängig.removeLast().bereinigteVisuelleGruppen()
+        aktualisiereHistorienStatus()
         bereinigeAuswahl()
     }
 
     fun wiederholen() {
         if (wiederholen.isEmpty()) return
         verwerfeVerbindungsInteraktion()
-        rückgängig.addLast(karte)
+        rückgängig.fügeBegrenztHinzu(karte)
         karte = wiederholen.removeLast().bereinigteVisuelleGruppen()
+        aktualisiereHistorienStatus()
         bereinigeAuswahl()
+    }
+
+    private fun merkeFürRückgängig(stand: KartenDaten) {
+        rückgängig.fügeBegrenztHinzu(stand)
+        wiederholen.clear()
+        aktualisiereHistorienStatus()
+    }
+
+    private fun leereHistorie() {
+        rückgängig.clear()
+        wiederholen.clear()
+        aktualisiereHistorienStatus()
+    }
+
+    private fun aktualisiereHistorienStatus() {
+        rückgängigVerfügbar = rückgängig.isNotEmpty()
+        wiederholenVerfügbar = wiederholen.isNotEmpty()
+    }
+
+    private fun ArrayDeque<KartenDaten>.fügeBegrenztHinzu(stand: KartenDaten) {
+        addLast(stand)
+        if (size > 100) removeFirst()
     }
 
     /**

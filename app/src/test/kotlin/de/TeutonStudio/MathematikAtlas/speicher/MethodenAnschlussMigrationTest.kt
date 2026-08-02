@@ -1,13 +1,14 @@
 package de.TeutonStudio.MathematikAtlas.speicher
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKartenAdapter.methodenErgebnisArtSchlüssel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 
 class MethodenAnschlussMigrationTest {
     @Test
-    fun `alte methodenanschluesse werden ohne id oder kantenverlust normalisiert`() {
+    fun `alte methodenanschluesse werden ohne id kanten oder vertragsverlust normalisiert`() {
         val ausgang = AnschlussDaten(
             name = "methode",
             richtung = AnschlussRichtung.Ausgang,
@@ -34,6 +35,8 @@ class MethodenAnschlussMigrationTest {
             listOf(AnschlussArtId("mathematik.methode"), AnschlussArtId("mathematik.methode")),
             migriert.knoten.flatMap { it.anschlüsse }.map { it.art },
         )
+        assertEquals("mathematik.aussage", migriert.knoten[0].parameter[methodenErgebnisArtSchlüssel("methode")])
+        assertEquals("mathematik.zahl", migriert.knoten[1].parameter[methodenErgebnisArtSchlüssel("methode")])
         assertEquals(listOf(ausgang.id, eingang.id), migriert.knoten.flatMap { it.anschlüsse }.map { it.id })
         assertEquals(listOf(verbindung), migriert.verbindungen)
         assertSame(migriert, migriert.migriereMethodenAnschlüsse())

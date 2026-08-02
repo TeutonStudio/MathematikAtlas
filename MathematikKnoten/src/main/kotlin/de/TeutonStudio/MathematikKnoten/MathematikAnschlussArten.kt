@@ -11,6 +11,7 @@ object MathematikAnschlussArten {
     val SpaltenVektor = AnschlussArt(AnschlussArtId("mathematik.vektor.spalte"), "Spaltenvektor", Vektor.id)
     val ZeilenVektor = AnschlussArt(AnschlussArtId("mathematik.vektor.zeile"), "Zeilenvektor", Vektor.id)
     val Matrix = AnschlussArt(AnschlussArtId("mathematik.matrix"), "Matrix", Objekt.id)
+    val Tensor = AnschlussArt(AnschlussArtId("mathematik.tensor"), "Tensor", Objekt.id)
     val Tupel = AnschlussArt(AnschlussArtId("mathematik.tupel"), "Tupel", Objekt.id)
 
     /** Einzige produktive Anschlussart für sämtliche Methoden. */
@@ -53,6 +54,7 @@ object MathematikAnschlussArten {
         SpaltenVektor,
         ZeilenVektor,
         Matrix,
+        Tensor,
         Tupel,
         Methode,
         LegacyFunktion,

@@ -4,6 +4,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 const val DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG = "@mathematik.definitionsmenge.doppelpunkt"
+const val METHODEN_ANFORDERUNG_PREFIX = "methodenAnforderung."
+
+fun methodenErgebnisArtSchlüssel(anschlussName: String): String =
+    "$METHODEN_ANFORDERUNG_PREFIX$anschlussName.ergebnisArt"
 
 data class ArgumentIdentität(
     val quelle: String,
@@ -33,6 +37,8 @@ data class BedingterWert(
     val latexDarstellung: String? = null,
     /** Gemeinsame Anschlussart der Elemente einer mengenwertigen Ausgabe. */
     val elementArt: AnschlussArtId? = null,
+    /** Kennzeichnet einen unbekannten Methodenparameter einer Karte, nicht eine konkrete Methode. */
+    val symbolischeMethode: Boolean = false,
 )
 
 /** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die mathematische Standarddarstellung. */
@@ -127,13 +133,7 @@ data class KartenAuswertungsErgebnis(
     val knoten: Map<KnotenId, KnotenAuswertungsErgebnis>,
     private val basisFehler: List<String>,
 ) {
-    /**
-     * Defensiver Kartenfehler für doppelte offene Prädikatsnamen.
-     *
-     * Identische Methodenobjekte, die lediglich durch weitere Knoten gereicht
-     * werden, zählen einmal. Verschiedene Definitionen mit demselben Namen
-     * werden nicht automatisch umbenannt.
-     */
+    /** Defensiver Kartenfehler für doppelte offene Prädikatsnamen. */
     val fehler: List<String> = basisFehler + knoten.values
         .flatMap { it.ausgaben.values }
         .mapNotNull { it.objekt as? Methode }
@@ -145,7 +145,6 @@ data class KartenAuswertungsErgebnis(
         .sorted()
         .map { name -> "Der Prädikatsname '$name' wird innerhalb der Karte mehrfach definiert." }
 }
-
 
 private fun Iterable<Methode>.eindeutigNachIdentität(): List<Methode> {
     val gesehen = java.util.Collections.newSetFromMap(
@@ -176,7 +175,7 @@ class MathematikAuswerterRegister {
         MENGENDEFINATOR_ART -> MengendefinatorAuswerter
         FALTUNGSKONSTRUKTOR_ART -> FaltungskonstruktorAuswerter
         FALTUNGSDEFINATOR_ART -> FaltungsdefinatorAuswerter
-        METHODEN_ANWENDUNG_ART -> MethodenAnwendungAuswerter
+        METHODEN_ANWENDUNG_ART, METHODEN_AUFRUF_ART -> MethodenAnwendungAuswerter
         METHODEN_ZIELMENGE_ART -> MethodenZielmengeAuswerter
         else -> auswerter[art]
     }
@@ -187,6 +186,7 @@ class MathematikAuswerterRegister {
         FALTUNGSKONSTRUKTOR_ART,
         FALTUNGSDEFINATOR_ART,
         METHODEN_ANWENDUNG_ART,
+        METHODEN_AUFRUF_ART,
         METHODEN_ZIELMENGE_ART,
     )
 }

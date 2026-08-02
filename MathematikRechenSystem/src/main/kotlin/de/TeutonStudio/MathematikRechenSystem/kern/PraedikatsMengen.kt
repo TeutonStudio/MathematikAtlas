@@ -61,15 +61,22 @@ data class PrädikatsMenge(
 }
 
 /**
- * Erzeugt eine grundmengenfreie Prädikatsmenge und wertet eindeutig endliche
- * Spezialfälle symbolisch aus. Insbesondere werden Gleichheitsfälle wie
- * `{x | x ∈ R ∧ x = 2}` zur Einzelmenge `{2}` normalisiert.
+ * Erzeugt eine Prädikatsmenge und wertet eindeutig entscheidbare Spezialfälle
+ * aus. Eine bekannte Obermenge erlaubt insbesondere die korrekte Normalisierung
+ * der konstant wahren Bedingung zum gesamten Wertevorrat.
  */
 fun definierePrädikatsMenge(
     element: FunktionsParameter,
     bedingung: Aussage,
     kontext: RechenKontext = RechenKontext(),
+    oberMenge: MengenAusdruck? = null,
 ): MengenAusdruck {
+    when (bedingung.entscheide(kontext).wahrheitswert) {
+        Wahrheitswert.Wahr -> if (oberMenge != null) return oberMenge
+        Wahrheitswert.Lüge -> return LeereMenge
+        null -> Unit
+    }
+
     if (element is AussagenParameter) {
         if (bedingung == element) return EndlicheMenge(setOf(WahrheitsKonstante(true)))
         if (bedingung is Negation && bedingung.aussage == element) {

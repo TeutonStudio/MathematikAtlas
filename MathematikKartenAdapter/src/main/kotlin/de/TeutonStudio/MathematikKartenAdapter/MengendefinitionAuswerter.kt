@@ -26,17 +26,18 @@ internal object MengenkonstruktorAuswerter : MathematikKnotenAuswerter {
                 ?.trim().orEmpty().ifBlank { "mathematik.zahl" },
         )
         val element = elementAusdruck(elementName, elementArt)
-        val fehlendeObermenge = FehlendeObermenge(elementArt.wert)
+        val oberMenge = kontext.eingänge["oberMenge"]?.objekt as? MengenAusdruck
+            ?: FehlendeObermenge(elementArt.wert)
 
         return KnotenAuswertungsErgebnis(mapOf(
             "element" to BedingterWert(
                 objekt = element,
-                werteVorrat = null,
+                werteVorrat = oberMenge.takeUnless { it is FehlendeObermenge },
                 variablenQuellen = listOf(
                     VariablenQuelle(
                         knotenId = kontext.knoten.id,
                         name = elementName,
-                        werteVorrat = fehlendeObermenge,
+                        werteVorrat = oberMenge,
                         alsMethodenParameter = false,
                         bindungsId = paarId,
                         bindungsName = mengenName,
@@ -70,7 +71,13 @@ internal object MengendefinatorAuswerter : MathematikKnotenAuswerter {
         val mengenName = quelle.bindungsName?.trim().orEmpty().ifBlank { "M" }
         val elementArt = quelle.gebundeneArt ?: AnschlussArtId("mathematik.objekt")
         val element = elementAusdruck(quelle.name, elementArt)
-        val menge = definierePrädikatsMenge(element, aussage, kontext.rechenKontext)
+        val oberMenge = quelle.werteVorrat.takeUnless { it is FehlendeObermenge }
+        val menge = definierePrädikatsMenge(
+            element = element,
+            bedingung = aussage,
+            kontext = kontext.rechenKontext,
+            oberMenge = oberMenge,
+        )
         return KnotenAuswertungsErgebnis(mapOf(
             "menge" to BedingterWert(
                 objekt = menge,

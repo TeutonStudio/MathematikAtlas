@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.12.x"
-current_version = "2.12.3"
+current_series = "2.15.x"
+current_version = "2.15.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -332,11 +332,11 @@ previous_release = "2.10.2"
 branch = "agent/v2.10.3-karten-wahrheitstabellen"
 kind = "fix"
 version_axis = "x"
-reason = "Erweitert den Wahrheitstabellendialog auf fest versionierte Karten-Knoten mit Aussageausgängen, gemischten Eingängen und mehreren Ausgabespalten, ohne einen neuen Knotentyp einzuführen."
+reason = "Erweitert den Wahrheitstabellendialog auf fest versionierte Karten-Knoten mit Aussageausgängen, gemischten Eingaben und mehreren Ausgabespalten, ohne einen neuen Knotentyp einzuführen."
 
 [[releases]]
 version = "2.11.0"
-title = "Mengendefinitionskarten für Mengenoperatore"
+title = "Mengendefinitionskarten für Mengenoperatoren"
 roadmap = "v2.11.x Symbolische Mengenoperatoren und Definitionskarten"
 status = "released"
 previous_release = "2.10.3"
@@ -355,7 +355,7 @@ previous_release = "2.11.0"
 branch = "agent/v2.11.1-kartenknoten"
 kind = "feature"
 version_axis = "x"
-reason = "Erweitert den vorhandenen Kartenverweis-Knoten um Schnittstellen- und Methodenzustand, Versionwechsel, Kompatibilitätsprüfung und Drag-and-drop, ohne einen neuen registrierten Knotentyp einzuführen."
+reason = "Erweitert den vorhandenen Kartenverweis-Knoten um Schnittstellen- und Methodenzustand, Versionswechsel, Kompatibilitätsprüfung und Drag-and-drop, ohne einen neuen registrierten Knotentyp einzuführen."
 
 [[releases]]
 version = "2.12.0"
@@ -380,7 +380,6 @@ kind = "fix"
 version_axis = "x"
 reason = "Korrigiert die sichtbare Adjunktion konsistent auf einen ausgefüllten Punkt, behebt die fehlerhafte UND-Darstellung im Kartenadapter und ergänzt graue Zeilenindizes in direkten sowie kartenbasierten Wahrheitstabellen, ohne einen neuen Knotentyp einzuführen."
 
-
 [[releases]]
 version = "2.12.2"
 title = "Typisierte endliche Mengen im Inspector"
@@ -393,13 +392,59 @@ version_axis = "x"
 reason = "Erweitert den vorhandenen Endliche-Menge-Knoten um eine strukturierte typisierte Elementliste, Migration und Elementtyp-Metadaten, ohne einen neuen Knotentyp einzuführen."
 
 [[releases]]
-version = "2.12.3"
-title = "Einheitliches Methodenmodell und Prädikatsdarstellung"
-roadmap = "v2.12.x Methodenfundament und Aussagenlogik"
+version = "2.13.0"
+title = "Allgemeiner Methodenaufruf"
+roadmap = "v2.13.x Methoden und wiederverwendbare Karten"
 status = "released"
 previous_release = "2.12.2"
-branch = "agent/v2.12.3-methoden-praedikate"
+branch = "agent/v2.13.0-methode-aufrufen"
 kind = "feature"
-version_axis = "x"
-reason = "Vereinheitlicht methodenartige Objekte und Prädikatsdarstellung ohne einen neuen registrierten Knotentyp einzuführen."
+version_axis = "y"
+new_node_types = ["mathematik.methodeAufrufen"]
+reason = "Führt einen separat erzeugbaren allgemeinen Methodenaufruf mit geordneten dynamischen Argumenten, konkreter und symbolischer Auswertung sowie Zielmengenweitergabe ein."
 
+[[releases]]
+version = "2.13.1"
+title = "Methodenaufruf aus Methodenvertrag"
+roadmap = "v2.13.x Methoden und wiederverwendbare Karten"
+status = "released"
+previous_release = "2.13.0"
+branch = "agent/v2.13.1-methode-aufruf-vertrag"
+kind = "fix"
+version_axis = "x"
+reason = "Vervollständigt den vorhandenen Methodenaufruf um automatische Stelligkeit, stabile Argumentanschlüsse, Typ- und Zielmengeninferenz sowie eine schreibgeschützte Vertragsanzeige im Inspector, ohne einen weiteren Knotentyp einzuführen."
+
+[[releases]]
+version = "2.13.2"
+title = "README, Apache-2.0 und Issue-Verwalter"
+roadmap = "v2.13.x Dokumentation und Projektsteuerung"
+status = "released"
+previous_release = "2.13.1"
+branch = "agent/v2.13.2-readme-issue-verwalter"
+kind = "governance"
+version_axis = "x"
+reason = "Überarbeitet die öffentliche Projektdokumentation, ergänzt die Apache License 2.0 und führt den Issue-Verwalter-Agenten ein, ohne einen neuen registrierten Knotentyp hinzuzufügen."
+
+[[releases]]
+version = "2.14.0"
+title = "Auswahl geometrischer Ecken, Kanten und Flächen"
+roadmap = "v2.14.x Geometrische Strukturen und Teilobjekte"
+status = "released"
+previous_release = "2.13.2"
+branch = "release/v2.14.0-geometrie-teilobjekte"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.geometrie.eckeVon", "mathematik.geometrie.kanteVon", "mathematik.geometrie.flaecheVon"]
+reason = "Führt drei separat erzeugbare Geometrieknoten ein, die 0-, 1- und 2-Zellen eines geometrischen Objekts über stabile Zell-IDs auswählen und konkret typisiert ausgeben."
+
+[[releases]]
+version = "2.15.0"
+title = "Universelles Transponieren und dynamische Kompositionsketten"
+roadmap = "v2.15.x Lineare Algebra und Methodenoperationen"
+status = "released"
+previous_release = "2.14.0"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.transponieren"]
+reason = "Führt mit mathematik.transponieren einen neuen separat erzeugbaren Universalknoten für Vektoren, Matrizen und Tensoren ein. Die dynamische Kompositionskette erweitert den bestehenden Kompositionsknoten ohne einen weiteren Typ-Schlüssel."
+branch_exception = "Der bereits geöffnete Draft-PR #89 verwendet den vor der Releaseklassifikation angelegten Branch agent/issues-80-81-85; GitHub erlaubt den Headbranch eines bestehenden PRs nicht nachträglich auszutauschen."

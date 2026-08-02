@@ -24,7 +24,7 @@ internal fun iteriertesOperatorKonzept(varianten: List<KnotenVorlage>): KonzeptD
                     id = if (index == 0) "definition" else "definition-${iterierterSlug(vorlage.name)}-$index",
                     titel = "${namensPrefix}Definition",
                     rolle = if (index == 0) KonzeptReiterRolle.Definition else KonzeptReiterRolle.Spezialfall,
-                    karte = iterierteOperatorDefinitionsKarte(vorlage, index * 10),
+                    karte = iterierteDefinitionsKarte(vorlage, index * 10),
                 ),
             )
             add(
