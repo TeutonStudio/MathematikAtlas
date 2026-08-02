@@ -42,6 +42,7 @@ object KnotenInspektorRegister {
         "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
         "mathematik.transponieren" to TransponierenInspektor,
+        "mathematik.matrixdiagonale" to MatrixdiagonaleInspektor,
         GeometrieTeilobjektTyp.Ecke.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Kante.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Fläche.knotenArt to GeometrieTeilobjektInspektor,
