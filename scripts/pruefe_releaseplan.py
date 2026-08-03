@@ -37,6 +37,16 @@ def versionsteile(version: str) -> tuple[int, int, int]:
     return tuple(map(int, treffer.groups()))
 
 
+def erlaubte_releasebranches(version: str) -> tuple[str, ...]:
+    """Historische und aktuelle Branchmuster für einen veröffentlichten Stand."""
+    return (
+        f"agent/v{version}-",
+        f"release/v{version}-",
+        f"samai/v{version}-",
+        f"samai/v{version}/",
+    )
+
+
 def lade_plan() -> dict:
     if not PLAN_PFAD.is_file():
         fehler(f"{PLAN_PFAD.relative_to(WURZEL)} fehlt.")
@@ -115,10 +125,11 @@ def prüfe_plan(plan: dict) -> tuple[str, dict[str, dict]]:
         cursor = vorgänger
 
     aktueller_branch = str(aktuell.get("branch", ""))
-    erwartete_präfixe = (f"agent/v{aktuelle_version}-", f"release/v{aktuelle_version}-")
+    erwartete_präfixe = erlaubte_releasebranches(aktuelle_version)
     if aktueller_branch and not aktueller_branch.startswith(erwartete_präfixe):
         fehler(
-            f"Branch {aktueller_branch!r} passt nicht zur aktuellen Version {aktuelle_version}."
+            f"Branch {aktueller_branch!r} passt nicht zur aktuellen Version {aktuelle_version}. "
+            f"Erlaubt sind die Präfixe: {', '.join(erwartete_präfixe)}."
         )
 
     return aktuelle_version, nach_version

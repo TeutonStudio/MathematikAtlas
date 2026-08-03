@@ -1,8 +1,12 @@
-# Mathematik Atlas – Repository-Anweisungen für Codex
+# Mathematik Atlas – verbindliche Agentenanweisungen
 
-## Projektziel
+## Zweck dieser Datei
 
-Der Mathematik Atlas ist eine native Android-Anwendung, die mathematische Vorgänge als interaktive Knotenkarten darstellt. Mathematische Objekte, Operationen und Umformungen werden als Knoten verbunden, topologisch ausgewertet und als versionierte Karten gespeichert.
+Diese Datei ist die kurze, verbindliche Einstiegskarte für Agenten. Ausführliche Abläufe, Rollen und technische Verträge liegen in den unter **Verbindliche Lektüre** genannten Dokumenten. Wiederhole deren vollständigen Inhalt nicht hier; lies nur die für die aktuelle Aufgabe erforderlichen Quellen.
+
+## Projektidentität
+
+Der Mathematik Atlas ist eine native Android-Anwendung, die mathematische Objekte und Vorgänge als interaktive Knotenkarten modelliert, verbindet, auswertet und versioniert.
 
 Projektbegriffe:
 
@@ -10,127 +14,141 @@ Projektbegriffe:
 - **Anschlüsse** sind typisierte `AnschlussDaten`-Instanzen.
 - **Verbindungen** sind `VerbindungDaten` zwischen zwei `AnschlussVerweis`-Instanzen.
 - **Karten** sind versionierte `KartenDaten` mit Knoten, Verbindungen, Ansicht und optionalen visuellen Gruppen.
-- Mathematische Vorgänge umfassen unter anderem Terme, Gleichungen, Rechnungen, Funktionen, Mengen, Relationen, Graphen, Geometrie und iterative Operatoren.
 
-Verwendete Technologien:
+Technologien:
 
-- Kotlin und Gradle mit Kotlin-DSL,
-- Android und Jetpack Compose,
+- Kotlin, Gradle Kotlin-DSL, Android und Jetpack Compose,
 - Material 3,
-- ein Android- und Compose-freier Kotlin-Rechenkern,
-- ein nativer Compose-Renderer für den vom Rechenkern erzeugten LaTeX-Teilumfang,
-- die bereits im Repository vorhandenen Abhängigkeiten.
+- Android- und Compose-freier Kotlin-Rechenkern,
+- nativer Compose-Renderer für den unterstützten LaTeX-Teilumfang.
 
-Das Projekt verwendet ausdrücklich **nicht** Vite, React, React Flow, shadcn/ui oder KaTeX. Ermittle konkrete Versionen, Plugins, Tasks, Pakete und Verzeichnisnamen immer aus dem Repository.
+Das Repository verwendet ausdrücklich **nicht** Vite, React, React Flow, shadcn/ui oder KaTeX. Ermittle Versionen, Plugins, Tasks, Pakete und Verzeichnisnamen aus dem Repository statt aus älteren Projektbeschreibungen.
 
 ## Verbindliche Lektüre
 
-Lies vor Architektur- oder Implementierungsarbeit die für die Aufgabe relevanten Dateien:
+Lies vor der Arbeit nur die aufgabenspezifisch relevanten Quellen:
 
-1. `docs/codex/PROJECT_CONTEXT.md`
-2. `docs/codex/CURRENT_STATE.md`
-3. `docs/codex/ARCHITECTURE.md`
-4. `docs/codex/NODE_CONTRACT.md`
-5. bei Versions-, Branch- oder Mergearbeit zusätzlich `release/roadmap.toml` und `docs/codex/RELEASE_WORKFLOW.md`
-6. bei neuen Knoten zusätzlich `docs/codex/NEW_NODE_WORKFLOW.md`
-7. bei größeren Änderungen zusätzlich `docs/codex/PLANS.md`
-8. bei Reviews zusätzlich `docs/codex/CODE_REVIEW.md`
-9. bei Tests zusätzlich `docs/codex/TEST_STRATEGY.md`
+1. Grundkontext: `docs/codex/PROJECT_CONTEXT.md`, `docs/codex/CURRENT_STATE.md`
+2. Architektur: `docs/codex/ARCHITECTURE.md`
+3. Knotenverträge: `docs/codex/NODE_CONTRACT.md`
+4. Release-, Branch- oder Mergearbeit: `release/roadmap.toml`, `docs/codex/RELEASE_WORKFLOW.md`
+5. Git-Identität und Branchherkunft: `docs/codex/GIT_IDENTITY.md`
+6. Neue Knoten: `docs/codex/NEW_NODE_WORKFLOW.md`
+7. Größere Änderungen: `docs/codex/PLANS.md`
+8. Reviews: `docs/codex/CODE_REVIEW.md`
+9. Tests: `docs/codex/TEST_STRATEGY.md`
 
-Dokumente sind Orientierung, nicht Ersatz für Codeprüfung. Wenn Dokumentation und Code einander widersprechen, behandle den Code als aktuellen Istzustand, weise auf den Widerspruch hin und aktualisiere die betroffene Dokumentation im Rahmen der Aufgabe. Ein älterer Verifikationsstand in `CURRENT_STATE.md` darf nicht als Beleg für neuere Commits ausgegeben werden.
+Dokumentation ist Orientierung, nicht Ersatz für Code- und Git-Prüfung. Widersprechen Dokumentation und Code einander, gilt der nachweisbare Istzustand. Aktualisiere widersprüchliche Dokumentation im Rahmen der Aufgabe.
+
+## Git-Identität von SamAI
+
+Alle durch SamAI lokal erzeugten Commits müssen folgende Metadaten besitzen:
+
+```text
+Author:    SamAI <46108494+TeutonStudio@users.noreply.github.com>
+Committer: SamAI <46108494+TeutonStudio@users.noreply.github.com>
+```
+
+Verbindliche Regeln:
+
+- Erzeuge SamAI-Branches mit `bash scripts/samai-git.sh branch ...`.
+- SamAI-Branches beginnen mit `samai/`.
+- Erzeuge SamAI-Commits ausschließlich mit `bash scripts/samai-git.sh commit ...`.
+- Stage nur ausdrücklich zur Aufgabe gehörende Dateien; das Skript führt kein automatisches Staging aus.
+- Prüfe vor dem Push mit `bash scripts/samai-git.sh verify HEAD`.
+- Keine direkten Commits auf `master` oder `main`.
+- Verändere weder globale noch Repository-lokale `user.name`- oder `user.email`-Werte für SamAI.
+- Der GitHub-Connector kann Autor und Committer derzeit nicht auf `SamAI` setzen. Connector-Commits dürfen daher nicht als korrekt signierte SamAI-Commits bezeichnet werden und müssen im Abschlussbericht ausdrücklich genannt werden.
+
+Ein Branch besitzt technisch keinen Autor. Die SamAI-Herkunft wird deshalb über den Präfix `samai/` kenntlich gemacht. Vollständige Regeln und Ausnahmen stehen in `docs/codex/GIT_IDENTITY.md`.
 
 ## Modulgrenzen
 
-- `MathematikRechenSystem` enthält die mathematische Domäne und bleibt frei von Android, Compose und Karteneditor-Abhängigkeiten.
-- `KnotenKartenVerwalter` enthält den fachneutralen Karteneditor, Graphdaten, Interaktion und Undo/Redo. Es darf keine Mathematikregeln oder knotenspezifischen Parameterkonventionen kennen.
-- `MathematikKartenAdapter` verbindet Graph und Rechenkern, führt Karten topologisch aus und verwaltet Auswertungsergebnisse und Cache.
-- `MathematikKnoten` enthält mathematische Vorlagen, Anschlussarten, Auswerter und spezialisierte Compose-Renderer.
-- `app` koordiniert Kartenbibliothek, Navigation, Inspector, Persistenz, Import/Export und anwendungsspezifische Dialoge.
+- `MathematikRechenSystem`: mathematische Domäne; frei von Android, Compose und Karteneditor-Abhängigkeiten.
+- `KnotenKartenVerwalter`: fachneutraler Karteneditor, Graphdaten, Interaktion und Undo/Redo; keine Mathematikregeln.
+- `MathematikKartenAdapter`: Verbindung zwischen Graph und Rechenkern, topologische Ausführung und Auswertungscache.
+- `MathematikKnoten`: mathematische Vorlagen, Anschlussarten, Auswerter und spezialisierte Renderer.
+- `app`: Navigation, Inspector, Bibliothek, Persistenz, Import/Export und anwendungsspezifische Dialoge.
 
-Abhängigkeiten dürfen nur in der durch die Gradle-Module vorgegebenen Richtung erweitert werden. Eine bequeme Abkürzung ist keine neue Architektur, sondern meist nur technische Schuld mit optimistischem Namen.
+Abhängigkeiten dürfen nur in der durch die Gradle-Module vorgegebenen Richtung erweitert werden.
 
-## Architekturregeln
+## Unverhandelbare Architekturregeln
 
 - Trenne mathematische Semantik, Graphzustand, Anwendungskoordination, Darstellung und Persistenz.
-- Implementiere mathematische Regeln im Rechenkern oder in dafür vorgesehenen Auswertern, nicht ausschließlich in Composables oder Pointer-Handlern.
-- Ein Knoten visualisiert und konfiguriert ein fachliches Modell; er ist nicht alleinige Quelle der mathematischen Wahrheit.
-- Verwende stabile, eindeutige IDs für Karten, Knoten, Anschlüsse, Verbindungen und visuelle Gruppen.
-- Definiere für jeden Anschluss Richtung, fachlichen Datentyp, Kardinalität, Reihenfolge und Kompatibilitätsregeln.
-- Speichere keine Composables, Funktionen, `State`-Objekte oder andere Laufzeitobjekte in persistierten Daten.
-- Registriere mathematische Knotenvorlagen über den vorhandenen Vorlagenkatalog und Auswerter über das bestehende Auswerterregister. Erzeuge kein paralleles Ersatzregister.
-- Berücksichtige Laden, Speichern, Kopieren, Löschen, Undo/Redo und Migrationen, soweit die Änderung diese Pfade betrifft.
-- Der Inspector verändert validierte `KnotenDaten` über die vorgesehenen Kartenaktionen und keine unabhängigen UI-Schattenzustände.
-- LaTeX wird aus fachlichen Objekten oder Ausdrücken erzeugt. Eine alternative Darstellung darf die mathematische Semantik nicht heimlich ersetzen.
-- Der neutrale Karteneditor darf keine Namen wie `festeEingänge`, mathematische Knotenschlüssel oder sonstige Konventionen höherer Module voraussetzen.
-- Bestehende Abstraktionen sind zu erweitern, solange sie die neue Semantik korrekt tragen. Eine neue Abstraktion braucht eine konkrete Begründung.
+- Implementiere Mathematik im Rechenkern oder vorgesehenen Auswertern, nicht ausschließlich in Composables oder Pointer-Handlern.
+- Ein Knoten visualisiert und konfiguriert ein fachliches Modell; er ist nicht alleinige Quelle mathematischer Wahrheit.
+- Verwende stabile IDs für Karten, Knoten, Anschlüsse, Verbindungen und visuelle Gruppen.
+- Definiere für Anschlüsse Richtung, Datentyp, Kardinalität, Reihenfolge und Kompatibilität.
+- Persistiere keine Composables, Funktionen, `State`-Objekte oder andere Laufzeitobjekte.
+- Verwende bestehende Vorlagenkataloge und Auswerterregister; erzeuge keine parallelen Ersatzsysteme.
+- Berücksichtige Laden, Speichern, Kopieren, Löschen, Undo/Redo und Migrationen, sofern die Änderung diese Pfade berührt.
+- Der Inspector verändert validierte `KnotenDaten` über vorgesehene Kartenaktionen, nicht über unabhängigen UI-Schattenzustand.
+- Der fachneutrale Karteneditor darf keine mathematischen Parameterkonventionen kennen.
 - Keine neue Produktionsabhängigkeit ohne nachgewiesene Notwendigkeit.
 - Keine beiläufigen Refactorings außerhalb des Aufgabenumfangs.
 
 ## Arbeitsweise
 
-- Untersuche vor Änderungen die tatsächlichen Aufrufpfade und mindestens einen vergleichbaren vorhandenen Knoten oder Editorpfad.
-- Bestimme ausführbare Prüfungen aus Gradle-Konfiguration, Skripten und CI. Suche nicht nach `package.json`, wenn das Repository ein Android-Gradle-Projekt ist.
-- Verwende keine geratenen Befehle als angeblich erfolgreiche Prüfung.
-- Ändere nur Dateien, die für die Aufgabe erforderlich sind.
-- Bewahre bestehende öffentliche APIs, sofern die Aufgabe keine bewusste Änderung verlangt.
-- Dokumentiere Annahmen, Risiken und Abweichungen vom Plan.
-- Bei längeren Aufgaben führe einen ExecPlan nach `docs/codex/PLANS.md`.
-- Halte `docs/codex/CURRENT_STATE.md` nur mit nachweisbaren Fakten aktuell.
-- Halte dauerhafte Architekturentscheidungen als ADR unter `docs/codex/decisions/` fest.
+1. Prüfe vor Änderungen tatsächliche Aufrufpfade und mindestens einen vergleichbaren vorhandenen Pfad.
+2. Ermittle passende Prüfungen aus Gradle, Skripten und CI.
+3. Ändere nur erforderliche Dateien und wahre bestehende öffentliche APIs, sofern keine bewusste Änderung verlangt ist.
+4. Dokumentiere Annahmen, Risiken und nicht ausführbare Prüfungen konkret.
+5. Verwende bei längeren Aufgaben einen ExecPlan nach `docs/codex/PLANS.md`.
+6. Aktualisiere `CURRENT_STATE.md` nur mit nachweisbaren Fakten.
+7. Halte dauerhafte Architekturentscheidungen als ADR unter `docs/codex/decisions/` fest.
+8. Prüfe den Abschlussdiff auf unbeabsichtigte Änderungen.
 
-## Release- und Master-Verwaltung
+## Release- und Branchverwaltung
 
-Bei jeder Anfrage, die eine Versionsnummer, einen neuen Branch, einen Pull Request gegen `master` oder eine Veröffentlichung betrifft, verwende den Skill `release-verwalten` und den Agenten `master_verwalter`.
+Bei Versionsnummern, neuen Release- oder SamAI-Branches, Pull Requests gegen `master` und Veröffentlichungen verwende den Skill `release-verwalten` und den Agenten `master_verwalter`.
 
-Vor neuer Entwicklungsarbeit mit Versionsnummer:
+Versionsschema `vM.y.x`:
 
-1. Ermittle den tatsächlichen `master`-HEAD und offene Pull Requests.
-2. Prüfe `release/roadmap.toml` gegen die Git-Historie.
-3. Klassifiziere den beauftragten Umfang als neuer Versionsraum, Knoten-Version oder Änderungs-Version.
-4. Bestimme daraus die nächste zulässige Version und ihren Vorgängerstand.
-5. Lege Release- und Subbranches ausschließlich nach `docs/codex/RELEASE_WORKFLOW.md` an.
-6. Führe `scripts/pruefe_releaseplan.py` und, in einem Git-Checkout, `scripts/pruefe_versionsfolge.py` aus.
+- `M`: ausdrücklich beschlossener Versionsraum,
+- `y`: mindestens ein neuer, separat erzeugbarer und registrierter Knotentyp oder eine neue Knotenfamilie,
+- `x`: Änderung ohne neuen Knotentyp, etwa Fehlerkorrektur, UI, Dokumentation, Refactoring oder Erweiterung vorhandener Knoten.
 
-### Versionsklassifikation `vM.y.x`
+Verbindlich:
 
-Die drei Stellen haben im Mathematik Atlas eine projektspezifische Bedeutung:
-
-- **`M` – Versionsraum:** größerer fachlicher oder technischer Entwicklungsabschnitt. `M` wird nur aufgrund einer ausdrücklichen Roadmap-Entscheidung erhöht und niemals automatisch aus einem gewöhnlichen Auftrag abgeleitet.
-- **`y` – Knoten-Version:** Veröffentlichung mit mindestens einem neuen, eigenständig registrierten und separat erzeugbaren Knotentyp oder einer neuen Knotenfamilie.
-- **`x` – Änderungs-Version:** Veröffentlichung ohne neuen Knotentyp, beispielsweise Fehlerkorrektur, UI-Änderung, Refactoring, Dokumentation, neue Inspector-Option, zusätzlicher Anschluss oder Verhaltensänderung eines vorhandenen Knotens.
-
-Verbindliche Entscheidungsregeln:
-
-1. Enthält der vollständige Releaseumfang mindestens einen neuen Knotentyp, erhöhe `y` und setze `x` auf `0`.
-2. Enthält der Releaseumfang keine neuen Knotentypen, behalte `M` und `y` bei und erhöhe nur `x`.
-3. Enthält ein Release neue Knoten und sonstige Änderungen, gilt es insgesamt als Knoten-Version; `y` hat Vorrang und `x` bleibt `0`.
-4. Ein neuer Anschluss, Parameter, Inspector-Eintrag, Renderer oder Sonderfall eines bestehenden Knotentyps ist allein keine Knoten-Version.
-5. Maßgeblich sind der vollständige geplante Umfang und der Abschlussdiff, nicht nur Titel oder Commitnachricht.
-6. Bereits veröffentlichte oder als `superseded` dokumentierte historische Versionen werden durch diese Regel nicht nachträglich umnummeriert.
-
-Beispiel ausgehend von `v2.3.16`:
-
-- neuer registrierter Knotentyp → `v2.4.0`
-- keine neuen Knotentypen → `v2.3.17`
-
-Verbindliche Release-Regeln:
-
+- Neue Knoten erhöhen `y` und setzen `x` auf `0`.
+- Ohne neue Knoten wird nur `x` erhöht.
+- Maßgeblich sind vollständiger Plan und Abschlussdiff.
 - Keine direkten Produktionscommits auf `master`.
-- Pro Release genau ein finaler Commit mit dem Titel `v<version>` auf `master`.
-- Pro Pull Request gegen `master` genau eine Releaseversion.
-- Keine höhere Version, solange eine niedrigere aktive Version ungeklärt ist.
-- Keine Releasearbeit auf einer veralteten oder falschen Branchbasis.
-- Subbranches bleiben innerhalb ihrer reservierten Version.
+- Pro PR gegen `master` genau eine Version.
+- Pro Release genau ein finaler Commit `v<version>` auf `master`.
 - Android-`versionName`, `versionCode` und `release/roadmap.toml` müssen übereinstimmen.
-- Ein technisch mergebarer Pull Request ist nicht automatisch ein zulässiger Release.
-- Bei einem inkonsistenten Releasezustand wird zuerst ein Reparaturplan erstellt; neue Versionsarbeit bleibt gesperrt.
-- Vor Abschluss wird die ursprüngliche Versionsklassifikation gegen den tatsächlichen Diff erneut geprüft.
+- Ein technisch mergebarer PR ist nicht automatisch ein zulässiger Release.
+- Der `master_verwalter` verwaltet Version, Basis, Branch und Integration; der fachliche Implementierer bleibt für Produktcode verantwortlich.
 
-Der `master_verwalter` verwaltet Versionen, Branches, PR-Basen und Integration. Er ersetzt weder den fachlichen Implementierer noch den unabhängigen Verifizierer.
+Branchmuster:
+
+```text
+release/v<version>-<kurzname>
+samai/v<version>/<aufgabe>
+samai/v<version>-<kurzname>
+repair/v<version>/<aufgabe>
+```
+
+Historische `agent/`-Branches bleiben gültige Historie, werden von SamAI aber nicht mehr neu erzeugt.
+
+## Neuer-Knoten-Workflow
+
+Bei einem neuen Knotentyp verwende den Skill `neuer-knoten`.
+
+Reihenfolge:
+
+1. `master_verwalter` klassifiziert und reserviert die Version.
+2. `node_planner` untersucht den Bestand und spezifiziert Typ-Schlüssel, Anschlüsse und Semantik.
+3. `math_reviewer` prüft mathematisch nicht triviale Semantik.
+4. `node_implementer` setzt den bestätigten Plan um.
+5. `node_verifier` prüft unabhängig Diff, Verhalten, Architektur, Tests und Versionsklassifikation.
+6. Blockierende Findings gehen zurück an den Implementierer; anschließend erfolgt die Abschlussprüfung.
+
+Planer, Mathematikprüfer und Verifizierer verändern keine Produktionsdateien. Es arbeitet höchstens ein schreibender Implementierungsagent gleichzeitig.
 
 ## Standardprüfungen
 
-Leite die tatsächlich passenden Befehle aus dem Bestand ab. Der derzeit übliche Prüfpfad ist:
+Leite die tatsächlich passenden Befehle aus dem Bestand ab. Der übliche Prüfpfad ist:
 
 ```bash
 python3 scripts/pruefe_repository.py
@@ -143,58 +161,28 @@ python3 scripts/pruefe_kern.py
 
 Ein nicht ausführbarer Befehl wird mit konkretem Grund dokumentiert. Ein erfolgreicher Build ersetzt keinen Laufzeittest auf Emulator oder Gerät.
 
-## Neuer-Knoten-Workflow
-
-Bei der Planung oder Implementierung eines neuen Knotentyps verwende den Skill `neuer-knoten`.
-
-Jeder tatsächlich neue, registrierte Knotentyp löst eine Knoten-Version aus. Vor der Implementierung muss der `master_verwalter` daher prüfen, ob eine passende `y`-Version reserviert ist. Ein Knotenimplementierer darf einen neuen Typ nicht stillschweigend in einen bereits als reine `x`-Version reservierten Release aufnehmen.
-
-Die Rollen werden grundsätzlich in dieser Reihenfolge eingesetzt:
-
-1. `master_verwalter` klassifiziert die Änderung und reserviert bei neuen Knotentypen eine `y`-Version.
-2. `node_planner` untersucht den Bestand, nennt alle neu geplanten Typ-Schlüssel und erstellt eine ausführbare Spezifikation.
-3. `math_reviewer` prüft bei mathematisch nicht trivialen Knoten die fachliche Semantik.
-4. `node_implementer` setzt den bestätigten Plan innerhalb der reservierten Version um.
-5. `node_verifier` prüft unabhängig Diff, Verhalten, Architektur, Tests und die korrekte `y`-Klassifikation.
-6. Blockierende Findings gehen zurück an `node_implementer`.
-7. `node_verifier` führt anschließend die Abschlussprüfung durch.
-
-Planer, Mathematikprüfer und Verifizierer dürfen keine Produktionsdateien verändern. Es arbeitet höchstens ein schreibender Implementierungsagent gleichzeitig.
-
-## Wann der Mathematikprüfer erforderlich ist
-
-Setze `math_reviewer` ein, wenn mindestens einer dieser Punkte zutrifft:
-
-- Der Knoten repräsentiert eine mathematische Operation, Relation, Funktion, Menge oder Transformation.
-- Definitionsbereich, Wertebereich, Bindungsvariablen oder Gültigkeitsbedingungen sind relevant.
-- Assoziativität, Kommutativität, Distributivität, Neutralität, Inversen oder partielle Definitionen beeinflussen das Verhalten.
-- Der Knoten aggregiert, iteriert, löst, differenziert, integriert, transformiert oder erzeugt eine Lösungsmenge.
-- Mehrdeutige mathematische Notation könnte zu einer falschen Datenstruktur führen.
-
-Für rein dekorative, organisatorische oder einfache Anzeige-Knoten ist die Rolle optional.
-
 ## Definition of Done
 
-Eine Aufgabe ist nur abgeschlossen, wenn:
+Eine Aufgabe ist abgeschlossen, wenn:
 
-- das gewünschte Verhalten implementiert ist,
+- das beauftragte Verhalten umgesetzt ist,
 - fachliche und technische Randfälle behandelt sind,
 - relevante Tests ergänzt oder begründet nicht ergänzt wurden,
-- alle vorhandenen passenden Prüfungen ausgeführt wurden,
-- Build- und Testfehler aus der Änderung behoben sind,
-- Persistenz und Migration berücksichtigt wurden, falls Daten verändert wurden,
-- keine unnötigen Duplikate oder parallelen Abstraktionen entstanden sind,
+- passende Prüfungen ausgeführt und Fehler aus der Änderung behoben wurden,
+- Persistenz und Migration berücksichtigt wurden, falls Daten betroffen sind,
 - Dokumentation und Code denselben Zustand beschreiben,
-- der abschließende Diff auf unbeabsichtigte Änderungen geprüft wurde,
-- bei einem Release Versionsplan, Android-Version, Git-Zustand und `y`/`x`-Klassifikation übereinstimmen.
+- der Diff frei von unbeabsichtigten Änderungen ist,
+- Git-Identität und Branchherkunft den Regeln entsprechen,
+- bei Releases Versionsplan, Android-Version, Basis und Versionsklassifikation übereinstimmen.
 
 ## Abschlussbericht
 
-Berichte am Ende knapp und überprüfbar:
+Berichte knapp und überprüfbar:
 
 1. umgesetztes Verhalten,
-2. geänderte zentrale Dateien,
-3. ausgeführte Prüfungen mit Ergebnis,
+2. zentrale geänderte Dateien,
+3. ausgeführte Prüfungen und Ergebnis,
 4. verbleibende Risiken oder bewusst nicht bearbeitete Punkte,
-5. bei neuen Knoten: Typ-Schlüssel, Anschlüsse, Semantik, Inspector und Persistenz,
-6. bei Releases: Version, Klassifikation als Versionsraum/Knoten-Version/Änderungs-Version, Basis, finaler Commit und Release-Guard-Status.
+5. verwendeter Branch und Commit-SHA,
+6. Autor- und Committeridentität oder ausdrücklich die Connector-Einschränkung,
+7. bei Releases Version, Klassifikation, Basis und Release-Guard-Status.

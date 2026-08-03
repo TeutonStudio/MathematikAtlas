@@ -2,7 +2,7 @@
 
 ## Ziel
 
-`master` enthält ausschließlich vollständig geprüfte, geordnete Veröffentlichungsstände. Eine Versionsnummer ist keine unverbindliche Beschriftung eines Arbeitsbranches, sondern bezeichnet genau einen finalen Releasecommit auf `master`.
+`master` enthält ausschließlich vollständig geprüfte, geordnete Veröffentlichungsstände. Eine Versionsnummer bezeichnet genau einen finalen Releasecommit auf `master` und ist keine unverbindliche Beschriftung eines Arbeitsbranches.
 
 ## Quellen der Wahrheit
 
@@ -10,6 +10,7 @@
 2. `release/roadmap.toml` beschreibt Reihenfolge, Status, Roadmap-Zuordnung und Branch einer Version.
 3. `app/build.gradle.kts` enthält die zur aktuellen Version passenden Android-Metadaten.
 4. GitHub Actions prüft Plan, Metadaten und Pull-Request-Kontext.
+5. `docs/codex/GIT_IDENTITY.md` definiert Git-Identitäten und die Herkunft von SamAI-Branches.
 
 Widersprechen sich diese Quellen, ist der Releasezustand inkonsistent. Neue Versionsarbeit bleibt gesperrt, bis der Widerspruch behoben ist.
 
@@ -17,11 +18,11 @@ Widersprechen sich diese Quellen, ist der Releasezustand inkonsistent. Neue Vers
 
 ### `master_verwalter`
 
-Der Master-Verwalter darf Release-Metadaten, Branches, PR-Basen und Integrationsreihenfolgen verwalten. Er klassifiziert jeden Release als Versionsraum-, Knoten- oder Änderungs-Version, prüft den Abschlussdiff und veröffentlicht nach bestandenen Prüfungen. Er implementiert nicht beiläufig fachliche Produktfunktionen.
+Der Master-Verwalter verwaltet Release-Metadaten, Branches, PR-Basen und Integrationsreihenfolgen. Er klassifiziert jeden Release als Versionsraum-, Knoten- oder Änderungs-Version, prüft den Abschlussdiff und veröffentlicht nach bestandenen Prüfungen. Er implementiert nicht beiläufig fachliche Produktfunktionen.
 
 ### Implementierungsagent
 
-Ein Implementierungsagent arbeitet ausschließlich innerhalb einer reservierten Version und eines zugewiesenen Release- oder Subbranches. Er vergibt keine Versionsnummer und merged nicht nach `master`. Stellt er fest, dass der Diff entgegen der Reservierung einen neuen Knotentyp einführt oder der geplante neue Knotentyp entfällt, stoppt er und meldet die notwendige Neuklassifikation an den `master_verwalter`.
+Ein Implementierungsagent arbeitet ausschließlich innerhalb einer reservierten Version und eines zugewiesenen Release- oder Subbranches. Er vergibt keine Versionsnummer und merged nicht nach `master`. Erkennt er eine falsche Versionsklassifikation, stoppt er und meldet die notwendige Neuklassifikation an den `master_verwalter`.
 
 ### Verifizierer
 
@@ -30,20 +31,36 @@ Der Verifizierer prüft Diff, Tests, Build, Migrationen, unbeabsichtigte Änderu
 ## Branchmodell
 
 - Releasebranch: `release/v<version>-<kurzname>`
-- Subbranch: `agent/v<version>/<aufgabe>`
+- SamAI-Subbranch: `samai/v<version>/<aufgabe>`
+- kleiner eigenständiger SamAI-Release: `samai/v<version>-<kurzname>`
 - Reparatursubbranch: `repair/v<version>/<aufgabe>`
+
+Historische `agent/v...`-Branches bleiben gültige Historie, werden von SamAI aber nicht mehr neu erzeugt.
 
 Ein Releasebranch entsteht vom in `previous_release` festgelegten veröffentlichten Stand. Subbranches entstehen vom zugehörigen Releasebranch und werden nur dorthin integriert. Ein versionsübergreifender Branchstapel ist unzulässig.
 
-Für kleine, in sich geschlossene Releases darf ein einzelner `agent/v<version>-<kurzname>` direkt gegen `master` arbeiten. Auch dann gelten sämtliche Basis-, Plan-, Klassifikations- und Prüfregeln.
+Für kleine, in sich geschlossene Releases darf ein einzelner `samai/v<version>-<kurzname>` direkt gegen `master` arbeiten. Auch dann gelten sämtliche Basis-, Plan-, Klassifikations- und Prüfregeln.
+
+## Git-Identität
+
+SamAI erzeugt lokale Branches und Commits über `bash scripts/samai-git.sh`.
+
+Verbindliche SamAI-Identität:
+
+```text
+Author:    SamAI <46108494+TeutonStudio@users.noreply.github.com>
+Committer: SamAI <46108494+TeutonStudio@users.noreply.github.com>
+```
+
+Vor dem Push muss `bash scripts/samai-git.sh verify HEAD` erfolgreich sein. Das Skript darf nicht durch eine dauerhafte Änderung von `git config user.name` oder `git config user.email` ersetzt werden, weil dadurch spätere manuelle Commits falsch zugeordnet würden.
+
+Der GitHub-Connector stellt derzeit keine Autor- und Committerfelder für erzeugte Commits bereit. Connector-Commits gelten deshalb nicht als korrekt signierte SamAI-Commits und müssen im Abschlussbericht als solche benannt werden. Der Connector bleibt sinnvoll für Issues, Reviews, PR-Metadaten und das Eröffnen bereits lokal erzeugter und gepushter Branches.
 
 ## Versionsschema `vM.y.x`
 
-Die Stellen der Versionsnummer besitzen im Mathematik Atlas eine feste Bedeutung:
-
-- **`M` – Versionsraum:** ein größerer fachlicher oder technischer Abschnitt, der ausdrücklich durch die Roadmap festgelegt wird.
-- **`y` – Knoten-Version:** ein Release mit mindestens einem neuen, eigenständig registrierten und separat erzeugbaren Knotentyp oder einer neuen Knotenfamilie.
-- **`x` – Änderungs-Version:** ein Release ohne neue Knotentypen, etwa für Fehlerkorrekturen, UI, Refactoring, Dokumentation oder Erweiterungen bestehender Knoten.
+- **`M` – Versionsraum:** ausdrücklich durch die Roadmap festgelegter größerer fachlicher oder technischer Abschnitt.
+- **`y` – Knoten-Version:** Release mit mindestens einem neuen, eigenständig registrierten und separat erzeugbaren Knotentyp oder einer neuen Knotenfamilie.
+- **`x` – Änderungs-Version:** Release ohne neue Knotentypen, etwa Fehlerkorrektur, UI, Refactoring, Dokumentation oder Erweiterung vorhandener Knoten.
 
 ### Entscheidung der nächsten Version
 
@@ -52,7 +69,7 @@ Die Stellen der Versionsnummer besitzen im Mathematik Atlas eine feste Bedeutung
 | kein neuer Knotentyp | `vM.y.(x+1)` |
 | mindestens ein neuer Knotentyp | `vM.(y+1).0` |
 | neue Knotentypen und sonstige Änderungen | `vM.(y+1).0` |
-| ausdrücklich beschlossener neuer Versionsraum | `v(M+1).0.0` oder die in der Roadmap festgelegte Startversion |
+| ausdrücklich beschlossener neuer Versionsraum | die in der Roadmap festgelegte nächste `M`-Version |
 
 Ein Knotentyp gilt als neu, wenn er einen neuen Typ-Schlüssel beziehungsweise eine neue Registry- oder Vorlagenregistrierung erhält und vom Nutzer als eigener Knoten erzeugt werden kann. Zusätzliche Anschlüsse, Parameter, Inspector-Felder, Renderer, Auswertungsfälle oder Sonderfälle eines vorhandenen Knotentyps lösen allein keine `y`-Version aus.
 
@@ -61,9 +78,7 @@ Die Klassifikation erfolgt zweimal:
 1. vor der Reservierung anhand von Auftrag und ExecPlan,
 2. vor der Veröffentlichung anhand des vollständigen Diffs.
 
-Weicht der tatsächliche Diff ab, darf nicht unter der falschen Version veröffentlicht werden. Der `master_verwalter` passt Reservierung, Branch und Releaseplan an oder entfernt den abweichenden Umfang.
-
-Die Regel gilt für künftige Reservierungen. Historische veröffentlichte, übersprungene oder als `superseded` markierte Versionen werden nicht nachträglich umnummeriert.
+Weicht der tatsächliche Diff ab, darf nicht unter der falschen Version veröffentlicht werden. Historische veröffentlichte, übersprungene oder als `superseded` markierte Versionen werden nicht nachträglich umnummeriert.
 
 ## Allgemeine Versionsregeln
 
@@ -71,7 +86,7 @@ Die Regel gilt für künftige Reservierungen. Historische veröffentlichte, übe
 - Jeder PR gegen `master` beansprucht genau eine Version.
 - Die nächste Version muss auf dem letzten veröffentlichten Stand basieren.
 - Eine niedrigere aktive Version blockiert eine höhere Version.
-- Übersprungene Nummern benötigen den Status `skipped` oder `superseded` mit Begründung.
+- Übersprungene Nummern benötigen `skipped` oder `superseded` mit Begründung.
 - Arbeitscommits innerhalb eines Branches erhalten keine zusätzlichen Releaseversionen.
 - `versionName` entspricht `current_version`.
 - `versionCode` wird als `major * 1_000_000 + minor * 1_000 + patch` gebildet.
@@ -90,25 +105,28 @@ Die Regel gilt für künftige Reservierungen. Historische veröffentlichte, übe
 ### 2. Reservierung
 
 - Nach Klassifikation nächste zulässige Version bestimmen.
-- Releaseeintrag mit `planned` oder `reserved` anlegen.
-- Bei einer `y`-Version die geplanten Typ-Schlüssel oder Knotenfamilien im ExecPlan dokumentieren.
+- Releaseeintrag mit vollständiger Basis, Branch und Begründung anlegen.
+- Bei einer `y`-Version die geplanten Typ-Schlüssel oder Knotenfamilien dokumentieren.
 - Vorgängerrelease und Branch festlegen.
 - Draft-PR eröffnen.
 
 ### 3. Implementierung
 
+- SamAI-Branches mit `bash scripts/samai-git.sh branch ...` anlegen.
+- Nur ausdrücklich ausgewählte Dateien stagen.
+- SamAI-Commits mit `bash scripts/samai-git.sh commit ...` erzeugen.
 - Subbranches auf die reservierte Version begrenzen.
 - Keine fremden Versionsänderungen übernehmen.
 - Keine neuen Knotentypen in eine als `x` klassifizierte Version einschleusen.
-- Releaseplan bei geänderten Abhängigkeiten oder geänderter Versionsklassifikation aktualisieren.
 
 ### 4. Abschluss
 
 - Releasebranch auf aktuellen `master` aktualisieren.
 - Vollständigen Diff prüfen.
-- Neue Typ-Schlüssel und Registry-Einträge gegen die reservierte Versionsachse prüfen.
+- Versionsklassifikation gegen Registry- und Typänderungen prüfen.
 - Repository-, Architektur-, Test- und Buildprüfungen ausführen.
 - Android-Version und Releaseplan abgleichen.
+- Für den letzten lokal durch SamAI erzeugten Commit `bash scripts/samai-git.sh verify HEAD` ausführen.
 - PR als bereit markieren.
 
 ### 5. Veröffentlichung
@@ -118,6 +136,8 @@ Die Regel gilt für künftige Reservierungen. Historische veröffentlichte, übe
 - Releaseeintrag auf `released` setzen.
 - Abgeschlossene Subbranches löschen oder schließen.
 
+Ein durch GitHub erzeugter Squash- oder Merge-Commit kann als Committer `web-flow` enthalten. Er ist technisch ein GitHub-Commit und wird nicht nachträglich als lokaler SamAI-Commit ausgegeben.
+
 ## Abbruchbedingungen
 
 Kein Merge bei:
@@ -125,16 +145,15 @@ Kein Merge bei:
 - falscher oder veralteter Branchbasis,
 - fehlendem Vorgängerrelease,
 - mehreren Releaseversionen im PR,
-- einem neuen registrierten Knotentyp in einer `x`-Version,
-- einer `y`-Version ohne den angekündigten neuen Knotentyp,
+- neuem registrierten Knotentyp in einer `x`-Version,
+- `y`-Version ohne angekündigten neuen Knotentyp,
 - abweichender Android-Version,
 - fehlerhaftem Releaseplan,
 - roten oder fehlenden Pflichtprüfungen,
 - ungeklärten Migrationen oder Datenverlustgefahr,
-- unbeabsichtigten Änderungen im Abschlussdiff.
+- unbeabsichtigten Änderungen im Abschlussdiff,
+- einem als SamAI-Commit behaupteten Commit mit abweichender Autor- oder Committeridentität.
 
-## Historische v2.3.x-Abweichung
+## Bestehende Historie
 
-v2.3.2 bis v2.3.9 wurden auf gestapelten Entwicklungsbranches umgesetzt, jedoch nicht als einzelne Releases nach `master` veröffentlicht. Ihre Arbeit wurde später durch v2.3.11 integriert. Der Releaseplan kennzeichnet diese Nummern deshalb als `superseded`, statt eine nie vorhandene Veröffentlichung zu behaupten.
-
-Auch weitere bereits veröffentlichte v2.3.x-Versionen werden durch die neu präzisierte Bedeutung von `y` und `x` nicht rückwirkend umnummeriert. Die Klassifikationsregel gilt ab ihrer Einführung für neue Reservierungen.
+Historische Commits und `agent/`-Branches werden nicht umgeschrieben. Eine Änderung ihrer Metadaten würde Commit-SHAs, Branches und Pull Requests neu schreiben. Die SamAI-Regel gilt für neu erzeugte Arbeit ab `v2.21.1`.
