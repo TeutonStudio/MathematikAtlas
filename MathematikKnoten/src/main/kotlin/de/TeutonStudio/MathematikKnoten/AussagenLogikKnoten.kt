@@ -10,6 +10,7 @@ import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
+import de.TeutonStudio.MathematikKartenAdapter.operatorEingänge
 import de.TeutonStudio.MathematikRechenSystem.kern.Aussage
 import de.TeutonStudio.MathematikRechenSystem.kern.Disjunktion as DisjunktionAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.Implikation as ImplikationAussage
@@ -94,7 +95,41 @@ object AussagenLogikKnotenVorlagen {
         ),
     )
 
-    val alle = listOf(Negation, Adjunktion, IterierteAdjunktion)
+    val Auswerten = KnotenVorlage(
+        art = "mathematik.auswerten",
+        name = "Auswerten",
+        kategorie = "Steuerung",
+        beschreibung = "Vereinfacht Objekte, entscheidet Aussagen und erzeugt für Matrizen exakte Gauß-Verläufe.",
+        standardGröße = GraphGröße(250f, 125f),
+        anschlüsse = listOf(
+            AnschlussDaten(
+                name = "objekt",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.Objekt.id,
+                reihenfolge = 0,
+            ),
+            AnschlussDaten(
+                name = "rechteSeite",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.SpaltenVektor.id,
+                reihenfolge = 1,
+            ),
+            AnschlussDaten(
+                name = "wert",
+                richtung = AnschlussRichtung.Ausgang,
+                kante = AnschlussKante.Rechts,
+                art = MathematikAnschlussArten.Objekt.id,
+            ),
+        ),
+        standardParameter = mapOf(
+            GAUSS_MODUS_PARAMETER to "automatisch",
+            "variablen" to "",
+        ),
+    )
+
+    val alle = listOf(Negation, Adjunktion, IterierteAdjunktion, Auswerten)
 }
 
 private fun vorlagenSchlüssel(vorlage: KnotenVorlage): Pair<String, String> =
@@ -119,7 +154,8 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
         basis +
             ZahlenRechnerKnotenVorlagen.alle +
             FaltungsKnotenVorlagen.alle +
-            MatrixdiagonaleKnotenVorlagen.alle
+            MatrixdiagonaleKnotenVorlagen.alle +
+            LineareAlgebraGrundlagenKnotenVorlagen.alle
         )
         .distinctBy(::vorlagenSchlüssel)
 }

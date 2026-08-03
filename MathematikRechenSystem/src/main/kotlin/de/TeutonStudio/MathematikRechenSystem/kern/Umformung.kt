@@ -6,7 +6,11 @@ data class UmformungsSchritt(
     val regelId: String,
     val titel: String,
     val erklärung: String,
-)
+    val operationen: List<StrukturOperation> = emptyList(),
+    val bedingungen: List<Aussage> = emptyList(),
+) {
+    val strukturOperation: StrukturOperation? get() = operationen.singleOrNull()
+}
 
 data class FallBedingung(val name: String, val bedingung: Aussage)
 
