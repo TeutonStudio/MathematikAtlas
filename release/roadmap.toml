@@ -562,3 +562,16 @@ branch = "release/v2.20.1-lineare-strukturen"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert vorhandene Matrix-, Skalarprodukt- und Tensorrechner-Knoten um gemeinsame Komponentenansichten, dynamische Operatoranschlüsse und lokale Fehlerzustände, ohne einen neuen registrierten Knotentyp einzuführen."
+
+[[releases]]
+version = "2.21.0"
+title = "Universeller Zahlenrechner und automatische Migration"
+roadmap = "v2.21.x Zahlenrechner und CAS-Grundlage"
+status = "released"
+previous_release = "2.20.1"
+branch = "agent/v2.21.0-universeller-zahlenrechner"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.zahlenrechner"]
+reason = "Führt den einzigen erzeugbaren Zahlenrechner-Knotentyp mit persistierten Operatorzuständen, Zahlbereichsdefinitionen, Rechenregeln und verlustfreier Migration der historischen Zahl-zu-Zahl-Rechnerknoten ein."
+
