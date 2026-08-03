@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.21.x"
-current_version = "2.21.1"
+current_version = "2.21.2"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -585,3 +585,14 @@ branch = "samai/v2.21.1-formelbauer-latex"
 kind = "feature"
 version_axis = "x"
 reason = "Veröffentlicht die persistierte Konzeptbibliothek, vereinheitlichte SamAI-Verwaltungsregeln und den UI-neutralen Formelbauer-Kern mit kontrolliertem LaTeX-Roundtrip, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen."
+
+[[releases]]
+version = "2.21.2"
+title = "Interaktive visuelle Gruppen"
+roadmap = "v2.21.x Karteneditor und Bedienoberfläche"
+status = "released"
+previous_release = "2.21.1"
+branch = "samai/v2.21.2-visuelle-gruppen"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert bestehende visuelle Gruppen um persistierte Kopfzeilen, Titel, Geometrie, gemeinsame Kindverschiebung, eindeutige Zuordnung und unabhängiges Löschen, ohne einen neuen registrierten Knotentyp einzuführen."
