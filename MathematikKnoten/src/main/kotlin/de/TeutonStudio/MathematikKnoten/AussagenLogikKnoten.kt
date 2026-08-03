@@ -139,19 +139,23 @@ private fun vorlagenSchlüssel(vorlage: KnotenVorlage): Pair<String, String> =
     ).joinToString("|")
 
 /**
- * Ersetzt korrigierte Varianten, entfernt historische Zahlrechnerarten aus dem
+ * Ersetzt korrigierte Varianten, entfernt historische Spezialknoten aus dem
  * Erstellen-Dialog und hängt additive Knotendomänen an.
  */
 fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val ersatz = AussagenLogikKnotenVorlagen.alle.associateBy(::vorlagenSchlüssel)
     val vorhandeneSchlüssel = MathematikKnotenVorlagen.alle.mapTo(mutableSetOf(), ::vorlagenSchlüssel)
+    val historischeArten = historischeZahlenRechnerArten +
+        historischeMengenKnotenArten +
+        historischeSkalarproduktArten +
+        setOf("mathematik.einheitsSpalte", "mathematik.einheitsZeile")
     val basis = MathematikKnotenVorlagen.alle
-        .filterNot { it.art in historischeZahlenRechnerArten }
+        .filterNot { it.art in historischeArten }
         .map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
     return (
         basis +
-            ZahlenRechnerKnotenVorlagen.alle +
+            listOf(ZahlenRechnerKnotenVorlagen.standard) +
             FaltungsKnotenVorlagen.alle +
             MatrixdiagonaleKnotenVorlagen.alle +
             LineareAlgebraGrundlagenKnotenVorlagen.alle
