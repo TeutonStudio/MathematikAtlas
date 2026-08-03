@@ -8,8 +8,9 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /**
  * Ersetzt die Tensorrechner-Schnittstelle atomar passend zum Operator.
- * Anschlüsse gleicher Rolle behalten ihre IDs; unpassende Verbindungen werden
- * durch KnotenKonfigurationErsetzen in derselben Undo-Aktion entfernt.
+ * Anschlüsse gleicher Rolle und Art behalten ihre IDs. Bei einem Typwechsel
+ * entsteht dagegen eine neue ID, damit nun unpassende Verbindungen in derselben
+ * Undo-Aktion durch KnotenKonfigurationErsetzen entfernt werden.
  */
 fun konfiguriereTensorRechner(
     knoten: KnotenDaten,
@@ -18,8 +19,11 @@ fun konfiguriereTensorRechner(
     require(knoten.art == TensorRechner.KNOTEN_ART) { "Nur Tensorrechner können so konfiguriert werden." }
     val vorhandene = knoten.anschlüsse.associateBy { it.name }
 
-    fun eingang(name: String, art: AnschlussArtId, reihenfolge: Int): AnschlussDaten =
-        vorhandene[name]?.copy(
+    fun eingang(name: String, art: AnschlussArtId, reihenfolge: Int): AnschlussDaten {
+        val bestehend = vorhandene[name]?.takeIf {
+            it.richtung == AnschlussRichtung.Eingang && it.art == art
+        }
+        return bestehend?.copy(
             name = name,
             richtung = AnschlussRichtung.Eingang,
             kante = AnschlussKante.Links,
@@ -34,6 +38,7 @@ fun konfiguriereTensorRechner(
             art = art,
             reihenfolge = reihenfolge,
         )
+    }
 
     val eingänge = when (operator) {
         TensorRechnerOperator.SKALARMULTIPLIKATION -> listOf(
@@ -58,7 +63,10 @@ fun konfiguriereTensorRechner(
         -> MathematikAnschlussArten.Zahl.id
         else -> MathematikAnschlussArten.Objekt.id
     }
-    val ausgang = vorhandene["wert"]?.copy(
+    val bestehenderAusgang = vorhandene["wert"]?.takeIf {
+        it.richtung == AnschlussRichtung.Ausgang && it.art == ausgangsArt
+    }
+    val ausgang = bestehenderAusgang?.copy(
         name = "wert",
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
