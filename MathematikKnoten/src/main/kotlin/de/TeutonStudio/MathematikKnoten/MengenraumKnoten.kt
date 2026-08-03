@@ -141,11 +141,9 @@ object MengenraumKnotenVorlagen {
         listOf(eingang("links", 0), eingang("rechts", 1), ausgang()),
     )
 
+    /** Nur ein Mengenknoten ist erzeugbar; historische Konstanten bleiben ausschließlich für Migration und alte Karten registriert. */
     val alle = listOf(
-        LeereMenge,
-        GaußscheZahlen,
-        Primzahlen,
-        GaußschePrimzahlen,
+        MengenKnotenVorlagen.standard,
         Potenzmenge,
         Abbildungsmenge,
         Vektorraum,
