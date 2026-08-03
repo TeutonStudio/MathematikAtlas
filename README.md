@@ -149,6 +149,8 @@ Die Grafik zeigt langfristige Entwicklungsräume. Sie ist keine Zusage für Term
 - [Entwicklung und Architektur](docs/DEVELOPMENT.md)
 - [Versionsschema](docs/VERSIONING.md)
 - [Beitragen](CONTRIBUTING.md)
+- [Contributor License Agreement](CLA.md)
+- [Lizenzhistorie](LICENSE_HISTORY.md)
 - [Sicherheitsrichtlinie](SECURITY.md)
 - [Verhaltenskodex](CODE_OF_CONDUCT.md)
 - [Danksagungen](ACKNOWLEDGEMENTS.md)
@@ -158,10 +160,12 @@ Die Grafik zeigt langfristige Entwicklungsräume. Sie ist keine Zusage für Term
 
 Fehlermeldungen, mathematische Hinweise, Dokumentationsverbesserungen und gut abgegrenzte Beiträge sind willkommen. Vor größeren Änderungen bitte [CONTRIBUTING.md](CONTRIBUTING.md) und die für den Bereich relevante technische Dokumentation lesen.
 
-Die Issue-Vorlagen unterscheiden zwischen Fehlern und Funktionsvorschlägen. Neue mathematische Semantik benötigt eine fachliche Beschreibung, nachvollziehbare Randfälle und geeignete Tests. Direkte Produktionscommits auf `master` sind nicht vorgesehen.
+Die Issue-Vorlagen unterscheiden zwischen Fehlern und Funktionsvorschlägen. Neue mathematische Semantik benötigt eine fachliche Beschreibung, nachvollziehbare Randfälle und geeignete Tests. Direkte Produktionscommits auf `master` sind nicht vorgesehen. Codebeiträge werden nur angenommen, wenn die beitragende Person dem [Contributor License Agreement](CLA.md) ausdrücklich zustimmt.
 
 ## Lizenz
 
 Copyright © 2026 Alexander Würfl (TeutonStudio).
 
-Der Mathematik Atlas wird unter der [Apache License 2.0](LICENSE) veröffentlicht. Der Quellcode darf unter Einhaltung der Lizenzbedingungen angesehen, verwendet, verändert und weitergegeben werden. Marken, Projektname und visuelle Identität werden durch die Softwarelizenz nicht automatisch als Kennzeichen zur freien Verwendung freigegeben.
+Der Mathematik Atlas wird unter der [Mathematik Atlas Source-Available License 1.0](LICENSE) bereitgestellt. Dies ist **keine Open-Source-Lizenz**. Erlaubt sind insbesondere das Einsehen des Quellcodes, Beitrags-Forks, private Änderungen sowie das Erstellen und private nichtkommerzielle Nutzen einer eigenen APK. Öffentliche Distribution und jede direkte oder indirekte kommerzielle Nutzung bedürfen einer ausdrücklichen schriftlichen Genehmigung des Lizenzgebers.
+
+Frühere Repository-Fassungen bis einschließlich Commit `90a85368942db1f0b8d06f0ca458e9c6970daf62` bleiben unter der Apache License 2.0 nutzbar. Einzelheiten und Fremdlizenzen sind in der [Lizenzhistorie](LICENSE_HISTORY.md) beschrieben.
