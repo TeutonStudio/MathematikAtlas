@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.22.x"
-current_version = "2.22.1"
+current_series = "2.23.x"
+current_version = "2.23.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -538,7 +538,7 @@ previous_release = "2.19.0"
 branch = "release/v2.19.1-rechnerfamilien"
 kind = "feature"
 version_axis = "x"
-reason = "Erweitert den mathematischen Rechenkern um gemeinsame Definitions-, Zahlbereichs-, Formel-, Mengen-, Vektor-, Matrix- und Folgenverträge, ergänzt atomare Edge-Einfügung sowie profilbasierte Farbrollen, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen."
+reason = "Erweitert den mathematischen Rechenkern um gemeinsame Definitions-, Zahlbereichs-, Formel-, Mengen-, Vektor-, Matrix- und Folgenverträge, ergänzt atomare Edge-Einfügung sowie profilbasierte Farbrollen, ohne einen neuen registrierten Knotentyp einzuführen."
 
 [[releases]]
 version = "2.20.0"
@@ -630,3 +630,15 @@ branch = "samai/v2.22.1-auswahl-kartenkatalog"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert den Karteneditor um das Erzeugen neuer Karten aus einer Mehrfachauswahl und ordnet vorhandene Karten-Ein- und -Ausgänge konsistent unter Eigene Karten ein, ohne einen neuen registrierten Knotentyp einzuführen."
+
+[[releases]]
+version = "2.23.0"
+title = "Mengenknoten und Rechnerkonsolidierung"
+roadmap = "v2.23.x Mengen, Rechner und Definitionsdialoge"
+status = "released"
+previous_release = "2.22.1"
+branch = "samai/v2.23.0-mengenknoten-rechnerkonsolidierung"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.menge", "mathematik.vektorrechner"]
+reason = "Führt einen einheitlichen Mengenknoten mit versionsfesten eigenen Karten ein, macht den Vektorrechner separat erzeugbar und konsolidiert Zahlenrechner-, Skalarprodukt- und Einheitsvektorvarianten mit verlustfreier Migration."
