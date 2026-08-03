@@ -106,7 +106,10 @@ class KonsolidierteKnotenTest {
             parameter = mapOf("index" to "2", "dimension" to "5"),
         )
         val altesSkalarprodukt = MathematikKnotenVorlagen.SkalarproduktZeile.erzeuge(GraphPunkt(20f, 20f))
-        val alt = KartenDaten(knoten = listOf(alteMenge, alteEinheit, altesSkalarprodukt))
+        val alt = KartenDaten(
+            name = "Migrationstest",
+            knoten = listOf(alteMenge, alteEinheit, altesSkalarprodukt),
+        )
         val migriert = alt.migriereKonsolidierteKnoten()
 
         val menge = migriert.knoten.first { it.id == alteMenge.id }
