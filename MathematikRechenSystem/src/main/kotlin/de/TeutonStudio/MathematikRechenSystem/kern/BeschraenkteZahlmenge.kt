@@ -1,6 +1,33 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 /**
+ * Kanonische Relation einer Grenze.
+ *
+ * Rohes `<` wird nicht in erzeugtes LaTeX übernommen: strenge Grenzen werden
+ * als `\lt`, eingeschlossene Grenzen unabhängig von `\le` oder `\leq` als
+ * kanonisches `\leq` ausgegeben.
+ */
+enum class GrenzRelation(
+    val latex: String,
+    val grenzeEnthalten: Boolean,
+) {
+    KLEINER("\\lt", false),
+    KLEINER_GLEICH("\\leq", true),
+    ;
+
+    companion object {
+        fun ausEnthalten(enthalten: Boolean): GrenzRelation =
+            if (enthalten) KLEINER_GLEICH else KLEINER
+
+        fun ausLatex(operator: String): GrenzRelation = when (operator.trim()) {
+            "<", "\\lt" -> KLEINER
+            "<=", "≤", "\\le", "\\leq" -> KLEINER_GLEICH
+            else -> throw IllegalArgumentException("Unbekannte Grenzrelation: $operator")
+        }
+    }
+}
+
+/**
  * Geordneter Zahlbereich mit optionaler unterer und oberer Schranke.
  * Die Darstellung folgt der Aussagenreihenfolge l R x R u.
  */
@@ -19,14 +46,18 @@ data class BeschraenkteZahlmenge(
         require(obereGrenze != null || !obereGrenzeEnthalten)
     }
 
+    val untereRelation: GrenzRelation
+        get() = GrenzRelation.ausEnthalten(untereGrenzeEnthalten)
+
+    val obereRelation: GrenzRelation
+        get() = GrenzRelation.ausEnthalten(obereGrenzeEnthalten)
+
     override fun zuLatex(): String {
         val links = untereGrenze?.let { grenze ->
-            val relation = if (untereGrenzeEnthalten) "\\leq" else "<"
-            "{}^{${grenze.alsGrenzeLatex()}$relation}"
+            "{}^{${grenze.alsGrenzeLatex()}${untereRelation.latex}}"
         }.orEmpty()
         val rechts = obereGrenze?.let { grenze ->
-            val relation = if (obereGrenzeEnthalten) "\\leq" else "<"
-            "^{${relation}${grenze.alsGrenzeLatex()}}"
+            "^{${obereRelation.latex}${grenze.alsGrenzeLatex()}}"
         }.orEmpty()
         return "$links${traeger.latex}$rechts"
     }
