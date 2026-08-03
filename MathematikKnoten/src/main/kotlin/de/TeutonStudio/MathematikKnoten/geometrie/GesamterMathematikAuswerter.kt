@@ -19,5 +19,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturRechnerKnoten()
         registriereLineareStrukturErweiterungen()
         registriereLineareAlgebraGrundlagen()
+        // Bewusst zuletzt: ersetzt historische Spezialauswerter derselben Knotenarten.
+        registriereKonsolidierteKnoten()
     }
 }
