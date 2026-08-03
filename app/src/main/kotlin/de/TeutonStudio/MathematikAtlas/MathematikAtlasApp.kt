@@ -126,7 +126,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     )
                 }
 
-                KartenMarkierungen(zustand.editor)
+                VisuelleGruppenEbene(zustand.editor)
                 Row(
                     Modifier.align(Alignment.BottomEnd).padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

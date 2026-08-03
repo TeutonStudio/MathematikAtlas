@@ -24,7 +24,11 @@ data class VerbindungDaten(
 
 data class VisuelleKnotenGruppeDaten(
     val id: VisuelleGruppenId = neueVisuelleGruppenId(),
-    val knotenIds: Set<KnotenId>,
+    val knotenIds: Set<KnotenId> = emptySet(),
+    val titel: String = VISUELLE_GRUPPE_STANDARD_TITEL,
+    val position: GraphPunkt = GraphPunkt.Zero,
+    /** Eine nichtpositive Größe kennzeichnet ausschließlich importierte Altgruppen ohne gespeicherte Geometrie. */
+    val größe: GraphGröße = GraphGröße(0f, 0f),
 )
 
 data class KartenDaten(

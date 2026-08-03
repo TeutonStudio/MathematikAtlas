@@ -7,7 +7,7 @@ import org.json.JSONObject
 
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
-        put("formatVersion", 6)
+        put("formatVersion", 7)
         put("id", karte.id.wert)
         put("name", karte.name)
         put("version", karte.version)
@@ -132,15 +132,31 @@ object KartenJson {
 
     private fun visuelleGruppeZuJson(gruppe: VisuelleKnotenGruppeDaten) = JSONObject().apply {
         put("id", gruppe.id.wert)
-        put("knotenIds", JSONArray().apply { gruppe.knotenIds.forEach { put(it.wert) } })
+        put("titel", gruppe.titel)
+        put("position", JSONObject().put("x", gruppe.position.x).put("y", gruppe.position.y))
+        put("größe", JSONObject().put("breite", gruppe.größe.breite).put("höhe", gruppe.größe.höhe))
+        put("knotenIds", JSONArray().apply { gruppe.knotenIds.map { it.wert }.sorted().forEach(::put) })
     }
 
-    private fun visuelleGruppeVonJson(json: JSONObject) = VisuelleKnotenGruppeDaten(
-        id = VisuelleGruppenId(json.getString("id")),
-        knotenIds = json.optJSONArray("knotenIds")?.let { ids ->
-            List(ids.length()) { index -> KnotenId(ids.getString(index)) }.toSet()
-        } ?: emptySet(),
-    )
+    private fun visuelleGruppeVonJson(json: JSONObject): VisuelleKnotenGruppeDaten {
+        val position = json.optJSONObject("position")
+        val größe = json.optJSONObject("größe")
+        return VisuelleKnotenGruppeDaten(
+            id = VisuelleGruppenId(json.getString("id")),
+            knotenIds = json.optJSONArray("knotenIds")?.let { ids ->
+                List(ids.length()) { index -> KnotenId(ids.getString(index)) }.toSet()
+            } ?: emptySet(),
+            titel = json.optString("titel", VISUELLE_GRUPPE_STANDARD_TITEL),
+            position = GraphPunkt(
+                position?.optDouble("x", 0.0)?.toFloat() ?: 0f,
+                position?.optDouble("y", 0.0)?.toFloat() ?: 0f,
+            ),
+            größe = GraphGröße(
+                größe?.optDouble("breite", 0.0)?.toFloat() ?: 0f,
+                größe?.optDouble("höhe", 0.0)?.toFloat() ?: 0f,
+            ),
+        )
+    }
 
     private fun eigenschaftZuJson(wert: KnotenEigenschaft): JSONObject = JSONObject().apply {
         when (wert) {

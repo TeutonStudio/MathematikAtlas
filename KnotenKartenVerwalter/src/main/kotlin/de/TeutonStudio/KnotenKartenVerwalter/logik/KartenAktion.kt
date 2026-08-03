@@ -27,7 +27,15 @@ sealed interface KartenAktion {
     data class KnotenErsetzen(val knoten: KnotenDaten) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
     data class KnotenMehrfachLöschen(val ids: Set<KnotenId>) : KartenAktion
-    data class VisuelleGruppeErstellen(val knotenIds: Set<KnotenId>) : KartenAktion
+    data class VisuelleGruppeErstellen(
+        val knotenIds: Set<KnotenId>,
+        val titel: String = VISUELLE_GRUPPE_STANDARD_TITEL,
+    ) : KartenAktion
+    data class VisuelleGruppeVerschieben(val id: VisuelleGruppenId, val delta: GraphPunkt) : KartenAktion
+    data class VisuelleGruppeGrößeÄndern(val id: VisuelleGruppenId, val größe: GraphGröße) : KartenAktion
+    data class VisuelleGruppeTitelÄndern(val id: VisuelleGruppenId, val titel: String) : KartenAktion
+    data class VisuelleGruppenKinderZuordnen(val id: VisuelleGruppenId) : KartenAktion
+    data class VisuelleGruppeLöschen(val id: VisuelleGruppenId) : KartenAktion
     data class VisuelleGruppierungAufheben(val knotenIds: Set<KnotenId>) : KartenAktion
     /** Entfernt nur die Verbindungen eines Knotens; der Knoten selbst bleibt erhalten. */
     data class KnotenIsolieren(val id: KnotenId) : KartenAktion
@@ -100,18 +108,60 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
     )
     is KartenAktion.VisuelleGruppeErstellen -> {
         val gültigeIds = aktion.knotenIds.intersect(knoten.mapTo(mutableSetOf()) { it.id })
-        val übrigeGruppen = visuelleGruppen.mapNotNull { gruppe ->
-            (gruppe.knotenIds - gültigeIds).takeIf { it.size >= 2 }?.let { gruppe.copy(knotenIds = it) }
+        val geometrie = visuelleGruppenGeometrieFür(gültigeIds)
+        if (gültigeIds.size < 2 || geometrie == null) this else {
+            val übrigeGruppen = visuelleGruppen.map { gruppe ->
+                gruppe.copy(knotenIds = gruppe.knotenIds - gültigeIds)
+            }
+            copy(
+                visuelleGruppen = übrigeGruppen + VisuelleKnotenGruppeDaten(
+                    knotenIds = gültigeIds,
+                    titel = aktion.titel,
+                    position = geometrie.first,
+                    größe = geometrie.second,
+                ),
+            )
         }
-        copy(
-            visuelleGruppen = if (gültigeIds.size >= 2) {
-                übrigeGruppen + VisuelleKnotenGruppeDaten(knotenIds = gültigeIds)
-            } else übrigeGruppen,
+    }
+    is KartenAktion.VisuelleGruppeVerschieben -> {
+        val gruppe = visuelleGruppen.firstOrNull { it.id == aktion.id }
+        if (gruppe == null || aktion.delta == GraphPunkt.Zero) this else copy(
+            knoten = knoten.map { knoten ->
+                if (knoten.id in gruppe.knotenIds) knoten.copy(position = knoten.position + aktion.delta) else knoten
+            },
+            visuelleGruppen = visuelleGruppen.map {
+                if (it.id == aktion.id) it.copy(position = it.position + aktion.delta) else it
+            },
         )
     }
+    is KartenAktion.VisuelleGruppeGrößeÄndern -> copy(
+        visuelleGruppen = visuelleGruppen.map {
+            if (it.id == aktion.id) it.copy(größe = aktion.größe.alsGültigeVisuelleGruppenGröße()) else it
+        },
+    )
+    is KartenAktion.VisuelleGruppeTitelÄndern -> copy(
+        visuelleGruppen = visuelleGruppen.map {
+            if (it.id == aktion.id) it.copy(titel = aktion.titel) else it
+        },
+    )
+    is KartenAktion.VisuelleGruppenKinderZuordnen -> {
+        val gruppe = visuelleGruppen.firstOrNull { it.id == aktion.id }
+        if (gruppe == null) this else {
+            val enthalteneIds = vollständigEnthalteneKnoten(gruppe)
+            copy(visuelleGruppen = visuelleGruppen.map {
+                when (it.id) {
+                    aktion.id -> it.copy(knotenIds = enthalteneIds)
+                    else -> it.copy(knotenIds = it.knotenIds - enthalteneIds)
+                }
+            })
+        }
+    }
+    is KartenAktion.VisuelleGruppeLöschen -> copy(
+        visuelleGruppen = visuelleGruppen.filterNot { it.id == aktion.id },
+    )
     is KartenAktion.VisuelleGruppierungAufheben -> copy(
-        visuelleGruppen = visuelleGruppen.mapNotNull { gruppe ->
-            (gruppe.knotenIds - aktion.knotenIds).takeIf { it.size >= 2 }?.let { gruppe.copy(knotenIds = it) }
+        visuelleGruppen = visuelleGruppen.map { gruppe ->
+            gruppe.copy(knotenIds = gruppe.knotenIds - aktion.knotenIds)
         },
     )
     is KartenAktion.KnotenIsolieren -> copy(
