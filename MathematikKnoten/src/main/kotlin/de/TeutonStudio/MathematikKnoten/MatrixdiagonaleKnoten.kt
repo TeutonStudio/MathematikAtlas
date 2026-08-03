@@ -43,7 +43,9 @@ object MatrixdiagonaleKnotenVorlagen {
 
     val alle = listOf(Matrixdiagonale) +
         SpurKnotenVorlagen.alle +
-        StrukturRechnerKnotenVorlagen.alle
+        StrukturRechnerKnotenVorlagen.alle.filterNot { it.art in historischeSkalarproduktArten } +
+        EinheitsvektorKnotenVorlagen.alle +
+        VektorRechnerKnotenVorlagen.standard
 }
 
 internal fun MathematikAuswerterRegister.registriereMatrixdiagonale() {
