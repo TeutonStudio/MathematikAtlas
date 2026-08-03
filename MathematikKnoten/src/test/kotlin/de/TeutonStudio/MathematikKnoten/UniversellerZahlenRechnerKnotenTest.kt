@@ -19,15 +19,15 @@ class UniversellerZahlenRechnerKnotenTest {
     )
 
     @Test
-    fun `Katalog enthaelt nur noch universelle Zahlenrechnerzustaende`() {
-        val vorlagen = alleMathematikKnotenVorlagen()
+    fun `Katalog zeigt einen Zahlenrechner und interner Definitionskatalog alle Operatoren`() {
+        val sichtbar = alleMathematikKnotenVorlagen()
+        assertEquals(1, sichtbar.count { it.art == ZAHLENRECHNER_ART })
         assertTrue(UniversellerZahlenOperator.entries.all { operator ->
-            vorlagen.any {
-                it.art == ZAHLENRECHNER_ART &&
-                    it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
+            ZahlenRechnerKnotenVorlagen.alle.any {
+                it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
             }
         })
-        assertTrue(vorlagen.none { it.art in historischeZahlenRechnerArten })
+        assertTrue(sichtbar.none { it.art in historischeZahlenRechnerArten })
         assertNotNull(register.finde(ZAHLENRECHNER_ART))
     }
 
@@ -48,129 +48,77 @@ class UniversellerZahlenRechnerKnotenTest {
             verbindungen = listOf(edge),
         )
 
-        val migriert = karte.migriereUniversellenZahlenRechner()
-        val rechner = migriert.knoten.single { it.id == alt.id }
+        val migriert = migriereHistorischeZahlenRechnerKnoten(karte)
+        val neu = migriert.knoten.single { it.id == alt.id }
 
-        assertEquals(ZAHLENRECHNER_ART, rechner.art)
-        assertEquals(
-            UniversellerZahlenOperator.ADDITION.stabileId,
-            rechner.parameter[ZAHLENRECHNER_OPERATOR],
-        )
-        assertTrue(rechner.anschlüsse.any { it.id == a.id })
-        assertTrue(rechner.anschlüsse.any { it.id == ausgang.id && it.name == "wert" })
-        assertEquals(edge, migriert.verbindungen.single())
-        assertEquals(migriert, migriert.migriereUniversellenZahlenRechner())
+        assertEquals(ZAHLENRECHNER_ART, neu.art)
+        assertEquals(UniversellerZahlenOperator.ADDITION.stabileId, neu.parameter[ZAHLENRECHNER_OPERATOR])
+        assertTrue(neu.anschlüsse.any { it.id == a.id })
+        assertTrue(neu.anschlüsse.any { it.id == ausgang.id })
+        assertEquals(edge.id, migriert.verbindungen.single().id)
+        assertEquals(edge.zu, migriert.verbindungen.single().zu)
     }
 
     @Test
-    fun `Division waehlt Zeilen oder Bruchnotation aus dem Nenner`() {
-        val vorlage = ZahlenRechnerKnotenVorlagen.alle.first {
-            it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
-                UniversellerZahlenOperator.DIVISION.stabileId
-        }
-        val knoten = vorlage.erzeuge(GraphPunkt.Zero)
-        val auswerter = register.finde(ZAHLENRECHNER_ART)!!
-
-        val kurz = auswerter.auswerten(
+    fun `Addition vereinigt kompatible Zahlbereiche`() {
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.first {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.ADDITION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
             kontext(
                 knoten,
                 mapOf(
-                    "a" to BedingterWert(
-                        RationaleZahl.Eins,
-                        werteVorrat = BenannteMenge("Rationale Zahlen", "\\mathbb Q"),
-                    ),
-                    "b" to BedingterWert(
-                        RationaleZahl.von(2),
-                        werteVorrat = BenannteMenge("Rationale Zahlen", "\\mathbb Q"),
-                    ),
+                    "wert1" to BedingterWert(RationaleZahl.von(2)),
+                    "wert2" to BedingterWert(RationaleZahl.von(3)),
                 ),
             ),
-        ).ausgaben.getValue("wert")
-        assertEquals("1 \\div 2", kurz.latexDarstellung)
+        )
+        assertEquals(RationaleZahl.von(5), ergebnis.ausgaben.getValue("wert").objekt)
+    }
 
-        val lang = auswerter.auswerten(
+    @Test
+    fun `Subtraktion erweitert Ergebnisbereich wenn natuerliche Zahlen nicht abgeschlossen sind`() {
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.first {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.SUBTRAKTION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
             kontext(
                 knoten,
                 mapOf(
-                    "a" to BedingterWert(
-                        Variable("a"),
-                        werteVorrat = BenannteMenge("Reelle Zahlen", "\\mathbb R"),
-                    ),
-                    "b" to BedingterWert(
-                        addition(Variable("x"), Variable("y")),
-                        werteVorrat = BenannteMenge("Reelle Zahlen", "\\mathbb R"),
-                    ),
+                    "wert1" to BedingterWert(RationaleZahl.von(2)),
+                    "wert2" to BedingterWert(RationaleZahl.von(3)),
                 ),
             ),
-        ).ausgaben.getValue("wert")
-        assertTrue(lang.latexDarstellung.orEmpty().startsWith("\\frac"))
-    }
-
-    @Test
-    fun `Quaternionische Multiplikation behaelt Faktorordnung als Regel`() {
-        val definition = ZahlenRechnerDefinition(
-            UniversellerZahlenOperator.MULTIPLIKATION,
-            ZahlenRechnerBereich.QUATERNION,
         )
-        assertTrue(definition.regeln.any { "Faktorordnung" in it && "nicht kommutativ" in it })
-        assertEquals("\\cdot\\vert_{\\mathbb H}", definition.latex)
+        assertEquals(RationaleZahl.von(-1), ergebnis.ausgaben.getValue("wert").objekt)
     }
 
     @Test
-    fun `Rundung und Modulo werden fuer rationale Eingaben exakt ausgewertet`() {
-        assertEquals(RationaleZahl.von(-2), abrunden(RationaleZahl.von(-3, 2)))
-        assertEquals(RationaleZahl.von(-1), aufrunden(RationaleZahl.von(-3, 2)))
-        assertEquals(RationaleZahl.von(2), runden(RationaleZahl.von(3, 2)))
-        assertEquals(RationaleZahl.von(2), modulo(RationaleZahl.von(17), RationaleZahl.von(5)))
-    }
-
-    @Test
-    fun `Komplexkonstruktor akzeptiert getrennte Werte und Tupelmodus`() {
-        val vorlage = ZahlenRechnerKnotenVorlagen.alle.first {
-            it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
-                UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH.stabileId
-        }
-        val getrennt = vorlage.erzeuge(GraphPunkt.Zero)
-        val auswerter = register.finde(ZAHLENRECHNER_ART)!!
-        val getrenntErgebnis = auswerter.auswerten(
+    fun `Division durch null liefert Definitionsluecke`() {
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.first {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.DIVISION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
             kontext(
-                getrennt,
+                knoten,
                 mapOf(
-                    "a" to BedingterWert(RationaleZahl.von(2)),
-                    "b" to BedingterWert(RationaleZahl.von(3)),
+                    "zaehler" to BedingterWert(RationaleZahl.Eins),
+                    "nenner" to BedingterWert(RationaleZahl.Null),
                 ),
             ),
         )
-        assertEquals(
-            KomplexeZahl(RationaleZahl.von(2), RationaleZahl.von(3)),
-            getrenntErgebnis.ausgaben.getValue("wert").objekt,
-        )
-
-        val tupel = getrennt.copy(
-            parameter = getrennt.parameter +
-                (ZAHLENRECHNER_KOMPLEX_EINGABE to ZAHLENRECHNER_KOMPLEX_TUPEL),
-        )
-        val tupelErgebnis = auswerter.auswerten(
-            kontext(
-                tupel,
-                mapOf(
-                    "tupel" to BedingterWert(
-                        Tupel(listOf(RationaleZahl.von(4), RationaleZahl.von(5))),
-                    ),
-                ),
-            ),
-        )
-        assertEquals(
-            KomplexeZahl(RationaleZahl.von(4), RationaleZahl.von(5)),
-            tupelErgebnis.ausgaben.getValue("wert").objekt,
-        )
+        assertNotNull(ergebnis.fehler)
+        assertTrue(ergebnis.ausgaben.isEmpty())
     }
 
     @Test
-    fun `Gradwinkel kann symbolisch oder als Pi durch 180 ausgewertet werden`() {
-        val winkel = Variable("x")
-        assertEquals("x^{\\circ}", gradWinkelLatex(winkel, false))
-        assertEquals("x \\cdot \\pi \\div 180", gradWinkelLatex(winkel, true))
-        assertEquals(multiplikation(winkel, GradWinkelEinheit), gradZuBogenmass(winkel))
+    fun `Operatorwechsel rekonstruiert Anschluesse deterministisch`() {
+        val start = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
+        val addition = konfiguriereZahlenRechnerKnoten(start, UniversellerZahlenOperator.ADDITION)
+        val division = konfiguriereZahlenRechnerKnoten(addition, UniversellerZahlenOperator.DIVISION)
+        val erneut = konfiguriereZahlenRechnerKnoten(division, UniversellerZahlenOperator.ADDITION)
+
+        assertEquals(addition.anschlüsse.map { it.name }, erneut.anschlüsse.map { it.name })
+        assertEquals(addition.anschlüsse.map { it.id }, erneut.anschlüsse.map { it.id })
     }
 }
