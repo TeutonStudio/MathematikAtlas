@@ -98,7 +98,11 @@ object AussagenLogikKnotenVorlagen {
 }
 
 private fun vorlagenSchlüssel(vorlage: KnotenVorlage): Pair<String, String> =
-    vorlage.art to (vorlage.standardParameter["operator"] ?: vorlage.name)
+    vorlage.art to listOf(
+        vorlage.standardParameter["operator"].orEmpty(),
+        vorlage.standardParameter["eingabeModus"].orEmpty(),
+        vorlage.name,
+    ).joinToString("|")
 
 /**
  * Ersetzt korrigierte Varianten, entfernt historische Zahlrechnerarten aus dem

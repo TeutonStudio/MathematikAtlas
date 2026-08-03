@@ -226,7 +226,17 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
             )
         } else {
             val operator = historischerZahlenOperator(alt) ?: return@map alt
-            val standard = standardAnschluesse(operator)
+            val standard = if (
+                operator == UniversellerZahlenOperator.ITERIERTE_SUMME &&
+                alt.parameter["eingabeModus"] == ITERIERTE_SUMME_TUPEL_MODUS
+            ) {
+                listOf(
+                    spezialEingang("tupel", MathematikAnschlussArten.Tupel.id, 0),
+                    zahlenAusgang(),
+                )
+            } else {
+                standardAnschluesse(operator)
+            }
             val alteEingaenge = alt.anschlüsse
                 .filter { it.richtung == AnschlussRichtung.Eingang }
                 .sortedBy { it.reihenfolge }
@@ -475,14 +485,27 @@ private fun universellAuswerten(
         UniversellerZahlenOperator.ITERIERTE_SUMME,
         UniversellerZahlenOperator.ITERIERTES_PRODUKT,
         -> {
-            val methode = k.eingänge["methode"]?.objekt as? Methode
-                ?: error("Iterationsmethode fehlt.")
-            val indexmenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck
-                ?: error("Indexmenge fehlt.")
-            val objekt = if (operator == UniversellerZahlenOperator.ITERIERTE_SUMME) {
-                iterierteSumme(methode, indexmenge)
+            val tupel = k.eingänge["tupel"]?.objekt as? Tupel
+            val objekt = if (tupel != null) {
+                val komponenten = tupel.elemente.mapIndexed { index, element ->
+                    element as? ZahlAusdruck
+                        ?: error("Tupelkomponente ${index + 1} ist keine Zahl.")
+                }
+                if (operator == UniversellerZahlenOperator.ITERIERTE_SUMME) {
+                    addition(komponenten)
+                } else {
+                    multiplikation(komponenten)
+                }
             } else {
-                iteriertesProdukt(methode, indexmenge)
+                val methode = k.eingänge["methode"]?.objekt as? Methode
+                    ?: error("Iterationsmethode fehlt.")
+                val indexmenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck
+                    ?: error("Indexmenge fehlt.")
+                if (operator == UniversellerZahlenOperator.ITERIERTE_SUMME) {
+                    iterierteSumme(methode, indexmenge)
+                } else {
+                    iteriertesProdukt(methode, indexmenge)
+                }
             }
             UniverselleZahlenAusgabe(objekt, gemeinsam)
         }

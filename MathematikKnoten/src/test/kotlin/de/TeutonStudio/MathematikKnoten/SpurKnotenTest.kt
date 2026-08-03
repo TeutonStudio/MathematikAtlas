@@ -8,6 +8,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Matrix
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
+import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.addition
 import kotlin.test.Test
@@ -61,7 +62,7 @@ class SpurKnotenTest {
         val knoten = SpurKnotenVorlagen.IterierteSummeTupel.erzeuge(GraphPunkt.Zero)
         val a = Variable("a")
         val tupel = Tupel(listOf(a, zahl(2), zahl(3)))
-        val ergebnis = register.finde(MathematikKnotenVorlagen.IterierteSumme.art)!!.auswerten(
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
                 eingänge = mapOf("tupel" to BedingterWert(tupel)),
@@ -74,8 +75,11 @@ class SpurKnotenTest {
 
     @Test
     fun `Bestehender Methodenmodus der iterierten Summe bleibt registriert`() {
-        val vorlagen = alleMathematikKnotenVorlagen()
-            .filter { it.art == MathematikKnotenVorlagen.IterierteSumme.art }
+        val vorlagen = alleMathematikKnotenVorlagen().filter {
+            it.art == ZAHLENRECHNER_ART &&
+                it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
+                UniversellerZahlenOperator.ITERIERTE_SUMME.stabileId
+        }
 
         assertEquals(2, vorlagen.size)
         assertNotNull(vorlagen.singleOrNull { vorlage ->

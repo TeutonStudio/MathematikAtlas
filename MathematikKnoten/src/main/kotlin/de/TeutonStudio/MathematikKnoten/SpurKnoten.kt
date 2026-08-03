@@ -8,13 +8,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
-import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
-import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensorartig
-import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
-import de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
-import de.TeutonStudio.MathematikRechenSystem.kern.addition
-import de.TeutonStudio.MathematikRechenSystem.kern.iterierteSumme
+import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.spur
 
 const val SPUR_ART = "mathematik.spur"
@@ -45,7 +40,7 @@ object SpurKnotenVorlagen {
 
     /** Alternative Eingabeform des vorhandenen Summenknotens für kartesische Zahlentupel. */
     val IterierteSummeTupel = KnotenVorlage(
-        art = MathematikKnotenVorlagen.IterierteSumme.art,
+        art = ZAHLENRECHNER_ART,
         name = "Iterierte Summe (Tupel)",
         kategorie = "Operatoren",
         beschreibung = "Summiert die Komponenten eines kartesischen Zahlentupels in ihrer Reihenfolge.",
@@ -64,7 +59,10 @@ object SpurKnotenVorlagen {
                 art = MathematikAnschlussArten.Zahl.id,
             ),
         ),
-        standardParameter = mapOf("eingabeModus" to ITERIERTE_SUMME_TUPEL_MODUS),
+        standardParameter = mapOf(
+            ZAHLENRECHNER_OPERATOR to UniversellerZahlenOperator.ITERIERTE_SUMME.stabileId,
+            "eingabeModus" to ITERIERTE_SUMME_TUPEL_MODUS,
+        ),
     )
 
     val alle = listOf(Spur, IterierteSummeTupel)
@@ -77,26 +75,6 @@ internal fun MathematikAuswerterRegister.registriereSpurUndTupelsumme() {
         val matrix = eingang.objekt as? Tensorartig ?: error("Der Eingang ist keine Matrix.")
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf("spur" to BedingterWert(spur(matrix), eingang.annahmen)),
-            eingänge = kontext.eingänge,
-        )
-    }
-
-    registriere(MathematikKnotenVorlagen.IterierteSumme.art) { kontext ->
-        val tupelWert = kontext.eingänge["tupel"]
-        val ergebnis = if (tupelWert != null) {
-            val tupel = tupelWert.objekt as? Tupel ?: error("Der Tupel-Eingang enthält kein Tupel.")
-            addition(tupel.elemente.mapIndexed { index, element ->
-                element as? ZahlAusdruck
-                    ?: error("Tupelkomponente ${index + 1} ist keine Zahl.")
-            })
-        } else {
-            val methode = kontext.eingänge["methode"]?.objekt as? Methode ?: error("Zahlfunktion fehlt.")
-            val indexMenge = kontext.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
-            iterierteSumme(methode, indexMenge)
-        }
-        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
-        KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("wert" to BedingterWert(ergebnis, annahmen)),
             eingänge = kontext.eingänge,
         )
     }
