@@ -94,7 +94,16 @@ class StrukturRechnerTest {
     }
 
     @Test
-    fun `Natuerliche Indizes beginnen bei eins`() {
+    fun `Natuerliche Zahlen und Indizes beginnen bei eins`() {
+        assertEquals(
+            Wahrheitswert.Lüge,
+            ElementBeziehung(zahl(0), NatürlicheZahlen).entscheide().wahrheitswert,
+        )
+        assertEquals(
+            Wahrheitswert.Wahr,
+            ElementBeziehung(zahl(1), NatürlicheZahlen).entscheide().wahrheitswert,
+        )
+
         val n = Variable("n")
         val methode = Methode(
             name = "u",
