@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas.speicher
 
 import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.migriereUniversellenZahlenRechner
 import org.json.JSONObject
 import java.io.File
 
@@ -51,7 +52,9 @@ class KartenSpeicher(private val context: Context) {
     fun importiere(text: String): KartenDaten = if (KartenFreigabePaket.istFreigabePaket(text)) {
         importierePaket(text)
     } else {
-        val gelesen = KartenJson.lese(text).migriereMethodenAnschlüsse()
+        val gelesen = KartenJson.lese(text)
+            .migriereMethodenAnschlüsse()
+            .migriereUniversellenZahlenRechner()
         val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
@@ -126,17 +129,19 @@ class KartenSpeicher(private val context: Context) {
                 ?: neueKartenId()
         }
         val remappteKarten = paket.karten.map { karte ->
-            karte.migriereMethodenAnschlüsse().copy(
-                id = idAbbildung.getValue(karte.id),
-                knoten = karte.knoten.map { knoten ->
-                    knoten.copy(
-                        kartenVerweis = knoten.kartenVerweis?.remappe(idAbbildung),
-                        eingangsKartenVerweise = knoten.eingangsKartenVerweise.mapValues { (_, verweis) ->
-                            verweis.remappe(idAbbildung)
-                        },
-                    )
-                },
-            )
+            karte.migriereMethodenAnschlüsse()
+                .migriereUniversellenZahlenRechner()
+                .copy(
+                    id = idAbbildung.getValue(karte.id),
+                    knoten = karte.knoten.map { knoten ->
+                        knoten.copy(
+                            kartenVerweis = knoten.kartenVerweis?.remappe(idAbbildung),
+                            eingangsKartenVerweise = knoten.eingangsKartenVerweise.mapValues { (_, verweis) ->
+                                verweis.remappe(idAbbildung)
+                            },
+                        )
+                    },
+                )
         }
         remappteKarten.sortedWith(compareBy({ it.id.wert }, { it.version })).forEach(::speichereExakt)
 
@@ -207,6 +212,10 @@ class KartenSpeicher(private val context: Context) {
     private fun dateiFür(id: KartenId, version: Int) = File(File(kartenOrdner, id.wert), "v$version.json")
     private fun versionAusDatei(file: File) = file.name.removePrefix("v").removeSuffix(".json").toIntOrNull() ?: 0
     private fun leseDatei(file: File): KartenDaten? = runCatching {
-        if (file.exists()) KartenJson.lese(file.readText()).migriereMethodenAnschlüsse() else null
+        if (file.exists()) {
+            KartenJson.lese(file.readText())
+                .migriereMethodenAnschlüsse()
+                .migriereUniversellenZahlenRechner()
+        } else null
     }.getOrNull()
 }
