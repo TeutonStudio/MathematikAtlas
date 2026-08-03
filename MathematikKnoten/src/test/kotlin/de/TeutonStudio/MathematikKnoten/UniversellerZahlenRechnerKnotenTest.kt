@@ -15,7 +15,6 @@ class UniversellerZahlenRechnerKnotenTest {
     ) = KnotenAuswertungsKontext(
         knoten = knoten,
         eingänge = eingänge,
-        karte = KartenDaten(name = "Test", knoten = listOf(knoten)),
         rechenKontext = RechenKontext(),
     )
 
