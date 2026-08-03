@@ -75,7 +75,8 @@ class KartenEditorZustand(
             .ohneUnverbundeneDynamischeEingänge()
             .bereinigteVisuelleGruppen()
         if (neu == karte) return
-        if (mitHistorie) merkeFürRückgängig(standVorAktion)
+        val historienRelevant = mitHistorie && wirksameAktion !is KartenAktion.AnsichtÄndern
+        if (historienRelevant) merkeFürRückgängig(standVorAktion)
         karte = neu
         bereinigeAuswahl()
     }
@@ -372,18 +373,24 @@ class KartenEditorZustand(
 
     fun rückgängig() {
         if (rückgängig.isEmpty()) return
+        val aktuelleAnsicht = karte.ansicht
         verwerfeVerbindungsInteraktion()
         wiederholen.fügeBegrenztHinzu(karte)
-        karte = rückgängig.removeLast().bereinigteVisuelleGruppen()
+        karte = rückgängig.removeLast()
+            .copy(ansicht = aktuelleAnsicht)
+            .bereinigteVisuelleGruppen()
         aktualisiereHistorienStatus()
         bereinigeAuswahl()
     }
 
     fun wiederholen() {
         if (wiederholen.isEmpty()) return
+        val aktuelleAnsicht = karte.ansicht
         verwerfeVerbindungsInteraktion()
         rückgängig.fügeBegrenztHinzu(karte)
-        karte = wiederholen.removeLast().bereinigteVisuelleGruppen()
+        karte = wiederholen.removeLast()
+            .copy(ansicht = aktuelleAnsicht)
+            .bereinigteVisuelleGruppen()
         aktualisiereHistorienStatus()
         bereinigeAuswahl()
     }
