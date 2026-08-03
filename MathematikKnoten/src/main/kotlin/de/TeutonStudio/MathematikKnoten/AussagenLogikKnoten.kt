@@ -10,7 +10,6 @@ import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
-import de.TeutonStudio.MathematikKartenAdapter.operatorEingänge
 import de.TeutonStudio.MathematikRechenSystem.kern.Aussage
 import de.TeutonStudio.MathematikRechenSystem.kern.Disjunktion as DisjunktionAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.Implikation as ImplikationAussage
