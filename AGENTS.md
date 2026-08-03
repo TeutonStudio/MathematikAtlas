@@ -51,11 +51,11 @@ Committer: SamAI <46108494+TeutonStudio@users.noreply.github.com>
 
 Verbindliche Regeln:
 
-- Erzeuge SamAI-Branches mit `scripts/samai-git.sh branch ...`.
+- Erzeuge SamAI-Branches mit `bash scripts/samai-git.sh branch ...`.
 - SamAI-Branches beginnen mit `samai/`.
-- Erzeuge SamAI-Commits ausschließlich mit `scripts/samai-git.sh commit ...`.
+- Erzeuge SamAI-Commits ausschließlich mit `bash scripts/samai-git.sh commit ...`.
 - Stage nur ausdrücklich zur Aufgabe gehörende Dateien; das Skript führt kein automatisches Staging aus.
-- Prüfe vor dem Push mit `scripts/samai-git.sh verify HEAD`.
+- Prüfe vor dem Push mit `bash scripts/samai-git.sh verify HEAD`.
 - Keine direkten Commits auf `master` oder `main`.
 - Verändere weder globale noch Repository-lokale `user.name`- oder `user.email`-Werte für SamAI.
 - Der GitHub-Connector kann Autor und Committer derzeit nicht auf `SamAI` setzen. Connector-Commits dürfen daher nicht als korrekt signierte SamAI-Commits bezeichnet werden und müssen im Abschlussbericht ausdrücklich genannt werden.
