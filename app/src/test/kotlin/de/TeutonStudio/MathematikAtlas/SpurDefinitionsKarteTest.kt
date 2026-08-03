@@ -6,6 +6,9 @@ import de.TeutonStudio.MathematikKnoten.MATRIXDIAGONALE_ART
 import de.TeutonStudio.MathematikKnoten.MATRIXDIAGONALE_ART_PARAMETER
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.SPUR_ART
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_OPERATOR
+import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.MatrixDiagonalArt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,7 +29,9 @@ class SpurDefinitionsKarteTest {
             diagonale.parameter[MATRIXDIAGONALE_ART_PARAMETER],
         )
         val summe = karte.knoten.single {
-            it.art == MathematikKnotenVorlagen.IterierteSumme.art &&
+            it.art == ZAHLENRECHNER_ART &&
+                it.parameter[ZAHLENRECHNER_OPERATOR] ==
+                UniversellerZahlenOperator.ITERIERTE_SUMME.stabileId &&
                 it.parameter["eingabeModus"] == ITERIERTE_SUMME_TUPEL_MODUS
         }
         assertTrue(summe.anschlüsse.any {

@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 private data class IterierteDefinitionsKonfiguration(
     val operator: String,
@@ -146,8 +147,14 @@ internal fun iterierteOperatorDefinitionsKarte(
     )
 }
 
-private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitionsKonfiguration = when (vorlage.art) {
-    "mathematik.iterierteSumme" -> IterierteDefinitionsKonfiguration(
+private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitionsKonfiguration {
+    val kennung: Any? = if (vorlage.art == ZAHLENRECHNER_ART) {
+        vorlage.standardParameter[ZAHLENRECHNER_OPERATOR]
+    } else {
+        vorlage.art
+    }
+    return when (kennung) {
+    "mathematik.iterierteSumme", UniversellerZahlenOperator.ITERIERTE_SUMME.stabileId -> IterierteDefinitionsKonfiguration(
         operator = "summe",
         methodenName = "f",
         methodenArt = MathematikAnschlussArten.ZahlMethode.id,
@@ -158,7 +165,7 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
         neutralParameter = mapOf("wert" to "0"),
         verknüpfungsAusgang = "wert",
     )
-    "mathematik.iteriertesProdukt" -> IterierteDefinitionsKonfiguration(
+    "mathematik.iteriertesProdukt", UniversellerZahlenOperator.ITERIERTES_PRODUKT.stabileId -> IterierteDefinitionsKonfiguration(
         operator = "produkt",
         methodenName = "f",
         methodenArt = MathematikAnschlussArten.ZahlMethode.id,
@@ -211,6 +218,7 @@ private fun iterierteKonfiguration(vorlage: KnotenVorlage): IterierteDefinitions
         verknüpfungsAusgang = "menge",
     )
     else -> error("Für ${vorlage.art} existiert keine iterierte Definitionskonfiguration.")
+    }
 }
 
 private fun iteriertesKartesischesProduktDefinitionsKarte(
