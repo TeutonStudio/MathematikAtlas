@@ -551,3 +551,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.skalarprodukt", "mathematik.tensorprodukt", "mathematik.dimensionen", "mathematik.tensorrechner", "mathematik.aussagensatz", "mathematik.cauchy"]
 reason = "Führt sechs separat erzeugbare Strukturknoten ein und ergänzt gemeinsame Verträge für Tensoroperationen, Skalarprodukte, Falk-Schema, Quantoren, Prädikate, unendliche Indexstrukturen, Cauchy-Aussagen und beschränkte geordnete Zahlmengen."
+
+[[releases]]
+version = "2.20.1"
+title = "Lineare Strukturknoten konsolidieren"
+roadmap = "v2.20.x Tensorrechnung und lineare Strukturverträge"
+status = "released"
+previous_release = "2.20.0"
+branch = "release/v2.20.1-lineare-strukturen"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert vorhandene Matrix-, Skalarprodukt- und Tensorrechner-Knoten um gemeinsame Komponentenansichten, dynamische Operatoranschlüsse und lokale Fehlerzustände, ohne einen neuen registrierten Knotentyp einzuführen."
