@@ -45,11 +45,13 @@ Releasebranches, die ausschließlich der Integration mehrerer Beiträge dienen, 
 SamAI erstellt lokale Branches und Commits über:
 
 ```bash
-scripts/samai-git.sh branch v2.21.1/git-identitaet master
+bash scripts/samai-git.sh branch v2.21.1/git-identitaet master
 git add <ausdrücklich ausgewählte Dateien>
-scripts/samai-git.sh commit -m "Agentenidentität vereinheitlichen"
-scripts/samai-git.sh verify HEAD
+bash scripts/samai-git.sh commit -m "Agentenidentität vereinheitlichen"
+bash scripts/samai-git.sh verify HEAD
 ```
+
+Der explizite Aufruf über `bash` funktioniert auch dann, wenn ein Connector oder Archiv beim Erstellen der Datei kein ausführbares Git-Dateirecht setzt.
 
 Das Skript:
 
@@ -68,7 +70,7 @@ Der aktuell verwendete GitHub-Connector kann Branches, Dateien, Commits und Pull
 
 Daraus folgen verbindliche Regeln:
 
-1. Für reguläre SamAI-Implementierungen wird ein lokaler Checkout mit `scripts/samai-git.sh` bevorzugt.
+1. Für reguläre SamAI-Implementierungen wird ein lokaler Checkout mit `bash scripts/samai-git.sh` bevorzugt.
 2. Der Connector wird bevorzugt für Lesen, Issues, PR-Metadaten, Reviews und das Eröffnen eines bereits gepushten Pull Requests verwendet.
 3. Muss eine Änderung mangels lokalem Git-Zugriff über den Connector erstellt werden, darf sie nicht als korrekt signierter SamAI-Commit bezeichnet werden.
 4. Ein solcher Bootstrap- oder Notfallcommit wird im Abschlussbericht ausdrücklich als Connector-Commit ausgewiesen.
@@ -85,7 +87,7 @@ git show -s --format='Autor: %an <%ae>%nCommitter: %cn <%ce>%nCommit: %H' HEAD
 Für einen SamAI-Commit muss außerdem erfolgreich sein:
 
 ```bash
-scripts/samai-git.sh verify HEAD
+bash scripts/samai-git.sh verify HEAD
 ```
 
 Vor dem Push prüft SamAI zusätzlich:
