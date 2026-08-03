@@ -74,10 +74,9 @@ class SpurKnotenTest {
     }
 
     @Test
-    fun `Bestehender Methodenmodus der iterierten Summe bleibt registriert`() {
-        val vorlagen = alleMathematikKnotenVorlagen().filter {
-            it.art == ZAHLENRECHNER_ART &&
-                it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
+    fun `Bestehende Varianten der iterierten Summe bleiben intern registriert`() {
+        val vorlagen = ZahlenRechnerKnotenVorlagen.alle.filter {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
                 UniversellerZahlenOperator.ITERIERTE_SUMME.stabileId
         }
 
@@ -86,6 +85,7 @@ class SpurKnotenTest {
             vorlage.anschlüsse.any { it.name == "methode" } && vorlage.anschlüsse.any { it.name == "indexmenge" }
         })
         assertNotNull(vorlagen.singleOrNull { vorlage -> vorlage.anschlüsse.any { it.name == "tupel" } })
+        assertEquals(1, alleMathematikKnotenVorlagen().count { it.art == ZAHLENRECHNER_ART })
     }
 
     @Test
