@@ -48,6 +48,7 @@ class SchnittstellenKatalogTest {
         val texte = Files.list(ordner).use { pfade ->
             pfade
                 .filter { Files.isRegularFile(it) }
+                .filter { it.fileName.toString().endsWith(".kt") }
                 .map { it.readText() }
                 .toList()
         }.joinToString("\n")
