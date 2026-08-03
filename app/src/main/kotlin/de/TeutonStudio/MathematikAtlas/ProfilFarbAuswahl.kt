@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -81,7 +82,12 @@ internal fun ProfilFarbAuswahl(
                 y = (1f - entwurf.hsv.helligkeit) * size.height,
             )
             drawCircle(Color.White, radius = 10.dp.toPx(), center = marker)
-            drawCircle(Color.Black, radius = 7.dp.toPx(), center = marker, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+            drawCircle(
+                Color.Black,
+                radius = 7.dp.toPx(),
+                center = marker,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()),
+            )
         }
 
         Text("Farbton: ${entwurf.hsv.farbton.toInt()}°", style = MaterialTheme.typography.labelLarge)
@@ -109,8 +115,9 @@ internal fun ProfilFarbAuswahl(
             Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
-        val schema = remember(entwurf.letzteGueltigeFarbe) {
-            ProfilFarbschemaGenerator.erzeuge(entwurf.letzteGueltigeFarbe, dunkel = true)
+        val dunkel = LocalDarstellungsSteuerung.current.modus.istDunkel(isSystemInDarkTheme())
+        val schema = remember(entwurf.letzteGueltigeFarbe, dunkel) {
+            ProfilFarbschemaGenerator.erzeuge(entwurf.letzteGueltigeFarbe, dunkel)
         }
         Surface(
             modifier = Modifier.fillMaxWidth(),
