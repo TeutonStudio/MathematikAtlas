@@ -5,6 +5,7 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 /** Bestehender Standardauswerter plus additive Mathematikdomänen. */
 object GesamterMathematikAuswerter {
     fun erzeugeRegister(): MathematikAuswerterRegister = StandardMathematikAuswerter.erzeugeRegister().apply {
+        registriereUniversellenZahlenRechner()
         registriereMatrixdiagonale()
         registriereSpurUndTupelsumme()
         registriereTransponieren()
