@@ -37,7 +37,7 @@ Prüfe die Klassifikation vor dem Abschluss erneut gegen den tatsächlichen Diff
 
 ## Git-Identität
 
-SamAI verwendet für lokale Branches und Commits ausschließlich `scripts/samai-git.sh`.
+SamAI verwendet für lokale Branches und Commits ausschließlich `bash scripts/samai-git.sh`.
 
 ```text
 Author:    SamAI <46108494+TeutonStudio@users.noreply.github.com>
@@ -46,7 +46,7 @@ Committer: SamAI <46108494+TeutonStudio@users.noreply.github.com>
 
 - SamAI-Branches beginnen mit `samai/`.
 - Direkte Commits auf `master` sind verboten.
-- Vor dem Push muss `scripts/samai-git.sh verify HEAD` erfolgreich sein.
+- Vor dem Push muss `bash scripts/samai-git.sh verify HEAD` erfolgreich sein.
 - Der GitHub-Connector kann die Identität nicht auf SamAI setzen. Connector-Commits müssen als solche ausgewiesen werden.
 
 ## Ablauf
@@ -68,7 +68,7 @@ Bei Widersprüchen darf keine neue Version begonnen werden. Erstelle stattdessen
 - Trage Titel, Roadmap-Phase, Vorgängerrelease, Branch und Status in `release/roadmap.toml` ein.
 - Dokumentiere bei `y`-Versionen die geplanten neuen Typ-Schlüssel oder Knotenfamilien.
 - Lege Integrationsbranches als `release/v<version>-<kurzname>` an.
-- Lege SamAI-Arbeitsbranches mit `scripts/samai-git.sh branch v<version>/<aufgabe> <basis>` an.
+- Lege SamAI-Arbeitsbranches mit `bash scripts/samai-git.sh branch v<version>/<aufgabe> <basis>` an.
 - Für einen kleinen eigenständigen Release ist `samai/v<version>-<kurzname>` zulässig.
 
 ### 3. Arbeit integrieren
