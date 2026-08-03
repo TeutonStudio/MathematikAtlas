@@ -15,5 +15,6 @@ object GesamterMathematikAuswerter {
         registriereMengenraumKnoten()
         registriereAussagenLogikKnoten()
         registriereStrukturRechnerKnoten()
+        registriereLineareStrukturErweiterungen()
     }
 }
