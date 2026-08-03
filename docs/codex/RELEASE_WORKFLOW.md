@@ -43,7 +43,7 @@ Für kleine, in sich geschlossene Releases darf ein einzelner `samai/v<version>-
 
 ## Git-Identität
 
-SamAI erzeugt lokale Branches und Commits über `scripts/samai-git.sh`.
+SamAI erzeugt lokale Branches und Commits über `bash scripts/samai-git.sh`.
 
 Verbindliche SamAI-Identität:
 
@@ -52,7 +52,7 @@ Author:    SamAI <46108494+TeutonStudio@users.noreply.github.com>
 Committer: SamAI <46108494+TeutonStudio@users.noreply.github.com>
 ```
 
-Vor dem Push muss `scripts/samai-git.sh verify HEAD` erfolgreich sein. Das Skript darf nicht durch eine dauerhafte Änderung von `git config user.name` oder `git config user.email` ersetzt werden, weil dadurch spätere manuelle Commits falsch zugeordnet würden.
+Vor dem Push muss `bash scripts/samai-git.sh verify HEAD` erfolgreich sein. Das Skript darf nicht durch eine dauerhafte Änderung von `git config user.name` oder `git config user.email` ersetzt werden, weil dadurch spätere manuelle Commits falsch zugeordnet würden.
 
 Der GitHub-Connector stellt derzeit keine Autor- und Committerfelder für erzeugte Commits bereit. Connector-Commits gelten deshalb nicht als korrekt signierte SamAI-Commits und müssen im Abschlussbericht als solche benannt werden. Der Connector bleibt sinnvoll für Issues, Reviews, PR-Metadaten und das Eröffnen bereits lokal erzeugter und gepushter Branches.
 
@@ -112,9 +112,9 @@ Weicht der tatsächliche Diff ab, darf nicht unter der falschen Version veröffe
 
 ### 3. Implementierung
 
-- SamAI-Branches mit `scripts/samai-git.sh branch ...` anlegen.
+- SamAI-Branches mit `bash scripts/samai-git.sh branch ...` anlegen.
 - Nur ausdrücklich ausgewählte Dateien stagen.
-- SamAI-Commits mit `scripts/samai-git.sh commit ...` erzeugen.
+- SamAI-Commits mit `bash scripts/samai-git.sh commit ...` erzeugen.
 - Subbranches auf die reservierte Version begrenzen.
 - Keine fremden Versionsänderungen übernehmen.
 - Keine neuen Knotentypen in eine als `x` klassifizierte Version einschleusen.
@@ -126,7 +126,7 @@ Weicht der tatsächliche Diff ab, darf nicht unter der falschen Version veröffe
 - Versionsklassifikation gegen Registry- und Typänderungen prüfen.
 - Repository-, Architektur-, Test- und Buildprüfungen ausführen.
 - Android-Version und Releaseplan abgleichen.
-- Für den letzten lokal durch SamAI erzeugten Commit `scripts/samai-git.sh verify HEAD` ausführen.
+- Für den letzten lokal durch SamAI erzeugten Commit `bash scripts/samai-git.sh verify HEAD` ausführen.
 - PR als bereit markieren.
 
 ### 5. Veröffentlichung
