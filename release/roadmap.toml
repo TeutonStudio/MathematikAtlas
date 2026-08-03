@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.22.x"
-current_version = "2.22.0"
+current_version = "2.22.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -619,3 +619,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.begriff.vektorraum", "mathematik.begriff.lineareAbbildung"]
 reason = "Führt zwei separat erzeugbare Begriffsknoten für Vektorräume und lineare Abbildungen ein, ergänzt Gauß-Jordan-Auswertungen und rendert mathematische Reitertitel im Definitionsdialog über die zentrale LaTeX-Darstellung."
+
+[[releases]]
+version = "2.22.1"
+title = "Teilgraphkarten und gemeinsamer Kartenschnittstellenkatalog"
+roadmap = "v2.22.x Karteneditor und eigene Karten"
+status = "released"
+previous_release = "2.22.0"
+branch = "samai/v2.22.1-auswahl-kartenkatalog"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert den Karteneditor um das Erzeugen neuer Karten aus einer Mehrfachauswahl und ordnet vorhandene Karten-Ein- und -Ausgänge konsistent unter Eigene Karten ein, ohne einen neuen registrierten Knotentyp einzuführen."

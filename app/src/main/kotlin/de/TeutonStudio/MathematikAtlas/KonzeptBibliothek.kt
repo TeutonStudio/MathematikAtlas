@@ -138,8 +138,6 @@ internal object KonzeptBibliothekRegister {
             listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe")),
         ),
         KonzeptKategorie("eigene-karten", "Eigene Karten"),
-        KonzeptKategorie("karteneingaenge", "Karteneingänge"),
-        KonzeptKategorie("kartenausgaenge", "Kartenausgänge"),
     )
 
     private val kategorienNachId: Map<String, KonzeptKategorie> = buildMap {
@@ -217,13 +215,8 @@ internal object KonzeptBibliothekRegister {
         val kategorie = vorlage.kategorie.lowercase()
         val pfade = linkedSetOf<List<String>>()
 
-        when {
-            kategorie == "gespeicherte karten" || vorlage.kartenVerweis != null ->
-                pfade += listOf("eigene-karten")
-            art.contains("karteneingang") || name.contains("karteneingang") ->
-                pfade += listOf("karteneingaenge")
-            art.contains("kartenausgang") || name.contains("kartenausgang") ->
-                pfade += listOf("kartenausgaenge")
+        if (kategorie in setOf("eigene karten", "gespeicherte karten") || vorlage.kartenVerweis != null) {
+            pfade += listOf("eigene-karten")
         }
 
         if (kategorie.startsWith("geometrie:") || art.contains("geometrie")) {

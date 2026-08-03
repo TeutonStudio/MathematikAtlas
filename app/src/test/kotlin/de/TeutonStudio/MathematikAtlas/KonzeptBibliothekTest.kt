@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KonzeptBibliothekTest {
@@ -10,12 +11,44 @@ class KonzeptBibliothekTest {
         assertTrue(
             setOf(
                 "Analysis", "Lineare Algebra", "Geometrie", "Mengenlehre", "Logik", "Algebra",
-                "Topologie", "Stochastik", "Eigene Karten", "Karteneingänge", "Kartenausgänge",
+                "Topologie", "Stochastik", "Eigene Karten",
             ).all { it in hauptbereiche },
         )
+        assertFalse("Karteneingänge" in hauptbereiche)
+        assertFalse("Kartenausgänge" in hauptbereiche)
 
         val einträge = KonzeptBibliothekRegister.erstelle(listOf(testVorlage()))
         assertTrue(einträge.flatMap { it.kategoriePfade }.all { it.size in 1..3 })
+        assertEquals(emptyList(), KonzeptBibliothekRegister.validierungsFehler(einträge))
+    }
+
+    @Test
+    fun `Kartenschnittstellen erscheinen unter Eigene Karten und bleiben suchbar`() {
+        val einträge = KonzeptBibliothekRegister.erstelle(
+            listOf(
+                MathematikKnotenVorlagen.KartenEingang,
+                MathematikKnotenVorlagen.KartenAusgang,
+            ),
+        ).filter { it.vorlage != null }
+
+        assertEquals(2, einträge.size)
+        assertTrue(einträge.all { it.kategoriePfade == listOf(listOf("eigene-karten")) })
+        assertEquals(
+            setOf("Karten-Eingang"),
+            einträge.filter { it.passt(KonzeptBibliothekFilter(suchtext = "Eingang")) }.map { it.titel }.toSet(),
+        )
+        assertEquals(
+            setOf("Karten-Ausgang"),
+            einträge.filter { it.passt(KonzeptBibliothekFilter(suchtext = "Ausgang")) }.map { it.titel }.toSet(),
+        )
+        assertEquals(
+            setOf("Karten-Eingang"),
+            einträge.filter { it.passt(KonzeptBibliothekFilter(suchtext = "Karten-Eingang")) }.map { it.titel }.toSet(),
+        )
+        assertEquals(
+            setOf("Karten-Ausgang"),
+            einträge.filter { it.passt(KonzeptBibliothekFilter(suchtext = "Karten-Ausgang")) }.map { it.titel }.toSet(),
+        )
         assertEquals(emptyList(), KonzeptBibliothekRegister.validierungsFehler(einträge))
     }
 

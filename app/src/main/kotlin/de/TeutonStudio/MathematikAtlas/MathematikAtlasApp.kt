@@ -168,6 +168,16 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
 
 @Composable
 private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließen: () -> Unit) {
+    var auswahlZuKarteGeöffnet by remember(kontext) { mutableStateOf(false) }
+    if (auswahlZuKarteGeöffnet && kontext is GraphKontext.Knotengruppe) {
+        AuswahlZuKarteDialog(
+            zustand = zustand,
+            knotenIds = kontext.knotenIds,
+            schließen = { auswahlZuKarteGeöffnet = false },
+            erstellt = schließen,
+        )
+        return
+    }
     if (kontext is GraphKontext.Knoten) {
         val knoten = zustand.editor.karte.knoten.firstOrNull { it.id == kontext.id }
         if (knoten != null) {
@@ -200,6 +210,11 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
                             enabled = kontext.knotenIds.size >= 2,
                             modifier = Modifier.fillMaxWidth(),
                         ) { Text("Visuell gruppieren") }
+                        OutlinedButton(
+                            onClick = { auswahlZuKarteGeöffnet = true },
+                            enabled = kontext.knotenIds.size >= 2,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Zur neuen Karte") }
                         if (kontext.knotenIds.size < 2) {
                             Text("Mindestens zwei Knoten werden benötigt.", style = MaterialTheme.typography.bodySmall)
                         }

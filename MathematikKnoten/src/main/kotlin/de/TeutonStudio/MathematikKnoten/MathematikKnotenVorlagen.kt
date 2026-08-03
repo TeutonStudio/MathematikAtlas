@@ -334,11 +334,11 @@ object MathematikKnotenVorlagen {
         listOf(eingang("matrix", MathematikAnschlussArten.Matrix.id), ausgang("inverse", MathematikAnschlussArten.Matrix.id)),
     )
     val KartenEingang = KnotenVorlage(
-        "mathematik.kartenEingang", "Karten-Eingang", "Gruppen", "Öffentlicher Parameter einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
+        "mathematik.kartenEingang", "Karten-Eingang", "Eigene Karten", "Öffentlicher Parameter einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
         listOf(ausgang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "x"),
     )
     val KartenAusgang = KnotenVorlage(
-        "mathematik.kartenAusgang", "Karten-Ausgang", "Gruppen", "Öffentliche Ausgabe einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
+        "mathematik.kartenAusgang", "Karten-Ausgang", "Eigene Karten", "Öffentliche Ausgabe einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
         listOf(eingang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "ergebnis"),
     )
     val Fall = KnotenVorlage(
