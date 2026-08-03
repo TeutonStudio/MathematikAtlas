@@ -119,11 +119,12 @@ fun inferiereZahlenRechnerBereich(
         "{}^*\\mathbb R" in vorratLatex || "^*\\mathbb R" in vorratLatex -> ZahlenRechnerBereich.HYPERREELL
         "\\mathbb H" in vorratLatex -> ZahlenRechnerBereich.QUATERNION
         "\\mathbb Z/" in vorratLatex || "\\bmod" in vorratLatex -> ZahlenRechnerBereich.MODULO
-        werteVorrat == KomplexeZahlen || ausdruck is KomplexeZahl -> ZahlenRechnerBereich.KOMPLEX
-        werteVorrat == ReelleZahlen -> ZahlenRechnerBereich.REELL
-        werteVorrat == RationaleZahlen -> ZahlenRechnerBereich.RATIONAL
-        werteVorrat == GanzeZahlen -> ZahlenRechnerBereich.GANZ
-        werteVorrat == NatürlicheZahlen -> if (ausdruck == RationaleZahl.Null) {
+        "\\mathbb C" in vorratLatex || ausdruck is KomplexeZahl -> ZahlenRechnerBereich.KOMPLEX
+        "\\mathbb R" in vorratLatex -> ZahlenRechnerBereich.REELL
+        "\\mathbb Q" in vorratLatex -> ZahlenRechnerBereich.RATIONAL
+        "\\mathbb Z" in vorratLatex -> ZahlenRechnerBereich.GANZ
+        "\\mathbb N_0" in vorratLatex -> ZahlenRechnerBereich.NATUERLICH_MIT_NULL
+        "\\mathbb N" in vorratLatex -> if (ausdruck == RationaleZahl.Null) {
             ZahlenRechnerBereich.NATUERLICH_MIT_NULL
         } else {
             ZahlenRechnerBereich.NATUERLICH
