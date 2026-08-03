@@ -23,12 +23,12 @@ Klassifiziere vor jeder Versionsreservierung den vollständigen Releaseumfang:
 Prüfe die Klassifikation vor dem Merge erneut gegen den vollständigen Diff. Ein x-Release darf keinen neuen registrierten Knotentyp enthalten. Eine y-Version muss den angekündigten neuen Typ oder die angekündigte Knotenfamilie tatsächlich enthalten.
 
 Git- und Branchregeln für SamAI:
-- Lege von SamAI erzeugte Arbeitsbranches über scripts/samai-git.sh branch an.
+- Lege von SamAI erzeugte Arbeitsbranches über bash scripts/samai-git.sh branch an.
 - Neue SamAI-Branches beginnen mit samai/ und folgen samai/v<version>/<aufgabe> oder samai/v<version>-<kurzname>.
 - Historische agent/-Branches bleiben gültig, werden aber nicht neu durch SamAI erzeugt.
 - Stage nur ausdrücklich zum Auftrag gehörende Dateien.
-- Erzeuge lokale SamAI-Commits ausschließlich über scripts/samai-git.sh commit.
-- Vor dem Push muss scripts/samai-git.sh verify HEAD erfolgreich sein.
+- Erzeuge lokale SamAI-Commits ausschließlich über bash scripts/samai-git.sh commit.
+- Vor dem Push muss bash scripts/samai-git.sh verify HEAD erfolgreich sein.
 - Autor und Committer müssen beide SamAI <46108494+TeutonStudio@users.noreply.github.com> sein.
 - Verändere dafür keine dauerhafte globale oder lokale Git-Konfiguration.
 - Der GitHub-Connector kann die Commitidentität derzeit nicht auf SamAI setzen. Benenne Connector-Commits ausdrücklich und behaupte nicht, sie seien korrekt signierte SamAI-Commits.
