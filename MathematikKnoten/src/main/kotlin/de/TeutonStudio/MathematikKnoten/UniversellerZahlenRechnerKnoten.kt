@@ -432,8 +432,8 @@ private fun universellAuswerten(
             Potenz(zahl("a"), zahl("b")),
             gemeinsam,
         )
-        UniversellerZahlenOperator.QUADRAT -> unär { Potenz(it, RationaleZahl.von(2)) }
-        UniversellerZahlenOperator.KUBIK -> unär { Potenz(it, RationaleZahl.von(3)) }
+        UniversellerZahlenOperator.QUADRAT -> unär(erzeuge = { Potenz(it, RationaleZahl.von(2)) })
+        UniversellerZahlenOperator.KUBIK -> unär(erzeuge = { Potenz(it, RationaleZahl.von(3)) })
         UniversellerZahlenOperator.WURZEL -> {
             val radikand = zahl("a")
             val gradWert = k.eingänge["b"]?.objekt as? ZahlAusdruck
@@ -453,9 +453,9 @@ private fun universellAuswerten(
             wurzel(zahl("a"), k.rechenKontext),
             wurzelBereich(zahl("a"), gemeinsam),
         )
-        UniversellerZahlenOperator.KUBIKWURZEL -> unär {
-            Potenz(it, RationaleZahl.von(1, 3))
-        }
+        UniversellerZahlenOperator.KUBIKWURZEL -> unär(
+            erzeuge = { Potenz(it, RationaleZahl.von(1, 3)) },
+        )
         UniversellerZahlenOperator.LOGARITHMUS -> UniverselleZahlenAusgabe(
             Logarithmus(zahl("a"), zahl("b")),
             maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
@@ -559,7 +559,7 @@ private fun universellAuswerten(
         UniversellerZahlenOperator.KOMPLEXER_WINKEL -> {
             val argument = zahl("a")
             val objekt = (argument as? KomplexeZahl)?.let {
-                Argument(it.imaginärteil, it.realteil)
+                Argument(it)
             } ?: symbolischerZahlterm(
                 "arg-${argument.zuLatex()}",
                 "\\arg\\left(${argument.zuLatex()}\\right)",
