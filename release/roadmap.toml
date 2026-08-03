@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.21.x"
-current_version = "2.21.0"
+current_version = "2.21.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -575,3 +575,13 @@ version_axis = "y"
 new_node_types = ["mathematik.zahlenrechner"]
 reason = "Führt den einzigen erzeugbaren Zahlenrechner-Knotentyp mit persistierten Operatorzuständen, Zahlbereichsdefinitionen, Rechenregeln und verlustfreier Migration der historischen Zahl-zu-Zahl-Rechnerknoten ein."
 
+[[releases]]
+version = "2.21.1"
+title = "Konzeptbibliothek und Formelbauer-Grundlage"
+roadmap = "v2.21.x Konzeptbibliothek und CAS-Grundlage"
+status = "released"
+previous_release = "2.21.0"
+branch = "samai/v2.21.1-formelbauer-latex"
+kind = "feature"
+version_axis = "x"
+reason = "Veröffentlicht die persistierte Konzeptbibliothek, vereinheitlichte SamAI-Verwaltungsregeln und den UI-neutralen Formelbauer-Kern mit kontrolliertem LaTeX-Roundtrip, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen."
