@@ -20,6 +20,20 @@ fun inferiereZielmenge(
                 "'${ausdruck.anschlussArt}' ist keine Obermenge festgelegt.",
         )
     is Aussage -> WahrheitsMenge
+    is LogischeVariable -> ausdruck.bereich
+    is LogischerAusdruck -> WahrheitsMenge
+    is PraedikatAusdruck -> when (ausdruck.parameter.size) {
+        0 -> WahrheitsMenge
+        1 -> Abbildungsmenge(ausdruck.parameter.single().bereich, WahrheitsMenge)
+        else -> Abbildungsmenge(Tupelraum(ausdruck.parameter.map { it.bereich }), WahrheitsMenge)
+    }
+    is UnendlicheIndexStruktur -> Abbildungsmenge(ausdruck.indexMenge, ausdruck.zielMenge)
+    is TensorDimensionenErgebnis -> Tupelraum(
+        listOf(
+            Tupelraum(ausdruck.form.map { NatürlicheZahlen }),
+            NatürlicheZahlen,
+        ),
+    )
     is MengenAusdruck -> inferiereElementMenge(ausdruck, werteVorräte, annahmen)
     is FallAusdruck -> when (ausdruck.aussage.entscheide(RechenKontext(annahmen)).wahrheitswert) {
         Wahrheitswert.Wahr -> inferiereZielmenge(ausdruck.wahr, werteVorräte, annahmen + ausdruck.aussage)
@@ -76,6 +90,7 @@ private fun inferiereElementMenge(
         inferiereZielmenge(it, werteVorräte, annahmen)
     })
     is ReellesIntervall -> ReelleZahlen
+    is BeschraenkteZahlmenge -> menge.traeger.alsMenge()
     is Vereinigung -> vereinige(menge.mengen.map { inferiereElementMenge(it, werteVorräte, annahmen) })
     is Schnitt -> menge.grundMenge?.let { inferiereElementMenge(it, werteVorräte, annahmen) }
         ?: vereinige(menge.mengen.map { inferiereElementMenge(it, werteVorräte, annahmen) })
