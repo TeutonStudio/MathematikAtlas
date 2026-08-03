@@ -23,21 +23,45 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKnoten.MENGEN_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.MENGEN_KNOTEN_AUSWAHL
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MengenKnotenAuswahl
 import de.TeutonStudio.MathematikKnoten.VEKTOR_RECHNER_OPERATOR
+import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechnerOperator
 
 internal object MengenKnotenKartenQuelle {
     private var kartenLieferant: () -> List<KartenDaten> = { emptyList() }
     private var versionenLieferant: (KartenId) -> List<KartenDaten> = { emptyList() }
     private var aktuelleKarteLieferant: () -> KartenId? = { null }
+    private var inspektorenRegistriert = false
 
     fun installieren(zustand: AtlasZustand) {
         kartenLieferant = { zustand.karten }
         versionenLieferant = zustand::kartenVersionen
         aktuelleKarteLieferant = { zustand.editor.karte.id }
+        registriereInspektoren()
+    }
+
+    /**
+     * Das bestehende Register besitzt noch keine additive Registrierungsschnittstelle.
+     * Die zugrunde liegende LinkedHashMap wird deshalb einmalig erweitert; der Zugriff
+     * bleibt auf diesen Kompatibilitätsadapter begrenzt, bis das Register selbst
+     * öffentlich erweiterbar ist.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun registriereInspektoren() {
+        if (inspektorenRegistriert) return
+        synchronized(this) {
+            if (inspektorenRegistriert) return
+            val feld = KnotenInspektorRegister::class.java.getDeclaredField("inspektoren")
+            feld.isAccessible = true
+            val register = feld.get(null) as MutableMap<String, KnotenInspektor>
+            register[MENGEN_KNOTEN_ART] = MengenKnotenInspektor
+            register[VektorRechner.KNOTEN_ART] = VektorRechnerInspektor
+            inspektorenRegistriert = true
+        }
     }
 
     fun kandidaten(): List<EigeneMengenKarte> {
