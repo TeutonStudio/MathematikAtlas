@@ -4,27 +4,11 @@ on:
   push:
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   pruefen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-      - name: Zahlenrechner-Inspector integrieren
-        if: hashFiles('scripts/integriere_zahlenrechner_inspektor.py') != ''
-        run: |
-          python3 scripts/integriere_zahlenrechner_inspektor.py
-          git rm scripts/integriere_zahlenrechner_inspektor.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app
-          git commit -m "Zahlenrechner-Inspector registrieren"
-          git pull --rebase origin ${{ github.head_ref || github.ref_name }}
-          git push origin HEAD:${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -35,14 +19,4 @@ jobs:
       - name: Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
       - name: Bauen und testen
-        shell: bash
-        run: |
-          set -o pipefail
-          ./gradlew --stacktrace --info test :app:assembleDebug 2>&1 | tee gradle-build-output.txt
-      - name: Diagnoseausgabe hochladen
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-build-output
-          path: gradle-build-output.txt
-          if-no-files-found: warn
+        run: ./gradlew --stacktrace test :app:assembleDebug
