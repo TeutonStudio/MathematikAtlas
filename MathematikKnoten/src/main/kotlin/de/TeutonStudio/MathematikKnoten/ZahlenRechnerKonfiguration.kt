@@ -73,7 +73,12 @@ fun konfiguriereZahlenRechner(
     }
     val vorhandenerAusgang = vorhandene[AnschlussRichtung.Ausgang to "wert"]?.firstOrNull()
         ?: knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
-    val ausgang = (vorhandenerAusgang ?: AnschlussDaten()).copy(
+    val ausgang = (vorhandenerAusgang ?: AnschlussDaten(
+        name = "wert",
+        richtung = AnschlussRichtung.Ausgang,
+        kante = AnschlussKante.Rechts,
+        art = MathematikAnschlussArten.Zahl.id,
+    )).copy(
         name = "wert",
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
