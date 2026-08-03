@@ -43,6 +43,7 @@ import java.math.BigInteger
 const val MENGEN_KNOTEN_ART = "mathematik.menge"
 const val MENGEN_KNOTEN_AUSWAHL = "mengeAuswahl"
 const val VEKTOR_RECHNER_OPERATOR = "operator"
+const val VEKTOR_RECHNER_AUSGANG = "skalar"
 const val EINHEITSVEKTOR_POSITION = "position"
 const val EINHEITSVEKTOR_DIMENSION = "dimension"
 private const val STANDARDWERT_PREFIX = "standardwert."
@@ -159,7 +160,7 @@ object VektorRechnerKnotenVorlagen {
             vektorRechnerEingang("links", 0),
             vektorRechnerEingang("rechts", 1),
             AnschlussDaten(
-                name = "wert",
+                name = VEKTOR_RECHNER_AUSGANG,
                 richtung = AnschlussRichtung.Ausgang,
                 kante = AnschlussKante.Rechts,
                 art = MathematikAnschlussArten.Zahl.id,
@@ -209,11 +210,11 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
         when (ergebnis) {
             is VektorRechnerErgebnis.ZahlWert -> KnotenAuswertungsErgebnis(
-                ausgaben = mapOf("wert" to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
+                ausgaben = mapOf(VEKTOR_RECHNER_AUSGANG to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
                 eingänge = kontext.eingänge,
             )
             is VektorRechnerErgebnis.VektorWert -> KnotenAuswertungsErgebnis(
-                ausgaben = mapOf("wert" to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
+                ausgaben = mapOf(VEKTOR_RECHNER_AUSGANG to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
                 eingänge = kontext.eingänge,
             )
             is VektorRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)
@@ -358,7 +359,7 @@ private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
     if (alt.art !in historischeSkalarproduktArten) return null
     val eingänge = alt.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
     val ausgang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
-        ?: VektorRechnerKnotenVorlagen.standard.anschlüsse.last().copy(id = AnschlussId("${alt.id.wert}-wert"))
+        ?: VektorRechnerKnotenVorlagen.standard.anschlüsse.last().copy(id = AnschlussId("${alt.id.wert}-$VEKTOR_RECHNER_AUSGANG"))
     return alt.copy(
         art = VektorRechner.KNOTEN_ART,
         name = if (alt.name.startsWith("Skalarprodukt")) "Vektorrechner" else alt.name,
@@ -375,7 +376,7 @@ private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
                 zulässigeArten = vektorRechnerEingang("rechts", 1).zulässigeArten,
                 reihenfolge = 1,
             ),
-            ausgang.copy(name = "wert", art = MathematikAnschlussArten.Zahl.id),
+            ausgang.copy(name = VEKTOR_RECHNER_AUSGANG, art = MathematikAnschlussArten.Zahl.id),
         ),
         parameter = alt.parameter + (VEKTOR_RECHNER_OPERATOR to VektorRechnerOperator.SKALARPRODUKT.stabileId),
     )
