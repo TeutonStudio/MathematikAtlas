@@ -1,0 +1,50 @@
+name: Patch v2.20.1 roadmap
+
+on:
+  push:
+    branches:
+      - release/v2.20.1-lineare-strukturen
+
+permissions:
+  contents: write
+
+jobs:
+  patch-roadmap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v2.20.1-lineare-strukturen
+          fetch-depth: 0
+      - name: Patch release plan
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("release/roadmap.toml")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace('current_version = "2.20.0"', 'current_version = "2.20.1"', 1)
+          block = '''
+
+          [[releases]]
+          version = "2.20.1"
+          title = "Lineare Strukturknoten konsolidieren"
+          roadmap = "v2.20.x Tensorrechnung und lineare Strukturverträge"
+          status = "released"
+          previous_release = "2.20.0"
+          branch = "release/v2.20.1-lineare-strukturen"
+          kind = "feature"
+          version_axis = "x"
+          reason = "Erweitert vorhandene Matrix-, Skalarprodukt- und Tensorrechner-Knoten um gemeinsame Komponentenansichten, dynamische Operatoranschlüsse und lokale Fehlerzustände, ohne einen neuen registrierten Knotentyp einzuführen."
+          '''
+          if 'version = "2.20.1"' not in text:
+              text = text.rstrip() + block
+          path.write_text(text.rstrip() + "\n", encoding="utf-8")
+      - name: Commit patch and remove helper workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add release/roadmap.toml
+          git rm .github/workflows/patch-v2.20.1-roadmap.yml
+          git commit -m "v2.20.1: Releaseplan fortschreiben"
+          git push origin HEAD:release/v2.20.1-lineare-strukturen
