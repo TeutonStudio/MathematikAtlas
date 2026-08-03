@@ -50,12 +50,12 @@ Historische `agent/`-Branches bleiben erhalten, werden von SamAI aber nicht mehr
 
 ## SamAI-Commits
 
-Durch SamAI lokal erzeugte Commits werden über `scripts/samai-git.sh` erstellt und besitzen identische Autor- und Committerdaten:
+Durch SamAI lokal erzeugte Commits werden über `bash scripts/samai-git.sh` erstellt und besitzen identische Autor- und Committerdaten:
 
 ```text
 SamAI <46108494+TeutonStudio@users.noreply.github.com>
 ```
 
-Vor dem Push muss `scripts/samai-git.sh verify HEAD` erfolgreich sein. Connector- oder GitHub-Merge-Commits können technisch andere Committer wie `web-flow` besitzen und dürfen nicht als lokal signierte SamAI-Commits bezeichnet werden.
+Vor dem Push muss `bash scripts/samai-git.sh verify HEAD` erfolgreich sein. Connector- oder GitHub-Merge-Commits können technisch andere Committer wie `web-flow` besitzen und dürfen nicht als lokal signierte SamAI-Commits bezeichnet werden.
 
 Dokumentations- und Governance-Änderungen sind normalerweise eine `x`-Version, solange sie keinen neuen registrierten Knotentyp einführen.
