@@ -61,7 +61,7 @@ object MathematikKnotenVorlagen {
     )
     val Wahr = KnotenVorlage("mathematik.wahr", "Wahr", "Aussagen: Aussagenlogik", "Die wahre Aussage ⊤.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Lüge = KnotenVorlage("mathematik.lüge", "Lüge", "Aussagen: Aussagenlogik", "Die falsche Aussage ⊥.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
-    val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
+    val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id, "Aussagen: Aussagenprädikate")
     val Kleiner = vergleichVorlage("Kleiner", "<", "kleiner")
     val Größer = vergleichVorlage("Größer", ">", "größer")
     val KleinerGleich = vergleichVorlage("Kleiner oder gleich", "≤", "kleinerGleich")
@@ -334,11 +334,11 @@ object MathematikKnotenVorlagen {
         listOf(eingang("matrix", MathematikAnschlussArten.Matrix.id), ausgang("inverse", MathematikAnschlussArten.Matrix.id)),
     )
     val KartenEingang = KnotenVorlage(
-        "mathematik.kartenEingang", "Karten-Eingang", "Gruppen", "Öffentlicher Parameter einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
+        "mathematik.kartenEingang", "Karten-Eingang", "Eigene Karten", "Öffentlicher Parameter einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
         listOf(ausgang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "x"),
     )
     val KartenAusgang = KnotenVorlage(
-        "mathematik.kartenAusgang", "Karten-Ausgang", "Gruppen", "Öffentliche Ausgabe einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
+        "mathematik.kartenAusgang", "Karten-Ausgang", "Eigene Karten", "Öffentliche Ausgabe einer wiederverwendbaren Karte.", GraphGröße(210f, 100f),
         listOf(eingang("wert", MathematikAnschlussArten.Objekt.id)), mapOf("name" to "ergebnis"),
     )
     val Fall = KnotenVorlage(
