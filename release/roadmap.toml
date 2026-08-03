@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.19.x"
-current_version = "2.19.1"
+current_series = "2.20.x"
+current_version = "2.20.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -284,7 +284,7 @@ title = "Typisierte Mengen-Karteneingänge"
 roadmap = "v2.9.x Symbolische Mengenkonstruktionen"
 status = "released"
 previous_release = "2.9.0"
-branch = "release/v2.9.1-mengenkarten-eingaenge"
+branch = "agent/v2.9.1-mengenkarten-eingaenge"
 kind = "fix"
 version_axis = "x"
 reason = "Erzeugt für öffentliche Karten-Eingänge Symbole passend zu ihrer Anschlussart, sodass Mengenparameter in Elementbeziehungen und gekoppelten Prädikatsdefinitionen auswertbar bleiben."
@@ -539,3 +539,15 @@ branch = "release/v2.19.1-rechnerfamilien"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert den mathematischen Rechenkern um gemeinsame Definitions-, Zahlbereichs-, Formel-, Mengen-, Vektor-, Matrix- und Folgenverträge, ergänzt atomare Edge-Einfügung sowie profilbasierte Farbrollen, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen."
+
+[[releases]]
+version = "2.20.0"
+title = "Tensor-, Logik- und Mengenstrukturen"
+roadmap = "v2.20.x Tensorrechnung, Aussagenlogik und Zahlbereiche"
+status = "released"
+previous_release = "2.19.1"
+branch = "release/v2.20.0-tensor-logik-strukturen"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.skalarprodukt", "mathematik.tensorprodukt", "mathematik.dimensionen", "mathematik.tensorrechner", "mathematik.aussagensatz", "mathematik.cauchy"]
+reason = "Führt sechs separat erzeugbare Strukturknoten ein und ergänzt gemeinsame Verträge für Tensoroperationen, Skalarprodukte, Falk-Schema, Quantoren, Prädikate, unendliche Indexstrukturen, Cauchy-Aussagen und beschränkte geordnete Zahlmengen."
