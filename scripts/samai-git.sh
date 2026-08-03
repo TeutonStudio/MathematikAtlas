@@ -8,19 +8,20 @@ readonly SAMAI_BRANCH_PREFIX="samai/"
 usage() {
     cat <<'EOF'
 Verwendung:
-  scripts/samai-git.sh branch <name-oder-suffix> [startpunkt]
-  scripts/samai-git.sh commit <git-commit-argumente...>
-  scripts/samai-git.sh verify [ref]
-  scripts/samai-git.sh identity
+  bash scripts/samai-git.sh branch <name-oder-suffix> [startpunkt]
+  bash scripts/samai-git.sh commit <git-commit-argumente...>
+  bash scripts/samai-git.sh verify [ref]
+  bash scripts/samai-git.sh identity
 
 Beispiele:
-  scripts/samai-git.sh branch v2.21.1/git-identitaet master
+  bash scripts/samai-git.sh branch v2.21.1/git-identitaet master
   git add AGENTS.md scripts/samai-git.sh
-  scripts/samai-git.sh commit -m "Agentenidentität vereinheitlichen"
-  scripts/samai-git.sh verify HEAD
+  bash scripts/samai-git.sh commit -m "Agentenidentität vereinheitlichen"
+  bash scripts/samai-git.sh verify HEAD
 
 Das Skript führt kein automatisches Staging aus. Dadurch entscheidet der Aufrufer
-weiterhin ausdrücklich, welche Dateien zum Commit gehören.
+weiterhin ausdrücklich, welche Dateien zum Commit gehören. Der explizite Aufruf
+über bash funktioniert unabhängig vom im Checkout gespeicherten Dateimodus.
 EOF
 }
 
