@@ -1,10 +1,10 @@
 # Zum Mathematik Atlas beitragen
 
-Beiträge sind willkommen, sofern sie den fachlichen und technischen Rahmen des Projekts respektieren. Besonders hilfreich sind reproduzierbare Fehlermeldungen, mathematisch präzise Randfälle, Tests, Dokumentationsverbesserungen und klar abgegrenzte Implementierungen.
+Beiträge sind willkommen, sofern sie den fachlichen, technischen und lizenzrechtlichen Rahmen des Projekts respektieren. Besonders hilfreich sind reproduzierbare Fehlermeldungen, mathematisch präzise Randfälle, Tests, Dokumentationsverbesserungen und klar abgegrenzte Implementierungen.
 
 ## Vor dem Start
 
-1. Lies `README.md` und `docs/DEVELOPMENT.md`.
+1. Lies `README.md`, `LICENSE`, `CLA.md` und `docs/DEVELOPMENT.md`.
 2. Suche nach bestehenden Issues und Pull Requests zum selben Thema.
 3. Verwende für neue Vorschläge die passende Issue-Vorlage.
 4. Besprich größere Architektur-, Persistenz- oder Knotenkonzepte vor der Implementierung.
@@ -33,6 +33,8 @@ Sicherheitsprobleme gehören **nicht** in ein öffentliches Issue. Verwende daf�
 - Ergänze Tests oder begründe im Pull Request, warum kein sinnvoller Test möglich ist.
 - Aktualisiere betroffene Dokumentation gemeinsam mit dem Code.
 - Berücksichtige Persistenz und Migrationen, wenn gespeicherte Daten betroffen sind.
+- Veröffentliche aus deinem Beitrags-Fork keine APKs, Releases, Pakete oder sonstigen ausführbaren Artefakte.
+- Nutze den Fork ausschließlich für private Entwicklung und die Vorbereitung eines Beitrags.
 
 ## Branches und Versionen
 
@@ -65,7 +67,24 @@ Ein Pull Request soll enthalten:
 - ausgeführte Prüfungen mit Ergebnis
 - verbleibende Risiken
 - zugehörige Issue-Nummern
+- ausdrückliche Zustimmung zum `CLA.md`
 
-## Lizenz der Beiträge
+Füge dafür folgende Erklärung in die Beschreibung des Pull Requests ein:
 
-Das Projekt steht unter der Apache License 2.0. Mit dem Einreichen eines Beitrags bestätigst du, dass du die notwendigen Rechte daran besitzt und ihn unter denselben Lizenzbedingungen zur Verfügung stellst. Das Urheberrecht an deinem eigenen Beitrag bleibt bei dir; du räumst die für die Projektlizenz erforderlichen Nutzungsrechte ein.
+```text
+Ich habe CLA.md gelesen und stimme den Bedingungen für diesen Beitrag zu.
+```
+
+Pull Requests ohne diese ausdrückliche Zustimmung werden nicht in das offizielle Projekt übernommen.
+
+## Lizenz des Projekts
+
+Der aktuelle Mathematik Atlas steht unter der Mathematik Atlas Source-Available License 1.0. Die Lizenz erlaubt das Einsehen des Quellcodes, private Änderungen, private nichtkommerzielle Builds und Beitrags-Forks. Sie erlaubt keine öffentliche Distribution und keine kommerzielle Nutzung ohne ausdrückliche schriftliche Genehmigung.
+
+Frühere Fassungen bis einschließlich Commit `90a85368942db1f0b8d06f0ca458e9c6970daf62` bleiben unter der Apache License 2.0 nutzbar. Näheres steht in `LICENSE_HISTORY.md`.
+
+## Rechte an Beiträgen
+
+Das Urheberrecht an einem eigenen Beitrag verbleibt bei der beitragenden Person. Damit Alexander Würfl den Mathematik Atlas einheitlich pflegen, veröffentlichen und kommerziell verwerten kann, werden Beiträge nur unter den zusätzlichen Bedingungen des `CLA.md` angenommen.
+
+Das Einreichen einer allgemeinen Idee, einer Fehlermeldung oder einer mathematischen Beobachtung über ein Issue ist für sich allein keine Einräumung ausschließlicher Nutzungsrechte. Für Quellcode, Dokumentation, Grafiken und andere schutzfähige Beiträge gilt dagegen das `CLA.md`.
