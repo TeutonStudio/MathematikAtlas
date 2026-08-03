@@ -1,15 +1,16 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-/** Bewahrt eine noch nicht konkret auswertbare Konjugation symbolisch. */
-data class KonjugierterZahlAusdruck(val argument: ZahlAusdruck) : ZahlAusdruck {
-    override fun zuLatex(): String = "\\overline{${argument.zuLatex()}}"
-}
-
+/**
+ * Konjugiert konkret bekannte Zahlen und bewahrt unbekannte Terme als
+ * vorhandenen Zahlparameter mit passender LaTeX-Darstellung.
+ */
 fun konjugiereFormal(argument: ZahlAusdruck): ZahlAusdruck = when (argument) {
     is RationaleZahl -> argument
     is KomplexeZahl -> KomplexeZahl(argument.realteil, negation(argument.imaginärteil))
-    is KonjugierterZahlAusdruck -> argument.argument
-    else -> KonjugierterZahlAusdruck(argument)
+    else -> Variable(
+        name = "konjugiert_${argument.hashCode()}",
+        latex = "\\overline{${argument.zuLatex()}}",
+    )
 }
 
 enum class SkalarproduktLinearitaet { RECHTSLINEAR, LINKSLINEAR }
@@ -22,45 +23,46 @@ data class SkalarproduktSpezifikation(
     init { require(id.isNotBlank()) }
 }
 
-/**
- * Vektororientierungen werden beim Skalarprodukt absichtlich nicht
- * unterschieden. Auch ein homogenes kartesisches Tupel ist zulässig.
- */
+/** Vektororientierung ist beim Skalarprodukt absichtlich bedeutungslos. */
 fun standardSkalarprodukt(
     links: MathematischesObjekt,
     rechts: MathematischesObjekt,
     spezifikation: SkalarproduktSpezifikation = SkalarproduktSpezifikation(),
     werteVorraete: Map<String, MengenAusdruck> = emptyMap(),
 ): StrukturPruefung<ZahlAusdruck> {
-    val l = links.numerischeKomponentenAnsicht(werteVorraete = werteVorraete)
-    val r = rechts.numerischeKomponentenAnsicht(werteVorraete = werteVorraete)
-    if (l !is StrukturPruefung.Gueltig) return l.ohneStrukturWert()
-    if (r !is StrukturPruefung.Gueltig) return r.ohneStrukturWert()
-    if (l.wert.laenge != r.wert.laenge) {
+    val linkeAnsicht = links.numerischeKomponentenAnsicht(werteVorraete = werteVorraete)
+    val rechteAnsicht = rechts.numerischeKomponentenAnsicht(werteVorraete = werteVorraete)
+    if (linkeAnsicht !is StrukturPruefung.Gueltig) return linkeAnsicht.ohneWert()
+    if (rechteAnsicht !is StrukturPruefung.Gueltig) return rechteAnsicht.ohneWert()
+    if (linkeAnsicht.wert.laenge != rechteAnsicht.wert.laenge) {
         return StrukturPruefung.Ungueltig(
             "Das Skalarprodukt benötigt gleich lange Komponentenfolgen; erhalten: " +
-                "${l.wert.laenge} und ${r.wert.laenge}.",
+                "${linkeAnsicht.wert.laenge} und ${rechteAnsicht.wert.laenge}.",
         )
     }
-    val summanden = l.wert.komponenten.zip(r.wert.komponenten) { a, b ->
+    val summanden = linkeAnsicht.wert.komponenten.zip(rechteAnsicht.wert.komponenten) { linksWert, rechtsWert ->
         when (spezifikation.linearitaet) {
-            SkalarproduktLinearitaet.RECHTSLINEAR ->
-                multiplikation(if (spezifikation.konjugiert) konjugiereFormal(a) else a, b)
-            SkalarproduktLinearitaet.LINKSLINEAR ->
-                multiplikation(a, if (spezifikation.konjugiert) konjugiereFormal(b) else b)
+            SkalarproduktLinearitaet.RECHTSLINEAR -> multiplikation(
+                if (spezifikation.konjugiert) konjugiereFormal(linksWert) else linksWert,
+                rechtsWert,
+            )
+            SkalarproduktLinearitaet.LINKSLINEAR -> multiplikation(
+                linksWert,
+                if (spezifikation.konjugiert) konjugiereFormal(rechtsWert) else rechtsWert,
+            )
         }
     }
     return StrukturPruefung.Gueltig(addition(summanden))
 }
 
-private fun StrukturPruefung<*>.ohneStrukturWert(): StrukturPruefung<Nothing> = when (this) {
+private fun StrukturPruefung<*>.ohneWert(): StrukturPruefung<Nothing> = when (this) {
     is StrukturPruefung.Gueltig -> error("Ein gültiger Strukturwert kann nicht ohne Wert weitergereicht werden.")
-    is StrukturPruefung.Bedingt -> StrukturPruefung.Bedingt<Nothing>(null, bedingungen)
+    is StrukturPruefung.Bedingt -> StrukturPruefung.Bedingt(null, bedingungen)
     is StrukturPruefung.Ungueltig -> this
     is StrukturPruefung.Unentscheidbar -> this
 }
 
-/** Semantische Beschreibung des Falkschen Schemas, unabhängig von Compose. */
+/** Semantik des Falkschen Schemas, getrennt von seiner späteren Darstellung. */
 data class FalkSchema(
     val linkeForm: List<Int>,
     val rechteForm: List<Int>,
@@ -77,9 +79,9 @@ data class FalkSchema(
     }
 
     fun eintragsFormelLatex(): String {
-        val i = ausgewaehlteZeile?.toString() ?: "i"
-        val j = ausgewaehlteSpalte?.toString() ?: "j"
-        return "c_{$i$j}=\\sum_{k=0}^{${linkeForm[1] - 1}}a_{$i k}b_{k$j}"
+        val zeile = ausgewaehlteZeile?.toString() ?: "i"
+        val spalte = ausgewaehlteSpalte?.toString() ?: "j"
+        return "c_{$zeile$spalte}=\\sum_{k=0}^{${linkeForm[1] - 1}}a_{$zeile k}b_{k$spalte}"
     }
 }
 
@@ -124,11 +126,11 @@ fun tensorprodukt(
     werteVorraete: Map<String, MengenAusdruck> = emptyMap(),
     materialisierungsBudget: Int = 100_000,
 ): StrukturPruefung<MathematischesObjekt> {
-    val l = links.tensorielleAnsicht(werteVorraete)
-    val r = rechts.tensorielleAnsicht(werteVorraete)
-    if (l !is StrukturPruefung.Gueltig) return l.ohneStrukturWert()
-    if (r !is StrukturPruefung.Gueltig) return r.ohneStrukturWert()
-    val form = l.wert.form + r.wert.form
+    val linkeAnsicht = links.tensorielleAnsicht(werteVorraete)
+    val rechteAnsicht = rechts.tensorielleAnsicht(werteVorraete)
+    if (linkeAnsicht !is StrukturPruefung.Gueltig) return linkeAnsicht.ohneWert()
+    if (rechteAnsicht !is StrukturPruefung.Gueltig) return rechteAnsicht.ohneWert()
+    val form = linkeAnsicht.wert.form + rechteAnsicht.wert.form
     val anzahl = runCatching { form.sicheresProdukt() }.getOrElse {
         return StrukturPruefung.Ungueltig("Die Tensorform ist zu groß.")
     }
@@ -139,8 +141,10 @@ fun tensorprodukt(
         )
     }
     val werte = buildList(anzahl) {
-        l.wert.komponenten.forEach { a ->
-            r.wert.komponenten.forEach { b -> add(multiplikation(a, b)) }
+        linkeAnsicht.wert.komponenten.forEach { linksWert ->
+            rechteAnsicht.wert.komponenten.forEach { rechtsWert ->
+                add(multiplikation(linksWert, rechtsWert))
+            }
         }
     }
     return StrukturPruefung.Gueltig(materialisiereTensor(form, werte))
@@ -158,17 +162,17 @@ data class TensorDimensionenErgebnis(
 fun tensorDimensionen(
     objekt: MathematischesObjekt,
     werteVorraete: Map<String, MengenAusdruck> = emptyMap(),
-): StrukturPruefung<TensorDimensionenErgebnis> = when (val a = objekt.tensorielleAnsicht(werteVorraete)) {
+): StrukturPruefung<TensorDimensionenErgebnis> = when (val ansicht = objekt.tensorielleAnsicht(werteVorraete)) {
     is StrukturPruefung.Gueltig -> StrukturPruefung.Gueltig(
         TensorDimensionenErgebnis(
-            Tupel(a.wert.form.map { RationaleZahl.von(it.toLong()) }),
-            RationaleZahl.von(a.wert.stufe.toLong()),
-            a.wert.form,
+            Tupel(ansicht.wert.form.map { RationaleZahl.von(it.toLong()) }),
+            RationaleZahl.von(ansicht.wert.stufe.toLong()),
+            ansicht.wert.form,
         ),
     )
-    is StrukturPruefung.Bedingt -> StrukturPruefung.Bedingt(null, a.bedingungen)
-    is StrukturPruefung.Ungueltig -> a
-    is StrukturPruefung.Unentscheidbar -> a
+    is StrukturPruefung.Bedingt -> StrukturPruefung.Bedingt(null, ansicht.bedingungen)
+    is StrukturPruefung.Ungueltig -> ansicht
+    is StrukturPruefung.Unentscheidbar -> ansicht
 }
 
 enum class TensorRechnerOperator(val stabileId: String) {
@@ -213,22 +217,24 @@ object TensorRechner {
         operator: TensorRechnerOperator,
         eingaben: List<TensorRechnerEingabe>,
         konfiguration: TensorRechnerKonfiguration = TensorRechnerKonfiguration(),
-    ): TensorRechnerErgebnis = when (operator) {
-        TensorRechnerOperator.ADDITION -> komponentenweise(eingaben, ::addition)
-        TensorRechnerOperator.SUBTRAKTION -> komponentenweise(eingaben, ::subtraktion)
-        TensorRechnerOperator.HADAMARD_PRODUKT -> komponentenweise(eingaben, ::multiplikation)
-        TensorRechnerOperator.SKALARMULTIPLIKATION -> skalarMultiplikation(eingaben)
-        TensorRechnerOperator.TENSORPRODUKT -> tensorProdukt(eingaben, konfiguration.materialisierungsBudget)
-        TensorRechnerOperator.ACHSENPERMUTATION -> permutiere(eingaben, konfiguration.permutation)
-        TensorRechnerOperator.TRANSPONIEREN -> {
-            val a = einzigeAnsicht(eingaben)
-                ?: return TensorRechnerErgebnis.Ungueltig("tensor_fehlt", "Transponieren benötigt genau einen Tensor.")
-            permutiere(eingaben, konfiguration.permutation.ifEmpty { standardTensorPermutation(a.stufe) })
+    ): TensorRechnerErgebnis {
+        return when (operator) {
+            TensorRechnerOperator.ADDITION -> komponentenweise(eingaben, ::addition)
+            TensorRechnerOperator.SUBTRAKTION -> komponentenweise(eingaben, ::subtraktion)
+            TensorRechnerOperator.HADAMARD_PRODUKT -> komponentenweise(eingaben, ::multiplikation)
+            TensorRechnerOperator.SKALARMULTIPLIKATION -> skalarMultiplikation(eingaben)
+            TensorRechnerOperator.TENSORPRODUKT -> tensorProdukt(eingaben, konfiguration.materialisierungsBudget)
+            TensorRechnerOperator.ACHSENPERMUTATION -> permutiere(eingaben, konfiguration.permutation)
+            TensorRechnerOperator.TRANSPONIEREN -> {
+                val ansicht = einzigeAnsicht(eingaben)
+                    ?: return ungueltig("tensor_fehlt", "Transponieren benötigt genau einen Tensor.")
+                permutiere(eingaben, konfiguration.permutation.ifEmpty { standardTensorPermutation(ansicht.stufe) })
+            }
+            TensorRechnerOperator.INDEXAUSWERTUNG -> indexAuswertung(eingaben, konfiguration.indizes)
+            TensorRechnerOperator.ACHSENSCHNITT -> achsenSchnitt(eingaben, konfiguration.achsen, konfiguration.indizes)
+            TensorRechnerOperator.KONTRAKTION -> kontrahiere(eingaben, konfiguration.achsen)
+            TensorRechnerOperator.NORM -> norm(eingaben)
         }
-        TensorRechnerOperator.INDEXAUSWERTUNG -> indexAuswertung(eingaben, konfiguration.indizes)
-        TensorRechnerOperator.ACHSENSCHNITT -> achsenSchnitt(eingaben, konfiguration.achsen, konfiguration.indizes)
-        TensorRechnerOperator.KONTRAKTION -> kontrahiere(eingaben, konfiguration.achsen)
-        TensorRechnerOperator.NORM -> norm(eingaben)
     }
 
     fun alsFormelAusdruck(
@@ -239,7 +245,7 @@ object TensorRechner {
         id,
         operator.stabileId,
         argumente.mapIndexed { index, (rolle, ausdruck) -> FormelArgument(rolle, index, ausdruck) },
-        if (operator == TensorRechnerOperator.INDEXAUSWERTUNG || operator == TensorRechnerOperator.NORM) {
+        if (operator in setOf(TensorRechnerOperator.INDEXAUSWERTUNG, TensorRechnerOperator.NORM)) {
             FormelTyp.ZAHL
         } else {
             FormelTyp.TENSOR
@@ -253,18 +259,18 @@ object TensorRechner {
         if (eingaben.size < 2) return ungueltig("argumentanzahl", "Mindestens zwei Tensoren werden benötigt.")
         val ansichten = mutableListOf<TensorielleAnsicht>()
         for (eingabe in eingaben) {
-            when (val a = eingabe.objekt.tensorielleAnsicht()) {
-                is StrukturPruefung.Gueltig -> ansichten += a.wert
-                is StrukturPruefung.Bedingt -> return TensorRechnerErgebnis.Bedingt(null, a.bedingungen)
-                is StrukturPruefung.Ungueltig -> return ungueltig("struktur", a.grund)
-                is StrukturPruefung.Unentscheidbar -> return ungueltig("struktur_unentscheidbar", a.grund)
+            when (val ansicht = eingabe.objekt.tensorielleAnsicht()) {
+                is StrukturPruefung.Gueltig -> ansichten += ansicht.wert
+                is StrukturPruefung.Bedingt -> return TensorRechnerErgebnis.Bedingt(null, ansicht.bedingungen)
+                is StrukturPruefung.Ungueltig -> return ungueltig("struktur", ansicht.grund)
+                is StrukturPruefung.Unentscheidbar -> return ungueltig("struktur_unentscheidbar", ansicht.grund)
             }
         }
         val form = ansichten.first().form
         if (ansichten.any { it.form != form }) return ungueltig("form", "Alle Tensoren müssen dieselbe Form besitzen.")
         val werte = List(form.sicheresProdukt()) { index ->
-            ansichten.drop(1).fold(ansichten.first().komponenten[index]) { akk, a ->
-                operation(akk, a.komponenten[index])
+            ansichten.drop(1).fold(ansichten.first().komponenten[index]) { akk, ansicht ->
+                operation(akk, ansicht.komponenten[index])
             }
         }
         return alsWert(materialisiereWie(eingaben.first().objekt, form, werte))
@@ -275,8 +281,10 @@ object TensorRechner {
             ?: return ungueltig("skalar_fehlt", "Ein Zahlskalar fehlt.")
         val tensor = eingaben.singleOrNull { it.rollenId == "tensor" }?.objekt
             ?: return ungueltig("tensor_fehlt", "Ein Tensor fehlt.")
-        val a = ansichtOderFehler(tensor) ?: return ungueltig("struktur", "Der Eingang besitzt keine tensorielle Ansicht.")
-        return alsWert(materialisiereWie(tensor, a.form, a.komponenten.map { multiplikation(skalar, it) }))
+        val ansicht = ansichtOderNull(tensor) ?: return ungueltig("struktur", "Keine tensorielle Ansicht.")
+        return alsWert(
+            materialisiereWie(tensor, ansicht.form, ansicht.komponenten.map { multiplikation(skalar, it) }),
+        )
     }
 
     private fun tensorProdukt(eingaben: List<TensorRechnerEingabe>, budget: Int): TensorRechnerErgebnis {
@@ -285,36 +293,45 @@ object TensorRechner {
         if (links == null || rechts == null || eingaben.size != 2) {
             return ungueltig("argumentrollen", "Das Tensorprodukt erwartet genau links und rechts.")
         }
-        return when (val p = tensorprodukt(links, rechts, materialisierungsBudget = budget)) {
-            is StrukturPruefung.Gueltig -> alsWert(p.wert)
-            is StrukturPruefung.Bedingt -> TensorRechnerErgebnis.Bedingt(null, p.bedingungen)
-            is StrukturPruefung.Ungueltig -> ungueltig("tensorprodukt", p.grund)
-            is StrukturPruefung.Unentscheidbar -> ungueltig("tensorprodukt_unentscheidbar", p.grund)
+        return when (val produkt = tensorprodukt(links, rechts, materialisierungsBudget = budget)) {
+            is StrukturPruefung.Gueltig -> alsWert(produkt.wert)
+            is StrukturPruefung.Bedingt -> TensorRechnerErgebnis.Bedingt(null, produkt.bedingungen)
+            is StrukturPruefung.Ungueltig -> ungueltig("tensorprodukt", produkt.grund)
+            is StrukturPruefung.Unentscheidbar -> ungueltig("tensorprodukt_unentscheidbar", produkt.grund)
         }
     }
 
-    private fun permutiere(eingaben: List<TensorRechnerEingabe>, permutation: List<Int>): TensorRechnerErgebnis {
+    private fun permutiere(
+        eingaben: List<TensorRechnerEingabe>,
+        permutation: List<Int>,
+    ): TensorRechnerErgebnis {
         val objekt = eingaben.singleOrNull()?.objekt
             ?: return ungueltig("argumentanzahl", "Eine Achsenpermutation benötigt genau einen Tensor.")
-        val a = ansichtOderFehler(objekt) ?: return ungueltig("struktur", "Keine tensorielle Ansicht.")
-        if (runCatching { pruefePermutation(permutation, a.stufe) }.isFailure) {
+        val ansicht = ansichtOderNull(objekt) ?: return ungueltig("struktur", "Keine tensorielle Ansicht.")
+        if (runCatching { prüfePermutation(permutation, ansicht.stufe) }.isFailure) {
             return ungueltig("permutation", "Die Permutation muss jede Achse genau einmal enthalten.")
         }
-        val form = permutation.map(a.form::get)
+        val form = permutation.map(ansicht.form::get)
         val werte = form.indizesFolge().map { neueIndizes ->
-            val alteIndizes = MutableList(a.stufe) { 0 }
-            permutation.forEachIndexed { neueAchse, alteAchse -> alteIndizes[alteAchse] = neueIndizes[neueAchse] }
-            a.komponente(alteIndizes)
+            val alteIndizes = MutableList(ansicht.stufe) { 0 }
+            permutation.forEachIndexed { neueAchse, alteAchse ->
+                alteIndizes[alteAchse] = neueIndizes[neueAchse]
+            }
+            ansicht.komponente(alteIndizes)
         }
         return alsWert(materialisiereTensor(form, werte))
     }
 
-    private fun indexAuswertung(eingaben: List<TensorRechnerEingabe>, indizes: List<Int>): TensorRechnerErgebnis {
-        val a = einzigeAnsicht(eingaben) ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
-        if (indizes.size != a.stufe || indizes.zip(a.form).any { (i, n) -> i !in 0 until n }) {
+    private fun indexAuswertung(
+        eingaben: List<TensorRechnerEingabe>,
+        indizes: List<Int>,
+    ): TensorRechnerErgebnis {
+        val ansicht = einzigeAnsicht(eingaben)
+            ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
+        if (indizes.size != ansicht.stufe || indizes.zip(ansicht.form).any { (index, dimension) -> index !in 0 until dimension }) {
             return ungueltig("index", "Es wird genau ein gültiger Index je Achse benötigt.")
         }
-        return TensorRechnerErgebnis.Wert(a.komponente(indizes), emptyList(), a.zahlBereich)
+        return TensorRechnerErgebnis.Wert(ansicht.komponente(indizes), emptyList(), ansicht.zahlBereich)
     }
 
     private fun achsenSchnitt(
@@ -322,64 +339,83 @@ object TensorRechner {
         achsen: List<Int>,
         indizes: List<Int>,
     ): TensorRechnerErgebnis {
-        val a = einzigeAnsicht(eingaben) ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
-        if (achsen.size != 1 || indizes.size != 1) return ungueltig("achsenschnitt", "Eine Achse und ein Index werden benötigt.")
+        val ansicht = einzigeAnsicht(eingaben)
+            ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
+        if (achsen.size != 1 || indizes.size != 1) {
+            return ungueltig("achsenschnitt", "Eine Achse und ein Index werden benötigt.")
+        }
         val achse = achsen.single()
         val index = indizes.single()
-        if (achse !in a.form.indices || index !in 0 until a.form[achse]) return ungueltig("achsenschnitt", "Achse oder Index ist ungültig.")
-        val form = a.form.filterIndexed { position, _ -> position != achse }
-        val freie = if (form.isEmpty()) listOf(emptyList()) else form.indizesFolge()
-        val werte = freie.map { rest ->
+        if (achse !in ansicht.form.indices || index !in 0 until ansicht.form[achse]) {
+            return ungueltig("achsenschnitt", "Achse oder Index ist ungültig.")
+        }
+        val form = ansicht.form.filterIndexed { position, _ -> position != achse }
+        val freieIndizes = if (form.isEmpty()) listOf(emptyList()) else form.indizesFolge()
+        val werte = freieIndizes.map { rest ->
             val voll = rest.toMutableList().also { it.add(achse, index) }
-            a.komponente(voll)
+            ansicht.komponente(voll)
         }
         return alsWert(if (form.isEmpty()) werte.single() else materialisiereTensor(form, werte))
     }
 
-    private fun kontrahiere(eingaben: List<TensorRechnerEingabe>, achsen: List<Int>): TensorRechnerErgebnis {
-        val a = einzigeAnsicht(eingaben) ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
-        if (achsen.size != 2 || achsen[0] == achsen[1]) return ungueltig("achsen", "Zwei verschiedene Achsen werden benötigt.")
-        val x = achsen[0]
-        val y = achsen[1]
-        if (x !in a.form.indices || y !in a.form.indices || a.form[x] != a.form[y]) {
+    private fun kontrahiere(
+        eingaben: List<TensorRechnerEingabe>,
+        achsen: List<Int>,
+    ): TensorRechnerErgebnis {
+        val ansicht = einzigeAnsicht(eingaben)
+            ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
+        if (achsen.size != 2 || achsen[0] == achsen[1]) {
+            return ungueltig("achsen", "Zwei verschiedene Achsen werden benötigt.")
+        }
+        val ersteAchse = achsen[0]
+        val zweiteAchse = achsen[1]
+        if (
+            ersteAchse !in ansicht.form.indices ||
+            zweiteAchse !in ansicht.form.indices ||
+            ansicht.form[ersteAchse] != ansicht.form[zweiteAchse]
+        ) {
             return ungueltig("dimension", "Kontrahierte Achsen müssen vorhanden und gleich lang sein.")
         }
-        val entfernt = setOf(x, y)
-        val form = a.form.filterIndexed { index, _ -> index !in entfernt }
-        val freie = if (form.isEmpty()) listOf(emptyList()) else form.indizesFolge()
-        val werte = freie.map { rest ->
-            addition(List(a.form[x]) { diagonal ->
-                val voll = MutableList(a.stufe) { 0 }
+        val entfernt = setOf(ersteAchse, zweiteAchse)
+        val form = ansicht.form.filterIndexed { index, _ -> index !in entfernt }
+        val freieIndizes = if (form.isEmpty()) listOf(emptyList()) else form.indizesFolge()
+        val werte = freieIndizes.map { rest ->
+            addition(List(ansicht.form[ersteAchse]) { diagonal ->
+                val voll = MutableList(ansicht.stufe) { 0 }
                 var frei = 0
-                for (achse in 0 until a.stufe) voll[achse] = if (achse in entfernt) diagonal else rest[frei++]
-                a.komponente(voll)
+                for (achse in 0 until ansicht.stufe) {
+                    voll[achse] = if (achse in entfernt) diagonal else rest[frei++]
+                }
+                ansicht.komponente(voll)
             })
         }
         return alsWert(if (form.isEmpty()) werte.single() else materialisiereTensor(form, werte))
     }
 
     private fun norm(eingaben: List<TensorRechnerEingabe>): TensorRechnerErgebnis {
-        val a = einzigeAnsicht(eingaben) ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
-        return TensorRechnerErgebnis.Wert(
-            Wurzel(addition(a.komponenten.map { multiplikation(konjugiereFormal(it), it) })),
-            emptyList(),
-            a.zahlBereich,
-        )
+        val ansicht = einzigeAnsicht(eingaben)
+            ?: return ungueltig("argumentanzahl", "Genau ein Tensor wird benötigt.")
+        val quadrate = ansicht.komponenten.map { multiplikation(konjugiereFormal(it), it) }
+        return TensorRechnerErgebnis.Wert(Wurzel(addition(quadrate)), emptyList(), ansicht.zahlBereich)
     }
 
     private fun einzigeAnsicht(eingaben: List<TensorRechnerEingabe>): TensorielleAnsicht? =
-        eingaben.singleOrNull()?.objekt?.let(::ansichtOderFehler)
+        eingaben.singleOrNull()?.objekt?.let(::ansichtOderNull)
 
-    private fun ansichtOderFehler(objekt: MathematischesObjekt): TensorielleAnsicht? =
+    private fun ansichtOderNull(objekt: MathematischesObjekt): TensorielleAnsicht? =
         (objekt.tensorielleAnsicht() as? StrukturPruefung.Gueltig)?.wert
 
     private fun alsWert(objekt: MathematischesObjekt): TensorRechnerErgebnis {
-        if (objekt is ZahlAusdruck) return TensorRechnerErgebnis.Wert(objekt, emptyList(), inferiereZahlenWertevorrat(objekt))
-        val a = ansichtOderFehler(objekt) ?: return ungueltig("struktur", "Das Ergebnis ist nicht tensorartig.")
-        return TensorRechnerErgebnis.Wert(objekt, a.form, a.zahlBereich)
+        if (objekt is ZahlAusdruck) {
+            return TensorRechnerErgebnis.Wert(objekt, emptyList(), inferiereZahlenWertevorrat(objekt))
+        }
+        val ansicht = ansichtOderNull(objekt)
+            ?: return ungueltig("struktur", "Das Ergebnis ist nicht tensorartig.")
+        return TensorRechnerErgebnis.Wert(objekt, ansicht.form, ansicht.zahlBereich)
     }
 
-    private fun ungueltig(code: String, nachricht: String) = TensorRechnerErgebnis.Ungueltig(code, nachricht)
+    private fun ungueltig(code: String, nachricht: String) =
+        TensorRechnerErgebnis.Ungueltig(code, nachricht)
 }
 
 private fun materialisiereWie(
@@ -389,12 +425,19 @@ private fun materialisiereWie(
 ): MathematischesObjekt = when (vorlage) {
     is ZeilenVektor if form.size == 1 -> ZeilenVektor(werte)
     is SpaltenVektor if form.size == 1 -> SpaltenVektor(werte)
-    is Matrix if form.size == 2 -> Matrix(List(form[0]) { z -> List(form[1]) { s -> werte[z * form[1] + s] } })
+    is Matrix if form.size == 2 -> Matrix(
+        List(form[0]) { zeile -> List(form[1]) { spalte -> werte[zeile * form[1] + spalte] } },
+    )
     else -> materialisiereTensor(form, werte)
 }
 
-private fun materialisiereTensor(form: List<Int>, werte: List<ZahlAusdruck>): MathematischesObjekt = when (form.size) {
+private fun materialisiereTensor(
+    form: List<Int>,
+    werte: List<ZahlAusdruck>,
+): MathematischesObjekt = when (form.size) {
     0 -> werte.single()
-    2 -> Matrix(List(form[0]) { z -> List(form[1]) { s -> werte[z * form[1] + s] } })
+    2 -> Matrix(
+        List(form[0]) { zeile -> List(form[1]) { spalte -> werte[zeile * form[1] + spalte] } },
+    )
     else -> Tensor(form, werte)
 }
