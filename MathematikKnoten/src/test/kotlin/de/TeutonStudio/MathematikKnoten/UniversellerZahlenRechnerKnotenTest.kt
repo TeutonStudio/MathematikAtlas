@@ -9,6 +9,16 @@ import kotlin.test.*
 class UniversellerZahlenRechnerKnotenTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
 
+    private fun kontext(
+        knoten: KnotenDaten,
+        eingänge: Map<String, BedingterWert>,
+    ) = KnotenAuswertungsKontext(
+        knoten = knoten,
+        eingänge = eingänge,
+        karte = KartenDaten(name = "Test", knoten = listOf(knoten)),
+        rechenKontext = RechenKontext(),
+    )
+
     @Test
     fun `Katalog enthaelt nur noch universelle Zahlenrechnerzustaende`() {
         val vorlagen = alleMathematikKnotenVorlagen()
@@ -33,13 +43,20 @@ class UniversellerZahlenRechnerKnotenTest {
             von = AnschlussVerweis(quelle.id, quellAusgang.id),
             zu = AnschlussVerweis(alt.id, a.id),
         )
-        val karte = KartenDaten(name = "Migration", knoten = listOf(quelle, alt), verbindungen = listOf(edge))
+        val karte = KartenDaten(
+            name = "Migration",
+            knoten = listOf(quelle, alt),
+            verbindungen = listOf(edge),
+        )
 
         val migriert = karte.migriereUniversellenZahlenRechner()
         val rechner = migriert.knoten.single { it.id == alt.id }
 
         assertEquals(ZAHLENRECHNER_ART, rechner.art)
-        assertEquals(UniversellerZahlenOperator.ADDITION.stabileId, rechner.parameter[ZAHLENRECHNER_OPERATOR])
+        assertEquals(
+            UniversellerZahlenOperator.ADDITION.stabileId,
+            rechner.parameter[ZAHLENRECHNER_OPERATOR],
+        )
         assertTrue(rechner.anschlüsse.any { it.id == a.id })
         assertTrue(rechner.anschlüsse.any { it.id == ausgang.id && it.name == "wert" })
         assertEquals(edge, migriert.verbindungen.single())
@@ -49,31 +66,42 @@ class UniversellerZahlenRechnerKnotenTest {
     @Test
     fun `Division waehlt Zeilen oder Bruchnotation aus dem Nenner`() {
         val vorlage = ZahlenRechnerKnotenVorlagen.alle.first {
-            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.DIVISION.stabileId
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
+                UniversellerZahlenOperator.DIVISION.stabileId
         }
         val knoten = vorlage.erzeuge(GraphPunkt.Zero)
         val auswerter = register.finde(ZAHLENRECHNER_ART)!!
 
         val kurz = auswerter.auswerten(
-            KnotenAuswertungsKontext(
+            kontext(
                 knoten,
                 mapOf(
-                    "a" to BedingterWert(RationaleZahl.Eins, werteVorrat = RationaleZahlen),
-                    "b" to BedingterWert(RationaleZahl.von(2), werteVorrat = RationaleZahlen),
+                    "a" to BedingterWert(
+                        RationaleZahl.Eins,
+                        werteVorrat = BenannteMenge("Rationale Zahlen", "\\mathbb Q"),
+                    ),
+                    "b" to BedingterWert(
+                        RationaleZahl.von(2),
+                        werteVorrat = BenannteMenge("Rationale Zahlen", "\\mathbb Q"),
+                    ),
                 ),
-                RechenKontext(),
             ),
         ).ausgaben.getValue("wert")
         assertEquals("1 \\div 2", kurz.latexDarstellung)
 
         val lang = auswerter.auswerten(
-            KnotenAuswertungsKontext(
+            kontext(
                 knoten,
                 mapOf(
-                    "a" to BedingterWert(Variable("a"), werteVorrat = ReelleZahlen),
-                    "b" to BedingterWert(addition(Variable("x"), Variable("y")), werteVorrat = ReelleZahlen),
+                    "a" to BedingterWert(
+                        Variable("a"),
+                        werteVorrat = BenannteMenge("Reelle Zahlen", "\\mathbb R"),
+                    ),
+                    "b" to BedingterWert(
+                        addition(Variable("x"), Variable("y")),
+                        werteVorrat = BenannteMenge("Reelle Zahlen", "\\mathbb R"),
+                    ),
                 ),
-                RechenKontext(),
             ),
         ).ausgaben.getValue("wert")
         assertTrue(lang.latexDarstellung.orEmpty().startsWith("\\frac"))
@@ -100,15 +128,18 @@ class UniversellerZahlenRechnerKnotenTest {
     @Test
     fun `Komplexkonstruktor akzeptiert getrennte Werte und Tupelmodus`() {
         val vorlage = ZahlenRechnerKnotenVorlagen.alle.first {
-            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH.stabileId
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
+                UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH.stabileId
         }
         val getrennt = vorlage.erzeuge(GraphPunkt.Zero)
         val auswerter = register.finde(ZAHLENRECHNER_ART)!!
         val getrenntErgebnis = auswerter.auswerten(
-            KnotenAuswertungsKontext(
+            kontext(
                 getrennt,
-                mapOf("a" to BedingterWert(RationaleZahl.von(2)), "b" to BedingterWert(RationaleZahl.von(3))),
-                RechenKontext(),
+                mapOf(
+                    "a" to BedingterWert(RationaleZahl.von(2)),
+                    "b" to BedingterWert(RationaleZahl.von(3)),
+                ),
             ),
         )
         assertEquals(
@@ -116,12 +147,18 @@ class UniversellerZahlenRechnerKnotenTest {
             getrenntErgebnis.ausgaben.getValue("wert").objekt,
         )
 
-        val tupel = getrennt.copy(parameter = getrennt.parameter + (ZAHLENRECHNER_KOMPLEX_EINGABE to ZAHLENRECHNER_KOMPLEX_TUPEL))
+        val tupel = getrennt.copy(
+            parameter = getrennt.parameter +
+                (ZAHLENRECHNER_KOMPLEX_EINGABE to ZAHLENRECHNER_KOMPLEX_TUPEL),
+        )
         val tupelErgebnis = auswerter.auswerten(
-            KnotenAuswertungsKontext(
+            kontext(
                 tupel,
-                mapOf("tupel" to BedingterWert(Tupel(listOf(RationaleZahl.von(4), RationaleZahl.von(5))))),
-                RechenKontext(),
+                mapOf(
+                    "tupel" to BedingterWert(
+                        Tupel(listOf(RationaleZahl.von(4), RationaleZahl.von(5))),
+                    ),
+                ),
             ),
         )
         assertEquals(
