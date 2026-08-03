@@ -18,6 +18,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Negation as NegationsAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.UnentscheidbareAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
 import de.TeutonStudio.MathematikRechenSystem.kern.Wahrheitswert
+import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.adjunktion
 import de.TeutonStudio.MathematikRechenSystem.kern.Äquivalenz as ÄquivalenzAussage
 import java.math.BigInteger
@@ -141,6 +142,10 @@ private fun vorlagenSchlüssel(vorlage: KnotenVorlage): Pair<String, String> =
 /**
  * Ersetzt korrigierte Varianten, entfernt historische Spezialknoten aus dem
  * Erstellen-Dialog und hängt additive Knotendomänen an.
+ *
+ * Interne Definitions- und Migrationsvarianten bleiben in ihren jeweiligen
+ * Vorlagenobjekten erhalten. Sichtbar ist je Rechnerfamilie jedoch nur ein
+ * Knoten; den Operator wählt anschließend der Inspector.
  */
 fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val ersatz = AussagenLogikKnotenVorlagen.alle.associateBy(::vorlagenSchlüssel)
@@ -150,7 +155,11 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
         historischeSkalarproduktArten +
         setOf("mathematik.einheitsSpalte", "mathematik.einheitsZeile")
     val basis = MathematikKnotenVorlagen.alle
-        .filterNot { it.art in historischeArten }
+        .filterNot {
+            it.art in historischeArten ||
+                it.art == ZAHLENRECHNER_ART ||
+                it.art == VektorRechner.KNOTEN_ART
+        }
         .map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
     return (
