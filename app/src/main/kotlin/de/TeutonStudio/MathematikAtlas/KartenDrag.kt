@@ -1,27 +1,52 @@
 package de.TeutonStudio.MathematikAtlas
 
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import java.util.WeakHashMap
 
+private sealed interface KartenDragInhalt {
+    data class Karte(val daten: KartenDaten) : KartenDragInhalt
+
+    data class Knotenvorlage(
+        val vorlage: KnotenVorlage,
+        val griffPosition: Offset,
+        val quellGröße: Size,
+    ) : KartenDragInhalt
+}
+
 internal class KartenDragZustand {
-    var karte by mutableStateOf<KartenDaten?>(null)
-        private set
+    private var inhalt by mutableStateOf<KartenDragInhalt?>(null)
     var positionImFenster by mutableStateOf<Offset?>(null)
         private set
     var editorBereich by mutableStateOf<Rect?>(null)
     var dichte by mutableFloatStateOf(1f)
 
     fun beginne(karte: KartenDaten, position: Offset) {
-        this.karte = karte
+        inhalt = KartenDragInhalt.Karte(karte)
+        positionImFenster = position
+    }
+
+    fun beginne(
+        vorlage: KnotenVorlage,
+        position: Offset,
+        griffPosition: Offset,
+        quellGröße: Size,
+    ) {
+        inhalt = KartenDragInhalt.Knotenvorlage(
+            vorlage = vorlage,
+            griffPosition = griffPosition,
+            quellGröße = quellGröße,
+        )
         positionImFenster = position
     }
 
@@ -30,30 +55,75 @@ internal class KartenDragZustand {
     }
 
     fun abbrechen() {
-        karte = null
+        inhalt = null
         positionImFenster = null
     }
 
     fun ablegen(zustand: AtlasZustand) {
-        val gezogen = karte
+        val gezogen = inhalt
         val position = positionImFenster
         val bereich = editorBereich
         if (gezogen != null && position != null && bereich != null && position in bereich) {
             val lokal = position - bereich.topLeft
             val ansicht = zustand.editor.karte.ansicht
             val faktor = (dichte * ansicht.zoom).coerceAtLeast(0.0001f)
-            val welt = GraphPunkt(
+            val weltAmZeiger = GraphPunkt(
                 (lokal.x - ansicht.verschiebung.x) / faktor,
                 (lokal.y - ansicht.verschiebung.y) / faktor,
             )
-            val aufKnoten = zustand.editor.karte.knoten.any { knoten ->
-                welt.x >= knoten.position.x && welt.x <= knoten.position.x + knoten.größe.breite &&
-                    welt.y >= knoten.position.y && welt.y <= knoten.position.y + knoten.größe.höhe
+
+            when (gezogen) {
+                is KartenDragInhalt.Karte -> {
+                    val aufKnoten = zustand.editor.karte.knoten.any { knoten ->
+                        weltAmZeiger.x >= knoten.position.x &&
+                            weltAmZeiger.x <= knoten.position.x + knoten.größe.breite &&
+                            weltAmZeiger.y >= knoten.position.y &&
+                            weltAmZeiger.y <= knoten.position.y + knoten.größe.höhe
+                    }
+                    if (!aufKnoten) {
+                        zustand.fügeKartenKnotenEin(
+                            gezogen.daten,
+                            weltAmZeiger - GraphPunkt(120f, 50f),
+                        )
+                    }
+                }
+
+                is KartenDragInhalt.Knotenvorlage -> {
+                    val zielPosition = berechneKnotenAblagePosition(
+                        positionImEditor = lokal,
+                        ansicht = ansicht,
+                        dichte = dichte,
+                        griffPosition = gezogen.griffPosition,
+                        quellGröße = gezogen.quellGröße,
+                        knotenGröße = gezogen.vorlage.standardGröße,
+                    )
+                    zustand.fügeKnotenEin(gezogen.vorlage, zielPosition)
+                }
             }
-            if (!aufKnoten) zustand.fügeKartenKnotenEin(gezogen, welt - GraphPunkt(120f, 50f))
         }
         abbrechen()
     }
+}
+
+internal fun berechneKnotenAblagePosition(
+    positionImEditor: Offset,
+    ansicht: AnsichtsFenster,
+    dichte: Float,
+    griffPosition: Offset,
+    quellGröße: Size,
+    knotenGröße: GraphGröße,
+): GraphPunkt {
+    val faktor = (dichte * ansicht.zoom).coerceAtLeast(0.0001f)
+    val weltAmZeiger = GraphPunkt(
+        (positionImEditor.x - ansicht.verschiebung.x) / faktor,
+        (positionImEditor.y - ansicht.verschiebung.y) / faktor,
+    )
+    val griffAnteilX = (griffPosition.x / quellGröße.width.coerceAtLeast(1f)).coerceIn(0f, 1f)
+    val griffAnteilY = (griffPosition.y / quellGröße.height.coerceAtLeast(1f)).coerceIn(0f, 1f)
+    return weltAmZeiger - GraphPunkt(
+        knotenGröße.breite * griffAnteilX,
+        knotenGröße.höhe * griffAnteilY,
+    )
 }
 
 private val dragZustände = WeakHashMap<AtlasZustand, KartenDragZustand>()
@@ -74,6 +144,36 @@ internal fun Modifier.kartenDragQuelle(zustand: AtlasZustand, karte: KartenDaten
                 onDragCancel = { zustand.kartenDragZustand.abbrechen() },
             )
         }
+}
+
+internal fun Modifier.knotenVorlagenDragQuelle(
+    zustand: AtlasZustand,
+    vorlage: KnotenVorlage,
+): Modifier = composed {
+    var ursprung by remember { mutableStateOf(Offset.Zero) }
+    var quellGröße by remember { mutableStateOf(Size.Zero) }
+    onGloballyPositioned {
+        val bounds = it.boundsInWindow()
+        ursprung = bounds.topLeft
+        quellGröße = bounds.size
+    }.pointerInput(vorlage.art, vorlage.name, vorlage.standardParameter) {
+        detectDragGestures(
+            onDragStart = { lokal ->
+                zustand.kartenDragZustand.beginne(
+                    vorlage = vorlage,
+                    position = ursprung + lokal,
+                    griffPosition = lokal,
+                    quellGröße = quellGröße,
+                )
+            },
+            onDrag = { änderung, delta ->
+                änderung.consume()
+                zustand.kartenDragZustand.verschiebe(delta)
+            },
+            onDragEnd = { zustand.kartenDragZustand.ablegen(zustand) },
+            onDragCancel = { zustand.kartenDragZustand.abbrechen() },
+        )
+    }
 }
 
 internal fun Modifier.kartenDropZiel(zustand: AtlasZustand, dichte: Float): Modifier =
