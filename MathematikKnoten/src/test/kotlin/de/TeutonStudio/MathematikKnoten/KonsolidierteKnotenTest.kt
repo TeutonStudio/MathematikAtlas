@@ -84,6 +84,7 @@ class KonsolidierteKnotenTest {
     @Test
     fun `Vektorrechner bildet Skalarprodukt auch aus kartesischen Tupeln`() {
         val knoten = VektorRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
+        assertEquals(VEKTOR_RECHNER_AUSGANG, knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.name)
         val ergebnis = register.finde(knoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
@@ -94,7 +95,7 @@ class KonsolidierteKnotenTest {
                 RechenKontext(),
             ),
         )
-        val wert = assertIs<RationaleZahl>(ergebnis.ausgaben.getValue("wert").objekt)
+        val wert = assertIs<RationaleZahl>(ergebnis.ausgaben.getValue(VEKTOR_RECHNER_AUSGANG).objekt)
         assertEquals(BigInteger.valueOf(11), wert.zähler)
         assertEquals(BigInteger.ONE, wert.nenner)
     }
@@ -128,6 +129,7 @@ class KonsolidierteKnotenTest {
         val skalar = migriert.knoten.first { it.id == altesSkalarprodukt.id }
         assertEquals(VektorRechner.KNOTEN_ART, skalar.art)
         assertEquals(VektorRechnerOperator.SKALARPRODUKT.stabileId, skalar.parameter[VEKTOR_RECHNER_OPERATOR])
+        assertEquals(VEKTOR_RECHNER_AUSGANG, skalar.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.name)
         assertEquals(
             altesSkalarprodukt.anschlüsse.map { it.id }.toSet(),
             skalar.anschlüsse.map { it.id }.toSet(),
