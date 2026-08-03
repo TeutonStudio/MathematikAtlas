@@ -57,7 +57,7 @@ internal object MengenKnotenKartenQuelle {
             if (inspektorenRegistriert) return
             val feld = KnotenInspektorRegister::class.java.getDeclaredField("inspektoren")
             feld.isAccessible = true
-            val register = feld.get(null) as MutableMap<String, KnotenInspektor>
+            val register = feld.get(KnotenInspektorRegister) as MutableMap<String, KnotenInspektor>
             register[MENGEN_KNOTEN_ART] = MengenKnotenInspektor
             register[VektorRechner.KNOTEN_ART] = VektorRechnerInspektor
             inspektorenRegistriert = true
