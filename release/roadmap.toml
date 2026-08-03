@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.21.x"
-current_version = "2.21.3"
+current_series = "2.22.x"
+current_version = "2.22.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -607,3 +607,15 @@ branch = "samai/v2.21.3/konzeptbibliothek-vorschau-einfuegen"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert vorhandene Bibliotheks-, Zahlenrechner-, Formelbauer- und Profiloberflächen sowie Aussagenverträge ohne einen neuen registrierten Knotentyp."
+
+[[releases]]
+version = "2.22.0"
+title = "Lineare Algebra Grundlagen und LaTeX-Reitertitel"
+roadmap = "v2.22.x Lineare Algebra und Definitionsdialoge"
+status = "released"
+previous_release = "2.21.3"
+branch = "release/v2.22.0-lina-grundlagen"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.begriff.vektorraum", "mathematik.begriff.lineareAbbildung"]
+reason = "Führt zwei separat erzeugbare Begriffsknoten für Vektorräume und lineare Abbildungen ein, ergänzt Gauß-Jordan-Auswertungen und rendert mathematische Reitertitel im Definitionsdialog über die zentrale LaTeX-Darstellung."

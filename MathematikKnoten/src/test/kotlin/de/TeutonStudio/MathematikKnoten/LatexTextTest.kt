@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.BaselineShift
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -25,6 +26,17 @@ class LatexTextTest {
     fun `ungleichheitsbefehle werden als Symbol dargestellt`() {
         assertEquals("2 ≠ -2", vereinfacheLatexAnzeige("2 \\neq -2"))
         assertEquals("2 ≠ -2", vereinfacheLatexAnzeige("2 \\ne -2"))
+    }
+
+    @Test
+    fun `Reitertitel rendern Relationen Zahlbereiche Indizes und Klartext`() {
+        assertEquals("x ≤ 0", vereinfacheLatexAnzeige("x \\leq 0"))
+        assertEquals("ℝ und ℕ", vereinfacheLatexAnzeige("\\mathbb{R} und \\mathbb{N}"))
+        assertEquals("Definition", vereinfacheLatexAnzeige("Definition"))
+
+        val indexierterTitel = latexZuAnnotiertemText("a_{n}")
+        assertEquals("an", indexierterTitel.text)
+        assertEquals(BaselineShift.Subscript, indexierterTitel.spanStyles.single().item.baselineShift)
     }
 
     @Test

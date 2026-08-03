@@ -16,6 +16,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswerter
 import de.TeutonStudio.MathematikKnoten.AussagenOperatorArt
 import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
+import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
@@ -131,7 +132,12 @@ private fun KonzeptDialog(
                                 Tab(
                                     selected = reiterIndex == index,
                                     onClick = { reiterIndex = index },
-                                    text = { Text(reiter.titel) },
+                                    text = {
+                                        LatexText(
+                                            latex = reiter.titel,
+                                            style = MaterialTheme.typography.labelLarge,
+                                        )
+                                    },
                                 )
                             }
                         }
