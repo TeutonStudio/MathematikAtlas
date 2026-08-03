@@ -127,7 +127,7 @@ internal fun KonzeptBibliothekInhalt(
         }
 
         Text(
-            "${sichtbareEinträge.size} Konzepte · Klick ohne Aktion · Halten öffnet die Definition · Ziehen fügt ein",
+            "${sichtbareEinträge.size} Konzepte · Knotendarstellung antippen fügt ein · Halten öffnet die Definition · Ziehen fügt ein",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -201,7 +201,12 @@ private fun KonzeptBibliothekZeile(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (vorlage != null) {
-                KnotenBibliothekVorschau(zustand, eintrag.id, vorlage)
+                KnotenBibliothekVorschau(
+                    zustand = zustand,
+                    eintragId = eintrag.id,
+                    vorlage = vorlage,
+                    onEinfügen = { zustand.fügeKnotenEin(vorlage, position) },
+                )
             } else {
                 Surface(
                     Modifier.width(180.dp).height(108.dp),
@@ -250,16 +255,8 @@ private fun KonzeptBibliothekZeile(
                         "$eingänge Eingänge · $ausgänge Ausgänge",
                         style = MaterialTheme.typography.labelSmall,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        OutlinedButton(onClick = { definitionÖffnen(knotenVorlage) }) {
-                            Text("Definition")
-                        }
-                        Button(
-                            onClick = { zustand.fügeKnotenEin(knotenVorlage, position) },
-                            enabled = eintrag.istEinfügbar,
-                        ) {
-                            Text("Einfügen")
-                        }
+                    OutlinedButton(onClick = { definitionÖffnen(knotenVorlage) }) {
+                        Text("Definition")
                     }
                 }
             }
@@ -272,6 +269,7 @@ private fun KnotenBibliothekVorschau(
     zustand: AtlasZustand,
     eintragId: String,
     vorlage: KnotenVorlage,
+    onEinfügen: () -> Unit,
 ) {
     val knoten = remember(eintragId) { vorlage.erzeuge(GraphPunkt.Zero) }
     val renderer = remember(knoten.art, knoten.parameter) { zustand.rendererFür(knoten) }
@@ -279,7 +277,7 @@ private fun KnotenBibliothekVorschau(
     val ausgänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
 
     Surface(
-        Modifier.width(180.dp).height(108.dp),
+        Modifier.width(180.dp).height(108.dp).clickable(onClick = onEinfügen),
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
