@@ -66,7 +66,7 @@ object MengenRechner {
                 if (eingaben.size < 2) ungueltigeAnzahl(operator, 2)
                 else if (inkompatibel) bedingt(operator, eingaben, universen)
                 else MengenRechnerErgebnis.Wert(
-                    schneide(eingaben.map { it.menge }, gemeinsamesUniversum),
+                    normalisiereZahlmengenSchnitt(eingaben.map { it.menge }, gemeinsamesUniversum),
                     gemeinsamesUniversum,
                     operator,
                 )
