@@ -85,15 +85,22 @@ class StrukturRechnerKnotenTest {
     @Test
     fun `Tensorrechner passt Anschluesse atomar an den Operator an`() {
         val basis = StrukturRechnerKnotenVorlagen.Tensorrechner.erzeuge(GraphPunkt.Zero)
+        val basisAusgang = basis.anschlüsse.first { it.name == "wert" }
 
         val skalar = konfiguriereTensorRechner(basis, TensorRechnerOperator.SKALARMULTIPLIKATION)
         assertEquals(listOf("skalar", "tensor", "wert"), skalar.anschlüsse.map { it.name })
         assertEquals(MathematikAnschlussArten.Zahl.id, skalar.anschlüsse.first { it.name == "skalar" }.art)
+        assertEquals(basisAusgang.id, skalar.anschlüsse.first { it.name == "wert" }.id)
 
         val norm = konfiguriereTensorRechner(skalar, TensorRechnerOperator.NORM)
+        val normAusgang = norm.anschlüsse.first { it.name == "wert" }
         assertEquals(listOf("tensor", "wert"), norm.anschlüsse.map { it.name })
-        assertEquals(MathematikAnschlussArten.Zahl.id, norm.anschlüsse.first { it.name == "wert" }.art)
+        assertEquals(MathematikAnschlussArten.Zahl.id, normAusgang.art)
+        assertNotEquals(basisAusgang.id, normAusgang.id)
         assertEquals(TensorRechnerOperator.NORM.stabileId, norm.parameter[RECHNER_OPERATOR_PARAMETER])
+
+        val tensorprodukt = konfiguriereTensorRechner(norm, TensorRechnerOperator.TENSORPRODUKT)
+        assertNotEquals(normAusgang.id, tensorprodukt.anschlüsse.first { it.name == "wert" }.id)
     }
 
     @Test
