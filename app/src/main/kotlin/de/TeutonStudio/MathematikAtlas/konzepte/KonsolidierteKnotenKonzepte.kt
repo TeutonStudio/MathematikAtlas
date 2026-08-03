@@ -122,6 +122,7 @@ private fun fehlendesKartenKonzept(
     name = knoten.name,
     beschreibung = fehler,
     pfad = listOf("Mengen", "Eigene Karten"),
+    tags = setOf("Menge", "Eigene Karte", "Fehlende Version"),
     knotenArten = setOf(MENGEN_KNOTEN_ART),
     reiter = listOf(
         KonzeptReiter(
