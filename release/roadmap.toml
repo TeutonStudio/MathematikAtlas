@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.20.x"
-current_version = "2.20.1"
+current_series = "2.21.x"
+current_version = "2.21.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
