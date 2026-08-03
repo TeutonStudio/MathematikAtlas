@@ -3,8 +3,8 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class StrukturRechnerTest {
     @Test
@@ -64,17 +64,37 @@ class StrukturRechnerTest {
     }
 
     @Test
-    fun `Beschraenkte Zahlmenge rendert links Grenze Relation und rechts Relation Grenze`() {
-        val bereich = beschraenkteZahlmenge(
-            FundamentalerZahlbereich.REELL,
-            zahl(2),
-            true,
-            zahl(5),
-            false,
+    fun `Beschraenkte Zahlmenge rendert alle Grenzarten mit LaTeX Relationen`() {
+        val faelle = listOf(
+            Triple(false, false, "{}^{2\\lt}\\mathbb R^{\\lt5}"),
+            Triple(false, true, "{}^{2\\lt}\\mathbb R^{\\leq5}"),
+            Triple(true, false, "{}^{2\\leq}\\mathbb R^{\\lt5}"),
+            Triple(true, true, "{}^{2\\leq}\\mathbb R^{\\leq5}"),
         )
 
-        assertEquals("{}^{2\\leq}\\mathbb R^{<5}", bereich.zuLatex())
-        assertTrue(!bereich.zuLatex().contains("{}^{\\leq2}"))
+        for ((linksEnthalten, rechtsEnthalten, erwartet) in faelle) {
+            val bereich = beschraenkteZahlmenge(
+                FundamentalerZahlbereich.REELL,
+                zahl(2),
+                linksEnthalten,
+                zahl(5),
+                rechtsEnthalten,
+            )
+            val latex = bereich.zuLatex()
+
+            assertEquals(erwartet, latex)
+            assertFalse(latex.contains('<'))
+            assertFalse(latex.contains("{}^{\\leq2}"))
+        }
+    }
+
+    @Test
+    fun `Grenzrelation normalisiert le und leq auf leq`() {
+        assertEquals(GrenzRelation.KLEINER_GLEICH, GrenzRelation.ausLatex("\\le"))
+        assertEquals(GrenzRelation.KLEINER_GLEICH, GrenzRelation.ausLatex("\\leq"))
+        assertEquals("\\leq", GrenzRelation.ausLatex("\\le").latex)
+        assertEquals(GrenzRelation.KLEINER, GrenzRelation.ausLatex("<"))
+        assertEquals("\\lt", GrenzRelation.ausLatex("<").latex)
     }
 
     @Test
