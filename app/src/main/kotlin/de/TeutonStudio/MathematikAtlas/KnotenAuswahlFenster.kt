@@ -19,46 +19,47 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
     val context = LocalContext.current
     val modusSpeicher = remember(context) { KnotenWählerModusSpeicher(context) }
     var modus by remember(modusSpeicher) { mutableStateOf(modusSpeicher.lade()) }
+    val setzeModus: (KnotenWählerModus) -> Unit = { neu ->
+        modus = neu
+        modusSpeicher.speichere(neu)
+        if (neu == KnotenWählerModus.Konzeptbibliothek) zustand.setzeSuchText("")
+    }
 
-    AlertDialog(
-        onDismissRequest = zustand::schließeKnotenAuswahl,
-        title = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(if (modus == KnotenWählerModus.Standard) "Knoten einfügen" else "Konzeptbibliothek")
-                Text(
-                    modus.beschreibung,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        text = {
-            Column(
-                Modifier.fillMaxWidth().heightIn(max = 700.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                KnotenWählerModusAuswahl(
-                    modus = modus,
-                    onModus = { neu ->
-                        modus = neu
-                        modusSpeicher.speichere(neu)
-                        if (neu == KnotenWählerModus.Konzeptbibliothek) zustand.setzeSuchText("")
-                    },
-                )
-                HorizontalDivider()
-                when (modus) {
-                    KnotenWählerModus.Standard -> StandardKnotenAuswahlInhalt(zustand, position)
-                    KnotenWählerModus.Konzeptbibliothek -> KonzeptBibliothekInhalt(
-                        zustand = zustand,
-                        position = position,
-                        vorlagen = zustand.sichtbareVorlagen(),
-                        modifier = Modifier.fillMaxWidth(),
+    when (modus) {
+        KnotenWählerModus.Standard -> AlertDialog(
+            onDismissRequest = zustand::schließeKnotenAuswahl,
+            title = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Knoten einfügen")
+                    Text(
+                        modus.beschreibung,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-        },
-        confirmButton = { TextButton(onClick = zustand::schließeKnotenAuswahl) { Text("Schließen") } },
-    )
+            },
+            text = {
+                Column(
+                    Modifier.fillMaxWidth().heightIn(max = 700.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    KnotenWählerModusAuswahl(modus = modus, onModus = setzeModus)
+                    HorizontalDivider()
+                    StandardKnotenAuswahlInhalt(zustand, position)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = zustand::schließeKnotenAuswahl) { Text("Schließen") }
+            },
+        )
+
+        KnotenWählerModus.Konzeptbibliothek -> KonzeptBibliothekDialog(
+            zustand = zustand,
+            position = position,
+            vorlagen = zustand.sichtbareVorlagen(),
+            onStandardWähler = { setzeModus(KnotenWählerModus.Standard) },
+        )
+    }
 }
 
 @Composable

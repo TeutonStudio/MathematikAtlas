@@ -18,10 +18,25 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
-        val operator = UniversellerZahlenOperator.vonId(
-            knoten.parameter[ZAHLENRECHNER_OPERATOR],
-        )
-        var operatorMenü by remember(knoten.id, operator) { mutableStateOf(false) }
+        val operatorId = knoten.parameter[ZAHLENRECHNER_OPERATOR]
+        val standardOperator = UniversellerZahlenOperator.entries.firstOrNull { operator ->
+            operatorId == operator.stabileId || operatorId.equals(operator.name, ignoreCase = true)
+        }
+        val erweiterterOperator = ErweiterterZahlenOperator.vonId(operatorId)
+        val formelModus = operatorId == ZAHLENRECHNER_FORMEL_ID
+        var operatorMenü by remember(knoten.id, operatorId) { mutableStateOf(false) }
+        var formelDialog by remember(knoten.id) { mutableStateOf(false) }
+
+        val titel = when {
+            formelModus -> "Formel"
+            erweiterterOperator != null -> erweiterterOperator.titel
+            else -> standardOperator?.titel ?: "Addition"
+        }
+        val symbol = when {
+            formelModus -> "f(x)"
+            erweiterterOperator != null -> erweiterterOperator.symbolLatex
+            else -> standardOperator?.symbolLatex ?: "+"
+        }
 
         Text("Operator", style = MaterialTheme.typography.titleSmall)
         Box(Modifier.fillMaxWidth()) {
@@ -29,8 +44,8 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 onClick = { operatorMenü = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(operator.titel, modifier = Modifier.weight(1f))
-                Text(operator.symbolLatex, style = MaterialTheme.typography.labelMedium)
+                Text(titel, modifier = Modifier.weight(1f))
+                Text(symbol, style = MaterialTheme.typography.labelMedium)
             }
             DropdownMenu(
                 expanded = operatorMenü,
@@ -50,14 +65,68 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                         },
                         onClick = {
                             operatorMenü = false
-                            aktionen.knoten(
-                                konfiguriereZahlenRechner(
-                                    knoten = knoten,
-                                    operator = auswählbar,
-                                ),
-                            )
+                            aktionen.knoten(konfiguriereStandardZahlenRechner(knoten, auswählbar))
                         },
                     )
+                }
+                HorizontalDivider()
+                ErweiterterZahlenOperator.entries.forEach { auswählbar ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(auswählbar.titel)
+                                Text(
+                                    auswählbar.symbolLatex,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        },
+                        onClick = {
+                            operatorMenü = false
+                            aktionen.knoten(konfiguriereErweitertenZahlenRechner(knoten, auswählbar))
+                        },
+                    )
+                }
+                HorizontalDivider()
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text("Formel")
+                            Text(
+                                "CAS-Formelbauer öffnen",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    onClick = {
+                        operatorMenü = false
+                        formelDialog = true
+                    },
+                )
+            }
+        }
+
+        if (formelModus) {
+            val latex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" }
+            Surface(
+                Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Gespeicherte Formel", style = MaterialTheme.typography.labelLarge)
+                    LatexText(latex, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        knoten.parameter[ZAHLENRECHNER_FORMEL_VARIABLEN]
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let { "Eingänge: $it" }
+                            ?: "Konstante Formel ohne freie Eingänge",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(onClick = { formelDialog = true }) { Text("Formel bearbeiten") }
                 }
             }
         }
@@ -70,7 +139,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             )
         }
 
-        if (istVariadischerZahlenOperator(operator)) {
+        if (standardOperator != null && istVariadischerZahlenOperator(standardOperator)) {
             val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
             Text("Feste Operanden", style = MaterialTheme.typography.titleSmall)
             Row(
@@ -103,7 +172,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             }
         }
 
-        if (istKomplexKonstruktor(operator)) {
+        if (standardOperator != null && istKomplexKonstruktor(standardOperator)) {
             val modus = knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE]
                 ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT
             Text("Komplexe Eingabe", style = MaterialTheme.typography.titleSmall)
@@ -138,7 +207,9 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             }
         }
 
-        if (verwendetGradWinkel(operator)) {
+        val verwendetGrad = standardOperator?.let(::verwendetGradWinkel) == true ||
+            erweiterterOperator?.let(::verwendetGradWinkel) == true
+        if (verwendetGrad) {
             val grad = knoten.parameter[ZAHLENRECHNER_GRADWINKEL].toBoolean()
             val auswerten = knoten.parameter[ZAHLENRECHNER_GRAD_AUSWERTEN] != "false"
             Row(
@@ -149,9 +220,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 Text("Gradwinkel", modifier = Modifier.weight(1f))
                 Switch(
                     checked = grad,
-                    onCheckedChange = {
-                        aktionen.parameter(ZAHLENRECHNER_GRADWINKEL, it.toString())
-                    },
+                    onCheckedChange = { aktionen.parameter(ZAHLENRECHNER_GRADWINKEL, it.toString()) },
                 )
             }
             if (grad) {
@@ -176,7 +245,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             }
         }
 
-        if (operator in setOf(
+        if (standardOperator in setOf(
                 UniversellerZahlenOperator.INTEGRAL,
                 UniversellerZahlenOperator.DIFFERENTIAL,
             )
@@ -185,10 +254,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             OutlinedTextField(
                 value = variable,
                 onValueChange = {
-                    aktionen.parameter(
-                        ZAHLENRECHNER_VARIABLE,
-                        it.trim().ifBlank { "x" },
-                    )
+                    aktionen.parameter(ZAHLENRECHNER_VARIABLE, it.trim().ifBlank { "x" })
                 },
                 label = { Text("Variable") },
                 modifier = Modifier.fillMaxWidth(),
@@ -210,6 +276,17 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 fehler,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
+            )
+        }
+
+        if (formelDialog) {
+            FormelBauerDialog(
+                startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" },
+                schließen = { formelDialog = false },
+                übernehmen = { latex ->
+                    aktionen.knoten(konfiguriereZahlenRechnerFormel(knoten, latex))
+                    formelDialog = false
+                },
             )
         }
     }

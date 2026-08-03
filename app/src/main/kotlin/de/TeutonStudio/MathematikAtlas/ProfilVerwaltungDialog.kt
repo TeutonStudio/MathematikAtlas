@@ -3,28 +3,21 @@ package de.TeutonStudio.MathematikAtlas
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
 import de.TeutonStudio.MathematikAtlas.speicher.*
 import java.text.DateFormat
 import java.util.Date
@@ -47,8 +40,7 @@ internal fun ProfilVerwaltungDialog(
     val ordnungsSpeicher = remember(context) { KartenOrdnungSpeicher(context) }
     var profil by remember { mutableStateOf(profilSpeicher.lade()) }
     var pseudonym by remember(profil.id) { mutableStateOf(profil.pseudonym) }
-    var lieblingsFarbeText by remember(profil.id) { mutableStateOf(profil.lieblingsFarbe.rgbHex) }
-    val gültigeLieblingsFarbe = remember(lieblingsFarbeText) { ProfilFarbe.parse(lieblingsFarbeText) }
+    var lieblingsFarbe by remember(profil.id) { mutableStateOf(profil.lieblingsFarbe) }
     var reiter by remember { mutableStateOf(ProfilReiter.Profil) }
     var ordnung by remember { mutableStateOf(ordnungsSpeicher.lade()) }
     var papierkorb by remember { mutableStateOf(zustand.speicher.papierkorbEinträge()) }
@@ -67,7 +59,7 @@ internal fun ProfilVerwaltungDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(.86f).fillMaxHeight(.84f).widthIn(max = 920.dp),
+            modifier = Modifier.fillMaxWidth(.9f).fillMaxHeight(.9f).widthIn(max = 980.dp),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 6.dp,
         ) {
@@ -79,7 +71,7 @@ internal fun ProfilVerwaltungDialog(
                     Column(Modifier.weight(1f)) {
                         Text("Profil und Verwaltung", style = MaterialTheme.typography.headlineSmall)
                         Text(
-                            "Lokale Identität, Papierkorb und endgültige Löschung",
+                            "Lokale Identität, exakte Profilfarbe, Papierkorb und endgültige Löschung",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -101,21 +93,16 @@ internal fun ProfilVerwaltungDialog(
                             profil = profil,
                             pseudonym = pseudonym,
                             pseudonymÄndern = { pseudonym = it },
-                            lieblingsFarbeText = lieblingsFarbeText,
-                            lieblingsFarbeÄndern = { lieblingsFarbeText = it },
+                            lieblingsFarbe = lieblingsFarbe,
+                            lieblingsFarbeÄndern = { lieblingsFarbe = it },
                             speichern = {
-                                val farbe = gültigeLieblingsFarbe
-                                if (farbe == null) {
-                                    meldung = "Die Lieblingsfarbe ist ungültig. Erwartet wird #RRGGBB."
-                                } else {
-                                    profil = profilSpeicher.speichere(
-                                        profil.copy(pseudonym = pseudonym, lieblingsFarbe = farbe),
-                                    )
-                                    pseudonym = profil.pseudonym
-                                    lieblingsFarbeText = profil.lieblingsFarbe.rgbHex
-                                    profilGeändert(profil)
-                                    meldung = "Pseudonym und Lieblingsfarbe wurden gespeichert."
-                                }
+                                profil = profilSpeicher.speichere(
+                                    profil.copy(pseudonym = pseudonym.trim(), lieblingsFarbe = lieblingsFarbe),
+                                )
+                                pseudonym = profil.pseudonym
+                                lieblingsFarbe = profil.lieblingsFarbe
+                                profilGeändert(profil)
+                                meldung = "Pseudonym und Profilfarbe wurden gespeichert."
                             },
                             einstellungenÖffnen = einstellungenÖffnen,
                         )
@@ -263,25 +250,18 @@ private fun ProfilInhalt(
     profil: LokalesProfil,
     pseudonym: String,
     pseudonymÄndern: (String) -> Unit,
-    lieblingsFarbeText: String,
-    lieblingsFarbeÄndern: (String) -> Unit,
+    lieblingsFarbe: ProfilFarbe,
+    lieblingsFarbeÄndern: (ProfilFarbe) -> Unit,
     speichern: () -> Unit,
     einstellungenÖffnen: () -> Unit,
 ) {
-    val farbe = remember(lieblingsFarbeText) { ProfilFarbe.parse(lieblingsFarbeText) }
-    val vorschau = remember(farbe) { farbe?.let { ProfilFarbschemaGenerator.erzeuge(it, dunkel = true) } }
-    val vorschläge = remember {
-        listOf("#1D4ED8", "#7C3AED", "#C026D3", "#BE123C", "#C2410C", "#15803D", "#0F766E")
-            .mapNotNull(ProfilFarbe::parse)
-    }
-
     Column(
-        Modifier.fillMaxSize().widthIn(max = 620.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
+        Modifier.fillMaxSize().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("Lokale Identität", style = MaterialTheme.typography.titleLarge)
         Text(
-            "Pseudonym und Lieblingsfarbe werden lokal gespeichert. Die Farbe bestimmt die dekorativen Material-Farbrollen, nicht semantische Fehlerfarben.",
+            "Pseudonym und Lieblingsfarbe werden lokal gespeichert. Die Farbe bestimmt dekorative Material-Farbrollen; semantische Fehlerfarben bleiben davon unabhängig.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         OutlinedTextField(
@@ -292,86 +272,20 @@ private fun ProfilInhalt(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        Text("Lieblingsfarbe", style = MaterialTheme.typography.titleMedium)
-        Text(
-            "Wähle einen Vorschlag oder gib einen deckenden sRGB-Wert ein.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            vorschläge.forEach { vorschlag ->
-                val istAusgewählt = farbe == vorschlag
-                val schema = remember(vorschlag) { ProfilFarbschemaGenerator.erzeuge(vorschlag, dunkel = true) }
-                Surface(
-                    modifier = Modifier.size(48.dp)
-                        .clip(CircleShape)
-                        .clickable { lieblingsFarbeÄndern(vorschlag.rgbHex) }
-                        .semantics {
-                            contentDescription = "Lieblingsfarbe ${vorschlag.rgbHex}"
-                            selected = istAusgewählt
-                        },
-                    color = Color(vorschlag.argbLong),
-                    contentColor = schema.onPrimary,
-                    shape = CircleShape,
-                    border = if (istAusgewählt) {
-                        androidx.compose.foundation.BorderStroke(3.dp, schema.onPrimary)
-                    } else null,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (istAusgewählt) Text("✓", style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-            }
-        }
-        OutlinedTextField(
-            value = lieblingsFarbeText,
-            onValueChange = { lieblingsFarbeÄndern(it.take(7)) },
-            label = { Text("Hex-Farbe") },
-            supportingText = {
-                Text(if (farbe == null) "Ungültig. Beispiel: #1D4ED8" else "Kanonisch: ${farbe.rgbHex}")
-            },
-            isError = farbe == null,
-            singleLine = true,
+        ProfilFarbAuswahl(
+            startFarbe = lieblingsFarbe,
+            farbeGeaendert = lieblingsFarbeÄndern,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        if (vorschau != null) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = vorschau.surface,
-                contentColor = vorschau.onSurface,
-                shape = MaterialTheme.shapes.large,
-                border = androidx.compose.foundation.BorderStroke(1.dp, vorschau.outline),
-            ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Vorschau", style = MaterialTheme.typography.titleMedium)
-                    Surface(
-                        color = vorschau.surfaceVariant,
-                        contentColor = vorschau.onSurfaceVariant,
-                        shape = MaterialTheme.shapes.medium,
-                    ) {
-                        Text("Profilfarbige Fläche mit lesbarem Text", Modifier.padding(12.dp))
-                    }
-                    Button(
-                        onClick = {},
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = vorschau.primary,
-                            contentColor = vorschau.onPrimary,
-                        ),
-                    ) { Text("Primäre Aktion") }
-                }
-            }
-        }
-
         Text("Lokale Profil-ID: ${profil.id.wert}", style = MaterialTheme.typography.bodySmall)
         Button(
             onClick = speichern,
-            enabled = pseudonym.isNotBlank() && farbe != null,
+            enabled = pseudonym.isNotBlank(),
         ) { Text("Profil speichern") }
         HorizontalDivider()
         Text("Anwendung", style = MaterialTheme.typography.titleMedium)
         OutlinedButton(onClick = einstellungenÖffnen) { Text("Einstellungen öffnen") }
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -387,19 +301,18 @@ private fun LöschverwaltungInhalt(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         contentPadding = PaddingValues(bottom = 20.dp),
     ) {
-        item {
-            Text("Sammlungen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        }
+        item { Text("Sammlungen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
         if (ordnung.ordner.isEmpty()) {
             item { Text("Keine Sammlungen vorhanden.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
-        items(ordnung.ordner.sortedWith(compareBy({ it.size }, { formatiereOrdnerPfad(it).lowercase() })), key = { formatiereOrdnerPfad(it) }) { pfad ->
+        items(
+            ordnung.ordner.sortedWith(compareBy({ it.size }, { formatiereOrdnerPfad(it).lowercase() })),
+            key = { formatiereOrdnerPfad(it) },
+        ) { pfad ->
             ListItem(
                 headlineContent = { Text(formatiereOrdnerPfad(pfad)) },
                 supportingContent = { Text("${ordnung.kartenUnter(pfad).size} Karten einschließlich Unterordnern") },
-                trailingContent = {
-                    TextButton(onClick = { ordnerInPapierkorb(pfad) }) { Text("Löschen") }
-                },
+                trailingContent = { TextButton(onClick = { ordnerInPapierkorb(pfad) }) { Text("Löschen") } },
             )
         }
         item {
@@ -410,18 +323,14 @@ private fun LöschverwaltungInhalt(
             ListItem(
                 headlineContent = { Text(karte.name) },
                 supportingContent = {
-                    Text(
-                        buildString {
-                            append("Version ${karte.version}")
-                            if (karte.archiviert) append(" · archiviert")
-                            val pfad = ordnung.ordnerFür(karte.id)
-                            if (pfad.isNotEmpty()) append(" · ${formatiereOrdnerPfad(pfad)}")
-                        },
-                    )
+                    Text(buildString {
+                        append("Version ${karte.version}")
+                        if (karte.archiviert) append(" · archiviert")
+                        val pfad = ordnung.ordnerFür(karte.id)
+                        if (pfad.isNotEmpty()) append(" · ${formatiereOrdnerPfad(pfad)}")
+                    })
                 },
-                trailingContent = {
-                    TextButton(onClick = { karteInPapierkorb(karte) }) { Text("Löschen") }
-                },
+                trailingContent = { TextButton(onClick = { karteInPapierkorb(karte) }) { Text("Löschen") } },
             )
         }
     }

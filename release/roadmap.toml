@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.21.x"
-current_version = "2.21.2"
+current_version = "2.21.3"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -596,3 +596,14 @@ branch = "samai/v2.21.2-visuelle-gruppen"
 kind = "feature"
 version_axis = "x"
 reason = "Erweitert bestehende visuelle Gruppen um persistierte Kopfzeilen, Titel, Geometrie, gemeinsame Kindverschiebung, eindeutige Zuordnung und unabhängiges Löschen, ohne einen neuen registrierten Knotentyp einzuführen."
+
+[[releases]]
+version = "2.21.3"
+title = "Adaptive Konzeptbibliothek, CAS-Formelbauer und präzise Profilfarbe"
+roadmap = "v2.21.x Konzeptbibliothek, Formelbauer und Bedienoberfläche"
+status = "released"
+previous_release = "2.21.2"
+branch = "samai/v2.21.3/konzeptbibliothek-vorschau-einfuegen"
+kind = "feature"
+version_axis = "x"
+reason = "Erweitert vorhandene Bibliotheks-, Zahlenrechner-, Formelbauer- und Profiloberflächen sowie Aussagenverträge ohne einen neuen registrierten Knotentyp."
