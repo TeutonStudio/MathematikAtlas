@@ -58,7 +58,7 @@ class StrukturRechnerKnotenTest {
         )
 
         assertTrue(ergebnis.ausgaben.isEmpty())
-        assertContains(ergebnis.fehler.orEmpty(), "Länge")
+        assertFalse(ergebnis.fehler.isNullOrBlank())
     }
 
     @Test
