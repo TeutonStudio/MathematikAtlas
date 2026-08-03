@@ -1,23 +1,12 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-/** Ein unendlicher Hyperindex wird niemals in Int oder Long umgewandelt. */
+/** Ein unendlicher Hyperindex bleibt symbolisch und wird nie in Int oder Long gezwungen. */
 data class HyperNatuerlicherIndex(
     val name: String,
     val unendlich: Boolean = true,
-) : ZahlAusdruck {
+) {
     init { require(name.isNotBlank()) }
-    override fun zuLatex(): String = if (unendlich) "$name\\in{}^*\\mathbb N\\setminus\\mathbb N" else name
-}
-
-data class HyperErweiterteMenge(val original: MengenAusdruck) : MengenAusdruck {
-    override fun zuLatex(): String = "{}^*${original.zuLatex()}"
-}
-
-data class HyperErweiterteKomponente(
-    val strukturId: String,
-    val index: HyperNatuerlicherIndex,
-) : MathematischesObjekt {
-    override fun zuLatex(): String = "{}^*u_{${index.name}}"
+    fun zuLatex(): String = if (unendlich) "$name\\in{}^*\\mathbb N\\setminus\\mathbb N" else name
 }
 
 sealed interface UnendlicheIndexStruktur : MathematischesObjekt {
@@ -36,18 +25,25 @@ private fun pruefeEinstelligeVorschrift(vorschrift: Methode) {
     }
 }
 
-data class UnnatuerlichesTupel(
+/** Allgemeines, nicht materialisiertes Objekt-Tupel über ℕ={1,2,3,…}. */
+data class UnnatuerlichesObjektTupel(
     override val id: String,
     override val name: String,
     override val zielMenge: MengenAusdruck,
     override val vorschrift: Methode,
     override val nachweislichKonstant: Boolean = false,
-) : UnendlicheIndexStruktur {
+) : UnendlicheIndexStruktur, UnnatuerlichesTupel<MathematischesObjekt> {
     init {
         require(id.isNotBlank() && name.isNotBlank())
         pruefeEinstelligeVorschrift(vorschrift)
     }
+
     override val indexMenge: MengenAusdruck = NatürlicheZahlen
+
+    override fun komponente(index: Long): MathematischesObjekt {
+        require(index >= 1L) { "Ein unnatürliches Tupel ist ab Index 1 definiert." }
+        return standardKomponente(RationaleZahl.von(index))
+    }
 
     override fun standardKomponente(index: ZahlAusdruck): MathematischesObjekt {
         require(index.istPositiverNatuerlicherIndex()) {
@@ -65,7 +61,7 @@ data class UnnatuerlichesKartesischesTupel(
     override val zielMenge: MengenAusdruck,
     override val vorschrift: Methode,
     override val nachweislichKonstant: Boolean = false,
-) : UnendlicheIndexStruktur {
+) : UnendlicheIndexStruktur, UnnatuerlichesTupel<ZahlAusdruck> {
     init {
         require(id.isNotBlank() && name.isNotBlank())
         require(zielMenge.fundamentalerZahlbereichOderNull() != null || zielMenge is BeschraenkteZahlmenge) {
@@ -73,15 +69,21 @@ data class UnnatuerlichesKartesischesTupel(
         }
         pruefeEinstelligeVorschrift(vorschrift)
     }
+
     override val indexMenge: MengenAusdruck = NatürlicheZahlen
+
+    override fun komponente(index: Long): ZahlAusdruck {
+        require(index >= 1L) { "Ein unnatürliches Tupel ist ab Index 1 definiert." }
+        return standardKomponente(RationaleZahl.von(index)) as ZahlAusdruck
+    }
 
     override fun standardKomponente(index: ZahlAusdruck): MathematischesObjekt {
         require(index.istPositiverNatuerlicherIndex()) {
             "Unnatürliche kartesische Tupel verwenden die Projektkonvention ℕ={1,2,3,…}."
         }
-        return vorschrift.wendeAn(listOf(index)).also {
-            require(it is ZahlAusdruck) { "Die Komponentenvorschrift muss eine Zahl liefern." }
-        }
+        val wert = vorschrift.wendeAn(listOf(index))
+        require(wert is ZahlAusdruck) { "Die Komponentenvorschrift muss eine Zahl liefern." }
+        return wert
     }
 
     override fun zuLatex(): String = "$name:\\mathbb N\\to${zielMenge.zuLatex()}"
@@ -93,12 +95,15 @@ data class GanzzahligeFolge(
     override val zielMenge: MengenAusdruck,
     override val vorschrift: Methode,
     override val nachweislichKonstant: Boolean = false,
-) : UnendlicheIndexStruktur {
+) : UnendlicheIndexStruktur, ZFolge<MathematischesObjekt> {
     init {
         require(id.isNotBlank() && name.isNotBlank())
         pruefeEinstelligeVorschrift(vorschrift)
     }
+
     override val indexMenge: MengenAusdruck = GanzeZahlen
+
+    override fun wert(index: Long): MathematischesObjekt = standardKomponente(RationaleZahl.von(index))
 
     override fun standardKomponente(index: ZahlAusdruck): MathematischesObjekt {
         require(index.istGanzzahligerIndex()) { "Eine Folge verwendet ganzzahlige Indizes." }
@@ -114,16 +119,23 @@ private fun ZahlAusdruck.istGanzzahligerIndex(): Boolean =
 private fun ZahlAusdruck.istPositiverNatuerlicherIndex(): Boolean =
     this !is RationaleZahl || (nenner == java.math.BigInteger.ONE && zähler.signum() > 0)
 
-data class HyperErweiterteIndexStruktur(
-    val original: UnendlicheIndexStruktur,
-) : MathematischesObjekt {
-    val indexMenge: MengenAusdruck = HyperErweiterteMenge(original.indexMenge)
-    val zielMenge: MengenAusdruck = HyperErweiterteMenge(original.zielMenge)
+/** Symbolische Hypererweiterung ohne Materialisierung unendlich vieler Komponenten. */
+data class HyperErweiterteIndexStruktur(val original: UnendlicheIndexStruktur) {
+    val indexMenge: MengenAusdruck = BenannteMenge(
+        "hyper_${original.id}_index",
+        "{}^*${original.indexMenge.zuLatex()}",
+    )
+    val zielMenge: MengenAusdruck = BenannteMenge(
+        "hyper_${original.id}_ziel",
+        "{}^*${original.zielMenge.zuLatex()}",
+    )
 
-    fun komponente(index: HyperNatuerlicherIndex): HyperErweiterteKomponente =
-        HyperErweiterteKomponente(original.id, index)
+    fun komponente(index: HyperNatuerlicherIndex): AllgemeinerParameter = AllgemeinerParameter(
+        name = "hyper_${original.id}_${index.name}",
+        latex = "{}^*${original.name}_{${index.name}}",
+    )
 
-    override fun zuLatex(): String =
+    fun zuLatex(): String =
         "{}^*${original.name}:${indexMenge.zuLatex()}\\to${zielMenge.zuLatex()}"
 }
 
