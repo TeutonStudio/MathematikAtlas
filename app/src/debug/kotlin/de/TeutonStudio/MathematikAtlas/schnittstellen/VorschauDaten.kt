@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikAtlas.schnittstellen
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
@@ -9,9 +12,11 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
+import de.TeutonStudio.MathematikAtlas.AtlasZustand
 import de.TeutonStudio.MathematikAtlas.KnotenInspektorAktionen
 import de.TeutonStudio.MathematikKnoten.ENDLICHE_MENGE_ALT_PARAMETER
 import de.TeutonStudio.MathematikKnoten.MATRIXDIAGONALE_ART_PARAMETER
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
 
 internal object VorschauDaten {
@@ -32,7 +37,7 @@ internal object VorschauDaten {
     )
 
     val ZahlenRechner = knoten(
-        art = "mathematik.zahlenRechner",
+        art = ZAHLENRECHNER_ART,
         name = "Potenz und trigonometrische Auswertung",
         parameter = mapOf(
             "operator" to "potenz",
@@ -80,6 +85,12 @@ internal object VorschauDaten {
             parameter = basis.parameter + parameter,
         )
     }
+}
+
+@Composable
+internal fun erinnereVorschauAtlasZustand(): AtlasZustand {
+    val context = LocalContext.current
+    return remember(context) { AtlasZustand(context) }
 }
 
 internal object VorschauInspektorAktionen : KnotenInspektorAktionen {
