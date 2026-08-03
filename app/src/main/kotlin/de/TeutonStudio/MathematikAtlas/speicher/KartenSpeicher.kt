@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas.speicher
 
 import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.migriereUniversellenZahlenRechner
 import org.json.JSONObject
 import java.io.File
 
@@ -18,7 +19,10 @@ class KartenSpeicher(private val context: Context) {
     private val ordnungsSpeicher = KartenOrdnungSpeicher(context)
     private val freigabeQuellenSpeicher = FreigabeQuellenSpeicher(context)
 
-    init { kartenOrdner.mkdirs(); sicherungsOrdner.mkdirs() }
+    init {
+        kartenOrdner.mkdirs()
+        sicherungsOrdner.mkdirs()
+    }
 
     fun liste(archivierteEinschließen: Boolean = false): List<KartenDaten> {
         val papierkorbIds = if (archivierteEinschließen) emptySet() else papierkorbSpeicher.kartenIds()
@@ -33,17 +37,27 @@ class KartenSpeicher(private val context: Context) {
             .sortedBy { it.name.lowercase() }
     }
 
-    fun lade(verweis: KartenVerweis): KartenDaten? = leseDatei(dateiFür(verweis.kartenId, verweis.version))
+    fun lade(verweis: KartenVerweis): KartenDaten? = leseDatei(
+        dateiFür(verweis.kartenId, verweis.version),
+    )
 
     fun ladeAktuell(id: KartenId): KartenDaten? = File(kartenOrdner, id.wert)
-        .listFiles { f -> f.name.matches(Regex("v\\d+\\.json")) }.orEmpty()
-        .maxByOrNull(::versionAusDatei)?.let(::leseDatei)
+        .listFiles { f -> f.name.matches(Regex("v\\d+\\.json")) }
+        .orEmpty()
+        .maxByOrNull(::versionAusDatei)
+        ?.let(::leseDatei)
 
     fun speichere(karte: KartenDaten): KartenDaten {
         val zielVersion = if (versionWirdVerwendet(KartenVerweis(karte.id, karte.version))) {
             maxOf(karte.version + 1, höchsteVersion(karte.id) + 1)
-        } else karte.version
-        val zuSpeichern = if (zielVersion == karte.version) karte else karte.copy(version = zielVersion, erstelltAm = System.currentTimeMillis())
+        } else {
+            karte.version
+        }
+        val zuSpeichern = if (zielVersion == karte.version) {
+            karte
+        } else {
+            karte.copy(version = zielVersion, erstelltAm = System.currentTimeMillis())
+        }
         speichereExakt(zuSpeichern)
         return zuSpeichern
     }
@@ -51,7 +65,9 @@ class KartenSpeicher(private val context: Context) {
     fun importiere(text: String): KartenDaten = if (KartenFreigabePaket.istFreigabePaket(text)) {
         importierePaket(text)
     } else {
-        val gelesen = KartenJson.lese(text).migriereMethodenAnschlüsse()
+        val gelesen = KartenJson.lese(text)
+            .migriereMethodenAnschlüsse()
+            .migriereUniversellenZahlenRechner()
         val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
@@ -84,13 +100,19 @@ class KartenSpeicher(private val context: Context) {
 
     fun blockierendeVerwendungen(kartenIds: Set<KartenId>): List<KartenVerwendung> {
         if (kartenIds.isEmpty()) return emptyList()
-        return alleVersionen().filter { it.id !in kartenIds }.flatMap { karte ->
-            karte.knoten.asSequence().flatMap { knoten ->
-                knoten.alleKartenVerweise().asSequence()
-                    .filter { it.kartenId in kartenIds }
-                    .map { KartenVerwendung(karte, it) }
+        return alleVersionen()
+            .filter { it.id !in kartenIds }
+            .flatMap { karte ->
+                karte.knoten.asSequence().flatMap { knoten ->
+                    knoten.alleKartenVerweise().asSequence()
+                        .filter { it.kartenId in kartenIds }
+                        .map { KartenVerwendung(karte, it) }
+                }
             }
-        }.distinctBy { Triple(it.verwendendeKarte.id, it.verwendendeKarte.version, it.verwendeterVerweis) }.toList()
+            .distinctBy {
+                Triple(it.verwendendeKarte.id, it.verwendendeKarte.version, it.verwendeterVerweis)
+            }
+            .toList()
     }
 
     fun löscheEndgültig(kartenIds: Set<KartenId>): List<KartenVerwendung> {
@@ -111,24 +133,33 @@ class KartenSpeicher(private val context: Context) {
         karte.id != verweis.kartenId && karte.knoten.any { verweis in it.alleKartenVerweise() }
     }
 
-    fun verwendungen(verweis: KartenVerweis): List<KartenDaten> =
-        alleVersionen().filter { karte -> karte.knoten.any { verweis in it.alleKartenVerweise() } }.toList()
+    fun verwendungen(verweis: KartenVerweis): List<KartenDaten> = alleVersionen()
+        .filter { karte -> karte.knoten.any { verweis in it.alleKartenVerweise() } }
+        .toList()
 
     private fun importierePaket(text: String): KartenDaten {
         val paket = KartenFreigabePaket.lese(text)
         val vorhandeneQuellen = freigabeQuellenSpeicher.liste().filter {
-            it.quelle.herausgeberId == paket.quelle.herausgeberId && it.quelle.ressourcenId == paket.quelle.ressourcenId
+            it.quelle.herausgeberId == paket.quelle.herausgeberId &&
+                it.quelle.ressourcenId == paket.quelle.ressourcenId
         }
-        val bekannteIds = vorhandeneQuellen.associate { it.ursprünglicheKartenId to it.lokaleKartenId }
-        val idAbbildung = paket.karten.map(KartenDaten::id).distinct().associateWith { ursprünglicheId ->
-            bekannteIds[ursprünglicheId]
-                ?: ursprünglicheId.takeIf { ladeAktuell(it) == null }
-                ?: neueKartenId()
+        val bekannteIds = vorhandeneQuellen.associate {
+            it.ursprünglicheKartenId to it.lokaleKartenId
         }
+        val idAbbildung = paket.karten
+            .map(KartenDaten::id)
+            .distinct()
+            .associateWith { ursprünglicheId ->
+                bekannteIds[ursprünglicheId]
+                    ?: ursprünglicheId.takeIf { ladeAktuell(it) == null }
+                    ?: neueKartenId()
+            }
         val remappteKarten = paket.karten.map { karte ->
-            karte.migriereMethodenAnschlüsse().copy(
-                id = idAbbildung.getValue(karte.id),
-                knoten = karte.knoten.map { knoten ->
+            val migriert = karte.migriereMethodenAnschlüsse()
+                .migriereUniversellenZahlenRechner()
+            migriert.copy(
+                id = idAbbildung.getValue(migriert.id),
+                knoten = migriert.knoten.map { knoten ->
                     knoten.copy(
                         kartenVerweis = knoten.kartenVerweis?.remappe(idAbbildung),
                         eingangsKartenVerweise = knoten.eingangsKartenVerweise.mapValues { (_, verweis) ->
@@ -138,22 +169,33 @@ class KartenSpeicher(private val context: Context) {
                 },
             )
         }
-        remappteKarten.sortedWith(compareBy({ it.id.wert }, { it.version })).forEach(::speichereExakt)
+        remappteKarten
+            .sortedWith(compareBy({ it.id.wert }, { it.version }))
+            .forEach(::speichereExakt)
 
         val paketOrdnung = ordnungsSpeicher.lade()
         val importStamm = eindeutigerImportPfad(
             paketOrdnung,
-            listOf("Freigaben", "${paket.quelle.ressourcenName} – ${paket.quelle.herausgeberPseudonym}"),
+            listOf(
+                "Freigaben",
+                "${paket.quelle.ressourcenName} – ${paket.quelle.herausgeberPseudonym}",
+            ),
         )
         val ordner = paket.ordnerPfade.map { importStamm + it }
         val zuordnungen = paket.kartenPfade.mapNotNull { (ursprünglicheId, pfad) ->
-            idAbbildung[ursprünglicheId]?.let { lokaleId -> lokaleId to (importStamm + pfad) }
+            idAbbildung[ursprünglicheId]?.let { lokaleId ->
+                lokaleId to (importStamm + pfad)
+            }
         }.toMap()
         ordnungsSpeicher.speichere(
-            paketOrdnung.mitOrdner(importStamm).mitOrdnern(ordner).mitKartenInOrdnern(zuordnungen),
+            paketOrdnung
+                .mitOrdner(importStamm)
+                .mitOrdnern(ordner)
+                .mitKartenInOrdnern(zuordnungen),
         )
 
-        val quellenEinträge = paket.karten.groupBy(KartenDaten::id).map { (ursprünglicheId, versionen) ->
+        val quellenEinträge = paket.karten.groupBy(KartenDaten::id).map {
+            (ursprünglicheId, versionen) ->
             ImportierteFreigabe(
                 lokaleKartenId = idAbbildung.getValue(ursprünglicheId),
                 ursprünglicheKartenId = ursprünglicheId,
@@ -170,13 +212,19 @@ class KartenSpeicher(private val context: Context) {
         }
     }
 
-    private fun KartenVerweis.remappe(idAbbildung: Map<KartenId, KartenId>): KartenVerweis =
-        copy(kartenId = idAbbildung[kartenId] ?: kartenId)
+    private fun KartenVerweis.remappe(
+        idAbbildung: Map<KartenId, KartenId>,
+    ): KartenVerweis = copy(kartenId = idAbbildung[kartenId] ?: kartenId)
 
-    private fun eindeutigerImportPfad(ordnung: KartenOrdnung, basisPfad: List<String>): List<String> {
+    private fun eindeutigerImportPfad(
+        ordnung: KartenOrdnung,
+        basisPfad: List<String>,
+    ): List<String> {
         if (basisPfad !in ordnung.ordner) return basisPfad
         var nummer = 2
-        while (basisPfad.dropLast(1) + "${basisPfad.last()} $nummer" in ordnung.ordner) nummer += 1
+        while (basisPfad.dropLast(1) + "${basisPfad.last()} $nummer" in ordnung.ordner) {
+            nummer += 1
+        }
         return basisPfad.dropLast(1) + "${basisPfad.last()} $nummer"
     }
 
@@ -185,7 +233,10 @@ class KartenSpeicher(private val context: Context) {
         datei.parentFile?.mkdirs()
         if (datei.exists()) {
             datei.copyTo(
-                File(sicherungsOrdner, "${karte.id.wert}-v${karte.version}-${System.currentTimeMillis()}.json"),
+                File(
+                    sicherungsOrdner,
+                    "${karte.id.wert}-v${karte.version}-${System.currentTimeMillis()}.json",
+                ),
                 overwrite = true,
             )
         }
@@ -202,11 +253,29 @@ class KartenSpeicher(private val context: Context) {
         .mapNotNull(::leseDatei)
 
     private fun höchsteVersion(id: KartenId): Int = File(kartenOrdner, id.wert)
-        .listFiles().orEmpty().maxOfOrNull(::versionAusDatei) ?: 0
+        .listFiles()
+        .orEmpty()
+        .maxOfOrNull(::versionAusDatei)
+        ?: 0
 
-    private fun dateiFür(id: KartenId, version: Int) = File(File(kartenOrdner, id.wert), "v$version.json")
-    private fun versionAusDatei(file: File) = file.name.removePrefix("v").removeSuffix(".json").toIntOrNull() ?: 0
+    private fun dateiFür(id: KartenId, version: Int) = File(
+        File(kartenOrdner, id.wert),
+        "v$version.json",
+    )
+
+    private fun versionAusDatei(file: File) = file.name
+        .removePrefix("v")
+        .removeSuffix(".json")
+        .toIntOrNull()
+        ?: 0
+
     private fun leseDatei(file: File): KartenDaten? = runCatching {
-        if (file.exists()) KartenJson.lese(file.readText()).migriereMethodenAnschlüsse() else null
+        if (file.exists()) {
+            KartenJson.lese(file.readText())
+                .migriereMethodenAnschlüsse()
+                .migriereUniversellenZahlenRechner()
+        } else {
+            null
+        }
     }.getOrNull()
 }

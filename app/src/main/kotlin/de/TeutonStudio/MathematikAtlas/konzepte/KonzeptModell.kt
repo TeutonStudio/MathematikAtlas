@@ -5,6 +5,8 @@ import de.TeutonStudio.MathematikKnoten.GeometrieKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MengenraumKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.SPUR_ART
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_OPERATOR
 import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
 
 @JvmInline
@@ -37,6 +39,7 @@ data class KonzeptDefinition(
     val pfad: List<String>,
     val tags: Set<String>,
     val knotenArten: Set<KnotenArtId>,
+    val knotenParameter: Map<String, String> = emptyMap(),
     val reiter: List<KonzeptReiter>,
 ) {
     init {
@@ -44,6 +47,11 @@ data class KonzeptDefinition(
             "$name benötigt genau einen Definitionsreiter."
         }
     }
+
+    fun erklärt(knoten: KnotenDaten): Boolean =
+        knoten.art in knotenArten && knotenParameter.all { (schlüssel, wert) ->
+            knoten.parameter[schlüssel] == wert
+        }
 }
 
 object TestDefinitionsKarten {
@@ -58,10 +66,17 @@ object TestDefinitionsKarten {
 
     val alle: List<KonzeptDefinition> by lazy {
         festeVorlagen
-            .groupBy(KnotenVorlage::art)
+            .groupBy { vorlage ->
+                if (vorlage.art == ZAHLENRECHNER_ART) {
+                    "${vorlage.art}:${vorlage.standardParameter[ZAHLENRECHNER_OPERATOR]}"
+                } else {
+                    vorlage.art.toString()
+                }
+            }
             .values
             .map { varianten ->
                 when (varianten.first().art) {
+                    ZAHLENRECHNER_ART -> ZahlenRechnerDefinitionsKarten.konzept(varianten)
                     MathematikKnotenVorlagen.Division.art -> DivisionDefinitionsKarten.konzept
                     MathematikKnotenVorlagen.ORDNUNGSRELATION_ART ->
                         OrdnungsrelationDefinitionsKarten.katalogKonzept(varianten)
@@ -75,15 +90,16 @@ object TestDefinitionsKarten {
             }
     }
 
-    private val nachArt: Map<KnotenArtId, KonzeptDefinition> by lazy {
-        alle.flatMap { konzept -> konzept.knotenArten.map { art -> art to konzept } }.toMap()
+    private val nachArt: Map<KnotenArtId, List<KonzeptDefinition>> by lazy {
+        alle.flatMap { konzept -> konzept.knotenArten.map { art -> art to konzept } }
+            .groupBy({ it.first }, { it.second })
     }
 
     fun fürKnoten(knoten: KnotenDaten): KonzeptDefinition? =
         if (knoten.art == MathematikKnotenVorlagen.ORDNUNGSRELATION_ART) {
             OrdnungsrelationDefinitionsKarten.fürKnoten(knoten)
         } else {
-            nachArt[knoten.art]
+            nachArt[knoten.art]?.firstOrNull { it.erklärt(knoten) }
         }
 
     fun validierungsFehler(): List<String> = validierungsFehler(alle)
@@ -240,7 +256,7 @@ object TestDefinitionsKarten {
             konzept.reiter.forEach { reiter ->
                 val karten = listOf(reiter.karte) + reiter.darstellungsVarianten.values
                 karten.distinctBy(KartenDaten::id).forEach { karte ->
-                    karte.knoten.filter { it.art in konzept.knotenArten }.forEach { knoten ->
+                    karte.knoten.filter(konzept::erklärt).forEach { knoten ->
                         add("Selbstbezug in ${konzept.id}/${reiter.id}/${karte.id}: ${knoten.id}")
                     }
                 }

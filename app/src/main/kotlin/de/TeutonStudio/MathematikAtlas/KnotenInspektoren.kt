@@ -13,6 +13,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikRechenSystem.kern.Abbild
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
@@ -29,6 +30,7 @@ interface KnotenInspektorAktionen {
     fun name(wert: String)
     fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
     fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
+    fun knoten(knoten: KnotenDaten)
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
@@ -44,6 +46,7 @@ object KnotenInspektorRegister {
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
         "mathematik.transponieren" to TransponierenInspektor,
         "mathematik.matrixdiagonale" to MatrixdiagonaleInspektor,
+        ZAHLENRECHNER_ART to ZahlenRechnerInspektor,
         GeometrieTeilobjektTyp.Ecke.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Kante.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Fläche.knotenArt to GeometrieTeilobjektInspektor,

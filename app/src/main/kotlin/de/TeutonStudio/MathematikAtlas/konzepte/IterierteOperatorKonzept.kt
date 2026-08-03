@@ -15,8 +15,7 @@ internal val ITERIERTE_KONZEPT_ARTEN: Set<String> = setOf(
 
 internal fun iteriertesOperatorKonzept(varianten: List<KnotenVorlage>): KonzeptDefinition {
     val konzeptVarianten = varianten.filterNot { vorlage ->
-        vorlage.art == MathematikKnotenVorlagen.IterierteSumme.art &&
-            vorlage.standardParameter["eingabeModus"] == ITERIERTE_SUMME_TUPEL_MODUS
+        vorlage.standardParameter["eingabeModus"] == ITERIERTE_SUMME_TUPEL_MODUS
     }
     require(konzeptVarianten.isNotEmpty())
     val erste = konzeptVarianten.first()

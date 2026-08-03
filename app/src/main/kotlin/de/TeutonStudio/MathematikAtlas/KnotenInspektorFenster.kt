@@ -88,6 +88,9 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
                             zustand.editor.ändereAnschlussArt(verweis, art)
                         }
+                        override fun knoten(knoten: KnotenDaten) {
+                            zustand.editor.führeAus(KartenAktion.KnotenErsetzen(knoten))
+                        }
                     },
                 )
                 Spacer(Modifier.weight(1f))
