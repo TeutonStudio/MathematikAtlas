@@ -1,0 +1,25 @@
+name: Releaseeintrag v2.21.0 einmalig ergänzen
+
+on:
+  push:
+    branches: [agent/v2.21.0-universeller-zahlenrechner]
+
+permissions:
+  contents: write
+
+jobs:
+  aktualisieren:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v2.21.0-universeller-zahlenrechner
+      - run: python3 scripts/ergaenze_release_v2_21_0.py
+      - run: |
+          git rm .github/workflows/release-v2-21-eintrag-einmalig.yml scripts/ergaenze_release_v2_21_0.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add release/roadmap.toml
+          git commit -m "Releaseeintrag für v2.21.0 ergänzen"
+          git push origin HEAD:agent/v2.21.0-universeller-zahlenrechner
