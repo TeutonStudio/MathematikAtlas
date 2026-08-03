@@ -69,7 +69,7 @@ fun KartenDaten.bereinigteVisuelleGruppen(): KartenDaten {
         val gültigeIds = vorhandeneIds.asSequence()
             .filter { id -> id !in bereitsVerwendet }
             .filter { id -> normalisiert.enthältVollständig(vorhandeneKnoten.getValue(id)) }
-            .onEach(bereitsVerwendet::add)
+            .onEach { id -> bereitsVerwendet += id }
             .toCollection(linkedSetOf())
         normalisiert.copy(knotenIds = gültigeIds)
     }
