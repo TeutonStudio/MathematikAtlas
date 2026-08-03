@@ -1,10 +1,10 @@
 package de.TeutonStudio.KnotenKartenVerwalter
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsFenster
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
