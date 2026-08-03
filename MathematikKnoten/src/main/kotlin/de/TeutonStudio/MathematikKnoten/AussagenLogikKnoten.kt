@@ -118,7 +118,6 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     return (
         basis +
             ZahlenRechnerKnotenVorlagen.alle +
-            ErweiterteZahlenRechnerKnotenVorlagen.alle +
             FaltungsKnotenVorlagen.alle +
             MatrixdiagonaleKnotenVorlagen.alle
         )
