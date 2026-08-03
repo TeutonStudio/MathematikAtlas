@@ -39,8 +39,18 @@ class KonzeptBibliothekTest {
         val zahl = AnschlussArtId("mathematik.zahl")
         val vorlage = testVorlage(
             anschlüsse = listOf(
-                AnschlussDaten(name = "matrix", richtung = AnschlussRichtung.Eingang, art = matrix),
-                AnschlussDaten(name = "spur", richtung = AnschlussRichtung.Ausgang, art = zahl),
+                AnschlussDaten(
+                    name = "matrix",
+                    richtung = AnschlussRichtung.Eingang,
+                    kante = AnschlussKante.Links,
+                    art = matrix,
+                ),
+                AnschlussDaten(
+                    name = "spur",
+                    richtung = AnschlussRichtung.Ausgang,
+                    kante = AnschlussKante.Rechts,
+                    art = zahl,
+                ),
             ),
         )
         val eintrag = KonzeptBibliothekRegister.erstelle(listOf(vorlage)).single { it.vorlage == vorlage }
@@ -72,6 +82,7 @@ class KonzeptBibliothekTest {
             AnschlussDaten(
                 name = "wert",
                 richtung = AnschlussRichtung.Ausgang,
+                kante = AnschlussKante.Rechts,
                 art = AnschlussArtId("mathematik.zahl"),
             ),
         ),
