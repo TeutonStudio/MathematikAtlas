@@ -5,28 +5,64 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
-    @Test fun `Version sechs rundet verschachtelte Eigenschaften`() {
+    @Test fun `Version sieben rundet verschachtelte Eigenschaften`() {
         val eigenschaften = mapOf("konfiguration" to KnotenEigenschaft.Objekt(mapOf(
             "kamera" to KnotenEigenschaft.Objekt(mapOf("zoom" to KnotenEigenschaft.Dezimalzahl(1.25), "aktiv" to KnotenEigenschaft.Wahrheitswert(true))),
             "farben" to KnotenEigenschaft.Liste(listOf(KnotenEigenschaft.Farbe(0xFF2563EB), KnotenEigenschaft.Text("Ozean"))),
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 6"))
+        assertTrue(text.contains("\"formatVersion\": 7"))
         assertEquals(karte, KartenJson.lese(text))
     }
 
-    @Test fun `Visuelle Gruppen bleiben beim Roundtrip erhalten und werden bereinigt`() {
-        val a = KnotenDaten(id = KnotenId("a"), art = "test", name = "A")
-        val b = KnotenDaten(id = KnotenId("b"), art = "test", name = "B")
-        val gruppe = VisuelleKnotenGruppeDaten(VisuelleGruppenId("g"), setOf(a.id, b.id, KnotenId("fehlt")))
+    @Test fun `Visuelle Gruppen behalten Titel Geometrie und gültige Kinder beim Roundtrip`() {
+        val a = KnotenDaten(id = KnotenId("a"), art = "test", name = "A", position = GraphPunkt(40f, 100f))
+        val b = KnotenDaten(id = KnotenId("b"), art = "test", name = "B", position = GraphPunkt(300f, 120f))
+        val gruppe = VisuelleKnotenGruppeDaten(
+            id = VisuelleGruppenId("g"),
+            knotenIds = setOf(a.id, b.id, KnotenId("fehlt")),
+            titel = "Ableitung",
+            position = GraphPunkt(20f, 20f),
+            größe = GraphGröße(540f, 260f),
+        )
         val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(
             name = "Test",
             knoten = listOf(a, b),
             visuelleGruppen = listOf(gruppe),
         )))
 
-        assertEquals(setOf(a.id, b.id), gelesen.visuelleGruppen.single().knotenIds)
+        val geleseneGruppe = gelesen.visuelleGruppen.single()
+        assertEquals(setOf(a.id, b.id), geleseneGruppe.knotenIds)
+        assertEquals("Ableitung", geleseneGruppe.titel)
+        assertEquals(GraphPunkt(20f, 20f), geleseneGruppe.position)
+        assertEquals(GraphGröße(540f, 260f), geleseneGruppe.größe)
+    }
+
+    @Test fun `Alte visuelle Gruppe ohne Geometrie wird aus Kindern migriert`() {
+        val text = """
+            {
+              "formatVersion":6,
+              "id":"karte",
+              "name":"Altgruppe",
+              "version":1,
+              "erstelltAm":1,
+              "ansicht":{"x":0,"y":0,"zoom":1},
+              "knoten":[
+                {"id":"a","art":"test","name":"A","position":{"x":40,"y":100},"größe":{"breite":220,"höhe":120},"parameter":{},"anschlüsse":[]},
+                {"id":"b","art":"test","name":"B","position":{"x":300,"y":100},"größe":{"breite":220,"höhe":120},"parameter":{},"anschlüsse":[]}
+              ],
+              "verbindungen":[],
+              "visuelleGruppen":[{"id":"g","knotenIds":["a","b"]}]
+            }
+        """.trimIndent()
+
+        val gruppe = KartenJson.lese(text).visuelleGruppen.single()
+
+        assertEquals(VISUELLE_GRUPPE_STANDARD_TITEL, gruppe.titel)
+        assertEquals(setOf(KnotenId("a"), KnotenId("b")), gruppe.knotenIds)
+        assertTrue(gruppe.größe.breite > 0f)
+        assertTrue(gruppe.größe.höhe > 0f)
     }
 
     @Test fun `Version eins ohne Eigenschaften bleibt lesbar`() {
