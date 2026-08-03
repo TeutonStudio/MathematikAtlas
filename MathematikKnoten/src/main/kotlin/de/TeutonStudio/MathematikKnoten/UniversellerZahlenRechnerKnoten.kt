@@ -116,7 +116,9 @@ object ZahlenRechnerKnotenVorlagen {
         )
     }
 
-    val standard: KnotenVorlage = alle.first { it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.ADDITION.stabileId }
+    val standard: KnotenVorlage = alle.first {
+        it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.ADDITION.stabileId
+    }
 }
 
 /** Nur diese historischen Zahl-zu-Zahl-Knoten verschwinden aus dem Katalog. */
@@ -217,16 +219,23 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
 fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
     knoten = knoten.map { alt ->
         if (alt.art == ZAHLENRECHNER_ART) {
-            alt.copy(parameter = standardParameter(UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR])) + alt.parameter)
+            alt.copy(
+                parameter = standardParameter(
+                    UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR]),
+                ) + alt.parameter,
+            )
         } else {
             val operator = historischerZahlenOperator(alt) ?: return@map alt
             val standard = standardAnschluesse(operator)
-            val alteEingaenge = alt.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
+            val alteEingaenge = alt.anschlüsse
+                .filter { it.richtung == AnschlussRichtung.Eingang }
+                .sortedBy { it.reihenfolge }
             val alterAusgang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
             val umbenannt = alteEingaenge.mapIndexed { index, anschluss ->
                 val zielName = kanonischerEingangsName(operator, anschluss.name, index)
-                val zielArt = standard.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == zielName }?.art
-                    ?: anschluss.art
+                val zielArt = standard.firstOrNull {
+                    it.richtung == AnschlussRichtung.Eingang && it.name == zielName
+                }?.art ?: anschluss.art
                 anschluss.copy(
                     name = zielName,
                     richtung = AnschlussRichtung.Eingang,
@@ -242,7 +251,9 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                 )
             }
             val vorhanden = umbenannt.mapTo(mutableSetOf()) { it.name }
-            val ergaenzt = standard.filter { it.richtung == AnschlussRichtung.Eingang && it.name !in vorhanden }
+            val ergaenzt = standard.filter {
+                it.richtung == AnschlussRichtung.Eingang && it.name !in vorhanden
+            }
             val ausgang = (alterAusgang ?: zahlenAusgang()).copy(
                 name = "wert",
                 richtung = AnschlussRichtung.Ausgang,
@@ -261,7 +272,8 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                     ZAHLENRECHNER_KOMPLEX_EINGABE to if (alt.art == "mathematik.komplexAusTupel") {
                         ZAHLENRECHNER_KOMPLEX_TUPEL
                     } else {
-                        alt.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT
+                        alt.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE]
+                            ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT
                     },
                 ),
             )
@@ -283,7 +295,9 @@ private fun kanonischerEingangsName(
     index: Int,
 ): String = when {
     alterName == "methode" || alterName == "indexmenge" || alterName == "tupel" -> alterName
-    alterName in setOf("dividend", "zaehler", "basis", "radikand", "zahl", "term", "argument", "links", "minuend") -> "a"
+    alterName in setOf(
+        "dividend", "zaehler", "basis", "radikand", "zahl", "term", "argument", "links", "minuend",
+    ) -> "a"
     alterName in setOf("divisor", "nenner", "exponent", "rechts", "subtrahend", "grad") -> "b"
     alterName == "fallsNennerNull" -> "c"
     operator in setOf(
@@ -297,7 +311,9 @@ private fun kanonischerEingangsName(
 
 internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() {
     registriere(ZAHLENRECHNER_ART) { kontext ->
-        val operator = UniversellerZahlenOperator.vonId(kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR])
+        val operator = UniversellerZahlenOperator.vonId(
+            kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR],
+        )
         val ausgabe = universellAuswerten(kontext, operator)
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
         val reelle = reelleVariablen(kontext.eingänge.values)
@@ -309,7 +325,9 @@ internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() 
                     annahmen = annahmen,
                     werteVorrat = ausgabe.bereich.alsMenge(),
                     reelleVariablen = reelle,
-                    variablenQuellen = kontext.eingänge.values.flatMap { it.variablenQuellen }.distinctBy { it.identität },
+                    variablenQuellen = kontext.eingänge.values
+                        .flatMap { it.variablenQuellen }
+                        .distinctBy { it.identität },
                     latexDarstellung = ausgabe.latex,
                 ),
             ),
@@ -332,16 +350,22 @@ private fun universellAuswerten(
     operator: UniversellerZahlenOperator,
 ): UniverselleZahlenAusgabe {
     fun wert(name: String): BedingterWert = k.eingänge[name] ?: error("Zahleingang '$name' fehlt.")
-    fun zahl(name: String): ZahlAusdruck = wert(name).objekt as? ZahlAusdruck ?: error("Eingang '$name' enthält keine Zahl.")
+    fun zahl(name: String): ZahlAusdruck = wert(name).objekt as? ZahlAusdruck
+        ?: error("Eingang '$name' enthält keine Zahl.")
     fun bereich(wert: BedingterWert): ZahlenRechnerBereich = inferiereZahlenRechnerBereich(
         wert.objekt as? ZahlAusdruck ?: error("Ein Zahlenrechner-Eingang enthält keine Zahl."),
         wert.werteVorrat,
     )
+
     val zahlenWerte = k.knoten.anschlüsse
-        .filter { it.richtung == AnschlussRichtung.Eingang && it.art == MathematikAnschlussArten.Zahl.id }
+        .filter {
+            it.richtung == AnschlussRichtung.Eingang &&
+                it.art == MathematikAnschlussArten.Zahl.id
+        }
         .sortedBy { it.reihenfolge }
         .mapNotNull { anschluss -> k.eingänge[anschluss.name] }
-    val gemeinsam = zahlenWerte.takeIf { it.isNotEmpty() }
+    val gemeinsam = zahlenWerte
+        .takeIf { it.isNotEmpty() }
         ?.map(::bereich)
         ?.let(::gemeinsamerZahlenRechnerBereich)
         ?: ZahlenRechnerBereich.UNBEKANNT
@@ -349,18 +373,29 @@ private fun universellAuswerten(
     val gradAuswerten = k.knoten.parameter[ZAHLENRECHNER_GRAD_AUSWERTEN] != "false"
     val variable = Variable(k.knoten.parameter[ZAHLENRECHNER_VARIABLE]?.ifBlank { "x" } ?: "x")
 
-    fun unär(erzeuge: (ZahlAusdruck) -> ZahlAusdruck, ziel: ZahlenRechnerBereich = gemeinsam) =
-        UniverselleZahlenAusgabe(erzeuge(zahl("a")), ziel)
+    fun unär(
+        erzeuge: (ZahlAusdruck) -> ZahlAusdruck,
+        ziel: ZahlenRechnerBereich = gemeinsam,
+    ) = UniverselleZahlenAusgabe(erzeuge(zahl("a")), ziel)
 
     return when (operator) {
         UniversellerZahlenOperator.ADDITION -> {
             require(zahlenWerte.size >= 2) { "Addition benötigt mindestens zwei Summanden." }
-            UniverselleZahlenAusgabe(addition(zahlenWerte.map { it.objekt as ZahlAusdruck }), gemeinsam)
+            UniverselleZahlenAusgabe(
+                addition(zahlenWerte.map { it.objekt as ZahlAusdruck }),
+                gemeinsam,
+            )
         }
-        UniversellerZahlenOperator.SUBTRAKTION -> UniverselleZahlenAusgabe(subtraktion(zahl("a"), zahl("b")), gemeinsam)
+        UniversellerZahlenOperator.SUBTRAKTION -> UniverselleZahlenAusgabe(
+            subtraktion(zahl("a"), zahl("b")),
+            gemeinsam,
+        )
         UniversellerZahlenOperator.MULTIPLIKATION -> {
             require(zahlenWerte.size >= 2) { "Multiplikation benötigt mindestens zwei Faktoren." }
-            UniverselleZahlenAusgabe(multiplikation(zahlenWerte.map { it.objekt as ZahlAusdruck }), gemeinsam)
+            UniverselleZahlenAusgabe(
+                multiplikation(zahlenWerte.map { it.objekt as ZahlAusdruck }),
+                gemeinsam,
+            )
         }
         UniversellerZahlenOperator.DIVISION -> {
             val zaehler = zahl("a")
@@ -368,39 +403,82 @@ private fun universellAuswerten(
             if (nenner == RationaleZahl.Null) {
                 val ersatz = k.eingänge["c"]?.objekt as? ZahlAusdruck
                     ?: error("Division durch null ist ohne verbundenen Ersatzwert nicht definiert.")
-                return UniverselleZahlenAusgabe(ersatz, inferiereZahlenRechnerBereich(ersatz, k.eingänge["c"]?.werteVorrat))
+                return UniverselleZahlenAusgabe(
+                    ersatz,
+                    inferiereZahlenRechnerBereich(ersatz, k.eingänge["c"]?.werteVorrat),
+                )
             }
-            val ziel = if (gemeinsam.rang < ZahlenRechnerBereich.RATIONAL.rang) ZahlenRechnerBereich.RATIONAL else gemeinsam
-            UniverselleZahlenAusgabe(Division(zaehler, nenner), ziel, intelligenteDivisionLatex(zaehler, nenner))
+            val ziel = if (gemeinsam.rang < ZahlenRechnerBereich.RATIONAL.rang) {
+                ZahlenRechnerBereich.RATIONAL
+            } else {
+                gemeinsam
+            }
+            UniverselleZahlenAusgabe(
+                Division(zaehler, nenner),
+                ziel,
+                intelligenteDivisionLatex(zaehler, nenner),
+            )
         }
         UniversellerZahlenOperator.KEHRWERT -> {
             val argument = zahl("a")
             require(argument != RationaleZahl.Null) { "Der Kehrwert von null ist nicht definiert." }
-            UniverselleZahlenAusgabe(Division(RationaleZahl.Eins, argument), gemeinsam, intelligenteDivisionLatex(RationaleZahl.Eins, argument))
+            UniverselleZahlenAusgabe(
+                Division(RationaleZahl.Eins, argument),
+                gemeinsam,
+                intelligenteDivisionLatex(RationaleZahl.Eins, argument),
+            )
         }
-        UniversellerZahlenOperator.POTENZ -> UniverselleZahlenAusgabe(Potenz(zahl("a"), zahl("b")), gemeinsam)
-        UniversellerZahlenOperator.QUADRAT -> unär({ Potenz(it, RationaleZahl.von(2)) })
-        UniversellerZahlenOperator.KUBIK -> unär({ Potenz(it, RationaleZahl.von(3)) })
+        UniversellerZahlenOperator.POTENZ -> UniverselleZahlenAusgabe(
+            Potenz(zahl("a"), zahl("b")),
+            gemeinsam,
+        )
+        UniversellerZahlenOperator.QUADRAT -> unär { Potenz(it, RationaleZahl.von(2)) }
+        UniversellerZahlenOperator.KUBIK -> unär { Potenz(it, RationaleZahl.von(3)) }
         UniversellerZahlenOperator.WURZEL -> {
             val radikand = zahl("a")
             val gradWert = k.eingänge["b"]?.objekt as? ZahlAusdruck
             if (gradWert == null || gradWert == RationaleZahl.von(2)) {
-                UniverselleZahlenAusgabe(wurzel(radikand, k.rechenKontext), wurzelBereich(radikand, gemeinsam))
+                UniverselleZahlenAusgabe(
+                    wurzel(radikand, k.rechenKontext),
+                    wurzelBereich(radikand, gemeinsam),
+                )
             } else {
-                UniverselleZahlenAusgabe(Potenz(radikand, Division(RationaleZahl.Eins, gradWert)), gemeinsam)
+                UniverselleZahlenAusgabe(
+                    Potenz(radikand, Division(RationaleZahl.Eins, gradWert)),
+                    gemeinsam,
+                )
             }
         }
-        UniversellerZahlenOperator.QUADRATWURZEL -> UniverselleZahlenAusgabe(wurzel(zahl("a"), k.rechenKontext), wurzelBereich(zahl("a"), gemeinsam))
-        UniversellerZahlenOperator.KUBIKWURZEL -> unär({ Potenz(it, RationaleZahl.von(1, 3)) })
-        UniversellerZahlenOperator.LOGARITHMUS -> UniverselleZahlenAusgabe(Logarithmus(zahl("a"), zahl("b")), maxBereich(gemeinsam, ZahlenRechnerBereich.REELL))
-        UniversellerZahlenOperator.LOGARITHMUS_BASIS_2 -> unär({ Logarithmus(RationaleZahl.von(2), it) }, maxBereich(gemeinsam, ZahlenRechnerBereich.REELL))
-        UniversellerZahlenOperator.NATUERLICHER_LOGARITHMUS -> unär(::NatürlicherLogarithmus, maxBereich(gemeinsam, ZahlenRechnerBereich.REELL))
-        UniversellerZahlenOperator.LOGARITHMUS_BASIS_10 -> unär({ Logarithmus(RationaleZahl.von(10), it) }, maxBereich(gemeinsam, ZahlenRechnerBereich.REELL))
+        UniversellerZahlenOperator.QUADRATWURZEL -> UniverselleZahlenAusgabe(
+            wurzel(zahl("a"), k.rechenKontext),
+            wurzelBereich(zahl("a"), gemeinsam),
+        )
+        UniversellerZahlenOperator.KUBIKWURZEL -> unär {
+            Potenz(it, RationaleZahl.von(1, 3))
+        }
+        UniversellerZahlenOperator.LOGARITHMUS -> UniverselleZahlenAusgabe(
+            Logarithmus(zahl("a"), zahl("b")),
+            maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
+        )
+        UniversellerZahlenOperator.LOGARITHMUS_BASIS_2 -> unär(
+            { Logarithmus(RationaleZahl.von(2), it) },
+            maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
+        )
+        UniversellerZahlenOperator.NATUERLICHER_LOGARITHMUS -> unär(
+            ::NatürlicherLogarithmus,
+            maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
+        )
+        UniversellerZahlenOperator.LOGARITHMUS_BASIS_10 -> unär(
+            { Logarithmus(RationaleZahl.von(10), it) },
+            maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
+        )
         UniversellerZahlenOperator.ITERIERTE_SUMME,
         UniversellerZahlenOperator.ITERIERTES_PRODUKT,
         -> {
-            val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Iterationsmethode fehlt.")
-            val indexmenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck ?: error("Indexmenge fehlt.")
+            val methode = k.eingänge["methode"]?.objekt as? Methode
+                ?: error("Iterationsmethode fehlt.")
+            val indexmenge = k.eingänge["indexmenge"]?.objekt as? MengenAusdruck
+                ?: error("Indexmenge fehlt.")
             val objekt = if (operator == UniversellerZahlenOperator.ITERIERTE_SUMME) {
                 iterierteSumme(methode, indexmenge)
             } else {
@@ -410,23 +488,39 @@ private fun universellAuswerten(
         }
         UniversellerZahlenOperator.INTEGRAL -> {
             val ergebnis = integrieren(zahl("a"), variable)
-            UniverselleZahlenAusgabe(ergebnis.ergebnis, gemeinsam, schritte = ergebnis.schritte)
+            UniverselleZahlenAusgabe(
+                ergebnis.ergebnis,
+                gemeinsam,
+                schritte = ergebnis.schritte,
+            )
         }
         UniversellerZahlenOperator.DIFFERENTIAL -> {
             val ergebnis = ableiten(zahl("a"), variable)
-            UniverselleZahlenAusgabe(ergebnis.ergebnis, gemeinsam, schritte = ergebnis.schritte)
+            UniverselleZahlenAusgabe(
+                ergebnis.ergebnis,
+                gemeinsam,
+                schritte = ergebnis.schritte,
+            )
         }
         UniversellerZahlenOperator.MINIMUM,
         UniversellerZahlenOperator.MAXIMUM,
         -> {
-            require(gemeinsam.geordnet) { "${operator.titel} ist auf ${gemeinsam.latex} nicht definiert, da der Bereich nicht geordnet ist." }
+            require(gemeinsam.geordnet) {
+                "${operator.titel} ist auf ${gemeinsam.latex} nicht definiert, da der Bereich nicht geordnet ist."
+            }
             require(zahlenWerte.size >= 2) { "${operator.titel} benötigt mindestens zwei Operanden." }
             val zahlen = zahlenWerte.map { it.objekt as ZahlAusdruck }
-            UniverselleZahlenAusgabe(if (operator == UniversellerZahlenOperator.MINIMUM) minimum(zahlen) else maximum(zahlen), gemeinsam)
+            UniverselleZahlenAusgabe(
+                if (operator == UniversellerZahlenOperator.MINIMUM) minimum(zahlen) else maximum(zahlen),
+                gemeinsam,
+            )
         }
         UniversellerZahlenOperator.NORM -> {
             val argument = zahl("a")
-            UniverselleZahlenAusgabe(if (argument is KomplexeZahl) komplexerBetrag(argument) else Betrag(argument), ZahlenRechnerBereich.REELL)
+            UniverselleZahlenAusgabe(
+                if (argument is KomplexeZahl) komplexerBetrag(argument) else Betrag(argument),
+                ZahlenRechnerBereich.REELL,
+            )
         }
         UniversellerZahlenOperator.ABRUNDUNG -> unär(::abrunden, ZahlenRechnerBereich.GANZ)
         UniversellerZahlenOperator.AUFRUNDUNG -> unär(::aufrunden, ZahlenRechnerBereich.GANZ)
@@ -436,36 +530,60 @@ private fun universellAuswerten(
             UniverselleZahlenAusgabe(
                 when (argument) {
                     is KomplexeZahl -> konjugiere(argument)
-                    else -> if (gemeinsam.rang <= ZahlenRechnerBereich.REELL.rang) argument else symbolischerZahlterm("konjugiert-${argument.zuLatex()}", "\\overline{${argument.zuLatex()}}")
+                    else -> if (gemeinsam.rang <= ZahlenRechnerBereich.REELL.rang) {
+                        argument
+                    } else {
+                        symbolischerZahlterm(
+                            "konjugiert-${argument.zuLatex()}",
+                            "\\overline{${argument.zuLatex()}}",
+                        )
+                    }
                 },
                 gemeinsam,
             )
         }
         UniversellerZahlenOperator.REALTEIL -> {
             val argument = zahl("a")
-            UniverselleZahlenAusgabe((argument as? KomplexeZahl)?.realteil ?: argument, ZahlenRechnerBereich.REELL)
+            UniverselleZahlenAusgabe(
+                (argument as? KomplexeZahl)?.realteil ?: argument,
+                ZahlenRechnerBereich.REELL,
+            )
         }
         UniversellerZahlenOperator.IMAGINAERTEIL -> {
             val argument = zahl("a")
-            UniverselleZahlenAusgabe((argument as? KomplexeZahl)?.imaginärteil ?: RationaleZahl.Null, ZahlenRechnerBereich.REELL)
+            UniverselleZahlenAusgabe(
+                (argument as? KomplexeZahl)?.imaginärteil ?: RationaleZahl.Null,
+                ZahlenRechnerBereich.REELL,
+            )
         }
         UniversellerZahlenOperator.KOMPLEXER_WINKEL -> {
             val argument = zahl("a")
-            val objekt = (argument as? KomplexeZahl)?.let(::Argument)
-                ?: symbolischerZahlterm("arg-${argument.zuLatex()}", "\\arg\\left(${argument.zuLatex()}\\right)")
+            val objekt = (argument as? KomplexeZahl)?.let {
+                Argument(it.imaginärteil, it.realteil)
+            } ?: symbolischerZahlterm(
+                "arg-${argument.zuLatex()}",
+                "\\arg\\left(${argument.zuLatex()}\\right)",
+            )
             UniverselleZahlenAusgabe(objekt, ZahlenRechnerBereich.REELL)
         }
         UniversellerZahlenOperator.KOMPLEXER_RADIUS -> {
             val argument = zahl("a")
-            UniverselleZahlenAusgabe((argument as? KomplexeZahl)?.let(::komplexerBetrag) ?: Betrag(argument), ZahlenRechnerBereich.REELL)
+            UniverselleZahlenAusgabe(
+                (argument as? KomplexeZahl)?.let(::komplexerBetrag) ?: Betrag(argument),
+                ZahlenRechnerBereich.REELL,
+            )
         }
         UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH,
         UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
         -> {
-            val tupelModus = k.knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] == ZAHLENRECHNER_KOMPLEX_TUPEL
+            val tupelModus = k.knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] ==
+                ZAHLENRECHNER_KOMPLEX_TUPEL
             val (erste, zweite) = if (tupelModus) {
-                val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Ein Tupel aus zwei Zahlen fehlt.")
-                require(tupel.elemente.size == 2 && tupel.elemente.all { it is ZahlAusdruck }) { "Das komplexe Tupel muss genau zwei Zahlen enthalten." }
+                val tupel = k.eingänge["tupel"]?.objekt as? Tupel
+                    ?: error("Ein Tupel aus zwei Zahlen fehlt.")
+                require(tupel.elemente.size == 2 && tupel.elemente.all { it is ZahlAusdruck }) {
+                    "Das komplexe Tupel muss genau zwei Zahlen enthalten."
+                }
                 (tupel.elemente[0] as ZahlAusdruck) to (tupel.elemente[1] as ZahlAusdruck)
             } else {
                 zahl("a") to zahl("b")
@@ -478,48 +596,86 @@ private fun universellAuswerten(
             val latex = if (operator == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR && grad) {
                 val winkelLatex = gradWinkelLatex(zweite, gradAuswerten)
                 "${erste.zuLatex()}\\left(\\cos\\left($winkelLatex\\right)+i\\sin\\left($winkelLatex\\right)\\right)"
-            } else null
+            } else {
+                null
+            }
             UniverselleZahlenAusgabe(objekt, ZahlenRechnerBereich.KOMPLEX, latex)
         }
-        UniversellerZahlenOperator.MODULO -> UniverselleZahlenAusgabe(modulo(zahl("a"), zahl("b")), ZahlenRechnerBereich.MODULO)
-        UniversellerZahlenOperator.BETRAG -> unär(::Betrag, if (gemeinsam.rang >= ZahlenRechnerBereich.KOMPLEX.rang) ZahlenRechnerBereich.REELL else gemeinsam)
-        UniversellerZahlenOperator.EXPONENTIALFUNKTION -> unär(::Exponentialfunktion, maxBereich(gemeinsam, ZahlenRechnerBereich.REELL))
+        UniversellerZahlenOperator.MODULO -> UniverselleZahlenAusgabe(
+            modulo(zahl("a"), zahl("b")),
+            ZahlenRechnerBereich.MODULO,
+        )
+        UniversellerZahlenOperator.BETRAG -> unär(
+            ::Betrag,
+            if (gemeinsam.rang >= ZahlenRechnerBereich.KOMPLEX.rang) {
+                ZahlenRechnerBereich.REELL
+            } else {
+                gemeinsam
+            },
+        )
+        UniversellerZahlenOperator.EXPONENTIALFUNKTION -> unär(
+            ::Exponentialfunktion,
+            maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
+        )
         UniversellerZahlenOperator.SINUS,
         UniversellerZahlenOperator.COSINUS,
         -> {
             val argument = zahl("a")
             val effektiv = if (grad && gradAuswerten) gradZuBogenmass(argument) else argument
-            val objekt = if (operator == UniversellerZahlenOperator.SINUS) Sinus(effektiv) else Cosinus(effektiv)
+            val objekt = if (operator == UniversellerZahlenOperator.SINUS) {
+                Sinus(effektiv)
+            } else {
+                Cosinus(effektiv)
+            }
             val latex = if (grad) {
                 val name = if (operator == UniversellerZahlenOperator.SINUS) "\\sin" else "\\cos"
                 "$name\\left(${gradWinkelLatex(argument, gradAuswerten)}\\right)"
-            } else null
-            UniverselleZahlenAusgabe(objekt, maxBereich(gemeinsam, ZahlenRechnerBereich.REELL), latex)
+            } else {
+                null
+            }
+            UniverselleZahlenAusgabe(
+                objekt,
+                maxBereich(gemeinsam, ZahlenRechnerBereich.REELL),
+                latex,
+            )
         }
         UniversellerZahlenOperator.ARCSINUS -> unär(::ArcSinus, ZahlenRechnerBereich.REELL)
         UniversellerZahlenOperator.ARCCOSINUS -> unär(::ArcCosinus, ZahlenRechnerBereich.REELL)
         UniversellerZahlenOperator.LIMES_HYPERREELL_ZU_REELL -> {
             val argument = zahl("a")
-            UniverselleZahlenAusgabe(argument, ZahlenRechnerBereich.REELL, "\\lim\\left(${argument.zuLatex()}\\right)")
+            UniverselleZahlenAusgabe(
+                argument,
+                ZahlenRechnerBereich.REELL,
+                "\\lim\\left(${argument.zuLatex()}\\right)",
+            )
         }
     }
 }
 
-private fun wurzelBereich(argument: ZahlAusdruck, basis: ZahlenRechnerBereich): ZahlenRechnerBereich =
-    if ((argument as? RationaleZahl)?.zähler?.signum() == -1) ZahlenRechnerBereich.KOMPLEX
-    else maxBereich(basis, ZahlenRechnerBereich.REELL)
+private fun wurzelBereich(
+    argument: ZahlAusdruck,
+    basis: ZahlenRechnerBereich,
+): ZahlenRechnerBereich = if ((argument as? RationaleZahl)?.zähler?.signum() == -1) {
+    ZahlenRechnerBereich.KOMPLEX
+} else {
+    maxBereich(basis, ZahlenRechnerBereich.REELL)
+}
 
-private fun maxBereich(a: ZahlenRechnerBereich, b: ZahlenRechnerBereich): ZahlenRechnerBereich =
-    if (a.rang >= b.rang) a else b
+private fun maxBereich(
+    a: ZahlenRechnerBereich,
+    b: ZahlenRechnerBereich,
+): ZahlenRechnerBereich = if (a.rang >= b.rang) a else b
 
 private fun ZahlenRechnerBereich.alsMenge(): MengenAusdruck = when (this) {
-    ZahlenRechnerBereich.NATUERLICH, ZahlenRechnerBereich.NATUERLICH_MIT_NULL -> NatürlicheZahlen
-    ZahlenRechnerBereich.GANZ -> GanzeZahlen
-    ZahlenRechnerBereich.RATIONAL -> RationaleZahlen
-    ZahlenRechnerBereich.REELL -> ReelleZahlen
-    ZahlenRechnerBereich.KOMPLEX -> KomplexeZahlen
-    ZahlenRechnerBereich.HYPERREELL -> BenannteMenge("hyperreell", latex)
-    ZahlenRechnerBereich.QUATERNION -> BenannteMenge("quaternion", latex)
-    ZahlenRechnerBereich.MODULO -> BenannteMenge("modulo", latex)
-    ZahlenRechnerBereich.UNBEKANNT -> BenannteMenge("zahlbereich-unbekannt", latex)
+    ZahlenRechnerBereich.NATUERLICH,
+    ZahlenRechnerBereich.NATUERLICH_MIT_NULL,
+    -> BenannteMenge("Natürliche Zahlen", latex)
+    ZahlenRechnerBereich.GANZ -> BenannteMenge("Ganze Zahlen", latex)
+    ZahlenRechnerBereich.RATIONAL -> BenannteMenge("Rationale Zahlen", latex)
+    ZahlenRechnerBereich.REELL -> BenannteMenge("Reelle Zahlen", latex)
+    ZahlenRechnerBereich.KOMPLEX -> BenannteMenge("Komplexe Zahlen", latex)
+    ZahlenRechnerBereich.HYPERREELL -> BenannteMenge("Hyperreelle Zahlen", latex)
+    ZahlenRechnerBereich.QUATERNION -> BenannteMenge("Quaternionen", latex)
+    ZahlenRechnerBereich.MODULO -> BenannteMenge("Restklassen", latex)
+    ZahlenRechnerBereich.UNBEKANNT -> BenannteMenge("Unbekannter Zahlbereich", latex)
 }
