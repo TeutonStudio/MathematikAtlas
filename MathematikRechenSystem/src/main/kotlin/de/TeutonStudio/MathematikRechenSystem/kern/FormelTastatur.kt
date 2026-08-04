@@ -97,7 +97,7 @@ object FormelTastatur {
 
         UniversellerZahlenOperator.DIVISION -> listOf("zaehler", "nenner")
         UniversellerZahlenOperator.POTENZ -> listOf("basis", "exponent")
-        UniversellerZahlenOperator.WURZEL -> listOf("radikand", "grad")
+        UniversellerZahlenOperator.WURZEL -> listOf("radikand")
         UniversellerZahlenOperator.LOGARITHMUS -> listOf("basis", "argument")
         UniversellerZahlenOperator.ITERIERTE_SUMME,
         UniversellerZahlenOperator.ITERIERTES_PRODUKT,
@@ -118,7 +118,7 @@ object FormelTastatur {
         UniversellerZahlenOperator.POTENZ -> "xʸ"
         UniversellerZahlenOperator.QUADRAT -> "x²"
         UniversellerZahlenOperator.KUBIK -> "x³"
-        UniversellerZahlenOperator.WURZEL -> "ⁿ√x"
+        UniversellerZahlenOperator.WURZEL -> "√x"
         UniversellerZahlenOperator.QUADRATWURZEL -> "√x"
         UniversellerZahlenOperator.KUBIKWURZEL -> "∛x"
         UniversellerZahlenOperator.LOGARITHMUS -> "logₐ"
