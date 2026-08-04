@@ -1,0 +1,100 @@
+{
+  "formatVersion": 7,
+  "id": "konzept.term-zu-methode",
+  "name": "Definition Term zu Methode",
+  "version": 1,
+  "erstelltAm": 0,
+  "archiviert": false,
+  "ansicht": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+  "knoten": [
+    {
+      "id": "term-zu-methode-eingang",
+      "art": "konzept.eingang",
+      "name": "term",
+      "position": { "x": 30.0, "y": 90.0 },
+      "größe": { "breite": 220.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.objekt", "rolle": "term" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "term-zu-methode-eingang-wert",
+          "name": "wert",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.objekt",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "term-zu-methode-regel",
+      "art": "konzept.regel",
+      "name": "Parameter binden",
+      "position": { "x": 330.0, "y": 60.0 },
+      "größe": { "breite": 410.0, "höhe": 170.0 },
+      "parameter": {
+        "regel": "Freie Parameter werden gebunden; der Term wird als Methode mit typisiertem Ziel bereitgestellt.",
+        "definition": "t(x)\\mapsto(x\\mapsto t(x))"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "term-zu-methode-regel-term",
+          "name": "term",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.objekt",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "term-zu-methode-regel-methode",
+          "name": "methode",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.methode",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "term-zu-methode-ausgang",
+      "art": "konzept.ausgang",
+      "name": "methode",
+      "position": { "x": 820.0, "y": 90.0 },
+      "größe": { "breite": 220.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.methode", "rolle": "methode" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "term-zu-methode-ausgang-wert",
+          "name": "wert",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.methode",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    }
+  ],
+  "verbindungen": [
+    {
+      "id": "term-zu-methode-kante-1",
+      "von": { "knotenId": "term-zu-methode-eingang", "anschlussId": "term-zu-methode-eingang-wert" },
+      "zu": { "knotenId": "term-zu-methode-regel", "anschlussId": "term-zu-methode-regel-term" }
+    },
+    {
+      "id": "term-zu-methode-kante-2",
+      "von": { "knotenId": "term-zu-methode-regel", "anschlussId": "term-zu-methode-regel-methode" },
+      "zu": { "knotenId": "term-zu-methode-ausgang", "anschlussId": "term-zu-methode-ausgang-wert" }
+    }
+  ],
+  "visuelleGruppen": []
+}
