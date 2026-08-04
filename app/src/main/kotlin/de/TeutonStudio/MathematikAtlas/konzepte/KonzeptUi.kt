@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -63,8 +64,12 @@ internal fun KnotenKonzeptDialog(
         return
     }
 
-    val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis) {
-        konzeptFürKonsolidiertenKnoten(zustand, knoten) ?: TestDefinitionsKarten.fürKnoten(knoten)
+    val context = LocalContext.current
+    val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis, context) {
+        val spezial = konzeptFürKonsolidiertenKnoten(zustand, knoten)
+        val enzyklopädie = enzyklopädieKonzeptFürKnoten(context, knoten)
+        kombiniereEnzyklopädieUndSpezialkonzept(enzyklopädie, spezial)
+            ?: TestDefinitionsKarten.fürKnoten(knoten)
     }
     KonzeptDialog(
         zustand = zustand,
