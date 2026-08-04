@@ -20,6 +20,7 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -50,10 +51,9 @@ internal fun StrukturelleFormelVorschau(
     val bereiche = remember(wurzel) { mutableStateMapOf<String, Rect>() }
     var wurzelUrsprung by remember { mutableStateOf(Offset.Zero) }
     var viewportBreite by remember { mutableIntStateOf(0) }
-    val aktuellerCursor by rememberUpdatedState(cursor)
     val aktuelleWurzel by rememberUpdatedState(wurzel)
     val cursorAbsolut = cursorBereich(cursor, wurzel, bereiche)
-    val cursorLokal = cursorAbsolut?.verschoben(-wurzelUrsprung)
+    val cursorLokal = cursorAbsolut?.verschoben(Offset(-wurzelUrsprung.x, -wurzelUrsprung.y))
 
     LaunchedEffect(cursor, cursorLokal, viewportBreite) {
         val bereich = cursorLokal ?: return@LaunchedEffect
