@@ -34,6 +34,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           wurzel = Path('MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/konzeptknoten')
           index = wurzel / 'ExpliziteKonzeptKnoten.kt'
@@ -80,20 +81,24 @@ jobs:
 
           register = wurzel / 'KonzeptKnotenRegister.kt'
           text = register.read_text()
-          alt = '''        val alle = ExpliziteKonzeptKnoten.dateien
-              .map { datei -> datei.erstelle(eindeutigeVorlagen) }
-              .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
-          '''
-          neu = '''        val alle = ExpliziteKonzeptKnoten.dateien
-              .map { datei -> datei.erstelle(eindeutigeVorlagen) }
-              .filter { eintrag ->
-                  eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar || eintrag.knotenVorlagen.isNotEmpty()
-              }
-              .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
-          '''
-          if alt not in text:
-              raise SystemExit('Registerfilter-Muster nicht gefunden')
-          register.write_text(text.replace(alt, neu, 1))
+          muster = re.compile(
+              r'(?P<einzug>^[ \t]*)val alle = ExpliziteKonzeptKnoten\.dateien\n'
+              r'(?P=einzug)[ \t]+\.map \{ datei -> datei\.erstelle\(eindeutigeVorlagen\) \}\n'
+              r'(?P=einzug)[ \t]+\.sortedWith',
+              re.MULTILINE,
+          )
+          ersatz = (
+              r'\g<einzug>val alle = ExpliziteKonzeptKnoten.dateien\n'
+              r'\g<einzug>    .map { datei -> datei.erstelle(eindeutigeVorlagen) }\n'
+              r'\g<einzug>    .filter { eintrag ->\n'
+              r'\g<einzug>        eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar || eintrag.knotenVorlagen.isNotEmpty()\n'
+              r'\g<einzug>    }\n'
+              r'\g<einzug>    .sortedWith'
+          )
+          text, anzahl = muster.subn(ersatz, text, count=1)
+          if anzahl != 1:
+              raise SystemExit(f'Registerfilter-Muster {anzahl}-mal gefunden')
+          register.write_text(text)
           PY
       - name: Nullable Kartenreferenz eindeutig binden
         run: |
