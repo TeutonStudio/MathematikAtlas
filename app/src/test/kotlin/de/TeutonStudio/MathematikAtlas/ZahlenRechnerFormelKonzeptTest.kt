@@ -24,7 +24,7 @@ class ZahlenRechnerFormelKonzeptTest {
             .mapNotNull { it.parameter[ZAHLENRECHNER_OPERATOR] }
             .toSet()
         val eingänge = karte.knoten
-            .filter { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART }
+            .filter { it.art == KonzeptKnotenArten.EINGANG }
             .map { it.name }
             .sorted()
 

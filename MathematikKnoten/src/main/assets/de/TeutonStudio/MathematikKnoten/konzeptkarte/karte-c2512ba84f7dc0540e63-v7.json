@@ -1,0 +1,455 @@
+{
+  "erstelltAm": 1785883810244,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "division-kn-k-nenner",
+        "anschlussId": "division-kn-k-nenner-ausgang-wert"
+      },
+      "id": "division-knk1",
+      "zu": {
+        "knotenId": "division-kn-k-konjugierte",
+        "anschlussId": "division-kn-k-konjugierte-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-zaehler",
+        "anschlussId": "division-kn-k-zaehler-ausgang-wert"
+      },
+      "id": "division-knk2",
+      "zu": {
+        "knotenId": "division-kn-k-zaehler-produkt",
+        "anschlussId": "division-kn-k-zaehler-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-konjugierte",
+        "anschlussId": "division-kn-k-konjugierte-ausgang-wert"
+      },
+      "id": "division-knk3",
+      "zu": {
+        "knotenId": "division-kn-k-zaehler-produkt",
+        "anschlussId": "division-kn-k-zaehler-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-nenner",
+        "anschlussId": "division-kn-k-nenner-ausgang-wert"
+      },
+      "id": "division-knk4",
+      "zu": {
+        "knotenId": "division-kn-k-nenner-produkt",
+        "anschlussId": "division-kn-k-nenner-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-konjugierte",
+        "anschlussId": "division-kn-k-konjugierte-ausgang-wert"
+      },
+      "id": "division-knk5",
+      "zu": {
+        "knotenId": "division-kn-k-nenner-produkt",
+        "anschlussId": "division-kn-k-nenner-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-nenner-produkt",
+        "anschlussId": "division-kn-k-nenner-produkt-ausgang-wert"
+      },
+      "id": "division-knk6",
+      "zu": {
+        "knotenId": "division-kn-k-kehrwert",
+        "anschlussId": "division-kn-k-kehrwert-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-zaehler-produkt",
+        "anschlussId": "division-kn-k-zaehler-produkt-ausgang-wert"
+      },
+      "id": "division-knk7",
+      "zu": {
+        "knotenId": "division-kn-k-produkt",
+        "anschlussId": "division-kn-k-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-kehrwert",
+        "anschlussId": "division-kn-k-kehrwert-ausgang-wert"
+      },
+      "id": "division-knk8",
+      "zu": {
+        "knotenId": "division-kn-k-produkt",
+        "anschlussId": "division-kn-k-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-k-produkt",
+        "anschlussId": "division-kn-k-produkt-ausgang-wert"
+      },
+      "id": "division-knk9",
+      "zu": {
+        "knotenId": "division-kn-k-ausgang",
+        "anschlussId": "division-kn-k-ausgang-eingang-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Komplexen Nenner kartesisch rationalisieren",
+  "knoten": [
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-zaehler-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Zähler a"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-kn-k-zaehler",
+      "position": {
+        "x": 30,
+        "y": 80
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-nenner-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Nenner b ∈ ℂ∖ℝ"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-kn-k-nenner",
+      "position": {
+        "x": 30,
+        "y": 360
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-konjugierte-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-konjugierte-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.konjugierte"
+      },
+      "name": "Konjugierte",
+      "id": "division-kn-k-konjugierte",
+      "position": {
+        "x": 360,
+        "y": 360
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-zaehler-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-zaehler-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-zaehler-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kn-k-zaehler-produkt",
+      "position": {
+        "x": 690,
+        "y": 90
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-nenner-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-nenner-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-nenner-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kn-k-nenner-produkt",
+      "position": {
+        "x": 690,
+        "y": 360
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-kehrwert-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-kehrwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.kehrwert"
+      },
+      "name": "Kehrwert",
+      "id": "division-kn-k-kehrwert",
+      "position": {
+        "x": 1030,
+        "y": 360
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kn-k-produkt",
+      "position": {
+        "x": 1320,
+        "y": 190
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-k-ausgang-eingang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Ergebnis"
+      },
+      "name": "Karten-Ausgang",
+      "id": "division-kn-k-ausgang",
+      "position": {
+        "x": 1650,
+        "y": 200
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.komplexer-nenner",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.65
+  },
+  "formatVersion": 7,
+  "version": 1
+}

@@ -462,9 +462,10 @@ private fun kartenListenEinträge(karten: List<KartenDaten>, ordnung: KartenOrdn
 private fun KonzeptListe(zustand: AtlasZustand) {
     var suche by remember { mutableStateOf("") }
     var geöffnetesKonzept by remember { mutableStateOf<KonzeptDefinition?>(null) }
-    val konzepte = remember(suche) {
+    val context = LocalContext.current
+    val konzepte = remember(suche, context) {
         val begriff = suche.trim()
-        TestDefinitionsKarten.alle.filter { konzept ->
+        alleEnzyklopädieKonzepte(context).filter { konzept ->
             begriff.isBlank() || listOf(
                 konzept.name,
                 konzept.beschreibung,

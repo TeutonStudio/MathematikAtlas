@@ -4,48 +4,51 @@ import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKnoten.MENGEN_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.istZahlenRechnerFormel
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.MathematikEnzyklopädie
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensEintrag
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenReferenz
-import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenId
-import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenLadeErgebnis
-import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenLader
-import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenQuelle
-import de.TeutonStudio.MathematikKnoten.konzeptkarte.ladeManifest
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.*
+import de.TeutonStudio.MathematikKnoten.konzeptkarte.*
+import de.TeutonStudio.MathematikKnoten.konzeptknoten.stabileVariantenId
 
 internal class AndroidKonzeptKartenQuelle(context: Context) : KonzeptKartenQuelle {
     private val assets = context.applicationContext.assets
-
     override fun lese(pfad: String): String? = runCatching {
         assets.open(pfad).bufferedReader().use { it.readText() }
     }.getOrNull()
 }
 
-internal fun enzyklopädieKonzeptFürKnoten(
-    context: Context,
-    knoten: KnotenDaten,
-): KonzeptDefinition? {
+internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDaten): KonzeptDefinition? {
     if (istZahlenRechnerFormel(knoten)) return null
     if (knoten.art == MENGEN_KNOTEN_ART && knoten.kartenVerweis != null) return null
-
     val wissen = findeWissensEintrag(knoten) ?: return null
-    val asset = wissen.karten.filterIsInstance<WissensKartenReferenz.Asset>()
-        .singleOrNull { it.primär }
-        ?: return null
+    val vorlage = passendeVorlage(wissen, knoten) ?: return null
+    val assets = StatischeKonzeptKarten.fürVariante(vorlage.stabileVariantenId())
+    if (assets.isEmpty()) return null
     val quelle = AndroidKonzeptKartenQuelle(context)
     val manifest = quelle.ladeManifest().getOrNull() ?: return null
-    val karte = when (
-        val ergebnis = KonzeptKartenLader(quelle, manifest).lade(KonzeptKartenId(asset.id))
-    ) {
-        is KonzeptKartenLadeErgebnis.Erfolg -> ergebnis.karte
-        is KonzeptKartenLadeErgebnis.Fehler -> return null
-    }
-    val passendeVorlage = wissen.knotenVorlagen.firstOrNull { vorlage ->
-        vorlage.art == knoten.art && vorlage.standardParameter.all { (schlüssel, wert) ->
-            knoten.parameter[schlüssel] == wert
+    val lader = KonzeptKartenLader(quelle, manifest)
+    val geladene = assets.associateWith { asset ->
+        when (val ergebnis = lader.lade(KonzeptKartenId(asset.id))) {
+            is KonzeptKartenLadeErgebnis.Erfolg -> ergebnis.karte
+            is KonzeptKartenLadeErgebnis.Fehler -> return null
         }
-    } ?: wissen.knotenVorlagen.firstOrNull { it.art == knoten.art }
-
+    }
+    val basis = assets.filter { it.darstellung == null }.map { asset ->
+        val varianten = assets.filter { kandidat ->
+            kandidat.darstellungsGruppe != null &&
+                kandidat.darstellungsGruppe == asset.darstellungsGruppe &&
+                kandidat.darstellung != null
+        }.mapNotNull { kandidat ->
+            runCatching { KomplexDarstellung.valueOf(kandidat.darstellung!!) }.getOrNull()
+                ?.let { it to geladene.getValue(kandidat) }
+        }.toMap()
+        KonzeptReiter(
+            id = asset.id,
+            titel = asset.titel,
+            rolle = asset.rolle.zuAppRolle(),
+            karte = geladene.getValue(asset),
+            darstellungsVarianten = varianten,
+        )
+    }
+    if (basis.count { it.rolle == KonzeptReiterRolle.Definition } != 1) return null
     return KonzeptDefinition(
         id = KonzeptId(wissen.id.wert),
         name = wissen.titel,
@@ -53,46 +56,31 @@ internal fun enzyklopädieKonzeptFürKnoten(
         pfad = wissen.fachPfade.minBy { it.stabileId }.segmente,
         tags = wissen.alleSuchtexte,
         knotenArten = wissen.knotenArten,
-        knotenParameter = passendeVorlage?.standardParameter.orEmpty(),
-        reiter = listOf(
-            KonzeptReiter(
-                id = "definition-json",
-                titel = "Definition",
-                rolle = KonzeptReiterRolle.Definition,
-                karte = karte,
-            ),
-        ),
+        knotenParameter = vorlage.standardParameter,
+        reiter = basis,
     )
 }
 
-internal fun kombiniereEnzyklopädieUndSpezialkonzept(
-    enzyklopädie: KonzeptDefinition?,
-    spezial: KonzeptDefinition?,
-): KonzeptDefinition? = when {
-    enzyklopädie == null -> spezial
-    spezial == null -> enzyklopädie
-    enzyklopädie.id == spezial.id && enzyklopädie.reiter == spezial.reiter -> enzyklopädie
-    else -> enzyklopädie.copy(
-        reiter = enzyklopädie.reiter + spezial.reiter.mapIndexed { index, reiter ->
-            reiter.copy(
-                id = "spezial-${reiter.id}-$index",
-                rolle = if (reiter.rolle == KonzeptReiterRolle.Definition) {
-                    KonzeptReiterRolle.Spezialfall
-                } else {
-                    reiter.rolle
-                },
-            )
-        },
-    )
+internal fun alleEnzyklopädieKonzepte(context: Context): List<KonzeptDefinition> =
+    MathematikEnzyklopädie.standard.alle.mapNotNull { wissen ->
+        wissen.knotenVorlagen.firstNotNullOfOrNull { vorlage ->
+            enzyklopädieKonzeptFürKnoten(context, vorlage.erzeuge(de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt.Zero))
+        }
+    }
+
+private fun WissensKartenRolle.zuAppRolle(): KonzeptReiterRolle = when (this) {
+    WissensKartenRolle.Definition -> KonzeptReiterRolle.Definition
+    WissensKartenRolle.Spezialfall -> KonzeptReiterRolle.Spezialfall
+    WissensKartenRolle.Beispiel -> KonzeptReiterRolle.Beispiel
+    WissensKartenRolle.Äquivalenz -> KonzeptReiterRolle.Äquivalenz
 }
+
+private fun passendeVorlage(wissen: WissensEintrag, knoten: KnotenDaten) =
+    wissen.knotenVorlagen.firstOrNull { vorlage ->
+        vorlage.art == knoten.art && vorlage.standardParameter.all { (schlüssel, wert) -> knoten.parameter[schlüssel] == wert }
+    } ?: wissen.knotenVorlagen.singleOrNull { it.art == knoten.art }
 
 private fun findeWissensEintrag(knoten: KnotenDaten): WissensEintrag? {
     val kandidaten = MathematikEnzyklopädie.standard.fürKnotenArt(knoten.art)
-    return kandidaten.firstOrNull { wissen ->
-        wissen.knotenVorlagen.any { vorlage ->
-            vorlage.art == knoten.art && vorlage.standardParameter.all { (schlüssel, wert) ->
-                knoten.parameter[schlüssel] == wert
-            }
-        }
-    } ?: kandidaten.singleOrNull()
+    return kandidaten.firstOrNull { passendeVorlage(it, knoten) != null } ?: kandidaten.singleOrNull()
 }

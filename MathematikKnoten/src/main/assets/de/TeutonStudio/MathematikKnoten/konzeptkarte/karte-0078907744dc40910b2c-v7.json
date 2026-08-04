@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810606,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definitionslücken Sinus",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "Fehlt eine gültige bereichsspezifische Definition, liefert der Rechner einen strukturierten Nichtwert mit Operator, Eingängen und Ursache."
+      },
+      "name": "Strukturierter Nichtwert",
+      "id": "zahlenrechner-zahl-sin-luecken-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.e0f895c0.definitionsluecken",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

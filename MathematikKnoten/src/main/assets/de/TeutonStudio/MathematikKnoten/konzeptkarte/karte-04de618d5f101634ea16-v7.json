@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810603,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definitionsbereich Betrag",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "Der Rechner wählt aus den Eingangsbereichen die engste nachweislich gültige Operatordefinition. Unbekannte Bereiche bleiben bedingt statt vorsorglich auf den größten Bereich erweitert zu werden."
+      },
+      "name": "Definiert, bedingt oder undefiniert",
+      "id": "zahlenrechner-zahl-betrag-definitionsbereich-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.92484ca2.definitionsbereich",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

@@ -1,0 +1,145 @@
+{
+  "erstelltAm": 1785883810598,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-komplexerRadius-c-1-eingang-0",
+        "anschlussId": "definition-zahlenrechner-komplexerRadius-c-1-eingang-0-wert"
+      },
+      "id": "definition-zahlenrechner-komplexerRadius-c-1-e-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-komplexerRadius-c-1-regel",
+        "anschlussId": "definition-zahlenrechner-komplexerRadius-c-1-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-komplexerRadius-c-1-regel",
+        "anschlussId": "definition-zahlenrechner-komplexerRadius-c-1-regel-1"
+      },
+      "id": "definition-zahlenrechner-komplexerRadius-c-1-a-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-komplexerRadius-c-1-ausgang-0",
+        "anschlussId": "definition-zahlenrechner-komplexerRadius-c-1-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Komplexer Radius auf \\mathbb C",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-komplexerRadius-c-1-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "a"
+      },
+      "name": "a",
+      "id": "definition-zahlenrechner-komplexerRadius-c-1-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 470,
+        "höhe": 160
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-komplexerRadius-c-1-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-komplexerRadius-c-1-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "zahlbereich": "C",
+        "zahlbereichLatex": "\\mathbb C",
+        "geordnet": "false",
+        "definition": "|\\cdot|\\vert_{\\mathbb C}",
+        "regel": "Definition: |\\cdot|\\vert_{\\mathbb C}",
+        "operator": "zahl.komplexerRadius",
+        "kommutativ": "true"
+      },
+      "name": "|\\cdot|\\vert_{\\mathbb C}",
+      "id": "definition-zahlenrechner-komplexerRadius-c-1-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-komplexerRadius-c-1-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-zahlenrechner-komplexerRadius-c-1-ausgang-0",
+      "position": {
+        "x": 930,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.db4412c2.definition-c",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

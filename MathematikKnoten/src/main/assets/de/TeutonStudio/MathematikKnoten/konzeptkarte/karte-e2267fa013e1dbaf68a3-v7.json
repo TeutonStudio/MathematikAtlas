@@ -1,0 +1,217 @@
+{
+  "erstelltAm": 1785883810532,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-0",
+        "anschlussId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-0-wert"
+      },
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-e-0",
+      "zu": {
+        "knotenId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel",
+        "anschlussId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-1",
+        "anschlussId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-1-wert"
+      },
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-e-1",
+      "zu": {
+        "knotenId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel",
+        "anschlussId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel",
+        "anschlussId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel-2"
+      },
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-a-0",
+      "zu": {
+        "knotenId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-ausgang-0",
+        "anschlussId": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Vektorrechner: Addition",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 280,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.vektor",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "zulässigeArten": [
+            "mathematik.tupel",
+            "mathematik.vektor",
+            "mathematik.vektor.spalte",
+            "mathematik.vektor.zeile"
+          ],
+          "dynamischErzeugt": false,
+          "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.vektor",
+        "rolle": "links"
+      },
+      "name": "links",
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 280,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.vektor",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "zulässigeArten": [
+            "mathematik.tupel",
+            "mathematik.vektor",
+            "mathematik.vektor.spalte",
+            "mathematik.vektor.zeile"
+          ],
+          "dynamischErzeugt": false,
+          "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-1-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.vektor",
+        "rolle": "rechts"
+      },
+      "name": "rechts",
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-eingang-1",
+      "position": {
+        "x": 30,
+        "y": 190
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 500,
+        "höhe": 182
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.vektor",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.tupel",
+            "mathematik.vektor",
+            "mathematik.vektor.spalte",
+            "mathematik.vektor.zeile"
+          ],
+          "dynamischErzeugt": false,
+          "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.vektor",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.tupel",
+            "mathematik.vektor",
+            "mathematik.vektor.spalte",
+            "mathematik.vektor.zeile"
+          ],
+          "dynamischErzeugt": false,
+          "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.vektor",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.vektorrechner",
+        "definition": "(u_i)+(v_i)=(u_i+v_i)",
+        "regel": "Die Definitionskarte folgt dem ausgewählten Operatorvertrag und aktualisiert Ein- und Ausgangstypen gemeinsam.",
+        "operator": "vektor.addition"
+      },
+      "name": "(u_i)+(v_i)=(u_i+v_i)",
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 280,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.vektor",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.vektor",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-vektor-export-mathematik-vektorrechner-operator-vektor-addition-vektorrechner-0-ausgang-0",
+      "position": {
+        "x": 970,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.vektorrechner|Vektorrechner|operator=vektor.addition.c71caeff.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

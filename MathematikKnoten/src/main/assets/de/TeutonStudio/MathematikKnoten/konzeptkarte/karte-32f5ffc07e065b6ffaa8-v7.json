@@ -1,0 +1,145 @@
+{
+  "erstelltAm": 1785883810612,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-limes-r-4-eingang-0",
+        "anschlussId": "definition-zahlenrechner-limes-r-4-eingang-0-wert"
+      },
+      "id": "definition-zahlenrechner-limes-r-4-e-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-limes-r-4-regel",
+        "anschlussId": "definition-zahlenrechner-limes-r-4-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-limes-r-4-regel",
+        "anschlussId": "definition-zahlenrechner-limes-r-4-regel-1"
+      },
+      "id": "definition-zahlenrechner-limes-r-4-a-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-limes-r-4-ausgang-0",
+        "anschlussId": "definition-zahlenrechner-limes-r-4-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Limes auf \\mathbb R",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-limes-r-4-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "a"
+      },
+      "name": "a",
+      "id": "definition-zahlenrechner-limes-r-4-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 470,
+        "höhe": 160
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-limes-r-4-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-limes-r-4-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "zahlbereich": "R",
+        "zahlbereichLatex": "\\mathbb R",
+        "geordnet": "true",
+        "definition": "\\lim\\vert_{\\mathbb R}",
+        "regel": "Definition: \\lim\\vert_{\\mathbb R}",
+        "operator": "zahl.limes",
+        "kommutativ": "true"
+      },
+      "name": "\\lim\\vert_{\\mathbb R}",
+      "id": "definition-zahlenrechner-limes-r-4-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-limes-r-4-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-zahlenrechner-limes-r-4-ausgang-0",
+      "position": {
+        "x": 930,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.defd3722.definition-r",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

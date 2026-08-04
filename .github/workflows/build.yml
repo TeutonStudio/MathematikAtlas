@@ -1,22 +1,14 @@
 name: Android-Build
 
 on:
-  pull_request:
   push:
-    branches:
-      - agent/enzyklopaedie-konzeptschicht
-
-permissions:
-  contents: write
+  pull_request:
 
 jobs:
   pruefen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: agent/enzyklopaedie-konzeptschicht
-          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -24,137 +16,7 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Android SDK 36 installieren
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
-      - name: Ausgangszustand prüfen
+      - name: Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
-      - name: Kanonischen Restbestand exportieren
+      - name: Bauen und testen
         run: ./gradlew --stacktrace test :app:assembleDebug
-      - name: Restmigration anwenden
-        run: python3 scripts/restmigration_bootstrap.py
-      - name: Explizite Konzepte auf vorhandene Teilinventare begrenzen
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          wurzel = Path('MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/konzeptknoten')
-          index = wurzel / 'ExpliziteKonzeptKnoten.kt'
-          text = index.read_text()
-          alt = '''internal fun List<KnotenVorlage>.nachVarianten(ids: Set<VariantenId>): List<KnotenVorlage> {
-              if (ids.isEmpty()) return emptyList()
-              val nachId = associateBy(KnotenVorlage::stabileVariantenId)
-              val fehlend = ids - nachId.keys
-              require(fehlend.isEmpty()) { "Explizite Konzeptdatei referenziert unbekannte Varianten: $fehlend" }
-              return ids.map(nachId::getValue)
-          }
-          '''
-          neu = '''internal fun List<KnotenVorlage>.nachVarianten(ids: Set<VariantenId>): List<KnotenVorlage> {
-              if (ids.isEmpty()) return emptyList()
-              val nachId = distinctBy(KnotenVorlage::stabileVariantenId)
-                  .associateBy(KnotenVorlage::stabileVariantenId)
-              return ids.mapNotNull(nachId::get)
-          }
-          '''
-          if alt not in text:
-              raise SystemExit('Teilvarianten-Helfer nicht gefunden')
-          index.write_text(text.replace(alt, neu, 1))
-
-          geänderte_dateien = 0
-          for path in wurzel.glob('*KonzeptDatei*.kt'):
-              text = path.read_text()
-              if 'val passendeVorlagen = vorlagen.nachVarianten(varianten)' not in text:
-                  continue
-              neues = text.replace(
-                  '            varianten = varianten,\n',
-                  '            varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),\n',
-                  1,
-              ).replace(
-                  '            karten = StatischeKonzeptKarten.fürVarianten(varianten),\n',
-                  '            karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),\n',
-                  1,
-              )
-              if neues == text:
-                  raise SystemExit(f'Variantenbindung fehlt in {path.name}')
-              path.write_text(neues)
-              geänderte_dateien += 1
-          if geänderte_dateien != 93:
-              raise SystemExit(f'Erwartet 93 Konzeptdateien, geändert: {geänderte_dateien}')
-
-          register = wurzel / 'KonzeptKnotenRegister.kt'
-          text = register.read_text()
-          muster = re.compile(
-              r'(?P<einzug>^[ \t]*)val alle = ExpliziteKonzeptKnoten\.dateien\n'
-              r'(?P=einzug)[ \t]+\.map \{ datei -> datei\.erstelle\(eindeutigeVorlagen\) \}\n'
-              r'(?P=einzug)[ \t]+\.sortedWith',
-              re.MULTILINE,
-          )
-          ersatz = (
-              r'\g<einzug>val alle = ExpliziteKonzeptKnoten.dateien\n'
-              r'\g<einzug>    .map { datei -> datei.erstelle(eindeutigeVorlagen) }\n'
-              r'\g<einzug>    .filter { eintrag ->\n'
-              r'\g<einzug>        eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar || eintrag.knotenVorlagen.isNotEmpty()\n'
-              r'\g<einzug>    }\n'
-              r'\g<einzug>    .sortedWith'
-          )
-          text, anzahl = muster.subn(ersatz, text, count=1)
-          if anzahl != 1:
-              raise SystemExit(f'Registerfilter-Muster {anzahl}-mal gefunden')
-          register.write_text(text)
-          PY
-      - name: Nullable Kartenreferenz eindeutig binden
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          path = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/konzepte/KonsolidierteKnotenKonzepte.kt')
-          text = path.read_text()
-          muster = re.compile(
-              r'(?P<einzug>^[ \t]*)if \(knoten\.art == MENGEN_KNOTEN_ART && knoten\.kartenVerweis != null\) \{\n'
-              r'(?P=einzug)[ \t]+val verweis = knoten\.kartenVerweis',
-              re.MULTILINE,
-          )
-          ersatz = (
-              r'\g<einzug>if (knoten.art == MENGEN_KNOTEN_ART) {\n'
-              r'\g<einzug>    val verweis = knoten.kartenVerweis ?: return null'
-          )
-          text, anzahl = muster.subn(ersatz, text, count=1)
-          if anzahl != 1:
-              raise SystemExit(f'Kartenverweis-Migrationsmuster {anzahl}-mal gefunden')
-          path.write_text(text)
-          PY
-      - name: Migrierte Architektur prüfen
-        run: python3 scripts/pruefe_architektur.py
-      - name: Formelkonzept gezielt prüfen
-        shell: bash
-        run: |
-          set -o pipefail
-          mkdir -p build/restmigration-diagnose
-          ./gradlew --stacktrace --info :app:testReleaseUnitTest --tests '*ZahlenRechnerFormelKonzeptTest.Definitionskarte*' 2>&1 | tee build/restmigration-diagnose/formelkonzept-test.log
-      - name: Migrierten Zustand bauen und testen
-        shell: bash
-        run: |
-          set -o pipefail
-          ./gradlew --stacktrace test :app:assembleDebug 2>&1 | tee build/restmigration-diagnose/migrierter-build.log
-      - name: Migrierten Endzustand committen
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          test -n "$(git status --porcelain)"
-          git commit -m "Restmigration der Enzyklopädie- und Konzeptschicht abschließen"
-          git push origin HEAD:agent/enzyklopaedie-konzeptschicht
-      - name: Diagnosezustand sichern
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: restmigration-fehlerzustand
-          path: |
-            build/restmigration-export
-            build/restmigration-diagnose
-            app/build/test-results
-            app/build/reports/tests
-            MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte
-            MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/konzeptknoten
-            MathematikKnoten/src/debug/kotlin/de/TeutonStudio/MathematikKnoten/previews
-          if-no-files-found: warn
-          retention-days: 1

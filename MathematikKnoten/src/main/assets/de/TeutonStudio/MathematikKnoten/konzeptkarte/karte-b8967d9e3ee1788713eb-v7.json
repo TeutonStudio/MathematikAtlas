@@ -1,0 +1,91 @@
+{
+  "erstelltAm": 1785883810207,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-mathematik-variable-variable-0-regel",
+        "anschlussId": "definition-mathematik-variable-variable-0-regel-0"
+      },
+      "id": "definition-mathematik-variable-variable-0-a-0",
+      "zu": {
+        "knotenId": "definition-mathematik-variable-variable-0-ausgang-0",
+        "anschlussId": "definition-mathematik-variable-variable-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Variable",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 390,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-variable-variable-0-regel-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.variable",
+        "regel": "Freie mathematische Variable mit im Inspector definiertem Wertevorrat.",
+        "kategorie": "Rechnen"
+      },
+      "name": "Variable",
+      "id": "definition-mathematik-variable-variable-0-regel",
+      "position": {
+        "x": 370,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-variable-variable-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "wert",
+      "id": "definition-mathematik-variable-variable-0-ausgang-0",
+      "position": {
+        "x": 830,
+        "y": 55
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.variable|Variable|name=x;werteVorrat=R.b6fb9e1.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

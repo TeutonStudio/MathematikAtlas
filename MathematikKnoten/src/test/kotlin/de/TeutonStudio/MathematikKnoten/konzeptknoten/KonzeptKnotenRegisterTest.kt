@@ -27,12 +27,12 @@ class KonzeptKnotenRegisterTest {
         val vorlagen = alleMathematikDefinitionsVorlagen()
         val einträge = KonzeptKnotenRegister.erstelle(vorlagen)
 
-        val zahlen = assertNotNull(einträge.singleOrNull { it.id == ZahlenRechnerKonzept.id })
+        val zahlen = assertNotNull(einträge.singleOrNull { it.id == de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensId("konzept.zahlenrechner") })
         assertEquals(
             vorlagen.filter { it.art == ZAHLENRECHNER_ART }.map { it.stabileVariantenId() }.toSet(),
             zahlen.varianten,
         )
-        val tensor = assertNotNull(einträge.singleOrNull { it.id == TensorRechnerKonzept.id })
+        val tensor = assertNotNull(einträge.singleOrNull { it.id == de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensId("konzept.tensorrechner") })
         assertEquals(
             vorlagen.filter { it.art == TensorRechner.KNOTEN_ART }.map { it.stabileVariantenId() }.toSet(),
             tensor.varianten,
@@ -43,7 +43,7 @@ class KonzeptKnotenRegisterTest {
     fun `historische Bibliotheks-IDs bleiben als Aliasse auflösbar`() {
         val vorlagen = alleMathematikDefinitionsVorlagen()
         val zahlenVorlagen = vorlagen.filter { it.art == ZAHLENRECHNER_ART }
-        val zahlen = KonzeptKnotenRegister.erstelle(vorlagen).single { it.id == ZahlenRechnerKonzept.id }
+        val zahlen = KonzeptKnotenRegister.erstelle(vorlagen).single { it.id == de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensId("konzept.zahlenrechner") }
 
         assertTrue(zahlenVorlagen.map { it.stabileKonzeptId() }.all { it in zahlen.aliase })
     }

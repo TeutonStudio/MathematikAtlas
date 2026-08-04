@@ -1,0 +1,538 @@
+{
+  "erstelltAm": 1785883810623,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-variable-c",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-variable-c-anschluss-0"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-quadrat-basis",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-quadrat",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-quadrat-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-zahl-zwei",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-zahl-zwei-anschluss-0"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-quadrat-exponent",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-quadrat",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-quadrat-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-eingang-1",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-eingang-1-wert"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-addition-rechts",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-addition",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-addition-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-quadrat",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-quadrat-anschluss-2"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-addition-quadrat",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-addition",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-addition-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-addition",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-addition-anschluss-2"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-gleichheit-summe",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-gleichheit",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-gleichheit-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-eingang-0",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-eingang-0-wert"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-gleichheit-links",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-gleichheit",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-gleichheit-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-gleichheit",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-gleichheit-anschluss-2"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-methode-term",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode-anschluss-1"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-iteration-methode",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-iteration",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-iteration-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-reelle-zahlen",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-reelle-zahlen-anschluss-0"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-iteration-index",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-iteration",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-iteration-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-iteration",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-iteration-anschluss-2"
+      },
+      "id": "definition-ordnungsrelation-größerGleich-0-karten-ausgang",
+      "zu": {
+        "knotenId": "definition-ordnungsrelation-größerGleich-0-karten-ausgang",
+        "anschlussId": "definition-ordnungsrelation-größerGleich-0-karten-ausgang-anschluss-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Größer oder gleich",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 220,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "links",
+      "id": "definition-ordnungsrelation-größerGleich-0-eingang-0",
+      "position": {
+        "x": 20,
+        "y": 110
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 220,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-eingang-1-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "rechts",
+      "id": "definition-ordnungsrelation-größerGleich-0-eingang-1",
+      "position": {
+        "x": 20,
+        "y": 530
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-variable-c-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "c",
+        "werteVorrat": "R"
+      },
+      "name": "Variable",
+      "id": "definition-ordnungsrelation-größerGleich-0-variable-c",
+      "position": {
+        "x": 280,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-zahl-zwei-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "wert": "2"
+      },
+      "name": "Zahl",
+      "id": "definition-ordnungsrelation-größerGleich-0-zahl-zwei",
+      "position": {
+        "x": 280,
+        "y": 500
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.potenz",
+      "größe": {
+        "breite": 210,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "basis",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-quadrat-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "exponent",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-quadrat-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-quadrat-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Potenz",
+      "id": "definition-ordnungsrelation-größerGleich-0-quadrat",
+      "position": {
+        "x": 560,
+        "y": 360
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.addition",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-addition-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-addition-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-addition-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Addition",
+      "id": "definition-ordnungsrelation-größerGleich-0-addition",
+      "position": {
+        "x": 850,
+        "y": 240
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.gleichheit",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-gleichheit-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-gleichheit-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-gleichheit-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Gleichheit",
+      "id": "definition-ordnungsrelation-größerGleich-0-gleichheit",
+      "position": {
+        "x": 1150,
+        "y": 300
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.termZuMethode",
+      "größe": {
+        "breite": 265,
+        "höhe": 135
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "P",
+        "argumentReihenfolge": "c"
+      },
+      "name": "Aussage zu Methode",
+      "id": "definition-ordnungsrelation-größerGleich-0-aussage-zu-methode",
+      "position": {
+        "x": 1440,
+        "y": 300
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.reelleZahlen",
+      "größe": {
+        "breite": 210,
+        "höhe": 90
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-reelle-zahlen-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Reelle Zahlen",
+      "id": "definition-ordnungsrelation-größerGleich-0-reelle-zahlen",
+      "position": {
+        "x": 1430,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.iterierteAussagenverknüpfung",
+      "größe": {
+        "breite": 270,
+        "höhe": 120
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-iteration-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "indexmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-iteration-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-iteration-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operator": "disjunktion"
+      },
+      "name": "Iterierte Disjunktion",
+      "id": "definition-ordnungsrelation-größerGleich-0-iteration",
+      "position": {
+        "x": 2290,
+        "y": 300
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-ordnungsrelation-größerGleich-0-karten-ausgang-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "aussage"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-ordnungsrelation-größerGleich-0-karten-ausgang",
+      "position": {
+        "x": 2610,
+        "y": 300
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.ordnungsrelation|Größer oder gleich|relation=größerGleich.d4746c5e.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

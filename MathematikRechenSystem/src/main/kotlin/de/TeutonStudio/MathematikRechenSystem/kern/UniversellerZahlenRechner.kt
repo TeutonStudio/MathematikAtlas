@@ -56,11 +56,15 @@ enum class UniversellerZahlenOperator(
     ;
 
     companion object {
-        fun vonId(id: String?): UniversellerZahlenOperator = entries.firstOrNull { operator ->
+        fun vonIdOderNull(id: String?): UniversellerZahlenOperator? = entries.firstOrNull { operator ->
             id == operator.stabileId ||
                 id.equals(operator.name, ignoreCase = true) ||
                 id.equals(operator.stabileId.substringAfterLast('.'), ignoreCase = true)
-        } ?: ADDITION
+        }
+
+        fun vonId(id: String?): UniversellerZahlenOperator = requireNotNull(vonIdOderNull(id)) {
+            "Unbekannte Zahlenoperator-ID: ${id ?: "<null>"}"
+        }
     }
 }
 

@@ -1,0 +1,145 @@
+{
+  "erstelltAm": 1785883810566,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-quadratwurzel-h-7-eingang-0",
+        "anschlussId": "definition-zahlenrechner-quadratwurzel-h-7-eingang-0-wert"
+      },
+      "id": "definition-zahlenrechner-quadratwurzel-h-7-e-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-quadratwurzel-h-7-regel",
+        "anschlussId": "definition-zahlenrechner-quadratwurzel-h-7-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-quadratwurzel-h-7-regel",
+        "anschlussId": "definition-zahlenrechner-quadratwurzel-h-7-regel-1"
+      },
+      "id": "definition-zahlenrechner-quadratwurzel-h-7-a-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-quadratwurzel-h-7-ausgang-0",
+        "anschlussId": "definition-zahlenrechner-quadratwurzel-h-7-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Quadratwurzel auf \\mathbb H",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-quadratwurzel-h-7-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "a"
+      },
+      "name": "a",
+      "id": "definition-zahlenrechner-quadratwurzel-h-7-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 470,
+        "höhe": 160
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-quadratwurzel-h-7-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-quadratwurzel-h-7-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "zahlbereich": "H",
+        "zahlbereichLatex": "\\mathbb H",
+        "geordnet": "false",
+        "definition": "\\sqrt{}\\vert_{\\mathbb H}",
+        "regel": "Definition: \\sqrt{}\\vert_{\\mathbb H}",
+        "operator": "zahl.quadratwurzel",
+        "kommutativ": "false"
+      },
+      "name": "\\sqrt{}\\vert_{\\mathbb H}",
+      "id": "definition-zahlenrechner-quadratwurzel-h-7-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-quadratwurzel-h-7-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-zahlenrechner-quadratwurzel-h-7-ausgang-0",
+      "position": {
+        "x": 930,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.f96040c2.definition-h",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

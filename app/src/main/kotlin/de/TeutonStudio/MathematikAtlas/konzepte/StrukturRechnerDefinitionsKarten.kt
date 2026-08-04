@@ -74,7 +74,7 @@ private fun strukturRechnerDefinitionsKarte(
     }
     val regel = KnotenDaten(
         id = KnotenId("$prefix-regel"),
-        art = TestDefinitionsKarten.KONZEPT_REGEL_ART,
+        art = KonzeptKnotenArten.REGEL,
         name = latex,
         position = GraphPunkt(390f, 70f),
         größe = GraphGröße(500f, maxOf(170f, 110f + 36f * maxOf(eingänge.size, ausgänge.size))),
@@ -131,7 +131,7 @@ private fun strukturSchnittstelle(
     val id = "$prefix-${if (eingang) "eingang" else "ausgang"}-$index"
     return KnotenDaten(
         id = KnotenId(id),
-        art = if (eingang) TestDefinitionsKarten.KONZEPT_EINGANG_ART else TestDefinitionsKarten.KONZEPT_AUSGANG_ART,
+        art = if (eingang) KonzeptKnotenArten.EINGANG else KonzeptKnotenArten.AUSGANG,
         name = anschluss.name,
         position = GraphPunkt(if (eingang) 30f else 970f, 70f + index * 120f),
         größe = GraphGröße(280f, 92f),

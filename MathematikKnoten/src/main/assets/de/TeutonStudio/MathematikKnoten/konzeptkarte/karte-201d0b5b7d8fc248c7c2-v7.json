@@ -1,0 +1,196 @@
+{
+  "erstelltAm": 1785883810555,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-potenz-z-2-eingang-0",
+        "anschlussId": "definition-zahlenrechner-potenz-z-2-eingang-0-wert"
+      },
+      "id": "definition-zahlenrechner-potenz-z-2-e-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-potenz-z-2-regel",
+        "anschlussId": "definition-zahlenrechner-potenz-z-2-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-potenz-z-2-eingang-1",
+        "anschlussId": "definition-zahlenrechner-potenz-z-2-eingang-1-wert"
+      },
+      "id": "definition-zahlenrechner-potenz-z-2-e-1",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-potenz-z-2-regel",
+        "anschlussId": "definition-zahlenrechner-potenz-z-2-regel-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-potenz-z-2-regel",
+        "anschlussId": "definition-zahlenrechner-potenz-z-2-regel-2"
+      },
+      "id": "definition-zahlenrechner-potenz-z-2-a-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-potenz-z-2-ausgang-0",
+        "anschlussId": "definition-zahlenrechner-potenz-z-2-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Potenz auf \\mathbb Z",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-potenz-z-2-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "a"
+      },
+      "name": "a",
+      "id": "definition-zahlenrechner-potenz-z-2-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-potenz-z-2-eingang-1-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "b"
+      },
+      "name": "b",
+      "id": "definition-zahlenrechner-potenz-z-2-eingang-1",
+      "position": {
+        "x": 30,
+        "y": 190
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 470,
+        "höhe": 173
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-potenz-z-2-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-potenz-z-2-regel-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-potenz-z-2-regel-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "zahlbereich": "Z",
+        "zahlbereichLatex": "\\mathbb Z",
+        "geordnet": "true",
+        "definition": "^\\vert_{\\mathbb Z}",
+        "regel": "Definition: ^\\vert_{\\mathbb Z}",
+        "operator": "zahl.potenz",
+        "kommutativ": "true"
+      },
+      "name": "^\\vert_{\\mathbb Z}",
+      "id": "definition-zahlenrechner-potenz-z-2-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-potenz-z-2-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-zahlenrechner-potenz-z-2-ausgang-0",
+      "position": {
+        "x": 930,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.bbd75a8c.definition-z",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

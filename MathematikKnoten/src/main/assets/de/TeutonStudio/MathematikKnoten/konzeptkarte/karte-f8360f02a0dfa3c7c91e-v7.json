@@ -1,0 +1,112 @@
+{
+  "erstelltAm": 1785883810526,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Falksches Schema des Matrixprodukts",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 280,
+        "höhe": 170
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.matrixProdukt",
+        "regel": "Wähle Zeile i der linken Matrix A. Ihre Einträge bleiben in der gespeicherten Reihenfolge aᵢ₁,…,aᵢₙ."
+      },
+      "name": "A unten links",
+      "id": "falk-links",
+      "position": {
+        "x": 40,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 300,
+        "höhe": 170
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.matrixProdukt",
+        "regel": "Wähle Spalte j der rechten Matrix B. Erforderlich ist spalten(A)=zeilen(B)."
+      },
+      "name": "B oben rechts",
+      "id": "falk-rechts",
+      "position": {
+        "x": 390,
+        "y": 40
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 360,
+        "höhe": 170
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.matrixProdukt",
+        "regel": "Der gewählte Eintrag ist cᵢⱼ. Das Ergebnis besitzt zeilen(A) Zeilen und spalten(B) Spalten."
+      },
+      "name": "C = A·B unten rechts",
+      "id": "falk-ergebnis",
+      "position": {
+        "x": 390,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 660,
+        "höhe": 170
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.matrixProdukt",
+        "regel": "cᵢⱼ = Σₖ₌₁ⁿ aᵢₖ·bₖⱼ. Keine Konjugation und keine Vertauschung: Auch über ℍ steht aᵢₖ stets vor bₖⱼ."
+      },
+      "name": "Geordnete Produktsumme",
+      "id": "falk-summe",
+      "position": {
+        "x": 90,
+        "y": 590
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 360,
+        "höhe": 170
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.matrixProdukt",
+        "regel": "Bei mehreren Faktoren zeigt das Schema genau einen Schritt der gespeicherten Klammerung, niemals zwei nur zufällig benachbarte Ursprungsmatrizen."
+      },
+      "name": "Tatsächlicher binärer Schritt",
+      "id": "falk-schritt",
+      "position": {
+        "x": 800,
+        "y": 180
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.matrixProdukt|Matrixprodukt|.4c459827.falksches-schema",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.72
+  },
+  "formatVersion": 7,
+  "version": 1
+}

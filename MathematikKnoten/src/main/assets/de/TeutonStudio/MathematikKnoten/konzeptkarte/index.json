@@ -1,10 +1,3035 @@
 {
   "manifestVersion": 1,
   "karten": [
-    { "id": "konzept.zahlkonstante", "datei": "zahlkonstante-v1.json", "formatVersion": 7 },
-    { "id": "konzept.mengenkonstante", "datei": "mengenkonstante-v1.json", "formatVersion": 7 },
-    { "id": "konzept.term-zu-methode", "datei": "term-zu-methode-v1.json", "formatVersion": 7 },
-    { "id": "konzept.zahlenrechner", "datei": "zahlenrechner-v1.json", "formatVersion": 7 },
-    { "id": "konzept.tensorrechner", "datei": "tensorrechner-v1.json", "formatVersion": 7 }
+    {
+      "id": "mathematik.abbild|Abbild|.da631bb3.definition",
+      "datei": "karte-fafa3200b486525ac49c-v7.json",
+      "formatVersion": 7,
+      "sha256": "e92ff995dbd8e4a816dba86c8fad940f8eabe6dc2311592d0aa3a48d489f22b6"
+    },
+    {
+      "id": "mathematik.adjunktion|Adjunktion|festeEingänge=2;logikSemantik=xor;operatorAnzeige=wert.a411be3e.definition",
+      "datei": "karte-39dd5cfaa3646cfc8dca-v7.json",
+      "formatVersion": 7,
+      "sha256": "fe764ce79faf13b7158ee64b8c6327b0f9885043a12d8a4bd72075d61ce4a1dd"
+    },
+    {
+      "id": "mathematik.allgemeinerParameter|Allgemeiner Parameter|name=a.9f016b18.definition",
+      "datei": "karte-1d719b373c41ea163d86-v7.json",
+      "formatVersion": 7,
+      "sha256": "5cb0a35f14ab552ac3efa98047b137f474003e76cc0c27e46f7841ed4c86cfec"
+    },
+    {
+      "id": "mathematik.aussagensatz|Aussagesatz|operator=aussage.negation.ac0a2d08.definition",
+      "datei": "karte-ffba168a886d77f2d035-v7.json",
+      "formatVersion": 7,
+      "sha256": "229b7fb9e8f68e060bbd9887d1b32e113bf1130b08123b32c91a53246d261970"
+    },
+    {
+      "id": "mathematik.auswerten|Auswerten|.88323b2b.definition",
+      "datei": "karte-8cc257de0958bea64d38-v7.json",
+      "formatVersion": 7,
+      "sha256": "5de5b84df822f7e660331bccf5386fd58f318daae74c42ab81b996294fcf884d"
+    },
+    {
+      "id": "mathematik.begriff.lineareAbbildung|Lineare Abbildung überprüfen|.e51be48c.definition",
+      "datei": "karte-dec10aaa5a2c6868892b-v7.json",
+      "formatVersion": 7,
+      "sha256": "25c1a183754c64272169eb684fdd355703e644b32374c0729897604b408faa80"
+    },
+    {
+      "id": "mathematik.begriff.skalarprodukt|Skalarprodukt überprüfen|skalarprodukt.linearitaet=RECHTSLINEAR;skalarprodukt.nachweis.linearitaet=;skalarprodukt.nachweis.positiv=;skalarprodukt.nachweis.symmetrie=;skalarprodukt.zahlbereich=R;skalarprodukt.zertifikatVersion=1.13c95e10.definition",
+      "datei": "karte-f1c31c6468ca332d22de-v7.json",
+      "formatVersion": 7,
+      "sha256": "6021fadf9f22bc648cd023ca4b38804b388b21caad927871483ef6e42e928713"
+    },
+    {
+      "id": "mathematik.begriff.vektorraum|Vektorraum überprüfen|.4f5a6988.definition",
+      "datei": "karte-5b4d102c4fee0c5f5be2-v7.json",
+      "formatVersion": 7,
+      "sha256": "de51832df4802c4a5d428bacf19496b6a9f52fd381d6bd6ddf5ec2826e8604bb"
+    },
+    {
+      "id": "mathematik.cauchy|Cauchy|.3ac33913.definition",
+      "datei": "karte-00747f20baad12debe6d-v7.json",
+      "formatVersion": 7,
+      "sha256": "29faeed2185d17129e6b96a6950543471160924b2524de704f70dc8fd1d01e56"
+    },
+    {
+      "id": "mathematik.darstellungsoptimierung|Darstellungsoptimierung|latex=u.527ce9f.definition",
+      "datei": "karte-3e75a04482e0cce088a9-v7.json",
+      "formatVersion": 7,
+      "sha256": "e298e0a30c19a17347d955121d2d5dd867b45e9f60a8ca82a170fc8733a7ab1f"
+    },
+    {
+      "id": "mathematik.differenz|Differenz|.fee02b79.definition",
+      "datei": "karte-94551ba911ec47b93f46-v7.json",
+      "formatVersion": 7,
+      "sha256": "71d5c822286d1992f324c81342e1b4b9c413de7a0af1ceb4055d04da44318eb3"
+    },
+    {
+      "id": "mathematik.dimensionen|Dimensionen|.105f33d9.definition",
+      "datei": "karte-dd3b31aaebf29c1bb57f-v7.json",
+      "formatVersion": 7,
+      "sha256": "b12655316674f6f80f81bfd0c44869be342c48337ae33e326e138b36748a7242"
+    },
+    {
+      "id": "mathematik.disjunktion|Disjunktion|festeEingänge=2;operatorAnzeige=wert.5768f908.definition",
+      "datei": "karte-f99b07f5eb98875c6e8f-v7.json",
+      "formatVersion": 7,
+      "sha256": "f5d6396d2044921edab7f959020055fdd52431eaf63c02eee74474a7971a0ac8"
+    },
+    {
+      "id": "mathematik.disjunkt|Disjunkt|.d3ad3ef3.definition",
+      "datei": "karte-5650bd40ac45437ccbb9-v7.json",
+      "formatVersion": 7,
+      "sha256": "cf0db6e78e7f2c9510971b24384f9a57003260fb77c3392b97eae5211ee9e7d2"
+    },
+    {
+      "id": "mathematik.einheitsSpalte|Einheitsvektor (Spalte)|standardwert.dimension=3;standardwert.position=0.6994f065.definition",
+      "datei": "karte-b5bbf5d40dbf849c23d3-v7.json",
+      "formatVersion": 7,
+      "sha256": "703c3b98220ae2c82444d8fc0178b7493b59e6bbf30a0008bd7ac4e52a8d4974"
+    },
+    {
+      "id": "mathematik.einheitsZeile|Einheitsvektor (Zeile)|standardwert.dimension=3;standardwert.position=0.6bce0f47.definition",
+      "datei": "karte-e6f88b9777fb244ef61a-v7.json",
+      "formatVersion": 7,
+      "sha256": "47a50ef24ee7fa55bad747adbdb16a9330c9c31e02d0b7d77269ee379fcdc5ad"
+    },
+    {
+      "id": "mathematik.einzelmenge|Einzelmenge|.675680b5.definition",
+      "datei": "karte-a5df822b43d3537b2012-v7.json",
+      "formatVersion": 7,
+      "sha256": "0813ec2af5bff166cd515c6c17b6fd708ee7d8b9041ed562c6e8a4cbfb80ab88"
+    },
+    {
+      "id": "mathematik.element|Element|.cc957c33.definition",
+      "datei": "karte-5f986d02aba843d9848a-v7.json",
+      "formatVersion": 7,
+      "sha256": "3a76da223e78ee0970e341c5c9e6f4bb399e7c6a447a9582f7da6beb7001b53c"
+    },
+    {
+      "id": "mathematik.endlicheMenge|Endliche Menge|elementKonfiguration=v2:bWF0aGVtYXRpay56YWhs|z:c3RhbmRhcmQtMQ:bWF0aGVtYXRpay56YWhs:MQ|z:c3RhbmRhcmQtMg:bWF0aGVtYXRpay56YWhs:Mg|z:c3RhbmRhcmQtMw:bWF0aGVtYXRpay56YWhs:Mw.73ff3420.definition",
+      "datei": "karte-c2ad53b26949d7b83266-v7.json",
+      "formatVersion": 7,
+      "sha256": "f41a3cdf76ea16142a49f3c6c8e89492bbfd44b32b111abb56c7a2159929eead"
+    },
+    {
+      "id": "mathematik.fall|Fallunterscheidung|.8a4346b1.definition",
+      "datei": "karte-5e0c79bd9484f9bf2210-v7.json",
+      "formatVersion": 7,
+      "sha256": "686a203f3fee9b3bfb6f6ac7d976047657e72edc2426e65889445b8c497e9527"
+    },
+    {
+      "id": "mathematik.gleichheit|Gleichheit|.a7e508f3.definition",
+      "datei": "karte-886a0c215ae37be4d518-v7.json",
+      "formatVersion": 7,
+      "sha256": "7afb89bb8856b9a94f420c5d783e582de3a0c1f45dc851d7c4180d8f920da8bd"
+    },
+    {
+      "id": "mathematik.gleichungLösen|Auflösen|variable=x.61aad944.definition",
+      "datei": "karte-0743e9535a108829de22-v7.json",
+      "formatVersion": 7,
+      "sha256": "21500dd2299bdf64a795d8f37d3c0ad727dbc55387d12b0f05d76da7aef633b7"
+    },
+    {
+      "id": "mathematik.implikation|Implikation|.1aac66a1.definition",
+      "datei": "karte-04af952929bb4d6a558c-v7.json",
+      "formatVersion": 7,
+      "sha256": "b4b763200df14cc12eb8e361ad6467fa3ea45fea96189bc401f8d3ea2e5bd312"
+    },
+    {
+      "id": "mathematik.iteration|Iteration|.16583b35.definition",
+      "datei": "karte-0fed4002de847ab2cf13-v7.json",
+      "formatVersion": 7,
+      "sha256": "3bf85a91c87fb6c3af8a135ca9434e6c6d5aa3cf5b67247458f3668eb49b7c8b"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.definition",
+      "datei": "karte-5d477585f54b3316d802-v7.json",
+      "formatVersion": 7,
+      "sha256": "63f2de47431e7bc5e311bc8db5f6cb5189783d3468c8aa964b1d4a43bb644181"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-konjunktion-leere-indexmenge-0",
+      "datei": "karte-40065560d61032f2fc4f-v7.json",
+      "formatVersion": 7,
+      "sha256": "c61b9d4319e738bba63309e3d9d5ea13d07c568b2b3bd57e2c6e6dd78e54ee6b"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-konjunktion-endlicher-spezialfall-0",
+      "datei": "karte-fbe144ed93759b009c27-v7.json",
+      "formatVersion": 7,
+      "sha256": "7b4cf6da487967796b394141410f8aa4eac93964dd52b9db0d9e518f2603799c"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.definition-iterierte-disjunktion-1",
+      "datei": "karte-21c831ca8a25b631612a-v7.json",
+      "formatVersion": 7,
+      "sha256": "3b89548ea2c9e5f93eb366bbdf662dca6b4e550b052534449660c0c4895cca3f"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-disjunktion-leere-indexmenge-1",
+      "datei": "karte-810877aac4787eef12d8-v7.json",
+      "formatVersion": 7,
+      "sha256": "6d280d295861e236d16972f10ef28377e721ba595668b0f1f6b7ae41490d9ef2"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-disjunktion-endlicher-spezialfall-1",
+      "datei": "karte-63525e53145bb76aea48-v7.json",
+      "formatVersion": 7,
+      "sha256": "97b9ba5a3e3fd98f8075078789bc0879522ee689816e1138415c5444e4a3ceb4"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.definition-iterierte-adjunktion-2",
+      "datei": "karte-9f2380d4ea50652c57c2-v7.json",
+      "formatVersion": 7,
+      "sha256": "ed8bc8f9533cc5715f4520093773a8b35f4f5bd0f434ee7afe29a7a0395f8718"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-adjunktion-leere-indexmenge-2",
+      "datei": "karte-dffd9d7825af7aa6a403-v7.json",
+      "formatVersion": 7,
+      "sha256": "936b70dc24bef76b8301617f1c9cbe2b7953d9131543f1a69404dd5461c1a4b5"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-adjunktion-endlicher-spezialfall-2",
+      "datei": "karte-8d3271da5356c778c9c0-v7.json",
+      "formatVersion": 7,
+      "sha256": "c369e37d6a2f6aee7ff42dca7b83fae1bee31e17976962f59c67a5591b2f31c6"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.definition",
+      "datei": "karte-57785da1ea69d70e5025-v7.json",
+      "formatVersion": 7,
+      "sha256": "00ed8f0016414847a6b1848a9cbfb54b0e4340723f50a6afbc643c1d743b2641"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-konjunktion-leere-indexmenge-0",
+      "datei": "karte-1f30f94a8aac01f59b45-v7.json",
+      "formatVersion": 7,
+      "sha256": "3296c74b90fd13e3db556ee93958c78fb0419b924df3d168c935c291a8c8dd08"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-konjunktion-endlicher-spezialfall-0",
+      "datei": "karte-cb676a161af411143689-v7.json",
+      "formatVersion": 7,
+      "sha256": "8a1df25a395796745bce476c6bcdf0ac042fda659e87489755c4ad7f4f1c8ae5"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.definition-iterierte-disjunktion-1",
+      "datei": "karte-64964a120b63d0a42170-v7.json",
+      "formatVersion": 7,
+      "sha256": "b0e6a1289597e8fa514a2c90f7e3c36f959214f5f26fb50422ce88a798e93dce"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-disjunktion-leere-indexmenge-1",
+      "datei": "karte-0795b021c6e87b913bb1-v7.json",
+      "formatVersion": 7,
+      "sha256": "c2fe987f5cba09dcaf8a4321c678a12814f619b0ab19c48e39a08c344fad3f72"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-disjunktion-endlicher-spezialfall-1",
+      "datei": "karte-6da82ee4da8558f60dba-v7.json",
+      "formatVersion": 7,
+      "sha256": "0571b29de5fe9072b2d9b50c11af0d462c51888d8d2ecc12e784b02c99ae783b"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.definition-iterierte-adjunktion-2",
+      "datei": "karte-6b4c55494313f82a7d99-v7.json",
+      "formatVersion": 7,
+      "sha256": "69e553e2dbbb3b68856db495e8fe5140b15a991b7d4c625607e486b17cccdd1a"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-adjunktion-leere-indexmenge-2",
+      "datei": "karte-8fd376b1e2dee2205746-v7.json",
+      "formatVersion": 7,
+      "sha256": "82aaf5a0932b9aab518270dd6f8c8d8303cf081c45af0769c2813984a7a1c319"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-adjunktion-endlicher-spezialfall-2",
+      "datei": "karte-4ffe9c30618324d89b4b-v7.json",
+      "formatVersion": 7,
+      "sha256": "0177648da4971a180e8f7ee91ff8abf2535336dc0669c6450294190adbe7e9fb"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.definition",
+      "datei": "karte-bf9f7a1210ecc545cc04-v7.json",
+      "formatVersion": 7,
+      "sha256": "27e1c39ae0db4472d66f01ce36f820003f7a5044b50b42ba16d51f715d33f0f0"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-konjunktion-leere-indexmenge-0",
+      "datei": "karte-1356706e03673f3fe054-v7.json",
+      "formatVersion": 7,
+      "sha256": "f7c037c1b61a4e26e71657cad33198ace9264df24b2f437f85f34caed78a9aba"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-konjunktion-endlicher-spezialfall-0",
+      "datei": "karte-309812b3c641f1555e34-v7.json",
+      "formatVersion": 7,
+      "sha256": "7b3c40a78b3156735d16fc5a69ca6c2a02bc8bdc246927f60e515a06ed8948c3"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.definition-iterierte-disjunktion-1",
+      "datei": "karte-b79ed68ed1aa5a70983c-v7.json",
+      "formatVersion": 7,
+      "sha256": "b12f720fc7224089929d3f83236e54cbfd18ee02a900735e9c96273de3430d46"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-disjunktion-leere-indexmenge-1",
+      "datei": "karte-d2c244ce3139e36ad382-v7.json",
+      "formatVersion": 7,
+      "sha256": "6b3dfe672044c7267cf193f0d05efe052903b172b830e14b07e739ec96bf6e7b"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-disjunktion-endlicher-spezialfall-1",
+      "datei": "karte-a8eb1f1dba6ab96c88e5-v7.json",
+      "formatVersion": 7,
+      "sha256": "17b2fb1785700d49ec17223359f63d7c845e6b5992474622abeb92b31b061c20"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.definition-iterierte-adjunktion-2",
+      "datei": "karte-d0a6218f2e1500db2236-v7.json",
+      "formatVersion": 7,
+      "sha256": "211cdcdb09ce375576db80a10ff3ea7ecba92e12830452eceafb44fd6bc4f1b5"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-adjunktion-leere-indexmenge-2",
+      "datei": "karte-4d778fcc862af13a84be-v7.json",
+      "formatVersion": 7,
+      "sha256": "02012b448fbab5825279ca6d0c8380f63c60b394a07f695fb8cced1ffce18f70"
+    },
+    {
+      "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-adjunktion-endlicher-spezialfall-2",
+      "datei": "karte-bb5ce970f206ae8d85c1-v7.json",
+      "formatVersion": 7,
+      "sha256": "9672b834d5161038a5875ed37a590ecd388e5a06dc7f842b831e8484d8f14e21"
+    },
+    {
+      "id": "mathematik.iterierteVereinigung|Iterierte Vereinigung|.b199fdbf.definition",
+      "datei": "karte-37967a2c2dac95ccca31-v7.json",
+      "formatVersion": 7,
+      "sha256": "1ed715b5a5aa37c8105aef536151ae16d2a7665702f167b86b85b10a809f597e"
+    },
+    {
+      "id": "mathematik.iterierteVereinigung|Iterierte Vereinigung|.b199fdbf.iterierte-vereinigung-leere-indexmenge-0",
+      "datei": "karte-517452e3e52fe41f153c-v7.json",
+      "formatVersion": 7,
+      "sha256": "451b9d34c6e4e8493a48d4018f4e51d4b2e538e2947b40f0793cd2abf28842af"
+    },
+    {
+      "id": "mathematik.iterierteVereinigung|Iterierte Vereinigung|.b199fdbf.iterierte-vereinigung-endlicher-spezialfall-0",
+      "datei": "karte-43232719f298b65892b4-v7.json",
+      "formatVersion": 7,
+      "sha256": "80f87cc475c5f753751f6908c0ed86ba3bb139122168dc57b241797ad1ec78c7"
+    },
+    {
+      "id": "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.definition",
+      "datei": "karte-6f153f45b11d0f82022b-v7.json",
+      "formatVersion": 7,
+      "sha256": "a847e3acbf55ff90a286a5561660e6169e0c97cfcd25bf9fe833fc08b8a7bb63"
+    },
+    {
+      "id": "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.iterierter-schnitt-leere-indexmenge-0",
+      "datei": "karte-252747030d6f807047dc-v7.json",
+      "formatVersion": 7,
+      "sha256": "1f3d486ecae42ac1fac27d62f1c6ea5c12aefa597b0a8f5c08eefec54aaae91d"
+    },
+    {
+      "id": "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.iterierter-schnitt-endlicher-spezialfall-0",
+      "datei": "karte-d36b9749e73f91df40e1-v7.json",
+      "formatVersion": 7,
+      "sha256": "eea64de6655e271c32e6d3af950679e2ababe5798708fce0478fb194aadc5256"
+    },
+    {
+      "id": "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.definition",
+      "datei": "karte-74cd55853a62bde54812-v7.json",
+      "formatVersion": 7,
+      "sha256": "f75fca622f283d61ecef8146f5baa12525311bee2dae35967b559db7010ce293"
+    },
+    {
+      "id": "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.iteriertes-kartesisches-produkt-leere-indexmenge-0",
+      "datei": "karte-1c62c5fb8fe05c0b5658-v7.json",
+      "formatVersion": 7,
+      "sha256": "9654bf102aa8bd7a62454ae69cced55a740c4662d9e29fb5aa51703cf8640bbc"
+    },
+    {
+      "id": "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.iteriertes-kartesisches-produkt-endlicher-spezialfall-0",
+      "datei": "karte-f05b1aa68468d07795cb-v7.json",
+      "formatVersion": 7,
+      "sha256": "d5d122624b21e1f94baa8927a49c54fe851d3838d924bca3323fbbe479d49c14"
+    },
+    {
+      "id": "mathematik.kartenAusgang|Karten-Ausgang|name=ergebnis.e4039123.definition",
+      "datei": "karte-a51eea58aba378ce8a26-v7.json",
+      "formatVersion": 7,
+      "sha256": "eeb4544dea4930e3f05dd89db7bb596cc0ec22c1e62fb29d1474380b1703b810"
+    },
+    {
+      "id": "mathematik.kartenEingang|Karten-Eingang|name=x.91bb599e.definition",
+      "datei": "karte-35d96d437bc5b35dc46f-v7.json",
+      "formatVersion": 7,
+      "sha256": "34f49ea3973c10316ac189a52ebbc622951f9af821e08e3240ff2ff63a704536"
+    },
+    {
+      "id": "mathematik.kartesischesProdukt|Kartesisches Produkt|festeEingänge=2;operatorAnzeige=wert.6850b846.definition",
+      "datei": "karte-48a9d138be7a412e36f9-v7.json",
+      "formatVersion": 7,
+      "sha256": "ea1b702cd4c0c9e6af62c718205d37adbf6c8202fd5a1a2f116e7805cd6e74e1"
+    },
+    {
+      "id": "mathematik.komposition|Komposition|festeEingänge=2;operatorAnzeige=wert.99856208.definition",
+      "datei": "karte-929aba3eb090cf9ca3b6-v7.json",
+      "formatVersion": 7,
+      "sha256": "8f44720eb45ca4a0fb036fcee5c70dfad9c1931b822348c445a10afdea9d05b6"
+    },
+    {
+      "id": "mathematik.konjunktion|Konjunktion|festeEingänge=2;operatorAnzeige=wert.bc84088.definition",
+      "datei": "karte-b8777e1d8ccd4408ef37-v7.json",
+      "formatVersion": 7,
+      "sha256": "8be5d61571b7220f2b46de308537f6ea7af12a3aee85a6ccb76a435c34b2380c"
+    },
+    {
+      "id": "mathematik.kreuzproduktSpalte|Kreuzprodukt (Spalten)|.6b6c7bd6.definition",
+      "datei": "karte-6564c437bf54f22af70a-v7.json",
+      "formatVersion": 7,
+      "sha256": "e4de72960d7f89a1864573a8a604371e264c4081b8ff4fb26a485d98c05936a7"
+    },
+    {
+      "id": "mathematik.kreuzproduktZeile|Kreuzprodukt (Zeilen)|.32a41194.definition",
+      "datei": "karte-8725244ac6546c3999ce-v7.json",
+      "formatVersion": 7,
+      "sha256": "7dd459468065584948df5ec2b04707795353f4a7819ade005234de80079f316c"
+    },
+    {
+      "id": "mathematik.lösungsmenge|Lösungsmenge|automatisch=true;grundmengen=R;variablen=.80502346.definition",
+      "datei": "karte-66e5f9c3e1054c10eb82-v7.json",
+      "formatVersion": 7,
+      "sha256": "53a56ec505ffba2ed2ef8255b3d39d290c8403f114c94ae67be312899326eb70"
+    },
+    {
+      "id": "mathematik.lüge|Lüge|.6116eef3.definition",
+      "datei": "karte-825141cadbf5632dc987-v7.json",
+      "formatVersion": 7,
+      "sha256": "8e9f102e4292ef743ad77103729cbbfb04fd78e2bc30274daed60e58fe224ba1"
+    },
+    {
+      "id": "mathematik.matrixInvertieren|Matrix invertieren|.63685f47.definition",
+      "datei": "karte-9366a99de5b21264601a-v7.json",
+      "formatVersion": 7,
+      "sha256": "770ec803e2b87df87ebdd8a14cf0ba9ed2a259256cd3c6610fe04e3cbad3c322"
+    },
+    {
+      "id": "mathematik.matrixProdukt|Matrixprodukt|.4c459827.definition",
+      "datei": "karte-9f0f44b2de3d25ad1592-v7.json",
+      "formatVersion": 7,
+      "sha256": "e8d656fef2923840d6e413ff8ef7de387b6e70eef33c114796edfb6a899344cc"
+    },
+    {
+      "id": "mathematik.matrixProdukt|Matrixprodukt|.4c459827.falksches-schema",
+      "datei": "karte-f8360f02a0dfa3c7c91e-v7.json",
+      "formatVersion": 7,
+      "sha256": "8bb9652c54679394e7b47d4bb28726485deb249bc3ff4d0fb40dc7b78a916fad"
+    },
+    {
+      "id": "mathematik.matrixdiagonale|Matrixdiagonale|diagonalArt=hauptdiagonale.95ac8848.definition",
+      "datei": "karte-cc29d2d432b1a991658b-v7.json",
+      "formatVersion": 7,
+      "sha256": "715214dd9966f9fb88fe168b7ef4a4aa50ee881703062fc20509a9a6d43015f7"
+    },
+    {
+      "id": "mathematik.matrixrechner|Matrixrechner|operator=matrix.addition.6210e779.definition",
+      "datei": "karte-e9c72f207033af8d0b76-v7.json",
+      "formatVersion": 7,
+      "sha256": "455f328bc69e98c5f17cfe66b62cc6c6c32e086ef1244b51df74c51491e2ac42"
+    },
+    {
+      "id": "mathematik.matrix|Matrix|breite=2;erzeugungsArt=einzelEingaben;höhe=2.9cf70c78.definition",
+      "datei": "karte-a3675d233bb3752f068b-v7.json",
+      "formatVersion": 7,
+      "sha256": "c2ba5d52621a8dbecc8a31a4ce85947504fb6b20620262b9fb87ebf3068b4113"
+    },
+    {
+      "id": "mathematik.mengenfilter|Mengenfilter|.a28a3173.definition",
+      "datei": "karte-45ae22b2e09c6ec590e2-v7.json",
+      "formatVersion": 7,
+      "sha256": "db9d9d42a741595eb34aae649e6718f82bd0085bc89011586cac85e3a2f377e8"
+    },
+    {
+      "id": "mathematik.methodeAufrufen|Methode aufrufen|festeEingänge=2;methodenAnwendung.ergebnisArt=mathematik.objekt.b3610dac.definition",
+      "datei": "karte-8b934439d0942c14acca-v7.json",
+      "formatVersion": 7,
+      "sha256": "7b8f09619f65fc6500605d630f9e352d90a494ecd4282bdaee934aebe51f43b5"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.definition",
+      "datei": "karte-d5e047915fc6ad607357-v7.json",
+      "formatVersion": 7,
+      "sha256": "b491b0ac00520731e7084581228bbd528cbaf86dc788b4786eefd9fafa401c80"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-aussagenmethode-anwenden-1",
+      "datei": "karte-4bd2eff119c444633453-v7.json",
+      "formatVersion": 7,
+      "sha256": "b1d4275720827a237ed7bc7cc17af88bbbc2d95c7dd5aa78c2bdc4ed759719d9"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-mengenmethode-anwenden-2",
+      "datei": "karte-4e8179350e608b8a463c-v7.json",
+      "formatVersion": 7,
+      "sha256": "3461c729e9e90d78b40819bf1a017d8902f920f1fc129bdb37b62eb71f65e64e"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-methode-allgemein-anwenden-3",
+      "datei": "karte-10305a3f7c4429b68bcd-v7.json",
+      "formatVersion": 7,
+      "sha256": "a4e201e7d58b07cacff0b9e0b312b76921b42128482887e89187758a60ec95e6"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.definition",
+      "datei": "karte-03adaec7413779a5e2f6-v7.json",
+      "formatVersion": 7,
+      "sha256": "d3fe849b077da2ddc6b4bb34ca6a889122becc64d2ad7cb4a02385caeea0ec7f"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-aussagenmethode-anwenden-1",
+      "datei": "karte-20fdc5520cc2bb31b444-v7.json",
+      "formatVersion": 7,
+      "sha256": "47f85bbced58b281e23beacea2864fea1e965926cc1ecdebdd19d4e50b4bbdf2"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-mengenmethode-anwenden-2",
+      "datei": "karte-3f53c3d1fc46875cafdf-v7.json",
+      "formatVersion": 7,
+      "sha256": "3736ab864c9ffc2c0a4140e9ca77e648e57002c2407444c1edb8230fc1b24cc4"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-methode-allgemein-anwenden-3",
+      "datei": "karte-dce365d1d8b52e53c540-v7.json",
+      "formatVersion": 7,
+      "sha256": "f34b3ecc3c24d54a0c2b7f50b6772dfd1d25685605448942db8a2094ca773fc2"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.definition",
+      "datei": "karte-bfc5e69c63c1eb940851-v7.json",
+      "formatVersion": 7,
+      "sha256": "a5d5de55b36e591f8c423d9c021d5bec86be3d566f04e9bc115cb47d4c163d31"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-aussagenmethode-anwenden-1",
+      "datei": "karte-3ce868145ba91b3e1baf-v7.json",
+      "formatVersion": 7,
+      "sha256": "267fc26503fa3ba382c0228901227bd856a04f001b72cf731e070c0bb236aac5"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-mengenmethode-anwenden-2",
+      "datei": "karte-3af37be8431f519f96d7-v7.json",
+      "formatVersion": 7,
+      "sha256": "551716340f71f5896166b841f434bb30e40936021ec1a23f6908bef995566bf7"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-methode-allgemein-anwenden-3",
+      "datei": "karte-9919d43a39dc45d7e0dc-v7.json",
+      "formatVersion": 7,
+      "sha256": "e55cf6ca4a098e5e94b55dd0bcc1e1ea45cbea4e73be42e6c34f07c2524cbd57"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.definition",
+      "datei": "karte-c9391b0a41bfe80c1e94-v7.json",
+      "formatVersion": 7,
+      "sha256": "f21cd834f45e6e069a9d42d23663df4d32fbf11b3a78336536623125424f842b"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-aussagenmethode-anwenden-1",
+      "datei": "karte-b8c5924b8d71a0bcaf6d-v7.json",
+      "formatVersion": 7,
+      "sha256": "482c46acd43fa6af17d09d879a42af2123ed4893ac154cb4c465041efcdaa581"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-mengenmethode-anwenden-2",
+      "datei": "karte-d92c5fe3d44f85abd770-v7.json",
+      "formatVersion": 7,
+      "sha256": "7c69ecea16ac33c98b21dc99275f63c237d41d974b7789a15102f0db0d6dffe7"
+    },
+    {
+      "id": "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-methode-allgemein-anwenden-3",
+      "datei": "karte-69df5d4fd0e35f15521a-v7.json",
+      "formatVersion": 7,
+      "sha256": "a6ae07d4a01a867a5b1a8b7dffb2c52a35f0fb426c2b87f332c1b9b22f704b2d"
+    },
+    {
+      "id": "mathematik.methodenDifferentieren|Methode differentieren|.1b94f5c5.definition",
+      "datei": "karte-77a2885743e4dbdfa74d-v7.json",
+      "formatVersion": 7,
+      "sha256": "dafd59289a575ebdc15174ca12a32c1d66a87d5ee9e2d5626ed56623d56c49dc"
+    },
+    {
+      "id": "mathematik.methodenIntegrieren|Methode integrieren|.f3871cd1.definition",
+      "datei": "karte-90fb7246b651f25e3fac-v7.json",
+      "formatVersion": 7,
+      "sha256": "b0ffb5543480f24f22fc6910817c125181e5fe6df17011dfd5abcd0b63bf3e30"
+    },
+    {
+      "id": "mathematik.methodenZielmenge|Methoden-Zielmenge|.de27246c.definition",
+      "datei": "karte-5b555a2fbd73411381be-v7.json",
+      "formatVersion": 7,
+      "sha256": "77aa5a1da6925c88bf1a7af765794ac3ecc20e5e52edec575ac959ba34971e89"
+    },
+    {
+      "id": "mathematik.mächtigkeit|Mächtigkeit|.ae4e9f71.definition",
+      "datei": "karte-a7122b4206cb8bcb1dac-v7.json",
+      "formatVersion": 7,
+      "sha256": "8da4fb642bb46d6efb1147cd5a01fffc067de92c86327fb5bdc62de93346ef6b"
+    },
+    {
+      "id": "mathematik.negation|Negation|.f80b96d3.definition",
+      "datei": "karte-5e61f383e8dcd5aa5855-v7.json",
+      "formatVersion": 7,
+      "sha256": "c3a5d50b3e4c0e4c813289165f4f87eaac648a8fc8f08ab138552f86e391a543"
+    },
+    {
+      "id": "mathematik.ordnungsrelation|Größer oder gleich|relation=größerGleich.d4746c5e.definition",
+      "datei": "karte-226435b0d0f6bad99dc2-v7.json",
+      "formatVersion": 7,
+      "sha256": "6630ea91629f80d6c677d5356e96983ef01444050178ff7bc97c8b2486933e76"
+    },
+    {
+      "id": "mathematik.ordnungsrelation|Größer|relation=größer.9eec3900.definition",
+      "datei": "karte-d375f9d1ffd9d08a0a46-v7.json",
+      "formatVersion": 7,
+      "sha256": "02bf6fc590d1fdb68729b179e4216586057b401327c7188a0894afe9f288426d"
+    },
+    {
+      "id": "mathematik.ordnungsrelation|Kleiner oder gleich|relation=kleinerGleich.b457e5ce.definition",
+      "datei": "karte-181047a2d4822cb338e4-v7.json",
+      "formatVersion": 7,
+      "sha256": "d790974e75f72eb8af323dad1378c3cb525c7af2024239ea1e2a0626b417dd08"
+    },
+    {
+      "id": "mathematik.ordnungsrelation|Kleiner|relation=kleiner.96e04cd4.definition",
+      "datei": "karte-971091cb78c4a08729bd-v7.json",
+      "formatVersion": 7,
+      "sha256": "1221a34451b034e471b9c2fea236c28b10c03ab317e126e5b89bd6ac3a1c4eab"
+    },
+    {
+      "id": "mathematik.reellesIntervall|Reelles Intervall|.f0cea39b.definition",
+      "datei": "karte-cc55c8efe6b70e20cba2-v7.json",
+      "formatVersion": 7,
+      "sha256": "04d85eb1035c7903ae20d6e7d6363f53f3ed1a2fbdec93694a82789ff5a56edb"
+    },
+    {
+      "id": "mathematik.schnitt|Schnitt|festeEingänge=2;operatorAnzeige=wert.e854328.definition",
+      "datei": "karte-1526b73df5f11ddfd40a-v7.json",
+      "formatVersion": 7,
+      "sha256": "43c5b9d2e6dcc7a9a2b1a8e8d12dc59a3b7a4d482340273c5314b3bb85ed48f7"
+    },
+    {
+      "id": "mathematik.spaltenMethodeDifferentieren|Spaltenmethode differentieren|.fb047c39.definition",
+      "datei": "karte-6b92985076090e84ea49-v7.json",
+      "formatVersion": 7,
+      "sha256": "2b42436779ee59dc6f03b57d8ee49400589676ea5cd0e9b7a95e5f06d9a23c75"
+    },
+    {
+      "id": "mathematik.spaltenMethodeIntegrieren|Spaltenmethode integrieren|.51248d63.definition",
+      "datei": "karte-fc1e96be888a58fc518d-v7.json",
+      "formatVersion": 7,
+      "sha256": "cff083148ce8e99b38a87385df757394e8658732bc44ede23b9268297bb006f1"
+    },
+    {
+      "id": "mathematik.spur|Spur|.9a98ce73.definition",
+      "datei": "karte-6d89cd01ce6bfb286f09-v7.json",
+      "formatVersion": 7,
+      "sha256": "763ee69d0e1eb2dce3bc7d504a7eb735fc6d1e9ea5ef14923324751a9f9fe16f"
+    },
+    {
+      "id": "mathematik.teilOderGleichmenge|Teil- oder Gleichmenge|.4ea2b164.definition",
+      "datei": "karte-c99fe5ccd8eee2123777-v7.json",
+      "formatVersion": 7,
+      "sha256": "27d9a8997bd279d9e38a356f268957565e0da1b8adcbf76e9026b0760afc1617"
+    },
+    {
+      "id": "mathematik.teilmenge|Teilmenge|.9d59a27b.definition",
+      "datei": "karte-e900fc3edf79cd85f582-v7.json",
+      "formatVersion": 7,
+      "sha256": "973a4ccbc66cd49ddacbe5c2dc3ee7a093bdffaf69e3e43f6517577c3827128f"
+    },
+    {
+      "id": "mathematik.tensorprodukt|Tensorprodukt|.16849317.definition",
+      "datei": "karte-42b026d1a82c132a46b2-v7.json",
+      "formatVersion": 7,
+      "sha256": "1faf6176679a0330149c74e568a13693c07bfc4a6870a142e17b7a609f17a7de"
+    },
+    {
+      "id": "konzept.tensorrechner.85b782e1.definition",
+      "datei": "karte-6beb387a19dc335c2f78-v7.json",
+      "formatVersion": 7,
+      "sha256": "124b2959f95a0a0bdf653e9b0184fc249243dfc73c0d7c7fe09ef71bf4f82f01"
+    },
+    {
+      "id": "konzept.term-zu-methode.e7cd10b2.definition",
+      "datei": "karte-eb03749beea762f731c4-v7.json",
+      "formatVersion": 7,
+      "sha256": "b92a9b2954068b682a05a01966146251078553b8b614f06abf7a7c4c9c5d45d1"
+    },
+    {
+      "id": "konzept.term-zu-methode.e7cd10b2.variante-aussage-zu-methode-1",
+      "datei": "karte-518ca0e5430a9fd43713-v7.json",
+      "formatVersion": 7,
+      "sha256": "5ff71a1def3fcd71edeaa79c9a11ef8a42404b4010876122a24855215b571374"
+    },
+    {
+      "id": "konzept.term-zu-methode.1f18afeb.definition",
+      "datei": "karte-81f46bbc018ff99dd68c-v7.json",
+      "formatVersion": 7,
+      "sha256": "243dadfa37d44da88561fb78c90140fd8f7b31fc6c4c56d481c31d81b5bfbd47"
+    },
+    {
+      "id": "konzept.term-zu-methode.1f18afeb.variante-aussage-zu-methode-1",
+      "datei": "karte-ddd9853fec379d1653d6-v7.json",
+      "formatVersion": 7,
+      "sha256": "fda788985ea183f88745966c0ee23727820098486c0af47128ffb35fea8e2313"
+    },
+    {
+      "id": "mathematik.transponieren|Transponieren|achsenPermutation=1,0.a4020bd7.definition",
+      "datei": "karte-0ac43fca4b1dbd697db6-v7.json",
+      "formatVersion": 7,
+      "sha256": "b56785655498ad5ac801f7ac368876cebb372bfdeb9c24b0f91fdad009e0a8b0"
+    },
+    {
+      "id": "mathematik.tupelZuSpalte|Tupel zu Spalte|.565ca999.definition",
+      "datei": "karte-c92bef93fa90b03501e2-v7.json",
+      "formatVersion": 7,
+      "sha256": "04c76138380e0b1f1d140fa6242fb8c32c7853ba3dad450b6fd771f3d749c12c"
+    },
+    {
+      "id": "mathematik.tupelZuZeile|Tupel zu Zeile|.d6e735a9.definition",
+      "datei": "karte-7b897a266b06e78c0d5a-v7.json",
+      "formatVersion": 7,
+      "sha256": "d1977b8690cd87708f01369d517366014ad0aa2376725a6e5cd559ad1c1245d7"
+    },
+    {
+      "id": "mathematik.tupel|Tupel|festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
+      "datei": "karte-7ffb820d0986b769a5da-v7.json",
+      "formatVersion": 7,
+      "sha256": "564b3702020a4312b26313e4310c40b667d7de2e0ae7a8d5afbb1efae5ad5494"
+    },
+    {
+      "id": "mathematik.ungleichheit|Ungleichheit|.d9d55493.definition",
+      "datei": "karte-128be1b2f9108aef2da3-v7.json",
+      "formatVersion": 7,
+      "sha256": "b8b1a0f37f1b538fbbfd2889f2602e025397966085bb410c1eb7dda4fb8daa98"
+    },
+    {
+      "id": "mathematik.variable|Variable|name=x;werteVorrat=R.b6fb9e1.definition",
+      "datei": "karte-b8967d9e3ee1788713eb-v7.json",
+      "formatVersion": 7,
+      "sha256": "1dad0fa8395cd07eb89a47df039a3029be34bfb3a8a1a349a0965bd4870a473f"
+    },
+    {
+      "id": "mathematik.vektorRadiusSpalte|Radius (Spalte)|.ba1f5d09.definition",
+      "datei": "karte-42a29b0e7c8be6992c76-v7.json",
+      "formatVersion": 7,
+      "sha256": "11a96afd11d2495d94957b0395d7069ad8c39a2da69a3d047a4631b30ba2fd9f"
+    },
+    {
+      "id": "mathematik.vektorRadiusZeile|Radius (Zeile)|.ea5e427.definition",
+      "datei": "karte-c99930f257854b714c9d-v7.json",
+      "formatVersion": 7,
+      "sha256": "9a157bea0951111af3738c6074ee6c5bf29f6f0e65a128f7f07017eba15b3a06"
+    },
+    {
+      "id": "mathematik.vektorZuPolynom|Vektor zu Polynom|variable=x.e81f2cf6.definition",
+      "datei": "karte-d2f941f3e736a6e3128f-v7.json",
+      "formatVersion": 7,
+      "sha256": "c53232dbe8349ee48f8f6011c1ba2055744e4c2e4bdca6f92870ebd91c1b5abe"
+    },
+    {
+      "id": "mathematik.vektorrechner|Vektorrechner|operator=vektor.addition.c71caeff.definition",
+      "datei": "karte-e2267fa013e1dbaf68a3-v7.json",
+      "formatVersion": 7,
+      "sha256": "8499ccbaa6958cf3a8f75f94e2c15c9dab6f7548518e1a16756a8a535bc97ec3"
+    },
+    {
+      "id": "mathematik.vektor|Spaltenvektor|festeEingänge=2;operatorAnzeige=wert.2a89ecb.definition",
+      "datei": "karte-a172fff23cc90f2899b6-v7.json",
+      "formatVersion": 7,
+      "sha256": "77e2a2839891fad398b9c76a042c12a9992792b0d3060f8b52e20e753c53509d"
+    },
+    {
+      "id": "mathematik.vereinigung|Vereinigung|festeEingänge=2;operatorAnzeige=wert.a0974ae8.definition",
+      "datei": "karte-e9fb80e6e2fcc43bfd65-v7.json",
+      "formatVersion": 7,
+      "sha256": "408841660413b89ff7a54582dc142ac718b0b3090b277e26a956aa53a950a4fb"
+    },
+    {
+      "id": "mathematik.visualisierung|Visualisierung|.e59f5973.definition",
+      "datei": "karte-d32a60576557d70ec352-v7.json",
+      "formatVersion": 7,
+      "sha256": "984b73cb8ae987c5f713933683a52171e80ce82b4f56d176209c319bb4c66bf3"
+    },
+    {
+      "id": "mathematik.wahr|Wahr|.25c97eb3.definition",
+      "datei": "karte-48b80ef40beb227b5dd7-v7.json",
+      "formatVersion": 7,
+      "sha256": "40b2aecc6228bb7f83c0af7950b386fc4e57af1fba5310b9b3370d3c6e7d46dd"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition",
+      "datei": "karte-15b48507f03e2daa38cc-v7.json",
+      "formatVersion": 7,
+      "sha256": "acd840e52fa1c5d607ae6058631c5d480eccedc1c800733ab9ba5e9277491a0f"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-n0",
+      "datei": "karte-56a992d32eaf4fbfd08f-v7.json",
+      "formatVersion": 7,
+      "sha256": "27bcf2368e82c26ec45f9061320cf91377b23a2985bf31df238d339ba6e0792e"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-z",
+      "datei": "karte-690a75c108411610d082-v7.json",
+      "formatVersion": 7,
+      "sha256": "bf5fa5e9de11b2d00ce70e91ef2fd29177d7cc0ad6f519d3e2f0e21c49b86182"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-q",
+      "datei": "karte-c1dc6ee51a1856d3a43e-v7.json",
+      "formatVersion": 7,
+      "sha256": "3c4f496725e762b8276e7c3ef4a240715c457b2563e4d2b81f42be782f67fbe5"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-r",
+      "datei": "karte-1ab8299852d1fbbd305f-v7.json",
+      "formatVersion": 7,
+      "sha256": "3ce4965332c518c1aed535b887acc37e73501ac4041558e66070e3a787813bde"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-c",
+      "datei": "karte-6f0f91c666fed2f102be-v7.json",
+      "formatVersion": 7,
+      "sha256": "0e3028171d03a0e588a0c67b3a16741cdb21e82c72fae02e3ab3a60270a0200c"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-hyperr",
+      "datei": "karte-ad9aecd8b11f56b59010-v7.json",
+      "formatVersion": 7,
+      "sha256": "5c1b551989dcbddd47c69571f5f3e9310624382308670fc1e1c9b4b5a510d3a9"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definition-h",
+      "datei": "karte-9515b02bbd3f97fb5999-v7.json",
+      "formatVersion": 7,
+      "sha256": "7a3305ff75e90eb625b8183fbc09e9a38625d67950da1061c2a702ceffc3fc59"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definitionsbereich",
+      "datei": "karte-835f9d2bbbb51f5c5cbe-v7.json",
+      "formatVersion": 7,
+      "sha256": "3c25cec49d31ed7bc2d898227cea0e2ab63c61114e2298e5ce797cb4947f3d7f"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.definitionsluecken",
+      "datei": "karte-480fd615502b7c1f7c4b-v7.json",
+      "formatVersion": 7,
+      "sha256": "30e100792430b1fa5c546141c9108994b2daf6fc19b59621fd722e7b07e41d15"
+    },
+    {
+      "id": "konzept.zahlenrechner.a1db3db9.aequivalente",
+      "datei": "karte-ee8d8b013342fe4b2817-v7.json",
+      "formatVersion": 7,
+      "sha256": "c28bcb3396356934ed7ea77da61a18cea8804c6002d17a63ad0c18b9db86e21e"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definition",
+      "datei": "karte-12462bb9b7a063da6781-v7.json",
+      "formatVersion": 7,
+      "sha256": "85d1b544571cf03b0d4cb1a5989226691a64001a0415095849d1b1ecb57315e6"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definition-n0",
+      "datei": "karte-6501c9722f69de7d4d25-v7.json",
+      "formatVersion": 7,
+      "sha256": "6bf6843d13092c1b996e96e0cf324d57b4513de325d36406ff19eef3a4cd94b7"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definition-z",
+      "datei": "karte-0efbd94843923e08cf55-v7.json",
+      "formatVersion": 7,
+      "sha256": "6daef1310e05b4f4dc51047c7ab5918bb7792fc1cc6758b195f9662a1354430d"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definition-q",
+      "datei": "karte-46ea35979b0aaaf62eeb-v7.json",
+      "formatVersion": 7,
+      "sha256": "e92d4862c15e8307063eea74b9e4d3e4596069054d3a99a72a550c7b74a5dd0c"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definition-r",
+      "datei": "karte-a76a05355581fec40e2d-v7.json",
+      "formatVersion": 7,
+      "sha256": "38e4f1776088e1bf7ba2c324492a90f11e3d84b1baa5ffc643bda23dedcb2c84"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definition-hyperr",
+      "datei": "karte-ab7de1889415894f6ce8-v7.json",
+      "formatVersion": 7,
+      "sha256": "78d300bf8193957715b6a3b3f2ef0dde8be064126281b09f7d7c5fffb86e0aff"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definitionsbereich",
+      "datei": "karte-98a1d718385a98be7257-v7.json",
+      "formatVersion": 7,
+      "sha256": "22f36f09cc5d24faedb4fe4c9824102dec47e1a030452081a610bccded37099c"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.definitionsluecken",
+      "datei": "karte-b8d02cb959e068fd1d94-v7.json",
+      "formatVersion": 7,
+      "sha256": "693fadb1fda1c7d78e5bc51968d96af8fcc33149637d92a59e3aa4e8c98f812b"
+    },
+    {
+      "id": "konzept.zahlenrechner.7a37e9cb.aequivalente",
+      "datei": "karte-4a8d7804923ea2f9ce16-v7.json",
+      "formatVersion": 7,
+      "sha256": "138d3e126db3a2b2666895506b287a48f5ea4daa479ff65b83dfa55455938696"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definition",
+      "datei": "karte-37cc134af2076eaa943d-v7.json",
+      "formatVersion": 7,
+      "sha256": "d8119c8d06821292b5be4636ccae27a8b2467ea2c89b66ad1e257579f553a65b"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definition-n0",
+      "datei": "karte-8f1dd946efa71998a148-v7.json",
+      "formatVersion": 7,
+      "sha256": "c7ff3771df7a5a0d0c8dba7baad8f1f9091d94b77d1d371decbe1fcf7b4006a8"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definition-z",
+      "datei": "karte-443dec7a1f5e5ce16657-v7.json",
+      "formatVersion": 7,
+      "sha256": "0ea12b09b9c2822552356b489a21dd537fd0eb98d70254e3384b792ce6b87e4a"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definition-q",
+      "datei": "karte-5f4f4e7440c6bf0827fc-v7.json",
+      "formatVersion": 7,
+      "sha256": "5cc17a4950e47a5e8aa0972d3d26911f8905d2e02b9bae07aa377c6cf56ae212"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definition-r",
+      "datei": "karte-0c182410501b82e1fe9f-v7.json",
+      "formatVersion": 7,
+      "sha256": "c5e7f4864863dd92979f384b2c9337c1e1bd0412fe627260862ab876920230d6"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definition-hyperr",
+      "datei": "karte-dd7ce45a74b053dfcd96-v7.json",
+      "formatVersion": 7,
+      "sha256": "3df5ef58e73c174f84a200514c16cc1c5a5bd7c24b9c81f1e8d59ac7ef69b02c"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definitionsbereich",
+      "datei": "karte-a010d2ac3e639cf6bee7-v7.json",
+      "formatVersion": 7,
+      "sha256": "debbc77ba9a800dcf7cd8d8a3e9fe0c3725c99f41f924205519175471a58574e"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.definitionsluecken",
+      "datei": "karte-cf7e51150659c17d4b9e-v7.json",
+      "formatVersion": 7,
+      "sha256": "07dd7d0c3c6cee19d6577443b9cc5c7b5ae702449d08f6c202209cdcf9e426a1"
+    },
+    {
+      "id": "konzept.zahlenrechner.48c697a7.aequivalente",
+      "datei": "karte-b27f16d1f67a45706e73-v7.json",
+      "formatVersion": 7,
+      "sha256": "7fd7c109f3932b215a0e9ed9338a79579fd4956160574e86456d2031914d37e0"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition",
+      "datei": "karte-a526a670e8b943abaf3e-v7.json",
+      "formatVersion": 7,
+      "sha256": "61d7b242ccd7f175ecdca6829f330f411f607a66951bcc23db3ac0bd89e3d14f"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-n0",
+      "datei": "karte-ff48e17ad46f4b56b683-v7.json",
+      "formatVersion": 7,
+      "sha256": "77ae1bc7c8cf4610c08e2f2a0619828d9114e0dbb42f6938b4c91165621fb4e0"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-z",
+      "datei": "karte-1be65ef86261cb301006-v7.json",
+      "formatVersion": 7,
+      "sha256": "55cb02c4331aa001f81c6721502222593ecdd3ecac7d2f8710a9c404adc69905"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-q",
+      "datei": "karte-0da711ba0a4ad60bf866-v7.json",
+      "formatVersion": 7,
+      "sha256": "245ed1b2c0740838cd2b5aa12f21e29611222df74f04c51657a9a80bf105e54e"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-r",
+      "datei": "karte-7c5454684c9895b3657d-v7.json",
+      "formatVersion": 7,
+      "sha256": "b8ea92e7a5484444ad9b0b4ed25aefa8ebf8642562f81c2ec60b2349116b77f8"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-c",
+      "datei": "karte-375be8d4db38a294c377-v7.json",
+      "formatVersion": 7,
+      "sha256": "5f4683cc61eb5953ce83c802d36aaa253174b5bebfc20afdd764f45b9c77edca"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-hyperr",
+      "datei": "karte-7679a4f65063030cf428-v7.json",
+      "formatVersion": 7,
+      "sha256": "07572eb1264a8ccb07655d8046697b217ba72c61db1939ef4e791d91f7ec60f1"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definition-h",
+      "datei": "karte-0cc34a8d122223d5d7a5-v7.json",
+      "formatVersion": 7,
+      "sha256": "573d03d848786f8f9f17fcaf07c67aac977d78e16c35f36419afb5858b4f2b7d"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definitionsbereich",
+      "datei": "karte-ef41a1ea47f657cea491-v7.json",
+      "formatVersion": 7,
+      "sha256": "74ea9d159e1dd1662eb8b725129b4e7d445fbf5d83d00f91ab388b675913cfc8"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.definitionsluecken",
+      "datei": "karte-a8d350fa3754770e723c-v7.json",
+      "formatVersion": 7,
+      "sha256": "30eeff20f601792e17efbe7ef4e0c9698759d9e3f0f465ff8449e638b197df3d"
+    },
+    {
+      "id": "konzept.zahlenrechner.25805a39.aequivalente",
+      "datei": "karte-66244bf8bbef9c68d5e6-v7.json",
+      "formatVersion": 7,
+      "sha256": "caab954116848e1724d2f4a2d1d67bc5328af2ac77a0d6f9bdea98d34f5b5946"
+    },
+    {
+      "id": "konzept.zahlenrechner.83bd162.definition",
+      "datei": "karte-89b8bf62b0d14f5d83a8-v7.json",
+      "formatVersion": 7,
+      "sha256": "930715a0bb6adf6e9171e6a1599074a60662d4c6af47d8b17e4269871d89321a"
+    },
+    {
+      "id": "konzept.zahlenrechner.83bd162.definition-r",
+      "datei": "karte-bbb2ec77e3aab5575c83-v7.json",
+      "formatVersion": 7,
+      "sha256": "9767d9cadc1223f1af6101c9812d4d19a0102374690b8bb2b8744ca24aeef2b9"
+    },
+    {
+      "id": "konzept.zahlenrechner.83bd162.definition-hyperr",
+      "datei": "karte-5852817b7974c75888ca-v7.json",
+      "formatVersion": 7,
+      "sha256": "62c7201e3765e7031489357db1583ebfc18316019ae9767bb6b4398db075c02b"
+    },
+    {
+      "id": "konzept.zahlenrechner.83bd162.definitionsbereich",
+      "datei": "karte-18ae60355dd575b18095-v7.json",
+      "formatVersion": 7,
+      "sha256": "094f4e2451de471fac19ace15cc6d38523c54fae95632e6cd00fbd7c50073d42"
+    },
+    {
+      "id": "konzept.zahlenrechner.83bd162.definitionsluecken",
+      "datei": "karte-cd1f64105a7caca5f38e-v7.json",
+      "formatVersion": 7,
+      "sha256": "0f1250e687ad0a8c8a2c2034390c40b73337a97ab4b9a55eccc3ebec6268bc6e"
+    },
+    {
+      "id": "konzept.zahlenrechner.83bd162.aequivalente",
+      "datei": "karte-4eac91b400f12c16cab2-v7.json",
+      "formatVersion": 7,
+      "sha256": "e8e907c18b94e9eff6700259020fe7cbc760962bb6fe6246307a133f231f53fc"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition",
+      "datei": "karte-5232ea4cdc6fc6da1005-v7.json",
+      "formatVersion": 7,
+      "sha256": "6ec422a4a2f42798c1025c4836e7afbbcde10f926ca20c3a3fff18b2b98f7e3d"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-n0",
+      "datei": "karte-415b3526685b3f716a47-v7.json",
+      "formatVersion": 7,
+      "sha256": "0ae6c3113cc48195cf3c1d8fdff3606f8fc1c3b2387d0615737a693325bc2e74"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-z",
+      "datei": "karte-afae0b3e357ef223bd1e-v7.json",
+      "formatVersion": 7,
+      "sha256": "f5dbf328717519ab23e9d565004242dc8d0a67e4d53d63b63cdf93d773d7f4be"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-q",
+      "datei": "karte-b542fa9b6befd82fa6c4-v7.json",
+      "formatVersion": 7,
+      "sha256": "fedb3788fae957429c190caa06dd1de28fa28a7693179384d03ff3d8a29bf794"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-r",
+      "datei": "karte-67ed7c0779e6429dca2f-v7.json",
+      "formatVersion": 7,
+      "sha256": "33bc331bea3e407028bb7e1a41c33eb5f7fb4f7d95e8eddf643b105045a03af8"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-c",
+      "datei": "karte-3348cb8036fca3421348-v7.json",
+      "formatVersion": 7,
+      "sha256": "814970c2967f83bdcb36559ae8f4636807e3333c8c9acbd14ff5e054e018e5e1"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-hyperr",
+      "datei": "karte-5e957dbc83a01e322ac3-v7.json",
+      "formatVersion": 7,
+      "sha256": "f775b628830a521597e99d98359c4bc35b9560bd8e118a635d82cd9555a94315"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definition-h",
+      "datei": "karte-c6ebd451fece02c422c2-v7.json",
+      "formatVersion": 7,
+      "sha256": "8735b6d21c3bf97857009def39905a0242d2b22e63b872e62e2fbb7405e40a9b"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definitionsbereich",
+      "datei": "karte-523dce74f1a22ee480f6-v7.json",
+      "formatVersion": 7,
+      "sha256": "40b38d4fce7339b8f31e171b26495c5acb9a8be087b89702e124ca232b7d7afc"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.definitionsluecken",
+      "datei": "karte-0d03418d21d460cb835e-v7.json",
+      "formatVersion": 7,
+      "sha256": "770f0e25869e00f344b6e9830650586e27b4637b1c912cca55ad9794b45f5688"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d325151.aequivalente",
+      "datei": "karte-d49140a0e230591cb5ce-v7.json",
+      "formatVersion": 7,
+      "sha256": "023c38a750f6f8b14a56044c553e76d7aefb70d13f04053f10235c13d3f8e083"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition",
+      "datei": "karte-f2f3bc7b0e9ff06afaf7-v7.json",
+      "formatVersion": 7,
+      "sha256": "c73659d56dfe0ba56c3fc3332b36993530db87ee5bb7af3d73ecd09940c1fab8"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-n0",
+      "datei": "karte-e234d6bbec66b7f0d2f3-v7.json",
+      "formatVersion": 7,
+      "sha256": "b89ea3e095bd7c3a904ffe1652ccab5f329b56f0c8629cf10faab78a2fae5c99"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-z",
+      "datei": "karte-cf0a5d2cd2314f18d201-v7.json",
+      "formatVersion": 7,
+      "sha256": "28e4283a1439bcde2b344dd2cdd5ffc009b098b317a50006a1202aa5f5c19e72"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-q",
+      "datei": "karte-fb9bbe7e7274e33a5939-v7.json",
+      "formatVersion": 7,
+      "sha256": "463b3478498691bf2274f1af2b8e75fd973037f35ec66e240ed8af0a7fbc181d"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-r",
+      "datei": "karte-91dca88498e2714f475c-v7.json",
+      "formatVersion": 7,
+      "sha256": "98bd6da7a1f3f9a807a795e72d6d93215fadc00b7a8486ba1f8fe4a9d130fee0"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-c",
+      "datei": "karte-d6d6ed1bdfa73f198646-v7.json",
+      "formatVersion": 7,
+      "sha256": "b0dfc7b7bfc2e9b6f7da03197858345063a908ca83c5e30d45d4e434977f8f8f"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-hyperr",
+      "datei": "karte-492a20830020850ca24a-v7.json",
+      "formatVersion": 7,
+      "sha256": "ed5b4c7666d7cf3762106e0f67d554bdc67bee5a1698c2ff5f14e1d51d9f39e0"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definition-h",
+      "datei": "karte-c72626cea673fe913213-v7.json",
+      "formatVersion": 7,
+      "sha256": "dfbfee073d07d057825d64bfa1674db58328bf027237198a0a436d8406f4f5c9"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definitionsbereich",
+      "datei": "karte-4203fd29f92fb66679f0-v7.json",
+      "formatVersion": 7,
+      "sha256": "861af88c8f90bc2d4d99e18f6a1e57d5ec554291b468042f4aaae5acce2668ed"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.definitionsluecken",
+      "datei": "karte-84b93c4bb7b5d1af4de7-v7.json",
+      "formatVersion": 7,
+      "sha256": "18cd484807584032f0d7f2229e06bb3a1b942a09e11afac65158407639556851"
+    },
+    {
+      "id": "konzept.zahlenrechner.1f83998c.aequivalente",
+      "datei": "karte-a3a6e49334136ba1646a-v7.json",
+      "formatVersion": 7,
+      "sha256": "989ff1b8383d59f085b7aec6bb79637e4354305fa6bbcf881e3efc13e6f20aac"
+    },
+    {
+      "id": "konzept.zahlenrechner.3066291a.definition",
+      "datei": "karte-f1bdb89e776a451d29b6-v7.json",
+      "formatVersion": 7,
+      "sha256": "ea34f9df262626152532e27bf4e9dc4f5a9c301747d6cd85c342adca8c35e70e"
+    },
+    {
+      "id": "konzept.zahlenrechner.3066291a.definition-r",
+      "datei": "karte-e7504cec0652f5f69ec7-v7.json",
+      "formatVersion": 7,
+      "sha256": "4aca0059eac72cc87c19020f0216e47467bc9913152e450a6f4a1d6997bfbfed"
+    },
+    {
+      "id": "konzept.zahlenrechner.3066291a.definition-hyperr",
+      "datei": "karte-3c854f58d1526cd68eca-v7.json",
+      "formatVersion": 7,
+      "sha256": "eb421c4bd1a40c891b72b7415626054f489617a9876c4670cfb77adf2a3f07d2"
+    },
+    {
+      "id": "konzept.zahlenrechner.3066291a.definitionsbereich",
+      "datei": "karte-e2b32c8f8bf8ad0c0a6d-v7.json",
+      "formatVersion": 7,
+      "sha256": "abe304ad45e6693891866db7ff4e24000b02a7803179e27d276707f6bf32579e"
+    },
+    {
+      "id": "konzept.zahlenrechner.3066291a.definitionsluecken",
+      "datei": "karte-d50c668b2e11c1b2c2ef-v7.json",
+      "formatVersion": 7,
+      "sha256": "475d9959011f3f2f1b87cdc40293ba31dc9b5eb8dbd0448836f151d4e3335f1a"
+    },
+    {
+      "id": "konzept.zahlenrechner.3066291a.aequivalente",
+      "datei": "karte-69404a5d8deabf169608-v7.json",
+      "formatVersion": 7,
+      "sha256": "039d89600822f1b5505422f89270cb009b015f1981ddb7423d3184c84d2727fd"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition",
+      "datei": "karte-06f695c08a04c2d633fc-v7.json",
+      "formatVersion": 7,
+      "sha256": "f2567854b22f344dc7b4be9f5ecde940e0c58f3aed6442ec32e545cce071b763"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-n0",
+      "datei": "karte-d154da589d7ec7821f0f-v7.json",
+      "formatVersion": 7,
+      "sha256": "b771fedc56002b3f0b41d99e99ab5a1e04b8a88014d3fa94bb84807a36156d22"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-z",
+      "datei": "karte-3c481aeef15c0f22375a-v7.json",
+      "formatVersion": 7,
+      "sha256": "fbd00c2b8701d3c3319e1c0770b3510c7ef5cd0aace513de5caeb1a49f0d3777"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-q",
+      "datei": "karte-eaf2c7c62dfbd08caa0c-v7.json",
+      "formatVersion": 7,
+      "sha256": "632930a71d6e02aed74c8fe4e65473a9c5901d6d42a2ea2e3995adbea2c720e6"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-r",
+      "datei": "karte-9024ba503b2774228328-v7.json",
+      "formatVersion": 7,
+      "sha256": "8eca603363fb4e95466c47a07ea86cba3d8ffbff3a9bffaa777b6d4dd44f1429"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-c",
+      "datei": "karte-168843806be00e383631-v7.json",
+      "formatVersion": 7,
+      "sha256": "9ad2801db5ee7f68e5ccb6c76f864d4037559f3dccb1da29fd22bb84176e2f90"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-hyperr",
+      "datei": "karte-6d40d0b7f18ecade1c07-v7.json",
+      "formatVersion": 7,
+      "sha256": "c557983b42dc93f4e89b0623beb2c8bf723776ffcc5cb3fb296c7c32000c1bf6"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definition-h",
+      "datei": "karte-1e6790547351f865f558-v7.json",
+      "formatVersion": 7,
+      "sha256": "ca4bfeb4a9662fc8aad26ba01044a2970587b1e90619fc12ae22f15bb964324a"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definitionsbereich",
+      "datei": "karte-04de618d5f101634ea16-v7.json",
+      "formatVersion": 7,
+      "sha256": "c920aab475012561ce1897ff9ef01b1766e81c31bb77bc10a69cbdf9341f7673"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.definitionsluecken",
+      "datei": "karte-cf5e525f69e03fa9a0cf-v7.json",
+      "formatVersion": 7,
+      "sha256": "fbb6876415275732cc4ebf95d0ff7ad7375f4fdb7c2bc3cf35ceaef53a8b81da"
+    },
+    {
+      "id": "konzept.zahlenrechner.92484ca2.aequivalente",
+      "datei": "karte-de5b500e59f6b06ee6f8-v7.json",
+      "formatVersion": 7,
+      "sha256": "2efe60011da0167100522fb7e8010b927189b6449e8f1e6333d3c79c45c3c900"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition",
+      "datei": "karte-c506ee40acf85f1ecb9c-v7.json",
+      "formatVersion": 7,
+      "sha256": "f2e4210ac5b7b4f2bfd55c8926e18ae09597e3c9b2f048d398e9674144327055"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-n0",
+      "datei": "karte-bdd4851647351e511296-v7.json",
+      "formatVersion": 7,
+      "sha256": "7be8e24c7dc1fb08fe8d749baff761c43903add02b50cb92abdfe3e3ac16f202"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-z",
+      "datei": "karte-ec01109f6f23e1979c9a-v7.json",
+      "formatVersion": 7,
+      "sha256": "0522cf8720f6013f671f728bea621de6de58f5f463354e8dcc4107d9acad22fb"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-q",
+      "datei": "karte-62cd902f3ab5296abf58-v7.json",
+      "formatVersion": 7,
+      "sha256": "b25c92c7e5fe5373b51278288c9947a775d734e4d7260f46ee3ce58e00bbe788"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-r",
+      "datei": "karte-f7f2820484df3b7be6f8-v7.json",
+      "formatVersion": 7,
+      "sha256": "e43bf9635cdbcd271ca61886d05b8827645a6f36131bc82457691953a39969f9"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-c",
+      "datei": "karte-bf731c843d2b2725f0be-v7.json",
+      "formatVersion": 7,
+      "sha256": "5243157fc665b46332daadf05a22e59e911893d8cff608285a20a1708d988c4b"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-hyperr",
+      "datei": "karte-20a59e4c71b509dacb9b-v7.json",
+      "formatVersion": 7,
+      "sha256": "08bc39da235e6f637669d85d64cfb36e636f37e4d89e3f2d6227eca52cba669c"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definition-h",
+      "datei": "karte-761fcfc7894645e0f34c-v7.json",
+      "formatVersion": 7,
+      "sha256": "ba55c38aabea0ce0db1b83a7fe3c367887c393a2fdd2b931e75483fba2665175"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definitionsbereich",
+      "datei": "karte-57589dbdd54bc5191d6a-v7.json",
+      "formatVersion": 7,
+      "sha256": "83bc972951822eb17ff1a21dd1bbb0937e1aa6d2257de5b28af859c1822624eb"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.definitionsluecken",
+      "datei": "karte-1ab6f375c4ad9c611301-v7.json",
+      "formatVersion": 7,
+      "sha256": "08dbcc80820cdfc9ba85ea9f582da8894dd7e752a8eb08f488b03865abac00ae"
+    },
+    {
+      "id": "konzept.zahlenrechner.aaa7c945.aequivalente",
+      "datei": "karte-abc5ada5e799377cac62-v7.json",
+      "formatVersion": 7,
+      "sha256": "fdcf1d8ba07c2cdc02d9245f1716c4787db05b4591a6ce33a76b19d1464ba292"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition",
+      "datei": "karte-5353bad8370d6535408a-v7.json",
+      "formatVersion": 7,
+      "sha256": "ba8e61cf2a9917bb02e88357d8d3452e196bd6e5f4356072bf6fd20966c69651"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-n0",
+      "datei": "karte-ec35e0526c7180bc9c9e-v7.json",
+      "formatVersion": 7,
+      "sha256": "fa9c7bd9a577ec14757468fcc14a937f8b59209031562ccc513121c70e33402e"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-z",
+      "datei": "karte-87b4747e39b7c3024a61-v7.json",
+      "formatVersion": 7,
+      "sha256": "f81321ba384b2b28204db63b9557c3b87e44c4be2c745accba96c694425e257b"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-q",
+      "datei": "karte-671e776496ad5293fda7-v7.json",
+      "formatVersion": 7,
+      "sha256": "0adabb9c1817204d3cb299457460d84da8ee03ddf78c94341f3903a6a923bdb5"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-r",
+      "datei": "karte-7acdfc228367094beb2d-v7.json",
+      "formatVersion": 7,
+      "sha256": "0b4ba906afa1a65834838a7aeddc2cce193c05fec4edd8175e02db23728ddafc"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-c",
+      "datei": "karte-2a3851e15c1832af9ca1-v7.json",
+      "formatVersion": 7,
+      "sha256": "8c3c4c529d798a8b74ad91230ff0f8ebf9799fd44df080ba3f10914b1e5ebe85"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-hyperr",
+      "datei": "karte-c55426a7746026be81cb-v7.json",
+      "formatVersion": 7,
+      "sha256": "867df3cdf6bb4feae0ef39324bbced992a15d1e697eaa891abd8a5a46a56a094"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definition-h",
+      "datei": "karte-763be7fa5bbdc8f42677-v7.json",
+      "formatVersion": 7,
+      "sha256": "b64e47dc59b998217beec7ea17eaafe0d8d9659886ecd9193f95244a5cf0aa73"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definitionsbereich",
+      "datei": "karte-c175d6fa32d7ff8edd24-v7.json",
+      "formatVersion": 7,
+      "sha256": "c7b6682746a7fa4b2ef5a219ab174513a23f8e0fe139da44ddde0dd102bf0fb4"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.definitionsluecken",
+      "datei": "karte-b7fc1617e0404b408cdb-v7.json",
+      "formatVersion": 7,
+      "sha256": "3ee2549742e5d98cec2a6cf9eb208870b14b9b6cf23c56217122aa1e0f7a91e2"
+    },
+    {
+      "id": "konzept.zahlenrechner.f8270f4a.aequivalente",
+      "datei": "karte-224981af27b1d332587e-v7.json",
+      "formatVersion": 7,
+      "sha256": "bce0cde818a7da82b7610916bb894cf84dbfc1528c243e947928aa83d70a800f"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.definition",
+      "datei": "karte-105da6bc304b9785bd9e-v7.json",
+      "formatVersion": 7,
+      "sha256": "ea5d5eea29316e0d039fc6af968ea18e29325cefc9e890ce7cfe003352707ec5"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.positiver-nenner",
+      "datei": "karte-00cace1053590da408fa-v7.json",
+      "formatVersion": 7,
+      "sha256": "61af508f554cfc52d5874027a035cc01dd0c1391f7f48a76f376a383783dea44"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.negativer-nenner",
+      "datei": "karte-6fff2abdabd85401dd13-v7.json",
+      "formatVersion": 7,
+      "sha256": "b0fae0be15cdfe9f4fa41d8c87ed8484ace91cc782e168e33b4bf82ac254054a"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.komplexer-nenner",
+      "datei": "karte-c2512ba84f7dc0540e63-v7.json",
+      "formatVersion": 7,
+      "sha256": "107a395d732970b675bf7502157f7e27b256a4ceb6b7d98a26be78e924e6d51d"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.komplexer-nenner.polar",
+      "datei": "karte-7ea7869e82150b06148b-v7.json",
+      "formatVersion": 7,
+      "sha256": "ce44842c025f56447225b5fb26cf0c67cb90ca886abf4e78b5d0923ece00582c"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.komplexer-zaehler",
+      "datei": "karte-3b3b7b556899f05894d2-v7.json",
+      "formatVersion": 7,
+      "sha256": "0b42458622c56c30f013e03e5656b87def535cbbc9ba5746be8932a1b03a9892"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.komplexer-zaehler.polar",
+      "datei": "karte-68f949bb295339069de0-v7.json",
+      "formatVersion": 7,
+      "sha256": "b4da07ceef53a79b3fe44945b8bd7db896320102cb23514e41a83067b14101d2"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.definitionsbereich",
+      "datei": "karte-9451f3e8e026317c981b-v7.json",
+      "formatVersion": 7,
+      "sha256": "11bd21eb90768742a3ee13d7f032f32485c4e4c4f09379b4b110a396755ed8bd"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.definitionsluecken",
+      "datei": "karte-2e0d8d72bff7eca789c3-v7.json",
+      "formatVersion": 7,
+      "sha256": "7680dbf0c2974b6a19a9d01e90a7a6f518ab0e0084e053e9aca2afa817d09641"
+    },
+    {
+      "id": "konzept.zahlenrechner.5d7c91ae.aequivalente",
+      "datei": "karte-7b2f922416b59d8d7e76-v7.json",
+      "formatVersion": 7,
+      "sha256": "640f66ef11710b10b95373fa02b2304b877cdb89326c05c73c364ef623ed502b"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition",
+      "datei": "karte-16e34e7f7b4e21c39c45-v7.json",
+      "formatVersion": 7,
+      "sha256": "2b42656dec92499b6c117dd3ae8f5ebd2d47451f042163b22bce7749bf3590ec"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-n0",
+      "datei": "karte-c2bf06ede27ac354aeb0-v7.json",
+      "formatVersion": 7,
+      "sha256": "41b24e31276f68fa872a738ceed58addc236867c65c5f8a155810bda0a5b956b"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-z",
+      "datei": "karte-38c07bd6b0006e7b1541-v7.json",
+      "formatVersion": 7,
+      "sha256": "38170b4a22f4330eff6bfdf42b8275f603f152c7b1c91142e8e820dc87a6029f"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-q",
+      "datei": "karte-40b87e0acf58685c874e-v7.json",
+      "formatVersion": 7,
+      "sha256": "1407013cc30da1f457a8484fc1c1a2b596822468481e06d23d453a503299f68a"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-r",
+      "datei": "karte-b252730a361e003a2ab4-v7.json",
+      "formatVersion": 7,
+      "sha256": "decd31389320b7e28c78f279798d8cd6efec5a94a63a3828714851be0a864d11"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-c",
+      "datei": "karte-4bb74e03741ee96ac60d-v7.json",
+      "formatVersion": 7,
+      "sha256": "d00dedf3e623f01b59975f4bf734b6f5924ad6a0071e063cb2bf687eb944b783"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-hyperr",
+      "datei": "karte-ad987a05b7c606b68ff4-v7.json",
+      "formatVersion": 7,
+      "sha256": "390d6f388b5a8c01bc1b0e115c6b0aa15a70fb46b7db9604693383495dee4e85"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definition-h",
+      "datei": "karte-96fe5412964b839effab-v7.json",
+      "formatVersion": 7,
+      "sha256": "2bb5bfaada7b690501d2a4282bfa115205cefe65990c374d3d8821fc05df80bc"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definitionsbereich",
+      "datei": "karte-40cccf3dccfde6bb18ca-v7.json",
+      "formatVersion": 7,
+      "sha256": "75dda166e608b6d85075c9f4ca8f79e2b4f124e74f934a69267e6ca24a95c595"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.definitionsluecken",
+      "datei": "karte-e640370c2e872df6ba3f-v7.json",
+      "formatVersion": 7,
+      "sha256": "35b36ff7d36b664cb0cb8292bed784f5394bf814487ddb025097f16524f43bcc"
+    },
+    {
+      "id": "konzept.zahlenrechner.730e250a.aequivalente",
+      "datei": "karte-0157017cf1c2eb62fc50-v7.json",
+      "formatVersion": 7,
+      "sha256": "d2c0f1d2962d2dc00928e22fe3592db8d52bb05b49140a27aa91c70d5853d44e"
+    },
+    {
+      "id": "konzept.zahlenrechner.bdceefc2.definition",
+      "datei": "karte-1412a32528a181c75fcc-v7.json",
+      "formatVersion": 7,
+      "sha256": "150441d7d551bdfccd45402f55ffece90cbc1c9da33ff2a522306f5d12724b27"
+    },
+    {
+      "id": "konzept.zahlenrechner.bdceefc2.definition-c",
+      "datei": "karte-09b31b9c4b8c77e3b3a2-v7.json",
+      "formatVersion": 7,
+      "sha256": "096aae818cf93fc1b6628d0f5ad06e24e0d5b022e2ba39dd2686046e57264bc2"
+    },
+    {
+      "id": "konzept.zahlenrechner.bdceefc2.definition-h",
+      "datei": "karte-48013160af057b878201-v7.json",
+      "formatVersion": 7,
+      "sha256": "d43769c6949a2eebf47ddb1dc00cec2e994926c3395b1fee851826d59398dd05"
+    },
+    {
+      "id": "konzept.zahlenrechner.bdceefc2.definitionsbereich",
+      "datei": "karte-34b5ff024fe8ea4223f6-v7.json",
+      "formatVersion": 7,
+      "sha256": "afe33e6e10b04257b607d0487e6819411c0e425f70118bab19703b048363dc94"
+    },
+    {
+      "id": "konzept.zahlenrechner.bdceefc2.definitionsluecken",
+      "datei": "karte-d2d7235e6293644c6c49-v7.json",
+      "formatVersion": 7,
+      "sha256": "05341b950ed25921169ff76f92b06bd6ff91dbf4a51e3ff922bcfd991b0f19d6"
+    },
+    {
+      "id": "konzept.zahlenrechner.bdceefc2.aequivalente",
+      "datei": "karte-d4e0d428cbcef7d255fd-v7.json",
+      "formatVersion": 7,
+      "sha256": "299d8997ffcdcd25d72cb7e9beb3d4dc2791f5472e0d8591c94e0083cc93a406"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition",
+      "datei": "karte-861d7b04dd4e07916b7c-v7.json",
+      "formatVersion": 7,
+      "sha256": "b2e09a3d0fbfdd5b6b569a9920609c355e091f0b8be16714b938f649fa4e1119"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-n0",
+      "datei": "karte-2e6adbde6a7f44ca4b0d-v7.json",
+      "formatVersion": 7,
+      "sha256": "eb1093c44e5427584da13f53355c01a2f3f9cef56addfb4c285891c0de0ca617"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-z",
+      "datei": "karte-7e7d4a39d33e763855a4-v7.json",
+      "formatVersion": 7,
+      "sha256": "eeb4e7a8a9747ba0d259b3d1e83c8173b143e0763a978d373e56cf5a2e9178f7"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-q",
+      "datei": "karte-434f5d1ba06fa59644a1-v7.json",
+      "formatVersion": 7,
+      "sha256": "975e5007f28afcf18808b13f90f82cf85bf034cb92b5fa40e350fd41210c63d5"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-r",
+      "datei": "karte-e16ec9cadc28021441f8-v7.json",
+      "formatVersion": 7,
+      "sha256": "3a4d5d80af8f481cbde6cf3760fda0c085e80ff9d5c9589b07a6193c4c5449f9"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-c",
+      "datei": "karte-2f4abaff45bca6354222-v7.json",
+      "formatVersion": 7,
+      "sha256": "beb6e087a939531b90dfad21b022b2cd46ab5f2ae88bad0c4e46e3e51d85dc02"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-hyperr",
+      "datei": "karte-078654b2de2454a0cf53-v7.json",
+      "formatVersion": 7,
+      "sha256": "3addface917de4c9c742aca53b8aafc70049cf027badc16aefef5f9fcd0f7a88"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definition-h",
+      "datei": "karte-2e7a55bb9685168c62d0-v7.json",
+      "formatVersion": 7,
+      "sha256": "5bdaed06733cc6f029b5804d81c22bcb8adc3679852b7d0b17751dfa74a4488d"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definitionsbereich",
+      "datei": "karte-e85c1b967e5d127c6ec9-v7.json",
+      "formatVersion": 7,
+      "sha256": "01f003e767e798787fd761c80f159d7e9e0c4bdef2b8cc3d3cd2198d786fd43d"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.definitionsluecken",
+      "datei": "karte-9ea40de2566b3e43a24e-v7.json",
+      "formatVersion": 7,
+      "sha256": "be17a4a66a591df2b7d6503b605dc8e04633211792defdc0f0df9bdac769f310"
+    },
+    {
+      "id": "konzept.zahlenrechner.7f1a662c.aequivalente",
+      "datei": "karte-6a9f440d37d6666b5607-v7.json",
+      "formatVersion": 7,
+      "sha256": "61054746912d9470d332af090d291c7cbcc9fabab67bbd156b1990e4a762258d"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1199b0a.definition",
+      "datei": "karte-2aea3366b7dd5a96b397-v7.json",
+      "formatVersion": 7,
+      "sha256": "b36634ed32dbabe32c0547e6d8b35e0fc403be5dc592893b7ddcc000ac01a18e"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1199b0a.iterierte-summe-leere-indexmenge-0",
+      "datei": "karte-432d4de6e5bf6131d158-v7.json",
+      "formatVersion": 7,
+      "sha256": "a21596929a8d8c7f1a31f54844e1cc0444040484585b3f7451fcb9f1413986b3"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1199b0a.iterierte-summe-endlicher-spezialfall-0",
+      "datei": "karte-e371e3f2f02917dee75c-v7.json",
+      "formatVersion": 7,
+      "sha256": "931c84d396bd4aabfd09b138519ca257fa807ceba26c35c1ebc267cd691d9727"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1199b0a.definitionsbereich",
+      "datei": "karte-d10f04b2c01f5c7cc7b0-v7.json",
+      "formatVersion": 7,
+      "sha256": "acf1292f3faee505abead9d6c618003e89e4d16dec55ed350e2198742481d9af"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1199b0a.definitionsluecken",
+      "datei": "karte-46baf5d2614b9f1ef310-v7.json",
+      "formatVersion": 7,
+      "sha256": "111379907e595243d6a9a61c1e00180df3ba0cffd7f1421e913a9ba1ad333d8d"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1199b0a.aequivalente",
+      "datei": "karte-6ab64e1c5d63ed6627a9-v7.json",
+      "formatVersion": 7,
+      "sha256": "12cd6f1a5146203f68d585c468de8536872793d1b968d6981c9b1ba438dc6bf4"
+    },
+    {
+      "id": "konzept.zahlenrechner.3087b80c.definition",
+      "datei": "karte-f0de4f60bef75805204f-v7.json",
+      "formatVersion": 7,
+      "sha256": "c01fd5c179a1658e71376180b038393794816510792d3ef8af28b657c9f7fc51"
+    },
+    {
+      "id": "konzept.zahlenrechner.3087b80c.iteriertes-produkt-leere-indexmenge-0",
+      "datei": "karte-e6314a4a20e96e0c66c9-v7.json",
+      "formatVersion": 7,
+      "sha256": "a187acc0a5e5dea50c0bd37be7b8382c56434ae7c81792db505406f07a816f88"
+    },
+    {
+      "id": "konzept.zahlenrechner.3087b80c.iteriertes-produkt-endlicher-spezialfall-0",
+      "datei": "karte-e8c40eee9b3eb0a67122-v7.json",
+      "formatVersion": 7,
+      "sha256": "5d7396306b0810e442550c5573d4dae971c8ad97b63a71b1b36e6a296d582fd8"
+    },
+    {
+      "id": "konzept.zahlenrechner.3087b80c.definitionsbereich",
+      "datei": "karte-d4ce6fb8299e0dcfc920-v7.json",
+      "formatVersion": 7,
+      "sha256": "2664fa55987e6ad200ee93e04f77f0b7ed6d406facb81d5a69d0c97239f8ba00"
+    },
+    {
+      "id": "konzept.zahlenrechner.3087b80c.definitionsluecken",
+      "datei": "karte-1ce03c48a708c3b798a1-v7.json",
+      "formatVersion": 7,
+      "sha256": "71c5be634a10a0189193c4d7f7c6eca23b4ff7359cb239f5f5c0d8f0efac0a99"
+    },
+    {
+      "id": "konzept.zahlenrechner.3087b80c.aequivalente",
+      "datei": "karte-3b272c6c44cccc3b80ab-v7.json",
+      "formatVersion": 7,
+      "sha256": "2f2e3076c326528758f694963d23984db722f1e27367d1f8d6fc30163dd8ad1f"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition",
+      "datei": "karte-952584e706df00465f18-v7.json",
+      "formatVersion": 7,
+      "sha256": "c9aa56e81a1f7554eaf20a8e916610a450f2be5a5df4a5c1ece6d7ea8f6ffeba"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-n0",
+      "datei": "karte-15b395cd84136e8fc4a1-v7.json",
+      "formatVersion": 7,
+      "sha256": "842f44aa54098aedeed0d89fbcf229c4d48766b06336c9a841c6dc5e77346d55"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-z",
+      "datei": "karte-5eaf7ec094cf582a7aef-v7.json",
+      "formatVersion": 7,
+      "sha256": "d8feb67500c841e15501040bb402f23505c8a8e965a98abdfd1fb73c6faba343"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-q",
+      "datei": "karte-12b8e9318498ff2f2511-v7.json",
+      "formatVersion": 7,
+      "sha256": "d01620aafe8e6d770d377cf6052cd800d7e7089388405df9811c49b20de7ad7d"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-r",
+      "datei": "karte-8e25ef1cb57c386cdcd0-v7.json",
+      "formatVersion": 7,
+      "sha256": "377fd7f938c15cac66d5f2b7335e8757effe1d9ddd120d899e8db2a7851a0cb3"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-c",
+      "datei": "karte-62cc7d9b9519bffdd6ee-v7.json",
+      "formatVersion": 7,
+      "sha256": "1b472013245687872eaa60084f9c5bcb0f871ab46a7c563e9cee282376bb8ee8"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-hyperr",
+      "datei": "karte-156a025c24b1357681ec-v7.json",
+      "formatVersion": 7,
+      "sha256": "8991c94ec069681d32ea8ed447d90070fd368f29b43d7c30a7f015df6a67a7bf"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definition-h",
+      "datei": "karte-dcb1cf0f66b2844449b3-v7.json",
+      "formatVersion": 7,
+      "sha256": "750996e94ab7448551eb9e6b98d58775d06cb7470e4a13c9fad41a231a8dabfc"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definitionsbereich",
+      "datei": "karte-0fec63e9979808308345-v7.json",
+      "formatVersion": 7,
+      "sha256": "b2cb44a282e068ce261ab07ffcfb1050941bf3f1212479fc46b65f2089b3f19d"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.definitionsluecken",
+      "datei": "karte-a365c17d0abd15555f5c-v7.json",
+      "formatVersion": 7,
+      "sha256": "c83335e0da85a1aea17be5a5084cca00ed32475097f475641cf88b69ea6f1d9e"
+    },
+    {
+      "id": "konzept.zahlenrechner.2c527dbc.aequivalente",
+      "datei": "karte-633ad3fe7cfd0a207418-v7.json",
+      "formatVersion": 7,
+      "sha256": "0b7326c75b9e453c4dc0ac64efb525bd345a4e5ff3b50aa62492ff5846cf67ed"
+    },
+    {
+      "id": "konzept.zahlenrechner.2edaee09.definition",
+      "datei": "karte-fd30171673426139d237-v7.json",
+      "formatVersion": 7,
+      "sha256": "f55a7c696f74f8b03899b383a0709790e8e39e82255f759fc1c61e1fde190903"
+    },
+    {
+      "id": "konzept.zahlenrechner.2edaee09.definition-c",
+      "datei": "karte-f218be94fa60a8b79a2c-v7.json",
+      "formatVersion": 7,
+      "sha256": "6479a97ca671012cb17701844468a8cd0237c0027113615d7e19b35accce6899"
+    },
+    {
+      "id": "konzept.zahlenrechner.2edaee09.definition-h",
+      "datei": "karte-d80c40bc1f15f4cc45f2-v7.json",
+      "formatVersion": 7,
+      "sha256": "2cddeb58e8ffb50e1fbb80ae06a045236de1962c155cc6876d5211e5bec12fff"
+    },
+    {
+      "id": "konzept.zahlenrechner.2edaee09.definitionsbereich",
+      "datei": "karte-43626304bad183908e66-v7.json",
+      "formatVersion": 7,
+      "sha256": "93f752102f7d17439d6e76c69ca3c21c9fccd62b59cc3ad2f6673055352e7c95"
+    },
+    {
+      "id": "konzept.zahlenrechner.2edaee09.definitionsluecken",
+      "datei": "karte-ab815a526f4cf0ede62c-v7.json",
+      "formatVersion": 7,
+      "sha256": "6179b3b4edb27e0d82e426ad66271a934ead92d8730e3a3ba34722e244eb562c"
+    },
+    {
+      "id": "konzept.zahlenrechner.2edaee09.aequivalente",
+      "datei": "karte-9f1bafb96920d1fd776a-v7.json",
+      "formatVersion": 7,
+      "sha256": "f87c602f106689ed62deb6c083f300fd88d45d97a66f26e1ddc9338e74a1f857"
+    },
+    {
+      "id": "konzept.zahlenrechner.18cb9f44.definition",
+      "datei": "karte-0672c74045ad7afbe6c9-v7.json",
+      "formatVersion": 7,
+      "sha256": "eca11043e57f9712a6fd438607679aabbeafd1c2a63409ade89445a66d245993"
+    },
+    {
+      "id": "konzept.zahlenrechner.18cb9f44.definition-c",
+      "datei": "karte-e6a63bdeb56ce4c195db-v7.json",
+      "formatVersion": 7,
+      "sha256": "ef5c7255ab98449160d3e6f6dd7a97daea833f87ffe8e44c65352b4f3a984bb5"
+    },
+    {
+      "id": "konzept.zahlenrechner.18cb9f44.definition-h",
+      "datei": "karte-2d04bdc9852381c89839-v7.json",
+      "formatVersion": 7,
+      "sha256": "a88b5b08c81157b550d374790fd9b957b655804ae075b65ceac22269d733fb26"
+    },
+    {
+      "id": "konzept.zahlenrechner.18cb9f44.definitionsbereich",
+      "datei": "karte-12e9e577bd13500047c7-v7.json",
+      "formatVersion": 7,
+      "sha256": "fc4fcc3d8a3cd949594dafe6b37494ca4388e51a4d3b742b86fe49522335e1d1"
+    },
+    {
+      "id": "konzept.zahlenrechner.18cb9f44.definitionsluecken",
+      "datei": "karte-9e068e6e992f1806f662-v7.json",
+      "formatVersion": 7,
+      "sha256": "cfb888540879a170cf5031220ea30f35334e4218d20aa5c8e29b664cbc443e78"
+    },
+    {
+      "id": "konzept.zahlenrechner.18cb9f44.aequivalente",
+      "datei": "karte-b15b2f160e5ad97f6364-v7.json",
+      "formatVersion": 7,
+      "sha256": "a86354b851cdf9c0bcd4e888bbb4fbaf5faf0ced5b13904be2967c7644b611c0"
+    },
+    {
+      "id": "konzept.zahlenrechner.db4412c2.definition",
+      "datei": "karte-611856703862b30222ad-v7.json",
+      "formatVersion": 7,
+      "sha256": "4945010a11ee76656ce68bd21230906e469da77b172885bd1d34d582ea859f8f"
+    },
+    {
+      "id": "konzept.zahlenrechner.db4412c2.definition-c",
+      "datei": "karte-cd4616995af1d742846e-v7.json",
+      "formatVersion": 7,
+      "sha256": "519d6dde66245bf7c0a758a1ba273b33a825c6627501033fb90378e122769ead"
+    },
+    {
+      "id": "konzept.zahlenrechner.db4412c2.definition-h",
+      "datei": "karte-7024a49a20890647b25d-v7.json",
+      "formatVersion": 7,
+      "sha256": "c04f3675eadc63d3fd621f35fe95e2bbe24748e78dee101c7a996ad455365c7d"
+    },
+    {
+      "id": "konzept.zahlenrechner.db4412c2.definitionsbereich",
+      "datei": "karte-8d555b6ef7b7cf79c5d8-v7.json",
+      "formatVersion": 7,
+      "sha256": "b1542b1c5e407b47adb47cd67ba6db20c92219d4df0a3894dd7d5df9a9d29e50"
+    },
+    {
+      "id": "konzept.zahlenrechner.db4412c2.definitionsluecken",
+      "datei": "karte-0c07302da8fde23b06df-v7.json",
+      "formatVersion": 7,
+      "sha256": "3bee04ea7f97d4c3b5b022c68ef63f4d7c7602c0f8b9967a8d6e8ba9c17f3b6b"
+    },
+    {
+      "id": "konzept.zahlenrechner.db4412c2.aequivalente",
+      "datei": "karte-32abdb7e7e093f151869-v7.json",
+      "formatVersion": 7,
+      "sha256": "7b8adad0a130b9195b533f79726dd02a7e2c2ad9f8bd65f9a0899208fca539df"
+    },
+    {
+      "id": "konzept.zahlenrechner.5458658a.definition",
+      "datei": "karte-5bc6ad9b713faecd14b0-v7.json",
+      "formatVersion": 7,
+      "sha256": "86d45e16b8b77dcc05a9b4d8e90094cf4f6395c0ed4cd7973242a256f8a89a51"
+    },
+    {
+      "id": "konzept.zahlenrechner.5458658a.definition-c",
+      "datei": "karte-b136aeb2048b46f53b61-v7.json",
+      "formatVersion": 7,
+      "sha256": "647c30059dca02b336b91d817ab4659769f624e460d16722eaf73a719ca584b9"
+    },
+    {
+      "id": "konzept.zahlenrechner.5458658a.definition-h",
+      "datei": "karte-7255dd2500e7ce53be99-v7.json",
+      "formatVersion": 7,
+      "sha256": "a5c9b391503994d477196f7fb6a566a5cd074610177aa148c493460fa57c5d6c"
+    },
+    {
+      "id": "konzept.zahlenrechner.5458658a.definitionsbereich",
+      "datei": "karte-79e4ec50d9fd59a66c93-v7.json",
+      "formatVersion": 7,
+      "sha256": "069f449b35ba53685fff2a6e8258711bbb55059ad99a5c4cf5e290a318287866"
+    },
+    {
+      "id": "konzept.zahlenrechner.5458658a.definitionsluecken",
+      "datei": "karte-633e2f7df137393d8b77-v7.json",
+      "formatVersion": 7,
+      "sha256": "c3b6ee68e6114a43e78e3ebf732946c84b0fd7ec86b628677b535c2b2ddf1d44"
+    },
+    {
+      "id": "konzept.zahlenrechner.5458658a.aequivalente",
+      "datei": "karte-2005d9bbf20a3dbbee50-v7.json",
+      "formatVersion": 7,
+      "sha256": "c5974253a8c2d54c4d7a0dc0c7ffce4ccd3025829e7b68422f1c7631f89d5c1a"
+    },
+    {
+      "id": "konzept.zahlenrechner.73598602.definition",
+      "datei": "karte-4ceec25b7e0b87002ee9-v7.json",
+      "formatVersion": 7,
+      "sha256": "a25d4b319585d7285a4c69b06c52a5dca2b229f1a1e2d5e61a5f38f5062d7dd4"
+    },
+    {
+      "id": "konzept.zahlenrechner.73598602.definition-c",
+      "datei": "karte-2f38167f6e2c752dce83-v7.json",
+      "formatVersion": 7,
+      "sha256": "e287ba57439e9f484ef7a2bae72414526ae1a6ed4354b183dd74815553f6361b"
+    },
+    {
+      "id": "konzept.zahlenrechner.73598602.definition-h",
+      "datei": "karte-a95a1e4ebf4db23bb8e7-v7.json",
+      "formatVersion": 7,
+      "sha256": "c9314cc6c6babeb72dee0e44a62ebc577f2decf1e82fbe395b98d75fd534923f"
+    },
+    {
+      "id": "konzept.zahlenrechner.73598602.definitionsbereich",
+      "datei": "karte-fdc55124ab53574688e8-v7.json",
+      "formatVersion": 7,
+      "sha256": "0830b905fce71b97475cd5f111a6366a8093895727c43ac9f58b368416181508"
+    },
+    {
+      "id": "konzept.zahlenrechner.73598602.definitionsluecken",
+      "datei": "karte-0625d8512f72152a4b1d-v7.json",
+      "formatVersion": 7,
+      "sha256": "300729f82572ae888188b6c4d936ef26489a6564e6dc235a02ea719e4a83bc66"
+    },
+    {
+      "id": "konzept.zahlenrechner.73598602.aequivalente",
+      "datei": "karte-4b8c281ace8d78125ee0-v7.json",
+      "formatVersion": 7,
+      "sha256": "e47a240f60dc7a05e74372b6d828f63777e5a4b09ea080fb908efe34c3292e1d"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition",
+      "datei": "karte-4e88e18e70ba9a5890fb-v7.json",
+      "formatVersion": 7,
+      "sha256": "6604b24bf112e7c262309ae3efb4f2affff0eea88a0ea77be2d31f98e4bd9292"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-n0",
+      "datei": "karte-0452c701aca71e88d5d0-v7.json",
+      "formatVersion": 7,
+      "sha256": "0c574e1add6625398f7f595e9a63959f0c2737067a48f5f59e1198ee04473abc"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-z",
+      "datei": "karte-f6e33ad424a07c8cfbbc-v7.json",
+      "formatVersion": 7,
+      "sha256": "43308f4153cc440aed288c2191155327d65a09acc39eb82eaceecd1c274aa801"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-q",
+      "datei": "karte-839f78d2bc6df8fab939-v7.json",
+      "formatVersion": 7,
+      "sha256": "1f5d69515b9f70f4105e7dae5868f9ffb8f36d169b92da4ef20d470d3a670e36"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-r",
+      "datei": "karte-d7c7ef09ee4f79e745d5-v7.json",
+      "formatVersion": 7,
+      "sha256": "e1ffbad12f1e903fe96abab7f768593e399891db6fa1076f0c3dbeee2ee23316"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-c",
+      "datei": "karte-bc74a10b950e4e43c294-v7.json",
+      "formatVersion": 7,
+      "sha256": "78653d2a354e32b42a3a61b94967531ffd89d136b796a1049aeb09647a6056f8"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-hyperr",
+      "datei": "karte-1c0bf2bcabcc60f0b575-v7.json",
+      "formatVersion": 7,
+      "sha256": "bbc9ddec445c323698fed493f127303af9e26c6bd020621f3b08e8fa44bdb4b8"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definition-h",
+      "datei": "karte-7a0fe153348bae18b25b-v7.json",
+      "formatVersion": 7,
+      "sha256": "93e57583fa97855dae964916db9c6b25daa821f1c17ff4327eb5869c88ea7ea4"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definitionsbereich",
+      "datei": "karte-0ddccf38282dda6e5d28-v7.json",
+      "formatVersion": 7,
+      "sha256": "ff880d04e318f7861d61b08c058b1122b75ac84cbaba1cd878bde3aacf597a5f"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.definitionsluecken",
+      "datei": "karte-7319d1fa717fb3f5a8ce-v7.json",
+      "formatVersion": 7,
+      "sha256": "81c2a06e1cac82afbdd3b1d7c8e093e135a9e96747bb69f7672665b387327a79"
+    },
+    {
+      "id": "konzept.zahlenrechner.4e0789c2.aequivalente",
+      "datei": "karte-50b00d41d1e8017610ce-v7.json",
+      "formatVersion": 7,
+      "sha256": "1bae788b272e6aa73868e5e4c25ff4685f33dcccd4d63186e70ed70ad7d37d60"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition",
+      "datei": "karte-127ba7aab5637858e74a-v7.json",
+      "formatVersion": 7,
+      "sha256": "6c05ec7c5eb95da19319e65f9a6d8f905151954369911247f0844b5914b73372"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-n0",
+      "datei": "karte-80f32af96a30cf2a737b-v7.json",
+      "formatVersion": 7,
+      "sha256": "f9e08bec9173807ccb95da1b0ba886f3a675af1a9581ed4bbaa61417543decb7"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-z",
+      "datei": "karte-b7d96dacec924dadbbf9-v7.json",
+      "formatVersion": 7,
+      "sha256": "b3094bf9c6751b3726a44023025fe57e777cfc416ca4a11ff512a0f5b4144674"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-q",
+      "datei": "karte-8dd9daee8e89243221f3-v7.json",
+      "formatVersion": 7,
+      "sha256": "7ed4c9fba577395903f0284835d84fb9414c0160010b8b4f4a6c2ce3616941c7"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-r",
+      "datei": "karte-3b93356045d90dc5b0f8-v7.json",
+      "formatVersion": 7,
+      "sha256": "cee6beb9663a94d2bb3c53c1fb96bb5254b6416ab6edd1cdbd5428db5542e887"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-c",
+      "datei": "karte-e9af6049e1d2465f93ec-v7.json",
+      "formatVersion": 7,
+      "sha256": "697cfcb74b8c97abba60e71224ef93633ead2d438c0a2f97ab4e52121e224fcf"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-hyperr",
+      "datei": "karte-765836a2c220adb3415c-v7.json",
+      "formatVersion": 7,
+      "sha256": "5e37f6396b46d0c8e855b00ad238febd000c0fcd354c3852d473cd327e203aad"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definition-h",
+      "datei": "karte-7f1d13270ce372034852-v7.json",
+      "formatVersion": 7,
+      "sha256": "9075dcaae8ed4df1a3e10d14de8ec0e47700db61692f07ce9a31320c54e6643b"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definitionsbereich",
+      "datei": "karte-c4806a48a6a84c0fbc23-v7.json",
+      "formatVersion": 7,
+      "sha256": "beb79b503fbdac3b4df6238453fc5d86f68c832196413bbe2d68321aeb8e2bf7"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.definitionsluecken",
+      "datei": "karte-47b262f0ad3291539523-v7.json",
+      "formatVersion": 7,
+      "sha256": "ddaee69eb5f3863f87a84ec4bc2a7167c5f060c5f0f5167a8d18b99d65055134"
+    },
+    {
+      "id": "konzept.zahlenrechner.dc072a2.aequivalente",
+      "datei": "karte-25eb2dd6f90b4fb5501f-v7.json",
+      "formatVersion": 7,
+      "sha256": "9554a10ab8aa6616e6fb75547d088551ced8946afb2cdef2268dcb22f139c978"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition",
+      "datei": "karte-7774004706c2a468d6c7-v7.json",
+      "formatVersion": 7,
+      "sha256": "5f34db1afd373b95cacea7138b0378d5201ee3fb54d7faf0e5f625282d11aeda"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-n0",
+      "datei": "karte-d3cb9e16adaff4786e20-v7.json",
+      "formatVersion": 7,
+      "sha256": "f76edb065588d4fdfbd8002cc7e46488dd2e6a7e92094dd57edc75237b67df1d"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-z",
+      "datei": "karte-cbe15d364cee57bcc4eb-v7.json",
+      "formatVersion": 7,
+      "sha256": "3163808309c0cddf75fed9d99abcdc52f703d2e4ca4a9dcfb11f04384ddaa3bd"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-q",
+      "datei": "karte-b2526af4d17f95e5d1c6-v7.json",
+      "formatVersion": 7,
+      "sha256": "76bb7e0825e27b7a1d0040d0b93eae6c42febc5152a57b93fa56989bc4e955a5"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-r",
+      "datei": "karte-c56c59e2468a6a2f6d57-v7.json",
+      "formatVersion": 7,
+      "sha256": "12f45214c661c028c7fe337fcfb24287d78414ee5ebe67e26dd9fb72cd5191c2"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-c",
+      "datei": "karte-bfedb5f327b69c528655-v7.json",
+      "formatVersion": 7,
+      "sha256": "824ae0dec75a6ba6eee2217699ed3039351ae5b4632f94c18e67a562a45bf481"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-hyperr",
+      "datei": "karte-425b0da6d00246311247-v7.json",
+      "formatVersion": 7,
+      "sha256": "60765ce8da24d20cfe746773cc1ff755cdcd1d0edc93c9cc90493ea9372c6490"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definition-h",
+      "datei": "karte-f3847962e2ff863dd290-v7.json",
+      "formatVersion": 7,
+      "sha256": "d813131e2405242f3cd49c690f2e2056d481c6e59180bb29fcec9f6c4affb78e"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definitionsbereich",
+      "datei": "karte-e4ac72e8de8d57696cf4-v7.json",
+      "formatVersion": 7,
+      "sha256": "9c91cea7b65283086a3de0277554abd39c4ee3099fa39b5ec24eb282b2e2fdf1"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.definitionsluecken",
+      "datei": "karte-40ed6f98e7167f4f012e-v7.json",
+      "formatVersion": 7,
+      "sha256": "3e45dbdc8e8114ee6c31d6d13a978fe95cdb14ec7fb512a77e083ee88ccc4eae"
+    },
+    {
+      "id": "konzept.zahlenrechner.4bdc9a7b.aequivalente",
+      "datei": "karte-f31402f3790ac1d92811-v7.json",
+      "formatVersion": 7,
+      "sha256": "cd74eea3752ace0c49ffddff461f95cbc83d140b732655022ba9bb381c8a8916"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition",
+      "datei": "karte-620cfe5c9c3bf960f12e-v7.json",
+      "formatVersion": 7,
+      "sha256": "d8d280b4c8ab30cc1278864374ce0c5c440eb220100a04cc8ce7b0469e68f81f"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-n0",
+      "datei": "karte-039823ee567ad78bbe19-v7.json",
+      "formatVersion": 7,
+      "sha256": "98c13d31bdc5001cb344728cf4ee5f25e3a7df84c6406371f6af37993655b525"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-z",
+      "datei": "karte-6d364ed3762c8eca1092-v7.json",
+      "formatVersion": 7,
+      "sha256": "9c2fb3d70bc957d52ac843a5326a2e321856d790caf7f33a3eeb89c72177e4ad"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-q",
+      "datei": "karte-d7d5ffb9747973302a6d-v7.json",
+      "formatVersion": 7,
+      "sha256": "ddfbb114b191ab9b2a1f1a914b8fd110523e4bfcb7b3e05719882d9837d9be09"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-r",
+      "datei": "karte-32f5ffc07e065b6ffaa8-v7.json",
+      "formatVersion": 7,
+      "sha256": "438b44ff925bc6018824945fa5212420b00792d505d19996048864ea473c23fe"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-c",
+      "datei": "karte-631d768ae6a320c7ed40-v7.json",
+      "formatVersion": 7,
+      "sha256": "0374ce06afb12a5bc0c53fb32de565562e90c679771911943667ba81189ac222"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-hyperr",
+      "datei": "karte-b34ea5c1949e0c313c1f-v7.json",
+      "formatVersion": 7,
+      "sha256": "020c45b7c50c0bc46a188aaa3434f6de955e86eb50eae01a2949c49e56dd88b0"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definition-h",
+      "datei": "karte-2d5f9bfbc720a333a453-v7.json",
+      "formatVersion": 7,
+      "sha256": "d83f7983b75a7bb876248327a4137581c988e9e0b77a231f18f00d3f37524241"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definitionsbereich",
+      "datei": "karte-26014946415b01b8a2cb-v7.json",
+      "formatVersion": 7,
+      "sha256": "0275af2bcf6f797cc9dfd3ae1a1826ee0bdc1fbfd1a958a1cf9810d845e9104e"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.definitionsluecken",
+      "datei": "karte-b4c04f96a6d31681e61a-v7.json",
+      "formatVersion": 7,
+      "sha256": "1fbb98ea9d637ab9435c6b51ba4717b333949ce5f4eeb7b25fb48e200bc8b6f0"
+    },
+    {
+      "id": "konzept.zahlenrechner.defd3722.aequivalente",
+      "datei": "karte-0440f0746537f7bc9f70-v7.json",
+      "formatVersion": 7,
+      "sha256": "09822774f0477309cb994a1371646693893882e064d5dab6d2f805362e84ee0b"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition",
+      "datei": "karte-3f0a395afb2b0ce2b3f5-v7.json",
+      "formatVersion": 7,
+      "sha256": "65c576ff394013de828ca4d57ad9218a923f4c0ee83f3927b9ba8a9af96df336"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-n0",
+      "datei": "karte-8ae142f2dd28d905a00a-v7.json",
+      "formatVersion": 7,
+      "sha256": "6edd9ee34ac5a0c4af2e3d6015f63ad2b1986767c19cb3c14146e5ba2912f724"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-z",
+      "datei": "karte-b2fa098eb9547734bdce-v7.json",
+      "formatVersion": 7,
+      "sha256": "dcd08b2c782005cf0f774dd1d0fce3fec9bea0e6d45f235e993f3d8c51e262eb"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-q",
+      "datei": "karte-641eeade9b557d511c8f-v7.json",
+      "formatVersion": 7,
+      "sha256": "9dcc7861de46ade85fc642cff070b9bf259ded83a0447b0bb287fd28ebbf8981"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-r",
+      "datei": "karte-2a2301d61038983b9c74-v7.json",
+      "formatVersion": 7,
+      "sha256": "7a1825b09b54a3210e598a399dedc4688762fc23fe0445c2b138883e9b6410cc"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-c",
+      "datei": "karte-efe3a1500a7d0670f3b1-v7.json",
+      "formatVersion": 7,
+      "sha256": "ff10213a52e57023e8b9523c58ac0af832936cc79dd162ffe8998ba982714e96"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-hyperr",
+      "datei": "karte-37297abed137962762d9-v7.json",
+      "formatVersion": 7,
+      "sha256": "3223c1b328cdea5842165c290ddabd3a9982425ea2604aacc6fb1a6a79ef96ea"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definition-h",
+      "datei": "karte-63e492651518a529eeb7-v7.json",
+      "formatVersion": 7,
+      "sha256": "21267d8cf2ff508fbc350818155bfee33a89da784faf95781ee2308d6a4234ad"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definitionsbereich",
+      "datei": "karte-c271383d79bca6e577c9-v7.json",
+      "formatVersion": 7,
+      "sha256": "fcf42617f65c88347c52118411d2092d2ee8bc8d20b37efd00a69c3872560c0b"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.definitionsluecken",
+      "datei": "karte-9030e29caf9c668f1a81-v7.json",
+      "formatVersion": 7,
+      "sha256": "a457295d3b216257c0f24969ea1239cc05f7ffbaa76ef3a29ba870295b5e05d5"
+    },
+    {
+      "id": "konzept.zahlenrechner.50188093.aequivalente",
+      "datei": "karte-5b2c28333b25368ca112-v7.json",
+      "formatVersion": 7,
+      "sha256": "60d747f7d5e3b95b50501acf15fd9d341d705c65b98eb99ef6661779be0b0cef"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition",
+      "datei": "karte-4798442c9866ef279c08-v7.json",
+      "formatVersion": 7,
+      "sha256": "2e90fe1ae9f84535d92f8e74b85e3fe6afb5ac65c39f93b0cd75551fd8262504"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-n0",
+      "datei": "karte-cad5b8b9cda10c63ce94-v7.json",
+      "formatVersion": 7,
+      "sha256": "f5f0b6e67ed0169a2e8ad26c0cb79533b0c085a24e42fcbe5461139423d6228a"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-z",
+      "datei": "karte-9d36282aa8c05138aa05-v7.json",
+      "formatVersion": 7,
+      "sha256": "111b5cf86ad9bf98703a353409ad8ffe28f8e4bc427694345e349d9dce1699d4"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-q",
+      "datei": "karte-cbba2a2e777f182519f9-v7.json",
+      "formatVersion": 7,
+      "sha256": "38682c130f0ca324a8c9e406bf8bc3904816db6205a58c1153e7548be6c2236a"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-r",
+      "datei": "karte-f32f3cb27e85c325a554-v7.json",
+      "formatVersion": 7,
+      "sha256": "4f896d7cf97b1e807ac5aeca1d538975fcd7a117d364d5c5f8473af18eb058f8"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-c",
+      "datei": "karte-48741c097c9b064f007c-v7.json",
+      "formatVersion": 7,
+      "sha256": "29102cd730819f26bc59eef0ab51ce87cb86702efe3a5790319769855388ef7d"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-hyperr",
+      "datei": "karte-e594cf595ba7ce71fad0-v7.json",
+      "formatVersion": 7,
+      "sha256": "5d706c2e4bf3a3c5476c48c1db0316c0835eeee0ddcf1e7fb940040ffdf45a96"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definition-h",
+      "datei": "karte-7ca675736ee009a58d05-v7.json",
+      "formatVersion": 7,
+      "sha256": "ad904ca155ce7699d5c76290224928a163e03c1cd328d45ed043c1951b9e1663"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definitionsbereich",
+      "datei": "karte-bbde525cb7c3ba2babe6-v7.json",
+      "formatVersion": 7,
+      "sha256": "375444a94712eb1810991141859862f8483f0fec06818b5fe90c75f5f3110f8f"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.definitionsluecken",
+      "datei": "karte-58b49d0d8d429c5b0838-v7.json",
+      "formatVersion": 7,
+      "sha256": "6fa1ade7257388096fe903645b520f60e97e0b2de450532e5b6233624694874b"
+    },
+    {
+      "id": "konzept.zahlenrechner.f1a8cf04.aequivalente",
+      "datei": "karte-2728bb16bc5097a95cc5-v7.json",
+      "formatVersion": 7,
+      "sha256": "4d5d7ada93433b3dbae3e05d90d7125bd4be11c0404350259fd26fed41acf8c9"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition",
+      "datei": "karte-0ca7fc01f6ff003ddcac-v7.json",
+      "formatVersion": 7,
+      "sha256": "3b16145699d05418bb7e99785cf797d29553ff689795f7be322572c8080fc8f9"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-n0",
+      "datei": "karte-ae190dfca6b9d0ecee1f-v7.json",
+      "formatVersion": 7,
+      "sha256": "d738b8b55748cebbc845afce68c6d4b1517489f844a5cddab60ba48544b14ea1"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-z",
+      "datei": "karte-2601c679410f04929f19-v7.json",
+      "formatVersion": 7,
+      "sha256": "dd0617e579864dbfa06ab7ea52e44ff9f684e6ef573a7ba614dd31230b2e8edf"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-q",
+      "datei": "karte-fe2f52f6b182d0c7da91-v7.json",
+      "formatVersion": 7,
+      "sha256": "a7ba30589be0ac4b5456759757865e958ecb9503aba73880a2f99f4385972cc7"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-r",
+      "datei": "karte-283faf3a763adcffa026-v7.json",
+      "formatVersion": 7,
+      "sha256": "b3e1d34955294d14bac0481fc18a22f9c356b44ef9505a5dc3aec632b3254ba6"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-c",
+      "datei": "karte-f3bcc8ac64b27da81fad-v7.json",
+      "formatVersion": 7,
+      "sha256": "27429fc6ac28e92cf68995b1f77b3fbd22ad6cd9c7b961c790a5585f190d747e"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-hyperr",
+      "datei": "karte-91646a2bbf2214059282-v7.json",
+      "formatVersion": 7,
+      "sha256": "489637e96efbe72ce9b6dd64b225adf6bef3d4bda3217c05f250271e24add8cb"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definition-h",
+      "datei": "karte-deeec80345c42491aacd-v7.json",
+      "formatVersion": 7,
+      "sha256": "5e462059f6442e02c75d30189505d0eb59294583bb2f4296e27b0abd9fdb6bf5"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definitionsbereich",
+      "datei": "karte-6fb03ca220ae83ac309a-v7.json",
+      "formatVersion": 7,
+      "sha256": "65a56bdf7229d903f557a094dea42c13a3cbc872a936d84880f4da3a3c7d377a"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.definitionsluecken",
+      "datei": "karte-4f1e19a789b2cb2381a8-v7.json",
+      "formatVersion": 7,
+      "sha256": "cf8b162f5634d7577d1b2d251617750580e804187143bdd1f97f9346b157abe8"
+    },
+    {
+      "id": "konzept.zahlenrechner.18f6aa42.aequivalente",
+      "datei": "karte-a988ba4e7bafbf0749f8-v7.json",
+      "formatVersion": 7,
+      "sha256": "2d49237289493e98f748ad19d7d313ef0bfef43b44280d049e698013dd392ca5"
+    },
+    {
+      "id": "konzept.zahlenrechner.7e4ae800.definition",
+      "datei": "karte-f9af93e4b3fd61d11ebd-v7.json",
+      "formatVersion": 7,
+      "sha256": "f9c32d3a4a9633d9eac1331da828c474f84fc9a5a2b90eebcc618b7625874917"
+    },
+    {
+      "id": "konzept.zahlenrechner.7e4ae800.definition-zn",
+      "datei": "karte-9f73df41debd12c8f908-v7.json",
+      "formatVersion": 7,
+      "sha256": "71a80d3608b843c02c78f44b1327e813c5f11025169da55e544e8b19fba20ec3"
+    },
+    {
+      "id": "konzept.zahlenrechner.7e4ae800.definitionsbereich",
+      "datei": "karte-936b54a16344e1d4f667-v7.json",
+      "formatVersion": 7,
+      "sha256": "ab2a6086895072fc67c6ac8b11f7146d11e24df91a33f7a6a3a8fb8df4b4bc61"
+    },
+    {
+      "id": "konzept.zahlenrechner.7e4ae800.definitionsluecken",
+      "datei": "karte-9303ba585b9ce1488a2e-v7.json",
+      "formatVersion": 7,
+      "sha256": "127c02bc9b0a939c4a89e3bb364ac252cc3d9dff261cb3a41dd3a2e4445e34d8"
+    },
+    {
+      "id": "konzept.zahlenrechner.7e4ae800.aequivalente",
+      "datei": "karte-3b3722081d151b1abe7d-v7.json",
+      "formatVersion": 7,
+      "sha256": "6fa51b42e72e0885554eec90330964ddf07fd5240f3d844912c20e56bd27e145"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition",
+      "datei": "karte-37c5970329b8e57d4619-v7.json",
+      "formatVersion": 7,
+      "sha256": "06c97d9effb9fc0006cb7a187914f3476f4473e840aacd35820e355c9a5ef85f"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-n0",
+      "datei": "karte-806ba2d5e09399ac1e62-v7.json",
+      "formatVersion": 7,
+      "sha256": "ec619573f49cf38da507a8acb2ab4097345a59375906620b43cba5f0610a10aa"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-z",
+      "datei": "karte-4b923b3dfff4c0815640-v7.json",
+      "formatVersion": 7,
+      "sha256": "bc48872ee1a713c214424065c16a3db2d3927552d67884accffde4a0c4a11039"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-q",
+      "datei": "karte-7d24901b7b5c896afa9a-v7.json",
+      "formatVersion": 7,
+      "sha256": "fd15520625db3650221308708865cf87819e41f061d23aed5676f7373ccaad3d"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-r",
+      "datei": "karte-4bf3c2f924e7b49ef17a-v7.json",
+      "formatVersion": 7,
+      "sha256": "0c6817052bd9ddfb1936e5ef3b322439174f2d09ead61688e4f847106db0866a"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-c",
+      "datei": "karte-63c04e2ed6557544712c-v7.json",
+      "formatVersion": 7,
+      "sha256": "cbf62547b16d9ae1d654a44ace3b66fa5d8fa5d44cd2ab4fb11b54477c3180e5"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-hyperr",
+      "datei": "karte-6a04b690ed6a005efe2f-v7.json",
+      "formatVersion": 7,
+      "sha256": "affa9a12d8d18a511fc974f85caf6c4b0e25bfae72e11d8f5df79370dbb7b4ae"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definition-h",
+      "datei": "karte-27b292d0883647c6f0f3-v7.json",
+      "formatVersion": 7,
+      "sha256": "b2b2124cc796aab7677b05fc8463b3cd7a5ec87524ddc11d25561831e3e9ead9"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definitionsbereich",
+      "datei": "karte-9f90b11386dbcb6607fe-v7.json",
+      "formatVersion": 7,
+      "sha256": "8f04528e1640b4ab6cb3ea9cb6f1b2dcd0a97672500d0dd19238624e72d72a05"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.definitionsluecken",
+      "datei": "karte-c2d198925b8a5e06f955-v7.json",
+      "formatVersion": 7,
+      "sha256": "26712061e5da416adff645955fc8129257bb6c46e29ca331165b82e03054d00e"
+    },
+    {
+      "id": "konzept.zahlenrechner.c19787cc.aequivalente",
+      "datei": "karte-20c63fbff3f51f580f2d-v7.json",
+      "formatVersion": 7,
+      "sha256": "5a80cf6a86bd5c7915cee5cae4bf17ea06b2055e9834d03c267f80b7a9455ae1"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition",
+      "datei": "karte-5339cc24ad488d5b2c02-v7.json",
+      "formatVersion": 7,
+      "sha256": "a1625fecab2d06608d49f2068c003de2f387abd7bd396e27f93be7f24c757489"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-n0",
+      "datei": "karte-c3209c0a431dc74919fc-v7.json",
+      "formatVersion": 7,
+      "sha256": "2b04d80200d7095bcde4493aa05ba903c27d1f7fd7ceebe590285d8579213187"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-z",
+      "datei": "karte-201d0b5b7d8fc248c7c2-v7.json",
+      "formatVersion": 7,
+      "sha256": "ab0d8466e1c8c711c61fdab4ae1d47a655da233a51139dd27dd0df205997d2aa"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-q",
+      "datei": "karte-b624085631899462ec9f-v7.json",
+      "formatVersion": 7,
+      "sha256": "5b28aa4db219936b0535983ced53d62decaa93f3ba1442a796ec907f59091b57"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-r",
+      "datei": "karte-4c515b71278e4380bf70-v7.json",
+      "formatVersion": 7,
+      "sha256": "e12010be080b9463527f22fdcbd46b2ce58037e1ed1e92ef524bfcc8ac171f76"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-c",
+      "datei": "karte-059f2c1eee0750435c56-v7.json",
+      "formatVersion": 7,
+      "sha256": "a6c448370610f32e3aaf76cdc271dd69bc998670b5ca09525dd7d94b2036a0b7"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-hyperr",
+      "datei": "karte-e3aa075962528743c9d4-v7.json",
+      "formatVersion": 7,
+      "sha256": "edd2b43fc60fe54ebe8f2b767eb478ac60aa0fe8efbc95b2ccb3b057ae1bb0be"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definition-h",
+      "datei": "karte-e2d86d36b4fb38a71ce5-v7.json",
+      "formatVersion": 7,
+      "sha256": "8999473c0db82f22fd35918bbbe2954c1b3a12023fadc8b3a82fa662bf5a4f19"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definitionsbereich",
+      "datei": "karte-fb3abe25a45d03ab5b6e-v7.json",
+      "formatVersion": 7,
+      "sha256": "dd9cd04358382a47a302079e2b2ad9807450ad0216d0875bdedfc96f0e9e7c48"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.definitionsluecken",
+      "datei": "karte-9390fc8b52252f062b4b-v7.json",
+      "formatVersion": 7,
+      "sha256": "ebc7ca174ba206cc571a31fbc85902964bbcad806aecc3122fdb2f712de11167"
+    },
+    {
+      "id": "konzept.zahlenrechner.bbd75a8c.aequivalente",
+      "datei": "karte-3aa9f3503377987bca81-v7.json",
+      "formatVersion": 7,
+      "sha256": "4c7f55522cb1fdd7ec849387916a06f0fd585184b9b4a4732231115feb5a0694"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition",
+      "datei": "karte-1ebea59ca1c46197de9c-v7.json",
+      "formatVersion": 7,
+      "sha256": "c7aeb156c3f080af3388937490aa09ee930786cf8d87451c9dc75ab08b9670a2"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-n0",
+      "datei": "karte-438da619a887652c281a-v7.json",
+      "formatVersion": 7,
+      "sha256": "58ab6b6b771da50679c43454bc61ed46f3eaccae21829bed757e1dae2437348c"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-z",
+      "datei": "karte-4913f5410dceadd9cbf2-v7.json",
+      "formatVersion": 7,
+      "sha256": "05ceb95e32c7d10e8b52f13149f952c688d1141210ec7d79d89d85524d9c74d9"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-q",
+      "datei": "karte-930f74f730ef66a35a65-v7.json",
+      "formatVersion": 7,
+      "sha256": "5a64bfc95e73651f7fa502a2de23468dc70f3f4b5bf0c876d172089b77ae09cc"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-r",
+      "datei": "karte-94a2e59ecf644bcf3fb9-v7.json",
+      "formatVersion": 7,
+      "sha256": "669887a53fd6ec7474095b9d36f3d0883f23e51774bf7b2d414b1b6948b99b03"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-c",
+      "datei": "karte-6a995a24a6c68f0334c7-v7.json",
+      "formatVersion": 7,
+      "sha256": "7e6ef7009cbb727f85e1b7771e5475688d06a8bb422ad6131d2a7624f1a73544"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-hyperr",
+      "datei": "karte-fe681cf863ea5dec51e9-v7.json",
+      "formatVersion": 7,
+      "sha256": "1469f04ab31ca9dddd841862fa5d7d1a473278c64f6a601674547fbd5c3d656c"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definition-h",
+      "datei": "karte-643768d4433ac6a14259-v7.json",
+      "formatVersion": 7,
+      "sha256": "8da2bd5ce8424cddf7499d02b688faeb852affa8fbfee831ab34ec51559a9a72"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definitionsbereich",
+      "datei": "karte-3b3a78ec58b76f5ffbf9-v7.json",
+      "formatVersion": 7,
+      "sha256": "ce8811154d0d27b523f2c1c607e66780fb555f6c4286fc83acce8c6339755685"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.definitionsluecken",
+      "datei": "karte-16aca56cb46f9cdefa54-v7.json",
+      "formatVersion": 7,
+      "sha256": "7c4e16b9fdc3e8dd37f06b45e8f55da395b3ce2719235daaf33e641d5ef099a8"
+    },
+    {
+      "id": "konzept.zahlenrechner.f96040c2.aequivalente",
+      "datei": "karte-28de8d94f8cb0f81b50d-v7.json",
+      "formatVersion": 7,
+      "sha256": "7b4f457b9c9e5334548b9b79d6d39e61d8c30f7f3dd81728f31ec78de8c48901"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition",
+      "datei": "karte-5e3f96154d4407b0631e-v7.json",
+      "formatVersion": 7,
+      "sha256": "12f5b87b66f94478fb11e5e54450751b63e082dbc048deeb70f9e0f02480d104"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-n0",
+      "datei": "karte-111fd77241a9c6dfb7c8-v7.json",
+      "formatVersion": 7,
+      "sha256": "8efdd6150fb1fddc9505f0f26afb0a62b4f504bd0a19d8aabf06f23c9c7fa77d"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-z",
+      "datei": "karte-1b95fc6556a26df72a8e-v7.json",
+      "formatVersion": 7,
+      "sha256": "0bc45d05ed72733fd6a89fdfa1904ea9ae9170e74bd30f1bd975317024d5f52c"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-q",
+      "datei": "karte-0ca74e03181c1215f336-v7.json",
+      "formatVersion": 7,
+      "sha256": "e130644c9c29974b0f8b328362d3666c7d89bb2c4f8afefe294355884045fe28"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-r",
+      "datei": "karte-40c9650ba46927a6215b-v7.json",
+      "formatVersion": 7,
+      "sha256": "33b8b588123cdb6d2828657162ea6b1eb08fa3049958c78a1e031223ff44f454"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-c",
+      "datei": "karte-aa8ca1f2c0dddb3dd208-v7.json",
+      "formatVersion": 7,
+      "sha256": "d7a68311002e83900a3cf23c69ce71aad8f6392c26c95b8ad150c5f9ab2f9e70"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-hyperr",
+      "datei": "karte-75471aa9c4063ceee380-v7.json",
+      "formatVersion": 7,
+      "sha256": "35ce1e6e5c3398c3b9e82683c526e157dbb2bff76a20bf724880f8e0eb14f12e"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definition-h",
+      "datei": "karte-ffa8f01897bb5db7f04f-v7.json",
+      "formatVersion": 7,
+      "sha256": "8afc3a547597d48a8eb267dcf6c3e8ce8e0fee2cf94c98074ca5d6c580e65774"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definitionsbereich",
+      "datei": "karte-5ebb46f73923300de622-v7.json",
+      "formatVersion": 7,
+      "sha256": "285acd3887d95a5ea56fbb695556fe9936b8dbe572901a3624d661d79ffe743a"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.definitionsluecken",
+      "datei": "karte-06e1055b7a2df64e0017-v7.json",
+      "formatVersion": 7,
+      "sha256": "ef1bf9e13a79168b584ca76f7b8445c7d94ecc48d43a45543d31a162ddeb8fa3"
+    },
+    {
+      "id": "konzept.zahlenrechner.87a68762.aequivalente",
+      "datei": "karte-04bd62dd8af86a598f2b-v7.json",
+      "formatVersion": 7,
+      "sha256": "48759a4667d95de38a34e20828f97037594586ece72a165025901cd7f1f6ef49"
+    },
+    {
+      "id": "konzept.zahlenrechner.535717b8.definition",
+      "datei": "karte-f79db1876d4ebf122b38-v7.json",
+      "formatVersion": 7,
+      "sha256": "78f30d8a6213fbae3e489e32d4e7ee4e00ec5b8a03c12f1cdb1b6039ec294c53"
+    },
+    {
+      "id": "konzept.zahlenrechner.535717b8.definition-c",
+      "datei": "karte-a8c865176aee22f223b3-v7.json",
+      "formatVersion": 7,
+      "sha256": "dc9d9a6d078378e2e760a0995a1c39197e7ea52f7e0108b835a13e86435022fa"
+    },
+    {
+      "id": "konzept.zahlenrechner.535717b8.definition-h",
+      "datei": "karte-1dc5332f6c1f3de3bf25-v7.json",
+      "formatVersion": 7,
+      "sha256": "dadc7d86507727ef588c14c696d6a03c31943f894848a6c6cccf7814d5e93ffb"
+    },
+    {
+      "id": "konzept.zahlenrechner.535717b8.definitionsbereich",
+      "datei": "karte-a45bbde2c428971f16f7-v7.json",
+      "formatVersion": 7,
+      "sha256": "64ed116e2c9b60b38948dfe68495d1c712e63ca57c8cda2ce06bdcf35960c4aa"
+    },
+    {
+      "id": "konzept.zahlenrechner.535717b8.definitionsluecken",
+      "datei": "karte-e60305a441e95f4e7351-v7.json",
+      "formatVersion": 7,
+      "sha256": "bdd9e2c2182052f97a89cf29a2d07f7b8ffa05b2a0764b2093464f7faedfb456"
+    },
+    {
+      "id": "konzept.zahlenrechner.535717b8.aequivalente",
+      "datei": "karte-4f372f837ff8930de3f9-v7.json",
+      "formatVersion": 7,
+      "sha256": "ac677361022445b24e35ed5c4d218137e1a632e139e5714df114eb0a69899fdd"
+    },
+    {
+      "id": "konzept.zahlenrechner.ff4f5a02.definition",
+      "datei": "karte-3becee7589ee8532cdd5-v7.json",
+      "formatVersion": 7,
+      "sha256": "6e698fe09a102fe852754020620ae8dda6cef7bdd2b2a622deb23dbb10c737cd"
+    },
+    {
+      "id": "konzept.zahlenrechner.ff4f5a02.definition-r",
+      "datei": "karte-bc25b6f9e7eeb16bf811-v7.json",
+      "formatVersion": 7,
+      "sha256": "16772fced98ab3caa6159da68948a8bda337469a25610876597acb5e9d8b7ba6"
+    },
+    {
+      "id": "konzept.zahlenrechner.ff4f5a02.definition-hyperr",
+      "datei": "karte-a18f0e3fa06916cd2f73-v7.json",
+      "formatVersion": 7,
+      "sha256": "f1f9b112d49a2f0ef4cbf0a06ac41e6a7b4754d8430bfbb2b94c0d1caba8fa97"
+    },
+    {
+      "id": "konzept.zahlenrechner.ff4f5a02.definitionsbereich",
+      "datei": "karte-8c4166deb59d66e0baa9-v7.json",
+      "formatVersion": 7,
+      "sha256": "c0007d997e7f962143f9107b35892dc3162fbd859f6899f36c2dc57ea038bd54"
+    },
+    {
+      "id": "konzept.zahlenrechner.ff4f5a02.definitionsluecken",
+      "datei": "karte-5ebea5dcef4f01bf04e0-v7.json",
+      "formatVersion": 7,
+      "sha256": "7fc79d70b2fc26bc45738fe58e1b38e8c6eba97d72e11abaf2e0185ef4c2b175"
+    },
+    {
+      "id": "konzept.zahlenrechner.ff4f5a02.aequivalente",
+      "datei": "karte-7be7422d308a492f0c15-v7.json",
+      "formatVersion": 7,
+      "sha256": "422b013a0f3c433635bceaedfa32e9af183e67cf78cd94573fff1d74ff117641"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition",
+      "datei": "karte-040c9e62f79927926c8e-v7.json",
+      "formatVersion": 7,
+      "sha256": "e3d8c129deaea236a12acde667fc64668258a8c3a647bcf46c1f57353f56c969"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-n0",
+      "datei": "karte-f6c5534f11f4e2498ff8-v7.json",
+      "formatVersion": 7,
+      "sha256": "08a5203def64d7219da504650cba0c36528c7d1edd4d87e47b469650c95645c6"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-z",
+      "datei": "karte-e6e9498196cfaa706a99-v7.json",
+      "formatVersion": 7,
+      "sha256": "ef30d9cffc2a2cbdeba7929e693536585b6bab527de362b0730bce5ad02ff949"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-q",
+      "datei": "karte-7434b6d1d40839ea2c01-v7.json",
+      "formatVersion": 7,
+      "sha256": "b7049bfe3e08c922bb5e97e5096131013cf698a8a9e6cd7575d1978eb3924b8e"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-r",
+      "datei": "karte-b37ca6923890ee3865a2-v7.json",
+      "formatVersion": 7,
+      "sha256": "aa407794015592915e6dc48e80ce7623fa1b6b246a1b5bff849d07ce8513cd12"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-c",
+      "datei": "karte-12ea20a7075ac2a6fff4-v7.json",
+      "formatVersion": 7,
+      "sha256": "a1b5f50248cdc4b11532aa048f00e6f0c065956b1e9be913f3a1718c79dd3441"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-hyperr",
+      "datei": "karte-72645a8a36b361c7eafb-v7.json",
+      "formatVersion": 7,
+      "sha256": "ee3560f68af97df4dc30f8b173318c78f6b2c222e7a0fc764176be6f68e64fd2"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definition-h",
+      "datei": "karte-8869fb63dbc0e1722489-v7.json",
+      "formatVersion": 7,
+      "sha256": "03f728d4a585852c7f2caed0ae7435b035a7c916db03b479d4a9e92893549232"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definitionsbereich",
+      "datei": "karte-7955f0c96436e141e488-v7.json",
+      "formatVersion": 7,
+      "sha256": "4fb96bacfa9f27660d3ca9011383f6d5f98b6c0ffd6cbdbf97d7fa10a91b5e36"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.definitionsluecken",
+      "datei": "karte-0078907744dc40910b2c-v7.json",
+      "formatVersion": 7,
+      "sha256": "ab066e3ee4ac574b40f60d480d8dbde35e7cfabe706c056cafa1f73464730309"
+    },
+    {
+      "id": "konzept.zahlenrechner.e0f895c0.aequivalente",
+      "datei": "karte-8dddae336ecd6b9d107d-v7.json",
+      "formatVersion": 7,
+      "sha256": "7ce09e7929f3de2bff76f654e3355e5e667423289681a576f54b829a9d4efb7e"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition",
+      "datei": "karte-74094d5675d0bf956f1d-v7.json",
+      "formatVersion": 7,
+      "sha256": "1df50f2c19219d54b8d0a707fccb70bbe7ab152ebaf9b7ea86b2eb01f4246d89"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-n0",
+      "datei": "karte-866f0b2c211beb1edf64-v7.json",
+      "formatVersion": 7,
+      "sha256": "a9c17055cdf8236d5dda701319a982553437b032fc877722945847c3de472f71"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-z",
+      "datei": "karte-01bbd3c9917ddfec6478-v7.json",
+      "formatVersion": 7,
+      "sha256": "83effecd049dc41095af0fa8e1d8c0640c205de92231404945c61c85aba6a161"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-q",
+      "datei": "karte-49160ec7ad6656e99304-v7.json",
+      "formatVersion": 7,
+      "sha256": "9d052fb3b219156311f862f86073fc9f789926ffae3c7824ce5c47bde337f091"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-r",
+      "datei": "karte-c00035c350aa26a5d8d2-v7.json",
+      "formatVersion": 7,
+      "sha256": "bd44fec5a7cfa4ab6d8d8e44130d7704aadf53b43d79e92328718c8573db4c5e"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-c",
+      "datei": "karte-b2e0bab9e11e38bc1011-v7.json",
+      "formatVersion": 7,
+      "sha256": "36e7c97ca49129083037e8ca3be9517ebca70b58a5245ef8f0c0fce4adf9215f"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-hyperr",
+      "datei": "karte-15a7ee9db72271194f93-v7.json",
+      "formatVersion": 7,
+      "sha256": "b4c681002fdf0aa42401088e14162fbe6736a68b4d58e86bc2830a7910240b93"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definition-h",
+      "datei": "karte-cf2f15a6f8e1a0a3d976-v7.json",
+      "formatVersion": 7,
+      "sha256": "fdcaf1e450542948520aced81dfaaea8b642ddda7a43a0c5200fb663da94a816"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definitionsbereich",
+      "datei": "karte-76bbb0c4fcb2bb539a6d-v7.json",
+      "formatVersion": 7,
+      "sha256": "1c67576b7a8f04be47dbf7333aefe435e696fdf21e0391f37f58d2bd7043fd8b"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.definitionsluecken",
+      "datei": "karte-0ee424b147ea99bcf2a0-v7.json",
+      "formatVersion": 7,
+      "sha256": "9a9707e82759842edfcb45b31232af196ef4b0873d0a696a0dbbf19b0b3a7927"
+    },
+    {
+      "id": "konzept.zahlenrechner.bd80a22.aequivalente",
+      "datei": "karte-92139e89ddb6ff7be428-v7.json",
+      "formatVersion": 7,
+      "sha256": "4ced7b8ae44c917550f4e95d7bfbcbbc6d8fc572f865277de542f43235ec11ac"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition",
+      "datei": "karte-e44ade82aade8fe0cffb-v7.json",
+      "formatVersion": 7,
+      "sha256": "c2ded8effdfc07011cfe25fd902abb30575b388aeea026ae29a8b6df16e0de25"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-n0",
+      "datei": "karte-4d53ffe084a5c9c5dca8-v7.json",
+      "formatVersion": 7,
+      "sha256": "3b499b818ce751b4e5701f6b8e033b9ca337e6301fabdba96989d3905c9661e4"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-z",
+      "datei": "karte-1dfa6a5c2212e8d16a33-v7.json",
+      "formatVersion": 7,
+      "sha256": "451dbcb614fd5a26f44fac658fd3a8829620298f58a1379ace61e751e24ae067"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-q",
+      "datei": "karte-75219fb35a3db709b4ba-v7.json",
+      "formatVersion": 7,
+      "sha256": "2fcefb26ed28c658358f0f73e4530b5224ac3bf868573257fd61039b06cc5e2b"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-r",
+      "datei": "karte-0952f1b56aac3e7cc401-v7.json",
+      "formatVersion": 7,
+      "sha256": "efc1f89bcf233f0665a6c8e752b3b1c225e0abfbbb024450b1f98f2dc81a9206"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-c",
+      "datei": "karte-0a4f42b61d67fe44c68a-v7.json",
+      "formatVersion": 7,
+      "sha256": "e5044e0b71e014f78edc95d0f9b88afc985e13f058b52df0b6b5993b080e3b3b"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-hyperr",
+      "datei": "karte-66513ee79ff7d5811555-v7.json",
+      "formatVersion": 7,
+      "sha256": "06d58badd13a1c4e7d631066a476a71f91ca0f29c235e2475b906d57f6d3dac8"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definition-h",
+      "datei": "karte-e1e78f8d1d5cf6289449-v7.json",
+      "formatVersion": 7,
+      "sha256": "e29fa1eea70b8cb43aebfb7b7e852641cca49cece2dc4e8d4ebe50554a8bb705"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definitionsbereich",
+      "datei": "karte-d18f013a539b14dd4f21-v7.json",
+      "formatVersion": 7,
+      "sha256": "98825d85504fbf13944f634c107dc7babe67c7e28a897e1b82a506e833c2581c"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.definitionsluecken",
+      "datei": "karte-834bd56fe5ea20f60e9a-v7.json",
+      "formatVersion": 7,
+      "sha256": "0be62472d14f7e9b5c9f6739b10590ffdd34fff0ca72f230700660549ec60e8e"
+    },
+    {
+      "id": "konzept.zahlenrechner.d084ee.aequivalente",
+      "datei": "karte-f9114fd57789f9b572aa-v7.json",
+      "formatVersion": 7,
+      "sha256": "d3974385ddc2695ec77114534cdf670dcad16fbc6e0cc75acf3d43c17cf8ba17"
+    },
+    {
+      "id": "konzept.zahlkonstante.f999937a.definition",
+      "datei": "karte-b77cee479c195d6f7d7a-v7.json",
+      "formatVersion": 7,
+      "sha256": "e6585e901849fcd384398197bc0ff086ac6b84e72e27b2685a188701c655f71e"
+    },
+    {
+      "id": "mathematik.zeilenMethodeDifferentieren|Zeilenmethode differentieren|.9de9f42b.definition",
+      "datei": "karte-11b85a0dffa677cefade-v7.json",
+      "formatVersion": 7,
+      "sha256": "45a0c0c0b2459c014a1a5327cb37e4a83d2b4ddc9ce23e83512301b5339a97f5"
+    },
+    {
+      "id": "mathematik.zeilenMethodeIntegrieren|Zeilenmethode integrieren|.64fa65e9.definition",
+      "datei": "karte-54e30bbf322ee24c92a3-v7.json",
+      "formatVersion": 7,
+      "sha256": "16295bed0ee8d0b65ea822588359df8a0bb00ef1aeb71f1aeb4b7078b784a52a"
+    },
+    {
+      "id": "mathematik.zeilenVektor|Zeilenvektor|festeEingänge=2;operatorAnzeige=wert.d383feee.definition",
+      "datei": "karte-63775e90c56824172eef-v7.json",
+      "formatVersion": 7,
+      "sha256": "ea495a7897dfa3b7110eb9fd2aec532dba2af1b59df5e365cd2bbd6e5be3344a"
+    },
+    {
+      "id": "mathematik.äquivalenz|Äquivalenz|.a79be13.definition",
+      "datei": "karte-cd8dde822cfb7b99fc5c-v7.json",
+      "formatVersion": 7,
+      "sha256": "c803d0bc6ac47cc5f4f292fc43e67793ee85524565520dca0d94565eb586fd2d"
+    },
+    {
+      "id": "mathematik.überOderGleichmenge|Über- oder Gleichmenge|.74cba5e2.definition",
+      "datei": "karte-f5b02e5a9e636fddfa13-v7.json",
+      "formatVersion": 7,
+      "sha256": "510db930aa8ccb3e000e8aa737ea60825505b366311e6e77e3adf4642388a4f4"
+    },
+    {
+      "id": "mathematik.übermenge|Übermenge|.5c473e7d.definition",
+      "datei": "karte-9cce144e4c968f2af230-v7.json",
+      "formatVersion": 7,
+      "sha256": "a45adf80eb22a4e294104e25e451439ee2c98c5f5e57a2eeb28439e879016558"
+    }
   ]
 }

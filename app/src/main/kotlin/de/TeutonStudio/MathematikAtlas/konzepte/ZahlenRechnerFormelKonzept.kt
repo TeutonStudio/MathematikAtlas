@@ -233,7 +233,7 @@ private fun formelEingang(prefix: String, name: String): KnotenDaten {
     val id = "$prefix-eingang-${sichererIdTeil(name)}-${name.hashCode().toUInt()}"
     return KnotenDaten(
         id = KnotenId(id),
-        art = TestDefinitionsKarten.KONZEPT_EINGANG_ART,
+        art = KonzeptKnotenArten.EINGANG,
         name = name,
         position = GraphPunkt.Zero,
         größe = GraphGröße(230f, 92f),
@@ -258,7 +258,7 @@ private fun formelLiteral(prefix: String, graphKnoten: FormelGraphKnoten): Knote
     val id = "$prefix-literal-${sichererIdTeil(graphKnoten.ausdrucksId)}"
     return KnotenDaten(
         id = KnotenId(id),
-        art = TestDefinitionsKarten.KONZEPT_REGEL_ART,
+        art = KonzeptKnotenArten.REGEL,
         name = latex,
         position = GraphPunkt.Zero,
         größe = GraphGröße(230f, 110f),
@@ -287,7 +287,7 @@ private fun formelHinweisKnoten(
     val id = "$prefix-${sichererIdTeil(idTeil)}"
     return KnotenDaten(
         id = KnotenId(id),
-        art = TestDefinitionsKarten.KONZEPT_REGEL_ART,
+        art = KonzeptKnotenArten.REGEL,
         name = name,
         position = GraphPunkt.Zero,
         größe = GraphGröße(260f, maxOf(110f, 76f + eingänge * 28f)),
@@ -318,7 +318,7 @@ private fun formelAusgang(prefix: String): KnotenDaten {
     val id = "$prefix-ausgang"
     return KnotenDaten(
         id = KnotenId(id),
-        art = TestDefinitionsKarten.KONZEPT_AUSGANG_ART,
+        art = KonzeptKnotenArten.AUSGANG,
         name = "wert",
         position = GraphPunkt.Zero,
         größe = GraphGröße(230f, 92f),
@@ -347,7 +347,7 @@ private fun fehlerhaftesFormelKonzept(
         knoten = listOf(
             KnotenDaten(
                 id = KnotenId("$prefix-regel"),
-                art = TestDefinitionsKarten.KONZEPT_REGEL_ART,
+                art = KonzeptKnotenArten.REGEL,
                 name = latex,
                 position = GraphPunkt(60f, 60f),
                 größe = GraphGröße(620f, 210f),

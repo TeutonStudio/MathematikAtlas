@@ -57,7 +57,7 @@ class EnzyklopädieRegister private constructor(
             eintrag.beziehungen.filter { it.ziel !in bekannteIds }.forEach {
                 add("${eintrag.id}: unbekanntes Beziehungsziel ${it.ziel}")
             }
-            if (eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar && eintrag.primäreDefinition == null) {
+            if (eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar && eintrag.primäreDefinitionen.isEmpty()) {
                 add("${eintrag.id}: keine primäre Definition")
             }
         }

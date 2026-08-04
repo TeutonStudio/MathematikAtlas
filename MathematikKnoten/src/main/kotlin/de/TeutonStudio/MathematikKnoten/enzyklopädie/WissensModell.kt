@@ -64,6 +64,10 @@ sealed interface WissensKartenReferenz {
     val id: String
     val rolle: WissensKartenRolle
     val primär: Boolean
+    val titel: String
+    val varianten: Set<VariantenId>
+    val darstellungsGruppe: String?
+    val darstellung: String?
 
     data class Asset(
         override val id: String,
@@ -71,6 +75,10 @@ sealed interface WissensKartenReferenz {
         val formatVersion: Int,
         override val rolle: WissensKartenRolle,
         override val primär: Boolean = false,
+        override val titel: String = id,
+        override val varianten: Set<VariantenId> = emptySet(),
+        override val darstellungsGruppe: String? = null,
+        override val darstellung: String? = null,
     ) : WissensKartenReferenz {
         init {
             require(id.isNotBlank())
@@ -84,6 +92,10 @@ sealed interface WissensKartenReferenz {
         val generatorId: String,
         override val rolle: WissensKartenRolle,
         override val primär: Boolean = false,
+        override val titel: String = id,
+        override val varianten: Set<VariantenId> = emptySet(),
+        override val darstellungsGruppe: String? = null,
+        override val darstellung: String? = null,
     ) : WissensKartenReferenz {
         init {
             require(id.isNotBlank())
@@ -137,6 +149,9 @@ data class WissensEintrag(
             }
         }
 
+    val primäreDefinitionen: List<WissensKartenReferenz>
+        get() = karten.filter { it.rolle == WissensKartenRolle.Definition && it.primär }
+
     val primäreDefinition: WissensKartenReferenz?
-        get() = karten.singleOrNull { it.rolle == WissensKartenRolle.Definition && it.primär }
+        get() = primäreDefinitionen.singleOrNull()
 }

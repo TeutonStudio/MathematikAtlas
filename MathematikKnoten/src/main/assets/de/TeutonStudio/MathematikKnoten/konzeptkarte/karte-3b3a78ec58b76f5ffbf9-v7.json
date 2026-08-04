@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810566,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definitionsbereich Quadratwurzel",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "Der Definitionsbereich folgt dem gewählten Zahlbereich und dem Wurzelexponenten. Reelle Hauptwerte dürfen nicht stillschweigend komplex fortgesetzt werden."
+      },
+      "name": "Definiert, bedingt oder undefiniert",
+      "id": "zahlenrechner-zahl-quadratwurzel-definitionsbereich-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.f96040c2.definitionsbereich",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

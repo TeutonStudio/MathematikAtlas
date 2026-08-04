@@ -66,10 +66,8 @@ internal fun KnotenKonzeptDialog(
 
     val context = LocalContext.current
     val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis, context) {
-        val spezial = konzeptFürKonsolidiertenKnoten(zustand, knoten)
-        val enzyklopädie = enzyklopädieKonzeptFürKnoten(context, knoten)
-        kombiniereEnzyklopädieUndSpezialkonzept(enzyklopädie, spezial)
-            ?: TestDefinitionsKarten.fürKnoten(knoten)
+        dynamischesKonzeptFürKnoten(zustand, knoten)
+            ?: enzyklopädieKonzeptFürKnoten(context, knoten)
     }
     KonzeptDialog(
         zustand = zustand,
@@ -271,7 +269,7 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             when (knoten.art) {
-                TestDefinitionsKarten.KONZEPT_REGEL_ART -> {
+                KonzeptKnotenArten.REGEL -> {
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
                     Text(knoten.parameter["regel"].orEmpty(), style = MaterialTheme.typography.bodyMedium)
                     Text(
@@ -280,7 +278,7 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                TestDefinitionsKarten.KONZEPT_EINGANG_ART -> {
+                KonzeptKnotenArten.EINGANG -> {
                     Text("Eingang", style = MaterialTheme.typography.labelLarge)
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
                     Text(knoten.parameter["typ"].orEmpty(), style = MaterialTheme.typography.bodySmall)

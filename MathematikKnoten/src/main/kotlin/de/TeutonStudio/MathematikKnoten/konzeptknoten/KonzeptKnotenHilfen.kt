@@ -10,13 +10,13 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenReferenz
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensReifegrad
 
-internal fun KnotenVorlage.stabileKonzeptId(): String {
+fun KnotenVorlage.stabileKonzeptId(): String {
     val variantenSchlüssel = standardParameter.toSortedMap()
         .entries.joinToString(";") { (schlüssel, wert) -> "$schlüssel=$wert" }
     return listOf(art, name, variantenSchlüssel).joinToString("|")
 }
 
-internal fun KnotenVorlage.stabileVariantenId(): VariantenId = VariantenId(
+fun KnotenVorlage.stabileVariantenId(): VariantenId = VariantenId(
     buildString {
         append(art)
         standardParameter.toSortedMap().forEach { (schlüssel, wert) ->

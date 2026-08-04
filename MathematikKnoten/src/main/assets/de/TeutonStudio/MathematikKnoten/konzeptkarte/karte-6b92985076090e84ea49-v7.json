@@ -1,0 +1,143 @@
+{
+  "erstelltAm": 1785883810227,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-eingang-0",
+        "anschlussId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-eingang-0-wert"
+      },
+      "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-e-0",
+      "zu": {
+        "knotenId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel",
+        "anschlussId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel",
+        "anschlussId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel-1"
+      },
+      "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-a-0",
+      "zu": {
+        "knotenId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-ausgang-0",
+        "anschlussId": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Spaltenmethode differentieren",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.methode",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "methode",
+      "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 390,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.spaltenMethodeDifferentieren",
+        "regel": "Differentiert die Komponenten einer Spaltenvektormethode.",
+        "kategorie": "Abbildungen"
+      },
+      "name": "Spaltenmethode differentieren",
+      "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-regel",
+      "position": {
+        "x": 370,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.methode",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "methode",
+      "id": "definition-mathematik-spaltenmethodedifferentieren-spaltenmethode-differentieren-0-ausgang-0",
+      "position": {
+        "x": 830,
+        "y": 55
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.spaltenMethodeDifferentieren|Spaltenmethode differentieren|.fb047c39.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}
