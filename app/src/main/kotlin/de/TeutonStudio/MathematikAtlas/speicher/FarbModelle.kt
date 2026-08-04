@@ -202,9 +202,9 @@ internal fun adaptiereD65NachD50(farbe: XyzFarbe): XyzFarbe = XyzFarbe(
 )
 
 internal fun adaptiereD50NachD65(farbe: XyzFarbe): XyzFarbe = XyzFarbe(
-    x = 0.9555766 * farbe.x - 0.0230393 * farbe.y + 0.0631636 * farbe.z,
-    y = -0.0282895 * farbe.x + 1.0099416 * farbe.y + 0.0210077 * farbe.z,
-    z = 0.0122982 * farbe.x - 0.0204830 * farbe.y + 1.3299098 * farbe.z,
+    x = 0.955576660497729 * farbe.x - 0.023039344716078 * farbe.y + 0.063163674186892 * farbe.z,
+    y = -0.028289545172321 * farbe.x + 1.009941617371114 * farbe.y + 0.021007654996190 * farbe.z,
+    z = 0.012298178487457 * farbe.x - 0.020483000603842 * farbe.y + 1.329909891497862 * farbe.z,
 )
 
 internal fun normalisiereFarbton(farbton: Double): Double {
