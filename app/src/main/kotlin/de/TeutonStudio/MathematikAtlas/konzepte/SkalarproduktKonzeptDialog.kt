@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -57,7 +58,6 @@ import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechnerOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.numerischeKomponentenAnsicht
 import de.TeutonStudio.MathematikRechenSystem.kern.skalarproduktZahlbereichOderNull
-import de.TeutonStudio.MathematikRechenSystem.kern.zuLatex
 
 private enum class SkalarproduktKonzeptReiter(val titel: String) {
     DEFINITION("Definition"),
@@ -74,6 +74,7 @@ internal fun besitztSkalarproduktKonzeptDialog(knoten: KnotenDaten): Boolean {
     return operator == VektorRechnerOperator.SKALARPRODUKT
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SkalarproduktKonzeptDialog(
     zustand: AtlasZustand,
@@ -266,7 +267,7 @@ private fun SkalarproduktDefinitionInhalt(daten: SkalarproduktDialogDaten) {
 @Composable
 private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
     var index by remember(daten.ablauf) { mutableIntStateOf(0) }
-    index = index.coerceIn(0, daten.ablauf.dimension - 1)
+    val sichererIndex = index.coerceIn(0, daten.ablauf.dimension - 1)
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -284,7 +285,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             ) {
                 repeat(daten.ablauf.dimension) { kandidat ->
                     FilterChip(
-                        selected = kandidat == index,
+                        selected = kandidat == sichererIndex,
                         onClick = { index = kandidat },
                         label = { Text(kandidat.toString()) },
                     )
@@ -296,8 +297,8 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FalkZeile("u", daten.ablauf.linkeKomponenten, index) { index = it }
-            FalkZeile("v", daten.ablauf.rechteKomponenten, index) { index = it }
+            FalkZeile("u", daten.ablauf.linkeKomponenten, sichererIndex) { index = it }
+            FalkZeile("v", daten.ablauf.rechteKomponenten, sichererIndex) { index = it }
         }
 
         Surface(
@@ -305,17 +306,17 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             shape = MaterialTheme.shapes.medium,
         ) {
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Aktueller Summand p$index", style = MaterialTheme.typography.labelLarge)
+                Text("Aktueller Summand p$sichererIndex", style = MaterialTheme.typography.labelLarge)
                 LatexText(
-                    latex = "p_{$index}=${daten.ablauf.produktLatex(index)}",
+                    latex = "p_{$sichererIndex}=${daten.ablauf.produktLatex(sichererIndex)}",
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
         }
 
         Text("Geordnete Teilsummen", style = MaterialTheme.typography.titleMedium)
-        repeat(index + 1) { teilsummenIndex ->
-            val ausgewählt = teilsummenIndex == index
+        repeat(sichererIndex + 1) { teilsummenIndex ->
+            val ausgewählt = teilsummenIndex == sichererIndex
             Surface(
                 color = if (ausgewählt) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                 shape = MaterialTheme.shapes.small,
