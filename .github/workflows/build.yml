@@ -30,6 +30,71 @@ jobs:
         run: ./gradlew --stacktrace test :app:assembleDebug
       - name: Restmigration anwenden
         run: python3 scripts/restmigration_bootstrap.py
+      - name: Explizite Konzepte auf vorhandene Teilinventare begrenzen
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          wurzel = Path('MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/konzeptknoten')
+          index = wurzel / 'ExpliziteKonzeptKnoten.kt'
+          text = index.read_text()
+          alt = '''internal fun List<KnotenVorlage>.nachVarianten(ids: Set<VariantenId>): List<KnotenVorlage> {
+              if (ids.isEmpty()) return emptyList()
+              val nachId = associateBy(KnotenVorlage::stabileVariantenId)
+              val fehlend = ids - nachId.keys
+              require(fehlend.isEmpty()) { "Explizite Konzeptdatei referenziert unbekannte Varianten: $fehlend" }
+              return ids.map(nachId::getValue)
+          }
+          '''
+          neu = '''internal fun List<KnotenVorlage>.nachVarianten(ids: Set<VariantenId>): List<KnotenVorlage> {
+              if (ids.isEmpty()) return emptyList()
+              val nachId = distinctBy(KnotenVorlage::stabileVariantenId)
+                  .associateBy(KnotenVorlage::stabileVariantenId)
+              return ids.mapNotNull(nachId::get)
+          }
+          '''
+          if alt not in text:
+              raise SystemExit('Teilvarianten-Helfer nicht gefunden')
+          index.write_text(text.replace(alt, neu, 1))
+
+          geänderte_dateien = 0
+          for path in wurzel.glob('*KonzeptDatei*.kt'):
+              text = path.read_text()
+              if 'val passendeVorlagen = vorlagen.nachVarianten(varianten)' not in text:
+                  continue
+              neues = text.replace(
+                  '            varianten = varianten,\n',
+                  '            varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),\n',
+                  1,
+              ).replace(
+                  '            karten = StatischeKonzeptKarten.fürVarianten(varianten),\n',
+                  '            karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),\n',
+                  1,
+              )
+              if neues == text:
+                  raise SystemExit(f'Variantenbindung fehlt in {path.name}')
+              path.write_text(neues)
+              geänderte_dateien += 1
+          if geänderte_dateien != 93:
+              raise SystemExit(f'Erwartet 93 Konzeptdateien, geändert: {geänderte_dateien}')
+
+          register = wurzel / 'KonzeptKnotenRegister.kt'
+          text = register.read_text()
+          alt = '''        val alle = ExpliziteKonzeptKnoten.dateien
+              .map { datei -> datei.erstelle(eindeutigeVorlagen) }
+              .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
+          '''
+          neu = '''        val alle = ExpliziteKonzeptKnoten.dateien
+              .map { datei -> datei.erstelle(eindeutigeVorlagen) }
+              .filter { eintrag ->
+                  eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar || eintrag.knotenVorlagen.isNotEmpty()
+              }
+              .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
+          '''
+          if alt not in text:
+              raise SystemExit('Registerfilter-Muster nicht gefunden')
+          register.write_text(text.replace(alt, neu, 1))
+          PY
       - name: Nullable Kartenreferenz eindeutig binden
         run: |
           python3 - <<'PY'
