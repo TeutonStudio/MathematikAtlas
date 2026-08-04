@@ -35,10 +35,10 @@ class AuswertenTest {
         val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(auswerten.art)!!
 
         val ergebnis = auswerter.auswerten(
-            KnotenAuswertungsKontext(auswerten, mapOf("objekt" to BedingterWert(aussage)), RechenKontext()),
+            KnotenAuswertungsKontext(auswerten, mapOf("term" to BedingterWert(aussage)), RechenKontext()),
         )
 
-        val auswertung = assertIs<WahrheitsKonstante>(ergebnis.ausgaben.getValue("wert").objekt)
+        val auswertung = assertIs<WahrheitsKonstante>(ergebnis.ausgaben.getValue("term").objekt)
         assertEquals(false, auswertung.wert)
     }
 
@@ -49,10 +49,10 @@ class AuswertenTest {
         val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(auswerten.art)!!
 
         val ergebnis = auswerter.auswerten(
-            KnotenAuswertungsKontext(auswerten, mapOf("objekt" to BedingterWert(aussage)), RechenKontext()),
+            KnotenAuswertungsKontext(auswerten, mapOf("term" to BedingterWert(aussage)), RechenKontext()),
         )
 
-        val auswertung = assertIs<WahrheitsKonstante>(ergebnis.ausgaben.getValue("wert").objekt)
+        val auswertung = assertIs<WahrheitsKonstante>(ergebnis.ausgaben.getValue("term").objekt)
         assertEquals(true, auswertung.wert)
     }
 
