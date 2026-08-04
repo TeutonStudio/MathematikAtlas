@@ -1,0 +1,36 @@
+name: Bootstrap v2.25.0 structure calculators
+
+on:
+  push:
+    branches:
+      - samai/v2.25.0-strukturformelrechner
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: samai/v2.25.0-strukturformelrechner
+          fetch-depth: 0
+
+      - name: Extract and apply implementation
+        shell: bash
+        run: |
+          cat scripts/samai-v2.25.0.bundle.part* | base64 --decode > /tmp/samai-v2.25.0.tar.gz
+          tar -xzf /tmp/samai-v2.25.0.tar.gz -C .
+          python3 scripts/samai_v2_25_0.py
+          rm -f scripts/samai-v2.25.0.bundle.part*
+
+      - name: Commit generated implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "v2.25.0: Typisierte Strukturrechner und CAS-Formeln"
+          git push origin HEAD:samai/v2.25.0-strukturformelrechner
