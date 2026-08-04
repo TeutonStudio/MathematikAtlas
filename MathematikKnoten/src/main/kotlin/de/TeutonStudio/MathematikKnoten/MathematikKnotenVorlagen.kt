@@ -76,8 +76,8 @@ object MathematikKnotenVorlagen {
         listOf(eingang("gleichung", MathematikAnschlussArten.Aussage.id), ausgang("lösungen", MathematikAnschlussArten.Menge.id)), mapOf("variable" to "x"),
     )
     val Auswerten = KnotenVorlage(
-        "mathematik.auswerten", "Auswerten", "Steuerung", "Vereinfacht einen Term oder entscheidet eine Aussage.", GraphGröße(230f, 110f),
-        listOf(eingang("objekt", MathematikAnschlussArten.Objekt.id), ausgang("wert", MathematikAnschlussArten.Objekt.id)),
+        "mathematik.auswerten", "Auswerten", "Steuerung", "Vereinfacht einen Zahlterm und gibt wieder einen Zahlterm aus.", GraphGröße(230f, 110f),
+        listOf(eingang("term", MathematikAnschlussArten.Zahl.id), ausgang("term", MathematikAnschlussArten.Zahl.id)),
     )
     val Darstellungsoptimierung = KnotenVorlage(
         "mathematik.darstellungsoptimierung", "Darstellungsoptimierung", "Darstellung", "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.", GraphGröße(250f, 120f),

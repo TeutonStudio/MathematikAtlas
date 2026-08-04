@@ -4,14 +4,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.BegriffsAussage
-import de.TeutonStudio.MathematikRechenSystem.kern.EindeutigeLineareLoesung
-import de.TeutonStudio.MathematikRechenSystem.kern.Matrix
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.NachweisStatus
-import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.SpaltenVektor
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.addition
 import de.TeutonStudio.MathematikRechenSystem.kern.multiplikation
@@ -73,59 +69,5 @@ class LineareAlgebraGrundlagenKnotenTest {
         assertEquals(NachweisStatus.Nachgewiesen, aussage.pruefung.status)
     }
 
-    @Test
-    fun `Gauss Knoten liefert Matrix und strukturiertes Protokoll`() {
-        val knoten = AussagenLogikKnotenVorlagen.Auswerten.erzeuge(GraphPunkt.Zero)
-        val matrix = Matrix(
-            listOf(
-                listOf(RationaleZahl.von(1), RationaleZahl.von(2)),
-                listOf(RationaleZahl.von(3), RationaleZahl.von(4)),
-            ),
-        )
 
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
-            KnotenAuswertungsKontext(
-                knoten,
-                mapOf("objekt" to BedingterWert(matrix)),
-                RechenKontext(),
-            ),
-        )
-
-        assertIs<Matrix>(ergebnis.ausgaben.getValue("wert").objekt)
-        assertTrue(ergebnis.schritte.isNotEmpty())
-        assertTrue(ergebnis.schritte.all { it.strukturOperation != null })
-        assertTrue(ergebnis.schritte.all { it.strukturOperation!!.betroffeneZeilen.isNotEmpty() })
-    }
-
-    @Test
-    fun `Gauss Knoten loest Ax gleich b wenn rechte Seite angeschlossen ist`() {
-        val knoten = AussagenLogikKnotenVorlagen.Auswerten.erzeuge(GraphPunkt.Zero)
-        val matrix = Matrix(
-            listOf(
-                listOf(RationaleZahl.von(1), RationaleZahl.von(1)),
-                listOf(RationaleZahl.von(1), RationaleZahl.von(-1)),
-            ),
-        )
-
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
-            KnotenAuswertungsKontext(
-                knoten,
-                mapOf(
-                    "objekt" to BedingterWert(matrix),
-                    "rechteSeite" to BedingterWert(
-                        SpaltenVektor(listOf(RationaleZahl.von(3), RationaleZahl.von(1))),
-                    ),
-                ),
-                RechenKontext(),
-            ),
-        )
-
-        assertEquals(
-            EindeutigeLineareLoesung(
-                SpaltenVektor(listOf(RationaleZahl.von(2), RationaleZahl.von(1))),
-            ),
-            ergebnis.ausgaben.getValue("wert").objekt,
-        )
-        assertTrue(ergebnis.warnungen.first().startsWith("Rang(A)"))
-    }
 }

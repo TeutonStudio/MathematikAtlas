@@ -278,7 +278,13 @@ class KartenAuswerter(
                 val zahl = runCatching { RationaleZahl.parse(text) }.getOrElse {
                     error("Standardwert für '${anschluss.name}' ist keine gültige ganze oder rationale Zahl: '$text'.")
                 }
-                put(anschluss.name, BedingterWert(zahl))
+                put(
+          anschluss.name,
+          BedingterWert(
+              objekt = zahl,
+              latexDarstellung = zahl.zuStrukturLatex(),
+          ),
+      )
             }
     }
 

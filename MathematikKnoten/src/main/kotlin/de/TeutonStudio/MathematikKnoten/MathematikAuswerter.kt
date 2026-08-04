@@ -90,19 +90,16 @@ object StandardMathematikAuswerter {
             )
         }
         registriere("mathematik.auswerten") { k ->
-            val objekt = k.eingänge["objekt"]?.objekt ?: error("Objekt fehlt.")
-            when (objekt) {
-                is ZahlAusdruck -> {
-                    val e = vereinfacheMitSchritten(objekt, k.rechenKontext)
-                    KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(e.ergebnis, k)), e.schritte)
-                }
-                is Aussage -> {
-                    val ergebnis = objekt.entscheide(k.rechenKontext)
-                    val auswertung = ergebnis.wahrheitswert?.let { WahrheitsKonstante(it == Wahrheitswert.Wahr) } ?: objekt
-                    KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(auswertung, annahmen(k))), fehler = if (ergebnis.status is EntscheidungsStatus.NichtAuswertbar) "Aussage nicht auswertbar" else null)
-                }
-                else -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(objekt, annahmen(k))))
-            }
+  val eingang = k.eingänge["term"] ?: k.eingänge["objekt"] ?: error("Term fehlt.")
+  val term = eingang.objekt as? ZahlAusdruck ?: error("Auswerten benötigt einen Zahlterm.")
+  val ergebnis = vereinfacheMitSchritten(term, k.rechenKontext)
+  val ausgangsName = k.knoten.anschlüsse.firstOrNull {
+      it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
+  }?.name ?: "term"
+  KnotenAuswertungsErgebnis(
+      mapOf(ausgangsName to reellerZahlwert(ergebnis.ergebnis, k)),
+      ergebnis.schritte,
+  )
         }
         registriere("mathematik.ableiten") { k ->
             val e = ableiten(k.zahl("term"), Variable(k.knoten.parameter["variable"] ?: "x"))
