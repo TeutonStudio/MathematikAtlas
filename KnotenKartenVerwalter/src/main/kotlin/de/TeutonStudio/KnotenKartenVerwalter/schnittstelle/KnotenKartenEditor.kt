@@ -25,6 +25,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -52,6 +54,7 @@ fun KnotenKartenEditor(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit = {},
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit = { _, _ -> },
     beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
+    beiKnotenInspektor: (KnotenDaten) -> Unit = {},
 ) {
     val dichte = LocalDensity.current
     val karte = zustand.karte
@@ -168,6 +171,7 @@ fun KnotenKartenEditor(
                         beiAnschlussKontext = beiAnschlussKontext,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                         beiDoppelklick = { beiKnotenDoppelklick(knoten) },
+                        beiInspektorÖffnen = { beiKnotenInspektor(knoten) },
                     )
                 }
             }
@@ -396,6 +400,26 @@ internal fun berechneVerbindungsGeometrie(
     )
 }
 
+internal data class VerbindungsVorschauEndpunkte(
+    val quelle: Offset,
+    val ziel: Offset,
+)
+
+/**
+ * Normalisiert die Vorschau in dieselbe semantische Richtung wie gespeicherte Edges.
+ * Wird an einem Eingang gezogen, ist der Zeiger die vorläufige Quelle und der feste
+ * Eingang das Ziel. Bei einem Ausgang bleibt der feste Anschluss die Quelle.
+ */
+internal fun normalisiereVerbindungsVorschauEndpunkte(
+    festerAnschluss: Offset,
+    zeiger: Offset,
+    startRichtung: AnschlussRichtung?,
+): VerbindungsVorschauEndpunkte = if (startRichtung == AnschlussRichtung.Eingang) {
+    VerbindungsVorschauEndpunkte(quelle = zeiger, ziel = festerAnschluss)
+} else {
+    VerbindungsVorschauEndpunkte(quelle = festerAnschluss, ziel = zeiger)
+}
+
 private data class SichtbareVerbindungsGeometrie(
     val verbindung: VerbindungDaten,
     val geometrie: VerbindungsGeometrie,
@@ -515,11 +539,21 @@ private fun Verbindungen(
         val startRef = zustand.verbindungsStart
         val vorschau = zustand.verbindungsVorschau
         if (startRef != null && vorschau != null) {
-            val start = anschlussBildschirmPosition(karte, startRef, dichte.density, ansicht)
-            val ende = weltZuBildschirm(vorschau, dichte.density, ansicht)
+            val festerAnschluss = anschlussBildschirmPosition(karte, startRef, dichte.density, ansicht)
+            val zeiger = weltZuBildschirm(vorschau, dichte.density, ansicht)
+            val startRichtung = karte.knoten
+                .firstOrNull { it.id == startRef.knotenId }
+                ?.anschlüsse
+                ?.firstOrNull { it.id == startRef.anschlussId }
+                ?.richtung
+            val endpunkte = normalisiereVerbindungsVorschauEndpunkte(
+                festerAnschluss = festerAnschluss,
+                zeiger = zeiger,
+                startRichtung = startRichtung,
+            )
             val geometrie = berechneVerbindungsGeometrie(
-                start = start,
-                ende = ende,
+                start = endpunkte.quelle,
+                ende = endpunkte.ziel,
                 mindestKontrollAbstand = 72.dp.toPx() * ansicht.zoom,
             )
             drawPath(
@@ -566,6 +600,7 @@ private fun KnotenDarstellung(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
+    beiInspektorÖffnen: () -> Unit,
 ) {
     val zoom = zustand.karte.ansicht.zoom
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
@@ -623,6 +658,19 @@ private fun KnotenDarstellung(
                     zustand.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
                 }
             })
+        }
+
+        IconButton(
+            onClick = {
+                zustand.wähleKnoten(knoten.id)
+                beiInspektorÖffnen()
+            },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(40.dp)
+                .semantics { contentDescription = "Inspektor öffnen" },
+        ) {
+            Text("⚙", style = MaterialTheme.typography.titleMedium)
         }
 
         knoten.anschlüsse.groupBy { it.kante }.forEach { (_, anschlüsse) ->
