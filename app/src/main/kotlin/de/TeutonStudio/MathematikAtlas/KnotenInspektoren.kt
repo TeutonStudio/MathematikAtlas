@@ -46,6 +46,7 @@ object KnotenInspektorRegister {
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
         "mathematik.transponieren" to TransponierenInspektor,
         "mathematik.matrixdiagonale" to MatrixdiagonaleInspektor,
+        "mathematik.auswerten" to AuswertenInspektor,
         ZAHLENRECHNER_ART to ZahlenRechnerInspektor,
         GeometrieTeilobjektTyp.Ecke.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Kante.knotenArt to GeometrieTeilobjektInspektor,
