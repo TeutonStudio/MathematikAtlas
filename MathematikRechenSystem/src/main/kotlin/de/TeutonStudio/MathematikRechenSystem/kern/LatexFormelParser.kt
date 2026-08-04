@@ -4,6 +4,8 @@ internal class LatexFormelParser(quelle: String) {
     internal val text = quelle
         .replace("\\left", "")
         .replace("\\right", "")
+        .replace("\\{", "{")
+        .replace("\\}", "}")
         .replace("\\,", " ")
         .replace("\\;", " ")
         .replace("\\!", "")
@@ -69,7 +71,6 @@ internal class LatexFormelParser(quelle: String) {
         if (verbrauche('+')) return parseUnaer()
         return parsePrimaer()
     }
-
 
     internal fun beginntPrimaer(): Boolean {
         leerraum()
@@ -152,5 +153,4 @@ internal class LatexFormelParser(quelle: String) {
     }
 
     internal fun fehler(nachricht: String): Nothing = throw LatexFormelParseFehler(position, nachricht)
-
 }
