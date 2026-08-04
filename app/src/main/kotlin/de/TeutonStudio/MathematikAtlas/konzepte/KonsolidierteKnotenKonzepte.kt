@@ -25,7 +25,9 @@ internal fun konzeptFürKonsolidiertenKnoten(
 ): KonzeptDefinition? = when (knoten.art) {
     MENGEN_KNOTEN_ART -> mengenKnotenKonzept(zustand, knoten)
     ZAHLENRECHNER_ART -> zahlenRechnerKonzept(knoten)
-    else -> null
+    else -> de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie
+        .fuerKnotenArt(knoten.art)
+        ?.let { familie -> strukturRechnerKonzept(knoten, familie) }
 }
 
 private fun mengenKnotenKonzept(
