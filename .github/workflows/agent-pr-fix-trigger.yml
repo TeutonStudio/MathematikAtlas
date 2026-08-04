@@ -30,6 +30,24 @@ jobs:
               raise SystemExit('Patchskript konnte nicht eindeutig aus dem Workflow gelesen werden.')
           roh = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
           skript = '\n'.join(zeile[10:] if zeile.startswith('          ') else zeile for zeile in roh.splitlines())
+
+          alte_pruefung = '''if lineare.count(override_block) != 1:
+    raise SystemExit("LineareAlgebraGrundlagenKnoten.kt: Auswerten-Override nicht eindeutig")
+lineare = lineare.replace(override_block, "", 1)'''
+          robuste_pruefung = '''if lineare.count(override_block) == 1:
+    lineare = lineare.replace(override_block, "", 1)
+else:
+    override_start = lineare.find('    registriere("mathematik.auswerten") { kontext ->')
+    if override_start < 0:
+        raise SystemExit("LineareAlgebraGrundlagenKnoten.kt: Auswerten-Override fehlt")
+    override_ende = lineare.find("\\n    }\\n", override_start)
+    if override_ende < 0:
+        raise SystemExit("LineareAlgebraGrundlagenKnoten.kt: Ende des Auswerten-Overrides fehlt")
+    override_ende += len("\\n    }\\n")
+    lineare = lineare[:override_start] + lineare[override_ende:]'''
+          if skript.count(alte_pruefung) != 1:
+              raise SystemExit('Die strenge Auswerten-Override-Prüfung wurde nicht eindeutig gefunden.')
+          skript = skript.replace(alte_pruefung, robuste_pruefung, 1)
           exec(compile(skript, '<auswerten-patch>', 'exec'))
 
           Path('.github/workflows/agent-pr-fix-trigger.yml').unlink()
