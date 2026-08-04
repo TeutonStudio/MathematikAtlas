@@ -164,7 +164,10 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
     return (
         basis +
-            listOf(ZahlenRechnerKnotenVorlagen.standard) +
+            listOf(
+                ZahlenRechnerKnotenVorlagen.standard,
+                MengenKnotenVorlagen.standard,
+            ) +
             FaltungsKnotenVorlagen.alle +
             MatrixdiagonaleKnotenVorlagen.alle +
             LineareAlgebraGrundlagenKnotenVorlagen.alle
