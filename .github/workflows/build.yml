@@ -31,17 +31,23 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
+
           path = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/konzepte/KonsolidierteKnotenKonzepte.kt')
           text = path.read_text()
-          alt = '''    if (knoten.art == MENGEN_KNOTEN_ART && knoten.kartenVerweis != null) {
-              val verweis = knoten.kartenVerweis
-          '''
-          neu = '''    if (knoten.art == MENGEN_KNOTEN_ART) {
-              val verweis = knoten.kartenVerweis ?: return null
-          '''
-          if alt not in text:
-              raise SystemExit('Kartenverweis-Migrationsmuster fehlt')
-          path.write_text(text.replace(alt, neu))
+          muster = re.compile(
+              r'(?P<einzug>^[ \t]*)if \(knoten\.art == MENGEN_KNOTEN_ART && knoten\.kartenVerweis != null\) \{\n'
+              r'(?P=einzug)[ \t]+val verweis = knoten\.kartenVerweis',
+              re.MULTILINE,
+          )
+          ersatz = (
+              r'\g<einzug>if (knoten.art == MENGEN_KNOTEN_ART) {\n'
+              r'\g<einzug>    val verweis = knoten.kartenVerweis ?: return null'
+          )
+          text, anzahl = muster.subn(ersatz, text, count=1)
+          if anzahl != 1:
+              raise SystemExit(f'Kartenverweis-Migrationsmuster {anzahl}-mal gefunden')
+          path.write_text(text)
           PY
       - name: Migrierte Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
