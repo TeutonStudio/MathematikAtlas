@@ -1,0 +1,37 @@
+{
+  "formatVersion": 7,
+  "id": "konzept.mengenkonstante",
+  "name": "Definition Mengenkonstante",
+  "version": 1,
+  "erstelltAm": 0,
+  "archiviert": false,
+  "ansicht": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+  "knoten": [
+    {
+      "id": "mengenkonstante-regel",
+      "art": "konzept.regel",
+      "name": "Mengenkonstante",
+      "position": { "x": 80.0, "y": 70.0 },
+      "größe": { "breite": 500.0, "höhe": 180.0 },
+      "parameter": {
+        "regel": "Eine Mengenkonstante bezeichnet eine feste Menge oder eine versionsfeste benutzerdefinierte Mengendefinition.",
+        "definition": "M=\\{x\\mid P(x)\\}"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "mengenkonstante-menge",
+          "name": "menge",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.menge",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    }
+  ],
+  "verbindungen": [],
+  "visuelleGruppen": []
+}
