@@ -54,6 +54,7 @@ fun KnotenKartenEditor(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit = {},
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit = { _, _ -> },
     beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
+    zeigeKnotenInspektor: Boolean = true,
     beiKnotenInspektor: (KnotenDaten) -> Unit = { InspektorSichtbarkeit.öffnen() },
 ) {
     val dichte = LocalDensity.current
@@ -171,6 +172,7 @@ fun KnotenKartenEditor(
                         beiAnschlussKontext = beiAnschlussKontext,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                         beiDoppelklick = { beiKnotenDoppelklick(knoten) },
+                        zeigeKnotenInspektor = zeigeKnotenInspektor,
                         beiInspektorÖffnen = { beiKnotenInspektor(knoten) },
                     )
                 }
@@ -600,6 +602,7 @@ private fun KnotenDarstellung(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
+    zeigeKnotenInspektor: Boolean,
     beiInspektorÖffnen: () -> Unit,
 ) {
     val zoom = zustand.karte.ansicht.zoom
@@ -660,17 +663,19 @@ private fun KnotenDarstellung(
             })
         }
 
-        IconButton(
-            onClick = {
-                zustand.wähleKnoten(knoten.id)
-                beiInspektorÖffnen()
-            },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(40.dp)
-                .semantics { contentDescription = "Inspektor öffnen" },
-        ) {
-            Text("⚙", style = MaterialTheme.typography.titleMedium)
+        if (zeigeKnotenInspektor) {
+            IconButton(
+                onClick = {
+                    zustand.wähleKnoten(knoten.id)
+                    beiInspektorÖffnen()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(40.dp)
+                    .semantics { contentDescription = "Inspektor öffnen" },
+            ) {
+                Text("⚙", style = MaterialTheme.typography.titleMedium)
+            }
         }
 
         knoten.anschlüsse.groupBy { it.kante }.forEach { (_, anschlüsse) ->
