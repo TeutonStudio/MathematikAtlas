@@ -149,21 +149,44 @@ internal object KonzeptBibliothekRegister {
     }
 
     fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> =
-        KonzeptKnotenRegister.erstelle(vorlagen).map { wissen ->
-            KonzeptBibliothekEintrag(
-                id = wissen.id.wert,
-                titel = wissen.titel,
-                beschreibung = wissen.kurzbeschreibung,
-                kategoriePfade = wissen.fachPfade.map { it.segmente }.sortedBy { it.joinToString("/") },
-                suchbegriffe = wissen.alleSuchtexte,
-                verfügbarkeit = when (wissen.verfügbarkeit) {
-                    WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
-                    WissensVerfügbarkeit.Geplant,
-                    WissensVerfügbarkeit.Historisch,
-                    -> KonzeptVerfügbarkeit.Geplant
-                },
-                vorlage = wissen.knotenVorlagen.firstOrNull(),
-            )
+        KonzeptKnotenRegister.erstelle(vorlagen).flatMap { wissen ->
+            val kategoriePfade = wissen.fachPfade
+                .map { it.segmente }
+                .sortedBy { it.joinToString("/") }
+            if (wissen.knotenVorlagen.isEmpty()) {
+                listOf(
+                    KonzeptBibliothekEintrag(
+                        id = wissen.id.wert,
+                        titel = wissen.titel,
+                        beschreibung = wissen.kurzbeschreibung,
+                        kategoriePfade = kategoriePfade,
+                        suchbegriffe = wissen.alleSuchtexte,
+                        verfügbarkeit = KonzeptVerfügbarkeit.Geplant,
+                    ),
+                )
+            } else {
+                wissen.knotenVorlagen.map { vorlage ->
+                    KonzeptBibliothekEintrag(
+                        id = vorlage.bibliotheksId(),
+                        titel = vorlage.name,
+                        beschreibung = vorlage.beschreibung,
+                        kategoriePfade = kategoriePfade,
+                        suchbegriffe = wissen.alleSuchtexte + setOf(
+                            vorlage.name,
+                            vorlage.beschreibung,
+                            vorlage.kategorie,
+                            vorlage.art,
+                        ) + vorlage.standardParameter.keys + vorlage.standardParameter.values,
+                        verfügbarkeit = when (wissen.verfügbarkeit) {
+                            WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
+                            WissensVerfügbarkeit.Geplant,
+                            WissensVerfügbarkeit.Historisch,
+                            -> KonzeptVerfügbarkeit.Geplant
+                        },
+                        vorlage = vorlage,
+                    )
+                }
+            }
         }
 
     fun bezeichnungFür(pfad: List<String>): String = pfad.mapIndexedNotNull { index, id ->
@@ -197,6 +220,12 @@ internal object KonzeptBibliothekRegister {
             }
         }
     }
+}
+
+private fun KnotenVorlage.bibliotheksId(): String {
+    val variantenSchlüssel = standardParameter.toSortedMap()
+        .entries.joinToString(";") { (schlüssel, wert) -> "$schlüssel=$wert" }
+    return listOf(art, name, variantenSchlüssel).joinToString("|")
 }
 
 internal fun KonzeptBibliothekEintrag.passt(filter: KonzeptBibliothekFilter): Boolean {
