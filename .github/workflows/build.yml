@@ -1,14 +1,31 @@
-name: Android-Build
+name: Einmaliger Auswerten-Auflösen-Patch
 
 on:
   push:
-  pull_request:
+    branches:
+      - agent/auswerten-standardwerte
+
+permissions:
+  contents: write
 
 jobs:
-  pruefen:
+  patchen-und-pruefen:
+    if: ${{ !contains(github.event.head_commit.message, '[auswerten-aufloesen-patched]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: agent/auswerten-standardwerte
+          fetch-depth: 0
+      - name: Fachlichen Patch anwenden
+        run: python3 scripts/agent_fix_auswerten_aufloesen.py
+      - name: Patch committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Auswerten verallgemeinern und Relationen auflösen [auswerten-aufloesen-patched]"
+          git push origin HEAD:agent/auswerten-standardwerte
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
