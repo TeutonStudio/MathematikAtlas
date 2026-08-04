@@ -10,19 +10,21 @@ class StrukturRechnerKnotenTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
 
     @Test
-    fun `Neue Strukturknoten sind im Katalog und Auswerter registriert`() {
+    fun `Strukturrechner sind sichtbar oder als kompatible Altknoten registriert`() {
         val arten = alleMathematikKnotenVorlagen().map { it.art }.toSet()
-        val erwartet = setOf(
-            SKALARPRODUKT_ART,
+        val sichtbar = setOf(
+            VektorRechner.KNOTEN_ART,
             TENSORPRODUKT_ART,
             DIMENSIONEN_ART,
             TensorRechner.KNOTEN_ART,
             AussagenSatzRechner.KNOTEN_ART,
             CAUCHY_ART,
         )
+        val auswerterArten = sichtbar + SKALARPRODUKT_ART
 
-        assertTrue(erwartet.all(arten::contains))
-        erwartet.forEach { assertNotNull(register.finde(it), "Auswerter für $it fehlt") }
+        assertTrue(sichtbar.all(arten::contains))
+        assertFalse(SKALARPRODUKT_ART in arten)
+        auswerterArten.forEach { assertNotNull(register.finde(it), "Auswerter für $it fehlt") }
     }
 
     @Test

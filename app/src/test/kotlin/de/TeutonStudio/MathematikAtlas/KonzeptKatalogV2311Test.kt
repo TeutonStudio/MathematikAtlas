@@ -8,14 +8,14 @@ import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_KOMPLEX_TUPEL
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_KOMPLEX_EINGABE
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_OPERATOR
-import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import kotlin.test.*
 
 class KonzeptKatalogV2311Test {
     @Test
     fun `jede feste Vorlage besitzt genau eine selbstbezugsfreie Definition`() {
-        val vorlagen = (alleMathematikKnotenVorlagen() + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle)
+        val vorlagen = (alleMathematikDefinitionsVorlagen() + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle)
             .distinctBy { it.art to it.name }
 
         vorlagen.forEach { vorlage ->
@@ -38,7 +38,7 @@ class KonzeptKatalogV2311Test {
 
     @Test
     fun `Division besitzt praktische selbstbezugsfreie Karten in beiden komplexen Darstellungen`() {
-        val division = alleMathematikKnotenVorlagen().single {
+        val division = alleMathematikDefinitionsVorlagen().single {
             it.art == ZAHLENRECHNER_ART &&
                 it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
                 UniversellerZahlenOperator.DIVISION.stabileId

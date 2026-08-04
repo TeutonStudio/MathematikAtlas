@@ -19,15 +19,15 @@ class UniversellerZahlenRechnerKnotenTest {
     )
 
     @Test
-    fun `Katalog enthaelt nur noch universelle Zahlenrechnerzustaende`() {
-        val vorlagen = alleMathematikKnotenVorlagen()
+    fun `Katalog zeigt einen Zahlenrechner und interner Definitionskatalog alle Operatoren`() {
+        val sichtbar = alleMathematikKnotenVorlagen()
+        assertEquals(1, sichtbar.count { it.art == ZAHLENRECHNER_ART })
         assertTrue(UniversellerZahlenOperator.entries.all { operator ->
-            vorlagen.any {
-                it.art == ZAHLENRECHNER_ART &&
-                    it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
+            ZahlenRechnerKnotenVorlagen.alle.any {
+                it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
             }
         })
-        assertTrue(vorlagen.none { it.art in historischeZahlenRechnerArten })
+        assertTrue(sichtbar.none { it.art in historischeZahlenRechnerArten })
         assertNotNull(register.finde(ZAHLENRECHNER_ART))
     }
 

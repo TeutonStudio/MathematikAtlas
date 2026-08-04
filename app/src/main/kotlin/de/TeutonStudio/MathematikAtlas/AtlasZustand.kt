@@ -41,6 +41,7 @@ class AtlasZustand(context: Context) {
         editor = KartenEditorZustand(start, graphPrüfung)
         letzterGespeicherterStand = start
         brotkrumen = listOf(KartenVerweis(start.id, start.version))
+        MengenKnotenKartenQuelle.installieren(this)
         werteAus()
     }
 
@@ -273,7 +274,7 @@ class AtlasZustand(context: Context) {
     }
 
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten =
-        migriereAssoziativeKnoten(migriereAussagenOperatoren(karte))
+        migriereAssoziativeKnoten(migriereAussagenOperatoren(karte)).migriereKonsolidierteKnoten()
 
     private fun werteAus() {
         if (editor.karte.knoten.any { it.art.startsWith("konzept.") }) {

@@ -7,7 +7,7 @@ import de.TeutonStudio.MathematikKnoten.MengenraumKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.SPUR_ART
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_OPERATOR
-import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
 
 @JvmInline
 value class KonzeptId(val wert: String) {
@@ -60,7 +60,7 @@ object TestDefinitionsKarten {
     const val KONZEPT_AUSGANG_ART = "konzept.ausgang"
 
     val festeVorlagen: List<KnotenVorlage> by lazy {
-        (alleMathematikKnotenVorlagen() + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle)
+        (alleMathematikDefinitionsVorlagen() + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle)
             .distinctBy { it.art to it.name }
     }
 
