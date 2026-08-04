@@ -18,8 +18,39 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
+      - name: Exporter variantenfest machen
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('app/src/test/kotlin/de/TeutonStudio/MathematikAtlas/RestmigrationExportTest.kt')
+          text = path.read_text()
+          text = text.replace(
+              'wissensId = eintrag.id.wert,\n                    konzept = konzept,',
+              'wissensId = eintrag.id.wert,\n                    variantenId = variantenId,\n                    konzept = konzept,',
+          )
+          text = text.replace(
+              'private fun exportiereKonzept(\n        wissensId: String,\n        konzept: KonzeptDefinition,',
+              'private fun exportiereKonzept(\n        wissensId: String,\n        variantenId: String,\n        konzept: KonzeptDefinition,',
+          )
+          text = text.replace(
+              'exportiereKarte(\n                wissensId,\n                reiter,',
+              'exportiereKarte(\n                wissensId,\n                variantenId,\n                reiter,',
+          )
+          text = text.replace(
+              'exportiereKarte(\n                    wissensId,\n                    reiter,',
+              'exportiereKarte(\n                    wissensId,\n                    variantenId,\n                    reiter,',
+          )
+          text = text.replace(
+              'private fun exportiereKarte(\n        wissensId: String,\n        reiter: KonzeptReiter,',
+              'private fun exportiereKarte(\n        wissensId: String,\n        variantenId: String,\n        reiter: KonzeptReiter,',
+          )
+          text = text.replace(
+              'val referenzId = "$wissensId.${reiter.id}$suffix"',
+              'val variantenSchluessel = variantenId.hashCode().toUInt().toString(16)\n        val referenzId = "$wissensId.$variantenSchluessel.${reiter.id}$suffix"',
+          )
+          path.write_text(text)
+          PY
       - name: Bauen, testen und Restbestand exportieren
-        continue-on-error: true
         run: ./gradlew --stacktrace test :app:assembleDebug
       - name: Quellstand für Restmigration verpacken
         if: always()
