@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten.konzeptkarte
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
+import org.json.JSONObject
 import java.security.MessageDigest
 
 @JvmInline
@@ -35,6 +36,29 @@ data class KonzeptKartenManifest(
     fun finde(id: KonzeptKartenId): KonzeptKartenManifestEintrag? = nachId[id]
 }
 
+object KonzeptKartenManifestJson {
+    const val MANIFEST_VERSION = 1
+
+    fun lese(text: String): KonzeptKartenManifest {
+        val json = JSONObject(text)
+        require(json.getInt("manifestVersion") == MANIFEST_VERSION) {
+            "Unbekannte Konzeptkarten-Manifestversion ${json.optInt("manifestVersion", -1)}."
+        }
+        val karten = json.getJSONArray("karten")
+        return KonzeptKartenManifest(
+            List(karten.length()) { index ->
+                val eintrag = karten.getJSONObject(index)
+                KonzeptKartenManifestEintrag(
+                    id = KonzeptKartenId(eintrag.getString("id")),
+                    datei = eintrag.getString("datei"),
+                    formatVersion = eintrag.getInt("formatVersion"),
+                    sha256 = eintrag.optString("sha256").takeIf(String::isNotBlank),
+                )
+            },
+        )
+    }
+}
+
 fun interface KonzeptKartenQuelle {
     fun lese(pfad: String): String?
 }
@@ -46,7 +70,7 @@ sealed interface KonzeptKartenLadeErgebnis {
 
 class KonzeptKartenLader(
     private val quelle: KonzeptKartenQuelle,
-    private val manifest: KonzeptKartenManifest = StandardKonzeptKartenManifest.manifest,
+    private val manifest: KonzeptKartenManifest,
 ) {
     fun lade(id: KonzeptKartenId): KonzeptKartenLadeErgebnis {
         val eintrag = manifest.finde(id)
@@ -86,19 +110,15 @@ class KonzeptKartenLader(
     }
 }
 
-object StandardKonzeptKartenManifest {
-    val manifest = KonzeptKartenManifest(
-        listOf(
-            KonzeptKartenManifestEintrag(KonzeptKartenId("konzept.zahlkonstante"), "zahlkonstante-v1.json"),
-            KonzeptKartenManifestEintrag(KonzeptKartenId("konzept.mengenkonstante"), "mengenkonstante-v1.json"),
-            KonzeptKartenManifestEintrag(KonzeptKartenId("konzept.term-zu-methode"), "term-zu-methode-v1.json"),
-            KonzeptKartenManifestEintrag(KonzeptKartenId("konzept.zahlenrechner"), "zahlenrechner-v1.json"),
-            KonzeptKartenManifestEintrag(KonzeptKartenId("konzept.tensorrechner"), "tensorrechner-v1.json"),
-        ),
-    )
+fun KonzeptKartenQuelle.ladeManifest(): Result<KonzeptKartenManifest> = runCatching {
+    val text = requireNotNull(lese(MANIFEST_ASSET_PFAD)) {
+        "Das Konzeptkarten-Manifest $MANIFEST_ASSET_PFAD fehlt."
+    }
+    KonzeptKartenManifestJson.lese(text)
 }
 
 const val ASSET_BASISPFAD = "de/TeutonStudio/MathematikKnoten/konzeptkarte"
+const val MANIFEST_ASSET_PFAD = "$ASSET_BASISPFAD/index.json"
 
 private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")
     .digest(toByteArray(Charsets.UTF_8))
