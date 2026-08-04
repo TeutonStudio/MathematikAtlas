@@ -104,13 +104,14 @@ private fun FormelAusdruck.bewegeVertikal(cursor: FormelCursor, delta: Int): For
         val argumente = eltern.argumente.sortedBy { it.position }
         val index = argumente.indexOfFirst { it.ausdruck.id == kindId }
         if (index < 0) continue
-        val zielIndex = index + delta
-        if (zielIndex !in argumente.indices) continue
+        val zielIndex = vertikalerZielIndex(eltern, index, delta) ?: continue
 
         val aktuellesTeilziel = argumente[index].ausdruck.cursorZiele()
-        val lokalerIndex = aktuellesTeilziel.indexOfFirst { it == normalisiert.ohneBevorzugtePosition() }
-            .takeIf { it >= 0 }
-            ?: 0
+        val lokalerCursor = normalisiert.copy(
+            pfad = AusdruckPfad(ids.drop(tiefe)),
+            bevorzugteXPosition = null,
+        )
+        val lokalerIndex = aktuellesTeilziel.indexOf(lokalerCursor).takeIf { it >= 0 } ?: 0
         val normiertesX = normalisiert.bevorzugteXPosition
             ?: if (aktuellesTeilziel.size <= 1) 0f else lokalerIndex.toFloat() / aktuellesTeilziel.lastIndex
         val zielTeilziele = argumente[zielIndex].ausdruck.cursorZiele()
@@ -123,6 +124,26 @@ private fun FormelAusdruck.bewegeVertikal(cursor: FormelCursor, delta: Int): For
         )
     }
     return normalisiert
+}
+
+/** Nur räumlich geschichtete Operatoren erhalten eine vertikale Nachbarschaft. */
+private fun vertikalerZielIndex(
+    operation: FormelAusdruck.Operation,
+    aktuellerIndex: Int,
+    delta: Int,
+): Int? = when (operation.operatorId.substringAfterLast('.')) {
+    "division" -> (aktuellerIndex + delta).takeIf { it in operation.argumente.indices }
+    "potenz" -> when {
+        delta < 0 && aktuellerIndex == 0 -> 1
+        delta > 0 && aktuellerIndex == 1 -> 0
+        else -> null
+    }
+    "logarithmus" -> when {
+        delta < 0 && aktuellerIndex == 0 -> 1
+        delta > 0 && aktuellerIndex == 1 -> 0
+        else -> null
+    }
+    else -> null
 }
 
 internal fun FormelAusdruck.cursorZiele(): List<FormelCursor> = buildList {
