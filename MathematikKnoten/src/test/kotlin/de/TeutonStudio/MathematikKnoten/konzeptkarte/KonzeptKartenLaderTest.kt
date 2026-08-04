@@ -29,6 +29,33 @@ class KonzeptKartenLaderTest {
     }
 
     @Test
+    fun `index json ist die einzige Manifestquelle`() {
+        val index = """
+            {
+              "manifestVersion": 1,
+              "karten": [
+                { "id": "test.karte", "datei": "test-v1.json", "formatVersion": 7 }
+              ]
+            }
+        """.trimIndent()
+        val quelle = KonzeptKartenQuelle { pfad -> index.takeIf { pfad == MANIFEST_ASSET_PFAD } }
+
+        val manifest = quelle.ladeManifest().getOrThrow()
+
+        val eintrag = assertIs<KonzeptKartenManifestEintrag>(manifest.finde(KonzeptKartenId("test.karte")))
+        assertEquals("test-v1.json", eintrag.datei)
+        assertEquals(7, eintrag.formatVersion)
+    }
+
+    @Test
+    fun `unbekannte Manifestversion wird abgelehnt`() {
+        val index = """{ "manifestVersion": 2, "karten": [] }"""
+        val fehler = runCatching { KonzeptKartenManifestJson.lese(index) }.exceptionOrNull()
+
+        assertIs<IllegalArgumentException>(fehler)
+    }
+
+    @Test
     fun `fehlendes Asset und falsche Karten-ID liefern strukturierte Fehler`() {
         val id = KonzeptKartenId("test.karte")
         val manifest = KonzeptKartenManifest(
