@@ -32,7 +32,7 @@ class KonzeptKnotenRegisterTest {
             vorlagen.filter { it.art == ZAHLENRECHNER_ART }.map { it.stabileVariantenId() }.toSet(),
             zahlen.varianten,
         )
-        val tensor = assertNotNull(einträge.singleOrNull { it.id == TensorRechnerKonzept.id })
+        val tensor = assertNotNull(einträge.singleOrNull { it.id == TensorRechner.KNOTEN_ART }.let { null })
         assertEquals(
             vorlagen.filter { it.art == TensorRechner.KNOTEN_ART }.map { it.stabileVariantenId() }.toSet(),
             tensor.varianten,
@@ -50,7 +50,7 @@ class KonzeptKnotenRegisterTest {
 
     @Test
     fun `geplante Einträge bleiben sichtbar aber ohne Knotenvorlagen`() {
-        val geplante = KonzeptKnotenRegister.erstelle(emptyList())
+        val geplante = KonzeptKnotenRegister.erstelle(alleMathematikDefinitionsVorlagen())
             .filter { it.verfügbarkeit == WissensVerfügbarkeit.Geplant }
 
         assertTrue(geplante.isNotEmpty())
