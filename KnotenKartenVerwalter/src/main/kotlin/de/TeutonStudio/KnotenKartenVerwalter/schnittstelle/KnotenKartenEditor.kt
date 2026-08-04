@@ -54,7 +54,7 @@ fun KnotenKartenEditor(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit = {},
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit = { _, _ -> },
     beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
-    beiKnotenInspektor: (KnotenDaten) -> Unit = {},
+    beiKnotenInspektor: (KnotenDaten) -> Unit = { InspektorSichtbarkeit.öffnen() },
 ) {
     val dichte = LocalDensity.current
     val karte = zustand.karte
