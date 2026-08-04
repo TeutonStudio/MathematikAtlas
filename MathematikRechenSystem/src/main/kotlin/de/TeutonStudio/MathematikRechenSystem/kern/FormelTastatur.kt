@@ -52,12 +52,30 @@ object FormelTastatur {
 
     private fun standardTaste(operator: UniversellerZahlenOperator): FormelTastaturTaste =
         FormelTastaturTaste(
-            id = operator.stabileId.substringAfterLast('.'),
+            id = operator.tastenId(),
             beschriftung = operator.tastenBeschriftung(),
             kategorie = operator.tastenKategorie(),
             operatorId = operator.stabileId,
             argumentRollen = operator.formelRollen(),
         )
+
+    private fun UniversellerZahlenOperator.tastenId(): String = when (this) {
+        UniversellerZahlenOperator.ADDITION -> "plus"
+        UniversellerZahlenOperator.SUBTRAKTION -> "minus"
+        UniversellerZahlenOperator.MULTIPLIKATION -> "mal"
+        UniversellerZahlenOperator.DIVISION -> "geteilt"
+        UniversellerZahlenOperator.POTENZ -> "potenz"
+        UniversellerZahlenOperator.WURZEL -> "wurzel"
+        UniversellerZahlenOperator.BETRAG -> "betrag"
+        UniversellerZahlenOperator.NATUERLICHER_LOGARITHMUS -> "ln"
+        UniversellerZahlenOperator.LOGARITHMUS -> "log"
+        UniversellerZahlenOperator.EXPONENTIALFUNKTION -> "exp"
+        UniversellerZahlenOperator.SINUS -> "sin"
+        UniversellerZahlenOperator.COSINUS -> "cos"
+        UniversellerZahlenOperator.ARCSINUS -> "arcsin"
+        UniversellerZahlenOperator.ARCCOSINUS -> "arccos"
+        else -> stabileId.substringAfterLast('.')
+    }
 
     private fun UniversellerZahlenOperator.tastenKategorie(): FormelTastenKategorie = when (this) {
         UniversellerZahlenOperator.ADDITION,
