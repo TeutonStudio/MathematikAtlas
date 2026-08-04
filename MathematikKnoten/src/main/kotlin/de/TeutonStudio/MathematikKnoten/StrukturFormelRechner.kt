@@ -311,7 +311,7 @@ fun anschlussArt(typ: FormelTyp): AnschlussArtId = when (typ) {
     FormelTyp.TUPEL -> MathematikAnschlussArten.Tupel.id
     FormelTyp.VEKTOR -> MathematikAnschlussArten.Vektor.id
     FormelTyp.MATRIX -> MathematikAnschlussArten.Matrix.id
-    FormelTyp.TENSOR -> MathematikAnschlussArten.Objekt.id
+    FormelTyp.TENSOR -> MathematikAnschlussArten.Tensor.id
     FormelTyp.METHODE -> MathematikAnschlussArten.Methode.id
     FormelTyp.OBJEKT -> MathematikAnschlussArten.Objekt.id
 }
