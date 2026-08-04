@@ -28,18 +28,30 @@ class RestmigrationExportTest {
         val wissen = MathematikEnzyklopädie.standard.alle
         val kartenNachVariante = linkedMapOf<String, MutableList<JSONObject>>()
         val exportierteDateien = linkedMapOf<String, String>()
+        val exportFehler = mutableListOf<JSONObject>()
 
         wissen.filter { it.knotenVorlagen.isNotEmpty() }.forEach { eintrag ->
             eintrag.knotenVorlagen.forEachIndexed { index, vorlage ->
                 val variantenId = vorlage.variantenId()
-                val konzept = statischesKonzept(vorlage, index) ?: return@forEachIndexed
-                val referenzen = exportiereKonzept(
-                    wissensId = eintrag.id.wert,
-                    konzept = konzept,
-                    ordner = kartenOrdner,
-                    dateien = exportierteDateien,
-                )
-                kartenNachVariante.getOrPut(variantenId) { mutableListOf() }.addAll(referenzen)
+                runCatching {
+                    val konzept = statischesKonzept(vorlage, index) ?: return@runCatching
+                    val referenzen = exportiereKonzept(
+                        wissensId = eintrag.id.wert,
+                        variantenId = variantenId,
+                        konzept = konzept,
+                        ordner = kartenOrdner,
+                        dateien = exportierteDateien,
+                    )
+                    kartenNachVariante.getOrPut(variantenId) { mutableListOf() }.addAll(referenzen)
+                }.onFailure { fehler ->
+                    exportFehler += JSONObject()
+                        .put("wissensId", eintrag.id.wert)
+                        .put("variantenId", variantenId)
+                        .put("knotenArt", vorlage.art)
+                        .put("vorlage", vorlage.name)
+                        .put("fehlerTyp", fehler::class.qualifiedName)
+                        .put("meldung", fehler.message ?: fehler.toString())
+                }
             }
         }
 
@@ -69,6 +81,9 @@ class RestmigrationExportTest {
         )
         File(ausgabe, "karten-dateien.json").writeText(
             JSONObject(exportierteDateien.toSortedMap()).toString(2),
+        )
+        File(ausgabe, "export-fehler.json").writeText(
+            JSONArray(exportFehler).toString(2),
         )
     }
 
@@ -228,6 +243,7 @@ class RestmigrationExportTest {
 
     private fun exportiereKonzept(
         wissensId: String,
+        variantenId: String,
         konzept: KonzeptDefinition,
         ordner: File,
         dateien: MutableMap<String, String>,
@@ -236,6 +252,7 @@ class RestmigrationExportTest {
         konzept.reiter.forEachIndexed { reiterIndex, reiter ->
             ergebnis += exportiereKarte(
                 wissensId,
+                variantenId,
                 reiter,
                 reiter.karte,
                 ordner,
@@ -247,6 +264,7 @@ class RestmigrationExportTest {
             reiter.darstellungsVarianten.toSortedMap(compareBy { it.name }).forEach { (darstellung, karte) ->
                 ergebnis += exportiereKarte(
                     wissensId,
+                    variantenId,
                     reiter,
                     karte,
                     ordner,
@@ -262,6 +280,7 @@ class RestmigrationExportTest {
 
     private fun exportiereKarte(
         wissensId: String,
+        variantenId: String,
         reiter: KonzeptReiter,
         karte: KartenDaten,
         ordner: File,
@@ -271,8 +290,10 @@ class RestmigrationExportTest {
         darstellung: String?,
     ): JSONObject {
         val suffix = darstellung?.let { ".${it.lowercase()}" }.orEmpty()
-        val referenzId = "$wissensId.${reiter.id}$suffix"
-        val datei = "${slug(referenzId)}-v1.json"
+        val variantenSchluessel = variantenId.hashCode().toUInt().toString(16)
+        val referenzId = "$wissensId.$variantenSchluessel.${reiter.id}$suffix"
+        val dateiSchluessel = referenzId.hashCode().toUInt().toString(16)
+        val datei = "konzeptkarte-$dateiSchluessel-v1.json"
         val text = KartenDatenJson.schreibe(karte)
         val vorhanden = dateien.putIfAbsent(datei, text)
         require(vorhanden == null || vorhanden == text) { "Kollidierende Assetdatei $datei" }
