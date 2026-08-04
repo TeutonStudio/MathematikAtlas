@@ -409,6 +409,7 @@ private fun SkalarproduktZertifikatInhalt(
             val statusText = when (aussage.pruefung.status) {
                 NachweisStatus.Nachgewiesen -> "nachgewiesen"
                 NachweisStatus.Widerlegt -> "widerlegt"
+                is NachweisStatus.Bedingt -> "bedingt"
                 NachweisStatus.Unvollstaendig -> "unvollständig"
                 NachweisStatus.Unentscheidbar -> "unentscheidbar"
             }
