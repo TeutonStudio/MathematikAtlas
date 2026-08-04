@@ -1,7 +1,11 @@
 package de.TeutonStudio.MathematikAtlas
 
 import android.content.Context
-import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
+import de.TeutonStudio.MathematikKnoten.konzeptknoten.KonzeptKnotenRegister
 
 internal enum class KnotenWählerModus(
     val stabileId: String,
@@ -69,6 +73,11 @@ internal data class KonzeptBibliothekFilter(
     val kategoriePfad: List<String>? = null,
 )
 
+/**
+ * App-Adapter auf die kanonische Enzyklopädiequelle im Modul MathematikKnoten.
+ * Fachliche Zuordnung, Suchbegriffe, Varianten und Verfügbarkeit werden nicht
+ * mehr parallel im App-Modul hergeleitet.
+ */
 internal object KonzeptBibliothekRegister {
     val kategorien: List<KonzeptKategorie> = listOf(
         KonzeptKategorie(
@@ -127,16 +136,8 @@ internal object KonzeptBibliothekRegister {
                 KonzeptKategorie("methoden", "Methoden und Abbildungen"),
             ),
         ),
-        KonzeptKategorie(
-            "topologie",
-            "Topologie",
-            listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe")),
-        ),
-        KonzeptKategorie(
-            "stochastik",
-            "Stochastik",
-            listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe")),
-        ),
+        KonzeptKategorie("topologie", "Topologie", listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe"))),
+        KonzeptKategorie("stochastik", "Stochastik", listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe"))),
         KonzeptKategorie("eigene-karten", "Eigene Karten"),
     )
 
@@ -147,36 +148,23 @@ internal object KonzeptBibliothekRegister {
         }
     }
 
-    fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> {
-        val verfügbareEinträge = vorlagen.map { vorlage ->
-            val variantenSchlüssel = vorlage.standardParameter.toSortedMap()
-                .entries.joinToString(";") { (schlüssel, wert) -> "$schlüssel=$wert" }
-            val id = listOf(vorlage.art, vorlage.name, variantenSchlüssel)
-                .joinToString("|")
+    fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> =
+        KonzeptKnotenRegister.erstelle(vorlagen).map { wissen ->
             KonzeptBibliothekEintrag(
-                id = id,
-                titel = vorlage.name,
-                beschreibung = vorlage.beschreibung,
-                kategoriePfade = kategoriePfadeFür(vorlage),
-                suchbegriffe = buildSet {
-                    add(vorlage.art)
-                    add(vorlage.name)
-                    add(vorlage.kategorie)
-                    add(vorlage.beschreibung)
-                    addAll(vorlage.standardParameter.keys)
-                    addAll(vorlage.standardParameter.values)
-                    addAll(vorlage.anschlüsse.map { it.name })
-                    addAll(vorlage.anschlüsse.map { it.art.wert })
+                id = wissen.id.wert,
+                titel = wissen.titel,
+                beschreibung = wissen.kurzbeschreibung,
+                kategoriePfade = wissen.fachPfade.map { it.segmente }.sortedBy { it.joinToString("/") },
+                suchbegriffe = wissen.alleSuchtexte,
+                verfügbarkeit = when (wissen.verfügbarkeit) {
+                    WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
+                    WissensVerfügbarkeit.Geplant,
+                    WissensVerfügbarkeit.Historisch,
+                    -> KonzeptVerfügbarkeit.Geplant
                 },
-                verfügbarkeit = KonzeptVerfügbarkeit.Verfügbar,
-                vorlage = vorlage,
+                vorlage = wissen.knotenVorlagen.firstOrNull(),
             )
         }
-
-        return (verfügbareEinträge + geplanteEinträge)
-            .distinctBy(KonzeptBibliothekEintrag::id)
-            .sortedWith(compareBy(KonzeptBibliothekEintrag::titel, KonzeptBibliothekEintrag::id))
-    }
 
     fun bezeichnungFür(pfad: List<String>): String = pfad.mapIndexedNotNull { index, id ->
         val schlüssel = if (index == 0) id else "${pfad.first()}/$id"
@@ -187,8 +175,9 @@ internal object KonzeptBibliothekRegister {
         kategorien.firstOrNull { it.id == hauptkategorie }?.kinder.orEmpty()
 
     fun validierungsFehler(einträge: List<KonzeptBibliothekEintrag>): List<String> = buildList {
-        val doppelteIds = einträge.groupingBy { it.id }.eachCount().filterValues { it > 1 }.keys
-        doppelteIds.forEach { add("Doppelte Konzept-ID: $it") }
+        einträge.groupingBy(KonzeptBibliothekEintrag::id).eachCount().filterValues { it > 1 }.keys.forEach {
+            add("Doppelte Konzept-ID: $it")
+        }
         einträge.forEach { eintrag ->
             if (eintrag.kategoriePfade.isEmpty()) add("${eintrag.id}: kein Kategoriepfad")
             eintrag.kategoriePfade.forEach { pfad ->
@@ -208,106 +197,9 @@ internal object KonzeptBibliothekRegister {
             }
         }
     }
-
-    private fun kategoriePfadeFür(vorlage: KnotenVorlage): List<List<String>> {
-        val art = vorlage.art.lowercase()
-        val name = vorlage.name.lowercase()
-        val kategorie = vorlage.kategorie.lowercase()
-        val pfade = linkedSetOf<List<String>>()
-
-        if (kategorie in setOf("eigene karten", "gespeicherte karten") || vorlage.kartenVerweis != null) {
-            pfade += listOf("eigene-karten")
-        }
-
-        if (kategorie.startsWith("geometrie:") || art.contains("geometrie")) {
-            val unterkategorie = when {
-                kategorie.contains("transformation") || art.contains("transformation") -> "transformationen"
-                kategorie.contains("darstellung") || art.contains("visualisierung") -> "visualisierung"
-                kategorie.contains("konstruktion") -> "konstruktionen"
-                else -> "grundobjekte"
-            }
-            pfade += listOf("geometrie", unterkategorie)
-        }
-
-        if (kategorie == "vektoren" || art.contains("vektor")) pfade += listOf("lineare-algebra", "vektoren")
-        if (kategorie == "matrizen" || art.contains("matrix") || art.contains("spur")) pfade += listOf("lineare-algebra", "matrizen")
-        if (art.contains("tensor")) pfade += listOf("lineare-algebra", "tensoren")
-        if (art.contains("skalarprodukt") || name.contains("skalarprodukt")) {
-            pfade += listOf("lineare-algebra", "skalarprodukte")
-            pfade += listOf("geometrie", "grundobjekte")
-        }
-
-        if (kategorie == "mengen" || kategorie.contains("mengen") || art.contains("menge")) {
-            val unterkategorie = when {
-                art.contains("konstruktor") || art.contains("definator") -> "mengendefinitionen"
-                kategorie.contains("rechnung") || art.contains("schnitt") || art.contains("vereinigung") ||
-                    art.contains("differenz") || art.contains("produkt") -> "mengenoperationen"
-                else -> "mengen"
-            }
-            pfade += listOf("mengenlehre", unterkategorie)
-        }
-
-        if (kategorie.startsWith("aussagen") || kategorie == "aussage" || art.contains("aussage") ||
-            art.contains("praedikat") || art.contains("prädikat") || art.contains("quantor") ||
-            art.contains("gleichheit") || art.contains("ordnung")
-        ) {
-            val unterkategorie = when {
-                art.contains("quantor") -> "quantoren"
-                art.contains("praedikat") || art.contains("prädikat") || art.contains("gleichheit") || art.contains("ordnung") -> "praedikate"
-                else -> "aussagen"
-            }
-            pfade += listOf("logik", unterkategorie)
-        }
-
-        if (kategorie == "analysis" || art.contains("ableit") || art.contains("integr") ||
-            art.contains("grenz") || art.contains("folge") || art.contains("reihe")
-        ) {
-            val unterkategorie = when {
-                art.contains("folge") || art.contains("reihe") || art.contains("grenz") -> "folgen-reihen"
-                art.contains("ableit") || art.contains("integr") -> "differential-integral"
-                else -> "funktionen"
-            }
-            pfade += listOf("analysis", unterkategorie)
-        }
-
-        if (kategorie in setOf("methoden", "abbildungen") || art.contains("methode") || art.contains("abbild")) {
-            pfade += listOf("algebra", "methoden")
-            pfade += listOf("analysis", "funktionen")
-        }
-
-        if (kategorie in setOf("rechnen", "algebra", "zahlen", "operatoren", "steuerung") ||
-            art.contains("zahl") || art.contains("rechner")
-        ) {
-            val unterkategorie = if (art.contains("zahl") && !art.contains("rechner")) "zahlen" else "operationen"
-            pfade += listOf("algebra", unterkategorie)
-        }
-
-        if (pfade.isEmpty()) pfade += listOf("algebra", "operationen")
-        return pfade.toList()
-    }
-
-    private val geplanteEinträge = listOf(
-        KonzeptBibliothekEintrag(
-            id = "geplant.topologie.offene-menge",
-            titel = "Offene Menge",
-            beschreibung = "Grundbegriff der Topologie; eine erzeugbare Knotenvorlage ist noch nicht registriert.",
-            kategoriePfade = listOf(listOf("topologie", "grundbegriffe")),
-            suchbegriffe = setOf("offene menge", "topologie", "umgebung"),
-            verfügbarkeit = KonzeptVerfügbarkeit.Geplant,
-        ),
-        KonzeptBibliothekEintrag(
-            id = "geplant.stochastik.zufallsvariable",
-            titel = "Zufallsvariable",
-            beschreibung = "Messbare Abbildung eines Wahrscheinlichkeitsraums; noch nicht als Knoten verfügbar.",
-            kategoriePfade = listOf(listOf("stochastik", "grundbegriffe")),
-            suchbegriffe = setOf("zufallsvariable", "stochastik", "wahrscheinlichkeit"),
-            verfügbarkeit = KonzeptVerfügbarkeit.Geplant,
-        ),
-    )
 }
 
 internal fun KonzeptBibliothekEintrag.passt(filter: KonzeptBibliothekFilter): Boolean {
-    val vorlage = vorlage
     val suchtext = filter.suchtext.trim().lowercase()
     val suchePasst = suchtext.isBlank() || buildSet {
         add(titel)
