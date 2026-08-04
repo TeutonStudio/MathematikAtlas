@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.25.x"
-current_version = "2.25.1"
+current_version = "2.25.2"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -689,3 +689,15 @@ branch = "release/v2.25.1-formeleingaenge"
 kind = "fix"
 version_axis = "x"
 reason = "Korrigiert die Lebensdauer automatisch aus freien Formelvariablen erzeugter Eingänge, vervollständigt Formel-Definitionskarten, Formeltastatur und Inspektorverhalten und führt keinen neuen registrierten Knotentyp ein."
+
+
+[[releases]]
+version = "2.25.2"
+title = "Generische Termauswertung und Relationsauflösung"
+roadmap = "v2.25.x Strukturrechner, CAS und dynamische Definitionskarten"
+status = "released"
+previous_release = "2.25.1"
+branch = "agent/auswerten-standardwerte"
+kind = "fix"
+version_axis = "x"
+reason = "Korrigiert die vorhandenen Knoten Auswerten und Gleichung lösen: Auswerten vereinfacht mathematische Objekte typ-erhaltend, Auflösen bestimmt oder definiert Lösungsmengen von Relationen und Standardwerte behalten eine gültige LaTeX-Pfaddarstellung. Es wird kein neuer registrierter Knotentyp eingeführt."

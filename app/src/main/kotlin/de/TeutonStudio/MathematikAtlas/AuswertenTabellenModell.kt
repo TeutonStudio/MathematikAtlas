@@ -2,7 +2,6 @@ package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
-import de.TeutonStudio.MathematikKnoten.GAUSS_MODUS_PARAMETER
 import de.TeutonStudio.MathematikRechenSystem.kern.Matrix
 import de.TeutonStudio.MathematikRechenSystem.kern.SpaltenVektor
 import de.TeutonStudio.MathematikRechenSystem.kern.UmformungsTabelle
@@ -66,7 +65,7 @@ internal fun umformungsTabelleOderNull(
     if (start.spaltenAnzahl != ende.spaltenAnzahl) return null
     val hatRechteSeite = ergebnis?.eingänge?.get("rechteSeite")?.objekt is SpaltenVektor
     val konfiguration = auswertungsTabellenKonfiguration(
-        modus = knoten.parameter[GAUSS_MODUS_PARAMETER],
+        modus = knoten.parameter["gaussModus"],
         variablenText = knoten.parameter["variablen"],
         eingabeSpalten = eingabe?.spaltenAnzahl,
         verlaufsSpalten = start.spaltenAnzahl,

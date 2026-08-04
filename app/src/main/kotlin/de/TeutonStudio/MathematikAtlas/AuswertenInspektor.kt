@@ -45,7 +45,7 @@ internal object AuswertenInspektor : KnotenInspektor {
     ) {
         Text("Termauswertung", style = MaterialTheme.typography.titleSmall)
         Text(
-  "Dieser Knoten vereinfacht ausschließlich Zahlterme. Gleichheiten werden im Gleichheitsknoten definiert und in dafür vorgesehenen Gleichungs- oder Lösungsverfahren verarbeitet.",
+  "Dieser Knoten vereinfacht mathematische Terme typ-erhaltend, darunter Zahlen, Aussagen, Matrizen, Vektoren, Tupel und Mengen. Relationen werden nicht hier gelöst, sondern im Knoten „Auflösen“.",
   style = MaterialTheme.typography.bodySmall,
   color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
