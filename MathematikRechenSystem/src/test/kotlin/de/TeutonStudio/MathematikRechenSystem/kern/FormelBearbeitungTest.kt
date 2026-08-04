@@ -36,6 +36,7 @@ class FormelBearbeitungTest {
         assertEquals(listOf("zaehler", "nenner"), division.argumente.map { it.rollenId })
         assertEquals(2, editor.offenePlatzhalter.size)
         assertEquals(editor.offenePlatzhalter.first().id, editor.auswahlId)
+        assertIs<CursorPosition.InPlatzhalter>(editor.cursor.position)
     }
 
     @Test
@@ -81,6 +82,99 @@ class FormelBearbeitungTest {
         assertTrue("zahl.sech" in ids)
         assertTrue("zahl.csc" in ids)
         assertTrue("zahl.csch" in ids)
+    }
+
+    @Test
+    fun `links und rechts durchlaufen semantische Cursorziele ohne Undo Eintrag`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("x+1"))
+        val nachImportKannRueckgaengig = editor.kannRueckgaengig
+        val start = editor.cursor
+
+        assertTrue(editor.bewegeCursor(FormelCursorRichtung.Links))
+        assertNotEquals(start, editor.cursor)
+        assertEquals(nachImportKannRueckgaengig, editor.kannRueckgaengig)
+        assertTrue(editor.bewegeCursor(FormelCursorRichtung.Rechts))
+        assertEquals(start, editor.cursor)
+    }
+
+    @Test
+    fun `oben und unten wechseln zwischen Zaehler und Nenner`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("\\frac{x+1}{y-2}"))
+        val division = assertIs<FormelAusdruck.Operation>(editor.wurzel)
+        val zaehler = division.argumente.sortedBy { it.position }[0].ausdruck
+        val nenner = division.argumente.sortedBy { it.position }[1].ausdruck
+        val zaehlerKind = assertIs<FormelAusdruck.Operation>(zaehler).argumente.first().ausdruck
+        assertTrue(editor.setzeCursorAufAusdruck(zaehlerKind.id, CursorPosition.NachAusdruck))
+
+        assertTrue(editor.bewegeCursor(FormelCursorRichtung.Unten))
+        assertTrue(editor.cursor.pfad.ids.contains(nenner.id))
+        assertTrue(editor.bewegeCursor(FormelCursorRichtung.Oben))
+        assertTrue(editor.cursor.pfad.ids.contains(zaehler.id))
+    }
+
+    @Test
+    fun `Operator vor Ausdruck setzt bestehenden Ausdruck rechts ein`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("x"))
+        val xId = editor.wurzel.id
+        assertTrue(editor.setzeCursorAufAusdruck(xId, CursorPosition.VorAusdruck))
+        val plus = FormelTastatur.standard.single { it.id == "plus" }
+
+        assertTrue(editor.druecke(plus))
+
+        val addition = assertIs<FormelAusdruck.Operation>(editor.wurzel)
+        assertIs<FormelAusdruck.Platzhalter>(addition.argumente.sortedBy { it.position }[0].ausdruck)
+        assertEquals(xId, addition.argumente.sortedBy { it.position }[1].ausdruck.id)
+    }
+
+    @Test
+    fun `Operator nach Ausdruck setzt bestehenden Ausdruck links ein`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("x"))
+        val xId = editor.wurzel.id
+        assertTrue(editor.setzeCursorAufAusdruck(xId, CursorPosition.NachAusdruck))
+        val plus = FormelTastatur.standard.single { it.id == "plus" }
+
+        assertTrue(editor.druecke(plus))
+
+        val addition = assertIs<FormelAusdruck.Operation>(editor.wurzel)
+        assertEquals(xId, addition.argumente.sortedBy { it.position }[0].ausdruck.id)
+        assertIs<FormelAusdruck.Platzhalter>(addition.argumente.sortedBy { it.position }[1].ausdruck)
+    }
+
+    @Test
+    fun `Undo und Redo stellen Ausdruck und Cursorposition wieder her`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("x"))
+        val xId = editor.wurzel.id
+        assertTrue(editor.setzeCursorAufAusdruck(xId, CursorPosition.VorAusdruck))
+        val cursorVorMutation = editor.cursor
+        val plus = FormelTastatur.standard.single { it.id == "plus" }
+        assertTrue(editor.druecke(plus))
+        val cursorNachMutation = editor.cursor
+
+        assertTrue(editor.rueckgaengig())
+        assertEquals(cursorVorMutation, editor.cursor)
+        assertTrue(editor.wiederholen())
+        assertEquals(cursorNachMutation, editor.cursor)
+    }
+
+    @Test
+    fun `Backspace hinterlaesst erreichbaren Pflichtplatzhalter`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("x+1"))
+        val addition = assertIs<FormelAusdruck.Operation>(editor.wurzel)
+        val rechts = addition.argumente.sortedBy { it.position }[1].ausdruck
+        assertTrue(editor.setzeCursorAufAusdruck(rechts.id, CursorPosition.NachAusdruck))
+
+        assertTrue(editor.loescheRueckwaerts())
+
+        assertIs<FormelAusdruck.Platzhalter>(
+            assertIs<FormelAusdruck.Operation>(editor.wurzel).argumente.sortedBy { it.position }[1].ausdruck,
+        )
+        assertIs<CursorPosition.InPlatzhalter>(editor.cursor.position)
     }
 
     private fun sammleOperatorIds(ausdruck: FormelAusdruck): Set<String> = buildSet {

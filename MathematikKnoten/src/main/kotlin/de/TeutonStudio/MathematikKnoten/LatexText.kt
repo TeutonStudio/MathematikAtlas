@@ -280,18 +280,22 @@ private class LatexParser(
     }
 
     private fun zahlbereich(text: String) = when (text) {
-        "R" -> "ℝ"
-        "Q" -> "ℚ"
-        "Z" -> "ℤ"
         "N" -> "ℕ"
+        "Z" -> "ℤ"
+        "Q" -> "ℚ"
+        "R" -> "ℝ"
         "C" -> "ℂ"
+        "H" -> "ℍ"
+        "P" -> "ℙ"
+        "F" -> "𝔽"
+        "K" -> "𝕂"
         else -> text
     }
 
     private fun zeichenFürBefehl(befehl: String) = mapOf(
         "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
-        "varnothing" to "∅", "neg" to "¬", "land" to "∧", "lor" to "∨",
+        "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁",
         "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
         "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",

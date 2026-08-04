@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 @Composable
@@ -44,6 +43,10 @@ internal fun FormelBauerDialog(
         importFehler = null
     }
 
+    fun cursorBewegen(richtung: FormelCursorRichtung) {
+        if (editor.bewegeCursor(richtung)) revision++
+    }
+
     Dialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -70,13 +73,36 @@ internal fun FormelBauerDialog(
                 }
 
                 Surface(
-                    Modifier.fillMaxWidth().heightIn(min = 92.dp),
+                    Modifier.fillMaxWidth().heightIn(min = 128.dp),
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         Text("Formelvorschau", style = MaterialTheme.typography.labelLarge)
-                        LatexText(vorschau, style = MaterialTheme.typography.headlineSmall)
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            StrukturelleFormelVorschau(
+                                wurzel = editor.wurzel,
+                                cursor = editor.cursor,
+                                cursorSetzen = { id, position ->
+                                    if (editor.setzeCursorAufAusdruck(id, position)) revision++
+                                },
+                                navigieren = ::cursorBewegen,
+                                rücklöschen = { if (editor.loescheRueckwaerts()) geändert() },
+                                vorwärtsLöschen = { if (editor.loescheVorwaerts()) geändert() },
+                                modifier = Modifier.weight(1f),
+                            )
+                            FormelCursorTasten(
+                                kannBewegen = editor::kannCursorBewegen,
+                                bewegen = ::cursorBewegen,
+                            )
+                        }
                         Text(
                             when (val status = prüfung) {
                                 FormelPruefung.Gueltig -> "Vollständige Formel"
@@ -85,6 +111,11 @@ internal fun FormelBauerDialog(
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = if (gültig) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            "Cursor: ${editor.cursor.position}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

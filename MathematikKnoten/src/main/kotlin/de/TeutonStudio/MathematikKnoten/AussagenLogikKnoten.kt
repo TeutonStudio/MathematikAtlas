@@ -162,13 +162,14 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
         }
         .map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
-    return (
-        basis +
-            listOf(ZahlenRechnerKnotenVorlagen.standard) +
-            FaltungsKnotenVorlagen.alle +
-            MatrixdiagonaleKnotenVorlagen.alle +
-            LineareAlgebraGrundlagenKnotenVorlagen.alle
-        )
+    val strukturRechner = StrukturFormelRechnerVorlagen.alle
+    val strukturArten = strukturRechner.mapTo(mutableSetOf()) { it.art }
+    val katalog = basis +
+        listOf(ZahlenRechnerKnotenVorlagen.standard) +
+        FaltungsKnotenVorlagen.alle +
+        MatrixdiagonaleKnotenVorlagen.alle +
+        LineareAlgebraGrundlagenKnotenVorlagen.alle
+    return (katalog.filterNot { it.art in strukturArten } + strukturRechner)
         .distinctBy(::vorlagenSchlüssel)
 }
 

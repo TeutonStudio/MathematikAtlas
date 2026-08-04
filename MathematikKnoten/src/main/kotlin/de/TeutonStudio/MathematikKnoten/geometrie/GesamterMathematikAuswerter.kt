@@ -23,5 +23,9 @@ object GesamterMathematikAuswerter {
         registriereKonsolidierteKnoten()
         // Verfeinert ausschließlich das Skalarprodukt und delegiert alle übrigen Vektoroperationen.
         registriereSkalarproduktErweiterungen()
+        // Muss zuletzt registriert werden: typisierte CAS-Formeln und dynamische Rechnerverträge.
+        registriereStrukturFormelRechner()
+        // Bewahrt gespeicherte Karten mit dem historischen Ausgang `skalar`.
+        registriereStrukturRechnerKompatibilitaet()
     }
 }

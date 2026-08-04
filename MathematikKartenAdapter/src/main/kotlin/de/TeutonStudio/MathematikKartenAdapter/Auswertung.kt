@@ -41,11 +41,11 @@ data class BedingterWert(
     val symbolischeMethode: Boolean = false,
 )
 
-/** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die mathematische Standarddarstellung. */
+/** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die kanonische Struktur-Darstellung. */
 fun BedingterWert.anzeigeLatex(): String = when {
     latexDarstellung == DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG && objekt is DefinierteMenge ->
         objekt.zuDoppelpunktLatex()
-    else -> latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuLatex()
+    else -> latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuStrukturLatex()
 }
 
 data class VariablenQuelle(
