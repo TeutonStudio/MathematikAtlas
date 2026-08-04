@@ -31,6 +31,20 @@ private fun KnotenVorlage.wissensBeschreibung(): String =
         "Mathematisches Konzept „$name“ der Knotenart $art."
     }
 
+private fun Iterable<String>.bereinigteSuchbegriffe(): Set<String> =
+    map(String::trim).filter(String::isNotBlank).toCollection(linkedSetOf())
+
+private fun KnotenVorlage.suchbegriffe(): Set<String> = buildList {
+    add(art)
+    add(name)
+    add(kategorie)
+    add(wissensBeschreibung())
+    addAll(standardParameter.keys)
+    addAll(standardParameter.values)
+    addAll(anschlüsse.map { it.name })
+    addAll(anschlüsse.map { it.art.wert })
+}.bereinigteSuchbegriffe()
+
 internal fun einzelnesVorlagenKonzept(
     vorlage: KnotenVorlage,
     id: WissensId = WissensId(vorlage.stabileKonzeptId()),
@@ -45,16 +59,7 @@ internal fun einzelnesVorlagenKonzept(
         kategorie = vorlage.kategorie,
         besitztKartenVerweis = vorlage.kartenVerweis != null,
     ),
-    suchbegriffe = buildSet {
-        add(vorlage.art)
-        add(vorlage.name)
-        add(vorlage.kategorie)
-        add(vorlage.wissensBeschreibung())
-        addAll(vorlage.standardParameter.keys)
-        addAll(vorlage.standardParameter.values)
-        addAll(vorlage.anschlüsse.map { it.name })
-        addAll(vorlage.anschlüsse.map { it.art.wert })
-    },
+    suchbegriffe = vorlage.suchbegriffe(),
     reifegrad = WissensReifegrad.Geprüft,
     knotenArten = setOf(vorlage.art),
     varianten = setOf(vorlage.stabileVariantenId()),
@@ -105,19 +110,10 @@ internal fun gruppiertesVorlagenKonzept(
                 besitztKartenVerweis = vorlage.kartenVerweis != null,
             )
         }.toSet(),
-        suchbegriffe = buildSet {
-            addAll(zusätzlicheSuchbegriffe)
-            vorlagen.forEach { vorlage ->
-                add(vorlage.art)
-                add(vorlage.name)
-                add(vorlage.kategorie)
-                add(vorlage.wissensBeschreibung())
-                addAll(vorlage.standardParameter.keys)
-                addAll(vorlage.standardParameter.values)
-                addAll(vorlage.anschlüsse.map { it.name })
-                addAll(vorlage.anschlüsse.map { it.art.wert })
-            }
-        },
+        suchbegriffe = (
+            zusätzlicheSuchbegriffe +
+                vorlagen.flatMap { it.suchbegriffe() }
+            ).bereinigteSuchbegriffe(),
         aliase = vorlagen.mapTo(linkedSetOf(), KnotenVorlage::stabileKonzeptId),
         reifegrad = WissensReifegrad.Geprüft,
         knotenArten = vorlagen.map(KnotenVorlage::art).toSet(),
