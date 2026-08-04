@@ -10,7 +10,8 @@ data class GeordneterProduktSummand(
     fun zuLatex(): String = "${linkerFaktor.zuLatex()}\\cdot ${rechterFaktor.zuLatex()}"
 }
 
-data class FalkSchemaModell(
+/** Detailansicht des bereits im Tensorrechner vorhandenen Falk-Schema-Vertrags. */
+data class DetailliertesFalkSchemaModell(
     val linkerFaktor: Matrix,
     val rechterFaktor: Matrix,
     val ergebnis: Matrix,
@@ -23,29 +24,30 @@ data class FalkSchemaModell(
     fun summenLatex(): String = summanden.joinToString(" + ") { it.zuLatex() }
 }
 
-sealed interface FalkSchemaErgebnis {
-    data class Gültig(val modell: FalkSchemaModell) : FalkSchemaErgebnis
+sealed interface DetailliertesFalkSchemaErgebnis {
+    data class Gültig(val modell: DetailliertesFalkSchemaModell) : DetailliertesFalkSchemaErgebnis
     data class Inkompatibel(
         val linkeSpalten: Int,
         val rechteZeilen: Int,
-    ) : FalkSchemaErgebnis {
+    ) : DetailliertesFalkSchemaErgebnis {
         val meldung: String
             get() = "Die Matrizen sind nicht multiplizierbar: Die linke Matrix besitzt $linkeSpalten Spalten, die rechte $rechteZeilen Zeilen."
     }
 }
 
 /**
- * Erzeugt das Falk-Schema direkt aus der vorhandenen Matrixproduktsemantik.
- * Es wird weder konjugiert noch ein zusätzlicher Paarungsoperator eingeführt.
+ * Erzeugt die faktorhaltige Detailansicht direkt aus der vorhandenen Matrixproduktsemantik.
+ * Der allgemeine Formvertrag bleibt `falkSchema` im Tensorrechner; dieser Zusatz liefert
+ * die tatsächlichen geordneten Summanden für Darstellung und Erklärung.
  */
-fun falkSchema(
+fun detailliertesFalkSchema(
     links: Matrix,
     rechts: Matrix,
     zeilenIndex: Int = 0,
     spaltenIndex: Int = 0,
-): FalkSchemaErgebnis {
+): DetailliertesFalkSchemaErgebnis {
     if (links.spaltenAnzahl != rechts.zeilenAnzahl) {
-        return FalkSchemaErgebnis.Inkompatibel(links.spaltenAnzahl, rechts.zeilenAnzahl)
+        return DetailliertesFalkSchemaErgebnis.Inkompatibel(links.spaltenAnzahl, rechts.zeilenAnzahl)
     }
     require(zeilenIndex in 0 until links.zeilenAnzahl) {
         "Der ausgewählte Zeilenindex liegt außerhalb der Ergebnismatrix."
@@ -60,8 +62,8 @@ fun falkSchema(
             rechterFaktor = rechts.zeilen[index][spaltenIndex],
         )
     }
-    return FalkSchemaErgebnis.Gültig(
-        FalkSchemaModell(
+    return DetailliertesFalkSchemaErgebnis.Gültig(
+        DetailliertesFalkSchemaModell(
             linkerFaktor = links,
             rechterFaktor = rechts,
             ergebnis = links * rechts,
