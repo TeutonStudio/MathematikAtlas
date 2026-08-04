@@ -1,0 +1,83 @@
+name: SamAI v2.23.1 Release Metadata
+
+on:
+  push:
+    branches:
+      - samai/v2.23.1-auswerten-umformung
+
+permissions:
+  contents: write
+
+jobs:
+  patch-release-metadata:
+    if: ${{ !contains(github.event.head_commit.message, '[v2.23.1-metadata]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: samai/v2.23.1-auswerten-umformung
+          fetch-depth: 0
+      - name: Update roadmap and release notes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          roadmap = Path("release/roadmap.toml")
+          content = roadmap.read_text()
+          content = content.replace('current_version = "2.23.0"', 'current_version = "2.23.1"', 1)
+          release = '''
+
+[[releases]]
+version = "2.23.1"
+title = "Interaktive Gauß- und Umformungstabelle"
+roadmap = "v2.23.x Lineare Algebra und Bedienoberfläche"
+status = "released"
+previous_release = "2.23.0"
+branch = "samai/v2.23.1-auswerten-umformung"
+kind = "feature"
+version_axis = "x"
+reason = "Vervollständigt den vorhandenen Auswerten-Knoten um Inspector-Modi und eine interaktive strukturierte Gauß-/Gauß-Jordan-Tabelle, ohne einen neuen registrierten Knotentyp einzuführen."
+'''
+          if 'version = "2.23.1"' not in content:
+              content = content.rstrip() + release
+          roadmap.write_text(content)
+
+          Path("release/v2.23.1.md").write_text('''# Mathematik Atlas v2.23.1
+
+## Interaktive Gauß- und Umformungstabelle
+
+Diese Version schließt die bereits in v2.22.0 eingeführten strukturierten Gauß-Verläufe an eine vollständige Compose-Oberfläche an.
+
+### Auswertungsinspektor
+
+- Der vorhandene Knoten `Auswerten` besitzt eine direkte Auswahl für automatische Auswertung, Zeilenstufenform, reduzierte Zeilenstufenform, lineare Systeme und Inversen über Gauß-Jordan.
+- Spaltennamen können geordnet festgelegt werden; ungültige oder fehlende Namen fallen deterministisch auf `x_1, x_2, …` zurück.
+- Die gewählte Auswertungsart und die Spaltennamen bleiben als Knotenparameter erhalten.
+
+### Detaildialog
+
+- Die Reiter `Ergebnis`, `Umformung` und `Bedingungen` verwenden dasselbe strukturierte Auswertungsergebnis.
+- Die Umformungstabelle zeigt römische Zeilennamen, stabile Spaltenüberschriften und eine sichtbare Trennung vor der rechten Seite.
+- Zustände sind horizontal getrennt und können mit `Zurück` und `Weiter` schrittweise ausgewählt werden.
+- Nur Zeilen mit einer strukturiert protokollierten Operation zeigen Operationsnotation und Hervorhebung.
+- Allgemeine, nicht tabellarische Umformungsschritte bleiben als Vorher-/Nachher-Folge sichtbar.
+
+### Tests
+
+- Separate rechte Seiten werden korrekt als `b`-Spalten getrennt.
+- Erweiterte Matrizen und Inversen erhalten deterministische Spaltenbereiche.
+- Ungültige Variablenlisten fallen reproduzierbar auf Standardnamen zurück.
+
+## Zugeordnetes Issue
+
+- #208 Gauß- und Umformungsschritte als strukturierte Tabelle
+''')
+
+          Path(".github/workflows/samai-v2.23.1-release-metadata.yml").unlink()
+      - name: Commit release metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add release/roadmap.toml release/v2.23.1.md .github/workflows/samai-v2.23.1-release-metadata.yml
+          git commit -m "v2.23.1: Releasemetadaten ergänzen [v2.23.1-metadata]"
+          git push origin HEAD:samai/v2.23.1-auswerten-umformung
