@@ -1,9 +1,7 @@
 name: Android-Build
 
 on:
-  push:
-    branches:
-      - agent/enzyklopaedie-konzeptschicht
+  pull_request:
 
 permissions:
   contents: write
