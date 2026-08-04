@@ -97,6 +97,7 @@ internal fun gruppiertesVorlagenKonzept(
                 addAll(vorlage.anschlüsse.map { it.art.wert })
             }
         },
+        aliase = vorlagen.mapTo(linkedSetOf(), KnotenVorlage::stabileKonzeptId),
         reifegrad = WissensReifegrad.Geprüft,
         knotenArten = vorlagen.map(KnotenVorlage::art).toSet(),
         varianten = vorlagen.mapTo(linkedSetOf(), KnotenVorlage::stabileVariantenId),
