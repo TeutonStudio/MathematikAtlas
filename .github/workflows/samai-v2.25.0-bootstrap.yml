@@ -27,6 +27,16 @@ jobs:
         run: |
           cat scripts/samai-v2.25.0.bundle.part* | base64 --decode > /tmp/samai-v2.25.0.tar.gz
           tar -xzf /tmp/samai-v2.25.0.tar.gz -C .
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("scripts/samai_v2_25_0.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace(
+              "if 'version = \"2.25.0\"' in text:",
+              "if '\\nversion = \"2.25.0\"\\n' in text:",
+          )
+          path.write_text(text, encoding="utf-8")
+          PY
           python3 scripts/samai_v2_25_0.py
           rm -f scripts/samai-v2.25.0.bundle.part*
 
