@@ -214,7 +214,8 @@ private fun werteFormelAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungs
     require(FormelAusdruckPruefer.pruefe(ausdruck) == FormelPruefung.Gueltig) {
         "Die gespeicherte Formel ist unvollständig."
     }
-    var eingesetzt = FormelLatexCodec.exportiere(ausdruck)
+    val symbolischeDarstellung = FormelLatexCodec.exportiere(ausdruck)
+    var eingesetzt = symbolischeDarstellung
     formelVariablen(ausdruck).sortedByDescending(String::length).forEach { name ->
         val wert = kontext.eingänge[name] ?: error("Der Formeleingang '$name' fehlt.")
         val muster = Regex("(?<![A-Za-z0-9_])${Regex.escape(name)}(?![A-Za-z0-9_])")
@@ -230,11 +231,11 @@ private fun werteFormelAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungs
                 werteVorrat = werte.mapNotNull { it.werteVorrat }.distinct().singleOrNull(),
                 reelleVariablen = reelleVariablen(werte),
                 variablenQuellen = werte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
-                latexDarstellung = eingesetzt,
+                latexDarstellung = symbolischeDarstellung,
             ),
         ),
         eingänge = kontext.eingänge,
-        warnungen = listOf("Formel: $latex"),
+        warnungen = listOf("Formel: $symbolischeDarstellung"),
     )
 }
 
