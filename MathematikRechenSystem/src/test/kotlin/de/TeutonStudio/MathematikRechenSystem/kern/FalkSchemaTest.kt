@@ -23,8 +23,8 @@ class FalkSchemaTest {
             ),
         )
 
-        val modell = assertIs<FalkSchemaErgebnis.Gültig>(
-            falkSchema(a, b, zeilenIndex = 1, spaltenIndex = 1),
+        val modell = assertIs<DetailliertesFalkSchemaErgebnis.Gültig>(
+            detailliertesFalkSchema(a, b, zeilenIndex = 1, spaltenIndex = 1),
         ).modell
 
         assertEquals(listOf("a21", "a22", "a23"), modell.summanden.map { it.linkerFaktor.zuLatex() })
@@ -39,7 +39,9 @@ class FalkSchemaTest {
         val a = Matrix(listOf(listOf(variable("p"), variable("q"))))
         val b = Matrix(listOf(listOf(variable("r")), listOf(variable("s"))))
 
-        val modell = assertIs<FalkSchemaErgebnis.Gültig>(falkSchema(a, b)).modell
+        val modell = assertIs<DetailliertesFalkSchemaErgebnis.Gültig>(
+            detailliertesFalkSchema(a, b),
+        ).modell
 
         assertEquals("p\\cdot r + q\\cdot s", modell.summenLatex())
         assertEquals("p", modell.summanden.first().linkerFaktor.zuLatex())
@@ -51,7 +53,9 @@ class FalkSchemaTest {
         val a = Matrix(listOf(listOf(variable("a"), variable("b"))))
         val b = Matrix(listOf(listOf(variable("c"), variable("d"))))
 
-        val fehler = assertIs<FalkSchemaErgebnis.Inkompatibel>(falkSchema(a, b))
+        val fehler = assertIs<DetailliertesFalkSchemaErgebnis.Inkompatibel>(
+            detailliertesFalkSchema(a, b),
+        )
 
         assertEquals(2, fehler.linkeSpalten)
         assertEquals(1, fehler.rechteZeilen)
