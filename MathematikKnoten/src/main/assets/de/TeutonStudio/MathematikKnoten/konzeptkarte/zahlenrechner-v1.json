@@ -1,0 +1,70 @@
+{
+  "formatVersion": 7,
+  "id": "konzept.zahlenrechner",
+  "name": "Definition Zahlenrechner",
+  "version": 1,
+  "erstelltAm": 0,
+  "archiviert": false,
+  "ansicht": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+  "knoten": [
+    {
+      "id": "zahlenrechner-a",
+      "art": "konzept.eingang",
+      "name": "a",
+      "position": { "x": 30.0, "y": 45.0 },
+      "größe": { "breite": 210.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.zahl", "rolle": "a" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "zahlenrechner-a-wert", "name": "wert", "richtung": "Ausgang", "kante": "Rechts", "art": "mathematik.zahl", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    },
+    {
+      "id": "zahlenrechner-b",
+      "art": "konzept.eingang",
+      "name": "b",
+      "position": { "x": 30.0, "y": 175.0 },
+      "größe": { "breite": 210.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.zahl", "rolle": "b" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "zahlenrechner-b-wert", "name": "wert", "richtung": "Ausgang", "kante": "Rechts", "art": "mathematik.zahl", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    },
+    {
+      "id": "zahlenrechner-operator",
+      "art": "konzept.regel",
+      "name": "Zahlenoperator",
+      "position": { "x": 340.0, "y": 80.0 },
+      "größe": { "breite": 430.0, "höhe": 180.0 },
+      "parameter": {
+        "regel": "Der gewählte Operator bestimmt Argumentrollen, Stelligkeit, Definitionsbereich und Darstellung.",
+        "definition": "(a,b)\\mapsto a\\circ b"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "zahlenrechner-operator-a", "name": "a", "richtung": "Eingang", "kante": "Links", "art": "mathematik.zahl", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false },
+        { "id": "zahlenrechner-operator-b", "name": "b", "richtung": "Eingang", "kante": "Links", "art": "mathematik.zahl", "reihenfolge": 1, "kannSichErweitern": false, "dynamischErzeugt": false },
+        { "id": "zahlenrechner-operator-wert", "name": "wert", "richtung": "Ausgang", "kante": "Rechts", "art": "mathematik.zahl", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    },
+    {
+      "id": "zahlenrechner-ergebnis",
+      "art": "konzept.ausgang",
+      "name": "wert",
+      "position": { "x": 850.0, "y": 125.0 },
+      "größe": { "breite": 210.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.zahl", "rolle": "wert" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "zahlenrechner-ergebnis-wert", "name": "wert", "richtung": "Eingang", "kante": "Links", "art": "mathematik.zahl", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    }
+  ],
+  "verbindungen": [
+    { "id": "zahlenrechner-kante-a", "von": { "knotenId": "zahlenrechner-a", "anschlussId": "zahlenrechner-a-wert" }, "zu": { "knotenId": "zahlenrechner-operator", "anschlussId": "zahlenrechner-operator-a" } },
+    { "id": "zahlenrechner-kante-b", "von": { "knotenId": "zahlenrechner-b", "anschlussId": "zahlenrechner-b-wert" }, "zu": { "knotenId": "zahlenrechner-operator", "anschlussId": "zahlenrechner-operator-b" } },
+    { "id": "zahlenrechner-kante-wert", "von": { "knotenId": "zahlenrechner-operator", "anschlussId": "zahlenrechner-operator-wert" }, "zu": { "knotenId": "zahlenrechner-ergebnis", "anschlussId": "zahlenrechner-ergebnis-wert" } }
+  ],
+  "visuelleGruppen": []
+}
