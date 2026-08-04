@@ -15,6 +15,7 @@ object ZahlKonstanteKonzept {
         beschreibung = "Exakte Zahlkonstante mit kanonischer rationaler Darstellung und typisiertem Zahlenausgang.",
         vorlagen = vorlagen.filter(::passt),
         generatorId = "konzeptkarte.zahlkonstante",
+        assetDatei = "zahlkonstante-v1.json",
         zusätzlicheSuchbegriffe = setOf("Zahl", "Konstante", "rational", "ganz"),
     )
 }
