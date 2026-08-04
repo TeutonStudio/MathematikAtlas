@@ -128,7 +128,9 @@ fun konfiguriereZahlenRechnerFormel(
             art = MathematikAnschlussArten.Zahl.id,
             reihenfolge = index,
             kannSichErweitern = false,
-            dynamischErzeugt = true,
+            // Formelvariablen werden automatisch konfiguriert, sind aber keine
+            // provisorischen Variadic-Eingänge und müssen unverbunden sichtbar bleiben.
+            dynamischErzeugt = false,
         )
     }
     val alterAusgang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
