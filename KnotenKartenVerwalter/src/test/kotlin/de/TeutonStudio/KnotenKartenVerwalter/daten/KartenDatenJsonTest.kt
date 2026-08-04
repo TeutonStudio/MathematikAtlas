@@ -35,6 +35,7 @@ class KartenDatenJsonTest {
             id = KnotenId("ziel"),
             art = "test.ziel",
             name = "Ziel",
+            position = GraphPunkt(340f, 34f),
             anschlüsse = listOf(
                 AnschlussDaten(
                     id = AnschlussId("ziel-wert"),
@@ -71,7 +72,7 @@ class KartenDatenJsonTest {
                     id = VisuelleGruppenId("gruppe"),
                     knotenIds = setOf(quelle.id, ziel.id),
                     titel = "Gruppe",
-                    position = GraphPunkt(4f, 5f),
+                    position = GraphPunkt(-10f, -30f),
                     größe = GraphGröße(640f, 320f),
                 ),
             ),
