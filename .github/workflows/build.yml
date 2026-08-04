@@ -50,6 +50,22 @@ jobs:
           if skript.count(alte_pruefung) != 1:
               raise SystemExit('Die strenge Auswerten-Override-Prüfung wurde nicht eindeutig gefunden.')
           skript = skript.replace(alte_pruefung, robuste_pruefung, 1)
+
+          alte_replace_once = '\n'.join([
+              '    if anzahl != 1:',
+              '        raise SystemExit(f"{path}: erwartete Stelle {anzahl} statt genau einmal gefunden: {old[:100]!r}")',
+              '    datei.write_text(text.replace(old, new, 1), encoding="utf-8")',
+          ])
+          idempotente_replace_once = '\n'.join([
+              '    if anzahl == 0 and path.endswith("MathematikKnotenRenderer.kt"):',
+              '        return',
+              '    if anzahl != 1:',
+              '        raise SystemExit(f"{path}: erwartete Stelle {anzahl} statt genau einmal gefunden: {old[:100]!r}")',
+              '    datei.write_text(text.replace(old, new, 1), encoding="utf-8")',
+          ])
+          if skript.count(alte_replace_once) != 1:
+              raise SystemExit('replace_once konnte nicht eindeutig erweitert werden.')
+          skript = skript.replace(alte_replace_once, idempotente_replace_once, 1)
           exec(compile(skript, '<auswerten-patch>', 'exec'))
 
           for hilfsdatei in [
