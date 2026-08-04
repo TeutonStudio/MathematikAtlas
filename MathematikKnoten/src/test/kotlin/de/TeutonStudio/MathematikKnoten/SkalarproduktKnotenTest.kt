@@ -86,7 +86,7 @@ class SkalarproduktKnotenTest {
 
         val wert = ergebnis.ausgaben.getValue(VEKTOR_RECHNER_AUSGANG)
         assertEquals(RationaleZahl.von(11), wert.objekt)
-        assertEquals(FundamentalerZahlbereich.RATIONAL.latex, wert.zielMenge?.zuLatex())
+        assertEquals(FundamentalerZahlbereich.NATUERLICH_POSITIV.latex, wert.zielMenge?.zuLatex())
         assertTrue(wert.latexDarstellung.orEmpty().contains("\\sum_{i=0}^{1}"))
     }
 
