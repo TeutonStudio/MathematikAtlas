@@ -1,0 +1,37 @@
+{
+  "formatVersion": 7,
+  "id": "konzept.zahlkonstante",
+  "name": "Definition Zahlkonstante",
+  "version": 1,
+  "erstelltAm": 0,
+  "archiviert": false,
+  "ansicht": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+  "knoten": [
+    {
+      "id": "zahlkonstante-regel",
+      "art": "konzept.regel",
+      "name": "Zahlkonstante",
+      "position": { "x": 80.0, "y": 70.0 },
+      "größe": { "breite": 460.0, "höhe": 170.0 },
+      "parameter": {
+        "regel": "Eine Zahlkonstante repräsentiert einen exakten, unveränderlichen Zahlenwert.",
+        "definition": "c\\in\\mathcal Z"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "zahlkonstante-wert",
+          "name": "wert",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.zahl",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    }
+  ],
+  "verbindungen": [],
+  "visuelleGruppen": []
+}
