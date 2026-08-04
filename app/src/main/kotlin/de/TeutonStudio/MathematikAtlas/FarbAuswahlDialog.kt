@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,11 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.MathematikAtlas.speicher.*
+import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
  * Wiederverwendbare Farbauswahl ohne Profil- oder Persistenzwissen.
- * Änderungen bleiben bis [onBestaetigen] ausschließlich im lokalen Dialogentwurf.
+ * Die einzige Ausgabe ist deckendes sRGB; Änderungen bleiben bis [onBestaetigen] lokal.
  */
 @Composable
 internal fun FarbAuswahlDialog(
@@ -38,10 +41,12 @@ internal fun FarbAuswahlDialog(
     titel: String,
     onAbbrechen: () -> Unit,
     onBestaetigen: (RgbFarbe) -> Unit,
+    startModus: FarbEingabeModus = FarbEingabeModus.RGB,
+    initialerEntwurf: FarbEntwurf? = null,
 ) {
     if (!offen) return
-    var entwurf by remember(ausgangsFarbe, offen) {
-        mutableStateOf(FarbEntwurf.von(ausgangsFarbe))
+    var entwurf by remember(ausgangsFarbe, offen, startModus, initialerEntwurf) {
+        mutableStateOf(initialerEntwurf ?: FarbEntwurf.von(ausgangsFarbe, startModus))
     }
 
     Dialog(
@@ -69,25 +74,27 @@ internal fun FarbAuswahlDialog(
                 ) {
                     FarbVorschau(entwurf.kanonisch)
                     FarbModusAuswahl(entwurf.modus) { entwurf = entwurf.mitModus(it) }
+                    Text(
+                        "Allgemeine Farbauswahl (HSB)",
+                        style = MaterialTheme.typography.titleSmall,
+                    )
                     SättigungHelligkeitFeld(entwurf) { entwurf = it }
                     FarbtonRegler(entwurf) { entwurf = it }
-                    when (entwurf.modus) {
-                        FarbEingabeModus.RGB -> RgbEingabe(entwurf) { entwurf = it }
-                        FarbEingabeModus.HSB -> HsbEingabe(entwurf) { entwurf = it }
-                    }
+                    FarbModusEingabe(entwurf) { entwurf = it }
                     OutlinedTextField(
                         value = entwurf.hexText,
                         onValueChange = { entwurf = entwurf.mitHex(it) },
                         label = { Text("Hex #RRGGBB") },
                         singleLine = true,
-                        isError = entwurf.fehler != null,
+                        isError = entwurf.fehler == FarbEingabeFehler.HexUngueltig,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    entwurf.fehler?.let { fehler ->
+                    entwurf.fehlerText?.let { fehler ->
                         Text(
                             fehler,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.semantics { contentDescription = "Fehler: $fehler" },
                         )
                     }
                 }
@@ -108,14 +115,7 @@ private fun DialogKopf(titel: String, farbe: RgbFarbe) {
         Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(titel, style = MaterialTheme.typography.headlineSmall)
-            Text(
-                "HSB verwendet dieselbe Semantik wie HSV: Helligkeit entspricht dem Value-Kanal.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Text(titel, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
         Text(farbe.rgbHex, style = MaterialTheme.typography.labelLarge)
     }
 }
@@ -158,12 +158,19 @@ private fun FarbModusAuswahl(
     modus: FarbEingabeModus,
     ändern: (FarbEingabeModus) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FarbModusKnopf("RGB", modus == FarbEingabeModus.RGB, Modifier.weight(1f)) {
-            ändern(FarbEingabeModus.RGB)
-        }
-        FarbModusKnopf("HSB", modus == FarbEingabeModus.HSB, Modifier.weight(1f)) {
-            ändern(FarbEingabeModus.HSB)
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FarbEingabeModus.entries.forEach { eintrag ->
+            val titel = when (eintrag) {
+                FarbEingabeModus.RGB -> "RGB"
+                FarbEingabeModus.HSB -> "HSB"
+                FarbEingabeModus.HSL -> "HSL"
+                FarbEingabeModus.LAB -> "Lab"
+                FarbEingabeModus.CMYK -> "CMYK"
+            }
+            FarbModusKnopf(titel, modus == eintrag) { ändern(eintrag) }
         }
     }
 }
@@ -172,9 +179,11 @@ private fun FarbModusAuswahl(
 private fun FarbModusKnopf(
     titel: String,
     ausgewählt: Boolean,
-    modifier: Modifier,
     onClick: () -> Unit,
 ) {
+    val modifier = Modifier
+        .widthIn(min = 96.dp)
+        .semantics { contentDescription = "$titel-Farbmodus${if (ausgewählt) ", ausgewählt" else ""}" }
     if (ausgewählt) Button(onClick, modifier) { Text(titel) }
     else OutlinedButton(onClick, modifier) { Text(titel) }
 }
@@ -197,17 +206,13 @@ private fun SättigungHelligkeitFeld(
         Modifier
             .fillMaxWidth()
             .height(220.dp)
-            .semantics { contentDescription = "Sättigung und Helligkeit" }
+            .semantics { contentDescription = "Allgemeine Sättigungs- und Helligkeitsauswahl auf HSB-Basis" }
             .pointerInput(entwurf.hsb.farbton) {
-                detectTapGestures { punkt ->
-                    aktualisiere(punkt, size.width.toFloat(), size.height.toFloat())
-                }
+                detectTapGestures { punkt -> aktualisiere(punkt, size.width.toFloat(), size.height.toFloat()) }
             }
             .pointerInput(entwurf.hsb.farbton) {
                 detectDragGestures(
-                    onDragStart = { punkt ->
-                        aktualisiere(punkt, size.width.toFloat(), size.height.toFloat())
-                    },
+                    onDragStart = { punkt -> aktualisiere(punkt, size.width.toFloat(), size.height.toFloat()) },
                     onDrag = { änderung, _ ->
                         änderung.consume()
                         aktualisiere(änderung.position, size.width.toFloat(), size.height.toFloat())
@@ -248,86 +253,127 @@ private fun FarbtonRegler(
             value = entwurf.hsb.farbton,
             onValueChange = { ändern(entwurf.mitHsb(farbton = it)) },
             valueRange = 0f..360f,
-            modifier = Modifier.semantics { contentDescription = "Farbton in Grad" },
+            modifier = Modifier.semantics { contentDescription = "Allgemeiner Farbton in Grad" },
         )
     }
 }
 
 @Composable
-private fun RgbEingabe(entwurf: FarbEntwurf, ändern: (FarbEntwurf) -> Unit) {
-    RgbKanal("Rot", entwurf.rotText, { entwurf.mitRgb(rot = it) }, ändern)
-    RgbKanal("Grün", entwurf.gruenText, { entwurf.mitRgb(gruen = it) }, ändern)
-    RgbKanal("Blau", entwurf.blauText, { entwurf.mitRgb(blau = it) }, ändern)
-}
-
-@Composable
-private fun RgbKanal(
-    titel: String,
-    text: String,
-    aktualisiere: (String) -> FarbEntwurf,
-    ändern: (FarbEntwurf) -> Unit,
-) {
-    val wert = text.toIntOrNull()?.coerceIn(0, 255) ?: 0
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { ändern(aktualisiere(it.filter(Char::isDigit).take(3))) },
-            label = { Text(titel) },
-            singleLine = true,
-            modifier = Modifier.width(110.dp),
-        )
-        Slider(
-            value = wert.toFloat(),
-            onValueChange = { ändern(aktualisiere(it.roundToInt().toString())) },
-            valueRange = 0f..255f,
-            steps = 254,
-            modifier = Modifier.weight(1f).semantics { contentDescription = "$titel 0 bis 255" },
-        )
+private fun FarbModusEingabe(entwurf: FarbEntwurf, ändern: (FarbEntwurf) -> Unit) {
+    val istFehler = entwurf.fehler?.modus == entwurf.modus
+    when (entwurf.modus) {
+        FarbEingabeModus.RGB -> {
+            FarbKanalEingabe("Rot", "", entwurf.texte.rgb.rot, entwurf.kanonisch.rot.toFloat() * 255f, 0f..255f, true, false, istFehler,
+                { ändern(entwurf.mitRgb(rot = it)) }, { ändern(entwurf.mitRgb(rot = it.roundToInt().toString())) })
+            FarbKanalEingabe("Grün", "", entwurf.texte.rgb.gruen, entwurf.kanonisch.gruen.toFloat() * 255f, 0f..255f, true, false, istFehler,
+                { ändern(entwurf.mitRgb(gruen = it)) }, { ändern(entwurf.mitRgb(gruen = it.roundToInt().toString())) })
+            FarbKanalEingabe("Blau", "", entwurf.texte.rgb.blau, entwurf.kanonisch.blau.toFloat() * 255f, 0f..255f, true, false, istFehler,
+                { ändern(entwurf.mitRgb(blau = it)) }, { ändern(entwurf.mitRgb(blau = it.roundToInt().toString())) })
+        }
+        FarbEingabeModus.HSB -> {
+            ModusHinweis("HSB entspricht HSV; Helligkeit ist der Value-Kanal.")
+            FarbKanalEingabe("Farbton", "°", entwurf.texte.hsb.farbton, entwurf.hsb.farbton, 0f..360f, false, false, istFehler,
+                { ändern(entwurf.mitHsbText(farbton = it)) }, { ändern(entwurf.mitHsb(farbton = it)) })
+            FarbKanalEingabe("Sättigung", "%", entwurf.texte.hsb.saettigung, entwurf.hsb.saettigung * 100f, 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitHsbText(saettigung = it)) }, { ändern(entwurf.mitHsb(saettigung = it / 100f)) })
+            FarbKanalEingabe("Helligkeit", "%", entwurf.texte.hsb.helligkeit, entwurf.hsb.helligkeit * 100f, 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitHsbText(helligkeit = it)) }, { ändern(entwurf.mitHsb(helligkeit = it / 100f)) })
+        }
+        FarbEingabeModus.HSL -> {
+            ModusHinweis("HSL-Helligkeit ist der Mittelwert aus größtem und kleinstem RGB-Kanal und unterscheidet sich von HSB.")
+            FarbKanalEingabe("Farbton", "°", entwurf.texte.hsl.farbton, entwurf.hsl.farbton.toFloat(), 0f..360f, false, false, istFehler,
+                { ändern(entwurf.mitHslText(farbton = it)) }, { ändern(entwurf.mitHslText(farbton = formatiereSlider(it))) })
+            FarbKanalEingabe("Sättigung", "%", entwurf.texte.hsl.saettigung, (entwurf.hsl.saettigung * 100.0).toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitHslText(saettigung = it)) }, { ändern(entwurf.mitHslText(saettigung = formatiereSlider(it))) })
+            FarbKanalEingabe("Helligkeit", "%", entwurf.texte.hsl.helligkeit, (entwurf.hsl.helligkeit * 100.0).toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitHslText(helligkeit = it)) }, { ändern(entwurf.mitHslText(helligkeit = formatiereSlider(it))) })
+        }
+        FarbEingabeModus.LAB -> {
+            ModusHinweis("CIE Lab, Weißpunkt D50; Ausgabe auf sRGB begrenzt.")
+            FarbKanalEingabe("L*", "", entwurf.texte.lab.helligkeit, entwurf.lab.helligkeit.toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitLabText(helligkeit = it)) }, { ändern(entwurf.mitLabText(helligkeit = formatiereSlider(it))) })
+            FarbKanalEingabe("a*", "", entwurf.texte.lab.a, entwurf.lab.a.toFloat(), -128f..127f, false, true, istFehler,
+                { ändern(entwurf.mitLabText(a = it)) }, { ändern(entwurf.mitLabText(a = formatiereSlider(it))) })
+            FarbKanalEingabe("b*", "", entwurf.texte.lab.b, entwurf.lab.b.toFloat(), -128f..127f, false, true, istFehler,
+                { ändern(entwurf.mitLabText(b = it)) }, { ändern(entwurf.mitLabText(b = formatiereSlider(it))) })
+        }
+        FarbEingabeModus.CMYK -> {
+            ModusHinweis("Generisches CMYK dient der rechnerischen Eingabe. Druckergebnisse hängen von Papier, Tinte, Druckverfahren und ICC-Profil ab.")
+            FarbKanalEingabe("Cyan", "%", entwurf.texte.cmyk.cyan, (entwurf.cmyk.cyan * 100.0).toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitCmykText(cyan = it)) }, { ändern(entwurf.mitCmykText(cyan = formatiereSlider(it))) })
+            FarbKanalEingabe("Magenta", "%", entwurf.texte.cmyk.magenta, (entwurf.cmyk.magenta * 100.0).toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitCmykText(magenta = it)) }, { ändern(entwurf.mitCmykText(magenta = formatiereSlider(it))) })
+            FarbKanalEingabe("Gelb", "%", entwurf.texte.cmyk.gelb, (entwurf.cmyk.gelb * 100.0).toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitCmykText(gelb = it)) }, { ändern(entwurf.mitCmykText(gelb = formatiereSlider(it))) })
+            FarbKanalEingabe("Schwarz", "%", entwurf.texte.cmyk.schwarz, (entwurf.cmyk.schwarz * 100.0).toFloat(), 0f..100f, false, false, istFehler,
+                { ändern(entwurf.mitCmykText(schwarz = it)) }, { ändern(entwurf.mitCmykText(schwarz = formatiereSlider(it))) })
+        }
     }
 }
 
 @Composable
-private fun HsbEingabe(entwurf: FarbEntwurf, ändern: (FarbEntwurf) -> Unit) {
-    HsbKanal(
-        "Farbton", "°", entwurf.farbtonText, entwurf.hsb.farbton, 0f..360f,
-        { ändern(entwurf.mitHsbText(farbton = it)) },
-        { ändern(entwurf.mitHsb(farbton = it)) },
-    )
-    HsbKanal(
-        "Sättigung", "%", entwurf.saettigungText, entwurf.hsb.saettigung * 100f, 0f..100f,
-        { ändern(entwurf.mitHsbText(saettigung = it)) },
-        { ändern(entwurf.mitHsb(saettigung = it / 100f)) },
-    )
-    HsbKanal(
-        "Helligkeit", "%", entwurf.helligkeitText, entwurf.hsb.helligkeit * 100f, 0f..100f,
-        { ändern(entwurf.mitHsbText(helligkeit = it)) },
-        { ändern(entwurf.mitHsb(helligkeit = it / 100f)) },
+private fun ModusHinweis(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.semantics { contentDescription = text },
     )
 }
 
 @Composable
-private fun HsbKanal(
+private fun FarbKanalEingabe(
     titel: String,
     einheit: String,
     text: String,
     sliderWert: Float,
     bereich: ClosedFloatingPointRange<Float>,
+    ganzzahlig: Boolean,
+    vorzeichen: Boolean,
+    istFehler: Boolean,
     textÄndern: (String) -> Unit,
     sliderÄndern: (Float) -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedTextField(
             value = text,
-            onValueChange = { eingabe -> textÄndern(eingabe.filter { it.isDigit() || it == '.' }.take(6)) },
-            label = { Text("$titel $einheit") },
+            onValueChange = { textÄndern(bereinigeKanalEingabe(it, ganzzahlig, vorzeichen)) },
+            label = { Text(listOf(titel, einheit).filter(String::isNotBlank).joinToString(" ")) },
             singleLine = true,
-            modifier = Modifier.width(130.dp),
+            isError = istFehler,
+            modifier = Modifier
+                .width(142.dp)
+                .semantics { contentDescription = "$titel $einheit, Bereich ${bereich.start} bis ${bereich.endInclusive}, aktueller Wert $text" },
         )
         Slider(
             value = sliderWert.coerceIn(bereich.start, bereich.endInclusive),
             onValueChange = sliderÄndern,
             valueRange = bereich,
+            steps = if (ganzzahlig) (bereich.endInclusive - bereich.start).roundToInt() - 1 else 0,
             modifier = Modifier.weight(1f).semantics { contentDescription = "$titel $einheit" },
         )
     }
+}
+
+private fun bereinigeKanalEingabe(text: String, ganzzahlig: Boolean, vorzeichen: Boolean): String {
+    if (ganzzahlig) return text.filter(Char::isDigit).take(3)
+    val ergebnis = StringBuilder()
+    var trennzeichenVorhanden = false
+    text.forEachIndexed { index, zeichen ->
+        when {
+            zeichen.isDigit() -> ergebnis.append(zeichen)
+            vorzeichen && zeichen == '-' && index == 0 && ergebnis.isEmpty() -> ergebnis.append(zeichen)
+            (zeichen == '.' || zeichen == ',') && !trennzeichenVorhanden -> {
+                ergebnis.append(zeichen)
+                trennzeichenVorhanden = true
+            }
+        }
+    }
+    return ergebnis.toString().take(10)
+}
+
+private fun formatiereSlider(wert: Float): String {
+    val gerundet = wert.roundToInt()
+    if (abs(wert - gerundet) < .005f) return gerundet.toString()
+    return String.format(Locale.ROOT, "%.1f", wert)
 }
