@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikKnoten.konzeptknoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.FachKatalog
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.VariantenId
@@ -69,9 +70,24 @@ internal fun gruppiertesVorlagenKonzept(
     beschreibung: String,
     vorlagen: List<KnotenVorlage>,
     generatorId: String,
+    assetDatei: String? = null,
     zusätzlicheSuchbegriffe: Set<String> = emptySet(),
 ): WissensEintrag {
     require(vorlagen.isNotEmpty()) { "$id benötigt mindestens eine Knotenvorlage." }
+    val definition = assetDatei?.let { datei ->
+        WissensKartenReferenz.Asset(
+            id = id.wert,
+            datei = datei,
+            formatVersion = KartenDatenJson.FORMAT_VERSION,
+            rolle = WissensKartenRolle.Definition,
+            primär = true,
+        )
+    } ?: WissensKartenReferenz.Generator(
+        id = "${id.wert}.definition",
+        generatorId = generatorId,
+        rolle = WissensKartenRolle.Definition,
+        primär = true,
+    )
     return WissensEintrag(
         id = id,
         titel = titel,
@@ -102,13 +118,6 @@ internal fun gruppiertesVorlagenKonzept(
         knotenArten = vorlagen.map(KnotenVorlage::art).toSet(),
         varianten = vorlagen.mapTo(linkedSetOf(), KnotenVorlage::stabileVariantenId),
         knotenVorlagen = vorlagen,
-        karten = listOf(
-            WissensKartenReferenz.Generator(
-                id = "${id.wert}.definition",
-                generatorId = generatorId,
-                rolle = WissensKartenRolle.Definition,
-                primär = true,
-            ),
-        ),
+        karten = listOf(definition),
     )
 }
