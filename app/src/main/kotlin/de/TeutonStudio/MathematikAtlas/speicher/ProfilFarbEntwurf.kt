@@ -234,7 +234,10 @@ internal fun RgbFarbe.rgbKanaele(): Triple<Int, Int, Int> = Triple(
     (blau * 255.0).roundToInt().coerceIn(0, 255),
 )
 
-private fun normalisiereFarbton(farbton: Float): Float = ((farbton % 360f) + 360f) % 360f
+private fun normalisiereFarbton(farbton: Float): Float {
+    val normalisiert = ((farbton % 360f) + 360f) % 360f
+    return if (normalisiert == 0f) 0f else normalisiert
+}
 
 private fun formatiereKanal(wert: Float): String {
     val gerundet = wert.roundToInt()
