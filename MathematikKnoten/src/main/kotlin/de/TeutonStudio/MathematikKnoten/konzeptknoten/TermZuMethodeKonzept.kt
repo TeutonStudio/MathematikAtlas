@@ -17,6 +17,7 @@ object TermZuMethodeKonzept {
         beschreibung = "Bindet freie Parameter eines Terms und stellt den Term als typisierte Methode mit Zielmenge bereit.",
         vorlagen = vorlagen.filter(::passt),
         generatorId = "konzeptkarte.term-zu-methode",
+        assetDatei = "term-zu-methode-v1.json",
         zusätzlicheSuchbegriffe = setOf("Methode", "Abbildung", "Parameterbindung", "Lambda", "Term"),
     )
 }
