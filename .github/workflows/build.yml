@@ -18,7 +18,7 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
-      - name: Exporter variantenfest machen
+      - name: Exporter varianten- und dateisystemfest machen
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -47,6 +47,10 @@ jobs:
           text = text.replace(
               'val referenzId = "$wissensId.${reiter.id}$suffix"',
               'val variantenSchluessel = variantenId.hashCode().toUInt().toString(16)\n        val referenzId = "$wissensId.$variantenSchluessel.${reiter.id}$suffix"',
+          )
+          text = text.replace(
+              'val datei = "${slug(referenzId)}-v1.json"',
+              'val dateiSchluessel = "$referenzId:${text.hashCode()}".hashCode().toUInt().toString(16)\n        val datei = "konzeptkarte-$dateiSchluessel-v1.json"',
           )
           path.write_text(text)
           PY
