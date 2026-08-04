@@ -32,7 +32,7 @@ class KonzeptKnotenRegisterTest {
             vorlagen.filter { it.art == ZAHLENRECHNER_ART }.map { it.stabileVariantenId() }.toSet(),
             zahlen.varianten,
         )
-        val tensor = assertNotNull(einträge.singleOrNull { it.id == TensorRechner.KNOTEN_ART }.let { null })
+        val tensor = assertNotNull(einträge.singleOrNull { it.id == TensorRechnerKonzept.id })
         assertEquals(
             vorlagen.filter { it.art == TensorRechner.KNOTEN_ART }.map { it.stabileVariantenId() }.toSet(),
             tensor.varianten,
