@@ -33,7 +33,7 @@ class ZahlenRechnerErweiterungenTest {
     }
 
     @Test
-    fun `Formelzustand setzt verbundene Werte in kanonische Darstellung ein`() {
+    fun `Formelzustand zeigt Variablen trotz eingesetzter Werte`() {
         val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
         val formel = konfiguriereZahlenRechnerFormel(basis, "x+y")
         val auswerter = register.finde(ZAHLENRECHNER_ART)!!
@@ -48,10 +48,17 @@ class ZahlenRechnerErweiterungenTest {
             ),
         )
 
-        val latex = ergebnis.ausgaben.getValue("wert").latexDarstellung.orEmpty()
-        assertTrue("2" in latex)
-        assertTrue("3" in latex)
-        assertTrue("+" in latex)
+        val ausgabe = ergebnis.ausgaben.getValue("wert")
+        val sichtbaresLatex = ausgabe.latexDarstellung.orEmpty()
+        val eingesetztesLatex = ausgabe.objekt.zuStrukturLatex()
+
+        assertTrue("x" in sichtbaresLatex)
+        assertTrue("y" in sichtbaresLatex)
+        assertTrue("+" in sichtbaresLatex)
+        assertFalse("2" in sichtbaresLatex)
+        assertFalse("3" in sichtbaresLatex)
+        assertTrue("2" in eingesetztesLatex)
+        assertTrue("3" in eingesetztesLatex)
     }
 
     @Test
