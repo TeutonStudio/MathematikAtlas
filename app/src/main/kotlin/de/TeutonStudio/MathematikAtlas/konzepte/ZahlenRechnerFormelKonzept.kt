@@ -66,9 +66,7 @@ private fun formelDefinitionsKarte(
         .sortedBy { it.parameter["name"].orEmpty() }
         .forEach { graphKnoten ->
             val name = graphKnoten.parameter["name"].orEmpty().ifBlank { "x" }
-            val node = variablenKnoten.getOrPut(name) {
-                formelEingang(prefix, name)
-            }
+            val node = variablenKnoten.getOrPut(name) { formelEingang(prefix, name) }
             graphZuKartenKnoten[graphKnoten.id] = node.id
         }
     variablenKnoten.values.forEach { fügeEin(0, it) }
@@ -86,8 +84,11 @@ private fun formelDefinitionsKarte(
         .filter { it.art !in setOf("formel.variable", "formel.literal", "formel.platzhalter") }
         .sortedWith(compareBy<FormelGraphKnoten> { tiefe(it.id) }.thenBy { it.id })
         .forEach { graphKnoten ->
-            val argumentAnzahl = eingehendeKanten[graphKnoten.id].orEmpty().size
-            val node = formelOperator(prefix, graphKnoten, argumentAnzahl)
+            val rollen = eingehendeKanten[graphKnoten.id]
+                .orEmpty()
+                .sortedBy(FormelGraphKante::position)
+                .map(FormelGraphKante::rollenId)
+            val node = formelOperator(prefix, graphKnoten, rollen)
             graphZuKartenKnoten[graphKnoten.id] = node.id
             fügeEin(tiefe(graphKnoten.id), node)
         }
@@ -119,7 +120,8 @@ private fun formelDefinitionsKarte(
     )
 
     val verbindungen = buildList {
-        graph.kanten.sortedWith(compareBy<FormelGraphKante> { it.zielKnotenId }.thenBy { it.position })
+        graph.kanten
+            .sortedWith(compareBy<FormelGraphKante> { it.zielKnotenId }.thenBy { it.position })
             .forEachIndexed { index, kante ->
                 val quelle = nachId[graphZuKartenKnoten[kante.quelleKnotenId]] ?: return@forEachIndexed
                 val ziel = nachId[graphZuKartenKnoten[kante.zielKnotenId]] ?: return@forEachIndexed
@@ -161,7 +163,7 @@ private fun formelDefinitionsKarte(
 private fun formelOperator(
     prefix: String,
     graphKnoten: FormelGraphKnoten,
-    argumentAnzahl: Int,
+    rollen: List<String>,
 ): KnotenDaten {
     val operatorId = graphKnoten.art
     val standard = UniversellerZahlenOperator.entries.firstOrNull { operator ->
@@ -173,22 +175,58 @@ private fun formelOperator(
         art = ZAHLENRECHNER_ART,
         name = standard?.titel ?: erweitert?.titel ?: operatorId.substringAfterLast('.'),
         position = GraphPunkt.Zero,
-        größe = GraphGröße(260f, maxOf(110f, 76f + argumentAnzahl * 28f)),
+        größe = GraphGröße(260f, maxOf(110f, 76f + rollen.size * 28f)),
     )
-    return when {
+    val konfiguriert = when {
         standard != null -> konfiguriereZahlenRechner(
             knoten = basis,
             operator = standard,
-            festeEingänge = argumentAnzahl.coerceAtLeast(2),
+            festeEingänge = rollen.size.coerceAtLeast(2),
         )
         erweitert != null -> konfiguriereErweitertenZahlenRechner(basis, erweitert)
-        else -> formelHinweisKnoten(
+        else -> return formelHinweisKnoten(
             prefix = prefix,
             idTeil = "operator-${graphKnoten.ausdrucksId}",
             name = operatorId,
-            eingänge = argumentAnzahl,
+            eingänge = rollen.size,
         )
     }
+    val vorhandeneEingänge = konfiguriert.anschlüsse
+        .filter { it.richtung == AnschlussRichtung.Eingang }
+        .sortedBy { it.reihenfolge }
+    val eingänge = rollen.mapIndexed { index, rolle ->
+        (vorhandeneEingänge.getOrNull(index) ?: AnschlussDaten(
+            name = rolle,
+            richtung = AnschlussRichtung.Eingang,
+            kante = AnschlussKante.Links,
+            art = MathematikAnschlussArten.Zahl.id,
+        )).copy(
+            name = rolle,
+            richtung = AnschlussRichtung.Eingang,
+            kante = AnschlussKante.Links,
+            art = MathematikAnschlussArten.Zahl.id,
+            reihenfolge = index,
+            kannSichErweitern = false,
+            dynamischErzeugt = false,
+        )
+    }
+    val vorhandenerAusgang = konfiguriert.anschlüsse
+        .firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
+    val ausgang = (vorhandenerAusgang ?: AnschlussDaten(
+        name = "wert",
+        richtung = AnschlussRichtung.Ausgang,
+        kante = AnschlussKante.Rechts,
+        art = MathematikAnschlussArten.Zahl.id,
+    )).copy(
+        name = "wert",
+        richtung = AnschlussRichtung.Ausgang,
+        kante = AnschlussKante.Rechts,
+        art = MathematikAnschlussArten.Zahl.id,
+        reihenfolge = 0,
+        kannSichErweitern = false,
+        dynamischErzeugt = false,
+    )
+    return konfiguriert.copy(anschlüsse = eingänge + ausgang)
 }
 
 private fun formelEingang(prefix: String, name: String): KnotenDaten {
