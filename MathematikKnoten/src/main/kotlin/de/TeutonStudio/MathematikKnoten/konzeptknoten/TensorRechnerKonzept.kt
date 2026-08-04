@@ -16,6 +16,7 @@ object TensorRechnerKonzept {
         beschreibung = "Universeller Rechner für komponentenweise, indexbezogene und formverändernde Tensoroperationen.",
         vorlagen = vorlagen.filter(::passt),
         generatorId = "konzeptkarte.tensorrechner",
+        assetDatei = "tensorrechner-v1.json",
         zusätzlicheSuchbegriffe = setOf("Tensor", "Matrix", "Vektor", "Kontraktion", "Achsenpermutation"),
     )
 }
