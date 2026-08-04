@@ -1,0 +1,927 @@
+{
+  "erstelltAm": 1785883810225,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-eingang-methode",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-eingang-methode-wert"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-a-vereinigung",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge-wert"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-i-vereinigung",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-u-funktionsraum",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge-wert"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-i-funktionsraum",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-mengenkonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-mengenkonstruktor-anschluss-0"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-g-element",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-raum-element",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge-wert"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-i-faltung",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-wahr",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-wahr-anschluss-0"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-wahr-faltung",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-mengenkonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-mengenkonstruktor-anschluss-0"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-methode",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-g-anwendung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-i-g-anwendung",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-g-anwendung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-eingang-methode",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-eingang-methode-wert"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-methode",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-a-anwendung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-i-a-anwendung",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-a-anwendung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-g-anwendung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-g-i-element",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-auswahl-element",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-auswahl-element-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-a-anwendung",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-a-i-element",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-auswahl-element",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-auswahl-element-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-3"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-akkumulator-konjunktion",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-auswahl-element",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-auswahl-element-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-element-konjunktion",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-konjunktion-faltungsdefinator",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-raum-aeussere-konjunktion",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator-anschluss-1"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-faltung-aeussere-konjunktion",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-anschluss-2"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-mengendefinator",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-mengendefinator",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-mengendefinator-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-mengendefinator",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-mengendefinator-anschluss-1"
+      },
+      "id": "definition-iteriertes-kartesisches-produkt-2-mengendefinator-ausgang",
+      "zu": {
+        "knotenId": "definition-iteriertes-kartesisches-produkt-2-karten-ausgang",
+        "anschlussId": "definition-iteriertes-kartesisches-produkt-2-karten-ausgang-anschluss-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Endlicher Spezialfall von Iteriertes kartesisches Produkt",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 250,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-eingang-methode-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.methode",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "A",
+      "id": "definition-iteriertes-kartesisches-produkt-2-eingang-methode",
+      "position": {
+        "x": 20,
+        "y": 80
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.endlicheMenge",
+      "größe": {
+        "breite": 250,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "elementKonfiguration": "v2:bWF0aGVtYXRpay56YWhs|z:c3RhbmRhcmQtMQ:bWF0aGVtYXRpay56YWhs:MQ|z:c3RhbmRhcmQtMg:bWF0aGVtYXRpay56YWhs:Mg|z:c3RhbmRhcmQtMw:bWF0aGVtYXRpay56YWhs:Mw",
+        "elemente": "1,2,3"
+      },
+      "name": "Endliche Menge",
+      "id": "definition-iteriertes-kartesisches-produkt-2-eingang-indexmenge",
+      "position": {
+        "x": 20,
+        "y": 510
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.iterierteVereinigung",
+      "größe": {
+        "breite": 260,
+        "höhe": 120
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "indexmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Iterierte Vereinigung",
+      "id": "definition-iteriertes-kartesisches-produkt-2-iterierte-vereinigung",
+      "position": {
+        "x": 330,
+        "y": 60
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.abbildungsmenge",
+      "größe": {
+        "breite": 245,
+        "höhe": 120
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "zielmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "definitionsmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Abbildungsmenge",
+      "id": "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge",
+      "position": {
+        "x": 670,
+        "y": 100
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.mengenkonstruktor",
+      "größe": {
+        "breite": 275,
+        "höhe": 125
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "element",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-mengenkonstruktor-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "mengenName": "\\mathop{\\times}\\limits_{i\\in I}A(i)",
+        "mengendefinition.paar": "definition-iteriertes-kartesisches-produkt-2-mengendefinition",
+        "elementArt": "mathematik.methode",
+        "elementName": "g"
+      },
+      "name": "Mengenkonstruktor",
+      "id": "definition-iteriertes-kartesisches-produkt-2-mengenkonstruktor",
+      "position": {
+        "x": 1000,
+        "y": 235
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.element",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Element",
+      "id": "definition-iteriertes-kartesisches-produkt-2-g-im-funktionsraum",
+      "position": {
+        "x": 1330,
+        "y": 90
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.wahr",
+      "größe": {
+        "breite": 180,
+        "höhe": 90
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-wahr-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Wahr",
+      "id": "definition-iteriertes-kartesisches-produkt-2-wahr",
+      "position": {
+        "x": 1040,
+        "y": 650
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.faltungskonstruktor",
+      "größe": {
+        "breite": 285,
+        "höhe": 145
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "indexmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "neutral",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "index",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-2",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "akkumulator",
+          "kante": "Rechts",
+          "artFolgtEingang": "neutral",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor-anschluss-3",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "faltung.paar": "definition-iteriertes-kartesisches-produkt-2-faltung",
+        "faltung.akkumulatorName": "a",
+        "faltung.operator": "konjunktion",
+        "faltung.indexName": "i"
+      },
+      "name": "Faltungskonstruktor",
+      "id": "definition-iteriertes-kartesisches-produkt-2-faltungskonstruktor",
+      "position": {
+        "x": 1300,
+        "y": 545
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.methodenAnwendung",
+      "größe": {
+        "breite": 265,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "argument",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-g-anwendung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "methodenAnwendung.ergebnisArt": "mathematik.objekt"
+      },
+      "name": "Methode allgemein anwenden",
+      "id": "definition-iteriertes-kartesisches-produkt-2-g-anwendung",
+      "position": {
+        "x": 1640,
+        "y": 380
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.methodenAnwendung",
+      "größe": {
+        "breite": 265,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "argument",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-a-anwendung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "methodenAnwendung.ergebnisArt": "mathematik.menge"
+      },
+      "name": "Mengenmethode anwenden",
+      "id": "definition-iteriertes-kartesisches-produkt-2-a-anwendung",
+      "position": {
+        "x": 1640,
+        "y": 660
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.element",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-auswahl-element-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-auswahl-element-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-auswahl-element-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Element",
+      "id": "definition-iteriertes-kartesisches-produkt-2-auswahl-element",
+      "position": {
+        "x": 1980,
+        "y": 515
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.konjunktion",
+      "größe": {
+        "breite": 230,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Konjunktion",
+      "id": "definition-iteriertes-kartesisches-produkt-2-innere-konjunktion",
+      "position": {
+        "x": 2310,
+        "y": 555
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.faltungsdefinator",
+      "größe": {
+        "breite": 285,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "nächsterAkkumulator",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "artFolgtEingang": "nächsterAkkumulator",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "faltung.paar": "definition-iteriertes-kartesisches-produkt-2-faltung",
+        "faltung.operator": "konjunktion"
+      },
+      "name": "Faltungsdefinator",
+      "id": "definition-iteriertes-kartesisches-produkt-2-faltungsdefinator",
+      "position": {
+        "x": 2640,
+        "y": 555
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.konjunktion",
+      "größe": {
+        "breite": 230,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Konjunktion",
+      "id": "definition-iteriertes-kartesisches-produkt-2-aeussere-konjunktion",
+      "position": {
+        "x": 2970,
+        "y": 310
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.mengendefinator",
+      "größe": {
+        "breite": 270,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-mengendefinator-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-mengendefinator-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "mengendefinition.paar": "definition-iteriertes-kartesisches-produkt-2-mengendefinition"
+      },
+      "name": "Mengendefinator",
+      "id": "definition-iteriertes-kartesisches-produkt-2-mengendefinator",
+      "position": {
+        "x": 3300,
+        "y": 310
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iteriertes-kartesisches-produkt-2-karten-ausgang-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "menge"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-iteriertes-kartesisches-produkt-2-karten-ausgang",
+      "position": {
+        "x": 3630,
+        "y": 310
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.iteriertes-kartesisches-produkt-endlicher-spezialfall-0",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

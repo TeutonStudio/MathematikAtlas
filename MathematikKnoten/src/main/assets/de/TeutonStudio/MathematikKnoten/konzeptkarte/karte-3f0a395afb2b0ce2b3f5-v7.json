@@ -1,0 +1,145 @@
+{
+  "erstelltAm": 1785883810574,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-ln-n-0-eingang-0",
+        "anschlussId": "definition-zahlenrechner-ln-n-0-eingang-0-wert"
+      },
+      "id": "definition-zahlenrechner-ln-n-0-e-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-ln-n-0-regel",
+        "anschlussId": "definition-zahlenrechner-ln-n-0-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-ln-n-0-regel",
+        "anschlussId": "definition-zahlenrechner-ln-n-0-regel-1"
+      },
+      "id": "definition-zahlenrechner-ln-n-0-a-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-ln-n-0-ausgang-0",
+        "anschlussId": "definition-zahlenrechner-ln-n-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Natürlicher Logarithmus auf \\mathbb N",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-ln-n-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "a"
+      },
+      "name": "a",
+      "id": "definition-zahlenrechner-ln-n-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 470,
+        "höhe": 160
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-ln-n-0-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-ln-n-0-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "zahlbereich": "N",
+        "zahlbereichLatex": "\\mathbb N",
+        "geordnet": "true",
+        "definition": "\\ln\\vert_{\\mathbb N}",
+        "regel": "Definition: \\ln\\vert_{\\mathbb N}",
+        "operator": "zahl.ln",
+        "kommutativ": "true"
+      },
+      "name": "\\ln\\vert_{\\mathbb N}",
+      "id": "definition-zahlenrechner-ln-n-0-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-ln-n-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-zahlenrechner-ln-n-0-ausgang-0",
+      "position": {
+        "x": 930,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.50188093.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

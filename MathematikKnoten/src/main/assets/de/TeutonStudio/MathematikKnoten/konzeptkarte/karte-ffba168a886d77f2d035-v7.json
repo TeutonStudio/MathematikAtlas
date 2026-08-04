@@ -1,0 +1,142 @@
+{
+  "erstelltAm": 1785883810617,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-eingang-0",
+        "anschlussId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-eingang-0-wert"
+      },
+      "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-e-0",
+      "zu": {
+        "knotenId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel",
+        "anschlussId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel",
+        "anschlussId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel-1"
+      },
+      "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-a-0",
+      "zu": {
+        "knotenId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-ausgang-0",
+        "anschlussId": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Aussagesatz: Negation",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 280,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.aussage",
+        "rolle": "aussage"
+      },
+      "name": "aussage",
+      "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 500,
+        "höhe": 170
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.aussagensatz",
+        "definition": "\\neg A",
+        "regel": "Die Definitionskarte folgt dem ausgewählten Operatorvertrag und aktualisiert Ein- und Ausgangstypen gemeinsam.",
+        "operator": "aussage.negation"
+      },
+      "name": "\\neg A",
+      "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 280,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.aussage",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-aussagesatz-export-mathematik-aussagensatz-operator-aussage-negation-aussagesatz-0-ausgang-0",
+      "position": {
+        "x": 970,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.aussagensatz|Aussagesatz|operator=aussage.negation.ac0a2d08.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

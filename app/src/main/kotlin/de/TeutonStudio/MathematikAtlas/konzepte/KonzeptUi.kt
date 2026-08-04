@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -63,8 +64,10 @@ internal fun KnotenKonzeptDialog(
         return
     }
 
-    val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis) {
-        konzeptFürKonsolidiertenKnoten(zustand, knoten) ?: TestDefinitionsKarten.fürKnoten(knoten)
+    val context = LocalContext.current
+    val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis, context) {
+        dynamischesKonzeptFürKnoten(zustand, knoten)
+            ?: enzyklopädieKonzeptFürKnoten(context, knoten)
     }
     KonzeptDialog(
         zustand = zustand,
@@ -266,7 +269,7 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             when (knoten.art) {
-                TestDefinitionsKarten.KONZEPT_REGEL_ART -> {
+                KonzeptKnotenArten.REGEL -> {
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
                     Text(knoten.parameter["regel"].orEmpty(), style = MaterialTheme.typography.bodyMedium)
                     Text(
@@ -275,7 +278,7 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                TestDefinitionsKarten.KONZEPT_EINGANG_ART -> {
+                KonzeptKnotenArten.EINGANG -> {
                     Text("Eingang", style = MaterialTheme.typography.labelLarge)
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
                     Text(knoten.parameter["typ"].orEmpty(), style = MaterialTheme.typography.bodySmall)

@@ -11,14 +11,14 @@ import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
  */
 internal fun KartenAuswerter.werteKonzeptKarteAus(karte: KartenDaten): KartenAuswertungsErgebnis {
     val enthältNichtAuswertbareDokumentation = karte.knoten.any { knoten ->
-        knoten.art.startsWith("konzept.") && knoten.art != TestDefinitionsKarten.KONZEPT_EINGANG_ART
+        knoten.art.startsWith("konzept.") && knoten.art != KonzeptKnotenArten.EINGANG
     }
     if (enthältNichtAuswertbareDokumentation) {
         return KartenAuswertungsErgebnis(emptyMap(), emptyList())
     }
 
     val vorgaben = karte.knoten
-        .filter { it.art == TestDefinitionsKarten.KONZEPT_EINGANG_ART }
+        .filter { it.art == KonzeptKnotenArten.EINGANG }
         .associate { knoten ->
             val ausgang = knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
             val methodenErgebnisArt = karte.inferiereMethodenErgebnisArt(knoten, ausgang)

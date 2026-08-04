@@ -1,0 +1,412 @@
+{
+  "erstelltAm": 1785883810217,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-mengenkonstruktor",
+        "anschlussId": "definition-schnitt-0-mengenkonstruktor-anschluss-0"
+      },
+      "id": "definition-schnitt-0-x-element-a",
+      "zu": {
+        "knotenId": "definition-schnitt-0-element-a",
+        "anschlussId": "definition-schnitt-0-element-a-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-mengenkonstruktor",
+        "anschlussId": "definition-schnitt-0-mengenkonstruktor-anschluss-0"
+      },
+      "id": "definition-schnitt-0-x-element-b",
+      "zu": {
+        "knotenId": "definition-schnitt-0-element-b",
+        "anschlussId": "definition-schnitt-0-element-b-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-eingang-0",
+        "anschlussId": "definition-schnitt-0-eingang-0-wert"
+      },
+      "id": "definition-schnitt-0-a-element-a",
+      "zu": {
+        "knotenId": "definition-schnitt-0-element-a",
+        "anschlussId": "definition-schnitt-0-element-a-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-eingang-1",
+        "anschlussId": "definition-schnitt-0-eingang-1-wert"
+      },
+      "id": "definition-schnitt-0-b-element-b",
+      "zu": {
+        "knotenId": "definition-schnitt-0-element-b",
+        "anschlussId": "definition-schnitt-0-element-b-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-element-a",
+        "anschlussId": "definition-schnitt-0-element-a-anschluss-2"
+      },
+      "id": "definition-schnitt-0-element-a-praedikat",
+      "zu": {
+        "knotenId": "definition-schnitt-0-praedikat",
+        "anschlussId": "definition-schnitt-0-praedikat-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-element-b",
+        "anschlussId": "definition-schnitt-0-element-b-anschluss-2"
+      },
+      "id": "definition-schnitt-0-element-b-praedikat",
+      "zu": {
+        "knotenId": "definition-schnitt-0-praedikat",
+        "anschlussId": "definition-schnitt-0-praedikat-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-praedikat",
+        "anschlussId": "definition-schnitt-0-praedikat-anschluss-2"
+      },
+      "id": "definition-schnitt-0-praedikat-definator",
+      "zu": {
+        "knotenId": "definition-schnitt-0-mengendefinator",
+        "anschlussId": "definition-schnitt-0-mengendefinator-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-schnitt-0-mengendefinator",
+        "anschlussId": "definition-schnitt-0-mengendefinator-anschluss-1"
+      },
+      "id": "definition-schnitt-0-definator-ausgang",
+      "zu": {
+        "knotenId": "definition-schnitt-0-karten-ausgang",
+        "anschlussId": "definition-schnitt-0-karten-ausgang-anschluss-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Schnitt",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 220,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.menge",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "A",
+      "id": "definition-schnitt-0-eingang-0",
+      "position": {
+        "x": 20,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 220,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-eingang-1-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.menge",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "B",
+      "id": "definition-schnitt-0-eingang-1",
+      "position": {
+        "x": 20,
+        "y": 450
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.mengenkonstruktor",
+      "größe": {
+        "breite": 275,
+        "höhe": 125
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "element",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-mengenkonstruktor-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "mengenName": "A\\cap B",
+        "mengendefinition.paar": "definition-schnitt-0-paar",
+        "elementArt": "mathematik.objekt",
+        "elementName": "x"
+      },
+      "name": "Mengenkonstruktor",
+      "id": "definition-schnitt-0-mengenkonstruktor",
+      "position": {
+        "x": 270,
+        "y": 260
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.element",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-element-a-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-element-a-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-element-a-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Element",
+      "id": "definition-schnitt-0-element-a",
+      "position": {
+        "x": 590,
+        "y": 80
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.element",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-element-b-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-element-b-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-element-b-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Element",
+      "id": "definition-schnitt-0-element-b",
+      "position": {
+        "x": 590,
+        "y": 450
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.konjunktion",
+      "größe": {
+        "breite": 230,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-praedikat-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-praedikat-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-praedikat-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Konjunktion",
+      "id": "definition-schnitt-0-praedikat",
+      "position": {
+        "x": 940,
+        "y": 265
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.mengendefinator",
+      "größe": {
+        "breite": 270,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-mengendefinator-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-mengendefinator-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "mengendefinition.paar": "definition-schnitt-0-paar"
+      },
+      "name": "Mengendefinator",
+      "id": "definition-schnitt-0-mengendefinator",
+      "position": {
+        "x": 1280,
+        "y": 260
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-schnitt-0-karten-ausgang-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "menge"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-schnitt-0-karten-ausgang",
+      "position": {
+        "x": 1630,
+        "y": 265
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.schnitt|Schnitt|festeEingänge=2;operatorAnzeige=wert.e854328.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

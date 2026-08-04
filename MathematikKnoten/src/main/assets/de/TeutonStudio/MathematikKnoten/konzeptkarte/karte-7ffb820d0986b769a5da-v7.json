@@ -1,0 +1,195 @@
+{
+  "erstelltAm": 1785883810207,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-mathematik-tupel-tupel-0-eingang-0",
+        "anschlussId": "definition-mathematik-tupel-tupel-0-eingang-0-wert"
+      },
+      "id": "definition-mathematik-tupel-tupel-0-e-0",
+      "zu": {
+        "knotenId": "definition-mathematik-tupel-tupel-0-regel",
+        "anschlussId": "definition-mathematik-tupel-tupel-0-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-mathematik-tupel-tupel-0-eingang-1",
+        "anschlussId": "definition-mathematik-tupel-tupel-0-eingang-1-wert"
+      },
+      "id": "definition-mathematik-tupel-tupel-0-e-1",
+      "zu": {
+        "knotenId": "definition-mathematik-tupel-tupel-0-regel",
+        "anschlussId": "definition-mathematik-tupel-tupel-0-regel-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-mathematik-tupel-tupel-0-regel",
+        "anschlussId": "definition-mathematik-tupel-tupel-0-regel-2"
+      },
+      "id": "definition-mathematik-tupel-tupel-0-a-0",
+      "zu": {
+        "knotenId": "definition-mathematik-tupel-tupel-0-ausgang-0",
+        "anschlussId": "definition-mathematik-tupel-tupel-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Tupel",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-tupel-tupel-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "variabel": "true",
+        "folgtEingang": ""
+      },
+      "name": "a",
+      "id": "definition-mathematik-tupel-tupel-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-tupel-tupel-0-eingang-1-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "variabel": "true",
+        "folgtEingang": ""
+      },
+      "name": "b",
+      "id": "definition-mathematik-tupel-tupel-0-eingang-1",
+      "position": {
+        "x": 30,
+        "y": 173
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 390,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-tupel-tupel-0-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-tupel-tupel-0-regel-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "tupel",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-tupel-tupel-0-regel-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.tupel",
+        "regel": "Geordnetes Tupel aus zwei oder mehr Zahlen.",
+        "kategorie": "Zahlen"
+      },
+      "name": "Tupel",
+      "id": "definition-mathematik-tupel-tupel-0-regel",
+      "position": {
+        "x": 370,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-tupel-tupel-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.tupel",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "tupel",
+      "id": "definition-mathematik-tupel-tupel-0-ausgang-0",
+      "position": {
+        "x": 830,
+        "y": 55
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.tupel|Tupel|festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

@@ -1,8 +1,12 @@
 package de.TeutonStudio.MathematikAtlas
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
-import kotlin.test.*
+import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class KonzeptBibliothekTest {
     @Test
@@ -17,7 +21,8 @@ class KonzeptBibliothekTest {
         assertFalse("Karteneingänge" in hauptbereiche)
         assertFalse("Kartenausgänge" in hauptbereiche)
 
-        val einträge = KonzeptBibliothekRegister.erstelle(listOf(testVorlage()))
+        val vorlage = alleMathematikDefinitionsVorlagen().first { it.art == "mathematik.spur" }
+        val einträge = KonzeptBibliothekRegister.erstelle(listOf(vorlage))
         assertTrue(einträge.flatMap { it.kategoriePfade }.all { it.size in 1..3 })
         assertEquals(emptyList(), KonzeptBibliothekRegister.validierungsFehler(einträge))
     }
@@ -54,11 +59,8 @@ class KonzeptBibliothekTest {
 
     @Test
     fun `Skalarprodukt erscheint in linearer Algebra und Geometrie`() {
-        val vorlage = testVorlage(
-            art = "mathematik.skalarprodukt",
-            name = "Standardskalarprodukt",
-            kategorie = "Operatoren",
-        )
+        val vorlage = alleMathematikDefinitionsVorlagen()
+            .first { it.art == "mathematik.begriff.skalarprodukt" }
         val eintrag = KonzeptBibliothekRegister.erstelle(listOf(vorlage))
             .single { it.vorlage == vorlage }
 
@@ -68,24 +70,9 @@ class KonzeptBibliothekTest {
 
     @Test
     fun `Anschlussfilter prüft Richtung und Typ`() {
-        val matrix = AnschlussArtId("mathematik.matrix")
-        val zahl = AnschlussArtId("mathematik.zahl")
-        val vorlage = testVorlage(
-            anschlüsse = listOf(
-                AnschlussDaten(
-                    name = "matrix",
-                    richtung = AnschlussRichtung.Eingang,
-                    kante = AnschlussKante.Links,
-                    art = matrix,
-                ),
-                AnschlussDaten(
-                    name = "spur",
-                    richtung = AnschlussRichtung.Ausgang,
-                    kante = AnschlussKante.Rechts,
-                    art = zahl,
-                ),
-            ),
-        )
+        val vorlage = alleMathematikDefinitionsVorlagen().first { it.art == "mathematik.spur" }
+        val matrix = vorlage.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }.art
+        val zahl = vorlage.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.art
         val eintrag = KonzeptBibliothekRegister.erstelle(listOf(vorlage)).single { it.vorlage == vorlage }
 
         assertTrue(eintrag.passt(KonzeptBibliothekFilter(erforderlicherEingang = matrix, erforderlicherAusgang = zahl)))
@@ -106,24 +93,4 @@ class KonzeptBibliothekTest {
         assertEquals(KnotenWählerModus.Standard, KnotenWählerModus.aus("unbekannt"))
         assertEquals(KnotenWählerModus.Konzeptbibliothek, KnotenWählerModus.aus("concept-library"))
     }
-
-    private fun testVorlage(
-        art: String = "mathematik.test",
-        name: String = "Test",
-        kategorie: String = "Operatoren",
-        anschlüsse: List<AnschlussDaten> = listOf(
-            AnschlussDaten(
-                name = "wert",
-                richtung = AnschlussRichtung.Ausgang,
-                kante = AnschlussKante.Rechts,
-                art = AnschlussArtId("mathematik.zahl"),
-            ),
-        ),
-    ) = KnotenVorlage(
-        art = art,
-        name = name,
-        kategorie = kategorie,
-        beschreibung = "Testbeschreibung",
-        anschlüsse = anschlüsse,
-    )
 }
