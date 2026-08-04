@@ -642,3 +642,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.menge", "mathematik.vektorrechner"]
 reason = "Führt einen einheitlichen Mengenknoten mit versionsfesten eigenen Karten ein, macht den Vektorrechner separat erzeugbar und konsolidiert Zahlenrechner-, Skalarprodukt- und Einheitsvektorvarianten mit verlustfreier Migration."
+
+[[releases]]
+version = "2.23.1"
+title = "Interaktive Gauß- und Umformungstabelle"
+roadmap = "v2.23.x Lineare Algebra und Bedienoberfläche"
+status = "released"
+previous_release = "2.23.0"
+branch = "samai/v2.23.1-auswerten-umformung"
+kind = "feature"
+version_axis = "x"
+reason = "Vervollständigt den vorhandenen Auswerten-Knoten um Inspector-Modi und eine interaktive strukturierte Gauß-/Gauß-Jordan-Tabelle, ohne einen neuen registrierten Knotentyp einzuführen."
