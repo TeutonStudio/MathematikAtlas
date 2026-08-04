@@ -196,15 +196,15 @@ fun LabFarbe.zuRgbOderNull(): RgbFarbe? {
 }
 
 internal fun adaptiereD65NachD50(farbe: XyzFarbe): XyzFarbe = XyzFarbe(
-    x = 1.0479298 * farbe.x + 0.0229468 * farbe.y - 0.0501922 * farbe.z,
-    y = 0.0296278 * farbe.x + 0.9904345 * farbe.y - 0.0170738 * farbe.z,
-    z = -0.0092430 * farbe.x + 0.0150552 * farbe.y + 0.7518743 * farbe.z,
+    x = 1.0478112 * farbe.x + 0.0228866 * farbe.y - 0.0501270 * farbe.z,
+    y = 0.0295424 * farbe.x + 0.9904844 * farbe.y - 0.0170491 * farbe.z,
+    z = -0.0092345 * farbe.x + 0.0150436 * farbe.y + 0.7521316 * farbe.z,
 )
 
 internal fun adaptiereD50NachD65(farbe: XyzFarbe): XyzFarbe = XyzFarbe(
-    x = 0.9554734 * farbe.x - 0.0230985 * farbe.y + 0.0632593 * farbe.z,
-    y = -0.0283697 * farbe.x + 1.0099955 * farbe.y + 0.0210414 * farbe.z,
-    z = 0.0123140 * farbe.x - 0.0205077 * farbe.y + 1.3303659 * farbe.z,
+    x = 0.9555766 * farbe.x - 0.0230393 * farbe.y + 0.0631636 * farbe.z,
+    y = -0.0282895 * farbe.x + 1.0099416 * farbe.y + 0.0210077 * farbe.z,
+    z = 0.0122982 * farbe.x - 0.0204830 * farbe.y + 1.3299098 * farbe.z,
 )
 
 internal fun normalisiereFarbton(farbton: Double): Double {
