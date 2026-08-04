@@ -124,11 +124,16 @@ jobs:
           PY
       - name: Migrierte Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
-      - name: Migrierten Zustand bauen und testen
+      - name: Formelkonzept gezielt prüfen
         shell: bash
         run: |
           set -o pipefail
           mkdir -p build/restmigration-diagnose
+          ./gradlew --stacktrace --info :app:testReleaseUnitTest --tests '*ZahlenRechnerFormelKonzeptTest.Definitionskarte*' 2>&1 | tee build/restmigration-diagnose/formelkonzept-test.log
+      - name: Migrierten Zustand bauen und testen
+        shell: bash
+        run: |
+          set -o pipefail
           ./gradlew --stacktrace test :app:assembleDebug 2>&1 | tee build/restmigration-diagnose/migrierter-build.log
       - name: Migrierten Endzustand committen
         run: |
@@ -146,6 +151,8 @@ jobs:
           path: |
             build/restmigration-export
             build/restmigration-diagnose
+            app/build/test-results
+            app/build/reports/tests
             MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte
             MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/konzeptknoten
             MathematikKnoten/src/debug/kotlin/de/TeutonStudio/MathematikKnoten/previews
