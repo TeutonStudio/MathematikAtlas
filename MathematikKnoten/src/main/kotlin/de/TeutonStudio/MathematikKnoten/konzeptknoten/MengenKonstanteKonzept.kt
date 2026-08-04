@@ -16,6 +16,7 @@ object MengenKonstanteKonzept {
         beschreibung = "Konsolidierter Mengenknoten für Grundmengen und versionsfeste benutzerdefinierte Mengenkarten.",
         vorlagen = vorlagen.filter(::passt),
         generatorId = "konzeptkarte.mengenkonstante",
+        assetDatei = "mengenkonstante-v1.json",
         zusätzlicheSuchbegriffe = setOf("Grundmenge", "Zahlbereich", "Menge", "Mengenkonstante"),
     )
 }
