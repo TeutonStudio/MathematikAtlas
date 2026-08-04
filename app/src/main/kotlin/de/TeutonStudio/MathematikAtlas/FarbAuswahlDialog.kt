@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -55,25 +57,8 @@ internal fun FarbAuswahlDialog(
             tonalElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxSize()) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(titel, style = MaterialTheme.typography.headlineSmall)
-                        Text(
-                            "HSB verwendet dieselbe Semantik wie HSV: Helligkeit entspricht dem Value-Kanal.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Text(
-                        entwurf.kanonisch.rgbHex,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                }
+                DialogKopf(titel, entwurf.kanonisch)
                 HorizontalDivider()
-
                 Column(
                     Modifier
                         .weight(1f)
@@ -83,27 +68,12 @@ internal fun FarbAuswahlDialog(
                     verticalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
                     FarbVorschau(entwurf.kanonisch)
-                    FarbModusAuswahl(
-                        modus = entwurf.modus,
-                        ändern = { entwurf = entwurf.mitModus(it) },
-                    )
-                    SättigungHelligkeitFeld(
-                        entwurf = entwurf,
-                        ändern = { entwurf = it },
-                    )
-                    FarbtonRegler(
-                        entwurf = entwurf,
-                        ändern = { entwurf = it },
-                    )
+                    FarbModusAuswahl(entwurf.modus) { entwurf = entwurf.mitModus(it) }
+                    SättigungHelligkeitFeld(entwurf) { entwurf = it }
+                    FarbtonRegler(entwurf) { entwurf = it }
                     when (entwurf.modus) {
-                        FarbEingabeModus.RGB -> RgbEingabe(
-                            entwurf = entwurf,
-                            ändern = { entwurf = it },
-                        )
-                        FarbEingabeModus.HSB -> HsbEingabe(
-                            entwurf = entwurf,
-                            ändern = { entwurf = it },
-                        )
+                        FarbEingabeModus.RGB -> RgbEingabe(entwurf) { entwurf = it }
+                        FarbEingabeModus.HSB -> HsbEingabe(entwurf) { entwurf = it }
                     }
                     OutlinedTextField(
                         value = entwurf.hexText,
@@ -121,39 +91,65 @@ internal fun FarbAuswahlDialog(
                         )
                     }
                 }
-
-                HorizontalDivider()
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedButton(
-                        onClick = { entwurf = entwurf.zuruecksetzen(standardFarbe) },
-                    ) { Text("Zurücksetzen") }
-                    Spacer(Modifier.weight(1f))
-                    TextButton(onClick = onAbbrechen) { Text("Abbrechen") }
-                    Button(
-                        onClick = { onBestaetigen(entwurf.kanonisch) },
-                        enabled = entwurf.istGueltig,
-                    ) { Text("Übernehmen") }
-                }
+                DialogFuss(
+                    gültig = entwurf.istGueltig,
+                    zurücksetzen = { entwurf = entwurf.zuruecksetzen(standardFarbe) },
+                    abbrechen = onAbbrechen,
+                    übernehmen = { onBestaetigen(entwurf.kanonisch) },
+                )
             }
         }
     }
 }
 
 @Composable
+private fun DialogKopf(titel: String, farbe: RgbFarbe) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(titel, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "HSB verwendet dieselbe Semantik wie HSV: Helligkeit entspricht dem Value-Kanal.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(farbe.rgbHex, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+@Composable
+private fun DialogFuss(
+    gültig: Boolean,
+    zurücksetzen: () -> Unit,
+    abbrechen: () -> Unit,
+    übernehmen: () -> Unit,
+) {
+    HorizontalDivider()
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        OutlinedButton(onClick = zurücksetzen) { Text("Zurücksetzen") }
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = abbrechen) { Text("Abbrechen") }
+        Button(onClick = übernehmen, enabled = gültig) { Text("Übernehmen") }
+    }
+}
+
+@Composable
 private fun FarbVorschau(farbe: RgbFarbe) {
-    val composeFarbe = Color(farbe.argbLong)
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(88.dp)
             .semantics { contentDescription = "Farbvorschau ${farbe.rgbHex}" },
-        color = composeFarbe,
+        color = Color(farbe.argbLong),
         shape = MaterialTheme.shapes.large,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {}
 }
 
@@ -162,20 +158,13 @@ private fun FarbModusAuswahl(
     modus: FarbEingabeModus,
     ändern: (FarbEingabeModus) -> Unit,
 ) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        FarbModusKnopf(
-            titel = "RGB",
-            ausgewählt = modus == FarbEingabeModus.RGB,
-            modifier = Modifier.weight(1f),
-        ) { ändern(FarbEingabeModus.RGB) }
-        FarbModusKnopf(
-            titel = "HSB",
-            ausgewählt = modus == FarbEingabeModus.HSB,
-            modifier = Modifier.weight(1f),
-        ) { ändern(FarbEingabeModus.HSB) }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FarbModusKnopf("RGB", modus == FarbEingabeModus.RGB, Modifier.weight(1f)) {
+            ändern(FarbEingabeModus.RGB)
+        }
+        FarbModusKnopf("HSB", modus == FarbEingabeModus.HSB, Modifier.weight(1f)) {
+            ändern(FarbEingabeModus.HSB)
+        }
     }
 }
 
@@ -186,11 +175,8 @@ private fun FarbModusKnopf(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
-    if (ausgewählt) {
-        Button(onClick = onClick, modifier = modifier) { Text(titel) }
-    } else {
-        OutlinedButton(onClick = onClick, modifier = modifier) { Text(titel) }
-    }
+    if (ausgewählt) Button(onClick, modifier) { Text(titel) }
+    else OutlinedButton(onClick, modifier) { Text(titel) }
 }
 
 @Composable
@@ -198,31 +184,33 @@ private fun SättigungHelligkeitFeld(
     entwurf: FarbEntwurf,
     ändern: (FarbEntwurf) -> Unit,
 ) {
-    val farbtonFarbe = Color(
-        entwurf.hsb.copy(saettigung = 1f, helligkeit = 1f).zuRgb().argbLong,
-    )
+    val farbtonFarbe = Color(entwurf.hsb.copy(saettigung = 1f, helligkeit = 1f).zuRgb().argbLong)
     fun aktualisiere(position: Offset, breite: Float, höhe: Float) {
         ändern(
             entwurf.mitHsb(
-                saettigung = (position.x / breite).coerceIn(0f, 1f),
-                helligkeit = (1f - position.y / höhe).coerceIn(0f, 1f),
+                saettigung = (position.x / breite.coerceAtLeast(1f)).coerceIn(0f, 1f),
+                helligkeit = (1f - position.y / höhe.coerceAtLeast(1f)).coerceIn(0f, 1f),
             ),
         )
     }
     Canvas(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
             .height(220.dp)
             .semantics { contentDescription = "Sättigung und Helligkeit" }
             .pointerInput(entwurf.hsb.farbton) {
-                detectTapGestures { aktualisiere(it, size.width, size.height) }
+                detectTapGestures { punkt ->
+                    aktualisiere(punkt, size.width.toFloat(), size.height.toFloat())
+                }
             }
             .pointerInput(entwurf.hsb.farbton) {
                 detectDragGestures(
-                    onDragStart = { aktualisiere(it, size.width, size.height) },
+                    onDragStart = { punkt ->
+                        aktualisiere(punkt, size.width.toFloat(), size.height.toFloat())
+                    },
                     onDrag = { änderung, _ ->
                         änderung.consume()
-                        aktualisiere(änderung.position, size.width, size.height)
+                        aktualisiere(änderung.position, size.width.toFloat(), size.height.toFloat())
                     },
                 )
             },
@@ -230,16 +218,11 @@ private fun SättigungHelligkeitFeld(
         drawRect(Brush.horizontalGradient(listOf(Color.White, farbtonFarbe)))
         drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
         val marker = Offset(
-            x = entwurf.hsb.saettigung * size.width,
-            y = (1f - entwurf.hsb.helligkeit) * size.height,
+            entwurf.hsb.saettigung * size.width,
+            (1f - entwurf.hsb.helligkeit) * size.height,
         )
-        drawCircle(Color.White, radius = 11.dp.toPx(), center = marker)
-        drawCircle(
-            Color.Black,
-            radius = 8.dp.toPx(),
-            center = marker,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()),
-        )
+        drawCircle(Color.White, 11.dp.toPx(), marker)
+        drawCircle(Color.Black, 8.dp.toPx(), marker, style = Stroke(2.dp.toPx()))
     }
 }
 
@@ -256,15 +239,7 @@ private fun FarbtonRegler(
                 .height(10.dp)
                 .background(
                     Brush.horizontalGradient(
-                        listOf(
-                            Color.Red,
-                            Color.Yellow,
-                            Color.Green,
-                            Color.Cyan,
-                            Color.Blue,
-                            Color.Magenta,
-                            Color.Red,
-                        ),
+                        listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red),
                     ),
                     CircleShape,
                 ),
@@ -279,71 +254,54 @@ private fun FarbtonRegler(
 }
 
 @Composable
-private fun RgbEingabe(
-    entwurf: FarbEntwurf,
+private fun RgbEingabe(entwurf: FarbEntwurf, ändern: (FarbEntwurf) -> Unit) {
+    RgbKanal("Rot", entwurf.rotText, { entwurf.mitRgb(rot = it) }, ändern)
+    RgbKanal("Grün", entwurf.gruenText, { entwurf.mitRgb(gruen = it) }, ändern)
+    RgbKanal("Blau", entwurf.blauText, { entwurf.mitRgb(blau = it) }, ändern)
+}
+
+@Composable
+private fun RgbKanal(
+    titel: String,
+    text: String,
+    aktualisiere: (String) -> FarbEntwurf,
     ändern: (FarbEntwurf) -> Unit,
 ) {
-    val kanäle = listOf(
-        Triple("Rot", entwurf.rotText, { wert: String -> entwurf.mitRgb(rot = wert) }),
-        Triple("Grün", entwurf.gruenText, { wert: String -> entwurf.mitRgb(gruen = wert) }),
-        Triple("Blau", entwurf.blauText, { wert: String -> entwurf.mitRgb(blau = wert) }),
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        kanäle.forEach { (titel, text, setzeText) ->
-            val wert = text.toIntOrNull()?.coerceIn(0, 255) ?: 0
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { ändern(setzeText(it.filter(Char::isDigit).take(3))) },
-                    label = { Text(titel) },
-                    singleLine = true,
-                    modifier = Modifier.width(110.dp),
-                )
-                Slider(
-                    value = wert.toFloat(),
-                    onValueChange = { ändern(setzeText(it.roundToInt().toString())) },
-                    valueRange = 0f..255f,
-                    steps = 254,
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { contentDescription = "$titel 0 bis 255" },
-                )
-            }
-        }
+    val wert = text.toIntOrNull()?.coerceIn(0, 255) ?: 0
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { ändern(aktualisiere(it.filter(Char::isDigit).take(3))) },
+            label = { Text(titel) },
+            singleLine = true,
+            modifier = Modifier.width(110.dp),
+        )
+        Slider(
+            value = wert.toFloat(),
+            onValueChange = { ändern(aktualisiere(it.roundToInt().toString())) },
+            valueRange = 0f..255f,
+            steps = 254,
+            modifier = Modifier.weight(1f).semantics { contentDescription = "$titel 0 bis 255" },
+        )
     }
 }
 
 @Composable
-private fun HsbEingabe(
-    entwurf: FarbEntwurf,
-    ändern: (FarbEntwurf) -> Unit,
-) {
+private fun HsbEingabe(entwurf: FarbEntwurf, ändern: (FarbEntwurf) -> Unit) {
     HsbKanal(
-        titel = "Farbton",
-        einheit = "°",
-        text = entwurf.farbtonText,
-        sliderWert = entwurf.hsb.farbton,
-        bereich = 0f..360f,
-        onText = { ändern(entwurf.mitHsbText(farbton = it)) },
-        onSlider = { ändern(entwurf.mitHsb(farbton = it)) },
+        "Farbton", "°", entwurf.farbtonText, entwurf.hsb.farbton, 0f..360f,
+        { ändern(entwurf.mitHsbText(farbton = it)) },
+        { ändern(entwurf.mitHsb(farbton = it)) },
     )
     HsbKanal(
-        titel = "Sättigung",
-        einheit = "%",
-        text = entwurf.saettigungText,
-        sliderWert = entwurf.hsb.saettigung * 100f,
-        bereich = 0f..100f,
-        onText = { ändern(entwurf.mitHsbText(saettigung = it)) },
-        onSlider = { ändern(entwurf.mitHsb(saettigung = it / 100f)) },
+        "Sättigung", "%", entwurf.saettigungText, entwurf.hsb.saettigung * 100f, 0f..100f,
+        { ändern(entwurf.mitHsbText(saettigung = it)) },
+        { ändern(entwurf.mitHsb(saettigung = it / 100f)) },
     )
     HsbKanal(
-        titel = "Helligkeit",
-        einheit = "%",
-        text = entwurf.helligkeitText,
-        sliderWert = entwurf.hsb.helligkeit * 100f,
-        bereich = 0f..100f,
-        onText = { ändern(entwurf.mitHsbText(helligkeit = it)) },
-        onSlider = { ändern(entwurf.mitHsb(helligkeit = it / 100f)) },
+        "Helligkeit", "%", entwurf.helligkeitText, entwurf.hsb.helligkeit * 100f, 0f..100f,
+        { ändern(entwurf.mitHsbText(helligkeit = it)) },
+        { ändern(entwurf.mitHsb(helligkeit = it / 100f)) },
     )
 }
 
@@ -354,26 +312,22 @@ private fun HsbKanal(
     text: String,
     sliderWert: Float,
     bereich: ClosedFloatingPointRange<Float>,
-    onText: (String) -> Unit,
-    onSlider: (Float) -> Unit,
+    textÄndern: (String) -> Unit,
+    sliderÄndern: (Float) -> Unit,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
             value = text,
-            onValueChange = { eingabe ->
-                onText(eingabe.filter { it.isDigit() || it == '.' }.take(6))
-            },
+            onValueChange = { eingabe -> textÄndern(eingabe.filter { it.isDigit() || it == '.' }.take(6)) },
             label = { Text("$titel $einheit") },
             singleLine = true,
             modifier = Modifier.width(130.dp),
         )
         Slider(
             value = sliderWert.coerceIn(bereich.start, bereich.endInclusive),
-            onValueChange = onSlider,
+            onValueChange = sliderÄndern,
             valueRange = bereich,
-            modifier = Modifier
-                .weight(1f)
-                .semantics { contentDescription = "$titel $einheit" },
+            modifier = Modifier.weight(1f).semantics { contentDescription = "$titel $einheit" },
         )
     }
 }
