@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.IntSize
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsFenster
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphGröße
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
@@ -109,5 +110,37 @@ class KartenGeometrieTest {
             assertTrue(punkt.x in geometrie.umhüllung.left..geometrie.umhüllung.right)
             assertTrue(punkt.y in geometrie.umhüllung.top..geometrie.umhüllung.bottom)
         }
+    }
+
+    @Test fun vorschauVomAusgangBehältDenFestenAnschlussAlsQuelle() {
+        val fest = Offset(20f, 30f)
+        val zeiger = Offset(240f, 150f)
+
+        val endpunkte = normalisiereVerbindungsVorschauEndpunkte(fest, zeiger, AnschlussRichtung.Ausgang)
+
+        assertEquals(fest, endpunkte.quelle)
+        assertEquals(zeiger, endpunkte.ziel)
+    }
+
+    @Test fun vorschauVomEingangZeichnetDenZeigerAlsVorläufigeQuelle() {
+        val eingang = Offset(240f, 150f)
+        val zeiger = Offset(20f, 30f)
+
+        val endpunkte = normalisiereVerbindungsVorschauEndpunkte(eingang, zeiger, AnschlussRichtung.Eingang)
+
+        assertEquals(zeiger, endpunkte.quelle)
+        assertEquals(eingang, endpunkte.ziel)
+        val geometrie = berechneVerbindungsGeometrie(endpunkte.quelle, endpunkte.ziel, 72f)
+        assertTrue(geometrie.kontrollpunkt1.x > geometrie.start.x)
+        assertTrue(geometrie.kontrollpunkt2.x < geometrie.ende.x)
+    }
+
+    @Test fun unbekannteRichtungFälltDeterministischAufAusgangsrichtungZurück() {
+        val fest = Offset(10f, 10f)
+        val zeiger = Offset(40f, 40f)
+
+        val endpunkte = normalisiereVerbindungsVorschauEndpunkte(fest, zeiger, null)
+
+        assertEquals(VerbindungsVorschauEndpunkte(fest, zeiger), endpunkte)
     }
 }
