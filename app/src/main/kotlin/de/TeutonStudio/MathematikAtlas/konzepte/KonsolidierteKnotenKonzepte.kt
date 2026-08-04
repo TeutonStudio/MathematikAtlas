@@ -18,6 +18,7 @@ import de.TeutonStudio.MathematikKnoten.MengenKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_OPERATOR
 import de.TeutonStudio.MathematikKnoten.ZahlenRechnerKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.istZahlenRechnerFormel
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal fun konzeptFürKonsolidiertenKnoten(
@@ -144,6 +145,8 @@ private fun fehlendesKartenKonzept(
 )
 
 private fun zahlenRechnerKonzept(knoten: KnotenDaten): KonzeptDefinition {
+    if (istZahlenRechnerFormel(knoten)) return zahlenRechnerFormelKonzept(knoten)
+
     val operator = UniversellerZahlenOperator.vonId(knoten.parameter[ZAHLENRECHNER_OPERATOR])
     val vorlage = ZahlenRechnerKnotenVorlagen.alle.first {
         UniversellerZahlenOperator.vonId(it.standardParameter[ZAHLENRECHNER_OPERATOR]) == operator

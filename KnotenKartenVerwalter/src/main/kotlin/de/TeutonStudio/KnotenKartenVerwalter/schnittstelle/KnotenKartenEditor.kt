@@ -666,7 +666,7 @@ private fun KnotenDarstellung(
                 beiInspektorÖffnen()
             },
             modifier = Modifier
-                .align(Alignment.TopStart)
+                .align(Alignment.TopEnd)
                 .size(40.dp)
                 .semantics { contentDescription = "Inspektor öffnen" },
         ) {

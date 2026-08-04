@@ -44,7 +44,6 @@ internal fun LatexFormelParser.parseBefehl(): FormelAusdruck {
     }
 }
 
-
 internal fun LatexFormelParser.parseBetrag(): FormelAusdruck {
     erwarte('|')
     val innen = parseSumme()
@@ -83,13 +82,16 @@ internal fun LatexFormelParser.parseOperatorname(): FormelAusdruck {
 
 internal fun LatexFormelParser.parseFunktion(operatorId: String): FormelAusdruck {
     leerraum()
-    val argumente = if (position < text.length && text[position] == '(') {
-        position++
-        parseArgumentListe(')')
-    } else if (position < text.length && text[position] == '{') {
-        listOf(parseGruppe())
-    } else {
-        listOf(parsePrimaer())
+    val argumente = when {
+        position < text.length && text[position] == '(' -> {
+            position++
+            parseArgumentListe(')')
+        }
+        position < text.length && text[position] == '{' -> {
+            position++
+            parseArgumentListe('}')
+        }
+        else -> listOf(parsePrimaer())
     }
     val rollen = operatorRollen(operatorId, argumente.size)
     return operation(operatorId, argumente.mapIndexed { index, argument -> rollen[index] to argument })
@@ -187,6 +189,8 @@ internal val funktionsBefehle = mapOf(
     "ln" to "zahl.ln",
     "log" to "zahl.log10",
     "exp" to "zahl.exp",
+    "min" to "zahl.minimum",
+    "max" to "zahl.maximum",
 )
 
 internal val funktionsNamen = funktionsBefehle + mapOf(
