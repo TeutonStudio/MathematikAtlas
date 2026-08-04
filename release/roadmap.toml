@@ -642,3 +642,15 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.menge", "mathematik.vektorrechner"]
 reason = "Führt einen einheitlichen Mengenknoten mit versionsfesten eigenen Karten ein, macht den Vektorrechner separat erzeugbar und konsolidiert Zahlenrechner-, Skalarprodukt- und Einheitsvektorvarianten mit verlustfreier Migration."
+
+[[releases]]
+version = "2.24.0"
+title = "Skalarprodukte und Begriffszertifikate"
+roadmap = "v2.24.x Lineare Algebra und zertifizierte Definitionskarten"
+status = "released"
+previous_release = "2.23.0"
+branch = "samai/v2.24.0-skalarprodukt"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.begriff.skalarprodukt"]
+reason = "Führt einen separat erzeugbaren Begriffsknoten für Skalarprodukt-Zertifikate ein, vervollständigt das Standardskalarprodukt für komplexe und quaternionische Skalare und erlaubt ausschließlich versionsfeste, nachgewiesene Karten als benutzerdefinierte Definitionen."
