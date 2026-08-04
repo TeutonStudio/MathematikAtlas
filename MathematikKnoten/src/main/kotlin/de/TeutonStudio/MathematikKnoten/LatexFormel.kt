@@ -19,6 +19,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 
+private const val PMATRIX_BEGINN = "\\begin{pmatrix}"
+private const val PMATRIX_ENDE = "\\end{pmatrix}"
+
 internal data class LatexMatrixFormel(
     val vorher: String,
     val zeilen: List<List<String>>,
@@ -45,12 +48,10 @@ internal fun entferneLatexDisplayBegrenzer(latex: String): String {
 
 internal fun analysiereLatexMatrix(latex: String): LatexMatrixAnalyse {
     val bereinigt = entferneLatexDisplayBegrenzer(latex)
-    val beginnToken = "\\begin{pmatrix}"
-    val endeToken = "\\end{pmatrix}"
-    val beginn = bereinigt.indexOf(beginnToken)
+    val beginn = bereinigt.indexOf(PMATRIX_BEGINN)
     if (beginn < 0) return LatexMatrixAnalyse.KeineMatrix
-    val inhaltStart = beginn + beginnToken.length
-    val ende = bereinigt.indexOf(endeToken, startIndex = inhaltStart)
+    val inhaltStart = beginn + PMATRIX_BEGINN.length
+    val ende = findePassendesPmatrixEnde(bereinigt, inhaltStart)
     if (ende < 0) {
         return LatexMatrixAnalyse.Fehler(
             diagnose = "Die Matrix besitzt kein \\end{pmatrix}.",
@@ -58,12 +59,6 @@ internal fun analysiereLatexMatrix(latex: String): LatexMatrixAnalyse {
         )
     }
     val inhalt = bereinigt.substring(inhaltStart, ende)
-    if (beginnToken in inhalt || endeToken in inhalt) {
-        return LatexMatrixAnalyse.Fehler(
-            diagnose = "Verschachtelte Matrixumfelder werden noch nicht dargestellt.",
-            fallback = bereinigt,
-        )
-    }
     val zerlegt = zerlegeLatexMatrixInhalt(inhalt)
     if (zerlegt.fehler != null) {
         return LatexMatrixAnalyse.Fehler(zerlegt.fehler, bereinigt)
@@ -80,8 +75,8 @@ internal fun analysiereLatexMatrix(latex: String): LatexMatrixAnalyse {
             fallback = bereinigt,
         )
     }
-    val nachherStart = ende + endeToken.length
-    if (bereinigt.indexOf(beginnToken, startIndex = nachherStart) >= 0) {
+    val nachherStart = ende + PMATRIX_ENDE.length
+    if (bereinigt.indexOf(PMATRIX_BEGINN, startIndex = nachherStart) >= 0) {
         return LatexMatrixAnalyse.Fehler(
             diagnose = "Mehrere Matrixumfelder in einer Display-Formel werden noch nicht unterstützt.",
             fallback = bereinigt,
@@ -96,6 +91,26 @@ internal fun analysiereLatexMatrix(latex: String): LatexMatrixAnalyse {
     )
 }
 
+/** Findet das Ende des äußeren pmatrix-Umfelds, nicht das erste Ende einer inneren Matrix. */
+private fun findePassendesPmatrixEnde(text: String, inhaltStart: Int): Int {
+    var tiefe = 1
+    var position = inhaltStart
+    while (position < text.length) {
+        val nächsterBeginn = text.indexOf(PMATRIX_BEGINN, startIndex = position)
+        val nächstesEnde = text.indexOf(PMATRIX_ENDE, startIndex = position)
+        if (nächstesEnde < 0) return -1
+        if (nächsterBeginn >= 0 && nächsterBeginn < nächstesEnde) {
+            tiefe++
+            position = nächsterBeginn + PMATRIX_BEGINN.length
+        } else {
+            tiefe--
+            if (tiefe == 0) return nächstesEnde
+            position = nächstesEnde + PMATRIX_ENDE.length
+        }
+    }
+    return -1
+}
+
 private data class MatrixZerlegung(
     val zeilen: List<List<String>>,
     val fehler: String? = null,
@@ -106,6 +121,7 @@ private fun zerlegeLatexMatrixInhalt(inhalt: String): MatrixZerlegung {
     var zeile = mutableListOf<String>()
     val zelle = StringBuilder()
     var gruppenTiefe = 0
+    var matrixTiefe = 0
     var position = 0
 
     fun zelleAbschließen() {
@@ -122,6 +138,19 @@ private fun zerlegeLatexMatrixInhalt(inhalt: String): MatrixZerlegung {
     while (position < inhalt.length) {
         val zeichen = inhalt[position]
         when {
+            inhalt.startsWith(PMATRIX_BEGINN, position) -> {
+                matrixTiefe++
+                zelle.append(PMATRIX_BEGINN)
+                position += PMATRIX_BEGINN.length
+            }
+            inhalt.startsWith(PMATRIX_ENDE, position) -> {
+                if (matrixTiefe == 0) {
+                    return MatrixZerlegung(emptyList(), "Unerwartetes \\end{pmatrix} innerhalb einer Matrixzelle.")
+                }
+                matrixTiefe--
+                zelle.append(PMATRIX_ENDE)
+                position += PMATRIX_ENDE.length
+            }
             zeichen == '{' -> {
                 gruppenTiefe++
                 zelle.append(zeichen)
@@ -133,11 +162,15 @@ private fun zerlegeLatexMatrixInhalt(inhalt: String): MatrixZerlegung {
                 zelle.append(zeichen)
                 position++
             }
-            zeichen == '&' && gruppenTiefe == 0 -> {
+            zeichen == '&' && gruppenTiefe == 0 && matrixTiefe == 0 -> {
                 zelleAbschließen()
                 position++
             }
-            zeichen == '\\' && position + 1 < inhalt.length && inhalt[position + 1] == '\\' && gruppenTiefe == 0 -> {
+            zeichen == '\\' &&
+                position + 1 < inhalt.length &&
+                inhalt[position + 1] == '\\' &&
+                gruppenTiefe == 0 &&
+                matrixTiefe == 0 -> {
                 zeileAbschließen()
                 position += 2
                 while (position < inhalt.length && inhalt[position].isWhitespace()) position++
@@ -149,6 +182,7 @@ private fun zerlegeLatexMatrixInhalt(inhalt: String): MatrixZerlegung {
         }
     }
     if (gruppenTiefe != 0) return MatrixZerlegung(emptyList(), "Eine Gruppe innerhalb der Matrix ist nicht geschlossen.")
+    if (matrixTiefe != 0) return MatrixZerlegung(emptyList(), "Eine verschachtelte Matrix ist nicht geschlossen.")
     zeileAbschließen()
     return MatrixZerlegung(zeilen)
 }
@@ -156,7 +190,7 @@ private fun zerlegeLatexMatrixInhalt(inhalt: String): MatrixZerlegung {
 /**
  * Display-Renderer für mehrzeilige mathematische Strukturen.
  * Gewöhnliche Formeln und `cases` werden weiterhin an den einzeiligen Teilparser delegiert;
- * `pmatrix` erhält dagegen ein echtes Raster aus getrennten Zellen.
+ * `pmatrix` erhält dagegen ein echtes Raster aus getrennten, rekursiv renderbaren Zellen.
  */
 @Composable
 fun LatexFormel(
@@ -233,7 +267,7 @@ private fun LatexMatrixRaster(zeilen: List<List<String>>, style: TextStyle) {
             zeilen.forEach { zeile ->
                 zeile.forEach { zelle ->
                     Box(Modifier.padding(horizontal = 1.dp)) {
-                        LatexText(zelle, style = style)
+                        LatexFormel(zelle, style = style)
                     }
                 }
             }
