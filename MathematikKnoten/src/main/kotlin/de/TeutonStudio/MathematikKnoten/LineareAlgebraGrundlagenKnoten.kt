@@ -77,7 +77,9 @@ object LineareAlgebraGrundlagenKnotenVorlagen {
         ),
     )
 
-    val alle = listOf(Vektorraum, LineareAbbildung)
+    val alle = listOf(Vektorraum, LineareAbbildung) +
+        SkalarproduktKnotenVorlagen.alle +
+        StrukturFormelRechnerVorlagen.alle
 }
 
 internal fun MathematikAuswerterRegister.registriereLineareAlgebraGrundlagen() {
