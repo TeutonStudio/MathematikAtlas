@@ -16,6 +16,7 @@ object ZahlenRechnerKonzept {
         beschreibung = "Universeller Rechner für Zahlenoperatoren mit operatorabhängigen Anschlüssen, Definitionsbereichen und Formeldarstellung.",
         vorlagen = vorlagen.filter(::passt),
         generatorId = "konzeptkarte.zahlenrechner",
+        assetDatei = "zahlenrechner-v1.json",
         zusätzlicheSuchbegriffe = setOf("CAS", "Formel", "Zahlenoperator", "Rechenoperation"),
     )
 }
