@@ -7,7 +7,8 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
 
 object KonzeptKnotenRegister {
     fun erstelle(vorlagen: List<KnotenVorlage>): List<WissensEintrag> {
-        val offen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId).toMutableList()
+        val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId)
+        val offen = eindeutigeVorlagen.toMutableList()
         val spezialisiert = buildList {
             entnehme(offen, ZahlenRechnerKonzept::passt)?.let { add(ZahlenRechnerKonzept.erstelle(it)) }
             entnehme(offen, TensorRechnerKonzept::passt)?.let { add(TensorRechnerKonzept.erstelle(it)) }
@@ -17,7 +18,7 @@ object KonzeptKnotenRegister {
         }
         val alle = (spezialisiert + GenerischeKonzeptKnoten.erstelle(offen) + GeplanteKonzepte.alle)
             .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }.thenBy { it.titel }.thenBy { it.id.wert })
-        val fehler = validierungsFehler(alle, vorlagen)
+        val fehler = validierungsFehler(alle, eindeutigeVorlagen)
         require(fehler.isEmpty()) { fehler.joinToString(prefix = "Ungültiges Konzeptknoten-Register:\n- ", separator = "\n- ") }
         return alle
     }
@@ -54,7 +55,8 @@ object KonzeptKnotenRegister {
             }
         }
 
-        val erwarteteVarianten = vorlagen.map(KnotenVorlage::stabileVariantenId)
+        val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId)
+        val erwarteteVarianten = eindeutigeVorlagen.map(KnotenVorlage::stabileVariantenId)
         val registrierteVarianten = einträge.flatMap { it.varianten }
         (erwarteteVarianten.toSet() - registrierteVarianten.toSet()).forEach {
             add("Fehlende Knotenvorlage: $it")
