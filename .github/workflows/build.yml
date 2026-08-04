@@ -27,6 +27,29 @@ jobs:
         run: ./gradlew --stacktrace test :app:assembleDebug
       - name: Restmigration anwenden
         run: python3 scripts/restmigration_bootstrap.py
+      - name: Explizites Konzeptregister für Teilinventare absichern
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/konzeptknoten/KonzeptKnotenRegister.kt')
+          text = path.read_text()
+          alt = '''        val alle = ExpliziteKonzeptKnoten.dateien
+            .map { datei -> datei.erstelle(eindeutigeVorlagen) }
+'''
+          neu = '''        val vorhandeneVarianten = eindeutigeVorlagen
+            .map(KnotenVorlage::stabileVariantenId)
+            .toSet()
+        val alle = ExpliziteKonzeptKnoten.dateien
+            .filter { datei ->
+                datei.varianten.isEmpty() || datei.varianten.all(vorhandeneVarianten::contains)
+            }
+            .map { datei -> datei.erstelle(eindeutigeVorlagen) }
+'''
+          if alt not in text:
+              raise SystemExit('Konzeptregister-Migrationsmuster fehlt')
+          path.write_text(text.replace(alt, neu, 1))
+          PY
       - name: Nullable Kartenreferenz eindeutig binden
         run: |
           python3 - <<'PY'
