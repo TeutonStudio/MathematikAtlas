@@ -20,3 +20,10 @@ jobs:
         run: python3 scripts/pruefe_architektur.py
       - name: Bauen und testen
         run: ./gradlew --stacktrace test :app:assembleDebug
+      - name: Restmigration-Inventar hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: restmigration-export
+          path: build/restmigration-export
+          if-no-files-found: error
+          retention-days: 1
