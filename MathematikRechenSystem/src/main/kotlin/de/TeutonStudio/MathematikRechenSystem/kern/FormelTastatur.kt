@@ -50,13 +50,14 @@ object FormelTastatur {
                 FormelTastaturTaste("e", "e", FormelTastenKategorie.KONSTANTEN, literal = EulerscheZahl),
             )
 
-    private fun standardTaste(operator: UniversellerZahlenOperator): FormelTastaturTaste = operator(
-        id = operator.stabileId.substringAfterLast('.'),
-        beschriftung = operator.tastenBeschriftung(),
-        kategorie = operator.tastenKategorie(),
-        operatorId = operator.stabileId,
-        rollen = operator.formelRollen().toTypedArray(),
-    )
+    private fun standardTaste(operator: UniversellerZahlenOperator): FormelTastaturTaste =
+        FormelTastaturTaste(
+            id = operator.stabileId.substringAfterLast('.'),
+            beschriftung = operator.tastenBeschriftung(),
+            kategorie = operator.tastenKategorie(),
+            operatorId = operator.stabileId,
+            argumentRollen = operator.formelRollen(),
+        )
 
     private fun UniversellerZahlenOperator.tastenKategorie(): FormelTastenKategorie = when (this) {
         UniversellerZahlenOperator.ADDITION,
