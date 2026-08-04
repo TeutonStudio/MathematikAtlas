@@ -11,6 +11,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenId
 import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenLadeErgebnis
 import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenLader
 import de.TeutonStudio.MathematikKnoten.konzeptkarte.KonzeptKartenQuelle
+import de.TeutonStudio.MathematikKnoten.konzeptkarte.ladeManifest
 
 internal class AndroidKonzeptKartenQuelle(context: Context) : KonzeptKartenQuelle {
     private val assets = context.applicationContext.assets
@@ -31,8 +32,10 @@ internal fun enzyklopädieKonzeptFürKnoten(
     val asset = wissen.karten.filterIsInstance<WissensKartenReferenz.Asset>()
         .singleOrNull { it.primär }
         ?: return null
+    val quelle = AndroidKonzeptKartenQuelle(context)
+    val manifest = quelle.ladeManifest().getOrNull() ?: return null
     val karte = when (
-        val ergebnis = KonzeptKartenLader(AndroidKonzeptKartenQuelle(context)).lade(KonzeptKartenId(asset.id))
+        val ergebnis = KonzeptKartenLader(quelle, manifest).lade(KonzeptKartenId(asset.id))
     ) {
         is KonzeptKartenLadeErgebnis.Erfolg -> ergebnis.karte
         is KonzeptKartenLadeErgebnis.Fehler -> return null
