@@ -138,15 +138,15 @@ class ProfilFarbEntwurfTest {
     }
 
     @Test
-    fun `unvollstaendige Dezimal und Vorzeicheneingaben aendern die Vorschau nicht`() {
+    fun `unvollstaendige Kanal und Vorzeicheneingaben aendern die Vorschau nicht`() {
         val start = rgb("#336699")
         val minus = FarbEntwurf.von(start, FarbEingabeModus.LAB).mitLabText(a = "-")
-        val komma = FarbEntwurf.von(start, FarbEingabeModus.HSL).mitHslText(helligkeit = "12,")
+        val leer = FarbEntwurf.von(start, FarbEingabeModus.HSL).mitHslText(helligkeit = "")
 
         assertEquals(start, minus.kanonisch)
-        assertEquals(start, komma.kanonisch)
+        assertEquals(start, leer.kanonisch)
         assertIs<FarbEingabeFehler.UnvollstaendigeEingabe>(minus.fehler)
-        assertIs<FarbEingabeFehler.UnvollstaendigeEingabe>(komma.fehler)
+        assertIs<FarbEingabeFehler.UnvollstaendigeEingabe>(leer.fehler)
     }
 
     @Test
