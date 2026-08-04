@@ -27,6 +27,22 @@ jobs:
         run: ./gradlew --stacktrace test :app:assembleDebug
       - name: Restmigration anwenden
         run: python3 scripts/restmigration_bootstrap.py
+      - name: Nullable Kartenreferenz eindeutig binden
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/konzepte/KonsolidierteKnotenKonzepte.kt')
+          text = path.read_text()
+          alt = '''    if (knoten.art == MENGEN_KNOTEN_ART && knoten.kartenVerweis != null) {
+              val verweis = knoten.kartenVerweis
+          '''
+          neu = '''    if (knoten.art == MENGEN_KNOTEN_ART) {
+              val verweis = knoten.kartenVerweis ?: return null
+          '''
+          if alt not in text:
+              raise SystemExit('Kartenverweis-Migrationsmuster fehlt')
+          path.write_text(text.replace(alt, neu))
+          PY
       - name: Migrierte Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
       - name: Migrierten Zustand bauen und testen
