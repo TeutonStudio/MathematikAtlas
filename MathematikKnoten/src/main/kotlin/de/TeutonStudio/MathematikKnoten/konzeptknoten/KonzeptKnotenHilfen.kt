@@ -26,6 +26,11 @@ internal fun KnotenVorlage.stabileVariantenId(): VariantenId = VariantenId(
     },
 )
 
+private fun KnotenVorlage.wissensBeschreibung(): String =
+    beschreibung.trim().ifBlank {
+        "Mathematisches Konzept „$name“ der Knotenart $art."
+    }
+
 internal fun einzelnesVorlagenKonzept(
     vorlage: KnotenVorlage,
     id: WissensId = WissensId(vorlage.stabileKonzeptId()),
@@ -33,7 +38,7 @@ internal fun einzelnesVorlagenKonzept(
 ): WissensEintrag = WissensEintrag(
     id = id,
     titel = vorlage.name,
-    kurzbeschreibung = vorlage.beschreibung,
+    kurzbeschreibung = vorlage.wissensBeschreibung(),
     fachPfade = FachKatalog.fürVorlage(
         art = vorlage.art,
         name = vorlage.name,
@@ -44,7 +49,7 @@ internal fun einzelnesVorlagenKonzept(
         add(vorlage.art)
         add(vorlage.name)
         add(vorlage.kategorie)
-        add(vorlage.beschreibung)
+        add(vorlage.wissensBeschreibung())
         addAll(vorlage.standardParameter.keys)
         addAll(vorlage.standardParameter.values)
         addAll(vorlage.anschlüsse.map { it.name })
@@ -106,7 +111,7 @@ internal fun gruppiertesVorlagenKonzept(
                 add(vorlage.art)
                 add(vorlage.name)
                 add(vorlage.kategorie)
-                add(vorlage.beschreibung)
+                add(vorlage.wissensBeschreibung())
                 addAll(vorlage.standardParameter.keys)
                 addAll(vorlage.standardParameter.values)
                 addAll(vorlage.anschlüsse.map { it.name })
