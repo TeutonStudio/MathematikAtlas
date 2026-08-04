@@ -1,0 +1,70 @@
+{
+  "formatVersion": 7,
+  "id": "konzept.tensorrechner",
+  "name": "Definition Tensorrechner",
+  "version": 1,
+  "erstelltAm": 0,
+  "archiviert": false,
+  "ansicht": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+  "knoten": [
+    {
+      "id": "tensorrechner-links",
+      "art": "konzept.eingang",
+      "name": "links",
+      "position": { "x": 30.0, "y": 45.0 },
+      "größe": { "breite": 220.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.tensor", "rolle": "links" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "tensorrechner-links-wert", "name": "wert", "richtung": "Ausgang", "kante": "Rechts", "art": "mathematik.tensor", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    },
+    {
+      "id": "tensorrechner-rechts",
+      "art": "konzept.eingang",
+      "name": "rechts",
+      "position": { "x": 30.0, "y": 175.0 },
+      "größe": { "breite": 220.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.tensor", "rolle": "rechts" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "tensorrechner-rechts-wert", "name": "wert", "richtung": "Ausgang", "kante": "Rechts", "art": "mathematik.tensor", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    },
+    {
+      "id": "tensorrechner-operator",
+      "art": "konzept.regel",
+      "name": "Tensoroperator",
+      "position": { "x": 350.0, "y": 80.0 },
+      "größe": { "breite": 440.0, "höhe": 180.0 },
+      "parameter": {
+        "regel": "Der gewählte Tensoroperator legt Formbedingungen, Achsenregeln, Materialisierungsbudget und Ausgabetyp fest.",
+        "definition": "(A,B)\\mapsto A\\circ B"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "tensorrechner-operator-links", "name": "links", "richtung": "Eingang", "kante": "Links", "art": "mathematik.tensor", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false },
+        { "id": "tensorrechner-operator-rechts", "name": "rechts", "richtung": "Eingang", "kante": "Links", "art": "mathematik.tensor", "reihenfolge": 1, "kannSichErweitern": false, "dynamischErzeugt": false },
+        { "id": "tensorrechner-operator-wert", "name": "wert", "richtung": "Ausgang", "kante": "Rechts", "art": "mathematik.tensor", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    },
+    {
+      "id": "tensorrechner-ergebnis",
+      "art": "konzept.ausgang",
+      "name": "tensor",
+      "position": { "x": 870.0, "y": 125.0 },
+      "größe": { "breite": 220.0, "höhe": 92.0 },
+      "parameter": { "typ": "mathematik.tensor", "rolle": "wert" },
+      "eigenschaften": {},
+      "anschlüsse": [
+        { "id": "tensorrechner-ergebnis-wert", "name": "wert", "richtung": "Eingang", "kante": "Links", "art": "mathematik.tensor", "reihenfolge": 0, "kannSichErweitern": false, "dynamischErzeugt": false }
+      ]
+    }
+  ],
+  "verbindungen": [
+    { "id": "tensorrechner-kante-links", "von": { "knotenId": "tensorrechner-links", "anschlussId": "tensorrechner-links-wert" }, "zu": { "knotenId": "tensorrechner-operator", "anschlussId": "tensorrechner-operator-links" } },
+    { "id": "tensorrechner-kante-rechts", "von": { "knotenId": "tensorrechner-rechts", "anschlussId": "tensorrechner-rechts-wert" }, "zu": { "knotenId": "tensorrechner-operator", "anschlussId": "tensorrechner-operator-rechts" } },
+    { "id": "tensorrechner-kante-wert", "von": { "knotenId": "tensorrechner-operator", "anschlussId": "tensorrechner-operator-wert" }, "zu": { "knotenId": "tensorrechner-ergebnis", "anschlussId": "tensorrechner-ergebnis-wert" } }
+  ],
+  "visuelleGruppen": []
+}
