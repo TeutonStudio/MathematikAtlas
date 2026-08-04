@@ -41,8 +41,12 @@ object MatrixdiagonaleKnotenVorlagen {
         ),
     )
 
-    val alle = listOf(Matrixdiagonale) +
-        SpurKnotenVorlagen.alle +
+    /**
+     * Sichtbare Vorlagen des Erstellen-Dialogs. Vorkonfigurierte Varianten
+     * bestehender Rechnerfamilien bleiben in ihren Definitionskatalogen und
+     * werden nicht als zusätzliche Knoten angeboten.
+     */
+    val alle = listOf(Matrixdiagonale, SpurKnotenVorlagen.Spur) +
         StrukturRechnerKnotenVorlagen.alle.filterNot { it.art in historischeSkalarproduktArten } +
         EinheitsvektorKnotenVorlagen.alle +
         VektorRechnerKnotenVorlagen.standard
