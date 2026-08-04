@@ -22,15 +22,15 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import textwrap
 
           workflow = Path('.github/workflows/agent-fix-auswerten-standardwerte.yml').read_text(encoding='utf-8')
           marker_start = '      - name: Verantwortungen trennen und Regressionstests ergänzen\n        shell: python\n        run: |\n'
           marker_end = '\n      - name: Patch committen\n'
           if workflow.count(marker_start) != 1 or workflow.count(marker_end) != 1:
               raise SystemExit('Patchskript konnte nicht eindeutig aus dem Workflow gelesen werden.')
-          skript = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
-          exec(compile(textwrap.dedent(skript), '<auswerten-patch>', 'exec'))
+          roh = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
+          skript = '\n'.join(zeile[10:] if zeile.startswith('          ') else zeile for zeile in roh.splitlines())
+          exec(compile(skript, '<auswerten-patch>', 'exec'))
 
           Path('.github/workflows/agent-pr-fix-trigger.yml').unlink()
           trigger = Path('.github/auswerten-standardwerte-trigger')
