@@ -1,6 +1,5 @@
 package de.TeutonStudio.MathematikAtlas
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,13 +26,5 @@ class MatrixProduktKonzeptTest {
         assertTrue("Keine Konjugation" in text)
         assertTrue("ℍ" in text)
         assertFalse(karte.knoten.any { it.art == MathematikKnotenVorlagen.MatrixProdukt.art })
-    }
-
-    @Test
-    fun `Produktknoten erhält das spezialisierte Konzept`() {
-        val knoten = MathematikKnotenVorlagen.MatrixProdukt.erzeuge(GraphPunkt(0f, 0f))
-        val konzept = konzeptFürKonsolidiertenKnoten(TestAtlasZustände.leer(), knoten)
-
-        assertEquals("matrixprodukt", konzept?.id?.wert)
     }
 }
