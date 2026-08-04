@@ -41,29 +41,29 @@ class MathematikKnotenRenderer(
                 Text(methode.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
             }
             when {
-                knoten.art == MENGENKONSTRUKTOR_ART -> LatexText(
+                knoten.art == MENGENKONSTRUKTOR_ART -> LatexFormel(
                     mengenkonstruktorFormel(knoten),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                knoten.art == "mathematik.variable" -> LatexText(
+                knoten.art == "mathematik.variable" -> LatexFormel(
                     variablenFormel(knoten),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                knoten.art == "mathematik.addition" -> LatexText(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.extremwert" -> LatexText(extremwertFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.vereinigung" -> LatexText(operatorFormel(knoten, ergebnis, " \\cup "), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.schnitt" -> LatexText(operatorFormel(knoten, ergebnis, " \\cap "), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.kartesischesProdukt" -> LatexText(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
-                knoten.art in iterativeArten -> LatexText(iterationsFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
-                knoten.art == "mathematik.termZuMethode" -> LatexText(
+                knoten.art == "mathematik.addition" -> LatexFormel(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.extremwert" -> LatexFormel(extremwertFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.vereinigung" -> LatexFormel(operatorFormel(knoten, ergebnis, " \\cup "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.schnitt" -> LatexFormel(operatorFormel(knoten, ergebnis, " \\cap "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.kartesischesProdukt" -> LatexFormel(operatorFormel(knoten, ergebnis, " \\times "), style = MaterialTheme.typography.bodyLarge)
+                knoten.art in iterativeArten -> LatexFormel(iterationsFormel(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
+                knoten.art == "mathematik.termZuMethode" -> LatexFormel(
                     termZuMethodeFormel(ergebnis),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> LatexText(
+                knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> LatexFormel(
                     objekt.zuLatex(),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                ausgabe != null -> LatexText(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)
+                ausgabe != null -> LatexFormel(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)
                 knoten.parameter.isNotEmpty() -> LatexText(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
             }
