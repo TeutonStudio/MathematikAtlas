@@ -1,9 +1,13 @@
 package de.TeutonStudio.MathematikKnoten.enzyklopädie
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenArtId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
+import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_OPERATOR
+import de.TeutonStudio.MathematikKnoten.ZahlenRechnerKnotenVorlagen
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechnerOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
@@ -26,15 +30,33 @@ data class OperatorStelligkeit(
     fun erlaubt(anzahl: Int): Boolean = anzahl >= mindestens && (höchstens == null || anzahl <= höchstens)
 }
 
+data class RechnerOperatorSignatur(
+    val argumentRollen: List<String>,
+    val eingangsArten: List<AnschlussArtId>,
+    val stelligkeit: OperatorStelligkeit = OperatorStelligkeit(argumentRollen.size),
+    val beschreibung: String? = null,
+) {
+    init {
+        require(argumentRollen.isNotEmpty() || stelligkeit.mindestens == 0)
+        require(argumentRollen.size == eingangsArten.size) {
+            "Argumentrollen und Anschlussarten einer Operatorsignatur müssen gleich lang sein."
+        }
+        require(argumentRollen.distinct().size == argumentRollen.size) {
+            "Argumentrollen einer Operatorsignatur müssen eindeutig sein."
+        }
+        require(stelligkeit.mindestens <= argumentRollen.size) {
+            "Die Mindeststelligkeit darf die beschriebenen Grundrollen nicht überschreiten."
+        }
+    }
+}
+
 data class RechnerOperatorEintrag(
     val stabileId: String,
     val familie: RechnerFamilienId,
     val knotenArt: KnotenArtId,
     val titel: String,
     val kategorie: String,
-    val argumentRollen: List<String>,
-    val stelligkeit: OperatorStelligkeit,
-    val eingangsArten: List<AnschlussArtId>,
+    val signaturen: List<RechnerOperatorSignatur>,
     val ausgangsArt: AnschlussArtId,
     val casVerfügbar: Boolean,
     val wissensId: WissensId,
@@ -44,9 +66,22 @@ data class RechnerOperatorEintrag(
         require(stabileId.isNotBlank())
         require(titel.isNotBlank())
         require(kategorie.isNotBlank())
-        require(argumentRollen.size >= stelligkeit.mindestens || stelligkeit.höchstens == null)
-        require(eingangsArten.isNotEmpty() || stelligkeit.mindestens == 0)
+        require(signaturen.isNotEmpty()) { "$stabileId benötigt mindestens eine Operatorsignatur." }
     }
+
+    val argumentRollen: List<String>
+        get() = signaturen.flatMap(RechnerOperatorSignatur::argumentRollen).distinct()
+
+    val eingangsArten: List<AnschlussArtId>
+        get() = signaturen.flatMap(RechnerOperatorSignatur::eingangsArten).distinct()
+
+    val stelligkeit: OperatorStelligkeit
+        get() = OperatorStelligkeit(
+            mindestens = signaturen.minOf { it.stelligkeit.mindestens },
+            höchstens = signaturen.map { it.stelligkeit.höchstens }.let { maxima ->
+                if (maxima.any { it == null }) null else maxima.filterNotNull().maxOrNull()
+            },
+        )
 }
 
 object RechnerFamilienKatalog {
@@ -54,16 +89,15 @@ object RechnerFamilienKatalog {
     val Tensorrechner = RechnerFamilienId("rechner.tensor")
 
     val zahlenOperatoren: List<RechnerOperatorEintrag> = UniversellerZahlenOperator.entries.map { operator ->
+        val vorlage = zahlenVorlage(operator)
         RechnerOperatorEintrag(
             stabileId = operator.stabileId,
             familie = Zahlenrechner,
             knotenArt = ZAHLENRECHNER_ART,
             titel = operator.titel,
             kategorie = zahlenKategorie(operator),
-            argumentRollen = zahlenRollen(operator),
-            stelligkeit = zahlenStelligkeit(operator),
-            eingangsArten = zahlenEingangsArten(operator),
-            ausgangsArt = MathematikAnschlussArten.Zahl.id,
+            signaturen = zahlenSignaturen(operator, vorlage),
+            ausgangsArt = vorlage.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.art,
             casVerfügbar = true,
             wissensId = WissensId("operator.${operator.stabileId}"),
         )
@@ -76,9 +110,7 @@ object RechnerFamilienKatalog {
             knotenArt = TensorRechner.KNOTEN_ART,
             titel = tensorTitel(operator),
             kategorie = tensorKategorie(operator),
-            argumentRollen = tensorRollen(operator),
-            stelligkeit = tensorStelligkeit(operator),
-            eingangsArten = tensorEingangsArten(operator),
+            signaturen = listOf(tensorSignatur(operator)),
             ausgangsArt = if (operator == TensorRechnerOperator.NORM) {
                 MathematikAnschlussArten.Zahl.id
             } else {
@@ -115,10 +147,90 @@ object RechnerFamilienKatalog {
         (erwarteteZahlenIds - zahlenIds).forEach { add("Fehlender Zahlenoperator: $it") }
         (zahlenIds - erwarteteZahlenIds).forEach { add("Unbekannter Zahlenoperator: $it") }
 
+        zahlenOperatoren.forEach { eintrag ->
+            val operator = UniversellerZahlenOperator.entries.single { it.stabileId == eintrag.stabileId }
+            val vorlage = zahlenVorlage(operator)
+            val eingänge = vorlage.anschlüsse
+                .filter { it.richtung == AnschlussRichtung.Eingang }
+                .associate { it.name to it.art }
+            eintrag.signaturen.forEach { signatur ->
+                signatur.argumentRollen.zip(signatur.eingangsArten).forEach { (rolle, art) ->
+                    if (eingänge[rolle] != art) {
+                        add("${eintrag.stabileId}: Signaturrolle $rolle/$art stimmt nicht mit der Knotenvorlage überein.")
+                    }
+                }
+            }
+            val ausgang = vorlage.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.art
+            if (eintrag.ausgangsArt != ausgang) {
+                add("${eintrag.stabileId}: Ausgang ${eintrag.ausgangsArt} stimmt nicht mit $ausgang überein.")
+            }
+        }
+
         val tensorIds = tensorOperatoren.map(RechnerOperatorEintrag::stabileId).toSet()
         val erwarteteTensorIds = TensorRechnerOperator.entries.map(TensorRechnerOperator::stabileId).toSet()
         (erwarteteTensorIds - tensorIds).forEach { add("Fehlender Tensoroperator: $it") }
         (tensorIds - erwarteteTensorIds).forEach { add("Unbekannter Tensoroperator: $it") }
+    }
+}
+
+private fun zahlenVorlage(operator: UniversellerZahlenOperator): KnotenVorlage =
+    ZahlenRechnerKnotenVorlagen.alle.single {
+        it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
+    }
+
+private fun zahlenSignaturen(
+    operator: UniversellerZahlenOperator,
+    vorlage: KnotenVorlage,
+): List<RechnerOperatorSignatur> {
+    val eingänge = vorlage.anschlüsse
+        .filter { it.richtung == AnschlussRichtung.Eingang }
+        .sortedBy { it.reihenfolge }
+
+    fun signatur(
+        namen: List<String>,
+        stelligkeit: OperatorStelligkeit = OperatorStelligkeit(namen.size),
+        beschreibung: String? = null,
+    ): RechnerOperatorSignatur {
+        val anschlüsse = namen.map { name -> eingänge.single { it.name == name } }
+        return RechnerOperatorSignatur(
+            argumentRollen = namen,
+            eingangsArten = anschlüsse.map { it.art },
+            stelligkeit = stelligkeit,
+            beschreibung = beschreibung,
+        )
+    }
+
+    return when (operator) {
+        UniversellerZahlenOperator.ADDITION,
+        UniversellerZahlenOperator.MULTIPLIKATION,
+        UniversellerZahlenOperator.MINIMUM,
+        UniversellerZahlenOperator.MAXIMUM,
+        -> listOf(
+            signatur(
+                namen = eingänge.take(2).map { it.name },
+                stelligkeit = OperatorStelligkeit(2, null),
+                beschreibung = "Mindestens zwei, über dynamische Anschlüsse beliebig viele Argumente.",
+            ),
+        )
+
+        UniversellerZahlenOperator.DIVISION -> listOf(
+            signatur(listOf("a", "b"), beschreibung = "Zähler und Nenner."),
+            signatur(listOf("a", "b", "c"), beschreibung = "Optionaler Ersatzwert für einen verschwindenden Nenner."),
+        )
+
+        UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
+        UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH,
+        -> listOf(
+            signatur(listOf("a", "b"), beschreibung = "Getrennte Komponenten."),
+            signatur(listOf("tupel"), beschreibung = "Gemeinsame Tupelkomponente."),
+        )
+
+        else -> listOf(
+            RechnerOperatorSignatur(
+                argumentRollen = eingänge.map { it.name },
+                eingangsArten = eingänge.map { it.art },
+            ),
+        )
     }
 }
 
@@ -166,60 +278,6 @@ private fun zahlenKategorie(operator: UniversellerZahlenOperator): String = when
     else -> "Funktionen"
 }
 
-private fun zahlenRollen(operator: UniversellerZahlenOperator): List<String> = when (operator) {
-    UniversellerZahlenOperator.ADDITION,
-    UniversellerZahlenOperator.SUBTRAKTION,
-    UniversellerZahlenOperator.MULTIPLIKATION,
-    UniversellerZahlenOperator.MINIMUM,
-    UniversellerZahlenOperator.MAXIMUM,
-    -> listOf("a", "b")
-
-    UniversellerZahlenOperator.DIVISION -> listOf("zähler", "nenner")
-    UniversellerZahlenOperator.POTENZ -> listOf("basis", "exponent")
-    UniversellerZahlenOperator.WURZEL -> listOf("radikand", "exponent")
-    UniversellerZahlenOperator.LOGARITHMUS -> listOf("basis", "argument")
-    UniversellerZahlenOperator.ITERIERTE_SUMME,
-    UniversellerZahlenOperator.ITERIERTES_PRODUKT,
-    -> listOf("methode", "indexmenge")
-
-    UniversellerZahlenOperator.INTEGRAL -> listOf("methode", "untereGrenze", "obereGrenze")
-    UniversellerZahlenOperator.DIFFERENTIAL -> listOf("methode", "variable")
-    UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> listOf("radius", "winkel")
-    UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH -> listOf("realteil", "imaginärteil")
-    UniversellerZahlenOperator.MODULO -> listOf("dividend", "modul")
-    else -> listOf("argument")
-}
-
-private fun zahlenStelligkeit(operator: UniversellerZahlenOperator): OperatorStelligkeit = when (operator) {
-    UniversellerZahlenOperator.ADDITION,
-    UniversellerZahlenOperator.MULTIPLIKATION,
-    UniversellerZahlenOperator.MINIMUM,
-    UniversellerZahlenOperator.MAXIMUM,
-    -> OperatorStelligkeit(2, null)
-
-    UniversellerZahlenOperator.INTEGRAL -> OperatorStelligkeit(3)
-    else -> OperatorStelligkeit(zahlenRollen(operator).size)
-}
-
-private fun zahlenEingangsArten(operator: UniversellerZahlenOperator): List<AnschlussArtId> = when (operator) {
-    UniversellerZahlenOperator.ITERIERTE_SUMME,
-    UniversellerZahlenOperator.ITERIERTES_PRODUKT,
-    -> listOf(MathematikAnschlussArten.Methode.id, MathematikAnschlussArten.Menge.id)
-
-    UniversellerZahlenOperator.INTEGRAL -> listOf(
-        MathematikAnschlussArten.Methode.id,
-        MathematikAnschlussArten.Zahl.id,
-        MathematikAnschlussArten.Zahl.id,
-    )
-
-    UniversellerZahlenOperator.DIFFERENTIAL -> listOf(
-        MathematikAnschlussArten.Methode.id,
-        MathematikAnschlussArten.Zahl.id,
-    )
-
-    else -> List(zahlenRollen(operator).size.coerceAtLeast(1)) { MathematikAnschlussArten.Zahl.id }
-}
-
 private fun tensorTitel(operator: TensorRechnerOperator): String = when (operator) {
     TensorRechnerOperator.ADDITION -> "Tensoraddition"
     TensorRechnerOperator.SUBTRAKTION -> "Tensorsubtraktion"
@@ -252,25 +310,23 @@ private fun tensorKategorie(operator: TensorRechnerOperator): String = when (ope
     TensorRechnerOperator.NORM -> "Tensoranalyse"
 }
 
-private fun tensorRollen(operator: TensorRechnerOperator): List<String> = when (operator) {
+private fun tensorSignatur(operator: TensorRechnerOperator): RechnerOperatorSignatur = when (operator) {
     TensorRechnerOperator.ADDITION,
     TensorRechnerOperator.SUBTRAKTION,
     TensorRechnerOperator.HADAMARD_PRODUKT,
     TensorRechnerOperator.TENSORPRODUKT,
-    -> listOf("links", "rechts")
-
-    TensorRechnerOperator.SKALARMULTIPLIKATION -> listOf("skalar", "tensor")
-    else -> listOf("tensor")
-}
-
-private fun tensorStelligkeit(operator: TensorRechnerOperator): OperatorStelligkeit =
-    OperatorStelligkeit(tensorRollen(operator).size)
-
-private fun tensorEingangsArten(operator: TensorRechnerOperator): List<AnschlussArtId> = when (operator) {
-    TensorRechnerOperator.SKALARMULTIPLIKATION -> listOf(
-        MathematikAnschlussArten.Zahl.id,
-        MathematikAnschlussArten.Tensor.id,
+    -> RechnerOperatorSignatur(
+        argumentRollen = listOf("links", "rechts"),
+        eingangsArten = listOf(MathematikAnschlussArten.Tensor.id, MathematikAnschlussArten.Tensor.id),
     )
 
-    else -> List(tensorRollen(operator).size) { MathematikAnschlussArten.Tensor.id }
+    TensorRechnerOperator.SKALARMULTIPLIKATION -> RechnerOperatorSignatur(
+        argumentRollen = listOf("skalar", "tensor"),
+        eingangsArten = listOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Tensor.id),
+    )
+
+    else -> RechnerOperatorSignatur(
+        argumentRollen = listOf("tensor"),
+        eingangsArten = listOf(MathematikAnschlussArten.Tensor.id),
+    )
 }
