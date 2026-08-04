@@ -47,6 +47,19 @@ class LatexFormelTest {
     }
 
     @Test
+    fun `verschachtelte Tupelmatrix bleibt eine einzelne äußere Zelle`() {
+        val innere = "\\begin{pmatrix}2 & 3 \\\\ 4 & 5\\end{pmatrix}"
+        val analyse = analysiereLatexMatrix(
+            "\\begin{pmatrix}1 & $innere & x\\end{pmatrix}",
+        )
+
+        val formel = assertIs<LatexMatrixAnalyse.Erfolg>(analyse).formel
+        assertEquals(1, formel.zeilen.size)
+        assertEquals(3, formel.zeilen.single().size)
+        assertEquals(innere, formel.zeilen.single()[1])
+    }
+
+    @Test
     fun `erhält Präfix Suffix und beide Display-Begrenzer`() {
         val dollar = assertIs<LatexMatrixAnalyse.Erfolg>(
             analysiereLatexMatrix("$$A=\\begin{pmatrix}1 & 2\\end{pmatrix}\\in M$$"),
