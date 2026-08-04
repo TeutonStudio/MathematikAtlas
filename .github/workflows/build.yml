@@ -4,49 +4,11 @@ on:
   push:
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   pruefen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'push' && github.ref_name || github.event.pull_request.head.sha }}
-      - name: Releaseeintrag v2.24.0 ergänzen
-        if: github.event_name == 'push' && github.ref_name == 'samai/v2.24.0-skalarprodukt' && github.actor != 'github-actions[bot]'
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path("release/roadmap.toml")
-          text = path.read_text(encoding="utf-8")
-          marker = '[[releases]]\nversion = "2.24.0"'
-          if marker not in text:
-              text = text.rstrip() + '''
-
-          [[releases]]
-          version = "2.24.0"
-          title = "Skalarprodukte und Begriffszertifikate"
-          roadmap = "v2.24.x Lineare Algebra und zertifizierte Definitionskarten"
-          status = "released"
-          previous_release = "2.23.0"
-          branch = "samai/v2.24.0-skalarprodukt"
-          kind = "feature"
-          version_axis = "y"
-          new_node_types = ["mathematik.begriff.skalarprodukt"]
-          reason = "Führt einen separat erzeugbaren Begriffsknoten für Skalarprodukt-Zertifikate ein, vervollständigt das Standardskalarprodukt für komplexe und quaternionische Skalare und erlaubt ausschließlich versionsfeste, nachgewiesene Karten als benutzerdefinierte Definitionen."
-          '''
-          path.write_text(text, encoding="utf-8")
-          PY
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add release/roadmap.toml
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(v2.24.0): add release roadmap entry"
-            git push origin HEAD:samai/v2.24.0-skalarprodukt
-          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
