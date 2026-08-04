@@ -1,7 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner
-import de.TeutonStudio.MathematikRechenSystem.knoten.MathematikAuswerterRegister
 
 /**
  * Hält den historischen Vektorrechner-Ausgang `skalar` kompatibel, während
