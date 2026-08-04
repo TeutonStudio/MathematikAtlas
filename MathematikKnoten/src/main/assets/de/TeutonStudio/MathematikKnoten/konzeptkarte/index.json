@@ -1,0 +1,10 @@
+{
+  "manifestVersion": 1,
+  "karten": [
+    { "id": "konzept.zahlkonstante", "datei": "zahlkonstante-v1.json", "formatVersion": 7 },
+    { "id": "konzept.mengenkonstante", "datei": "mengenkonstante-v1.json", "formatVersion": 7 },
+    { "id": "konzept.term-zu-methode", "datei": "term-zu-methode-v1.json", "formatVersion": 7 },
+    { "id": "konzept.zahlenrechner", "datei": "zahlenrechner-v1.json", "formatVersion": 7 },
+    { "id": "konzept.tensorrechner", "datei": "tensorrechner-v1.json", "formatVersion": 7 }
+  ]
+}
