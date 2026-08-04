@@ -59,5 +59,27 @@ class EnzyklopädieRegisterTest {
             TensorRechnerOperator.entries.map { it.stabileId }.toSet(),
             RechnerFamilienKatalog.tensorOperatoren.map { it.stabileId }.toSet(),
         )
+        assertEquals(null, RechnerFamilienKatalog.fürOperatorId("zahl.nicht-registriert"))
+    }
+
+    @Test
+    fun `alternative Signaturen werden vollständig beschrieben`() {
+        val division = assertNotNull(
+            RechnerFamilienKatalog.fürOperatorId(UniversellerZahlenOperator.DIVISION.stabileId),
+        )
+        assertEquals(
+            setOf(listOf("a", "b"), listOf("a", "b", "c")),
+            division.signaturen.map { it.argumentRollen }.toSet(),
+        )
+        assertEquals(2, division.stelligkeit.mindestens)
+        assertEquals(3, division.stelligkeit.höchstens)
+
+        val polar = assertNotNull(
+            RechnerFamilienKatalog.fürOperatorId(UniversellerZahlenOperator.KOMPLEX_AUS_POLAR.stabileId),
+        )
+        assertEquals(
+            setOf(listOf("a", "b"), listOf("tupel")),
+            polar.signaturen.map { it.argumentRollen }.toSet(),
+        )
     }
 }
