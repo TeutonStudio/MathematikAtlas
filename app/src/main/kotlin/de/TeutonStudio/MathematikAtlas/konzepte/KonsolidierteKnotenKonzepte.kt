@@ -12,6 +12,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.MathematikKnoten.MENGEN_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.MENGEN_KNOTEN_AUSWAHL
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MengenKnotenAuswahl
 import de.TeutonStudio.MathematikKnoten.MengenKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
@@ -25,6 +26,7 @@ internal fun konzeptFürKonsolidiertenKnoten(
 ): KonzeptDefinition? = when (knoten.art) {
     MENGEN_KNOTEN_ART -> mengenKnotenKonzept(zustand, knoten)
     ZAHLENRECHNER_ART -> zahlenRechnerKonzept(knoten)
+    MathematikKnotenVorlagen.MatrixProdukt.art -> matrixProduktKonzept()
     else -> null
 }
 

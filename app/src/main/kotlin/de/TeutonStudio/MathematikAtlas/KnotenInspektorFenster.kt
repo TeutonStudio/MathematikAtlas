@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.InspektorSichtbarkeit
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
@@ -21,11 +22,19 @@ private const val STANDARDWERT_PREFIX = "standardwert."
 
 @Composable
 internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
+    if (!InspektorSichtbarkeit.offen) return
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         val knoten = zustand.ausgewählterKnoten
         var knotenUmbenennenGeöffnet by remember(knoten?.id) { mutableStateOf(false) }
         Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Inspektor", style = MaterialTheme.typography.headlineSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text("Inspektor", modifier = Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                TextButton(onClick = InspektorSichtbarkeit::schließen) { Text("Schließen") }
+            }
             if (knoten == null) {
                 Text("Wähle einen Knoten oder eine Verbindung aus.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 zustand.editor.ausgewählteVerbindung?.let { id ->

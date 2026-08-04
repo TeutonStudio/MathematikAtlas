@@ -3,21 +3,30 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 import java.math.BigDecimal
 import java.math.BigInteger
 
+private data class FormelEditorMoment(
+    val wurzel: FormelAusdruck,
+    val cursor: FormelCursor,
+)
+
 /**
  * Transaktionaler, UI-neutraler Bearbeitungszustand für eine strukturierte Formel.
- * Auswahl und Historie beziehen sich auf stabile Ausdrucks-IDs.
+ * Ausdruckshistorie und Cursorzustand bleiben getrennt: Cursorbewegungen erzeugen
+ * keine Undo-Einträge, Ausdrucksmutationen sichern dagegen eine sinnvolle Position.
  */
 class FormelEditorZustand(
     start: FormelAusdruck = neuerFormelPlatzhalter("wurzel", "Ausdruck"),
 ) {
-    private val rueckgaengig = ArrayDeque<FormelAusdruck>()
-    private val wiederholen = ArrayDeque<FormelAusdruck>()
+    private val rueckgaengig = ArrayDeque<FormelEditorMoment>()
+    private val wiederholen = ArrayDeque<FormelEditorMoment>()
     private var idZaehler = 0
 
     var wurzel: FormelAusdruck = start
         private set
-    var auswahlId: String = start.ersterPlatzhalter()?.id ?: start.id
+    var cursor: FormelCursor = start.standardCursor()
         private set
+
+    /** Kompatible Auswahlprojektion für bestehende Aufrufer. */
+    val auswahlId: String get() = cursor.ausdrucksId
 
     val kannRueckgaengig: Boolean get() = rueckgaengig.isNotEmpty()
     val kannWiederholen: Boolean get() = wiederholen.isNotEmpty()
@@ -25,32 +34,64 @@ class FormelEditorZustand(
         get() = wurzel.platzhalter()
 
     fun waehle(ausdrucksId: String): Boolean {
-        if (wurzel.finde(ausdrucksId) == null) return false
-        auswahlId = ausdrucksId
+        val ziel = wurzel.cursorFürAusdruck(ausdrucksId) ?: return false
+        cursor = ziel
         return true
     }
 
+    fun setzeCursor(neu: FormelCursor): Boolean {
+        if (!wurzel.istGültigerCursor(neu)) return false
+        cursor = neu
+        return true
+    }
+
+    fun setzeCursorAufAusdruck(
+        ausdrucksId: String,
+        position: CursorPosition,
+    ): Boolean {
+        val neu = wurzel.cursorFürAusdruck(ausdrucksId, position) ?: return false
+        cursor = neu
+        return true
+    }
+
+    fun bewegeCursor(richtung: FormelCursorRichtung): Boolean {
+        val neu = wurzel.bewegeCursor(cursor, richtung)
+        if (neu == cursor) return false
+        cursor = neu
+        return true
+    }
+
+    fun kannCursorBewegen(richtung: FormelCursorRichtung): Boolean =
+        wurzel.kannCursorBewegen(cursor, richtung)
+
     fun naechsterPlatzhalter(richtung: Int = 1): String? {
-        val ids = offenePlatzhalter.map { it.id }
-        if (ids.isEmpty()) return null
-        val aktuell = ids.indexOf(auswahlId)
-        val index = if (aktuell < 0) 0 else Math.floorMod(aktuell + richtung, ids.size)
-        auswahlId = ids[index]
-        return auswahlId
+        val platzhalter = offenePlatzhalter
+        if (platzhalter.isEmpty()) return null
+        val aktuell = platzhalter.indexOfFirst { it.id == cursor.ausdrucksId }
+        val index = if (aktuell < 0) 0 else Math.floorMod(aktuell + richtung, platzhalter.size)
+        val ziel = platzhalter[index]
+        cursor = requireNotNull(
+            wurzel.cursorFürAusdruck(
+                ziel.id,
+                CursorPosition.InPlatzhalter(ziel.rollenId),
+            ),
+        )
+        return ziel.id
     }
 
     fun druecke(taste: FormelTastaturTaste): Boolean {
-        val ziel = wurzel.finde(auswahlId) ?: return false
+        val ziel = wurzel.findeCursorAusdruck(cursor.ausdrucksId) ?: return false
         val neu = taste.literal?.let { literal ->
             FormelAusdruck.Literal(neueId("literal"), literal, FormelTyp.ZAHL)
         } ?: run {
             val rollen = taste.argumentRollen.ifEmpty { listOf("argument") }
+            val zielIndex = when {
+                ziel is FormelAusdruck.Platzhalter -> -1
+                cursor.position == CursorPosition.VorAusdruck && rollen.size > 1 -> rollen.lastIndex
+                else -> 0
+            }
             val argumente = rollen.mapIndexed { index, rolle ->
-                val argument = if (index == 0 && ziel !is FormelAusdruck.Platzhalter) {
-                    ziel
-                } else {
-                    neuerPlatzhalter(rolle)
-                }
+                val argument = if (index == zielIndex) ziel else neuerPlatzhalter(rolle)
                 FormelArgument(rolle, index, argument)
             }
             FormelAusdruck.Operation(
@@ -80,10 +121,24 @@ class FormelEditorZustand(
 
     fun loescheAuswahl(): Boolean = ersetzeAuswahl(neuerPlatzhalter("argument"))
 
+    fun loescheRueckwaerts(): Boolean {
+        if (cursor.position == CursorPosition.VorAusdruck && bewegeCursor(FormelCursorRichtung.Links)) {
+            return loescheAuswahl()
+        }
+        return loescheAuswahl()
+    }
+
+    fun loescheVorwaerts(): Boolean {
+        if (cursor.position == CursorPosition.NachAusdruck && bewegeCursor(FormelCursorRichtung.Rechts)) {
+            return loescheAuswahl()
+        }
+        return loescheAuswahl()
+    }
+
     fun importiere(latex: String): FormelLatexImportErgebnis {
         val ergebnis = FormelLatexCodec.importiere(latex)
         if (ergebnis is FormelLatexImportErgebnis.Erfolg) {
-            setzeWurzel(ergebnis.ausdruck)
+            setzeWurzel(ergebnis.ausdruck, ergebnis.ausdruck.standardCursor())
         }
         return ergebnis
     }
@@ -92,34 +147,40 @@ class FormelEditorZustand(
 
     fun rueckgaengig(): Boolean {
         val vorher = rueckgaengig.removeLastOrNull() ?: return false
-        wiederholen.add(wurzel)
-        wurzel = vorher
-        auswahlId = wurzel.ersterPlatzhalter()?.id ?: wurzel.id
+        wiederholen.add(aktuellerMoment())
+        wurzel = vorher.wurzel
+        cursor = wurzel.normalisiereCursor(vorher.cursor)
         return true
     }
 
     fun wiederholen(): Boolean {
         val nachher = wiederholen.removeLastOrNull() ?: return false
-        rueckgaengig.add(wurzel)
-        wurzel = nachher
-        auswahlId = wurzel.ersterPlatzhalter()?.id ?: wurzel.id
+        rueckgaengig.add(aktuellerMoment())
+        wurzel = nachher.wurzel
+        cursor = wurzel.normalisiereCursor(nachher.cursor)
         return true
     }
 
     private fun ersetzeAuswahl(neu: FormelAusdruck): Boolean {
-        val ersetzt = wurzel.ersetze(auswahlId, neu) ?: return false
-        setzeWurzel(ersetzt)
-        auswahlId = neu.ersterPlatzhalter()?.id ?: neu.id
+        val ersetzt = wurzel.ersetze(cursor.ausdrucksId, neu) ?: return false
+        val zielId = neu.ersterPlatzhalter()?.id ?: neu.id
+        val zielPosition = (neu.ersterPlatzhalter())?.let {
+            CursorPosition.InPlatzhalter(it.rollenId)
+        } ?: CursorPosition.NachAusdruck
+        val zielCursor = ersetzt.cursorFürAusdruck(zielId, zielPosition)
+        setzeWurzel(ersetzt, zielCursor)
         return true
     }
 
-    private fun setzeWurzel(neu: FormelAusdruck) {
+    private fun setzeWurzel(neu: FormelAusdruck, gewünschterCursor: FormelCursor? = null) {
         if (neu == wurzel) return
-        rueckgaengig.add(wurzel)
+        rueckgaengig.add(aktuellerMoment())
         wiederholen.clear()
         wurzel = neu
-        auswahlId = neu.ersterPlatzhalter()?.id ?: neu.id
+        cursor = neu.normalisiereCursor(gewünschterCursor)
     }
+
+    private fun aktuellerMoment(): FormelEditorMoment = FormelEditorMoment(wurzel, cursor)
 
     private fun neuerPlatzhalter(rolle: String): FormelAusdruck.Platzhalter =
         FormelAusdruck.Platzhalter(
@@ -141,12 +202,6 @@ fun neuerFormelPlatzhalter(
     beschriftung = beschriftung,
     typ = FormelTyp.ZAHL,
 )
-
-private fun FormelAusdruck.finde(id: String): FormelAusdruck? = when {
-    id == this.id -> this
-    this is FormelAusdruck.Operation -> argumente.firstNotNullOfOrNull { it.ausdruck.finde(id) }
-    else -> null
-}
 
 private fun FormelAusdruck.ersetze(id: String, neu: FormelAusdruck): FormelAusdruck? {
     if (this.id == id) return neu
@@ -175,7 +230,6 @@ private fun FormelAusdruck.platzhalter(): List<FormelAusdruck.Platzhalter> = bui
 
 private fun FormelAusdruck.ersterPlatzhalter(): FormelAusdruck.Platzhalter? =
     platzhalter().firstOrNull()
-
 
 private fun parseEditorRationaleEingabe(text: String): RationaleZahl {
     val bereinigt = text.trim()
