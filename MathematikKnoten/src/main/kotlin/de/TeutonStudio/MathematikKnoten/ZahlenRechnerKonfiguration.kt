@@ -87,10 +87,9 @@ fun konfiguriereZahlenRechner(
         kannSichErweitern = false,
         dynamischErzeugt = false,
     )
-    val bisherigerOperator = UniversellerZahlenOperator.vonId(
-        knoten.parameter[ZAHLENRECHNER_OPERATOR],
-    )
-    val bisherStandardName = knoten.name == bisherigerOperator.titel ||
+    val bisherigerOperator = knoten.parameter[ZAHLENRECHNER_OPERATOR]
+        ?.let { operatorId -> UniversellerZahlenOperator.vonId(operatorId) }
+    val bisherStandardName = bisherigerOperator?.let { knoten.name == it.titel } == true ||
         UniversellerZahlenOperator.entries.any { it.titel == knoten.name }
     val parameter = knoten.parameter + mapOf(
         ZAHLENRECHNER_OPERATOR to operator.stabileId,
