@@ -10,21 +10,13 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikRechenSystem.kern.BegriffsAussage
-import de.TeutonStudio.MathematikRechenSystem.kern.GaussZiel
-import de.TeutonStudio.MathematikRechenSystem.kern.Matrix
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
-import de.TeutonStudio.MathematikRechenSystem.kern.SpaltenVektor
-import de.TeutonStudio.MathematikRechenSystem.kern.gauss
-import de.TeutonStudio.MathematikRechenSystem.kern.inverseMitGauss
-import de.TeutonStudio.MathematikRechenSystem.kern.loeseErweiterteMatrix
-import de.TeutonStudio.MathematikRechenSystem.kern.loeseLinearesSystem
 import de.TeutonStudio.MathematikRechenSystem.kern.pruefeLineareAbbildung
 import de.TeutonStudio.MathematikRechenSystem.kern.pruefeVektorraum
 
 const val BEGRIFF_VEKTORRAUM_KNOTEN_ART = "mathematik.begriff.vektorraum"
 const val BEGRIFF_LINEARE_ABBILDUNG_KNOTEN_ART = "mathematik.begriff.lineareAbbildung"
-const val GAUSS_MODUS_PARAMETER = "gaussModus"
 
 object LineareAlgebraGrundlagenKnotenVorlagen {
     private fun eingang(
@@ -83,10 +75,6 @@ object LineareAlgebraGrundlagenKnotenVorlagen {
 }
 
 internal fun MathematikAuswerterRegister.registriereLineareAlgebraGrundlagen() {
-    val basisAuswerten = requireNotNull(finde("mathematik.auswerten")) {
-        "Der Standardauswerter für mathematik.auswerten muss vor den Lina-Erweiterungen registriert sein."
-    }
-
     registriere(BEGRIFF_VEKTORRAUM_KNOTEN_ART) { kontext ->
         val traeger = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
             ?: error("Die Trägermenge fehlt.")
@@ -121,64 +109,6 @@ internal fun MathematikAuswerterRegister.registriereLineareAlgebraGrundlagen() {
         )
     }
 
-    registriere("mathematik.auswerten") { kontext ->
-        if (kontext.eingänge["objekt"]?.objekt is Matrix) {
-            kontext.gaussAuswerten()
-        } else {
-            basisAuswerten.auswerten(kontext)
-        }
-    }
-}
-
-private fun KnotenAuswertungsKontext.gaussAuswerten(): KnotenAuswertungsErgebnis {
-    val matrix = eingänge["objekt"]?.objekt as? Matrix
-        ?: error("Für die lineare Auswertung wird eine Matrix benötigt.")
-    val rechteSeite = eingänge["rechteSeite"]?.objekt as? SpaltenVektor
-    val variablen = knoten.parameter["variablen"].orEmpty()
-        .split(',')
-        .map(String::trim)
-        .filter(String::isNotBlank)
-    val modus = knoten.parameter[GAUSS_MODUS_PARAMETER]
-        ?.trim()
-        ?.lowercase()
-        .orEmpty()
-        .ifBlank { "automatisch" }
-
-    if (rechteSeite != null || modus in setOf("linearessystem", "lineares system", "loesen", "lösen")) {
-        val system = if (rechteSeite != null) {
-            loeseLinearesSystem(matrix, rechteSeite, variablen)
-        } else {
-            loeseErweiterteMatrix(matrix, variablenNamen = variablen)
-        }
-        return KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("wert" to BedingterWert(system.loesung, gemeinsameAnnahmen())),
-            schritte = system.schritte,
-            warnungen = listOf(
-                "Rang(A) = ${system.rangKoeffizienten}, Rang(A|b) = ${system.rangErweitert}",
-                "Spalten: ${system.variablenNamen.joinToString()} | b",
-            ),
-        )
-    }
-
-    if (modus in setOf("inverse", "inverse durch gauss-jordan", "inverse durch gauß-jordan")) {
-        val inverse = inverseMitGauss(matrix)
-        return KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("wert" to BedingterWert(inverse.inverse, gemeinsameAnnahmen())),
-            schritte = inverse.schritte,
-            warnungen = listOf("Inverse über [A|I] mit Gauß-Jordan bestimmt."),
-        )
-    }
-
-    val ziel = when (modus) {
-        "stufenform", "zeilenstufenform" -> GaussZiel.ZEILENSTUFENFORM
-        else -> GaussZiel.REDUZIERTE_ZEILENSTUFENFORM
-    }
-    val ergebnis = gauss(matrix, ziel)
-    return KnotenAuswertungsErgebnis(
-        ausgaben = mapOf("wert" to BedingterWert(ergebnis.matrix, gemeinsameAnnahmen())),
-        schritte = ergebnis.schritte,
-        warnungen = listOf("Rang = ${ergebnis.rang}"),
-    )
 }
 
 private fun KnotenAuswertungsKontext.gemeinsameAnnahmen() =

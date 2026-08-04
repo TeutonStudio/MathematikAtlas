@@ -71,13 +71,32 @@ object MathematikKnotenVorlagen {
     val TeilOderGleichmenge = mengenAussagenVorlage("mathematik.teilOderGleichmenge", "Teil- oder Gleichmenge", "Prüft ⊆.")
     val ÜberOderGleichmenge = mengenAussagenVorlage("mathematik.überOderGleichmenge", "Über- oder Gleichmenge", "Prüft ⊇.")
     val Disjunkt = mengenAussagenVorlage("mathematik.disjunkt", "Disjunkt", "Prüft, ob zwei Mengen keinen gemeinsamen Wert besitzen.")
-    val GleichungLösen = KnotenVorlage(
-        "mathematik.gleichungLösen", "Lineare Gleichung lösen", "Algebra", "Löst eine lineare Gleichung nach der gewählten Variablen.", GraphGröße(240f, 115f),
-        listOf(eingang("gleichung", MathematikAnschlussArten.Aussage.id), ausgang("lösungen", MathematikAnschlussArten.Menge.id)), mapOf("variable" to "x"),
+    val Auflösen = KnotenVorlage(
+        "mathematik.gleichungLösen", "Auflösen", "Algebra",
+        "Bestimmt die Lösungsmenge einer Relation. Exakt lösbare Relationen werden berechnet; andernfalls bleibt die Lösungsmenge symbolisch definiert.",
+        GraphGröße(240f, 115f),
+        listOf(
+            eingang("relation", MathematikAnschlussArten.Aussage.id),
+            ausgang("lösungsmenge", MathematikAnschlussArten.Menge.id),
+        ),
+        mapOf("variable" to "x"),
     )
+    /** Quellkompatibler Name für bestehende Aufrufer und gespeicherte Karten. */
+    val GleichungLösen = Auflösen
     val Auswerten = KnotenVorlage(
-        "mathematik.auswerten", "Auswerten", "Steuerung", "Vereinfacht einen Term oder entscheidet eine Aussage.", GraphGröße(230f, 110f),
-        listOf(eingang("objekt", MathematikAnschlussArten.Objekt.id), ausgang("wert", MathematikAnschlussArten.Objekt.id)),
+        "mathematik.auswerten", "Auswerten", "Steuerung",
+        "Vereinfacht einen mathematischen Term typ-erhaltend, etwa eine Zahl, Aussage, Matrix, einen Vektor, ein Tupel oder eine Menge.",
+        GraphGröße(230f, 110f),
+        listOf(
+            eingang("term", MathematikAnschlussArten.Objekt.id),
+            AnschlussDaten(
+                name = "term",
+                richtung = AnschlussRichtung.Ausgang,
+                kante = AnschlussKante.Rechts,
+                art = MathematikAnschlussArten.Objekt.id,
+                artFolgtEingang = "term",
+            ),
+        ),
     )
     val Darstellungsoptimierung = KnotenVorlage(
         "mathematik.darstellungsoptimierung", "Darstellungsoptimierung", "Darstellung", "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.", GraphGröße(250f, 120f),

@@ -9,13 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -36,20 +33,8 @@ import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
-import de.TeutonStudio.MathematikKnoten.GAUSS_MODUS_PARAMETER
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikRechenSystem.kern.UmformungsSchritt
-import de.TeutonStudio.MathematikRechenSystem.kern.UmformungsTabelle
-
-private data class AuswertungsModus(val id: String, val titel: String)
-
-private val auswertungsModi = listOf(
-    AuswertungsModus("automatisch", "Automatisch"),
-    AuswertungsModus("zeilenstufenform", "Zeilenstufenform"),
-    AuswertungsModus("reduzierteZeilenstufenform", "Reduzierte Zeilenstufenform"),
-    AuswertungsModus("linearesSystem", "Lineares System lösen"),
-    AuswertungsModus("inverse", "Inverse durch Gauß-Jordan"),
-)
 
 internal object AuswertenInspektor : KnotenInspektor {
     @Composable
@@ -58,60 +43,29 @@ internal object AuswertenInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
-        val aktuellerModus = knoten.parameter[GAUSS_MODUS_PARAMETER].orEmpty().ifBlank { "automatisch" }
-        Text("Auswertungsmodus", style = MaterialTheme.typography.titleSmall)
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            auswertungsModi.forEach { modus ->
-                FilterChip(
-                    selected = aktuellerModus.equals(modus.id, ignoreCase = true),
-                    onClick = { aktionen.parameter(GAUSS_MODUS_PARAMETER, modus.id) },
-                    label = { Text(modus.titel) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        }
-
-        val variablen = knoten.parameter["variablen"].orEmpty()
-        var variablenText by remember(knoten.id, variablen) { mutableStateOf(variablen) }
-        OutlinedTextField(
-            value = variablenText,
-            onValueChange = {
-                variablenText = it
-                aktionen.parameter("variablen", it)
-            },
-            label = { Text("Spaltennamen") },
-            supportingText = { Text("Kommagetrennt; ohne Angabe werden x₁, x₂, … verwendet.") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        Text("Termauswertung", style = MaterialTheme.typography.titleSmall)
+        Text(
+  "Dieser Knoten vereinfacht mathematische Terme typ-erhaltend, darunter Zahlen, Aussagen, Matrizen, Vektoren, Tupel und Mengen. Relationen werden nicht hier gelöst, sondern im Knoten „Auflösen“.",
+  style = MaterialTheme.typography.bodySmall,
+  color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-
-        ergebnis?.warnungen.orEmpty().forEach { hinweis ->
-            Text(
-                hinweis,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         ergebnis?.fehler?.let { fehler ->
-            Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+  Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
-        val tabelle = remember(knoten, ergebnis) { umformungsTabelleOderNull(knoten, ergebnis) }
-        val hatDetails = tabelle != null || ergebnis?.schritte?.isNotEmpty() == true ||
-            ergebnis?.ausgaben?.isNotEmpty() == true || ergebnis?.warnungen?.isNotEmpty() == true
+        val hatDetails = ergebnis?.let {
+  it.ausgaben.isNotEmpty() || it.schritte.isNotEmpty() || it.warnungen.isNotEmpty() || it.fehler != null
+        } == true
         var dialogGeöffnet by remember(knoten.id) { mutableStateOf(false) }
         Button(
-            onClick = { dialogGeöffnet = true },
-            enabled = hatDetails,
-            modifier = Modifier.fillMaxWidth(),
+  onClick = { dialogGeöffnet = true },
+  enabled = hatDetails,
+  modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(
-                if (tabelle == null) "Auswertungsdetails öffnen"
-                else "Umformung öffnen · ${tabelle.bloecke.size - 1} Schritte",
-            )
+  Text("Auswertungsdetails öffnen")
         }
         if (dialogGeöffnet && ergebnis != null) {
-            AuswertungsDetailsDialog(knoten, ergebnis, tabelle) { dialogGeöffnet = false }
+  AuswertungsDetailsDialog(knoten, ergebnis) { dialogGeöffnet = false }
         }
     }
 }
@@ -120,48 +74,43 @@ internal object AuswertenInspektor : KnotenInspektor {
 private fun AuswertungsDetailsDialog(
     knoten: KnotenDaten,
     ergebnis: KnotenAuswertungsErgebnis,
-    tabelle: UmformungsTabelle?,
     schließen: () -> Unit,
 ) {
-    var tab by remember(knoten.id) { mutableIntStateOf(if (tabelle == null) 0 else 1) }
+    var tab by remember(knoten.id) { mutableIntStateOf(0) }
     val tabs = listOf("Ergebnis", "Umformung", "Bedingungen")
     Dialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.96f).fillMaxHeight(0.92f),
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
+  modifier = Modifier.fillMaxWidth(0.96f).fillMaxHeight(0.92f),
+  shape = MaterialTheme.shapes.extraLarge,
+  tonalElevation = 6.dp,
         ) {
-            Column(Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        "${knoten.name}: Auswertung",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = schließen) { Text("Schließen") }
-                }
-                TabRow(selectedTabIndex = tab) {
-                    tabs.forEachIndexed { index, titel ->
-                        Tab(selected = tab == index, onClick = { tab = index }, text = { Text(titel) })
-                    }
-                }
-                when (tab) {
-                    0 -> ErgebnisAnsicht(ergebnis, Modifier.fillMaxSize().padding(20.dp))
-                    1 -> if (tabelle != null) {
-                        UmformungsTabellenAnsicht(tabelle, Modifier.fillMaxSize())
-                    } else {
-                        AllgemeineUmformungsAnsicht(ergebnis.schritte, Modifier.fillMaxSize().padding(20.dp))
-                    }
-                    else -> BedingungenAnsicht(ergebnis, Modifier.fillMaxSize().padding(20.dp))
-                }
-            }
+  Column(Modifier.fillMaxSize()) {
+      Row(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+          Text(
+              "${knoten.name}: Termauswertung",
+              style = MaterialTheme.typography.titleLarge,
+              modifier = Modifier.weight(1f),
+          )
+          TextButton(onClick = schließen) { Text("Schließen") }
+      }
+      TabRow(selectedTabIndex = tab) {
+          tabs.forEachIndexed { index, titel ->
+              Tab(selected = tab == index, onClick = { tab = index }, text = { Text(titel) })
+          }
+      }
+      when (tab) {
+          0 -> ErgebnisAnsicht(ergebnis, Modifier.fillMaxSize().padding(20.dp))
+          1 -> UmformungsAnsicht(ergebnis.schritte, Modifier.fillMaxSize().padding(20.dp))
+          else -> BedingungenAnsicht(ergebnis, Modifier.fillMaxSize().padding(20.dp))
+      }
+  }
         }
     }
 }
@@ -170,55 +119,46 @@ private fun AuswertungsDetailsDialog(
 private fun ErgebnisAnsicht(ergebnis: KnotenAuswertungsErgebnis, modifier: Modifier = Modifier) {
     LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         ergebnis.ausgaben.forEach { (name, wert) ->
-            item(key = "ausgabe.$name") {
-                Text(
-                    name,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                LatexText(wert.anzeigeLatex(), style = MaterialTheme.typography.titleMedium)
-            }
+  item(key = "ausgabe.$name") {
+      Text(name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+      LatexText(wert.anzeigeLatex(), style = MaterialTheme.typography.titleMedium)
+  }
         }
         if (ergebnis.warnungen.isNotEmpty()) {
-            item { HorizontalDivider() }
-            items(ergebnis.warnungen.size) { index ->
-                Text(ergebnis.warnungen[index], style = MaterialTheme.typography.bodyMedium)
-            }
+  item { HorizontalDivider() }
+  itemsIndexed(ergebnis.warnungen) { _, warnung ->
+      Text(warnung, style = MaterialTheme.typography.bodyMedium)
+  }
         }
         ergebnis.fehler?.let { fehler ->
-            item {
-                Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-            }
+  item { Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
         }
     }
 }
 
 @Composable
-private fun AllgemeineUmformungsAnsicht(
-    schritte: List<UmformungsSchritt>,
-    modifier: Modifier = Modifier,
-) {
+private fun UmformungsAnsicht(schritte: List<UmformungsSchritt>, modifier: Modifier = Modifier) {
     if (schritte.isEmpty()) {
         Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Für diese Auswertung sind keine Umformungsschritte erforderlich.")
+  Text("Für diesen Term sind keine Umformungsschritte erforderlich.")
         }
         return
     }
     LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         itemsIndexed(schritte, key = { index, schritt -> "$index.${schritt.regelId}" }) { index, schritt ->
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-            ) {
-                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("${index + 1}. ${schritt.titel}", fontWeight = FontWeight.SemiBold)
-                    LatexText(schritt.vorher.zuLatex(), style = MaterialTheme.typography.bodyMedium)
-                    Text("↓", style = MaterialTheme.typography.titleMedium)
-                    LatexText(schritt.nachher.zuLatex(), style = MaterialTheme.typography.bodyMedium)
-                    Text(schritt.erklärung, style = MaterialTheme.typography.bodySmall)
-                }
-            }
+  Surface(
+      modifier = Modifier.fillMaxWidth(),
+      shape = MaterialTheme.shapes.medium,
+      color = MaterialTheme.colorScheme.surfaceContainerLow,
+  ) {
+      Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+          Text("${index + 1}. ${schritt.titel}", fontWeight = FontWeight.SemiBold)
+          LatexText(schritt.vorher.zuLatex(), style = MaterialTheme.typography.bodyMedium)
+          Text("↓", style = MaterialTheme.typography.titleMedium)
+          LatexText(schritt.nachher.zuLatex(), style = MaterialTheme.typography.bodyMedium)
+          Text(schritt.erklärung, style = MaterialTheme.typography.bodySmall)
+      }
+  }
         }
     }
 }
@@ -227,20 +167,20 @@ private fun AllgemeineUmformungsAnsicht(
 private fun BedingungenAnsicht(ergebnis: KnotenAuswertungsErgebnis, modifier: Modifier = Modifier) {
     val bedingungen = remember(ergebnis) {
         (ergebnis.schritte.flatMap { it.bedingungen } + ergebnis.ausgaben.values.flatMap { it.annahmen })
-            .distinctBy { it.zuLatex() }
+  .distinctBy { it.zuLatex() }
     }
     if (bedingungen.isEmpty()) {
         Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Keine zusätzlichen Pivot- oder Definitionsbedingungen.")
+  Text("Keine zusätzlichen Definitionsbedingungen.")
         }
         return
     }
     LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        items(bedingungen.size) { index ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
-                Text("${index + 1}.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                LatexText(bedingungen[index].zuLatex(), style = MaterialTheme.typography.bodyLarge)
-            }
+        itemsIndexed(bedingungen) { index, bedingung ->
+  Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+      Text("${index + 1}.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+      LatexText(bedingung.zuLatex(), style = MaterialTheme.typography.bodyLarge)
+  }
         }
     }
 }

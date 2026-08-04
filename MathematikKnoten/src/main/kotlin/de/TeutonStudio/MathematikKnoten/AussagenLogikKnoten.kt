@@ -95,41 +95,7 @@ object AussagenLogikKnotenVorlagen {
         ),
     )
 
-    val Auswerten = KnotenVorlage(
-        art = "mathematik.auswerten",
-        name = "Auswerten",
-        kategorie = "Steuerung",
-        beschreibung = "Vereinfacht Objekte, entscheidet Aussagen und erzeugt für Matrizen exakte Gauß-Verläufe.",
-        standardGröße = GraphGröße(250f, 125f),
-        anschlüsse = listOf(
-            AnschlussDaten(
-                name = "objekt",
-                richtung = AnschlussRichtung.Eingang,
-                kante = AnschlussKante.Links,
-                art = MathematikAnschlussArten.Objekt.id,
-                reihenfolge = 0,
-            ),
-            AnschlussDaten(
-                name = "rechteSeite",
-                richtung = AnschlussRichtung.Eingang,
-                kante = AnschlussKante.Links,
-                art = MathematikAnschlussArten.SpaltenVektor.id,
-                reihenfolge = 1,
-            ),
-            AnschlussDaten(
-                name = "wert",
-                richtung = AnschlussRichtung.Ausgang,
-                kante = AnschlussKante.Rechts,
-                art = MathematikAnschlussArten.Objekt.id,
-            ),
-        ),
-        standardParameter = mapOf(
-            GAUSS_MODUS_PARAMETER to "automatisch",
-            "variablen" to "",
-        ),
-    )
-
-    val alle = listOf(Negation, Adjunktion, IterierteAdjunktion, Auswerten)
+    val alle = listOf(Negation, Adjunktion, IterierteAdjunktion)
 }
 
 private fun vorlagenSchlüssel(vorlage: KnotenVorlage): Pair<String, String> =
