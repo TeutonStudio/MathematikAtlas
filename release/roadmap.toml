@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.25.x"
-current_version = "2.25.0"
+current_version = "2.25.1"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -678,3 +678,14 @@ kind = "feature"
 version_axis = "y"
 new_node_types = ["mathematik.matrixrechner"]
 reason = "Vereinheitlicht Aussagesatz-, Vektor-, Matrix- und Tensorrechner auf operatorabhängige Anschlüsse, ergänzt einen typisierten CAS-Formelzustand und erzeugt Definitionskarten aus dem aktuellen Ausdruck."
+
+[[releases]]
+version = "2.25.1"
+title = "Formel-Definitionskarten und dauerhafte Variableneingänge"
+roadmap = "v2.25.x Strukturrechner, CAS und dynamische Definitionskarten"
+status = "planned"
+previous_release = "2.25.0"
+branch = "release/v2.25.1-formeleingaenge"
+kind = "fix"
+version_axis = "x"
+reason = "Korrigiert die Lebensdauer automatisch aus freien Formelvariablen erzeugter Eingänge, vervollständigt Formel-Definitionskarten, Formeltastatur und Inspektorverhalten und führt keinen neuen registrierten Knotentyp ein."
