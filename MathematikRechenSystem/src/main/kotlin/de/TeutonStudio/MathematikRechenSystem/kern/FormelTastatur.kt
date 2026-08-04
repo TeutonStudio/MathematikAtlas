@@ -27,35 +27,129 @@ data class FormelTastaturTaste(
 
 /** UI-neutrale Tastenbelegung. Tasten erzeugen Ausdrucksobjekte, niemals Roh-LaTeX. */
 object FormelTastatur {
-    val standard: List<FormelTastaturTaste> = listOf(
-        operator("plus", "+", FormelTastenKategorie.GRUNDRECHNUNG, "zahl.addition", "a", "b"),
-        operator("minus", "−", FormelTastenKategorie.GRUNDRECHNUNG, "zahl.subtraktion", "a", "b"),
-        operator("mal", "×", FormelTastenKategorie.GRUNDRECHNUNG, "zahl.multiplikation", "a", "b"),
-        operator("geteilt", "÷", FormelTastenKategorie.GRUNDRECHNUNG, "zahl.division", "zaehler", "nenner"),
-        operator("potenz", "xʸ", FormelTastenKategorie.POTENZEN, "zahl.potenz", "basis", "exponent"),
-        operator("wurzel", "√", FormelTastenKategorie.POTENZEN, "zahl.wurzel", "radikand"),
-        operator("betrag", "|x|", FormelTastenKategorie.FUNKTIONEN, "zahl.betrag", "argument"),
-        operator("ln", "ln", FormelTastenKategorie.FUNKTIONEN, "zahl.ln", "argument"),
-        operator("log", "logₐ", FormelTastenKategorie.FUNKTIONEN, "zahl.logarithmus", "basis", "argument"),
-        operator("exp", "exp", FormelTastenKategorie.FUNKTIONEN, "zahl.exp", "argument"),
-        operator("sin", "sin", FormelTastenKategorie.TRIGONOMETRIE, "zahl.sin", "argument"),
-        operator("cos", "cos", FormelTastenKategorie.TRIGONOMETRIE, "zahl.cos", "argument"),
-        operator("tan", "tan", FormelTastenKategorie.TRIGONOMETRIE, "zahl.tan", "argument"),
-        operator("cot", "cot", FormelTastenKategorie.TRIGONOMETRIE, "zahl.cot", "argument"),
-        operator("sec", "sec", FormelTastenKategorie.TRIGONOMETRIE, "zahl.sec", "argument"),
-        operator("csc", "csc", FormelTastenKategorie.TRIGONOMETRIE, "zahl.csc", "argument"),
-        operator("arcsin", "arcsin", FormelTastenKategorie.TRIGONOMETRIE, "zahl.arcsin", "argument"),
-        operator("arccos", "arccos", FormelTastenKategorie.TRIGONOMETRIE, "zahl.arccos", "argument"),
-        operator("arctan", "arctan", FormelTastenKategorie.TRIGONOMETRIE, "zahl.arctan", "argument"),
-        operator("sinh", "sinh", FormelTastenKategorie.HYPERBOLISCH, "zahl.sinh", "argument"),
-        operator("cosh", "cosh", FormelTastenKategorie.HYPERBOLISCH, "zahl.cosh", "argument"),
-        operator("tanh", "tanh", FormelTastenKategorie.HYPERBOLISCH, "zahl.tanh", "argument"),
-        operator("coth", "coth", FormelTastenKategorie.HYPERBOLISCH, "zahl.coth", "argument"),
-        operator("sech", "sech", FormelTastenKategorie.HYPERBOLISCH, "zahl.sech", "argument"),
-        operator("csch", "csch", FormelTastenKategorie.HYPERBOLISCH, "zahl.csch", "argument"),
-        FormelTastaturTaste("pi", "π", FormelTastenKategorie.KONSTANTEN, literal = Pi),
-        FormelTastaturTaste("e", "e", FormelTastenKategorie.KONSTANTEN, literal = EulerscheZahl),
+    /**
+     * Der Standardkatalog wird aus dem stabilen Operatorregister des universellen
+     * Zahlenrechners erzeugt. Neue Standardoperatoren können dadurch nicht mehr
+     * unbemerkt im Rechner existieren, aber im CAS-Formelbauer fehlen.
+     */
+    val standard: List<FormelTastaturTaste> =
+        UniversellerZahlenOperator.entries.map(::standardTaste) +
+            listOf(
+                operator("tan", "tan", FormelTastenKategorie.TRIGONOMETRIE, "zahl.tan", "argument"),
+                operator("cot", "cot", FormelTastenKategorie.TRIGONOMETRIE, "zahl.cot", "argument"),
+                operator("sec", "sec", FormelTastenKategorie.TRIGONOMETRIE, "zahl.sec", "argument"),
+                operator("csc", "csc", FormelTastenKategorie.TRIGONOMETRIE, "zahl.csc", "argument"),
+                operator("arctan", "arctan", FormelTastenKategorie.TRIGONOMETRIE, "zahl.arctan", "argument"),
+                operator("sinh", "sinh", FormelTastenKategorie.HYPERBOLISCH, "zahl.sinh", "argument"),
+                operator("cosh", "cosh", FormelTastenKategorie.HYPERBOLISCH, "zahl.cosh", "argument"),
+                operator("tanh", "tanh", FormelTastenKategorie.HYPERBOLISCH, "zahl.tanh", "argument"),
+                operator("coth", "coth", FormelTastenKategorie.HYPERBOLISCH, "zahl.coth", "argument"),
+                operator("sech", "sech", FormelTastenKategorie.HYPERBOLISCH, "zahl.sech", "argument"),
+                operator("csch", "csch", FormelTastenKategorie.HYPERBOLISCH, "zahl.csch", "argument"),
+                FormelTastaturTaste("pi", "π", FormelTastenKategorie.KONSTANTEN, literal = Pi),
+                FormelTastaturTaste("e", "e", FormelTastenKategorie.KONSTANTEN, literal = EulerscheZahl),
+            )
+
+    private fun standardTaste(operator: UniversellerZahlenOperator): FormelTastaturTaste = operator(
+        id = operator.stabileId.substringAfterLast('.'),
+        beschriftung = operator.tastenBeschriftung(),
+        kategorie = operator.tastenKategorie(),
+        operatorId = operator.stabileId,
+        rollen = operator.formelRollen().toTypedArray(),
     )
+
+    private fun UniversellerZahlenOperator.tastenKategorie(): FormelTastenKategorie = when (this) {
+        UniversellerZahlenOperator.ADDITION,
+        UniversellerZahlenOperator.SUBTRAKTION,
+        UniversellerZahlenOperator.MULTIPLIKATION,
+        UniversellerZahlenOperator.DIVISION,
+        UniversellerZahlenOperator.MODULO,
+        UniversellerZahlenOperator.MINIMUM,
+        UniversellerZahlenOperator.MAXIMUM,
+        -> FormelTastenKategorie.GRUNDRECHNUNG
+
+        UniversellerZahlenOperator.KEHRWERT,
+        UniversellerZahlenOperator.POTENZ,
+        UniversellerZahlenOperator.QUADRAT,
+        UniversellerZahlenOperator.KUBIK,
+        UniversellerZahlenOperator.WURZEL,
+        UniversellerZahlenOperator.QUADRATWURZEL,
+        UniversellerZahlenOperator.KUBIKWURZEL,
+        -> FormelTastenKategorie.POTENZEN
+
+        UniversellerZahlenOperator.SINUS,
+        UniversellerZahlenOperator.COSINUS,
+        UniversellerZahlenOperator.ARCSINUS,
+        UniversellerZahlenOperator.ARCCOSINUS,
+        -> FormelTastenKategorie.TRIGONOMETRIE
+
+        else -> FormelTastenKategorie.FUNKTIONEN
+    }
+
+    private fun UniversellerZahlenOperator.formelRollen(): List<String> = when (this) {
+        UniversellerZahlenOperator.ADDITION,
+        UniversellerZahlenOperator.SUBTRAKTION,
+        UniversellerZahlenOperator.MULTIPLIKATION,
+        UniversellerZahlenOperator.MINIMUM,
+        UniversellerZahlenOperator.MAXIMUM,
+        -> listOf("a", "b")
+
+        UniversellerZahlenOperator.DIVISION -> listOf("zaehler", "nenner")
+        UniversellerZahlenOperator.POTENZ -> listOf("basis", "exponent")
+        UniversellerZahlenOperator.WURZEL -> listOf("radikand", "grad")
+        UniversellerZahlenOperator.LOGARITHMUS -> listOf("basis", "argument")
+        UniversellerZahlenOperator.ITERIERTE_SUMME,
+        UniversellerZahlenOperator.ITERIERTES_PRODUKT,
+        -> listOf("methode", "indexmenge")
+
+        UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> listOf("radius", "winkel")
+        UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH -> listOf("realteil", "imaginaerteil")
+        UniversellerZahlenOperator.MODULO -> listOf("dividend", "modul")
+        else -> listOf("argument")
+    }
+
+    private fun UniversellerZahlenOperator.tastenBeschriftung(): String = when (this) {
+        UniversellerZahlenOperator.ADDITION -> "+"
+        UniversellerZahlenOperator.SUBTRAKTION -> "−"
+        UniversellerZahlenOperator.MULTIPLIKATION -> "×"
+        UniversellerZahlenOperator.DIVISION -> "÷"
+        UniversellerZahlenOperator.KEHRWERT -> "x⁻¹"
+        UniversellerZahlenOperator.POTENZ -> "xʸ"
+        UniversellerZahlenOperator.QUADRAT -> "x²"
+        UniversellerZahlenOperator.KUBIK -> "x³"
+        UniversellerZahlenOperator.WURZEL -> "ⁿ√x"
+        UniversellerZahlenOperator.QUADRATWURZEL -> "√x"
+        UniversellerZahlenOperator.KUBIKWURZEL -> "∛x"
+        UniversellerZahlenOperator.LOGARITHMUS -> "logₐ"
+        UniversellerZahlenOperator.LOGARITHMUS_BASIS_2 -> "lb"
+        UniversellerZahlenOperator.NATUERLICHER_LOGARITHMUS -> "ln"
+        UniversellerZahlenOperator.LOGARITHMUS_BASIS_10 -> "log"
+        UniversellerZahlenOperator.ITERIERTE_SUMME -> "Σ"
+        UniversellerZahlenOperator.ITERIERTES_PRODUKT -> "Π"
+        UniversellerZahlenOperator.INTEGRAL -> "∫"
+        UniversellerZahlenOperator.DIFFERENTIAL -> "d/dx"
+        UniversellerZahlenOperator.MINIMUM -> "min"
+        UniversellerZahlenOperator.MAXIMUM -> "max"
+        UniversellerZahlenOperator.NORM -> "‖x‖"
+        UniversellerZahlenOperator.ABRUNDUNG -> "⌊x⌋"
+        UniversellerZahlenOperator.AUFRUNDUNG -> "⌈x⌉"
+        UniversellerZahlenOperator.RUNDUNG -> "⌊x⌉"
+        UniversellerZahlenOperator.KONJUGIERTE -> "x̄"
+        UniversellerZahlenOperator.REALTEIL -> "Re"
+        UniversellerZahlenOperator.IMAGINAERTEIL -> "Im"
+        UniversellerZahlenOperator.KOMPLEXER_WINKEL -> "arg"
+        UniversellerZahlenOperator.KOMPLEXER_RADIUS -> "|z|"
+        UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> "reⁱφ"
+        UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH -> "a+bi"
+        UniversellerZahlenOperator.MODULO -> "mod"
+        UniversellerZahlenOperator.BETRAG -> "|x|"
+        UniversellerZahlenOperator.EXPONENTIALFUNKTION -> "exp"
+        UniversellerZahlenOperator.SINUS -> "sin"
+        UniversellerZahlenOperator.COSINUS -> "cos"
+        UniversellerZahlenOperator.ARCSINUS -> "arcsin"
+        UniversellerZahlenOperator.ARCCOSINUS -> "arccos"
+        UniversellerZahlenOperator.LIMES_HYPERREELL_ZU_REELL -> "lim"
+    }
 
     private fun operator(
         id: String,
@@ -71,4 +165,3 @@ object FormelTastatur {
         argumentRollen = rollen.toList(),
     )
 }
-
