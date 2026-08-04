@@ -254,6 +254,7 @@ private fun UnveränderlicheKonzeptKarte(
             if (knoten.art.startsWith("konzept.")) KonzeptDokumentationsRenderer else mathematikRenderer
         },
         farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
+        zeigeKnotenInspektor = false,
     )
 }
 
