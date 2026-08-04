@@ -62,7 +62,7 @@ class LatexFormelTest {
     @Test
     fun `erhält Präfix Suffix und beide Display-Begrenzer`() {
         val dollar = assertIs<LatexMatrixAnalyse.Erfolg>(
-            analysiereLatexMatrix("$$A=\\begin{pmatrix}1 & 2\\end{pmatrix}\\in M$$"),
+            analysiereLatexMatrix("\$\$A=\\begin{pmatrix}1 & 2\\end{pmatrix}\\in M\$\$"),
         ).formel
         val eckig = assertIs<LatexMatrixAnalyse.Erfolg>(
             analysiereLatexMatrix("\\[A=\\begin{pmatrix}1 & 2\\end{pmatrix}\\in M\\]"),
