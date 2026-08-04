@@ -40,6 +40,31 @@ class LatexTextTest {
     }
 
     @Test
+    fun `rendert alle verwendeten Doppelstrichbuchstaben`() {
+        assertEquals(
+            "ℕ ℤ ℚ ℝ ℂ ℍ ℙ 𝔽 𝕂",
+            vereinfacheLatexAnzeige(
+                "\\mathbb{N} \\mathbb{Z} \\mathbb{Q} \\mathbb{R} \\mathbb{C} " +
+                    "\\mathbb{H} \\mathbb{P} \\mathbb{F} \\mathbb{K}",
+            ),
+        )
+    }
+
+    @Test
+    fun `rendert vert und kombinierte mathematische Reitertitel`() {
+        val titel = latexZuAnnotiertemText("x_{n} \\in \\mathbb{K} \\vert n \\in \\mathbb{N}")
+
+        assertEquals("xn ∈ 𝕂 | n ∈ ℕ", titel.text)
+        assertEquals(BaselineShift.Subscript, titel.spanStyles.single().item.baselineShift)
+        assertFalse("vert" in titel.text)
+    }
+
+    @Test
+    fun `mehrbuchstabiges mathbb Argument bleibt als sichtbarer Fallback erhalten`() {
+        assertEquals("AB", vereinfacheLatexAnzeige("\\mathbb{AB}"))
+    }
+
+    @Test
     fun `rendert große und gepunktete Aussagenoperatoren`() {
         assertEquals("a ∨̇ b", vereinfacheLatexAnzeige("a \\stackrel{\\bullet}{\\lor} b"))
         assertEquals(

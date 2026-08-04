@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.23.x"
-current_version = "2.23.1"
+current_series = "2.25.x"
+current_version = "2.25.0"
 first_guarded_version = "2.3.13"
 
 [[releases]]
@@ -653,3 +653,28 @@ branch = "samai/v2.23.1-auswerten-umformung"
 kind = "feature"
 version_axis = "x"
 reason = "Vervollständigt den vorhandenen Auswerten-Knoten um Inspector-Modi und eine interaktive strukturierte Gauß-/Gauß-Jordan-Tabelle, ohne einen neuen registrierten Knotentyp einzuführen."
+
+[[releases]]
+version = "2.24.0"
+title = "Skalarprodukte und Begriffszertifikate"
+roadmap = "v2.24.x Lineare Algebra und zertifizierte Definitionskarten"
+status = "released"
+previous_release = "2.23.1"
+branch = "samai/v2.24.0-skalarprodukt-v2.23.1"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.begriff.skalarprodukt"]
+reason = "Führt einen separat erzeugbaren Begriffsknoten für Skalarprodukt-Zertifikate ein, vervollständigt das Standardskalarprodukt für komplexe und quaternionische Skalare und erlaubt ausschließlich versionsfeste, nachgewiesene Karten als benutzerdefinierte Definitionen."
+
+
+[[releases]]
+version = "2.25.0"
+title = "Typisierte Strukturrechner und CAS-Formeln"
+roadmap = "v2.25.x Strukturrechner, CAS und dynamische Definitionskarten"
+status = "released"
+previous_release = "2.24.0"
+branch = "samai/v2.25.0-strukturformelrechner"
+kind = "feature"
+version_axis = "y"
+new_node_types = ["mathematik.matrixrechner"]
+reason = "Vereinheitlicht Aussagesatz-, Vektor-, Matrix- und Tensorrechner auf operatorabhängige Anschlüsse, ergänzt einen typisierten CAS-Formelzustand und erzeugt Definitionskarten aus dem aktuellen Ausdruck."

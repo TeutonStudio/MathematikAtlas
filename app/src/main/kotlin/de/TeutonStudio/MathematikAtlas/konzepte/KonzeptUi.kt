@@ -41,6 +41,15 @@ internal fun KnotenKonzeptDialog(
         return
     }
 
+    if (besitztSkalarproduktKonzeptDialog(knoten)) {
+        SkalarproduktKonzeptDialog(
+            zustand = zustand,
+            knoten = knoten,
+            schließen = schließen,
+        )
+        return
+    }
+
     val besitztAussagenDialog = AussagenOperatorArt.für(knoten) != null ||
         knoten.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
     var definitionAnzeigen by remember(knoten.id) { mutableStateOf(false) }
