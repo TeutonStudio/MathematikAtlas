@@ -27,7 +27,9 @@ internal fun konzeptFürKonsolidiertenKnoten(
     MENGEN_KNOTEN_ART -> mengenKnotenKonzept(zustand, knoten)
     ZAHLENRECHNER_ART -> zahlenRechnerKonzept(knoten)
     MathematikKnotenVorlagen.MatrixProdukt.art -> matrixProduktKonzept()
-    else -> null
+    else -> de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie
+        .fuerKnotenArt(knoten.art)
+        ?.let { familie -> strukturRechnerKonzept(knoten, familie) }
 }
 
 private fun mengenKnotenKonzept(
