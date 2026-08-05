@@ -1,7 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.MathematikKnoten.GeometrieKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.MengenraumKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,6 +79,27 @@ class KonzeptBibliothekTest {
 
         assertTrue(eintrag.passt(KonzeptBibliothekFilter(erforderlicherEingang = matrix, erforderlicherAusgang = zahl)))
         assertFalse(eintrag.passt(KonzeptBibliothekFilter(erforderlicherEingang = zahl)))
+    }
+
+    @Test
+    fun `App Erweiterungen ergänzen das kanonische Register ohne Absturz`() {
+        val geometrie = GeometrieKnotenVorlagen.Raum
+        val mengenraum = MengenraumKnotenVorlagen.Potenzmenge
+        val einträge = KonzeptBibliothekRegister.erstelle(
+            alleMathematikDefinitionsVorlagen() + listOf(geometrie, mengenraum),
+        )
+
+        assertTrue(
+            einträge.any {
+                it.vorlage == geometrie && listOf("geometrie", "grundobjekte") in it.kategoriePfade
+            },
+        )
+        assertTrue(
+            einträge.any {
+                it.vorlage == mengenraum && listOf("mengenlehre", "mengen") in it.kategoriePfade
+            },
+        )
+        assertEquals(emptyList(), KonzeptBibliothekRegister.validierungsFehler(einträge))
     }
 
     @Test

@@ -4,6 +4,7 @@ import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
+import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
 import de.TeutonStudio.MathematikKnoten.konzeptknoten.KonzeptKnotenRegister
 
@@ -75,8 +76,8 @@ internal data class KonzeptBibliothekFilter(
 
 /**
  * App-Adapter auf die kanonische Enzyklopädiequelle im Modul MathematikKnoten.
- * Fachliche Zuordnung, Suchbegriffe, Varianten und Verfügbarkeit werden nicht
- * mehr parallel im App-Modul hergeleitet.
+ * Kanonische Mathematikvorlagen werden dort validiert; App-Erweiterungen wie
+ * Geometrie-, Mengenraum- und Kartenvorlagen bleiben ergänzend einfügbar.
  */
 internal object KonzeptBibliothekRegister {
     val kategorien: List<KonzeptKategorie> = listOf(
@@ -148,8 +149,11 @@ internal object KonzeptBibliothekRegister {
         }
     }
 
-    fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> =
-        KonzeptKnotenRegister.erstelle(vorlagen).flatMap { wissen ->
+    fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> {
+        val kanonischeIds = alleMathematikDefinitionsVorlagen()
+            .mapTo(mutableSetOf(), KnotenVorlage::bibliotheksId)
+        val kanonischeVorlagen = vorlagen.filter { it.bibliotheksId() in kanonischeIds }
+        val kanonischeEinträge = KonzeptKnotenRegister.erstelle(kanonischeVorlagen).flatMap { wissen ->
             val kategoriePfade = wissen.fachPfade
                 .map { it.segmente }
                 .sortedBy { it.joinToString("/") }
@@ -188,6 +192,16 @@ internal object KonzeptBibliothekRegister {
                 }
             }
         }
+        val ergänzendeEinträge = vorlagen.asSequence()
+            .distinctBy(KnotenVorlage::bibliotheksId)
+            .filterNot { it.bibliotheksId() in kanonischeIds }
+            .map(::ergänzenderEintrag)
+            .toList()
+
+        return (kanonischeEinträge + ergänzendeEinträge)
+            .distinctBy(KonzeptBibliothekEintrag::id)
+            .sortedWith(compareBy(KonzeptBibliothekEintrag::titel, KonzeptBibliothekEintrag::id))
+    }
 
     fun bezeichnungFür(pfad: List<String>): String = pfad.mapIndexedNotNull { index, id ->
         val schlüssel = if (index == 0) id else "${pfad.first()}/$id"
@@ -219,6 +233,103 @@ internal object KonzeptBibliothekRegister {
                 add("${eintrag.id}: geplanter Eintrag besitzt irrtümlich eine Knotenvorlage")
             }
         }
+    }
+
+    private fun ergänzenderEintrag(vorlage: KnotenVorlage): KonzeptBibliothekEintrag =
+        KonzeptBibliothekEintrag(
+            id = vorlage.bibliotheksId(),
+            titel = vorlage.name,
+            beschreibung = vorlage.beschreibung,
+            kategoriePfade = kategoriePfadeFürErweiterung(vorlage),
+            suchbegriffe = buildSet {
+                add(vorlage.art)
+                add(vorlage.name)
+                add(vorlage.kategorie)
+                add(vorlage.beschreibung)
+                addAll(vorlage.standardParameter.keys)
+                addAll(vorlage.standardParameter.values)
+                addAll(vorlage.anschlüsse.map { it.name })
+                addAll(vorlage.anschlüsse.map { it.art.wert })
+            },
+            verfügbarkeit = KonzeptVerfügbarkeit.Verfügbar,
+            vorlage = vorlage,
+        )
+
+    private fun kategoriePfadeFürErweiterung(vorlage: KnotenVorlage): List<List<String>> {
+        val art = vorlage.art.lowercase()
+        val name = vorlage.name.lowercase()
+        val kategorie = vorlage.kategorie.lowercase()
+        val pfade = linkedSetOf<List<String>>()
+
+        if (kategorie in setOf("eigene karten", "gespeicherte karten", "gruppen") || vorlage.kartenVerweis != null) {
+            pfade += listOf("eigene-karten")
+        }
+
+        if (kategorie.startsWith("geometrie:") || art.contains("geometrie")) {
+            val unterkategorie = when {
+                kategorie.contains("transformation") || art.contains("transformation") -> "transformationen"
+                kategorie.contains("darstellung") || art.contains("visualisierung") -> "visualisierung"
+                kategorie.contains("konstruktion") -> "konstruktionen"
+                else -> "grundobjekte"
+            }
+            pfade += listOf("geometrie", unterkategorie)
+        }
+
+        if (kategorie == "vektoren" || art.contains("vektor")) pfade += listOf("lineare-algebra", "vektoren")
+        if (kategorie == "matrizen" || art.contains("matrix") || art.contains("spur")) pfade += listOf("lineare-algebra", "matrizen")
+        if (art.contains("tensor")) pfade += listOf("lineare-algebra", "tensoren")
+        if (art.contains("skalarprodukt") || name.contains("skalarprodukt")) {
+            pfade += listOf("lineare-algebra", "skalarprodukte")
+            pfade += listOf("geometrie", "grundobjekte")
+        }
+
+        if (kategorie == "mengen" || kategorie.contains("mengen") || art.contains("menge")) {
+            val unterkategorie = when {
+                art.contains("konstruktor") || art.contains("definator") -> "mengendefinitionen"
+                kategorie.contains("rechnung") || art.contains("schnitt") || art.contains("vereinigung") ||
+                    art.contains("differenz") || art.contains("produkt") -> "mengenoperationen"
+                else -> "mengen"
+            }
+            pfade += listOf("mengenlehre", unterkategorie)
+        }
+
+        if (kategorie.startsWith("aussagen") || kategorie == "aussage" || art.contains("aussage") ||
+            art.contains("praedikat") || art.contains("prädikat") || art.contains("quantor") ||
+            art.contains("gleichheit") || art.contains("ordnung")
+        ) {
+            val unterkategorie = when {
+                art.contains("quantor") -> "quantoren"
+                art.contains("praedikat") || art.contains("prädikat") || art.contains("gleichheit") || art.contains("ordnung") -> "praedikate"
+                else -> "aussagen"
+            }
+            pfade += listOf("logik", unterkategorie)
+        }
+
+        if (kategorie == "analysis" || art.contains("ableit") || art.contains("integr") ||
+            art.contains("grenz") || art.contains("folge") || art.contains("reihe")
+        ) {
+            val unterkategorie = when {
+                art.contains("folge") || art.contains("reihe") || art.contains("grenz") -> "folgen-reihen"
+                art.contains("ableit") || art.contains("integr") -> "differential-integral"
+                else -> "funktionen"
+            }
+            pfade += listOf("analysis", unterkategorie)
+        }
+
+        if (kategorie in setOf("methoden", "abbildungen") || art.contains("methode") || art.contains("abbild")) {
+            pfade += listOf("algebra", "methoden")
+            pfade += listOf("analysis", "funktionen")
+        }
+
+        if (kategorie in setOf("rechnen", "algebra", "zahlen", "operatoren", "steuerung") ||
+            art.contains("zahl") || art.contains("rechner")
+        ) {
+            val unterkategorie = if (art.contains("zahl") && !art.contains("rechner")) "zahlen" else "operationen"
+            pfade += listOf("algebra", unterkategorie)
+        }
+
+        if (pfade.isEmpty()) pfade += listOf("algebra", "operationen")
+        return pfade.toList()
     }
 }
 
