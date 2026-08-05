@@ -76,9 +76,16 @@ internal fun KonzeptBibliothekInhalt(
         when {
             hauptkategorie == null -> HauptkategorienEbene(
                 einträge = einträge,
+                anschlussArten = anschlussArten,
+                suchtext = suchtext,
+                onSuchtext = { suchtext = it },
+                eingangsArt = eingangsArt,
+                onEingangsArt = { eingangsArt = it },
+                ausgangsArt = ausgangsArt,
+                onAusgangsArt = { ausgangsArt = it },
+                onFilterZurücksetzen = ::filterZurücksetzen,
                 spalten = konzeptRasterSpalten(maxWidth.value, KonzeptRasterEbene.Hauptkategorien),
                 onKategorie = { kategorie ->
-                    filterZurücksetzen()
                     hauptkategorieId = kategorie.id
                     unterkategorieId = if (kategorie.kinder.isEmpty()) DIREKTE_KATEGORIE else null
                 },
@@ -96,10 +103,7 @@ internal fun KonzeptBibliothekInhalt(
                 onAusgangsArt = { ausgangsArt = it },
                 onFilterZurücksetzen = ::filterZurücksetzen,
                 spalten = konzeptRasterSpalten(maxWidth.value, KonzeptRasterEbene.Unterkategorien),
-                onZurück = {
-                    filterZurücksetzen()
-                    hauptkategorieId = null
-                },
+                onZurück = { hauptkategorieId = null },
                 onUnterkategorie = { unterkategorieId = it.id },
             )
 
@@ -120,7 +124,6 @@ internal fun KonzeptBibliothekInhalt(
                 onFilterZurücksetzen = ::filterZurücksetzen,
                 spalten = konzeptRasterSpalten(maxWidth.value, KonzeptRasterEbene.Konzepte),
                 onZurück = {
-                    filterZurücksetzen()
                     if (unterkategorieId == DIREKTE_KATEGORIE) {
                         hauptkategorieId = null
                         unterkategorieId = null
@@ -145,28 +148,67 @@ internal fun KonzeptBibliothekInhalt(
 @Composable
 private fun HauptkategorienEbene(
     einträge: List<KonzeptBibliothekEintrag>,
+    anschlussArten: List<AnschlussArtId>,
+    suchtext: String,
+    onSuchtext: (String) -> Unit,
+    eingangsArt: AnschlussArtId?,
+    onEingangsArt: (AnschlussArtId?) -> Unit,
+    ausgangsArt: AnschlussArtId?,
+    onAusgangsArt: (AnschlussArtId?) -> Unit,
+    onFilterZurücksetzen: () -> Unit,
     spalten: Int,
     onKategorie: (KonzeptKategorie) -> Unit,
 ) {
+    val filter = KonzeptBibliothekFilter(
+        suchtext = suchtext,
+        erforderlicherEingang = eingangsArt,
+        erforderlicherAusgang = ausgangsArt,
+    )
+    val ergebnisse = hauptkategorieTreffer(
+        kategorien = KonzeptBibliothekRegister.kategorien,
+        einträge = einträge,
+        filter = filter,
+    )
+    val passendeAnzahl = ergebnisse.sumOf(KonzeptHauptkategorieTreffer::anzahl)
+
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Fachgebiet wählen", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Die erste Ebene ordnet Konzepte fachlich. Die Anzahl der quadratischen Kacheln pro Zeile richtet sich nach der verfügbaren Dialogbreite.",
+            "Suche und Anschlussfilter grenzen bereits die Fachgebiete anhand ihrer enthaltenen Konzepte ein.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(spalten),
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 8.dp),
-        ) {
-            items(KonzeptBibliothekRegister.kategorien, key = KonzeptKategorie::id) { kategorie ->
-                val anzahl = einträge.count { eintrag ->
-                    eintrag.kategoriePfade.any { it.firstOrNull() == kategorie.id }
+        BibliotheksSucheUndFilter(
+            suchtext = suchtext,
+            onSuchtext = onSuchtext,
+            anschlussArten = anschlussArten,
+            eingangsArt = eingangsArt,
+            onEingangsArt = onEingangsArt,
+            ausgangsArt = ausgangsArt,
+            onAusgangsArt = onAusgangsArt,
+            onZurücksetzen = onFilterZurücksetzen,
+        )
+        Text(
+            "$passendeAnzahl passende Konzepte in ${ergebnisse.count { it.anzahl > 0 }} Fachgebieten",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (ergebnisse.isEmpty()) {
+            LeererBibliothekszustand(
+                text = "Kein Fachgebiet enthält passende Konzepte.",
+                onZurücksetzen = onFilterZurücksetzen,
+            )
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(spalten),
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 8.dp),
+            ) {
+                items(ergebnisse, key = { it.kategorie.id }) { treffer ->
+                    HauptkategorieKachel(treffer.kategorie, treffer.anzahl, onKategorie)
                 }
-                HauptkategorieKachel(kategorie, anzahl, onKategorie)
             }
         }
     }
@@ -265,7 +307,10 @@ private fun UnterkategorienEbene(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (ergebnisse.isEmpty()) {
-            LeererBibliothekszustand("Keine Unterkategorie enthält passende Konzepte.")
+            LeererBibliothekszustand(
+                text = "Keine Unterkategorie enthält passende Konzepte.",
+                onZurücksetzen = onFilterZurücksetzen,
+            )
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(spalten),
@@ -383,7 +428,10 @@ private fun KonzepteEbene(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (sichtbareEinträge.isEmpty()) {
-            LeererBibliothekszustand("Keine Konzepte entsprechen den aktiven Filtern.")
+            LeererBibliothekszustand(
+                text = "Keine Konzepte entsprechen den aktiven Filtern.",
+                onZurücksetzen = onFilterZurücksetzen,
+            )
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(spalten),
@@ -671,14 +719,24 @@ private fun AnschlussArtAuswahl(
 }
 
 @Composable
-private fun ColumnScope.LeererBibliothekszustand(text: String) {
-    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+private fun ColumnScope.LeererBibliothekszustand(
+    text: String,
+    onZurücksetzen: (() -> Unit)? = null,
+) {
+    Column(
+        Modifier.fillMaxWidth().weight(1f).padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
         Text(
             text,
-            modifier = Modifier.padding(24.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        onZurücksetzen?.let { zurücksetzen ->
+            Spacer(Modifier.height(8.dp))
+            TextButton(onClick = zurücksetzen) { Text("Suche und Filter zurücksetzen") }
+        }
     }
 }
 
