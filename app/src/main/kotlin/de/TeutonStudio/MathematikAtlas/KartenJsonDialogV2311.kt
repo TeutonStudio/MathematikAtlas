@@ -37,15 +37,20 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
     val ausgangstext = remember(zustand.editor.karte.id, zustand.editor.karte.version) {
         zustand.speicher.exportiere(zustand.editor.karte)
     }
+    val analyseCache = remember(ausgangstext) { JsonEditorAnalyseCache(::prüfeJsonV2311) }
     var wert by remember(ausgangstext) { mutableStateOf(TextFieldValue(ausgangstext)) }
-    var prüfung by remember(ausgangstext) { mutableStateOf(prüfeJsonV2311(ausgangstext)) }
+    var prüfung by remember(ausgangstext) { mutableStateOf(analyseCache.sofort(ausgangstext)) }
     var übernahmeFehler by remember(ausgangstext) { mutableStateOf<String?>(null) }
     var verwerfenBestätigen by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
 
     LaunchedEffect(wert.text) {
+        val auftrag = analyseCache.beauftrage(wert.text)
         delay(150)
-        prüfung = withContext(Dispatchers.Default) { prüfeJsonV2311(wert.text) }
+        val ergebnis = withContext(Dispatchers.Default) { analyseCache.analysiere(auftrag) }
+        analyseCache.übernehme(ergebnis)?.let { aktuellePrüfung ->
+            prüfung = aktuellePrüfung
+        }
     }
 
     fun dialogSchließen() {
@@ -229,7 +234,9 @@ private fun JsonStrukturWerkzeugeV2311(
     onWert: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val idKontext = remember(wert.text, wert.selection) { jsonIdKontextV2311(wert.text, wert.selection.start) }
+    val idKontext = remember(prüfung.idBereiche, wert.selection) {
+        jsonIdKontextV2311(prüfung.idBereiche, wert.selection.start)
+    }
     val listen = prüfung.listen.filter { it.schlüssel in unterstützteListenV2311 }
     Column(modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (idKontext != null) {
@@ -332,6 +339,7 @@ internal data class JsonPrüfungV2311(
     val schemaFehler: String?,
     val zeilenAnzahl: Int,
     val listen: List<JsonListeV2311>,
+    val idBereiche: List<JsonIdBereichV2311>,
 )
 
 internal data class JsonListeV2311(
@@ -341,6 +349,14 @@ internal data class JsonListeV2311(
 )
 
 internal data class JsonEinfügungV2311(val text: String, val cursor: Int)
+
+internal data class JsonIdBereichV2311(
+    val schlüssel: String,
+    val aktuellerWert: String,
+    val wertStart: Int,
+    val wertEnde: Int,
+    val knotenId: String?,
+)
 
 internal data class JsonIdKontextV2311(
     val schlüssel: String,
@@ -362,6 +378,7 @@ internal fun prüfeJsonV2311(text: String): JsonPrüfungV2311 {
         schemaFehler = schemaFehler,
         zeilenAnzahl = text.count { it == '\n' } + 1,
         listen = analysiereJsonListenV2311(text),
+        idBereiche = analysiereJsonIdBereicheV2311(text),
     )
 }
 
@@ -403,24 +420,40 @@ internal fun analysiereJsonListenV2311(text: String): List<JsonListeV2311> {
     return listen.sortedBy(JsonListeV2311::startOffset)
 }
 
-internal fun jsonIdKontextV2311(text: String, cursor: Int): JsonIdKontextV2311? {
-    val regex = Regex("\"(knotenId|anschlussId)\"\\s*:\\s*\"([^\"]*)\"")
-    val treffer = regex.findAll(text).firstOrNull {
-        cursor in it.groups[2]!!.range.first..(it.groups[2]!!.range.last + 1)
-    } ?: return null
-    val wertGruppe = treffer.groups[2]!!
-    val objektStart = text.lastIndexOf('{', treffer.range.first).coerceAtLeast(0)
-    val objektText = text.substring(objektStart, treffer.range.first)
-    val knotenId = Regex("\"knotenId\"\\s*:\\s*\"([^\"]+)\"")
-        .findAll(objektText).lastOrNull()?.groupValues?.get(1)
-    return JsonIdKontextV2311(
-        schlüssel = treffer.groupValues[1],
-        aktuellerWert = treffer.groupValues[2],
-        wertStart = wertGruppe.range.first,
-        wertEnde = wertGruppe.range.last + 1,
-        knotenId = knotenId,
+/** Analysiert alle ID-Felder genau einmal pro Textrevision. */
+internal fun analysiereJsonIdBereicheV2311(text: String): List<JsonIdBereichV2311> {
+    val idRegex = Regex("\"(knotenId|anschlussId)\"\\s*:\\s*\"([^\"]*)\"")
+    val knotenRegex = Regex("\"knotenId\"\\s*:\\s*\"([^\"]+)\"")
+    return idRegex.findAll(text).map { treffer ->
+        val wertGruppe = treffer.groups[2]!!
+        val objektStart = text.lastIndexOf('{', treffer.range.first).coerceAtLeast(0)
+        val objektText = text.substring(objektStart, treffer.range.first)
+        JsonIdBereichV2311(
+            schlüssel = treffer.groupValues[1],
+            aktuellerWert = treffer.groupValues[2],
+            wertStart = wertGruppe.range.first,
+            wertEnde = wertGruppe.range.last + 1,
+            knotenId = knotenRegex.findAll(objektText).lastOrNull()?.groupValues?.get(1),
+        )
+    }.toList()
+}
+
+internal fun jsonIdKontextV2311(
+    bereiche: List<JsonIdBereichV2311>,
+    cursor: Int,
+): JsonIdKontextV2311? = bereiche.firstOrNull { cursor in it.wertStart..it.wertEnde }?.let { bereich ->
+    JsonIdKontextV2311(
+        schlüssel = bereich.schlüssel,
+        aktuellerWert = bereich.aktuellerWert,
+        wertStart = bereich.wertStart,
+        wertEnde = bereich.wertEnde,
+        knotenId = bereich.knotenId,
     )
 }
+
+/** Quellkompatibler Einstieg für Tests und Werkzeuge außerhalb der Compose-Ansicht. */
+internal fun jsonIdKontextV2311(text: String, cursor: Int): JsonIdKontextV2311? =
+    jsonIdKontextV2311(analysiereJsonIdBereicheV2311(text), cursor)
 
 private fun idOptionenV2311(kontext: JsonIdKontextV2311, karte: KartenDaten): List<JsonIdOptionV2311> = when (kontext.schlüssel) {
     "knotenId" -> karte.knoten.map { JsonIdOptionV2311(it.id.wert, it.name) }
