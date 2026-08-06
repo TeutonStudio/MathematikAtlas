@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -26,6 +27,22 @@ class ZahlbereichsGraphTest {
             FundamentaleZahlbereiche.kleinsterGemeinsamerBereich(
                 listOf(FundamentalerZahlbereich.GANZ, FundamentalerZahlbereich.REELL),
             ),
+        )
+    }
+
+    @Test
+    fun `Adjunktionen besitzen ihre kanonischen Basiseinbettungen`() {
+        assertEquals(
+            ZahlbereichsIds.GAUSS_GANZ,
+            StandardZahlbereichsGraph.graph.gemeinsameMinimaleZielbereiche(
+                listOf(ZahlbereichsIds.GANZ, ZahlbereichsIds.GAUSS_GANZ),
+            ).bereich,
+        )
+        assertEquals(
+            ZahlbereichsIds.REELL_ADJUNGIERT_I,
+            StandardZahlbereichsGraph.graph.gemeinsameMinimaleZielbereiche(
+                listOf(ZahlbereichsIds.REELL, ZahlbereichsIds.REELL_ADJUNGIERT_I),
+            ).bereich,
         )
     }
 
@@ -102,6 +119,44 @@ class ZahlbereichsGraphTest {
 
         assertEquals(GemeinsamerBereichStatus.MEHRDEUTIG, ergebnis.status)
         assertEquals(listOf(x, y), ergebnis.alternativen)
+    }
+
+    @Test
+    fun `Graph JSON Roundtrip erhaelt Knoten Relationen und Voraussetzungen`() {
+        val a = ZahlbereichsId("A")
+        val b = ZahlbereichsId("B")
+        val graph = ZahlbereichsGraph(
+            knoten = listOf(
+                ZahlbereichsKnoten(a, "\\mathbb A", "Bereich Ä"),
+                ZahlbereichsKnoten(b, "\\mathbb B", "Bereich B"),
+            ),
+            relationen = listOf(
+                BereichsRelation(
+                    quelle = a,
+                    ziel = b,
+                    art = BereichsRelationArt.KANONISCHE_EINBETTUNG,
+                    voraussetzungen = linkedSetOf("intern", "verlustfrei"),
+                    adapterId = "adapter.a.b",
+                ),
+            ),
+        )
+
+        val json = ZahlbereichsGraphJsonCodec.exportiere(graph)
+        val geladen = ZahlbereichsGraphJsonCodec.importiere(json)
+
+        assertEquals(graph.knoten().sortedBy { it.id.wert }, geladen.knoten().sortedBy { it.id.wert })
+        assertEquals(graph.relationen(), geladen.relationen())
+        assertEquals(json, ZahlbereichsGraphJsonCodec.exportiere(geladen))
+    }
+
+    @Test
+    fun `Graph JSON Codec lehnt unbekannte Version ab`() {
+        val json = ZahlbereichsGraphJsonCodec.exportiere(StandardZahlbereichsGraph.graph)
+            .replace("\"schemaVersion\":1", "\"schemaVersion\":2")
+
+        assertFailsWith<IllegalArgumentException> {
+            ZahlbereichsGraphJsonCodec.importiere(json)
+        }
     }
 
     @Test
