@@ -17,6 +17,7 @@ sealed interface FormelLatexImportErgebnis {
  */
 object FormelLatexCodec {
     fun exportiere(ausdruck: FormelAusdruck): String = ErweiterterFormelRenderer.render(ausdruck).latex
+        .ersetzeFunktionsOperator("zahl.log10", "\\log")
         .ersetzeFunktionsOperator("zahl.tan", "\\tan")
         .ersetzeFunktionsOperator("zahl.cot", "\\cot")
         .ersetzeFunktionsOperator("zahl.sec", "\\sec")
