@@ -24,9 +24,9 @@ class IntegralKnotenTest {
     )
 
     private fun intervall(links: Long = 0, rechts: Long = 1) = ReellesIntervall(
-        RationaleZahl.von(links),
+        links = RationaleZahl.von(links),
         linksOffen = false,
-        RationaleZahl.von(rechts),
+        rechts = RationaleZahl.von(rechts),
         rechtsOffen = false,
     )
 
