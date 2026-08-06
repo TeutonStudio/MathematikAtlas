@@ -31,5 +31,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturFormelRechner()
         // Bewahrt gespeicherte Karten mit dem historischen Ausgang `skalar`.
         registriereStrukturRechnerKompatibilitaet()
+        // Umschließt den finalen Analysis-Auswerter und ergänzt exakte Monom-Nullstellen.
+        registriereErweiterteAnalysisNullstellen()
     }
 }
