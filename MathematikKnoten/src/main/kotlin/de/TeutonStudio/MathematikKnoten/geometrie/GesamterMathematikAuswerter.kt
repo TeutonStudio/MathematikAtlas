@@ -27,11 +27,13 @@ object GesamterMathematikAuswerter {
         registriereKonsolidierteKnoten()
         // Verfeinert ausschließlich das Skalarprodukt und delegiert alle übrigen Vektoroperationen.
         registriereSkalarproduktErweiterungen()
-        // Muss zuletzt registriert werden: typisierte CAS-Formeln und dynamische Rechnerverträge.
+        // Muss nach den allgemeinen Rechnern registriert werden: typisierte CAS-Formeln und dynamische Verträge.
         registriereStrukturFormelRechner()
         // Bewahrt gespeicherte Karten mit dem historischen Ausgang `skalar`.
         registriereStrukturRechnerKompatibilitaet()
         // Umschließt den finalen Analysis-Auswerter und ergänzt exakte Monom-Nullstellen.
         registriereErweiterteAnalysisNullstellen()
+        // Finaler Zahlenrechner-Wrapper: übernimmt ausschließlich den Divisionszustand.
+        registriereStrukturierteDivision()
     }
 }
