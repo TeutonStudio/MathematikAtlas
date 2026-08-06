@@ -117,7 +117,11 @@ sealed interface IntegralVolumenElement : Ausdruck {
         val mass: IntegralMass,
         override val quellenIds: List<String>,
     ) : IntegralVolumenElement {
-        override fun zuLatex(): String = "d${mass.zuLatex()}"
+        override fun zuLatex(): String = when (mass) {
+            is IntegralMass.Gewichtet ->
+                "${mass.gewicht.zuLatex()}\\cdot d${mass.basis.zuLatex()}"
+            else -> "d${mass.zuLatex()}"
+        }
     }
 
     data class ZellGewicht(
@@ -215,8 +219,9 @@ data class StrukturiertesIntegral(
     override fun zuLatex(): String = when (ausgabeform) {
         IntegralAusgabeform.METHODE -> {
             val basis = "\\int_{${bereich.zuLatex()}}${integrand.zuLatex()}"
-            if (methodenDarstellung == IntegralMethodenDarstellung.KURZ) basis
-            else "$basis\\cdot${volumenElement.zuLatex()}"
+            val kurzZulaessig = methodenDarstellung == IntegralMethodenDarstellung.KURZ &&
+                mass == IntegralMass.StandardReell
+            if (kurzZulaessig) basis else "$basis\\cdot${volumenElement.zuLatex()}"
         }
         IntegralAusgabeform.TERM ->
             "\\int_{${bindungsLatex()}\\in${bereich.zuLatex()}}" +
@@ -303,7 +308,7 @@ fun methodenIntegral(
         bereich = bereich,
         ausgabeform = IntegralAusgabeform.METHODE,
         mass = mass,
-        methodenDarstellung = if (kurz) {
+        methodenDarstellung = if (kurz && mass == IntegralMass.StandardReell) {
             IntegralMethodenDarstellung.KURZ
         } else {
             IntegralMethodenDarstellung.VOLLSTAENDIG
@@ -531,19 +536,20 @@ private fun StrukturiertesIntegral.wertAnDiskretemElement(
     }
 }
 
-private fun StrukturiertesIntegral.eindimensionalerZahlIntegrandOderNull(): Pair<ZahlAusdruck, Variable>? =
-    when (val wert = integrand) {
+private fun StrukturiertesIntegral.eindimensionalerZahlIntegrandOderNull(): Pair<ZahlAusdruck, Variable>? {
+    return when (val wert = integrand) {
         is IntegralIntegrand.MethodenIntegrand -> {
-            val variable = wert.methode.parameter.singleOrNull() as? Variable ?: return null
-            val term = wert.methode.vorschrift as? ZahlAusdruck ?: return null
-            term to variable
+            val variable = wert.methode.parameter.singleOrNull() as? Variable
+            val term = wert.methode.vorschrift as? ZahlAusdruck
+            if (variable == null || term == null) null else term to variable
         }
         is IntegralIntegrand.TermIntegrand -> {
-            val variable = bindungen.singleOrNull()?.variable ?: return null
-            val term = wert.term as? ZahlAusdruck ?: return null
-            term to variable
+            val variable = bindungen.singleOrNull()?.variable
+            val term = wert.term as? ZahlAusdruck
+            if (variable == null || term == null) null else term to variable
         }
     }
+}
 
 private fun RiemannIntegralVertrag?.orEmptyVoraussetzungen(): Set<Aussage> =
     this?.voraussetzungen.orEmpty()
