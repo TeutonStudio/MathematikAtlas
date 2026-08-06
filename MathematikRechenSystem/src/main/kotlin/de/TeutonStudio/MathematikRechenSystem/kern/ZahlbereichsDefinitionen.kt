@@ -16,37 +16,34 @@ enum class FundamentalerZahlbereich(
     QUATERNION("H", "\\mathbb H", true, false),
 }
 
+fun FundamentalerZahlbereich.alsZahlbereichsId(): ZahlbereichsId = ZahlbereichsId(id)
+
 object FundamentaleZahlbereiche {
-    private val direkteEinbettungen = mapOf(
-        FundamentalerZahlbereich.NATUERLICH_POSITIV to FundamentalerZahlbereich.NATUERLICH_MIT_NULL,
-        FundamentalerZahlbereich.NATUERLICH_MIT_NULL to FundamentalerZahlbereich.GANZ,
-        FundamentalerZahlbereich.GANZ to FundamentalerZahlbereich.RATIONAL,
-        FundamentalerZahlbereich.RATIONAL to FundamentalerZahlbereich.REELL,
-        FundamentalerZahlbereich.REELL to FundamentalerZahlbereich.KOMPLEX,
-        FundamentalerZahlbereich.KOMPLEX to FundamentalerZahlbereich.QUATERNION,
-    )
+    val graph: ZahlbereichsGraph = StandardZahlbereichsGraph.graph
 
     fun istTeilbereich(
         teil: FundamentalerZahlbereich,
         ober: FundamentalerZahlbereich,
-    ): Boolean {
-        if (teil == ober) return true
-        var aktuell = direkteEinbettungen[teil]
-        while (aktuell != null) {
-            if (aktuell == ober) return true
-            aktuell = direkteEinbettungen[aktuell]
-        }
-        return false
-    }
+    ): Boolean = graph.istAutomatischErreichbar(
+        teil.alsZahlbereichsId(),
+        ober.alsZahlbereichsId(),
+    )
+
+    fun gemeinsamerBereich(
+        bereiche: Iterable<ZahlbereichsId>,
+    ): GemeinsamerBereichErgebnis = graph.gemeinsameMinimaleZielbereiche(bereiche)
 
     fun kleinsterGemeinsamerBereich(
         bereiche: Iterable<FundamentalerZahlbereich>,
     ): FundamentalerZahlbereich {
         val liste = bereiche.toList()
         require(liste.isNotEmpty())
-        return FundamentalerZahlbereich.entries.first { kandidat ->
-            liste.all { istTeilbereich(it, kandidat) }
+        val ergebnis = gemeinsamerBereich(liste.map { it.alsZahlbereichsId() })
+        require(ergebnis.status == GemeinsamerBereichStatus.EINDEUTIG) {
+            "Die fundamentalen Zahlbereiche besitzen keinen eindeutigen gemeinsamen Zielbereich: $ergebnis"
         }
+        return FundamentalerZahlbereich.entries.firstOrNull { it.id == ergebnis.bereich?.wert }
+            ?: error("Der gemeinsame Bereich ${ergebnis.bereich} ist kein fundamentaler Zahlbereich.")
     }
 }
 
