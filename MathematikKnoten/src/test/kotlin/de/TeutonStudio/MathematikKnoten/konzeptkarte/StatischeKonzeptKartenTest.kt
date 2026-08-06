@@ -1,8 +1,8 @@
 package de.TeutonStudio.MathematikKnoten.konzeptkarte
 
 import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.konzeptknoten.KonzeptKnotenRegister
+import de.TeutonStudio.MathematikKnoten.konzeptknoten.istPrimäreDefinitionFür
 import de.TeutonStudio.MathematikKnoten.konzeptknoten.stabileVariantenId
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +24,7 @@ class StatischeKonzeptKartenTest {
             )
             assertEquals(
                 1,
-                eintrag.karten.count { it.primär && it.rolle == WissensKartenRolle.Definition },
+                eintrag.karten.count { karte -> karte.istPrimäreDefinitionFür(variante) },
                 "Primärdefinition für $variante",
             )
         }
