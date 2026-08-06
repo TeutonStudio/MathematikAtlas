@@ -151,10 +151,17 @@ internal object KonzeptBibliothekRegister {
 
     fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> {
         val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::bibliotheksId)
-        val kanonischeIds = alleMathematikDefinitionsVorlagen()
-            .mapTo(mutableSetOf(), KnotenVorlage::bibliotheksId)
-        val kanonischeVorlagen = eindeutigeVorlagen.filter { it.bibliotheksId() in kanonischeIds }
-        val kanonischeEinträge = KonzeptKnotenRegister.erstelle(kanonischeVorlagen).flatMap { wissen ->
+        val angeforderteVorlagenIds = eindeutigeVorlagen
+            .mapTo(linkedSetOf(), KnotenVorlage::bibliotheksId)
+        val vollständigeKanonischeVorlagen = alleMathematikDefinitionsVorlagen()
+
+        /*
+         * Das Konzeptregister validiert einen vollständigen, geschlossenen
+         * Mathematikkatalog. Teilmengen sind eine Darstellungsfrage der App und
+         * werden deshalb erst nach der kanonischen Erzeugung gefiltert. Geplante
+         * Konzepte bleiben unabhängig von der Auswahl sichtbar.
+         */
+        val kanonischeEinträge = KonzeptKnotenRegister.erstelle(vollständigeKanonischeVorlagen).flatMap { wissen ->
             val kategoriePfade = wissen.fachPfade
                 .map { it.segmente }
                 .sortedBy { it.joinToString("/") }
@@ -170,27 +177,29 @@ internal object KonzeptBibliothekRegister {
                     ),
                 )
             } else {
-                wissen.knotenVorlagen.map { vorlage ->
-                    KonzeptBibliothekEintrag(
-                        id = vorlage.bibliotheksId(),
-                        titel = vorlage.name,
-                        beschreibung = vorlage.beschreibung,
-                        kategoriePfade = kategoriePfade,
-                        suchbegriffe = wissen.alleSuchtexte + setOf(
-                            vorlage.name,
-                            vorlage.beschreibung,
-                            vorlage.kategorie,
-                            vorlage.art,
-                        ) + vorlage.standardParameter.keys + vorlage.standardParameter.values,
-                        verfügbarkeit = when (wissen.verfügbarkeit) {
-                            WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
-                            WissensVerfügbarkeit.Geplant,
-                            WissensVerfügbarkeit.Historisch,
-                            -> KonzeptVerfügbarkeit.Geplant
-                        },
-                        vorlage = vorlage,
-                    )
-                }
+                wissen.knotenVorlagen
+                    .filter { vorlage -> vorlage.bibliotheksId() in angeforderteVorlagenIds }
+                    .map { vorlage ->
+                        KonzeptBibliothekEintrag(
+                            id = vorlage.bibliotheksId(),
+                            titel = vorlage.name,
+                            beschreibung = vorlage.beschreibung,
+                            kategoriePfade = kategoriePfade,
+                            suchbegriffe = wissen.alleSuchtexte + setOf(
+                                vorlage.name,
+                                vorlage.beschreibung,
+                                vorlage.kategorie,
+                                vorlage.art,
+                            ) + vorlage.standardParameter.keys + vorlage.standardParameter.values,
+                            verfügbarkeit = when (wissen.verfügbarkeit) {
+                                WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
+                                WissensVerfügbarkeit.Geplant,
+                                WissensVerfügbarkeit.Historisch,
+                                -> KonzeptVerfügbarkeit.Geplant
+                            },
+                            vorlage = vorlage,
+                        )
+                    }
             }
         }
         val abgedeckteVorlagenIds = kanonischeEinträge
