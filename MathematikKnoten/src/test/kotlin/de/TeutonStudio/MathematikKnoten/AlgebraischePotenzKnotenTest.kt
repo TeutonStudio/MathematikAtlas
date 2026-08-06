@@ -165,9 +165,9 @@ class AlgebraischePotenzKnotenTest {
     }
 
     @Test
-    fun `historischer Potenzknoten migriert idempotent`() {
+    fun `historischer Strukturpotenzknoten migriert idempotent`() {
         val alt = KnotenDaten(
-            art = "mathematik.potenz",
+            art = "mathematik.potenzStrukturell",
             name = "Alt",
             position = GraphPunkt.Zero,
             anschlüsse = AlgebraischePotenzKnotenVorlagen.Potenz.anschlüsse,
