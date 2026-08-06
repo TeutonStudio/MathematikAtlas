@@ -24,8 +24,14 @@ object KartenDatenJson {
         put("visuelleGruppen", JSONArray().apply { karte.visuelleGruppen.forEach { put(visuelleGruppeZuJson(it)) } })
     }.toString(2)
 
-    fun lese(text: String): KartenDaten {
-        val json = JSONObject(text)
+    fun lese(text: String): KartenDaten = lese(JSONObject(text))
+
+    /**
+     * Dekodiert einen bereits geparsten Objektbaum. Editoren und Importpipelines
+     * können dadurch Syntax- und Schemaprüfung innerhalb einer Textrevision mit
+     * genau einem vollständigen JSON-Parse durchführen.
+     */
+    fun lese(json: JSONObject): KartenDaten {
         val ansicht = json.optJSONObject("ansicht")
         return KartenDaten(
             id = KartenId(json.getString("id")),
