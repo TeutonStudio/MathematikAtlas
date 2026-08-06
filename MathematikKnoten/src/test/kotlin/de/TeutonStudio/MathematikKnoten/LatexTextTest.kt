@@ -100,4 +100,24 @@ class LatexTextTest {
     fun `unterstützt Fallunterscheidungen und Methodenpfeile`() {
         assertEquals("f:{\nℝ → ℂ\nx ↦ x}", vereinfacheLatexAnzeige("f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto x\\end{cases}"))
     }
+    @Test
+    fun `mathbb funktioniert gruppiert und ungruppiert`() {
+        assertEquals("ℝ ℕ", vereinfacheLatexAnzeige("\\mathbb R \\mathbb{N}"))
+    }
+
+    @Test
+    fun `Formelbegrenzer werden in Reitertiteln entfernt`() {
+        assertEquals("ℝ", vereinfacheLatexAnzeige("$\\mathbb{R}$"))
+        assertEquals("ℕ", vereinfacheLatexAnzeige("\\(\\mathbb{N}\\)"))
+    }
+
+    @Test
+    fun `historische Intervall Delimiter bleiben lesbar`() {
+        assertEquals("]1,3[", vereinfacheLatexAnzeige("\\mathopen{]}1,3\\mathclose{[}"))
+    }
+
+    @Test
+    fun `annotierte reelle Intervalle rendern Zahlbereich und Randrelationen`() {
+        assertEquals("1≤ℝ<3", vereinfacheLatexAnzeige("{}^{1\\leq}\\mathbb{R}^{<3}"))
+    }
 }

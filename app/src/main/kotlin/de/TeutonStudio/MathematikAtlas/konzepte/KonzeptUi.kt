@@ -22,6 +22,7 @@ import de.TeutonStudio.MathematikKnoten.LatexFormel
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.normalisiereLatexQuelltext
 
 @Composable
 internal fun KnotenKonzeptDialog(
@@ -150,7 +151,7 @@ private fun KonzeptDialog(
                                     onClick = { reiterIndex = index },
                                     text = {
                                         LatexText(
-                                            latex = reiter.titel,
+                                            latex = normalisiereKonzeptReiterTitel(reiter.titel),
                                             style = MaterialTheme.typography.labelLarge,
                                         )
                                     },
@@ -227,6 +228,11 @@ private fun KonzeptDialog(
         }
     }
 }
+
+private val doppeltEscapterLatexBefehl = Regex("""\\\\(?=[A-Za-z])""")
+
+internal fun normalisiereKonzeptReiterTitel(titel: String): String =
+    normalisiereLatexQuelltext(titel).replace(doppeltEscapterLatexBefehl) { "\\" }
 
 @Composable
 private fun UnveränderlicheKonzeptKarte(

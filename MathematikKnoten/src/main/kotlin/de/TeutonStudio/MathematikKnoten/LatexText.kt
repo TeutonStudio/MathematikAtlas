@@ -125,12 +125,27 @@ private fun zerlegeGroßenOperator(latex: String): GroßerOperatorTeile? {
     )
 }
 
+fun normalisiereLatexQuelltext(latex: String): String {
+    val getrimmt = latex.trim()
+    return when {
+        getrimmt.length >= 4 && getrimmt.startsWith("$$") && getrimmt.endsWith("$$") ->
+            getrimmt.substring(2, getrimmt.length - 2).trim()
+        getrimmt.length >= 4 && getrimmt.startsWith("\\[") && getrimmt.endsWith("\\]") ->
+            getrimmt.substring(2, getrimmt.length - 2).trim()
+        getrimmt.length >= 4 && getrimmt.startsWith("\\(") && getrimmt.endsWith("\\)") ->
+            getrimmt.substring(2, getrimmt.length - 2).trim()
+        getrimmt.length >= 2 && getrimmt.startsWith('$') && getrimmt.endsWith('$') ->
+            getrimmt.substring(1, getrimmt.length - 1).trim()
+        else -> getrimmt
+    }
+}
+
 fun latexZuAnnotiertemText(
     latex: String,
     wahrFarbe: Color = STANDARD_WAHR_FARBE,
     lügeFarbe: Color = STANDARD_LÜGE_FARBE,
 ): AnnotatedString = buildAnnotatedString {
-    LatexParser(latex, this, wahrFarbe, lügeFarbe).schreibe()
+    LatexParser(normalisiereLatexQuelltext(latex), this, wahrFarbe, lügeFarbe).schreibe()
 }
 
 /** Kompakte Klartextvariante für Stellen, an denen kein Compose-Text verfügbar ist. */
@@ -196,9 +211,9 @@ private class LatexParser(
             "mathcal" -> schreibeMathcal()
             "top" -> schreibeWahrheitswert("Wahr", wahrFarbe)
             "bot" -> schreibeWahrheitswert("Lüge", lügeFarbe)
-            "mathop", "mathbin" -> schreibeArgument()
+            "mathop", "mathbin", "mathopen", "mathclose" -> schreibeArgument()
             "limits" -> Unit
-            "mathbb" -> ausgabe.append(zahlbereich(liesGruppenText()))
+            "mathbb" -> schreibeDoppelstrich()
             "begin" -> when (liesGruppenText()) {
                 "pmatrix" -> ausgabe.append('[')
                 "cases" -> { casesTiefe++; ausgabe.append("{\n") }
@@ -211,6 +226,16 @@ private class LatexParser(
             "operatorname", "text", "mathrm", "mathbf" -> ausgabe.append(liesGruppenText().replace("\\ ", " "))
             else -> ausgabe.append(zeichenFürBefehl(befehl))
         }
+    }
+
+    private fun schreibeDoppelstrich() {
+        while (position < quelltext.length && quelltext[position].isWhitespace()) position++
+        val inhalt = when {
+            position >= quelltext.length -> ""
+            quelltext[position] == '{' -> liesGruppenText()
+            else -> quelltext[position++].toString()
+        }
+        ausgabe.append(zahlbereich(inhalt))
     }
 
     private fun schreibeMathcal() {

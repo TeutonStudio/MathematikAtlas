@@ -79,7 +79,7 @@ class ReellesIntervallKnotenTest {
         val ergebnis = auswerten(mapOf("links" to BedingterWert(z(1)), "rechts" to BedingterWert(z(3))))
 
         assertEquals(
-            "\\mathopen{[}1,3\\mathclose{]}",
+            "{}^{1\\leq}\\mathbb{R}^{\\leq3}",
             assertIs<ReellesIntervall>(ergebnis).zuLatex(),
         )
     }
@@ -103,8 +103,8 @@ class ReellesIntervallKnotenTest {
             ),
         )
 
-        assertEquals("\\mathopen{]}1,3\\mathclose{[}", assertIs<ReellesIntervall>(beideOffen).zuLatex())
-        assertEquals("\\mathopen{[}1,3\\mathclose{[}", assertIs<ReellesIntervall>(nurRechtsOffen).zuLatex())
+        assertEquals("{}^{1<}\\mathbb{R}^{<3}", assertIs<ReellesIntervall>(beideOffen).zuLatex())
+        assertEquals("{}^{1\\leq}\\mathbb{R}^{<3}", assertIs<ReellesIntervall>(nurRechtsOffen).zuLatex())
     }
 
     @Test

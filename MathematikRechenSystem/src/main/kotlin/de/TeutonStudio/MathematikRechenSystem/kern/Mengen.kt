@@ -16,9 +16,9 @@ data class ReellesIntervall(
     val rechtsOffen: Boolean,
 ) : MengenAusdruck {
     override fun zuLatex(): String {
-        val linkeKlammer = if (linksOffen) "\\mathopen{]}" else "\\mathopen{[}"
-        val rechteKlammer = if (rechtsOffen) "\\mathclose{[}" else "\\mathclose{]}"
-        return "$linkeKlammer${links.zuLatex()},${rechts.zuLatex()}$rechteKlammer"
+        val linkeRelation = if (linksOffen) "<" else "\\leq"
+        val rechteRelation = if (rechtsOffen) "<" else "\\leq"
+        return "{}^{${links.zuLatex()}$linkeRelation}\\mathbb{R}^{${rechteRelation}${rechts.zuLatex()}}"
     }
 }
 
