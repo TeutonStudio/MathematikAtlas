@@ -71,19 +71,27 @@ object StandardPotenzStrukturen {
         annahmen: Set<Aussage> = emptySet(),
     ): PotenzStrukturAufloesung = when (basis) {
         is ZahlAusdruck -> {
-            val menge = runCatching {
-                inferiereZahlenWertevorrat(basis, werteVorräte, annahmen)
-            }.getOrNull()
-            val bereich = menge?.fundamentalerZahlbereichOderNull()
-            if (bereich == null) {
+            val unbekannteVariablen = basis.enthalteneVariablen()
+                .filterNot { it.name in werteVorräte }
+            if (unbekannteVariablen.isNotEmpty()) {
                 PotenzStrukturAufloesung.NichtVorhanden(
-                    "Der Zahlbereich von ${basis.zuLatex()} ist nicht eindeutig bestimmbar.",
+                    "Der Zahlbereich der Variablen ${unbekannteVariablen.joinToString { it.name }} ist nicht festgelegt.",
                 )
             } else {
-                PotenzStrukturAufloesung.Gefunden(
-                    zahlbereich(bereich),
-                    standardZahlMultiplikation,
-                )
+                val menge = runCatching {
+                    inferiereZahlenWertevorrat(basis, werteVorräte, annahmen)
+                }.getOrNull()
+                val bereich = menge?.fundamentalerZahlbereichOderNull()
+                if (bereich == null) {
+                    PotenzStrukturAufloesung.NichtVorhanden(
+                        "Der Zahlbereich von ${basis.zuLatex()} ist nicht eindeutig bestimmbar.",
+                    )
+                } else {
+                    PotenzStrukturAufloesung.Gefunden(
+                        zahlbereich(bereich),
+                        standardZahlMultiplikation,
+                    )
+                }
             }
         }
         is Matrix -> PotenzStrukturAufloesung.Gefunden(
