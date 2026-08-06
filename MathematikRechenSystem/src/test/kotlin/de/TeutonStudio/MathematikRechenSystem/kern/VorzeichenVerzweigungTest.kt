@@ -17,7 +17,7 @@ class VorzeichenVerzweigungTest {
             VerzweigungsQuellenId("s1"),
         )
 
-        assertEquals("\\pmx", verzweigung.zuLatex())
+        assertEquals("\\pm\\,x", verzweigung.zuLatex())
         assertEquals(listOf(x, negation(x)), verzweigung.entfalte().komponenten)
     }
 
@@ -29,7 +29,7 @@ class VorzeichenVerzweigungTest {
             VerzweigungsQuellenId("s1"),
         )
 
-        assertEquals("\\mpx", verzweigung.zuLatex())
+        assertEquals("\\mp\\,x", verzweigung.zuLatex())
         assertEquals(listOf(negation(x), x), verzweigung.entfalte().komponenten)
     }
 
@@ -103,6 +103,6 @@ class VorzeichenVerzweigungTest {
         assertEquals(listOf(Wurzel(a), negation(Wurzel(a))), loesung.geordnetesErgebnis.komponenten)
         assertEquals(1, loesung.bedingungen.size)
         assertIs<Vergleich>(loesung.bedingungen.single())
-        assertTrue(loesung.schritte.first().latex.contains("\\pm\\varphi"))
+        assertTrue(loesung.schritte.first().latex.contains("\\pm\\,\\varphi"))
     }
 }
