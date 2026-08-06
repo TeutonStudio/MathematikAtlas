@@ -18,6 +18,7 @@ object KonzeptKnotenRegister {
             }
 
         val explizitRegistrierteVarianten = expliziteEinträge
+            .filter { eintrag -> eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar }
             .flatMapTo(linkedSetOf()) { eintrag -> eintrag.varianten }
         val generischeEinträge = eindeutigeVorlagen
             .filter { vorlage -> vorlage.stabileVariantenId() !in explizitRegistrierteVarianten }
@@ -71,7 +72,9 @@ object KonzeptKnotenRegister {
 
         val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId)
         val erwarteteVarianten = eindeutigeVorlagen.map(KnotenVorlage::stabileVariantenId)
-        val registrierteVarianten = einträge.flatMap { it.varianten }
+        val registrierteVarianten = einträge
+            .filter { eintrag -> eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar }
+            .flatMap { eintrag -> eintrag.varianten }
         (erwarteteVarianten.toSet() - registrierteVarianten.toSet()).forEach {
             add("Fehlende Knotenvorlage: $it")
         }
