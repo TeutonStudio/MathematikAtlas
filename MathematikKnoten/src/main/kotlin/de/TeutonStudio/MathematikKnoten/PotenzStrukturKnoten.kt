@@ -143,24 +143,19 @@ private fun pruefeInnereMultiplikation(
                 fehler = "Für das Argument '${parameter.name}' fehlt der Wertevorrat.",
             )
         if (bereich != traeger) {
-            val beziehung = TeilmengenBeziehung(traeger, bereich)
-            when (val pruefung = pruefeVertragsAussage(
-                aussage = beziehung,
+            val pruefung = pruefeVertragsAussage(
+                aussage = TeilmengenBeziehung(traeger, bereich),
                 kontext = kontext,
                 widerlegtNachricht = "Der Träger ${traeger.zuLatex()} liegt nicht im Wertevorrat ${bereich.zuLatex()} des Arguments '${parameter.name}'.",
-            )) {
-                is StrukturVertragsPruefung -> {
-                    pruefung.fehler?.let { return pruefung }
-                    voraussetzungen += pruefung.voraussetzungen
-                }
-            }
+            )
+            pruefung.fehler?.let { return pruefung }
+            voraussetzungen += pruefung.voraussetzungen
         }
     }
 
     if (methode.zielMenge != traeger) {
-        val beziehung = TeilmengenBeziehung(methode.zielMenge, traeger)
         val pruefung = pruefeVertragsAussage(
-            aussage = beziehung,
+            aussage = TeilmengenBeziehung(methode.zielMenge, traeger),
             kontext = kontext,
             widerlegtNachricht = "Die Zielmenge ${methode.zielMenge.zuLatex()} der Multiplikation liegt nicht im Träger ${traeger.zuLatex()}.",
         )
