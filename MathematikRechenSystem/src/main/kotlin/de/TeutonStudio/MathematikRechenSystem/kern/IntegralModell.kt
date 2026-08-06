@@ -137,13 +137,21 @@ data class StrukturiertesIntegral(
             "\\int_{${bereich.zuLatex()}}${integrand.zuLatex()}"
         IntegralAusgabeform.TERM ->
             "\\int_{${bindungsLatex()}\\in${bereich.zuLatex()}}" +
-                "${integrand.zuLatex()}\\cdot${volumenElement.zuLatex()}"
+                "${integrandAlsProduktFaktor()}\\cdot${volumenElement.zuLatex()}"
     }
 
     private fun bindungsLatex(): String = when (bindungen.size) {
         1 -> bindungen.single().variable.zuLatex()
         else -> bindungen.joinToString(prefix = "\\left(", separator = ",", postfix = "\\right)") {
             it.variable.zuLatex()
+        }
+    }
+
+    private fun integrandAlsProduktFaktor(): String {
+        val term = (integrand as? IntegralIntegrand.TermIntegrand)?.term
+        return when (term) {
+            is Addition -> "\\left(${term.zuLatex()}\\right)"
+            else -> integrand.zuLatex()
         }
     }
 }
