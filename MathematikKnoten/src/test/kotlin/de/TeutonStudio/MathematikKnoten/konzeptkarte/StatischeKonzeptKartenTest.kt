@@ -1,8 +1,8 @@
 package de.TeutonStudio.MathematikKnoten.konzeptkarte
 
 import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.MathematikEnzyklopädie
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
+import de.TeutonStudio.MathematikKnoten.konzeptknoten.KonzeptKnotenRegister
 import de.TeutonStudio.MathematikKnoten.konzeptknoten.stabileVariantenId
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,14 +12,15 @@ import kotlin.test.assertTrue
 class StatischeKonzeptKartenTest {
     @Test
     fun `jede Definitionsvariante besitzt genau eine primaere Definition`() {
-        val varianten = alleMathematikDefinitionsVorlagen().map { it.stabileVariantenId() }.toSet()
-        val register = MathematikEnzyklopädie.standard
+        val vorlagen = alleMathematikDefinitionsVorlagen()
+        val varianten = vorlagen.map { it.stabileVariantenId() }.toSet()
+        val einträge = KonzeptKnotenRegister.erstelle(vorlagen)
         assertTrue(varianten.isNotEmpty())
 
         varianten.forEach { variante ->
             val eintrag = assertNotNull(
-                register.alle.singleOrNull { variante in it.varianten },
-                "Kein eindeutiger Wissenseintrag für $variante",
+                einträge.singleOrNull { variante in it.varianten },
+                "Kein eindeutiger Konzept-Wissenseintrag für $variante",
             )
             assertEquals(
                 1,
