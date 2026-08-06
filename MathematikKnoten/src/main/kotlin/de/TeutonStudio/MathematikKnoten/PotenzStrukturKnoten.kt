@@ -56,10 +56,13 @@ private fun KnotenAuswertungsKontext.wertePotenzStrukturAus(): KnotenAuswertungs
         return fehlerErgebnis("Die Multiplikationsmethode muss genau zwei formale Argumente besitzen.")
     }
 
-    val signaturPruefung = pruefeInnereMultiplikation(multiplikation, traeger)
-    if (signaturPruefung.fehler != null) {
-        return fehlerErgebnis(signaturPruefung.fehler)
-    }
+    val signaturPruefung = pruefeInnereMultiplikation(
+        methode = multiplikation,
+        traeger = traeger,
+        kontext = rechenKontext,
+    )
+    signaturPruefung.fehler?.let { return fehlerErgebnis(it) }
+
     val abgeschlossenAussage = eingänge["abgeschlossen"]?.objekt as? Aussage
     val assoziativAussage = eingänge["assoziativ"]?.objekt as? Aussage
     val neutral = eingänge["neutral"]?.objekt
@@ -67,6 +70,13 @@ private fun KnotenAuswertungsKontext.wertePotenzStrukturAus(): KnotenAuswertungs
     if (neutral == null && neutralitaetsAussage != null) {
         return fehlerErgebnis("Ein Neutralitätsnachweis ohne verbundenes neutrales Element ist unvollständig.")
     }
+
+    val neutralPruefung = pruefeNeutralesElement(
+        neutral = neutral,
+        traeger = traeger,
+        kontext = rechenKontext,
+    )
+    neutralPruefung.fehler?.let { return fehlerErgebnis(it) }
 
     val struktur = PotenzStruktur(
         id = knoten.parameter[POTENZ_STRUKTUR_BEZEICHNUNG_PARAMETER]
@@ -82,10 +92,13 @@ private fun KnotenAuswertungsKontext.wertePotenzStrukturAus(): KnotenAuswertungs
             NachweisStatus.Unvollstaendig
         } else {
             statusAusAussage(neutralitaetsAussage)
+                .mitZusaetzlichenBedingungen(neutralPruefung.voraussetzungen)
         },
         multiplikationsMethode = multiplikation,
     )
-    val annahmen = gemeinsameAnnahmen() + signaturPruefung.voraussetzungen +
+    val annahmen = gemeinsameAnnahmen() +
+        signaturPruefung.voraussetzungen +
+        neutralPruefung.voraussetzungen +
         struktur.abgeschlossenheit.bedingungenOderLeer() +
         struktur.assoziativitaet.bedingungenOderLeer() +
         struktur.neutralitaet.bedingungenOderLeer()
@@ -102,12 +115,18 @@ private fun KnotenAuswertungsKontext.wertePotenzStrukturAus(): KnotenAuswertungs
             add("Abgeschlossenheit: ${struktur.abgeschlossenheit.statusName()}")
             add("Assoziativität: ${struktur.assoziativitaet.statusName()}")
             add("Neutralität: ${struktur.neutralitaet.statusName()}")
+            if (signaturPruefung.voraussetzungen.isNotEmpty()) {
+                add("Die innere Signatur bleibt unter ${signaturPruefung.voraussetzungen.size} Voraussetzung(en) gültig.")
+            }
+            if (neutralPruefung.voraussetzungen.isNotEmpty()) {
+                add("Die Trägerzugehörigkeit des neutralen Elements bleibt offen.")
+            }
         },
         eingänge = eingänge,
     )
 }
 
-private data class InnereMultiplikationsPruefung(
+private data class StrukturVertragsPruefung(
     val voraussetzungen: Set<Aussage> = emptySet(),
     val fehler: String? = null,
 )
@@ -115,23 +134,63 @@ private data class InnereMultiplikationsPruefung(
 private fun pruefeInnereMultiplikation(
     methode: Methode,
     traeger: MengenAusdruck,
-): InnereMultiplikationsPruefung {
+    kontext: RechenKontext,
+): StrukturVertragsPruefung {
     val voraussetzungen = linkedSetOf<Aussage>()
     methode.parameter.forEach { parameter ->
         val bereich = methode.werteVorräte[parameter.name]
-            ?: return InnereMultiplikationsPruefung(
+            ?: return StrukturVertragsPruefung(
                 fehler = "Für das Argument '${parameter.name}' fehlt der Wertevorrat.",
             )
-        when {
-            bereich == traeger -> Unit
-            else -> voraussetzungen += TeilmengenBeziehung(traeger, bereich)
+        if (bereich != traeger) {
+            val beziehung = TeilmengenBeziehung(traeger, bereich)
+            when (val pruefung = pruefeVertragsAussage(
+                aussage = beziehung,
+                kontext = kontext,
+                widerlegtNachricht = "Der Träger ${traeger.zuLatex()} liegt nicht im Wertevorrat ${bereich.zuLatex()} des Arguments '${parameter.name}'.",
+            )) {
+                is StrukturVertragsPruefung -> {
+                    pruefung.fehler?.let { return pruefung }
+                    voraussetzungen += pruefung.voraussetzungen
+                }
+            }
         }
     }
-    when {
-        methode.zielMenge == traeger -> Unit
-        else -> voraussetzungen += TeilmengenBeziehung(methode.zielMenge, traeger)
+
+    if (methode.zielMenge != traeger) {
+        val beziehung = TeilmengenBeziehung(methode.zielMenge, traeger)
+        val pruefung = pruefeVertragsAussage(
+            aussage = beziehung,
+            kontext = kontext,
+            widerlegtNachricht = "Die Zielmenge ${methode.zielMenge.zuLatex()} der Multiplikation liegt nicht im Träger ${traeger.zuLatex()}.",
+        )
+        pruefung.fehler?.let { return pruefung }
+        voraussetzungen += pruefung.voraussetzungen
     }
-    return InnereMultiplikationsPruefung(voraussetzungen)
+    return StrukturVertragsPruefung(voraussetzungen)
+}
+
+private fun pruefeNeutralesElement(
+    neutral: MathematischesObjekt?,
+    traeger: MengenAusdruck,
+    kontext: RechenKontext,
+): StrukturVertragsPruefung {
+    if (neutral == null) return StrukturVertragsPruefung()
+    return pruefeVertragsAussage(
+        aussage = ElementBeziehung(neutral, traeger),
+        kontext = kontext,
+        widerlegtNachricht = "Das angegebene neutrale Element ${neutral.zuLatex()} liegt nicht im Träger ${traeger.zuLatex()}.",
+    )
+}
+
+private fun pruefeVertragsAussage(
+    aussage: Aussage,
+    kontext: RechenKontext,
+    widerlegtNachricht: String,
+): StrukturVertragsPruefung = when (aussage.entscheide(kontext).wahrheitswert) {
+    Wahrheitswert.Wahr -> StrukturVertragsPruefung()
+    Wahrheitswert.Lüge -> StrukturVertragsPruefung(fehler = widerlegtNachricht)
+    null -> StrukturVertragsPruefung(voraussetzungen = setOf(aussage))
 }
 
 private fun KnotenAuswertungsKontext.statusAusAussage(aussage: Aussage?): NachweisStatus {
