@@ -122,13 +122,6 @@ fun inferiereEndlicheMaechtigkeit(menge: MengenAusdruck): EndlicheMaechtigkeitsI
     )
 }
 
-/** Laufzeitwert einer Definitionskarte für eine explizite Zahlbereichsdarstellung. */
-data class ZahlbereichsDarstellungsAusdruck(
-    val darstellung: ZahlbereichsDarstellung,
-) : MathematischesObjekt {
-    override fun zuLatex(): String = darstellung.definitionsLatex
-}
-
 /** Kernobjekte der Zahlbereichs- und Darstellungsdefinitionskarten. */
 object ZahlbereichsDefinitionsKatalog {
     val natuerlicheZahlen = InduktiveDefinition(
@@ -217,31 +210,44 @@ object ZahlbereichsDefinitionsKatalog {
         referenzen = setOf(ganzeZahlen.id, natuerlicheZahlen.id),
     )
 
-    private fun darstellung(id: String): ZahlbereichsDarstellung =
-        StandardZahlbereichsGraph.darstellungen.single { it.id == id }
+    private fun darstellungsDefinition(
+        id: String,
+        name: String,
+        operatorId: String,
+        darstellungId: String,
+    ): ImpliziteDefinition {
+        val darstellung = StandardZahlbereichsGraph.darstellungen.single { it.id == darstellungId }
+        return ImpliziteDefinition(
+            id = id,
+            name = name,
+            ziel = DefinitionsZiel.Operation(
+                stabileId = id,
+                operatorId = operatorId,
+            ),
+            charakterisierendeRegeln = listOf(
+                DefinitionsRegel(
+                    id = "$id.korrespondenz",
+                    name = "Matrixkorrespondenz",
+                    folgerungLatex = darstellung.definitionsLatex,
+                ),
+            ),
+            existenzStatus = NachweisStatus.Nachgewiesen,
+            eindeutigkeitsStatus = NachweisStatus.Nachgewiesen,
+        )
+    }
 
-    val komplexeMatrixdarstellung = ExpliziteDefinition(
+    val komplexeMatrixdarstellung = darstellungsDefinition(
         id = "definition.zahlbereich.darstellung.C.M2R",
         name = "Komplexe Zahlen als reelle 2×2-Matrizen",
-        ziel = DefinitionsZiel.Operation(
-            stabileId = "definition.zahlbereich.darstellung.C.M2R",
-            operatorId = "zahlbereich.darstellung.C.M2R",
-        ),
-        wert = ZahlbereichsDarstellungsAusdruck(
-            darstellung("zahlbereich.darstellung.C.M2R"),
-        ),
+        operatorId = "zahlbereich.darstellung.C.M2R",
+        darstellungId = "zahlbereich.darstellung.C.M2R",
     )
 
-    val quaternionenMatrixdarstellung = ExpliziteDefinition(
+    val quaternionenMatrixdarstellung = darstellungsDefinition(
         id = "definition.zahlbereich.darstellung.H.M2C",
         name = "Hamilton-Quaternionen als komplexe 2×2-Matrizen",
-        ziel = DefinitionsZiel.Operation(
-            stabileId = "definition.zahlbereich.darstellung.H.M2C",
-            operatorId = "zahlbereich.darstellung.H.M2C",
-        ),
-        wert = ZahlbereichsDarstellungsAusdruck(
-            darstellung("zahlbereich.darstellung.H.M2C"),
-        ),
+        operatorId = "zahlbereich.darstellung.H.M2C",
+        darstellungId = "zahlbereich.darstellung.H.M2C",
     )
 
     val alle: List<MathematischeDefinition> = listOf(
