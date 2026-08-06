@@ -33,14 +33,26 @@ internal fun FormelBauerDialog(
     var variablenText by remember { mutableStateOf("x") }
     var kategorie by remember { mutableStateOf(FormelTastenKategorie.GRUNDRECHNUNG) }
 
-    val vorschau = remember(revision) { editor.exportiere() }
     val prüfung = remember(revision) { FormelAusdruckPruefer.pruefe(editor.wurzel) }
-    val gültig = prüfung == FormelPruefung.Gueltig
+    val gültig = importFehler == null && prüfung == FormelPruefung.Gueltig
 
     fun geändert() {
         revision++
         latexEingabe = editor.exportiere()
         importFehler = null
+    }
+
+    fun latexGeändert(neu: String) {
+        latexEingabe = neu
+        when (val ergebnis = editor.importiere(neu)) {
+            is FormelLatexImportErgebnis.Erfolg -> {
+                revision++
+                importFehler = null
+            }
+            is FormelLatexImportErgebnis.Fehler -> {
+                importFehler = "${ergebnis.nachricht} (Position ${ergebnis.position + 1})"
+            }
+        }
     }
 
     fun cursorBewegen(richtung: FormelCursorRichtung) {
@@ -64,7 +76,7 @@ internal fun FormelBauerDialog(
                     Column(Modifier.weight(1f)) {
                         Text("CAS-Formelbauer", style = MaterialTheme.typography.headlineSmall)
                         Text(
-                            "Strukturierte Formel bearbeiten; LaTeX ist Import und Projektion, nicht die interne Wahrheit.",
+                            "LaTeX und strukturierte Formel werden live synchronisiert; die Struktur bleibt die interne Wahrheit.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -201,10 +213,10 @@ internal fun FormelBauerDialog(
 
                 OutlinedTextField(
                     value = latexEingabe,
-                    onValueChange = { latexEingabe = it; importFehler = null },
-                    label = { Text("Kontrollierter LaTeX-Import") },
+                    onValueChange = ::latexGeändert,
+                    label = { Text("LaTeX") },
                     supportingText = {
-                        Text(importFehler ?: "Import ersetzt den strukturierten Entwurf; Export bleibt kanonisch.")
+                        Text(importFehler ?: "Änderungen werden sofort in die strukturierte Formel übernommen.")
                     },
                     isError = importFehler != null,
                     minLines = 2,
@@ -212,15 +224,6 @@ internal fun FormelBauerDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    OutlinedButton(onClick = {
-                        when (val ergebnis = editor.importiere(latexEingabe)) {
-                            is FormelLatexImportErgebnis.Erfolg -> geändert()
-                            is FormelLatexImportErgebnis.Fehler -> {
-                                importFehler = "${ergebnis.nachricht} (Position ${ergebnis.position + 1})"
-                            }
-                        }
-                    }) { Text("LaTeX importieren") }
-                    Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = { übernehmen(editor.exportiere()) },
                         enabled = gültig,
