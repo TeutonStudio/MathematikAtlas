@@ -26,7 +26,7 @@ class StrukturierteDivisionKartenJsonTest {
         val text = KartenJson.schreibe(karte)
         val gelesen = KartenJson.lese(text).knoten.single()
 
-        assertTrue(text.contains("\\\"$ZAHLENRECHNER_DIVISIONSSEITE\\\""))
+        assertTrue(text.contains("\"$ZAHLENRECHNER_DIVISIONSSEITE\""))
         assertEquals("links", gelesen.parameter[ZAHLENRECHNER_DIVISIONSSEITE])
         assertEquals("false", gelesen.parameter[ZAHLENRECHNER_DIVISIONSSEITE_FEHLT])
         assertEquals(links.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
