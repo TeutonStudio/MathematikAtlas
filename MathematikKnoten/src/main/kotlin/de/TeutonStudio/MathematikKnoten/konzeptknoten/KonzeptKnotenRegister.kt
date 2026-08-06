@@ -47,13 +47,13 @@ object KonzeptKnotenRegister {
             if (eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar && eintrag.knotenVorlagen.isNotEmpty()) {
                 add("${eintrag.id}: nicht verfügbarer Eintrag besitzt Knotenvorlagen")
             }
-            if (eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar) {
-                eintrag.varianten.forEach { variante ->
-                    val anzahl = eintrag.karten.count { karte -> karte.istPrimäreDefinitionFür(variante) }
-                    if (anzahl != 1) {
-                        add("${eintrag.id}: Variante $variante benötigt genau eine primäre Definition, gefunden: $anzahl")
-                    }
+            if (
+                eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar &&
+                eintrag.karten.none { karte ->
+                    karte.primär && karte.rolle == WissensKartenRolle.Definition
                 }
+            ) {
+                add("${eintrag.id}: benötigt mindestens eine primäre Definition")
             }
             (eintrag.fachPfade - FachKatalog.alle).forEach {
                 add("${eintrag.id}: unbekannter Fachpfad ${it.stabileId}")
@@ -75,6 +75,11 @@ object KonzeptKnotenRegister {
     }
 }
 
+/**
+ * Variante-spezifische Invariante für den kanonischen Kernbestand. Dynamische
+ * App-Erweiterungen dürfen eine gemeinsame primäre Definition erben, ohne jede
+ * Darstellungsvariante nochmals in den Kartenmetadaten aufzuzählen.
+ */
 internal fun WissensKartenReferenz.istPrimäreDefinitionFür(variante: VariantenId): Boolean =
     primär &&
         rolle == WissensKartenRolle.Definition &&
