@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/agent-latex-ui-fix.yml
       - .github/agent-latex-ui-fix.py
+      - .github/agent-latex-ui-fix-hotpatch.py
 
 permissions:
   contents: write
@@ -38,8 +39,12 @@ jobs:
             echo "Reparatur wurde bereits angewendet."
             exit 0
           fi
+          python3 .github/agent-latex-ui-fix-hotpatch.py
           python3 .github/agent-latex-ui-fix.py
-          rm -f .github/agent-latex-ui-fix.py .github/workflows/agent-latex-ui-fix.yml
+          rm -f \
+            .github/agent-latex-ui-fix.py \
+            .github/agent-latex-ui-fix-hotpatch.py \
+            .github/workflows/agent-latex-ui-fix.yml
       - name: Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
       - name: Bauen und testen
