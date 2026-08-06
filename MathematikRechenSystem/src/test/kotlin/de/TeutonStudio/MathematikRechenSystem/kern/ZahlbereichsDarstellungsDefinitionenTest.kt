@@ -9,10 +9,10 @@ class ZahlbereichsDarstellungsDefinitionenTest {
     @Test
     fun `Matrixdarstellungen sind echte Definitionskarten Eintraege`() {
         val definitionen = ZahlbereichsDefinitionsKatalog.alle.associateBy { it.id }
-        val komplex = assertIs<ExpliziteDefinition>(
+        val komplex = assertIs<ImpliziteDefinition>(
             definitionen.getValue("definition.zahlbereich.darstellung.C.M2R"),
         )
-        val quaternion = assertIs<ExpliziteDefinition>(
+        val quaternion = assertIs<ImpliziteDefinition>(
             definitionen.getValue("definition.zahlbereich.darstellung.H.M2C"),
         )
 
@@ -24,10 +24,13 @@ class ZahlbereichsDarstellungsDefinitionenTest {
             "zahlbereich.darstellung.H.M2C",
             assertIs<DefinitionsZiel.Operation>(quaternion.ziel).operatorId,
         )
-        assertTrue(komplex.wert.zuLatex().contains("a+bi"))
-        assertTrue(quaternion.wert.zuLatex().contains("a+bi+cj+dk"))
-        assertTrue(komplex.wert.zuLatex().contains("pmatrix"))
-        assertTrue(quaternion.wert.zuLatex().contains("pmatrix"))
+
+        val komplexLatex = komplex.charakterisierendeRegeln.single().folgerungLatex
+        val quaternionLatex = quaternion.charakterisierendeRegeln.single().folgerungLatex
+        assertTrue(komplexLatex.contains("a+bi"))
+        assertTrue(quaternionLatex.contains("a+bi+cj+dk"))
+        assertTrue(komplexLatex.contains("pmatrix"))
+        assertTrue(quaternionLatex.contains("pmatrix"))
     }
 
     @Test
