@@ -57,7 +57,7 @@ class IntegralModellTest {
 
         assertEquals(
             "\\int_{\\left(x,y\\right)\\in\\left(\\mathbb R\\times\\mathbb R\\right)}" +
-                "x + y\\cdotdx\\cdotdy",
+                "\\left(x + y\\right)\\cdotdx\\cdotdy",
             integral.zuLatex(),
         )
     }
