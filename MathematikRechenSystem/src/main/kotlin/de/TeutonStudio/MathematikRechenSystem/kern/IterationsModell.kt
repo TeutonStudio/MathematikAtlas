@@ -62,20 +62,25 @@ data class IterierterAusdruck(
 
     override fun zuLatex(): String = when (art) {
         IterationsArt.MULTIPLIKATION ->
-            "{${basis.zuLatex()}}^{${ordnung.zuLatex()}}"
+            "{${basisLatex()}}^{${ordnung.zuLatex()}}"
         IterationsArt.DIFFERENTIATION -> differenzierungsLatex()
         IterationsArt.SELBSTKOMPOSITION ->
-            "{${basis.zuLatex()}}^{\\langle ${ordnung.zuLatex()}\\rangle}"
+            "{${basisLatex()}}^{\\langle ${ordnung.zuLatex()}\\rangle}"
+    }
+
+    private fun basisLatex(): String = when (basis) {
+        is Methode -> basis.name
+        else -> basis.zuLatex()
     }
 
     private fun differenzierungsLatex(): String = when (ordnung) {
         is IterationsOrdnung.Symbolisch ->
-            "{${basis.zuLatex()}}^{(${ordnung.zuLatex()})}"
+            "{${basisLatex()}}^{(${ordnung.zuLatex()})}"
         is IterationsOrdnung.Konkret -> when {
-            ordnung.wert == BigInteger.ZERO -> basis.zuLatex()
+            ordnung.wert == BigInteger.ZERO -> basisLatex()
             else -> roemischeZahlOderNull(ordnung.wert)?.let { roemisch ->
-                "{${basis.zuLatex()}}^{\\mathrm{$roemisch}}"
-            } ?: "{${basis.zuLatex()}}^{(${ordnung.wert})}"
+                "{${basisLatex()}}^{\\mathrm{$roemisch}}"
+            } ?: "{${basisLatex()}}^{(${ordnung.wert})}"
         }
     }
 }
