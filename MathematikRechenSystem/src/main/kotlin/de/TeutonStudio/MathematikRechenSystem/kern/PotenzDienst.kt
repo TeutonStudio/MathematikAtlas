@@ -85,18 +85,26 @@ object PotenzDienst {
 
     private fun loeseExpliziteStrukturAuf(
         struktur: PotenzStruktur,
-    ): PotenzStrukturAufloesung = when (struktur.multiplikationsOperatorId) {
-        "arithmetik.multiplikation" -> PotenzStrukturAufloesung.Gefunden(
-            struktur,
-            standardZahlMultiplikation,
-        )
-        MatrixRechnerOperator.MATRIXPRODUKT.stabileId -> PotenzStrukturAufloesung.Gefunden(
-            struktur,
-            standardMatrixMultiplikation,
-        )
-        else -> PotenzStrukturAufloesung.NichtVorhanden(
-            "Für den Multiplikationsoperator '${struktur.multiplikationsOperatorId}' ist noch keine Laufzeitimplementierung registriert.",
-        )
+    ): PotenzStrukturAufloesung {
+        struktur.multiplikationsMethode?.let { methode ->
+            return PotenzStrukturAufloesung.Gefunden(
+                struktur = struktur,
+                multiplikation = { links, rechts -> methode.wendeAn(listOf(links, rechts)) },
+            )
+        }
+        return when (struktur.multiplikationsOperatorId) {
+            "arithmetik.multiplikation" -> PotenzStrukturAufloesung.Gefunden(
+                struktur,
+                standardZahlMultiplikation,
+            )
+            MatrixRechnerOperator.MATRIXPRODUKT.stabileId -> PotenzStrukturAufloesung.Gefunden(
+                struktur,
+                standardMatrixMultiplikation,
+            )
+            else -> PotenzStrukturAufloesung.NichtVorhanden(
+                "Für den Multiplikationsoperator '${struktur.multiplikationsOperatorId}' ist noch keine Laufzeitimplementierung registriert.",
+            )
+        }
     }
 
     private fun werteObjektPotenzAus(
