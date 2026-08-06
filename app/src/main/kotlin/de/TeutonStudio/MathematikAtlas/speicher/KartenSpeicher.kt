@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas.speicher
 
 import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.migriereStrukturierteDivision
 import de.TeutonStudio.MathematikKnoten.migriereUniversellenZahlenRechner
 import org.json.JSONObject
 import java.io.File
@@ -68,6 +69,7 @@ class KartenSpeicher(private val context: Context) {
         val gelesen = KartenJson.lese(text)
             .migriereMethodenAnschlüsse()
             .migriereUniversellenZahlenRechner()
+            .migriereStrukturierteDivision()
         val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
@@ -157,6 +159,7 @@ class KartenSpeicher(private val context: Context) {
         val remappteKarten = paket.karten.map { karte ->
             val migriert = karte.migriereMethodenAnschlüsse()
                 .migriereUniversellenZahlenRechner()
+                .migriereStrukturierteDivision()
             migriert.copy(
                 id = idAbbildung.getValue(migriert.id),
                 knoten = migriert.knoten.map { knoten ->
@@ -274,6 +277,7 @@ class KartenSpeicher(private val context: Context) {
             KartenJson.lese(file.readText())
                 .migriereMethodenAnschlüsse()
                 .migriereUniversellenZahlenRechner()
+                .migriereStrukturierteDivision()
         } else {
             null
         }
