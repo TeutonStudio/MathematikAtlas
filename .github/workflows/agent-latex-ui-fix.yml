@@ -8,6 +8,7 @@ on:
       - .github/workflows/agent-latex-ui-fix.yml
       - .github/agent-latex-ui-fix.py
       - .github/agent-latex-ui-fix-hotpatch.py
+      - .github/agent-latex-ui-fix-postpatch.py
 
 permissions:
   contents: write
@@ -41,9 +42,11 @@ jobs:
           fi
           python3 .github/agent-latex-ui-fix-hotpatch.py
           python3 .github/agent-latex-ui-fix.py
+          python3 .github/agent-latex-ui-fix-postpatch.py
           rm -f \
             .github/agent-latex-ui-fix.py \
             .github/agent-latex-ui-fix-hotpatch.py \
+            .github/agent-latex-ui-fix-postpatch.py \
             .github/workflows/agent-latex-ui-fix.yml
       - name: Architektur prüfen
         run: python3 scripts/pruefe_architektur.py
