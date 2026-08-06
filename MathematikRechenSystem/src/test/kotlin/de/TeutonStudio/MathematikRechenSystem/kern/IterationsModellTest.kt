@@ -36,7 +36,7 @@ class IterationsModellTest {
     fun `konkrete und symbolische Ordnung bleiben auch fuer grosse Werte strukturiert`() {
         val gross = BigInteger("100000000000000000000000000000000000")
         val konkret = assertIs<IterationsOrdnungsPruefung.Gueltig>(
-            pruefeIterationsOrdnung(RationaleZahl(gross, BigInteger.ONE)),
+            pruefeIterationsOrdnung(RationaleZahl.von(gross)),
         ).ordnung
         val symbolisch = assertIs<IterationsOrdnungsPruefung.Gueltig>(
             pruefeIterationsOrdnung(Variable("n")),
