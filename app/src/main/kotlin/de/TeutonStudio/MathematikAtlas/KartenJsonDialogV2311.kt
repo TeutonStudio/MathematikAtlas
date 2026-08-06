@@ -218,7 +218,11 @@ private fun JsonEditorV2311(
                         lineHeight = 20.sp,
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    visualTransformation = JsonFarbTransformationV2311(farben),
+                    visualTransformation = JsonFarbTransformationV2311(
+                        farben = farben,
+                        analysierterText = prüfung.analysierterText,
+                        tokens = prüfung.tokens,
+                    ),
                 )
             }
         }
@@ -335,11 +339,13 @@ private fun JsonStatusV2311(
 }
 
 internal data class JsonPrüfungV2311(
+    val analysierterText: String,
     val syntaxFehler: String?,
     val schemaFehler: String?,
     val zeilenAnzahl: Int,
     val listen: List<JsonListeV2311>,
     val idBereiche: List<JsonIdBereichV2311>,
+    val tokens: List<JsonTokenV2311>,
 )
 
 internal data class JsonListeV2311(
@@ -369,16 +375,19 @@ internal data class JsonIdKontextV2311(
 private data class JsonIdOptionV2311(val id: String, val titel: String)
 
 internal fun prüfeJsonV2311(text: String): JsonPrüfungV2311 {
-    val syntaxFehler = runCatching { JSONObject(text) }.exceptionOrNull()?.message
-    val schemaFehler = if (syntaxFehler == null) {
-        runCatching { KartenJson.lese(text) }.exceptionOrNull()?.message
-    } else null
+    val objektBaum = runCatching { JSONObject(text) }
+    val syntaxFehler = objektBaum.exceptionOrNull()?.message
+    val schemaFehler = objektBaum.getOrNull()?.let { json ->
+        runCatching { KartenJson.lese(json) }.exceptionOrNull()?.message
+    }
     return JsonPrüfungV2311(
+        analysierterText = text,
         syntaxFehler = syntaxFehler,
         schemaFehler = schemaFehler,
         zeilenAnzahl = text.count { it == '\n' } + 1,
         listen = analysiereJsonListenV2311(text),
         idBereiche = analysiereJsonIdBereicheV2311(text),
+        tokens = jsonTokensV2311(text),
     )
 }
 
@@ -574,19 +583,27 @@ private fun jsonFarbenV2311() = JsonFarbenV2311(
     zeilennummer = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .72f),
 )
 
-private class JsonFarbTransformationV2311(private val farben: JsonFarbenV2311) : VisualTransformation {
+private class JsonFarbTransformationV2311(
+    private val farben: JsonFarbenV2311,
+    private val analysierterText: String,
+    private val tokens: List<JsonTokenV2311>,
+) : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText = TransformedText(
-        jsonHervorhebenV2311(text.text, farben),
+        if (text.text == analysierterText) jsonHervorhebenV2311(text.text, farben, tokens) else text,
         OffsetMapping.Identity,
     )
 }
 
-private enum class JsonTokenArtV2311 { Schlüssel, Zeichenkette, Zahl, Literal, Struktur }
-private data class JsonTokenV2311(val start: Int, val ende: Int, val art: JsonTokenArtV2311)
+internal enum class JsonTokenArtV2311 { Schlüssel, Zeichenkette, Zahl, Literal, Struktur }
+internal data class JsonTokenV2311(val start: Int, val ende: Int, val art: JsonTokenArtV2311)
 
-private fun jsonHervorhebenV2311(text: String, farben: JsonFarbenV2311): AnnotatedString {
+private fun jsonHervorhebenV2311(
+    text: String,
+    farben: JsonFarbenV2311,
+    tokens: List<JsonTokenV2311>,
+): AnnotatedString {
     val builder = AnnotatedString.Builder(text)
-    jsonTokensV2311(text).forEach { token ->
+    tokens.forEach { token ->
         val farbe = when (token.art) {
             JsonTokenArtV2311.Schlüssel -> farben.schlüssel
             JsonTokenArtV2311.Zeichenkette -> farben.zeichenkette
@@ -594,19 +611,21 @@ private fun jsonHervorhebenV2311(text: String, farben: JsonFarbenV2311): Annotat
             JsonTokenArtV2311.Literal -> farben.literal
             JsonTokenArtV2311.Struktur -> farben.struktur
         }
-        builder.addStyle(
-            SpanStyle(
-                color = farbe,
-                fontWeight = if (token.art == JsonTokenArtV2311.Schlüssel) FontWeight.SemiBold else FontWeight.Normal,
-            ),
-            token.start,
-            token.ende,
-        )
+        if (token.start in 0..text.length && token.ende in token.start..text.length) {
+            builder.addStyle(
+                SpanStyle(
+                    color = farbe,
+                    fontWeight = if (token.art == JsonTokenArtV2311.Schlüssel) FontWeight.SemiBold else FontWeight.Normal,
+                ),
+                token.start,
+                token.ende,
+            )
+        }
     }
     return builder.toAnnotatedString()
 }
 
-private fun jsonTokensV2311(text: String): List<JsonTokenV2311> {
+internal fun jsonTokensV2311(text: String): List<JsonTokenV2311> {
     val tokens = mutableListOf<JsonTokenV2311>()
     var index = 0
     while (index < text.length) {
