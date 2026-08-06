@@ -4,6 +4,7 @@ import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.migriereStrukturierteDivision
 import de.TeutonStudio.MathematikKnoten.migriereUniversellenZahlenRechner
+import de.TeutonStudio.MathematikKnoten.normalisiereStrukturierteDivisionVorSpeichern
 import org.json.JSONObject
 import java.io.File
 
@@ -49,15 +50,16 @@ class KartenSpeicher(private val context: Context) {
         ?.let(::leseDatei)
 
     fun speichere(karte: KartenDaten): KartenDaten {
-        val zielVersion = if (versionWirdVerwendet(KartenVerweis(karte.id, karte.version))) {
-            maxOf(karte.version + 1, höchsteVersion(karte.id) + 1)
+        val normalisiert = karte.normalisiereStrukturierteDivisionVorSpeichern()
+        val zielVersion = if (versionWirdVerwendet(KartenVerweis(normalisiert.id, normalisiert.version))) {
+            maxOf(normalisiert.version + 1, höchsteVersion(normalisiert.id) + 1)
         } else {
-            karte.version
+            normalisiert.version
         }
-        val zuSpeichern = if (zielVersion == karte.version) {
-            karte
+        val zuSpeichern = if (zielVersion == normalisiert.version) {
+            normalisiert
         } else {
-            karte.copy(version = zielVersion, erstelltAm = System.currentTimeMillis())
+            normalisiert.copy(version = zielVersion, erstelltAm = System.currentTimeMillis())
         }
         speichereExakt(zuSpeichern)
         return zuSpeichern
@@ -74,7 +76,9 @@ class KartenSpeicher(private val context: Context) {
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
 
-    fun exportiere(karte: KartenDaten) = KartenJson.schreibe(karte)
+    fun exportiere(karte: KartenDaten) = KartenJson.schreibe(
+        karte.normalisiereStrukturierteDivisionVorSpeichern(),
+    )
 
     fun erstelleFreigabePaket(
         name: String,
