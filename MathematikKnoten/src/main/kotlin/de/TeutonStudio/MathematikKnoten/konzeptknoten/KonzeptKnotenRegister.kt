@@ -2,7 +2,10 @@ package de.TeutonStudio.MathematikKnoten.konzeptknoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.FachKatalog
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.VariantenId
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensEintrag
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenReferenz
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
 
 object KonzeptKnotenRegister {
@@ -44,10 +47,13 @@ object KonzeptKnotenRegister {
             if (eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar && eintrag.knotenVorlagen.isNotEmpty()) {
                 add("${eintrag.id}: nicht verfügbarer Eintrag besitzt Knotenvorlagen")
             }
-            if (eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar &&
-                eintrag.karten.none { it.rolle == de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle.Definition && it.primär }
-            ) {
-                add("${eintrag.id}: benötigt mindestens eine primäre Definition")
+            if (eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar) {
+                eintrag.varianten.forEach { variante ->
+                    val anzahl = eintrag.karten.count { karte -> karte.istPrimäreDefinitionFür(variante) }
+                    if (anzahl != 1) {
+                        add("${eintrag.id}: Variante $variante benötigt genau eine primäre Definition, gefunden: $anzahl")
+                    }
+                }
             }
             (eintrag.fachPfade - FachKatalog.alle).forEach {
                 add("${eintrag.id}: unbekannter Fachpfad ${it.stabileId}")
@@ -68,3 +74,8 @@ object KonzeptKnotenRegister {
         }
     }
 }
+
+internal fun WissensKartenReferenz.istPrimäreDefinitionFür(variante: VariantenId): Boolean =
+    primär &&
+        rolle == WissensKartenRolle.Definition &&
+        (varianten.isEmpty() || variante in varianten)
