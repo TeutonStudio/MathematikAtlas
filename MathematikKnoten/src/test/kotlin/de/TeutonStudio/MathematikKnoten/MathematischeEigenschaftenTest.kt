@@ -132,7 +132,10 @@ class MathematischeEigenschaftenTest {
         )
 
         val menge = assertIs<DefinierteMenge>(ergebnis.ausgaben.getValue("stellenmenge").objekt)
-        assertTrue(menge.zuLatex().contains("extrem"))
+        val aussage = assertIs<EigenschaftsAussage>(menge.bedingung)
+        assertEquals(MathematischeEigenschaftRegister.Extremum.id, aussage.eigenschaftId)
+        assertEquals(UnterstuetzungsStatus.IMPLEMENTIERT, aussage.unterstuetzung)
+        assertEquals(AussageStatus.UNENTSCHEIDBAR, aussage.aussageStatus)
     }
 
     @Test
