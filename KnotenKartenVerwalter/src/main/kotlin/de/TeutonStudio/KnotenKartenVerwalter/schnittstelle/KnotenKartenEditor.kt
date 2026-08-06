@@ -25,9 +25,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.*
+import de.TeutonStudio.KnotenKartenVerwalter.R
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
@@ -664,18 +666,13 @@ private fun KnotenDarstellung(
         }
 
         if (zeigeKnotenInspektor) {
-            IconButton(
-                onClick = {
+            KnotenInspektorSchaltfläche(
+                beiKlick = {
                     zustand.wähleKnoten(knoten.id)
                     beiInspektorÖffnen()
                 },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(40.dp)
-                    .semantics { contentDescription = "Inspektor öffnen" },
-            ) {
-                Text("⚙", style = MaterialTheme.typography.titleMedium)
-            }
+                modifier = Modifier.align(Alignment.TopEnd),
+            )
         }
 
         knoten.anschlüsse.groupBy { it.kante }.forEach { (_, anschlüsse) ->
@@ -724,6 +721,30 @@ private fun KnotenDarstellung(
                     }
             )
         }
+    }
+}
+
+
+@Composable
+private fun KnotenInspektorSchaltfläche(
+    beiKlick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilledIconButton(
+        onClick = beiKlick,
+        modifier = modifier
+            .size(40.dp)
+            .semantics { contentDescription = "Inspektor öffnen" },
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_knoten_inspektor),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

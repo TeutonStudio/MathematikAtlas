@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -17,6 +18,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswerter
 import de.TeutonStudio.MathematikKnoten.AussagenOperatorArt
 import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
+import de.TeutonStudio.MathematikKnoten.LatexFormel
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
@@ -261,6 +263,44 @@ private fun UnveränderlicheKonzeptKarte(
     )
 }
 
+internal enum class DokumentationsInhaltArt {
+    TEXT,
+    INLINE_LATEX,
+    DISPLAY_LATEX,
+}
+
+private val dokumentationsLatexBefehl = Regex("""\\(?:[A-Za-z]+|.)""")
+
+internal fun dokumentationsInhaltArt(
+    knoten: KnotenDaten,
+    schlüssel: String,
+    latexStandard: DokumentationsInhaltArt,
+): DokumentationsInhaltArt {
+    val ausdrücklich = knoten.parameter["${schlüssel}InhaltArt"]
+        ?.trim()
+        ?.uppercase()
+        ?.replace('-', '_')
+    if (ausdrücklich != null) {
+        return DokumentationsInhaltArt.entries.firstOrNull { it.name == ausdrücklich }
+            ?: DokumentationsInhaltArt.TEXT
+    }
+    val inhalt = knoten.parameter[schlüssel].orEmpty()
+    return if (dokumentationsLatexBefehl.containsMatchIn(inhalt)) latexStandard else DokumentationsInhaltArt.TEXT
+}
+
+@Composable
+private fun DokumentationsInhalt(
+    inhalt: String,
+    art: DokumentationsInhaltArt,
+    style: TextStyle,
+) {
+    when (art) {
+        DokumentationsInhaltArt.TEXT -> Text(inhalt, style = style)
+        DokumentationsInhaltArt.INLINE_LATEX -> LatexText(inhalt, style = style)
+        DokumentationsInhaltArt.DISPLAY_LATEX -> LatexFormel(inhalt, style = style)
+    }
+}
+
 internal object KonzeptDokumentationsRenderer : KnotenRenderer {
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
@@ -271,7 +311,15 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
             when (knoten.art) {
                 KonzeptKnotenArten.REGEL -> {
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
-                    Text(knoten.parameter["regel"].orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                    DokumentationsInhalt(
+                        inhalt = knoten.parameter["regel"].orEmpty(),
+                        art = dokumentationsInhaltArt(
+                            knoten = knoten,
+                            schlüssel = "regel",
+                            latexStandard = DokumentationsInhaltArt.DISPLAY_LATEX,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                     Text(
                         knoten.parameter["knotenArt"].orEmpty(),
                         style = MaterialTheme.typography.labelSmall,
@@ -281,7 +329,15 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
                 KonzeptKnotenArten.EINGANG -> {
                     Text("Eingang", style = MaterialTheme.typography.labelLarge)
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
-                    Text(knoten.parameter["typ"].orEmpty(), style = MaterialTheme.typography.bodySmall)
+                    DokumentationsInhalt(
+                        inhalt = knoten.parameter["typ"].orEmpty(),
+                        art = dokumentationsInhaltArt(
+                            knoten = knoten,
+                            schlüssel = "typ",
+                            latexStandard = DokumentationsInhaltArt.INLINE_LATEX,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                     if (knoten.parameter["variabel"] == "true") {
                         Text("erweiterbar", style = MaterialTheme.typography.labelSmall)
                     }
@@ -289,7 +345,15 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
                 else -> {
                     Text("Ausgang", style = MaterialTheme.typography.labelLarge)
                     Text(knoten.name, style = MaterialTheme.typography.titleMedium)
-                    Text(knoten.parameter["typ"].orEmpty(), style = MaterialTheme.typography.bodySmall)
+                    DokumentationsInhalt(
+                        inhalt = knoten.parameter["typ"].orEmpty(),
+                        art = dokumentationsInhaltArt(
+                            knoten = knoten,
+                            schlüssel = "typ",
+                            latexStandard = DokumentationsInhaltArt.INLINE_LATEX,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
         }

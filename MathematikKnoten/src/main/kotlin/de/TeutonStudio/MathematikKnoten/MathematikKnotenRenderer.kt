@@ -43,7 +43,7 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
 ) : KnotenRenderer {
-    override val interaktionsModus: KnotenInteraktionsModus = KnotenInteraktionsModus.NurKopfzeileZiehbar
+    override val interaktionsModus: KnotenInteraktionsModus = KnotenInteraktionsModus.GanzeFlächeZiehbar
 
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
