@@ -122,7 +122,14 @@ fun inferiereEndlicheMaechtigkeit(menge: MengenAusdruck): EndlicheMaechtigkeitsI
     )
 }
 
-/** Kernobjekte der vier grundlegenden Definitionskarten. */
+/** Laufzeitwert einer Definitionskarte für eine explizite Zahlbereichsdarstellung. */
+data class ZahlbereichsDarstellungsAusdruck(
+    val darstellung: ZahlbereichsDarstellung,
+) : MathematischesObjekt {
+    override fun zuLatex(): String = darstellung.definitionsLatex
+}
+
+/** Kernobjekte der Zahlbereichs- und Darstellungsdefinitionskarten. */
 object ZahlbereichsDefinitionsKatalog {
     val natuerlicheZahlen = InduktiveDefinition(
         id = "zahlbereich.N",
@@ -210,11 +217,40 @@ object ZahlbereichsDefinitionsKatalog {
         referenzen = setOf(ganzeZahlen.id, natuerlicheZahlen.id),
     )
 
+    private fun darstellung(id: String): ZahlbereichsDarstellung =
+        StandardZahlbereichsGraph.darstellungen.single { it.id == id }
+
+    val komplexeMatrixdarstellung = ExpliziteDefinition(
+        id = "definition.zahlbereich.darstellung.C.M2R",
+        name = "Komplexe Zahlen als reelle 2×2-Matrizen",
+        ziel = DefinitionsZiel.Operation(
+            stabileId = "definition.zahlbereich.darstellung.C.M2R",
+            operatorId = "zahlbereich.darstellung.C.M2R",
+        ),
+        wert = ZahlbereichsDarstellungsAusdruck(
+            darstellung("zahlbereich.darstellung.C.M2R"),
+        ),
+    )
+
+    val quaternionenMatrixdarstellung = ExpliziteDefinition(
+        id = "definition.zahlbereich.darstellung.H.M2C",
+        name = "Hamilton-Quaternionen als komplexe 2×2-Matrizen",
+        ziel = DefinitionsZiel.Operation(
+            stabileId = "definition.zahlbereich.darstellung.H.M2C",
+            operatorId = "zahlbereich.darstellung.H.M2C",
+        ),
+        wert = ZahlbereichsDarstellungsAusdruck(
+            darstellung("zahlbereich.darstellung.H.M2C"),
+        ),
+    )
+
     val alle: List<MathematischeDefinition> = listOf(
         natuerlicheZahlen,
         nullDefinition,
         ganzeZahlen,
         nichtnegativeGanze,
         rationaleZahlen,
+        komplexeMatrixdarstellung,
+        quaternionenMatrixdarstellung,
     )
 }
