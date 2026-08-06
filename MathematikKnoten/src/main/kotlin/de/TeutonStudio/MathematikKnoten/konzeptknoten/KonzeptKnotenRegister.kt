@@ -11,14 +11,23 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
 object KonzeptKnotenRegister {
     fun erstelle(vorlagen: List<KnotenVorlage>): List<WissensEintrag> {
         val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId)
-        val alle = ExpliziteKonzeptKnoten.dateien
+        val expliziteEinträge = ExpliziteKonzeptKnoten.dateien
             .map { datei -> datei.erstelle(eindeutigeVorlagen) }
             .filter { eintrag ->
                 eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar || eintrag.knotenVorlagen.isNotEmpty()
             }
-            .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
-                .thenBy { it.titel }
-                .thenBy { it.id.wert })
+
+        val explizitRegistrierteVarianten = expliziteEinträge
+            .flatMapTo(linkedSetOf()) { eintrag -> eintrag.varianten }
+        val generischeEinträge = eindeutigeVorlagen
+            .filter { vorlage -> vorlage.stabileVariantenId() !in explizitRegistrierteVarianten }
+            .map(::einzelnesVorlagenKonzept)
+
+        val alle = (expliziteEinträge + generischeEinträge)
+            .sortedWith(compareBy<WissensEintrag> { eintrag ->
+                eintrag.fachPfade.minOfOrNull { pfad -> pfad.stabileId }.orEmpty()
+            }.thenBy { it.titel }.thenBy { it.id.wert })
+
         val fehler = validierungsFehler(alle, eindeutigeVorlagen)
         require(fehler.isEmpty()) {
             fehler.joinToString(prefix = "Ungültiges Konzeptknoten-Register:\n- ", separator = "\n- ")
