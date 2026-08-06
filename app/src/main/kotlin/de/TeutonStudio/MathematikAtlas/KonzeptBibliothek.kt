@@ -150,9 +150,10 @@ internal object KonzeptBibliothekRegister {
     }
 
     fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> {
+        val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::bibliotheksId)
         val kanonischeIds = alleMathematikDefinitionsVorlagen()
             .mapTo(mutableSetOf(), KnotenVorlage::bibliotheksId)
-        val kanonischeVorlagen = vorlagen.filter { it.bibliotheksId() in kanonischeIds }
+        val kanonischeVorlagen = eindeutigeVorlagen.filter { it.bibliotheksId() in kanonischeIds }
         val kanonischeEinträge = KonzeptKnotenRegister.erstelle(kanonischeVorlagen).flatMap { wissen ->
             val kategoriePfade = wissen.fachPfade
                 .map { it.segmente }
@@ -192,9 +193,11 @@ internal object KonzeptBibliothekRegister {
                 }
             }
         }
-        val ergänzendeEinträge = vorlagen.asSequence()
-            .distinctBy(KnotenVorlage::bibliotheksId)
-            .filterNot { it.bibliotheksId() in kanonischeIds }
+        val abgedeckteVorlagenIds = kanonischeEinträge
+            .mapNotNull { eintrag -> eintrag.vorlage?.bibliotheksId() }
+            .toSet()
+        val ergänzendeEinträge = eindeutigeVorlagen.asSequence()
+            .filterNot { vorlage -> vorlage.bibliotheksId() in abgedeckteVorlagenIds }
             .map(::ergänzenderEintrag)
             .toList()
 
