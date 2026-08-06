@@ -10,10 +10,10 @@ class ReellesIntervallTest {
 
     @Test
     fun `alle vier Randkombinationen verwenden deutsche Intervallschreibweise`() {
-        assertEquals("\\mathopen{[}1,3\\mathclose{]}", assertIs<ReellesIntervall>(reellesIntervall(z(1), false, z(3), false)).zuLatex())
-        assertEquals("\\mathopen{]}1,3\\mathclose{]}", assertIs<ReellesIntervall>(reellesIntervall(z(1), true, z(3), false)).zuLatex())
-        assertEquals("\\mathopen{[}1,3\\mathclose{[}", assertIs<ReellesIntervall>(reellesIntervall(z(1), false, z(3), true)).zuLatex())
-        assertEquals("\\mathopen{]}1,3\\mathclose{[}", assertIs<ReellesIntervall>(reellesIntervall(z(1), true, z(3), true)).zuLatex())
+        assertEquals("{}^{1\\leq}\\mathbb{R}^{\\leq3}", assertIs<ReellesIntervall>(reellesIntervall(z(1), false, z(3), false)).zuLatex())
+        assertEquals("{}^{1<}\\mathbb{R}^{\\leq3}", assertIs<ReellesIntervall>(reellesIntervall(z(1), true, z(3), false)).zuLatex())
+        assertEquals("{}^{1\\leq}\\mathbb{R}^{<3}", assertIs<ReellesIntervall>(reellesIntervall(z(1), false, z(3), true)).zuLatex())
+        assertEquals("{}^{1<}\\mathbb{R}^{<3}", assertIs<ReellesIntervall>(reellesIntervall(z(1), true, z(3), true)).zuLatex())
     }
 
     @Test

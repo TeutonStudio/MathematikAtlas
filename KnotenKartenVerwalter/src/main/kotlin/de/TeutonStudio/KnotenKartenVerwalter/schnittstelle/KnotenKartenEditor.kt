@@ -657,6 +657,7 @@ private fun KnotenDarstellung(
                     )
                 },
             elevation = CardDefaults.cardElevation(if (ausgewählt) 8.dp else 2.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             renderer.Inhalt(knoten, ausgewählt, object : KnotenRendererAktionen {
                 override fun eigenschaftenErsetzen(eigenschaften: Map<String, KnotenEigenschaft>) {
@@ -730,15 +731,17 @@ private fun KnotenInspektorSchaltfläche(
     beiKlick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FilledIconButton(
+    val knotenHintergrund = MaterialTheme.colorScheme.surfaceContainerLow
+    val iconFarbe = kontrastAdaptiveProfilFarbe(
+        profilFarbe = MaterialTheme.colorScheme.primary,
+        hintergrund = knotenHintergrund,
+    )
+    IconButton(
         onClick = beiKlick,
         modifier = modifier
             .size(40.dp)
             .semantics { contentDescription = "Inspektor öffnen" },
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+        colors = IconButtonDefaults.iconButtonColors(contentColor = iconFarbe),
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_knoten_inspektor),
@@ -746,6 +749,44 @@ private fun KnotenInspektorSchaltfläche(
             modifier = Modifier.size(20.dp),
         )
     }
+}
+
+internal fun farbKontrastVerhältnis(vordergrund: Color, hintergrund: Color): Float {
+    val vordergrundLuminanz = vordergrund.copy(alpha = 1f).luminance()
+    val hintergrundLuminanz = hintergrund.copy(alpha = 1f).luminance()
+    val heller = max(vordergrundLuminanz, hintergrundLuminanz)
+    val dunkler = min(vordergrundLuminanz, hintergrundLuminanz)
+    return (heller + 0.05f) / (dunkler + 0.05f)
+}
+
+/**
+ * Bewahrt die Profilfarbe, solange sie auf dem Knoten ausreichend kontrastiert.
+ * Andernfalls wird sie nur so weit in Richtung Schwarz oder Weiß verschoben,
+ * wie für die Erkennbarkeit erforderlich ist. Ein zusätzlicher Icon-Hintergrund
+ * ist dadurch weder nötig noch erlaubt.
+ */
+internal fun kontrastAdaptiveProfilFarbe(
+    profilFarbe: Color,
+    hintergrund: Color,
+    mindestKontrast: Float = 4.5f,
+): Color {
+    val deckendeProfilFarbe = profilFarbe.copy(alpha = 1f)
+    if (farbKontrastVerhältnis(deckendeProfilFarbe, hintergrund) >= mindestKontrast) {
+        return deckendeProfilFarbe
+    }
+    val ziel = listOf(Color.Black, Color.White)
+        .maxBy { farbKontrastVerhältnis(it, hintergrund) }
+    var unten = 0f
+    var oben = 1f
+    repeat(18) {
+        val mitte = (unten + oben) / 2f
+        if (farbKontrastVerhältnis(lerp(deckendeProfilFarbe, ziel, mitte), hintergrund) >= mindestKontrast) {
+            oben = mitte
+        } else {
+            unten = mitte
+        }
+    }
+    return lerp(deckendeProfilFarbe, ziel, oben).copy(alpha = 1f)
 }
 
 @Composable
