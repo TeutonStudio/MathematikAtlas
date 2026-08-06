@@ -43,8 +43,8 @@ class IterierteSelbstkompositionTest {
 
         val identitaet = requireNotNull(iteration.nullteIdentitaetOderNull())
         assertEquals(
-            "\\operatorname{id}\\vert_{\\mathbb R\\times\\mathbb R}",
-            identitaet.zuLatex().replace("\\left(", "").replace("\\right)", ""),
+            "\\operatorname{id}\\vert_{\\mathbb R \\times \\mathbb R}",
+            identitaet.zuLatex(),
         )
         assertEquals(iteration.werteVorrat, iteration.zielMenge)
     }
