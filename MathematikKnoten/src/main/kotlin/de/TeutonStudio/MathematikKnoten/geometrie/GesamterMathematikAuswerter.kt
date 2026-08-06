@@ -19,6 +19,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturRechnerKnoten()
         registriereLineareStrukturErweiterungen()
         registriereLineareAlgebraGrundlagen()
+        registriereMathematischeEigenschaften()
         // Bewusst zuletzt: ersetzt historische Spezialauswerter derselben Knotenarten.
         registriereKonsolidierteKnoten()
         // Verfeinert ausschließlich das Skalarprodukt und delegiert alle übrigen Vektoroperationen.
