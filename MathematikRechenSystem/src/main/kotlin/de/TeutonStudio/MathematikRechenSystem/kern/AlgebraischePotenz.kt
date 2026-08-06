@@ -72,7 +72,7 @@ sealed interface PotenzTraeger {
                 Wahrheitswert.Lüge -> PotenzBasisPruefung.Ungueltig(
                     "${basis.zuLatex()} liegt nachweislich nicht in ${menge.zuLatex()}.",
                 )
-                Wahrheitswert.Unbestimmt -> PotenzBasisPruefung.Bedingt(setOf(aussage))
+                null -> PotenzBasisPruefung.Bedingt(setOf(aussage))
             }
         }
     }
@@ -217,7 +217,7 @@ fun wertePunktweiseMethodenPotenzAus(
             code = "zielmenge_nicht_im_traeger",
             grund = "Die Zielmenge ${methode.zielMenge.zuLatex()} liegt nicht im Potenzträger ${struktur.traegerMenge.zuLatex()}.",
         )
-        Wahrheitswert.Unbestimmt -> setOf(zielBeziehung)
+        null -> setOf(zielBeziehung)
     }
 
     val punktweise = werteNatuerlichePotenzAus(
@@ -406,9 +406,10 @@ private fun werteSymbolischePotenzAus(
             )
         }
         if (neutralZulaessig) {
+            val neutral = requireNotNull(struktur.neutralesElement)
             addAll(
                 struktur.neutralitaet.offeneVoraussetzungen(
-                    "${struktur.neutralesElement?.zuLatex()} ist das neutrale Element.",
+                    "${neutral.zuLatex()} ist das neutrale Element.",
                     "Potenzstruktur ${struktur.id}",
                 ),
             )
@@ -492,36 +493,41 @@ object StandardPotenzStrukturen {
         )
     }
 
-    fun aufloesen(basis: MathematischesObjekt): PotenzStrukturAufloesung = when (basis) {
-        is ZahlAusdruck -> {
-            val menge = runCatching { inferiereZahlenWertevorrat(basis) }.getOrNull()
-            val bereich = menge?.fundamentalerZahlbereichOderNull()
-                ?: return PotenzStrukturAufloesung.NichtVorhanden(
-                    "Der Zahlbereich von ${basis.zuLatex()} ist nicht eindeutig bestimmbar.",
-                )
-            PotenzStrukturAufloesung.Gefunden(
-                zahlbereich(bereich),
-                standardZahlMultiplikation,
+    fun aufloesen(basis: MathematischesObjekt): PotenzStrukturAufloesung {
+        return when (basis) {
+            is ZahlAusdruck -> {
+                val menge = runCatching { inferiereZahlenWertevorrat(basis) }.getOrNull()
+                val bereich = menge?.fundamentalerZahlbereichOderNull()
+                if (bereich == null) {
+                    PotenzStrukturAufloesung.NichtVorhanden(
+                        "Der Zahlbereich von ${basis.zuLatex()} ist nicht eindeutig bestimmbar.",
+                    )
+                } else {
+                    PotenzStrukturAufloesung.Gefunden(
+                        zahlbereich(bereich),
+                        standardZahlMultiplikation,
+                    )
+                }
+            }
+            is Matrix -> PotenzStrukturAufloesung.Gefunden(
+                matrix(basis),
+                standardMatrixMultiplikation,
+            )
+            is Tupel -> PotenzStrukturAufloesung.NichtEindeutig(
+                "Ein Tupel besitzt keine kanonische innere Multiplikation.",
+                listOf("produkt.hadamard", "produkt.komponentenweise", "produkt.explizit"),
+            )
+            is Tensorartig -> PotenzStrukturAufloesung.NichtEindeutig(
+                "Vektoren und Tensoren benötigen einen ausdrücklich gewählten inneren Produktvertrag.",
+                listOf("produkt.hadamard", "produkt.kontrahiert", "produkt.explizit"),
+            )
+            is Methode -> PotenzStrukturAufloesung.NichtVorhanden(
+                "Methodenpotenzen werden punktweise über die Struktur ihrer Zielwerte aufgelöst.",
+            )
+            else -> PotenzStrukturAufloesung.NichtVorhanden(
+                "Für ${basis::class.simpleName} ist keine Standard-Potenzstruktur registriert.",
             )
         }
-        is Matrix -> PotenzStrukturAufloesung.Gefunden(
-            matrix(basis),
-            standardMatrixMultiplikation,
-        )
-        is Tupel -> PotenzStrukturAufloesung.NichtEindeutig(
-            "Ein Tupel besitzt keine kanonische innere Multiplikation.",
-            listOf("produkt.hadamard", "produkt.komponentenweise", "produkt.explizit"),
-        )
-        is Tensorartig -> PotenzStrukturAufloesung.NichtEindeutig(
-            "Vektoren und Tensoren benötigen einen ausdrücklich gewählten inneren Produktvertrag.",
-            listOf("produkt.hadamard", "produkt.kontrahiert", "produkt.explizit"),
-        )
-        is Methode -> PotenzStrukturAufloesung.NichtVorhanden(
-            "Methodenpotenzen werden punktweise über die Struktur ihrer Zielwerte aufgelöst.",
-        )
-        else -> PotenzStrukturAufloesung.NichtVorhanden(
-            "Für ${basis::class.simpleName} ist keine Standard-Potenzstruktur registriert.",
-        )
     }
 }
 
@@ -585,6 +591,6 @@ private fun pruefeMengenEinbettung(
         Wahrheitswert.Lüge -> PotenzBasisPruefung.Ungueltig(
             "${teil.zuLatex()} ist nachweislich keine Teilmenge von ${ober.zuLatex()}.",
         )
-        Wahrheitswert.Unbestimmt -> PotenzBasisPruefung.Bedingt(setOf(aussage))
+        null -> PotenzBasisPruefung.Bedingt(setOf(aussage))
     }
 }
