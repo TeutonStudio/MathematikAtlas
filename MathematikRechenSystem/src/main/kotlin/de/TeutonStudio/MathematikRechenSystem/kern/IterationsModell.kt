@@ -140,14 +140,14 @@ data class EingeschraenkteIdentitaet(
     val menge: MengenAusdruck,
 ) : Ausdruck {
     val operatorId: String = "methode.identitaet.eingeschraenkt"
-    private val variable = Variable("x")
+    private val parameter = AllgemeinerParameter("x")
 
     val alsMethode: Methode = Methode(
         name = "\\operatorname{id}\\vert_{${menge.zuLatex()}}",
-        parameter = listOf(variable),
-        vorschrift = variable,
+        parameter = listOf(parameter),
+        vorschrift = parameter,
         zielMenge = menge,
-        werteVorräte = mapOf(variable.name to menge),
+        werteVorräte = mapOf(parameter.name to menge),
     )
 
     override fun zuLatex(): String = "\\operatorname{id}\\vert_{${menge.zuLatex()}}"
@@ -159,6 +159,12 @@ data class IterierterAusdruck(
     val ordnung: IterationsOrdnung,
 ) : Ausdruck {
     val operatorId: String = art.operatorId
+
+    init {
+        require(art == IterationsArt.MULTIPLIKATION || basis is Methode) {
+            "Differentiation und Selbstkomposition sind nur für Methoden definiert."
+        }
+    }
 
     override fun zuLatex(): String = when (art) {
         IterationsArt.MULTIPLIKATION ->
@@ -187,7 +193,7 @@ data class IterierterAusdruck(
 
 sealed interface IterationsNullfall {
     data class MultiplikativNeutral(val element: MathematischesObjekt) : IterationsNullfall
-    data class UrspruenglicherAusdruck(val ausdruck: MathematischesObjekt) : IterationsNullfall
+    data class UrspruenglicherAusdruck(val ausdruck: Methode) : IterationsNullfall
     data class Identitaet(val identitaet: EingeschraenkteIdentitaet) : IterationsNullfall
 }
 
@@ -202,14 +208,19 @@ fun bestimmeIterationsNullfall(
             "Die nullte Multiplikationsiteration benötigt das neutrale Element ihrer Struktur."
         },
     )
-    IterationsArt.DIFFERENTIATION -> IterationsNullfall.UrspruenglicherAusdruck(basis)
-    IterationsArt.SELBSTKOMPOSITION -> IterationsNullfall.Identitaet(
-        EingeschraenkteIdentitaet(
-            requireNotNull(werteVorrat) {
-                "Die nullte Selbstkomposition benötigt den Wertevorrat der Methode."
-            },
-        ),
+    IterationsArt.DIFFERENTIATION -> IterationsNullfall.UrspruenglicherAusdruck(
+        basis as? Methode ?: error("Die nullte Differentiation benötigt eine Methode."),
     )
+    IterationsArt.SELBSTKOMPOSITION -> {
+        require(basis is Methode) { "Die nullte Selbstkomposition benötigt eine Methode." }
+        IterationsNullfall.Identitaet(
+            EingeschraenkteIdentitaet(
+                requireNotNull(werteVorrat) {
+                    "Die nullte Selbstkomposition benötigt den Wertevorrat der Methode."
+                },
+            ),
+        )
+    }
 }
 
 data class IterationsOrdnungSnapshot(
@@ -246,7 +257,7 @@ fun IterationsOrdnungSnapshot.zuOrdnung(
     "konkret" -> IterationsOrdnung.Konkret(wert.toBigInteger())
     "symbolisch" -> IterationsOrdnung.Symbolisch(
         ausdruck = symbolResolver(wert),
-        annahmen = annahmenLatex.mapTo(linkedSetOf()) { latex ->
+        annahmen = annahmenLatex.mapTo(linkedSetOf<Aussage>()) { latex ->
             UnentscheidbareAussage(latex, "persistierte Iterationsordnung")
         }.ifEmpty {
             linkedSetOf(
