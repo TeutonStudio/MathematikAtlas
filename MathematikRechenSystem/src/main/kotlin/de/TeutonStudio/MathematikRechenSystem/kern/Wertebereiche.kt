@@ -69,14 +69,16 @@ fun inferiereZielmenge(
         elementMenge = ausdruck.tensorZahlBereich,
         dimensionen = ausdruck.tensorForm,
     )
+    is AlgebraischePotenz -> ausdruck.struktur.traegerMenge
     is GeometrischerAusdruck -> BenannteMenge("geometrie_${ausdruck.raum.id}", "\\mathcal{G}(${ausdruck.raum.id})")
     is EuklidischerRaum -> BenannteMenge("euklidische_raeume", "\\mathfrak{E}")
     is GeometrischesKoordinatensystem -> BenannteMenge("koordinatensysteme_${ausdruck.raum.id}", "\\mathcal{K}(${ausdruck.raum.id})")
     is GeometrieStruktur -> BenannteMenge("geometriestrukturen_${ausdruck.raum.id}", "\\mathcal{C}(${ausdruck.raum.id})")
     is GeometrischeTransformation -> BenannteMenge("geometrietransformationen", "\\operatorname{Trans}_{G}")
     is LinearesSystemLoesung -> BenannteMenge("lineare_systemloesungen", "\\mathcal{L}")
-    is Methode, is GebundeneMethode, is Mächtigkeit ->
-        error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
+    is Methode, is GebundeneMethode, is Mächtigkeit,
+    is PunktweiseMethodenPotenz, is PotenzStruktur,
+    -> error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
 }
 
 private fun inferiereElementMenge(
