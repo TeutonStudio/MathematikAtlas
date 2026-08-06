@@ -95,6 +95,7 @@ object LineareAlgebraGrundlagenKnotenVorlagen {
 
     val alle = listOf(Vektorraum, LineareAbbildung) +
         SkalarproduktKnotenVorlagen.alle +
+        MethodenEinschraenkungKnotenVorlagen.alle +
         StrukturFormelRechnerVorlagen.alle +
         eigenschaftsVorlagen
 }
