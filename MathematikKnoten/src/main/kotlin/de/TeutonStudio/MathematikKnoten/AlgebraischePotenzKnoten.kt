@@ -14,6 +14,8 @@ const val POTENZ_STRUKTUR_MODUS_PARAMETER = "potenz.strukturModus"
 const val POTENZ_STRUKTUR_ID_PARAMETER = "potenz.strukturId"
 const val POTENZ_MIGRATIONSFEHLER_PARAMETER = "potenz.migrationsFehler"
 
+private const val HISTORISCHE_STRUKTURPOTENZ_KNOTEN_ART = "mathematik.potenzStrukturell"
+
 enum class PotenzStrukturModus {
     AUTO,
     EXPLIZIT,
@@ -196,7 +198,7 @@ fun KartenDaten.migriereAlgebraischePotenzKnoten(): KartenDaten = copy(
     knoten = knoten.map { knoten ->
         when (knoten.art) {
             ALGEBRAISCHE_POTENZ_KNOTEN_ART -> knoten.normalisierePotenzParameter()
-            "mathematik.potenz" -> knoten.copy(
+            HISTORISCHE_STRUKTURPOTENZ_KNOTEN_ART -> knoten.copy(
                 art = ALGEBRAISCHE_POTENZ_KNOTEN_ART,
                 name = "Potenz",
                 parameter = knoten.parameter + mapOf(
