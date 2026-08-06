@@ -55,6 +55,9 @@ private fun KnotenAuswertungsKontext.wertePotenzStrukturAus(): KnotenAuswertungs
     if (multiplikation.parameter.size != 2) {
         return fehlerErgebnis("Die Multiplikationsmethode muss genau zwei formale Argumente besitzen.")
     }
+    if (multiplikation.ausgabeNamen.size != 1) {
+        return fehlerErgebnis("Die Multiplikationsmethode muss genau einen öffentlichen Ausgang besitzen.")
+    }
 
     val signaturPruefung = pruefeInnereMultiplikation(
         methode = multiplikation,
