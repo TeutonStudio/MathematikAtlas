@@ -106,16 +106,23 @@ data class PotenzStruktur(
     val assoziativitaet: NachweisStatus,
     val neutralesElement: MathematischesObjekt?,
     val neutralitaet: NachweisStatus,
+    val multiplikationsMethode: Methode? = null,
 ) : MathematischesObjekt {
     init {
         require(id.isNotBlank())
         require(multiplikationsOperatorId.isNotBlank())
+        require(multiplikationsMethode == null || multiplikationsMethode.parameter.size == 2) {
+            "Eine explizite Potenzmultiplikation muss binär sein."
+        }
     }
 
     val traegerMenge: MengenAusdruck get() = traeger.menge
 
-    override fun zuLatex(): String =
-        "\\left(${traegerMenge.zuLatex()},\\operatorname{${multiplikationsOperatorId.potenzLatexText()}}\\right)"
+    override fun zuLatex(): String {
+        val operation = multiplikationsMethode?.name
+            ?: "\\operatorname{${multiplikationsOperatorId.potenzLatexText()}}"
+        return "\\left(${traegerMenge.zuLatex()},$operation\\right)"
+    }
 }
 
 data class AlgebraischePotenz(
