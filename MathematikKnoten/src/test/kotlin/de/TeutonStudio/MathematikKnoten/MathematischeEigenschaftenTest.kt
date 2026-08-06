@@ -114,12 +114,13 @@ class MathematischeEigenschaftenTest {
 
     @Test
     fun `Analysis Eigenschaft liefert bei fehlendem Beweis eine symbolische Stellenmenge`() {
+        val y = Variable("y")
         val methode = Methode(
             name = "f",
-            parameter = listOf(x),
+            parameter = listOf(x, y),
             vorschrift = x,
             zielMenge = ReelleZahlen,
-            werteVorräte = mapOf(x.name to ReelleZahlen),
+            werteVorräte = mapOf(x.name to ReelleZahlen, y.name to ReelleZahlen),
         )
         val knoten = MathematischeEigenschaftKnotenVorlagen.AnalysisEigenschaft.erzeuge(GraphPunkt.Zero)
 
