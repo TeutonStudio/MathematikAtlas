@@ -20,7 +20,7 @@ data class VorzeichenVerzweigung(
         VorzeichenReihenfolge.MINUS_PLUS -> "algebra.vorzeichen.minusPlus"
     }
 
-    override fun zuLatex(): String = "${reihenfolge.latex}${operand.zuLatex()}"
+    override fun zuLatex(): String = "${reihenfolge.latex}\\,${operand.zuLatex()}"
 
     fun entfalte(): VerzweigungsTupel {
         val werte = when (reihenfolge) {
