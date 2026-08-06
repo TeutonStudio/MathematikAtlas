@@ -45,25 +45,22 @@ fun konfiguriereDivisionsSeite(
 }
 
 /**
- * Historische Divisionen ohne nachgewiesenen kommutativen Bereich bleiben offen.
- * Neue Zahlenrechner ohne Migrationsmarker verwenden dagegen den Standard rechts.
+ * Wird ausschließlich beim Laden aufgerufen. Jede geladene Division ohne Seite
+ * ist daher historischer Bestand; neu erzeugte Knoten verwenden rechts als Standard.
  */
 fun KartenDaten.migriereStrukturierteDivision(): KartenDaten = copy(
     knoten = knoten.map { knoten ->
-        val operator = if (knoten.art == ZAHLENRECHNER_ART) {
-            UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR])
-        } else {
-            null
-        }
-        if (operator != UniversellerZahlenOperator.DIVISION) return@map knoten
+        val istHistorischeSpezialDivision = knoten.art == "mathematik.division"
+        val istUniverselleDivision = knoten.art == ZAHLENRECHNER_ART &&
+            UniversellerZahlenOperator.vonIdOderNull(
+                knoten.parameter[ZAHLENRECHNER_OPERATOR],
+            ) == UniversellerZahlenOperator.DIVISION
+        if (!istHistorischeSpezialDivision && !istUniverselleDivision) return@map knoten
         if (DivisionsSeite.ausPersistenzOderNull(knoten.parameter[ZAHLENRECHNER_DIVISIONSSEITE]) != null) {
-            return@map knoten
+            return@map knoten.copy(
+                parameter = knoten.parameter + (ZAHLENRECHNER_DIVISIONSSEITE_FEHLT to "false"),
+            )
         }
-
-        val historisch = knoten.parameter["migriertVon"] == "mathematik.division" ||
-            knoten.parameter[ZAHLENRECHNER_DIVISIONSSEITE_FEHLT] == "true"
-        if (!historisch) return@map knoten
-
         knoten.copy(
             parameter = knoten.parameter + (ZAHLENRECHNER_DIVISIONSSEITE_FEHLT to "true"),
         )
