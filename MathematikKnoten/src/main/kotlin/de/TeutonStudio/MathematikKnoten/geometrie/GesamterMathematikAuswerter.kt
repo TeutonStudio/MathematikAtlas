@@ -19,6 +19,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturRechnerKnoten()
         registriereLineareStrukturErweiterungen()
         registriereLineareAlgebraGrundlagen()
+        registrierePotenzStrukturKnoten()
         registriereAlgebraischePotenz()
         registriereMathematischeEigenschaften()
         registriereExakteEigenschaftsAuswertung()
