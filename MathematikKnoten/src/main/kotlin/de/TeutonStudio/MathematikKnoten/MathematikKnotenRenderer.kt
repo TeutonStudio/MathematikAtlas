@@ -1,11 +1,23 @@
 package de.TeutonStudio.MathematikKnoten
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInteraktionsModus
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
@@ -31,12 +43,17 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
 ) : KnotenRenderer {
-    @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
+    override val interaktionsModus: KnotenInteraktionsModus = KnotenInteraktionsModus.NurKopfzeileZiehbar
+
+    @Composable
+    override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         val ergebnis = ergebnisFür(knoten)
+        val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
+        val objekt = ausgabe?.objekt
+        var geöffneteDefinition by remember(knoten.id) { mutableStateOf<AutomatischesAdjektiv?>(null) }
+
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Text(knoten.name, style = MaterialTheme.typography.titleMedium)
-            val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
-            val objekt = ausgabe?.objekt
             (objekt as? Methode)?.let { methode ->
                 Text(methode.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
             }
@@ -67,6 +84,24 @@ class MathematikKnotenRenderer(
                 knoten.parameter.isNotEmpty() -> LatexText(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
             }
+
+            val adjektive = objekt?.let(::automatischeAdjektive).orEmpty()
+            if (adjektive.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    adjektive.take(3).forEach { adjektiv ->
+                        AdjektivMarke(
+                            adjektiv = adjektiv,
+                            öffnen = { geöffneteDefinition = adjektiv },
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                    }
+                }
+            }
+
             if (knoten.art in mengenIterationsArten) {
                 val methodenEingang = ergebnis?.eingänge?.get("methode")
                 val methode = methodenEingang?.objekt as? Methode
@@ -77,7 +112,18 @@ class MathematikKnotenRenderer(
                     }
                 }
             }
-            ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2) }
+
+            (objekt as? EigenschaftsAussage)?.let(::EigenschaftsStatusZeile)
+            ergebnis?.fehler?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+            }
+        }
+
+        geöffneteDefinition?.let { adjektiv ->
+            AdjektivDefinitionsDialog(
+                adjektiv = adjektiv,
+                schließen = { geöffneteDefinition = null },
+            )
         }
     }
 
@@ -152,4 +198,80 @@ class MathematikKnotenRenderer(
         val iterativeArten = setOf("mathematik.iterierteSumme", "mathematik.iteriertesProdukt", "mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt", "mathematik.iteriertesKartesischesProdukt", MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART)
         val mengenIterationsArten = setOf("mathematik.iterierteVereinigung", "mathematik.iterierterSchnitt")
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AdjektivMarke(
+    adjektiv: AutomatischesAdjektiv,
+    öffnen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .semantics {
+                role = Role.Button
+                contentDescription = "Eigenschaft ${adjektiv.text}. Definition öffnen."
+            }
+            .combinedClickable(
+                onClick = öffnen,
+                onLongClick = öffnen,
+            ),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    ) {
+        Text(
+            adjektiv.text,
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun EigenschaftsStatusZeile(aussage: EigenschaftsAussage) {
+    val farbe = when (aussage.unterstuetzung) {
+        UnterstuetzungsStatus.IMPLEMENTIERT -> MaterialTheme.colorScheme.onSurfaceVariant
+        UnterstuetzungsStatus.MATHEMATISCH_NICHT_MOEGLICH -> MaterialTheme.colorScheme.error
+        UnterstuetzungsStatus.NOCH_NICHT_IMPLEMENTIERT -> MaterialTheme.colorScheme.primary
+    }
+    val präfix = when (aussage.unterstuetzung) {
+        UnterstuetzungsStatus.IMPLEMENTIERT -> aussage.aussageStatus.name.lowercase()
+        UnterstuetzungsStatus.MATHEMATISCH_NICHT_MOEGLICH -> "Fehlende mathematische Struktur"
+        UnterstuetzungsStatus.NOCH_NICHT_IMPLEMENTIERT -> "Noch nicht implementiert"
+    }
+    Text(
+        listOfNotNull(präfix, aussage.diagnose?.nachricht).joinToString(": "),
+        color = farbe,
+        style = MaterialTheme.typography.labelSmall,
+        maxLines = 3,
+    )
+}
+
+@Composable
+private fun AdjektivDefinitionsDialog(
+    adjektiv: AutomatischesAdjektiv,
+    schließen: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = schließen,
+        title = { Text(adjektiv.text) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Automatisch abgeleitete Eigenschaft", style = MaterialTheme.typography.labelLarge)
+                LatexFormel(adjektiv.subjektLatex, style = MaterialTheme.typography.bodyLarge)
+                Text("besitzt die Eigenschaft", style = MaterialTheme.typography.bodyMedium)
+                Text(adjektiv.wissensId, style = MaterialTheme.typography.titleSmall)
+                Text(adjektiv.erklärung, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "Diese schreibgeschützte Pseudokarte erzeugt weder Knoten noch Verbindungen.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = schließen) { Text("Schließen") } },
+    )
 }
