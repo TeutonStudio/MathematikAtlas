@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.25.x"
-current_version = "2.25.4"
+current_version = "2.25.5"
 first_guarded_version = "2.3.13"
 
 releases = [
@@ -74,4 +74,5 @@ releases = [
   { version = "2.25.2", title = "Generische Termauswertung und Relationsauflösung", roadmap = "v2.25.x Strukturrechner, CAS und dynamische Definitionskarten", status = "released", previous_release = "2.25.1", branch = "release/v2.25.2-auswerten-aufloesen", kind = "fix", version_axis = "x", reason = "Korrigiert die vorhandenen Knoten Auswerten und Gleichung lösen: Auswerten vereinfacht mathematische Objekte typ-erhaltend, Auflösen bestimmt oder definiert Lösungsmengen von Relationen und Standardwerte behalten eine gültige LaTeX-Pfaddarstellung. Es wird kein neuer registrierter Knotentyp eingeführt." },
   { version = "2.25.3", title = "Enzyklopädie- und Konzeptschicht", roadmap = "v2.25.x Wissensmodell, Konzeptbibliothek und Definitionskarten", status = "released", previous_release = "2.25.2", branch = "release/v2.25.3-enzyklopaedie-konzeptschicht", kind = "feature", version_axis = "x", reason = "Konsolidiert Wissenseinträge, Rechnerfamilien, Konzeptknoten, statische JSON-Konzeptkarten und Debug-Previews im Modul MathematikKnoten, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen." },
   { version = "2.25.4", title = "Konzeptbibliothek auf erster Hierarchieebene filtern", roadmap = "v2.25.x Wissensmodell, Konzeptbibliothek und Bedienoberfläche", status = "released", previous_release = "2.25.3", branch = "samai/v2.25.4-konzeptbibliothek-filter-ebene-1", kind = "fix", version_axis = "x", reason = "Ergänzt Wortsuche und Anschlussfilter bereits auf der Fachgebietsebene, aggregiert Treffer über die Unterstruktur und erhält den Filterzustand über alle drei Hierarchieebenen, ohne einen neuen registrierten Knotentyp einzuführen." },
+  { version = "2.25.5", title = "Live-Synchronisation im CAS-Formelbauer", roadmap = "v2.25.x Strukturrechner, CAS und Bedienoberfläche", status = "released", previous_release = "2.25.4", branch = "release/v2.25.5-formelbauer-live-latex", kind = "fix", version_axis = "x", reason = "Synchronisiert gültige LaTeX-Eingaben unmittelbar mit dem strukturierten Formeleditor, erhält bei ungültigen Zwischenständen die letzte gültige Struktur und entfernt den zusätzlichen Import-Schritt, ohne einen neuen registrierten Knotentyp einzuführen." },
 ]
