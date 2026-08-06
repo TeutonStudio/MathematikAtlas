@@ -31,9 +31,9 @@ class AlgebraischePotenzKartenJsonTest {
     }
 
     @Test
-    fun `historischer Potenzknoten wird beim Lesen migriert`() {
+    fun `historischer Strukturpotenzknoten wird beim Lesen migriert`() {
         val alt = KnotenDaten(
-            art = "mathematik.potenz",
+            art = "mathematik.potenzStrukturell",
             name = "Alt",
             position = GraphPunkt.Zero,
             anschlüsse = AlgebraischePotenzKnotenVorlagen.Potenz.anschlüsse,
@@ -47,5 +47,19 @@ class AlgebraischePotenzKartenJsonTest {
         assertEquals("7", gelesen.parameter[POTENZ_ORDNUNG_PARAMETER])
         assertEquals(PotenzStrukturModus.AUTO.name, gelesen.parameter[POTENZ_STRUKTUR_MODUS_PARAMETER])
         assertEquals(alt.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
+    }
+
+    @Test
+    fun `historische Zahlenpotenz bleibt fuer Zahlenrechnermigration unberuehrt`() {
+        val alt = KnotenDaten(
+            art = "mathematik.potenz",
+            name = "Zahlenpotenz",
+            position = GraphPunkt.Zero,
+        )
+        val roh = KartenDatenJson.schreibe(KartenDaten(name = "Zahl", knoten = listOf(alt)))
+
+        val gelesen = KartenJson.lese(roh).knoten.single()
+
+        assertEquals("mathematik.potenz", gelesen.art)
     }
 }
