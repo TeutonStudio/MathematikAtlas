@@ -1,0 +1,51 @@
+name: Mathematikkern prüfen
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-math-core-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK einrichten
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle einrichten
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Gradle Wrapper ausführbar machen
+        run: chmod +x gradlew
+
+      - name: Repositorystruktur prüfen
+        run: python3 scripts/pruefe_repository.py
+
+      - name: Releaseplan prüfen
+        run: python3 scripts/pruefe_releaseplan.py
+
+      - name: Kernprüfung ausführen
+        run: python3 scripts/pruefe_kern.py
+
+      - name: JVM-Tests ausführen
+        run: ./gradlew test --stacktrace
+
+      - name: Android-Debug-Build erstellen
+        run: ./gradlew :app:assembleDebug --stacktrace
