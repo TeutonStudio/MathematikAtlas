@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
@@ -35,6 +36,21 @@ class PotenzStrukturKnotenTest {
         )
     }
 
+    private fun endlicheMultiplikation(
+        argumentBereich: MengenAusdruck,
+        zielMenge: MengenAusdruck,
+    ): Methode {
+        val a = Variable("a")
+        val b = Variable("b")
+        return Methode(
+            name = "\\diamond",
+            parameter = listOf(a, b),
+            vorschrift = a,
+            zielMenge = zielMenge,
+            werteVorräte = mapOf("a" to argumentBereich, "b" to argumentBereich),
+        )
+    }
+
     private val wahreAussage = Gleichheit(RationaleZahl.Eins, RationaleZahl.Eins)
 
     @Test
@@ -42,7 +58,7 @@ class PotenzStrukturKnotenTest {
         val vorlage = alleMathematikKnotenVorlagen().single { it.art == POTENZ_STRUKTUR_KNOTEN_ART }
 
         assertEquals("struktur", vorlage.anschlüsse.single {
-            it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
+            it.richtung == AnschlussRichtung.Ausgang
         }.name)
         assertTrue(vorlage.anschlüsse.any { it.name == "multiplikation" })
         assertTrue(vorlage.anschlüsse.any { it.name == "assoziativ" })
@@ -127,6 +143,92 @@ class PotenzStrukturKnotenTest {
 
         assertIs<NachweisStatus.Bedingt>(struktur.assoziativitaet)
         assertTrue(offen in ergebnis.ausgaben.getValue("struktur").annahmen)
+    }
+
+    @Test
+    fun `offene innere Signatur bleibt Bedingung der Abgeschlossenheit`() {
+        val traeger = BenannteMenge("M")
+        val knoten = PotenzStrukturKnotenVorlagen.Struktur.erzeuge(GraphPunkt.Zero)
+        val ergebnis = assertNotNull(register.finde(POTENZ_STRUKTUR_KNOTEN_ART)).auswerten(
+            kontext(
+                knoten,
+                mapOf(
+                    "traeger" to BedingterWert(traeger),
+                    "multiplikation" to BedingterWert(reelleMultiplikation()),
+                    "abgeschlossen" to BedingterWert(wahreAussage),
+                    "assoziativ" to BedingterWert(wahreAussage),
+                ),
+            ),
+        )
+        val struktur = assertIs<PotenzStruktur>(ergebnis.ausgaben.getValue("struktur").objekt)
+        val status = assertIs<NachweisStatus.Bedingt>(struktur.abgeschlossenheit)
+
+        assertTrue(status.bedingungen.any { it is TeilmengenBeziehung })
+        assertTrue(ergebnis.warnungen.any { it.contains("innere Signatur") })
+    }
+
+    @Test
+    fun `nachweislich zu enger Argumentbereich wird abgelehnt`() {
+        val klein = EndlicheMenge(setOf(RationaleZahl.Eins))
+        val traeger = EndlicheMenge(setOf(RationaleZahl.Eins, RationaleZahl.von(2)))
+        val knoten = PotenzStrukturKnotenVorlagen.Struktur.erzeuge(GraphPunkt.Zero)
+        val ergebnis = assertNotNull(register.finde(POTENZ_STRUKTUR_KNOTEN_ART)).auswerten(
+            kontext(
+                knoten,
+                mapOf(
+                    "traeger" to BedingterWert(traeger),
+                    "multiplikation" to BedingterWert(
+                        endlicheMultiplikation(argumentBereich = klein, zielMenge = traeger),
+                    ),
+                ),
+            ),
+        )
+
+        assertTrue(ergebnis.ausgaben.isEmpty())
+        assertTrue(ergebnis.fehler.orEmpty().contains("liegt nicht im Wertevorrat"))
+    }
+
+    @Test
+    fun `nachweislich fremde Zielmenge wird abgelehnt`() {
+        val traeger = EndlicheMenge(setOf(RationaleZahl.Eins))
+        val fremd = EndlicheMenge(setOf(RationaleZahl.von(2)))
+        val knoten = PotenzStrukturKnotenVorlagen.Struktur.erzeuge(GraphPunkt.Zero)
+        val ergebnis = assertNotNull(register.finde(POTENZ_STRUKTUR_KNOTEN_ART)).auswerten(
+            kontext(
+                knoten,
+                mapOf(
+                    "traeger" to BedingterWert(traeger),
+                    "multiplikation" to BedingterWert(
+                        endlicheMultiplikation(argumentBereich = traeger, zielMenge = fremd),
+                    ),
+                ),
+            ),
+        )
+
+        assertTrue(ergebnis.ausgaben.isEmpty())
+        assertTrue(ergebnis.fehler.orEmpty().contains("Zielmenge"))
+    }
+
+    @Test
+    fun `neutrales Element ausserhalb des Traegers wird abgelehnt`() {
+        val traeger = EndlicheMenge(setOf(RationaleZahl.Eins))
+        val knoten = PotenzStrukturKnotenVorlagen.Struktur.erzeuge(GraphPunkt.Zero)
+        val ergebnis = assertNotNull(register.finde(POTENZ_STRUKTUR_KNOTEN_ART)).auswerten(
+            kontext(
+                knoten,
+                mapOf(
+                    "traeger" to BedingterWert(traeger),
+                    "multiplikation" to BedingterWert(
+                        endlicheMultiplikation(argumentBereich = traeger, zielMenge = traeger),
+                    ),
+                    "neutral" to BedingterWert(RationaleZahl.von(2)),
+                    "neutralitaet" to BedingterWert(wahreAussage),
+                ),
+            ),
+        )
+
+        assertTrue(ergebnis.ausgaben.isEmpty())
+        assertTrue(ergebnis.fehler.orEmpty().contains("liegt nicht im Träger"))
     }
 
     @Test
