@@ -24,6 +24,13 @@ sealed interface PotenzTraeger {
                     "Die Struktur ${bereich.latex} akzeptiert nur Zahlenausdrücke.",
                 )
             }
+            val unbekannteVariablen = basis.enthalteneVariablen()
+                .filterNot { it.name in werteVorräte }
+            if (unbekannteVariablen.isNotEmpty()) {
+                return PotenzBasisPruefung.Bedingt(
+                    setOf(ElementBeziehung(basis, menge)),
+                )
+            }
             val basisMenge = runCatching {
                 inferiereZahlenWertevorrat(basis, werteVorräte, kontext.annahmen)
             }.getOrNull() ?: return PotenzBasisPruefung.Bedingt(
