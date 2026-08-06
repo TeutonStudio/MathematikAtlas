@@ -106,13 +106,16 @@ data class PotenzStruktur(
     val assoziativitaet: NachweisStatus,
     val neutralesElement: MathematischesObjekt?,
     val neutralitaet: NachweisStatus,
-) {
+) : MathematischesObjekt {
     init {
         require(id.isNotBlank())
         require(multiplikationsOperatorId.isNotBlank())
     }
 
     val traegerMenge: MengenAusdruck get() = traeger.menge
+
+    override fun zuLatex(): String =
+        "\\left(${traegerMenge.zuLatex()},\\operatorname{${multiplikationsOperatorId.potenzLatexText()}}\\right)"
 }
 
 data class AlgebraischePotenz(
@@ -184,3 +187,6 @@ sealed interface MethodenPotenzAuswertung {
 }
 
 typealias StrukturMultiplikation = (MathematischesObjekt, MathematischesObjekt) -> MathematischesObjekt
+
+private fun String.potenzLatexText(): String =
+    replace("\\", "").replace("_", "\\_").replace(".", "\\mathord{.}")
