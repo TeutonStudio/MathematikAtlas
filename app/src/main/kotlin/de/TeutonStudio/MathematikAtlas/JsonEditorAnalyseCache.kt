@@ -10,12 +10,12 @@ package de.TeutonStudio.MathematikAtlas
 internal class JsonEditorAnalyseCache<T>(
     private val analysiereText: (String) -> T,
 ) {
-    data class Auftrag internal constructor(
+    internal data class Auftrag(
         val revision: Long,
         val text: String,
     )
 
-    data class Ergebnis<T> internal constructor(
+    internal data class Ergebnis<T>(
         val revision: Long,
         val text: String,
         val analyse: T,
