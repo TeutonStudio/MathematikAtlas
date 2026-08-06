@@ -2,20 +2,33 @@ package de.TeutonStudio.MathematikKnoten.konzeptknoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.FachKatalog
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.VariantenId
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensEintrag
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenReferenz
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
 
 object KonzeptKnotenRegister {
     fun erstelle(vorlagen: List<KnotenVorlage>): List<WissensEintrag> {
         val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId)
-        val alle = ExpliziteKonzeptKnoten.dateien
+        val expliziteEinträge = ExpliziteKonzeptKnoten.dateien
             .map { datei -> datei.erstelle(eindeutigeVorlagen) }
             .filter { eintrag ->
                 eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar || eintrag.knotenVorlagen.isNotEmpty()
             }
-            .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
-                .thenBy { it.titel }
-                .thenBy { it.id.wert })
+
+        val explizitRegistrierteVarianten = expliziteEinträge
+            .filter { eintrag -> eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar }
+            .flatMapTo(linkedSetOf()) { eintrag -> eintrag.varianten }
+        val generischeEinträge = eindeutigeVorlagen
+            .filter { vorlage -> vorlage.stabileVariantenId() !in explizitRegistrierteVarianten }
+            .map(::einzelnesVorlagenKonzept)
+
+        val alle = (expliziteEinträge + generischeEinträge)
+            .sortedWith(compareBy<WissensEintrag> { eintrag ->
+                eintrag.fachPfade.minOfOrNull { pfad -> pfad.stabileId }.orEmpty()
+            }.thenBy { it.titel }.thenBy { it.id.wert })
+
         val fehler = validierungsFehler(alle, eindeutigeVorlagen)
         require(fehler.isEmpty()) {
             fehler.joinToString(prefix = "Ungültiges Konzeptknoten-Register:\n- ", separator = "\n- ")
@@ -44,8 +57,11 @@ object KonzeptKnotenRegister {
             if (eintrag.verfügbarkeit != WissensVerfügbarkeit.Verfügbar && eintrag.knotenVorlagen.isNotEmpty()) {
                 add("${eintrag.id}: nicht verfügbarer Eintrag besitzt Knotenvorlagen")
             }
-            if (eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar &&
-                eintrag.karten.none { it.rolle == de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle.Definition && it.primär }
+            if (
+                eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar &&
+                eintrag.karten.none { karte ->
+                    karte.primär && karte.rolle == WissensKartenRolle.Definition
+                }
             ) {
                 add("${eintrag.id}: benötigt mindestens eine primäre Definition")
             }
@@ -56,7 +72,9 @@ object KonzeptKnotenRegister {
 
         val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::stabileKonzeptId)
         val erwarteteVarianten = eindeutigeVorlagen.map(KnotenVorlage::stabileVariantenId)
-        val registrierteVarianten = einträge.flatMap { it.varianten }
+        val registrierteVarianten = einträge
+            .filter { eintrag -> eintrag.verfügbarkeit == WissensVerfügbarkeit.Verfügbar }
+            .flatMap { eintrag -> eintrag.varianten }
         (erwarteteVarianten.toSet() - registrierteVarianten.toSet()).forEach {
             add("Fehlende Knotenvorlage: $it")
         }
@@ -68,3 +86,13 @@ object KonzeptKnotenRegister {
         }
     }
 }
+
+/**
+ * Variante-spezifische Invariante für den kanonischen Kernbestand. Dynamische
+ * App-Erweiterungen dürfen eine gemeinsame primäre Definition erben, ohne jede
+ * Darstellungsvariante nochmals in den Kartenmetadaten aufzuzählen.
+ */
+internal fun WissensKartenReferenz.istPrimäreDefinitionFür(variante: VariantenId): Boolean =
+    primär &&
+        rolle == WissensKartenRolle.Definition &&
+        (varianten.isEmpty() || variante in varianten)

@@ -13,6 +13,11 @@ internal interface ExpliziteKonzeptDatei {
 
 internal object ExpliziteKonzeptKnoten {
     val dateien: List<ExpliziteKonzeptDatei> = listOf(
+        MethodenEigenschaftKonzeptDateiA53F6C21,
+        AnalysisEigenschaftKonzeptDateiBE88390F,
+        FolgenEigenschaftKonzeptDatei5D2C79C4,
+        MethodenStelligkeitKonzeptDatei426F55A9,
+        MengenEigenschaftKonzeptDatei9041F8B7,
         ZufallsvariableKonzeptDatei70790B00,
         OffeneMengeKonzeptDatei75C049CE,
         TensorrechnerKonzeptDatei64FF6386,

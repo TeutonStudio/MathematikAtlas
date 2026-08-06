@@ -69,9 +69,34 @@ object LineareAlgebraGrundlagenKnotenVorlagen {
         ),
     )
 
+    /**
+     * Öffentlicher Anschlussvertrag aus #273. Der erste Entwurf hieß intern
+     * `stellenmenge`; gespeicherte Karten werden vom Auswerter weiterhin unter
+     * beiden Namen bedient, neue Knoten erhalten jedoch ausschließlich `stellen`.
+     */
+    private val eigenschaftsVorlagen = MathematischeEigenschaftKnotenVorlagen.alle.map { vorlage ->
+        if (vorlage.art != ANALYSIS_EIGENSCHAFT_KNOTEN_ART) {
+            vorlage
+        } else {
+            vorlage.copy(
+                anschlüsse = vorlage.anschlüsse.map { anschluss ->
+                    if (
+                        anschluss.richtung == AnschlussRichtung.Ausgang &&
+                        anschluss.name == "stellenmenge"
+                    ) {
+                        anschluss.copy(name = "stellen")
+                    } else {
+                        anschluss
+                    }
+                },
+            )
+        }
+    }
+
     val alle = listOf(Vektorraum, LineareAbbildung) +
         SkalarproduktKnotenVorlagen.alle +
-        StrukturFormelRechnerVorlagen.alle
+        StrukturFormelRechnerVorlagen.alle +
+        eigenschaftsVorlagen
 }
 
 internal fun MathematikAuswerterRegister.registriereLineareAlgebraGrundlagen() {
@@ -108,7 +133,6 @@ internal fun MathematikAuswerterRegister.registriereLineareAlgebraGrundlagen() {
             ),
         )
     }
-
 }
 
 private fun KnotenAuswertungsKontext.gemeinsameAnnahmen() =

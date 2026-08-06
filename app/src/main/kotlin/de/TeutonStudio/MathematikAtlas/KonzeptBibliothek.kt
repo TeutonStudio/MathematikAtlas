@@ -88,6 +88,24 @@ internal object KonzeptBibliothekRegister {
                 KonzeptKategorie("funktionen", "Funktionen"),
                 KonzeptKategorie("folgen-reihen", "Folgen und Reihen"),
                 KonzeptKategorie("differential-integral", "Differential- und Integralrechnung"),
+                KonzeptKategorie(
+                    "eigenschaften",
+                    "Eigenschaften",
+                    listOf(
+                        KonzeptKategorie("regularitaet", "Regularität"),
+                        KonzeptKategorie("integrabilitaet", "Integrabilität"),
+                        KonzeptKategorie("funktionsgeometrie", "Funktionsgeometrie"),
+                    ),
+                ),
+            ),
+        ),
+        KonzeptKategorie(
+            "methoden",
+            "Methoden",
+            listOf(
+                KonzeptKategorie("signatur", "Signatur"),
+                KonzeptKategorie("folgen", "Folgen"),
+                KonzeptKategorie("wertarten", "Wertarten"),
             ),
         ),
         KonzeptKategorie(
@@ -117,6 +135,14 @@ internal object KonzeptBibliothekRegister {
                 KonzeptKategorie("mengen", "Mengen"),
                 KonzeptKategorie("mengenoperationen", "Mengenoperationen"),
                 KonzeptKategorie("mengendefinitionen", "Mengendefinitionen"),
+                KonzeptKategorie(
+                    "eigenschaften",
+                    "Eigenschaften",
+                    listOf(
+                        KonzeptKategorie("topologie", "Topologie"),
+                        KonzeptKategorie("konvexitaet", "Konvexität"),
+                    ),
+                ),
             ),
         ),
         KonzeptKategorie(
@@ -142,18 +168,28 @@ internal object KonzeptBibliothekRegister {
         KonzeptKategorie("eigene-karten", "Eigene Karten"),
     )
 
-    private val kategorienNachId: Map<String, KonzeptKategorie> = buildMap {
-        kategorien.forEach { haupt ->
-            put(haupt.id, haupt)
-            haupt.kinder.forEach { kind -> put("${haupt.id}/${kind.id}", kind) }
+    private val kategorienNachPfad: Map<List<String>, KonzeptKategorie> = buildMap {
+        fun erfasse(kategorie: KonzeptKategorie, eltern: List<String>) {
+            val pfad = eltern + kategorie.id
+            put(pfad, kategorie)
+            kategorie.kinder.forEach { kind -> erfasse(kind, pfad) }
         }
+        kategorien.forEach { haupt -> erfasse(haupt, emptyList()) }
     }
 
     fun erstelle(vorlagen: List<KnotenVorlage>): List<KonzeptBibliothekEintrag> {
-        val kanonischeIds = alleMathematikDefinitionsVorlagen()
-            .mapTo(mutableSetOf(), KnotenVorlage::bibliotheksId)
-        val kanonischeVorlagen = vorlagen.filter { it.bibliotheksId() in kanonischeIds }
-        val kanonischeEinträge = KonzeptKnotenRegister.erstelle(kanonischeVorlagen).flatMap { wissen ->
+        val eindeutigeVorlagen = vorlagen.distinctBy(KnotenVorlage::bibliotheksId)
+        val angeforderteVorlagenIds = eindeutigeVorlagen
+            .mapTo(linkedSetOf(), KnotenVorlage::bibliotheksId)
+        val vollständigeKanonischeVorlagen = alleMathematikDefinitionsVorlagen()
+
+        /*
+         * Das Konzeptregister validiert einen vollständigen, geschlossenen
+         * Mathematikkatalog. Teilmengen sind eine Darstellungsfrage der App und
+         * werden deshalb erst nach der kanonischen Erzeugung gefiltert. Geplante
+         * Konzepte bleiben unabhängig von der Auswahl sichtbar.
+         */
+        val kanonischeEinträge = KonzeptKnotenRegister.erstelle(vollständigeKanonischeVorlagen).flatMap { wissen ->
             val kategoriePfade = wissen.fachPfade
                 .map { it.segmente }
                 .sortedBy { it.joinToString("/") }
@@ -169,32 +205,36 @@ internal object KonzeptBibliothekRegister {
                     ),
                 )
             } else {
-                wissen.knotenVorlagen.map { vorlage ->
-                    KonzeptBibliothekEintrag(
-                        id = vorlage.bibliotheksId(),
-                        titel = vorlage.name,
-                        beschreibung = vorlage.beschreibung,
-                        kategoriePfade = kategoriePfade,
-                        suchbegriffe = wissen.alleSuchtexte + setOf(
-                            vorlage.name,
-                            vorlage.beschreibung,
-                            vorlage.kategorie,
-                            vorlage.art,
-                        ) + vorlage.standardParameter.keys + vorlage.standardParameter.values,
-                        verfügbarkeit = when (wissen.verfügbarkeit) {
-                            WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
-                            WissensVerfügbarkeit.Geplant,
-                            WissensVerfügbarkeit.Historisch,
-                            -> KonzeptVerfügbarkeit.Geplant
-                        },
-                        vorlage = vorlage,
-                    )
-                }
+                wissen.knotenVorlagen
+                    .filter { vorlage -> vorlage.bibliotheksId() in angeforderteVorlagenIds }
+                    .map { vorlage ->
+                        KonzeptBibliothekEintrag(
+                            id = vorlage.bibliotheksId(),
+                            titel = vorlage.name,
+                            beschreibung = vorlage.beschreibung,
+                            kategoriePfade = kategoriePfade,
+                            suchbegriffe = wissen.alleSuchtexte + setOf(
+                                vorlage.name,
+                                vorlage.beschreibung,
+                                vorlage.kategorie,
+                                vorlage.art,
+                            ) + vorlage.standardParameter.keys + vorlage.standardParameter.values,
+                            verfügbarkeit = when (wissen.verfügbarkeit) {
+                                WissensVerfügbarkeit.Verfügbar -> KonzeptVerfügbarkeit.Verfügbar
+                                WissensVerfügbarkeit.Geplant,
+                                WissensVerfügbarkeit.Historisch,
+                                -> KonzeptVerfügbarkeit.Geplant
+                            },
+                            vorlage = vorlage,
+                        )
+                    }
             }
         }
-        val ergänzendeEinträge = vorlagen.asSequence()
-            .distinctBy(KnotenVorlage::bibliotheksId)
-            .filterNot { it.bibliotheksId() in kanonischeIds }
+        val abgedeckteVorlagenIds = kanonischeEinträge
+            .mapNotNull { eintrag -> eintrag.vorlage?.bibliotheksId() }
+            .toSet()
+        val ergänzendeEinträge = eindeutigeVorlagen.asSequence()
+            .filterNot { vorlage -> vorlage.bibliotheksId() in abgedeckteVorlagenIds }
             .map(::ergänzenderEintrag)
             .toList()
 
@@ -203,9 +243,8 @@ internal object KonzeptBibliothekRegister {
             .sortedWith(compareBy(KonzeptBibliothekEintrag::titel, KonzeptBibliothekEintrag::id))
     }
 
-    fun bezeichnungFür(pfad: List<String>): String = pfad.mapIndexedNotNull { index, id ->
-        val schlüssel = if (index == 0) id else "${pfad.first()}/$id"
-        kategorienNachId[schlüssel]?.bezeichnung
+    fun bezeichnungFür(pfad: List<String>): String = pfad.indices.mapNotNull { index ->
+        kategorienNachPfad[pfad.take(index + 1)]?.bezeichnung
     }.joinToString(" / ")
 
     fun unterkategorien(hauptkategorie: String): List<KonzeptKategorie> =
@@ -218,12 +257,18 @@ internal object KonzeptBibliothekRegister {
         einträge.forEach { eintrag ->
             if (eintrag.kategoriePfade.isEmpty()) add("${eintrag.id}: kein Kategoriepfad")
             eintrag.kategoriePfade.forEach { pfad ->
-                if (pfad.isEmpty() || pfad.size > 3) add("${eintrag.id}: ungültige Hierarchietiefe ${pfad.size}")
-                val haupt = kategorien.firstOrNull { it.id == pfad.firstOrNull() }
-                if (haupt == null) {
-                    add("${eintrag.id}: unbekannte Hauptkategorie ${pfad.firstOrNull()}")
-                } else if (pfad.size >= 2 && haupt.kinder.none { it.id == pfad[1] }) {
-                    add("${eintrag.id}: unbekannte Unterkategorie ${pfad[1]}")
+                if (pfad.isEmpty() || pfad.size > 3) {
+                    add("${eintrag.id}: ungültige Hierarchietiefe ${pfad.size}")
+                } else {
+                    val unbekannteEbene = pfad.indices.firstOrNull { index ->
+                        kategorienNachPfad[pfad.take(index + 1)] == null
+                    }
+                    if (unbekannteEbene != null) {
+                        add(
+                            "${eintrag.id}: unbekannter Kategoriepfad " +
+                                pfad.take(unbekannteEbene + 1).joinToString("/"),
+                        )
+                    }
                 }
             }
             if (eintrag.verfügbarkeit == KonzeptVerfügbarkeit.Verfügbar && eintrag.vorlage == null) {

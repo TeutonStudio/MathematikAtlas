@@ -5,6 +5,13 @@ object FachKatalog {
     val AnalysisFunktionen = FachPfad.von("analysis", "funktionen")
     val AnalysisFolgenReihen = FachPfad.von("analysis", "folgen-reihen")
     val AnalysisDifferentialIntegral = FachPfad.von("analysis", "differential-integral")
+    val AnalysisEigenschaftenRegularität = FachPfad.von("analysis", "eigenschaften", "regularitaet")
+    val AnalysisEigenschaftenIntegrabilität = FachPfad.von("analysis", "eigenschaften", "integrabilitaet")
+    val AnalysisEigenschaftenFunktionsgeometrie = FachPfad.von("analysis", "eigenschaften", "funktionsgeometrie")
+
+    val MethodenSignatur = FachPfad.von("methoden", "signatur")
+    val MethodenFolgen = FachPfad.von("methoden", "folgen")
+    val MethodenWertarten = FachPfad.von("methoden", "wertarten")
 
     val LineareAlgebraVektoren = FachPfad.von("lineare-algebra", "vektoren")
     val LineareAlgebraMatrizen = FachPfad.von("lineare-algebra", "matrizen")
@@ -19,6 +26,8 @@ object FachKatalog {
     val MengenlehreMengen = FachPfad.von("mengenlehre", "mengen")
     val MengenlehreOperationen = FachPfad.von("mengenlehre", "mengenoperationen")
     val MengenlehreDefinitionen = FachPfad.von("mengenlehre", "mengendefinitionen")
+    val MengenEigenschaftenTopologie = FachPfad.von("mengenlehre", "eigenschaften", "topologie")
+    val MengenEigenschaftenKonvexität = FachPfad.von("mengenlehre", "eigenschaften", "konvexitaet")
 
     val LogikAussagen = FachPfad.von("logik", "aussagen")
     val LogikPrädikate = FachPfad.von("logik", "praedikate")
@@ -36,6 +45,12 @@ object FachKatalog {
         AnalysisFunktionen,
         AnalysisFolgenReihen,
         AnalysisDifferentialIntegral,
+        AnalysisEigenschaftenRegularität,
+        AnalysisEigenschaftenIntegrabilität,
+        AnalysisEigenschaftenFunktionsgeometrie,
+        MethodenSignatur,
+        MethodenFolgen,
+        MethodenWertarten,
         LineareAlgebraVektoren,
         LineareAlgebraMatrizen,
         LineareAlgebraTensoren,
@@ -47,6 +62,8 @@ object FachKatalog {
         MengenlehreMengen,
         MengenlehreOperationen,
         MengenlehreDefinitionen,
+        MengenEigenschaftenTopologie,
+        MengenEigenschaftenKonvexität,
         LogikAussagen,
         LogikPrädikate,
         LogikQuantoren,
@@ -71,6 +88,34 @@ object FachKatalog {
             if (besitztKartenVerweis || kategorieKlein in setOf("eigene karten", "gespeicherte karten")) {
                 add(EigeneKarten)
             }
+
+            when {
+                "methodeneigenschaft" in artKlein -> {
+                    add(AnalysisEigenschaftenRegularität)
+                    add(AnalysisEigenschaftenIntegrabilität)
+                    add(AnalysisEigenschaftenFunktionsgeometrie)
+                    add(AlgebraMethoden)
+                }
+                "analysiseigenschaft" in artKlein -> {
+                    add(AnalysisEigenschaftenFunktionsgeometrie)
+                    add(AnalysisDifferentialIntegral)
+                }
+                "folgeneigenschaft" in artKlein -> {
+                    add(MethodenFolgen)
+                    add(MethodenWertarten)
+                    add(AnalysisFolgenReihen)
+                }
+                "methodenstelligkeit" in artKlein -> {
+                    add(MethodenSignatur)
+                    add(AlgebraMethoden)
+                }
+                "mengeneigenschaft" in artKlein -> {
+                    add(MengenEigenschaftenTopologie)
+                    add(MengenEigenschaftenKonvexität)
+                    add(TopologieGrundbegriffe)
+                }
+            }
+
             if (kategorieKlein.startsWith("geometrie:") || "geometrie" in artKlein) {
                 add(
                     when {
@@ -110,7 +155,7 @@ object FachKatalog {
                 )
             }
             if (
-                kategorieKlein == "analysis" ||
+                kategorieKlein == "analysis" || kategorieKlein.startsWith("analysis:") ||
                 listOf("ableit", "integr", "grenz", "folge", "reihe").any(artKlein::contains)
             ) {
                 add(
@@ -121,7 +166,10 @@ object FachKatalog {
                     },
                 )
             }
-            if (kategorieKlein in setOf("methoden", "abbildungen") || "methode" in artKlein || "abbild" in artKlein) {
+            if (
+                kategorieKlein in setOf("methoden", "abbildungen") || kategorieKlein.startsWith("methoden:") ||
+                "methode" in artKlein || "abbild" in artKlein
+            ) {
                 add(AlgebraMethoden)
                 add(AnalysisFunktionen)
             }

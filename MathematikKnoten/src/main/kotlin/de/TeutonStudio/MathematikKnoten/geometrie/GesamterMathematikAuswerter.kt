@@ -19,6 +19,10 @@ object GesamterMathematikAuswerter {
         registriereStrukturRechnerKnoten()
         registriereLineareStrukturErweiterungen()
         registriereLineareAlgebraGrundlagen()
+        registriereMathematischeEigenschaften()
+        registriereExakteEigenschaftsAuswertung()
+        registriereFolgenUndSignaturEigenschaften()
+        registriereMengenEigenschaftsAuswertung()
         // Bewusst zuletzt: ersetzt historische Spezialauswerter derselben Knotenarten.
         registriereKonsolidierteKnoten()
         // Verfeinert ausschließlich das Skalarprodukt und delegiert alle übrigen Vektoroperationen.
@@ -27,5 +31,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturFormelRechner()
         // Bewahrt gespeicherte Karten mit dem historischen Ausgang `skalar`.
         registriereStrukturRechnerKompatibilitaet()
+        // Umschließt den finalen Analysis-Auswerter und ergänzt exakte Monom-Nullstellen.
+        registriereErweiterteAnalysisNullstellen()
     }
 }
