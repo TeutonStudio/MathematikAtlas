@@ -150,7 +150,7 @@ class AlgebraischePotenzTest {
         )
 
         assertEquals(einheitsMatrixFuerPotenz(2), ergebnis.wert)
-        assertEquals(Matrizenraum(2, 2, RationaleZahlen), ergebnis.traeger)
+        assertEquals(Matrizenraum(2, 2, NatürlicheZahlen), ergebnis.traeger)
     }
 
     @Test
