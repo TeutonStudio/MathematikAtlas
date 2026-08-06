@@ -1,17 +1,21 @@
 package de.TeutonStudio.MathematikAtlas
 
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.InspektorSichtbarkeit
 import de.TeutonStudio.MathematikKartenAdapter.*
+import de.TeutonStudio.MathematikKnoten.ANALYSIS_EIGENSCHAFT_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
 import de.TeutonStudio.MathematikKnoten.MATRIX_SPALTEN
@@ -22,7 +26,11 @@ import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
 
 private const val STANDARDWERT_PREFIX = "standardwert."
 private val INSPEKTOR_BREITE = 310.dp
+private val INSPEKTOR_OBEN = 60.dp
+private val INSPEKTOR_UNTEN = 152.dp
+private val INSPEKTOR_RAND = 16.dp
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
     val knoten = zustand.ausgewählterKnoten
@@ -31,163 +39,185 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
     }
     if (!InspektorSichtbarkeit.offen || knoten == null) return
 
-    Surface(
-        modifier = modifier.widthIn(max = INSPEKTOR_BREITE),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 2.dp,
-    ) {
-        var knotenUmbenennenGeöffnet by remember(knoten.id) { mutableStateOf(false) }
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+    Layout(
+        modifier = Modifier.fillMaxHeight().zIndex(2f),
+        content = {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
+                shape = MaterialTheme.shapes.large,
             ) {
-                Text("Inspektor", modifier = Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
-                TextButton(onClick = InspektorSichtbarkeit::schließen) { Text("Schließen") }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(knoten.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                TextButton(onClick = { knotenUmbenennenGeöffnet = true }) { Text("Umbenennen") }
-            }
-            if (knotenUmbenennenGeöffnet) {
-                NameÄndernDialog(
-                    titel = "Knoten umbenennen",
-                    aktuellerName = knoten.name,
-                    schließen = { knotenUmbenennenGeöffnet = false },
-                    bestätigen = { name ->
-                        zustand.ersetzeKarteMitAuswahl(
-                            zustand.editor.karte.copy(
-                                knoten = zustand.editor.karte.knoten.map { aktuell ->
-                                    if (aktuell.id == knoten.id) aktuell.copy(name = name) else aktuell
-                                },
-                            ),
-                        )
-                        zustand.speichereAktuell()
-                        knotenUmbenennenGeöffnet = false
-                    },
-                )
-            }
-            Text(knoten.art, style = MaterialTheme.typography.labelMedium)
-            StandardwerteEditor(knoten, zustand)
-            if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
-            IterierteMethodenKartenInspektor(knoten, zustand)
-            if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
-            KnotenInspektorRegister.finde(knoten.art)?.let { inspektor ->
-                inspektor.Inhalt(
-                    knoten,
-                    zustand.auswertung.knoten[knoten.id],
-                    object : KnotenInspektorAktionen {
-                        override fun parameter(schlüssel: String, wert: String) {
-                            zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
-                        }
-                        override fun name(wert: String) {
-                            zustand.ersetzeKarteMitAuswahl(
-                                zustand.editor.karte.copy(
-                                    knoten = zustand.editor.karte.knoten.map { aktuell ->
-                                        if (aktuell.id == knoten.id) aktuell.copy(name = wert) else aktuell
-                                    },
-                                ),
-                            )
-                        }
-                        override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) {
-                            zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
-                        }
-                        override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
-                            zustand.editor.ändereAnschlussArt(verweis, art)
-                        }
-                        override fun knoten(knoten: KnotenDaten) {
-                            zustand.editor.führeAus(KartenAktion.KnotenErsetzen(knoten))
-                        }
-                    },
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
-                    Button(
-                        onClick = zustand::löscheAuswahlMitMengendefinition,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    ) { Text("Löschen") }
-                }
-                return@Column
-            }
-            if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
-            if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor")) {
-                val wert = knoten.parameter["festeEingänge"] ?: "2"
-                var text by remember(knoten.id, wert) { mutableStateOf(wert) }
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = {
-                        text = it
-                        it.toIntOrNull()?.let { anzahl -> zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl) }
-                    },
-                    label = { Text("Feste Eingänge") },
-                    supportingText = { Text("Mindestens 2; weitere Eingänge entstehen beim Verbinden.") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                val zeigeWerte = knoten.parameter["operatorAnzeige"] != "name"
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                var knotenUmbenennenGeöffnet by remember(knoten.id) { mutableStateOf(false) }
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text("Anzeige: Namen", modifier = Modifier.weight(1f))
-                    Switch(
-                        checked = zeigeWerte,
-                        onCheckedChange = { werte ->
-                            zustand.editor.führeAus(
-                                KartenAktion.KnotenParameterÄndern(
-                                    knoten.id,
-                                    "operatorAnzeige",
-                                    if (werte) "wert" else "name",
-                                ),
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("Inspektor", modifier = Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                        TextButton(onClick = InspektorSichtbarkeit::schließen) { Text("Schließen") }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(knoten.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                        TextButton(onClick = { knotenUmbenennenGeöffnet = true }) { Text("Umbenennen") }
+                    }
+                    if (knotenUmbenennenGeöffnet) {
+                        NameÄndernDialog(
+                            titel = "Knoten umbenennen",
+                            aktuellerName = knoten.name,
+                            schließen = { knotenUmbenennenGeöffnet = false },
+                            bestätigen = { name ->
+                                zustand.ersetzeKarteMitAuswahl(
+                                    zustand.editor.karte.copy(
+                                        knoten = zustand.editor.karte.knoten.map { aktuell ->
+                                            if (aktuell.id == knoten.id) aktuell.copy(name = name) else aktuell
+                                        },
+                                    ),
+                                )
+                                zustand.speichereAktuell()
+                                knotenUmbenennenGeöffnet = false
+                            },
+                        )
+                    }
+                    Text(knoten.art, style = MaterialTheme.typography.labelMedium)
+                    StandardwerteEditor(knoten, zustand)
+                    if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
+                    IterierteMethodenKartenInspektor(knoten, zustand)
+                    if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
+                    val inspektor = if (knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART) {
+                        AnalysisEigenschaftInspektor
+                    } else {
+                        KnotenInspektorRegister.finde(knoten.art)
+                    }
+                    inspektor?.let {
+                        it.Inhalt(
+                            knoten,
+                            zustand.auswertung.knoten[knoten.id],
+                            object : KnotenInspektorAktionen {
+                                override fun parameter(schlüssel: String, wert: String) {
+                                    zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
+                                }
+                                override fun name(wert: String) {
+                                    zustand.ersetzeKarteMitAuswahl(
+                                        zustand.editor.karte.copy(
+                                            knoten = zustand.editor.karte.knoten.map { aktuell ->
+                                                if (aktuell.id == knoten.id) aktuell.copy(name = wert) else aktuell
+                                            },
+                                        ),
+                                    )
+                                }
+                                override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) {
+                                    zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+                                }
+                                override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
+                                    zustand.editor.ändereAnschlussArt(verweis, art)
+                                }
+                                override fun knoten(knoten: KnotenDaten) {
+                                    zustand.editor.führeAus(KartenAktion.KnotenErsetzen(knoten))
+                                }
+                            },
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
+                            Button(
+                                onClick = zustand::löscheAuswahlMitMengendefinition,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            ) { Text("Löschen") }
+                        }
+                        return@Column
+                    }
+                    if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
+                    if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor")) {
+                        val wert = knoten.parameter["festeEingänge"] ?: "2"
+                        var text by remember(knoten.id, wert) { mutableStateOf(wert) }
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                it.toIntOrNull()?.let { anzahl -> zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl) }
+                            },
+                            label = { Text("Feste Eingänge") },
+                            supportingText = { Text("Mindestens 2; weitere Eingänge entstehen beim Verbinden.") },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        val zeigeWerte = knoten.parameter["operatorAnzeige"] != "name"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text("Anzeige: Namen", modifier = Modifier.weight(1f))
+                            Switch(
+                                checked = zeigeWerte,
+                                onCheckedChange = { werte ->
+                                    zustand.editor.führeAus(
+                                        KartenAktion.KnotenParameterÄndern(
+                                            knoten.id,
+                                            "operatorAnzeige",
+                                            if (werte) "wert" else "name",
+                                        ),
+                                    )
+                                },
                             )
-                        },
-                    )
-                    Text("Werte")
+                            Text("Werte")
+                        }
+                    }
+                    if (knoten.art == "mathematik.extremwert") {
+                        Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
+                    }
+                    knoten.parameter.filterKeys {
+                        it !in setOf(
+                            "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
+                            "werteVorrat", "zielmenge", "argumentReihenfolge", MENGENDEFINITION_PAAR,
+                            MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
+                            MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
+                        ) && !it.startsWith(STANDARDWERT_PREFIX) &&
+                            !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.")
+                    }.forEach { (schlüssel, wert) ->
+                        var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+                            },
+                            label = { Text(schlüssel) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
+                        Button(
+                            onClick = zustand::löscheAuswahlMitMengendefinition,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) { Text("Löschen") }
+                    }
                 }
             }
-            if (knoten.art == "mathematik.extremwert") {
-                Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
-            }
-            knoten.parameter.filterKeys {
-                it !in setOf(
-                    "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
-                    "werteVorrat", "zielmenge", "argumentReihenfolge", MENGENDEFINITION_PAAR,
-                    MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
-                    MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
-                ) && !it.startsWith(STANDARDWERT_PREFIX) &&
-                    !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.")
-            }.forEach { (schlüssel, wert) ->
-                var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = {
-                        text = it
-                        zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
-                    },
-                    label = { Text(schlüssel) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            Spacer(Modifier.height(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
-                Button(
-                    onClick = zustand::löscheAuswahlMitMengendefinition,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                ) { Text("Löschen") }
-            }
+        },
+    ) { messbare, beschränkungen ->
+        val breite = INSPEKTOR_BREITE.roundToPx().coerceAtMost(beschränkungen.maxWidth)
+        val oben = INSPEKTOR_OBEN.roundToPx()
+        val unten = INSPEKTOR_UNTEN.roundToPx()
+        val rand = INSPEKTOR_RAND.roundToPx()
+        val höhe = (beschränkungen.maxHeight - oben - unten).coerceAtLeast(0)
+        val panel = messbare.single().measure(Constraints.fixed(breite, höhe))
+        layout(0, beschränkungen.maxHeight) {
+            panel.placeRelative(x = -breite - rand, y = oben)
         }
     }
 }
