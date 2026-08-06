@@ -113,7 +113,9 @@ class MathematikKnotenRenderer(
                 }
             }
 
-            (objekt as? EigenschaftsAussage)?.let(::EigenschaftsStatusZeile)
+            (objekt as? EigenschaftsAussage)?.let { aussage ->
+                EigenschaftsStatusZeile(aussage)
+            }
             ergebnis?.fehler?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2)
             }
