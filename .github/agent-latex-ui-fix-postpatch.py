@@ -50,3 +50,11 @@ ersetzen(
     r'vereinfacheLatexAnzeige("{}^{1\leq}\mathbb{R}^{<3}")',
     r'vereinfacheLatexAnzeige("{}^{1\\leq}\\mathbb{R}^{<3}")',
 )
+
+# Regex-Ersatztexte interpretieren Backslashes selbst. Eine Lambda-Ersetzung
+# gibt den einzelnen kanonischen Backslash dagegen unverändert aus.
+ersetzen(
+    "app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/konzepte/KonzeptUi.kt",
+    r'normalisiereLatexQuelltext(titel).replace(doppeltEscapterLatexBefehl, "\\")',
+    r'normalisiereLatexQuelltext(titel).replace(doppeltEscapterLatexBefehl) { "\\" }',
+)
