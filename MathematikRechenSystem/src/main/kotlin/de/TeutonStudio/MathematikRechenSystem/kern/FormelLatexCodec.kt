@@ -16,7 +16,7 @@ sealed interface FormelLatexImportErgebnis {
  * der strukturierten Formel erzeugt.
  */
 object FormelLatexCodec {
-    fun exportiere(ausdruck: FormelAusdruck): String = FormelRenderer.render(ausdruck).latex
+    fun exportiere(ausdruck: FormelAusdruck): String = ErweiterterFormelRenderer.render(ausdruck).latex
         .ersetzeFunktionsOperator("zahl.tan", "\\tan")
         .ersetzeFunktionsOperator("zahl.cot", "\\cot")
         .ersetzeFunktionsOperator("zahl.sec", "\\sec")
@@ -30,7 +30,7 @@ object FormelLatexCodec {
         .ersetzeFunktionsOperator("zahl.csch", "\\operatorname{csch}")
 
     fun importiere(latex: String): FormelLatexImportErgebnis = runCatching {
-        LatexFormelParser(latex).parse()
+        ErweiterterLatexFormelParser.parse(latex)
     }.fold(
         onSuccess = FormelLatexImportErgebnis::Erfolg,
         onFailure = { fehler ->
@@ -50,7 +50,11 @@ internal class LatexFormelParseFehler(
 
 internal fun operatorRollen(operatorId: String, anzahl: Int): List<String> = when (operatorId) {
     "zahl.division" -> listOf("zaehler", "nenner")
-    "zahl.potenz" -> listOf("basis", "exponent")
+    "algebra.division.rechts", "algebra.division.links" -> listOf("dividend", "divisor")
+    "zahl.potenz", "iteration.multiplikation" -> listOf("basis", "ordnung")
+    "iteration.differentiation", "iteration.selbstkomposition" -> listOf("methode", "ordnung")
+    "methode.einschraenkung" -> listOf("methode", "menge")
+    "algebra.vorzeichen.plusMinus", "algebra.vorzeichen.minusPlus" -> listOf("operand")
     "zahl.logarithmus" -> listOf("basis", "argument")
     "zahl.wurzel" -> listOf("radikand", "grad")
     "zahl.subtraktion" -> listOf("a", "b")
