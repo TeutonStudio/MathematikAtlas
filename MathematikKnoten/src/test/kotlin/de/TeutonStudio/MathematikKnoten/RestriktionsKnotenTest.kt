@@ -81,6 +81,32 @@ class RestriktionsKnotenTest {
     }
 
     @Test
+    fun `freier Ergaenzungseingang behaelt ID bei reiner Neuauswertung`() {
+        val ziel = menge(0, 1, 2)
+        val basis = methode("f", menge(0), 0, ziel)
+        val m = menge(0, 1, 2)
+        val grund = RestriktionsKnotenVorlagen.Restriktion.erzeuge(GraphPunkt.Zero)
+        val eingänge = mapOf("methode" to BedingterWert(basis), "menge" to BedingterWert(m))
+
+        val einmal = synchronisiereRestriktionsAnschlüsse(
+            KartenDaten(name = "Test", knoten = listOf(grund)),
+            auswertung(grund, eingänge),
+        ).knoten.single()
+        val freieId = einmal.anschlüsse.single { it.name.startsWith(RESTRIKTIONS_ERGÄNZUNG_PREFIX) }.id
+
+        val zweimal = synchronisiereRestriktionsAnschlüsse(
+            KartenDaten(name = "Test", knoten = listOf(einmal)),
+            auswertung(einmal, eingänge),
+        ).knoten.single()
+
+        assertEquals(
+            freieId,
+            zweimal.anschlüsse.single { it.name.startsWith(RESTRIKTIONS_ERGÄNZUNG_PREFIX) }.id,
+        )
+        assertEquals(einmal, zweimal)
+    }
+
+    @Test
     fun `vollstaendige Abdeckung erzeugt keinen Ergaenzungseingang`() {
         val ziel = menge(0, 1)
         val basis = methode("f", menge(0, 1), 0, ziel)
