@@ -39,12 +39,16 @@ class AtlasZustand(context: Context) {
     private var letzterGespeicherterStand: KartenDaten
 
     init {
-        if (speicher.liste(archivierteEinschließen = true).isEmpty()) BeispielKarten.alle().forEach(speicher::speichere)
+        installiereStandardkarten(context, speicher)
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
-        val start = karten.firstOrNull { it.name == "Rechnen" } ?: karten.first()
+        val start = karten.firstOrNull() ?: KartenDaten(name = "Neue Karte")
         editor = KartenEditorZustand(start, graphPrüfung)
         letzterGespeicherterStand = start
-        brotkrumen = listOf(KartenVerweis(start.id, start.version))
+        brotkrumen = if (karten.any { it.id == start.id }) {
+            listOf(KartenVerweis(start.id, start.version))
+        } else {
+            emptyList()
+        }
         MengenKnotenKartenQuelle.installieren(this)
         werteAus()
     }
