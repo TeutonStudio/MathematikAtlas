@@ -18,6 +18,11 @@ class UniversellerZahlenRechnerKnotenTest {
         rechenKontext = RechenKontext(),
     )
 
+    private fun divisionsKnoten(): KnotenDaten = ZahlenRechnerKnotenVorlagen.alle.first {
+        it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
+            UniversellerZahlenOperator.DIVISION.stabileId
+    }.erzeuge(GraphPunkt.Zero)
+
     @Test
     fun `Katalog zeigt einen Zahlenrechner und interner Definitionskatalog alle Operatoren`() {
         val sichtbar = alleMathematikKnotenVorlagen()
@@ -63,12 +68,31 @@ class UniversellerZahlenRechnerKnotenTest {
     }
 
     @Test
-    fun `Division waehlt Zeilen oder Bruchnotation aus dem Nenner`() {
-        val vorlage = ZahlenRechnerKnotenVorlagen.alle.first {
-            it.standardParameter[ZAHLENRECHNER_OPERATOR] ==
-                UniversellerZahlenOperator.DIVISION.stabileId
-        }
-        val knoten = vorlage.erzeuge(GraphPunkt.Zero)
+    fun `geladene historische Division bleibt bis zur Seitenwahl offen`() {
+        val alt = MathematikKnotenVorlagen.Division.erzeuge(GraphPunkt.Zero)
+        val ids = alt.anschlüsse.associate { it.name to it.id }
+        val karte = KartenDaten(name = "Alte Division", knoten = listOf(alt))
+
+        val migriert = karte
+            .migriereUniversellenZahlenRechner()
+            .migriereStrukturierteDivision()
+        val offen = migriert.knoten.single()
+
+        assertEquals(ZAHLENRECHNER_ART, offen.art)
+        assertEquals("true", offen.parameter[ZAHLENRECHNER_DIVISIONSSEITE_FEHLT])
+        assertNull(offen.parameter[ZAHLENRECHNER_DIVISIONSSEITE])
+        assertEquals(ids.values.toSet(), offen.anschlüsse.map { it.id }.toSet())
+        assertEquals(migriert, migriert.migriereStrukturierteDivision())
+
+        val gewaehlt = konfiguriereDivisionsSeite(offen, DivisionsSeite.LINKS)
+        assertEquals("links", gewaehlt.parameter[ZAHLENRECHNER_DIVISIONSSEITE])
+        assertEquals("false", gewaehlt.parameter[ZAHLENRECHNER_DIVISIONSSEITE_FEHLT])
+        assertEquals(offen.anschlüsse.map { it.id }, gewaehlt.anschlüsse.map { it.id })
+    }
+
+    @Test
+    fun `kommutative Division wird kanonisch als Bruch dargestellt`() {
+        val knoten = divisionsKnoten()
         val auswerter = register.finde(ZAHLENRECHNER_ART)!!
 
         val kurz = auswerter.auswerten(
@@ -86,7 +110,8 @@ class UniversellerZahlenRechnerKnotenTest {
                 ),
             ),
         ).ausgaben.getValue("wert")
-        assertEquals("1 \\div 2", kurz.latexDarstellung)
+        assertEquals("\\frac{1}{2}", kurz.latexDarstellung)
+        assertIs<Division>(kurz.objekt)
 
         val lang = auswerter.auswerten(
             kontext(
@@ -103,7 +128,62 @@ class UniversellerZahlenRechnerKnotenTest {
                 ),
             ),
         ).ausgaben.getValue("wert")
-        assertTrue(lang.latexDarstellung.orEmpty().startsWith("\\frac"))
+        assertEquals("\\frac{a}{x + y}", lang.latexDarstellung)
+    }
+
+    @Test
+    fun `Quaterniondivision verwendet die gewaehlte Seite ohne Umordnung`() {
+        val auswerter = register.finde(ZAHLENRECHNER_ART)!!
+        val q = Variable("q")
+        val r = Variable("r")
+        val quaternionen = BenannteMenge("Quaternionen", "\\mathbb H")
+        val eingänge = mapOf(
+            "a" to BedingterWert(q, werteVorrat = quaternionen),
+            "b" to BedingterWert(r, werteVorrat = quaternionen),
+        )
+
+        val rechts = auswerter.auswerten(
+            kontext(
+                konfiguriereDivisionsSeite(divisionsKnoten(), DivisionsSeite.RECHTS),
+                eingänge,
+            ),
+        ).ausgaben.getValue("wert")
+        val links = auswerter.auswerten(
+            kontext(
+                konfiguriereDivisionsSeite(divisionsKnoten(), DivisionsSeite.LINKS),
+                eingänge,
+            ),
+        ).ausgaben.getValue("wert")
+
+        val rechtsAusdruck = assertIs<StrukturierteDivision>(rechts.objekt)
+        val linksAusdruck = assertIs<StrukturierteDivision>(links.objekt)
+        assertEquals(DivisionsSeite.RECHTS, rechtsAusdruck.seite)
+        assertEquals(DivisionsSeite.LINKS, linksAusdruck.seite)
+        assertEquals(listOf(q, InversesElement(r)), rechtsAusdruck.alsGeordnetesProdukt().faktoren)
+        assertEquals(listOf(InversesElement(r), q), linksAusdruck.alsGeordnetesProdukt().faktoren)
+        assertEquals("q\\div_{R}\\,r", rechts.latexDarstellung)
+        assertEquals("q\\div_{L}\\,r", links.latexDarstellung)
+    }
+
+    @Test
+    fun `historisch offene Quaterniondivision fordert Inspectorwahl`() {
+        val offen = divisionsKnoten().copy(
+            parameter = divisionsKnoten().parameter +
+                (ZAHLENRECHNER_DIVISIONSSEITE_FEHLT to "true"),
+        )
+        val quaternionen = BenannteMenge("Quaternionen", "\\mathbb H")
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+            kontext(
+                offen,
+                mapOf(
+                    "a" to BedingterWert(Variable("q"), werteVorrat = quaternionen),
+                    "b" to BedingterWert(Variable("r"), werteVorrat = quaternionen),
+                ),
+            ),
+        )
+
+        assertTrue(ergebnis.ausgaben.isEmpty())
+        assertTrue(ergebnis.fehler.orEmpty().contains("Divisionsseite fehlt"))
     }
 
     @Test

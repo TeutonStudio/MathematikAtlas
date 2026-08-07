@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.DivisionsSeite
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal object ZahlenRechnerInspektor : KnotenInspektor {
@@ -128,6 +129,45 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                     )
                     Button(onClick = { formelDialog = true }) { Text("Formel bearbeiten") }
                 }
+            }
+        }
+
+        if (standardOperator == UniversellerZahlenOperator.DIVISION) {
+            val seite = divisionsSeiteOderStandard(knoten)
+            Text("Divisionsseite", style = MaterialTheme.typography.titleSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = seite == DivisionsSeite.RECHTS && !divisionsSeiteIstHistorischOffen(knoten),
+                    onClick = {
+                        aktionen.knoten(konfiguriereDivisionsSeite(knoten, DivisionsSeite.RECHTS))
+                    },
+                    label = { Text("Rechts") },
+                )
+                FilterChip(
+                    selected = seite == DivisionsSeite.LINKS && !divisionsSeiteIstHistorischOffen(knoten),
+                    onClick = {
+                        aktionen.knoten(konfiguriereDivisionsSeite(knoten, DivisionsSeite.LINKS))
+                    },
+                    label = { Text("Links") },
+                )
+            }
+            Text(
+                when (seite) {
+                    DivisionsSeite.RECHTS -> "a ÷ᵣ b = a · b⁻¹"
+                    DivisionsSeite.LINKS -> "a ÷ₗ b = b⁻¹ · a"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (divisionsSeiteIstHistorischOffen(knoten)) {
+                Text(
+                    "Historische nichtkommutative Division: Wähle die ursprünglich gemeinte Seite.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
 
