@@ -1,0 +1,49 @@
+package de.TeutonStudio.MathematikAtlas
+
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphGröße
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
+import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
+import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.RESTRIKTIONS_ERGÄNZUNG_PREFIX
+import de.TeutonStudio.MathematikKnoten.RESTRIKTIONS_KNOTEN_ART
+import de.TeutonStudio.MathematikKnoten.RestriktionsKnotenVorlagen
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+class RestriktionsKnotenPersistenzTest {
+    @Test
+    fun `dynamischer Ergaenzungsanschluss behaelt Identitaet und Reihenfolge im JSON`() {
+        val ergänzung = AnschlussDaten(
+            name = "${RESTRIKTIONS_ERGÄNZUNG_PREFIX}0",
+            richtung = AnschlussRichtung.Eingang,
+            kante = AnschlussKante.Links,
+            art = MathematikAnschlussArten.Methode.id,
+            reihenfolge = 2,
+            dynamischErzeugt = true,
+        )
+        val knoten = RestriktionsKnotenVorlagen.Restriktion.erzeuge(GraphPunkt(40f, 80f)).copy(
+            größe = GraphGröße(360f, 190f),
+            anschlüsse = RestriktionsKnotenVorlagen.Restriktion.erzeuge(GraphPunkt.Zero).anschlüsse + ergänzung,
+        )
+
+        val gelesen = KartenJson.lese(
+            KartenJson.schreibe(KartenDaten(name = "Restriktionstest", knoten = listOf(knoten))),
+        ).knoten.single()
+
+        assertEquals(RESTRIKTIONS_KNOTEN_ART, gelesen.art)
+        assertEquals(GraphGröße(360f, 190f), gelesen.größe)
+        val gelesenErgänzung = assertNotNull(
+            gelesen.anschlüsse.singleOrNull { it.name == ergänzung.name },
+        )
+        assertEquals(ergänzung.id, gelesenErgänzung.id)
+        assertEquals(2, gelesenErgänzung.reihenfolge)
+        assertEquals(MathematikAnschlussArten.Methode.id, gelesenErgänzung.art)
+        assertTrue(gelesenErgänzung.dynamischErzeugt)
+    }
+}
