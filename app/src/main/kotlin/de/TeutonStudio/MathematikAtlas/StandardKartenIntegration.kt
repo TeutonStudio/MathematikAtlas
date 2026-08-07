@@ -4,8 +4,7 @@ import android.content.Context
 import de.TeutonStudio.MathematikAtlas.speicher.KartenSpeicher
 import de.TeutonStudio.MathematikAtlas.speicher.StandardKartenInstallationsBericht
 import de.TeutonStudio.MathematikAtlas.speicher.StandardKartenInstaller
-import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
-import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.*
 
 internal fun installiereStandardkarten(
     context: Context,
