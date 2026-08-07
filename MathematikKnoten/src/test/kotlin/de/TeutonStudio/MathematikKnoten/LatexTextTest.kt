@@ -86,7 +86,7 @@ class LatexTextTest {
 
     @Test
     fun `Integral bleibt im Klartext als portables Standardsymbol lesbar`() {
-        assertEquals("∫x ∈ I f(x)·dx", vereinfacheLatexAnzeige("\\int_{x \\in I} f(x)\\cdot dx"))
+        assertEquals("∫x ∈ I f(x)· dx", vereinfacheLatexAnzeige("\\int_{x \\in I} f(x)\\cdot dx"))
     }
 
     @Test
