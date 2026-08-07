@@ -226,7 +226,6 @@ class AtlasZustand(context: Context) {
 
     private fun alleKnotenVorlagen(): List<KnotenVorlage> =
         alleMathematikKnotenVorlagen() +
-            RestriktionsKnotenVorlagen.alle +
             MengenraumKnotenVorlagen.alle +
             GeometrieKnotenVorlagen.alle +
             KartenWerkzeugVorlagen.alle +
