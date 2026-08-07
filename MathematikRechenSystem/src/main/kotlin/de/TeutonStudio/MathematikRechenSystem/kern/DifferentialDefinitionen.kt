@@ -11,13 +11,13 @@ object DifferentialDefinitionsKatalog {
     val methodenForm = ExpliziteDefinition(
         id = "differential.methodenForm", name = "Differential einer Methode",
         ziel = DefinitionsZiel.Operation("differential.methodenForm", "analysis.differential.methode"),
-        wert = AllgemeinerParameter(name = "methodendifferential", latex = "df=f^{\\mathrm I}\\cdot d\\left(\\operatorname{id}\\vert_W\\right)"),
+        wert = AllgemeinerParameter(name = "methodendifferential", latex = "df=f^{\\mathrm{I}}\\cdot d\\left(\\operatorname{id}\\vert_W\\right)"),
         referenzen = setOf(operator.id),
     )
     val termForm = ExpliziteDefinition(
         id = "differential.termForm", name = "Differential eines Terms",
         ziel = DefinitionsZiel.Operation("differential.termForm", "analysis.differential.term"),
-        wert = AllgemeinerParameter(name = "termdifferential", latex = "d_x(f(x))=f^{\\mathrm I}(x)\\cdot dx"),
+        wert = AllgemeinerParameter(name = "termdifferential", latex = "d_x(f(x))=f^{\\mathrm{I}}(x)\\cdot dx"),
         referenzen = setOf(operator.id, methodenForm.id),
     )
     val partielleForm = ExpliziteDefinition(
