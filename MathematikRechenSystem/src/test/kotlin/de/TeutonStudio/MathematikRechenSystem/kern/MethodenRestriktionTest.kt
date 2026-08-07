@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class MethodenRestriktionTest {
@@ -45,10 +46,14 @@ class MethodenRestriktionTest {
         assertEquals(m, restriktion.effektiverWerteVorrat)
         assertEquals(m, restriktion.methodenSignatur().werteVorrat)
         assertEquals(RationaleZahl.von(2), restriktion.wendeAn(listOf(RationaleZahl.von(2))))
+        val herkunft = assertNotNull(restriktion.bereichsanpassung)
+        assertSame(basis, herkunft.basis)
+        assertEquals(m, herkunft.werteVorrat)
+        assertTrue(herkunft.ergänzungen.isEmpty())
     }
 
     @Test
-    fun `Ergaenzungen haben stabile Prioritaet und decken den Rest schrittweise`() {
+    fun `Ergaenzungen haben stabile Prioritaet und bleiben strukturiert erhalten`() {
         val ziel = endlicheZahlen(0, 1, 2)
         val basis = konstanteMethode("f", endlicheZahlen(0), 0, ziel)
         val g1 = konstanteMethode("g_1", endlicheZahlen(1), 1, ziel)
@@ -64,6 +69,15 @@ class MethodenRestriktionTest {
         assertEquals(RationaleZahl.von(0), methode.wendeAn(listOf(RationaleZahl.von(0))))
         assertEquals(RationaleZahl.von(1), methode.wendeAn(listOf(RationaleZahl.von(1))))
         assertEquals(RationaleZahl.von(2), methode.wendeAn(listOf(RationaleZahl.von(2))))
+
+        val herkunft = assertNotNull(methode.bereichsanpassung)
+        assertSame(basis, herkunft.basis)
+        assertEquals(m, herkunft.werteVorrat)
+        assertEquals(listOf(g1, g2), herkunft.ergänzungen.map { it.methode })
+        assertEquals(
+            listOf(endlicheZahlen(1), endlicheZahlen(2)),
+            herkunft.ergänzungen.map { it.effektiverBereich },
+        )
     }
 
     @Test
@@ -89,6 +103,18 @@ class MethodenRestriktionTest {
 
         assertTrue(ergebnis.hatZielmengenVerletzung)
         assertNull(ergebnis.methode)
+    }
+
+    @Test
+    fun `groessere deklarierte Zielmenge darf auf effektivem Bereich trotzdem passen`() {
+        val ziel = endlicheZahlen(0, 1)
+        val basis = konstanteMethode("f", endlicheZahlen(0), 0, ziel)
+        val g = konstanteMethode("g", endlicheZahlen(1), 1, endlicheZahlen(1, 9))
+
+        val ergebnis = restriktiereMethode(basis, endlicheZahlen(0, 1), listOf(g))
+
+        assertEquals(Wahrheitswert.Wahr, ergebnis.ergänzungen.single().zielPrüfung.wahrheitswert)
+        assertNotNull(ergebnis.methode)
     }
 
     @Test
