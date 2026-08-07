@@ -20,6 +20,7 @@ object GesamterMathematikAuswerter {
         registriereLineareStrukturErweiterungen()
         registriereLineareAlgebraGrundlagen()
         registriereHyperAnalysisKnoten()
+        registriereDifferentialKnoten()
         registriereMathematischeEigenschaften()
         registriereExakteEigenschaftsAuswertung()
         registriereFolgenUndSignaturEigenschaften()
