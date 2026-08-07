@@ -122,7 +122,7 @@ fun inferiereEndlicheMaechtigkeit(menge: MengenAusdruck): EndlicheMaechtigkeitsI
     )
 }
 
-/** Kernobjekte der vier grundlegenden Definitionskarten. */
+/** Kernobjekte der Zahlbereichs- und Darstellungsdefinitionskarten. */
 object ZahlbereichsDefinitionsKatalog {
     val natuerlicheZahlen = InduktiveDefinition(
         id = "zahlbereich.N",
@@ -210,11 +210,53 @@ object ZahlbereichsDefinitionsKatalog {
         referenzen = setOf(ganzeZahlen.id, natuerlicheZahlen.id),
     )
 
+    private fun darstellungsDefinition(
+        id: String,
+        name: String,
+        operatorId: String,
+        darstellungId: String,
+    ): ImpliziteDefinition {
+        val darstellung = StandardZahlbereichsGraph.darstellungen.single { it.id == darstellungId }
+        return ImpliziteDefinition(
+            id = id,
+            name = name,
+            ziel = DefinitionsZiel.Operation(
+                stabileId = id,
+                operatorId = operatorId,
+            ),
+            charakterisierendeRegeln = listOf(
+                DefinitionsRegel(
+                    id = "$id.korrespondenz",
+                    name = "Matrixkorrespondenz",
+                    folgerungLatex = darstellung.definitionsLatex,
+                ),
+            ),
+            existenzStatus = NachweisStatus.Nachgewiesen,
+            eindeutigkeitsStatus = NachweisStatus.Nachgewiesen,
+        )
+    }
+
+    val komplexeMatrixdarstellung = darstellungsDefinition(
+        id = "definition.zahlbereich.darstellung.C.M2R",
+        name = "Komplexe Zahlen als reelle 2×2-Matrizen",
+        operatorId = "zahlbereich.darstellung.C.M2R",
+        darstellungId = "zahlbereich.darstellung.C.M2R",
+    )
+
+    val quaternionenMatrixdarstellung = darstellungsDefinition(
+        id = "definition.zahlbereich.darstellung.H.M2C",
+        name = "Hamilton-Quaternionen als komplexe 2×2-Matrizen",
+        operatorId = "zahlbereich.darstellung.H.M2C",
+        darstellungId = "zahlbereich.darstellung.H.M2C",
+    )
+
     val alle: List<MathematischeDefinition> = listOf(
         natuerlicheZahlen,
         nullDefinition,
         ganzeZahlen,
         nichtnegativeGanze,
         rationaleZahlen,
+        komplexeMatrixdarstellung,
+        quaternionenMatrixdarstellung,
     )
 }
