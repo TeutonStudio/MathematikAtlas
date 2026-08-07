@@ -320,9 +320,9 @@ private fun differenziereAusgabeObjektOderNull(
     wert: MathematischesObjekt,
     variable: Variable,
 ): MathematischesObjekt? = when (wert) {
-    is ZahlAusdruck -> ableiten(wert, variable).ergebnis
-    is SpaltenVektor -> SpaltenVektor(wert.werte.map { ableiten(it, variable).ergebnis })
-    is ZeilenVektor -> ZeilenVektor(wert.werte.map { ableiten(it, variable).ergebnis })
+    is ZahlAusdruck -> vereinfache(ableiten(wert, variable).ergebnis)
+    is SpaltenVektor -> SpaltenVektor(wert.werte.map { vereinfache(ableiten(it, variable).ergebnis) })
+    is ZeilenVektor -> ZeilenVektor(wert.werte.map { vereinfache(ableiten(it, variable).ergebnis) })
     is Tupel -> {
         val elemente = wert.elemente.map { differenziereAusgabeObjektOderNull(it, variable) }
         if (elemente.any { it == null }) null else Tupel(elemente.filterNotNull())
@@ -338,7 +338,7 @@ fun bildeDifferentialTerm(
 ): DifferentialTerm = DifferentialTerm(
     ursprung = term,
     variable = variable,
-    ableitung = ableiten(term, variable).ergebnis,
+    ableitung = vereinfache(ableiten(term, variable).ergebnis),
     operator = operator,
     quellenId = quellenId,
 )
@@ -376,13 +376,15 @@ private fun Methode.ableitungsZielRaum(
 ): MengenAusdruck {
     fun zielFuer(ausgabe: String): MengenAusdruck {
         val ziel = zielMengeFür(ausgabe)
+        val skalarIdentifiziert = parameter.size == 1 &&
+            ziel == ReelleZahlen &&
+            begriff == DifferentialBegriff.REELL_FRECHET
+        if (skalarIdentifiziert) return ReelleZahlen
         return AbleitungsZielraum(
             argumentRaum = argumentRaum,
             ursprungsZiel = ziel,
             ordnung = ordnung,
-            eindimensionalSkalarIdentifiziert = parameter.size == 1 &&
-                ziel == ReelleZahlen &&
-                begriff == DifferentialBegriff.REELL_FRECHET,
+            eindimensionalSkalarIdentifiziert = false,
         )
     }
     return if (ausgabeNamen.size == 1) {

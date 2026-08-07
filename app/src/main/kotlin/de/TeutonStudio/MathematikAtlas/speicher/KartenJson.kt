@@ -5,6 +5,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import de.TeutonStudio.MathematikAtlas.migriereTranspositionsKnoten
 import de.TeutonStudio.MathematikKnoten.migriereDifferentialKnoten
 import de.TeutonStudio.MathematikKnoten.migriereHyperAnalysisKnoten
+import de.TeutonStudio.MathematikKnoten.migriereIntegralKnoten
 import de.TeutonStudio.MathematikKnoten.migriereTensorOperationKnoten
 import org.json.JSONObject
 
@@ -14,7 +15,8 @@ object KartenJson {
         karte
             .migriereTensorOperationKnoten()
             .migriereHyperAnalysisKnoten()
-            .migriereDifferentialKnoten(),
+            .migriereDifferentialKnoten()
+            .migriereIntegralKnoten(),
     )
 
     fun lese(text: String): KartenDaten = lese(JSONObject(text))
@@ -24,4 +26,5 @@ object KartenJson {
         .migriereTensorOperationKnoten()
         .migriereHyperAnalysisKnoten()
         .migriereDifferentialKnoten()
+        .migriereIntegralKnoten()
 }

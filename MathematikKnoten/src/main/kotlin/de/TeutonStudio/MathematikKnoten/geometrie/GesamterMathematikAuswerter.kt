@@ -21,6 +21,7 @@ object GesamterMathematikAuswerter {
         registriereLineareAlgebraGrundlagen()
         registriereHyperAnalysisKnoten()
         registriereDifferentialKnoten()
+        registriereIntegralKnoten()
         registriereMathematischeEigenschaften()
         registriereExakteEigenschaftsAuswertung()
         registriereFolgenUndSignaturEigenschaften()
