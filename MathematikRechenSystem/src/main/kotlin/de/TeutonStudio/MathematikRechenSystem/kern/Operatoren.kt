@@ -226,6 +226,12 @@ fun istNachweisbarReell(
     is Multiplikation -> ausdruck.faktoren.all { istNachweisbarReell(it, variableIstReell, annahmen) }
     is Division -> istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen) &&
         istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen) && ausdruck.divisor.istNachweisbarNichtNull(annahmen)
+    is StrukturierteDivision -> ausdruck.kommutativitaet == KommutativitaetsStatus.NACHGEWIESEN &&
+        ausdruck.invertierbarkeit == InvertierbarkeitsStatus.NACHGEWIESEN &&
+        istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen) &&
+        istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen)
+    is InversesElement -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+        ausdruck.argument.istNachweisbarNichtNull(annahmen)
     is Potenz -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
         (ausdruck.exponent as? RationaleZahl)?.let { exponent ->
             exponent.nenner == BigInteger.ONE && (exponent.zähler.signum() >= 0 || ausdruck.basis.istNachweisbarNichtNull(annahmen))
@@ -252,6 +258,7 @@ fun istNachweisbarReell(
         istNachweisbarReell(ausdruck.wahr, variableIstReell, annahmen + ausdruck.aussage) &&
             istNachweisbarReell(ausdruck.lüge, variableIstReell, annahmen + Negation(ausdruck.aussage))
     is IterierteSumme, is IteriertesProdukt -> false
+    is DifferentialVariable, is DifferentialTerm, is SymbolischerHyperReellerWert -> false
 }
 
 /**
@@ -295,6 +302,25 @@ fun inferiereZahlenWertevorrat(
         inferiereZahlenWertevorrat(ausdruck.dividend, werteVorräte, annahmen),
         inferiereZahlenWertevorrat(ausdruck.divisor, werteVorräte, annahmen),
     ))
+    is StrukturierteDivision -> when (ausdruck.struktur) {
+        ZahlbereichsIds.NATUERLICH_POSITIV, ZahlbereichsIds.NATUERLICH_MIT_NULL -> NatürlicheZahlen
+        ZahlbereichsIds.GANZ -> GanzeZahlen
+        ZahlbereichsIds.RATIONAL -> RationaleZahlen
+        ZahlbereichsIds.REELL -> ReelleZahlen
+        ZahlbereichsIds.KOMPLEX -> KomplexeZahlen
+        null -> maximaleZahlenGrundmenge(listOf(
+            RationaleZahlen,
+            inferiereZahlenWertevorrat(ausdruck.dividend, werteVorräte, annahmen),
+            inferiereZahlenWertevorrat(ausdruck.divisor, werteVorräte, annahmen),
+        ))
+        else -> error(
+            "Der Zahlbereich '${ausdruck.struktur}' ist in der klassischen N-Z-Q-R-C-Wertevorratsinferenz nicht darstellbar.",
+        )
+    }
+    is InversesElement -> maximaleZahlenGrundmenge(listOf(
+        RationaleZahlen,
+        inferiereZahlenWertevorrat(ausdruck.argument, werteVorräte, annahmen),
+    ))
     is Potenz, is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
         ausdruck,
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
@@ -312,6 +338,9 @@ fun inferiereZahlenWertevorrat(
         inferiereZahlenWertevorrat(ausdruck.lüge, werteVorräte, annahmen + Negation(ausdruck.aussage)),
     ))
     is IterierteSumme, is IteriertesProdukt -> KomplexeZahlen
+    is DifferentialVariable, is DifferentialTerm, is SymbolischerHyperReellerWert -> error(
+        "${ausdruck::class.simpleName} lebt außerhalb der klassischen N-Z-Q-R-C-Wertevorratsinferenz.",
+    )
 }
 
 private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
