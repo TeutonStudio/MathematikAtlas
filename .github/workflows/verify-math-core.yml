@@ -23,6 +23,18 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
+      - name: Repositorystruktur prüfen
+        run: python3 scripts/pruefe_repository.py
+
+      - name: Standardkarten prüfen
+        run: python3 scripts/pruefe_standardkarten.py
+
+      - name: Releaseplan prüfen
+        run: python3 scripts/pruefe_releaseplan.py
+
+      - name: Kernprüfung ausführen
+        run: python3 scripts/pruefe_kern.py
+
       - name: Java 17 einrichten
         uses: actions/setup-java@v4
         with:
@@ -37,15 +49,6 @@ jobs:
 
       - name: Gradle Wrapper ausführbar machen
         run: chmod +x gradlew
-
-      - name: Repositorystruktur prüfen
-        run: python3 scripts/pruefe_repository.py
-
-      - name: Releaseplan prüfen
-        run: python3 scripts/pruefe_releaseplan.py
-
-      - name: Kernprüfung ausführen
-        run: python3 scripts/pruefe_kern.py
 
       - name: JVM-Tests ausführen
         run: ./gradlew test --stacktrace
