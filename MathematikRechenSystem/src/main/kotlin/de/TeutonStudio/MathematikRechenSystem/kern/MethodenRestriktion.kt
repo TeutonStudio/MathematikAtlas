@@ -6,6 +6,40 @@ enum class AbdeckungsStatus {
     Unbekannt,
 }
 
+/** Dauerhafte semantische Beschreibung eines tatsächlich verwendeten Ergänzungszweigs. */
+data class MethodenBereichsergänzung(
+    val methode: Methode,
+    val werteVorrat: MengenAusdruck,
+    val effektiverBereich: MengenAusdruck,
+)
+
+/**
+ * Strukturierte Herkunft einer auf einen neuen Wertevorrat angepassten Methode.
+ *
+ * Die kompakte Darstellung `f\vert_M` bleibt damit von der vollständigen Semantik
+ * getrennt. Basis, M, Reihenfolge und effektive Ergänzungsbereiche bleiben auch
+ * downstream rekonstruierbar.
+ */
+data class MethodenBereichsanpassung(
+    val basis: Methode,
+    val werteVorrat: MengenAusdruck,
+    val ergänzungen: List<MethodenBereichsergänzung>,
+)
+
+internal fun MethodenBereichsanpassung.ersetze(
+    bindungen: Map<String, MathematischesObjekt>,
+): MethodenBereichsanpassung = copy(
+    basis = ersetze(basis, bindungen) as Methode,
+    werteVorrat = ersetze(werteVorrat, bindungen) as MengenAusdruck,
+    ergänzungen = ergänzungen.map { ergänzung ->
+        ergänzung.copy(
+            methode = ersetze(ergänzung.methode, bindungen) as Methode,
+            werteVorrat = ersetze(ergänzung.werteVorrat, bindungen) as MengenAusdruck,
+            effektiverBereich = ersetze(ergänzung.effektiverBereich, bindungen) as MengenAusdruck,
+        )
+    },
+)
+
 data class MethodenErgänzungsBereich(
     val methode: Methode,
     val werteVorrat: MengenAusdruck,
@@ -114,6 +148,17 @@ fun restriktiereMethode(
             name = "${basis.name}\\vert_{${menge.zuLatex()}}",
             vorschrift = vorschrift,
             effektiverWerteVorrat = menge,
+            bereichsanpassung = MethodenBereichsanpassung(
+                basis = basis,
+                werteVorrat = menge,
+                ergänzungen = ergänzungsErgebnisse.map { ergänzung ->
+                    MethodenBereichsergänzung(
+                        methode = ergänzung.methode,
+                        werteVorrat = ergänzung.werteVorrat,
+                        effektiverBereich = ergänzung.effektiverBereich,
+                    )
+                },
+            ),
         )
     } else null
 
@@ -159,6 +204,10 @@ private fun prüfeErgänzungsBild(
     if (effektiverBereich == LeereMenge) {
         return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
     }
+
+    val deklarierteZielPrüfung = prüfeTeilmenge(methode.zielMenge, zielMenge, kontext)
+    if (deklarierteZielPrüfung.wahrheitswert == Wahrheitswert.Wahr) return deklarierteZielPrüfung
+
     if (effektiverBereich is EndlicheMenge) {
         val ergebnisse = effektiverBereich.elemente.map { argument ->
             val wert = methode.wendeAufGesamtArgumentAn(argument)
