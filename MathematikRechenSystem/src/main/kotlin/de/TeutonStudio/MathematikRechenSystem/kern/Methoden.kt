@@ -15,6 +15,14 @@ data class Methode(
     /** Definitionsmengen der Parameter, in derselben Reihenfolge wie [parameter]. */
     val werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     val ausgabeNamen: List<String> = listOf("wert"),
+    /**
+     * Optionaler gemeinsamer Definitionsbereich der vollständigen Argumentbelegung.
+     * Er überschreibt nur die aus den Parameter-Wertevorräten abgeleitete Gesamtmenge
+     * und erlaubt insbesondere nicht-kartesische Restriktionen mehrstelliger Methoden.
+     */
+    val effektiverWerteVorrat: MengenAusdruck? = null,
+    /** Strukturierte Herkunft einer Restriktion mit optionalen Ergänzungszweigen. */
+    val bereichsanpassung: MethodenBereichsanpassung? = null,
 ) : MathematischesObjekt {
     init {
         require(parameter.map { it.name }.distinct().size == parameter.size) {
@@ -211,6 +219,7 @@ fun komponiere(außen: Methode, innen: Methode): Methode {
         vorschrift = ersetze(termAußen, mapOf(x.name to termInnen)),
         zielMenge = außen.zielMengeFür(ausgabeAußen),
         werteVorräte = mapOf(t.name to wertevorrat),
+        effektiverWerteVorrat = innen.effektiverWerteVorrat,
     )
 }
 
@@ -276,6 +285,8 @@ data class GebundeneMethode(val methode: Methode, val bindungen: Map<String, Mat
         zielMenge = ersetze(methode.zielMenge, bindungen) as MengenAusdruck,
         werteVorräte = methode.werteVorräte.filterKeys { it !in bindungen }
             .mapValues { ersetze(it.value, bindungen) as MengenAusdruck },
+        effektiverWerteVorrat = methode.effektiverWerteVorrat?.let { ersetze(it, bindungen) as MengenAusdruck },
+        bereichsanpassung = methode.bereichsanpassung?.ersetze(bindungen),
     ).zuLatex()
     fun binde(weitere: Map<String, MathematischesObjekt>) = GebundeneMethode(methode, bindungen + weitere)
     fun auswerten(): MathematischesObjekt {
@@ -367,6 +378,8 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
             vorschrift = ersetze(objekt.vorschrift, freieBindungen),
             zielMenge = ersetze(objekt.zielMenge, freieBindungen) as MengenAusdruck,
             werteVorräte = objekt.werteVorräte.mapValues { ersetze(it.value, freieBindungen) as MengenAusdruck },
+            effektiverWerteVorrat = objekt.effektiverWerteVorrat?.let { ersetze(it, freieBindungen) as MengenAusdruck },
+            bereichsanpassung = objekt.bereichsanpassung?.ersetze(freieBindungen),
         )
     }
     is Abbild -> Abbild(ersetze(objekt.menge, bindungen) as MengenAusdruck, ersetze(objekt.methode, bindungen) as Methode)
@@ -454,8 +467,14 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is Disjunktheit -> listOf(links, rechts).enthalteneMethodenParameter()
     is Methode -> {
         val gebundeneNamen = parameter.map { it.name }.toSet()
-        (listOf(vorschrift, zielMenge) + werteVorräte.values)
+        val direkteParameter = (listOf(vorschrift, zielMenge) + werteVorräte.values + listOfNotNull(effektiverWerteVorrat))
             .enthalteneMethodenParameter()
+        val herkunftsParameter = bereichsanpassung?.let { anpassung ->
+            (listOf(anpassung.basis, anpassung.werteVorrat) +
+                anpassung.ergänzungen.flatMap { listOf(it.methode, it.werteVorrat, it.effektiverBereich) })
+                .enthalteneMethodenParameter()
+        }.orEmpty()
+        (direkteParameter + herkunftsParameter)
             .filterNot { it.name in gebundeneNamen }
             .toSet()
     }

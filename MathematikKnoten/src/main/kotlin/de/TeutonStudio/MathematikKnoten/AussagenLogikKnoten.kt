@@ -135,7 +135,8 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
         FaltungsKnotenVorlagen.alle +
         MatrixdiagonaleKnotenVorlagen.alle +
         LineareAlgebraGrundlagenKnotenVorlagen.alle +
-        IntegralKnotenVorlagen.alle
+        IntegralKnotenVorlagen.alle +
+        RestriktionsKnotenVorlagen.alle
     return (katalog.filterNot { it.art in strukturArten } + strukturRechner)
         .distinctBy(::vorlagenSchlüssel)
 }

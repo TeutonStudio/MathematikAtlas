@@ -21,6 +21,7 @@ import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
 import de.TeutonStudio.MathematikKnoten.MATRIX_SPALTEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_ZEILEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.RESTRIKTIONS_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
 import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
 
@@ -96,10 +97,11 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
                     IterierteMethodenKartenInspektor(knoten, zustand)
                     if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
-                    val inspektor = if (knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART) {
-                        AnalysisEigenschaftInspektor
-                    } else {
-                        KnotenInspektorRegister.finde(knoten.art)
+                    val inspektor = when {
+                        knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenInspektor
+                        knoten.art == RESTRIKTIONS_KNOTEN_ART -> RestriktionsKnotenInspektor
+                        knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART -> AnalysisEigenschaftInspektor
+                        else -> KnotenInspektorRegister.finde(knoten.art)
                     }
                     inspektor?.let {
                         it.Inhalt(

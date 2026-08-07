@@ -30,6 +30,26 @@ class KartenAuswerterTest {
         assertEquals(RationaleZahl.von(5), ergebnis.knoten.getValue(plus.id).ausgaben.getValue("wert").objekt)
     }
 
+    @Test fun `nicht auswertbare Knotenarten bleiben fehlerfrei`() {
+        val notiz = KnotenDaten(art = "karte.notiz", name = "Notiz")
+        val ergebnis = KartenAuswerter(
+            register = MathematikAuswerterRegister(),
+            nichtAuswertbareKnotenArten = setOf("karte.notiz"),
+        ).auswerten(KartenDaten(name = "Test", knoten = listOf(notiz)))
+
+        assertTrue(ergebnis.fehler.isEmpty())
+        assertTrue(ergebnis.knoten.getValue(notiz.id).ausgaben.isEmpty())
+    }
+
+    @Test fun `unbekannte auswertbare Knotenart bleibt Fehler`() {
+        val unbekannt = KnotenDaten(art = "test.unbekannt", name = "Unbekannt")
+        val ergebnis = KartenAuswerter(MathematikAuswerterRegister())
+            .auswerten(KartenDaten(name = "Test", knoten = listOf(unbekannt)))
+
+        assertEquals(1, ergebnis.fehler.size)
+        assertTrue(ergebnis.fehler.single().contains("Kein Auswerter für test.unbekannt registriert."))
+    }
+
     private fun verbinde(von: KnotenDaten, a: String, zu: KnotenDaten, b: String) = VerbindungDaten(
         von = AnschlussVerweis(von.id, von.anschlüsse.first { it.name == a }.id),
         zu = AnschlussVerweis(zu.id, zu.anschlüsse.first { it.name == b }.id),
