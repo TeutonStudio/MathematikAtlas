@@ -37,6 +37,7 @@ import de.TeutonStudio.MathematikKnoten.konfiguriereStrukturRechnerFormel
 import de.TeutonStudio.MathematikKnoten.ladeStrukturRechnerFormel
 import de.TeutonStudio.MathematikKnoten.strukturOperatorAlsFormel
 import de.TeutonStudio.MathematikRechenSystem.kern.AussagenSatzOperator
+import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechnerOperator
 
 internal object StrukturRechnerInspektor : KnotenInspektor {
@@ -46,6 +47,11 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        if (knoten.art == TensorRechner.KNOTEN_ART) {
+            TensorOperationRechnerInspektor.Inhalt(knoten, ergebnis, aktionen)
+            return
+        }
+
         val familie = StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) ?: return
         val operatorId = knoten.parameter[RECHNER_OPERATOR_PARAMETER]
         val formelModus = operatorId == familie.formelOperatorId
