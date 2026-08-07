@@ -96,10 +96,10 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
                     IterierteMethodenKartenInspektor(knoten, zustand)
                     if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
-                    val inspektor = if (knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART) {
-                        AnalysisEigenschaftInspektor
-                    } else {
-                        KnotenInspektorRegister.finde(knoten.art)
+                    val inspektor = when {
+                        knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenInspektor
+                        knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART -> AnalysisEigenschaftInspektor
+                        else -> KnotenInspektorRegister.finde(knoten.art)
                     }
                     inspektor?.let {
                         it.Inhalt(
