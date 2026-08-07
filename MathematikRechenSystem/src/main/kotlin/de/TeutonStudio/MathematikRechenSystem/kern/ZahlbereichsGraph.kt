@@ -83,6 +83,8 @@ class ZahlbereichsGraph(
 
     fun knoten(id: ZahlbereichsId): ZahlbereichsKnoten? = knotenNachId[id]
 
+    fun knoten(): List<ZahlbereichsKnoten> = knotenListe.toList()
+
     fun relationen(): List<BereichsRelation> = relationenListe.toList()
 
     fun istAutomatischNutzbar(relation: BereichsRelation): Boolean =
@@ -207,8 +209,20 @@ object StandardZahlbereichsGraph {
         BereichsRelation(ZahlbereichsIds.NATUERLICH_POSITIV, ZahlbereichsIds.NATUERLICH_MIT_NULL, BereichsRelationArt.TEILMENGE),
         BereichsRelation(ZahlbereichsIds.NATUERLICH_MIT_NULL, ZahlbereichsIds.GANZ, BereichsRelationArt.TEILMENGE),
         BereichsRelation(ZahlbereichsIds.GANZ, ZahlbereichsIds.RATIONAL, BereichsRelationArt.KANONISCHE_EINBETTUNG),
+        BereichsRelation(
+            ZahlbereichsIds.GANZ,
+            ZahlbereichsIds.GAUSS_GANZ,
+            BereichsRelationArt.KANONISCHE_EINBETTUNG,
+            adapterId = "zahlbereich.einbettung.Z.Zi",
+        ),
         BereichsRelation(ZahlbereichsIds.RATIONAL, ZahlbereichsIds.REELL, BereichsRelationArt.KANONISCHE_EINBETTUNG),
         BereichsRelation(ZahlbereichsIds.REELL, ZahlbereichsIds.KOMPLEX, BereichsRelationArt.KANONISCHE_EINBETTUNG),
+        BereichsRelation(
+            ZahlbereichsIds.REELL,
+            ZahlbereichsIds.REELL_ADJUNGIERT_I,
+            BereichsRelationArt.KANONISCHE_EINBETTUNG,
+            adapterId = "zahlbereich.einbettung.R.Ri",
+        ),
         BereichsRelation(ZahlbereichsIds.KOMPLEX, ZahlbereichsIds.QUATERNION, BereichsRelationArt.KANONISCHE_EINBETTUNG),
         BereichsRelation(ZahlbereichsIds.GAUSS_GANZ, ZahlbereichsIds.KOMPLEX, BereichsRelationArt.TEILMENGE),
         BereichsRelation(
