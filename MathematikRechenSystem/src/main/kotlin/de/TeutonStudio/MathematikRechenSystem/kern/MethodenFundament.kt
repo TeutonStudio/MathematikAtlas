@@ -13,14 +13,24 @@ data class MethodenArgument(
 data class MethodenSignatur(
     val argumente: List<MethodenArgument>,
     val zielMenge: MengenAusdruck,
+    /**
+     * Optionaler gemeinsamer Definitionsbereich der vollständigen Argumentbelegung.
+     *
+     * Er wird benötigt, wenn der tatsächliche Bereich nicht als kartesisches Produkt
+     * der einzelnen Parameter-Wertevorräte darstellbar ist, beispielsweise bei einer
+     * Restriktion auf die Diagonale in R².
+     */
+    val effektiverWerteVorrat: MengenAusdruck? = null,
 ) {
     /**
-     * Der Wertevorrat besteht aus geordneten Argumenttupeln. Auch ein einzelnes
-     * Argument bleibt dadurch eine eindimensionale Tupelkomponente. Nullstellige
-     * Methoden verwenden gemäß Atlas-Konvention die leere Menge.
+     * Der Wertevorrat besteht standardmäßig aus geordneten Argumenttupeln. Auch ein
+     * einzelnes Argument bleibt dadurch eine eindimensionale Tupelkomponente.
+     * Nullstellige Methoden verwenden gemäß Atlas-Konvention die leere Menge.
+     * Ein expliziter effektiver Gesamtbereich hat Vorrang vor dieser Ableitung.
      */
     val werteVorrat: MengenAusdruck
-        get() = if (argumente.isEmpty()) LeereMenge else Tupelraum(argumente.map { it.werteVorrat })
+        get() = effektiverWerteVorrat
+            ?: if (argumente.isEmpty()) LeereMenge else Tupelraum(argumente.map { it.werteVorrat })
 }
 
 /** Fachliche, ausschließlich abgeleitete Nutzerbegriffe unterhalb von Methode. */
@@ -40,6 +50,7 @@ fun Methode.methodenSignatur(): MethodenSignatur = MethodenSignatur(
         )
     },
     zielMenge = zielMenge,
+    effektiverWerteVorrat = effektiverWerteVorrat,
 )
 
 /**
