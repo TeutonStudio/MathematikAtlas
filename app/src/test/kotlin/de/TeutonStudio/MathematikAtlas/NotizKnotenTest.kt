@@ -18,6 +18,7 @@ class NotizKnotenTest {
         assertEquals("Darstellung", vorlage.kategorie)
         assertEquals(GraphGröße(280f, 160f), vorlage.standardGröße)
         assertTrue(knoten.anschlüsse.isEmpty())
+        assertEquals("Notiz", knoten.name)
         assertEquals("", knoten.parameter[NOTIZ_TEXT_PARAMETER])
         assertEquals("links", knoten.parameter[NOTIZ_AUSRICHTUNG_PARAMETER])
         assertEquals("16", knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER])
@@ -42,9 +43,10 @@ class NotizKnotenTest {
         assertEquals(16, notizSchriftgrößeSp(null))
     }
 
-    @Test fun `Notiz roundtript Text Formatierung und gezogene Groesse`() {
+    @Test fun `Notiz roundtript Ueberschrift Text Formatierung und gezogene Groesse`() {
         val text = "Erwartetes Ergebnis:\n∀ x ∈ ℝ: f′(x) = 3x² − 2"
         val notiz = KartenWerkzeugVorlagen.Notiz.erzeuge(GraphPunkt(40f, 80f)).copy(
+            name = "Erwartetes Ergebnis",
             größe = GraphGröße(420f, 210f),
             parameter = KartenWerkzeugVorlagen.Notiz.standardParameter + mapOf(
                 NOTIZ_TEXT_PARAMETER to text,
@@ -58,6 +60,7 @@ class NotizKnotenTest {
         ).knoten.single()
 
         assertEquals(NOTIZ_KNOTEN_ART, gelesen.art)
+        assertEquals("Erwartetes Ergebnis", gelesen.name)
         assertTrue(gelesen.anschlüsse.isEmpty())
         assertEquals(GraphGröße(420f, 210f), gelesen.größe)
         assertEquals(text, gelesen.parameter[NOTIZ_TEXT_PARAMETER])
