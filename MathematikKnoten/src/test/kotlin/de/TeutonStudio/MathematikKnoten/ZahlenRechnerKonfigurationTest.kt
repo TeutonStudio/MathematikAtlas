@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.DivisionsSeite
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import kotlin.test.*
 
@@ -49,6 +50,23 @@ class ZahlenRechnerKonfigurationTest {
         assertEquals(ids.getValue("a"), potenz.anschlüsse.single { it.name == "a" }.id)
         assertEquals(ids.getValue("b"), potenz.anschlüsse.single { it.name == "b" }.id)
         assertEquals(ids.getValue("wert"), potenz.anschlüsse.single { it.name == "wert" }.id)
+    }
+
+    @Test
+    fun `Divisionsseitenwechsel behaelt alle Anschluss IDs und markiert den Knoten`() {
+        val division = rechner(UniversellerZahlenOperator.DIVISION)
+        val anschlussIds = division.anschlüsse.associate { it.name to it.id }
+
+        val links = konfiguriereDivisionsSeite(division, DivisionsSeite.LINKS)
+        val rechts = konfiguriereDivisionsSeite(links, DivisionsSeite.RECHTS)
+
+        assertEquals(anschlussIds, links.anschlüsse.associate { it.name to it.id })
+        assertEquals(anschlussIds, rechts.anschlüsse.associate { it.name to it.id })
+        assertEquals("links", links.parameter[ZAHLENRECHNER_DIVISIONSSEITE])
+        assertEquals("rechts", rechts.parameter[ZAHLENRECHNER_DIVISIONSSEITE])
+        assertEquals("false", rechts.parameter[ZAHLENRECHNER_DIVISIONSSEITE_FEHLT])
+        assertEquals("Division (links)", links.name)
+        assertEquals("Division (rechts)", rechts.name)
     }
 
     @Test
