@@ -13,7 +13,13 @@ class DifferentialModellTest {
         return Methode(name="f", parameter=listOf(x), vorschrift=Potenz(x, RationaleZahl.von(2)), zielMenge=ReelleZahlen, werteVorräte=mapOf("x" to ReelleZahlen))
     }
     @Test fun `Argumentindizes beginnen bei eins`() { assertFailsWith<IllegalArgumentException> { DifferentialOperator.Partiell(0) }; val methode=quadratischeMethode(); assertFailsWith<IllegalArgumentException> { partielleAbleitung(methode,2) }; assertEquals("\\partial_{1}f",partielleAbleitung(methode,1).zuLatex()) }
-    @Test fun `Methodendifferential verwendet eingeschraenkte Identitaet`() { val d=MethodenDifferentialGleichung(quadratischeMethode(),ReelleZahlen); assertEquals("df=f^{\\mathrm{I}}\\cdotd\\left(\\operatorname{id}\\vert_{\\mathbb R}\\right)",d.zuLatex()) }
+    @Test fun `Methodendifferential verwendet eingeschraenkte Identitaet`() {
+        val d = MethodenDifferentialGleichung(quadratischeMethode(), ReelleZahlen)
+        assertEquals(ReelleZahlen, d.identitaetsDifferential.werteVorrat)
+        assertEquals(DifferentialOperator.Total, d.identitaetsDifferential.operator)
+        assertTrue(d.zuLatex().startsWith("df="))
+        assertTrue(d.zuLatex().endsWith("\\cdot${d.identitaetsDifferential.zuLatex()}"))
+    }
     @Test fun `Termdifferential behaelt Differentialvariable und Quellen ID`() { val x=Variable("x"); val d=bildeDifferentialTerm(Potenz(x,RationaleZahl.von(2)),x,quellenId="argument-f-x"); assertEquals("argument-f-x",d.quellenId); assertEquals("dx",d.differentialVariable.zuLatex()); assertTrue(d.zuLatex().contains("\\cdotdx")) }
     @Test fun `konkrete Ordnungen rendern roemisch und Ordnung null bleibt unveraendert`() { val m=quadratischeMethode(); assertEquals("f^{\\mathrm{I}}",totaleAbleitung(m,DifferentialOrdnung.Konkret(1)).zuLatex()); assertEquals("f^{\\mathrm{II}}",totaleAbleitung(m,DifferentialOrdnung.Konkret(2)).zuLatex()); assertEquals("f^{\\mathrm{IV}}",totaleAbleitung(m,DifferentialOrdnung.Konkret(4)).zuLatex()); val n=differenziereMethodeStrukturiert(m,DifferentialOrdnung.Konkret(0)); assertEquals(m,n.methode); assertEquals(DifferentialUnterstuetzungsStatus.BERECHNET,n.status) }
     @Test fun `symbolische Ordnung bleibt strukturierter Methodenausdruck`() { val a=UnentscheidbareAussage("n\\in\\mathbb N_0","Differentialordnung"); val e=differenziereMethodeStrukturiert(quadratischeMethode(),DifferentialOrdnung.Symbolisch(Variable("n"),setOf(a))); assertEquals(DifferentialUnterstuetzungsStatus.SYMBOLISCH,e.status); assertEquals("f^{(n)}",e.methode.name); assertIs<AbleitungsMethodenAusdruck>(e.methode.vorschrift); assertEquals(setOf(a),e.voraussetzungen) }
