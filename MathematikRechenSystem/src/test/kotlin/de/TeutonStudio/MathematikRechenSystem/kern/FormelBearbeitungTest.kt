@@ -27,6 +27,46 @@ class FormelBearbeitungTest {
     }
 
     @Test
+    fun `einfache runde klammern werden kanonisch zu left right normalisiert`() {
+        val wurzel = assertIs<FormelLatexImportErgebnis.Erfolg>(
+            FormelLatexCodec.importiere("a+(b*c)"),
+        ).ausdruck
+
+        val addition = assertIs<FormelAusdruck.Operation>(wurzel)
+        val gruppiert = assertIs<FormelAusdruck.Operation>(addition.argumente[1].ausdruck)
+        assertTrue(gruppiert.explizitGruppiert)
+        assertEquals("a + \\left(b \\cdot c\\right)", FormelLatexCodec.exportiere(wurzel))
+    }
+
+    @Test
+    fun `left right klammern und einfache klammern importieren gleich`() {
+        val einfach = assertIs<FormelLatexImportErgebnis.Erfolg>(
+            FormelLatexCodec.importiere("(a+b)*c"),
+        ).ausdruck
+        val skaliert = assertIs<FormelLatexImportErgebnis.Erfolg>(
+            FormelLatexCodec.importiere("\\left(a+b\\right)*c"),
+        ).ausdruck
+
+        assertEquals(FormelLatexCodec.exportiere(einfach), FormelLatexCodec.exportiere(skaliert))
+        assertEquals("\\left(a + b\\right) \\cdot c", FormelLatexCodec.exportiere(einfach))
+    }
+
+    @Test
+    fun `graph roundtrip behaelt explizite klammerung`() {
+        val original = assertIs<FormelLatexImportErgebnis.Erfolg>(
+            FormelLatexCodec.importiere("a+(b*c)"),
+        ).ausdruck
+        val graph = FormelZuGraph.konvertiere(original)
+        val erneut = assertIs<GraphZuFormelErgebnis.Erfolg>(
+            GraphZuFormel.konvertiere(graph, emptyMap()),
+        ).wurzel
+
+        assertEquals(FormelLatexCodec.exportiere(original), FormelLatexCodec.exportiere(erneut))
+        val addition = assertIs<FormelAusdruck.Operation>(erneut)
+        assertTrue(assertIs<FormelAusdruck.Operation>(addition.argumente[1].ausdruck).explizitGruppiert)
+    }
+
+    @Test
     fun `formeltaste erzeugt operation mit navigierbaren platzhaltern`() {
         val editor = FormelEditorZustand()
         val taste = FormelTastatur.standard.single { it.id == "geteilt" }
