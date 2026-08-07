@@ -77,6 +77,9 @@ fun inferiereZielmenge(
     is LinearesSystemLoesung -> BenannteMenge("lineare_systemloesungen", "\\mathcal{L}")
     is Methode, is GebundeneMethode, is Mächtigkeit ->
         error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
+    is Ausdruck -> error(
+        "Für den strukturierten Ausdruck ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.",
+    )
 }
 
 private fun inferiereElementMenge(
@@ -128,6 +131,8 @@ private fun inferiereElementMenge(
     }
     is GeometrischeTrägermenge -> BenannteMenge("punkte_${menge.objekt.raum.id}", "\\mathcal{P}(${menge.objekt.raum.id})")
     is KoordinatenBild -> Tupelraum(List(menge.objekt.raum.dimension) { ReelleZahlen })
+    is DifferenzierbarkeitsBereich -> inferiereElementMenge(menge.ursprungsBereich, werteVorräte, annahmen)
+    is AbleitungsZielraum -> menge
     is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum,
     is Potenzmenge, is Abbildungsmenge, is Tensorraum, is ModuloZahlenraum -> menge
 }
