@@ -4,6 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,6 +22,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
 
 private val STANDARD_WAHR_FARBE = Color(0xFF2E7D32)
 private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
@@ -28,6 +31,7 @@ private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
  * Stellt den vom Rechenkern erzeugten LaTeX-Teilumfang nativ dar. Es bleibt bewusst
  * ohne WebView und ohne externen TeX-Renderer, unterstützt aber Gruppen, Hoch- und
  * Tiefstellungen, Brüche, Matrizen und die verwendeten mathematischen Befehle.
+ * `\\int` wird zentral mit der Atlas-Integralglyphe (Variante 4) dargestellt.
  */
 @Composable
 fun LatexText(
@@ -38,7 +42,38 @@ fun LatexText(
     val dunklesSchema = isSystemInDarkTheme()
     val wahrFarbe = if (dunklesSchema) Color(0xFF81C784) else Color(0xFF1B5E20)
     val lügeFarbe = if (dunklesSchema) Color(0xFFEF9A9A) else Color(0xFFB71C1C)
-    val großerOperator = zerlegeGroßenOperator(latex)
+    val normalisiert = normalisiereLatexQuelltext(latex)
+    val integral = zerlegeIntegralOperator(normalisiert)
+    val großerOperator = zerlegeGroßenOperator(normalisiert)
+
+    if (integral != null && (großerOperator == null || integral.position <= großerOperator.position)) {
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            if (integral.vorher.isNotBlank()) {
+                Text(
+                    latexZuAnnotiertemText(integral.vorher, wahrFarbe, lügeFarbe),
+                    style = style,
+                    color = LocalContentColor.current,
+                )
+            }
+            AtlasIntegralOperator(
+                untereAnnotation = integral.untereAnnotation,
+                obereAnnotation = integral.obereAnnotation,
+                style = style,
+            )
+            if (integral.nachher.isNotBlank()) {
+                LatexText(
+                    latex = integral.nachher,
+                    style = style,
+                )
+            }
+        }
+        return
+    }
+
     if (großerOperator != null) {
         Row(
             modifier = modifier,
@@ -58,10 +93,9 @@ fun LatexText(
                     style = style,
                     color = LocalContentColor.current,
                 )
-                Text(
-                    latexZuAnnotiertemText(großerOperator.index, wahrFarbe, lügeFarbe),
+                LatexText(
+                    latex = großerOperator.index,
                     style = MaterialTheme.typography.labelSmall,
-                    color = LocalContentColor.current,
                 )
             }
             if (großerOperator.nachher.isNotBlank()) {
@@ -74,14 +108,146 @@ fun LatexText(
         return
     }
     Text(
-        latexZuAnnotiertemText(latex, wahrFarbe, lügeFarbe),
+        latexZuAnnotiertemText(normalisiert, wahrFarbe, lügeFarbe),
         modifier = modifier,
         style = style,
         color = LocalContentColor.current,
     )
 }
 
+@Composable
+private fun AtlasIntegralOperator(
+    untereAnnotation: String?,
+    obereAnnotation: String?,
+    style: TextStyle,
+) {
+    val schriftgroesse = style.fontSize.value.takeIf { it.isFinite() && it > 0f } ?: 18f
+    val glyphHoehe = (schriftgroesse * 2.15f).dp
+    val glyphBreite = (schriftgroesse * 1.72f).dp
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (!obereAnnotation.isNullOrBlank()) {
+            LatexText(
+                latex = obereAnnotation,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+        AtlasIntegralGlyph(
+            modifier = Modifier
+                .width(glyphBreite)
+                .height(glyphHoehe),
+        )
+        if (!untereAnnotation.isNullOrBlank()) {
+            LatexText(
+                latex = untereAnnotation,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+internal data class IntegralOperatorTeile(
+    val position: Int,
+    val vorher: String,
+    val untereAnnotation: String?,
+    val obereAnnotation: String?,
+    val nachher: String,
+)
+
+private data class LatexArgument(
+    val text: String,
+    val ende: Int,
+)
+
+/** Zerlegt den ersten echten `\\int`-Befehl samt optionalem `_` und `^`. */
+internal fun zerlegeIntegralOperator(latex: String): IntegralOperatorTeile? {
+    var sucheAb = 0
+    var start = -1
+    while (sucheAb < latex.length) {
+        val kandidat = latex.indexOf("\\int", startIndex = sucheAb)
+        if (kandidat < 0) return null
+        val danach = kandidat + 4
+        if (danach >= latex.length || !latex[danach].isLetter()) {
+            start = kandidat
+            break
+        }
+        sucheAb = danach
+    }
+    if (start < 0) return null
+
+    var position = start + 4
+    while (position < latex.length && latex[position].isWhitespace()) position++
+    if (latex.startsWith("\\limits", position)) {
+        position += "\\limits".length
+        while (position < latex.length && latex[position].isWhitespace()) position++
+    }
+
+    var unten: String? = null
+    var oben: String? = null
+    while (position < latex.length) {
+        var markerPosition = position
+        while (markerPosition < latex.length && latex[markerPosition].isWhitespace()) markerPosition++
+        val marker = latex.getOrNull(markerPosition)
+        if (marker != '_' && marker != '^') break
+        val argument = liesLatexArgument(latex, markerPosition + 1) ?: return null
+        if (marker == '_') unten = argument.text else oben = argument.text
+        position = argument.ende
+    }
+
+    return IntegralOperatorTeile(
+        position = start,
+        vorher = latex.substring(0, start).trimEnd(),
+        untereAnnotation = unten,
+        obereAnnotation = oben,
+        nachher = latex.substring(position).trimStart(),
+    )
+}
+
+private fun liesLatexArgument(latex: String, start: Int): LatexArgument? {
+    var position = start
+    while (position < latex.length && latex[position].isWhitespace()) position++
+    if (position >= latex.length) return null
+
+    if (latex[position] == '{') {
+        val inhaltStart = position + 1
+        position++
+        var tiefe = 1
+        while (position < latex.length && tiefe > 0) {
+            when (latex[position++]) {
+                '{' -> tiefe++
+                '}' -> tiefe--
+            }
+        }
+        if (tiefe != 0) return null
+        return LatexArgument(
+            text = latex.substring(inhaltStart, position - 1),
+            ende = position,
+        )
+    }
+
+    if (latex[position] == '\\') {
+        val befehlStart = position
+        position++
+        while (position < latex.length && latex[position].isLetter()) position++
+        if (position < latex.length && latex[position] == '{') {
+            position++
+            var tiefe = 1
+            while (position < latex.length && tiefe > 0) {
+                when (latex[position++]) {
+                    '{' -> tiefe++
+                    '}' -> tiefe--
+                }
+            }
+            if (tiefe != 0) return null
+        }
+        return LatexArgument(latex.substring(befehlStart, position), position)
+    }
+
+    return LatexArgument(latex[position].toString(), position + 1)
+}
+
 private data class GroßerOperatorTeile(
+    val position: Int,
     val vorher: String,
     val operator: String,
     val index: String,
@@ -118,6 +284,7 @@ private fun zerlegeGroßenOperator(latex: String): GroßerOperatorTeile? {
     if (tiefe != 0) return null
     val indexEnde = position - 1
     return GroßerOperatorTeile(
+        position = treffer.first,
         vorher = latex.substring(0, treffer.first).trimEnd(),
         operator = treffer.third,
         index = latex.substring(indexStart, indexEnde),
@@ -321,7 +488,7 @@ private class LatexParser(
         "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
         "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
-        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁",
+        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",
         "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
         "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
         "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
