@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 class KartenAuswerter(
     private val register: MathematikAuswerterRegister,
     private val kartenQuelle: KartenQuelle = KartenQuelle { null },
+    private val nichtAuswertbareKnotenArten: Set<KnotenArtId> = emptySet(),
 ) {
     private data class CacheEintrag(val signatur: Int, val ergebnis: KnotenAuswertungsErgebnis)
     private val cache = mutableMapOf<KnotenId, CacheEintrag>()
@@ -95,6 +96,8 @@ class KartenAuswerter(
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
 
         val basis = when {
+            knoten.art in nichtAuswertbareKnotenArten -> KnotenAuswertungsErgebnis(emptyMap())
+
             knoten.art == DARSTELLUNGSOPTIMIERUNG -> runCatching {
                 val wert = eingänge["wert"] ?: error("Ein Wert muss verbunden sein.")
                 val latex = knoten.parameter["latex"].orEmpty().trim()
@@ -279,12 +282,12 @@ class KartenAuswerter(
                     error("Standardwert für '${anschluss.name}' ist keine gültige ganze oder rationale Zahl: '$text'.")
                 }
                 put(
-          anschluss.name,
-          BedingterWert(
-              objekt = zahl,
-              latexDarstellung = zahl.zuStrukturLatex(),
-          ),
-      )
+                    anschluss.name,
+                    BedingterWert(
+                        objekt = zahl,
+                        latexDarstellung = zahl.zuStrukturLatex(),
+                    ),
+                )
             }
     }
 
