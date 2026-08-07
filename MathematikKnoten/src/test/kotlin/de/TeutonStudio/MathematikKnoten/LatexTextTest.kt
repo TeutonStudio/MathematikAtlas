@@ -5,6 +5,8 @@ import androidx.compose.ui.text.style.BaselineShift
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class LatexTextTest {
     @Test
@@ -80,6 +82,34 @@ class LatexTextTest {
 
         assertEquals("∑i ∈ I f(i)", text)
         assertFalse("limits" in text)
+    }
+
+    @Test
+    fun `Integral bleibt im Klartext als portables Standardsymbol lesbar`() {
+        assertEquals("∫x ∈ I f(x)·dx", vereinfacheLatexAnzeige("\\int_{x \\in I} f(x)\\cdot dx"))
+    }
+
+    @Test
+    fun `Integralparser trennt Unter und Oberannotation in beiden Reihenfolgen`() {
+        val untenDannOben = assertNotNull(zerlegeIntegralOperator("\\int_{x \\in I}^{b} f(x)"))
+        assertEquals("", untenDannOben.vorher)
+        assertEquals("x \\in I", untenDannOben.untereAnnotation)
+        assertEquals("b", untenDannOben.obereAnnotation)
+        assertEquals("f(x)", untenDannOben.nachher)
+
+        val obenDannUnten = assertNotNull(zerlegeIntegralOperator("a+\\int^{b}_{a}g"))
+        assertEquals("a+", obenDannUnten.vorher)
+        assertEquals("a", obenDannUnten.untereAnnotation)
+        assertEquals("b", obenDannUnten.obereAnnotation)
+        assertEquals("g", obenDannUnten.nachher)
+    }
+
+    @Test
+    fun `Integralparser unterstützt limits und verwechselt längere Befehle nicht mit int`() {
+        val mitLimits = assertNotNull(zerlegeIntegralOperator("\\int\\limits_{I} f"))
+        assertEquals("I", mitLimits.untereAnnotation)
+        assertEquals("f", mitLimits.nachher)
+        assertNull(zerlegeIntegralOperator("\\integer"))
     }
 
     @Test
