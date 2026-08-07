@@ -9,10 +9,3 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Aussage
  */
 internal fun KnotenAuswertungsKontext.gemeinsameEingangsAnnahmen(): Set<Aussage> =
     eingänge.values.flatMap { it.annahmen }.toSet()
-
-/**
- * Kompatibilitätsalias für ältere Auswerter. Dateiprivate Varianten desselben
- * Namens bleiben lokal und kollidieren nicht mit diesem paketweiten Vertrag.
- */
-internal fun KnotenAuswertungsKontext.annahmen(): Set<Aussage> =
-    gemeinsameEingangsAnnahmen()
