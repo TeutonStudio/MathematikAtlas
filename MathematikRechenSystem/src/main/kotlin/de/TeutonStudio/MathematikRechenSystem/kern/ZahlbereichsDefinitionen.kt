@@ -16,37 +16,34 @@ enum class FundamentalerZahlbereich(
     QUATERNION("H", "\\mathbb H", true, false),
 }
 
+fun FundamentalerZahlbereich.alsZahlbereichsId(): ZahlbereichsId = ZahlbereichsId(id)
+
 object FundamentaleZahlbereiche {
-    private val direkteEinbettungen = mapOf(
-        FundamentalerZahlbereich.NATUERLICH_POSITIV to FundamentalerZahlbereich.NATUERLICH_MIT_NULL,
-        FundamentalerZahlbereich.NATUERLICH_MIT_NULL to FundamentalerZahlbereich.GANZ,
-        FundamentalerZahlbereich.GANZ to FundamentalerZahlbereich.RATIONAL,
-        FundamentalerZahlbereich.RATIONAL to FundamentalerZahlbereich.REELL,
-        FundamentalerZahlbereich.REELL to FundamentalerZahlbereich.KOMPLEX,
-        FundamentalerZahlbereich.KOMPLEX to FundamentalerZahlbereich.QUATERNION,
-    )
+    val graph: ZahlbereichsGraph = StandardZahlbereichsGraph.graph
 
     fun istTeilbereich(
         teil: FundamentalerZahlbereich,
         ober: FundamentalerZahlbereich,
-    ): Boolean {
-        if (teil == ober) return true
-        var aktuell = direkteEinbettungen[teil]
-        while (aktuell != null) {
-            if (aktuell == ober) return true
-            aktuell = direkteEinbettungen[aktuell]
-        }
-        return false
-    }
+    ): Boolean = graph.istAutomatischErreichbar(
+        teil.alsZahlbereichsId(),
+        ober.alsZahlbereichsId(),
+    )
+
+    fun gemeinsamerBereich(
+        bereiche: Iterable<ZahlbereichsId>,
+    ): GemeinsamerBereichErgebnis = graph.gemeinsameMinimaleZielbereiche(bereiche)
 
     fun kleinsterGemeinsamerBereich(
         bereiche: Iterable<FundamentalerZahlbereich>,
     ): FundamentalerZahlbereich {
         val liste = bereiche.toList()
         require(liste.isNotEmpty())
-        return FundamentalerZahlbereich.entries.first { kandidat ->
-            liste.all { istTeilbereich(it, kandidat) }
+        val ergebnis = gemeinsamerBereich(liste.map { it.alsZahlbereichsId() })
+        require(ergebnis.status == GemeinsamerBereichStatus.EINDEUTIG) {
+            "Die fundamentalen Zahlbereiche besitzen keinen eindeutigen gemeinsamen Zielbereich: $ergebnis"
         }
+        return FundamentalerZahlbereich.entries.firstOrNull { it.id == ergebnis.bereich?.wert }
+            ?: error("Der gemeinsame Bereich ${ergebnis.bereich} ist kein fundamentaler Zahlbereich.")
     }
 }
 
@@ -125,7 +122,7 @@ fun inferiereEndlicheMaechtigkeit(menge: MengenAusdruck): EndlicheMaechtigkeitsI
     )
 }
 
-/** Kernobjekte der vier grundlegenden Definitionskarten. */
+/** Kernobjekte der Zahlbereichs- und Darstellungsdefinitionskarten. */
 object ZahlbereichsDefinitionsKatalog {
     val natuerlicheZahlen = InduktiveDefinition(
         id = "zahlbereich.N",
@@ -213,11 +210,53 @@ object ZahlbereichsDefinitionsKatalog {
         referenzen = setOf(ganzeZahlen.id, natuerlicheZahlen.id),
     )
 
+    private fun darstellungsDefinition(
+        id: String,
+        name: String,
+        operatorId: String,
+        darstellungId: String,
+    ): ImpliziteDefinition {
+        val darstellung = StandardZahlbereichsGraph.darstellungen.single { it.id == darstellungId }
+        return ImpliziteDefinition(
+            id = id,
+            name = name,
+            ziel = DefinitionsZiel.Operation(
+                stabileId = id,
+                operatorId = operatorId,
+            ),
+            charakterisierendeRegeln = listOf(
+                DefinitionsRegel(
+                    id = "$id.korrespondenz",
+                    name = "Matrixkorrespondenz",
+                    folgerungLatex = darstellung.definitionsLatex,
+                ),
+            ),
+            existenzStatus = NachweisStatus.Nachgewiesen,
+            eindeutigkeitsStatus = NachweisStatus.Nachgewiesen,
+        )
+    }
+
+    val komplexeMatrixdarstellung = darstellungsDefinition(
+        id = "definition.zahlbereich.darstellung.C.M2R",
+        name = "Komplexe Zahlen als reelle 2×2-Matrizen",
+        operatorId = "zahlbereich.darstellung.C.M2R",
+        darstellungId = "zahlbereich.darstellung.C.M2R",
+    )
+
+    val quaternionenMatrixdarstellung = darstellungsDefinition(
+        id = "definition.zahlbereich.darstellung.H.M2C",
+        name = "Hamilton-Quaternionen als komplexe 2×2-Matrizen",
+        operatorId = "zahlbereich.darstellung.H.M2C",
+        darstellungId = "zahlbereich.darstellung.H.M2C",
+    )
+
     val alle: List<MathematischeDefinition> = listOf(
         natuerlicheZahlen,
         nullDefinition,
         ganzeZahlen,
         nichtnegativeGanze,
         rationaleZahlen,
+        komplexeMatrixdarstellung,
+        quaternionenMatrixdarstellung,
     )
 }
