@@ -88,8 +88,8 @@ internal fun MathematikAuswerterRegister.registriereRestriktionsKnoten() {
 
 /**
  * Synchronisiert ausschließlich die automatisch angebotenen Ergänzungseingänge.
- * Verbundene Ergänzungen bleiben immer mit ihrer Anschluss-ID erhalten. Unverbundene
- * Vorschauanschlüsse werden neu aus dem aktuellen Restmengenstatus abgeleitet.
+ * Verbundene Ergänzungen und der bereits sichtbare freie Folgeanschluss behalten ihre
+ * Anschluss-ID. Dadurch verändert eine reine Neuauswertung den Graphen nicht.
  */
 fun synchronisiereRestriktionsAnschlüsse(
     karte: KartenDaten,
@@ -113,6 +113,7 @@ private fun synchronisiereRestriktionsKnoten(
         val ref = AnschlussVerweis(knoten.id, anschluss.id)
         karte.verbindungen.any { it.von == ref || it.zu == ref }
     }
+    val freie = bisherigeErgänzungen.filterNot { it in verbundene }
 
     val basis = auswertung?.eingänge?.get("methode")?.objekt as? Methode
     val menge = auswertung?.eingänge?.get("menge")?.objekt as? MengenAusdruck
@@ -131,10 +132,16 @@ private fun synchronisiereRestriktionsKnoten(
         anschluss.copy(reihenfolge = index + 2, dynamischErzeugt = true, kannSichErweitern = false)
     }
     val neueErgänzungen = if (benötigtWeiteren) {
-        normalisierteVerbundene + neuerErgänzungsAnschluss(
-            reihenfolge = normalisierteVerbundene.size + 2,
+        val reihenfolge = normalisierteVerbundene.size + 2
+        val freierFolgeanschluss = freie.firstOrNull()?.copy(
+            reihenfolge = reihenfolge,
+            dynamischErzeugt = true,
+            kannSichErweitern = false,
+        ) ?: neuerErgänzungsAnschluss(
+            reihenfolge = reihenfolge,
             index = nächsterErgänzungsIndex(bisherigeErgänzungen),
         )
+        normalisierteVerbundene + freierFolgeanschluss
     } else normalisierteVerbundene
 
     val methodenEingang = feste.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == "methode" }
