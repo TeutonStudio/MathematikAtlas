@@ -17,7 +17,7 @@ object BeispielKarten {
         val gruppe = gruppenKnoten(doppeln, GraphPunkt(1050f, 170f))
         return KarteBauer("Rechnen").knoten(zwei, drei, plus, auswerten, gruppe)
             .verbinde(zwei, "wert", plus, "a").verbinde(drei, "wert", plus, "b")
-            .verbinde(plus, "wert", auswerten, "objekt").verbinde(auswerten, "wert", gruppe, "x").baue()
+            .verbinde(plus, "wert", auswerten, "term").verbinde(auswerten, "term", gruppe, "x").baue()
     }
 
     private fun doppelnKarte(): KartenDaten {
@@ -32,7 +32,7 @@ object BeispielKarten {
         val b = MathematikKnotenVorlagen.Zahl.erzeuge(GraphPunkt(90f, 260f)).copy(parameter = mapOf("wert" to "0"))
         val gleich = MathematikKnotenVorlagen.Gleichheit.erzeuge(GraphPunkt(420f, 170f))
         val aus = MathematikKnotenVorlagen.Auswerten.erzeuge(GraphPunkt(760f, 170f))
-        return KarteBauer("Aussage").knoten(a,b,gleich,aus).verbinde(a,"wert",gleich,"links").verbinde(b,"wert",gleich,"rechts").verbinde(gleich,"aussage",aus,"objekt").baue()
+        return KarteBauer("Aussage").knoten(a,b,gleich,aus).verbinde(a,"wert",gleich,"links").verbinde(b,"wert",gleich,"rechts").verbinde(gleich,"aussage",aus,"term").baue()
     }
 
     private fun mengenKarte(): KartenDaten {
@@ -52,11 +52,11 @@ object BeispielKarten {
     private fun gruppenKnoten(karte: KartenDaten, position: GraphPunkt): KnotenDaten {
         val eingänge = karte.knoten.filter { it.art == "mathematik.kartenEingang" }.mapIndexed { i, k -> AnschlussDaten(
             name = k.parameter["name"] ?: k.name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
-            art = k.anschlüsse.first { it.name == "wert" }.art, reihenfolge = i,
+            art = k.anschlüsse.first { it.name == "wert" && it.richtung == AnschlussRichtung.Ausgang }.art, reihenfolge = i,
         ) }
         val ausgänge = karte.knoten.filter { it.art == "mathematik.kartenAusgang" }.mapIndexed { i, k -> AnschlussDaten(
             name = k.parameter["name"] ?: k.name, richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts,
-            art = k.anschlüsse.first { it.name == "wert" }.art, reihenfolge = i,
+            art = k.anschlüsse.first { it.name == "wert" && it.richtung == AnschlussRichtung.Eingang }.art, reihenfolge = i,
         ) }
         return KnotenDaten(art = "mathematik.gruppe", name = karte.name, position = position, anschlüsse = eingänge + ausgänge, kartenVerweis = KartenVerweis(karte.id, karte.version))
     }
@@ -65,9 +65,21 @@ object BeispielKarten {
         private var karte = KartenDaten(name = name)
         fun knoten(vararg k: KnotenDaten) = apply { karte = karte.copy(knoten = karte.knoten + k) }
         fun verbinde(von: KnotenDaten, vonName: String, zu: KnotenDaten, zuName: String) = apply {
-            val a = von.anschlüsse.first { it.name == vonName }; val b = zu.anschlüsse.first { it.name == zuName }
+            val a = findeAnschluss(von, vonName, AnschlussRichtung.Ausgang)
+            val b = findeAnschluss(zu, zuName, AnschlussRichtung.Eingang)
             karte = karte.copy(verbindungen = karte.verbindungen + VerbindungDaten(von = AnschlussVerweis(von.id,a.id), zu = AnschlussVerweis(zu.id,b.id)))
         }
         fun baue() = karte
+
+        private fun findeAnschluss(
+            knoten: KnotenDaten,
+            name: String,
+            richtung: AnschlussRichtung,
+        ): AnschlussDaten = requireNotNull(
+            knoten.anschlüsse.firstOrNull { it.name == name && it.richtung == richtung },
+        ) {
+            val vorhanden = knoten.anschlüsse.joinToString { "${it.name}:${it.richtung}" }
+            "Knoten '${knoten.name}' (${knoten.art}) besitzt keinen $richtung-Anschluss '$name'. Vorhanden: $vorhanden"
+        }
     }
 }
