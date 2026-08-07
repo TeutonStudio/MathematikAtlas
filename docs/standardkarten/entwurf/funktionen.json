@@ -1,0 +1,28 @@
+{
+  "draftFormatVersion": 1,
+  "root": ["Standardkarten", "Funktionen"],
+  "defaults": {
+    "output": "methode:mathematik.methode",
+    "note": "karte.notiz",
+    "status": "draft"
+  },
+  "cards": [
+    {"id":"function.linear.2x-minus-3","name":"Lineare Funktion","folder":"01 Polynome","formula":"f(x)=2x-3","expected":"f: ℝ → ℝ\nx ↦ 2x - 3"},
+    {"id":"function.polynomial.x2","name":"Quadratische Funktion","folder":"01 Polynome","formula":"f(x)=x^2","expected":"f: ℝ → ℝ\nx ↦ x²"},
+    {"id":"function.polynomial.x3-minus-3x","name":"Kubisches Polynom","folder":"01 Polynome","formula":"f(x)=x^3-3x","expected":"f: ℝ → ℝ\nx ↦ x³ - 3x"},
+    {"id":"function.polynomial.x4-minus-2x2","name":"Quartische Funktion","folder":"01 Polynome","formula":"f(x)=x^4-2x^2","expected":"f: ℝ → ℝ\nx ↦ x⁴ - 2x²"},
+    {"id":"function.rational.x2plus1-over-xminus1","name":"Rationale Standardfunktion","folder":"02 Rationale Funktionen","formula":"f(x)=(x^2+1)/(x-1)","expected":"f: ℝ \\ {1} → ℝ\nx ↦ (x² + 1)/(x - 1)","gates":["mathematik.restriktion"]},
+    {"id":"function.rational.removable-hole","name":"Hebbare Definitionslücke","folder":"02 Rationale Funktionen","formula":"f(x)=(x^2-1)/(x-1)","expected":"f: ℝ \\ {1} → ℝ\nx ↦ (x² - 1)/(x - 1) = x + 1 für x ≠ 1\nlim_{x→1} f(x)=2","gates":["mathematik.restriktion"]},
+    {"id":"function.absolute.x","name":"Betragsfunktion","folder":"03 Potenz- und Wurzelfunktionen","formula":"f(x)=|x|","expected":"f: ℝ → ℝ\nx ↦ |x|"},
+    {"id":"function.root.cuberoot","name":"Kubikwurzel","folder":"03 Potenz- und Wurzelfunktionen","formula":"f(x)=∛x","expected":"f: ℝ → ℝ\nx ↦ ∛x"},
+    {"id":"function.exp.ex","name":"Exponentialfunktion","folder":"04 Exponential- und Logarithmusfunktionen","formula":"f(x)=e^x","expected":"f: ℝ → ℝ_{>0}\nx ↦ eˣ"},
+    {"id":"function.log.ln","name":"Natürlicher Logarithmus","folder":"04 Exponential- und Logarithmusfunktionen","formula":"f(x)=ln(x)","expected":"ln: ℝ_{>0} → ℝ\nx ↦ ln(x)","gates":["mathematik.restriktion"]},
+    {"id":"function.trig.sin","name":"Sinus","folder":"05 Trigonometrische Funktionen","formula":"f(x)=sin(x)","expected":"f: ℝ → [-1,1]\nx ↦ sin(x)"},
+    {"id":"function.trig.cos","name":"Kosinus","folder":"05 Trigonometrische Funktionen","formula":"f(x)=cos(x)","expected":"f: ℝ → [-1,1]\nx ↦ cos(x)"},
+    {"id":"function.composed.sin-x2","name":"Kettenregel-Beispiel","folder":"06 Zusammengesetzte Funktionen","formula":"f(x)=sin(x^2)","expected":"f: ℝ → [-1,1]\nx ↦ sin(x²)"},
+    {"id":"function.composed.x2plus1-times-ex","name":"Produktregel-Beispiel","folder":"06 Zusammengesetzte Funktionen","formula":"f(x)=(x^2+1)e^x","expected":"f: ℝ → ℝ\nx ↦ (x² + 1)eˣ"},
+    {"id":"function.multivar.paraboloid","name":"Paraboloid","folder":"08 Funktionen mehrerer Variablen","formula":"f(x,y)=x^2+y^2","expected":"f: ℝ² → ℝ\n(x,y) ↦ x² + y²"},
+    {"id":"function.multivar.saddle","name":"Sattelfläche","folder":"08 Funktionen mehrerer Variablen","formula":"f(x,y)=x^2-y^2","expected":"f: ℝ² → ℝ\n(x,y) ↦ x² - y²"},
+    {"id":"function.multivar.mixed-quadratic","name":"Gemischte quadratische Form","folder":"08 Funktionen mehrerer Variablen","formula":"f(x,y)=x^2+xy+y^2","expected":"f: ℝ² → ℝ\n(x,y) ↦ x² + xy + y²"}
+  ]
+}
