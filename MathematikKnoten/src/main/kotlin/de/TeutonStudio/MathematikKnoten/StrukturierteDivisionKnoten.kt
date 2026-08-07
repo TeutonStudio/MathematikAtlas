@@ -69,7 +69,8 @@ fun KartenDaten.migriereStrukturierteDivision(): KartenDaten = copy(
 
 /**
  * Umschließt den final registrierten Zahlenrechner und ersetzt ausschließlich
- * dessen Divisionszweig. Alle anderen Operatoren bleiben beim vorhandenen Auswerter.
+ * dessen Divisionszweig. Alle anderen Operatoren, auch Erweiterungszustände mit
+ * eigener stabiler ID, bleiben beim vorhandenen Auswerter.
  */
 internal fun MathematikAuswerterRegister.registriereStrukturierteDivision() {
     val basis = requireNotNull(finde(ZAHLENRECHNER_ART)) {
@@ -78,7 +79,7 @@ internal fun MathematikAuswerterRegister.registriereStrukturierteDivision() {
     registriere(
         ZAHLENRECHNER_ART,
         MathematikKnotenAuswerter { kontext ->
-            val operator = UniversellerZahlenOperator.vonId(
+            val operator = UniversellerZahlenOperator.vonIdOderNull(
                 kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR],
             )
             if (operator != UniversellerZahlenOperator.DIVISION) {
