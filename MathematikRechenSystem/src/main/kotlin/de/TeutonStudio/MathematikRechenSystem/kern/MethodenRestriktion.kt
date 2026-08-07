@@ -172,7 +172,7 @@ private fun prüfeErgänzungsBild(
             else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
     }
-    return prüfeTeilmenge(methode.zielMenge, zielMenge, kontext)
+    return prüfeTeilmenge(Abbild(effektiverBereich, methode), zielMenge, kontext)
 }
 
 private fun Methode.wendeAufGesamtArgumentAn(argument: MathematischesObjekt): MathematischesObjekt = when (parameter.size) {
