@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -70,15 +71,28 @@ internal object NotizKnotenRenderer : KnotenRenderer {
         ausgewählt: Boolean,
         aktionen: KnotenRendererAktionen,
     ) {
-        Text(
-            text = knoten.parameter[NOTIZ_TEXT_PARAMETER].orEmpty(),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            fontSize = notizSchriftgrößeSp(knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER]).sp,
-            textAlign = notizTextAusrichtung(knoten.parameter[NOTIZ_AUSRICHTUNG_PARAMETER]),
-            overflow = TextOverflow.Clip,
-        )
+        Column(Modifier.fillMaxSize()) {
+            Text(
+                text = knoten.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            HorizontalDivider()
+            Text(
+                text = knoten.parameter[NOTIZ_TEXT_PARAMETER].orEmpty(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(12.dp),
+                fontSize = notizSchriftgrößeSp(knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER]).sp,
+                textAlign = notizTextAusrichtung(knoten.parameter[NOTIZ_AUSRICHTUNG_PARAMETER]),
+                overflow = TextOverflow.Clip,
+            )
+        }
     }
 }
 
