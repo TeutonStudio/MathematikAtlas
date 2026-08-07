@@ -50,6 +50,7 @@ internal fun MathematikAuswerterRegister.registriereRestriktionsKnoten() {
         val ergänzungen = kontext.knoten.ergänzungsAnschlüsse()
             .mapNotNull { anschluss -> kontext.eingänge[anschluss.name]?.objekt as? Methode }
         val ergebnis = restriktiereMethode(basis, menge, ergänzungen, kontext.rechenKontext)
+        val resultierendeMethode = ergebnis.methode
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet() + ergebnis.bedingungen
 
         val zielFehler = ergebnis.ergänzungen.withIndex().firstOrNull {
@@ -61,7 +62,7 @@ internal fun MathematikAuswerterRegister.registriereRestriktionsKnoten() {
                 fehler = "Ergänzung ${zielFehler.index + 1} bildet ihren effektiven Bereich nicht vollständig in ${ergebnis.zielMenge.zuLatex()} ab.",
                 warnungen = ergebnis.warnungen,
             )
-            ergebnis.methode == null -> KnotenAuswertungsErgebnis(
+            resultierendeMethode == null -> KnotenAuswertungsErgebnis(
                 ausgaben = emptyMap(),
                 fehler = "Die Methode ist auf ${ergebnis.gewünschterWerteVorrat.zuLatex()} noch nicht vollständig definiert. Offen: ${ergebnis.restMenge.zuLatex()}.",
                 warnungen = ergebnis.warnungen,
@@ -69,7 +70,7 @@ internal fun MathematikAuswerterRegister.registriereRestriktionsKnoten() {
             else -> KnotenAuswertungsErgebnis(
                 ausgaben = mapOf(
                     "methode" to BedingterWert(
-                        objekt = ergebnis.methode,
+                        objekt = resultierendeMethode,
                         annahmen = annahmen,
                         latexDarstellung = "${basis.name}\\vert_{${menge.zuLatex()}}",
                     ),
