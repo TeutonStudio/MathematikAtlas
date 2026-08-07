@@ -75,6 +75,15 @@ fun inferiereZielmenge(
     is GeometrieStruktur -> BenannteMenge("geometriestrukturen_${ausdruck.raum.id}", "\\mathcal{C}(${ausdruck.raum.id})")
     is GeometrischeTransformation -> BenannteMenge("geometrietransformationen", "\\operatorname{Trans}_{G}")
     is LinearesSystemLoesung -> BenannteMenge("lineare_systemloesungen", "\\mathcal{L}")
+    is MethodenEinschraenkung, is EingeschraenkteIdentitaet -> error(
+        "${ausdruck::class.simpleName} ist ein methodenwertiges Objekt; seine Zielmenge muss aus dem Methodenvertrag gelesen werden.",
+    )
+    is IterierterAusdruck -> error(
+        "Die Zielmenge eines iterierten Ausdrucks hängt von Iterationsart und Strukturvertrag ab und wird nicht pauschal geraten.",
+    )
+    is TensorOperation -> error(
+        "Die Zielmenge einer Tensoroperation hängt von der registrierten Operation und ihrer Ausgangsrolle ab.",
+    )
     is Methode, is GebundeneMethode, is Mächtigkeit ->
         error("Für ${ausdruck::class.simpleName} ist noch keine Zielmengeninferenz definiert.")
     is Ausdruck -> error(
