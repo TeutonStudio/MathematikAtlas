@@ -8,8 +8,9 @@ import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
 
-private const val STANDARDKARTEN_ASSET =
-    "de/TeutonStudio/MathematikAtlas/standardkarten/standardkarten.json"
+private const val STANDARDKARTEN_ASSET_BASIS =
+    "de/TeutonStudio/MathematikAtlas/standardkarten"
+private const val STANDARDKARTEN_MANIFEST = "$STANDARDKARTEN_ASSET_BASIS/manifest.json"
 
 enum class StandardKartenStatus {
     AKTIV,
@@ -39,6 +40,7 @@ private data class StandardKartenEintrag(
     val cardId: KartenId,
     val folder: List<String>,
     val title: String,
+    val path: String,
     val sourceHash: String,
     val requiredNodeTypes: Set<String>,
     val dependsOn: List<String>,
@@ -219,7 +221,7 @@ internal class StandardKartenInstaller(
     }
 
     private fun lesePaket(): StandardKartenPaket {
-        val text = context.assets.open(STANDARDKARTEN_ASSET)
+        val text = context.assets.open(STANDARDKARTEN_MANIFEST)
             .bufferedReader()
             .use { it.readText() }
         val json = JSONObject(text)
@@ -234,6 +236,7 @@ internal class StandardKartenInstaller(
                 cardId = KartenId(e.getString("cardId")),
                 folder = e.getJSONArray("folder").zuStringListe(),
                 title = e.getString("title"),
+                path = e.getString("path"),
                 sourceHash = e.getString("sourceHash"),
                 requiredNodeTypes = e.getJSONArray("requiredNodeTypes").zuStringListe().toSet(),
                 dependsOn = e.optJSONArray("dependsOn").zuStringListe(),
@@ -246,12 +249,19 @@ internal class StandardKartenInstaller(
             "Standardkarten-cardIds müssen eindeutig sein."
         }
 
-        val kartenJson = json.getJSONArray("karten")
-        val karten = List(kartenJson.length()) { index ->
-            KartenJson.lese(kartenJson.getJSONObject(index))
-        }.associateBy(KartenDaten::id)
-        require(karten.keys == entries.mapTo(linkedSetOf()) { it.cardId }) {
-            "Manifest und Kartenliste des Standardkarten-Pakets stimmen nicht überein."
+        val karten = entries.associate { eintrag ->
+            require(!eintrag.path.startsWith("/") && ".." !in eintrag.path.split('/')) {
+                "Ungültiger Standardkartenpfad '${eintrag.path}'."
+            }
+            val kartenText = context.assets
+                .open("$STANDARDKARTEN_ASSET_BASIS/${eintrag.path}")
+                .bufferedReader()
+                .use { it.readText() }
+            val karte = KartenJson.lese(kartenText)
+            require(karte.id == eintrag.cardId) {
+                "Standardkarte '${eintrag.sourceId}' besitzt die falsche cardId ${karte.id.wert}."
+            }
+            eintrag.cardId to karte
         }
         return StandardKartenPaket(
             version = json.getString("version"),
