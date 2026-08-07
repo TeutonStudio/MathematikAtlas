@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas.speicher
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import de.TeutonStudio.MathematikAtlas.migriereTranspositionsKnoten
+import de.TeutonStudio.MathematikKnoten.migriereDifferentialKnoten
 import de.TeutonStudio.MathematikKnoten.migriereHyperAnalysisKnoten
 import de.TeutonStudio.MathematikKnoten.migriereTensorOperationKnoten
 import org.json.JSONObject
@@ -10,7 +11,10 @@ import org.json.JSONObject
 /** App-Fassade: reiner Codec im Verwalter, App-spezifische Migration anschließend. */
 object KartenJson {
     fun schreibe(karte: KartenDaten): String = KartenDatenJson.schreibe(
-        karte.migriereTensorOperationKnoten().migriereHyperAnalysisKnoten(),
+        karte
+            .migriereTensorOperationKnoten()
+            .migriereHyperAnalysisKnoten()
+            .migriereDifferentialKnoten(),
     )
 
     fun lese(text: String): KartenDaten = lese(JSONObject(text))
@@ -19,4 +23,5 @@ object KartenJson {
         .let(::migriereTranspositionsKnoten)
         .migriereTensorOperationKnoten()
         .migriereHyperAnalysisKnoten()
+        .migriereDifferentialKnoten()
 }
