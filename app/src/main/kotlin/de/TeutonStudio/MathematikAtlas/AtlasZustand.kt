@@ -16,7 +16,11 @@ class AtlasZustand(context: Context) {
     val speicher = KartenSpeicher(context)
     val anschlussArten = AnschlussArtRegister(MathematikAnschlussArten.alle)
     private val graphPrüfung = GraphPrüfung(anschlussArten)
-    private val auswerter = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister(), KartenQuelle(speicher::lade))
+    private val auswerter = KartenAuswerter(
+        register = GesamterMathematikAuswerter.erzeugeRegister(),
+        kartenQuelle = KartenQuelle(speicher::lade),
+        nichtAuswertbareKnotenArten = KartenWerkzeugVorlagen.nichtAuswertbareArten,
+    )
 
     var karten by mutableStateOf<List<KartenDaten>>(emptyList())
         private set
@@ -191,6 +195,7 @@ class AtlasZustand(context: Context) {
     fun renderer() = MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
 
     fun rendererFür(knoten: KnotenDaten) = when {
+        knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenRenderer
         knoten.art.startsWith("konzept.") -> KonzeptDokumentationsRenderer
         knoten.art == "mathematik.visualisierung" -> VisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
         knoten.art == "mathematik.geometrie.visualisierung" -> GeometrieVisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
@@ -219,7 +224,12 @@ class AtlasZustand(context: Context) {
         if (aktiveKnotenKategorie() == null) ausgewählteKnotenKategorie = null
     }
 
-    private fun alleKnotenVorlagen(): List<KnotenVorlage> = alleMathematikKnotenVorlagen() + MengenraumKnotenVorlagen.alle + GeometrieKnotenVorlagen.alle + gruppenVorlagen()
+    private fun alleKnotenVorlagen(): List<KnotenVorlage> =
+        alleMathematikKnotenVorlagen() +
+            MengenraumKnotenVorlagen.alle +
+            GeometrieKnotenVorlagen.alle +
+            KartenWerkzeugVorlagen.alle +
+            gruppenVorlagen()
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }
