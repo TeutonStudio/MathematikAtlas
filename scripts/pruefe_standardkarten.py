@@ -6,7 +6,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE = ROOT / "app/src/main/assets/de/TeutonStudio/MathematikAtlas/standardkarten/standardkarten.json"
+ASSET_ROOT = ROOT / "app/src/main/assets/de/TeutonStudio/MathematikAtlas/standardkarten"
+PACKAGE = ASSET_ROOT / "manifest.json"
 
 
 def fail(message: str) -> None:
@@ -28,11 +29,16 @@ if data.get("targetCardFormatVersion") != 7:
     fail("targetCardFormatVersion muss dem Kartenformat 7 entsprechen")
 
 entries = data.get("entries", [])
-cards = data.get("karten", [])
-if not entries or not cards:
-    fail("Paket muss Manifest-Einträge und Karten enthalten")
-if len(entries) != len(cards):
-    fail("Manifest- und Kartenanzahl unterscheiden sich")
+if not entries:
+    fail("Paket muss Manifest-Einträge enthalten")
+
+cards = []
+for entry in entries:
+    path = entry.get("path", "")
+    candidate = (ASSET_ROOT / path).resolve()
+    if not path or ASSET_ROOT.resolve() not in candidate.parents or not candidate.is_file():
+        fail(f"{entry.get('sourceId')}: ungültiger oder fehlender Kartenpfad {path!r}")
+    cards.append(json.loads(candidate.read_text(encoding="utf-8")))
 
 entry_ids = [entry.get("sourceId") for entry in entries]
 card_ids = [card.get("id") for card in cards]
