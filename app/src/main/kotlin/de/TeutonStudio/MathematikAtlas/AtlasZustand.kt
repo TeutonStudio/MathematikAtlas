@@ -226,6 +226,7 @@ class AtlasZustand(context: Context) {
 
     private fun alleKnotenVorlagen(): List<KnotenVorlage> =
         alleMathematikKnotenVorlagen() +
+            RestriktionsKnotenVorlagen.alle +
             MengenraumKnotenVorlagen.alle +
             GeometrieKnotenVorlagen.alle +
             KartenWerkzeugVorlagen.alle +
@@ -293,7 +294,8 @@ class AtlasZustand(context: Context) {
         }
 
         val ersteAuswertung = auswerter.auswerten(editor.karte)
-        val synchronisiert = synchronisiereMethodenAufrufe(editor.karte, ersteAuswertung, graphPrüfung)
+        val mitRestriktionsAnschlüssen = synchronisiereRestriktionsAnschlüsse(editor.karte, ersteAuswertung)
+        val synchronisiert = synchronisiereMethodenAufrufe(mitRestriktionsAnschlüssen, ersteAuswertung, graphPrüfung)
         if (synchronisiert == editor.karte) {
             auswertung = ersteAuswertung
             return
