@@ -47,6 +47,7 @@ internal fun FormelBauerDialog(
         when (val ergebnis = editor.importiere(neu)) {
             is FormelLatexImportErgebnis.Erfolg -> {
                 revision++
+                latexEingabe = editor.exportiere()
                 importFehler = null
             }
             is FormelLatexImportErgebnis.Fehler -> {
