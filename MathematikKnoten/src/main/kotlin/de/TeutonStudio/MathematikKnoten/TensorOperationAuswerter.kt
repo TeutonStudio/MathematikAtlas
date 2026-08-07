@@ -118,7 +118,7 @@ private fun werteTensorOperationAus(
                 ausgaben = mapOf(
                     ausgangsName to BedingterWert(
                         objekt = rechenErgebnis.objekt,
-                        annahmen = kontext.annahmen(),
+                        annahmen = kontext.gemeinsameEingangsAnnahmen(),
                         latexDarstellung = rechenErgebnis.objekt.zuLatex(),
                     ),
                 ),
@@ -160,7 +160,7 @@ private fun symbolischesTensorErgebnis(
         ausgaben = definition.ausgangsRollen.associate { rolle ->
             ausgangsName(kontext, definition, rolle) to BedingterWert(
                 objekt = operation,
-                annahmen = kontext.annahmen(),
+                annahmen = kontext.gemeinsameEingangsAnnahmen(),
                 latexDarstellung = "${operation.zuLatex()}_{${rolle.wert.replace("_", "\\_")}}",
             )
         },
