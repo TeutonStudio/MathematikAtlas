@@ -41,6 +41,9 @@ jobs:
       - name: Repositorystruktur prüfen
         run: python3 scripts/pruefe_repository.py
 
+      - name: Standardkarten prüfen
+        run: python3 scripts/pruefe_standardkarten.py
+
       - name: Releaseplan prüfen
         run: python3 scripts/pruefe_releaseplan.py
 
