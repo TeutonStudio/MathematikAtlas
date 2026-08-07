@@ -307,6 +307,7 @@ object FormelZuGraph {
                     ausdruck.id,
                     ausdruck.operatorId,
                     ausdruck.typ,
+                    mapOf("explizitGruppiert" to ausdruck.explizitGruppiert.toString()),
                 )
             }
             knoten[knotenId] = graphKnoten
@@ -383,10 +384,11 @@ object GraphZuFormel {
                         baue(kante.quelleKnotenId)?.let { FormelArgument(kante.rollenId, kante.position, it) }
                     }
                     FormelAusdruck.Operation(
-                        graphKnoten.ausdrucksId,
-                        graphKnoten.art,
-                        argumente,
-                        graphKnoten.typ,
+                        id = graphKnoten.ausdrucksId,
+                        operatorId = graphKnoten.art,
+                        argumente = argumente,
+                        typ = graphKnoten.typ,
+                        explizitGruppiert = graphKnoten.parameter["explizitGruppiert"]?.toBooleanStrictOrNull() ?: false,
                     )
                 }
             }
