@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikKnoten.visualisierung.sampling
 
+import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.KoordinatenAdapter
+import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.KoordinatenErgebnis
+import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.ReelleKoordinatenKomponente
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 import java.math.BigDecimal
@@ -47,6 +50,17 @@ sealed interface VisualisierungsErgebnis {
         val intervalle: List<VisualisierungsIntervall> = emptyList(),
     ) : VisualisierungsErgebnis
 
+    data class BedingtDarstellbar(
+        val grund: String,
+        val bedingungen: List<String> = emptyList(),
+    ) : VisualisierungsErgebnis
+
+    data class ProjektionErforderlich(
+        val vorhandeneDimension: Int,
+        val erwarteteDimension: Int,
+        val grund: String,
+    ) : VisualisierungsErgebnis
+
     data class NichtDarstellbar(val grund: String) : VisualisierungsErgebnis
 }
 
@@ -55,13 +69,14 @@ sealed interface VisualisierungsDefinition {
     data class ExaktePunkte(
         val dimension: Int,
         val punkte: List<List<Double>>,
-        val verworfeneElemente: Map<String, Int> = emptyMap(),
+        val diagnosen: List<KoordinatenErgebnis> = emptyList(),
     ) : VisualisierungsDefinition
 
     data class Region(
         val dimension: Int,
         val mitgliedschaft: (List<Double>) -> NumerischeMitgliedschaft,
         val hinweise: List<String> = emptyList(),
+        val fensterBegrenzt: Boolean = false,
     ) : VisualisierungsDefinition
 
     data class ProduktDomänen(
@@ -76,6 +91,17 @@ sealed interface VisualisierungsDefinition {
     ) : VisualisierungsDefinition
 
     data class NichtRäumlich(val grund: String) : VisualisierungsDefinition
+
+    data class BedingtRäumlich(
+        val grund: String,
+        val bedingungen: List<String> = emptyList(),
+    ) : VisualisierungsDefinition
+
+    data class ProjektionErforderlich(
+        val vorhandeneDimension: Int,
+        val erwarteteDimension: Int,
+        val grund: String,
+    ) : VisualisierungsDefinition
 }
 
 data class NumerischeDomäne(
@@ -101,6 +127,7 @@ object VisualisierungsSampler {
         konfiguration: VisualisierungsKonfiguration,
     ): VisualisierungsDefinition {
         val dimension = konfiguration.raumDimension
+        if (menge is KoordinatenBild) return normalisiereKoordinatenBild(menge, dimension)
         if (konfiguration.dimension == RaumDimension.R1) {
             return ZahlengeradenNormalisierer.normalisiere(menge, konfiguration)
         }
@@ -134,6 +161,15 @@ object VisualisierungsSampler {
         konfiguration: VisualisierungsKonfiguration,
     ): VisualisierungsErgebnis = when (definition) {
         is VisualisierungsDefinition.NichtRäumlich -> VisualisierungsErgebnis.NichtDarstellbar(definition.grund)
+        is VisualisierungsDefinition.BedingtRäumlich -> VisualisierungsErgebnis.BedingtDarstellbar(
+            definition.grund,
+            definition.bedingungen,
+        )
+        is VisualisierungsDefinition.ProjektionErforderlich -> VisualisierungsErgebnis.ProjektionErforderlich(
+            definition.vorhandeneDimension,
+            definition.erwarteteDimension,
+            definition.grund,
+        )
         is VisualisierungsDefinition.ExaktePunkte -> materialisiereExaktePunkte(definition, konfiguration)
         is VisualisierungsDefinition.ProduktDomänen -> materialisiereProdukt(definition, konfiguration)
         is VisualisierungsDefinition.Zahlengerade -> materialisiereZahlengerade(definition, konfiguration)
@@ -174,14 +210,34 @@ object VisualisierungsSampler {
         dimension: Int,
     ): VisualisierungsDefinition.ExaktePunkte {
         val punkte = mutableListOf<List<Double>>()
-        val verworfen = linkedMapOf<String, Int>()
+        val diagnosen = mutableListOf<KoordinatenErgebnis>()
         menge.elemente.forEach { element ->
-            when (val adapter = koordinaten(element, dimension, emptyMap())) {
-                is KoordinatenErgebnis.Erfolgreich -> punkte += adapter.werte
-                is KoordinatenErgebnis.Fehler -> verworfen[adapter.grund] = verworfen.getOrDefault(adapter.grund, 0) + 1
+            when (val adapter = KoordinatenAdapter.extrahiere(element, dimension)) {
+                is KoordinatenErgebnis.Darstellbar -> punkte += adapter.werte
+                else -> diagnosen += adapter
             }
         }
-        return VisualisierungsDefinition.ExaktePunkte(dimension, punkte.distinct(), verworfen)
+        return VisualisierungsDefinition.ExaktePunkte(dimension, punkte.distinct(), diagnosen)
+    }
+
+    private fun normalisiereKoordinatenBild(
+        bild: KoordinatenBild,
+        dimension: Int,
+    ): VisualisierungsDefinition = when (val ergebnis = KoordinatenAdapter.extrahiere(bild, dimension)) {
+        is KoordinatenErgebnis.Darstellbar -> VisualisierungsDefinition.ExaktePunkte(
+            dimension,
+            listOf(ergebnis.werte),
+        )
+        is KoordinatenErgebnis.BedingtDarstellbar -> VisualisierungsDefinition.BedingtRäumlich(
+            ergebnis.grund,
+            ergebnis.bedingungen,
+        )
+        is KoordinatenErgebnis.ProjektionErforderlich -> VisualisierungsDefinition.ProjektionErforderlich(
+            ergebnis.vorhandeneDimension,
+            ergebnis.erwarteteDimension,
+            ergebnis.grund,
+        )
+        is KoordinatenErgebnis.NichtDarstellbar -> VisualisierungsDefinition.NichtRäumlich(ergebnis.grund)
     }
 
     private fun normalisiereProdukt(
@@ -277,6 +333,7 @@ object VisualisierungsSampler {
         return VisualisierungsDefinition.Region(
             dimension = konfiguration.raumDimension,
             hinweise = hinweise,
+            fensterBegrenzt = hinweise.isNotEmpty(),
             mitgliedschaft = { punkt -> mitgliedschaft(menge, punkt, konfiguration) },
         )
     }
@@ -286,7 +343,7 @@ object VisualisierungsSampler {
         konfiguration: VisualisierungsKonfiguration,
     ): VisualisierungsErgebnis {
         val punkte = definition.punkte.map { werte -> werte.alsPunkt(konfiguration) }
-        if (definition.punkte.isEmpty() && definition.verworfeneElemente.isEmpty()) {
+        if (definition.punkte.isEmpty() && definition.diagnosen.isEmpty()) {
             return VisualisierungsErgebnis.Erfolgreich(
                 punkte = emptyList(),
                 istApproximation = false,
@@ -294,12 +351,31 @@ object VisualisierungsSampler {
                 qualität = VisualisierungsQualität.MathematischLeer,
             )
         }
-        if (definition.verworfeneElemente.isNotEmpty()) {
-            val hinweise = definition.verworfeneElemente.map { (grund, anzahl) -> "$anzahl × $grund" }
+        if (definition.diagnosen.isNotEmpty()) {
+            val gruppiert = definition.diagnosen.groupingBy { it }.eachCount()
+            val hinweise = gruppiert.map { (diagnose, anzahl) -> "$anzahl × ${diagnose.beschreibung}" }
             return if (punkte.isEmpty()) {
-                VisualisierungsErgebnis.NichtDarstellbar(
-                    "Die endliche Menge enthält keine darstellbaren ${definition.dimension}-dimensionalen Koordinaten. ${hinweise.joinToString(" ")}",
-                )
+                val projektionen = definition.diagnosen.filterIsInstance<KoordinatenErgebnis.ProjektionErforderlich>()
+                val bedingte = definition.diagnosen.filterIsInstance<KoordinatenErgebnis.BedingtDarstellbar>()
+                val nichtDarstellbare = definition.diagnosen.filterIsInstance<KoordinatenErgebnis.NichtDarstellbar>()
+                when {
+                    projektionen.isNotEmpty() && bedingte.isEmpty() && nichtDarstellbare.isEmpty() -> {
+                        val erste = projektionen.first()
+                        VisualisierungsErgebnis.ProjektionErforderlich(
+                            erste.vorhandeneDimension,
+                            erste.erwarteteDimension,
+                            hinweise.joinToString(" "),
+                        )
+                    }
+                    bedingte.isNotEmpty() && projektionen.isEmpty() && nichtDarstellbare.isEmpty() ->
+                        VisualisierungsErgebnis.BedingtDarstellbar(
+                            hinweise.joinToString(" "),
+                            bedingte.flatMap { it.bedingungen }.distinct(),
+                        )
+                    else -> VisualisierungsErgebnis.NichtDarstellbar(
+                        "Die endliche Menge enthält keine darstellbaren ${definition.dimension}-dimensionalen Koordinaten. ${hinweise.joinToString(" ")}",
+                    )
+                }
             } else VisualisierungsErgebnis.Teilweise(punkte, hinweise)
         }
         return VisualisierungsErgebnis.Erfolgreich(punkte, istApproximation = false)
@@ -383,7 +459,9 @@ object VisualisierungsSampler {
         }
         besuche(0)
         if (punkte.isEmpty() && unbekannt != null) {
-            return VisualisierungsErgebnis.NichtDarstellbar("Die numerische Mitgliedschaft konnte nicht ausgewertet werden: $unbekannt")
+            return VisualisierungsErgebnis.BedingtDarstellbar(
+                "Die numerische Mitgliedschaft konnte noch nicht ausgewertet werden: $unbekannt",
+            )
         }
         if (punkte.isEmpty()) {
             return VisualisierungsErgebnis.Erfolgreich(
@@ -395,7 +473,9 @@ object VisualisierungsSampler {
         return VisualisierungsErgebnis.Erfolgreich(
             punkte,
             istApproximation = true,
-            hinweise = region.hinweise + if (region.dimension == 3) listOf("R³ wird als numerische Punktwolke angenähert.") else emptyList(),
+            hinweise = region.hinweise +
+                (if (region.fensterBegrenzt) listOf("Die Ergebnisqualität gilt ausschließlich im gewählten Sichtfenster.") else emptyList()) +
+                (if (region.dimension == 3) listOf("R³ wird als numerische Punktwolke angenähert.") else emptyList()),
         )
     }
 
@@ -487,32 +567,58 @@ object VisualisierungsSampler {
             kombinationen = kombinationen.flatMap { präfix -> domäne.werte.map { präfix + it } }
         }
         val punkte = mutableListOf<VisualisierungsPunkt>()
-        val verworfen = linkedMapOf<String, Int>()
+        val diagnosen = mutableListOf<KoordinatenErgebnis>()
         kombinationen.forEach { argumente ->
             val umgebung = parameter.map { it.name }.zip(argumente).toMap()
             val koordinaten = when (modus) {
                 MethodenDarstellungsModus.Funktionsgraph -> funktionsgraphKoordinaten(methode, argumente, umgebung, konfiguration)
                 MethodenDarstellungsModus.Bild -> {
                     if (methode.ausgabeNamen.size != 1) {
-                        KoordinatenErgebnis.Fehler("Der Bildmodus benötigt genau eine zusammengesetzte Methodenausgabe")
-                    } else koordinaten(methode.vorschrift, konfiguration.raumDimension, umgebung)
+                        KoordinatenErgebnis.NichtDarstellbar("Der Bildmodus benötigt genau eine zusammengesetzte Methodenausgabe")
+                    } else KoordinatenAdapter.extrahiere(
+                        methode.vorschrift,
+                        konfiguration.raumDimension,
+                        umgebung,
+                    )
                 }
                 MethodenDarstellungsModus.Koordinatenausgabe -> koordinatenausgabe(methode, umgebung, konfiguration)
                 MethodenDarstellungsModus.Automatisch -> error("Der automatische Methodenmodus muss vor dem Sampling aufgelöst sein.")
             }
             when (koordinaten) {
-                is KoordinatenErgebnis.Erfolgreich -> punkte += koordinaten.werte.alsPunkt(konfiguration, umgebung)
-                is KoordinatenErgebnis.Fehler -> verworfen[koordinaten.grund] = verworfen.getOrDefault(koordinaten.grund, 0) + 1
+                is KoordinatenErgebnis.Darstellbar -> punkte += koordinaten.werte.alsPunkt(konfiguration, umgebung)
+                is KoordinatenErgebnis.BedingtDarstellbar,
+                is KoordinatenErgebnis.ProjektionErforderlich,
+                is KoordinatenErgebnis.NichtDarstellbar -> diagnosen += koordinaten
             }
         }
         val domänenHinweise = domänen.flatMap { it.hinweise }.distinct() +
             "Methodenmodus: ${modus.name}; ${parameter.size} Parameter; $erwartetePunkte Kombinationen."
-        val fehlerHinweise = verworfen.map { (grund, anzahl) -> "$anzahl × $grund" }
+        val fehlerHinweise = diagnosen.groupingBy { it.beschreibung }.eachCount()
+            .map { (grund, anzahl) -> "$anzahl × $grund" }
         return when {
-            punkte.isEmpty() -> VisualisierungsErgebnis.NichtDarstellbar(
-                "Die Methode erzeugt keine darstellbaren Werte. ${fehlerHinweise.joinToString(" ")}",
-            )
-            verworfen.isNotEmpty() -> VisualisierungsErgebnis.Teilweise(punkte, domänenHinweise + fehlerHinweise)
+            punkte.isEmpty() -> {
+                val projektionen = diagnosen.filterIsInstance<KoordinatenErgebnis.ProjektionErforderlich>()
+                val bedingte = diagnosen.filterIsInstance<KoordinatenErgebnis.BedingtDarstellbar>()
+                val nichtDarstellbare = diagnosen.filterIsInstance<KoordinatenErgebnis.NichtDarstellbar>()
+                when {
+                    projektionen.isNotEmpty() && bedingte.isEmpty() && nichtDarstellbare.isEmpty() -> {
+                        val erste = projektionen.first()
+                        VisualisierungsErgebnis.ProjektionErforderlich(
+                            erste.vorhandeneDimension,
+                            erste.erwarteteDimension,
+                            "Die Methode erzeugt nur projektionsbedürftige Werte. ${fehlerHinweise.joinToString(" ")}",
+                        )
+                    }
+                    bedingte.isNotEmpty() && projektionen.isEmpty() && nichtDarstellbare.isEmpty() -> VisualisierungsErgebnis.BedingtDarstellbar(
+                        "Die Methode ist nur bedingt darstellbar. ${fehlerHinweise.joinToString(" ")}",
+                        bedingte.flatMap { it.bedingungen }.distinct(),
+                    )
+                    else -> VisualisierungsErgebnis.NichtDarstellbar(
+                        "Die Methode erzeugt keine darstellbaren Werte. ${fehlerHinweise.joinToString(" ")}",
+                    )
+                }
+            }
+            diagnosen.isNotEmpty() -> VisualisierungsErgebnis.Teilweise(punkte, domänenHinweise + fehlerHinweise)
             else -> VisualisierungsErgebnis.Erfolgreich(
                 punkte,
                 domänen.any { it.istApproximation },
@@ -527,19 +633,35 @@ object VisualisierungsSampler {
         umgebung: Map<String, Double>,
         konfiguration: VisualisierungsKonfiguration,
     ): KoordinatenErgebnis {
-        if (methode.ausgabeNamen.size != 1 || methode.vorschrift !is ZahlAusdruck) {
-            return KoordinatenErgebnis.Fehler("Der Funktionsgraphmodus benötigt genau eine skalare Ausgabe")
+        val vorschrift = methode.vorschrift as? ZahlAusdruck
+        if (methode.ausgabeNamen.size != 1 || vorschrift == null) {
+            return KoordinatenErgebnis.NichtDarstellbar("Der Funktionsgraphmodus benötigt genau eine skalare Ausgabe")
         }
         val erwarteteDimension = argumente.size + 1
         if (argumente.size !in 1..2 || konfiguration.raumDimension != erwarteteDimension) {
-            return KoordinatenErgebnis.Fehler(
+            return KoordinatenErgebnis.NichtDarstellbar(
                 "Ein Funktionsgraph mit ${argumente.size} Parametern benötigt R$erwarteteDimension",
             )
         }
-        val wert = numerischerWert(methode.vorschrift as ZahlAusdruck, umgebung)
-            ?: return KoordinatenErgebnis.Fehler("Funktionswert ist nicht numerisch definiert")
-        if (!wert.isFinite()) return KoordinatenErgebnis.Fehler("Funktionswert ist nicht endlich")
-        return KoordinatenErgebnis.Erfolgreich(argumente + wert)
+        return when (val wert = KoordinatenAdapter.extrahiere(vorschrift, 1, umgebung)) {
+            is KoordinatenErgebnis.Darstellbar -> KoordinatenErgebnis.Darstellbar(
+                argumente.mapIndexed { index, argument ->
+                    ReelleKoordinatenKomponente(
+                        index,
+                        methode.parameter[index] as Variable,
+                        argument,
+                    )
+                } + wert.komponenten.map { it.copy(index = it.index + argumente.size) },
+            )
+            is KoordinatenErgebnis.ProjektionErforderlich -> wert.copy(
+                vorhandeneDimension = argumente.size + wert.vorhandeneDimension,
+                erwarteteDimension = erwarteteDimension,
+            )
+            is KoordinatenErgebnis.NichtDarstellbar -> wert.copy(
+                grund = "Funktionswert ist nicht numerisch definiert: ${wert.grund}",
+            )
+            else -> wert
+        }
     }
 
     private fun koordinatenausgabe(
@@ -548,16 +670,16 @@ object VisualisierungsSampler {
         konfiguration: VisualisierungsKonfiguration,
     ): KoordinatenErgebnis {
         if (methode.ausgabeNamen.size == 1) {
-            return koordinaten(methode.vorschrift, konfiguration.raumDimension, umgebung)
+            return KoordinatenAdapter.extrahiere(methode.vorschrift, konfiguration.raumDimension, umgebung)
         }
         val achsen = konfiguration.achsenNamen
         val fehlend = achsen.filterNot(methode.ausgabeNamen::contains)
         if (fehlend.isNotEmpty()) {
-            return KoordinatenErgebnis.Fehler(
+            return KoordinatenErgebnis.NichtDarstellbar(
                 "Für die Achsen ${fehlend.joinToString()} fehlen gleichnamige Methodenausgaben",
             )
         }
-        return koordinaten(
+        return KoordinatenAdapter.extrahiere(
             Tupel(achsen.map(methode::vorschriftFür)),
             konfiguration.raumDimension,
             umgebung,
@@ -651,7 +773,7 @@ object VisualisierungsSampler {
 
     private fun exaktePunkte(menge: MengenAusdruck, dimension: Int): List<List<Double>>? = when (menge) {
         LeereMenge -> emptyList()
-        is EndlicheMenge -> normalisiereEndlicheMenge(menge, dimension).takeIf { it.verworfeneElemente.isEmpty() }?.punkte
+        is EndlicheMenge -> normalisiereEndlicheMenge(menge, dimension).takeIf { it.diagnosen.isEmpty() }?.punkte
         is KartesischesProdukt -> {
             if (menge.mengen.size != dimension) return null
             val faktoren = menge.mengen.map { faktor ->
@@ -805,42 +927,13 @@ object VisualisierungsSampler {
         is NumerischesErgebnis.Fehler -> null
     }
 
-    private sealed interface KoordinatenErgebnis {
-        data class Erfolgreich(val werte: List<Double>) : KoordinatenErgebnis
-        data class Fehler(val grund: String) : KoordinatenErgebnis
-    }
-
-    private fun koordinaten(
-        objekt: MathematischesObjekt,
-        dimension: Int,
-        umgebung: Map<String, Double>,
-    ): KoordinatenErgebnis {
-        if (objekt is FallAusdruck) {
-            return when (werteAussage(objekt.aussage, umgebung, 1e-9)) {
-                NumerischeMitgliedschaft.Enthalten -> koordinaten(objekt.wahr, dimension, umgebung)
-                NumerischeMitgliedschaft.NichtEnthalten -> koordinaten(objekt.lüge, dimension, umgebung)
-                else -> KoordinatenErgebnis.Fehler("Fallbedingung nicht eindeutig auswertbar")
-            }
+    private val KoordinatenErgebnis.beschreibung: String
+        get() = when (this) {
+            is KoordinatenErgebnis.Darstellbar -> "darstellbar"
+            is KoordinatenErgebnis.BedingtDarstellbar -> grund
+            is KoordinatenErgebnis.ProjektionErforderlich -> grund
+            is KoordinatenErgebnis.NichtDarstellbar -> grund
         }
-        val ausdrücke = when (objekt) {
-            is ZahlAusdruck -> if (dimension == 1) listOf(objekt) else return KoordinatenErgebnis.Fehler("Ein skalares Element ist nur in R¹ eine Koordinate")
-            is Tupel -> objekt.elemente.mapIndexed { index, element ->
-                element as? ZahlAusdruck ?: return KoordinatenErgebnis.Fehler("Tupelkomponente ${index + 1} ist keine Zahl")
-            }
-            is SpaltenVektor -> objekt.werte
-            is ZeilenVektor -> objekt.werte
-            else -> return KoordinatenErgebnis.Fehler("Element ist weder Tupel noch Zeilen- oder Spaltenvektor")
-        }
-        if (ausdrücke.size != dimension) {
-            return KoordinatenErgebnis.Fehler("Koordinatendimension ${ausdrücke.size} statt erwartet $dimension")
-        }
-        val werte = ausdrücke.mapIndexed { index, ausdruck ->
-            numerischerWert(ausdruck, umgebung)
-                ?: return KoordinatenErgebnis.Fehler("Koordinate ${index + 1} ist nicht numerisch auswertbar")
-        }
-        if (werte.any { !it.isFinite() }) return KoordinatenErgebnis.Fehler("Mindestens eine Koordinate ist nicht endlich")
-        return KoordinatenErgebnis.Erfolgreich(werte)
-    }
 
     private fun kombiniereMitgliedschaften(
         werte: List<NumerischeMitgliedschaft>,

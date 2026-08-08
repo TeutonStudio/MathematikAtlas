@@ -77,6 +77,55 @@ class VisualisierungsNormalisierungTest {
     }
 
     @Test
+    fun `ueberdimensionierte Koordinate bleibt sichtbarer Projektionsbedarf`() {
+        val menge = EndlicheMenge(
+            setOf(Tupel(listOf(RationaleZahl.Eins, RationaleZahl.von(2), RationaleZahl.von(3)))),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.ProjektionErforderlich>(
+            VisualisierungsSampler.sample(menge, konfiguration()),
+        )
+
+        assertEquals(3, ergebnis.vorhandeneDimension)
+        assertEquals(2, ergebnis.erwarteteDimension)
+        assertTrue("Projektion" in ergebnis.grund)
+    }
+
+    @Test
+    fun `symbolisch offene Koordinate bleibt bedingt darstellbar`() {
+        val menge = EndlicheMenge(
+            setOf(Tupel(listOf(Variable("x"), RationaleZahl.Eins))),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.BedingtDarstellbar>(
+            VisualisierungsSampler.sample(menge, konfiguration()),
+        )
+
+        assertTrue("nicht entscheidbar" in ergebnis.grund)
+    }
+
+    @Test
+    fun `Koordinatenbild wird nur ueber sein Koordinatensystem normalisiert`() {
+        val raum = EuklidischerRaum("E", 2)
+        val system = GeometrischesKoordinatensystem(raum, "K")
+        val bild = KoordinatenBild(
+            GeometriePunkt("A", raum, Tupel(listOf(RationaleZahl.Eins, RationaleZahl.von(2)))),
+            system,
+        )
+
+        val r2 = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+            VisualisierungsSampler.sample(bild, konfiguration()),
+        )
+        val r1 = assertIs<VisualisierungsErgebnis.ProjektionErforderlich>(
+            VisualisierungsSampler.sample(bild, konfiguration(RaumDimension.R1)),
+        )
+
+        assertEquals(listOf(VisualisierungsPunkt(1.0, 2.0)), r2.punkte)
+        assertEquals(2, r1.vorhandeneDimension)
+        assertTrue("K" in r1.grund)
+    }
+
+    @Test
     fun `kartesische Intervalle werden in R2 und R3 materialisiert`() {
         val r2 = KartesischesProdukt(
             listOf(
@@ -254,6 +303,7 @@ class VisualisierungsNormalisierungTest {
         )
         assertEquals(16, angenähert.punkte.size)
         assertTrue(angenähert.hinweise.any { "Fensterbegrenzte Approximation" in it })
+        assertTrue(angenähert.hinweise.any { "Ergebnisqualität" in it && "Sichtfenster" in it })
     }
 
     @Test

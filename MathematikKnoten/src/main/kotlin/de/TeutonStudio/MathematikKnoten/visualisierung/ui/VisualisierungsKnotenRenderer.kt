@@ -66,6 +66,16 @@ class VisualisierungsKnotenRenderer(
             LatexText(legende(konfiguration), style = MaterialTheme.typography.bodySmall)
             when (val wert = ergebnis) {
                 is VisualisierungsErgebnis.NichtDarstellbar -> Text(wert.grund, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                is VisualisierungsErgebnis.BedingtDarstellbar -> Text(
+                    listOf(wert.grund, wert.bedingungen.joinToString()).filter(String::isNotBlank).joinToString(" "),
+                    color = MaterialTheme.colorScheme.tertiary,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+                is VisualisierungsErgebnis.ProjektionErforderlich -> Text(
+                    wert.grund,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    style = MaterialTheme.typography.labelSmall,
+                )
                 is VisualisierungsErgebnis.Teilweise -> Text(wert.hinweise.joinToString(" "), style = MaterialTheme.typography.labelSmall)
                 is VisualisierungsErgebnis.Erfolgreich -> if (wert.istApproximation) Text("Numerische Approximation", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 null -> Text("Berechne Darstellung …", style = MaterialTheme.typography.labelSmall)
