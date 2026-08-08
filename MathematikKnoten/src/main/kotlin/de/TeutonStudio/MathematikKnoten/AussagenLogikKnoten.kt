@@ -136,7 +136,8 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
         MatrixdiagonaleKnotenVorlagen.alle +
         LineareAlgebraGrundlagenKnotenVorlagen.alle +
         IntegralKnotenVorlagen.alle +
-        RestriktionsKnotenVorlagen.alle
+        RestriktionsKnotenVorlagen.alle +
+        MethodenGraphKnotenVorlagen.alle
     return (katalog.filterNot { it.art in strukturArten } + strukturRechner)
         .distinctBy(::vorlagenSchlüssel)
 }
