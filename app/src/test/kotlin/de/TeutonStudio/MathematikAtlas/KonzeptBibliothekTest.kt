@@ -2,8 +2,10 @@ package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.MathematikKnoten.GeometrieKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MengenraumKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.MethodenGraphKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -68,6 +70,34 @@ class KonzeptBibliothekTest {
 
         assertTrue(listOf("lineare-algebra", "skalarprodukte") in eintrag.kategoriePfade)
         assertTrue(listOf("geometrie", "grundobjekte") in eintrag.kategoriePfade)
+    }
+
+    @Test
+    fun `Funktionsgraph erscheint in Analysis und Mengenlehre Konstruktionen`() {
+        val vorlage = MethodenGraphKnotenVorlagen.Graph
+        val eintrag = KonzeptBibliothekRegister.erstelle(listOf(vorlage))
+            .single { it.vorlage == vorlage }
+
+        assertEquals(
+            setOf(
+                listOf("analysis", "funktionen"),
+                listOf("mengenlehre", "konstruktionen"),
+            ),
+            eintrag.kategoriePfade.toSet(),
+        )
+        assertEquals("Mengenlehre / Konstruktionen", KonzeptBibliothekRegister.bezeichnungFür(listOf("mengenlehre", "konstruktionen")))
+        listOf("Graph", "Funktionsgraph", "Graph einer Funktion", "Graph einer Methode", "Γ_f").forEach { suchtext ->
+            assertTrue(eintrag.passt(KonzeptBibliothekFilter(suchtext = suchtext)), "Suchtext '$suchtext' findet den Graphen nicht.")
+        }
+        assertTrue(
+            eintrag.passt(
+                KonzeptBibliothekFilter(
+                    erforderlicherEingang = MathematikAnschlussArten.Methode.id,
+                    erforderlicherAusgang = MathematikAnschlussArten.Menge.id,
+                ),
+            ),
+        )
+        assertEquals(emptyList(), KonzeptBibliothekRegister.validierungsFehler(listOf(eintrag)))
     }
 
     @Test

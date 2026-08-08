@@ -26,6 +26,7 @@ object FachKatalog {
     val MengenlehreMengen = FachPfad.von("mengenlehre", "mengen")
     val MengenlehreOperationen = FachPfad.von("mengenlehre", "mengenoperationen")
     val MengenlehreDefinitionen = FachPfad.von("mengenlehre", "mengendefinitionen")
+    val MengenlehreKonstruktionen = FachPfad.von("mengenlehre", "konstruktionen")
     val MengenEigenschaftenTopologie = FachPfad.von("mengenlehre", "eigenschaften", "topologie")
     val MengenEigenschaftenKonvexität = FachPfad.von("mengenlehre", "eigenschaften", "konvexitaet")
 
@@ -62,6 +63,7 @@ object FachKatalog {
         MengenlehreMengen,
         MengenlehreOperationen,
         MengenlehreDefinitionen,
+        MengenlehreKonstruktionen,
         MengenEigenschaftenTopologie,
         MengenEigenschaftenKonvexität,
         LogikAussagen,
@@ -84,6 +86,11 @@ object FachKatalog {
         val artKlein = art.lowercase()
         val nameKlein = name.lowercase()
         val kategorieKlein = kategorie.lowercase()
+
+        if (artKlein == "mathematik.methodengraph") {
+            return setOf(AnalysisFunktionen, MengenlehreKonstruktionen)
+        }
+
         return buildSet {
             if (besitztKartenVerweis || kategorieKlein in setOf("eigene karten", "gespeicherte karten")) {
                 add(EigeneKarten)
