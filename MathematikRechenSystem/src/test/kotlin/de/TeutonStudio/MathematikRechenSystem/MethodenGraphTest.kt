@@ -26,6 +26,23 @@ class MethodenGraphTest {
     }
 
     @Test
+    fun `graphmenge besitzt den erwarteten tupel elementraum`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = GanzeZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+
+        assertEquals(
+            Tupelraum(listOf(ReelleZahlen, GanzeZahlen)),
+            inferiereZielmenge(methode.graphMenge()),
+        )
+    }
+
+    @Test
     fun `mehrere argumente bleiben als geordneter argumentraum erhalten`() {
         val x = Variable("x")
         val y = Variable("y")
