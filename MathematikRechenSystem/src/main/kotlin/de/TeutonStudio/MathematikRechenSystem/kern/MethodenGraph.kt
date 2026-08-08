@@ -20,20 +20,23 @@ data class MethodenGraphMenge(
  * Argumente bilden einen geordneten Tupelraum W1×...×Wn. Ein expliziter effektiver
  * Wertevorrat, etwa nach einer Restriktion auf eine nicht-kartesische Teilmenge,
  * hat Vorrang vor der komponentenweisen Ableitung.
+ *
+ * Die Signatur kann von Aufrufern vorab berechnet werden. Der optionale Parameter
+ * hält ältere, dateilokale Hilfsfunktionen mit demselben Kurzname konfliktfrei,
+ * bis diese schrittweise auf den zentralen Methodenvertrag umgestellt werden.
  */
-fun Methode.argumentRaum(): MengenAusdruck {
-    val signatur = methodenSignatur()
-    return signatur.effektiverWerteVorrat ?: when (signatur.argumente.size) {
+fun Methode.argumentRaum(signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
+    signatur.effektiverWerteVorrat ?: when (signatur.argumente.size) {
         0 -> LeereMenge
         1 -> signatur.argumente.single().werteVorrat
         else -> Tupelraum(signatur.argumente.map { it.werteVorrat })
     }
-}
 
 /** Umgebender Produktraum Graph(f) ⊆ W×Z. */
-fun Methode.graphRaum(): MengenAusdruck = KartesischesProdukt(
-    listOf(argumentRaum(), methodenSignatur().zielMenge),
-)
+fun Methode.graphRaum(): MengenAusdruck {
+    val signatur = methodenSignatur()
+    return KartesischesProdukt(listOf(argumentRaum(signatur), signatur.zielMenge))
+}
 
 /** Erzeugt die symbolische Graphmenge ohne den Methodenvertrag zu duplizieren. */
 fun Methode.graphMenge(): MethodenGraphMenge = MethodenGraphMenge(this)
