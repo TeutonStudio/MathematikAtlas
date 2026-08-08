@@ -18,12 +18,11 @@ internal class AndroidKonzeptKartenQuelle(context: Context) : KonzeptKartenQuell
         assets.open(pfad).bufferedReader().use { it.readText() }
     }.getOrNull()
 
-    fun ladeDirekt(asset: WissensKartenReferenz.Asset): KartenDaten? {
-        val text = lese("$KONZEPTKARTEN_ASSET_PFAD/${asset.datei}") ?: return null
-        if (KartenDatenJson.formatVersion(text) != asset.formatVersion) return null
-        val karte = runCatching { KartenDatenJson.lese(text) }.getOrNull() ?: return null
-        return karte.takeIf { it.id.wert == asset.id }
-    }
+    fun ladeDirekt(asset: WissensKartenReferenz.Asset): KartenDaten? = runCatching {
+        val text = lese("$KONZEPTKARTEN_ASSET_PFAD/${asset.datei}") ?: return@runCatching null
+        if (KartenDatenJson.formatVersion(text) != asset.formatVersion) return@runCatching null
+        KartenDatenJson.lese(text).takeIf { it.id.wert == asset.id }
+    }.getOrNull()
 }
 
 internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDaten): KonzeptDefinition? {
@@ -43,11 +42,10 @@ internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDate
     val lader = manifest?.let { KonzeptKartenLader(quelle, it) }
     val geladene = assets.associateWith { asset ->
         if (asset.id in statischeIds) {
-            when (val ergebnis = lader?.lade(KonzeptKartenId(asset.id))) {
+            val ergebnis = lader?.lade(KonzeptKartenId(asset.id)) ?: return null
+            when (ergebnis) {
                 is KonzeptKartenLadeErgebnis.Erfolg -> ergebnis.karte
-                is KonzeptKartenLadeErgebnis.Fehler,
-                null,
-                -> return null
+                is KonzeptKartenLadeErgebnis.Fehler -> return null
             }
         } else {
             quelle.ladeDirekt(asset) ?: return null
