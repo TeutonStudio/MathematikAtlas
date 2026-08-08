@@ -1,25 +1,26 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.FachKatalog
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenReferenz
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.konzeptknoten.KonzeptKnotenRegister
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class MethodenGraphKonzeptTest {
     @Test
-    fun `graph besitzt eine primaere definitionskarte`() {
-        val eintrag = KonzeptKnotenRegister.erstelle(alleMathematikDefinitionsVorlagen())
-            .single { wissen ->
-                wissen.knotenVorlagen.any { vorlage -> vorlage.art == METHODEN_GRAPH_KNOTEN_ART }
-            }
+    fun `graph besitzt eine explizite primaere definitionskarte`() {
+        val eintrag = graphEintrag()
+        val definition = eintrag.karten.single { karte ->
+            karte.primär && karte.rolle == WissensKartenRolle.Definition
+        }
+        val asset = assertIs<WissensKartenReferenz.Asset>(definition)
 
-        assertTrue(
-            eintrag.karten.any { karte ->
-                karte.primär && karte.rolle == WissensKartenRolle.Definition
-            },
-        )
+        assertEquals("mathematik.methodenGraph|Graph|.definition", asset.id)
+        assertEquals("karte-methodengraph-definition-v7.json", asset.datei)
+        assertEquals(7, asset.formatVersion)
         assertEquals(
             setOf(FachKatalog.AnalysisFunktionen, FachKatalog.MengenlehreKonstruktionen),
             eintrag.fachPfade,
@@ -28,11 +29,7 @@ class MethodenGraphKonzeptTest {
 
     @Test
     fun `graphdefinition bleibt unter den fachlichen suchbegriffen auffindbar`() {
-        val eintrag = KonzeptKnotenRegister.erstelle(alleMathematikDefinitionsVorlagen())
-            .single { wissen ->
-                wissen.knotenVorlagen.any { vorlage -> vorlage.art == METHODEN_GRAPH_KNOTEN_ART }
-            }
-        val suchtexte = eintrag.alleSuchtexte.map(String::lowercase).toSet()
+        val suchtexte = graphEintrag().alleSuchtexte.map(String::lowercase).toSet()
 
         listOf(
             "graph",
@@ -47,4 +44,9 @@ class MethodenGraphKonzeptTest {
             )
         }
     }
+
+    private fun graphEintrag() = KonzeptKnotenRegister.erstelle(alleMathematikDefinitionsVorlagen())
+        .single { wissen ->
+            wissen.knotenVorlagen.any { vorlage -> vorlage.art == METHODEN_GRAPH_KNOTEN_ART }
+        }
 }
