@@ -130,3 +130,8 @@ Lokal nicht ausführbar:
 Release-Guard, vollständige Tests und Android-Build müssen deshalb vor dem Squash-Merge in GitHub CI
 grün sein. Der über das GitHub-Plugin rekonstruierte Releasecommit ist ein Connector-Commit und kann
 die lokale SamAI-Autor-/Committeridentität technisch nicht übernehmen.
+
+Der erste CI-Lauf bestätigte Release-Guard und Kernprüfung, fand jedoch einen einzelnen
+Regressionsfehler in der bisherigen Diagnoseformulierung für nicht koordinatenfähige Elemente. Die
+kompatible Formulierung „weder Tupel noch Zeilen- oder Spaltenvektor“ wurde im Adapter wiederhergestellt;
+der vollständige Wiederholungslauf bleibt Voraussetzung für den Merge.

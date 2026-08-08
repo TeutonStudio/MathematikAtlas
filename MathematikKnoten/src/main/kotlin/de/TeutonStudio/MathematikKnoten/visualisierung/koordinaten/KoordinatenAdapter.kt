@@ -141,7 +141,7 @@ object KoordinatenAdapter {
             }
 
             else -> return KoordinatenErgebnis.NichtDarstellbar(
-                "Element ist weder Zahl, kartesisches Tupel noch Zeilen- oder Spaltenvektor.",
+                "Element ist weder Tupel noch Zeilen- oder Spaltenvektor und keine Zahl.",
             )
         }
 
