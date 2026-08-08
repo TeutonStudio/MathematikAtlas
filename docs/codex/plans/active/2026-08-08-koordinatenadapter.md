@@ -2,9 +2,8 @@
 
 ## Status
 
-Umsetzung für `v2.28.1` abgeschlossen. Die Veröffentlichung erfolgt über
-`release/v2.28.1-koordinatenadapter`; vollständige Gradle- und Android-Prüfungen bleiben vor dem
-Squash-Merge der GitHub-CI vorbehalten.
+Umsetzung und Releaseprüfung für `v2.28.1` abgeschlossen. Die Veröffentlichung erfolgt über
+`release/v2.28.1-koordinatenadapter`.
 
 ## Ziel und Nutzerwirkung
 
@@ -60,7 +59,7 @@ Es entstehen nur kurzlebige, nicht persistierte Adapter- und Ergebniswerte. Knot
 - [x] Private Samplerextraktion vollständig durch den Adapter ersetzen.
 - [x] Strukturierte Diagnosen und Ergebnisqualität durchreichen.
 - [x] Release-Metadaten auf `2.28.1` synchronisieren.
-- [-] Lokale Release-Prüfungen ausführen; vollständige Gradle-/Android-Prüfungen in CI ausführen.
+- [x] Lokale Release-Guards und vollständige Gradle-/Android-Prüfungen in GitHub CI ausführen.
 - [x] Abschlussdiff und lokale SamAI-Git-Identität prüfen.
 
 ## Konkrete Umsetzungsschritte
@@ -127,11 +126,17 @@ Lokal nicht ausführbar:
 - `./gradlew test` und `./gradlew :app:assembleDebug`, weil der Wrapper die Gradle-Distribution
   wegen fehlender DNS-Auflösung für `services.gradle.org` nicht laden kann.
 
-Release-Guard, vollständige Tests und Android-Build müssen deshalb vor dem Squash-Merge in GitHub CI
-grün sein. Der über das GitHub-Plugin rekonstruierte Releasecommit ist ein Connector-Commit und kann
-die lokale SamAI-Autor-/Committeridentität technisch nicht übernehmen.
+Die lokal nicht ausführbaren Prüfungen wurden auf dem funktionalen Release-Head
+`fb8ebbf134bee1f68f02350bb3952529b085ef1c` vollständig in GitHub CI ausgeführt:
+
+- Release-Guard, Lauf `31261459188`: erfolgreich,
+- Mathematikkern einschließlich JVM-Tests und Debug-Build, Lauf `31261459175`: erfolgreich,
+- Android-Build, Lauf `31261459170`: erfolgreich.
+
+Der über das GitHub-Plugin rekonstruierte Releasecommit ist ein Connector-Commit und kann die lokale
+SamAI-Autor-/Committeridentität technisch nicht übernehmen.
 
 Der erste CI-Lauf bestätigte Release-Guard und Kernprüfung, fand jedoch einen einzelnen
 Regressionsfehler in der bisherigen Diagnoseformulierung für nicht koordinatenfähige Elemente. Die
 kompatible Formulierung „weder Tupel noch Zeilen- oder Spaltenvektor“ wurde im Adapter wiederhergestellt;
-der vollständige Wiederholungslauf bleibt Voraussetzung für den Merge.
+der vollständige Wiederholungslauf war anschließend erfolgreich.
