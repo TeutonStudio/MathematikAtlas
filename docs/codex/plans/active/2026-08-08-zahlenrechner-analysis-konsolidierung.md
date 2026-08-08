@@ -151,3 +151,12 @@ Verifiziert wurden:
 Die Veröffentlichung `v2.28.2` umfasst bewusst nur M1. Die damals noch offene punktweise Operatorhebung wird getrennt als M2 in `v2.28.3` veröffentlicht.
 
 M2 in `v2.28.3` ergänzt die punktweise Hebung für gewöhnliche Standard- und Erweiterungsoperatoren. Mehrstellige Zahlenfunktionen, gemischte Zahl-/Methodenoperanden, gemeinsame Definitionsräume, dynamische Methodenausgänge, strukturierte Definitionsbedingungen und quaternionische Reihenfolge sind durch fokussierte Regressionstests abgedeckt. Die Anschlussregel ist optional persistiert; alte Karten werden idempotent unter Erhalt ihrer Identitäten erweitert. M3–M5 bleiben in Issue #340 offen.
+
+Verifiziert wurden für M2:
+
+- Repository-, Standardkarten-, Releaseplan- und Kernprüfung;
+- vollständige JVM-Testmatrix sowie Android-Debug-Build im GitHub-Actions-Lauf `31267030532`;
+- Release-Guard im GitHub-Actions-Lauf `31267030519`;
+- JSON-Roundtrip der priorisierten Anschlussart und idempotente Migration unter Erhalt bestehender IDs;
+- strukturierte Zielbereichsinferenz für kanonische fundamentale Zahlmengen;
+- Abschlussdiff gegen `v2.28.2`: kein neuer registrierter oder separat erzeugbarer Knotentyp.
