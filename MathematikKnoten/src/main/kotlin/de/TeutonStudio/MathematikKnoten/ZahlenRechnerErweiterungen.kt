@@ -220,7 +220,7 @@ private fun werteErweitertenOperatorAus(
     val objekt: MathematischesObjekt = if (vorbereitung == null) {
         zahlObjekt
     } else {
-        val ziel = methode?.zielMenge?.fundamentalerZahlbereichOderNull()?.let { bereich ->
+        val ziel = methode.zielMenge.fundamentalerZahlbereichOderNull()?.let { bereich ->
             if (FundamentaleZahlbereiche.istTeilbereich(bereich, FundamentalerZahlbereich.REELL)) {
                 ReelleZahlen
             } else {
@@ -228,7 +228,7 @@ private fun werteErweitertenOperatorAus(
             }
         } ?: KomplexeZahlen
         vorbereitung.erzeugeMethode(
-            name = "${operator.symbolLatex}(${methode?.name})",
+            name = "${operator.symbolLatex}(${methode.name})",
             vorschrift = zahlObjekt,
             zielMenge = ziel,
             definitionsBedingungen = bedingungen,
