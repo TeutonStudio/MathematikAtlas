@@ -90,4 +90,36 @@ class MethodenAnforderungTest {
         assertTrue(diagnose.contains("Zielmenge"))
         assertTrue(diagnose.contains("\\mathcal F"))
     }
+    @Test
+    fun `zahlenmengenerkennung deckt strukturierte Mengenkonstruktionen ab`() {
+        val x = Variable("x")
+        val unbekannt = BenannteMenge("Farben", "\\mathcal F")
+        val beschraenkt = BeschraenkteZahlmenge(
+            traeger = FundamentalerZahlbereich.REELL,
+            untereGrenze = RationaleZahl.Null,
+            untereGrenzeEnthalten = true,
+            obereGrenze = RationaleZahl.Eins,
+            obereGrenzeEnthalten = true,
+        )
+        val definiert = DefinierteMenge(
+            variablen = listOf(GebundeneMengenVariable(x, ReelleZahlen)),
+            bedingung = Gleichheit(x, x),
+        )
+        val filter = Methode(
+            name = "P",
+            parameter = listOf(x),
+            vorschrift = Gleichheit(x, x),
+            zielMenge = WahrheitsMenge,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+
+        assertTrue(beschraenkt.istZahlenmenge())
+        assertTrue(definiert.istZahlenmenge())
+        assertTrue(GefilterteMenge(ReelleZahlen, filter).istZahlenmenge())
+        assertTrue(Vereinigung(listOf(ReelleZahlen, EndlicheMenge(setOf(RationaleZahl.Eins)))).istZahlenmenge())
+        assertTrue(Schnitt(listOf(unbekannt, ReelleZahlen)).istZahlenmenge())
+        assertTrue(MengenDifferenz(ReelleZahlen, unbekannt).istZahlenmenge())
+        assertTrue(!unbekannt.istZahlenmenge())
+    }
+
 }
