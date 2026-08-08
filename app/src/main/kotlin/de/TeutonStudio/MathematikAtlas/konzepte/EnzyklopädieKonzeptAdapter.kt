@@ -1,6 +1,8 @@
 package de.TeutonStudio.MathematikAtlas
 
 import android.content.Context
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKnoten.MENGEN_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.istZahlenRechnerFormel
@@ -8,11 +10,20 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.*
 import de.TeutonStudio.MathematikKnoten.konzeptkarte.*
 import de.TeutonStudio.MathematikKnoten.konzeptknoten.stabileVariantenId
 
+private const val KONZEPTKARTEN_ASSET_PFAD = "de/TeutonStudio/MathematikKnoten/konzeptkarte"
+
 internal class AndroidKonzeptKartenQuelle(context: Context) : KonzeptKartenQuelle {
     private val assets = context.applicationContext.assets
     override fun lese(pfad: String): String? = runCatching {
         assets.open(pfad).bufferedReader().use { it.readText() }
     }.getOrNull()
+
+    fun ladeDirekt(asset: WissensKartenReferenz.Asset): KartenDaten? {
+        val text = lese("$KONZEPTKARTEN_ASSET_PFAD/${asset.datei}") ?: return null
+        if (KartenDatenJson.formatVersion(text) != asset.formatVersion) return null
+        val karte = runCatching { KartenDatenJson.lese(text) }.getOrNull() ?: return null
+        return karte.takeIf { it.id.wert == asset.id }
+    }
 }
 
 internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDaten): KonzeptDefinition? {
@@ -20,15 +31,26 @@ internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDate
     if (knoten.art == MENGEN_KNOTEN_ART && knoten.kartenVerweis != null) return null
     val wissen = findeWissensEintrag(knoten) ?: return null
     val vorlage = passendeVorlage(wissen, knoten) ?: return null
-    val assets = StatischeKonzeptKarten.fürVariante(vorlage.stabileVariantenId())
+    val variantenId = vorlage.stabileVariantenId()
+    val deklarierteAssets = wissen.karten
+        .filterIsInstance<WissensKartenReferenz.Asset>()
+        .filter { asset -> asset.varianten.isEmpty() || variantenId in asset.varianten }
+    val assets = deklarierteAssets.ifEmpty { StatischeKonzeptKarten.fürVariante(variantenId) }
     if (assets.isEmpty()) return null
     val quelle = AndroidKonzeptKartenQuelle(context)
-    val manifest = quelle.ladeManifest().getOrNull() ?: return null
-    val lader = KonzeptKartenLader(quelle, manifest)
+    val statischeIds = StatischeKonzeptKarten.alle.mapTo(hashSetOf()) { it.id }
+    val manifest = if (assets.any { it.id in statischeIds }) quelle.ladeManifest().getOrNull() else null
+    val lader = manifest?.let { KonzeptKartenLader(quelle, it) }
     val geladene = assets.associateWith { asset ->
-        when (val ergebnis = lader.lade(KonzeptKartenId(asset.id))) {
-            is KonzeptKartenLadeErgebnis.Erfolg -> ergebnis.karte
-            is KonzeptKartenLadeErgebnis.Fehler -> return null
+        if (asset.id in statischeIds) {
+            when (val ergebnis = lader?.lade(KonzeptKartenId(asset.id))) {
+                is KonzeptKartenLadeErgebnis.Erfolg -> ergebnis.karte
+                is KonzeptKartenLadeErgebnis.Fehler,
+                null,
+                -> return null
+            }
+        } else {
+            quelle.ladeDirekt(asset) ?: return null
         }
     }
     val basis = assets.filter { it.darstellung == null }.map { asset ->
