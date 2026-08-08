@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
