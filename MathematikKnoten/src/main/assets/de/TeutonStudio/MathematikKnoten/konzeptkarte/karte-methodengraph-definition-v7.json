@@ -1,0 +1,83 @@
+{
+  "erstelltAm": 1786176000000,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition des Funktionsgraphen",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": { "breite": 660, "höhe": 190 },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.methodenGraph",
+        "regel": "Für eine Methode f: W → Z ist Graph(f) = {(x,f(x)) | x ∈ W} ⊆ W × Z. Der Graph ist selbst eine Menge und kein Darstellungsmodus.",
+        "kategorie": "Analysis: Funktionen"
+      },
+      "name": "Definition",
+      "id": "methodengraph-definition-regel",
+      "position": { "x": 70, "y": 55 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": { "breite": 660, "höhe": 180 },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.methodenGraph",
+        "regel": "W ist der aktuelle Argumentraum und Z die aktuelle Zielmenge der Methode. Der Graph liegt daher kanonisch im Produktraum W × Z; fehlende Bereichsinformation wird nicht geraten.",
+        "kategorie": "Mengenlehre: Konstruktionen"
+      },
+      "name": "Argument- und Zielraum",
+      "id": "methodengraph-raeume-regel",
+      "position": { "x": 70, "y": 280 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": { "breite": 660, "höhe": 200 },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.methodenGraph",
+        "regel": "Bei mehreren Argumenten bleibt W = W₁ × … × Wₙ ein geordneter Argumentraum; ein Graphpunkt ist semantisch ((x₁,…,xₙ), f(x₁,…,xₙ)). Mehrere Ausgaben bleiben entsprechend als strukturierter Zielraum Z erhalten.",
+        "kategorie": "Analysis: Funktionen"
+      },
+      "name": "Mehrere Argumente und Ausgaben",
+      "id": "methodengraph-struktur-regel",
+      "position": { "x": 70, "y": 495 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": { "breite": 660, "höhe": 180 },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.methodenGraph",
+        "regel": "Restriktion und Erweiterung verändern ausschließlich die Methodensignatur. Graph(f) übernimmt den daraus resultierenden effektiven Wertevorrat automatisch; ein eigener Synchronisationszustand des Graphen existiert nicht.",
+        "kategorie": "Analysis: Funktionen"
+      },
+      "name": "Restriktion und Erweiterung",
+      "id": "methodengraph-bereich-regel",
+      "position": { "x": 70, "y": 730 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": { "breite": 660, "höhe": 230 },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.methodenGraph",
+        "regel": "Beispiele: f: ℝ→ℝ liefert Graph(f)⊆ℝ×ℝ; f: ℂ→ℝ liefert Graph(f)⊆ℂ×ℝ; f: ℝ→ℂ liefert Graph(f)⊆ℝ×ℂ; f: ℂ→ℂ liefert einen mathematisch gültigen vierdimensionalen Graphraum. Ob dieser Raum bereits visualisiert werden kann, ändert die Graphmenge nicht.",
+        "kategorie": "Visualisierung"
+      },
+      "name": "Visualisierung und Beispiele",
+      "id": "methodengraph-visualisierung-regel",
+      "position": { "x": 70, "y": 945 },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.methodenGraph|Graph|.definition",
+  "ansicht": { "x": 0, "y": 0, "zoom": 1 },
+  "formatVersion": 7,
+  "version": 1
+}
