@@ -63,6 +63,14 @@ class UniversellerZahlenRechnerKnotenTest {
         )
         assertTrue(rechner.anschlüsse.any { it.id == a.id })
         assertTrue(rechner.anschlüsse.any { it.id == ausgang.id && it.name == "wert" })
+        assertEquals(
+            setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
+            rechner.anschlüsse.single { it.id == a.id }.zulässigeArten,
+        )
+        assertEquals(
+            listOf(MathematikAnschlussArten.Methode.id),
+            rechner.anschlüsse.single { it.id == ausgang.id }.artPriorisiertEingänge?.prioritäten,
+        )
         assertEquals(edge, migriert.verbindungen.single())
         assertEquals(migriert, migriert.migriereUniversellenZahlenRechner())
     }
@@ -252,5 +260,163 @@ class UniversellerZahlenRechnerKnotenTest {
         assertEquals("x^{\\circ}", gradWinkelLatex(winkel, false))
         assertEquals("x \\cdot \\pi \\div 180", gradWinkelLatex(winkel, true))
         assertEquals(multiplikation(winkel, GradWinkelEinheit), gradZuBogenmass(winkel))
+    }
+
+    @Test
+    fun `R2 Zahlenfunktionen werden punktweise addiert und mit Skalaren gemischt`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val f = Methode(
+            name = "f",
+            parameter = listOf(x, y),
+            vorschrift = addition(x, y),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf("x" to ReelleZahlen, "y" to ReelleZahlen),
+        )
+        val u = Variable("u")
+        val v = Variable("v")
+        val g = Methode(
+            name = "g",
+            parameter = listOf(u, v),
+            vorschrift = multiplikation(u, v),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf("u" to ReelleZahlen, "v" to ReelleZahlen),
+        )
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.single {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.ADDITION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val auswerter = register.finde(ZAHLENRECHNER_ART)!!
+
+        val summe = assertIs<Methode>(
+            auswerter.auswerten(
+                kontext(knoten, mapOf("a" to BedingterWert(f), "b" to BedingterWert(g))),
+            ).ausgaben.getValue("wert").objekt,
+        )
+        assertEquals(listOf("x", "y"), summe.parameter.map { it.name })
+        assertEquals(addition(addition(x, y), multiplikation(x, y)), summe.vorschrift)
+        assertEquals(ReelleZahlen, summe.zielMenge)
+
+        val gemischt = assertIs<Methode>(
+            auswerter.auswerten(
+                kontext(
+                    knoten,
+                    mapOf("a" to BedingterWert(f), "b" to BedingterWert(RationaleZahl.von(3))),
+                ),
+            ).ausgaben.getValue("wert").objekt,
+        )
+        assertEquals(addition(addition(x, y), RationaleZahl.von(3)), gemischt.vorschrift)
+    }
+
+    @Test
+    fun `punktweise Zahlenfunktionen schneiden ihre Argumentbereiche komponentenweise`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val f = Methode(
+            name = "f",
+            parameter = listOf(x, y),
+            vorschrift = addition(x, y),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf("x" to ReelleZahlen, "y" to RationaleZahlen),
+        )
+        val u = Variable("u")
+        val v = Variable("v")
+        val g = Methode(
+            name = "g",
+            parameter = listOf(u, v),
+            vorschrift = multiplikation(u, v),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf("u" to GanzeZahlen, "v" to ReelleZahlen),
+        )
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.single {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.ADDITION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+
+        val summe = assertIs<Methode>(
+            register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+                kontext(knoten, mapOf("a" to BedingterWert(f), "b" to BedingterWert(g))),
+            ).ausgaben.getValue("wert").objekt,
+        )
+
+        assertEquals(GanzeZahlen, summe.werteVorräte.getValue("x"))
+        assertEquals(RationaleZahlen, summe.werteVorräte.getValue("y"))
+        assertEquals(Tupelraum(listOf(GanzeZahlen, RationaleZahlen)), summe.effektiverWerteVorrat)
+    }
+
+    @Test
+    fun `Kehrwert einer Zahlenfunktion traegt die Nichtnullbedingung in den Wertevorrat ein`() {
+        val x = Variable("x")
+        val f = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf("x" to ReelleZahlen),
+        )
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.single {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.KEHRWERT.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+            kontext(knoten, mapOf("a" to BedingterWert(f))),
+        )
+        val kehrwert = assertIs<Methode>(ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals(Division(RationaleZahl.Eins, x), kehrwert.vorschrift)
+        assertTrue(kehrwert.methodenSignatur().werteVorrat.zuLatex().contains("\\neq 0"))
+        assertTrue(ergebnis.warnungen.any { it.startsWith("Definitionsbedingung:") })
+    }
+
+    @Test
+    fun `punktweise Multiplikation erhaelt quaternionische Faktorordnung`() {
+        val x = Variable("x")
+        val quaternionen = FundamentalerZahlbereich.QUATERNION.alsMenge()
+        val f = Methode("f", listOf(x), Variable("q"), quaternionen, mapOf("x" to ReelleZahlen))
+        val g = Methode("g", listOf(x), Variable("r"), quaternionen, mapOf("x" to ReelleZahlen))
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.single {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.MULTIPLIKATION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+            kontext(knoten, mapOf("a" to BedingterWert(f), "b" to BedingterWert(g))),
+        )
+        val produkt = assertIs<Methode>(ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals(listOf(Variable("q"), Variable("r")), assertIs<Multiplikation>(produkt.vorschrift).faktoren)
+        assertTrue(ergebnis.warnungen.any { "Faktorordnung" in it })
+    }
+
+    @Test
+    fun `inkompatible Stelligkeit und nichtnumerische Methoden werden diagnostiziert`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val einstellig = Methode("f", listOf(x), x, ReelleZahlen, mapOf("x" to ReelleZahlen))
+        val zweistellig = Methode(
+            "g",
+            listOf(x, y),
+            addition(x, y),
+            ReelleZahlen,
+            mapOf("x" to ReelleZahlen, "y" to ReelleZahlen),
+        )
+        val nichtNumerisch = Methode(
+            "h",
+            listOf(x),
+            x,
+            BenannteMenge("Farben", "\\mathcal F"),
+            mapOf("x" to ReelleZahlen),
+        )
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.single {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.ADDITION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val auswerter = register.finde(ZAHLENRECHNER_ART)!!
+
+        val stelligkeitsFehler = assertFailsWith<IllegalArgumentException> {
+            auswerter.auswerten(
+                kontext(knoten, mapOf("a" to BedingterWert(einstellig), "b" to BedingterWert(zweistellig))),
+            )
+        }
+        assertTrue(stelligkeitsFehler.message.orEmpty().contains("Stelligkeit"))
+
+        val typFehler = assertFailsWith<IllegalStateException> {
+            auswerter.auswerten(
+                kontext(knoten, mapOf("a" to BedingterWert(einstellig), "b" to BedingterWert(nichtNumerisch))),
+            )
+        }
+        assertTrue(typFehler.message.orEmpty().contains("Zielmenge"))
     }
 }

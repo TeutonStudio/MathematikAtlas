@@ -2,7 +2,7 @@
 
 ## Status
 
-Aktiv für Issue #340. Release `v2.28.2` schließt ausschließlich M1 als x-Version ab; M2–M5 bleiben für nachfolgende Releases offen. Grundlage ist der Branch `samai/v2.28.2/zahlenrechner-konsolidierung` auf dem veröffentlichten Commit `c90ccf892eef9e977aad18faa95091978e5d0c37` (`v2.28.1`).
+Aktiv für Issue #340. Release `v2.28.2` schließt M1 als x-Version ab; Release `v2.28.3` schließt M2 auf dem Branch `samai/v2.28.3/zahlenfunktionen-punktweise` ab. Grundlage für M2 ist der veröffentlichte Commit `118c1f163ceada52b68e82e6073389a4d81562fc` (`v2.28.2`). M3–M5 bleiben für nachfolgende Releases offen.
 
 ## Ziel und Nutzerwirkung
 
@@ -69,7 +69,7 @@ Spätere Meilensteine erweitern den Zahlenrechneranschluss kontrolliert um „Za
 ## Meilensteine
 
 - [x] M1: Zahlenfunktionsvertrag und gemeinsamer Methodenrenderer — in `v2.28.2` abgeschlossen.
-- [ ] M2: Punktweise Hebung gewöhnlicher Zahlenoperatoren und dynamischer Ausgang — Folgerelease, weiterhin Teil von #340.
+- [x] M2: Punktweise Hebung gewöhnlicher Zahlenoperatoren und dynamischer Ausgang — in `v2.28.3` abgeschlossen.
 - [ ] M3: Ableitungsfunktion, Differential sowie Methoden- und Termintegral im Zahlenrechner — Folgerelease, weiterhin Teil von #340.
 - [ ] M4: Idempotente Kartenmigration und Entfernung der eigenständigen Vorlagen aus dem Erstellen-Katalog — Folgerelease, weiterhin Teil von #340.
 - [ ] M5: Definitionskarten, Standardbeispiele und vollständige End-to-End-Regression — Folgerelease, weiterhin Teil von #340.
@@ -82,6 +82,16 @@ Spätere Meilensteine erweitern den Zahlenrechneranschluss kontrolliert um „Za
 4. Den privaten Term-zu-Methode-Sonderrenderer auf die gemeinsame Darstellung umstellen; Prädikatskompaktdarstellung bleibt erhalten.
 5. Ordnung eins als `f'`, Ordnung zwei und höher weiterhin römisch rendern.
 6. Für symbolische mehrdimensionale Ableitungen die Vorschrift als ausgewerteten Term `f'(x,...)` anzeigen, ohne eine konkrete Gradientendarstellung zu erfinden.
+
+## Konkrete Umsetzungsschritte für M2
+
+1. Standard- und erweiterte Zahlenoperatoren vollständig als punktweise, methodenspezifisch oder Analysis klassifizieren.
+2. Gewöhnliche Zahlenoperatoren kontrolliert für Zahl- oder Methodeneingänge öffnen und den Ausgang zentral auf `Methode` priorisieren, sobald mindestens eine Zahlenfunktion verbunden ist.
+3. Gleichstellige Zahlenfunktionen auf die Parameter der ersten Methode alpha-umbenennen und ihre Argumenträume komponentenweise schneiden; Skalare bleiben konstante Operanden.
+4. Die skalare Operatorauswertung wiederverwenden und ihr Ergebnis mit gemeinsamer Signatur, Zielmenge und strukturierten Definitionsbedingungen in eine `Methode` heben.
+5. Division, Kehrwert, Logarithmen, reelle Wurzeln, Arkusfunktionen, Modulo und erweiterte Quotientenoperatoren mit strukturierten Bedingungen versehen.
+6. Quaternionische Faktor- und Divisionsreihenfolge erhalten sowie die bestehende strukturierte Divisionsseite auch in punktweisen Methoden fortführen.
+7. Bestehende Zahlenrechner idempotent auf die erweiterten Anschlussverträge migrieren, Anschluss- und Verbindungs-IDs erhalten und die neue Ausgangsregel im Karten-JSON roundtrippen.
 
 ## Tests und Validierung
 
@@ -109,6 +119,8 @@ M1 verändert keine persistierten Daten. Die späteren Migrationen erhalten Knot
 - [x] Releasezustand geprüft und `v2.28.1` veröffentlicht.
 - [x] `v2.28.2` als x-Version reserviert und SamAI-Branch erstellt.
 - [x] M1 implementiert und für `v2.28.2` als eigener Releaseumfang abgegrenzt.
+- [x] M2 als x-Version `v2.28.3` klassifiziert und SamAI-Branch vom veröffentlichten `v2.28.2`-Commit erstellt.
+- [x] Punktweise Operatorhebung, dynamische Ausgangsart, strukturierte Definitionsbedingungen und idempotente Anschlussmigration implementiert.
 
 ## Entscheidungsprotokoll
 
@@ -116,6 +128,9 @@ M1 verändert keine persistierten Daten. Die späteren Migrationen erhalten Knot
 - 2026-08-08: `f'`, `df`, `\partial_i f` und `d_i f` bleiben verschiedene Fachobjekte. Eine automatische Gradientendarstellung wurde verworfen.
 - 2026-08-08: Integrale werden später als Methoden- oder Termintegral modelliert; ein allgemeiner Stammfunktionsoperator ist kein Ziel.
 - 2026-08-08: M1 ändert keine Knoten- oder Persistenzverträge und bildet einen eigenständig prüfbaren ersten Branchcommit.
+- 2026-08-08: M2 verwendet keinen neuen physischen Methoden- oder Knotentyp. Der bestehende Zahlenrechner erhält kontrollierte Zahl-/Methodenanschlüsse; die effektive Ausgangsart wird zentral aus allen methodenfähigen Eingängen priorisiert.
+- 2026-08-08: Punktweise Operanden müssen dieselbe Stelligkeit besitzen. Abweichende Parameternamen werden alpha-umbenannt, die jeweiligen Argumenträume werden komponentenweise geschnitten und nicht-kartesische effektive Bereiche zusätzlich erhalten.
+- 2026-08-08: Iterierte Summe und iteriertes Produkt bleiben methodenspezifische Operatoren; Integral und Differential bleiben Analysisoperatoren. Nur explizit klassifizierte gewöhnliche Operatoren werden punktweise gehoben.
 
 ## Abweichungen vom ursprünglichen Plan
 
@@ -133,4 +148,15 @@ Verifiziert wurden:
 - strukturierte Zahlmengen einschließlich beschränkter, definierter, gefilterter und zusammengesetzter Mengen;
 - Abschlussdiff gegen `v2.28.1`: keine neuen Knotentypen und keine Persistenz- oder Anschlussmigration.
 
-Die Veröffentlichung `v2.28.2` umfasst bewusst nur M1. Punktweise Operatorhebung, Differential-/Integralintegration, Kartenmigration und Definitionskarten bleiben als M2–M5 in Issue #340 offen.
+Die Veröffentlichung `v2.28.2` umfasst bewusst nur M1. Die damals noch offene punktweise Operatorhebung wird getrennt als M2 in `v2.28.3` veröffentlicht.
+
+M2 in `v2.28.3` ergänzt die punktweise Hebung für gewöhnliche Standard- und Erweiterungsoperatoren. Mehrstellige Zahlenfunktionen, gemischte Zahl-/Methodenoperanden, gemeinsame Definitionsräume, dynamische Methodenausgänge, strukturierte Definitionsbedingungen und quaternionische Reihenfolge sind durch fokussierte Regressionstests abgedeckt. Die Anschlussregel ist optional persistiert; alte Karten werden idempotent unter Erhalt ihrer Identitäten erweitert. M3–M5 bleiben in Issue #340 offen.
+
+Verifiziert wurden für M2:
+
+- Repository-, Standardkarten-, Releaseplan- und Kernprüfung;
+- vollständige JVM-Testmatrix sowie Android-Debug-Build im GitHub-Actions-Lauf `31267030532`;
+- Release-Guard im GitHub-Actions-Lauf `31267030519`;
+- JSON-Roundtrip der priorisierten Anschlussart und idempotente Migration unter Erhalt bestehender IDs;
+- strukturierte Zielbereichsinferenz für kanonische fundamentale Zahlmengen;
+- Abschlussdiff gegen `v2.28.2`: kein neuer registrierter oder separat erzeugbarer Knotentyp.

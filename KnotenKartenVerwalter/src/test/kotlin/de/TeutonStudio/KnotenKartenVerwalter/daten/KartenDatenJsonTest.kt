@@ -51,6 +51,10 @@ class KartenDatenJsonTest {
                             AnschlussArtId("mathematik.zahl") to AnschlussArtId("mathematik.objekt"),
                         ),
                     ),
+                    artPriorisiertEingänge = AnschlussArtPriorisierung(
+                        eingänge = listOf("wert"),
+                        prioritäten = listOf(AnschlussArtId("mathematik.methode")),
+                    ),
                 ),
             ),
         )
@@ -85,5 +89,6 @@ class KartenDatenJsonTest {
         assertEquals(karte, gelesen)
         assertEquals(KartenDatenJson.FORMAT_VERSION, KartenDatenJson.formatVersion(text))
         assertTrue(text.contains("artAbbildungVonEingang"))
+        assertTrue(text.contains("artPriorisiertEingänge"))
     }
 }

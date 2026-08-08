@@ -26,6 +26,23 @@ private fun zahlenEingang(
     kannSichErweitern = erweiterbar,
 )
 
+private fun zahlenOderMethodenEingang(
+    name: String,
+    reihenfolge: Int,
+    erweiterbar: Boolean = false,
+) = AnschlussDaten(
+    name = name,
+    richtung = AnschlussRichtung.Eingang,
+    kante = AnschlussKante.Links,
+    art = MathematikAnschlussArten.Objekt.id,
+    reihenfolge = reihenfolge,
+    kannSichErweitern = erweiterbar,
+    zulässigeArten = setOf(
+        MathematikAnschlussArten.Zahl.id,
+        MathematikAnschlussArten.Methode.id,
+    ),
+)
+
 private fun spezialEingang(name: String, art: AnschlussArtId, reihenfolge: Int) = AnschlussDaten(
     name = name,
     richtung = AnschlussRichtung.Eingang,
@@ -34,11 +51,17 @@ private fun spezialEingang(name: String, art: AnschlussArtId, reihenfolge: Int) 
     reihenfolge = reihenfolge,
 )
 
-private fun zahlenAusgang() = AnschlussDaten(
+private fun zahlenAusgang(punktweiseEingänge: List<String> = emptyList()) = AnschlussDaten(
     name = "wert",
     richtung = AnschlussRichtung.Ausgang,
     kante = AnschlussKante.Rechts,
     art = MathematikAnschlussArten.Zahl.id,
+    artPriorisiertEingänge = punktweiseEingänge.takeIf { it.isNotEmpty() }?.let { namen ->
+        AnschlussArtPriorisierung(
+            eingänge = namen,
+            prioritäten = listOf(MathematikAnschlussArten.Methode.id),
+        )
+    },
 )
 
 private fun standardAnschluesse(operator: UniversellerZahlenOperator): List<AnschlussDaten> = when (operator) {
@@ -46,7 +69,11 @@ private fun standardAnschluesse(operator: UniversellerZahlenOperator): List<Ansc
     UniversellerZahlenOperator.MULTIPLIKATION,
     UniversellerZahlenOperator.MINIMUM,
     UniversellerZahlenOperator.MAXIMUM,
-    -> listOf(zahlenEingang("a", 0, true), zahlenEingang("b", 1, true), zahlenAusgang())
+    -> listOf(
+        zahlenOderMethodenEingang("a", 0, true),
+        zahlenOderMethodenEingang("b", 1, true),
+        zahlenAusgang(listOf("a", "b")),
+    )
 
     UniversellerZahlenOperator.ITERIERTE_SUMME,
     UniversellerZahlenOperator.ITERIERTES_PRODUKT,
@@ -59,17 +86,17 @@ private fun standardAnschluesse(operator: UniversellerZahlenOperator): List<Ansc
     UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
     UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH,
     -> listOf(
-        zahlenEingang("a", 0),
-        zahlenEingang("b", 1),
+        zahlenOderMethodenEingang("a", 0),
+        zahlenOderMethodenEingang("b", 1),
         spezialEingang("tupel", MathematikAnschlussArten.Tupel.id, 2),
-        zahlenAusgang(),
+        zahlenAusgang(listOf("a", "b")),
     )
 
     UniversellerZahlenOperator.DIVISION -> listOf(
-        zahlenEingang("a", 0),
-        zahlenEingang("b", 1),
+        zahlenOderMethodenEingang("a", 0),
+        zahlenOderMethodenEingang("b", 1),
         zahlenEingang("c", 2),
-        zahlenAusgang(),
+        zahlenAusgang(listOf("a", "b")),
     )
 
     UniversellerZahlenOperator.SUBTRAKTION,
@@ -77,9 +104,17 @@ private fun standardAnschluesse(operator: UniversellerZahlenOperator): List<Ansc
     UniversellerZahlenOperator.WURZEL,
     UniversellerZahlenOperator.LOGARITHMUS,
     UniversellerZahlenOperator.MODULO,
-    -> listOf(zahlenEingang("a", 0), zahlenEingang("b", 1), zahlenAusgang())
+    -> listOf(
+        zahlenOderMethodenEingang("a", 0),
+        zahlenOderMethodenEingang("b", 1),
+        zahlenAusgang(listOf("a", "b")),
+    )
 
-    else -> listOf(zahlenEingang("a", 0), zahlenAusgang())
+    else -> if (operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE) {
+        listOf(zahlenOderMethodenEingang("a", 0), zahlenAusgang(listOf("a")))
+    } else {
+        listOf(zahlenEingang("a", 0), zahlenAusgang())
+    }
 }
 
 /**
@@ -219,10 +254,14 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
 fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
     knoten = knoten.map { alt ->
         if (alt.art == ZAHLENRECHNER_ART) {
-            alt.copy(
+            val operator = UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR])
+            konfiguriereZahlenRechner(
+                knoten = alt.copy(
                 parameter = standardParameter(
-                    UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR]),
+                        operator,
                 ) + alt.parameter,
+                ),
+                operator = operator,
             )
         } else {
             val operator = historischerZahlenOperator(alt) ?: return@map alt
@@ -246,6 +285,9 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                 val zielArt = standard.firstOrNull {
                     it.richtung == AnschlussRichtung.Eingang && it.name == zielName
                 }?.art ?: anschluss.art
+                val standardEingang = standard.firstOrNull {
+                    it.richtung == AnschlussRichtung.Eingang && it.name == zielName
+                }
                 anschluss.copy(
                     name = zielName,
                     richtung = AnschlussRichtung.Eingang,
@@ -258,6 +300,7 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                         UniversellerZahlenOperator.MINIMUM,
                         UniversellerZahlenOperator.MAXIMUM,
                     ),
+                    zulässigeArten = standardEingang?.zulässigeArten.orEmpty(),
                 )
             }
             val vorhanden = umbenannt.mapTo(mutableSetOf()) { it.name }
@@ -272,6 +315,13 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                 reihenfolge = 0,
                 kannSichErweitern = false,
                 dynamischErzeugt = false,
+                artFolgtEingang = null,
+                artVereinigtEingänge = emptyList(),
+                zulässigeArten = emptySet(),
+                artAbbildungVonEingang = null,
+                artPriorisiertEingänge = standard.firstOrNull {
+                    it.richtung == AnschlussRichtung.Ausgang
+                }?.artPriorisiertEingänge,
             )
             alt.copy(
                 art = ZAHLENRECHNER_ART,
@@ -328,12 +378,14 @@ internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() 
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
         val reelle = reelleVariablen(kontext.eingänge.values)
         val definition = ZahlenRechnerDefinition(operator, ausgabe.bereich)
+        val methode = ausgabe.objekt as? Methode
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
                     objekt = ausgabe.objekt,
                     annahmen = annahmen,
-                    werteVorrat = ausgabe.bereich.alsMenge(),
+                    zielMenge = methode?.zielMenge,
+                    werteVorrat = methode?.methodenSignatur()?.werteVorrat ?: ausgabe.bereich.alsMenge(),
                     reelleVariablen = reelle,
                     variablenQuellen = kontext.eingänge.values
                         .flatMap { it.variablenQuellen }
@@ -343,19 +395,79 @@ internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() 
             ),
             schritte = ausgabe.schritte,
             eingänge = kontext.eingänge,
-            warnungen = definition.regeln,
+            warnungen = (definition.regeln + ausgabe.hinweise).distinct(),
         )
     }
 }
 
 private data class UniverselleZahlenAusgabe(
-    val objekt: ZahlAusdruck,
+    val objekt: MathematischesObjekt,
     val bereich: ZahlenRechnerBereich,
     val latex: String? = null,
     val schritte: List<UmformungsSchritt> = emptyList(),
+    val hinweise: List<String> = emptyList(),
 )
 
 private fun universellAuswerten(
+    k: KnotenAuswertungsKontext,
+    operator: UniversellerZahlenOperator,
+): UniverselleZahlenAusgabe {
+    val punktweiseNamen = k.knoten.anschlüsse
+        .filter {
+            it.richtung == AnschlussRichtung.Eingang &&
+                MathematikAnschlussArten.Methode.id in it.zulässigeArten
+        }
+        .sortedBy { it.reihenfolge }
+        .map { it.name }
+    val punktweiseOperanden = punktweiseNamen.mapNotNull { name ->
+        k.eingänge[name]?.objekt?.let { name to it }
+    }.toMap(LinkedHashMap())
+    if (punktweiseOperanden.values.none { it is Methode }) return universellSkalarAuswerten(k, operator)
+    require(operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE) {
+        "Der Operator '${operator.titel}' ist als ${operator.hebungsArt.name.lowercase()} klassifiziert und wird nicht punktweise gehoben."
+    }
+    require(
+        operator !in setOf(
+            UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
+            UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH,
+        ) || k.knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] != ZAHLENRECHNER_KOMPLEX_TUPEL,
+    ) { "Komplexkonstruktoren können nur im getrennten Eingabemodus punktweise gehoben werden." }
+
+    val vorbereitung = bereitePunktweiseZahlenfunktionVor(punktweiseOperanden)
+    val skalarEingänge = k.eingänge.mapValues { (name, wert) ->
+        vorbereitung.operanden[name]?.let { ausdruck ->
+            wert.copy(
+                objekt = ausdruck,
+                werteVorrat = (wert.objekt as? Methode)?.zielMenge ?: wert.werteVorrat,
+                zielMenge = null,
+                latexDarstellung = null,
+            )
+        } ?: wert
+    }
+    val skalar = universellSkalarAuswerten(k.copy(eingänge = skalarEingänge), operator)
+    val vorschrift = skalar.objekt as? ZahlAusdruck
+        ?: error("Der punktweise Operator '${operator.titel}' lieferte keine Zahlvorschrift.")
+    val bedingungen = punktweiseDefinitionsBedingungen(operator, vorbereitung.operanden, skalar.bereich)
+    val methode = vorbereitung.erzeugeMethode(
+        name = punktweiserMethodenName(operator, punktweiseOperanden),
+        vorschrift = vorschrift,
+        zielMenge = skalar.bereich.alsMenge(),
+        definitionsBedingungen = bedingungen,
+    )
+    return skalar.copy(
+        objekt = methode,
+        latex = null,
+        hinweise = buildList {
+            add("Signatur: ${methode.methodenSignatur().werteVorrat.zuLatex()} → ${methode.zielMenge.zuLatex()}")
+            add("Gemeinsamer Wertevorrat: ${methode.methodenSignatur().werteVorrat.zuLatex()}")
+            if (bedingungen.isNotEmpty()) {
+                add("Definitionsbedingung: ${bedingungen.joinToString(" \\land ") { it.zuLatex() }}")
+            }
+        },
+    )
+}
+
+private fun universellSkalarAuswerten(
     k: KnotenAuswertungsKontext,
     operator: UniversellerZahlenOperator,
 ): UniverselleZahlenAusgabe {
@@ -370,7 +482,10 @@ private fun universellAuswerten(
     val zahlenWerte = k.knoten.anschlüsse
         .filter {
             it.richtung == AnschlussRichtung.Eingang &&
-                it.art == MathematikAnschlussArten.Zahl.id
+                (
+                    it.art == MathematikAnschlussArten.Zahl.id ||
+                        MathematikAnschlussArten.Zahl.id in it.zulässigeArten
+                    )
         }
         .sortedBy { it.reihenfolge }
         .mapNotNull { anschluss -> k.eingänge[anschluss.name] }
@@ -568,14 +683,32 @@ private fun universellAuswerten(
         UniversellerZahlenOperator.REALTEIL -> {
             val argument = zahl("a")
             UniverselleZahlenAusgabe(
-                (argument as? KomplexeZahl)?.realteil ?: argument,
+                (argument as? KomplexeZahl)?.realteil ?: if (
+                    gemeinsam.rang <= ZahlenRechnerBereich.REELL.rang
+                ) {
+                    argument
+                } else {
+                    symbolischerZahlterm(
+                        "realteil-${argument.zuLatex()}",
+                        "\\operatorname{Re}\\left(${argument.zuLatex()}\\right)",
+                    )
+                },
                 ZahlenRechnerBereich.REELL,
             )
         }
         UniversellerZahlenOperator.IMAGINAERTEIL -> {
             val argument = zahl("a")
             UniverselleZahlenAusgabe(
-                (argument as? KomplexeZahl)?.imaginärteil ?: RationaleZahl.Null,
+                (argument as? KomplexeZahl)?.imaginärteil ?: if (
+                    gemeinsam.rang <= ZahlenRechnerBereich.REELL.rang
+                ) {
+                    RationaleZahl.Null
+                } else {
+                    symbolischerZahlterm(
+                        "imaginaerteil-${argument.zuLatex()}",
+                        "\\operatorname{Im}\\left(${argument.zuLatex()}\\right)",
+                    )
+                },
                 ZahlenRechnerBereich.REELL,
             )
         }
@@ -675,6 +808,67 @@ private fun universellAuswerten(
     }
 }
 
+private fun punktweiseDefinitionsBedingungen(
+    operator: UniversellerZahlenOperator,
+    operanden: Map<String, ZahlAusdruck>,
+    zielBereich: ZahlenRechnerBereich,
+): List<Aussage> = when (operator) {
+    UniversellerZahlenOperator.DIVISION -> listOf(
+        Ungleichheit(operanden.getValue("b"), RationaleZahl.Null),
+    )
+    UniversellerZahlenOperator.KEHRWERT -> listOf(
+        Ungleichheit(operanden.getValue("a"), RationaleZahl.Null),
+    )
+    UniversellerZahlenOperator.LOGARITHMUS -> if (zielBereich.rang <= ZahlenRechnerBereich.REELL.rang) {
+        listOf(
+            Vergleich(operanden.getValue("a"), VergleichsArt.Größer, RationaleZahl.Null),
+            Ungleichheit(operanden.getValue("a"), RationaleZahl.Eins),
+            Vergleich(operanden.getValue("b"), VergleichsArt.Größer, RationaleZahl.Null),
+        )
+    } else emptyList()
+    UniversellerZahlenOperator.LOGARITHMUS_BASIS_2,
+    UniversellerZahlenOperator.NATUERLICHER_LOGARITHMUS,
+    UniversellerZahlenOperator.LOGARITHMUS_BASIS_10,
+    -> if (zielBereich.rang <= ZahlenRechnerBereich.REELL.rang) {
+        listOf(Vergleich(operanden.getValue("a"), VergleichsArt.Größer, RationaleZahl.Null))
+    } else emptyList()
+    UniversellerZahlenOperator.WURZEL,
+    UniversellerZahlenOperator.QUADRATWURZEL,
+    -> if (zielBereich.rang <= ZahlenRechnerBereich.REELL.rang) {
+        listOf(Vergleich(operanden.getValue("a"), VergleichsArt.GrößerGleich, RationaleZahl.Null))
+    } else emptyList()
+    UniversellerZahlenOperator.ARCSINUS,
+    UniversellerZahlenOperator.ARCCOSINUS,
+    -> listOf(
+        Vergleich(RationaleZahl.von(-1), VergleichsArt.KleinerGleich, operanden.getValue("a")),
+        Vergleich(operanden.getValue("a"), VergleichsArt.KleinerGleich, RationaleZahl.Eins),
+    )
+    UniversellerZahlenOperator.MODULO -> listOf(
+        Vergleich(operanden.getValue("b"), VergleichsArt.Größer, RationaleZahl.Null),
+    )
+    else -> emptyList()
+}
+
+private fun punktweiserMethodenName(
+    operator: UniversellerZahlenOperator,
+    operanden: Map<String, MathematischesObjekt>,
+): String {
+    fun anzeige(objekt: MathematischesObjekt): String = when (objekt) {
+        is Methode -> objekt.name
+        else -> objekt.zuLatex()
+    }
+    val werte = operanden.values.map(::anzeige)
+    return when (operator) {
+        UniversellerZahlenOperator.ADDITION -> werte.joinToString("+")
+        UniversellerZahlenOperator.SUBTRAKTION -> werte.joinToString("-")
+        UniversellerZahlenOperator.MULTIPLIKATION -> werte.joinToString("\\cdot")
+        UniversellerZahlenOperator.DIVISION -> "${werte[0]}\\div${werte[1]}"
+        UniversellerZahlenOperator.KEHRWERT -> "(${werte.single()})^{-1}"
+        UniversellerZahlenOperator.POTENZ -> "(${werte[0]})^{${werte[1]}}"
+        else -> "${operator.symbolLatex}(${werte.joinToString(",")})"
+    }
+}
+
 private fun wurzelBereich(
     argument: ZahlAusdruck,
     basis: ZahlenRechnerBereich,
@@ -690,15 +884,14 @@ private fun maxBereich(
 ): ZahlenRechnerBereich = if (a.rang >= b.rang) a else b
 
 private fun ZahlenRechnerBereich.alsMenge(): MengenAusdruck = when (this) {
-    ZahlenRechnerBereich.NATUERLICH,
-    ZahlenRechnerBereich.NATUERLICH_MIT_NULL,
-    -> BenannteMenge("Natürliche Zahlen", latex)
-    ZahlenRechnerBereich.GANZ -> BenannteMenge("Ganze Zahlen", latex)
-    ZahlenRechnerBereich.RATIONAL -> BenannteMenge("Rationale Zahlen", latex)
-    ZahlenRechnerBereich.REELL -> BenannteMenge("Reelle Zahlen", latex)
-    ZahlenRechnerBereich.KOMPLEX -> BenannteMenge("Komplexe Zahlen", latex)
+    ZahlenRechnerBereich.NATUERLICH -> FundamentalerZahlbereich.NATUERLICH_POSITIV.alsMenge()
+    ZahlenRechnerBereich.NATUERLICH_MIT_NULL -> FundamentalerZahlbereich.NATUERLICH_MIT_NULL.alsMenge()
+    ZahlenRechnerBereich.GANZ -> FundamentalerZahlbereich.GANZ.alsMenge()
+    ZahlenRechnerBereich.RATIONAL -> FundamentalerZahlbereich.RATIONAL.alsMenge()
+    ZahlenRechnerBereich.REELL -> FundamentalerZahlbereich.REELL.alsMenge()
+    ZahlenRechnerBereich.KOMPLEX -> FundamentalerZahlbereich.KOMPLEX.alsMenge()
     ZahlenRechnerBereich.HYPERREELL -> BenannteMenge("Hyperreelle Zahlen", latex)
-    ZahlenRechnerBereich.QUATERNION -> BenannteMenge("Quaternionen", latex)
+    ZahlenRechnerBereich.QUATERNION -> FundamentalerZahlbereich.QUATERNION.alsMenge()
     ZahlenRechnerBereich.MODULO -> BenannteMenge("Restklassen", latex)
     ZahlenRechnerBereich.UNBEKANNT -> BenannteMenge("Unbekannter Zahlbereich", latex)
 }

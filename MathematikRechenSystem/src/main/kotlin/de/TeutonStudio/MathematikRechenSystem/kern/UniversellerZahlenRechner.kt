@@ -66,6 +66,60 @@ enum class UniversellerZahlenOperator(
             "Unbekannte Zahlenoperator-ID: ${id ?: "<null>"}"
         }
     }
+
+    val hebungsArt: ZahlenOperatorHebungsArt
+        get() = when (this) {
+            ITERIERTE_SUMME,
+            ITERIERTES_PRODUKT,
+            -> ZahlenOperatorHebungsArt.METHODENSPEZIFISCH
+            INTEGRAL,
+            DIFFERENTIAL,
+            -> ZahlenOperatorHebungsArt.ANALYSIS
+            ADDITION,
+            SUBTRAKTION,
+            MULTIPLIKATION,
+            DIVISION,
+            KEHRWERT,
+            POTENZ,
+            QUADRAT,
+            KUBIK,
+            WURZEL,
+            QUADRATWURZEL,
+            KUBIKWURZEL,
+            LOGARITHMUS,
+            LOGARITHMUS_BASIS_2,
+            NATUERLICHER_LOGARITHMUS,
+            LOGARITHMUS_BASIS_10,
+            MINIMUM,
+            MAXIMUM,
+            NORM,
+            ABRUNDUNG,
+            AUFRUNDUNG,
+            RUNDUNG,
+            KONJUGIERTE,
+            REALTEIL,
+            IMAGINAERTEIL,
+            KOMPLEXER_WINKEL,
+            KOMPLEXER_RADIUS,
+            KOMPLEX_AUS_POLAR,
+            KOMPLEX_AUS_KARTESISCH,
+            MODULO,
+            BETRAG,
+            EXPONENTIALFUNKTION,
+            SINUS,
+            COSINUS,
+            ARCSINUS,
+            ARCCOSINUS,
+            LIMES_HYPERREELL_ZU_REELL,
+            -> ZahlenOperatorHebungsArt.PUNKTWEISE
+        }
+}
+
+/** Expliziter Ausführungsvertrag sämtlicher registrierter Standardoperatoren. */
+enum class ZahlenOperatorHebungsArt {
+    PUNKTWEISE,
+    METHODENSPEZIFISCH,
+    ANALYSIS,
 }
 
 /** Zahlbereiche, die für die automatische Definitions- und Regelauswahl relevant sind. */
@@ -118,17 +172,31 @@ fun inferiereZahlenRechnerBereich(
     ausdruck: ZahlAusdruck,
     werteVorrat: MengenAusdruck? = null,
 ): ZahlenRechnerBereich {
+    werteVorrat?.fundamentalerZahlbereichOderNull()?.let { fundamental ->
+        return when (fundamental) {
+            FundamentalerZahlbereich.NATUERLICH_POSITIV -> ZahlenRechnerBereich.NATUERLICH
+            FundamentalerZahlbereich.NATUERLICH_MIT_NULL -> ZahlenRechnerBereich.NATUERLICH_MIT_NULL
+            FundamentalerZahlbereich.GANZ -> ZahlenRechnerBereich.GANZ
+            FundamentalerZahlbereich.RATIONAL -> ZahlenRechnerBereich.RATIONAL
+            FundamentalerZahlbereich.REELL -> ZahlenRechnerBereich.REELL
+            FundamentalerZahlbereich.KOMPLEX -> ZahlenRechnerBereich.KOMPLEX
+            FundamentalerZahlbereich.QUATERNION -> ZahlenRechnerBereich.QUATERNION
+        }
+    }
     val vorratLatex = werteVorrat?.zuLatex().orEmpty()
     return when {
         "{}^*\\mathbb R" in vorratLatex || "^*\\mathbb R" in vorratLatex -> ZahlenRechnerBereich.HYPERREELL
         "\\mathbb H" in vorratLatex -> ZahlenRechnerBereich.QUATERNION
         "\\mathbb Z/" in vorratLatex || "\\bmod" in vorratLatex -> ZahlenRechnerBereich.MODULO
-        "\\mathbb C" in vorratLatex || ausdruck is KomplexeZahl -> ZahlenRechnerBereich.KOMPLEX
-        "\\mathbb R" in vorratLatex -> ZahlenRechnerBereich.REELL
-        "\\mathbb Q" in vorratLatex -> ZahlenRechnerBereich.RATIONAL
-        "\\mathbb Z" in vorratLatex -> ZahlenRechnerBereich.GANZ
-        "\\mathbb N_0" in vorratLatex -> ZahlenRechnerBereich.NATUERLICH_MIT_NULL
-        "\\mathbb N" in vorratLatex -> if (ausdruck == RationaleZahl.Null) {
+        "\\mathbb C" in vorratLatex ||
+            "\\mathbb{C}" in vorratLatex ||
+            ausdruck is KomplexeZahl -> ZahlenRechnerBereich.KOMPLEX
+        "\\mathbb R" in vorratLatex || "\\mathbb{R}" in vorratLatex -> ZahlenRechnerBereich.REELL
+        "\\mathbb Q" in vorratLatex || "\\mathbb{Q}" in vorratLatex -> ZahlenRechnerBereich.RATIONAL
+        "\\mathbb Z" in vorratLatex || "\\mathbb{Z}" in vorratLatex -> ZahlenRechnerBereich.GANZ
+        "\\mathbb N_0" in vorratLatex || "\\mathbb{N}_0" in vorratLatex ->
+            ZahlenRechnerBereich.NATUERLICH_MIT_NULL
+        "\\mathbb N" in vorratLatex || "\\mathbb{N}" in vorratLatex -> if (ausdruck == RationaleZahl.Null) {
             ZahlenRechnerBereich.NATUERLICH_MIT_NULL
         } else {
             ZahlenRechnerBereich.NATUERLICH

@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
+import de.TeutonStudio.MathematikRechenSystem.kern.ZahlenOperatorHebungsArt
 
 private val variadischeZahlenOperatoren = setOf(
     UniversellerZahlenOperator.ADDITION,
@@ -69,8 +70,12 @@ fun konfiguriereZahlenRechner(
             reihenfolge = index,
             kannSichErweitern = vorgabe.kannSichErweitern,
             dynamischErzeugt = index >= 2 && operator in variadischeZahlenOperatoren,
+            zulässigeArten = vorgabe.zulässigeArten,
         )
     }
+    val punktweiseEingangsNamen = eingänge
+        .filter { MathematikAnschlussArten.Methode.id in it.zulässigeArten }
+        .map { it.name }
     val vorhandenerAusgang = vorhandene[AnschlussRichtung.Ausgang to "wert"]?.firstOrNull()
         ?: knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
     val ausgang = (vorhandenerAusgang ?: AnschlussDaten(
@@ -86,6 +91,16 @@ fun konfiguriereZahlenRechner(
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
+        artFolgtEingang = null,
+        artVereinigtEingänge = emptyList(),
+        zulässigeArten = emptySet(),
+        artAbbildungVonEingang = null,
+        artPriorisiertEingänge = punktweiseEingangsNamen.takeIf { it.isNotEmpty() }?.let { namen ->
+            AnschlussArtPriorisierung(
+                eingänge = namen,
+                prioritäten = listOf(MathematikAnschlussArten.Methode.id),
+            )
+        },
     )
     val bisherigerOperator = knoten.parameter[ZAHLENRECHNER_OPERATOR]
         ?.let { operatorId -> UniversellerZahlenOperator.vonId(operatorId) }
@@ -112,8 +127,8 @@ private fun gewünschteZahlenRechnerEingänge(
         eingang("tupel", MathematikAnschlussArten.Tupel.id),
     )
     operator in komplexKonstruktoren -> listOf(
-        eingang("a", MathematikAnschlussArten.Zahl.id),
-        eingang("b", MathematikAnschlussArten.Zahl.id),
+        zahlenOderMethodenEingang("a"),
+        zahlenOderMethodenEingang("b"),
     )
     operator == UniversellerZahlenOperator.ITERIERTE_SUMME ||
         operator == UniversellerZahlenOperator.ITERIERTES_PRODUKT -> listOf(
@@ -121,32 +136,48 @@ private fun gewünschteZahlenRechnerEingänge(
         eingang("indexmenge", MathematikAnschlussArten.Menge.id),
     )
     operator == UniversellerZahlenOperator.DIVISION -> listOf(
-        eingang("a", MathematikAnschlussArten.Zahl.id),
-        eingang("b", MathematikAnschlussArten.Zahl.id),
+        zahlenOderMethodenEingang("a"),
+        zahlenOderMethodenEingang("b"),
         eingang("c", MathematikAnschlussArten.Zahl.id),
     )
     operator in variadischeZahlenOperatoren -> List(festeEingänge) { index ->
-        eingang(
+        zahlenOderMethodenEingang(
             name = ('a'.code + index).toChar().toString(),
-            art = MathematikAnschlussArten.Zahl.id,
             erweiterbar = true,
         )
     }
     operator in binaereZahlenOperatoren -> listOf(
-        eingang("a", MathematikAnschlussArten.Zahl.id),
-        eingang("b", MathematikAnschlussArten.Zahl.id),
+        zahlenOderMethodenEingang("a"),
+        zahlenOderMethodenEingang("b"),
     )
+    operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE ->
+        listOf(zahlenOderMethodenEingang("a"))
     else -> listOf(eingang("a", MathematikAnschlussArten.Zahl.id))
 }
+
+private fun zahlenOderMethodenEingang(
+    name: String,
+    erweiterbar: Boolean = false,
+): AnschlussDaten = eingang(
+    name = name,
+    art = MathematikAnschlussArten.Objekt.id,
+    erweiterbar = erweiterbar,
+    zulässigeArten = setOf(
+        MathematikAnschlussArten.Zahl.id,
+        MathematikAnschlussArten.Methode.id,
+    ),
+)
 
 private fun eingang(
     name: String,
     art: AnschlussArtId,
     erweiterbar: Boolean = false,
+    zulässigeArten: Set<AnschlussArtId> = emptySet(),
 ): AnschlussDaten = AnschlussDaten(
     name = name,
     richtung = AnschlussRichtung.Eingang,
     kante = AnschlussKante.Links,
     art = art,
     kannSichErweitern = erweiterbar,
+    zulässigeArten = zulässigeArten,
 )

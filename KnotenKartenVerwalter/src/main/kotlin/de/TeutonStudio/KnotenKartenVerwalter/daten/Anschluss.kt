@@ -16,6 +16,21 @@ data class AnschlussArtAbbildung(
     val abbildung: Map<AnschlussArtId, AnschlussArtId>,
 )
 
+/**
+ * Wählt die effektive Ausgangsart aus mehreren Eingängen anhand einer geordneten
+ * Prioritätenliste. Die erste Art, zu der mindestens eine verbundene Quellart
+ * eine Unterart ist, gewinnt; ohne Treffer bleibt die deklarierte Anschlussart.
+ */
+data class AnschlussArtPriorisierung(
+    val eingänge: List<String>,
+    val prioritäten: List<AnschlussArtId>,
+) {
+    init {
+        require(eingänge.isNotEmpty()) { "Eine Anschlussart-Priorisierung benötigt Eingänge." }
+        require(prioritäten.isNotEmpty()) { "Eine Anschlussart-Priorisierung benötigt Prioritäten." }
+    }
+}
+
 data class AnschlussDaten(
     val id: AnschlussId = neueAnschlussId(),
     val name: String,
@@ -41,6 +56,8 @@ data class AnschlussDaten(
     val zulässigeArten: Set<AnschlussArtId> = emptySet(),
     /** Typabhängige Ausgangsart, zentral aus einem verbundenen Eingang berechnet. */
     val artAbbildungVonEingang: AnschlussArtAbbildung? = null,
+    /** Typabhängige Ausgangsart, die eine Quellart über mehrere Eingänge priorisiert. */
+    val artPriorisiertEingänge: AnschlussArtPriorisierung? = null,
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)

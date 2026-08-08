@@ -76,4 +76,30 @@ class ZahlenRechnerErweiterungenTest {
         assertTrue(ergebnis.ausgaben.getValue("wert").latexDarstellung.orEmpty().startsWith("\\tan"))
         assertTrue(ergebnis.warnungen.any { "cos(x)" in it })
     }
+
+    @Test
+    fun `Tangenszustand hebt Zahlenfunktionen punktweise mit Definitionsbedingung`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf("x" to ReelleZahlen),
+        )
+        val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
+        val tangens = konfiguriereErweitertenZahlenRechner(basis, ErweiterterZahlenOperator.TANGENS)
+        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+            KnotenAuswertungsKontext(
+                knoten = tangens,
+                eingänge = mapOf("a" to BedingterWert(methode)),
+                rechenKontext = RechenKontext(),
+            ),
+        )
+
+        val punktweise = assertIs<Methode>(ergebnis.ausgaben.getValue("wert").objekt)
+        assertEquals(listOf("x"), punktweise.parameter.map { it.name })
+        assertTrue(punktweise.methodenSignatur().werteVorrat.zuLatex().contains("\\cos"))
+        assertTrue(ergebnis.warnungen.any { it.startsWith("Signatur:") })
+    }
 }

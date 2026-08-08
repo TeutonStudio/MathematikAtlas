@@ -329,6 +329,11 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Maximum -> maximum(objekt.operanden.map { ersetze(it, bindungen) })
     is Minimum -> minimum(objekt.operanden.map { ersetze(it, bindungen) })
     is Division -> Division(ersetze(objekt.dividend, bindungen), ersetze(objekt.divisor, bindungen))
+    is StrukturierteDivision -> objekt.copy(
+        dividend = ersetze(objekt.dividend, bindungen),
+        divisor = ersetze(objekt.divisor, bindungen),
+    )
+    is InversesElement -> InversesElement(ersetze(objekt.argument, bindungen))
     is Potenz -> Potenz(ersetze(objekt.basis, bindungen), ersetze(objekt.exponent, bindungen))
     is Betrag -> Betrag(ersetze(objekt.argument, bindungen))
     is Sinus -> Sinus(ersetze(objekt.argument, bindungen))
