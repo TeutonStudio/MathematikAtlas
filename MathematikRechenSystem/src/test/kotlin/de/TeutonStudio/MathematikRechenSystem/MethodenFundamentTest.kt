@@ -117,4 +117,48 @@ class MethodenFundamentTest {
         assertEquals(GanzeZahlen, methode.zielMengeFür("rechts"))
     }
 
+    @Test
+    fun `methode rendert Signatur und Term gemeinsam in cases Umgebung`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x, y),
+            vorschrift = addition(x, y),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen, y.name to GanzeZahlen),
+        )
+
+        val latex = methode.zuLatex()
+        assertTrue(latex.startsWith("f:\\begin{cases}"))
+        assertTrue(latex.contains("\\mathbb{R} \\times \\mathbb{Z} \\longrightarrow \\mathbb{R}"))
+        assertTrue(latex.contains("\\left(x,y\\right) \\mapsto x + y"))
+        assertTrue(latex.endsWith("\\end{cases}"))
+    }
+
+    @Test
+    fun `symbolische totale Ableitungsfunktion besitzt f Strich und ausgewertete Termzeile`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x, y),
+            vorschrift = addition(x, y),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen, y.name to ReelleZahlen),
+        )
+
+        val ableitung = differenziereMethodeStrukturiert(
+            methode,
+            DifferentialOrdnung.Konkret(1),
+            DifferentialOperator.Total,
+        ).methode
+        val latex = ableitung.zuLatex()
+
+        assertEquals("f'", ableitung.name)
+        assertTrue(latex.startsWith("f':\\begin{cases}"))
+        assertTrue(latex.contains("\\left(x,y\\right) \\mapsto f'\\left(x,y\\right)"))
+        assertTrue(latex.contains("\\mathcal L"))
+    }
+
 }

@@ -84,6 +84,7 @@ fun MengenAusdruck.fundamentalerZahlbereichOderNull(): FundamentalerZahlbereich?
     RationaleZahlen -> FundamentalerZahlbereich.RATIONAL
     ReelleZahlen -> FundamentalerZahlbereich.REELL
     KomplexeZahlen -> FundamentalerZahlbereich.KOMPLEX
+    FundamentalerZahlbereich.QUATERNION.alsMenge() -> FundamentalerZahlbereich.QUATERNION
     NichtnegativeGanzeZahlenSemantik.menge -> FundamentalerZahlbereich.NATUERLICH_MIT_NULL
     else -> null
 }

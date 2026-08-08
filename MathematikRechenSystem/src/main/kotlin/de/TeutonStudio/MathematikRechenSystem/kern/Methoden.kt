@@ -71,9 +71,28 @@ data class Methode(
         return if (ausgabeNamen.size == 1) vorschrift else (vorschrift as Tupel).elemente[index]
     }
 
-    override fun zuLatex(): String {
-        val p = parameter.joinToString(",") { it.zuLatex() }
-        return "$name($p) = ${vorschrift.zuLatex()}"
+    override fun zuLatex(): String = zuFallunterscheidungsLatex()
+
+    /** Gemeinsame große Darstellung einer Methode mit Signatur und Termzeile. */
+    fun zuFallunterscheidungsLatex(): String {
+        val signatur = runCatching { methodenSignatur() }.getOrNull()
+        val argumente = parameter.joinToString(",") { it.zuLatex() }
+        val argumentTupel = when (parameter.size) {
+            0 -> "\\varnothing"
+            1 -> argumente
+            else -> "\\left($argumente\\right)"
+        }
+        val bild = when (val ausdruck = vorschrift) {
+            is AbleitungsMethodenAusdruck -> {
+                val aufrufArgumente = parameter.joinToString(",") { it.zuLatex() }
+                "${ausdruck.zuLatex()}\\left($aufrufArgumente\\right)"
+            }
+            else -> ausdruck.zuLatex()
+        }
+        return "$name:\\begin{cases}" +
+            "${signatur?.werteVorrat?.zuLatex() ?: "?"} \\longrightarrow " +
+            "${signatur?.zielMenge?.zuLatex() ?: zielMenge.zuLatex()}\\\\" +
+            "$argumentTupel \\mapsto $bild\\end{cases}"
     }
 
     fun zielMengeFür(ausgabe: String): MengenAusdruck {

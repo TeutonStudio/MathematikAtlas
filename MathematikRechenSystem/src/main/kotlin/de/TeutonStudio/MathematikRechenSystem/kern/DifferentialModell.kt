@@ -114,6 +114,7 @@ data class AbleitungsMethodenAusdruck(
         is DifferentialOrdnung.Symbolisch -> "${methode.name}^{(${ordnung.zuLatex()})}"
         is DifferentialOrdnung.Konkret -> when {
             ordnung.wert == BigInteger.ZERO -> methode.name
+            ordnung.wert == BigInteger.ONE -> "${methode.name}'"
             else -> differentialRoemischeZahlOderNull(ordnung.wert)?.let { roemisch ->
                 "${methode.name}^{\\mathrm{$roemisch}}"
             } ?: "${methode.name}^{(${ordnung.wert})}"
