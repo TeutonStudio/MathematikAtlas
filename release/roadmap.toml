@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.28.x"
-current_version = "2.28.1"
+current_version = "2.28.2"
 first_guarded_version = "2.3.13"
 
 releases = [
@@ -83,5 +83,5 @@ releases = [
   { version = "2.27.3", title = "Standardkarten-Seeding in installierter APK reparieren", roadmap = "v2.27.x Standardkarten und Projektstabilisierung", status = "released", previous_release = "2.27.2", branch = "samai/v2.27.3-standardkarten-seeding", kind = "fix", version_axis = "x", reason = "Trennt den sichtbaren Knoten-Erstellen-Katalog vom lade-kompatiblen Standardkarten-Katalog, sodass historische, migrationsfähige Knotentypen das mitgelieferte Standardkartenpaket nicht mehr vollständig ausfiltern. Ergänzt Regressionstests und führt keinen neuen Knotentyp ein." },
   { version = "2.28.0", title = "Graph einer Methode als symbolische Menge", roadmap = "v2.28.x Methoden, Funktionsgraphen und Mengenkonstruktionen", status = "released", previous_release = "2.27.3", branch = "agent/v2.28.0-methodengraph", kind = "feature", version_axis = "y", new_node_types = ["mathematik.methodenGraph"], reason = "Führt den separat erzeugbaren Graph-Knoten ein und modelliert Graph(f) zentral als symbolische Menge im Produktraum des aktuellen Argument- und Zielraums einer Methode." },
   { version = "2.28.1", title = "Zentraler Koordinatenadapter und Darstellbarkeitsdiagnosen", roadmap = "v2.28.x Visualisierung und Koordinatenverträge", status = "released", previous_release = "2.28.0", branch = "release/v2.28.1-koordinatenadapter", kind = "feature", version_axis = "x", reason = "Vereinheitlicht die reelle Koordinatenextraktion für Tupel, Vektoren, Methoden und Koordinatenbilder, erhält bedingte und projektionsbedürftige Zustände bis zur sichtbaren Visualisierungsdiagnose und führt keinen neuen registrierten Knotentyp ein." },
-  { version = "2.28.2", title = "Zahlenrechner: Zahlenfunktionen, Ableitungsfunktion, Differential und Integral konsolidieren", roadmap = "v2.28.x Zahlenrechner, Methoden und Analysis", status = "reserved", previous_release = "2.28.1", branch = "samai/v2.28.2/zahlenrechner-konsolidierung", kind = "feature", version_axis = "x", reason = "Erweitert den bestehenden Zahlenrechner um endlichstellige Zahlenfunktionen und konsolidiert Ableitungs-, Differential- und Integralpfade, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen." },
+  { version = "2.28.2", title = "Zahlenfunktionsvertrag und gemeinsame Methodendarstellung", roadmap = "v2.28.x Zahlenrechner, Methoden und Analysis", status = "released", previous_release = "2.28.1", branch = "samai/v2.28.2/zahlenrechner-konsolidierung", kind = "feature", version_axis = "x", reason = "Ergänzt eine signaturbasierte Zahlenfunktionsanforderung für endlichstellige Methoden, vereinheitlicht die cases-Darstellung von Methoden und rendert die erste totale Ableitungsfunktion als f' mit Termzeile, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen." },
 ]
