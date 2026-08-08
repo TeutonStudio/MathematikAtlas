@@ -183,17 +183,8 @@ class MathematikKnotenRenderer(
                 .getOrElse { methode.zuLatex() }
         }
 
-        val signatur = runCatching { methode.methodenSignatur() }.getOrNull()
-        val argumente = methode.parameter.joinToString(",") { it.zuLatex() }
-        val wertevorrat = signatur?.werteVorrat?.zuLatex() ?: "?"
-        val zielmenge = signatur?.zielMenge?.zuLatex() ?: "?"
-        val bild = runCatching { methode.vorschrift.zuLatex() }.getOrDefault("?")
-        val tupel = when (methode.parameter.size) {
-            0 -> "\\left\\right"
-            1 -> argumente
-            else -> "\\left($argumente\\right)"
-        }
-        return "${methode.name}:\\begin{cases}$wertevorrat \\longrightarrow $zielmenge\\\\$tupel \\mapsto $bild\\end{cases}"
+        return runCatching { methode.zuFallunterscheidungsLatex() }
+            .getOrElse { methode.zuLatex() }
     }
 
     private companion object {

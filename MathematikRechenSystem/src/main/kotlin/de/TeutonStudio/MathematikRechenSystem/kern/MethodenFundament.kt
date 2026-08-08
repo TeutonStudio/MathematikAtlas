@@ -96,16 +96,40 @@ private fun MethodenParameter.istMengenArgument(): Boolean = when (this) {
 }
 
 private fun MengenAusdruck.istFunktionalerRaum(): Boolean = when (this) {
-    NatürlicheZahlen,
-    GanzeZahlen,
-    RationaleZahlen,
-    ReelleZahlen,
-    KomplexeZahlen -> true
     is Vektorraum -> skalarMenge.istFunktionalerRaum()
     is Matrizenraum -> skalarMenge.istFunktionalerRaum()
     is Tensorraum -> elementMenge.istFunktionalerRaum()
     is Tupelraum -> komponenten.all { it.istFunktionalerRaum() }
-    else -> false
+    else -> istZahlenmenge()
+}
+
+/**
+ * Erkennt ausschließlich strukturell belegte Teilmengen der Hamilton-Quaternionen.
+ *
+ * Unbekannte benannte Mengen werden absichtlich nicht anhand ihres sichtbaren Namens
+ * als Zahlenmenge geraten. Bei einem Schnitt genügt dagegen ein numerischer Faktor:
+ * Der gesamte Schnitt ist bereits Teilmenge dieses Faktors.
+ */
+fun MengenAusdruck.istZahlenmenge(): Boolean = when (this) {
+    LeereMenge -> true
+    is BeschraenkteZahlmenge -> FundamentaleZahlbereiche.istTeilbereich(
+        traeger,
+        FundamentalerZahlbereich.QUATERNION,
+    )
+    is ReellesIntervall -> true
+    is EndlicheMenge -> elemente.all { it is ZahlAusdruck }
+    is DefinierteMenge ->
+        variablen.size == 1 && variablen.single().grundMenge.istZahlenmenge()
+    is GefilterteMenge -> menge.istZahlenmenge()
+    is Vereinigung -> mengen.isNotEmpty() && mengen.all { it.istZahlenmenge() }
+    is Schnitt -> mengen.any { it.istZahlenmenge() }
+    is MengenDifferenz -> links.istZahlenmenge()
+    else -> fundamentalerZahlbereichOderNull()?.let { bereich ->
+        FundamentaleZahlbereiche.istTeilbereich(
+            bereich,
+            FundamentalerZahlbereich.QUATERNION,
+        )
+    } == true
 }
 
 /** Semantische Eingangsprüfung statt immer weiterer Methoden-Anschlussunterarten. */
@@ -145,6 +169,30 @@ fun interface MethodenAnforderung {
         override fun prüfe(methode: Methode): String? =
             if (methode.istPrädikat()) null
             else "Die Methode '${methode.name}' erfüllt das Prädikatskriterium nicht."
+    }
+
+    /** Endlichstellige Methode mit ausschließlich numerischen Argument- und Zielräumen. */
+    data object Zahlenfunktion : MethodenAnforderung {
+        override fun prüfe(methode: Methode): String? = runCatching {
+            val signatur = methode.methodenSignatur()
+            val nichtNumerischesArgument = signatur.argumente.withIndex().firstOrNull { (_, argument) ->
+                !argument.werteVorrat.istZahlenmenge()
+            }
+            when {
+                nichtNumerischesArgument != null -> {
+                    val (index, argument) = nichtNumerischesArgument
+                    "Das ${index + 1}. Argument '${argument.parameter.name}' der Methode " +
+                        "'${methode.name}' besitzt mit ${argument.werteVorrat.zuLatex()} " +
+                        "keinen nachgewiesenen Zahlenraum innerhalb von \\mathbb H."
+                }
+                !signatur.zielMenge.istZahlenmenge() ->
+                    "Die Zielmenge ${signatur.zielMenge.zuLatex()} der Methode " +
+                        "'${methode.name}' ist keine nachgewiesene Teilmenge von \\mathbb H."
+                else -> null
+            }
+        }.getOrElse { fehler ->
+            fehler.message ?: "Die Methodensignatur ist unvollständig."
+        }
     }
 
     data object Endomorphismus : MethodenAnforderung {

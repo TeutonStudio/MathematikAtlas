@@ -189,7 +189,8 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
         } else {
             symbolischerAnwendungsWert(methode, argumente, ergebnisArt) to null
         }
-        val anwendungsLatex = "${methodenWert.anzeigeLatex()}(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
+        val methodenReferenz = if (methode is Methode) methode.name else methodenWert.anzeigeLatex()
+        val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
