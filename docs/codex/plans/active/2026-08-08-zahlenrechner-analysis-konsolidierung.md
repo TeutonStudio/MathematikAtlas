@@ -2,7 +2,7 @@
 
 ## Status
 
-Aktiv auf `samai/v2.28.2/zahlenrechner-konsolidierung`; Release `v2.28.2` ist als x-Version reserviert. Grundlage ist Issue #340 und der veröffentlichte Commit `c90ccf892eef9e977aad18faa95091978e5d0c37` (`v2.28.1`).
+Aktiv für Issue #340. Release `v2.28.2` schließt ausschließlich M1 als x-Version ab; M2–M5 bleiben für nachfolgende Releases offen. Grundlage ist der Branch `samai/v2.28.2/zahlenrechner-konsolidierung` auf dem veröffentlichten Commit `c90ccf892eef9e977aad18faa95091978e5d0c37` (`v2.28.1`).
 
 ## Ziel und Nutzerwirkung
 
@@ -68,11 +68,11 @@ Spätere Meilensteine erweitern den Zahlenrechneranschluss kontrolliert um „Za
 
 ## Meilensteine
 
-- [-] M1: Zahlenfunktionsvertrag und gemeinsamer Methodenrenderer.
-- [ ] M2: Punktweise Hebung gewöhnlicher Zahlenoperatoren und dynamischer Ausgang.
-- [ ] M3: Ableitungsfunktion, Differential sowie Methoden- und Termintegral im Zahlenrechner.
-- [ ] M4: Idempotente Kartenmigration und Entfernung der eigenständigen Vorlagen aus dem Erstellen-Katalog.
-- [ ] M5: Definitionskarten, Standardbeispiele, vollständige Regression und Releaseabschluss.
+- [x] M1: Zahlenfunktionsvertrag und gemeinsamer Methodenrenderer — in `v2.28.2` abgeschlossen.
+- [ ] M2: Punktweise Hebung gewöhnlicher Zahlenoperatoren und dynamischer Ausgang — Folgerelease, weiterhin Teil von #340.
+- [ ] M3: Ableitungsfunktion, Differential sowie Methoden- und Termintegral im Zahlenrechner — Folgerelease, weiterhin Teil von #340.
+- [ ] M4: Idempotente Kartenmigration und Entfernung der eigenständigen Vorlagen aus dem Erstellen-Katalog — Folgerelease, weiterhin Teil von #340.
+- [ ] M5: Definitionskarten, Standardbeispiele und vollständige End-to-End-Regression — Folgerelease, weiterhin Teil von #340.
 
 ## Konkrete Umsetzungsschritte für M1
 
@@ -108,7 +108,7 @@ M1 verändert keine persistierten Daten. Die späteren Migrationen erhalten Knot
 
 - [x] Releasezustand geprüft und `v2.28.1` veröffentlicht.
 - [x] `v2.28.2` als x-Version reserviert und SamAI-Branch erstellt.
-- [-] M1 wird implementiert.
+- [x] M1 implementiert und für `v2.28.2` als eigener Releaseumfang abgegrenzt.
 
 ## Entscheidungsprotokoll
 
@@ -123,4 +123,14 @@ Noch keine.
 
 ## Ergebnis und Verifikation
 
-Wird nach Abschluss jedes Meilensteins fortgeschrieben.
+M1 liefert eine signaturbasierte `MethodenAnforderung.Zahlenfunktion`, die gemeinsame `cases`-Darstellung für Methoden sowie die kanonische erste totale Ableitungsfunktion (f') einschließlich Termzeile. Konkrete Methodenaufrufe verwenden weiterhin ausschließlich die Methodenreferenz, beispielsweise (f(4)), und hängen Argumente nicht an die vollständige Methodendefinition.
+
+Verifiziert wurden:
+
+- Repository- und Architekturprüfung;
+- vollständige JVM-Tests und `:app:assembleDebug` im GitHub-Actions-Lauf `31262381674`;
+- Regressionstests für ein- und mehrstellige Methodenaufrufe;
+- strukturierte Zahlmengen einschließlich beschränkter, definierter, gefilterter und zusammengesetzter Mengen;
+- Abschlussdiff gegen `v2.28.1`: keine neuen Knotentypen und keine Persistenz- oder Anschlussmigration.
+
+Die Veröffentlichung `v2.28.2` umfasst bewusst nur M1. Punktweise Operatorhebung, Differential-/Integralintegration, Kartenmigration und Definitionskarten bleiben als M2–M5 in Issue #340 offen.
