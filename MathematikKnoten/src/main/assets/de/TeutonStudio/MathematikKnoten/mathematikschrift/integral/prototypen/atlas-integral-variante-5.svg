@@ -1,0 +1,46 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 320 350"
+    preserveAspectRatio="xMidYMid meet"
+    focusable="false"
+    aria-hidden="true"
+>
+    <!--
+        Atlas-Integral, Variante 5.
+
+        Ausgangspunkt ist die Blender-orientierte Formfamilie aus Variante 3 und 4.
+        Gegenüber Variante 4 wird nun die beabsichtigte Proportion explizit umgesetzt:
+        - der obere Bogen ist ungefähr viermal so breit wie die untere Schwingung,
+        - die untere Schwingung bleibt klein, rund und weich,
+        - der Mittelteil verbindet beide Bögen als gestreckte S-Linie.
+
+        Diese Datei bleibt eine Formreferenz als Mittellinie.
+        Die spätere produktive Glyphe wird aus derselben Form als geschlossene,
+        gefüllte Kontur abgeleitet.
+    -->
+    <path
+        d="M 176 292
+           C 170 306 157 319 141 323
+           C 127 326 114 323 106 315
+           C 98 307 96 296 99 284
+           C 103 268 112 253 126 237
+           C 141 220 159 205 177 189
+           C 196 172 215 156 229 137
+           C 243 118 251 96 250 73
+           C 249 56 244 41 234 30
+           C 221 17 200 12 171 12
+           C 139 12 106 18 78 31
+           C 57 42 43 58 36 79
+           C 29 99 29 121 35 142
+           C 42 165 57 183 76 197
+           C 93 209 113 221 128 239
+           C 140 253 145 269 143 285
+           C 141 298 135 308 126 314
+           C 118 320 108 321 100 317"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    />
+</svg>
