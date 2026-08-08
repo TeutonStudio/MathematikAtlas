@@ -89,6 +89,22 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
             return effektiveArt(karte, quelle, besucht)
         }
 
+        anschluss.artPriorisiertEingänge?.let { regel ->
+            if (!besucht.add(ref)) return anschluss.art
+            val quellArten = regel.eingänge.mapNotNull { eingangsName ->
+                val eingang = knoten.anschlüsse.firstOrNull {
+                    it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
+                } ?: return@mapNotNull null
+                val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
+                val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von
+                    ?: return@mapNotNull null
+                effektiveArt(karte, quelle, besucht.toMutableSet())
+            }
+            return regel.prioritäten.firstOrNull { priorität ->
+                quellArten.any { quellArt -> arten.istUnterart(quellArt, priorität) }
+            } ?: anschluss.art
+        }
+
         if (anschluss.artVereinigtEingänge.isEmpty()) return anschluss.art
         if (!besucht.add(ref)) return anschluss.art
         val quellArten = anschluss.artVereinigtEingänge.mapNotNull { eingangsName ->

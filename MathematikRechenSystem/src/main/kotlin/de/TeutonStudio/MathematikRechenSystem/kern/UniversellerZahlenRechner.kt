@@ -66,6 +66,60 @@ enum class UniversellerZahlenOperator(
             "Unbekannte Zahlenoperator-ID: ${id ?: "<null>"}"
         }
     }
+
+    val hebungsArt: ZahlenOperatorHebungsArt
+        get() = when (this) {
+            ITERIERTE_SUMME,
+            ITERIERTES_PRODUKT,
+            -> ZahlenOperatorHebungsArt.METHODENSPEZIFISCH
+            INTEGRAL,
+            DIFFERENTIAL,
+            -> ZahlenOperatorHebungsArt.ANALYSIS
+            ADDITION,
+            SUBTRAKTION,
+            MULTIPLIKATION,
+            DIVISION,
+            KEHRWERT,
+            POTENZ,
+            QUADRAT,
+            KUBIK,
+            WURZEL,
+            QUADRATWURZEL,
+            KUBIKWURZEL,
+            LOGARITHMUS,
+            LOGARITHMUS_BASIS_2,
+            NATUERLICHER_LOGARITHMUS,
+            LOGARITHMUS_BASIS_10,
+            MINIMUM,
+            MAXIMUM,
+            NORM,
+            ABRUNDUNG,
+            AUFRUNDUNG,
+            RUNDUNG,
+            KONJUGIERTE,
+            REALTEIL,
+            IMAGINAERTEIL,
+            KOMPLEXER_WINKEL,
+            KOMPLEXER_RADIUS,
+            KOMPLEX_AUS_POLAR,
+            KOMPLEX_AUS_KARTESISCH,
+            MODULO,
+            BETRAG,
+            EXPONENTIALFUNKTION,
+            SINUS,
+            COSINUS,
+            ARCSINUS,
+            ARCCOSINUS,
+            LIMES_HYPERREELL_ZU_REELL,
+            -> ZahlenOperatorHebungsArt.PUNKTWEISE
+        }
+}
+
+/** Expliziter Ausführungsvertrag sämtlicher registrierter Standardoperatoren. */
+enum class ZahlenOperatorHebungsArt {
+    PUNKTWEISE,
+    METHODENSPEZIFISCH,
+    ANALYSIS,
 }
 
 /** Zahlbereiche, die für die automatische Definitions- und Regelauswahl relevant sind. */

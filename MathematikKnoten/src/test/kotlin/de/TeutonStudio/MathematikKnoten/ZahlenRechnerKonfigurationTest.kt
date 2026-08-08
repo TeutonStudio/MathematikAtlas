@@ -1,6 +1,9 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
+import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
+import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
 import de.TeutonStudio.MathematikRechenSystem.kern.DivisionsSeite
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import kotlin.test.*
@@ -103,5 +106,45 @@ class ZahlenRechnerKonfigurationTest {
         assertEquals(bisherige.getValue("b"), erweitert.anschlüsse.single { it.name == "b" }.id)
         assertTrue(erweitert.anschlüsse.single { it.name == "c" }.dynamischErzeugt)
         assertTrue(erweitert.anschlüsse.single { it.name == "d" }.dynamischErzeugt)
+    }
+
+    @Test
+    fun `punktweise Operatoren akzeptieren kontrolliert Zahl oder Methode und schalten den Ausgang`() {
+        val addition = rechner(UniversellerZahlenOperator.ADDITION)
+        val a = addition.anschlüsse.single { it.name == "a" }
+        val ausgang = addition.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+        assertEquals(MathematikAnschlussArten.Objekt.id, a.art)
+        assertEquals(
+            setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
+            a.zulässigeArten,
+        )
+        assertEquals(listOf(MathematikAnschlussArten.Methode.id), ausgang.artPriorisiertEingänge?.prioritäten)
+
+        val methodenQuelle = KnotenDaten(
+            art = "test.methode",
+            name = "f",
+            anschlüsse = listOf(
+                AnschlussDaten(
+                    name = "methode",
+                    richtung = AnschlussRichtung.Ausgang,
+                    kante = AnschlussKante.Rechts,
+                    art = MathematikAnschlussArten.Methode.id,
+                ),
+            ),
+        )
+        val verbindung = VerbindungDaten(
+            von = AnschlussVerweis(methodenQuelle.id, methodenQuelle.anschlüsse.single().id),
+            zu = AnschlussVerweis(addition.id, a.id),
+        )
+        val karte = KartenDaten(name = "Punktweise", knoten = listOf(methodenQuelle, addition))
+        val prüfung = GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle))
+        assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karte, verbindung.von, verbindung.zu))
+        assertEquals(
+            MathematikAnschlussArten.Methode.id,
+            prüfung.effektiveArt(
+                karte.copy(verbindungen = listOf(verbindung)),
+                AnschlussVerweis(addition.id, ausgang.id),
+            ),
+        )
     }
 }

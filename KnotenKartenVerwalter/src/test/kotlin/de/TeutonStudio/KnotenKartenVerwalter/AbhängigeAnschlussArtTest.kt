@@ -114,6 +114,36 @@ class AbhängigeAnschlussArtTest {
         assertTrue(abgelehnt.grund.contains("abhängigen Ausgang"))
     }
 
+    @Test fun `Priorisierte Eingangsart schaltet den Ausgang sobald eine Methode verbunden ist`() {
+        val methode = AnschlussArt(AnschlussArtId("methode"), "Methode", objekt.id)
+        val lokalePrüfung = GraphPrüfung(
+            AnschlussArtRegister(listOf(objekt, zahl, menge, aussage, methode)),
+        )
+        val zahlQuelle = quelle("zahl", zahl.id)
+        val methodenQuelle = quelle("methode", methode.id)
+        val rechner = priorisierterRechner(methode.id)
+        val nurZahl = KartenDaten(
+            name = "Nur Zahl",
+            knoten = listOf(zahlQuelle, rechner),
+            verbindungen = listOf(
+                VerbindungDaten(
+                    von = ref(zahlQuelle, AnschlussRichtung.Ausgang),
+                    zu = ref(rechner, "a", AnschlussRichtung.Eingang),
+                ),
+            ),
+        )
+        assertEquals(zahl.id, lokalePrüfung.effektiveArt(nurZahl, ref(rechner, AnschlussRichtung.Ausgang)))
+
+        val mitMethode = nurZahl.copy(
+            knoten = listOf(zahlQuelle, methodenQuelle, rechner),
+            verbindungen = nurZahl.verbindungen + VerbindungDaten(
+                von = ref(methodenQuelle, AnschlussRichtung.Ausgang),
+                zu = ref(rechner, "b", AnschlussRichtung.Eingang),
+            ),
+        )
+        assertEquals(methode.id, lokalePrüfung.effektiveArt(mitMethode, ref(rechner, AnschlussRichtung.Ausgang)))
+    }
+
     private fun quelle(name: String, art: AnschlussArtId) = KnotenDaten(
         art = "test.quelle",
         name = name,
@@ -143,6 +173,39 @@ class AbhängigeAnschlussArtTest {
             AnschlussDaten(name = "aussage", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = aussage.id, reihenfolge = 1),
             AnschlussDaten(name = "lüge", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = objekt.id, reihenfolge = 2),
             AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = objekt.id, artVereinigtEingänge = listOf("wahr", "lüge")),
+        ),
+    )
+
+    private fun priorisierterRechner(methodenArt: AnschlussArtId) = KnotenDaten(
+        art = "test.rechner",
+        name = "Rechner",
+        anschlüsse = listOf(
+            AnschlussDaten(
+                name = "a",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = objekt.id,
+                reihenfolge = 0,
+                zulässigeArten = setOf(zahl.id, methodenArt),
+            ),
+            AnschlussDaten(
+                name = "b",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = objekt.id,
+                reihenfolge = 1,
+                zulässigeArten = setOf(zahl.id, methodenArt),
+            ),
+            AnschlussDaten(
+                name = "wert",
+                richtung = AnschlussRichtung.Ausgang,
+                kante = AnschlussKante.Rechts,
+                art = zahl.id,
+                artPriorisiertEingänge = AnschlussArtPriorisierung(
+                    eingänge = listOf("a", "b"),
+                    prioritäten = listOf(methodenArt),
+                ),
+            ),
         ),
     )
 

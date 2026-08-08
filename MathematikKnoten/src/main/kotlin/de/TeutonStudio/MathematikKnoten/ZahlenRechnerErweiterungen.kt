@@ -32,6 +32,9 @@ enum class ErweiterterZahlenOperator(
             id == operator.stabileId || id.equals(operator.name, ignoreCase = true)
         }
     }
+
+    val hebungsArt: ZahlenOperatorHebungsArt
+        get() = ZahlenOperatorHebungsArt.PUNKTWEISE
 }
 
 fun istZahlenRechnerFormel(knoten: KnotenDaten): Boolean =
@@ -72,10 +75,14 @@ fun konfiguriereErweitertenZahlenRechner(
         name = "a",
         richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links,
-        art = MathematikAnschlussArten.Zahl.id,
+        art = MathematikAnschlussArten.Objekt.id,
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
+        zulässigeArten = setOf(
+            MathematikAnschlussArten.Zahl.id,
+            MathematikAnschlussArten.Methode.id,
+        ),
     )
     val ausgang = (bisherigerAusgang ?: AnschlussDaten(
         name = "wert",
@@ -90,6 +97,14 @@ fun konfiguriereErweitertenZahlenRechner(
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
+        artFolgtEingang = null,
+        artVereinigtEingänge = emptyList(),
+        zulässigeArten = emptySet(),
+        artAbbildungVonEingang = null,
+        artPriorisiertEingänge = AnschlussArtPriorisierung(
+            eingänge = listOf("a"),
+            prioritäten = listOf(MathematikAnschlussArten.Methode.id),
+        ),
     )
     return knoten.copy(
         name = operator.titel,
@@ -131,6 +146,7 @@ fun konfiguriereZahlenRechnerFormel(
             // Formelvariablen werden automatisch konfiguriert, sind aber keine
             // provisorischen Variadic-Eingänge und müssen unverbunden sichtbar bleiben.
             dynamischErzeugt = false,
+            zulässigeArten = emptySet(),
         )
     }
     val alterAusgang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
@@ -147,6 +163,11 @@ fun konfiguriereZahlenRechnerFormel(
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
+        artFolgtEingang = null,
+        artVereinigtEingänge = emptyList(),
+        zulässigeArten = emptySet(),
+        artAbbildungVonEingang = null,
+        artPriorisiertEingänge = null,
     )
     return knoten.copy(
         name = "Formel",
@@ -178,7 +199,13 @@ private fun werteErweitertenOperatorAus(
     operator: ErweiterterZahlenOperator,
 ): KnotenAuswertungsErgebnis {
     val eingang = kontext.eingänge["a"] ?: error("Der Eingang a fehlt.")
-    val argument = eingang.objekt as? ZahlAusdruck ?: error("Der Eingang a enthält keine Zahl.")
+    val methode = eingang.objekt as? Methode
+    val vorbereitung = methode?.let {
+        require(operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE)
+        bereitePunktweiseZahlenfunktionVor(mapOf("a" to it))
+    }
+    val argument = vorbereitung?.operanden?.getValue("a")
+        ?: (eingang.objekt as? ZahlAusdruck ?: error("Der Eingang a enthält weder eine Zahl noch eine Zahlenfunktion."))
     val argumentLatex = eingang.anzeigeLatex()
     val grad = kontext.knoten.parameter[ZAHLENRECHNER_GRADWINKEL].toBoolean()
     val gradAuswerten = kontext.knoten.parameter[ZAHLENRECHNER_GRAD_AUSWERTEN] != "false"
@@ -188,21 +215,69 @@ private fun werteErweitertenOperatorAus(
         argumentLatex
     }
     val latex = "${operator.symbolLatex}\\left($effektivLatex\\right)"
-    val objekt = symbolischerZahlterm("${operator.stabileId}:$latex", latex)
+    val zahlObjekt = symbolischerZahlterm("${operator.stabileId}:$latex", latex)
+    val bedingungen = erweiterteDefinitionsBedingungen(operator, argument)
+    val objekt: MathematischesObjekt = if (vorbereitung == null) {
+        zahlObjekt
+    } else {
+        val ziel = methode?.zielMenge?.fundamentalerZahlbereichOderNull()?.let { bereich ->
+            if (FundamentaleZahlbereiche.istTeilbereich(bereich, FundamentalerZahlbereich.REELL)) {
+                ReelleZahlen
+            } else {
+                KomplexeZahlen
+            }
+        } ?: KomplexeZahlen
+        vorbereitung.erzeugeMethode(
+            name = "${operator.symbolLatex}(${methode?.name})",
+            vorschrift = zahlObjekt,
+            zielMenge = ziel,
+            definitionsBedingungen = bedingungen,
+        )
+    }
     return KnotenAuswertungsErgebnis(
         ausgaben = mapOf(
             "wert" to BedingterWert(
                 objekt = objekt,
                 annahmen = eingang.annahmen,
-                werteVorrat = eingang.werteVorrat,
+                zielMenge = (objekt as? Methode)?.zielMenge,
+                werteVorrat = (objekt as? Methode)?.methodenSignatur()?.werteVorrat ?: eingang.werteVorrat,
                 reelleVariablen = eingang.reelleVariablen,
                 variablenQuellen = eingang.variablenQuellen,
-                latexDarstellung = latex,
+                latexDarstellung = if (objekt is Methode) null else latex,
             ),
         ),
         eingänge = kontext.eingänge,
-        warnungen = definitionsHinweise(operator),
+        warnungen = buildList {
+            addAll(definitionsHinweise(operator))
+            (objekt as? Methode)?.let { punktweise ->
+                add("Signatur: ${punktweise.methodenSignatur().werteVorrat.zuLatex()} → ${punktweise.zielMenge.zuLatex()}")
+                if (bedingungen.isNotEmpty()) {
+                    add("Definitionsbedingung: ${bedingungen.joinToString(" \\land ") { it.zuLatex() }}")
+                }
+            }
+        },
     )
+}
+
+private fun erweiterteDefinitionsBedingungen(
+    operator: ErweiterterZahlenOperator,
+    argument: ZahlAusdruck,
+): List<Aussage> = when (operator) {
+    ErweiterterZahlenOperator.TANGENS,
+    ErweiterterZahlenOperator.SEKANS,
+    -> listOf(Ungleichheit(Cosinus(argument), RationaleZahl.Null))
+    ErweiterterZahlenOperator.COTANGENS,
+    ErweiterterZahlenOperator.KOSEKANS,
+    -> listOf(Ungleichheit(Sinus(argument), RationaleZahl.Null))
+    ErweiterterZahlenOperator.COTANGENS_HYPERBOLICUS,
+    ErweiterterZahlenOperator.KOSEKANS_HYPERBOLICUS,
+    -> listOf(
+        Ungleichheit(
+            symbolischerZahlterm("sinh:${argument.zuLatex()}", "\\sinh(${argument.zuLatex()})"),
+            RationaleZahl.Null,
+        ),
+    )
+    else -> emptyList()
 }
 
 private fun werteFormelAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {

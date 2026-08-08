@@ -100,17 +100,23 @@ private fun werteStrukturierteDivisionAus(
         ?: return basisErgebnis.copy(fehler = "Der Dividendeneingang a fehlt.")
     val divisorWert = kontext.eingänge["b"]
         ?: return basisErgebnis.copy(fehler = "Der Divisoreingang b fehlt.")
-    val dividend = dividendWert.objekt as? ZahlAusdruck
-        ?: return basisErgebnis.copy(fehler = "Der Dividend ist keine Zahl.")
-    val divisor = divisorWert.objekt as? ZahlAusdruck
-        ?: return basisErgebnis.copy(fehler = "Der Divisor ist keine Zahl.")
+    val punktweiseMethode = basisErgebnis.ausgaben["wert"]?.objekt as? Methode
+    val punktweiseDivision = punktweiseMethode?.vorschrift as? Division
+    val dividend = punktweiseDivision?.dividend ?: (dividendWert.objekt as? ZahlAusdruck)
+        ?: return basisErgebnis.copy(fehler = "Der Dividend ist weder eine Zahl noch Teil einer punktweisen Zahlenfunktion.")
+    val divisor = punktweiseDivision?.divisor ?: (divisorWert.objekt as? ZahlAusdruck)
+        ?: return basisErgebnis.copy(fehler = "Der Divisor ist weder eine Zahl noch Teil einer punktweisen Zahlenfunktion.")
 
     // Der bestehende dritte Eingang ist ein expliziter Ersatzwert für den exakten Nullfall.
     if (divisor == RationaleZahl.Null) return basisErgebnis
 
     val gemeinsam = gemeinsamerZahlenRechnerBereich(
         listOf(dividendWert, divisorWert).map { wert ->
-            inferiereZahlenRechnerBereich(wert.objekt as ZahlAusdruck, wert.werteVorrat)
+            when (val objekt = wert.objekt) {
+                is ZahlAusdruck -> inferiereZahlenRechnerBereich(objekt, wert.werteVorrat)
+                is Methode -> inferiereMethodenZielBereich(objekt)
+                else -> ZahlenRechnerBereich.UNBEKANNT
+            }
         },
     )
     val kommutativitaet = when {
@@ -138,6 +144,10 @@ private fun werteStrukturierteDivisionAus(
     )
     val bisher = basisErgebnis.ausgaben["wert"]
         ?: BedingterWert(objekt = ausdruck)
+    val ergebnisObjekt: MathematischesObjekt = punktweiseMethode?.copy(
+        name = "${punktweiseMethode.name}_{${seite.latexIndex}}",
+        vorschrift = ausdruck,
+    ) ?: ausdruck
     val hinweise = when (ausdruck) {
         is StrukturierteDivision -> buildList {
             add("Divisionsseite: ${seite.persistenzWert}")
@@ -148,14 +158,29 @@ private fun werteStrukturierteDivisionAus(
     return basisErgebnis.copy(
         ausgaben = basisErgebnis.ausgaben + (
             "wert" to bisher.copy(
-                objekt = ausdruck,
-                latexDarstellung = ausdruck.zuLatex(),
+                objekt = ergebnisObjekt,
+                latexDarstellung = if (ergebnisObjekt is Methode) null else ausdruck.zuLatex(),
             )
         ),
         warnungen = (basisErgebnis.warnungen + hinweise).distinct(),
         fehler = null,
         eingänge = kontext.eingänge,
     )
+}
+
+private fun inferiereMethodenZielBereich(methode: Methode): ZahlenRechnerBereich {
+    val fundamental = methode.zielMenge.fundamentalerZahlbereichOderNull()
+        ?: (methode.zielMenge as? BeschraenkteZahlmenge)?.traeger
+    return when (fundamental) {
+        FundamentalerZahlbereich.NATUERLICH_POSITIV -> ZahlenRechnerBereich.NATUERLICH
+        FundamentalerZahlbereich.NATUERLICH_MIT_NULL -> ZahlenRechnerBereich.NATUERLICH_MIT_NULL
+        FundamentalerZahlbereich.GANZ -> ZahlenRechnerBereich.GANZ
+        FundamentalerZahlbereich.RATIONAL -> ZahlenRechnerBereich.RATIONAL
+        FundamentalerZahlbereich.REELL -> ZahlenRechnerBereich.REELL
+        FundamentalerZahlbereich.KOMPLEX -> ZahlenRechnerBereich.KOMPLEX
+        FundamentalerZahlbereich.QUATERNION -> ZahlenRechnerBereich.QUATERNION
+        null -> ZahlenRechnerBereich.UNBEKANNT
+    }
 }
 
 private fun ZahlenRechnerBereich.alsZahlbereichsIdOderNull(): ZahlbereichsId? = when (this) {

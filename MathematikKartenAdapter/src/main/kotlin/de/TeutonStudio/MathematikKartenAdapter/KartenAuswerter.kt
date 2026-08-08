@@ -274,7 +274,11 @@ class KartenAuswerter(
             ergebnisse[quellKnoten.id]?.ausgaben?.get(quellAnschluss.name)?.let { put(zielAnschluss.name, it) }
         }
         knoten.anschlüsse
-            .filter { it.richtung == AnschlussRichtung.Eingang && it.art == ZAHL_ART && it.name !in this }
+            .filter {
+                it.richtung == AnschlussRichtung.Eingang &&
+                    (it.art == ZAHL_ART || ZAHL_ART in it.zulässigeArten) &&
+                    it.name !in this
+            }
             .forEach { anschluss ->
                 val text = knoten.parameter[standardwertSchlüssel(anschluss.name)]?.trim().orEmpty()
                 if (text.isBlank()) return@forEach

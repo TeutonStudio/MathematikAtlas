@@ -98,6 +98,12 @@ object KartenDatenJson {
                             })
                         })
                     }
+                    anschluss.artPriorisiertEingänge?.let { regel ->
+                        put("artPriorisiertEingänge", JSONObject().apply {
+                            put("eingänge", JSONArray(regel.eingänge))
+                            put("prioritäten", JSONArray(regel.prioritäten.map { it.wert }))
+                        })
+                    }
                 })
             }
         })
@@ -146,6 +152,16 @@ object KartenDatenJson {
                             eingang = regel.getString("eingang"),
                             abbildung = abbildung.keys().asSequence().associate { von ->
                                 AnschlussArtId(von) to AnschlussArtId(abbildung.getString(von))
+                            },
+                        )
+                    },
+                    artPriorisiertEingänge = anschluss.optJSONObject("artPriorisiertEingänge")?.let { regel ->
+                        val eingänge = regel.optJSONArray("eingänge") ?: JSONArray()
+                        val prioritäten = regel.optJSONArray("prioritäten") ?: JSONArray()
+                        AnschlussArtPriorisierung(
+                            eingänge = List(eingänge.length()) { index -> eingänge.getString(index) },
+                            prioritäten = List(prioritäten.length()) { index ->
+                                AnschlussArtId(prioritäten.getString(index))
                             },
                         )
                     },
