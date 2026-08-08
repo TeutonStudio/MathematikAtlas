@@ -135,6 +135,7 @@ internal object KonzeptBibliothekRegister {
                 KonzeptKategorie("mengen", "Mengen"),
                 KonzeptKategorie("mengenoperationen", "Mengenoperationen"),
                 KonzeptKategorie("mengendefinitionen", "Mengendefinitionen"),
+                KonzeptKategorie("konstruktionen", "Konstruktionen"),
                 KonzeptKategorie(
                     "eigenschaften",
                     "Eigenschaften",
