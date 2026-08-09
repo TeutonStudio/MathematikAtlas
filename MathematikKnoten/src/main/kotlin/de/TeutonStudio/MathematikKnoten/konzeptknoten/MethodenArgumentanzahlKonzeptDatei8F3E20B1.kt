@@ -2,7 +2,6 @@ package de.TeutonStudio.MathematikKnoten.konzeptknoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.*
-import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object MethodenArgumentanzahlKonzeptDatei8F3E20B1 : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.methodenArgumentanzahl|Methoden-Argumentanzahl|")
@@ -33,7 +32,14 @@ internal object MethodenArgumentanzahlKonzeptDatei8F3E20B1 : ExpliziteKonzeptDat
             knotenArten = setOf("mathematik.methodenArgumentanzahl"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
-            karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),
+            karten = listOf(
+                WissensKartenReferenz.Generator(
+                    id = "${id.wert}.definition",
+                    generatorId = "konzeptkarte.generisch",
+                    rolle = WissensKartenRolle.Definition,
+                    primär = true,
+                ),
+            ),
         )
     }
 }
