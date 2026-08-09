@@ -54,6 +54,7 @@ object MathematikKartenMigrationen {
         .migriereIntegralKnoten()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
+        .migrierePraedikatStandardname()
         .migriereMethodenAnschlüsse()
         .migriereUniversellenZahlenRechner()
         .migriereStrukturierteDivision()
