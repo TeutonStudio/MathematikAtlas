@@ -23,8 +23,12 @@ import de.TeutonStudio.MathematikKnoten.MATRIX_SPALTEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_ZEILEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.RESTRIKTIONS_KNOTEN_ART
+import de.TeutonStudio.MathematikKnoten.TUPEL_EINZEL_EINGABEN
+import de.TeutonStudio.MathematikKnoten.TUPEL_METHODE
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
 import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
+import de.TeutonStudio.MathematikKnoten.setzeTupelKonfiguration
+import de.TeutonStudio.MathematikKnoten.tupelKonfiguration
 
 private const val STANDARDWERT_PREFIX = "standardwert."
 private val INSPEKTOR_BREITE = 310.dp
@@ -145,7 +149,10 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         return@Column
                     }
                     if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
-                    if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.tupel", "mathematik.vektor", "mathematik.zeilenVektor")) {
+                    if (knoten.art == "mathematik.tupel") TupelInspektor(knoten, zustand)
+                    if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
+                        knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN
+                    ) {
                         val wert = knoten.parameter["festeEingänge"] ?: "2"
                         var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                         OutlinedTextField(
@@ -225,6 +232,64 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
             panel.placeRelative(x = -breite - rand, y = oben)
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TupelInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
+    val konfiguration = tupelKonfiguration(knoten)
+    val erzeugungsArten = listOf(
+        TUPEL_EINZEL_EINGABEN to "Elemente einzeln",
+        TUPEL_METHODE to "Dimension und Indexmethode",
+    )
+    var menüGeöffnet by remember(knoten.id, konfiguration.erzeugungsArt) { mutableStateOf(false) }
+    HorizontalDivider()
+    Text("Tupel erzeugen", style = MaterialTheme.typography.titleSmall)
+    ExposedDropdownMenuBox(
+        expanded = menüGeöffnet,
+        onExpandedChange = { menüGeöffnet = it },
+    ) {
+        OutlinedTextField(
+            value = erzeugungsArten.first { it.first == konfiguration.erzeugungsArt }.second,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Erzeugungsart") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menüGeöffnet) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = menüGeöffnet,
+            onDismissRequest = { menüGeöffnet = false },
+        ) {
+            erzeugungsArten.forEach { (art, bezeichnung) ->
+                DropdownMenuItem(
+                    text = { Text(bezeichnung) },
+                    onClick = {
+                        menüGeöffnet = false
+                        if (art != konfiguration.erzeugungsArt) {
+                            zustand.editor.setzeTupelKonfiguration(knoten.id, art)
+                        }
+                    },
+                )
+            }
+        }
+    }
+    Text(
+        if (konfiguration.erzeugungsArt == TUPEL_METHODE) {
+            "Erzeugt für eine konkrete ganze Dimension n ≥ 1 das Tupel (f(1), …, f(n)). Die einstellige Methode darf beliebige mathematische Objekte liefern."
+        } else {
+            "Erzeugt ein Zahlentupel aus den geordneten Eingängen."
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Text(
+        "Beim Wechsel der Erzeugungsart werden inkompatible Verbindungen gemeinsam mit der Änderung entfernt und können per Rückgängig wiederhergestellt werden.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
