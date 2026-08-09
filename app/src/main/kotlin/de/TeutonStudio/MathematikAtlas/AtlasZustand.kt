@@ -63,6 +63,11 @@ class AtlasZustand(context: Context) {
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
     }
 
+    fun berechneKnotenCacheNeu(knotenId: KnotenId) {
+        auswerter.verwerfeCache(knotenId)
+        werteAus()
+    }
+
     fun öffne(karte: KartenDaten, alsUnterkarte: Boolean = false) {
         val aktualisiert = aktualisiereAssoziativeKnoten(karte)
         editor.ersetzeKarte(aktualisiert)
@@ -203,13 +208,13 @@ class AtlasZustand(context: Context) {
 
     fun renderer() = MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
 
-    fun rendererFür(knoten: KnotenDaten) = when {
+    fun rendererFür(knoten: KnotenDaten) = (when {
         knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenRenderer
         knoten.art.startsWith("konzept.") -> KonzeptDokumentationsRenderer
         knoten.art == "mathematik.visualisierung" -> VisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
         knoten.art == "mathematik.geometrie.visualisierung" -> GeometrieVisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
         else -> renderer()
-    }
+    }).mitAuswertungszeit { daten -> auswertung.knoten[daten.id] }
 
     fun setzeSuchText(text: String) {
         suchText = text
