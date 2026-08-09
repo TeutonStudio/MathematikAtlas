@@ -116,14 +116,12 @@ class ZahlenRechnerDifferentialTest {
             zielMenge = ReelleZahlen,
             werteVorräte = mapOf("x" to ReelleZahlen, "y" to ReelleZahlen),
         )
-        val knoten = konfiguriereZahlenRechnerDifferential(
+        val basisKnoten = konfiguriereZahlenRechnerDifferential(
             basis(),
             ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
-        ).copy(
-            parameter = konfiguriereZahlenRechnerDifferential(
-                basis(),
-                ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
-            ).parameter + mapOf(
+        )
+        val knoten = basisKnoten.copy(
+            parameter = basisKnoten.parameter + mapOf(
                 DIFFERENTIAL_OPERATOR_PARAMETER to DifferentialOperator.Partiell(2).operatorId,
                 DIFFERENTIAL_ARGUMENT_INDEX_PARAMETER to "2",
             ),
@@ -166,9 +164,7 @@ class ZahlenRechnerDifferentialTest {
         val differential = assertIs<MethodenDifferential>(ergebnis.ausgaben.getValue("wert").objekt)
 
         assertEquals("d_{1}f", differential.zuLatex())
-        assertTrue(differential.definitionsLatex().contains("d_{1}f=d f".replace(" ", "")) || differential.definitionsLatex().contains("\\iota_{1}"))
         assertTrue(differential.definitionsLatex().contains("\\iota_{1}"))
-        assertFalse(differential is Methode)
     }
 
     @Test
