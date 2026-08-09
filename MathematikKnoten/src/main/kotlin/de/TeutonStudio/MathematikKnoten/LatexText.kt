@@ -6,32 +6,42 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import com.hrm.latex.renderer.Latex
+import com.hrm.latex.renderer.model.LatexConfig
+import com.hrm.latex.renderer.model.LatexTheme
 import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
 
-private val STANDARD_WAHR_FARBE = Color(0xFF2E7D32)
-private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
+private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\{#1\\right\\}}"
+private const val ATLAS_IMPLIES_MACRO = "\\newcommand{\\implies}{\\Rightarrow}"
+private const val ATLAS_IFF_MACRO = "\\newcommand{\\iff}{\\Leftrightarrow}"
+private const val ATLAS_LONGTO_MACRO = "\\newcommand{\\longto}{\\longrightarrow}"
+private val ATLAS_MACROS = listOf(
+    ATLAS_SET_MACRO,
+    ATLAS_IMPLIES_MACRO,
+    ATLAS_IFF_MACRO,
+    ATLAS_LONGTO_MACRO,
+).joinToString(separator = "")
 
 /**
- * Stellt den vom Rechenkern erzeugten LaTeX-Teilumfang nativ dar. Es bleibt bewusst
- * ohne WebView und ohne externen TeX-Renderer, unterstützt aber Gruppen, Hoch- und
- * Tiefstellungen, Brüche, Matrizen und die verwendeten mathematischen Befehle.
- * `\\int` wird zentral mit der Atlas-Integralglyphe (Variante 4) dargestellt.
+ * Zentrale LaTeX-Fassade des Atlas.
+ *
+ * Gewöhnliche mathematische Layoutarbeit wird vollständig an den nativen
+ * Compose-Multiplatform-Renderer delegiert. Der Atlas interpretiert insbesondere
+ * keine Brüche, Matrizen, cases-Umgebungen, skalierenden Klammern oder großen
+ * Operatoren mehr selbst.
+ *
+ * Einzige bewusste Darstellungs-Sonderregel bleibt die Atlas-Integralglyphe. Sie
+ * ersetzt ausschließlich das erste echte `\\int`; Grenzen und Restformel werden
+ * wiederum durch denselben LaTeX-Renderer dargestellt.
  */
 @Composable
 fun LatexText(
@@ -39,25 +49,17 @@ fun LatexText(
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
-    val dunklesSchema = isSystemInDarkTheme()
-    val wahrFarbe = if (dunklesSchema) Color(0xFF81C784) else Color(0xFF1B5E20)
-    val lügeFarbe = if (dunklesSchema) Color(0xFFEF9A9A) else Color(0xFFB71C1C)
     val normalisiert = normalisiereLatexQuelltext(latex)
     val integral = zerlegeIntegralOperator(normalisiert)
-    val großerOperator = zerlegeGroßenOperator(normalisiert)
 
-    if (integral != null && (großerOperator == null || integral.position <= großerOperator.position)) {
+    if (integral != null) {
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             if (integral.vorher.isNotBlank()) {
-                Text(
-                    latexZuAnnotiertemText(integral.vorher, wahrFarbe, lügeFarbe),
-                    style = style,
-                    color = LocalContentColor.current,
-                )
+                EchterLatexText(integral.vorher, style = style)
             }
             AtlasIntegralOperator(
                 untereAnnotation = integral.untereAnnotation,
@@ -74,45 +76,49 @@ fun LatexText(
         return
     }
 
-    if (großerOperator != null) {
-        Row(
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            if (großerOperator.vorher.isNotBlank()) {
-                Text(
-                    latexZuAnnotiertemText(großerOperator.vorher, wahrFarbe, lügeFarbe),
-                    style = style,
-                    color = LocalContentColor.current,
-                )
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    latexZuAnnotiertemText(großerOperator.operator, wahrFarbe, lügeFarbe),
-                    style = style,
-                    color = LocalContentColor.current,
-                )
-                LatexText(
-                    latex = großerOperator.index,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-            if (großerOperator.nachher.isNotBlank()) {
-                LatexText(
-                    latex = großerOperator.nachher,
-                    style = style,
-                )
-            }
-        }
-        return
-    }
-    Text(
-        latexZuAnnotiertemText(normalisiert, wahrFarbe, lügeFarbe),
+    EchterLatexText(
+        latex = normalisiert,
         modifier = modifier,
         style = style,
-        color = LocalContentColor.current,
     )
+}
+
+@Composable
+private fun EchterLatexText(
+    latex: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle,
+) {
+    val dunklesSchema = isSystemInDarkTheme()
+    val fontSize = style.fontSize.value
+        .takeIf { it.isFinite() && it > 0f }
+        ?.sp
+        ?: 18.sp
+    Latex(
+        latex = atlasLatexQuelltext(latex, dunklesSchema),
+        modifier = modifier,
+        config = LatexConfig(
+            fontSize = fontSize,
+            theme = LatexTheme.material3(),
+            accessibilityEnabled = true,
+        ),
+        isDarkTheme = dunklesSchema,
+    )
+}
+
+/**
+ * Ergänzt nur Atlas-eigene Kompatibilitätsmakros und die bisherigen farbigen
+ * Wahrheitswerte. Mathematisches Layout wird ausdrücklich nicht mehr umgeschrieben.
+ */
+internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String {
+    val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
+    val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
+    val farbig = latex
+        .replace("\\top", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
+        .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+        .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
+        .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+    return ATLAS_MACROS + farbig
 }
 
 @Composable
@@ -127,7 +133,7 @@ private fun AtlasIntegralOperator(
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         if (!obereAnnotation.isNullOrBlank()) {
-            LatexText(
+            EchterLatexText(
                 latex = obereAnnotation,
                 style = MaterialTheme.typography.labelSmall,
             )
@@ -138,7 +144,7 @@ private fun AtlasIntegralOperator(
                 .height(glyphHoehe),
         )
         if (!untereAnnotation.isNullOrBlank()) {
-            LatexText(
+            EchterLatexText(
                 latex = untereAnnotation,
                 style = MaterialTheme.typography.labelSmall,
             )
@@ -246,52 +252,7 @@ private fun liesLatexArgument(latex: String, start: Int): LatexArgument? {
     return LatexArgument(latex[position].toString(), position + 1)
 }
 
-private data class GroßerOperatorTeile(
-    val position: Int,
-    val vorher: String,
-    val operator: String,
-    val index: String,
-    val nachher: String,
-)
-
-private fun zerlegeGroßenOperator(latex: String): GroßerOperatorTeile? {
-    val operatoren = listOf(
-        "\\mathop{\\stackrel{\\bullet}{\\bigvee}}" to "\\stackrel{\\bullet}{\\bigvee}",
-        "\\mathop{\\times}" to "\\times",
-        "\\sum" to "\\sum",
-        "\\prod" to "\\prod",
-        "\\bigcup" to "\\bigcup",
-        "\\bigcap" to "\\bigcap",
-        "\\bigwedge" to "\\bigwedge",
-        "\\bigvee" to "\\bigvee",
-    )
-    val treffer = operatoren.mapNotNull { (quelle, anzeige) ->
-        latex.indexOf(quelle).takeIf { it >= 0 }?.let { Triple(it, quelle, anzeige) }
-    }.minByOrNull { it.first } ?: return null
-    val limitsStart = treffer.first + treffer.second.length
-    val limits = "\\limits_"
-    if (!latex.startsWith(limits, limitsStart)) return null
-    var position = limitsStart + limits.length
-    if (position >= latex.length || latex[position] != '{') return null
-    val indexStart = ++position
-    var tiefe = 1
-    while (position < latex.length && tiefe > 0) {
-        when (latex[position++]) {
-            '{' -> tiefe++
-            '}' -> tiefe--
-        }
-    }
-    if (tiefe != 0) return null
-    val indexEnde = position - 1
-    return GroßerOperatorTeile(
-        position = treffer.first,
-        vorher = latex.substring(0, treffer.first).trimEnd(),
-        operator = treffer.third,
-        index = latex.substring(indexStart, indexEnde),
-        nachher = latex.substring(position).trimStart(),
-    )
-}
-
+/** Entfernt ausschließlich vollständige äußere Formelbegrenzer. */
 fun normalisiereLatexQuelltext(latex: String): String {
     val getrimmt = latex.trim()
     return when {
@@ -307,192 +268,77 @@ fun normalisiereLatexQuelltext(latex: String): String {
     }
 }
 
-fun latexZuAnnotiertemText(
-    latex: String,
-    wahrFarbe: Color = STANDARD_WAHR_FARBE,
-    lügeFarbe: Color = STANDARD_LÜGE_FARBE,
-): AnnotatedString = buildAnnotatedString {
-    LatexParser(normalisiereLatexQuelltext(latex), this, wahrFarbe, lügeFarbe).schreibe()
+/**
+ * Kompatible Klartextdarstellung für nicht-visuelle Diagnosepfade. Sie ist kein
+ * Formelrenderer; visuelle Oberflächen müssen [LatexText] oder [LatexFormel] verwenden.
+ */
+fun vereinfacheLatexAnzeige(latex: String): String {
+    var text = normalisiereLatexQuelltext(latex)
+    val befehle = linkedMapOf(
+        "\\longrightarrow" to "→",
+        "\\rightarrow" to "→",
+        "\\mapsto" to "↦",
+        "\\Leftrightarrow" to "⇔",
+        "\\Rightarrow" to "⇒",
+        "\\subseteq" to "⊆",
+        "\\subset" to "⊂",
+        "\\setminus" to "∖",
+        "\\neq" to "≠",
+        "\\ne" to "≠",
+        "\\leq" to "≤",
+        "\\geq" to "≥",
+        "\\in" to "∈",
+        "\\cup" to "∪",
+        "\\cap" to "∩",
+        "\\cdot" to "·",
+        "\\times" to "×",
+        "\\div" to "÷",
+        "\\sum" to "∑",
+        "\\prod" to "∏",
+        "\\bigcup" to "⋃",
+        "\\bigcap" to "⋂",
+        "\\bigwedge" to "⋀",
+        "\\bigvee" to "⋁",
+        "\\int" to "∫",
+        "\\varnothing" to "∅",
+        "\\dots" to "…",
+        "\\ldots" to "…",
+        "\\circ" to "∘",
+        "\\forall" to "∀",
+        "\\exists" to "∃",
+    )
+    befehle.forEach { (quelle, ziel) -> text = text.replace(quelle, ziel) }
+    text = text
+        .replace("\\begin{cases}", "")
+        .replace("\\end{cases}", "")
+        .replace("\\begin{pmatrix}", "[")
+        .replace("\\end{pmatrix}", "]")
+        .replace("\\limits", "")
+        .replace("\\left", "")
+        .replace("\\right", "")
+        .replace("\\mathopen", "")
+        .replace("\\mathclose", "")
+        .replace("\\mathrm", "")
+        .replace("\\mathbf", "")
+        .replace("\\operatorname", "")
+        .replace("\\text", "")
+        .replace("\\mathcal", "")
+        .replace("\\mathbb{N}", "ℕ")
+        .replace("\\mathbb{Z}", "ℤ")
+        .replace("\\mathbb{Q}", "ℚ")
+        .replace("\\mathbb{R}", "ℝ")
+        .replace("\\mathbb{C}", "ℂ")
+        .replace("\\mathbb{H}", "ℍ")
+        .replace("\\\\", "\n")
+        .replace(Regex("[{}]"), "")
+    return text
 }
 
-/** Kompakte Klartextvariante für Stellen, an denen kein Compose-Text verfügbar ist. */
-fun vereinfacheLatexAnzeige(latex: String): String = latexZuAnnotiertemText(latex).text
-
-private class LatexParser(
-    private val quelltext: String,
-    private val ausgabe: AnnotatedString.Builder,
-    private val wahrFarbe: Color,
-    private val lügeFarbe: Color,
-) {
-    private var position = 0
-    private var casesTiefe = 0
-
-    fun schreibe(bisGruppenEnde: Boolean = false) {
-        while (position < quelltext.length) {
-            when (val zeichen = quelltext[position++]) {
-                '}' -> if (bisGruppenEnde) return else ausgabe.append(zeichen)
-                '{' -> schreibe(bisGruppenEnde = true)
-                '^' -> mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.78.em)) { schreibeArgument() }
-                '_' -> mitStil(SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 0.78.em)) { schreibeArgument() }
-                '\\' -> schreibeBefehl()
-                else -> ausgabe.append(zeichen)
-            }
-        }
-    }
-
-    private fun schreibeArgument() {
-        if (position >= quelltext.length) return
-        if (quelltext[position] == '{') {
-            position++
-            schreibe(bisGruppenEnde = true)
-        } else {
-            val einzelnes = quelltext[position++]
-            if (einzelnes == '\\') schreibeBefehl() else ausgabe.append(einzelnes)
-        }
-    }
-
-    private fun schreibeBefehl() {
-        if (position >= quelltext.length) return
-        if (!quelltext[position].isLetter()) {
-            when (val zeichen = quelltext[position++]) {
-                '\\' -> {
-                    ausgabe.append(if (casesTiefe > 0) "\n" else ";\n")
-                    if (casesTiefe > 0) while (position < quelltext.length && quelltext[position] == ' ') position++
-                }
-                '{', '}' -> ausgabe.append(zeichen)
-                ' ' -> ausgabe.append(";\n")
-                else -> ausgabe.append(zeichen)
-            }
-            return
-        }
-        val start = position
-        while (position < quelltext.length && quelltext[position].isLetter()) position++
-        when (val befehl = quelltext.substring(start, position)) {
-            "frac" -> schreibeBruch()
-            "stackrel" -> schreibeStackrel()
-            "Set" -> {
-                ausgabe.append('{')
-                schreibeArgument()
-                ausgabe.append('}')
-            }
-            "mathcal" -> schreibeMathcal()
-            "top" -> schreibeWahrheitswert("Wahr", wahrFarbe)
-            "bot" -> schreibeWahrheitswert("Lüge", lügeFarbe)
-            "mathop", "mathbin", "mathopen", "mathclose" -> schreibeArgument()
-            "limits" -> Unit
-            "mathbb" -> schreibeDoppelstrich()
-            "begin" -> when (liesGruppenText()) {
-                "pmatrix" -> ausgabe.append('[')
-                "cases" -> { casesTiefe++; ausgabe.append("{\n") }
-            }
-            "end" -> when (liesGruppenText()) {
-                "pmatrix" -> ausgabe.append(']')
-                "cases" -> { casesTiefe = (casesTiefe - 1).coerceAtLeast(0); ausgabe.append('}') }
-            }
-            "left", "right", "!", ",", ";", "quad", "qquad" -> Unit
-            "operatorname", "text", "mathrm", "mathbf" -> ausgabe.append(liesGruppenText().replace("\\ ", " "))
-            else -> ausgabe.append(zeichenFürBefehl(befehl))
-        }
-    }
-
-    private fun schreibeDoppelstrich() {
-        while (position < quelltext.length && quelltext[position].isWhitespace()) position++
-        val inhalt = when {
-            position >= quelltext.length -> ""
-            quelltext[position] == '{' -> liesGruppenText()
-            else -> quelltext[position++].toString()
-        }
-        ausgabe.append(zahlbereich(inhalt))
-    }
-
-    private fun schreibeMathcal() {
-        val inhalt = liesGruppenText()
-        when (inhalt) {
-            "Wahr" -> schreibeWahrheitswert(inhalt, wahrFarbe)
-            "Lüge" -> schreibeWahrheitswert(inhalt, lügeFarbe)
-            else -> mitStil(SpanStyle(fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic)) {
-                LatexParser(inhalt, ausgabe, wahrFarbe, lügeFarbe).schreibe()
-            }
-        }
-    }
-
-    private fun schreibeWahrheitswert(text: String, farbe: Color) {
-        mitStil(
-            SpanStyle(
-                color = farbe,
-                fontFamily = FontFamily.Serif,
-                fontStyle = FontStyle.Italic,
-            ),
-        ) {
-            ausgabe.append(text)
-        }
-    }
-
-    private fun schreibeBruch() {
-        ausgabe.append('(')
-        schreibeArgument()
-        ausgabe.append(")⁄(")
-        mitStil(SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 0.86.em)) { schreibeArgument() }
-        ausgabe.append(')')
-    }
-
-    private fun schreibeStackrel() {
-        val oben = liesGruppenText()
-        val unten = liesGruppenText()
-        when (oben to unten) {
-            "\\bullet" to "\\lor" -> ausgabe.append("∨̇")
-            "\\bullet" to "\\bigvee" -> ausgabe.append("⋁̇")
-            else -> {
-                mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.66.em)) {
-                    LatexParser(oben, ausgabe, wahrFarbe, lügeFarbe).schreibe()
-                }
-                LatexParser(unten, ausgabe, wahrFarbe, lügeFarbe).schreibe()
-            }
-        }
-    }
-
-    private fun liesGruppenText(): String {
-        if (position >= quelltext.length || quelltext[position] != '{') return ""
-        position++
-        val start = position
-        var tiefe = 1
-        while (position < quelltext.length && tiefe > 0) {
-            when (quelltext[position++]) {
-                '{' -> tiefe++
-                '}' -> tiefe--
-            }
-        }
-        return quelltext.substring(start, (position - 1).coerceAtLeast(start))
-    }
-
-    private fun mitStil(stil: SpanStyle, block: () -> Unit) {
-        ausgabe.pushStyle(stil)
-        block()
-        ausgabe.pop()
-    }
-
-    private fun zahlbereich(text: String) = when (text) {
-        "N" -> "ℕ"
-        "Z" -> "ℤ"
-        "Q" -> "ℚ"
-        "R" -> "ℝ"
-        "C" -> "ℂ"
-        "H" -> "ℍ"
-        "P" -> "ℙ"
-        "F" -> "𝔽"
-        "K" -> "𝕂"
-        else -> text
-    }
-
-    private fun zeichenFürBefehl(befehl: String) = mapOf(
-        "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
-        "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
-        "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
-        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",
-        "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
-        "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
-        "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
-        "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",
-        "lambda" to "λ", "mu" to "μ", "rho" to "ρ", "sigma" to "σ", "phi" to "φ", "omega" to "ω",
-    )[befehl] ?: befehl
+fun latexZuAnnotiertemText(
+    latex: String,
+    wahrFarbe: Color = Color(0xFF2E7D32),
+    lügeFarbe: Color = Color(0xFFC62828),
+): AnnotatedString {
+    @Suppress("UNUSED_VARIABLE") val farben = wahrFarbe to lügeFarbe
+    return AnnotatedString(vereinfacheLatexAnzeige(latex))
 }
