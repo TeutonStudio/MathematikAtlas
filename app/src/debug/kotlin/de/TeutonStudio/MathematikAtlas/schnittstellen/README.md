@@ -18,6 +18,7 @@ Dieser Debug-Quellordner macht die sichtbaren Oberflächen des Mathematik Atlas 
 |---|---|---|---|---|
 | Gesamtoberfläche | `MathematikAtlasApp.kt` | `MathematikAtlasAppVorschau.kt` | Desktop, dunkel | vorhandene Beispielkarten und mathematische Knoten |
 | Verwaltungsfenster | `VerwaltungsFenster.kt` | `VerwaltungsFensterVorschau.kt` | Karten, Auswertung, hell/dunkel | lokale Beispielkarten und ausgewertete Knotenzustände |
+| Einstellungen | `EinstellungenDialog.kt` | `EinstellungenDialogVorschau.kt` | breit, kompakt/dunkel | produktive Darstellungseinstellungen, Beispielkartenaktion und Buildinformationen |
 | Knoten einfügen | `KnotenAuswahlFenster.kt` | `KnotenAuswahlFensterVorschau.kt` | Standardliste, Matrixsuche, Konzeptbibliothek | registrierte produktive Knotenvorlagen |
 | Konzeptbibliothek | `KonzeptBibliothekDialog.kt` / `KonzeptBibliothekUi.kt` | `KonzeptBibliothekDialogVorschau.kt` | Fachgebietsübersicht | vollständiges produktives Konzeptregister |
 | Vollständiger Inspector | `KnotenInspektorFenster.kt` | `KnotenInspektorFensterVorschau.kt` | ausgewählte Matrixdiagonale | Nebendiagonale mit realer Inspector-Konfiguration |
