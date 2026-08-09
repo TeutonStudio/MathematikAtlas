@@ -132,6 +132,7 @@ object MengenraumKnotenVorlagen {
         mapOf("modul" to "2"),
     )
 
+    /** Historische Vorlage bleibt für alte Karten ladefähig, wird aber nicht mehr im Erstellen-Katalog angeboten. */
     val SymmetrischeDifferenz = KnotenVorlage(
         "mathematik.symmetrischeDifferenz",
         "Symmetrische Differenz",
@@ -141,7 +142,7 @@ object MengenraumKnotenVorlagen {
         listOf(eingang("links", 0), eingang("rechts", 1), ausgang()),
     )
 
-    /** Nur ein Mengenknoten ist erzeugbar; historische Konstanten bleiben ausschließlich für Migration und alte Karten registriert. */
+    /** Nur kanonische Mengenknoten sind erzeugbar; historische Einzeloperatoren bleiben ausschließlich ladefähig. */
     val alle = listOf(
         MengenKnotenVorlagen.standard,
         Potenzmenge,
@@ -150,7 +151,6 @@ object MengenraumKnotenVorlagen {
         Matrizenraum,
         Tensorraum,
         ModuloZahlenraum,
-        SymmetrischeDifferenz,
     )
 }
 
@@ -199,7 +199,7 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
         mengenraumErgebnis(Tensorraum(k.mengenraumEingabe("grundmenge"), k.mengenraumDimensionen()), k)
     }
     registriere("mathematik.moduloZahlenraum") { k ->
-        mengenraumErgebnis(ModuloZahlenraum(k.mengenraumPositiveGanzzahl("modul", minimum = 2)))
+        mengenraumErgebnis(ModuloZahlenraum(k.mengenraumPositiveGanzzahl("modul", minimum = 2)), k)
     }
     registriere("mathematik.symmetrischeDifferenz") { k ->
         mengenraumErgebnis(
