@@ -43,18 +43,20 @@ class KanonischerMathematikKnotenKatalogTest {
     }
 
     @Test
-    fun `mengenoperatoren sind konsolidiert ohne potenzmenge zu verschlucken`() {
-        val vorlagen = KanonischerMathematikKnotenKatalog.alle()
-        val arten = vorlagen.map { it.art }.toSet()
+    fun `mengenoperatoren sind konsolidiert und potenzmenge bleibt eigenstaendig sichtbar`() {
+        val kanonischeArten = KanonischerMathematikKnotenKatalog.alle().map { it.art }.toSet()
+        val mengenraumArten = MengenraumKnotenVorlagen.alle.map { it.art }.toSet()
 
-        assertTrue(MengenRechner.KNOTEN_ART in arten)
-        assertTrue(MengenRelationRechner.KNOTEN_ART in arten)
-        assertTrue("mathematik.potenzmenge" in arten)
+        assertTrue(MengenRechner.KNOTEN_ART in kanonischeArten)
+        assertTrue(MengenRelationRechner.KNOTEN_ART in kanonischeArten)
+        assertTrue("mathematik.potenzmenge" in mengenraumArten)
+        assertFalse("mathematik.potenzmenge" in MengenRechnerMigration.alteKnotenArten)
+        assertFalse("mathematik.symmetrischeDifferenz" in mengenraumArten)
         MengenRechnerMigration.alteKnotenArten.keys.forEach { alt ->
-            assertFalse(alt in arten, "Historischer Mengenoperator $alt darf nicht mehr separat sichtbar sein.")
+            assertFalse(alt in kanonischeArten, "Historischer Mengenoperator $alt darf nicht mehr separat sichtbar sein.")
         }
         MengenRelationsMigration.alteKnotenArten.keys.forEach { alt ->
-            assertFalse(alt in arten, "Historische Mengenrelation $alt darf nicht mehr separat sichtbar sein.")
+            assertFalse(alt in kanonischeArten, "Historische Mengenrelation $alt darf nicht mehr separat sichtbar sein.")
         }
     }
 }
