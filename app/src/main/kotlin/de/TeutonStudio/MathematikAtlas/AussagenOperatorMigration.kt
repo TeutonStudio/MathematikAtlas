@@ -5,17 +5,22 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKnoten.AUSSAGEN_LOGIK_SEMANTIK
 import de.TeutonStudio.MathematikKnoten.AUSSAGEN_LOGIK_XOR
+import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
 /**
- * Bewahrt die bis v2.9.1 als UND ausgewertete Adjunktion, indem alte Instanzen
- * explizit zu Konjunktionen werden. Nur neu markierte Knoten erhalten XOR-Semantik.
+ * Bewahrt historische Aussagenverträge und führt rein benennende Migrationen
+ * idempotent aus. Anschluss-IDs, Knoten-IDs und Verbindungen werden dabei nicht
+ * verändert.
  */
 internal fun migriereAussagenOperatoren(karte: KartenDaten): KartenDaten = karte.copy(
     knoten = karte.knoten.map(::migriereAussagenKnoten),
 )
 
 private fun migriereAussagenKnoten(knoten: KnotenDaten): KnotenDaten = when {
+    istHistorischeAussageZuMethodeVariante(knoten) ->
+        knoten.copy(name = "Aussage zu Prädikat")
+
     knoten.art == "mathematik.adjunktion" && knoten.parameter[AUSSAGEN_LOGIK_SEMANTIK] != AUSSAGEN_LOGIK_XOR ->
         knoten.copy(
             art = "mathematik.konjunktion",
@@ -49,4 +54,21 @@ private fun migriereAussagenKnoten(knoten: KnotenDaten): KnotenDaten = when {
         )
 
     else -> knoten
+}
+
+/**
+ * Nur der historische Standardname der echten Prädikatsvariante wird ersetzt.
+ * Ein allgemeiner Term-zu-Methode-Knoten und benutzerdefinierte Namen bleiben
+ * unverändert, selbst wenn sie dieselbe persistierte Knotenart teilen.
+ */
+private fun istHistorischeAussageZuMethodeVariante(knoten: KnotenDaten): Boolean {
+    if (knoten.art != "mathematik.termZuMethode" || knoten.name != "Aussage zu Methode") return false
+    val eingang = knoten.anschlüsse.singleOrNull {
+        it.richtung == AnschlussRichtung.Eingang && it.name == "term"
+    } ?: return false
+    val ausgang = knoten.anschlüsse.singleOrNull {
+        it.richtung == AnschlussRichtung.Ausgang && it.name == "methode"
+    } ?: return false
+    return eingang.art == MathematikAnschlussArten.Aussage.id &&
+        ausgang.art == MathematikAnschlussArten.AussageMethode.id
 }
