@@ -12,8 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.hrm.latex.renderer.Latex
 import com.hrm.latex.renderer.model.LatexConfig
@@ -29,6 +35,9 @@ private val ATLAS_MACROS = listOf(
     ATLAS_IFF_MACRO,
     ATLAS_LONGTO_MACRO,
 ).joinToString(separator = "")
+
+private val STANDARD_WAHR_FARBE = Color(0xFF2E7D32)
+private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
 
 /**
  * Zentrale LaTeX-Fassade des Atlas.
@@ -300,77 +309,203 @@ fun normalisiereLatexQuelltext(latex: String): String {
     }
 }
 
-/**
- * Kompatible Klartextdarstellung für nicht-visuelle Diagnosepfade. Sie ist kein
- * Formelrenderer; visuelle Oberflächen müssen [LatexText] oder [LatexFormel] verwenden.
- */
-fun vereinfacheLatexAnzeige(latex: String): String {
-    var text = normalisiereLatexQuelltext(latex)
-    val befehle = linkedMapOf(
-        "\\longrightarrow" to "→",
-        "\\rightarrow" to "→",
-        "\\mapsto" to "↦",
-        "\\Leftrightarrow" to "⇔",
-        "\\Rightarrow" to "⇒",
-        "\\subseteq" to "⊆",
-        "\\subset" to "⊂",
-        "\\setminus" to "∖",
-        "\\neq" to "≠",
-        "\\ne" to "≠",
-        "\\leq" to "≤",
-        "\\geq" to "≥",
-        "\\in" to "∈",
-        "\\cup" to "∪",
-        "\\cap" to "∩",
-        "\\cdot" to "·",
-        "\\times" to "×",
-        "\\div" to "÷",
-        "\\sum" to "∑",
-        "\\prod" to "∏",
-        "\\bigcup" to "⋃",
-        "\\bigcap" to "⋂",
-        "\\bigwedge" to "⋀",
-        "\\bigvee" to "⋁",
-        "\\int" to "∫",
-        "\\varnothing" to "∅",
-        "\\dots" to "…",
-        "\\ldots" to "…",
-        "\\circ" to "∘",
-        "\\forall" to "∀",
-        "\\exists" to "∃",
-    )
-    befehle.forEach { (quelle, ziel) -> text = text.replace(quelle, ziel) }
-    text = text
-        .replace("\\begin{cases}", "")
-        .replace("\\end{cases}", "")
-        .replace("\\begin{pmatrix}", "[")
-        .replace("\\end{pmatrix}", "]")
-        .replace("\\limits", "")
-        .replace("\\left", "")
-        .replace("\\right", "")
-        .replace("\\mathopen", "")
-        .replace("\\mathclose", "")
-        .replace("\\mathrm", "")
-        .replace("\\mathbf", "")
-        .replace("\\operatorname", "")
-        .replace("\\text", "")
-        .replace("\\mathcal", "")
-        .replace("\\mathbb{N}", "ℕ")
-        .replace("\\mathbb{Z}", "ℤ")
-        .replace("\\mathbb{Q}", "ℚ")
-        .replace("\\mathbb{R}", "ℝ")
-        .replace("\\mathbb{C}", "ℂ")
-        .replace("\\mathbb{H}", "ℍ")
-        .replace("\\\\", "\n")
-        .replace(Regex("[{}]"), "")
-    return text
-}
-
 fun latexZuAnnotiertemText(
     latex: String,
-    wahrFarbe: Color = Color(0xFF2E7D32),
-    lügeFarbe: Color = Color(0xFFC62828),
-): AnnotatedString {
-    @Suppress("UNUSED_VARIABLE") val farben = wahrFarbe to lügeFarbe
-    return AnnotatedString(vereinfacheLatexAnzeige(latex))
+    wahrFarbe: Color = STANDARD_WAHR_FARBE,
+    lügeFarbe: Color = STANDARD_LÜGE_FARBE,
+): AnnotatedString = buildAnnotatedString {
+    LatexParser(normalisiereLatexQuelltext(latex), this, wahrFarbe, lügeFarbe).schreibe()
+}
+
+/** Kompakte Klartextvariante für Stellen, an denen kein Compose-Text verfügbar ist. */
+fun vereinfacheLatexAnzeige(latex: String): String = latexZuAnnotiertemText(latex).text
+
+/**
+ * Leichtgewichtiger Parser ausschließlich für Text-/Diagnosepfade, die einen
+ * [AnnotatedString] statt eines echten Formel-Layouts benötigen. Die visuelle
+ * Darstellung läuft weiterhin vollständig über [LatexText].
+ */
+private class LatexParser(
+    private val quelltext: String,
+    private val ausgabe: AnnotatedString.Builder,
+    private val wahrFarbe: Color,
+    private val lügeFarbe: Color,
+) {
+    private var position = 0
+    private var casesTiefe = 0
+
+    fun schreibe(bisGruppenEnde: Boolean = false) {
+        while (position < quelltext.length) {
+            when (val zeichen = quelltext[position++]) {
+                '}' -> if (bisGruppenEnde) return else ausgabe.append(zeichen)
+                '{' -> schreibe(bisGruppenEnde = true)
+                '^' -> mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.78.em)) { schreibeArgument() }
+                '_' -> mitStil(SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 0.78.em)) { schreibeArgument() }
+                '\\' -> schreibeBefehl()
+                else -> ausgabe.append(zeichen)
+            }
+        }
+    }
+
+    private fun schreibeArgument() {
+        if (position >= quelltext.length) return
+        if (quelltext[position] == '{') {
+            position++
+            schreibe(bisGruppenEnde = true)
+        } else {
+            val einzelnes = quelltext[position++]
+            if (einzelnes == '\\') schreibeBefehl() else ausgabe.append(einzelnes)
+        }
+    }
+
+    private fun schreibeBefehl() {
+        if (position >= quelltext.length) return
+        if (!quelltext[position].isLetter()) {
+            when (val zeichen = quelltext[position++]) {
+                '\\' -> {
+                    ausgabe.append(if (casesTiefe > 0) "\n" else ";\n")
+                    if (casesTiefe > 0) while (position < quelltext.length && quelltext[position] == ' ') position++
+                }
+                '{', '}' -> ausgabe.append(zeichen)
+                ' ' -> ausgabe.append(";\n")
+                else -> ausgabe.append(zeichen)
+            }
+            return
+        }
+        val start = position
+        while (position < quelltext.length && quelltext[position].isLetter()) position++
+        when (val befehl = quelltext.substring(start, position)) {
+            "frac" -> schreibeBruch()
+            "stackrel" -> schreibeStackrel()
+            "Set" -> {
+                ausgabe.append('{')
+                schreibeArgument()
+                ausgabe.append('}')
+            }
+            "mathcal" -> schreibeMathcal()
+            "top" -> schreibeWahrheitswert("Wahr", wahrFarbe)
+            "bot" -> schreibeWahrheitswert("Lüge", lügeFarbe)
+            "mathop", "mathbin", "mathopen", "mathclose" -> schreibeArgument()
+            "limits" -> Unit
+            "mathbb" -> schreibeDoppelstrich()
+            "begin" -> when (liesGruppenText()) {
+                "pmatrix" -> ausgabe.append('[')
+                "cases" -> {
+                    casesTiefe++
+                    ausgabe.append("{\n")
+                }
+            }
+            "end" -> when (liesGruppenText()) {
+                "pmatrix" -> ausgabe.append(']')
+                "cases" -> {
+                    casesTiefe = (casesTiefe - 1).coerceAtLeast(0)
+                    ausgabe.append('}')
+                }
+            }
+            "left", "right", "!", ",", ";", "quad", "qquad" -> Unit
+            "operatorname", "text", "mathrm", "mathbf" -> ausgabe.append(liesGruppenText().replace("\\ ", " "))
+            else -> ausgabe.append(zeichenFürBefehl(befehl))
+        }
+    }
+
+    private fun schreibeDoppelstrich() {
+        while (position < quelltext.length && quelltext[position].isWhitespace()) position++
+        val inhalt = when {
+            position >= quelltext.length -> ""
+            quelltext[position] == '{' -> liesGruppenText()
+            else -> quelltext[position++].toString()
+        }
+        ausgabe.append(zahlbereich(inhalt))
+    }
+
+    private fun schreibeMathcal() {
+        val inhalt = liesGruppenText()
+        when (inhalt) {
+            "Wahr" -> schreibeWahrheitswert(inhalt, wahrFarbe)
+            "Lüge" -> schreibeWahrheitswert(inhalt, lügeFarbe)
+            else -> mitStil(SpanStyle(fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic)) {
+                LatexParser(inhalt, ausgabe, wahrFarbe, lügeFarbe).schreibe()
+            }
+        }
+    }
+
+    private fun schreibeWahrheitswert(text: String, farbe: Color) {
+        mitStil(
+            SpanStyle(
+                color = farbe,
+                fontFamily = FontFamily.Serif,
+                fontStyle = FontStyle.Italic,
+            ),
+        ) {
+            ausgabe.append(text)
+        }
+    }
+
+    private fun schreibeBruch() {
+        ausgabe.append('(')
+        schreibeArgument()
+        ausgabe.append(")⁄(")
+        mitStil(SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 0.86.em)) { schreibeArgument() }
+        ausgabe.append(')')
+    }
+
+    private fun schreibeStackrel() {
+        val oben = liesGruppenText()
+        val unten = liesGruppenText()
+        when (oben to unten) {
+            "\\bullet" to "\\lor" -> ausgabe.append("∨̇")
+            "\\bullet" to "\\bigvee" -> ausgabe.append("⋁̇")
+            else -> {
+                mitStil(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 0.66.em)) {
+                    LatexParser(oben, ausgabe, wahrFarbe, lügeFarbe).schreibe()
+                }
+                LatexParser(unten, ausgabe, wahrFarbe, lügeFarbe).schreibe()
+            }
+        }
+    }
+
+    private fun liesGruppenText(): String {
+        if (position >= quelltext.length || quelltext[position] != '{') return ""
+        position++
+        val start = position
+        var tiefe = 1
+        while (position < quelltext.length && tiefe > 0) {
+            when (quelltext[position++]) {
+                '{' -> tiefe++
+                '}' -> tiefe--
+            }
+        }
+        return quelltext.substring(start, (position - 1).coerceAtLeast(start))
+    }
+
+    private fun mitStil(stil: SpanStyle, block: () -> Unit) {
+        ausgabe.pushStyle(stil)
+        block()
+        ausgabe.pop()
+    }
+
+    private fun zahlbereich(text: String) = when (text) {
+        "N" -> "ℕ"
+        "Z" -> "ℤ"
+        "Q" -> "ℚ"
+        "R" -> "ℝ"
+        "C" -> "ℂ"
+        "H" -> "ℍ"
+        "P" -> "ℙ"
+        "F" -> "𝔽"
+        "K" -> "𝕂"
+        else -> text
+    }
+
+    private fun zeichenFürBefehl(befehl: String) = mapOf(
+        "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
+        "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
+        "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
+        "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",
+        "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
+        "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
+        "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
+        "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",
+        "lambda" to "λ", "mu" to "μ", "rho" to "ρ", "sigma" to "σ", "phi" to "φ", "omega" to "ω",
+    )[befehl] ?: befehl
 }
