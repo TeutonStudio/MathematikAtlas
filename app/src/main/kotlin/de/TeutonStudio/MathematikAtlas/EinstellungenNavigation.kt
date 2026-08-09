@@ -84,7 +84,7 @@ internal fun baueEinstellungsNavigation(
     class NavigationBauer {
         fun baueEbene(rohknoten: RohOrdner): EinstellungsNavigationsebene {
             val elemente = buildList {
-                addAll(rohknoten.seiten.map(EinstellungsNavigationsElement::Seite))
+                addAll(rohknoten.seiten.map { seite -> EinstellungsNavigationsElement.Seite(seite) })
                 addAll(rohknoten.kinder.values.map(::komprimiereOrdner))
             }.sortedWith(compareBy(EinstellungsNavigationsElement::reihenfolge, { element ->
                 when (element) {
