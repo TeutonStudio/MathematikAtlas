@@ -35,12 +35,12 @@ private val ATLAS_MACROS = listOf(
  *
  * Gewöhnliche mathematische Layoutarbeit wird vollständig an den nativen
  * Compose-Multiplatform-Renderer delegiert. Der Atlas interpretiert insbesondere
- * keine Brüche, Matrizen, cases-Umgebungen, skalierenden Klammern oder großen
- * Operatoren mehr selbst.
+ * keine Brüche, Matrizen, skalierenden Klammern oder großen Operatoren selbst.
  *
- * Einzige bewusste Darstellungs-Sonderregel bleibt die Atlas-Integralglyphe. Sie
- * ersetzt ausschließlich das erste echte `\\int`; Grenzen und Restformel werden
- * wiederum durch denselben LaTeX-Renderer dargestellt.
+ * Zwei Atlas-spezifische Kompatibilitätsregeln bleiben bewusst erhalten:
+ * - die Atlas-Integralglyphe für einfache Formeln außerhalb komplexer Umgebungen;
+ * - historische nicht-bedingte `cases`-Blöcke von Methoden werden als linke große
+ *   Klammer mit einer Matrix gerendert, damit der Renderer kein „if“ ergänzt.
  */
 @Composable
 fun LatexText(
@@ -49,7 +49,9 @@ fun LatexText(
     style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     val normalisiert = normalisiereLatexQuelltext(latex)
-    val integral = zerlegeIntegralOperator(normalisiert)
+    val integral = normalisiert
+        .takeUnless { "\\begin{" in it }
+        ?.let(::zerlegeIntegralOperator)
 
     if (integral != null) {
         Row(
@@ -106,17 +108,49 @@ private fun EchterLatexText(
 
 /**
  * Ergänzt nur Atlas-eigene Kompatibilitätsmakros und die bisherigen farbigen
- * Wahrheitswerte. Mathematisches Layout wird ausdrücklich nicht mehr umgeschrieben.
+ * Wahrheitswerte. Mathematisches Layout wird ansonsten nicht mehr umgeschrieben.
  */
 internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String {
     val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
     val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
-    val farbig = latex
+    val rendererKompatibel = ersetzeNichtBedingteCases(latex)
+    val farbig = rendererKompatibel
         .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
         .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
         .replace("\\top", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
         .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
     return ATLAS_MACROS + farbig
+}
+
+/**
+ * Der verwendete Renderer interpretiert `cases` als echte Fallunterscheidung und
+ * ergänzt dabei ein „if“. Historische Methodendarstellungen nutzen dieselbe Umgebung
+ * jedoch nur für die große linke Klammer. Solche Blöcke besitzen keine `&`-Spalte
+ * und werden deshalb verlustfrei in eine einspaltige Matrix mit linker Klammer
+ * übersetzt. Echte Fallunterscheidungen mit Bedingungsspalte bleiben unangetastet.
+ */
+internal fun ersetzeNichtBedingteCases(latex: String): String {
+    val startMarke = "\\begin{cases}"
+    val endeMarke = "\\end{cases}"
+    var text = latex
+    var sucheAb = 0
+
+    while (sucheAb < text.length) {
+        val start = text.indexOf(startMarke, sucheAb)
+        if (start < 0) break
+        val inhaltStart = start + startMarke.length
+        val ende = text.indexOf(endeMarke, inhaltStart)
+        if (ende < 0) break
+        val inhalt = text.substring(inhaltStart, ende)
+        if ('&' !in inhalt) {
+            val ersatz = "\\left\\{\\begin{matrix}$inhalt\\end{matrix}\\right."
+            text = text.substring(0, start) + ersatz + text.substring(ende + endeMarke.length)
+            sucheAb = start + ersatz.length
+        } else {
+            sucheAb = ende + endeMarke.length
+        }
+    }
+    return text
 }
 
 @Composable
