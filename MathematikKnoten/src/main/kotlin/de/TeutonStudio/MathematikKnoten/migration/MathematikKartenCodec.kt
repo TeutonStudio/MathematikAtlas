@@ -56,5 +56,6 @@ object MathematikKartenMigrationen {
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
         .migriereMethodenAnschlüsse()
         .migriereUniversellenZahlenRechner()
+        .migriereMengenOperatorKnoten()
         .migriereStrukturierteDivision()
 }
