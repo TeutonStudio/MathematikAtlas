@@ -18,6 +18,10 @@ fun methodenArgumentAusgangName(argument: MethodenArgument, index: Int): String 
     return if (name == "dimension") "argument-${index + 1}" else name
 }
 
+fun MathematikAuswerterRegister.registriereMethodenArgumente() {
+    registriere(METHODEN_ARGUMENTE_ART, MethodenArgumenteAuswerter)
+}
+
 internal object MethodenWertevorratAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
