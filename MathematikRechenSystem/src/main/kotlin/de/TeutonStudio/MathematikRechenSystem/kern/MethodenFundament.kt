@@ -24,7 +24,7 @@ data class MethodenSignatur(
 ) {
     /**
      * Der Wertevorrat besteht standardmäßig aus geordneten Argumenttupeln. Auch ein
-     * einzelnes Argument bleibt dadurch eine eindimensionale Tupelkomponente.
+     * einzelnes Argument bleibt dadurch strukturell ein Einertupel.
      * Nullstellige Methoden verwenden gemäß Atlas-Konvention die leere Menge.
      * Ein expliziter effektiver Gesamtbereich hat Vorrang vor dieser Ableitung.
      */
