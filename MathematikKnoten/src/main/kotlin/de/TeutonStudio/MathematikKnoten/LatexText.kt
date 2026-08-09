@@ -114,10 +114,10 @@ internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String 
     val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
     val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
     val farbig = latex
-        .replace("\\top", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
-        .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
         .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
         .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+        .replace("\\top", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
+        .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
     return ATLAS_MACROS + farbig
 }
 
