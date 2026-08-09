@@ -4,7 +4,6 @@ import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MathematikKartenCodec
 import de.TeutonStudio.MathematikKnoten.MathematikKartenMigrationen
-import de.TeutonStudio.MathematikKnoten.normalisiereStrukturierteDivisionVorSpeichern
 import org.json.JSONObject
 import java.io.File
 
@@ -50,7 +49,7 @@ class KartenSpeicher(private val context: Context) {
         ?.let(::leseDatei)
 
     fun speichere(karte: KartenDaten): KartenDaten {
-        val normalisiert = karte.normalisiereStrukturierteDivisionVorSpeichern()
+        val normalisiert = MathematikKartenMigrationen.vorSpeichern(karte)
         val zielVersion = if (versionWirdVerwendet(KartenVerweis(normalisiert.id, normalisiert.version))) {
             maxOf(normalisiert.version + 1, höchsteVersion(normalisiert.id) + 1)
         } else {
@@ -73,9 +72,7 @@ class KartenSpeicher(private val context: Context) {
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
 
-    fun exportiere(karte: KartenDaten) = KartenJson.schreibe(
-        karte.normalisiereStrukturierteDivisionVorSpeichern(),
-    )
+    fun exportiere(karte: KartenDaten) = KartenJson.schreibe(karte)
 
     fun erstelleFreigabePaket(
         name: String,
