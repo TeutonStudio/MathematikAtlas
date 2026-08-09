@@ -43,7 +43,8 @@ jobs:
           XDG_DATA_HOME="$daten" xvfb-run --auto-servernum "$starter" --smoke-test
           XDG_DATA_HOME="$daten" xvfb-run --auto-servernum "$starter" --smoke-test
           test "$(find "$daten/MathematikAtlas/karten" -name 'v*.json' | wc -l)" -ge 2
-          paket=$(rpm -q --whatprovides "$starter")
+          paket=$(rpm -qp --queryformat '%{NAME}' "$rpm_datei")
+          rpm -q "$paket"
           sudo rpm --erase "$paket"
           test ! -e "$starter"
       - name: Pakete bereitstellen
@@ -54,4 +55,3 @@ jobs:
             desktopApp/build/compose/binaries/main/rpm/*.rpm
             desktopApp/build/compose/binaries/main/deb/*.deb
           if-no-files-found: warn
-
