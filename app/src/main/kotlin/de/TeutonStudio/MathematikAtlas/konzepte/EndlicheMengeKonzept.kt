@@ -5,7 +5,8 @@ import de.TeutonStudio.MathematikKnoten.*
 
 internal fun endlicheMengeKonzept(ursprung: KnotenDaten): KonzeptDefinition {
     val gelesen = leseEndlicheMengeKonfiguration(ursprung)
-    if (gelesen.fehler != null) return endlicheMengeFehlerKonzept(ursprung, gelesen.fehler)
+    val fehler = gelesen.fehler
+    if (fehler != null) return endlicheMengeFehlerKonzept(ursprung, fehler)
     val normalisiert = normalisiereEndlicheMengeKonfiguration(gelesen.konfiguration)
     return KonzeptDefinition(
         id = KonzeptId("endliche-menge-${ursprung.id.wert}"),
