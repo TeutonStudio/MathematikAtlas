@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -55,64 +52,75 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         val familie = StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) ?: return
         val operatorId = knoten.parameter[RECHNER_OPERATOR_PARAMETER]
         val formelModus = operatorId == familie.formelOperatorId
-        val operator = StrukturRechnerOperatoren.finde(familie, operatorId)
-        var operatorMenü by remember(knoten.id, operatorId) { mutableStateOf(false) }
+        val bekannterOperator = StrukturRechnerOperatoren.fuer(familie).firstOrNull { it.id == operatorId }
+        val operator = bekannterOperator ?: StrukturRechnerOperatoren.fuer(familie).first()
+        var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
         var formelStart by remember(knoten.id, operatorId) {
             mutableStateOf(ladeStrukturRechnerFormel(knoten) ?: strukturOperatorAlsFormel(operator))
+        }
+        val operatorEinträge = remember(knoten, familie) {
+            buildList {
+                if (!formelModus && bekannterOperator == null && !operatorId.isNullOrBlank()) {
+                    add(
+                        RechnerOperatorAuswahlEintrag(
+                            id = operatorId,
+                            titel = "Unbekannter gespeicherter Operator",
+                            symbolLatex = "?",
+                            kategorie = "Nicht verfügbar",
+                            beschreibung = "Die gespeicherte Operator-ID $operatorId ist nicht registriert.",
+                            art = RechnerOperatorAuswahlArt.UNBEKANNT,
+                        ),
+                    )
+                }
+                StrukturRechnerOperatoren.fuer(familie).forEach { definition ->
+                    add(
+                        RechnerOperatorAuswahlEintrag(
+                            id = definition.id,
+                            titel = definition.titel,
+                            symbolLatex = definition.symbolLatex,
+                            kategorie = strukturOperatorKategorie(familie, definition),
+                            beschreibung = "${definition.definitionsLatex}. Anschlüsse und Ergebnistyp folgen diesem Operatorvertrag.",
+                            suchbegriffe = definition.eingänge.mapTo(linkedSetOf()) { it.typ.name },
+                            kandidat = konfiguriereStrukturRechner(knoten, familie, definition.id),
+                        ),
+                    )
+                }
+                add(
+                    RechnerOperatorAuswahlEintrag(
+                        id = familie.formelOperatorId,
+                        titel = "Eigene Formel",
+                        symbolLatex = "f(\\ldots)",
+                        kategorie = "Eigene Formeln",
+                        beschreibung = "Erstellt oder bearbeitet einen typisierten Ausdruck im CAS-Formelbauer.",
+                        suchbegriffe = setOf("CAS", "Formelbauer", familie.formelFamilie.name),
+                        art = RechnerOperatorAuswahlArt.FORMEL,
+                    ),
+                )
+            }
         }
 
         Text("Operator", style = MaterialTheme.typography.titleSmall)
         Box(Modifier.fillMaxWidth()) {
             OutlinedButton(
-                onClick = { operatorMenü = true },
+                onClick = { operatorDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(if (formelModus) "Formel" else operator.titel, modifier = Modifier.weight(1f))
                 Text(
-                    if (formelModus) "f(…)" else operator.symbolLatex,
-                    style = MaterialTheme.typography.labelMedium,
+                    when {
+                        formelModus -> "Formel"
+                        bekannterOperator == null && !operatorId.isNullOrBlank() -> "Unbekannter gespeicherter Operator"
+                        else -> operator.titel
+                    },
+                    modifier = Modifier.weight(1f),
                 )
-            }
-            DropdownMenu(
-                expanded = operatorMenü,
-                onDismissRequest = { operatorMenü = false },
-            ) {
-                StrukturRechnerOperatoren.fuer(familie).forEach { auswählbar ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(auswählbar.titel)
-                                Text(
-                                    auswählbar.symbolLatex,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        },
-                        onClick = {
-                            operatorMenü = false
-                            aktionen.knoten(konfiguriereStrukturRechner(knoten, familie, auswählbar.id))
-                        },
-                    )
-                }
-                HorizontalDivider()
-                DropdownMenuItem(
-                    text = {
-                        Column {
-                            Text("Formel")
-                            Text(
-                                "Typisierten CAS-Formelbauer öffnen",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                Text(
+                    when {
+                        formelModus -> "f(…)"
+                        bekannterOperator == null && !operatorId.isNullOrBlank() -> "?"
+                        else -> operator.symbolLatex
                     },
-                    onClick = {
-                        operatorMenü = false
-                        formelStart = ladeStrukturRechnerFormel(knoten) ?: strukturOperatorAlsFormel(operator)
-                        formelDialog = true
-                    },
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
         }
@@ -187,6 +195,26 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
             )
         }
 
+        if (operatorDialog) {
+            RechnerOperatorAuswahlDialog(
+                familienTitel = familie.titel,
+                einträge = operatorEinträge,
+                aktuelleId = operatorId,
+                auswirkungFür = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen)
+                },
+                schließen = { operatorDialog = false },
+                operatorÜbernehmen = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::knoten)
+                    operatorDialog = false
+                },
+                formelÖffnen = {
+                    formelStart = ladeStrukturRechnerFormel(knoten) ?: strukturOperatorAlsFormel(operator)
+                    formelDialog = true
+                },
+            )
+        }
+
         if (formelDialog) {
             StrukturFormelBauerDialog(
                 familie = familie.formelFamilie,
@@ -203,10 +231,34 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                         ),
                     )
                     formelDialog = false
+                    operatorDialog = false
                 },
             )
         }
     }
+}
+
+private fun strukturOperatorKategorie(
+    familie: StrukturRechnerKnotenFamilie,
+    definition: StrukturRechnerOperatorDefinition,
+): String = when (familie) {
+    StrukturRechnerKnotenFamilie.AUSSAGESATZ ->
+        if ("quantor" in definition.id.lowercase()) "Quantoren" else "Verknüpfungen"
+    StrukturRechnerKnotenFamilie.VEKTOR -> when {
+        definition.id.endsWith("norm") || definition.id.endsWith("winkel") || definition.id.endsWith("projektion") ||
+            definition.id.endsWith("normalisierung") -> "Norm und Geometrie"
+        definition.id.contains("produkt") || definition.id.endsWith("hadamard") -> "Produkte"
+        else -> "Grundoperationen"
+    }
+    StrukturRechnerKnotenFamilie.MATRIX -> when {
+        definition.id.endsWith("determinante") || definition.id.endsWith("spur") || definition.id.endsWith("rang") ->
+            "Kennwerte"
+        definition.id.endsWith("transponieren") || definition.id.endsWith("inverse") ||
+            definition.id.endsWith("hauptdiagonale") || definition.id.endsWith("nebendiagonale") -> "Transformationen"
+        definition.id.contains("produkt") || definition.id.endsWith("hadamard") -> "Produkte"
+        else -> "Grundoperationen"
+    }
+    StrukturRechnerKnotenFamilie.TENSOR -> "Tensoren"
 }
 
 @Composable

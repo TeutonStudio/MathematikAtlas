@@ -24,6 +24,7 @@ Dieser Debug-Quellordner macht die sichtbaren Oberflächen des Mathematik Atlas 
 | Matrixdiagonale-Inspector | `MatrixdiagonaleInspektor.kt` | `MatrixdiagonaleInspektorVorschau.kt` | hell/dunkel, Telefon/Tablet | rechteckig interpretierte Nebendiagonale |
 | Endliche-Menge-Inspector | `EndlicheMengeInspektor.kt` | `EndlicheMengeInspektorVorschau.kt` | befüllt, hell/dunkel | Primzahlen `2, 3, 5, 7` |
 | Zahlenrechner-Inspector | `ZahlenRechnerInspektor.kt` | `ZahlenRechnerInspektorVorschau.kt` | Potenz, hell/dunkel | reeller Potenzoperator mit plausibler Benennung |
+| Rechner-Operatorauswahl | `RechnerOperatorAuswahlDialog.kt` | `RechnerOperatorAuswahlDialogVorschau.kt` | breit mit Verbindungswarnung, kompakt | Addition, Division, Sinus und eigener Formelpfad |
 | Geometrie-Teilobjekt-Inspector | `GeometrieTeilobjektInspektor.kt` | `GeometrieTeilobjektInspektorVorschau.kt` | unverbundene Kante, hell/dunkel | dritte Kante eines Würfels als Auswahlabsicht |
 | KartenKnoten-Inspector | `KartenKnotenInspektor.kt` | `KartenKnotenInspektorVorschau.kt` | Methodenmodus | reale gespeicherte Beispielkarte und Version |
 | Iterierte Kartenmethode | `IterierteMethodenKartenInspektor.kt` | `IterierteMethodenKartenInspektorVorschau.kt` | ausgewählte Kartenmethode | Summe der Quadratzahlen mit Karten-Fallback |

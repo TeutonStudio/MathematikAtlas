@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikKnoten.enzyklopädie.RechnerFamilienKatalog
 import de.TeutonStudio.MathematikRechenSystem.kern.DifferentialBegriff
 import de.TeutonStudio.MathematikRechenSystem.kern.DifferentialOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.DivisionsSeite
@@ -27,95 +28,95 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         }
         val erweiterterOperator = ErweiterterZahlenOperator.vonId(operatorId)
         val formelModus = operatorId == ZAHLENRECHNER_FORMEL_ID
-        var operatorMenü by remember(knoten.id, operatorId) { mutableStateOf(false) }
+        var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
+        val operatorEinträge = remember(knoten) {
+            val katalogNachId = RechnerFamilienKatalog.zahlenOperatoren.associateBy { it.stabileId }
+            buildList {
+                if (!formelModus && standardOperator == null && erweiterterOperator == null && !operatorId.isNullOrBlank()) {
+                    add(
+                        RechnerOperatorAuswahlEintrag(
+                            id = operatorId,
+                            titel = "Unbekannter gespeicherter Operator",
+                            symbolLatex = "?",
+                            kategorie = "Nicht verfügbar",
+                            beschreibung = "Die gespeicherte Operator-ID $operatorId ist nicht registriert.",
+                            art = RechnerOperatorAuswahlArt.UNBEKANNT,
+                        ),
+                    )
+                }
+                UniversellerZahlenOperator.entries.forEach { operator ->
+                    val kandidat = if (operator == UniversellerZahlenOperator.DIFFERENTIAL) {
+                        konfiguriereZahlenRechnerDifferential(
+                            knoten,
+                            ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
+                        )
+                    } else {
+                        konfiguriereStandardZahlenRechner(knoten, operator)
+                    }
+                    add(
+                        RechnerOperatorAuswahlEintrag(
+                            id = operator.stabileId,
+                            titel = operator.titel,
+                            symbolLatex = operator.symbolLatex,
+                            kategorie = katalogNachId[operator.stabileId]?.kategorie ?: "Weitere Funktionen",
+                            beschreibung = katalogNachId[operator.stabileId]
+                                ?.signaturen
+                                ?.mapNotNull { it.beschreibung }
+                                ?.joinToString(" ")
+                                ?.ifBlank { null }
+                                ?: "Konfiguriert den Zahlenrechner für ${operator.titel}.",
+                            suchbegriffe = setOf(operator.name),
+                            kandidat = kandidat,
+                        ),
+                    )
+                }
+                ErweiterterZahlenOperator.entries.forEach { operator ->
+                    add(
+                        RechnerOperatorAuswahlEintrag(
+                            id = operator.stabileId,
+                            titel = operator.titel,
+                            symbolLatex = operator.symbolLatex,
+                            kategorie = erweiterteZahlenKategorie(operator),
+                            beschreibung = "Erweiterter Zahlenoperator ${operator.titel}.",
+                            suchbegriffe = setOf(operator.name),
+                            kandidat = konfiguriereErweitertenZahlenRechner(knoten, operator),
+                        ),
+                    )
+                }
+                add(
+                    RechnerOperatorAuswahlEintrag(
+                        id = ZAHLENRECHNER_FORMEL_ID,
+                        titel = "Eigene Formel",
+                        symbolLatex = "f(x)",
+                        kategorie = "Eigene Formeln",
+                        beschreibung = "Erstellt oder bearbeitet einen eigenen Zahlenausdruck im CAS-Formelbauer.",
+                        suchbegriffe = setOf("CAS", "Formelbauer"),
+                        art = RechnerOperatorAuswahlArt.FORMEL,
+                    ),
+                )
+            }
+        }
 
         val titel = when {
             formelModus -> "Formel"
             erweiterterOperator != null -> erweiterterOperator.titel
-            else -> standardOperator?.titel ?: "Addition"
+            else -> standardOperator?.titel ?: operatorId?.let { "Unbekannter gespeicherter Operator" } ?: "Addition"
         }
         val symbol = when {
             formelModus -> "f(x)"
             erweiterterOperator != null -> erweiterterOperator.symbolLatex
-            else -> standardOperator?.symbolLatex ?: "+"
+            else -> standardOperator?.symbolLatex ?: operatorId?.let { "?" } ?: "+"
         }
 
         Text("Operator", style = MaterialTheme.typography.titleSmall)
         Box(Modifier.fillMaxWidth()) {
             OutlinedButton(
-                onClick = { operatorMenü = true },
+                onClick = { operatorDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(titel, modifier = Modifier.weight(1f))
                 Text(symbol, style = MaterialTheme.typography.labelMedium)
-            }
-            DropdownMenu(
-                expanded = operatorMenü,
-                onDismissRequest = { operatorMenü = false },
-            ) {
-                UniversellerZahlenOperator.entries.forEach { auswählbar ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(auswählbar.titel)
-                                Text(
-                                    auswählbar.symbolLatex,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        },
-                        onClick = {
-                            operatorMenü = false
-                            val neu = if (auswählbar == UniversellerZahlenOperator.DIFFERENTIAL) {
-                                konfiguriereZahlenRechnerDifferential(
-                                    knoten,
-                                    ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
-                                )
-                            } else {
-                                konfiguriereStandardZahlenRechner(knoten, auswählbar)
-                            }
-                            aktionen.knoten(neu)
-                        },
-                    )
-                }
-                HorizontalDivider()
-                ErweiterterZahlenOperator.entries.forEach { auswählbar ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(auswählbar.titel)
-                                Text(
-                                    auswählbar.symbolLatex,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        },
-                        onClick = {
-                            operatorMenü = false
-                            aktionen.knoten(konfiguriereErweitertenZahlenRechner(knoten, auswählbar))
-                        },
-                    )
-                }
-                HorizontalDivider()
-                DropdownMenuItem(
-                    text = {
-                        Column {
-                            Text("Formel")
-                            Text(
-                                "CAS-Formelbauer öffnen",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    },
-                    onClick = {
-                        operatorMenü = false
-                        formelDialog = true
-                    },
-                )
             }
         }
 
@@ -452,6 +453,30 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             )
         }
 
+        if (operatorDialog) {
+            RechnerOperatorAuswahlDialog(
+                familienTitel = "Zahlenrechner",
+                einträge = operatorEinträge,
+                aktuelleId = when {
+                    formelModus -> ZAHLENRECHNER_FORMEL_ID
+                    erweiterterOperator != null -> erweiterterOperator.stabileId
+                    standardOperator != null -> standardOperator.stabileId
+                    else -> operatorId
+                },
+                auswirkungFür = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen)
+                },
+                schließen = { operatorDialog = false },
+                operatorÜbernehmen = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::knoten)
+                    operatorDialog = false
+                },
+                formelÖffnen = {
+                    formelDialog = true
+                },
+            )
+        }
+
         if (formelDialog) {
             FormelBauerDialog(
                 startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" },
@@ -459,8 +484,20 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 übernehmen = { latex ->
                     aktionen.knoten(konfiguriereZahlenRechnerFormel(knoten, latex))
                     formelDialog = false
+                    operatorDialog = false
                 },
             )
         }
     }
+}
+
+private fun erweiterteZahlenKategorie(operator: ErweiterterZahlenOperator): String = when (operator) {
+    ErweiterterZahlenOperator.POLYNOM -> "Algebra"
+    ErweiterterZahlenOperator.TANGENS,
+    ErweiterterZahlenOperator.COTANGENS,
+    ErweiterterZahlenOperator.SEKANS,
+    ErweiterterZahlenOperator.KOSEKANS,
+    ErweiterterZahlenOperator.ARCTANGENS,
+    -> "Trigonometrie"
+    else -> "Hyperbelfunktionen"
 }

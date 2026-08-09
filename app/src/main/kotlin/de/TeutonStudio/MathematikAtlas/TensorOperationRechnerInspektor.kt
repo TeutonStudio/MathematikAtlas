@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -46,53 +44,74 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
         aktionen: KnotenInspektorAktionen,
     ) {
         val definition = aktuelleTensorOperationDefinition(knoten)
-        var operatorMenue by remember(knoten.id, definition.id) { mutableStateOf(false) }
+        val operatorId = knoten.parameter[de.TeutonStudio.MathematikKnoten.RECHNER_OPERATOR_PARAMETER]
+            ?: knoten.parameter[de.TeutonStudio.MathematikKnoten.TENSOR_OPERATION_ID]
+            ?: definition.id.wert
+        var operatorDialog by remember(knoten.id, definition.id) { mutableStateOf(false) }
         var ausstehenderKnoten by remember(knoten.id) { mutableStateOf<KnotenDaten?>(null) }
+        val operatorEinträge = remember(knoten) {
+            buildList {
+                if (StandardTensorOperationen.registry.definition(operatorId) == null) {
+                    add(
+                        RechnerOperatorAuswahlEintrag(
+                            id = operatorId,
+                            titel = "Unbekannter gespeicherter Operator",
+                            symbolLatex = "?",
+                            kategorie = "Nicht verfügbar",
+                            beschreibung = "Die gespeicherte Operator-ID $operatorId ist nicht registriert.",
+                            art = RechnerOperatorAuswahlArt.UNBEKANNT,
+                        ),
+                    )
+                }
+                StandardTensorOperationen.registry.alle().forEach { auswählbar ->
+                    add(RechnerOperatorAuswahlEintrag(
+                    id = auswählbar.id.wert,
+                    titel = auswählbar.titel,
+                    symbolLatex = "\\operatorname{${auswählbar.titel}}",
+                    kategorie = tensorOperatorKategorie(auswählbar),
+                    beschreibung = buildString {
+                        append("Tensoroperation der Signaturfamilie ${auswählbar.familie.name.lowercase()}.")
+                        if (auswählbar.parameter.isNotEmpty()) {
+                            append(" Zusatzparameter: ")
+                            append(auswählbar.parameter.joinToString { it.id })
+                            append('.')
+                        }
+                    },
+                    suchbegriffe = buildSet {
+                        add(auswählbar.familie.name)
+                        add(auswählbar.unterstuetzungsStatus.name)
+                        addAll(auswählbar.eingangsRollen.map { it.wert })
+                        addAll(auswählbar.ausgangsRollen.map { it.wert })
+                        addAll(auswählbar.parameter.map { it.id })
+                    },
+                    status = tensorStatusTitel(auswählbar),
+                    kandidat = konfiguriereTensorOperation(
+                        knoten = knoten,
+                        definition = auswählbar,
+                        achsenModus = aktuellerAchsenEingabeModus(knoten),
+                        dynamischeAchsenAnzahl = dynamischeAchsenAnzahl(knoten, auswählbar),
+                    ),
+                    ))
+                }
+            }
+        }
 
-        fun uebernehmeOderBestaetige(neu: KnotenDaten) {
-            val neueIds = neu.anschlüsse.mapTo(linkedSetOf()) { it.id }
-            val entfernt = knoten.anschlüsse.filter { it.id !in neueIds }
-            if (entfernt.isEmpty()) aktionen.knoten(neu) else ausstehenderKnoten = neu
+        fun übernehmeAchsenÄnderung(neu: KnotenDaten) {
+            if (aktionen.vorschauKnotenErsetzen(neu).trenntVerbindungen) {
+                ausstehenderKnoten = neu
+            } else {
+                aktionen.knoten(neu)
+            }
         }
 
         Text("Tensoroperation", style = MaterialTheme.typography.titleSmall)
         Box(Modifier.fillMaxWidth()) {
             OutlinedButton(
-                onClick = { operatorMenue = true },
+                onClick = { operatorDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(definition.titel, modifier = Modifier.weight(1f))
                 Text(definition.familie.name, style = MaterialTheme.typography.labelSmall)
-            }
-            DropdownMenu(
-                expanded = operatorMenue,
-                onDismissRequest = { operatorMenue = false },
-            ) {
-                StandardTensorOperationen.registry.alle().forEach { auswaehlbar ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(auswaehlbar.titel)
-                                Text(
-                                    "${auswaehlbar.familie.name} · ${auswaehlbar.unterstuetzungsStatus.name}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        },
-                        onClick = {
-                            operatorMenue = false
-                            uebernehmeOderBestaetige(
-                                konfiguriereTensorOperation(
-                                    knoten = knoten,
-                                    definition = auswaehlbar,
-                                    achsenModus = aktuellerAchsenEingabeModus(knoten),
-                                    dynamischeAchsenAnzahl = dynamischeAchsenAnzahl(knoten, auswaehlbar),
-                                ),
-                            )
-                        },
-                    )
-                }
             }
         }
 
@@ -103,7 +122,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                 knoten = knoten,
                 definition = definition,
                 aktionen = aktionen,
-                knotenAendern = ::uebernehmeOderBestaetige,
+                knotenAendern = ::übernehmeAchsenÄnderung,
             )
         }
         if (definition.parameter.isNotEmpty()) {
@@ -130,16 +149,32 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
             Text(fehler, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
+        if (operatorDialog) {
+            RechnerOperatorAuswahlDialog(
+                familienTitel = "Tensorrechner",
+                einträge = operatorEinträge,
+                aktuelleId = operatorId,
+                auswirkungFür = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen)
+                },
+                schließen = { operatorDialog = false },
+                operatorÜbernehmen = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::knoten)
+                    operatorDialog = false
+                },
+                formelÖffnen = {},
+            )
+        }
+
         ausstehenderKnoten?.let { ziel ->
-            val neueIds = ziel.anschlüsse.mapTo(linkedSetOf()) { it.id }
-            val entfernt = knoten.anschlüsse.filter { it.id !in neueIds }
+            val auswirkung = aktionen.vorschauKnotenErsetzen(ziel)
             AlertDialog(
                 onDismissRequest = { ausstehenderKnoten = null },
-                title = { Text("Signatur wirklich wechseln?") },
+                title = { Text("Achseneingabe wirklich wechseln?") },
                 text = {
                     Text(
-                        "Die Handles ${entfernt.joinToString { it.name }} werden entfernt. " +
-                            "Bestehende Verbindungen an diesen Handles werden dabei getrennt.",
+                        "${auswirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) an " +
+                            "${auswirkung.entfallendeAnschlüsse.joinToString { it.name }} werden getrennt.",
                     )
                 },
                 confirmButton = {
@@ -148,7 +183,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                             aktionen.knoten(ziel)
                             ausstehenderKnoten = null
                         },
-                    ) { Text("Wechseln") }
+                    ) { Text("Wechseln und Verbindungen trennen") }
                 },
                 dismissButton = {
                     TextButton(onClick = { ausstehenderKnoten = null }) { Text("Abbrechen") }
@@ -156,6 +191,24 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
             )
         }
     }
+}
+
+private fun tensorOperatorKategorie(definition: TensorOperationDefinition): String = when (definition.familie) {
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.BINAER -> "Binäre Operationen"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.UNAER -> "Unäre Operationen"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.ACHSENABHAENGIG -> "Achsenoperationen"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.INDEXIERUNG -> "Indexierung"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.KONSTRUKTION -> "Konstruktion"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.ZERLEGUNG,
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.MEHRFACHAUSGANG,
+    -> "Zerlegungen"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorSignaturFamilie.VARIADISCH -> "Variadische Operationen"
+}
+
+private fun tensorStatusTitel(definition: TensorOperationDefinition): String = when (definition.unterstuetzungsStatus) {
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT -> "Konkret implementiert"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorUnterstuetzungsStatus.SYMBOLISCH_IMPLEMENTIERT -> "Symbolisch implementiert"
+    de.TeutonStudio.MathematikRechenSystem.kern.TensorUnterstuetzungsStatus.REGISTRIERT -> "Registriert"
 }
 
 @Composable

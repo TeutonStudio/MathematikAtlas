@@ -9,6 +9,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.logik.KnotenErsetzungsAuswirkung
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
@@ -31,6 +32,13 @@ interface KnotenInspektorAktionen {
     fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
     fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
     fun knoten(knoten: KnotenDaten)
+    fun vorschauKnotenErsetzen(knoten: KnotenDaten): KnotenErsetzungsAuswirkung =
+        KnotenErsetzungsAuswirkung(
+            erhalteneAnschlüsse = knoten.anschlüsse,
+            hinzugefügteAnschlüsse = emptyList(),
+            entfallendeAnschlüsse = emptyList(),
+            entfallendeVerbindungen = emptyList(),
+        )
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
