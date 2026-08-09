@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenAuswertungszeitFußzeile
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInteraktionsModus
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
@@ -132,6 +133,11 @@ class MathematikKnotenRenderer(
                 schließen = { geöffneteDefinition = null },
             )
         }
+    }
+
+    @Composable
+    override fun Fußzeile(knoten: KnotenDaten, ausgewählt: Boolean) {
+        KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos)
     }
 
     private fun operatorFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, zeichen: String): String = knoten.anschlüsse

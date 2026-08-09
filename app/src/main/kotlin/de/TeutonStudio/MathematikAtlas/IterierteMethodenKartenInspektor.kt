@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.formatiereAuswertungsDauerNanos
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
@@ -28,6 +29,7 @@ private val ITERIERTE_METHODEN_ARTEN = setOf<KnotenArtId>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun IterierteMethodenKartenInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
+    KnotenAuswertungsDiagnose(knoten, zustand)
     if (knoten.art !in ITERIERTE_METHODEN_ARTEN) return
     val methodeVerbunden = zustand.istMethodenEingangVerbunden(knoten)
     val ausgewählt = knoten.eingangsKartenVerweise["methode"]
@@ -129,6 +131,25 @@ internal fun IterierteMethodenKartenInspektor(knoten: KnotenDaten, zustand: Atla
                 color = MaterialTheme.colorScheme.error,
             )
         }
+    }
+}
+
+@Composable
+private fun KnotenAuswertungsDiagnose(knoten: KnotenDaten, zustand: AtlasZustand) {
+    val dauer = zustand.auswertung.knoten[knoten.id]?.auswertungsDauerNanos
+    HorizontalDivider()
+    Text("Auswertung", style = MaterialTheme.typography.titleSmall)
+    Text(
+        dauer?.let { "Letzte Auswertung: ${formatiereAuswertungsDauerNanos(it)}" }
+            ?: "Noch keine Auswertungsdauer gemessen.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    OutlinedButton(
+        onClick = { zustand.berechneKnotenCacheNeu(knoten.id) },
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text("Cache neu errechnen")
     }
 }
 

@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.29.x"
-current_version = "2.29.1"
+current_version = "2.29.3"
 first_guarded_version = "2.3.13"
 
 releases = [
@@ -92,4 +92,6 @@ releases = [
   { version = "2.28.8", title = "Geräteübergreifende Eingaben und Linux-Desktopziel", roadmap = "v2.28.x Bedienoberfläche und Plattformen", status = "released", previous_release = "2.28.7", branch = "release/v2.28.8-linux-desktop", kind = "feature", version_axis = "x", reason = "Vereinheitlicht Konzeptbibliotheksgesten und Kartenbefehle, ergänzt den vollständigen PC-Eingabevertrag und veröffentlicht ein Compose-Multiplatform-Desktopziel für Linux, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen." },
   { version = "2.29.0", title = "Tupeloperationen, Operatorauswahl und Atlas-Integral", roadmap = "v2.29.x Tupeloperationen und Bedienoberfläche", status = "released", previous_release = "2.28.8", branch = "release/v2.29.0-tupel-operator-integral", kind = "feature", version_axis = "y", new_node_types = ["mathematik.tupelErgänzen", "mathematik.tupelAuflösen"], reason = "Führt mit Tupel ergänzen und Tupel auflösen zwei neue separat erzeugbare Knotentypen mit geordneten, dynamischen Anschlussverträgen ein und bündelt den größeren Rechner-Operatorauswahldialog sowie das Atlas-Integralzeichen v4." },
   { version = "2.29.1", title = "Hierarchische Einstellungen und Kartenverwaltung", roadmap = "v2.29.x Bedienoberfläche und Kartenverwaltung", status = "released", previous_release = "2.29.0", branch = "release/v2.29.1-einstellungen-kartenverwaltung", kind = "feature", version_axis = "x", reason = "Hierarchisiert die bestehenden Einstellungen, ergänzt die kontrollierte Neuerzeugung von Beispielkarten und macht Kartenordner einklappbar, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen." },
+  { version = "2.29.2", title = "Zahnrad-Symbol für den Knoteninspektor", roadmap = "v2.29.x Bedienoberfläche und Knoteninspektor", status = "released", previous_release = "2.29.1", kind = "fix", version_axis = "x", reason = "Ersetzt die provisorische i-Beschriftung des Knoteninspektors durch ein kontrastadaptives Zahnrad-Symbol, ohne Knotengeometrie oder mathematische Knotentypen zu verändern." },
+  { version = "2.29.3", title = "Knoten-Auswertungszeiten und gezielte Cache-Neuberechnung", roadmap = "v2.29.x Auswertungsdiagnose und Bedienoberfläche", status = "released", previous_release = "2.29.2", branch = "agent/v2.29.3-knoten-auswertungsdiagnose", kind = "feature", version_axis = "x", reason = "Ergänzt bestehende Knoten um nichtpersistierte Auswertungszeiten in einer Fußzeile und eine gezielte Cache-Neuberechnung im Inspector, ohne einen neuen registrierten und separat erzeugbaren Knotentyp einzuführen." },
 ]
