@@ -48,5 +48,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturierteDivision()
         // Darauf aufbauend übernimmt der Analysisadapter ausschließlich strukturierte Differentialzustände.
         registriereZahlenRechnerDifferential()
+        // Äußerste Fehlergrenze des Polynomzustands, damit auch direkte Auswertungen nie Exceptions propagieren.
+        registrierePolynomFehlergrenze()
     }
 }
