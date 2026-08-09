@@ -1,0 +1,42 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 160 360"
+    preserveAspectRatio="xMidYMid meet"
+    focusable="false"
+    aria-hidden="true"
+>
+    <!--
+        Atlas-Integral, Konturvariante 2.
+
+        Korrektur gegenüber Variante 1:
+        - obere Hälfte bleibt weit und weich geöffnet,
+        - der Mittelstamm läuft schräg nach rechts unten,
+        - erst kurz vor dem unteren Ende entsteht ein kleiner Gegenschwung,
+        - der Abschluss läuft anschließend nach links unten aus.
+
+        Dadurch liest sich die Gesamtkontur als gestrecktes, asymmetrisches S
+        statt als von links nach rechts wandernde Kurve.
+    -->
+    <path
+        fill="currentColor"
+        d="M146 18
+           C124 2 87 2 58 19
+           C30 35 17 64 23 94
+           C28 121 47 139 60 158
+           C72 176 78 194 81 216
+           C84 239 83 262 76 286
+           C71 305 63 320 52 330
+           C43 338 33 341 23 338
+           C16 336 10 331 7 325
+           L24 311
+           C28 315 33 317 38 315
+           C45 313 51 305 55 293
+           C62 273 63 251 60 229
+           C57 208 50 190 38 171
+           C25 151 11 131 7 105
+           C2 76 11 49 33 29
+           C57 7 91 0 119 8
+           C130 11 139 14 146 18
+           Z"
+    />
+</svg>

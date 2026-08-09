@@ -1,0 +1,43 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 160 360"
+    preserveAspectRatio="xMidYMid meet"
+    focusable="false"
+    aria-hidden="true"
+>
+    <!--
+        Atlas-Integral, Konturvariante 1.
+
+        Gestaltungsabsicht:
+        - breiter, weich auslaufender oberer Bogen,
+        - schmaler vertikaler Mittelstamm,
+        - kompakter, gequetschter unterer Abschluss,
+        - keine Spiegelung zwischen oberem und unterem Teil.
+
+        Das Asset ist ausschließlich eine Designreferenz. Mathematische Semantik,
+        LaTeX-Export und Barrierefreiheitsbeschreibung verbleiben beim Renderer.
+    -->
+    <path
+        fill="currentColor"
+        d="M145 18
+           C123 2 86 2 57 19
+           C29 35 16 64 22 94
+           C27 122 48 142 60 165
+           C72 188 73 207 62 234
+           C51 262 36 283 32 306
+           C28 326 39 347 58 356
+           C75 360 94 356 104 343
+           C111 335 114 326 114 316
+           L92 314
+           C92 321 89 328 84 333
+           C78 338 69 339 62 335
+           C53 329 51 319 55 306
+           C60 287 76 264 87 236
+           C99 206 98 181 83 153
+           C71 129 52 111 48 91
+           C44 72 51 55 67 45
+           C86 33 112 34 128 44
+           C136 37 142 28 145 18
+           Z"
+    />
+</svg>
