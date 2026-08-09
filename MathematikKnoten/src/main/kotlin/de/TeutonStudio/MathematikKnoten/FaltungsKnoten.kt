@@ -102,11 +102,35 @@ object FaltungsKnotenVorlagen {
         art = METHODEN_ZIELMENGE_ART,
         name = "Methoden-Zielmenge",
         kategorie = "Methoden",
-        beschreibung = "Gibt die deklarierte Zielmenge einer einwertigen Methode aus.",
+        beschreibung = "Gibt die deklarierte Zielmenge einer Methode aus.",
         standardGröße = GraphGröße(250f, 105f),
         anschlüsse = listOf(
             eingang("methode", MathematikAnschlussArten.Methode.id),
             ausgang("menge", MathematikAnschlussArten.Menge.id),
+        ),
+    )
+
+    val MethodenWertevorrat = KnotenVorlage(
+        art = METHODEN_WERTEVORRAT_ART,
+        name = "Methoden-Wertevorrat",
+        kategorie = "Methoden",
+        beschreibung = "Gibt den kanonischen Wertevorrat einer Methode aus.",
+        standardGröße = GraphGröße(250f, 105f),
+        anschlüsse = listOf(
+            eingang("methode", MathematikAnschlussArten.Methode.id),
+            ausgang("menge", MathematikAnschlussArten.Menge.id),
+        ),
+    )
+
+    val MethodenArgumentanzahl = KnotenVorlage(
+        art = METHODEN_ARGUMENTANZAHL_ART,
+        name = "Methoden-Argumentanzahl",
+        kategorie = "Methoden",
+        beschreibung = "Gibt die Anzahl der geordneten Argumentplätze einer Methode aus; sie ist kein Dimensionsbegriff.",
+        standardGröße = GraphGröße(270f, 105f),
+        anschlüsse = listOf(
+            eingang("methode", MathematikAnschlussArten.Methode.id),
+            ausgang("anzahl", MathematikAnschlussArten.Zahl.id),
         ),
     )
 
@@ -117,6 +141,8 @@ object FaltungsKnotenVorlagen {
         MethodenAnwendungMenge,
         MethodenAnwendungObjekt,
         MethodenZielmenge,
+        MethodenWertevorrat,
+        MethodenArgumentanzahl,
     )
 
     private fun methodenAnwendung(
