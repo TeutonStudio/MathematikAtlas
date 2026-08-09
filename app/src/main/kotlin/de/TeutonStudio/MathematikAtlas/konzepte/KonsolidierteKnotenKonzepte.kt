@@ -5,6 +5,7 @@ import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? {
+    if (knoten.art == "mathematik.endlicheMenge") return endlicheMengeKonzept(knoten)
     if (knoten.art == MENGEN_KNOTEN_ART) {
         val verweis = knoten.kartenVerweis ?: return null
         val karte = zustand.speicher.lade(verweis)
