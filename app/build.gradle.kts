@@ -36,8 +36,8 @@ android {
         applicationId = "de.TeutonStudio.MathematikAtlas"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2028004
-        versionName = "2.28.4"
+        versionCode = 2028005
+        versionName = "2.28.5"
         buildConfigField("String", "GIT_COMMIT_SHA", "\"$gitCommitSha\"")
     }
 
