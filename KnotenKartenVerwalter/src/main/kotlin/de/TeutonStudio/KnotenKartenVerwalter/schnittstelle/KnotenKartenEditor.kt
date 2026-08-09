@@ -31,7 +31,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
-import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
 import kotlin.math.*
 
 private const val KNOTEN_VIEWPORT_PUFFER = 200f
@@ -43,6 +43,7 @@ private const val ANSCHLUSS_SICHTBAR_GRÖSSE_DP = 14f
 private const val SNAP_EINTRITT_DP = 28f
 private const val SNAP_AUSTRITT_DP = 34f
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun KnotenKartenEditor(
     zustand: KartenEditorZustand,
@@ -71,6 +72,8 @@ fun KnotenKartenEditor(
     var auswahlRechteckBildschirm by remember(karte.id) { mutableStateOf<Rect?>(null) }
     var aktuelleAuswahlÄnderung by remember { mutableStateOf(AuswahlÄnderung.Ersetzen) }
     var leertasteGedrückt by remember { mutableStateOf(false) }
+    var umschaltGedrückt by remember { mutableStateOf(false) }
+    var primärModifierGedrückt by remember { mutableStateOf(false) }
     LaunchedEffect(zustand.verbindungsStart) {
         if (zustand.verbindungsStart == null) magnetischesZiel = null
     }
@@ -87,51 +90,53 @@ fun KnotenKartenEditor(
             .clipToBounds()
             .onSizeChanged { anzeigeGröße = it }
             .onPreviewKeyEvent { event ->
+                umschaltGedrückt = event.isShiftPressed
+                primärModifierGedrückt = event.isCtrlPressed || event.isMetaPressed
                 if (event.key == Key.Spacebar) {
                     leertasteGedrückt = event.type == KeyEventType.KeyDown
                 }
                 false
             }
-            .onPointerEvent(PointerEventType.Press) { event ->
-                aktuelleAuswahlÄnderung = when {
-                    event.keyboardModifiers.isCtrlPressed -> AuswahlÄnderung.Umschalten
-                    event.keyboardModifiers.isShiftPressed -> AuswahlÄnderung.Hinzufügen
-                    else -> AuswahlÄnderung.Ersetzen
+            .pointerInput(zustand) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val änderung = event.changes.firstOrNull() ?: continue
+                        beiZeigerPosition(bildschirmZuWelt(änderung.position, aktuelleAnsicht, aktuelleDichte))
+                        when (event.type) {
+                            PointerEventType.Press -> aktuelleAuswahlÄnderung = when {
+                                primärModifierGedrückt -> AuswahlÄnderung.Umschalten
+                                umschaltGedrückt -> AuswahlÄnderung.Hinzufügen
+                                else -> AuswahlÄnderung.Ersetzen
+                            }
+                            PointerEventType.Scroll -> {
+                                val bisher = aktuelleAnsicht
+                                if (umschaltGedrückt) {
+                                    zustand.führeAus(
+                                        KartenAktion.AnsichtÄndern(bisher.copy(verschiebung = bisher.verschiebung + GraphPunkt(-änderung.scrollDelta.y * 36f, 0f))),
+                                        mitHistorie = false,
+                                    )
+                                } else {
+                                    val faktor = if (änderung.scrollDelta.y < 0f) 1.1f else 1f / 1.1f
+                                    val neuerZoom = (bisher.zoom * faktor).coerceIn(.25f, 3.5f)
+                                    val effektiv = neuerZoom / bisher.zoom
+                                    val zentrum = änderung.position
+                                    zustand.führeAus(
+                                        KartenAktion.AnsichtÄndern(AnsichtsFenster(
+                                            verschiebung = GraphPunkt(
+                                                zentrum.x - (zentrum.x - bisher.verschiebung.x) * effektiv,
+                                                zentrum.y - (zentrum.y - bisher.verschiebung.y) * effektiv,
+                                            ),
+                                            zoom = neuerZoom,
+                                        )),
+                                        mitHistorie = false,
+                                    )
+                                }
+                                änderung.consume()
+                            }
+                        }
+                    }
                 }
-                event.changes.firstOrNull()?.position?.let { position ->
-                    beiZeigerPosition(bildschirmZuWelt(position, aktuelleAnsicht, aktuelleDichte))
-                }
-            }
-            .onPointerEvent(PointerEventType.Move) { event ->
-                event.changes.firstOrNull()?.position?.let { position ->
-                    beiZeigerPosition(bildschirmZuWelt(position, aktuelleAnsicht, aktuelleDichte))
-                }
-            }
-            .onPointerEvent(PointerEventType.Scroll) { event ->
-                val änderung = event.changes.firstOrNull() ?: return@onPointerEvent
-                val bisher = aktuelleAnsicht
-                if (event.keyboardModifiers.isShiftPressed) {
-                    zustand.führeAus(
-                        KartenAktion.AnsichtÄndern(bisher.copy(verschiebung = bisher.verschiebung + GraphPunkt(-änderung.scrollDelta.y * 36f, 0f))),
-                        mitHistorie = false,
-                    )
-                } else {
-                    val faktor = if (änderung.scrollDelta.y < 0f) 1.1f else 1f / 1.1f
-                    val neuerZoom = (bisher.zoom * faktor).coerceIn(.25f, 3.5f)
-                    val effektiv = neuerZoom / bisher.zoom
-                    val zentrum = änderung.position
-                    zustand.führeAus(
-                        KartenAktion.AnsichtÄndern(AnsichtsFenster(
-                            verschiebung = GraphPunkt(
-                                zentrum.x - (zentrum.x - bisher.verschiebung.x) * effektiv,
-                                zentrum.y - (zentrum.y - bisher.verschiebung.y) * effektiv,
-                            ),
-                            zoom = neuerZoom,
-                        )),
-                        mitHistorie = false,
-                    )
-                }
-                änderung.consume()
             }
             .sekundärKlick(zustand, karte.id) { pos ->
                 if (!trifftKnoten(pos, aktuelleKarte, aktuelleAnsicht, aktuelleDichte)) {
