@@ -34,7 +34,6 @@ enum class UniversellerZahlenOperator(
     DIFFERENTIAL("zahl.differential", "Differential", "\\frac{d}{d x}"),
     MINIMUM("zahl.minimum", "Minimum", "\\min"),
     MAXIMUM("zahl.maximum", "Maximum", "\\max"),
-    NORM("zahl.norm", "Norm", "\\lVert\\cdot\\rVert"),
     ABRUNDUNG("zahl.abrundung", "Abrundung", "\\lfloor\\cdot\\rfloor"),
     AUFRUNDUNG("zahl.aufrundung", "Aufrundung", "\\lceil\\cdot\\rceil"),
     RUNDUNG("zahl.rundung", "Rundung", "\\lfloor\\cdot\\rceil"),
@@ -56,10 +55,15 @@ enum class UniversellerZahlenOperator(
     ;
 
     companion object {
-        fun vonIdOderNull(id: String?): UniversellerZahlenOperator? = entries.firstOrNull { operator ->
-            id == operator.stabileId ||
-                id.equals(operator.name, ignoreCase = true) ||
-                id.equals(operator.stabileId.substringAfterLast('.'), ignoreCase = true)
+        fun vonIdOderNull(id: String?): UniversellerZahlenOperator? {
+            // Historische Norm-Karten behalten ihre bisherige Zahlensemantik,
+            // werden aber auf den kanonischen 0-Distanz-/Betrag-Operator migriert.
+            if (id == "zahl.norm" || id.equals("NORM", ignoreCase = true)) return BETRAG
+            return entries.firstOrNull { operator ->
+                id == operator.stabileId ||
+                    id.equals(operator.name, ignoreCase = true) ||
+                    id.equals(operator.stabileId.substringAfterLast('.'), ignoreCase = true)
+            }
         }
 
         fun vonId(id: String?): UniversellerZahlenOperator = requireNotNull(vonIdOderNull(id)) {
@@ -92,7 +96,6 @@ enum class UniversellerZahlenOperator(
             LOGARITHMUS_BASIS_10,
             MINIMUM,
             MAXIMUM,
-            NORM,
             ABRUNDUNG,
             AUFRUNDUNG,
             RUNDUNG,
