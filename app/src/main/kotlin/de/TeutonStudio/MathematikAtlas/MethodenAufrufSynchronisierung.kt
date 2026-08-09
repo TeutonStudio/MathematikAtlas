@@ -17,14 +17,23 @@ internal const val METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX = "methodenAusgang
 internal fun methodenAusgangArgumentprojektionSchlüssel(anschlussName: String): String =
     "$METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX$anschlussName.argumentprojektion"
 
+internal fun methodenAusgangErgebnisprojektionSchlüssel(anschlussName: String): String =
+    "$METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX$anschlussName.ergebnisprojektion"
+
 internal fun KnotenDaten.methodenAusgangArgumentprojektion(anschlussName: String): String =
     parameter[methodenAusgangArgumentprojektionSchlüssel(anschlussName)]
         ?.takeIf { it == METHODEN_ARGUMENTPROJEKTION_TUPEL }
         ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT
 
+internal fun KnotenDaten.methodenAusgangErgebnisprojektion(anschlussName: String): String =
+    parameter[methodenAusgangErgebnisprojektionSchlüssel(anschlussName)]
+        ?.takeIf { it == METHODEN_ERGEBNISPROJEKTION_TUPEL }
+        ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
+
 /**
  * Synchronisiert alle UI-Projektionen, die von einer konkreten Methodensignatur
  * abhängen. Eine unbekannte Methode erzeugt dabei niemals eine geratene Stelligkeit.
+ * Ebenso bleibt ihre Ausgabe über den universellen Tupelvertrag verdrahtbar.
  */
 internal fun synchronisiereMethodenAufrufe(
     karte: KartenDaten,
@@ -48,8 +57,9 @@ internal fun synchronisiereMethodenAufrufe(
                     ?.eingänge
                     ?.get("methode")
                     ?.objekt as? Methode
-                val projektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
-                synchronisiereMethodenAufruf(knoten, methode, projektion)
+                val argumentProjektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
+                val ergebnisProjektion = methodenErgebnisprojektionFürVerbraucher(karte, knoten)
+                synchronisiereMethodenAufruf(knoten, methode, argumentProjektion, ergebnisProjektion)
             }
             METHODEN_ARGUMENTE_ART -> {
                 val methode = auswertung.knoten[knoten.id]
@@ -92,27 +102,40 @@ internal fun synchronisiereMethodenAufrufe(
     )
 }
 
-private fun methodenArgumentprojektionFürVerbraucher(karte: KartenDaten, verbraucher: KnotenDaten): String {
+private data class MethodenQuellAusgang(
+    val knoten: KnotenDaten,
+    val anschluss: AnschlussDaten,
+)
+
+private fun methodenQuellAusgang(karte: KartenDaten, verbraucher: KnotenDaten): MethodenQuellAusgang? {
     val methodenEingang = verbraucher.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
-    } ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
+    } ?: return null
     val eingangsVerweis = AnschlussVerweis(verbraucher.id, methodenEingang.id)
-    val verbindung = karte.verbindungen.singleOrNull { it.zu == eingangsVerweis }
-        ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
-    val quelle = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId }
-        ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
-    val ausgang = quelle.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId }
-        ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
+    val verbindung = karte.verbindungen.singleOrNull { it.zu == eingangsVerweis } ?: return null
+    val quelle = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId } ?: return null
+    val ausgang = quelle.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId } ?: return null
     if (ausgang.richtung != AnschlussRichtung.Ausgang || ausgang.art != MathematikAnschlussArten.Methode.id) {
-        return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
+        return null
     }
-    return quelle.methodenAusgangArgumentprojektion(ausgang.name)
+    return MethodenQuellAusgang(quelle, ausgang)
+}
+
+private fun methodenArgumentprojektionFürVerbraucher(karte: KartenDaten, verbraucher: KnotenDaten): String {
+    val quelle = methodenQuellAusgang(karte, verbraucher) ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
+    return quelle.knoten.methodenAusgangArgumentprojektion(quelle.anschluss.name)
+}
+
+private fun methodenErgebnisprojektionFürVerbraucher(karte: KartenDaten, verbraucher: KnotenDaten): String {
+    val quelle = methodenQuellAusgang(karte, verbraucher) ?: return METHODEN_ERGEBNISPROJEKTION_DIREKT
+    return quelle.knoten.methodenAusgangErgebnisprojektion(quelle.anschluss.name)
 }
 
 private fun synchronisiereMethodenAufruf(
     knoten: KnotenDaten,
     methode: Methode?,
-    projektion: String,
+    argumentProjektion: String,
+    ergebnisProjektion: String,
 ): KnotenDaten {
     val methodenEingang = knoten.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
@@ -126,14 +149,15 @@ private fun synchronisiereMethodenAufruf(
         val argumente = listOf(tupelAnschluss(knoten.id, bisherigeArgumente.firstOrNull()))
         return knoten.copy(
             anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
-                ausgang.copy(art = MathematikAnschlussArten.Objekt.id),
+                ausgang.copy(art = MathematikAnschlussArten.Tupel.id),
             parameter = knoten.parameter
                 .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }
                 .minus(METHODEN_AUFRUF_STELLIGKEIT)
                 .minus(METHODEN_AUFRUF_ZIELMENGE)
                 .minus(METHODEN_AUFRUF_VERTRAGSFEHLER)
-                .plus(METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Objekt.id.wert)
+                .plus(METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Tupel.id.wert)
                 .plus(METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_TUPEL)
+                .plus(METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_TUPEL)
                 .plus("festeEingänge" to "1"),
         )
     }
@@ -148,8 +172,27 @@ private fun synchronisiereMethodenAufruf(
             METHODEN_AUFRUF_VERTRAGSFEHLER to (fehler.message ?: "Die Zielmenge der Methode fehlt.")
         ))
     }
-    val ergebnisArt = anschlussArtFürMathematischesObjekt(ausgabe)
-    val argumente = if (projektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
+    val effektiveErgebnisProjektion = if (
+        zielMenge is Tupelraum || ausgabe is Tupel || ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL
+    ) {
+        METHODEN_ERGEBNISPROJEKTION_TUPEL
+    } else {
+        METHODEN_ERGEBNISPROJEKTION_DIREKT
+    }
+    val roheErgebnisArt = anschlussArtFürMathematischesObjekt(ausgabe)
+    val ergebnisArt = if (effektiveErgebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL) {
+        MathematikAnschlussArten.Tupel.id
+    } else {
+        roheErgebnisArt
+    }
+    val projizierteZielMenge = if (
+        effektiveErgebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && zielMenge !is Tupelraum
+    ) {
+        Tupelraum(listOf(zielMenge))
+    } else {
+        zielMenge
+    }
+    val argumente = if (argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
         if (methode.parameter.isEmpty()) emptyList()
         else listOf(tupelAnschluss(knoten.id, bisherigeArgumente.firstOrNull()))
     } else {
@@ -173,9 +216,10 @@ private fun synchronisiereMethodenAufruf(
     }
     val vertragsParameter = buildMap {
         put(METHODEN_AUFRUF_STELLIGKEIT, methode.parameter.size.toString())
-        put(METHODEN_AUFRUF_ZIELMENGE, zielMenge.zuLatex())
+        put(METHODEN_AUFRUF_ZIELMENGE, projizierteZielMenge.zuLatex())
         put(METHODEN_ANWENDUNG_ERGEBNIS_ART, ergebnisArt.wert)
-        put(METHODEN_AUFRUF_ARGUMENTPROJEKTION, projektion)
+        put(METHODEN_AUFRUF_ARGUMENTPROJEKTION, argumentProjektion)
+        put(METHODEN_AUFRUF_ERGEBNISPROJEKTION, effektiveErgebnisProjektion)
         put("festeEingänge", argumente.size.toString())
         methode.parameter.forEachIndexed { index, parameter ->
             val präfix = "$METHODEN_AUFRUF_PARAMETER_PREFIX$index."
