@@ -102,17 +102,13 @@ fun konfiguriereZahlenRechner(
             )
         },
     )
-    val bisherigerOperator = knoten.parameter[ZAHLENRECHNER_OPERATOR]
-        ?.let { operatorId -> UniversellerZahlenOperator.vonId(operatorId) }
-    val bisherStandardName = bisherigerOperator?.let { knoten.name == it.titel } == true ||
-        UniversellerZahlenOperator.entries.any { it.titel == knoten.name }
     val parameter = knoten.parameter + mapOf(
         ZAHLENRECHNER_OPERATOR to operator.stabileId,
         ZAHLENRECHNER_KOMPLEX_EINGABE to komplexEingabe,
         "festeEingänge" to festeEingänge.toString(),
     )
     return knoten.copy(
-        name = if (bisherStandardName) operator.titel else knoten.name,
+        name = zahlenRechnerNameFürWechsel(knoten, operator.titel),
         anschlüsse = eingänge + ausgang,
         parameter = parameter,
     )
