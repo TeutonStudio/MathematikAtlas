@@ -42,5 +42,7 @@ object GesamterMathematikAuswerter {
         registriereTensorOperationRegistry()
         // Finaler Zahlenrechner-Wrapper: übernimmt ausschließlich den Divisionszustand.
         registriereStrukturierteDivision()
+        // Darauf aufbauend übernimmt der Analysisadapter ausschließlich strukturierte Differentialzustände.
+        registriereZahlenRechnerDifferential()
     }
 }

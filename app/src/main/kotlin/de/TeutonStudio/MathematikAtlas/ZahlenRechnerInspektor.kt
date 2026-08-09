@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.DifferentialBegriff
+import de.TeutonStudio.MathematikRechenSystem.kern.DifferentialOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.DivisionsSeite
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
@@ -66,7 +68,15 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                         },
                         onClick = {
                             operatorMenü = false
-                            aktionen.knoten(konfiguriereStandardZahlenRechner(knoten, auswählbar))
+                            val neu = if (auswählbar == UniversellerZahlenOperator.DIFFERENTIAL) {
+                                konfiguriereZahlenRechnerDifferential(
+                                    knoten,
+                                    ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
+                                )
+                            } else {
+                                konfiguriereStandardZahlenRechner(knoten, auswählbar)
+                            }
+                            aktionen.knoten(neu)
                         },
                     )
                 }
@@ -168,6 +178,131 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                 )
+            }
+        }
+
+        if (standardOperator == UniversellerZahlenOperator.DIFFERENTIAL) {
+            val ergebnisArt = aktuelleZahlenRechnerDifferentialErgebnisArt(knoten)
+            Text("Ergebnisart", style = MaterialTheme.typography.titleSmall)
+            if (ergebnisArt == null) {
+                Text(
+                    "Historischer Termmodus. Die bisherige skalare Ableitung bleibt unverändert, bis eine strukturierte Ergebnisart gewählt wird.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = ergebnisArt == ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
+                    onClick = {
+                        aktionen.knoten(
+                            konfiguriereZahlenRechnerDifferential(
+                                knoten,
+                                ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
+                            ),
+                        )
+                    },
+                    label = { Text("f′") },
+                )
+                FilterChip(
+                    selected = ergebnisArt == ZahlenRechnerDifferentialErgebnisArt.DIFFERENTIAL,
+                    onClick = {
+                        aktionen.knoten(
+                            konfiguriereZahlenRechnerDifferential(
+                                knoten,
+                                ZahlenRechnerDifferentialErgebnisArt.DIFFERENTIAL,
+                            ),
+                        )
+                    },
+                    label = { Text("df") },
+                )
+            }
+
+            if (ergebnisArt != null) {
+                val differentialOperator = aktuelleZahlenRechnerDifferentialOperator(knoten)
+                Text("Differentiation", style = MaterialTheme.typography.titleSmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = differentialOperator == DifferentialOperator.Total,
+                        onClick = {
+                            aktionen.parameter(
+                                DIFFERENTIAL_OPERATOR_PARAMETER,
+                                DifferentialOperator.Total.operatorId,
+                            )
+                        },
+                        label = { Text("Total") },
+                    )
+                    FilterChip(
+                        selected = differentialOperator is DifferentialOperator.Partiell,
+                        onClick = {
+                            aktionen.parameter(
+                                DIFFERENTIAL_OPERATOR_PARAMETER,
+                                DifferentialOperator.Partiell(1).operatorId,
+                            )
+                        },
+                        label = { Text("Partiell") },
+                    )
+                }
+
+                if (differentialOperator is DifferentialOperator.Partiell) {
+                    val indexText = knoten.parameter[DIFFERENTIAL_ARGUMENT_INDEX_PARAMETER] ?: "1"
+                    OutlinedTextField(
+                        value = indexText,
+                        onValueChange = { eingabe ->
+                            val bereinigt = eingabe.filter(Char::isDigit).ifBlank { "1" }
+                            aktionen.parameter(DIFFERENTIAL_ARGUMENT_INDEX_PARAMETER, bereinigt)
+                        },
+                        label = { Text("Argumentindex i") },
+                        supportingText = { Text("Sichtbar einsbasiert: ∂ᵢf bzw. dᵢf") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                }
+
+                val ordnung = knoten.parameter[DIFFERENTIAL_ORDNUNG_PARAMETER] ?: "1"
+                OutlinedTextField(
+                    value = ordnung,
+                    onValueChange = { eingabe ->
+                        aktionen.parameter(DIFFERENTIAL_ORDNUNG_PARAMETER, eingabe.trim().ifBlank { "1" })
+                    },
+                    label = { Text("Ordnung n") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+
+                val begriff = aktuellerZahlenRechnerDifferentialBegriff(knoten)
+                Text("Differentialbegriff", style = MaterialTheme.typography.titleSmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = begriff == DifferentialBegriff.REELL_FRECHET,
+                        onClick = {
+                            aktionen.parameter(
+                                DIFFERENTIAL_BEGRIFF_PARAMETER,
+                                DifferentialBegriff.REELL_FRECHET.name,
+                            )
+                        },
+                        label = { Text("Reell / Fréchet") },
+                    )
+                    FilterChip(
+                        selected = begriff == DifferentialBegriff.KOMPLEX,
+                        onClick = {
+                            aktionen.parameter(
+                                DIFFERENTIAL_BEGRIFF_PARAMETER,
+                                DifferentialBegriff.KOMPLEX.name,
+                            )
+                        },
+                        label = { Text("Komplex") },
+                    )
+                }
             }
         }
 
@@ -285,11 +420,9 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             }
         }
 
-        if (standardOperator in setOf(
-                UniversellerZahlenOperator.INTEGRAL,
-                UniversellerZahlenOperator.DIFFERENTIAL,
-            )
-        ) {
+        val differentialHistorisch = standardOperator == UniversellerZahlenOperator.DIFFERENTIAL &&
+            aktuelleZahlenRechnerDifferentialErgebnisArt(knoten) == null
+        if (standardOperator == UniversellerZahlenOperator.INTEGRAL || differentialHistorisch) {
             val variable = knoten.parameter[ZAHLENRECHNER_VARIABLE] ?: "x"
             OutlinedTextField(
                 value = variable,
