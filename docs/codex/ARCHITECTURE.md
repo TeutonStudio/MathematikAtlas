@@ -2,7 +2,7 @@
 
 ## Zweck
 
-Dieses Dokument beschreibt die beabsichtigten Verantwortungsgrenzen der nativen Android-Anwendung. Es behauptet nicht, dass der aktuelle Code sie bereits vollständig erfüllt. Abweichungen werden im ExecPlan und gegebenenfalls als technische Schuld dokumentiert.
+Dieses Dokument beschreibt die beabsichtigten Verantwortungsgrenzen der nativen Android- und Desktop-Anwendung. Es behauptet nicht, dass der aktuelle Code sie bereits vollständig erfüllt. Abweichungen werden im ExecPlan und gegebenenfalls als technische Schuld dokumentiert.
 
 ## Module und Verantwortungen
 
@@ -74,7 +74,8 @@ Verantwortlich für:
 
 - mathematische `KnotenVorlage`-Definitionen,
 - mathematische Anschlussarten,
-- Standardauswerter und deren Registrierung,
+- den kanonischen plattformübergreifenden Erstellen-Katalog,
+- Standardauswerter und deren geordnete Registrierungsphasen,
 - spezialisierte Compose-Renderer,
 - native Darstellung des vom Rechenkern erzeugten LaTeX-Teilumfangs,
 - fachbezogene Konfigurationen wie Matrix- oder Visualisierungsparameter.
@@ -88,9 +89,20 @@ Verantwortlich für:
 - Anwendungseinstieg und Material-3-Oberfläche,
 - Kartenbibliothek, Ordner und Navigation,
 - Inspector und anwendungsspezifische Dialoge,
-- Zusammenstellung der Vorlagen- und Renderer-Kataloge,
+- Ergänzung des kanonischen Mathematikkatalogs um App-Werkzeuge und dynamische Gruppenvorlagen,
 - Laden, Speichern, Import, Export und Migration,
 - Koordination von Editorzustand und Auswertung.
+
+Die App darf keine zweite mathematische Katalog- oder Konsolidierungslogik pflegen.
+
+### 6. `desktopApp`
+
+Verantwortlich für:
+
+- Desktop-Einstieg, Fenster und Menüs,
+- Dateidialoge und XDG-nahe Speicherorte,
+- Desktop-spezifische Eingabeverträge,
+- Verwendung desselben kanonischen Mathematikkatalogs und Auswerterregisters wie Android.
 
 ## Abhängigkeitsrichtung
 
@@ -124,13 +136,21 @@ Verboten sind insbesondere:
 
 Der aktuelle Bestand verwendet bewusst getrennte Mechanismen:
 
-- `MathematikKnotenVorlagen.alle` als statischen Vorlagenkatalog,
+- `MathematikKnotenVorlagen.alle` als lade-kompatiblen historischen Basiskatalog,
+- `KanonischerMathematikKnotenKatalog` als einzige fachliche Quelle für den sichtbaren mathematischen Erstellen-Katalog auf Android und Desktop,
 - dynamisch aus Karten abgeleitete Gruppenvorlagen im App-Zustand,
 - `MathematikAuswerterRegister` für mathematische Auswerter,
+- `StandardMathematikAuswerterPakete` für die explizite Reihenfolge additiver Registrierungen und nachgelagerter Verfeinerungen,
 - Renderer-Zuordnung über die vorhandenen App- und Knotenpfade,
 - `AnschlussArtRegister` für die Typkompatibilität von Anschlüssen.
 
-Agenten erweitern den jeweils zuständigen vorhandenen Mechanismus. Sie führen kein paralleles Register ein, nur weil mehrere bestehende Register unterschiedliche Verantwortungen besitzen.
+Historische Vorlagen dürfen zum Laden und Migrieren erhalten bleiben, ohne im sichtbaren Katalog angeboten zu werden. Plattformmodule dürfen keine eigene mathematische Ersetzungslogik neben `KanonischerMathematikKnotenKatalog` aufbauen.
+
+## Ordner- und Paketregeln
+
+Neue globale Orchestrierungsdateien werden nach Verantwortung einsortiert. Insbesondere liegen Katalog- und Registrierungsorchestrierung unter `MathematikKnoten/.../katalog/`, Rechenadapter unter `.../rechnen/` und Vektor-/Multinomcode unter `.../vektor/`.
+
+Versionssuffixe wie `V2300` sind nur für historische Implementierungs- oder Migrationspfade zulässig. Neue Produktpfade verwenden versionsfreie Fassaden. Eine veröffentlichte Versionsnummer ist kein Fachgebiet und deshalb auch kein dauerhafter Architekturordner.
 
 ## Zustandsführung
 
@@ -155,6 +175,12 @@ Persistierte Daten enthalten ausschließlich serialisierbare eigene Datentypen u
 - Auswertungscaches und abgeleitete Renderdaten.
 
 Änderungen am Schema müssen ältere Karten, stabile Anschlussreferenzen und unbekannte Knotentypen berücksichtigen.
+
+## Plattformbrücken und bekannte technische Schuld
+
+Die Desktopmodule `KnotenKartenVerwalterDesktop`, `MathematikKartenAdapterDesktop` und `MathematikKnotenDesktop` verwenden derzeit noch gemeinsame Quellverzeichnisse der Android-orientierten Bibliotheksmodule. Dieser Zustand ist eine bekannte Übergangsarchitektur und kein Vorbild für neue Module.
+
+Eine Ablösung soll über eine offiziell unterstützte gemeinsame Android-/Desktop-Toolchain erfolgen. Solange die verwendete Kotlin-/AGP-Kombination keinen freigegebenen KMP-Android-Library-Weg bietet, wird dafür weder AGP beiläufig herabgestuft noch Produktionscode dupliziert. Fachliche Quellen wie Knotenkatalog und Auswerterregistrierung werden unabhängig davon bereits plattformneutral gehalten.
 
 ## Fehlerzustände
 
