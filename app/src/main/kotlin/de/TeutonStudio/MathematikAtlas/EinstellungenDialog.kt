@@ -360,11 +360,13 @@ private fun BeispielkartenEinstellungsSeite(zustand: AtlasZustand) {
                             withContext(Dispatchers.IO) { verwaltung.erstelleNeu() }
                         }.fold(
                             onSuccess = { ergebnis ->
+                                zustand.ladeKartenNeu()
                                 KartenAenderungsSignal.markiereAenderung()
                                 val pfad = ergebnis.ordnerPfad.joinToString("/")
                                 meldung = "${ergebnis.anzahl} Beispielkarten wurden in „$pfad“ erstellt." to false
                             },
                             onFailure = { fehler ->
+                                zustand.ladeKartenNeu()
                                 val grund = fehler.message ?: fehler::class.simpleName ?: "Unbekannter Fehler"
                                 meldung = (
                                     "Die Beispielkarten konnten nicht vollständig erstellt werden. " +
