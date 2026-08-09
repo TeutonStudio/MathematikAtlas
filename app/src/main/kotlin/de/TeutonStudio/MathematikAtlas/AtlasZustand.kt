@@ -58,6 +58,11 @@ class AtlasZustand(context: Context) {
 
     fun aktualisiereAuswertung() { werteAus() }
 
+    /** Lädt den sichtbaren Kartenbestand aus dem Speicher, ohne die aktuell geöffnete Karte zu wechseln. */
+    fun ladeKartenNeu() {
+        karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
+    }
+
     fun berechneKnotenCacheNeu(knotenId: KnotenId) {
         auswerter.verwerfeCache(knotenId)
         werteAus()
