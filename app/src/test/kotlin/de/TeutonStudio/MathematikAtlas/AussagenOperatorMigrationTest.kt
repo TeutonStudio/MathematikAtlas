@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikKnoten.AUSSAGEN_LOGIK_SEMANTIK
 import de.TeutonStudio.MathematikKnoten.AUSSAGEN_LOGIK_XOR
 import de.TeutonStudio.MathematikKnoten.AussagenLogikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.V230KnotenVorlagen
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -44,5 +45,39 @@ class AussagenOperatorMigrationTest {
 
         assertEquals("mathematik.adjunktion", migriert.art)
         assertEquals(AUSSAGEN_LOGIK_XOR, migriert.parameter[AUSSAGEN_LOGIK_SEMANTIK])
+    }
+
+    @Test
+    fun `historischer Standardname Aussage zu Methode wird selektiv umbenannt`() {
+        val alt = MathematikKnotenVorlagen.AussageZuMethode.erzeuge(GraphPunkt(5f, 8f))
+        val karte = KartenDaten(name = "Alt", knoten = listOf(alt))
+
+        val migriert = migriereAussagenOperatoren(karte).knoten.single()
+
+        assertEquals("Aussage zu Prädikat", migriert.name)
+        assertEquals(alt.art, migriert.art)
+        assertEquals(alt.id, migriert.id)
+        assertEquals(alt.anschlüsse, migriert.anschlüsse)
+        assertEquals(alt.parameter, migriert.parameter)
+        assertEquals(migriert, migriereAussagenOperatoren(KartenDaten(name = "Neu", knoten = listOf(migriert))).knoten.single())
+    }
+
+    @Test
+    fun `benutzerdefinierter Name der Praedikatsvariante bleibt erhalten`() {
+        val individuell = MathematikKnotenVorlagen.AussageZuMethode
+            .erzeuge(GraphPunkt.Zero)
+            .copy(name = "Mein Prädikat")
+
+        val migriert = migriereAussagenOperatoren(KartenDaten(name = "Eigen", knoten = listOf(individuell))).knoten.single()
+
+        assertEquals("Mein Prädikat", migriert.name)
+    }
+
+    @Test
+    fun `neue Prädikatsvorlage bleibt idempotent unverändert`() {
+        val neu = V230KnotenVorlagen.AussageZuPrädikat.erzeuge(GraphPunkt.Zero)
+        val migriert = migriereAussagenOperatoren(KartenDaten(name = "Neu", knoten = listOf(neu))).knoten.single()
+
+        assertEquals(neu, migriert)
     }
 }
