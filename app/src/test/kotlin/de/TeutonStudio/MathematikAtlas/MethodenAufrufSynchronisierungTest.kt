@@ -41,6 +41,7 @@ class MethodenAufrufSynchronisierungTest {
         assertEquals("x", ergebnisKnoten.parameter["${METHODEN_AUFRUF_PARAMETER_PREFIX}0.name"])
         assertEquals(ReelleZahlen.zuLatex(), ergebnisKnoten.parameter["${METHODEN_AUFRUF_PARAMETER_PREFIX}0.werteVorrat"])
         assertEquals(ReelleZahlen.zuLatex(), ergebnisKnoten.parameter[METHODEN_AUFRUF_ZIELMENGE])
+        assertEquals(METHODEN_ERGEBNISPROJEKTION_DIREKT, ergebnisKnoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION])
     }
 
     @Test
@@ -140,7 +141,7 @@ class MethodenAufrufSynchronisierungTest {
     }
 
     @Test
-    fun `unbekannter Vertrag erzwingt genau einen nicht erweiterbaren Tupelanschluss`() {
+    fun `unbekannter Vertrag erzwingt Argumenttupel und Ergebnistupel`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
         val karte = KartenDaten(name = "Test", knoten = listOf(knoten))
 
@@ -153,9 +154,61 @@ class MethodenAufrufSynchronisierungTest {
         assertEquals(listOf("argument-0"), synchronisiert.argumente().map { it.name })
         assertEquals(MathematikAnschlussArten.Tupel.id, synchronisiert.argumente().single().art)
         assertFalse(synchronisiert.argumente().single().kannSichErweitern)
-        assertEquals(MathematikAnschlussArten.Objekt.id, synchronisiert.wertAusgang().art)
+        assertEquals(MathematikAnschlussArten.Tupel.id, synchronisiert.wertAusgang().art)
         assertEquals(METHODEN_ARGUMENTPROJEKTION_TUPEL, synchronisiert.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION])
+        assertEquals(METHODEN_ERGEBNISPROJEKTION_TUPEL, synchronisiert.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION])
         assertFalse(METHODEN_AUFRUF_STELLIGKEIT in synchronisiert.parameter)
+    }
+
+    @Test
+    fun `nicht tupelige Zielmenge kann als Einertupel projiziert werden`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            ausgaben = mapOf("wert" to x),
+            zielMengen = mapOf("wert" to ReelleZahlen),
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+        val quelle = methodenQuelle(
+            argumentProjektion = METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
+            ergebnisProjektion = METHODEN_ERGEBNISPROJEKTION_TUPEL,
+        )
+        val aufruf = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt(300f, 0f))
+        val verbindung = methodenVerbindung(quelle, aufruf)
+        val auswertung = KnotenAuswertungsErgebnis(
+            ausgaben = emptyMap(),
+            eingänge = mapOf("methode" to BedingterWert(methode)),
+        )
+
+        val synchronisiert = synchronisiereMethodenAufrufe(
+            KartenDaten(name = "Test", knoten = listOf(quelle, aufruf), verbindungen = listOf(verbindung)),
+            KartenAuswertungsErgebnis(mapOf(aufruf.id to auswertung), emptyList()),
+            prüfung,
+        ).knoten.single { it.id == aufruf.id }
+
+        assertEquals(MathematikAnschlussArten.Tupel.id, synchronisiert.wertAusgang().art)
+        assertEquals(METHODEN_ERGEBNISPROJEKTION_TUPEL, synchronisiert.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION])
+        assertEquals(Tupelraum(listOf(ReelleZahlen)).zuLatex(), synchronisiert.parameter[METHODEN_AUFRUF_ZIELMENGE])
+    }
+
+    @Test
+    fun `bereits tupelige Zielmenge bleibt auch ohne explizite Projektion ein Tupelausgang`() {
+        val x = Variable("x")
+        val ziel = Tupelraum(listOf(ReelleZahlen))
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            ausgaben = mapOf("wert" to Tupel(listOf(x))),
+            zielMengen = mapOf("wert" to ziel),
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+        val ergebnisKnoten = synchronisiere(FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero), methode)
+            .knoten.single()
+
+        assertEquals(MathematikAnschlussArten.Tupel.id, ergebnisKnoten.wertAusgang().art)
+        assertEquals(ziel.zuLatex(), ergebnisKnoten.parameter[METHODEN_AUFRUF_ZIELMENGE])
+        assertEquals(METHODEN_ERGEBNISPROJEKTION_TUPEL, ergebnisKnoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION])
     }
 
     @Test
@@ -225,7 +278,10 @@ class MethodenAufrufSynchronisierungTest {
         )
     }
 
-    private fun methodenQuelle(projektion: String): KnotenDaten {
+    private fun methodenQuelle(
+        argumentProjektion: String,
+        ergebnisProjektion: String = METHODEN_ERGEBNISPROJEKTION_DIREKT,
+    ): KnotenDaten {
         val id = KnotenId("methoden-quelle")
         return KnotenDaten(
             id = id,
@@ -240,7 +296,10 @@ class MethodenAufrufSynchronisierungTest {
                     art = MathematikAnschlussArten.Methode.id,
                 ),
             ),
-            parameter = mapOf(methodenAusgangArgumentprojektionSchlüssel("methode") to projektion),
+            parameter = mapOf(
+                methodenAusgangArgumentprojektionSchlüssel("methode") to argumentProjektion,
+                methodenAusgangErgebnisprojektionSchlüssel("methode") to ergebnisProjektion,
+            ),
         )
     }
 
