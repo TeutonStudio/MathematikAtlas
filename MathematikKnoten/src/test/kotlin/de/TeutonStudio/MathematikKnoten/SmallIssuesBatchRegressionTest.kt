@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class SmallIssuesBatchRegressionTest {
     @Test
     fun `Tupelvariable bleibt Tupel und wird bei Methodenbildung in Indexreihenfolge destrukturiert`() {
-        val register = StandardMathematikAuswerter.erzeugeRegister()
+        val register = GesamterMathematikAuswerter.erzeugeRegister()
         val quelle = TupelVariableKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero).copy(
             id = KnotenId("tupelvariable"),
             parameter = mapOf("name" to "x", "dimension" to "3", "werteVorrat" to "R"),
