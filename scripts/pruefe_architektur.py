@@ -68,13 +68,9 @@ if not app_katalog.exists():
 else:
     text = app_katalog.read_text(encoding="utf-8")
     if "KanonischerMathematikKnotenKatalog" not in text:
-        fehler.append("Die App verwendet nicht den kanonischen Mathematikknoten-Katalog")
+        fehler.append("Die App-Katalogfassade verwendet nicht den kanonischen Mathematikknoten-Katalog")
     if "V2300" in text:
         fehler.append("Die App-Fassade darf keine versionsspezifische Knotenkataloglogik enthalten")
-
-desktop_zustand = wurzel / "desktopApp/src/main/kotlin/de/TeutonStudio/MathematikAtlas/desktop/DesktopAtlasZustand.kt"
-if desktop_zustand.exists() and "KanonischerMathematikKnotenKatalog" not in desktop_zustand.read_text(encoding="utf-8"):
-    fehler.append("DesktopAtlasZustand verwendet nicht den kanonischen Mathematikknoten-Katalog")
 
 alter_gesamtpfad = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/geometrie/GesamterMathematikAuswerter.kt"
 neuer_gesamtpfad = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/katalog/GesamterMathematikAuswerter.kt"
@@ -112,6 +108,37 @@ if not desktop_speicher.exists():
     fehler.append("DesktopKartenSpeicher fehlt")
 elif "MathematikKartenCodec" not in desktop_speicher.read_text(encoding="utf-8"):
     fehler.append("DesktopKartenSpeicher verwendet nicht den gemeinsamen MathematikKartenCodec")
+
+
+# Android und Desktop verdrahten die Mathematik-/Graphinfrastruktur nicht mehr separat.
+laufzeit = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/laufzeit/MathematikKartenLaufzeit.kt"
+if not laufzeit.exists():
+    fehler.append("MathematikKartenLaufzeit.kt fehlt als gemeinsame Laufzeitkomposition")
+else:
+    text = laufzeit.read_text(encoding="utf-8")
+    for erforderlich in ("AnschlussArtRegister", "GraphPrüfung", "KartenAuswerter", "GesamterMathematikAuswerter", "KanonischerMathematikKnotenKatalog"):
+        if erforderlich not in text:
+            fehler.append(f"MathematikKartenLaufzeit enthält die zentrale Komponente {erforderlich} nicht")
+
+plattform_zustaende = (
+    app_root / "AtlasZustand.kt",
+    wurzel / "desktopApp/src/main/kotlin/de/TeutonStudio/MathematikAtlas/desktop/DesktopAtlasZustand.kt",
+)
+for datei in plattform_zustaende:
+    if not datei.exists():
+        fehler.append(f"Plattformzustand fehlt: {datei.relative_to(wurzel)}")
+        continue
+    text = datei.read_text(encoding="utf-8")
+    if "MathematikKartenLaufzeit" not in text:
+        fehler.append(f"{datei.relative_to(wurzel)} verwendet nicht die gemeinsame MathematikKartenLaufzeit")
+    for verboten in (
+        "AnschlussArtRegister(MathematikAnschlussArten.alle)",
+        "GesamterMathematikAuswerter.erzeugeRegister()",
+        "KartenAuswerter(",
+        "KanonischerMathematikKnotenKatalog.alle()",
+    ):
+        if verboten in text:
+            fehler.append(f"{datei.relative_to(wurzel)} verdrahtet gemeinsame Laufzeitlogik erneut: {verboten}")
 
 if fehler:
     print("Architekturprüfung fehlgeschlagen:")
