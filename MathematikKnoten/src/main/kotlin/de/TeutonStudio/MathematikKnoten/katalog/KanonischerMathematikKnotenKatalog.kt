@@ -2,6 +2,8 @@ package de.TeutonStudio.MathematikKnoten.katalog
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenRechnerMigration
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenRelationsMigration
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 /**
@@ -31,10 +33,14 @@ object KanonischerMathematikKnotenKatalog {
         "mathematik.skalarproduktZeile",
     )
 
+    private val historischeMengenEinzelknoten: Set<String> =
+        MengenRechnerMigration.alteKnotenArten.keys + MengenRelationsMigration.alteKnotenArten.keys
+
     fun alle(): List<KnotenVorlage> {
         val basis = de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen()
         val bereinigt = basis.filterNot { vorlage ->
             vorlage.art in historischeOrientierungsDuplikate ||
+                vorlage.art in historischeMengenEinzelknoten ||
                 vorlage.art == MULTINOMVEKTOR_ART ||
                 (
                     vorlage.art == ZAHLENRECHNER_ART &&
@@ -46,6 +52,9 @@ object KanonischerMathematikKnotenKatalog {
         return bereinigt +
             VektorKonstruktorVorlagen.standard +
             VektorOrientierungsVorlagen.alle +
-            MultinomVektorKnotenVorlagen.standard
+            MultinomVektorKnotenVorlagen.standard +
+            MengenRechnerKnotenVorlagen.standard +
+            MengenRelationsKnotenVorlagen.standard +
+            MengenMassKnotenVorlagen.alle
     }
 }
