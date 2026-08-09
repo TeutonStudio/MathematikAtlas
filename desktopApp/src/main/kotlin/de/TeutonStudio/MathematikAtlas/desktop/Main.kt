@@ -337,6 +337,19 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             Text("Position: ${knoten.position.x.toInt()}, ${knoten.position.y.toInt()}")
             Text("Größe: ${knoten.größe.breite.toInt()} × ${knoten.größe.höhe.toInt()}")
             Text("Anschlüsse: ${knoten.anschlüsse.size}")
+            HorizontalDivider()
+            Text("Auswertung", style = MaterialTheme.typography.labelLarge)
+            val dauer = atlas.auswertung.knoten[knoten.id]?.auswertungsDauerNanos
+            Text(
+                dauer?.let { "Letzte Auswertung: ${formatiereAuswertungsDauerNanos(it)}" }
+                    ?: "Noch keine Auswertungsdauer gemessen.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(
+                onClick = { atlas.berechneKnotenCacheNeu(knoten.id) },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Cache neu errechnen") }
         }
         Spacer(Modifier.weight(1f))
         if (atlas.auswertung.fehler.isNotEmpty()) {

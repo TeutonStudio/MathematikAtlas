@@ -812,6 +812,17 @@ private fun KnotenDarstellung(
             })
         }
 
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .offset(y = 22.dp)
+                .fillMaxWidth()
+                .height(18.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            renderer.Fußzeile(knoten, ausgewählt)
+        }
+
         if (zeigeKnotenInspektor) {
             KnotenInspektorSchaltfläche(
                 beiKlick = {

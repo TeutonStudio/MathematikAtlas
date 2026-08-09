@@ -127,6 +127,8 @@ data class KnotenAuswertungsErgebnis(
     val elementFehler: Map<String, String> = emptyMap(),
     /** Nichtpersistierte Hinweise, etwa über zusammengeführte Mengenelemente. */
     val warnungen: List<String> = emptyList(),
+    /** Dauer der letzten tatsächlichen Berechnung dieses Knotens. Cache-Treffer verändern diesen Wert nicht. */
+    val auswertungsDauerNanos: Long? = null,
 )
 
 data class KartenAuswertungsErgebnis(

@@ -18,6 +18,12 @@ interface KnotenRendererAktionen {
 interface KnotenRenderer {
     val interaktionsModus: KnotenInteraktionsModus get() = KnotenInteraktionsModus.GanzeFlächeZiehbar
     @Composable fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen)
+
+    /**
+     * Optionale Diagnosezeile außerhalb des logischen Knotenrechtecks.
+     * Sie verändert weder gespeicherte Knotengröße noch Anschluss- oder Treffergeometrie.
+     */
+    @Composable fun Fußzeile(knoten: KnotenDaten, ausgewählt: Boolean) {}
 }
 
 object StandardKnotenRenderer : KnotenRenderer {
