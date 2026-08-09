@@ -25,6 +25,7 @@ enum class ErweiterterZahlenOperator(
     COTANGENS_HYPERBOLICUS("zahl.coth", "Cotangens hyperbolicus", "\\coth"),
     SEKANS_HYPERBOLICUS("zahl.sech", "Sekans hyperbolicus", "\\operatorname{sech}"),
     KOSEKANS_HYPERBOLICUS("zahl.csch", "Kosekans hyperbolicus", "\\operatorname{csch}"),
+    POLYNOM("zahl.polynom", "Polynom", "\\sum c_i x^i"),
     ;
 
     companion object {
@@ -34,7 +35,11 @@ enum class ErweiterterZahlenOperator(
     }
 
     val hebungsArt: ZahlenOperatorHebungsArt
-        get() = ZahlenOperatorHebungsArt.PUNKTWEISE
+        get() = if (this == POLYNOM) {
+            ZahlenOperatorHebungsArt.METHODENSPEZIFISCH
+        } else {
+            ZahlenOperatorHebungsArt.PUNKTWEISE
+        }
 }
 
 fun istZahlenRechnerFormel(knoten: KnotenDaten): Boolean =
@@ -62,6 +67,9 @@ fun konfiguriereErweitertenZahlenRechner(
     operator: ErweiterterZahlenOperator,
 ): KnotenDaten {
     require(knoten.art == ZAHLENRECHNER_ART)
+    if (operator == ErweiterterZahlenOperator.POLYNOM) {
+        return konfigurierePolynomZahlenRechner(knoten)
+    }
     val bisherigerEingang = knoten.anschlüsse
         .firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == "a" }
         ?: knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang }
@@ -114,6 +122,76 @@ fun konfiguriereErweitertenZahlenRechner(
     )
 }
 
+private fun konfigurierePolynomZahlenRechner(knoten: KnotenDaten): KnotenDaten {
+    val vorhandeneEingänge = knoten.anschlüsse
+        .filter { it.richtung == AnschlussRichtung.Eingang }
+        .sortedBy { it.reihenfolge }
+    val bisherigeKoeffizienten = vorhandeneEingänge.firstOrNull { it.name == "koeffizienten" }
+        ?: vorhandeneEingänge.firstOrNull()
+    val bisherigesArgument = vorhandeneEingänge.firstOrNull { it.name == "argument" }
+        ?: vorhandeneEingänge.getOrNull(1)
+    val bisherigerAusgang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
+
+    val koeffizienten = (bisherigeKoeffizienten ?: AnschlussDaten(
+        name = "koeffizienten",
+        richtung = AnschlussRichtung.Eingang,
+        kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Objekt.id,
+    )).copy(
+        name = "koeffizienten",
+        richtung = AnschlussRichtung.Eingang,
+        kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Objekt.id,
+        reihenfolge = 0,
+        kannSichErweitern = false,
+        dynamischErzeugt = false,
+        zulässigeArten = setOf(
+            MathematikAnschlussArten.Tupel.id,
+            MathematikAnschlussArten.Vektor.id,
+        ),
+    )
+    val argument = (bisherigesArgument ?: AnschlussDaten(
+        name = "argument",
+        richtung = AnschlussRichtung.Eingang,
+        kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Zahl.id,
+    )).copy(
+        name = "argument",
+        richtung = AnschlussRichtung.Eingang,
+        kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Zahl.id,
+        reihenfolge = 1,
+        kannSichErweitern = false,
+        dynamischErzeugt = false,
+        zulässigeArten = emptySet(),
+    )
+    val ausgang = (bisherigerAusgang ?: AnschlussDaten(
+        name = "wert",
+        richtung = AnschlussRichtung.Ausgang,
+        kante = AnschlussKante.Rechts,
+        art = MathematikAnschlussArten.Zahl.id,
+    )).copy(
+        name = "wert",
+        richtung = AnschlussRichtung.Ausgang,
+        kante = AnschlussKante.Rechts,
+        art = MathematikAnschlussArten.Zahl.id,
+        reihenfolge = 0,
+        kannSichErweitern = false,
+        dynamischErzeugt = false,
+        artFolgtEingang = null,
+        artVereinigtEingänge = emptyList(),
+        zulässigeArten = emptySet(),
+        artAbbildungVonEingang = null,
+        artPriorisiertEingänge = null,
+    )
+    return knoten.copy(
+        name = ErweiterterZahlenOperator.POLYNOM.titel,
+        anschlüsse = listOf(koeffizienten, argument, ausgang),
+        parameter = (knoten.parameter - ZAHLENRECHNER_FORMEL_LATEX - ZAHLENRECHNER_FORMEL_VARIABLEN) +
+            (ZAHLENRECHNER_OPERATOR to ErweiterterZahlenOperator.POLYNOM.stabileId),
+    )
+}
+
 fun konfiguriereZahlenRechnerFormel(
     knoten: KnotenDaten,
     latex: String,
@@ -143,8 +221,6 @@ fun konfiguriereZahlenRechnerFormel(
             art = MathematikAnschlussArten.Zahl.id,
             reihenfolge = index,
             kannSichErweitern = false,
-            // Formelvariablen werden automatisch konfiguriert, sind aber keine
-            // provisorischen Variadic-Eingänge und müssen unverbunden sichtbar bleiben.
             dynamischErzeugt = false,
             zulässigeArten = emptySet(),
         )
@@ -198,6 +274,9 @@ private fun werteErweitertenOperatorAus(
     kontext: KnotenAuswertungsKontext,
     operator: ErweiterterZahlenOperator,
 ): KnotenAuswertungsErgebnis {
+    if (operator == ErweiterterZahlenOperator.POLYNOM) {
+        return wertePolynomAus(kontext)
+    }
     val eingang = kontext.eingänge["a"] ?: error("Der Eingang a fehlt.")
     val methode = eingang.objekt as? Methode
     val vorbereitung = methode?.let {
@@ -256,6 +335,37 @@ private fun werteErweitertenOperatorAus(
                 }
             }
         },
+    )
+}
+
+private fun wertePolynomAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+    val koeffizientenWert = kontext.eingänge["koeffizienten"]
+        ?: error("Das Koordinatentupel der Koeffizienten fehlt.")
+    val argumentWert = kontext.eingänge["argument"]
+        ?: error("Das Polynomargument fehlt.")
+    val koeffizienten = when (val objekt = koeffizientenWert.objekt) {
+        is Tupel -> objekt.elemente.mapIndexed { index, element ->
+            element as? ZahlAusdruck
+                ?: error("Koeffizient ${index + 1} des Tupels ist keine Zahl.")
+        }
+        is OrientierterVektor -> objekt.werte
+        else -> error("Koeffizienten müssen als Koordinatentupel vorliegen.")
+    }
+    val argument = argumentWert.objekt as? ZahlAusdruck
+        ?: error("Das Polynomargument ist kein Zahlterm.")
+    val objekt = polynomAusKoeffizienten(koeffizienten, argument)
+    val werte = listOf(koeffizientenWert, argumentWert)
+    return KnotenAuswertungsErgebnis(
+        ausgaben = mapOf(
+            "wert" to BedingterWert(
+                objekt = objekt,
+                annahmen = werte.flatMap { it.annahmen }.toSet(),
+                werteVorrat = inferiereZahlenWertevorrat(objekt),
+                reelleVariablen = reelleVariablen(werte),
+                variablenQuellen = werte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
+            ),
+        ),
+        eingänge = kontext.eingänge,
     )
 }
 

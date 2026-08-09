@@ -119,7 +119,7 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val historischeArten = historischeZahlenRechnerArten +
         historischeMengenKnotenArten +
         historischeSkalarproduktArten +
-        setOf("mathematik.einheitsSpalte", "mathematik.einheitsZeile")
+        setOf("mathematik.einheitsSpalte", "mathematik.einheitsZeile", "mathematik.vektorZuPolynom")
     val basis = MathematikKnotenVorlagen.alle
         .filterNot {
             it.art in historischeArten ||
