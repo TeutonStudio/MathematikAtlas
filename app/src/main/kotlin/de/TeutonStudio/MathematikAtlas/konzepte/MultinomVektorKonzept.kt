@@ -3,14 +3,14 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.*
 
-/** Dynamische, strukturelle Definitionskarte des Multinomvektors. */
+/** Dynamische, ausführbare Definitionskarte des Multinomvektors. */
 internal fun multinomVektorKonzept(knoten: KnotenDaten): KonzeptDefinition {
     val form = knoten.parameter[MULTINOM_AUSGABEFORM_PARAMETER] ?: MULTINOM_AUSGABE_VEKTOR
     val orient = knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: VEKTOR_ORIENTIERUNG_SPALTE
     return KonzeptDefinition(
         id = KonzeptId("multinomvektor-${form}-${orient}"),
         name = "Multinomvektor",
-        beschreibung = "Erzeugt die Monome (x^k) für k=0,…,dim. Die Definitionskarte benutzt denselben Dimension-und-Indexmethode-Vertrag wie Tupel und Vektor.",
+        beschreibung = "Erzeugt die Monome (x^k) für k=0,…,dim. Die Definitionskarte verwendet dieselben produktiven Rechen-, Methoden- und Strukturknoten wie eine normale Karte.",
         pfad = listOf("Lineare Algebra", "Vektoren"),
         tags = setOf("Multinomvektor", "Monom", "Polynom", "Indexmethode", "Tupel", "Vektor"),
         knotenArten = setOf(MULTINOMVEKTOR_ART),
@@ -53,7 +53,7 @@ internal fun multinomVektorDefinitionsKarte(
         id = KnotenId("multinom-definition-x"),
         art = KonzeptKnotenArten.EINGANG,
         name = "x",
-        position = GraphPunkt(30f, 65f),
+        position = GraphPunkt(30f, 75f),
         größe = GraphGröße(180f, 90f),
         anschlüsse = listOf(ausgang("multinom-definition-x-wert", "wert", MathematikAnschlussArten.Zahl.id)),
         parameter = mapOf("typ" to MathematikAnschlussArten.Zahl.id.wert, "rolle" to "x"),
@@ -62,25 +62,70 @@ internal fun multinomVektorDefinitionsKarte(
         id = KnotenId("multinom-definition-dim"),
         art = KonzeptKnotenArten.EINGANG,
         name = "dim",
-        position = GraphPunkt(30f, 320f),
+        position = GraphPunkt(30f, 390f),
         größe = GraphGröße(180f, 90f),
         anschlüsse = listOf(ausgang("multinom-definition-dim-wert", "wert", MathematikAnschlussArten.Zahl.id)),
         parameter = mapOf("typ" to MathematikAnschlussArten.Zahl.id.wert, "rolle" to "dim"),
+    )
+    val idx = KnotenDaten(
+        id = KnotenId("multinom-definition-idx"),
+        art = "mathematik.variable",
+        name = "idx",
+        position = GraphPunkt(30f, 225f),
+        größe = GraphGröße(180f, 95f),
+        anschlüsse = listOf(ausgang("multinom-definition-idx-wert", "wert", MathematikAnschlussArten.Zahl.id)),
+        parameter = mapOf("name" to "idx", "werteVorrat" to "N"),
     )
     val eins = KnotenDaten(
         id = KnotenId("multinom-definition-eins"),
         art = "mathematik.zahl",
         name = "1",
-        position = GraphPunkt(250f, 420f),
-        größe = GraphGröße(150f, 85f),
+        position = GraphPunkt(250f, 315f),
+        größe = GraphGröße(145f, 85f),
         anschlüsse = listOf(ausgang("multinom-definition-eins-wert", "wert", MathematikAnschlussArten.Zahl.id)),
         parameter = mapOf("wert" to "1"),
+    )
+    val exponent = KnotenDaten(
+        id = KnotenId("multinom-definition-exponent"),
+        art = "mathematik.subtraktion",
+        name = "idx − 1",
+        position = GraphPunkt(445f, 205f),
+        größe = GraphGröße(220f, 115f),
+        anschlüsse = listOf(
+            eingang("multinom-definition-sub-a", "a", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("multinom-definition-sub-b", "b", MathematikAnschlussArten.Zahl.id, 1),
+            ausgang("multinom-definition-sub-wert", "wert", MathematikAnschlussArten.Zahl.id),
+        ),
+    )
+    val potenz = KnotenDaten(
+        id = KnotenId("multinom-definition-potenz"),
+        art = "mathematik.potenz",
+        name = "x^(idx−1)",
+        position = GraphPunkt(705f, 90f),
+        größe = GraphGröße(225f, 115f),
+        anschlüsse = listOf(
+            eingang("multinom-definition-potenz-basis", "basis", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("multinom-definition-potenz-exponent", "exponent", MathematikAnschlussArten.Zahl.id, 1),
+            ausgang("multinom-definition-potenz-wert", "wert", MathematikAnschlussArten.Zahl.id),
+        ),
+    )
+    val indexMethode = KnotenDaten(
+        id = KnotenId("multinom-definition-indexmethode"),
+        art = "mathematik.termZuMethode",
+        name = "Indexmethode",
+        position = GraphPunkt(970f, 95f),
+        größe = GraphGröße(235f, 105f),
+        anschlüsse = listOf(
+            eingang("multinom-definition-methode-term", "term", MathematikAnschlussArten.Zahl.id),
+            ausgang("multinom-definition-methode-ausgang", "methode", MathematikAnschlussArten.Methode.id),
+        ),
+        parameter = mapOf("name" to "m", "argumentReihenfolge" to "idx"),
     )
     val dimPlusEins = KnotenDaten(
         id = KnotenId("multinom-definition-dimension"),
         art = "mathematik.addition",
         name = "dim + 1",
-        position = GraphPunkt(455f, 330f),
+        position = GraphPunkt(455f, 405f),
         größe = GraphGröße(220f, 120f),
         anschlüsse = listOf(
             eingang("multinom-definition-plus-a", "a", MathematikAnschlussArten.Zahl.id, 0),
@@ -88,21 +133,6 @@ internal fun multinomVektorDefinitionsKarte(
             ausgang("multinom-definition-plus-wert", "wert", MathematikAnschlussArten.Zahl.id),
         ),
         parameter = mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
-    )
-    val indexMethode = KnotenDaten(
-        id = KnotenId("multinom-definition-indexmethode"),
-        art = KonzeptKnotenArten.REGEL,
-        name = "Indexmethode",
-        position = GraphPunkt(440f, 70f),
-        größe = GraphGröße(300f, 145f),
-        anschlüsse = listOf(
-            eingang("multinom-definition-regel-x", "x", MathematikAnschlussArten.Zahl.id),
-            ausgang("multinom-definition-regel-methode", "methode", MathematikAnschlussArten.Methode.id),
-        ),
-        parameter = mapOf(
-            "regel" to "Die Konstruktoren verwenden die mathematischen Indizes idx=1,…,dim+1.",
-            "definition" to "idx\\mapsto x^{idx-1}",
-        ),
     )
 
     val tuple = ausgabeForm == MULTINOM_AUSGABE_TUPEL
@@ -118,7 +148,7 @@ internal fun multinomVektorDefinitionsKarte(
         id = KnotenId("multinom-definition-konstruktor"),
         art = konstruktorArt,
         name = if (tuple) "Tupel" else "Vektor",
-        position = GraphPunkt(790f, 185f),
+        position = GraphPunkt(1245f, 250f),
         größe = GraphGröße(260f, 135f),
         anschlüsse = listOf(
             eingang("multinom-definition-konstruktor-dimension", "dimension", MathematikAnschlussArten.Zahl.id, 0),
@@ -138,7 +168,7 @@ internal fun multinomVektorDefinitionsKarte(
         id = KnotenId("multinom-definition-ausgang"),
         art = KonzeptKnotenArten.AUSGANG,
         name = "wert",
-        position = GraphPunkt(1110f, 205f),
+        position = GraphPunkt(1560f, 270f),
         größe = GraphGröße(190f, 90f),
         anschlüsse = listOf(eingang("multinom-definition-ausgang-wert", "wert", konstruktorAusgangArt)),
         parameter = mapOf("typ" to konstruktorAusgangArt.wert, "rolle" to "wert"),
@@ -153,13 +183,17 @@ internal fun multinomVektorDefinitionsKarte(
     return KartenDaten(
         id = KartenId("multinom-definition-${if (tuple) "tupel" else if (zeile) "zeile" else "spalte"}"),
         name = "Multinomvektor: Definition",
-        knoten = listOf(x, dim, eins, dimPlusEins, indexMethode, konstruktor, ziel),
+        knoten = listOf(x, dim, idx, eins, exponent, potenz, indexMethode, dimPlusEins, konstruktor, ziel),
         verbindungen = listOf(
-            verbindung("multinom-v-x-regel", x, "wert", indexMethode, "x"),
+            verbindung("multinom-v-idx-sub", idx, "wert", exponent, "a"),
+            verbindung("multinom-v-eins-sub", eins, "wert", exponent, "b"),
+            verbindung("multinom-v-x-potenz", x, "wert", potenz, "basis"),
+            verbindung("multinom-v-sub-potenz", exponent, "wert", potenz, "exponent"),
+            verbindung("multinom-v-potenz-methode", potenz, "wert", indexMethode, "term"),
             verbindung("multinom-v-dim-plus", dim, "wert", dimPlusEins, "a"),
             verbindung("multinom-v-eins-plus", eins, "wert", dimPlusEins, "b"),
             verbindung("multinom-v-plus-konstruktor", dimPlusEins, "wert", konstruktor, "dimension"),
-            verbindung("multinom-v-regel-konstruktor", indexMethode, "methode", konstruktor, "methode"),
+            verbindung("multinom-v-methode-konstruktor", indexMethode, "methode", konstruktor, "methode"),
             verbindung("multinom-v-konstruktor-ziel", konstruktor, konstruktorAusgangName, ziel, "wert"),
         ),
     )
