@@ -7,6 +7,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.AussageStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.DefinierteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.EigenschaftsAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge
+import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.Potenz
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
@@ -71,7 +72,51 @@ class ExakteEigenschaftsAuswertungTest {
     }
 
     @Test
-    fun `Konvexitaetsbereich wird ueber die zweite Ableitung beschrieben`() {
+    fun `Konvexitaetsbereich von x Quadrat wird zur ganzen Grundmenge normalisiert`() {
+        val quadrat = methode(Potenz(x, RationaleZahl.von(2)))
+
+        assertEquals(
+            ReelleZahlen,
+            prüfeStellen(quadrat, MathematischeEigenschaftRegister.Konvexitaetsbereich.id, streng = false),
+        )
+        assertEquals(
+            ReelleZahlen,
+            prüfeStellen(quadrat, MathematischeEigenschaftRegister.Konvexitaetsbereich.id, streng = true),
+        )
+        assertEquals(
+            LeereMenge,
+            prüfeStellen(quadrat, MathematischeEigenschaftRegister.Konkavitaetsbereich.id, streng = false),
+        )
+        assertEquals(
+            LeereMenge,
+            prüfeStellen(quadrat, MathematischeEigenschaftRegister.Konkavitaetsbereich.id, streng = true),
+        )
+    }
+
+    @Test
+    fun `affine Krümmungsbereiche unterscheiden streng und nicht streng exakt`() {
+        val affin = methode(addition(multiplikation(RationaleZahl.von(3), x), RationaleZahl.von(2)))
+
+        assertEquals(
+            ReelleZahlen,
+            prüfeStellen(affin, MathematischeEigenschaftRegister.Konvexitaetsbereich.id, streng = false),
+        )
+        assertEquals(
+            ReelleZahlen,
+            prüfeStellen(affin, MathematischeEigenschaftRegister.Konkavitaetsbereich.id, streng = false),
+        )
+        assertEquals(
+            LeereMenge,
+            prüfeStellen(affin, MathematischeEigenschaftRegister.Konvexitaetsbereich.id, streng = true),
+        )
+        assertEquals(
+            LeereMenge,
+            prüfeStellen(affin, MathematischeEigenschaftRegister.Konkavitaetsbereich.id, streng = true),
+        )
+    }
+
+    @Test
+    fun `Konvexitaetsbereich von x hoch drei bleibt echte definierte Menge`() {
         val kubisch = methode(Potenz(x, RationaleZahl.von(3)))
 
         val menge = assertIs<DefinierteMenge>(
@@ -99,10 +144,16 @@ class ExakteEigenschaftsAuswertungTest {
         return assertIs(ergebnis.ausgaben.getValue("aussage").objekt)
     }
 
-    private fun prüfeStellen(methode: Methode, eigenschaft: String) = run {
+    private fun prüfeStellen(
+        methode: Methode,
+        eigenschaft: String,
+        streng: Boolean = false,
+    ) = run {
         val knoten = MathematischeEigenschaftKnotenVorlagen.AnalysisEigenschaft.erzeuge(GraphPunkt.Zero).copy(
-            parameter = MathematischeEigenschaftKnotenVorlagen.AnalysisEigenschaft.standardParameter +
-                (EIGENSCHAFT_PARAMETER to eigenschaft),
+            parameter = MathematischeEigenschaftKnotenVorlagen.AnalysisEigenschaft.standardParameter + mapOf(
+                EIGENSCHAFT_PARAMETER to eigenschaft,
+                EIGENSCHAFT_STRENGE_PARAMETER to if (streng) "streng" else "nicht-streng",
+            ),
         )
         register.finde(knoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
