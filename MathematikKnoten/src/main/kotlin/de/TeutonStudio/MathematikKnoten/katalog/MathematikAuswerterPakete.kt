@@ -17,7 +17,7 @@ data class MathematikAuswerterPaket(
     val registrieren: MathematikAuswerterRegister.() -> Unit,
 ) {
     fun installiereIn(register: MathematikAuswerterRegister) {
-        register.registrieren()
+        registrieren.invoke(register)
     }
 }
 
