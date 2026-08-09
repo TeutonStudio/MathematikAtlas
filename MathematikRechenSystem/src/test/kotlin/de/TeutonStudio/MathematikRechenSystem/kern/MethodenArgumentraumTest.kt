@@ -10,8 +10,8 @@ class MethodenArgumentraumTest {
         val methode = Methode(
             name = "f",
             parameter = listOf(x),
-            ausgaben = mapOf("wert" to x),
-            zielMengen = mapOf("wert" to ReelleZahlen),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
             werteVorräte = mapOf(x.name to ReelleZahlen),
         )
 
@@ -33,8 +33,8 @@ class MethodenArgumentraumTest {
         val methode = Methode(
             name = "f",
             parameter = listOf(x, y),
-            ausgaben = mapOf("wert" to x),
-            zielMengen = mapOf("wert" to ReelleZahlen),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
             werteVorräte = mapOf(x.name to ReelleZahlen, y.name to ReelleZahlen),
             effektiverWerteVorrat = diagonale,
         )
