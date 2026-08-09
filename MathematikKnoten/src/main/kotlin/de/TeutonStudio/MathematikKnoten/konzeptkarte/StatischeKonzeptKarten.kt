@@ -1067,13 +1067,13 @@ object StatischeKonzeptKarten {
             varianten = setOf(VariantenId("mathematik.tupelZuZeile|Tupel zu Zeile")),
         ),
         WissensKartenReferenz.Asset(
-            id = "mathematik.tupel|Tupel|festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
+            id = "mathematik.tupel|Tupel|erzeugungsArt=einzelEingaben;festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
             datei = "karte-7ffb820d0986b769a5da-v7.json",
             formatVersion = 7,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.tupel|festeEingänge=2|operatorAnzeige=wert|Tupel")),
+            varianten = setOf(VariantenId("mathematik.tupel|erzeugungsArt=einzelEingaben|festeEingänge=2|operatorAnzeige=wert|Tupel")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.ungleichheit|Ungleichheit|.d9d55493.definition",

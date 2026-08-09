@@ -18,7 +18,9 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
     )
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
-        if (knoten.art !in assoziativeKnotenArten) knoten else {
+        val istAssoziativ = knoten.art in assoziativeKnotenArten &&
+            !(knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_METHODE)
+        if (!istAssoziativ) knoten else {
             val festeEingänge = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
             val verbundeneEingänge = migriert.verbindungen.map { it.zu }.toSet()
             val überzähligeFesteEingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && !it.dynamischErzeugt }

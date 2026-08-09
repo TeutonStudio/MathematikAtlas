@@ -129,9 +129,9 @@ object MathematikKnotenVorlagen {
         listOf(eingang("basis", MathematikAnschlussArten.Zahl.id, 0), eingang("argument", MathematikAnschlussArten.Zahl.id, 1), ausgang("wert", MathematikAnschlussArten.Zahl.id)),
     )
     val Tupel = KnotenVorlage(
-        "mathematik.tupel", "Tupel", "Zahlen", "Geordnetes Tupel aus zwei oder mehr Zahlen.", GraphGröße(220f, 115f),
+        "mathematik.tupel", "Tupel", "Zahlen", "Geordnetes Tupel aus einzelnen Zahlen oder einer Indexmethode.", GraphGröße(220f, 115f),
         listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("tupel", MathematikAnschlussArten.Tupel.id)),
-        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert", "erzeugungsArt" to TUPEL_EINZEL_EINGABEN),
     )
     val KomplexAusTupel = KnotenVorlage(
         "mathematik.komplexAusTupel", "Komplexe Zahl aus Tupel", "Zahlen", "Interpretiert ein Tupel als (x,y) oder (r,φ).", GraphGröße(250f, 110f),

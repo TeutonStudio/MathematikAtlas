@@ -4,7 +4,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.TUPEL_METHODE
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
+import de.TeutonStudio.MathematikKnoten.konfiguriereTupel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -145,6 +147,18 @@ class KartenSchnittstellenTest {
         assertEquals("name", migriert.parameter.getValue("operatorAnzeige"))
         assertEquals(2, migriert.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang })
         assertTrue(migriert.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.all { it.kannSichErweitern })
+    }
+
+    @Test
+    fun `Migration bewahrt Tupel Indexmethode als nicht assoziative Anschlusskonfiguration`() {
+        val methode = konfiguriereTupel(MathematikKnotenVorlagen.Tupel.erzeuge(GraphPunkt.Zero), TUPEL_METHODE)
+
+        val migriert = migriereAssoziativeKnoten(KartenDaten(name = "Index-Tupel", knoten = listOf(methode)))
+            .knoten.single()
+
+        assertEquals(listOf("dimension", "methode", "tupel"), migriert.anschlüsse.map { it.name })
+        assertTrue(migriert.anschlüsse.none { it.kannSichErweitern })
+        assertEquals(TUPEL_METHODE, migriert.parameter["erzeugungsArt"])
     }
 
     @Test
