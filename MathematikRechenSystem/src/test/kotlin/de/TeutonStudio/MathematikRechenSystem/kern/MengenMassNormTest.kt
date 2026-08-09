@@ -28,7 +28,8 @@ class MengenMassNormTest {
         val ergebnis = normEinerMenge(menge, IntegralMass.Allgemein("\\mu"))
 
         assertEquals("\\int_{A} 1\\,\\mathrm d\\mu", ergebnis.wert.zuLatex())
-        assertEquals("\\int_{A}1\\cdot\\mathrm d\\mu", ergebnis.integral.zuLatex())
+        assertEquals(menge, ergebnis.integral.bereich.alsMenge)
+        assertEquals(IntegralMass.Allgemein("\\mu"), ergebnis.integral.mass)
         assertTrue(ergebnis.voraussetzungen.isNotEmpty())
     }
 
