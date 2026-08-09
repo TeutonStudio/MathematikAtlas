@@ -28,7 +28,3 @@ fun MathematikAuswerterRegister.registriereVektorKonstruktor() {
 fun MathematikAuswerterRegister.registriereVektorOrientierungsKnoten() {
     registriereVektorOrientierungsKnotenV2300()
 }
-
-fun MathematikAuswerterRegister.registrierePolynomMultinomVertrag() {
-    registrierePolynomMultinomVertragV2300()
-}
