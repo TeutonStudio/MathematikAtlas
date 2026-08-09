@@ -2,7 +2,7 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "2.32.x"
-current_version = "2.32.0"
+current_version = "2.32.1"
 first_guarded_version = "2.3.13"
 
 releases = [
@@ -97,4 +97,5 @@ releases = [
   { version = "2.30.0", title = "Methodensignatur und Argumentprojektion", roadmap = "v2.30.x Methoden, Signaturen und Argumentprojektion", status = "released", previous_release = "2.29.3", branch = "samai/v2.30.0-methoden-signaturprojektion", kind = "feature", version_axis = "y", new_node_types = ["mathematik.methodenWertevorrat", "mathematik.methodenArgumentanzahl"], reason = "Führt getrennte Abfrageknoten für den kanonischen Methoden-Wertevorrat und die logische Argumentanzahl ein, härtet die Zielmengenabfrage und ergänzt eine persistierte Ausgabeprojektion zwischen separierten Argumenten und explizitem Argumenttupel einschließlich Einertupeln." },
   { version = "2.31.0", title = "Rechnernotation, 0-Distanz und Multinomvektor", roadmap = "v2.31.x Rechner, Polynome und Vektorkonsolidierung", status = "released", previous_release = "2.30.0", branch = "agent/v2.31.0-rechner-multinomvektor", kind = "feature", version_axis = "y", new_node_types = ["mathematik.multinomVektor"], reason = "Führt den separat erzeugbaren Multinomvektor ein, vereinheitlicht Polynom- und Monomsemantik, konsolidiert 0-Distanz sowie reine Zeilen-/Spaltenknoten und korrigiert vollständige Rechneroperatorvorschauen." },
   { version = "2.32.0", title = "Nativer LaTeX-Renderer und Methodenargument-Reflexion", roadmap = "v2.32.x Methoden, LaTeX und Definitionskarten", status = "released", previous_release = "2.31.0", branch = "agent/v2.32.0-latex-methoden-korrekturen", kind = "feature", version_axis = "y", new_node_types = ["mathematik.methodenArgumente"], reason = "Führt mit mathematik.methodenArgumente einen neuen separat erzeugbaren Reflexionsknoten ein, behandelt unbekannte Methodensignaturen ohne erfundene Stelligkeit und ersetzt die visuellen LaTeX-Sonderparser für Brüche, Matrizen, cases und große Operatoren durch einen nativen Compose-Multiplatform-Renderer." },
+  { version = "2.32.1", title = "Kanonischer Knotenkatalog und Architekturrefactor", roadmap = "v2.32.x Architektur und Plattformkonsolidierung", status = "released", previous_release = "2.32.0", branch = "release/v2.32.1-architektur-refactor", kind = "refactor", version_axis = "x", reason = "Zentralisiert den sichtbaren Mathematikknoten-Katalog für Android und Desktop, gliedert Auswerterregistrierungen in explizite Phasen, sortiert globale Knotenadapter fachlich ein und dokumentiert die verbleibende Desktop-Shadowmodul-Schuld ohne neuen registrierten Knotentyp." },
 ]

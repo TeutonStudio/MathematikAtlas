@@ -5,35 +5,33 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
-import de.TeutonStudio.MathematikKartenAdapter.*
+import de.TeutonStudio.MathematikKartenAdapter.KartenQuelle
+import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
-import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
 
 @Stable
 class DesktopAtlasZustand(
     val speicher: DesktopKartenSpeicher = DesktopKartenSpeicher(),
 ) {
-    private val anschlussArten = AnschlussArtRegister(MathematikAnschlussArten.alle)
-    private val auswerter = KartenAuswerter(
-        register = GesamterMathematikAuswerter.erzeugeRegister(),
+    private val laufzeit = MathematikKartenLaufzeit(
         kartenQuelle = KartenQuelle(speicher::lade),
     )
-    val vorlagen: List<KnotenVorlage> = alleMathematikKnotenVorlagen()
+    val vorlagen: List<KnotenVorlage> = laufzeit.vorlagen
     val editor = KartenEditorZustand(
         speicher.ladeAktuell() ?: KartenDaten(name = "Neue Desktop-Karte"),
-        GraphPrüfung(anschlussArten),
+        laufzeit.graphPrüfung,
     )
-    var auswertung by mutableStateOf(auswerter.auswerten(editor.karte))
+    var auswertung by mutableStateOf(laufzeit.auswerten(editor.karte))
         private set
     var meldung by mutableStateOf<String?>(null)
         private set
 
     fun aktualisiereAuswertung() {
-        auswertung = auswerter.auswerten(editor.karte)
+        auswertung = laufzeit.auswerten(editor.karte)
     }
 
     fun berechneKnotenCacheNeu(knotenId: KnotenId) {
-        auswerter.verwerfeCache(knotenId)
+        laufzeit.verwerfeCache(knotenId)
         aktualisiereAuswertung()
     }
 

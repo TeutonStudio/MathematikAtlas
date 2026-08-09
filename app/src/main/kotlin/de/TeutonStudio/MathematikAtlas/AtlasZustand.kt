@@ -14,13 +14,12 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenR
 @Stable
 class AtlasZustand(context: Context) {
     val speicher = KartenSpeicher(context)
-    val anschlussArten = AnschlussArtRegister(MathematikAnschlussArten.alle)
-    private val graphPrüfung = GraphPrüfung(anschlussArten)
-    private val auswerter = KartenAuswerter(
-        register = GesamterMathematikAuswerter.erzeugeRegister(),
+    private val laufzeit = MathematikKartenLaufzeit(
         kartenQuelle = KartenQuelle(speicher::lade),
         nichtAuswertbareKnotenArten = KartenWerkzeugVorlagen.nichtAuswertbareArten,
     )
+    val anschlussArten = laufzeit.anschlussArten
+    private val graphPrüfung = laufzeit.graphPrüfung
 
     var karten by mutableStateOf<List<KartenDaten>>(emptyList())
         private set
@@ -64,7 +63,7 @@ class AtlasZustand(context: Context) {
     }
 
     fun berechneKnotenCacheNeu(knotenId: KnotenId) {
-        auswerter.verwerfeCache(knotenId)
+        laufzeit.verwerfeCache(knotenId)
         werteAus()
     }
 
@@ -239,7 +238,7 @@ class AtlasZustand(context: Context) {
     }
 
     private fun alleKnotenVorlagen(): List<KnotenVorlage> =
-        alleMathematikKnotenVorlagen() +
+        laufzeit.vorlagen +
             MengenraumKnotenVorlagen.alle +
             GeometrieKnotenVorlagen.alle +
             KartenWerkzeugVorlagen.alle +
@@ -306,7 +305,7 @@ class AtlasZustand(context: Context) {
             return
         }
 
-        val ersteAuswertung = auswerter.auswerten(editor.karte)
+        val ersteAuswertung = laufzeit.auswerten(editor.karte)
         val mitRestriktionsAnschlüssen = synchronisiereRestriktionsAnschlüsse(editor.karte, ersteAuswertung)
         val synchronisiert = synchronisiereMethodenAufrufe(mitRestriktionsAnschlüssen, ersteAuswertung, graphPrüfung)
         if (synchronisiert == editor.karte) {
@@ -318,7 +317,7 @@ class AtlasZustand(context: Context) {
         val aktiverKnoten = editor.ausgewählterKnoten
         editor.ersetzeKarte(synchronisiert, historieLeeren = false)
         editor.stelleAuswahlWiederHer(auswahl, aktiverKnoten)
-        auswerter.leereCache()
-        auswertung = auswerter.auswerten(editor.karte)
+        laufzeit.leereCache()
+        auswertung = laufzeit.auswerten(editor.karte)
     }
 }

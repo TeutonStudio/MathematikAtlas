@@ -1,7 +1,6 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class TranspositionsMigrationTest {
