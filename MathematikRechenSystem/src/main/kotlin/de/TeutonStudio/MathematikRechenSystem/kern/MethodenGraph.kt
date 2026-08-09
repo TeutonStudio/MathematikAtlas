@@ -16,21 +16,18 @@ data class MethodenGraphMenge(
 /**
  * Kanonischer Argumentraum einer Methode.
  *
- * Ein einzelnes Argument behält seinen tatsächlichen Wertevorrat W. Mehrere
- * Argumente bilden einen geordneten Tupelraum W1×...×Wn. Ein expliziter effektiver
+ * Der Argumentraum ist unabhängig von der Kartenprojektion immer der in der
+ * Methodensignatur definierte Wertevorrat. Insbesondere bleibt auch ein einzelner
+ * Argumentplatz als Einertupelraum strukturell erhalten. Ein expliziter effektiver
  * Wertevorrat, etwa nach einer Restriktion auf eine nicht-kartesische Teilmenge,
- * hat Vorrang vor der komponentenweisen Ableitung.
+ * hat weiterhin Vorrang.
  *
  * Die Signatur kann von Aufrufern vorab berechnet werden. Der optionale Parameter
  * hält ältere, dateilokale Hilfsfunktionen mit demselben Kurzname konfliktfrei,
  * bis diese schrittweise auf den zentralen Methodenvertrag umgestellt werden.
  */
 fun Methode.argumentRaum(signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
-    signatur.effektiverWerteVorrat ?: when (signatur.argumente.size) {
-        0 -> LeereMenge
-        1 -> signatur.argumente.single().werteVorrat
-        else -> Tupelraum(signatur.argumente.map { it.werteVorrat })
-    }
+    signatur.werteVorrat
 
 /** Umgebender Produktraum Graph(f) ⊆ W×Z. */
 fun Methode.graphRaum(): MengenAusdruck {
