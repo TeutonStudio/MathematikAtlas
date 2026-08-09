@@ -45,5 +45,7 @@ object GesamterMathematikAuswerter {
         registriereStrukturierteDivision()
         // Darauf aufbauend übernimmt der Analysisadapter ausschließlich strukturierte Differentialzustände.
         registriereZahlenRechnerDifferential()
+        // Abschließend vereinheitlicht der Betrag die historische Radiussemantik für komplexe Zahlen.
+        registriereNullDistanz()
     }
 }
