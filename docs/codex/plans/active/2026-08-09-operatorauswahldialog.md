@@ -28,7 +28,7 @@ Die unmittelbaren Dropdown-Wechsel in den Rechner-Inspectoren werden durch einen
 
 ## Fachliche und mathematische Semantik
 
-Der Dialog führt keine Mathematik aus. Ein Auswahleintrag beschreibt einen bereits vorhandenen Operatorvertrag. Kandidaten entstehen ausschließlich über die vorhandenen Konfigurationsfunktionen `konfiguriereStandardZahlenRechner`, `konfiguriereErweitertenZahlenRechner`, `konfiguriereStrukturRechner` und `konfiguriereTensorOperation`. Formelzustände werden weiterhin erst durch die vorhandenen Formelbauer bestätigt.
+Der Dialog führt keine Mathematik aus. Ein Auswahleintrag beschreibt einen bereits vorhandenen Operatorvertrag. Kandidaten entstehen ausschließlich über die vorhandenen Konfigurationsfunktionen `konfiguriereStandardZahlenRechner`, `konfiguriereErweitertenZahlenRechner`, `konfiguriereStrukturRechner` und `konfiguriereTensorOperation`. Formelzustände werden durch die vorhandenen Formelbauer als Kandidaten erzeugt und erst nach einer zweiten Bestätigung samt Auswirkungsvorschau übernommen.
 
 ## Daten-, Knoten-, Anschluss- und Verbindungsvertrag
 
@@ -45,7 +45,7 @@ Der Dialog führt keine Mathematik aus. Ein Auswahleintrag beschreibt einen bere
 - Der gemeinsame Dialog und sein kurzlebiger Zustand liegen im App-Modul.
 - Die Dialogoberfläche erhält fertige, UI-neutrale Auswahlmodelle und Kandidaten; sie erzeugt keine Anschlüsse selbst.
 - Die aktive Tensorregistry bleibt maßgeblich.
-- Bestehende Formelpfade bleiben eigenständige bestätigte Dialoge; der Tensorpfad erhält keine neue Formelkachel.
+- Bestehende Formelpfade bleiben eigenständige Dialoge, deren Ergebnis in den gemeinsamen Bestätigungsablauf zurückkehrt; der Tensorpfad erhält keine neue Formelkachel.
 
 ## Betroffene Dateien und Symbole
 
@@ -58,12 +58,12 @@ Der Dialog führt keine Mathematik aus. Ein Auswahleintrag beschreibt einen bere
 
 ## Meilensteine
 
-- [-] M1: Version, Branch und ExecPlan reservieren.
-- [ ] M2: Fachneutrale Ersetzungsvorschau samt Tests einführen.
-- [ ] M3: Gemeinsames Such-, Kategorie-, Signatur- und Dialogmodell implementieren.
-- [ ] M4: Zahlen-, Aussage-, Vektor-, Matrix- und Tensorinspector anbinden; Formel-Handoff erhalten.
-- [ ] M5: responsive Produktionsoberfläche, Previews und Accessibility ergänzen.
-- [ ] M6: gezielte und vollständige Prüfungen ausführen, Diff und Identität verifizieren.
+- [x] M1: Version, Branch und ExecPlan reservieren.
+- [x] M2: Fachneutrale Ersetzungsvorschau samt Tests einführen.
+- [x] M3: Gemeinsames Such-, Kategorie-, Signatur- und Dialogmodell implementieren.
+- [x] M4: Zahlen-, Aussage-, Vektor-, Matrix- und Tensorinspector anbinden; Formel-Handoff erhalten.
+- [-] M5: responsive Produktionsoberfläche, Previews und Accessibility ergänzen.
+- [-] M6: gezielte und vollständige Prüfungen ausführen, Diff und Identität verifizieren.
 
 ## Konkrete Umsetzungsschritte
 
@@ -106,6 +106,9 @@ Es werden keine neuen persistierten Felder eingeführt. Bestehende Operator-IDs,
 
 - 2026-08-09: Repository, Issue #359, Dialogpfade, Operatorquellen, Releasebasis und Versionsachse untersucht.
 - 2026-08-09: v2.28.6 als geplante x-Version und Branchstruktur festgelegt.
+- 2026-08-09: Fachneutrale Ersetzungsvorschau, gemeinsames Auswahlmodell und responsive Oberfläche implementiert.
+- 2026-08-09: Zahlen-, Aussage-, Vektor-, Matrix- und aktive Tensorrechner auf den gemeinsamen Dialog umgestellt; unbekannte gespeicherte IDs werden sichtbar diagnostiziert.
+- 2026-08-09: Formel-Handoff nach unabhängiger Prüfung auf Kandidat, Auswirkungsvorschau und zweite Bestätigung umgestellt. Der hohe Befund ist geschlossen.
 
 ## Entscheidungsprotokoll
 
@@ -116,8 +119,19 @@ Es werden keine neuen persistierten Felder eingeführt. Bestehende Operator-IDs,
 
 ## Abweichungen vom ursprünglichen Plan
 
-Noch keine.
+- Der vollständige UI-neutrale Familienkatalog ist noch nicht zentralisiert. Die Inspectoren leiten ihre Kandidaten bereits aus den aktiven Operatorquellen ab, halten ergänzende UI-Metadaten aber vorerst lokal.
+- Die Produktionsoberfläche besitzt Escape, `Ctrl+F`, `Alt+Enter` und Auswahlsemantik. Explizite Pfeiltastennavigation im Raster, Fokusrückgabe an das öffnende Operatorfeld und vollständig beschreibende Kachelsemantik bleiben offen.
+- Debug-Previews decken breite und kompakte Zahlenrechnerzustände ab. Zustände aller fünf Familien, leere Suche und unbekannte ID sowie Inspector-Interaktionstests bleiben offen.
 
 ## Ergebnis und Verifikation
 
-Noch offen. Dieser Abschnitt wird nach Implementierung und unabhängiger Abnahme mit konkreten Befehlen, Ergebnissen und verbleibenden Grenzen ergänzt.
+Ein erster integrierter Dialogstand liegt auf `samai/v2.28.6/operatorauswahldialog`. Die fünf Rechnerfamilien verwenden denselben Auswahl- und Bestätigungsablauf. Auswirkungsvorschau und Modell besitzen fokussierte Tests; Formelkandidaten mutieren die Karte erst nach der abschließenden Bestätigung.
+
+- `python3 scripts/pruefe_repository.py`: erfolgreich.
+- `python3 scripts/pruefe_releaseplan.py`: erfolgreich, 82 Einträge, aktuelle Version bleibt 2.28.5.
+- `python3 scripts/pruefe_versionsfolge.py`: erfolgreich.
+- `git diff --check`: erfolgreich.
+- `bash scripts/samai-git.sh verify HEAD`: erfolgreich.
+- GitHub Actions `Android-Build` Lauf 31306438437: erfolgreich einschließlich Architekturprüfung, `./gradlew test` und `:app:assembleDebug` für den Stand vor der Formel-Handoff-Korrektur.
+- Die Formel-Handoff-Korrektur wurde unabhängig nachgeprüft; keine neuen oder blockierenden Probleme.
+- `python3 scripts/pruefe_kern.py` ist lokal ohne `kotlinc` nicht ausführbar. Der lokale Gradle-Lauf kann die Android-Plugin-Abhängigkeiten in dieser Umgebung nicht beziehen; deshalb ist GitHub Actions die vollständige Build- und Testinstanz.
