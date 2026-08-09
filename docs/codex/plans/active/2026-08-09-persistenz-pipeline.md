@@ -2,11 +2,11 @@
 
 ## 1. Status und Basis
 
-**Status:** in Umsetzung auf `samai/v2.32.2/persistenz-pipeline`.
+**Status:** in Umsetzung auf `samai/v2.32.1/persistenz-pipeline` als zweite Phase des noch unveröffentlichten Architekturrefactors `v2.32.1`.
 
 **Basis:** vollständig verifizierter Releasebranch `release/v2.32.1-architektur-refactor`, Head `9dbe73c35504f251a94ad78e3127102fc3c87c2a`.
 
-**Versionsklassifikation:** `v2.32.2` (`x`-Version), keine neuen Knotentypen.
+**Versionsklassifikation:** Teil von `v2.32.1`; keine zusätzliche Versionsreservierung und keine neuen Knotentypen.
 
 ## 2. Ziel
 
@@ -47,7 +47,7 @@ Android und Desktop sollen dieselben mathematischen Regeln zum Schreiben, Dekodi
 - [x] `DesktopKartenSpeicher` auf denselben Codec umstellen.
 - [x] Pipeline-Phasen und Roundtrip regressionsprüfen.
 - [x] Architekturprüfung gegen neue app-lokale Migrationen härten.
-- [ ] Release-Metadaten auf v2.32.2 aktualisieren.
+- [x] Versionsmetadaten bleiben konsistent auf dem bereits reservierten `v2.32.1`.
 - [ ] GitHub-Actions-Verifikation auswerten.
 
 ## 7. Persistenzvertrag
@@ -96,4 +96,4 @@ Das größte Risiko ist eine unbeabsichtigte Änderung der Migrationsreihenfolge
 
 ## 10. Ergebnis
 
-Wird nach CI-Abnahme ergänzt.
+Wird nach CI-Abnahme ergänzt und anschließend in den bestehenden Releasebranch `release/v2.32.1-architektur-refactor` übernommen.
