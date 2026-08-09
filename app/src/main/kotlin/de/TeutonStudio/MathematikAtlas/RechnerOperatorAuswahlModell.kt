@@ -12,6 +12,12 @@ internal enum class RechnerOperatorAuswahlArt {
     UNBEKANNT,
 }
 
+internal enum class RechnerOperatorBestätigungsAktion {
+    KEINE,
+    FORMEL_BAUEN,
+    KNOTEN_ERSETZEN,
+}
+
 internal data class RechnerOperatorAuswahlEintrag(
     val id: String,
     val titel: String,
@@ -75,6 +81,20 @@ internal fun filtereRechnerOperatoren(
     kategorie: String?,
 ): List<RechnerOperatorAuswahlEintrag> = einträge.filter { eintrag ->
     (kategorie == null || eintrag.kategorie == kategorie) && eintrag.entspricht(suchtext)
+}
+
+internal fun bestätigungsAktionFür(
+    eintrag: RechnerOperatorAuswahlEintrag?,
+    aktuelleId: String?,
+): RechnerOperatorBestätigungsAktion = when {
+    eintrag == null || eintrag.art == RechnerOperatorAuswahlArt.UNBEKANNT ->
+        RechnerOperatorBestätigungsAktion.KEINE
+    eintrag.art == RechnerOperatorAuswahlArt.FORMEL && eintrag.kandidat == null ->
+        RechnerOperatorBestätigungsAktion.FORMEL_BAUEN
+    eintrag.art == RechnerOperatorAuswahlArt.FORMEL ->
+        RechnerOperatorBestätigungsAktion.KNOTEN_ERSETZEN
+    eintrag.id == aktuelleId -> RechnerOperatorBestätigungsAktion.KEINE
+    else -> RechnerOperatorBestätigungsAktion.KNOTEN_ERSETZEN
 }
 
 private fun normalisiereOperatorSuche(text: String): String = Normalizer

@@ -56,6 +56,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         val operator = bekannterOperator ?: StrukturRechnerOperatoren.fuer(familie).first()
         var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
+        var formelKandidat by remember(knoten.id, operatorId) { mutableStateOf<KnotenDaten?>(null) }
         var formelStart by remember(knoten.id, operatorId) {
             mutableStateOf(ladeStrukturRechnerFormel(knoten) ?: strukturOperatorAlsFormel(operator))
         }
@@ -97,6 +98,13 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                         art = RechnerOperatorAuswahlArt.FORMEL,
                     ),
                 )
+            }
+        }
+        val dialogEinträge = operatorEinträge.map { eintrag ->
+            if (eintrag.id == familie.formelOperatorId) {
+                eintrag.copy(kandidat = formelKandidat)
+            } else {
+                eintrag
             }
         }
 
@@ -148,6 +156,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                     )
                     Button(onClick = {
                         formelStart = ladeStrukturRechnerFormel(knoten) ?: strukturOperatorAlsFormel(operator)
+                        operatorDialog = true
                         formelDialog = true
                     }) { Text("Formel bearbeiten") }
                 }
@@ -216,14 +225,18 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         if (operatorDialog) {
             RechnerOperatorAuswahlDialog(
                 familienTitel = familie.titel,
-                einträge = operatorEinträge,
+                einträge = dialogEinträge,
                 aktuelleId = operatorId,
                 auswirkungFür = { eintrag ->
                     eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen)
                 },
-                schließen = { operatorDialog = false },
+                schließen = {
+                    formelKandidat = null
+                    operatorDialog = false
+                },
                 operatorÜbernehmen = { eintrag ->
                     eintrag.kandidat?.let(aktionen::knoten)
+                    formelKandidat = null
                     operatorDialog = false
                 },
                 formelÖffnen = {
@@ -240,16 +253,14 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                 quantorVariable = knoten.parameter["variablenName"].orEmpty().ifBlank { "x" },
                 schließen = { formelDialog = false },
                 übernehmen = { wurzel ->
-                    aktionen.knoten(
-                        konfiguriereStrukturRechnerFormel(
-                            knoten = knoten,
-                            familie = familie,
-                            wurzel = wurzel,
-                            quantorVariable = knoten.parameter["variablenName"].orEmpty().ifBlank { "x" },
-                        ),
+                    formelKandidat = konfiguriereStrukturRechnerFormel(
+                        knoten = knoten,
+                        familie = familie,
+                        wurzel = wurzel,
+                        quantorVariable = knoten.parameter["variablenName"].orEmpty().ifBlank { "x" },
                     )
                     formelDialog = false
-                    operatorDialog = false
+                    operatorDialog = true
                 },
             )
         }

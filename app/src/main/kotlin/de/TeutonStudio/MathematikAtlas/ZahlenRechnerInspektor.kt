@@ -30,6 +30,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         val formelModus = operatorId == ZAHLENRECHNER_FORMEL_ID
         var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
+        var formelKandidat by remember(knoten.id, operatorId) { mutableStateOf<KnotenDaten?>(null) }
         val operatorEinträge = remember(knoten) {
             val katalogNachId = RechnerFamilienKatalog.zahlenOperatoren.associateBy { it.stabileId }
             buildList {
@@ -97,6 +98,13 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 )
             }
         }
+        val dialogEinträge = operatorEinträge.map { eintrag ->
+            if (eintrag.id == ZAHLENRECHNER_FORMEL_ID) {
+                eintrag.copy(kandidat = formelKandidat)
+            } else {
+                eintrag
+            }
+        }
 
         val titel = when {
             formelModus -> "Formel"
@@ -138,7 +146,10 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Button(onClick = { formelDialog = true }) { Text("Formel bearbeiten") }
+                    Button(onClick = {
+                        operatorDialog = true
+                        formelDialog = true
+                    }) { Text("Formel bearbeiten") }
                 }
             }
         }
@@ -456,7 +467,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         if (operatorDialog) {
             RechnerOperatorAuswahlDialog(
                 familienTitel = "Zahlenrechner",
-                einträge = operatorEinträge,
+                einträge = dialogEinträge,
                 aktuelleId = when {
                     formelModus -> ZAHLENRECHNER_FORMEL_ID
                     erweiterterOperator != null -> erweiterterOperator.stabileId
@@ -466,9 +477,13 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 auswirkungFür = { eintrag ->
                     eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen)
                 },
-                schließen = { operatorDialog = false },
+                schließen = {
+                    formelKandidat = null
+                    operatorDialog = false
+                },
                 operatorÜbernehmen = { eintrag ->
                     eintrag.kandidat?.let(aktionen::knoten)
+                    formelKandidat = null
                     operatorDialog = false
                 },
                 formelÖffnen = {
@@ -482,9 +497,9 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" },
                 schließen = { formelDialog = false },
                 übernehmen = { latex ->
-                    aktionen.knoten(konfiguriereZahlenRechnerFormel(knoten, latex))
+                    formelKandidat = konfiguriereZahlenRechnerFormel(knoten, latex)
                     formelDialog = false
-                    operatorDialog = false
+                    operatorDialog = true
                 },
             )
         }

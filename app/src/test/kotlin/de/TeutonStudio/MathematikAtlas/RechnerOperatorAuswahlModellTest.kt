@@ -62,4 +62,40 @@ class RechnerOperatorAuswahlModellTest {
             filtereRechnerOperatoren(listOf(addition, tangens), "Summe", "Trigonometrie"),
         )
     }
+
+    @Test
+    fun `Formel wird erst gebaut und danach als Kandidat ersetzt`() {
+        val formel = RechnerOperatorAuswahlEintrag(
+            id = "zahl.formel",
+            titel = "Eigene Formel",
+            symbolLatex = "f(x)",
+            kategorie = "Eigene Formeln",
+            beschreibung = "Eigener Ausdruck.",
+            art = RechnerOperatorAuswahlArt.FORMEL,
+        )
+
+        assertEquals(
+            RechnerOperatorBestätigungsAktion.FORMEL_BAUEN,
+            bestätigungsAktionFür(formel, addition.id),
+        )
+        assertEquals(
+            RechnerOperatorBestätigungsAktion.KNOTEN_ERSETZEN,
+            bestätigungsAktionFür(formel.copy(kandidat = kandidat), addition.id),
+        )
+    }
+
+    @Test
+    fun `Aktueller oder unbekannter Operator löst keinen Austausch aus`() {
+        val unbekannt = RechnerOperatorAuswahlEintrag(
+            id = "veraltet",
+            titel = "Unbekannt",
+            symbolLatex = "?",
+            kategorie = "Nicht verfügbar",
+            beschreibung = "Nicht registriert.",
+            art = RechnerOperatorAuswahlArt.UNBEKANNT,
+        )
+
+        assertEquals(RechnerOperatorBestätigungsAktion.KEINE, bestätigungsAktionFür(addition, addition.id))
+        assertEquals(RechnerOperatorBestätigungsAktion.KEINE, bestätigungsAktionFür(unbekannt, unbekannt.id))
+    }
 }

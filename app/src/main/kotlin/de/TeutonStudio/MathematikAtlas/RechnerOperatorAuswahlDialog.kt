@@ -34,9 +34,10 @@ internal fun RechnerOperatorAuswahlDialog(
     operatorÜbernehmen: (RechnerOperatorAuswahlEintrag) -> Unit,
     formelÖffnen: (RechnerOperatorAuswahlEintrag) -> Unit,
 ) {
-    var suchtext by remember(einträge) { mutableStateOf("") }
-    var kategorie by remember(einträge) { mutableStateOf<String?>(null) }
-    var auswahlId by remember(einträge, aktuelleId) {
+    val eintragIds = einträge.map(RechnerOperatorAuswahlEintrag::id)
+    var suchtext by remember(eintragIds) { mutableStateOf("") }
+    var kategorie by remember(eintragIds) { mutableStateOf<String?>(null) }
+    var auswahlId by remember(eintragIds, aktuelleId) {
         mutableStateOf(einträge.firstOrNull { it.id == aktuelleId }?.id ?: einträge.firstOrNull()?.id)
     }
     val kategorien = remember(einträge) { einträge.map { it.kategorie }.distinct() }
@@ -46,16 +47,15 @@ internal fun RechnerOperatorAuswahlDialog(
     val ausgewählt = einträge.firstOrNull { it.id == auswahlId }
     val auswirkung = ausgewählt?.let(auswirkungFür)
     val sucheFokus = remember { FocusRequester() }
-    val kannBestätigen = ausgewählt != null && ausgewählt.art != RechnerOperatorAuswahlArt.UNBEKANNT &&
-        (ausgewählt.art == RechnerOperatorAuswahlArt.FORMEL || ausgewählt.id != aktuelleId)
+    val bestätigungsAktion = bestätigungsAktionFür(ausgewählt, aktuelleId)
+    val kannBestätigen = bestätigungsAktion != RechnerOperatorBestätigungsAktion.KEINE
 
     fun bestätige() {
         val eintrag = ausgewählt ?: return
-        if (!kannBestätigen) return
-        when (eintrag.art) {
-            RechnerOperatorAuswahlArt.OPERATOR -> operatorÜbernehmen(eintrag)
-            RechnerOperatorAuswahlArt.FORMEL -> formelÖffnen(eintrag)
-            RechnerOperatorAuswahlArt.UNBEKANNT -> Unit
+        when (bestätigungsAktion) {
+            RechnerOperatorBestätigungsAktion.FORMEL_BAUEN -> formelÖffnen(eintrag)
+            RechnerOperatorBestätigungsAktion.KNOTEN_ERSETZEN -> operatorÜbernehmen(eintrag)
+            RechnerOperatorBestätigungsAktion.KEINE -> Unit
         }
     }
 
@@ -361,10 +361,20 @@ private fun OperatorDetails(
                 }
                 if (eintrag.art == RechnerOperatorAuswahlArt.FORMEL) {
                     item {
-                        Text(
-                            "Der passende CAS-Formelbauer öffnet sich als nächster Schritt. Erst dessen Übernehmen verändert den Knoten.",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        if (eintrag.kandidat == null) {
+                            Text(
+                                "Der passende CAS-Formelbauer öffnet sich als nächster Schritt. Erst die anschließende Bestätigung in diesem Dialog verändert den Knoten.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        } else {
+                            Text(
+                                "Die Formel ist vollständig. Prüfe vor dem Übernehmen ihre Signatur und Auswirkungen.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            SignaturZeile("Eingänge", eintrag.eingänge)
+                            SignaturZeile("Ausgänge", eintrag.ausgänge)
+                            auswirkung?.let { AuswirkungsDetails(it) }
+                        }
                     }
                 } else if (eintrag.art == RechnerOperatorAuswahlArt.UNBEKANNT) {
                     item {
@@ -380,22 +390,7 @@ private fun OperatorDetails(
                         SignaturZeile("Ausgänge", eintrag.ausgänge)
                     }
                     auswirkung?.let { wirkung ->
-                        item {
-                            HorizontalDivider()
-                            Text("Auswirkungen", style = MaterialTheme.typography.titleSmall)
-                            Text("Erhalten: ${wirkung.erhalteneAnschlüsse.namenOderKeine()}")
-                            Text("Neu: ${wirkung.hinzugefügteAnschlüsse.namenOderKeine()}")
-                            Text("Entfallen: ${wirkung.entfallendeAnschlüsse.namenOderKeine()}")
-                            if (wirkung.trenntVerbindungen) {
-                                Text(
-                                    "${wirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) werden getrennt.",
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            } else {
-                                Text("Keine bestehende Verbindung wird getrennt.")
-                            }
-                        }
+                        item { AuswirkungsDetails(wirkung) }
                     }
                 }
             }
@@ -417,6 +412,24 @@ private fun List<de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten>.nam
     joinToString { it.name }.ifBlank { "keine" }
 
 @Composable
+private fun AuswirkungsDetails(wirkung: KnotenErsetzungsAuswirkung) {
+    HorizontalDivider()
+    Text("Auswirkungen", style = MaterialTheme.typography.titleSmall)
+    Text("Erhalten: ${wirkung.erhalteneAnschlüsse.namenOderKeine()}")
+    Text("Neu: ${wirkung.hinzugefügteAnschlüsse.namenOderKeine()}")
+    Text("Entfallen: ${wirkung.entfallendeAnschlüsse.namenOderKeine()}")
+    if (wirkung.trenntVerbindungen) {
+        Text(
+            "${wirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) werden getrennt.",
+            color = MaterialTheme.colorScheme.error,
+            fontWeight = FontWeight.Bold,
+        )
+    } else {
+        Text("Keine bestehende Verbindung wird getrennt.")
+    }
+}
+
+@Composable
 private fun DialogAktionen(
     eintrag: RechnerOperatorAuswahlEintrag?,
     aktuelleId: String?,
@@ -434,10 +447,12 @@ private fun DialogAktionen(
         Button(onClick = bestätigen, enabled = kannBestätigen) {
             Text(
                 when {
-                    eintrag?.art == RechnerOperatorAuswahlArt.FORMEL && eintrag.id == aktuelleId -> "Formel bearbeiten"
-                    eintrag?.art == RechnerOperatorAuswahlArt.FORMEL -> "Formel erstellen"
+                    eintrag?.art == RechnerOperatorAuswahlArt.FORMEL && eintrag.kandidat == null &&
+                        eintrag.id == aktuelleId -> "Formel bearbeiten"
+                    eintrag?.art == RechnerOperatorAuswahlArt.FORMEL && eintrag.kandidat == null -> "Formel erstellen"
                     auswirkung?.trenntVerbindungen == true ->
                         "Übernehmen und ${auswirkung.entfallendeVerbindungen.size} Verbindung(en) trennen"
+                    eintrag?.art == RechnerOperatorAuswahlArt.FORMEL -> "Formel übernehmen"
                     else -> "Übernehmen"
                 },
             )
