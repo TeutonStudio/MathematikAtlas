@@ -2,8 +2,8 @@ package de.TeutonStudio.MathematikAtlas.speicher
 
 import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKnoten.migriereStrukturierteDivision
-import de.TeutonStudio.MathematikKnoten.migriereUniversellenZahlenRechner
+import de.TeutonStudio.MathematikKnoten.MathematikKartenCodec
+import de.TeutonStudio.MathematikKnoten.MathematikKartenMigrationen
 import de.TeutonStudio.MathematikKnoten.normalisiereStrukturierteDivisionVorSpeichern
 import org.json.JSONObject
 import java.io.File
@@ -68,10 +68,7 @@ class KartenSpeicher(private val context: Context) {
     fun importiere(text: String): KartenDaten = if (KartenFreigabePaket.istFreigabePaket(text)) {
         importierePaket(text)
     } else {
-        val gelesen = KartenJson.lese(text)
-            .migriereMethodenAnschlüsse()
-            .migriereUniversellenZahlenRechner()
-            .migriereStrukturierteDivision()
+        val gelesen = MathematikKartenCodec.importiere(text)
         val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
@@ -161,9 +158,7 @@ class KartenSpeicher(private val context: Context) {
                     ?: neueKartenId()
             }
         val remappteKarten = paket.karten.map { karte ->
-            val migriert = karte.migriereMethodenAnschlüsse()
-                .migriereUniversellenZahlenRechner()
-                .migriereStrukturierteDivision()
+            val migriert = MathematikKartenMigrationen.nachLaden(karte)
             migriert.copy(
                 id = idAbbildung.getValue(migriert.id),
                 knoten = migriert.knoten.map { knoten ->
@@ -277,13 +272,6 @@ class KartenSpeicher(private val context: Context) {
         ?: 0
 
     private fun leseDatei(file: File): KartenDaten? = runCatching {
-        if (file.exists()) {
-            KartenJson.lese(file.readText())
-                .migriereMethodenAnschlüsse()
-                .migriereUniversellenZahlenRechner()
-                .migriereStrukturierteDivision()
-        } else {
-            null
-        }
+        if (file.exists()) MathematikKartenCodec.lade(file.readText()) else null
     }.getOrNull()
 }
