@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.desktop
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKnoten.MathematikKartenCodec
 import java.nio.file.*
 import kotlin.io.path.*
 
@@ -35,15 +36,17 @@ class DesktopKartenSpeicher(
         val version = if (vorhandeneVersion == 0) karte.version.coerceAtLeast(1) else maxOf(vorhandeneVersion + 1, karte.version)
         val gespeichert = karte.copy(version = version)
         val ziel = ordner.resolve("v$version.json")
-        atomarSchreiben(ziel, KartenDatenJson.schreibe(gespeichert))
+        atomarSchreiben(ziel, MathematikKartenCodec.schreibe(gespeichert))
         atomarSchreiben(aktuellDatei, basis.relativize(ziel).toString())
         return gespeichert
     }
 
-    fun importiere(text: String): KartenDaten = speichere(KartenDatenJson.lese(text))
-    fun exportiere(karte: KartenDaten): String = KartenDatenJson.schreibe(karte)
+    fun importiere(text: String): KartenDaten = speichere(MathematikKartenCodec.importiere(text))
+    fun exportiere(karte: KartenDaten): String = MathematikKartenCodec.schreibe(karte)
 
-    private fun ladeDatei(pfad: Path): KartenDaten? = runCatching { KartenDatenJson.lese(pfad.readText()) }.getOrNull()
+    private fun ladeDatei(pfad: Path): KartenDaten? = runCatching {
+        MathematikKartenCodec.lade(pfad.readText())
+    }.getOrNull()
 
     private fun alleDateien(): List<Path> = if (!kartenVerzeichnis.exists()) emptyList() else
         Files.walk(kartenVerzeichnis).use { dateien -> dateien.filter { it.isRegularFile() && it.extension == "json" }.toList() }
