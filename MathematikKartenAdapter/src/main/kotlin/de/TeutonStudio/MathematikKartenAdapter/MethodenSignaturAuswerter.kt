@@ -65,9 +65,9 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
         val argumente = methode.methodenSignatur().argumente
         val werte = argumente.map { argument ->
             val quelle = VariablenQuelle(
-                knotenId = kontext.knoten.id,
-                name = argument.parameter.name,
-                werteVorrat = argument.werteVorrat,
+                kontext.knoten.id,
+                argument.parameter.name,
+                argument.werteVorrat,
                 alsMethodenParameter = true,
             )
             BedingterWert(
