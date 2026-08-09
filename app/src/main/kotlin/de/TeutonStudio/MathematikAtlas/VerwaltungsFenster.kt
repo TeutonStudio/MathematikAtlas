@@ -224,10 +224,8 @@ private fun KartenListe(zustand: AtlasZustand) {
                             modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                                 .clip(MaterialTheme.shapes.medium)
                                 .clickable {
-                                    eingeklappteOrdner = if (eingeklappt) {
-                                        eingeklappteOrdner - eintrag.pfad
-                                    } else {
-                                        eingeklappteOrdner + eintrag.pfad
+                                    eingeklappteOrdner = eingeklappteOrdner.toMutableSet().apply {
+                                        if (!remove(eintrag.pfad)) add(eintrag.pfad)
                                     }
                                 }
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .45f)),
