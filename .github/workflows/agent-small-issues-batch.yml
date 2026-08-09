@@ -24,14 +24,31 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Android SDK vorbereiten
         run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
-      - name: Änderungen anwenden
-        run: python3 scripts/agent_resolve_small_issues.py
-      - name: Architektur prüfen
-        run: python3 scripts/pruefe_architektur.py
-      - name: Tests und Android-Build
-        run: ./gradlew --stacktrace test :app:assembleDebug
-      - name: Implementierung committen
+      - name: Änderungen anwenden und prüfen
+        id: pruefung
+        continue-on-error: true
         run: |
+          set -o pipefail
+          {
+            python3 scripts/agent_resolve_small_issues.py
+            python3 scripts/pruefe_architektur.py
+            ./gradlew --stacktrace test :app:assembleDebug
+          } 2>&1 | tee /tmp/agent-small-issues.log
+      - name: Fehlerbericht schreiben
+        if: steps.pruefung.outcome == 'failure'
+        run: |
+          cp /tmp/agent-small-issues.log /tmp/agent-small-issues-full.log
+          git reset --hard HEAD
+          tail -n 400 /tmp/agent-small-issues-full.log > agent-small-issues-failure.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add agent-small-issues-failure.txt
+          git commit -m 'chore: record small-issues batch failure'
+          git push origin HEAD:agent/resolve-small-issues-batch
+      - name: Implementierung committen
+        if: steps.pruefung.outcome == 'success'
+        run: |
+          rm -f agent-small-issues-failure.txt
           rm scripts/agent_resolve_small_issues.py
           rm .github/workflows/agent-small-issues-batch.yml
           git config user.name 'github-actions[bot]'
@@ -39,3 +56,6 @@ jobs:
           git add -A
           git commit -m 'Implement small issue batch'
           git push origin HEAD:agent/resolve-small-issues-batch
+      - name: Lauf als fehlgeschlagen markieren
+        if: steps.pruefung.outcome == 'failure'
+        run: exit 1
