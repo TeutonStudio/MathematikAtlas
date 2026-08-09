@@ -426,6 +426,7 @@ private fun erhalteAnschlussIds(
         val positionsAlt = when (neu.richtung) {
             AnschlussRichtung.Eingang -> bisherEingaenge.getOrNull(index)
             AnschlussRichtung.Ausgang -> bisherAusgaenge.getOrNull(index)
+            AnschlussRichtung.Neutral -> null
         }
         val alt = gleichnamig ?: positionsAlt
         if (alt == null) neu else neu.copy(id = alt.id)
