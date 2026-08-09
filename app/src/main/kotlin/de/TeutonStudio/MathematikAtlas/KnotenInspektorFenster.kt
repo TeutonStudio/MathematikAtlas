@@ -15,6 +15,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.vorschauKnotenErsetzen
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.InspektorSichtbarkeit
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.MINDESTEINGÄNGE_PARAMETER
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.ANALYSIS_EIGENSCHAFT_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
@@ -27,6 +28,7 @@ import de.TeutonStudio.MathematikKnoten.TUPEL_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.TUPEL_METHODE
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
 import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
+import de.TeutonStudio.MathematikKnoten.setzeTupelEingangAnzahl
 import de.TeutonStudio.MathematikKnoten.setzeTupelKonfiguration
 import de.TeutonStudio.MathematikKnoten.tupelKonfiguration
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
@@ -166,7 +168,13 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                                 text = it
                                 it.toIntOrNull()
                                     ?.takeIf { anzahl -> anzahl >= mindestAnzahl }
-                                    ?.let { anzahl -> zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl) }
+                                    ?.let { anzahl ->
+                                        if (knoten.art == "mathematik.tupel") {
+                                            zustand.editor.setzeTupelEingangAnzahl(knoten.id, anzahl)
+                                        } else {
+                                            zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl)
+                                        }
+                                    }
                             },
                             label = { Text("Feste Eingänge") },
                             supportingText = {
@@ -202,8 +210,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     knoten.parameter.filterKeys {
                         it !in setOf(
                             "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
-                            "werteVorrat", "zielmenge", "argumentReihenfolge", MENGENDEFINITION_PAAR,
-                            MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
+                            "werteVorrat", "zielmenge", "argumentReihenfolge", MINDESTEINGÄNGE_PARAMETER,
+                            MENGENDEFINITION_PAAR, MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
                             MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
                         ) && !it.startsWith(STANDARDWERT_PREFIX) &&
                             !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.") &&
