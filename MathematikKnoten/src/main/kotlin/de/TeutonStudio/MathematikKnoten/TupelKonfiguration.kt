@@ -95,3 +95,22 @@ fun KartenEditorZustand.setzeTupelKonfiguration(knotenId: KnotenId, erzeugungsAr
     val konfiguriert = konfiguriereTupel(knoten, erzeugungsArt)
     führeAus(KartenAktion.KnotenKonfigurationErsetzen(knotenId, konfiguriert.parameter, konfiguriert.anschlüsse))
 }
+
+/** Setzt ausschließlich für den Elementmodus die feste Tupellänge; Einertupel sind gültig. */
+fun KartenEditorZustand.setzeTupelEingangAnzahl(knotenId: KnotenId, anzahl: Int) {
+    val knoten = karte.knoten.firstOrNull { it.id == knotenId && it.art == TUPEL_ART } ?: return
+    val vorbereitet = knoten.copy(
+        parameter = knoten.parameter + mapOf(
+            "festeEingänge" to anzahl.coerceAtLeast(1).toString(),
+            "erzeugungsArt" to TUPEL_EINZEL_EINGABEN,
+        ),
+    )
+    val konfiguriert = konfiguriereTupel(vorbereitet, TUPEL_EINZEL_EINGABEN)
+    führeAus(
+        KartenAktion.KnotenKonfigurationErsetzen(
+            knotenId,
+            konfiguriert.parameter,
+            konfiguriert.anschlüsse,
+        ),
+    )
+}
