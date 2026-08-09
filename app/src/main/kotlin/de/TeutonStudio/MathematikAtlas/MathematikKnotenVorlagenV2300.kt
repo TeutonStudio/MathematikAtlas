@@ -30,6 +30,7 @@ internal fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     )
     val bereinigt = basis.filterNot { vorlage ->
         vorlage.art in historischeOrientierungsDuplikate ||
+            vorlage.art == MULTINOMVEKTOR_ART ||
             (
                 vorlage.art == ZAHLENRECHNER_ART &&
                     vorlage.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.KOMPLEXER_RADIUS.stabileId
@@ -37,5 +38,6 @@ internal fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     }
     return bereinigt +
         VektorKonstruktorV2300Vorlagen.standard +
-        VektorOrientierungsV2300Vorlagen.alle
+        VektorOrientierungsV2300Vorlagen.alle +
+        MultinomVektorKnotenVorlagen.standard
 }

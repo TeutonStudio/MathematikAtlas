@@ -51,5 +51,7 @@ object GesamterMathematikAuswerter {
         registriereVektorKonstruktorV2300()
         // v2.30.0: historische Zeile-/Spalte-Paare werden auf parametrierte Verträge abgebildet.
         registriereVektorOrientierungsKnotenV2300()
+        // Neuer erzeugbarer Typ mit gemeinsamer Monomfolge.
+        registriereMultinomVektor()
     }
 }
