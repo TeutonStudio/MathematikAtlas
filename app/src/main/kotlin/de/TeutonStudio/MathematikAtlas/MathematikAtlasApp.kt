@@ -53,6 +53,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { r -> zustand.importiere(r.readText()) } }
     }
+    var exportDialogOffen by remember { mutableStateOf(false) }
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
     var werkzeug by remember { mutableStateOf(KartenWerkzeug.Auswahl) }
     var editorGröße by remember { mutableStateOf(IntSize.Zero) }
@@ -90,6 +91,18 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         zustand.speichereAktuell()
     }
 
+    if (exportDialogOffen) {
+        KartenExportFormatDialog(
+            schließen = { exportDialogOffen = false },
+            exportieren = { format ->
+                exportDialogOffen = false
+                if (format == KartenExportFormat.JSON) {
+                    export.launch(normalisiereExportDateiname(zustand.editor.karte.name, format))
+                }
+            },
+        )
+    }
+
     Row(
         Modifier.fillMaxSize()
             .navigationBarsPadding()
@@ -110,7 +123,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             WerkzeugLeiste(
                 zustand,
                 onImport = { import.launch(arrayOf("application/json", "text/plain")) },
-                onExport = { export.launch("${zustand.editor.karte.name}.json") },
+                onExport = { exportDialogOffen = true },
                 onSpeichern = { ausführen(AtlasBefehl.Speichern) },
             )
             HorizontalDivider()
