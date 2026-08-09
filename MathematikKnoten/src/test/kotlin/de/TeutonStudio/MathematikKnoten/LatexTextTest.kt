@@ -15,14 +15,26 @@ class LatexTextTest {
     }
 
     @Test
-    fun `Rendererquelltext erhält echte Latex Strukturen`() {
+    fun `Methoden cases werden ohne automatische if Spalte gerendert`() {
         val latex = "f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto \\frac{x}{2}\\end{cases}"
+        val quelltext = atlasLatexQuelltext(latex, dunklesSchema = false)
+
+        assertContains(quelltext, "\\left\\{")
+        assertContains(quelltext, "\\begin{matrix}")
+        assertContains(quelltext, "\\end{matrix}\\right.")
+        assertContains(quelltext, "\\frac{x}{2}")
+        assertFalse("\\begin{cases}" in quelltext)
+        assertFalse("\\text{if}" in quelltext)
+    }
+
+    @Test
+    fun `Echte Fallunterscheidung mit Bedingungsspalte bleibt cases`() {
+        val latex = "\\begin{cases}x^2 & x>0\\\\0 & x\\leq0\\end{cases}"
         val quelltext = atlasLatexQuelltext(latex, dunklesSchema = false)
 
         assertContains(quelltext, "\\begin{cases}")
         assertContains(quelltext, "\\end{cases}")
-        assertContains(quelltext, "\\frac{x}{2}")
-        assertFalse("f:{" in quelltext)
+        assertContains(quelltext, "& x>0")
     }
 
     @Test
