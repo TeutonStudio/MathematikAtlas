@@ -49,5 +49,7 @@ object GesamterMathematikAuswerter {
         registriereNullDistanz()
         // v2.30.0: kanonischer Vektorkonstruktor mit Orientierung und Indexmethode.
         registriereVektorKonstruktorV2300()
+        // v2.30.0: historische Zeile-/Spalte-Paare werden auf parametrierte Verträge abgebildet.
+        registriereVektorOrientierungsKnotenV2300()
     }
 }
