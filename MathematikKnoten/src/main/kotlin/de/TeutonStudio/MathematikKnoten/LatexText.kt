@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hrm.latex.renderer.Latex
 import com.hrm.latex.renderer.model.LatexConfig
-import com.hrm.latex.renderer.model.LatexTheme
 import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
 
 private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\{#1\\right\\}}"
@@ -99,7 +98,6 @@ private fun EchterLatexText(
         modifier = modifier,
         config = LatexConfig(
             fontSize = fontSize,
-            theme = LatexTheme.material3(),
             accessibilityEnabled = true,
         ),
         isDarkTheme = dunklesSchema,
