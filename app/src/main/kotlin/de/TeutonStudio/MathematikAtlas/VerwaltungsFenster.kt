@@ -70,7 +70,10 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
         )
     }
     if (einstellungenGeöffnet) {
-        EinstellungenDialog(schließen = { einstellungenGeöffnet = false })
+        EinstellungenDialogV2291(
+            zustand = zustand,
+            schließen = { einstellungenGeöffnet = false },
+        )
     }
 }
 
@@ -113,84 +116,20 @@ private fun ProfilLeiste(profil: LokalesProfil, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EinstellungenDialog(schließen: () -> Unit) {
-    val darstellung = LocalDarstellungsSteuerung.current
-    val buildInformation = remember { aktuelleAppBuildInformation() }
-    AlertDialog(
-        onDismissRequest = schließen,
-        title = { Text("Einstellungen") },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text("Darstellung", style = MaterialTheme.typography.titleSmall)
-                Text(
-                    "Wähle, ob die App dem System folgt oder dauerhaft hell beziehungsweise dunkel dargestellt wird.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                DarstellungsModus.entries.forEach { modus ->
-                    val ausgewählt = darstellung.modus == modus
-                    Surface(
-                        modifier = Modifier.fillMaxWidth()
-                            .clip(MaterialTheme.shapes.medium)
-                            .clickable { darstellung.ändereModus(modus) },
-                        shape = MaterialTheme.shapes.medium,
-                        color = if (ausgewählt) {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = ausgewählt,
-                                onClick = { darstellung.ändereModus(modus) },
-                            )
-                            Column(Modifier.padding(vertical = 8.dp)) {
-                                Text(modus.anzeigeName, style = MaterialTheme.typography.bodyLarge)
-                                Text(
-                                    modus.beschreibung(),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                Text("Über die Anwendung", style = MaterialTheme.typography.titleSmall)
-                Text(buildInformation.versionsZeile, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    buildInformation.buildZeile,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        confirmButton = { TextButton(onClick = schließen) { Text("Fertig") } },
-    )
-}
-
-private fun DarstellungsModus.beschreibung(): String = when (this) {
-    DarstellungsModus.System -> "Verwendet die Darstellung des Betriebssystems."
-    DarstellungsModus.Hell -> "Verwendet immer den Lightmode."
-    DarstellungsModus.Dunkel -> "Verwendet immer den Darkmode."
-}
-
-@Composable
 private fun KartenListe(zustand: AtlasZustand) {
     val context = LocalContext.current
     val ordnungsSpeicher = remember(context) { KartenOrdnungSpeicher(context) }
     var ordnung by remember(ordnungsSpeicher) { mutableStateOf(ordnungsSpeicher.lade()) }
+    var eingeklappteOrdner by remember { mutableStateOf<Set<List<String>>>(emptySet()) }
     var dialog by remember { mutableStateOf<KartenOrdnerDialog?>(null) }
     var ordnerMenü by remember { mutableStateOf<List<String>?>(null) }
     var kartenMenü by remember { mutableStateOf<KartenId?>(null) }
     var freigabeFehler by remember { mutableStateOf<String?>(null) }
+    val kartenAenderungsVersion = KartenAenderungsSignal.version
+
+    LaunchedEffect(kartenAenderungsVersion, ordnungsSpeicher) {
+        ordnung = ordnungsSpeicher.lade()
+    }
 
     fun speichere(neu: KartenOrdnung) {
         val normalisiert = neu.normalisiert()
@@ -205,7 +144,12 @@ private fun KartenListe(zustand: AtlasZustand) {
         )
     }
 
-    val einträge = remember(zustand.karten, ordnung) { kartenListenEinträge(zustand.karten, ordnung) }
+    val sichtbareKarten = remember(zustand.karten, kartenAenderungsVersion) {
+        zustand.speicher.liste()
+    }
+    val einträge = remember(sichtbareKarten, ordnung, eingeklappteOrdner) {
+        kartenListenEinträge(sichtbareKarten, ordnung, eingeklappteOrdner)
+    }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -225,58 +169,70 @@ private fun KartenListe(zustand: AtlasZustand) {
         ) {
             items(einträge, key = KartenListenEintrag::schlüssel) { eintrag ->
                 when (eintrag) {
-                    is KartenListenEintrag.Ordner -> ListItem(
-                        headlineContent = { Text("▾ ${eintrag.pfad.last()}") },
-                        supportingContent = {
-                            if (eintrag.pfad.size > 1) Text(formatiereOrdnerPfad(eintrag.pfad.dropLast(1)))
-                        },
-                        trailingContent = {
-                            Box {
-                                TextButton(onClick = { ordnerMenü = eintrag.pfad }) { Text("⋮") }
-                                DropdownMenu(
-                                    expanded = ordnerMenü == eintrag.pfad,
-                                    onDismissRequest = { ordnerMenü = null },
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Pfad bearbeiten") },
-                                        onClick = {
-                                            ordnerMenü = null
-                                            dialog = KartenOrdnerDialog.OrdnerVerschieben(eintrag.pfad)
-                                        },
-                                    )
-                                    val enthalteneKarten = ordnung.kartenUnter(eintrag.pfad)
-                                        .mapNotNull(zustand.speicher::ladeAktuell)
-                                    DropdownMenuItem(
-                                        text = { Text("Sammlung freigeben") },
-                                        enabled = enthalteneKarten.isNotEmpty(),
-                                        onClick = {
-                                            ordnerMenü = null
-                                            freigeben(eintrag.pfad.last()) {
-                                                zustand.speicher.erstelleFreigabePaket(
-                                                    name = eintrag.pfad.last(),
-                                                    art = FreigabeArt.Sammlung,
-                                                    wurzelKarten = enthalteneKarten,
-                                                    ordnung = ordnung,
-                                                    sammlungsPfad = eintrag.pfad,
-                                                )
-                                            }
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("Leeren Ordner löschen") },
-                                        enabled = ordnung.kannOrdnerLöschen(eintrag.pfad),
-                                        onClick = {
-                                            ordnerMenü = null
-                                            speichere(ordnung.ohneOrdner(eintrag.pfad))
-                                        },
-                                    )
+                    is KartenListenEintrag.Ordner -> {
+                        val eingeklappt = eintrag.pfad in eingeklappteOrdner
+                        ListItem(
+                            headlineContent = {
+                                Text("${if (eingeklappt) "▸" else "▾"} ${eintrag.pfad.last()}")
+                            },
+                            supportingContent = {
+                                if (eintrag.pfad.size > 1) Text(formatiereOrdnerPfad(eintrag.pfad.dropLast(1)))
+                            },
+                            trailingContent = {
+                                Box {
+                                    TextButton(onClick = { ordnerMenü = eintrag.pfad }) { Text("⋮") }
+                                    DropdownMenu(
+                                        expanded = ordnerMenü == eintrag.pfad,
+                                        onDismissRequest = { ordnerMenü = null },
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Pfad bearbeiten") },
+                                            onClick = {
+                                                ordnerMenü = null
+                                                dialog = KartenOrdnerDialog.OrdnerVerschieben(eintrag.pfad)
+                                            },
+                                        )
+                                        val enthalteneKarten = ordnung.kartenUnter(eintrag.pfad)
+                                            .mapNotNull(zustand.speicher::ladeAktuell)
+                                        DropdownMenuItem(
+                                            text = { Text("Sammlung freigeben") },
+                                            enabled = enthalteneKarten.isNotEmpty(),
+                                            onClick = {
+                                                ordnerMenü = null
+                                                freigeben(eintrag.pfad.last()) {
+                                                    zustand.speicher.erstelleFreigabePaket(
+                                                        name = eintrag.pfad.last(),
+                                                        art = FreigabeArt.Sammlung,
+                                                        wurzelKarten = enthalteneKarten,
+                                                        ordnung = ordnung,
+                                                        sammlungsPfad = eintrag.pfad,
+                                                    )
+                                                }
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Leeren Ordner löschen") },
+                                            enabled = ordnung.kannOrdnerLöschen(eintrag.pfad),
+                                            onClick = {
+                                                ordnerMenü = null
+                                                speichere(ordnung.ohneOrdner(eintrag.pfad))
+                                            },
+                                        )
+                                    }
                                 }
-                            }
-                        },
-                        modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .45f)),
-                    )
+                            },
+                            modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable {
+                                    eingeklappteOrdner = if (eingeklappt) {
+                                        eingeklappteOrdner - eintrag.pfad
+                                    } else {
+                                        eingeklappteOrdner + eintrag.pfad
+                                    }
+                                }
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .45f)),
+                        )
+                    }
                     is KartenListenEintrag.Karte -> ListItem(
                         headlineContent = { Text(eintrag.karte.name) },
                         supportingContent = { Text("Version ${eintrag.karte.version}") },
@@ -426,36 +382,6 @@ private sealed interface KartenOrdnerDialog {
     data object OrdnerAnlegen : KartenOrdnerDialog
     data class KarteVerschieben(val karte: KartenDaten) : KartenOrdnerDialog
     data class OrdnerVerschieben(val pfad: List<String>) : KartenOrdnerDialog
-}
-
-private sealed interface KartenListenEintrag {
-    val tiefe: Int
-    val schlüssel: String
-
-    data class Ordner(val pfad: List<String>, override val tiefe: Int) : KartenListenEintrag {
-        override val schlüssel = "ordner:${formatiereOrdnerPfad(pfad)}"
-    }
-
-    data class Karte(val karte: KartenDaten, override val tiefe: Int) : KartenListenEintrag {
-        override val schlüssel = "karte:${karte.id.wert}"
-    }
-}
-
-private fun kartenListenEinträge(karten: List<KartenDaten>, ordnung: KartenOrdnung): List<KartenListenEintrag> = buildList {
-    fun fügeEbeneHinzu(eltern: List<String>, tiefe: Int) {
-        ordnung.ordner.asSequence()
-            .filter { it.size == eltern.size + 1 && it.take(eltern.size) == eltern }
-            .sortedBy { it.last().lowercase() }
-            .forEach { pfad ->
-                add(KartenListenEintrag.Ordner(pfad, tiefe))
-                fügeEbeneHinzu(pfad, tiefe + 1)
-            }
-        karten.asSequence()
-            .filter { ordnung.ordnerFür(it.id) == eltern }
-            .sortedBy { it.name.lowercase() }
-            .forEach { add(KartenListenEintrag.Karte(it, tiefe)) }
-    }
-    fügeEbeneHinzu(emptyList(), 0)
 }
 
 @Composable
