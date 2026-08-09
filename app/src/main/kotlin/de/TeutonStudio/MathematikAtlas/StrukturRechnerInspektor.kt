@@ -152,6 +152,24 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                     }) { Text("Formel bearbeiten") }
                 }
             }
+        } else if (bekannterOperator == null && !operatorId.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.errorContainer,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text("Unbekannter gespeicherter Operator", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        "Die Operator-ID $operatorId ist nicht registriert. Öffne die Operatorauswahl, um einen gültigen Ersatz zu wählen.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
         } else {
             Surface(
                 modifier = Modifier.fillMaxWidth(),

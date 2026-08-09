@@ -47,6 +47,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
         val operatorId = knoten.parameter[de.TeutonStudio.MathematikKnoten.RECHNER_OPERATOR_PARAMETER]
             ?: knoten.parameter[de.TeutonStudio.MathematikKnoten.TENSOR_OPERATION_ID]
             ?: definition.id.wert
+        val bekannteDefinition = StandardTensorOperationen.registry.definition(operatorId)
         var operatorDialog by remember(knoten.id, definition.id) { mutableStateOf(false) }
         var ausstehenderKnoten by remember(knoten.id) { mutableStateOf<KnotenDaten?>(null) }
         val operatorEinträge = remember(knoten) {
@@ -110,26 +111,47 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                 onClick = { operatorDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(definition.titel, modifier = Modifier.weight(1f))
-                Text(definition.familie.name, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    bekannteDefinition?.titel ?: "Unbekannter gespeicherter Operator",
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    bekannteDefinition?.familie?.name ?: "?",
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
 
-        VertragsKarte(definition, knoten)
+        if (bekannteDefinition == null) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.errorContainer,
+            ) {
+                Text(
+                    "Die Operator-ID $operatorId ist nicht registriert. Wähle im Dialog einen gültigen Ersatz.",
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        } else {
+            VertragsKarte(bekannteDefinition, knoten)
+        }
 
-        if (definition.benoetigtAchsenEingabe()) {
+        if (bekannteDefinition?.benoetigtAchsenEingabe() == true) {
             AchsenKonfiguration(
                 knoten = knoten,
-                definition = definition,
+                definition = bekannteDefinition,
                 aktionen = aktionen,
                 knotenAendern = ::übernehmeAchsenÄnderung,
             )
         }
-        if (definition.parameter.isNotEmpty()) {
+        if (bekannteDefinition != null && bekannteDefinition.parameter.isNotEmpty()) {
             OutlinedTextField(
                 value = knoten.parameter[TENSOR_OPERATION_PARAMETER].orEmpty(),
                 onValueChange = { aktionen.parameter(TENSOR_OPERATION_PARAMETER, it) },
-                label = { Text(definition.parameter.joinToString { it.id }) },
+                label = { Text(bekannteDefinition.parameter.joinToString { it.id }) },
                 supportingText = {
                     Text("Operationsparameter, kommagetrennt. Achsen werden getrennt und sichtbar einsbasiert gespeichert.")
                 },
