@@ -53,5 +53,7 @@ object GesamterMathematikAuswerter {
         registriereVektorOrientierungsKnotenV2300()
         // Neuer erzeugbarer Typ mit gemeinsamer Monomfolge.
         registriereMultinomVektor()
+        // Historischer Komfortknoten und Zahlenrechner teilen dieselbe Multinomfolge.
+        registrierePolynomMultinomVertragV2300()
     }
 }

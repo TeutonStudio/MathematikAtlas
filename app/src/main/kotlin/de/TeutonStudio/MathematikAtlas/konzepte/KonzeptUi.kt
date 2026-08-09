@@ -69,8 +69,12 @@ internal fun KnotenKonzeptDialog(
 
     val context = LocalContext.current
     val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis, context) {
-        dynamischesKonzeptFürKnoten(zustand, knoten)
-            ?: enzyklopädieKonzeptFürKnoten(context, knoten)
+        if (knoten.art == "mathematik.multinomVektor") {
+            multinomVektorKonzept(knoten)
+        } else {
+            dynamischesKonzeptFürKnoten(zustand, knoten)
+                ?: enzyklopädieKonzeptFürKnoten(context, knoten)
+        }
     }
     KonzeptDialog(
         zustand = zustand,
