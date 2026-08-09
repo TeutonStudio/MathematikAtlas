@@ -11,7 +11,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.abbild|Abbild")),
+            varianten = setOf(VariantenId("mathematik.abbild|Bildmenge")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.adjunktion|Adjunktion|festeEingänge=2;logikSemantik=xor;operatorAnzeige=wert.a411be3e.definition",

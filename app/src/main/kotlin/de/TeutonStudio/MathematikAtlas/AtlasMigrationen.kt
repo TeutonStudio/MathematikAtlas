@@ -49,10 +49,11 @@ internal fun migriereOrdnungsrelation(karte: KartenDaten): KartenDaten = karte.c
     },
 )
 
-/** Erweitert den persistierten Methodenanschluss von Abbild-Knoten ohne Kanten zu verändern. */
+/** Aktualisiert bestehende Bildmengen-Knoten ohne benutzerdefinierte Namen oder Kanten zu verändern. */
 internal fun migriereAbbildZuAllgemeinerMethode(karte: KartenDaten): KartenDaten = karte.copy(
     knoten = karte.knoten.map { knoten ->
         if (knoten.art != "mathematik.abbild") knoten else knoten.copy(
+            name = if (knoten.name == "Abbild") "Bildmenge" else knoten.name,
             anschlüsse = knoten.anschlüsse.map { anschluss ->
                 if (anschluss.name == "methode" && anschluss.richtung == AnschlussRichtung.Eingang) anschluss.copy(art = MathematikAnschlussArten.Methode.id) else anschluss
             },

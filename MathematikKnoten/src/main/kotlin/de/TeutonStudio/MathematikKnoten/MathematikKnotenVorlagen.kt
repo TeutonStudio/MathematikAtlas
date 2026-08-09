@@ -240,7 +240,7 @@ object MathematikKnotenVorlagen {
         listOf(eingang("methode", MathematikAnschlussArten.MengenMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val Abbild = KnotenVorlage(
-        "mathematik.abbild", "Abbild", "Mengen", "Bildet eine Menge mit einer einwertigen Methode ab: f[M] = { f(x) : x ∈ M }.", GraphGröße(255f, 115f),
+        "mathematik.abbild", "Bildmenge", "Mengen", "Bestimmt die Bildmenge einer Menge unter einer einwertigen Methode: f(M) = { f(x) : x ∈ M }.", GraphGröße(255f, 115f),
         listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Methode.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val TermZuMethode = KnotenVorlage(

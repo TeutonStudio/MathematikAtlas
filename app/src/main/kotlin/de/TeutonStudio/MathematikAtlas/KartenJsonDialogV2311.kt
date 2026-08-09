@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -15,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -37,19 +40,49 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
     val ausgangstext = remember(zustand.editor.karte.id, zustand.editor.karte.version) {
         zustand.speicher.exportiere(zustand.editor.karte)
     }
+    val ausgangsZeilenIndex = remember(ausgangstext) { JsonZeilenIndex.erzeuge(ausgangstext) }
+    val ausgangsModus = remember(ausgangstext, ausgangsZeilenIndex.zeilenAnzahl) {
+        jsonAnalyseModus(ausgangstext.encodeToByteArray().size, ausgangsZeilenIndex.zeilenAnzahl)
+    }
     val analyseCache = remember(ausgangstext) { JsonEditorAnalyseCache(::prüfeJsonV2311) }
     var wert by remember(ausgangstext) { mutableStateOf(TextFieldValue(ausgangstext)) }
-    var prüfung by remember(ausgangstext) { mutableStateOf(analyseCache.sofort(ausgangstext)) }
+    var prüfung by remember(ausgangstext, ausgangsModus) {
+        mutableStateOf(
+            if (ausgangsModus == JsonAnalyseModus.Vollständig) analyseCache.sofort(ausgangstext)
+            else reduzierteJsonPrüfungV2311(ausgangstext, ausgangsZeilenIndex),
+        )
+    }
     var übernahmeFehler by remember(ausgangstext) { mutableStateOf<String?>(null) }
     var verwerfenBestätigen by remember { mutableStateOf(false) }
+    var manuellAngeforderterText by remember(ausgangstext) { mutableStateOf<String?>(null) }
+    var manuellePrüfRevision by remember(ausgangstext) { mutableIntStateOf(0) }
+    var prüfungLäuft by remember(ausgangstext) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
+    val zeilenIndex = remember(wert.text) { JsonZeilenIndex.erzeuge(wert.text) }
+    val textGrößeBytes = remember(wert.text) { wert.text.encodeToByteArray().size }
+    val analyseModus = remember(textGrößeBytes, zeilenIndex.zeilenAnzahl) {
+        jsonAnalyseModus(textGrößeBytes, zeilenIndex.zeilenAnzahl)
+    }
 
-    LaunchedEffect(wert.text) {
+    LaunchedEffect(wert.text, analyseModus, manuellePrüfRevision) {
+        val manuell = manuellAngeforderterText == wert.text
+        val verzögerung = if (manuell) 0L else analyseModus.automatischeVerzögerungMillis
+        if (verzögerung == null) {
+            prüfung = reduzierteJsonPrüfungV2311(wert.text, zeilenIndex)
+            prüfungLäuft = false
+            return@LaunchedEffect
+        }
         val auftrag = analyseCache.beauftrage(wert.text)
-        delay(150)
-        val ergebnis = withContext(Dispatchers.Default) { analyseCache.analysiere(auftrag) }
-        analyseCache.übernehme(ergebnis)?.let { aktuellePrüfung ->
-            prüfung = aktuellePrüfung
+        prüfungLäuft = true
+        try {
+            delay(verzögerung)
+            val ergebnis = withContext(Dispatchers.Default) { analyseCache.analysiere(auftrag) }
+            analyseCache.übernehme(ergebnis)?.let { aktuellePrüfung ->
+                prüfung = aktuellePrüfung
+            }
+        } finally {
+            prüfungLäuft = false
+            if (manuell) manuellAngeforderterText = null
         }
     }
 
@@ -59,8 +92,8 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
 
     fun formatieren() {
         val formatiert = runCatching { JSONObject(wert.text).toString(2) }.getOrNull() ?: return
-        val altePosition = offsetZuZeileSpalte(wert.text, wert.selection.start)
-        val neuerOffset = offsetFürZeileSpalte(formatiert, altePosition.zeile, altePosition.spalte)
+        val altePosition = zeilenIndex.position(wert.selection.start)
+        val neuerOffset = JsonZeilenIndex.erzeuge(formatiert).offset(altePosition.zeile, altePosition.spalte)
         wert = TextFieldValue(formatiert, TextRange(neuerOffset))
         übernahmeFehler = null
     }
@@ -88,29 +121,53 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
                     Column(Modifier.weight(1f)) {
                         Text("JSON der aktuellen Karte", style = MaterialTheme.typography.titleLarge)
                         Text(
-                            "${zustand.editor.karte.name} · Version ${zustand.editor.karte.version} · ${if (wert.text == ausgangstext) "Unverändert" else "Nicht übernommen"}",
+                            "${zustand.editor.karte.name} · Version ${zustand.editor.karte.version} · ${if (wert.text == ausgangstext) "Unverändert" else "Nicht übernommen"} · ${analyseModus.anzeigeName}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    TextButton(onClick = ::formatieren, enabled = prüfung.syntaxFehler == null) { Text("Formatieren") }
+                    if (analyseModus != JsonAnalyseModus.Vollständig) {
+                        TextButton(
+                            onClick = {
+                                manuellAngeforderterText = wert.text
+                                manuellePrüfRevision++
+                            },
+                            enabled = !prüfungLäuft,
+                        ) { Text(if (prüfungLäuft) "Prüft …" else "Vollständig prüfen") }
+                    }
+                    TextButton(
+                        onClick = ::formatieren,
+                        enabled = prüfung.vollständig &&
+                            prüfung.analysierterText == wert.text &&
+                            prüfung.syntaxFehler == null,
+                    ) { Text("Formatieren") }
                     TextButton(onClick = { clipboard.setText(AnnotatedString(wert.text)) }) { Text("Kopieren") }
                 }
                 HorizontalDivider()
 
-                JsonStrukturWerkzeugeV2311(
-                    wert = wert,
-                    karte = zustand.editor.karte,
-                    prüfung = prüfung,
-                    onWert = { wert = it; übernahmeFehler = null },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (prüfung.vollständig && prüfung.analysierterText == wert.text) {
+                    JsonStrukturWerkzeugeV2311(
+                        wert = wert,
+                        karte = zustand.editor.karte,
+                        prüfung = prüfung,
+                        onWert = { wert = it; übernahmeFehler = null },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    Text(
+                        "Strukturwerkzeuge stehen nach einer vollständigen Prüfung wieder bereit.",
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 HorizontalDivider()
 
                 JsonEditorV2311(
                     wert = wert,
                     onWert = { wert = it; übernahmeFehler = null },
                     prüfung = prüfung,
+                    zeilenIndex = zeilenIndex,
                     übernehmen = ::übernehmen,
                     formatieren = ::formatieren,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -120,6 +177,9 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
                 JsonStatusV2311(
                     wert = wert,
                     prüfung = prüfung,
+                    zeilenIndex = zeilenIndex,
+                    analyseModus = analyseModus,
+                    prüfungLäuft = prüfungLäuft,
                     übernahmeFehler = übernahmeFehler,
                 )
                 HorizontalDivider()
@@ -131,7 +191,8 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
                     Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = ::übernehmen,
-                        enabled = prüfung.syntaxFehler == null && prüfung.schemaFehler == null,
+                        enabled = prüfung.analysierterText != wert.text || !prüfung.vollständig ||
+                            (prüfung.syntaxFehler == null && prüfung.schemaFehler == null),
                     ) { Text("Übernehmen") }
                 }
             }
@@ -161,6 +222,7 @@ private fun JsonEditorV2311(
     wert: TextFieldValue,
     onWert: (TextFieldValue) -> Unit,
     prüfung: JsonPrüfungV2311,
+    zeilenIndex: JsonZeilenIndex,
     übernehmen: () -> Unit,
     formatieren: () -> Unit,
     modifier: Modifier = Modifier,
@@ -168,9 +230,21 @@ private fun JsonEditorV2311(
     val vertikal = rememberScrollState()
     val horizontal = rememberScrollState()
     val farben = jsonFarbenV2311()
-    val cursorZeile = offsetZuZeileSpalte(wert.text, wert.selection.start).zeile
-    val längsteZeile = wert.text.lineSequence().maxOfOrNull(String::length) ?: 0
-    val zeilen = prüfung.zeilenAnzahl
+    val cursorZeile = zeilenIndex.position(wert.selection.start).zeile
+    val längsteZeile = zeilenIndex.maximaleZeilenLänge
+    val zeilen = zeilenIndex.zeilenAnzahl
+    val density = LocalDensity.current
+    val zeilenHöhe = jsonZeilenHöheDp(density.fontScale).dp
+    val innenabstand = 8.dp
+    var viewportHöhePx by remember { mutableIntStateOf(0) }
+    val inhaltHöhe = innenabstand * 2f + zeilenHöhe * zeilen.toFloat()
+    val farbTransformation = remember(farben, prüfung.analysierterText, prüfung.tokens) {
+        JsonFarbTransformationV2311(
+            farben = farben,
+            analysierterText = prüfung.analysierterText,
+            tokens = prüfung.tokens,
+        )
+    }
 
     Surface(
         modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -178,24 +252,22 @@ private fun JsonEditorV2311(
         color = farben.hintergrund,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Row(Modifier.fillMaxSize().verticalScroll(vertikal)) {
-            Column(
-                Modifier.width(((zeilen.toString().length * 9) + 30).dp)
-                    .background(farben.zeilenRand)
-                    .padding(vertical = 8.dp),
-            ) {
-                repeat(zeilen) { index ->
-                    val zeile = index + 1
-                    Text(
-                        zeile.toString(),
-                        modifier = Modifier.fillMaxWidth().height(20.dp).padding(end = 8.dp),
-                        color = if (zeile == cursorZeile) MaterialTheme.colorScheme.primary else farben.zeilennummer,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
-                    )
-                }
-            }
+        Row(
+            Modifier
+                .fillMaxSize()
+                .onSizeChanged { viewportHöhePx = it.height }
+                .verticalScroll(vertikal),
+        ) {
+            JsonZeilenRandV2311(
+                scrollState = vertikal,
+                viewportHöhePx = viewportHöhePx,
+                zeilenAnzahl = zeilen,
+                cursorZeile = cursorZeile,
+                zeilenHöhe = zeilenHöhe,
+                innenabstand = innenabstand,
+                inhaltHöhe = inhaltHöhe,
+                farben = farben,
+            )
             Box(Modifier.weight(1f).horizontalScroll(horizontal)) {
                 BasicTextField(
                     value = wert,
@@ -215,14 +287,55 @@ private fun JsonEditorV2311(
                         color = farben.standard,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 13.sp,
-                        lineHeight = 20.sp,
+                        lineHeight = JSON_ZEILENHOEHE_SP.sp,
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    visualTransformation = JsonFarbTransformationV2311(
-                        farben = farben,
-                        analysierterText = prüfung.analysierterText,
-                        tokens = prüfung.tokens,
-                    ),
+                    visualTransformation = farbTransformation,
+                )
+            }
+        }
+    }
+}
+
+/** Liest den Scrollzustand nur in dieser kleinen Kompositionsgrenze. */
+@Composable
+private fun JsonZeilenRandV2311(
+    scrollState: ScrollState,
+    viewportHöhePx: Int,
+    zeilenAnzahl: Int,
+    cursorZeile: Int,
+    zeilenHöhe: androidx.compose.ui.unit.Dp,
+    innenabstand: androidx.compose.ui.unit.Dp,
+    inhaltHöhe: androidx.compose.ui.unit.Dp,
+    farben: JsonFarbenV2311,
+) {
+    val density = LocalDensity.current
+    val sichtbarerBereich = sichtbarerJsonZeilenbereich(
+        scrollYpx = scrollState.value,
+        viewportHöhePx = viewportHöhePx,
+        zeilenHöhePx = with(density) { zeilenHöhe.toPx() },
+        zeilenAnzahl = zeilenAnzahl,
+        innenabstandPx = with(density) { innenabstand.toPx() },
+    )
+    Box(
+        Modifier.width(((zeilenAnzahl.toString().length * 9) + 30).dp)
+            .height(inhaltHöhe)
+            .background(farben.zeilenRand)
+            .padding(vertical = innenabstand),
+    ) {
+        for (zeile in sichtbarerBereich.ersteZeile..sichtbarerBereich.letzteZeile) {
+            key(zeile) {
+                Text(
+                    zeile.toString(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(zeilenHöhe)
+                        .absoluteOffset(y = zeilenHöhe * (zeile - 1).toFloat())
+                        .padding(end = 8.dp),
+                    color = if (zeile == cursorZeile) MaterialTheme.colorScheme.primary else farben.zeilennummer,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
                 )
             }
         }
@@ -310,12 +423,18 @@ private fun JsonStrukturWerkzeugeV2311(
 private fun JsonStatusV2311(
     wert: TextFieldValue,
     prüfung: JsonPrüfungV2311,
+    zeilenIndex: JsonZeilenIndex,
+    analyseModus: JsonAnalyseModus,
+    prüfungLäuft: Boolean,
     übernahmeFehler: String?,
 ) {
-    val position = offsetZuZeileSpalte(wert.text, wert.selection.start)
+    val position = zeilenIndex.position(wert.selection.start)
     val fehler = übernahmeFehler ?: prüfung.syntaxFehler ?: prüfung.schemaFehler
     val status = when {
         übernahmeFehler != null -> "Übernahme: $übernahmeFehler"
+        prüfungLäuft -> "${analyseModus.anzeigeName}: Prüfung läuft …"
+        !prüfung.vollständig || prüfung.analysierterText != wert.text ->
+            "${analyseModus.anzeigeName}: vollständige Prüfung ausstehend"
         prüfung.syntaxFehler != null -> "Syntax: ${prüfung.syntaxFehler}"
         prüfung.schemaFehler != null -> "Kartenschema: ${prüfung.schemaFehler}"
         else -> "Syntax und Kartenschema gültig"
@@ -326,7 +445,7 @@ private fun JsonStatusV2311(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("Zeile ${position.zeile}, Spalte ${position.spalte}", style = MaterialTheme.typography.labelSmall)
-        Text("${prüfung.zeilenAnzahl} Zeilen", style = MaterialTheme.typography.labelSmall)
+        Text("${zeilenIndex.zeilenAnzahl} Zeilen", style = MaterialTheme.typography.labelSmall)
         Text(
             status,
             modifier = Modifier.weight(1f),
@@ -346,6 +465,7 @@ internal data class JsonPrüfungV2311(
     val listen: List<JsonListeV2311>,
     val idBereiche: List<JsonIdBereichV2311>,
     val tokens: List<JsonTokenV2311>,
+    val vollständig: Boolean = true,
 )
 
 internal data class JsonListeV2311(
@@ -546,16 +666,6 @@ private fun jsonListenVorlageV2311(schlüssel: String?, karte: KartenDaten): Str
       "knotenIds": []
     }"""
     else -> "null"
-}
-
-private fun offsetFürZeileSpalte(text: String, zeile: Int, spalte: Int): Int {
-    var aktuelleZeile = 1
-    var index = 0
-    while (index < text.length && aktuelleZeile < zeile) {
-        if (text[index++] == '\n') aktuelleZeile++
-    }
-    val zeilenEnde = text.indexOf('\n', index).let { if (it < 0) text.length else it }
-    return (index + spalte - 1).coerceIn(index, zeilenEnde)
 }
 
 private data class JsonFarbenV2311(

@@ -50,12 +50,13 @@ class KartenSchnittstellenTest {
     }
 
     @Test
-    fun `Migration erweitert den Abbild Methodenanschluss und bewahrt seine ID`() {
-        val abbild = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero)
+    fun `Migration aktualisiert alten Abbild Standardnamen und bewahrt benutzerdefinierte Namen`() {
+        val abbild = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero).copy(name = "Abbild")
         val alteMethode = abbild.anschlüsse.first { it.name == "methode" }
         val alt = abbild.copy(anschlüsse = abbild.anschlüsse.map { anschluss ->
             if (anschluss.id == alteMethode.id) anschluss.copy(art = MathematikAnschlussArten.ZahlMethode.id) else anschluss
         })
+        val benutzerdefiniert = abbild.copy(id = KnotenId("benutzerdefiniert"), name = "Mein f(M)")
         val quelle = KnotenDaten(
             art = "test.methode", name = "Quelle",
             anschlüsse = listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.ZahlMethode.id)),
@@ -65,9 +66,13 @@ class KartenSchnittstellenTest {
             zu = AnschlussVerweis(alt.id, alteMethode.id),
         )
 
-        val migriert = migriereAbbildZuAllgemeinerMethode(KartenDaten(name = "Alt", knoten = listOf(quelle, alt), verbindungen = listOf(verbindung)))
+        val migriert = migriereAbbildZuAllgemeinerMethode(
+            KartenDaten(name = "Alt", knoten = listOf(quelle, alt, benutzerdefiniert), verbindungen = listOf(verbindung)),
+        )
         val neueMethode = migriert.knoten.first { it.id == alt.id }.anschlüsse.first { it.name == "methode" }
 
+        assertEquals("Bildmenge", migriert.knoten.first { it.id == alt.id }.name)
+        assertEquals("Mein f(M)", migriert.knoten.first { it.id == benutzerdefiniert.id }.name)
         assertEquals(alteMethode.id, neueMethode.id)
         assertEquals(MathematikAnschlussArten.Methode.id, neueMethode.art)
         assertEquals(listOf(verbindung), migriert.verbindungen)

@@ -37,7 +37,7 @@
   ],
   "visuelleGruppen": [],
   "archiviert": false,
-  "name": "Definition von Abbild",
+  "name": "Definition von Bildmenge",
   "knoten": [
     {
       "art": "konzept.eingang",
@@ -141,10 +141,10 @@
       ],
       "parameter": {
         "knotenArt": "mathematik.abbild",
-        "regel": "Bildet eine Menge mit einer einwertigen Methode ab: f[M] = { f(x) : x ∈ M }.",
+        "regel": "Bestimmt die Bildmenge mit einer einwertigen Methode: f(M) = { f(x) : x ∈ M }.",
         "kategorie": "Mengen"
       },
-      "name": "Abbild",
+      "name": "Bildmenge",
       "id": "definition-mathematik-abbild-abbild-0-regel",
       "position": {
         "x": 370,
