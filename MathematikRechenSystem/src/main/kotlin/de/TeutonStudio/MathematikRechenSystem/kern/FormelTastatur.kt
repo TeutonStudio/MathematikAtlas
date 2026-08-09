@@ -149,7 +149,6 @@ object FormelTastatur {
         UniversellerZahlenOperator.DIFFERENTIAL -> "d/dx"
         UniversellerZahlenOperator.MINIMUM -> "min"
         UniversellerZahlenOperator.MAXIMUM -> "max"
-        UniversellerZahlenOperator.NORM -> "‖x‖"
         UniversellerZahlenOperator.ABRUNDUNG -> "⌊x⌋"
         UniversellerZahlenOperator.AUFRUNDUNG -> "⌈x⌉"
         UniversellerZahlenOperator.RUNDUNG -> "⌊x⌉"
