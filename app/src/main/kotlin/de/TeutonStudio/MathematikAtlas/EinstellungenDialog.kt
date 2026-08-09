@@ -74,10 +74,8 @@ internal fun EinstellungenDialogV2291(
                                     ausgeklappteOrdner = ausgeklappteOrdner,
                                     seiteWählen = { ausgewählteSeite = it },
                                     ordnerUmschalten = { pfad ->
-                                        ausgeklappteOrdner = if (pfad in ausgeklappteOrdner) {
-                                            ausgeklappteOrdner - pfad
-                                        } else {
-                                            ausgeklappteOrdner + pfad
+                                        ausgeklappteOrdner = ausgeklappteOrdner.toMutableSet().apply {
+                                            if (!remove(pfad)) add(pfad)
                                         }
                                     },
                                     modifier = Modifier.widthIn(min = 230.dp, max = 320.dp).fillMaxHeight(),
