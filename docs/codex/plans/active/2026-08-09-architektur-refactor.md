@@ -1,143 +1,149 @@
 # Architekturrefactor des Mathematik Atlas
 
-## 1. Titel und Status
+## 1. Status und Basis
 
-**Status:** implementiert und CI-verifiziert; Release-PR #392 gegen `master` ist offen.
+**Status:** Implementierung abgeschlossen; finale Release-CI nach dem Abschlussmerge steht noch aus.
 
 **Basis:** `c79400e1f8ff98ff654ee931848ddcbd9427f732` auf `master`, nach veröffentlichtem `v2.32.0`.
 
-**Releasebranch:** `release/v2.32.1-architektur-refactor`.
+**Release:** `v2.32.1` auf `release/v2.32.1-architektur-refactor`.
 
-**Versionsklassifikation:** `v2.32.1` (`x`-Version), da keine neuen separat erzeugbaren Knotentypen eingeführt werden.
+**Klassifikation:** `x`-Version. Es entstehen keine neuen separat erzeugbaren Knotentypen.
 
-## 2. Ziel und Nutzerwirkung
+## 2. Ziel
 
-Die schnell gewachsene Architektur wird so geordnet, dass mathematische Knoten, Registrierungen, Plattformkataloge und spätere Modultrennungen nicht mehr über app-seitige Versionsadapter und zufällige Dateipfade gekoppelt sind. Android und Desktop verwenden denselben kanonischen Knotenkatalog. Die Reihenfolge der Auswerter-Erweiterungen ist als explizite, benannte Registrierungsphasen modelliert statt in einer fachfremden Datei unter `geometrie/` zu wachsen.
+Die gewachsene Architektur wird so geordnet, dass mathematische Kataloge, Auswerterregistrierung, Kartenmigration und Laufzeitkomposition nur noch eine fachliche Quelle besitzen. Android und Desktop dürfen diese Kernverträge nicht separat nachbauen.
 
-Langfristig sollen Graphmodell, Graph-UI, Mathematikknoten-Semantik, Mathematikknoten-UI und Anwendungsshell weiter getrennt werden. Die aktuelle Toolchain verhindert jedoch eine sofortige KMP-Migration der Android-/Desktop-Shared-UI: Kotlin 2.3.21 ist mit dem Kotlin-Multiplatform-Plugin nicht für AGP 9.3.x freigegeben. Ein AGP-Downgrade gehört ausdrücklich nicht in diesen Refactor.
+Die physische Entfernung der drei Desktop-Shadowmodule ist bewusst nicht Teil dieses Releases, weil dafür mit der aktuellen Kombination Kotlin 2.3.21 / AGP 9.3.1 kein unterstützter KMP-Android-Library-Pfad vorliegt. Das Folgevorhaben ist vollständig in GitHub-Issue #395 beschrieben.
 
 ## 3. Nicht-Ziele
 
 - keine Änderung persistierter Knoten-, Anschluss-, Karten- oder Verbindung-IDs,
 - keine neue mathematische Semantik,
 - keine neuen Knotentypen,
-- kein AGP-/Kotlin-Downgrade nur zur Ermöglichung von Kotlin Multiplatform,
-- keine Änderung bestehender Kartenformate,
-- keine Entfernung historischer Lade- oder Migrationspfade.
+- keine Änderung der JSON-`formatVersion`,
+- kein AGP-Downgrade nur zur Erzwingung von KMP,
+- keine Vermischung mit neuen mathematischen Features.
 
-## 4. Untersuchter Istzustand
+## 4. Phase A: Katalog, Registrierung und Ordnerstruktur
 
-- `MathematikKnotenVorlagenV2300.kt` bereinigte den sichtbaren Android-Katalog app-seitig und ersetzte historische Vektorknoten durch kanonische Varianten.
-- Desktop verwendete dagegen direkt `de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen()` und konnte dadurch vom Android-Katalog abweichen.
-- `GesamterMathematikAuswerter.kt` lag im Verzeichnis `geometrie/`, obwohl er globale Registrierungen aus Zahlen, Mengen, Aussagen, Analysis, linearer Algebra, Geometrie und Methoden orchestrierte.
-- Die Registrierungsreihenfolge enthält bewusst ersetzende Wrapper und ist daher semantisch relevant, war aber nur durch Kommentare im ausführenden Block dokumentiert.
-- Die Desktop-Brückenmodule kompilieren Quellordner anderer Module erneut. Das bleibt technische Schuld; eine saubere gemeinsame Compose-UI setzt mit der aktuellen AGP-9.3.x-Toolchain eine spätere Toolchainentscheidung voraus.
+Umgesetzt:
 
-## 5. Fachliche und mathematische Semantik
+- `KanonischerMathematikKnotenKatalog` als gemeinsame sichtbare mathematische Katalogquelle,
+- Entfernung des app-seitigen `MathematikKnotenVorlagenV2300.kt`,
+- Android und Desktop auf denselben Katalog umgestellt,
+- `MathematikAuswerterPaket` und `StandardMathematikAuswerterPakete` für benannte Basis- und Verfeinerungsphasen,
+- `GesamterMathematikAuswerter` aus dem Geometrieordner nach `katalog/` verschoben,
+- versionsfreie Fassaden vor historischen `V2300`-Implementierungen,
+- Null-Distanz sowie Vektor-/Multinomdateien fachlich unter `rechnen/` beziehungsweise `vektor/` einsortiert,
+- Katalog- und Registrierungsregressionstests,
+- Architekturguards gegen erneute app-seitige Kataloglogik.
 
-Unverändert. Der Refactor verändert ausschließlich Registrierungs- und Katalogorganisation. Für dieselbe gespeicherte Karte bleiben dieselben Knotentypen, Anschlussverträge und Auswerter erreichbar.
+ADR: `docs/codex/decisions/2026-08-09-kanonischer-knotenkatalog-und-registrierungsphasen.md`.
 
-## 6. Daten-, Node-, Handle- und Edge-Vertrag
+## 5. Phase B: gemeinsame Karten- und Migrationspipeline
 
-Unverändert. Alle stabilen IDs und Parameter bleiben bestehen. Historische Typen bleiben ladbar, können aber weiterhin aus dem sichtbaren Erstellen-Katalog ausgeblendet werden.
+Umgesetzt:
 
-## 7. Architekturentscheidungen
+- Transpositionsmigration aus `app` nach `MathematikKnoten/migration`,
+- Methodenanschlussmigration aus `app` nach `MathematikKnoten/migration`,
+- `MathematikKartenCodec` als gemeinsame mathematische Serialisierungsfassade,
+- `MathematikKartenMigrationen` mit expliziter Vorspeicher-, Dekodier- und Lade-/Importphase,
+- strukturierte-Divisions-Normalisierung in die gemeinsame Vorspeicherphase übernommen,
+- Android-`KartenJson` zu einer dünnen Fassade reduziert,
+- Android- und Desktop-Dateispeicher auf dieselbe mathematische Schreib-/Lade-/Importpipeline umgestellt,
+- Migrationstests in das Mathematikknoten-Modul verschoben,
+- Roundtrip- und Phasentests ergänzt,
+- Architekturguards gegen plattformlokale mathematische Migrationen.
 
-1. Der **kanonische sichtbare Mathematikknoten-Katalog** gehört in `MathematikKnoten`, nicht in `app`.
-2. Android und Desktop beziehen denselben Katalog.
-3. Versionsspezifische Namen wie `V2300` werden hinter kanonischen Fassaden isoliert; neue Produktpfade verwenden keine Versionssuffixe.
-4. Auswerter-Erweiterungen werden in benannten, geordneten Phasen registriert.
-5. Die KMP-/Desktop-Shadowmodul-Ablösung wird nicht durch ein AGP-Downgrade erzwungen. Sie bleibt ein nachfolgender Toolchain-Meilenstein.
+Der fachneutrale `KartenDatenJson`-Codec bleibt unverändert im Graphmodul und kennt weiterhin keine Mathematikschicht.
 
-Die dauerhafte Entscheidung ist unter `docs/codex/decisions/2026-08-09-kanonischer-knotenkatalog-und-registrierungsphasen.md` festgehalten.
+ADR: `docs/codex/decisions/2026-08-09-gemeinsame-kartenmigrationspipeline.md`.
 
-## 8. Betroffene Dateien und Symbole
+ExecPlan: `docs/codex/plans/active/2026-08-09-persistenz-pipeline.md`.
 
-- `MathematikKnoten/.../katalog/KanonischerMathematikKnotenKatalog.kt`
-- `MathematikKnoten/.../katalog/MathematikAuswerterPakete.kt`
-- `MathematikKnoten/.../katalog/GesamterMathematikAuswerter.kt`
-- kanonische Fassaden für Vektor-/Multinomimplementierungen
-- `app/.../MathematikKnotenKatalog.kt`
-- `desktopApp/.../DesktopAtlasZustand.kt`
-- `scripts/pruefe_architektur.py`
-- zugehörige JVM-Tests
-- Architektur- und Release-Dokumentation
+## 6. Phase C: gemeinsame Mathematik-Kartenlaufzeit
 
-## 9. Meilensteine
+Umgesetzt:
 
-- [x] Istzustand und Toolchain-Grenze geprüft.
-- [x] Kanonischen plattformübergreifenden Knotenkatalog in `MathematikKnoten` eingeführt.
-- [x] Registrierungsphasen aus `GesamterMathematikAuswerter` extrahiert.
-- [x] Versionsspezifische Produktadapter hinter kanonischen Fassaden isoliert.
-- [x] Android und Desktop auf dieselbe Katalogquelle umgestellt.
-- [x] Architekturtests und Regressionstests ergänzt.
-- [x] Release-Metadaten und Dokumentation auf `v2.32.1` aktualisiert.
-- [x] GitHub-Actions-Validierung ausgewertet: alle vier Releasepfade erfolgreich.
+- `MathematikKartenLaufzeit` unter `MathematikKnoten/laufzeit`,
+- zentrale Zusammensetzung von `AnschlussArtRegister`, `GraphPrüfung`, `KartenAuswerter`, `GesamterMathematikAuswerter`, Cache und kanonischem Katalog,
+- Android `AtlasZustand` auf die gemeinsame Laufzeit umgestellt,
+- Desktop `DesktopAtlasZustand` auf dieselbe Laufzeit umgestellt,
+- Android-spezifische Nachsynchronisierung dynamischer Restriktions- und Methodenanschlüsse unverändert erhalten,
+- Laufzeit-/Cachetests ergänzt,
+- Architekturprüfung verbietet erneute direkte Plattformverdrahtung der gemeinsamen Komponenten.
 
-## 10. Konkrete Umsetzungsschritte
+ADR: `docs/codex/decisions/2026-08-09-gemeinsame-mathematik-kartenlaufzeit.md`.
 
-1. `KanonischerMathematikKnotenKatalog` übernimmt die bisher app-seitige Filter-/Ersetzungslogik.
-2. App-Funktion `alleMathematikKnotenVorlagen()` ist nur noch eine dünne Kompatibilitätsfassade ohne fachliche Kataloglogik.
-3. `DesktopAtlasZustand` verwendet denselben kanonischen Katalog.
-4. `StandardMathematikAuswerterPakete` gruppiert die Registrierung in Basisdomänen und absichtlich nachgelagerte Verfeinerungen.
-5. `GesamterMathematikAuswerter` installiert nur noch diese geordnete Liste.
-6. `pruefe_architektur.py` verbietet die Rückkehr des app-seitigen Versionskatalogs und prüft die kanonischen Katalog- und Orchestrierungspfade.
-7. Regressionstests sichern Katalogkonsolidierung, Paketnamen, Paketordnung und zentrale Auswerterregistrierungen.
-8. Globale Null-Distanz- und Vektor-/Multinomdateien wurden in fachlich passende Verzeichnisse verschoben, ohne ihre Packages oder Persistenzverträge zu ändern.
+ExecPlan: `docs/codex/plans/active/2026-08-09-gemeinsame-kartenlaufzeit.md`.
 
-## 11. Tests und Validierung
+## 7. Verbleibende Toolchain-Schuld
 
-Die lokale Connector-Umgebung besitzt keinen Checkout mit nutzbarem externem Netzwerk; lokale Gradle-Ausführung wurde daher nicht als erfolgt ausgegeben. Die vollständige Verifikation erfolgte über GitHub Actions auf Release-PR #392, Head `13e017c4e447930dd3ecdce7dc027f4a23c9b78e`:
+Noch physisch vorhanden:
 
-- **Release-Guard**, Run `31330536989`: erfolgreich.
-- **Mathematikkern prüfen**, Run `31330536952`: erfolgreich. Repositorystruktur, Standardkarten, Releaseplan und Kernprüfung bestanden; JVM-Tests und Android-Debug-Build innerhalb dieses Workflows bestanden.
-- **Linux-Desktop**, Run `31330536981`: erfolgreich. Gemeinsame/Desktop-Tests sowie RPM-Paketierung und Paketprüfung bestanden.
-- **Android-Build**, Run `31330536978`: erfolgreich. Architekturprüfung sowie Bauen und Testen bestanden.
+- `KnotenKartenVerwalterDesktop`,
+- `MathematikKartenAdapterDesktop`,
+- `MathematikKnotenDesktop`.
 
-Damit sind die vorgesehenen Architektur-, Kern-, JVM-, Android- und Desktoppfade für den implementierten Stand grün.
+Diese Module kompilieren gemeinsame Produktionsquellen derzeit über relative `srcDir`-Pfade erneut. Die Schuld ist nun begrenzt:
 
-## 12. Persistenz und Migration
+- GitHub-Issue #395 enthält Zielarchitektur, Toolchain-Gate und Abnahmekriterien,
+- `scripts/pruefe_desktop_shadowmodule.py` erlaubt exakt die vier aktuell notwendigen relativen `srcDir`-Einträge,
+- `scripts/pruefe_repository.py` führt diese Prüfung in jeder Repositoryprüfung aus,
+- die Whitelist darf nur im Zuge von #395 kleiner werden; neue Source-Sharing-Pfade schlagen in CI fehl.
 
-Keine Formatänderung. Historische Knotentypen bleiben im lade-kompatiblen Basiskatalog beziehungsweise in den bestehenden Migrationspfaden. Nur der sichtbare Erstellen-Katalog wurde zentralisiert. Stabile Knoten-, Anschluss-, Karten- und Verbindung-IDs wurden nicht geändert.
+Damit bleibt die nicht sofort lösbare Toolchain-Schuld explizit, begrenzt und maschinell überprüft statt sich weiter auszubreiten.
 
-## 13. Risiken und Rückfallstrategie
+## 8. Persistenz- und Kompatibilitätsvertrag
 
-Das zentrale Risiko war eine unabsichtliche Abweichung des sichtbaren Katalogs zwischen bisheriger Android-Logik und neuer zentraler Logik. Die neue Architekturprüfung und die Katalogregressionstests schützen diesen Vertrag. Bei einer später erkannten Regression kann die zentrale Katalogfassade ohne Datenmigration angepasst werden.
+Unverändert bleiben:
 
-Die Desktop-Shadowmodule bleiben bewusst bestehen. Ihre spätere physische Ablösung ist ein separater Toolchain-Refactor und kein verdeckter Rest dieses Releases.
+- Kartenformat und `formatVersion`,
+- `KartenId`, `KnotenId`, `AnschlussId`, `VerbindungsId`,
+- persistierte Knotenart-Schlüssel,
+- Anschlussnamen und historische Migrationsfähigkeit,
+- vorhandene Kartenreferenzen und Versionierungssemantik.
 
-## 14. Fortschritt
+Migrationen wurden verschoben und zentralisiert, nicht fachlich neu erfunden.
 
-Die Implementierung ist abgeschlossen und über die Release-CI verifiziert. Ausstehend ist ausschließlich die gesonderte Veröffentlichung des bereits geprüften Releasebranches nach `master`.
+## 9. Tests
 
-## 15. Entscheidungsprotokoll
+Neu beziehungsweise verschoben:
 
-### 2026-08-09: Kein KMP-Umbau unter AGP 9.3.x erzwingen
+- `KanonischerMathematikKnotenKatalogTest`,
+- `MathematikAuswerterPaketeTest`,
+- `MethodenAnschlussMigrationTest`,
+- `TranspositionsMigrationTest`,
+- `MathematikKartenCodecTest`,
+- `MathematikKartenLaufzeitTest`,
+- erweiterte `pruefe_architektur.py`,
+- `pruefe_desktop_shadowmodule.py`.
 
-**Entscheidung:** Die Desktop-Shadowmodule werden in diesem Release nicht durch einen riskanten KMP-Umbau ersetzt.
+Releaseabnahme benötigt auf dem finalen Head:
 
-**Alternativen:** AGP auf eine von Kotlin 2.3.21 für KMP unterstützte Version absenken; Kotlin/AGP gemeinsam auf einen kompatiblen zukünftigen Stand migrieren.
+1. Release-Guard,
+2. Mathematikkern/JVM-Tests,
+3. Android-Build,
+4. Linux-Desktop inklusive Tests und Paketierung.
 
-**Begründung:** Ein Buildtool-Downgrade ist kein neutraler Refactor und würde den Umfang mit Toolchainrisiken vermischen.
+## 10. Frühere Verifikation
 
-**Konsequenz:** Dieser Release beseitigt die fachlichen Plattformabweichungen und zentralen Registrierungsprobleme; die physische Shared-UI-Modulablösung bleibt separat.
+Der erste Refactorschnitt war auf Head `9dbe73c35504f251a94ad78e3127102fc3c87c2a` bereits vollständig grün:
 
-### 2026-08-09: Sichtbaren Katalog in die Mathematikschicht verlagern
+- Release-Guard `31330804331`,
+- Mathematikkern `31330804315`,
+- Linux-Desktop `31330804338`,
+- Android-Build `31330804309`.
 
-**Entscheidung:** Die bisherige app-seitige Vektor-/Multinomkonsolidierung ist in `KanonischerMathematikKnotenKatalog` überführt und wird von Android wie Desktop genutzt.
+Nach Übernahme der Persistenz- und Laufzeitphasen wird diese Abnahme auf dem finalen Release-Head vollständig wiederholt. Frühere grüne Läufe werden nicht als Ersatz für die Abschlussprüfung ausgegeben.
 
-**Begründung:** Die Plattform darf nicht bestimmen, welche mathematischen Knoten fachlich kanonisch sind.
+## 11. Abweichung vom ursprünglichen Zielentwurf
 
-**Konsequenz:** Neue mathematische Katalogkonsolidierungen werden in `MathematikKnoten` vorgenommen; Plattformmodule ergänzen nur Plattform- oder Kartenwerkzeuge.
+Der ursprüngliche Zielentwurf sah auch die sofortige physische Trennung von Graphkern/Compose-Editor sowie die vollständige Beseitigung der Desktop-Shadowmodule vor. Diese letzte physische Modulgrenze ist an die Toolchain gekoppelt und wird nicht mit einer nicht unterstützten KMP-Kombination oder einem verdeckten AGP-Downgrade erzwungen.
 
-## 16. Abweichungen vom ursprünglichen Plan
+Stattdessen wurden in diesem Release alle unabhängig davon möglichen Architekturgrenzen umgesetzt: gemeinsame Katalogquelle, explizite Registrierungsphasen, gemeinsame Kartenmigration, gemeinsame Laufzeitkomposition, fachliche Dateisortierung und automatische Grenzen gegen neue Plattformduplikation. #395 ist der eindeutig abgegrenzte Rest für die physische Shared-UI-/Modulmigration.
 
-Der ursprüngliche Zielentwurf sah die sofortige Ablösung der Desktop-Quellordnerbrücken durch Kotlin Multiplatform vor. Nach Prüfung der aktuellen Toolchain wurde dieser Schritt bewusst getrennt, weil die verwendete Kombination Kotlin 2.3.21 / AGP 9.3.1 außerhalb der freigegebenen KMP-Kompatibilität liegt.
+## 12. Ergebnis
 
-Stattdessen wurde der unmittelbar sichere Teil vollständig umgesetzt: gemeinsame fachliche Katalogquelle, explizite Registrierungsphasen, versionsfreie Produktfassaden, fachliche Dateisortierung und automatisierte Architekturgrenzen.
-
-## 17. Ergebnis und Verifikation
-
-Der Releasebranch enthält einen verifizierten Architekturrefactor ohne neue Knotentypen oder Persistenzänderungen. Android und Desktop verwenden denselben sichtbaren Mathematikknoten-Katalog; die globale Auswerterregistrierung ist aus dem Geometriepfad gelöst und ihre Reihenfolge explizit modelliert. Alle vier GitHub-Actions-Releasepfade waren für den implementierten Code-Stand erfolgreich.
-
-Release-PR #392 ist bereit zur gesonderten Veröffentlichung nach `master`.
+Der fachliche Architekturrefactor ist implementiert. Ausstehend ist nur noch die finale CI-Abnahme des Abschlussstands und anschließend die getrennte Veröffentlichung über Release-PR #392 nach `master`.
