@@ -9,6 +9,7 @@ object GesamterMathematikAuswerter {
         registriereZahlenRechnerErweiterungen()
         registriereMatrixdiagonale()
         registriereSpurUndTupelsumme()
+        registriereTupelOperationKnoten()
         registriereTransponieren()
         registriereGeometrieGrundobjekte()
         registriereGeometrieTeilobjekte()
