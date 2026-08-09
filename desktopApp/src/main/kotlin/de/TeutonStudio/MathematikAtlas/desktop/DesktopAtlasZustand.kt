@@ -7,7 +7,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
-import de.TeutonStudio.MathematikKnoten.geometrie.GesamterMathematikAuswerter
+import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
 
 @Stable
 class DesktopAtlasZustand(

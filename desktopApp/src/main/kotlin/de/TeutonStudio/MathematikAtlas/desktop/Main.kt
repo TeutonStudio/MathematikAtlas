@@ -10,9 +10,9 @@ import androidx.compose.ui.focus.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
@@ -76,8 +76,9 @@ private fun desktopAnwendung() = application {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun WindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFenster: java.awt.Window) {
+private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFenster: java.awt.Window) {
     var graphFokussiert by remember { mutableStateOf(true) }
     var letzterZeiger by remember { mutableStateOf(GraphPunkt(240f, 180f)) }
     var editorGröße by remember { mutableStateOf(IntSize.Zero) }
@@ -190,7 +191,13 @@ private fun WindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFenster: 
                         .focusRequester(graphFokus)
                         .onFocusChanged { graphFokussiert = it.hasFocus }
                         .focusable()
-                        .onPointerEvent(PointerEventType.Press) { graphFokus.requestFocus() },
+                        .pointerInput(Unit) {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    if (awaitPointerEvent().type == PointerEventType.Press) graphFokus.requestFocus()
+                                }
+                            }
+                        },
                 ) {
                     KnotenKartenEditor(
                         zustand = atlas.editor,
@@ -258,7 +265,7 @@ private fun Katalog(
             modifier = Modifier.fillMaxWidth().focusRequester(fokusRequester),
         )
         LazyColumn(Modifier.fillMaxWidth().weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(sichtbar, key = { "${it.art.wert}:${it.name}:${it.standardParameter}" }) { vorlage ->
+            items(sichtbar, key = { "${it.art}:${it.name}:${it.standardParameter}" }) { vorlage ->
                 OutlinedButton(
                     onClick = { atlas.fügeEin(vorlage, position) },
                     modifier = Modifier.fillMaxWidth(),
@@ -274,6 +281,7 @@ private fun Katalog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DesktopWerkzeugleiste(
     ausführen: (AtlasBefehl) -> Unit,
@@ -325,7 +333,7 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             Button(onClick = { atlas.benenneAuswahlUm(name) }, enabled = name.isNotBlank() && name != knoten.name) { Text("Übernehmen") }
             HorizontalDivider()
             Text("Art", style = MaterialTheme.typography.labelLarge)
-            Text(knoten.art.wert)
+            Text(knoten.art)
             Text("Position: ${knoten.position.x.toInt()}, ${knoten.position.y.toInt()}")
             Text("Größe: ${knoten.größe.breite.toInt()} × ${knoten.größe.höhe.toInt()}")
             Text("Anschlüsse: ${knoten.anschlüsse.size}")
