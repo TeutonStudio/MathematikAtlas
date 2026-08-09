@@ -39,6 +39,8 @@ object GesamterMathematikAuswerter {
         registriereStrukturRechnerKompatibilitaet()
         // Umschließt den finalen Analysis-Auswerter und ergänzt exakte Monom-Nullstellen.
         registriereErweiterteAnalysisNullstellen()
+        // Normalisiert anschließend triviale definierte Stellenmengen auf Grundmenge oder leere Menge.
+        registriereAnalysisMengenNormalisierung()
         // Finaler Tensorrechner-Wrapper: Registryrollen, sichtbare Achsen und symbolische Ausgänge.
         registriereTensorOperationRegistry()
         // Finaler Zahlenrechner-Wrapper: übernimmt ausschließlich den Divisionszustand.
