@@ -15,7 +15,7 @@ Android und Desktop sollen dieselben mathematischen Regeln zum Schreiben, Dekodi
 ## 3. Ausgangslage
 
 - Android `KartenJson` besaß eine eigene Kette aus Transpositions-, Tensor-, Hyperanalysis-, Differential- und Integralmigrationen.
-- Android `KartenSpeicher` ergänzte beim Laden zusätzlich Methodenanschluss-, Zahlenrechner- und Divisionsmigrationen.
+- Android `KartenSpeicher` normalisierte strukturierte Division zusätzlich vor dem Schreiben und ergänzte beim Laden Methodenanschluss-, Zahlenrechner- und Divisionsmigrationen.
 - Transpositions- und Methodenanschlussmigration lagen im `app`-Modul, obwohl sie ausschließlich mathematische Knotendaten transformieren.
 - Desktop verwendete `KartenDatenJson` direkt und durchlief diese mathematischen Migrationen nicht vollständig.
 
@@ -31,7 +31,8 @@ Android und Desktop sollen dieselben mathematischen Regeln zum Schreiben, Dekodi
 
 1. `KartenDatenJson` bleibt der reine Graph-Codec.
 2. `MathematikKartenCodec` ist die gemeinsame mathematische Fassade für Android und Desktop.
-3. Migrationen bleiben in zwei expliziten Phasen:
+3. Migrationen bleiben in zwei Lesephasen und einer gemeinsamen Vorspeicherphase:
+   - `vorSpeichern`: kanonische mathematische Schreibnormalisierung,
    - `lese`: schema-/knotennahe Migrationen wie bisher in `KartenJson`,
    - `lade/importiere`: zusätzliche historische Methoden-/Rechnerkonsolidierungen wie bisher im Android-Dateispeicher.
 4. Mathematische Migrationen dürfen nicht im Plattformmodul definiert werden.
@@ -42,9 +43,10 @@ Android und Desktop sollen dieselben mathematischen Regeln zum Schreiben, Dekodi
 - [x] Methodenanschlussmigration nach `MathematikKnoten/migration` verschieben.
 - [x] zugehörige Tests in das Mathematikknoten-Modul verschieben.
 - [x] `MathematikKartenCodec` und `MathematikKartenMigrationen` einführen.
+- [x] Strukturierte-Divisions-Normalisierung in die gemeinsame Vorspeicherphase aufnehmen.
 - [x] Android-`KartenJson` auf dünne Fassade reduzieren.
-- [x] Android-`KartenSpeicher` auf gemeinsame Lade-/Importpipeline umstellen.
-- [x] `DesktopKartenSpeicher` auf denselben Codec umstellen.
+- [x] Android-`KartenSpeicher` auf gemeinsame Schreib-/Lade-/Importpipeline umstellen.
+- [x] `DesktopKartenSpeicher` auf dieselbe Schreib-/Lade-/Importpipeline umstellen.
 - [x] Pipeline-Phasen und Roundtrip regressionsprüfen.
 - [x] Architekturprüfung gegen neue app-lokale Migrationen härten.
 - [x] Versionsmetadaten bleiben konsistent auf dem bereits reservierten `v2.32.1`.
@@ -52,14 +54,15 @@ Android und Desktop sollen dieselben mathematischen Regeln zum Schreiben, Dekodi
 
 ## 7. Persistenzvertrag
 
-Die Reihenfolge wird aus dem bisherigen Android-Verhalten übernommen:
+Die Reihenfolge übernimmt die vorherigen Android-Regeln und macht sie für beide Plattformen gemeinsam:
 
 ### Vor dem Schreiben
 
-1. Tensoroperationen,
-2. Hyperanalysis,
-3. Differential,
-4. Integral.
+1. strukturierte Division normalisieren,
+2. Tensoroperationen,
+3. Hyperanalysis,
+4. Differential,
+5. Integral.
 
 ### Nach dem Dekodieren
 
@@ -75,7 +78,7 @@ Die Reihenfolge wird aus dem bisherigen Android-Verhalten übernommen:
 2. universeller Zahlenrechner,
 3. strukturierte Division.
 
-Die Phasen sind getrennt, damit ein bloßer JSON-Editor-Roundtrip nicht stillschweigend stärkere Importnormalisierungen erhält.
+Die Phasen sind getrennt, damit ein bloßer JSON-Editor-Roundtrip nicht stillschweigend stärkere Importnormalisierungen erhält. `speichere` normalisiert vor der Versionsentscheidung, sodass zurückgegebener In-Memory-Zustand und gespeicherter JSON-Zustand denselben kanonischen Kartenstand repräsentieren.
 
 ## 8. Tests
 
@@ -92,7 +95,7 @@ Erforderlich:
 
 ## 9. Risiken
 
-Das größte Risiko ist eine unbeabsichtigte Änderung der Migrationsreihenfolge. Die neue Pipeline übernimmt daher bewusst die vorherigen Reihenfolgen und macht die stärkere Ladephase separat sichtbar.
+Das größte Risiko ist eine unbeabsichtigte Änderung der Migrationsreihenfolge. Die neue Pipeline übernimmt daher bewusst die vorherigen Reihenfolgen und macht die stärkere Ladephase separat sichtbar. Die vorher nur Android-seitige Vorspeicher-Normalisierung wird absichtlich auf Desktop vereinheitlicht.
 
 ## 10. Ergebnis
 
