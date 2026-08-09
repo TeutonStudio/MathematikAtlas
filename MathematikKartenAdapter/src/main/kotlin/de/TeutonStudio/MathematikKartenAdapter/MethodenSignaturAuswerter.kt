@@ -2,10 +2,10 @@ package de.TeutonStudio.MathematikKartenAdapter
 
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.MethodenArgument
-import de.TeutonStudio.MathematikRechenSystem.kern.MethodenArgumentWert
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
+import de.TeutonStudio.MathematikRechenSystem.kern.VariablenQuelle
 import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
 import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
 
@@ -63,21 +63,26 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
         val methode = methodenWert.objekt as? Methode
             ?: error("Die Methodensignatur ist noch unbekannt.")
         val argumente = methode.methodenSignatur().argumente
-        val werte = argumente.map(::MethodenArgumentWert)
+        val werte = argumente.map { argument ->
+            val quelle = VariablenQuelle(
+                knotenId = kontext.knoten.id,
+                name = argument.parameter.name,
+                werteVorrat = argument.werteVorrat,
+                alsMethodenParameter = true,
+            )
+            BedingterWert(
+                objekt = argument.parameter,
+                werteVorrat = argument.werteVorrat,
+                variablenQuellen = methodenWert.variablenQuellen + quelle,
+            )
+        }
         val projektion = kontext.knoten.parameter[METHODEN_ARGUMENTE_PROJEKTION]
             ?: METHODEN_ARGUMENTPROJEKTION_TUPEL
 
         val ausgaben = when (projektion) {
             METHODEN_ARGUMENTPROJEKTION_SEPARIERT -> buildMap {
                 argumente.forEachIndexed { index, argument ->
-                    put(
-                        methodenArgumentAusgangName(argument, index),
-                        BedingterWert(
-                            objekt = werte[index],
-                            werteVorrat = argument.werteVorrat,
-                            variablenQuellen = methodenWert.variablenQuellen,
-                        ),
-                    )
+                    put(methodenArgumentAusgangName(argument, index), werte[index])
                 }
                 put(
                     "dimension",
@@ -89,8 +94,8 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
             }
             else -> mapOf(
                 "argumente" to BedingterWert(
-                    objekt = Tupel(werte),
-                    variablenQuellen = methodenWert.variablenQuellen,
+                    objekt = Tupel(werte.map(BedingterWert::objekt)),
+                    variablenQuellen = werte.flatMap(BedingterWert::variablenQuellen).distinct(),
                 ),
             )
         }
