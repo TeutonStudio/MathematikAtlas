@@ -8,6 +8,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikKnoten.GesamterMathematikAuswerter
+import de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog
 
 @Stable
 class DesktopAtlasZustand(
@@ -18,7 +19,7 @@ class DesktopAtlasZustand(
         register = GesamterMathematikAuswerter.erzeugeRegister(),
         kartenQuelle = KartenQuelle(speicher::lade),
     )
-    val vorlagen: List<KnotenVorlage> = alleMathematikKnotenVorlagen()
+    val vorlagen: List<KnotenVorlage> = KanonischerMathematikKnotenKatalog.alle()
     val editor = KartenEditorZustand(
         speicher.ladeAktuell() ?: KartenDaten(name = "Neue Desktop-Karte"),
         GraphPrüfung(anschlussArten),
