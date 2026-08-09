@@ -498,7 +498,7 @@ private class LatexParser(
     }
 
     private fun zeichenFürBefehl(befehl: String) = mapOf(
-        "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
+        "cdot" to "·", "times" to "×", "div" to "÷", "pi" to "π", "dots" to "…", "ldots" to "…", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
         "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",
