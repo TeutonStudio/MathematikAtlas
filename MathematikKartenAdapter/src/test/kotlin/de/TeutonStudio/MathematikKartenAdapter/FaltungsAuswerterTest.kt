@@ -152,7 +152,7 @@ class FaltungsAuswerterTest {
     }
 
     @Test
-    fun `allgemeiner Methodenaufruf bleibt mit symbolischem Argument eine Menge`() {
+    fun `unbekannter Methodenaufruf normalisiert symbolische Einzelausgabe zum Einertupel`() {
         val methode = TypisiertesElement("A", "mathematik.funktion", "A")
         val i = Variable("i")
         val knoten = methodenAufrufKnoten("mathematik.menge")
@@ -168,9 +168,10 @@ class FaltungsAuswerterTest {
             ),
         )
 
-        val wert = assertIs<MengenParameter>(ergebnis.ausgaben.getValue("wert").objekt)
+        val tupel = assertIs<Tupel>(ergebnis.ausgaben.getValue("wert").objekt)
+        val wert = assertIs<MengenParameter>(tupel.elemente.single())
         assertEquals("A(i)", wert.zuLatex())
-        assertEquals("A(i)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals("(A(i))", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test
