@@ -18,7 +18,9 @@ import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.ModuloZahlenraum
 import de.TeutonStudio.MathematikRechenSystem.kern.Potenzmenge
 import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
+import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensorraum
+import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 import de.TeutonStudio.MathematikRechenSystem.kern.symmetrischeDifferenz
 
 /** Vorlagen und Auswerter der Mengen- und Koordinatenräume. */
@@ -28,6 +30,14 @@ object MengenraumKnotenVorlagen {
         richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links,
         art = MathematikAnschlussArten.Menge.id,
+        reihenfolge = reihe,
+    )
+
+    private fun tupelEingang(name: String, reihe: Int = 0) = AnschlussDaten(
+        name = name,
+        richtung = AnschlussRichtung.Eingang,
+        kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Tupel.id,
         reihenfolge = reihe,
     )
 
@@ -116,10 +126,9 @@ object MengenraumKnotenVorlagen {
         "mathematik.tensorraum",
         "Tensorraum",
         "Mengen",
-        "Erzeugt A^{n×m×k×…} aus einer kommagetrennten Liste positiver Dimensionen.",
-        GraphGröße(260f, 115f),
-        listOf(eingang("grundmenge"), ausgang()),
-        mapOf("dimensionen" to "2,2,2"),
+        "Erzeugt A^{n×m×k×…} aus einem Tupel positiver natürlicher Dimensionen.",
+        GraphGröße(270f, 125f),
+        listOf(eingang("grundmenge", 0), tupelEingang("dimensionen", 1), ausgang()),
     )
 
     val ModuloZahlenraum = KnotenVorlage(
@@ -235,7 +244,25 @@ private fun KnotenAuswertungsKontext.mengenraumPositiveGanzzahl(name: String, mi
 }
 
 private fun KnotenAuswertungsKontext.mengenraumDimensionen(): List<Int> {
-    val dimensionen = knoten.parameter["dimensionen"].orEmpty()
+    val tupel = eingänge["dimensionen"]?.objekt as? Tupel
+    if (tupel != null) {
+        require(tupel.elemente.isNotEmpty()) { "Ein Tensorraum benötigt mindestens eine Dimension." }
+        return tupel.elemente.mapIndexed { index, element ->
+            val zahl = element as? RationaleZahl
+                ?: error("Tensorraumdimension ${index + 1} ist keine konkrete natürliche Zahl.")
+            require(
+                zahl.nenner == java.math.BigInteger.ONE &&
+                    zahl.zähler.signum() > 0 &&
+                    zahl.zähler.bitLength() < 31,
+            ) { "Tensorraumdimension ${index + 1} muss eine positive natürliche Zahl sein." }
+            zahl.zähler.toInt()
+        }
+    }
+
+    // Rückwärtskompatibilität alter Karten. Neue Vorlagen schreiben diesen Parameter nicht mehr.
+    val historisch = knoten.parameter["dimensionen"]
+        ?: error("Der Tupel-Eingang 'dimensionen' fehlt.")
+    val dimensionen = historisch
         .split(',')
         .map(String::trim)
         .filter(String::isNotBlank)
