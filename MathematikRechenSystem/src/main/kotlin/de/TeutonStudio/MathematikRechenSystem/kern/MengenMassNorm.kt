@@ -8,15 +8,6 @@ package de.TeutonStudio.MathematikRechenSystem.kern
  * Der strukturierte Integralvertrag bleibt als Herkunft erhalten, auch wenn die
  * vorhandene Integralauswertung den Wert bereits exakt reduzieren kann.
  */
-data class MengenMassNormAusdruck(
-    val menge: MengenAusdruck,
-    val mass: IntegralMass,
-    val integral: StrukturiertesIntegral,
-) : ZahlAusdruck {
-    override fun zuLatex(): String =
-        "\\int_{${menge.zuLatex()}} 1\\,\\mathrm d${mass.zuLatex()}"
-}
-
 data class MengenMassNormErgebnis(
     val wert: ZahlAusdruck,
     val integral: StrukturiertesIntegral,
@@ -45,7 +36,10 @@ fun normEinerMenge(
     ).copy(voraussetzungen = messbarkeit)
     val ausgewertet = werteIntegralAus(integral)
     val wert = ausgewertet.wert as? ZahlAusdruck
-        ?: MengenMassNormAusdruck(menge, mass, integral)
+        ?: symbolischerZahlterm(
+            identitaet = "mengenmassnorm-${menge.zuLatex()}-${mass.zuLatex()}",
+            latex = "\\int_{${menge.zuLatex()}} 1\\,\\mathrm d${mass.zuLatex()}",
+        )
     return MengenMassNormErgebnis(
         wert = wert,
         integral = integral,
