@@ -5,7 +5,6 @@ import de.TeutonStudio.MathematikRechenSystem.kern.MethodenArgument
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
-import de.TeutonStudio.MathematikRechenSystem.kern.VariablenQuelle
 import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
 import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
 
