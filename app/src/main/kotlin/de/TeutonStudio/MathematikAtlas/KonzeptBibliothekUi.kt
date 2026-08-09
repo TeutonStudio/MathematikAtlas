@@ -241,12 +241,19 @@ private fun HauptkategorieKachel(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(
-                kategorieSymbol(kategorie.id),
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-            )
+            if (hatFachgebietsIcon(kategorie.id)) {
+                FachgebietsIcon(
+                    id = kategorie.id,
+                    modifier = Modifier.fillMaxWidth(.72f).aspectRatio(1f),
+                )
+            } else {
+                Text(
+                    kategorieSymbol(kategorie.id),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+            }
             Spacer(Modifier.height(10.dp))
             Text(
                 kategorie.bezeichnung,

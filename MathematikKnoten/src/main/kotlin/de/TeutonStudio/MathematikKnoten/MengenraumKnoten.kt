@@ -204,6 +204,19 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
             k,
         )
     }
+    registriere(TENSORRAUM_LEGACY_DIMENSIONEN_ART) { k ->
+        val dimensionen = k.knoten.parameter["werte"].orEmpty()
+            .split(',')
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .map { it.toLongOrNull() ?: error("Legacy-Tensorraumdimension '$it' ist keine ganze Zahl.") }
+        require(dimensionen.isNotEmpty() && dimensionen.all { it > 0 }) {
+            "Legacy-Tensorraumdimensionen müssen positive ganze Zahlen sein."
+        }
+        KnotenAuswertungsErgebnis(
+            mapOf("tupel" to BedingterWert(objekt = Tupel(dimensionen.map(RationaleZahl::von)))),
+        )
+    }
     registriere("mathematik.tensorraum") { k ->
         mengenraumErgebnis(Tensorraum(k.mengenraumEingabe("grundmenge"), k.mengenraumDimensionen()), k)
     }

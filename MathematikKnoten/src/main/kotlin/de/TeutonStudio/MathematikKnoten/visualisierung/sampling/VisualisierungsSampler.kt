@@ -128,6 +128,9 @@ object VisualisierungsSampler {
     ): VisualisierungsDefinition {
         val dimension = konfiguration.raumDimension
         if (menge is KoordinatenBild) return normalisiereKoordinatenBild(menge, dimension)
+        if (konfiguration.dimension == RaumDimension.R1 && menge is DefinierteMenge) {
+            return normalisiereDefinierteMenge(menge, konfiguration)
+        }
         if (konfiguration.dimension == RaumDimension.R1) {
             return ZahlengeradenNormalisierer.normalisiere(menge, konfiguration)
         }
