@@ -12,6 +12,7 @@ verpflichtend = [
     "KnotenKartenVerwalter/build.gradle.kts", "MathematikRechenSystem/build.gradle.kts",
     "MathematikKartenAdapter/build.gradle.kts", "MathematikKnoten/build.gradle.kts",
     "AGENTS.md", "docs/codex/GIT_IDENTITY.md", "scripts/samai-git.sh",
+    "scripts/pruefe_desktop_shadowmodule.py",
 ]
 fehlt = [p for p in verpflichtend if not (wurzel / p).is_file()]
 if fehlt:
@@ -27,4 +28,5 @@ with zipfile.ZipFile(wurzel / "gradle/wrapper/gradle-wrapper.jar") as jar:
 subprocess.run(["bash", "-n", str(wurzel / "scripts/samai-git.sh")], check=True)
 subprocess.run([sys.executable, str(wurzel / "scripts/pruefe_architektur.py")], check=True)
 subprocess.run([sys.executable, str(wurzel / "scripts/pruefe_methodenmodell.py")], check=True)
-print("Repository-Struktur, XML, Wrapper und SamAI-Gitwerkzeug erfolgreich geprüft.")
+subprocess.run([sys.executable, str(wurzel / "scripts/pruefe_desktop_shadowmodule.py")], check=True)
+print("Repository-Struktur, XML, Wrapper, Architektur und begrenzte Desktop-Übergangsmodule erfolgreich geprüft.")
