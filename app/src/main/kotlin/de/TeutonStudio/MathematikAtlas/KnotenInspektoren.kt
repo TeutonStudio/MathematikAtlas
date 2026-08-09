@@ -13,6 +13,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.KnotenErsetzungsAuswirkung
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.TUPEL_ERGÄNZEN_ART
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
@@ -55,6 +56,7 @@ object KnotenInspektorRegister {
         "mathematik.transponieren" to TransponierenInspektor,
         "mathematik.matrixdiagonale" to MatrixdiagonaleInspektor,
         "mathematik.auswerten" to AuswertenInspektor,
+        TUPEL_ERGÄNZEN_ART to TupelErgänzenInspektor,
         ZAHLENRECHNER_ART to ZahlenRechnerInspektor,
         de.TeutonStudio.MathematikRechenSystem.kern.AussagenSatzRechner.KNOTEN_ART to StrukturRechnerInspektor,
         de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner.KNOTEN_ART to StrukturRechnerInspektor,
