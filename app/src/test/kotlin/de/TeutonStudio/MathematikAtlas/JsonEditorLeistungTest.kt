@@ -14,10 +14,10 @@ class JsonEditorLeistungTest {
         assertEquals(3, index.zeilenAnzahl)
         assertEquals(12, index.maximaleZeilenLänge)
         assertEquals(JsonPosition(1, 1), index.position(0))
-        assertEquals(JsonPosition(2, 1), index.position(6))
-        assertEquals(JsonPosition(2, 7), index.position(12))
+        assertEquals(JsonPosition(2, 1), index.position(5))
+        assertEquals(JsonPosition(2, 7), index.position(11))
         assertEquals(JsonPosition(3, 1), index.position(text.length))
-        assertEquals(12, index.offset(2, 7))
+        assertEquals(11, index.offset(2, 7))
     }
 
     @Test
