@@ -107,7 +107,7 @@ class FaltungsAuswerterTest {
         )
         val knoten = methodenAufrufKnoten()
 
-        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+        val ergebnis = MethodenAufrufAuswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -135,7 +135,7 @@ class FaltungsAuswerterTest {
         )
         val knoten = methodenAufrufKnoten()
 
-        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+        val ergebnis = MethodenAufrufAuswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -157,7 +157,7 @@ class FaltungsAuswerterTest {
         val i = Variable("i")
         val knoten = methodenAufrufKnoten("mathematik.menge")
 
-        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+        val ergebnis = MethodenAufrufAuswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -174,8 +174,8 @@ class FaltungsAuswerterTest {
     }
 
     @Test
-    fun `allgemeiner Methodenaufruf verwendet denselben Auswerter wie bestehende Anwendung`() {
-        assertSame(MethodenAnwendungAuswerter, MathematikAuswerterRegister().finde(METHODEN_AUFRUF_ART))
+    fun `allgemeiner Methodenaufruf verwendet projektionsfaehigen Auswerter`() {
+        assertSame(MethodenAufrufAuswerter, MathematikAuswerterRegister().finde(METHODEN_AUFRUF_ART))
     }
 
     private fun methodenAufrufKnoten(ergebnisArt: String = "mathematik.zahl") = KnotenDaten(
