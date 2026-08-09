@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class DifferentialObjekteTest {
@@ -27,11 +27,11 @@ class DifferentialObjekteTest {
             operator = DifferentialOperator.Partiell(2),
             begriff = DifferentialBegriff.REELL_FRECHET,
         )
-        val latex = ergebnis.zielRaum.zuLatex()
+        val zielRaum = assertIs<AbleitungsZielraum>(ergebnis.zielRaum)
 
         assertEquals("\\partial_{2}f", ergebnis.methode.name)
-        assertTrue(latex.contains("\\mathbb C"))
-        assertFalse(latex.contains("\\mathbb R\\times\\mathbb C"))
+        assertEquals(KomplexeZahlen, zielRaum.argumentRaum)
+        assertEquals(ReelleZahlen, zielRaum.ursprungsZiel)
     }
 
     @Test
