@@ -1,11 +1,11 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
+import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -26,7 +26,10 @@ class SmallIssuesBatchRegressionTest {
         ).ausgaben.getValue("tupel")
         val tupel = assertIs<Tupel>(tupelWert.objekt)
 
-        assertEquals(listOf("x_1", "x_2", "x_3"), tupel.elemente.map { it.zuString() })
+        assertEquals(
+            listOf("x_1", "x_2", "x_3"),
+            tupel.elemente.map { assertIs<Variable>(it).name },
+        )
         assertEquals(listOf(0, 1, 2), tupelWert.variablenQuellen.map { it.reihenfolge })
         assertEquals(1, tupelWert.variablenQuellen.map { it.bindungsId }.distinct().size)
 
@@ -34,7 +37,7 @@ class SmallIssuesBatchRegressionTest {
             id = KnotenId("methode"),
             parameter = mapOf("name" to "f", "argumentReihenfolge" to ""),
         )
-        // Absichtlich umgekehrt angeliefert: die Komponenten-ID/Reihenfolge muss stärker sein
+        // Absichtlich umgekehrt angeliefert: die Komponentenreihenfolge muss stärker sein
         // als die Listenreihenfolge des transportierten Metadatums.
         val methodeWert = register.finde(methodeKnoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
