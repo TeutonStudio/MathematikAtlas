@@ -32,6 +32,11 @@ class DesktopAtlasZustand(
         auswertung = auswerter.auswerten(editor.karte)
     }
 
+    fun berechneKnotenCacheNeu(knotenId: KnotenId) {
+        auswerter.verwerfeCache(knotenId)
+        aktualisiereAuswertung()
+    }
+
     fun fügeEin(vorlage: KnotenVorlage, position: GraphPunkt) {
         val knoten = vorlage.erzeuge(position)
         editor.führeAus(KartenAktion.KnotenEinfügen(knoten))
@@ -73,6 +78,9 @@ class DesktopAtlasZustand(
         }
     }
 
-    fun rendererFür(knoten: KnotenDaten): KnotenRenderer = MathematikKnotenRenderer { auswertung.knoten[it.id] }
+    fun rendererFür(knoten: KnotenDaten): KnotenRenderer =
+        MathematikKnotenRenderer { auswertung.knoten[it.id] }
+            .mitAuswertungszeit { auswertung.knoten[it.id] }
+
     fun schließeMeldung() { meldung = null }
 }
