@@ -59,7 +59,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                         RechnerOperatorAuswahlEintrag(
                             id = operator.stabileId,
                             titel = operator.titel,
-                            symbolLatex = operator.symbolLatex,
+                            symbolLatex = operator.vorschauLatex,
                             kategorie = katalogNachId[operator.stabileId]?.kategorie ?: "Weitere Funktionen",
                             beschreibung = katalogNachId[operator.stabileId]
                                 ?.signaturen
@@ -77,7 +77,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                         RechnerOperatorAuswahlEintrag(
                             id = operator.stabileId,
                             titel = operator.titel,
-                            symbolLatex = operator.symbolLatex,
+                            symbolLatex = operator.vorschauLatex,
                             kategorie = erweiterteZahlenKategorie(operator),
                             beschreibung = "Erweiterter Zahlenoperator ${operator.titel}.",
                             suchbegriffe = setOf(operator.name),
