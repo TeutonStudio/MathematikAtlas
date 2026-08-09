@@ -7,6 +7,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.SymmetrischeDifferenz
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -36,7 +37,8 @@ class SymmetrischeDifferenzKnotenTest {
     }
 
     @Test
-    fun `Renderer zeigt das Dreiecksymbol`() {
-        assertEquals("A △ B", vereinfacheLatexAnzeige("A \\triangle B"))
+    fun `Renderer erhält das Latex Dreiecksymbol`() {
+        val quelltext = atlasLatexQuelltext("A \\triangle B", dunklesSchema = false)
+        assertContains(quelltext, "A \\triangle B")
     }
 }
