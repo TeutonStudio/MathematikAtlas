@@ -10,7 +10,7 @@ class AtlasBefehlTest {
     private val register = AnschlussArtRegister(listOf(AnschlussArt(art, "Test")))
 
     private fun knoten(name: String, x: Float, ausgang: Boolean = false): KnotenDaten = KnotenDaten(
-        art = KnotenArtId("test.$name"),
+        art = "test.$name",
         name = name,
         position = GraphPunkt(x, 20f),
         anschlüsse = listOf(AnschlussDaten(
@@ -38,8 +38,14 @@ class AtlasBefehlTest {
         val a = knoten("a", 0f, ausgang = true)
         val b = knoten("b", 200f)
         val c = knoten("c", 400f)
-        val intern = VerbindungDaten(AnschlussVerweis(a.id, a.anschlüsse.single().id), AnschlussVerweis(b.id, b.anschlüsse.single().id))
-        val extern = VerbindungDaten(AnschlussVerweis(a.id, a.anschlüsse.single().id), AnschlussVerweis(c.id, c.anschlüsse.single().id))
+        val intern = VerbindungDaten(
+            von = AnschlussVerweis(a.id, a.anschlüsse.single().id),
+            zu = AnschlussVerweis(b.id, b.anschlüsse.single().id),
+        )
+        val extern = VerbindungDaten(
+            von = AnschlussVerweis(a.id, a.anschlüsse.single().id),
+            zu = AnschlussVerweis(c.id, c.anschlüsse.single().id),
+        )
         val gruppe = VisuelleKnotenGruppeDaten(knotenIds = setOf(a.id, b.id), position = GraphPunkt.Zero)
         val karte = KartenDaten(name = "T", knoten = listOf(a, b, c), verbindungen = listOf(intern, extern), visuelleGruppen = listOf(gruppe))
         val clipboard = AtlasZwischenablage()
