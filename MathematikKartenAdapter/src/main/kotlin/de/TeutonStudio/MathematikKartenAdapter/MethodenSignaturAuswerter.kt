@@ -5,6 +5,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.MethodenArgument
 import de.TeutonStudio.MathematikRechenSystem.kern.MethodenArgumentWert
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
+import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
 import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
 import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
 
@@ -12,6 +13,7 @@ const val METHODEN_WERTEVORRAT_ART = "mathematik.methodenWertevorrat"
 const val METHODEN_ARGUMENTANZAHL_ART = "mathematik.methodenArgumentanzahl"
 const val METHODEN_ARGUMENTE_ART = "mathematik.methodenArgumente"
 const val METHODEN_ARGUMENTE_PROJEKTION = "methodenArgumente.projektion"
+const val METHODEN_ZIELMENGE_ERGEBNISPROJEKTION = "methodenZielmenge.ergebnisprojektion"
 
 fun methodenArgumentAusgangName(argument: MethodenArgument, index: Int): String {
     val name = argument.parameter.name.trim().ifBlank { "argument-${index + 1}" }
@@ -97,14 +99,24 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
 }
 
 /**
- * Verwendet ausschließlich die kanonische Methodensignatur. Historische öffentliche
- * Mehrfachausgaben sind im Methodenmodell bereits zu einem Tupelergebnis normalisiert.
+ * Liefert die Zielmenge derselben Ergebnisprojektion, die auch ein nachfolgender
+ * Methodenaufruf verwendet. Ein bereits tupeliger Zielraum wird dabei niemals
+ * nochmals als Einertupelraum verschachtelt.
  */
 internal object MethodenZielmengeSignaturAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
         val methode = methodenWert.objekt as? Methode ?: error("Eine konkrete Methode fehlt.")
-        val zielMenge = methode.methodenSignatur().zielMenge
+        val roheZielMenge = methode.methodenSignatur().zielMenge
+        val projektion = kontext.knoten.parameter[METHODEN_ZIELMENGE_ERGEBNISPROJEKTION]
+            ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
+        val zielMenge = if (
+            projektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && roheZielMenge !is Tupelraum
+        ) {
+            Tupelraum(listOf(roheZielMenge))
+        } else {
+            roheZielMenge
+        }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "menge" to BedingterWert(
