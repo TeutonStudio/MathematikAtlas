@@ -29,10 +29,13 @@ object GesamterMathematikAuswerter {
         registriereExakteEigenschaftsAuswertung()
         registriereFolgenUndSignaturEigenschaften()
         registriereMengenEigenschaftsAuswertung()
+        registriereNullDistanz()
         // Bewusst zuletzt: ersetzt historische Spezialauswerter derselben Knotenarten.
         registriereKonsolidierteKnoten()
         // Verfeinert ausschließlich das Skalarprodukt und delegiert alle übrigen Vektoroperationen.
         registriereSkalarproduktErweiterungen()
+        // Konsolidierter Vektorkonstruktor und neuer Multinomvektor überschreiben historische Vektorpfade.
+        registriereVektorKonsolidierung()
         // Muss nach den allgemeinen Rechnern registriert werden: typisierte CAS-Formeln und dynamische Verträge.
         registriereStrukturFormelRechner()
         // Bewahrt gespeicherte Karten mit dem historischen Ausgang `skalar`.
