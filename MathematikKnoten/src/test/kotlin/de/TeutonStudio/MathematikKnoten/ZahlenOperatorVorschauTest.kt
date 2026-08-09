@@ -18,12 +18,17 @@ class ZahlenOperatorVorschauTest {
         )
         assertEquals("\\min(\\dots,\\dots)", UniversellerZahlenOperator.MINIMUM.vorschauLatex)
         assertEquals("\\max(\\dots,\\dots)", UniversellerZahlenOperator.MAXIMUM.vorschauLatex)
-        assertEquals("\\lVert(\\dots)\\rVert", UniversellerZahlenOperator.NORM.vorschauLatex)
         assertEquals("\\operatorname{Re}(\\dots)", UniversellerZahlenOperator.REALTEIL.vorschauLatex)
         assertEquals("\\operatorname{Im}(\\dots)", UniversellerZahlenOperator.IMAGINAERTEIL.vorschauLatex)
         assertEquals("\\sin(\\dots)", UniversellerZahlenOperator.SINUS.vorschauLatex)
         assertEquals("\\sinh(\\dots)", ErweiterterZahlenOperator.SINUS_HYPERBOLICUS.vorschauLatex)
         assertEquals("(c_i)_i\\cdot\\vec{x}", ErweiterterZahlenOperator.POLYNOM.vorschauLatex)
+    }
+
+    @Test
+    fun `norm ist kein eigener Zahlenoperator mehr`() {
+        assertEquals(false, UniversellerZahlenOperator.entries.any { it.stabileId == "zahl.norm" })
+        assertEquals(UniversellerZahlenOperator.BETRAG, UniversellerZahlenOperator.vonId("zahl.norm"))
     }
 
     @Test
