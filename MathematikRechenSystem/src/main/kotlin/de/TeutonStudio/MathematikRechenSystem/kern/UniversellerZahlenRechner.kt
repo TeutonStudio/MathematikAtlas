@@ -42,11 +42,12 @@ enum class UniversellerZahlenOperator(
     REALTEIL("zahl.realteil", "Realteil", "\\operatorname{Re}"),
     IMAGINAERTEIL("zahl.imaginaerteil", "Imaginärteil", "\\operatorname{Im}"),
     KOMPLEXER_WINKEL("zahl.komplexerWinkel", "Komplexer Winkel", "\\arg"),
+    @Deprecated("Historischer Alias; im Katalog 0-Distanz verwenden.", ReplaceWith("BETRAG"))
     KOMPLEXER_RADIUS("zahl.komplexerRadius", "Komplexer Radius", "|\\cdot|"),
     KOMPLEX_AUS_POLAR("zahl.komplexAusPolar", "Komplex aus Polarform", "r e^{i\\varphi}"),
     KOMPLEX_AUS_KARTESISCH("zahl.komplexAusKartesisch", "Komplex aus kartesischer Form", "a+b i"),
     MODULO("zahl.modulo", "Modulo", "\\bmod"),
-    BETRAG("zahl.betrag", "Betrag", "|\\cdot|"),
+    BETRAG("zahl.betrag", "0-Distanz", "d(0,\\cdot)"),
     EXPONENTIALFUNKTION("zahl.exp", "Exponentialfunktion", "\\exp"),
     SINUS("zahl.sin", "Sinus", "\\sin"),
     COSINUS("zahl.cos", "Cosinus", "\\cos"),
@@ -55,11 +56,37 @@ enum class UniversellerZahlenOperator(
     LIMES_HYPERREELL_ZU_REELL("zahl.limes", "Limes", "\\lim"),
     ;
 
+    /** Historische Aliaszustände bleiben ladbar, erscheinen aber nicht mehr als reguläre Auswahl. */
+    val imKatalog: Boolean
+        get() = this != KOMPLEXER_RADIUS
+
+    /** Kanonischer semantischer Operator unabhängig von historischen IDs. */
+    val kanonisch: UniversellerZahlenOperator
+        get() = if (this == KOMPLEXER_RADIUS) BETRAG else this
+
     companion object {
-        fun vonIdOderNull(id: String?): UniversellerZahlenOperator? = entries.firstOrNull { operator ->
-            id == operator.stabileId ||
-                id.equals(operator.name, ignoreCase = true) ||
-                id.equals(operator.stabileId.substringAfterLast('.'), ignoreCase = true)
+        private val nullDistanzAliase = setOf(
+            "zahl.komplexerRadius",
+            "komplexerRadius",
+            "KOMPLEXER_RADIUS",
+            "Komplexer Radius",
+            "Quaternionenradius",
+            "Radius",
+            "Absolutbetrag",
+            "Modulus",
+        )
+
+        fun vonIdOderNull(id: String?): UniversellerZahlenOperator? {
+            if (id != null && nullDistanzAliase.any { alias -> id.equals(alias, ignoreCase = true) }) {
+                return BETRAG
+            }
+            return entries.firstOrNull { operator ->
+                operator.imKatalog && (
+                    id == operator.stabileId ||
+                        id.equals(operator.name, ignoreCase = true) ||
+                        id.equals(operator.stabileId.substringAfterLast('.'), ignoreCase = true)
+                    )
+            }?.kanonisch
         }
 
         fun vonId(id: String?): UniversellerZahlenOperator = requireNotNull(vonIdOderNull(id)) {
