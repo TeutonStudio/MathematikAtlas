@@ -30,7 +30,7 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
             tupelEingang(vorhandene["methode"], "methode", MathematikAnschlussArten.Methode.id, 1),
         )
         else -> {
-            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
+            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2
             List(anzahl) { index ->
                 val name = when (index) {
                     0 -> "a"
@@ -58,7 +58,7 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
     val parameter = when (art) {
         TUPEL_METHODE -> knoten.parameter
         else -> knoten.parameter + mapOf(
-            "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2).toString(),
+            "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2).toString(),
             "operatorAnzeige" to (knoten.parameter["operatorAnzeige"] ?: "wert"),
         )
     } + ("erzeugungsArt" to art)
