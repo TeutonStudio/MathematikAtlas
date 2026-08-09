@@ -45,7 +45,9 @@ object GesamterMathematikAuswerter {
         registriereStrukturierteDivision()
         // Darauf aufbauend übernimmt der Analysisadapter ausschließlich strukturierte Differentialzustände.
         registriereZahlenRechnerDifferential()
-        // Abschließend vereinheitlicht der Betrag die historische Radiussemantik für komplexe Zahlen.
+        // Vereinheitlicht Betrag und historischen Radius.
         registriereNullDistanz()
+        // v2.30.0: kanonischer Vektorkonstruktor mit Orientierung und Indexmethode.
+        registriereVektorKonstruktorV2300()
     }
 }
