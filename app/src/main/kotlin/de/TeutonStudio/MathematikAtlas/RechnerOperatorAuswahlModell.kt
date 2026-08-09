@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.MathematikKnoten.zahlenOperatorVorschauLatex
 import java.text.Normalizer
 import java.util.Locale
 
@@ -38,6 +39,17 @@ internal data class RechnerOperatorAuswahlEintrag(
         }
     }
 
+    /**
+     * Vollständige Vorschau für Auswahl- und Detailflächen. Strukturrechner und
+     * unbekannte Zustände fallen bewusst auf ihr eigenes Symbol zurück.
+     */
+    val vorschauLatex: String
+        get() = if (art == RechnerOperatorAuswahlArt.OPERATOR) {
+            zahlenOperatorVorschauLatex(id, symbolLatex)
+        } else {
+            symbolLatex
+        }
+
     val eingänge: List<AnschlussDaten>
         get() = kandidat?.anschlüsse
             .orEmpty()
@@ -60,6 +72,7 @@ internal data class RechnerOperatorAuswahlEintrag(
         yield(id)
         yield(titel)
         yield(symbolLatex)
+        yield(vorschauLatex)
         yield(kategorie)
         yield(beschreibung)
         status?.let { yield(it) }
