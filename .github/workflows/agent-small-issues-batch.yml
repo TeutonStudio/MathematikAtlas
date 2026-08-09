@@ -1,0 +1,41 @@
+name: Agent Small Issues Batch
+
+on:
+  push:
+    branches:
+      - agent/resolve-small-issues-batch
+
+permissions:
+  contents: write
+
+jobs:
+  implementieren:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/resolve-small-issues-batch
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK vorbereiten
+        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Änderungen anwenden
+        run: python3 scripts/agent_resolve_small_issues.py
+      - name: Architektur prüfen
+        run: python3 scripts/pruefe_architektur.py
+      - name: Tests und Android-Build
+        run: ./gradlew --stacktrace test :app:assembleDebug
+      - name: Implementierung committen
+        run: |
+          rm scripts/agent_resolve_small_issues.py
+          rm .github/workflows/agent-small-issues-batch.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Implement small issue batch'
+          git push origin HEAD:agent/resolve-small-issues-batch
