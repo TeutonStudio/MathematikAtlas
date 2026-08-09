@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
+import de.TeutonStudio.MathematikKartenAdapter.registriereMethodenArgumente
 
 /** Bestehender Standardauswerter plus additive Mathematikdomänen. */
 object GesamterMathematikAuswerter {
@@ -25,6 +26,7 @@ object GesamterMathematikAuswerter {
         registriereIntegralKnoten()
         registriereRestriktionsKnoten()
         registriereMethodenGraphKnoten()
+        registriereMethodenArgumente()
         registriereMathematischeEigenschaften()
         registriereExakteEigenschaftsAuswertung()
         registriereFolgenUndSignaturEigenschaften()

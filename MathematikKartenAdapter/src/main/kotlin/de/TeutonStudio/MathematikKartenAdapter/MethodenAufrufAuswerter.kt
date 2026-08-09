@@ -3,15 +3,19 @@ package de.TeutonStudio.MathematikKartenAdapter
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 const val METHODEN_AUFRUF_ARGUMENTPROJEKTION = "methodenAufruf.argumentprojektion"
+const val METHODEN_AUFRUF_ERGEBNISPROJEKTION = "methodenAufruf.ergebnisprojektion"
 const val METHODEN_ARGUMENTPROJEKTION_SEPARIERT = "separiert"
 const val METHODEN_ARGUMENTPROJEKTION_TUPEL = "tupel"
+const val METHODEN_ERGEBNISPROJEKTION_DIREKT = "direkt"
+const val METHODEN_ERGEBNISPROJEKTION_TUPEL = "tupel"
 
 /**
- * Allgemeiner Methodenaufruf mit rein graphischer Argumentprojektion.
+ * Allgemeiner Methodenaufruf mit rein graphischer Argument- und Ergebnisprojektion.
  *
- * Die Methode selbst bleibt unverändert. Im Tupelmodus wird ausschließlich an
- * dieser Adaptergrenze ein verbundenes Tupel positionsgetreu auf die kanonische
- * Parameterliste verteilt.
+ * Die Methode selbst bleibt unverändert. Im Tupelmodus der Argumente wird ausschließlich
+ * an dieser Adaptergrenze ein verbundenes Tupel positionsgetreu auf die kanonische
+ * Parameterliste verteilt. Die Ergebnisprojektion normalisiert ein nicht-tupeliges
+ * Resultat auf ein Einertupel; ein bereits vorhandenes Tupel bleibt unverändert.
  */
 internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
@@ -20,11 +24,13 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         val argumentAnschlüsse = kontext.knoten.anschlüsse
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
-        val projektion = kontext.knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION]
+        val argumentProjektion = kontext.knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION]
             ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT
+        val ergebnisProjektion = kontext.knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION]
+            ?: if (methode is Methode) METHODEN_ERGEBNISPROJEKTION_DIREKT else METHODEN_ERGEBNISPROJEKTION_TUPEL
 
         val argumentWerte = if (methode is Methode) {
-            when (projektion) {
+            when (argumentProjektion) {
                 METHODEN_ARGUMENTPROJEKTION_TUPEL -> tupelArgumente(methode, argumentAnschlüsse, kontext)
                 else -> separierteArgumente(methode, argumentAnschlüsse, kontext)
             }
@@ -43,15 +49,27 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         val argumente = argumentWerte.map(BedingterWert::objekt)
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
-        val (wert, zielMenge) = if (methode is Methode) {
+        val (roherWert, roheZielMenge) = if (methode is Methode) {
             val ausgabe = methode.einzigeAusgabe()
             val bindungen = methode.parameter.mapIndexed { index, parameter -> parameter.name to argumente[index] }.toMap()
             methode.wendeAn(bindungen) to methode.zielMengeFür(ausgabe.first, bindungen)
         } else {
             symbolischerProjektionsAnwendungsWert(methode, argumente, ergebnisArt) to null
         }
+        val (wert, zielMenge) = projiziereMethodenErgebnis(
+            wert = roherWert,
+            zielMenge = roheZielMenge,
+            projektion = ergebnisProjektion,
+        )
         val methodenReferenz = if (methode is Methode) methode.name else methodenWert.anzeigeLatex()
         val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
+        val projiziertesLatex = if (
+            ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && roherWert !is Tupel
+        ) {
+            "($anwendungsLatex)"
+        } else {
+            anwendungsLatex
+        }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
@@ -60,7 +78,7 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
                     zielMenge = zielMenge,
                     reelleVariablen = reelleVariablen(argumentWerte),
                     variablenQuellen = (listOf(methodenWert) + argumentWerte).flatMap { it.variablenQuellen },
-                    latexDarstellung = anwendungsLatex,
+                    latexDarstellung = projiziertesLatex,
                 ),
             ),
         )
@@ -117,6 +135,21 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
             )
         }
     }
+}
+
+internal fun projiziereMethodenErgebnis(
+    wert: MathematischesObjekt,
+    zielMenge: MengenAusdruck?,
+    projektion: String,
+): Pair<MathematischesObjekt, MengenAusdruck?> {
+    if (projektion != METHODEN_ERGEBNISPROJEKTION_TUPEL) return wert to zielMenge
+    val projizierterWert = if (wert is Tupel) wert else Tupel(listOf(wert))
+    val projizierteZielMenge = when (zielMenge) {
+        null -> null
+        is Tupelraum -> zielMenge
+        else -> Tupelraum(listOf(zielMenge))
+    }
+    return projizierterWert to projizierteZielMenge
 }
 
 private fun symbolischerProjektionsAnwendungsWert(

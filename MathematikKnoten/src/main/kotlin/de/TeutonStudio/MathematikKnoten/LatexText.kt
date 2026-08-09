@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,16 +20,36 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import com.hrm.latex.renderer.Latex
+import com.hrm.latex.renderer.model.LatexConfig
 import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
+
+private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\{#1\\right\\}}"
+private const val ATLAS_IMPLIES_MACRO = "\\newcommand{\\implies}{\\Rightarrow}"
+private const val ATLAS_IFF_MACRO = "\\newcommand{\\iff}{\\Leftrightarrow}"
+private const val ATLAS_LONGTO_MACRO = "\\newcommand{\\longto}{\\longrightarrow}"
+private val ATLAS_MACROS = listOf(
+    ATLAS_SET_MACRO,
+    ATLAS_IMPLIES_MACRO,
+    ATLAS_IFF_MACRO,
+    ATLAS_LONGTO_MACRO,
+).joinToString(separator = "")
 
 private val STANDARD_WAHR_FARBE = Color(0xFF2E7D32)
 private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
 
 /**
- * Stellt den vom Rechenkern erzeugten LaTeX-Teilumfang nativ dar. Es bleibt bewusst
- * ohne WebView und ohne externen TeX-Renderer, unterstützt aber Gruppen, Hoch- und
- * Tiefstellungen, Brüche, Matrizen und die verwendeten mathematischen Befehle.
- * `\\int` wird zentral mit der Atlas-Integralglyphe (Variante 4) dargestellt.
+ * Zentrale LaTeX-Fassade des Atlas.
+ *
+ * Gewöhnliche mathematische Layoutarbeit wird vollständig an den nativen
+ * Compose-Multiplatform-Renderer delegiert. Der Atlas interpretiert insbesondere
+ * keine Brüche, Matrizen, skalierenden Klammern oder großen Operatoren selbst.
+ *
+ * Zwei Atlas-spezifische Kompatibilitätsregeln bleiben bewusst erhalten:
+ * - die Atlas-Integralglyphe für einfache Formeln außerhalb komplexer Umgebungen;
+ * - historische nicht-bedingte `cases`-Blöcke von Methoden werden als linke große
+ *   Klammer mit einer Matrix gerendert, damit der Renderer kein „if“ ergänzt.
  */
 @Composable
 fun LatexText(
@@ -39,25 +57,19 @@ fun LatexText(
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
-    val dunklesSchema = isSystemInDarkTheme()
-    val wahrFarbe = if (dunklesSchema) Color(0xFF81C784) else Color(0xFF1B5E20)
-    val lügeFarbe = if (dunklesSchema) Color(0xFFEF9A9A) else Color(0xFFB71C1C)
     val normalisiert = normalisiereLatexQuelltext(latex)
-    val integral = zerlegeIntegralOperator(normalisiert)
-    val großerOperator = zerlegeGroßenOperator(normalisiert)
+    val integral = normalisiert
+        .takeUnless { "\\begin{" in it }
+        ?.let(::zerlegeIntegralOperator)
 
-    if (integral != null && (großerOperator == null || integral.position <= großerOperator.position)) {
+    if (integral != null) {
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             if (integral.vorher.isNotBlank()) {
-                Text(
-                    latexZuAnnotiertemText(integral.vorher, wahrFarbe, lügeFarbe),
-                    style = style,
-                    color = LocalContentColor.current,
-                )
+                EchterLatexText(integral.vorher, style = style)
             }
             AtlasIntegralOperator(
                 untereAnnotation = integral.untereAnnotation,
@@ -74,45 +86,80 @@ fun LatexText(
         return
     }
 
-    if (großerOperator != null) {
-        Row(
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            if (großerOperator.vorher.isNotBlank()) {
-                Text(
-                    latexZuAnnotiertemText(großerOperator.vorher, wahrFarbe, lügeFarbe),
-                    style = style,
-                    color = LocalContentColor.current,
-                )
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    latexZuAnnotiertemText(großerOperator.operator, wahrFarbe, lügeFarbe),
-                    style = style,
-                    color = LocalContentColor.current,
-                )
-                LatexText(
-                    latex = großerOperator.index,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-            if (großerOperator.nachher.isNotBlank()) {
-                LatexText(
-                    latex = großerOperator.nachher,
-                    style = style,
-                )
-            }
-        }
-        return
-    }
-    Text(
-        latexZuAnnotiertemText(normalisiert, wahrFarbe, lügeFarbe),
+    EchterLatexText(
+        latex = normalisiert,
         modifier = modifier,
         style = style,
-        color = LocalContentColor.current,
     )
+}
+
+@Composable
+private fun EchterLatexText(
+    latex: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle,
+) {
+    val dunklesSchema = isSystemInDarkTheme()
+    val fontSize = style.fontSize.value
+        .takeIf { it.isFinite() && it > 0f }
+        ?.sp
+        ?: 18.sp
+    Latex(
+        latex = atlasLatexQuelltext(latex, dunklesSchema),
+        modifier = modifier,
+        config = LatexConfig(
+            fontSize = fontSize,
+            accessibilityEnabled = true,
+        ),
+        isDarkTheme = dunklesSchema,
+    )
+}
+
+/**
+ * Ergänzt nur Atlas-eigene Kompatibilitätsmakros und die bisherigen farbigen
+ * Wahrheitswerte. Mathematisches Layout wird ansonsten nicht mehr umgeschrieben.
+ */
+internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String {
+    val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
+    val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
+    val rendererKompatibel = ersetzeNichtBedingteCases(latex)
+    val farbig = rendererKompatibel
+        .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
+        .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+        .replace("\\top", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
+        .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+    return ATLAS_MACROS + farbig
+}
+
+/**
+ * Der verwendete Renderer interpretiert `cases` als echte Fallunterscheidung und
+ * ergänzt dabei ein „if“. Historische Methodendarstellungen nutzen dieselbe Umgebung
+ * jedoch nur für die große linke Klammer. Solche Blöcke besitzen keine `&`-Spalte
+ * und werden deshalb verlustfrei in eine einspaltige Matrix mit linker Klammer
+ * übersetzt. Echte Fallunterscheidungen mit Bedingungsspalte bleiben unangetastet.
+ */
+internal fun ersetzeNichtBedingteCases(latex: String): String {
+    val startMarke = "\\begin{cases}"
+    val endeMarke = "\\end{cases}"
+    var text = latex
+    var sucheAb = 0
+
+    while (sucheAb < text.length) {
+        val start = text.indexOf(startMarke, sucheAb)
+        if (start < 0) break
+        val inhaltStart = start + startMarke.length
+        val ende = text.indexOf(endeMarke, inhaltStart)
+        if (ende < 0) break
+        val inhalt = text.substring(inhaltStart, ende)
+        if ('&' !in inhalt) {
+            val ersatz = "\\left\\{\\begin{matrix}$inhalt\\end{matrix}\\right."
+            text = text.substring(0, start) + ersatz + text.substring(ende + endeMarke.length)
+            sucheAb = start + ersatz.length
+        } else {
+            sucheAb = ende + endeMarke.length
+        }
+    }
+    return text
 }
 
 @Composable
@@ -127,7 +174,7 @@ private fun AtlasIntegralOperator(
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         if (!obereAnnotation.isNullOrBlank()) {
-            LatexText(
+            EchterLatexText(
                 latex = obereAnnotation,
                 style = MaterialTheme.typography.labelSmall,
             )
@@ -138,7 +185,7 @@ private fun AtlasIntegralOperator(
                 .height(glyphHoehe),
         )
         if (!untereAnnotation.isNullOrBlank()) {
-            LatexText(
+            EchterLatexText(
                 latex = untereAnnotation,
                 style = MaterialTheme.typography.labelSmall,
             )
@@ -246,52 +293,7 @@ private fun liesLatexArgument(latex: String, start: Int): LatexArgument? {
     return LatexArgument(latex[position].toString(), position + 1)
 }
 
-private data class GroßerOperatorTeile(
-    val position: Int,
-    val vorher: String,
-    val operator: String,
-    val index: String,
-    val nachher: String,
-)
-
-private fun zerlegeGroßenOperator(latex: String): GroßerOperatorTeile? {
-    val operatoren = listOf(
-        "\\mathop{\\stackrel{\\bullet}{\\bigvee}}" to "\\stackrel{\\bullet}{\\bigvee}",
-        "\\mathop{\\times}" to "\\times",
-        "\\sum" to "\\sum",
-        "\\prod" to "\\prod",
-        "\\bigcup" to "\\bigcup",
-        "\\bigcap" to "\\bigcap",
-        "\\bigwedge" to "\\bigwedge",
-        "\\bigvee" to "\\bigvee",
-    )
-    val treffer = operatoren.mapNotNull { (quelle, anzeige) ->
-        latex.indexOf(quelle).takeIf { it >= 0 }?.let { Triple(it, quelle, anzeige) }
-    }.minByOrNull { it.first } ?: return null
-    val limitsStart = treffer.first + treffer.second.length
-    val limits = "\\limits_"
-    if (!latex.startsWith(limits, limitsStart)) return null
-    var position = limitsStart + limits.length
-    if (position >= latex.length || latex[position] != '{') return null
-    val indexStart = ++position
-    var tiefe = 1
-    while (position < latex.length && tiefe > 0) {
-        when (latex[position++]) {
-            '{' -> tiefe++
-            '}' -> tiefe--
-        }
-    }
-    if (tiefe != 0) return null
-    val indexEnde = position - 1
-    return GroßerOperatorTeile(
-        position = treffer.first,
-        vorher = latex.substring(0, treffer.first).trimEnd(),
-        operator = treffer.third,
-        index = latex.substring(indexStart, indexEnde),
-        nachher = latex.substring(position).trimStart(),
-    )
-}
-
+/** Entfernt ausschließlich vollständige äußere Formelbegrenzer. */
 fun normalisiereLatexQuelltext(latex: String): String {
     val getrimmt = latex.trim()
     return when {
@@ -318,6 +320,11 @@ fun latexZuAnnotiertemText(
 /** Kompakte Klartextvariante für Stellen, an denen kein Compose-Text verfügbar ist. */
 fun vereinfacheLatexAnzeige(latex: String): String = latexZuAnnotiertemText(latex).text
 
+/**
+ * Leichtgewichtiger Parser ausschließlich für Text-/Diagnosepfade, die einen
+ * [AnnotatedString] statt eines echten Formel-Layouts benötigen. Die visuelle
+ * Darstellung läuft weiterhin vollständig über [LatexText].
+ */
 private class LatexParser(
     private val quelltext: String,
     private val ausgabe: AnnotatedString.Builder,
@@ -383,11 +390,17 @@ private class LatexParser(
             "mathbb" -> schreibeDoppelstrich()
             "begin" -> when (liesGruppenText()) {
                 "pmatrix" -> ausgabe.append('[')
-                "cases" -> { casesTiefe++; ausgabe.append("{\n") }
+                "cases" -> {
+                    casesTiefe++
+                    ausgabe.append("{\n")
+                }
             }
             "end" -> when (liesGruppenText()) {
                 "pmatrix" -> ausgabe.append(']')
-                "cases" -> { casesTiefe = (casesTiefe - 1).coerceAtLeast(0); ausgabe.append('}') }
+                "cases" -> {
+                    casesTiefe = (casesTiefe - 1).coerceAtLeast(0)
+                    ausgabe.append('}')
+                }
             }
             "left", "right", "!", ",", ";", "quad", "qquad" -> Unit
             "operatorname", "text", "mathrm", "mathbf" -> ausgabe.append(liesGruppenText().replace("\\ ", " "))
@@ -485,7 +498,7 @@ private class LatexParser(
     }
 
     private fun zeichenFürBefehl(befehl: String) = mapOf(
-        "cdot" to "·", "times" to "×", "pi" to "π", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
+        "cdot" to "·", "times" to "×", "div" to "÷", "pi" to "π", "dots" to "…", "ldots" to "…", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
         "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",

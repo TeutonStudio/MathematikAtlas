@@ -63,17 +63,18 @@ object FaltungsKnotenVorlagen {
         art = METHODEN_AUFRUF_ART,
         name = "Methode aufrufen",
         kategorie = "Methoden",
-        beschreibung = "Wendet eine Methode geordnet auf konkrete oder symbolische Argumente an.",
+        beschreibung = "Wendet eine Methode an; unbekannte Signaturen verwenden Argument- und Ergebnistupel als sicheren Vertrag.",
         standardGröße = GraphGröße(285f, 135f),
         anschlüsse = listOf(
             eingang("methode", MathematikAnschlussArten.Methode.id, 0),
-            eingang("argument1", MathematikAnschlussArten.Objekt.id, 1, erweiterbar = true),
-            eingang("argument2", MathematikAnschlussArten.Objekt.id, 2, erweiterbar = true),
-            ausgang("wert", MathematikAnschlussArten.Objekt.id),
+            eingang("argument-0", MathematikAnschlussArten.Tupel.id, 1),
+            ausgang("wert", MathematikAnschlussArten.Tupel.id),
         ),
         standardParameter = mapOf(
-            METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Objekt.id.wert,
-            "festeEingänge" to "2",
+            METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Tupel.id.wert,
+            METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_TUPEL,
+            METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_TUPEL,
+            "festeEingänge" to "1",
         ),
     )
 
@@ -122,11 +123,27 @@ object FaltungsKnotenVorlagen {
         ),
     )
 
+    val MethodenArgumente = KnotenVorlage(
+        art = METHODEN_ARGUMENTE_ART,
+        name = "Methodenargumente",
+        kategorie = "Methoden",
+        beschreibung = "Liest Namen und Wertevorräte der geordneten Methodenargumente strukturiert aus.",
+        standardGröße = GraphGröße(280f, 115f),
+        anschlüsse = listOf(
+            eingang("methode", MathematikAnschlussArten.Methode.id),
+            ausgang("argumente", MathematikAnschlussArten.Tupel.id),
+        ),
+        standardParameter = mapOf(
+            METHODEN_ARGUMENTE_PROJEKTION to METHODEN_ARGUMENTPROJEKTION_TUPEL,
+        ),
+    )
+
+    /** Historische Vorlage bleibt nur als Ladevertrag erhalten und wird nicht mehr katalogisiert. */
     val MethodenArgumentanzahl = KnotenVorlage(
         art = METHODEN_ARGUMENTANZAHL_ART,
         name = "Methoden-Argumentanzahl",
         kategorie = "Methoden",
-        beschreibung = "Gibt die Anzahl der geordneten Argumentplätze einer Methode aus; sie ist kein Dimensionsbegriff.",
+        beschreibung = "Historischer Kompatibilitätsknoten für gespeicherte Karten.",
         standardGröße = GraphGröße(270f, 105f),
         anschlüsse = listOf(
             eingang("methode", MathematikAnschlussArten.Methode.id),
@@ -142,7 +159,7 @@ object FaltungsKnotenVorlagen {
         MethodenAnwendungObjekt,
         MethodenZielmenge,
         MethodenWertevorrat,
-        MethodenArgumentanzahl,
+        MethodenArgumente,
     )
 
     private fun methodenAnwendung(

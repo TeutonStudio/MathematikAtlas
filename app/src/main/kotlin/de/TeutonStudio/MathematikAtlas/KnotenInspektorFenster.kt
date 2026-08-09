@@ -15,6 +15,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.vorschauKnotenErsetzen
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.InspektorSichtbarkeit
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.MINDESTEINGÄNGE_PARAMETER
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.ANALYSIS_EIGENSCHAFT_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.MATRIX_EINZEL_EINGABEN
@@ -27,8 +28,12 @@ import de.TeutonStudio.MathematikKnoten.TUPEL_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.TUPEL_METHODE
 import de.TeutonStudio.MathematikKnoten.matrixKonfiguration
 import de.TeutonStudio.MathematikKnoten.setzeMatrixKonfiguration
+import de.TeutonStudio.MathematikKnoten.setzeTupelEingangAnzahl
 import de.TeutonStudio.MathematikKnoten.setzeTupelKonfiguration
 import de.TeutonStudio.MathematikKnoten.tupelKonfiguration
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
+import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
+import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
 
 private const val STANDARDWERT_PREFIX = "standardwert."
 private val INSPEKTOR_BREITE = 310.dp
@@ -154,16 +159,27 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
                         knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN
                     ) {
+                        val mindestAnzahl = if (knoten.art == "mathematik.tupel") 1 else 2
                         val wert = knoten.parameter["festeEingänge"] ?: "2"
                         var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                         OutlinedTextField(
                             value = text,
                             onValueChange = {
                                 text = it
-                                it.toIntOrNull()?.let { anzahl -> zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl) }
+                                it.toIntOrNull()
+                                    ?.takeIf { anzahl -> anzahl >= mindestAnzahl }
+                                    ?.let { anzahl ->
+                                        if (knoten.art == "mathematik.tupel") {
+                                            zustand.editor.setzeTupelEingangAnzahl(knoten.id, anzahl)
+                                        } else {
+                                            zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl)
+                                        }
+                                    }
                             },
                             label = { Text("Feste Eingänge") },
-                            supportingText = { Text("Mindestens 2; weitere Eingänge entstehen beim Verbinden.") },
+                            supportingText = {
+                                Text("Mindestens $mindestAnzahl; weitere Eingänge entstehen beim Verbinden.")
+                            },
                             modifier = Modifier.fillMaxWidth(),
                         )
                         val zeigeWerte = knoten.parameter["operatorAnzeige"] != "name"
@@ -194,8 +210,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     knoten.parameter.filterKeys {
                         it !in setOf(
                             "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
-                            "werteVorrat", "zielmenge", "argumentReihenfolge", MENGENDEFINITION_PAAR,
-                            MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
+                            "werteVorrat", "zielmenge", "argumentReihenfolge", MINDESTEINGÄNGE_PARAMETER,
+                            MENGENDEFINITION_PAAR, MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
                             MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
                         ) && !it.startsWith(STANDARDWERT_PREFIX) &&
                             !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.") &&
@@ -423,20 +439,22 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
     if (methodenAusgänge.isEmpty()) return
 
     HorizontalDivider()
-    Text("Methodenargumente", style = MaterialTheme.typography.titleSmall)
+    Text("Methodenprojektion", style = MaterialTheme.typography.titleSmall)
     Text(
-        "Diese Einstellung verändert nur die Anschlüsse auf der Karte. Die Methode und ihre geordnete Parameterliste bleiben unverändert.",
+        "Argument- und Ergebnisprojektion verändern die Karten-Schnittstelle der Methode, nicht ihre geordnete Parameterliste oder Rechenvorschrift.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     methodenAusgänge.forEach { ausgang ->
         if (methodenAusgänge.size > 1) {
-            Text(ausgang.name, style = MaterialTheme.typography.labelMedium)
+            Text(ausgang.name, style = MaterialTheme.typography.labelLarge)
         }
-        val aktuell = knoten.methodenAusgangArgumentprojektion(ausgang.name)
+
+        Text("Argumente", style = MaterialTheme.typography.labelMedium)
+        val argumentProjektion = knoten.methodenAusgangArgumentprojektion(ausgang.name)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
             FilterChip(
-                selected = aktuell == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
+                selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
                 onClick = {
                     zustand.editor.führeAus(
                         KartenAktion.KnotenParameterÄndern(
@@ -449,7 +467,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
                 label = { Text("Separiert") },
             )
             FilterChip(
-                selected = aktuell == METHODEN_ARGUMENTPROJEKTION_TUPEL,
+                selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL,
                 onClick = {
                     zustand.editor.führeAus(
                         KartenAktion.KnotenParameterÄndern(
@@ -461,6 +479,52 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
                 },
                 label = { Text("Ein Tupel") },
             )
+        }
+
+        val methode = zustand.auswertung.knoten[knoten.id]
+            ?.ausgaben
+            ?.get(ausgang.name)
+            ?.objekt as? Methode
+        val zielIstTupel = methode?.let {
+            runCatching { it.methodenSignatur().zielMenge is Tupelraum }.getOrDefault(false)
+        } == true
+        Text("Ergebnis", style = MaterialTheme.typography.labelMedium)
+        if (zielIstTupel) {
+            Text(
+                "Die Zielmenge ist bereits ein Tupelraum; das Ergebnis bleibt ein Tupel und wird nicht nochmals verpackt.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            val ergebnisProjektion = knoten.methodenAusgangErgebnisprojektion(ausgang.name)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                FilterChip(
+                    selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_DIREKT,
+                    onClick = {
+                        zustand.editor.führeAus(
+                            KartenAktion.KnotenParameterÄndern(
+                                knoten.id,
+                                methodenAusgangErgebnisprojektionSchlüssel(ausgang.name),
+                                METHODEN_ERGEBNISPROJEKTION_DIREKT,
+                            ),
+                        )
+                    },
+                    label = { Text("Direkt") },
+                )
+                FilterChip(
+                    selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL,
+                    onClick = {
+                        zustand.editor.führeAus(
+                            KartenAktion.KnotenParameterÄndern(
+                                knoten.id,
+                                methodenAusgangErgebnisprojektionSchlüssel(ausgang.name),
+                                METHODEN_ERGEBNISPROJEKTION_TUPEL,
+                            ),
+                        )
+                    },
+                    label = { Text("1D-Tupel") },
+                )
+            }
         }
     }
 }

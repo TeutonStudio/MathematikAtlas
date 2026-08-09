@@ -7,6 +7,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.MINDESTEINGÄNGE_PARAMETER
 
 const val TUPEL_EINZEL_EINGABEN = "einzelEingaben"
 const val TUPEL_METHODE = "methode"
@@ -30,7 +31,7 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
             tupelEingang(vorhandene["methode"], "methode", MathematikAnschlussArten.Methode.id, 1),
         )
         else -> {
-            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
+            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2
             List(anzahl) { index ->
                 val name = when (index) {
                     0 -> "a"
@@ -56,10 +57,11 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
         art = MathematikAnschlussArten.Tupel.id,
     )
     val parameter = when (art) {
-        TUPEL_METHODE -> knoten.parameter
+        TUPEL_METHODE -> knoten.parameter - MINDESTEINGÄNGE_PARAMETER
         else -> knoten.parameter + mapOf(
-            "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2).toString(),
+            "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2).toString(),
             "operatorAnzeige" to (knoten.parameter["operatorAnzeige"] ?: "wert"),
+            MINDESTEINGÄNGE_PARAMETER to "1",
         )
     } + ("erzeugungsArt" to art)
     return knoten.copy(anschlüsse = eingänge + ausgang, parameter = parameter)
@@ -92,4 +94,23 @@ fun KartenEditorZustand.setzeTupelKonfiguration(knotenId: KnotenId, erzeugungsAr
     val knoten = karte.knoten.firstOrNull { it.id == knotenId } ?: return
     val konfiguriert = konfiguriereTupel(knoten, erzeugungsArt)
     führeAus(KartenAktion.KnotenKonfigurationErsetzen(knotenId, konfiguriert.parameter, konfiguriert.anschlüsse))
+}
+
+/** Setzt ausschließlich für den Elementmodus die feste Tupellänge; Einertupel sind gültig. */
+fun KartenEditorZustand.setzeTupelEingangAnzahl(knotenId: KnotenId, anzahl: Int) {
+    val knoten = karte.knoten.firstOrNull { it.id == knotenId && it.art == TUPEL_ART } ?: return
+    val vorbereitet = knoten.copy(
+        parameter = knoten.parameter + mapOf(
+            "festeEingänge" to anzahl.coerceAtLeast(1).toString(),
+            "erzeugungsArt" to TUPEL_EINZEL_EINGABEN,
+        ),
+    )
+    val konfiguriert = konfiguriereTupel(vorbereitet, TUPEL_EINZEL_EINGABEN)
+    führeAus(
+        KartenAktion.KnotenKonfigurationErsetzen(
+            knotenId,
+            konfiguriert.parameter,
+            konfiguriert.anschlüsse,
+        ),
+    )
 }

@@ -3,9 +3,13 @@ package de.TeutonStudio.KnotenKartenVerwalter.zustand
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 
-private const val MINDESTEINGÄNGE = 2
+private const val STANDARD_MINDESTEINGÄNGE = 2
+const val MINDESTEINGÄNGE_PARAMETER = "mindestEingänge"
 
 enum class AnschlussEinfügePosition { Davor, Danach }
+
+private fun KnotenDaten.mindestEingänge(): Int =
+    parameter[MINDESTEINGÄNGE_PARAMETER]?.toIntOrNull()?.coerceAtLeast(0) ?: STANDARD_MINDESTEINGÄNGE
 
 fun KartenEditorZustand.kannAnschlussRelativEinfügen(ref: AnschlussVerweis): Boolean {
     val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return false
@@ -21,7 +25,7 @@ fun KartenEditorZustand.kannAnschlussVernichten(ref: AnschlussVerweis): Boolean 
     val festeEingänge = knoten.anschlüsse.count {
         it.richtung == AnschlussRichtung.Eingang && !it.dynamischErzeugt
     }
-    return festeEingänge > MINDESTEINGÄNGE
+    return festeEingänge > knoten.mindestEingänge()
 }
 
 /**
