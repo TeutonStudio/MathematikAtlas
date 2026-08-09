@@ -176,7 +176,9 @@ class MathematikAuswerterRegister {
         FALTUNGSKONSTRUKTOR_ART -> FaltungskonstruktorAuswerter
         FALTUNGSDEFINATOR_ART -> FaltungsdefinatorAuswerter
         METHODEN_ANWENDUNG_ART, METHODEN_AUFRUF_ART -> MethodenAnwendungAuswerter
-        METHODEN_ZIELMENGE_ART -> MethodenZielmengeAuswerter
+        METHODEN_ZIELMENGE_ART -> MethodenZielmengeSignaturAuswerter
+        METHODEN_WERTEVORRAT_ART -> MethodenWertevorratAuswerter
+        METHODEN_ARGUMENTANZAHL_ART -> MethodenArgumentanzahlAuswerter
         else -> auswerter[art]
     }
     fun arten(): Set<KnotenArtId> = auswerter.keys + setOf(
@@ -188,6 +190,8 @@ class MathematikAuswerterRegister {
         METHODEN_ANWENDUNG_ART,
         METHODEN_AUFRUF_ART,
         METHODEN_ZIELMENGE_ART,
+        METHODEN_WERTEVORRAT_ART,
+        METHODEN_ARGUMENTANZAHL_ART,
     )
 }
 
