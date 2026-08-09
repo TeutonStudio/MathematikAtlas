@@ -2,7 +2,7 @@
 
 > **Eine knotenorientierte Mathematiklandschaft**
 
-Mathematik Atlas ist eine experimentelle native Android-Anwendung, in der mathematische Objekte, Operatoren und Umformungen als verbundene Knotenkarten dargestellt werden. Die sichtbare Graphstruktur macht Abhängigkeiten und Operatorreihenfolgen nachvollziehbar, während ein modularer Rechenkern die Karten topologisch auswertet und wiederverwendbare Zwischenergebnisse zwischenspeichert.
+Mathematik Atlas ist eine experimentelle Anwendung für Android und Linux-Desktop, in der mathematische Objekte, Operatoren und Umformungen als verbundene Knotenkarten dargestellt werden. Die sichtbare Graphstruktur macht Abhängigkeiten und Operatorreihenfolgen nachvollziehbar, während ein modularer Rechenkern die Karten topologisch auswertet und wiederverwendbare Zwischenergebnisse zwischenspeichert.
 
 > [!IMPORTANT]
 > Das Projekt befindet sich in aktiver Entwicklung. Es gibt derzeit keine professionell veröffentlichte Endnutzer-Version und keinen offiziellen APK-Download. Datenformate, Bedienkonzepte und mathematische Knoten können sich noch verändern.
@@ -88,7 +88,7 @@ Weitere Bedien- und Entwicklungsdetails stehen in [docs/DEVELOPMENT.md](docs/DEV
 
 ## Architektur
 
-Das Repository ist ein Android-Gradle-Multimodulprojekt:
+Das Repository ist ein Gradle-Multimodulprojekt mit Android- und Linux-Desktopzielen:
 
 | Modul | Verantwortung |
 |---|---|
@@ -97,6 +97,7 @@ Das Repository ist ein Android-Gradle-Multimodulprojekt:
 | `MathematikKartenAdapter` | Topologische Kartenauswertung, Ergebniszustände und Cache |
 | `MathematikKnoten` | Mathematische Knotenvorlagen, Anschlussarten, Auswerter und spezialisierte Renderer |
 | `app` | Android-Anwendung, Kartenbibliothek, Inspector, Navigation, Persistenz sowie Import und Export |
+| `desktopApp` | Linux-Desktopanwendung, Menü, Dateidialoge, XDG-Speicher und native Pakete |
 
 Die mathematische Semantik bleibt vom Editor und von der Android-Oberfläche getrennt. Technische Details und verbindliche Modulgrenzen sind in der [Entwicklungsdokumentation](docs/DEVELOPMENT.md) zusammengefasst.
 
@@ -109,7 +110,7 @@ Die mathematische Semantik bleibt vom Editor und von der Android-Oberfläche get
 
 ## Schnellstart
 
-Öffne den Repository-Ordner in Android Studio und starte das Modul `app` auf einem Emulator oder Android-Gerät.
+Öffne den Repository-Ordner in Android Studio und starte das Modul `app` auf einem Emulator oder Android-Gerät. Das Linux-Desktopziel startet mit `./gradlew :desktopApp:run`; Paketierung, Datenpfade und Tastaturkürzel beschreibt [Linux-Desktop](docs/LINUX_DESKTOP.md).
 
 Ein Debug-Build lässt sich auch in der Konsole erzeugen:
 
@@ -147,6 +148,7 @@ Die Grafik zeigt langfristige Entwicklungsräume. Sie ist keine Zusage für Term
 - [Roadmap](ROADMAP.md)
 - [Beispielkarten](docs/TESTKARTEN.md)
 - [Entwicklung und Architektur](docs/DEVELOPMENT.md)
+- [Linux-Desktop und Eingabevertrag](docs/LINUX_DESKTOP.md)
 - [Versionsschema](docs/VERSIONING.md)
 - [Beitragen](CONTRIBUTING.md)
 - [Contributor License Agreement](CLA.md)

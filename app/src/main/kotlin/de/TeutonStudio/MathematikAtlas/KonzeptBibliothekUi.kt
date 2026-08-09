@@ -12,7 +12,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -558,16 +566,11 @@ private fun KonzeptBibliothekKarte(
     ) {
         Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (vorlage != null) {
-                val dragModifier = if (eintrag.istEinfügbar) {
-                    Modifier.knotenVorlagenDragQuelle(zustand, vorlage)
-                } else {
-                    Modifier
-                }
                 KnotenBibliothekVorschau(
                     zustand = zustand,
                     eintragId = eintrag.id,
                     vorlage = vorlage,
-                    interaktionsModifier = dragModifier,
+                    einfügbar = eintrag.istEinfügbar,
                     onEinfügen = { zustand.fügeKnotenEin(vorlage, position) },
                     onDefinition = { definitionÖffnen(vorlage) },
                 )
@@ -625,13 +628,12 @@ private fun KonzeptBibliothekKarte(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun KnotenBibliothekVorschau(
     zustand: AtlasZustand,
     eintragId: String,
     vorlage: KnotenVorlage,
-    interaktionsModifier: Modifier,
+    einfügbar: Boolean,
     onEinfügen: () -> Unit,
     onDefinition: () -> Unit,
 ) {
@@ -654,9 +656,32 @@ private fun KnotenBibliothekVorschau(
             AnschlussPunkte(ausgänge, Modifier.align(Alignment.CenterEnd))
             Box(
                 Modifier.matchParentSize()
-                    .then(interaktionsModifier)
-                    .semantics { contentDescription = "${vorlage.name} einfügen" }
-                    .combinedClickable(onClick = onEinfügen, onLongClick = onDefinition),
+                    .then(
+                        if (einfügbar) Modifier.konzeptVorlagenInteraktion(
+                            zustand = zustand,
+                            vorlage = vorlage,
+                            onEinfügen = onEinfügen,
+                            onDefinition = onDefinition,
+                        ) else Modifier,
+                    )
+                    .onKeyEvent { event ->
+                        if (einfügbar && event.type == KeyEventType.KeyUp &&
+                            (event.key == Key.Enter || event.key == Key.Spacebar)
+                        ) {
+                            onEinfügen()
+                            true
+                        } else false
+                    }
+                    .focusable(enabled = einfügbar)
+                    .semantics {
+                        contentDescription = if (einfügbar) "${vorlage.name} einfügen" else "${vorlage.name} ist geplant"
+                        if (einfügbar) {
+                            onClick("Knoten einfügen") { onEinfügen(); true }
+                            customActions = listOf(
+                                CustomAccessibilityAction("Definition öffnen") { onDefinition(); true },
+                            )
+                        }
+                    },
             )
         }
     }

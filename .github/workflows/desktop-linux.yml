@@ -1,0 +1,59 @@
+name: Linux-Desktop
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bauen-und-paketieren:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Desktop- und gemeinsame Tests
+        run: ./gradlew :KnotenKartenVerwalterDesktop:test :MathematikKartenAdapterDesktop:test :MathematikKnotenDesktop:test :desktopApp:test --stacktrace
+      - name: RPM bauen
+        run: ./gradlew :desktopApp:packageRpm --stacktrace
+      - name: RPM installieren, starten, Neustartpersistenz prüfen und deinstallieren
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes rpm xvfb
+          rpm_datei=$(find desktopApp/build/compose/binaries/main/rpm -name '*.rpm' -print -quit)
+          test -n "$rpm_datei"
+          # Ubuntu besitzt kein Fedora-Menüsystem; Payload und RPM-Datenbank werden
+          # deshalb ohne die distro-spezifischen xdg-Skriptlets geprüft.
+          sudo rpm --install --nodeps --noscripts "$rpm_datei"
+          starter=$(find /opt -path '*/bin/mathematik-atlas' -type f -print -quit)
+          test -x "$starter"
+          daten=$(mktemp -d)
+          XDG_DATA_HOME="$daten" xvfb-run --auto-servernum "$starter" --smoke-test
+          XDG_DATA_HOME="$daten" xvfb-run --auto-servernum "$starter" --smoke-test
+          test "$(find "$daten/MathematikAtlas/karten" -name 'v*.json' | wc -l)" -ge 2
+          paket=$(rpm -qp --queryformat '%{NAME}' "$rpm_datei")
+          sudo rpm -q "$paket"
+          sudo rpm --erase --noscripts "$paket"
+          test ! -e "$starter"
+      - name: Pakete bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: mathematik-atlas-linux-v2.28.8
+          path: |
+            desktopApp/build/compose/binaries/main/rpm/*.rpm
+            desktopApp/build/compose/binaries/main/deb/*.deb
+          if-no-files-found: warn

@@ -9,6 +9,7 @@ sealed interface KartenAktion {
     data class KnotenMehrfachEinfügen(
         val knoten: List<KnotenDaten>,
         val verbindungen: List<VerbindungDaten>,
+        val visuelleGruppen: List<VisuelleKnotenGruppeDaten> = emptyList(),
     ) : KartenAktion
     data class KnotenGrößeÄndern(val id: KnotenId, val größe: GraphGröße) : KartenAktion
     data class KnotenParameterÄndern(val id: KnotenId, val schlüssel: String, val wert: String) : KartenAktion
@@ -56,6 +57,7 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
     is KartenAktion.KnotenMehrfachEinfügen -> copy(
         knoten = knoten + aktion.knoten,
         verbindungen = verbindungen + aktion.verbindungen,
+        visuelleGruppen = visuelleGruppen + aktion.visuelleGruppen,
     )
     is KartenAktion.KnotenGrößeÄndern -> copy(knoten = knoten.map { if (it.id == aktion.id) it.copy(größe = aktion.größe) else it })
     is KartenAktion.KnotenParameterÄndern -> copy(knoten = knoten.map {
