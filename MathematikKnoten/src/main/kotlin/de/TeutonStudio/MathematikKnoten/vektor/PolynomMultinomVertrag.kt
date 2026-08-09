@@ -6,14 +6,12 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /** Hält den historischen Komfortknoten auf demselben Multinomvertrag wie den Zahlenrechner. */
-fun MathematikAuswerterRegister.registrierePolynomMultinomVertragV2300() {
+fun MathematikAuswerterRegister.registrierePolynomMultinomVertrag() {
     registriere("mathematik.vektorZuPolynom") { k ->
         val vektor = k.eingänge["vektor"]?.objekt as? OrientierterVektor
             ?: error("Vektoreingang fehlt.")
         val variablenName = (k.knoten.parameter["variable"] ?: "x").trim()
         require(variablenName.isNotEmpty()) { "Die Polynomvariable darf nicht leer sein." }
-        // Explizit als ZahlAusdruck typisieren, damit dieselbe allgemeine Überladung wie
-        // beim Zahlenrechner verwendet wird und damit dieselbe multinomFolge zugrunde liegt.
         val argument: ZahlAusdruck = Variable(variablenName)
         val wert = polynomAusKoeffizienten(vektor.werte, argument)
         KnotenAuswertungsErgebnis(
@@ -28,3 +26,10 @@ fun MathematikAuswerterRegister.registrierePolynomMultinomVertragV2300() {
         )
     }
 }
+
+@Deprecated(
+    message = "Versionsspezifischer Name; registrierePolynomMultinomVertrag verwenden.",
+    replaceWith = ReplaceWith("registrierePolynomMultinomVertrag()"),
+)
+fun MathematikAuswerterRegister.registrierePolynomMultinomVertragV2300() =
+    registrierePolynomMultinomVertrag()

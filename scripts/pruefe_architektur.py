@@ -51,6 +51,38 @@ for name in verbotene_generatoren:
     if (app_konzepte / name).exists():
         fehler.append(f"App-lokaler statischer Kartengenerator {name} wurde nicht entfernt")
 
+
+# Der sichtbare mathematische Erstellen-Katalog ist plattformneutral.
+app_root = wurzel / "app/src/main/kotlin/de/TeutonStudio/MathematikAtlas"
+alter_versionskatalog = app_root / "MathematikKnotenVorlagenV2300.kt"
+if alter_versionskatalog.exists():
+    fehler.append("Der app-seitige Versionskatalog MathematikKnotenVorlagenV2300.kt darf nicht zurückkehren")
+
+kanonischer_katalog = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/katalog/KanonischerMathematikKnotenKatalog.kt"
+if not kanonischer_katalog.exists():
+    fehler.append("KanonischerMathematikKnotenKatalog.kt fehlt in der Mathematikschicht")
+
+app_katalog = app_root / "MathematikKnotenKatalog.kt"
+if not app_katalog.exists():
+    fehler.append("Die dünne App-Fassade MathematikKnotenKatalog.kt fehlt")
+else:
+    text = app_katalog.read_text(encoding="utf-8")
+    if "KanonischerMathematikKnotenKatalog" not in text:
+        fehler.append("Die App verwendet nicht den kanonischen Mathematikknoten-Katalog")
+    if "V2300" in text:
+        fehler.append("Die App-Fassade darf keine versionsspezifische Knotenkataloglogik enthalten")
+
+desktop_zustand = wurzel / "desktopApp/src/main/kotlin/de/TeutonStudio/MathematikAtlas/desktop/DesktopAtlasZustand.kt"
+if desktop_zustand.exists() and "KanonischerMathematikKnotenKatalog" not in desktop_zustand.read_text(encoding="utf-8"):
+    fehler.append("DesktopAtlasZustand verwendet nicht den kanonischen Mathematikknoten-Katalog")
+
+alter_gesamtpfad = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/geometrie/GesamterMathematikAuswerter.kt"
+neuer_gesamtpfad = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/katalog/GesamterMathematikAuswerter.kt"
+if alter_gesamtpfad.exists():
+    fehler.append("GesamterMathematikAuswerter gehört nicht in den Geometrieordner")
+if not neuer_gesamtpfad.exists():
+    fehler.append("GesamterMathematikAuswerter fehlt im Katalogordner")
+
 if fehler:
     print("Architekturprüfung fehlgeschlagen:")
     print("\n".join(f"- {f}" for f in fehler))
