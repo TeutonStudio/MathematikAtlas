@@ -364,7 +364,7 @@ class KartenAuswerter(
             "mathematik.potenz" -> mapOf("wert" to "\\left(${wert("basis")}\\right)^{${wert("exponent")}}")
             "mathematik.kehrwert" -> mapOf("wert" to "\\left(${wert("zahl")}\\right)^{-1}")
             "mathematik.wurzel" -> mapOf("wert" to "\\sqrt{${wert("radikand")}}")
-            "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}\\left(${wert("argument")}")")
+            "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}}\\left(${wert("argument")}\\right)")
             "mathematik.ableiten" -> mapOf("wert" to "\\frac{d}{d${knoten.parameter["variable"] ?: "x"}}\\left(${wert("term")}\\right)")
             "mathematik.integrieren" -> mapOf("wert" to "\\int ${wert("term")}\\,d${knoten.parameter["variable"] ?: "x"}")
             "mathematik.gleichheit" -> mapOf("aussage" to binär("="))
