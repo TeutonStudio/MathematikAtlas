@@ -69,6 +69,13 @@ internal fun synchronisiereMethodenAufrufe(
                 val projektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
                 synchronisiereMethodenArgumente(knoten, methode, projektion)
             }
+            METHODEN_ZIELMENGE_ART -> {
+                val projektion = methodenErgebnisprojektionFürVerbraucher(karte, knoten)
+                knoten.copy(
+                    parameter = knoten.parameter +
+                        (METHODEN_ZIELMENGE_ERGEBNISPROJEKTION to projektion),
+                )
+            }
             else -> knoten
         }
     }
