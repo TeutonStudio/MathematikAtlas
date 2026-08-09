@@ -108,7 +108,14 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         require(tupel.elemente.size == methode.parameter.size) {
             "Die Methode '${methode.name}' besitzt ${methode.parameter.size} Argumente, das verbundene Tupel aber ${tupel.elemente.size} Elemente."
         }
-        return tupel.elemente.map { element -> tupelWert.copy(objekt = element, latexDarstellung = null) }
+        return tupel.elemente.mapIndexed { index, element ->
+            val parameter = methode.parameter[index]
+            tupelWert.copy(
+                objekt = element,
+                werteVorrat = methode.werteVorräte[parameter.name],
+                latexDarstellung = null,
+            )
+        }
     }
 }
 
