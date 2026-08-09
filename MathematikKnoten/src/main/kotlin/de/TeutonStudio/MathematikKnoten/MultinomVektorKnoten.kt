@@ -44,8 +44,9 @@ object MultinomVektorKnotenVorlagen {
 fun MathematikAuswerterRegister.registriereMultinomVektor() {
     registriere(MULTINOMVEKTOR_ART) { kontext ->
         val xWert = kontext.eingänge["x"] ?: error("Der Multinomvektor benötigt den Eingang x.")
+        val dimEingang = kontext.eingänge["dim"] ?: error("Der Multinomvektor benötigt den Eingang dim.")
         val x = xWert.objekt as? ZahlAusdruck ?: error("Der Eingang x muss ein Zahlterm sein.")
-        val dimWert = kontext.eingänge["dim"]?.objekt as? RationaleZahl
+        val dimWert = dimEingang.objekt as? RationaleZahl
             ?: error("Der Multinomvektor benötigt eine konkrete ganze Dimension.")
         require(dimWert.nenner == BigInteger.ONE && dimWert.zähler.signum() >= 0 && dimWert.zähler.bitLength() < 31) {
             "dim muss eine konkrete nichtnegative ganze Zahl sein."
@@ -59,14 +60,13 @@ fun MathematikAuswerterRegister.registriereMultinomVektor() {
             orient == VEKTOR_ORIENTIERUNG_ZEILE -> ZeilenVektor(komponenten)
             else -> SpaltenVektor(komponenten)
         }
-        val eingänge = kontext.eingänge.values
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
                     objekt = objekt,
-                    annahmen = eingänge.flatMap { it.annahmen }.toSet(),
-                    reelleVariablen = reelleVariablen(eingänge),
-                    variablenQuellen = eingänge.flatMap { it.variablenQuellen }.geordnetEindeutig(),
+                    annahmen = xWert.annahmen + dimEingang.annahmen,
+                    reelleVariablen = xWert.reelleVariablen + dimEingang.reelleVariablen,
+                    variablenQuellen = xWert.variablenQuellen + dimEingang.variablenQuellen,
                     latexDarstellung = when (objekt) {
                         is Tupel -> "(x^k)_{0\\le k\\le $dim}"
                         is ZeilenVektor -> "(x^k)_{0\\le k\\le $dim}"
