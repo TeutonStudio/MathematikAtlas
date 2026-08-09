@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKartenAdapter
 
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
+import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
 import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
 
 const val METHODEN_WERTEVORRAT_ART = "mathematik.methodenWertevorrat"
@@ -27,11 +28,10 @@ internal object MethodenArgumentanzahlAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
         val methode = methodenWert.objekt as? Methode ?: error("Eine konkrete Methode fehlt.")
-        val argumentAnzahl = methode.methodenSignatur().argumente.size
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "anzahl" to BedingterWert(
-                    objekt = RationaleZahl.von(argumentAnzahl.toLong()),
+                    objekt = RationaleZahl.von(methode.argumentAnzahl.toLong()),
                     variablenQuellen = methodenWert.variablenQuellen,
                 ),
             ),
