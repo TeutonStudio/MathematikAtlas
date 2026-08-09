@@ -321,7 +321,7 @@ private fun OperatorKachel(
                 )
                 if (ausgewählt) Text("Ausgewählt", style = MaterialTheme.typography.labelSmall)
             }
-            LatexText(eintrag.symbolLatex, style = MaterialTheme.typography.titleMedium)
+            LatexText(eintrag.vorschauLatex, style = MaterialTheme.typography.titleMedium)
             Text(
                 eintrag.kategorie,
                 style = MaterialTheme.typography.labelSmall,
@@ -356,7 +356,7 @@ private fun OperatorDetails(
             ) {
                 item {
                     Text(eintrag.titel, style = MaterialTheme.typography.titleLarge)
-                    LatexText(eintrag.symbolLatex, style = MaterialTheme.typography.titleMedium)
+                    LatexText(eintrag.vorschauLatex, style = MaterialTheme.typography.titleMedium)
                     Text(eintrag.beschreibung, style = MaterialTheme.typography.bodyMedium)
                 }
                 if (eintrag.art == RechnerOperatorAuswahlArt.FORMEL) {
