@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.logik.vorschauKnotenErsetzen
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.InspektorSichtbarkeit
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.ANALYSIS_EIGENSCHAFT_KNOTEN_ART
@@ -133,6 +134,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                                 override fun knoten(knoten: KnotenDaten) {
                                     zustand.editor.führeAus(KartenAktion.KnotenErsetzen(knoten))
                                 }
+                                override fun vorschauKnotenErsetzen(knoten: KnotenDaten) =
+                                    zustand.editor.karte.vorschauKnotenErsetzen(knoten)
                             },
                         )
                         Spacer(Modifier.height(4.dp))

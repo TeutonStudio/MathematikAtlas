@@ -47,6 +47,7 @@ object MatrixdiagonaleKnotenVorlagen {
      * werden nicht als zusätzliche Knoten angeboten.
      */
     val alle = listOf(Matrixdiagonale, SpurKnotenVorlagen.Spur) +
+        TupelOperationKnotenVorlagen.alle +
         StrukturRechnerKnotenVorlagen.alle.filterNot { it.art in historischeSkalarproduktArten } +
         EinheitsvektorKnotenVorlagen.alle +
         VektorRechnerKnotenVorlagen.standard

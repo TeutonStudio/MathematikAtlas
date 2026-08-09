@@ -9,9 +9,11 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.logik.KnotenErsetzungsAuswirkung
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.TUPEL_ERGÄNZEN_ART
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
@@ -31,6 +33,13 @@ interface KnotenInspektorAktionen {
     fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
     fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
     fun knoten(knoten: KnotenDaten)
+    fun vorschauKnotenErsetzen(knoten: KnotenDaten): KnotenErsetzungsAuswirkung =
+        KnotenErsetzungsAuswirkung(
+            erhalteneAnschlüsse = knoten.anschlüsse,
+            hinzugefügteAnschlüsse = emptyList(),
+            entfallendeAnschlüsse = emptyList(),
+            entfallendeVerbindungen = emptyList(),
+        )
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
@@ -47,6 +56,7 @@ object KnotenInspektorRegister {
         "mathematik.transponieren" to TransponierenInspektor,
         "mathematik.matrixdiagonale" to MatrixdiagonaleInspektor,
         "mathematik.auswerten" to AuswertenInspektor,
+        TUPEL_ERGÄNZEN_ART to TupelErgänzenInspektor,
         ZAHLENRECHNER_ART to ZahlenRechnerInspektor,
         de.TeutonStudio.MathematikRechenSystem.kern.AussagenSatzRechner.KNOTEN_ART to StrukturRechnerInspektor,
         de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner.KNOTEN_ART to StrukturRechnerInspektor,

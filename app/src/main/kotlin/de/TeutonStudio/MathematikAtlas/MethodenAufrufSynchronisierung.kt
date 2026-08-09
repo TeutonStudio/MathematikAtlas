@@ -7,6 +7,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.METHODEN_ANWENDUNG_ERGEBNIS_ART
 import de.TeutonStudio.MathematikKartenAdapter.METHODEN_AUFRUF_ART
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.anschlussArtFürMathematischesObjekt
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 internal const val METHODEN_AUFRUF_STELLIGKEIT = "methodenAufruf.stelligkeit"
@@ -65,7 +66,11 @@ internal fun synchronisiereMethodenAufrufe(
         )
         prüfung.prüfe(ohneAktuelle, verbindung.von, verbindung.zu) is VerbindungsPrüfung.Erlaubt
     }
-    return ergebnis.copy(verbindungen = gültigeVerbindungen)
+    return synchronisiereTupelAuflöser(
+        ergebnis.copy(verbindungen = gültigeVerbindungen),
+        auswertung,
+        prüfung,
+    )
 }
 
 private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Methode?): KnotenDaten {
@@ -119,7 +124,7 @@ private fun synchronisiereMethodenAufruf(knoten: KnotenDaten, methode: Methode?)
             METHODEN_AUFRUF_VERTRAGSFEHLER to (fehler.message ?: "Die Zielmenge der Methode fehlt.")
         ))
     }
-    val ergebnisArt = anschlussArtFürObjekt(ausgabe)
+    val ergebnisArt = anschlussArtFürMathematischesObjekt(ausgabe)
     val argumente = methode.parameter.mapIndexed { index, parameter ->
         val bisher = bisherigeArgumente.getOrNull(index)
         (bisher ?: AnschlussDaten(
@@ -173,17 +178,4 @@ private fun anschlussArtFürParameter(parameter: MethodenParameter): AnschlussAr
     is MengenParameter -> MathematikAnschlussArten.Menge.id
     is TypisiertesElement -> AnschlussArtId(parameter.anschlussArt)
     is AllgemeinerParameter -> MathematikAnschlussArten.Objekt.id
-}
-
-private fun anschlussArtFürObjekt(objekt: MathematischesObjekt): AnschlussArtId = when (objekt) {
-    is ZahlAusdruck -> MathematikAnschlussArten.Zahl.id
-    is Aussage -> MathematikAnschlussArten.Aussage.id
-    is MengenAusdruck -> MathematikAnschlussArten.Menge.id
-    is SpaltenVektor -> MathematikAnschlussArten.SpaltenVektor.id
-    is ZeilenVektor -> MathematikAnschlussArten.ZeilenVektor.id
-    is Matrix -> MathematikAnschlussArten.Matrix.id
-    is Tupel -> MathematikAnschlussArten.Tupel.id
-    is Methode -> MathematikAnschlussArten.Methode.id
-    is TypisiertesElement -> AnschlussArtId(objekt.anschlussArt)
-    else -> MathematikAnschlussArten.Objekt.id
 }
