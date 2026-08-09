@@ -40,6 +40,7 @@ object MathematikKartenCodec {
 
 object MathematikKartenMigrationen {
     fun vorSpeichern(karte: KartenDaten): KartenDaten = karte
+        .normalisiereStrukturierteDivisionVorSpeichern()
         .migriereTensorOperationKnoten()
         .migriereHyperAnalysisKnoten()
         .migriereDifferentialKnoten()
