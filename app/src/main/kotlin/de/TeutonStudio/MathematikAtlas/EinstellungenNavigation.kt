@@ -81,42 +81,41 @@ internal fun baueEinstellungsNavigation(
         ordner.seiten += seite
     }
 
-    fun baueEbene(rohknoten: RohOrdner): EinstellungsNavigationsebene {
-        val elemente = buildList {
-            addAll(rohknoten.seiten.map(EinstellungsNavigationsElement::Seite))
-            addAll(rohknoten.kinder.values.map(::komprimiereOrdner))
-        }.sortedWith(compareBy(EinstellungsNavigationsElement::reihenfolge, { element ->
-            when (element) {
-                is EinstellungsNavigationsElement.Seite -> element.definition.titel
-                is EinstellungsNavigationsElement.Ordner -> element.titel
-            }
-        }))
-        return EinstellungsNavigationsebene(elemente)
-    }
-
-    fun kleinsteReihenfolge(ebene: EinstellungsNavigationsebene): Int =
-        ebene.elemente.minOfOrNull(EinstellungsNavigationsElement::reihenfolge) ?: Int.MAX_VALUE
-
-    fun komprimiereOrdner(start: RohOrdner): EinstellungsNavigationsElement.Ordner {
-        val sichtbareSegmente = mutableListOf(start.name)
-        var ende = start
-
-        while (ende.seiten.isEmpty() && ende.kinder.size == 1) {
-            val einzigesKind = ende.kinder.values.single()
-            sichtbareSegmente += einzigesKind.name
-            ende = einzigesKind
+    class NavigationBauer {
+        fun baueEbene(rohknoten: RohOrdner): EinstellungsNavigationsebene {
+            val elemente = buildList {
+                addAll(rohknoten.seiten.map(EinstellungsNavigationsElement::Seite))
+                addAll(rohknoten.kinder.values.map(::komprimiereOrdner))
+            }.sortedWith(compareBy(EinstellungsNavigationsElement::reihenfolge, { element ->
+                when (element) {
+                    is EinstellungsNavigationsElement.Seite -> element.definition.titel
+                    is EinstellungsNavigationsElement.Ordner -> element.titel
+                }
+            }))
+            return EinstellungsNavigationsebene(elemente)
         }
 
-        val inhalt = baueEbene(ende)
-        return EinstellungsNavigationsElement.Ordner(
-            pfad = ende.pfad,
-            anzeigePfad = sichtbareSegmente,
-            inhalt = inhalt,
-            reihenfolge = kleinsteReihenfolge(inhalt),
-        )
+        private fun komprimiereOrdner(start: RohOrdner): EinstellungsNavigationsElement.Ordner {
+            val sichtbareSegmente = mutableListOf(start.name)
+            var ende = start
+
+            while (ende.seiten.isEmpty() && ende.kinder.size == 1) {
+                val einzigesKind = ende.kinder.values.single()
+                sichtbareSegmente += einzigesKind.name
+                ende = einzigesKind
+            }
+
+            val inhalt = baueEbene(ende)
+            return EinstellungsNavigationsElement.Ordner(
+                pfad = ende.pfad,
+                anzeigePfad = sichtbareSegmente,
+                inhalt = inhalt,
+                reihenfolge = inhalt.elemente.minOfOrNull(EinstellungsNavigationsElement::reihenfolge) ?: Int.MAX_VALUE,
+            )
+        }
     }
 
-    return baueEbene(wurzel)
+    return NavigationBauer().baueEbene(wurzel)
 }
 
 internal fun EinstellungsNavigationsebene.alleOrdnerPfade(): Set<List<String>> = buildSet {
