@@ -7,6 +7,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.MINDESTEINGÄNGE_PARAMETER
 
 const val TUPEL_EINZEL_EINGABEN = "einzelEingaben"
 const val TUPEL_METHODE = "methode"
@@ -56,10 +57,11 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
         art = MathematikAnschlussArten.Tupel.id,
     )
     val parameter = when (art) {
-        TUPEL_METHODE -> knoten.parameter
+        TUPEL_METHODE -> knoten.parameter - MINDESTEINGÄNGE_PARAMETER
         else -> knoten.parameter + mapOf(
             "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2).toString(),
             "operatorAnzeige" to (knoten.parameter["operatorAnzeige"] ?: "wert"),
+            MINDESTEINGÄNGE_PARAMETER to "1",
         )
     } + ("erzeugungsArt" to art)
     return knoten.copy(anschlüsse = eingänge + ausgang, parameter = parameter)
