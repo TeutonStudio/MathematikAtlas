@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten.konzeptknoten
 
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.alleMathematikDefinitionsVorlagen
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensVerfügbarkeit
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechner
@@ -46,6 +47,18 @@ class KonzeptKnotenRegisterTest {
         val zahlen = KonzeptKnotenRegister.erstelle(vorlagen).single { it.id == de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensId("konzept.zahlenrechner") }
 
         assertTrue(zahlenVorlagen.map { it.stabileKonzeptId() }.all { it in zahlen.aliase })
+    }
+
+    @Test
+    fun `Bildmenge verwendet die neue sichtbare Benennung und behaelt Abbild als Suchalias`() {
+        val vorlagen = alleMathematikDefinitionsVorlagen()
+        val eintrag = KonzeptKnotenRegister.erstelle(vorlagen)
+            .single { "mathematik.abbild" in it.knotenArten }
+
+        assertEquals("Bildmenge", MathematikKnotenVorlagen.Abbild.name)
+        assertEquals("Bildmenge", eintrag.titel)
+        assertTrue("Abbild" in eintrag.alleSuchtexte)
+        assertEquals(setOf("mathematik.abbild"), eintrag.knotenArten)
     }
 
     @Test
