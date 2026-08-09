@@ -901,7 +901,7 @@ private fun KnotenInspektorSchaltfläche(
             .semantics { contentDescription = "Inspektor öffnen" },
         colors = IconButtonDefaults.iconButtonColors(contentColor = iconFarbe),
     ) {
-        Text("i", style = MaterialTheme.typography.titleMedium)
+        KnotenInspektorSymbol(Modifier.size(20.dp))
     }
 }
 
