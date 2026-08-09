@@ -36,7 +36,9 @@ jobs:
           sudo apt-get install --yes rpm xvfb
           rpm_datei=$(find desktopApp/build/compose/binaries/main/rpm -name '*.rpm' -print -quit)
           test -n "$rpm_datei"
-          sudo rpm --install --nodeps "$rpm_datei"
+          # Ubuntu besitzt kein Fedora-Menüsystem; Payload und RPM-Datenbank werden
+          # deshalb ohne die distro-spezifischen xdg-Skriptlets geprüft.
+          sudo rpm --install --nodeps --noscripts "$rpm_datei"
           starter=$(find /opt -path '*/bin/mathematik-atlas' -type f -print -quit)
           test -x "$starter"
           daten=$(mktemp -d)
@@ -45,7 +47,7 @@ jobs:
           test "$(find "$daten/MathematikAtlas/karten" -name 'v*.json' | wc -l)" -ge 2
           paket=$(rpm -qp --queryformat '%{NAME}' "$rpm_datei")
           rpm -q "$paket"
-          sudo rpm --erase "$paket"
+          sudo rpm --erase --noscripts "$paket"
           test ! -e "$starter"
       - name: Pakete bereitstellen
         uses: actions/upload-artifact@v4
