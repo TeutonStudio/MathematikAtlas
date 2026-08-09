@@ -119,18 +119,27 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val historischeArten = historischeZahlenRechnerArten +
         historischeMengenKnotenArten +
         historischeSkalarproduktArten +
-        setOf("mathematik.einheitsSpalte", "mathematik.einheitsZeile", "mathematik.vektorZuPolynom")
+        setOf(
+            "mathematik.einheitsSpalte",
+            "mathematik.einheitsZeile",
+            "mathematik.vektorZuPolynom",
+            "mathematik.zeilenVektor",
+            "mathematik.komplexerRadius",
+        )
     val basis = MathematikKnotenVorlagen.alle
-        .filterNot {
-            it.art in historischeArten ||
-                it.art == ZAHLENRECHNER_ART ||
-                it.art == VektorRechner.KNOTEN_ART
+        .filterNot { vorlage ->
+            vorlage.art in historischeArten ||
+                vorlage.art == ZAHLENRECHNER_ART ||
+                vorlage.art == VektorRechner.KNOTEN_ART ||
+                vorlage.art == VEKTOR_ART ||
+                vorlage.art == "mathematik.termZuMethode" && vorlage.name == "Aussage zu Methode"
         }
         .map { vorlage -> ersatz[vorlagenSchlüssel(vorlage)] ?: vorlage } +
         AussagenLogikKnotenVorlagen.alle.filter { vorlagenSchlüssel(it) !in vorhandeneSchlüssel }
     val strukturRechner = StrukturFormelRechnerVorlagen.alle
     val strukturArten = strukturRechner.mapTo(mutableSetOf()) { it.art }
     val katalog = basis +
+        V230KnotenVorlagen.alle +
         listOf(ZahlenRechnerKnotenVorlagen.standard) +
         FaltungsKnotenVorlagen.alle +
         MatrixdiagonaleKnotenVorlagen.alle +
