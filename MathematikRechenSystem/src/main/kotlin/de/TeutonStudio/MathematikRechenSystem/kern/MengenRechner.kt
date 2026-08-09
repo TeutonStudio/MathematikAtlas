@@ -211,6 +211,5 @@ object MengenRechnerMigration {
         "mathematik.iteriertesKartesischesProdukt" to MengenRechnerOperator.ITERIERTES_KARTESISCHES_PRODUKT,
         "mathematik.iterierteVereinigung" to MengenRechnerOperator.ITERIERTE_VEREINIGUNG,
         "mathematik.iterierterSchnitt" to MengenRechnerOperator.ITERIERTER_SCHNITT,
-        "mathematik.potenzmenge" to MengenRechnerOperator.POTENZMENGE,
     )
 }
