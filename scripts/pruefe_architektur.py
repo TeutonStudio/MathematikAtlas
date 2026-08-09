@@ -83,6 +83,36 @@ if alter_gesamtpfad.exists():
 if not neuer_gesamtpfad.exists():
     fehler.append("GesamterMathematikAuswerter fehlt im Katalogordner")
 
+
+# Mathematische Kartenmigrationen sind plattformneutral und besitzen genau eine Pipeline.
+alte_app_migrationen = (
+    app_root / "TranspositionsMigration.kt",
+    app_root / "speicher/MethodenAnschlussMigration.kt",
+)
+for datei in alte_app_migrationen:
+    if datei.exists():
+        fehler.append(f"App-lokale mathematische Migration darf nicht zurückkehren: {datei.relative_to(wurzel)}")
+
+karten_codec = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/migration/MathematikKartenCodec.kt"
+if not karten_codec.exists():
+    fehler.append("MathematikKartenCodec.kt fehlt als gemeinsame Migrationspipeline")
+
+app_json = app_root / "speicher/KartenJson.kt"
+if not app_json.exists():
+    fehler.append("KartenJson-App-Fassade fehlt")
+else:
+    text = app_json.read_text(encoding="utf-8")
+    if "MathematikKartenCodec" not in text:
+        fehler.append("KartenJson delegiert nicht an MathematikKartenCodec")
+    if ".migriere" in text or "migriereTranspositionsKnoten" in text:
+        fehler.append("KartenJson darf keine eigene mathematische Migrationskette pflegen")
+
+desktop_speicher = wurzel / "desktopApp/src/main/kotlin/de/TeutonStudio/MathematikAtlas/desktop/DesktopKartenSpeicher.kt"
+if not desktop_speicher.exists():
+    fehler.append("DesktopKartenSpeicher fehlt")
+elif "MathematikKartenCodec" not in desktop_speicher.read_text(encoding="utf-8"):
+    fehler.append("DesktopKartenSpeicher verwendet nicht den gemeinsamen MathematikKartenCodec")
+
 if fehler:
     print("Architekturprüfung fehlgeschlagen:")
     print("\n".join(f"- {f}" for f in fehler))

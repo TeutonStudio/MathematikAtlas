@@ -1,7 +1,6 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 
 private val alteTranspositionsArten = setOf(
     "mathematik.transponiereSpalte",

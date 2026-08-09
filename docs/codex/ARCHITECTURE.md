@@ -43,13 +43,15 @@ Verantwortlich für:
 - Verbindungskompatibilität anhand registrierter Anschlussarten,
 - Auswahl, Drag, Zoom und Kontextinteraktionen,
 - Kartenaktionen und Undo/Redo,
-- generische Renderer-Verträge.
+- generische Renderer-Verträge,
+- den fachneutralen `KartenDatenJson`-Codec ohne mathematische Migrationen.
 
 Nicht verantwortlich für:
 
 - mathematische Auswertung,
 - mathematische Knotenschlüssel,
 - knotenspezifische Parameternamen wie `festeEingänge`,
+- mathematische Kartenmigrationen,
 - LaTeX-Erzeugung,
 - App-Persistenz und Kartenbibliothek.
 
@@ -76,6 +78,8 @@ Verantwortlich für:
 - mathematische Anschlussarten,
 - den kanonischen plattformübergreifenden Erstellen-Katalog,
 - Standardauswerter und deren geordnete Registrierungsphasen,
+- die gemeinsame mathematische Kartenserialisierungsfassade `MathematikKartenCodec`,
+- historische mathematische Karten- und Knotenmigrationen,
 - spezialisierte Compose-Renderer,
 - native Darstellung des vom Rechenkern erzeugten LaTeX-Teilumfangs,
 - fachbezogene Konfigurationen wie Matrix- oder Visualisierungsparameter.
@@ -90,10 +94,10 @@ Verantwortlich für:
 - Kartenbibliothek, Ordner und Navigation,
 - Inspector und anwendungsspezifische Dialoge,
 - Ergänzung des kanonischen Mathematikkatalogs um App-Werkzeuge und dynamische Gruppenvorlagen,
-- Laden, Speichern, Import, Export und Migration,
+- Android-Dateispeicherung, Backups, Papierkorb, Freigaben sowie Import-/Export-UI,
 - Koordination von Editorzustand und Auswertung.
 
-Die App darf keine zweite mathematische Katalog- oder Konsolidierungslogik pflegen.
+Die App darf keine zweite mathematische Katalog-, Auswerter- oder Migrationslogik pflegen. Ihre `KartenJson`-Fassade delegiert an `MathematikKartenCodec`.
 
 ### 6. `desktopApp`
 
@@ -102,7 +106,7 @@ Verantwortlich für:
 - Desktop-Einstieg, Fenster und Menüs,
 - Dateidialoge und XDG-nahe Speicherorte,
 - Desktop-spezifische Eingabeverträge,
-- Verwendung desselben kanonischen Mathematikkatalogs und Auswerterregisters wie Android.
+- Verwendung desselben kanonischen Mathematikkatalogs, Auswerterregisters und mathematischen Karten-Codecs wie Android.
 
 ## Abhängigkeitsrichtung
 
@@ -148,7 +152,7 @@ Historische Vorlagen dürfen zum Laden und Migrieren erhalten bleiben, ohne im s
 
 ## Ordner- und Paketregeln
 
-Neue globale Orchestrierungsdateien werden nach Verantwortung einsortiert. Insbesondere liegen Katalog- und Registrierungsorchestrierung unter `MathematikKnoten/.../katalog/`, Rechenadapter unter `.../rechnen/` und Vektor-/Multinomcode unter `.../vektor/`.
+Neue globale Orchestrierungsdateien werden nach Verantwortung einsortiert. Insbesondere liegen Katalog- und Registrierungsorchestrierung unter `MathematikKnoten/.../katalog/`, mathematische Kartenmigrationen unter `MathematikKnoten/.../migration/`, Rechenadapter unter `.../rechnen/` und Vektor-/Multinomcode unter `.../vektor/`.
 
 Versionssuffixe wie `V2300` sind nur für historische Implementierungs- oder Migrationspfade zulässig. Neue Produktpfade verwenden versionsfreie Fassaden. Eine veröffentlichte Versionsnummer ist kein Fachgebiet und deshalb auch kein dauerhafter Architekturordner.
 
@@ -174,13 +178,17 @@ Persistierte Daten enthalten ausschließlich serialisierbare eigene Datentypen u
 - Canvas- oder Layoutobjekte,
 - Auswertungscaches und abgeleitete Renderdaten.
 
+`KartenDatenJson` dekodiert und kodiert ausschließlich die fachneutralen Graphdaten. `MathematikKartenCodec` legt darüber die gemeinsame mathematische Normalisierung für Android und Desktop. Die Pipeline unterscheidet bewusst zwischen dekodiernahen Migrationen (`lese`) und der stärkeren Lade-/Importphase (`lade`/`importiere`).
+
+Plattform-Dateispeicher sind für Pfade, Atomizität, Backups, Papierkorb oder XDG-Verzeichnisse zuständig, nicht für eigene mathematische Migrationsketten.
+
 Änderungen am Schema müssen ältere Karten, stabile Anschlussreferenzen und unbekannte Knotentypen berücksichtigen.
 
 ## Plattformbrücken und bekannte technische Schuld
 
 Die Desktopmodule `KnotenKartenVerwalterDesktop`, `MathematikKartenAdapterDesktop` und `MathematikKnotenDesktop` verwenden derzeit noch gemeinsame Quellverzeichnisse der Android-orientierten Bibliotheksmodule. Dieser Zustand ist eine bekannte Übergangsarchitektur und kein Vorbild für neue Module.
 
-Eine Ablösung soll über eine offiziell unterstützte gemeinsame Android-/Desktop-Toolchain erfolgen. Solange die verwendete Kotlin-/AGP-Kombination keinen freigegebenen KMP-Android-Library-Weg bietet, wird dafür weder AGP beiläufig herabgestuft noch Produktionscode dupliziert. Fachliche Quellen wie Knotenkatalog und Auswerterregistrierung werden unabhängig davon bereits plattformneutral gehalten.
+Eine Ablösung soll über eine offiziell unterstützte gemeinsame Android-/Desktop-Toolchain erfolgen. Solange die verwendete Kotlin-/AGP-Kombination keinen freigegebenen KMP-Android-Library-Weg bietet, wird dafür weder AGP beiläufig herabgestuft noch Produktionscode dupliziert. Fachliche Quellen wie Knotenkatalog, Auswerterregistrierung und Kartenmigration werden unabhängig davon bereits plattformneutral gehalten.
 
 ## Fehlerzustände
 

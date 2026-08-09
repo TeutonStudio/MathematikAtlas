@@ -1,4 +1,4 @@
-package de.TeutonStudio.MathematikAtlas.speicher
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKartenAdapter.methodenErgebnisArtSchlüssel

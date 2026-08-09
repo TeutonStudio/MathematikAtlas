@@ -2,9 +2,8 @@ package de.TeutonStudio.MathematikAtlas.speicher
 
 import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKnoten.migriereStrukturierteDivision
-import de.TeutonStudio.MathematikKnoten.migriereUniversellenZahlenRechner
-import de.TeutonStudio.MathematikKnoten.normalisiereStrukturierteDivisionVorSpeichern
+import de.TeutonStudio.MathematikKnoten.MathematikKartenCodec
+import de.TeutonStudio.MathematikKnoten.MathematikKartenMigrationen
 import org.json.JSONObject
 import java.io.File
 
@@ -50,7 +49,7 @@ class KartenSpeicher(private val context: Context) {
         ?.let(::leseDatei)
 
     fun speichere(karte: KartenDaten): KartenDaten {
-        val normalisiert = karte.normalisiereStrukturierteDivisionVorSpeichern()
+        val normalisiert = MathematikKartenMigrationen.vorSpeichern(karte)
         val zielVersion = if (versionWirdVerwendet(KartenVerweis(normalisiert.id, normalisiert.version))) {
             maxOf(normalisiert.version + 1, höchsteVersion(normalisiert.id) + 1)
         } else {
@@ -68,17 +67,12 @@ class KartenSpeicher(private val context: Context) {
     fun importiere(text: String): KartenDaten = if (KartenFreigabePaket.istFreigabePaket(text)) {
         importierePaket(text)
     } else {
-        val gelesen = KartenJson.lese(text)
-            .migriereMethodenAnschlüsse()
-            .migriereUniversellenZahlenRechner()
-            .migriereStrukturierteDivision()
+        val gelesen = MathematikKartenCodec.importiere(text)
         val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
         speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
     }
 
-    fun exportiere(karte: KartenDaten) = KartenJson.schreibe(
-        karte.normalisiereStrukturierteDivisionVorSpeichern(),
-    )
+    fun exportiere(karte: KartenDaten) = KartenJson.schreibe(karte)
 
     fun erstelleFreigabePaket(
         name: String,
@@ -161,9 +155,7 @@ class KartenSpeicher(private val context: Context) {
                     ?: neueKartenId()
             }
         val remappteKarten = paket.karten.map { karte ->
-            val migriert = karte.migriereMethodenAnschlüsse()
-                .migriereUniversellenZahlenRechner()
-                .migriereStrukturierteDivision()
+            val migriert = MathematikKartenMigrationen.nachLaden(karte)
             migriert.copy(
                 id = idAbbildung.getValue(migriert.id),
                 knoten = migriert.knoten.map { knoten ->
@@ -277,13 +269,6 @@ class KartenSpeicher(private val context: Context) {
         ?: 0
 
     private fun leseDatei(file: File): KartenDaten? = runCatching {
-        if (file.exists()) {
-            KartenJson.lese(file.readText())
-                .migriereMethodenAnschlüsse()
-                .migriereUniversellenZahlenRechner()
-                .migriereStrukturierteDivision()
-        } else {
-            null
-        }
+        if (file.exists()) MathematikKartenCodec.lade(file.readText()) else null
     }.getOrNull()
 }
