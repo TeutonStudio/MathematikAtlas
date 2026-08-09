@@ -2,7 +2,7 @@
 
 ## Status
 
-Angenommen für `v2.32.2`.
+Angenommen als zweite Architekturphase des noch unveröffentlichten `v2.32.1`-Refactors.
 
 ## Kontext
 
