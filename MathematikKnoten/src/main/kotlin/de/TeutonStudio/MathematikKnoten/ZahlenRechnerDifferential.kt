@@ -172,7 +172,7 @@ private fun werteZahlenRechnerDifferentialAus(
     val operator = aktuelleZahlenRechnerDifferentialOperator(kontext.knoten)
     val begriff = aktuellerZahlenRechnerDifferentialBegriff(kontext.knoten)
     val ergebnis = runCatching {
-        differenziereMethodeStrukturiert(
+        differenziereMethodeMitOperatorZielraum(
             methode = methode,
             ordnung = ordnung,
             operator = operator,
