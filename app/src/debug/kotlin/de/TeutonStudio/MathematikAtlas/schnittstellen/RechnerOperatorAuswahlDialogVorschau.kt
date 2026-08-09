@@ -19,7 +19,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 )
 @Composable
 private fun RechnerOperatorAuswahlBreitVorschau() {
-    OperatorAuswahlVorschauInhalt()
+    OperatorAuswahlBeispiel()
 }
 
 @Preview(
@@ -30,11 +30,11 @@ private fun RechnerOperatorAuswahlBreitVorschau() {
 )
 @Composable
 private fun RechnerOperatorAuswahlKompaktVorschau() {
-    OperatorAuswahlVorschauInhalt()
+    OperatorAuswahlBeispiel()
 }
 
 @Composable
-private fun OperatorAuswahlVorschauInhalt() {
+private fun OperatorAuswahlBeispiel() {
     val basis = VorschauDaten.ZahlenRechner
     val addition = konfiguriereStandardZahlenRechner(basis, UniversellerZahlenOperator.ADDITION)
     val division = konfiguriereStandardZahlenRechner(basis, UniversellerZahlenOperator.DIVISION)
