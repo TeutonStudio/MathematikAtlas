@@ -3,7 +3,6 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
-import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog
 
@@ -28,9 +27,6 @@ class MathematikKartenLaufzeit(
         kartenQuelle = kartenQuelle,
         nichtAuswertbareKnotenArten = nichtAuswertbareKnotenArten,
     )
-
-    fun erzeugeEditor(startKarte: KartenDaten): KartenEditorZustand =
-        KartenEditorZustand(startKarte, graphPrüfung)
 
     fun auswerten(karte: KartenDaten): KartenAuswertungsErgebnis = auswerter.auswerten(karte)
 
