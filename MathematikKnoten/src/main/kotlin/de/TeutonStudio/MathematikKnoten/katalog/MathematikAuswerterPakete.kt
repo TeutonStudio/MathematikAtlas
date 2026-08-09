@@ -29,6 +29,7 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("matrixdiagonale") { registriereMatrixdiagonale() },
         MathematikAuswerterPaket("spur-und-tupelsumme") { registriereSpurUndTupelsumme() },
         MathematikAuswerterPaket("tupeloperationen") { registriereTupelOperationKnoten() },
+        MathematikAuswerterPaket("tupelvariable") { registriereTupelVariable() },
         MathematikAuswerterPaket("transponieren") { registriereTransponieren() },
         MathematikAuswerterPaket("geometrie-grundobjekte") { registriereGeometrieGrundobjekte() },
         MathematikAuswerterPaket("geometrie-teilobjekte") { registriereGeometrieTeilobjekte() },
