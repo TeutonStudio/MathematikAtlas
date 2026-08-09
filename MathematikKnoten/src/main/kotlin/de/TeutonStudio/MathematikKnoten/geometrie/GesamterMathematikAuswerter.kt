@@ -45,5 +45,15 @@ object GesamterMathematikAuswerter {
         registriereStrukturierteDivision()
         // Darauf aufbauend übernimmt der Analysisadapter ausschließlich strukturierte Differentialzustände.
         registriereZahlenRechnerDifferential()
+        // Vereinheitlicht Betrag und historischen Radius.
+        registriereNullDistanz()
+        // v2.30.0: kanonischer Vektorkonstruktor mit Orientierung und Indexmethode.
+        registriereVektorKonstruktorV2300()
+        // v2.30.0: historische Zeile-/Spalte-Paare werden auf parametrierte Verträge abgebildet.
+        registriereVektorOrientierungsKnotenV2300()
+        // Neuer erzeugbarer Typ mit gemeinsamer Monomfolge.
+        registriereMultinomVektor()
+        // Historischer Komfortknoten und Zahlenrechner teilen dieselbe Multinomfolge.
+        registrierePolynomMultinomVertragV2300()
     }
 }

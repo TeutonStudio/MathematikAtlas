@@ -126,10 +126,11 @@ private fun konfigurierePolynomZahlenRechner(knoten: KnotenDaten): KnotenDaten {
     val vorhandeneEingänge = knoten.anschlüsse
         .filter { it.richtung == AnschlussRichtung.Eingang }
         .sortedBy { it.reihenfolge }
+    // Nur bereits semantisch passende Polynomanschlüsse behalten ihre IDs.
+    // Ein alter Standardoperator-Eingang darf nicht still zu Koeffizienten oder Argument umgedeutet werden,
+    // weil KnotenErsetzen sonst eine typinkompatible bestehende Edge an derselben Anschluss-ID erhält.
     val bisherigeKoeffizienten = vorhandeneEingänge.firstOrNull { it.name == "koeffizienten" }
-        ?: vorhandeneEingänge.firstOrNull()
     val bisherigesArgument = vorhandeneEingänge.firstOrNull { it.name == "argument" }
-        ?: vorhandeneEingänge.getOrNull(1)
     val bisherigerAusgang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
 
     val koeffizienten = (bisherigeKoeffizienten ?: AnschlussDaten(

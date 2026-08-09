@@ -23,8 +23,15 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         aktionen: KnotenInspektorAktionen,
     ) {
         val operatorId = knoten.parameter[ZAHLENRECHNER_OPERATOR]
-        val standardOperator = UniversellerZahlenOperator.entries.firstOrNull { operator ->
+        val gespeicherterStandardOperator = UniversellerZahlenOperator.entries.firstOrNull { operator ->
             operatorId == operator.stabileId || operatorId.equals(operator.name, ignoreCase = true)
+        }
+        // `zahl.komplexerRadius` bleibt als historische ID lesbar, wird in der Oberfläche aber
+        // auf den kanonischen Begriff 0-Distanz (`zahl.betrag`) abgebildet.
+        val standardOperator = if (gespeicherterStandardOperator == UniversellerZahlenOperator.KOMPLEXER_RADIUS) {
+            UniversellerZahlenOperator.BETRAG
+        } else {
+            gespeicherterStandardOperator
         }
         val erweiterterOperator = ErweiterterZahlenOperator.vonId(operatorId)
         val formelModus = operatorId == ZAHLENRECHNER_FORMEL_ID
@@ -46,38 +53,59 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                         ),
                     )
                 }
-                UniversellerZahlenOperator.entries.forEach { operator ->
-                    val kandidat = if (operator == UniversellerZahlenOperator.DIFFERENTIAL) {
-                        konfiguriereZahlenRechnerDifferential(
-                            knoten,
-                            ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
+                UniversellerZahlenOperator.entries
+                    .filterNot { it == UniversellerZahlenOperator.KOMPLEXER_RADIUS }
+                    .forEach { operator ->
+                        val kandidat = if (operator == UniversellerZahlenOperator.DIFFERENTIAL) {
+                            konfiguriereZahlenRechnerDifferential(
+                                knoten,
+                                ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
+                            )
+                        } else {
+                            konfiguriereStandardZahlenRechner(knoten, operator)
+                        }
+                        val nullDistanz = operator == UniversellerZahlenOperator.BETRAG
+                        add(
+                            RechnerOperatorAuswahlEintrag(
+                                id = operator.stabileId,
+                                titel = if (nullDistanz) "0-Distanz" else operator.titel,
+                                symbolLatex = if (nullDistanz) "d(0,\\dots)" else operator.vorschauLatex,
+                                kategorie = katalogNachId[operator.stabileId]?.kategorie ?: "Weitere Funktionen",
+                                beschreibung = if (nullDistanz) {
+                                    "Abstand eines Zahlwerts vom Nullelement; umfasst Betrag, komplexen Radius und Quaternionenradius."
+                                } else {
+                                    katalogNachId[operator.stabileId]
+                                        ?.signaturen
+                                        ?.mapNotNull { it.beschreibung }
+                                        ?.joinToString(" ")
+                                        ?.ifBlank { null }
+                                        ?: "Konfiguriert den Zahlenrechner für ${operator.titel}."
+                                },
+                                suchbegriffe = if (nullDistanz) {
+                                    setOf(
+                                        operator.name,
+                                        "Betrag",
+                                        "Absolutbetrag",
+                                        "0-Distanz",
+                                        "Abstand zu 0",
+                                        "komplexer Radius",
+                                        "Quaternionenradius",
+                                        "Radius",
+                                        "Modulus",
+                                    )
+                                } else {
+                                    setOf(operator.name)
+                                },
+                                kandidat = kandidat,
+                            ),
                         )
-                    } else {
-                        konfiguriereStandardZahlenRechner(knoten, operator)
                     }
-                    add(
-                        RechnerOperatorAuswahlEintrag(
-                            id = operator.stabileId,
-                            titel = operator.titel,
-                            symbolLatex = operator.symbolLatex,
-                            kategorie = katalogNachId[operator.stabileId]?.kategorie ?: "Weitere Funktionen",
-                            beschreibung = katalogNachId[operator.stabileId]
-                                ?.signaturen
-                                ?.mapNotNull { it.beschreibung }
-                                ?.joinToString(" ")
-                                ?.ifBlank { null }
-                                ?: "Konfiguriert den Zahlenrechner für ${operator.titel}.",
-                            suchbegriffe = setOf(operator.name),
-                            kandidat = kandidat,
-                        ),
-                    )
-                }
                 ErweiterterZahlenOperator.entries.forEach { operator ->
                     add(
                         RechnerOperatorAuswahlEintrag(
                             id = operator.stabileId,
                             titel = operator.titel,
-                            symbolLatex = operator.symbolLatex,
+                            symbolLatex = operator.vorschauLatex,
                             kategorie = erweiterteZahlenKategorie(operator),
                             beschreibung = "Erweiterter Zahlenoperator ${operator.titel}.",
                             suchbegriffe = setOf(operator.name),
@@ -109,11 +137,13 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         val titel = when {
             formelModus -> "Formel"
             erweiterterOperator != null -> erweiterterOperator.titel
+            standardOperator == UniversellerZahlenOperator.BETRAG -> "0-Distanz"
             else -> standardOperator?.titel ?: operatorId?.let { "Unbekannter gespeicherter Operator" } ?: "Addition"
         }
         val symbol = when {
             formelModus -> "f(x)"
             erweiterterOperator != null -> erweiterterOperator.symbolLatex
+            standardOperator == UniversellerZahlenOperator.BETRAG -> "d(0,·)"
             else -> standardOperator?.symbolLatex ?: operatorId?.let { "?" } ?: "+"
         }
 
