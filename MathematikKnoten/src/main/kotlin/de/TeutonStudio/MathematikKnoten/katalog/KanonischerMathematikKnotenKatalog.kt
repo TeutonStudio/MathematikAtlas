@@ -33,6 +33,7 @@ object KanonischerMathematikKnotenKatalog {
 
     fun alle(): List<KnotenVorlage> {
         val basis = de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen()
+            .map(::kanonisierePraedikatVorlage)
         val bereinigt = basis.filterNot { vorlage ->
             vorlage.art in historischeOrientierungsDuplikate ||
                 vorlage.art == MULTINOMVEKTOR_ART ||
@@ -44,8 +45,21 @@ object KanonischerMathematikKnotenKatalog {
         }
 
         return bereinigt +
+            TupelVariableKnotenVorlagen.standard +
             VektorKonstruktorVorlagen.standard +
             VektorOrientierungsVorlagen.alle +
             MultinomVektorKnotenVorlagen.standard
     }
+
+    private fun kanonisierePraedikatVorlage(vorlage: KnotenVorlage): KnotenVorlage =
+        if (
+            vorlage.art == "mathematik.termZuMethode" &&
+            vorlage.standardParameter["name"] == "P" &&
+            vorlage.name == "Aussage zu Methode"
+        ) {
+            vorlage.copy(
+                name = "Aussage zu Prädikat",
+                beschreibung = "Erzeugt aus einer Aussage ein typisiertes Prädikat.",
+            )
+        } else vorlage
 }
