@@ -48,7 +48,7 @@ internal fun synchronisiereMethodenAufrufe(
                     ?.eingänge
                     ?.get("methode")
                     ?.objekt as? Methode
-                val projektion = methodenArgumentprojektionFürAufruf(karte, knoten)
+                val projektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
                 synchronisiereMethodenAufruf(knoten, methode, projektion)
             }
             METHODEN_ARGUMENTE_ART -> {
@@ -56,7 +56,8 @@ internal fun synchronisiereMethodenAufrufe(
                     ?.eingänge
                     ?.get("methode")
                     ?.objekt as? Methode
-                synchronisiereMethodenArgumente(knoten, methode)
+                val projektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
+                synchronisiereMethodenArgumente(knoten, methode, projektion)
             }
             else -> knoten
         }
@@ -91,11 +92,11 @@ internal fun synchronisiereMethodenAufrufe(
     )
 }
 
-private fun methodenArgumentprojektionFürAufruf(karte: KartenDaten, aufruf: KnotenDaten): String {
-    val methodenEingang = aufruf.anschlüsse.firstOrNull {
+private fun methodenArgumentprojektionFürVerbraucher(karte: KartenDaten, verbraucher: KnotenDaten): String {
+    val methodenEingang = verbraucher.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
     } ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
-    val eingangsVerweis = AnschlussVerweis(aufruf.id, methodenEingang.id)
+    val eingangsVerweis = AnschlussVerweis(verbraucher.id, methodenEingang.id)
     val verbindung = karte.verbindungen.singleOrNull { it.zu == eingangsVerweis }
         ?: return METHODEN_ARGUMENTPROJEKTION_SEPARIERT
     val quelle = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId }
@@ -194,15 +195,18 @@ private fun synchronisiereMethodenAufruf(
     )
 }
 
-private fun synchronisiereMethodenArgumente(knoten: KnotenDaten, methode: Methode?): KnotenDaten {
+private fun synchronisiereMethodenArgumente(
+    knoten: KnotenDaten,
+    methode: Methode?,
+    konfigurierteProjektion: String,
+): KnotenDaten {
     val methodenEingang = knoten.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
     } ?: return knoten
-    val projektion = knoten.parameter[METHODEN_ARGUMENTE_PROJEKTION]
-        ?: METHODEN_ARGUMENTPROJEKTION_TUPEL
+    val projektion = if (methode == null) METHODEN_ARGUMENTPROJEKTION_TUPEL else konfigurierteProjektion
     val bisherigeAusgänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
 
-    val ausgänge = if (methode == null || projektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
+    val ausgänge = if (projektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
         val bisher = bisherigeAusgänge.firstOrNull { it.name == "argumente" }
         listOf(
             (bisher ?: AnschlussDaten(
@@ -221,7 +225,7 @@ private fun synchronisiereMethodenArgumente(knoten: KnotenDaten, methode: Method
             ),
         )
     } else {
-        val signatur = runCatching { methode.methodenSignatur() }.getOrNull() ?: return knoten
+        val signatur = runCatching { requireNotNull(methode).methodenSignatur() }.getOrNull() ?: return knoten
         buildList {
             signatur.argumente.forEachIndexed { index, argument ->
                 val name = methodenArgumentAusgangName(argument, index)
@@ -266,6 +270,7 @@ private fun synchronisiereMethodenArgumente(knoten: KnotenDaten, methode: Method
 
     return knoten.copy(
         anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + ausgänge,
+        parameter = knoten.parameter + (METHODEN_ARGUMENTE_PROJEKTION to projektion),
     )
 }
 
