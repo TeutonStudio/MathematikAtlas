@@ -29,7 +29,6 @@ val UniversellerZahlenOperator.vorschauLatex: String
         UniversellerZahlenOperator.DIFFERENTIAL -> "\\frac{\\mathrm{d}}{\\mathrm{d}x}(\\dots)"
         UniversellerZahlenOperator.MINIMUM -> "\\min(\\dots,\\dots)"
         UniversellerZahlenOperator.MAXIMUM -> "\\max(\\dots,\\dots)"
-        UniversellerZahlenOperator.NORM -> "\\lVert(\\dots)\\rVert"
         UniversellerZahlenOperator.ABRUNDUNG -> "\\lfloor\\dots\\rfloor"
         UniversellerZahlenOperator.AUFRUNDUNG -> "\\lceil\\dots\\rceil"
         UniversellerZahlenOperator.RUNDUNG -> "\\lfloor\\dots\\rceil"
