@@ -99,6 +99,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     }
                     Text(knoten.art, style = MaterialTheme.typography.labelMedium)
                     StandardwerteEditor(knoten, zustand)
+                    MethodenAusgangProjektionEditor(knoten, zustand)
                     if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
                     IterierteMethodenKartenInspektor(knoten, zustand)
                     if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
@@ -197,7 +198,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
                             MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
                         ) && !it.startsWith(STANDARDWERT_PREFIX) &&
-                            !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.")
+                            !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.") &&
+                            !it.startsWith(METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX)
                     }.forEach { (schlüssel, wert) ->
                         var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
                         OutlinedTextField(
@@ -410,6 +412,56 @@ private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
+    }
+}
+
+@Composable
+private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
+    val methodenAusgänge = knoten.anschlüsse.filter {
+        it.richtung == AnschlussRichtung.Ausgang && it.art == MathematikAnschlussArten.Methode.id
+    }
+    if (methodenAusgänge.isEmpty()) return
+
+    HorizontalDivider()
+    Text("Methodenargumente", style = MaterialTheme.typography.titleSmall)
+    Text(
+        "Diese Einstellung verändert nur die Anschlüsse auf der Karte. Die Methode und ihre geordnete Parameterliste bleiben unverändert.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    methodenAusgänge.forEach { ausgang ->
+        if (methodenAusgänge.size > 1) {
+            Text(ausgang.name, style = MaterialTheme.typography.labelMedium)
+        }
+        val aktuell = knoten.methodenAusgangArgumentprojektion(ausgang.name)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            FilterChip(
+                selected = aktuell == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
+                onClick = {
+                    zustand.editor.führeAus(
+                        KartenAktion.KnotenParameterÄndern(
+                            knoten.id,
+                            methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
+                            METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
+                        ),
+                    )
+                },
+                label = { Text("Separiert") },
+            )
+            FilterChip(
+                selected = aktuell == METHODEN_ARGUMENTPROJEKTION_TUPEL,
+                onClick = {
+                    zustand.editor.führeAus(
+                        KartenAktion.KnotenParameterÄndern(
+                            knoten.id,
+                            methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
+                            METHODEN_ARGUMENTPROJEKTION_TUPEL,
+                        ),
+                    )
+                },
+                label = { Text("Ein Tupel") },
+            )
+        }
     }
 }
 
