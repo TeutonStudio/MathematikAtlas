@@ -448,6 +448,7 @@ internal data class VerbindungsGeometrie(
                 kontrollpunkt2.x,
                 kontrollpunkt2.y,
                 ende.x,
+                ende.y,
             )
         }
     }
@@ -777,6 +778,9 @@ private fun KnotenDarstellung(
                             val aktuell = zustand.karte.knoten.firstOrNull { it.id == knoten.id }
                             if (aktuell != null) {
                                 zustand.führeAus(
+                                    // PointerInput liefert innerhalb des skalierten Layers lokale,
+                                    // bereits entzoomte Koordinaten. Nur die Pixeldichte muss noch
+                                    // in die Graph-Koordinaten umgerechnet werden.
                                     KartenAktion.KnotenVerschieben(aktuell.id, aktuell.position + GraphPunkt(delta.x / density, delta.y / density)),
                                     mitHistorie = false,
                                 )
@@ -879,6 +883,7 @@ private fun KnotenDarstellung(
     }
 }
 
+
 @Composable
 private fun KnotenInspektorSchaltfläche(
     beiKlick: () -> Unit,
@@ -927,6 +932,12 @@ internal fun farbKontrastVerhältnis(vordergrund: Color, hintergrund: Color): Fl
     return (heller + 0.05f) / (dunkler + 0.05f)
 }
 
+/**
+ * Bewahrt die Profilfarbe, solange sie auf dem Knoten ausreichend kontrastiert.
+ * Andernfalls wird sie nur so weit in Richtung Schwarz oder Weiß verschoben,
+ * wie für die Erkennbarkeit erforderlich ist. Ein zusätzlicher Icon-Hintergrund
+ * ist dadurch weder nötig noch erlaubt.
+ */
 internal fun kontrastAdaptiveProfilFarbe(
     profilFarbe: Color,
     hintergrund: Color,
@@ -1020,6 +1031,8 @@ private fun BoxScope.AnschlussGriff(
                     onDrag = { änderung, _ ->
                         änderung.consume()
                         val zeigerWelt = interaktionsObenLinks + GraphPunkt(
+                            // Absolute lokale Pointerposition statt Delta-Akkumulation:
+                            // dadurch werden Touch-Slop und Overslop nicht doppelt addiert.
                             änderung.position.x / density,
                             änderung.position.y / density,
                         )
@@ -1138,6 +1151,13 @@ private fun anschlussBildschirmPosition(
     ansicht: AnsichtsFenster,
 ): Offset = anschlussPositionWelt(karte, ref)?.let { weltZuBildschirm(it, dichte, ansicht) } ?: Offset.Zero
 
+/**
+ * Der sichtbare Ausschnitt der Kartenwelt in Graph-Koordinaten.
+ *
+ * Die Verschiebung der Ansicht liegt in Bildschirm-Pixeln vor; die Welt selbst
+ * wird dagegen in dp gespeichert. Deshalb wird nach der Rücktransformation des
+ * Zooms zusätzlich durch die Pixeldichte geteilt.
+ */
 internal fun sichtbarerWeltBereich(
     ansicht: AnsichtsFenster,
     anzeigeGröße: IntSize,
@@ -1175,6 +1195,7 @@ private fun KartenDaten.inhaltsGrenzen(puffer: Float): Rect? {
     return Rect(links - puffer, oben - puffer, rechts + puffer, unten + puffer)
 }
 
+/** Zeichnung und Viewport-Culling verwenden dieselbe kubische Verbindungsgeometrie. */
 private fun VerbindungDaten.istImBereich(
     karte: KartenDaten,
     bereich: Rect,
