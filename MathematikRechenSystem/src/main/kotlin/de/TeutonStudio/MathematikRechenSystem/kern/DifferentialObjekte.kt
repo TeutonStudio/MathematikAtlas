@@ -3,6 +3,48 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 import java.math.BigInteger
 
 /**
+ * Verwendet für partielle Ableitungen den Raum des tatsächlich gewählten
+ * Arguments als linearen Quellraum. Die totale Ableitung bleibt unverändert auf
+ * dem vollständigen Argumentproduktraum definiert.
+ */
+fun differenziereMethodeMitOperatorZielraum(
+    methode: Methode,
+    ordnung: DifferentialOrdnung,
+    operator: DifferentialOperator = DifferentialOperator.Total,
+    begriff: DifferentialBegriff = DifferentialBegriff.REELL_FRECHET,
+): DifferentialMethodenErgebnis {
+    val basis = differenziereMethodeStrukturiert(
+        methode = methode,
+        ordnung = ordnung,
+        operator = operator,
+        begriff = begriff,
+    )
+    if (operator !is DifferentialOperator.Partiell) return basis
+    if (ordnung is DifferentialOrdnung.Konkret && ordnung.wert == BigInteger.ZERO) return basis
+
+    val parameter = methode.parameter[operator.argumentIndex - 1]
+    val argumentRaum = methode.werteVorräte[parameter.name]
+        ?: FehlendeObermenge("differential.${methode.name}.${parameter.name}")
+    val skalarIdentifiziert = argumentRaum == ReelleZahlen &&
+        methode.zielMenge == ReelleZahlen &&
+        begriff == DifferentialBegriff.REELL_FRECHET
+    val zielRaum = if (skalarIdentifiziert) {
+        ReelleZahlen
+    } else {
+        AbleitungsZielraum(
+            argumentRaum = argumentRaum,
+            ursprungsZiel = methode.zielMenge,
+            ordnung = ordnung,
+            eindimensionalSkalarIdentifiziert = false,
+        )
+    }
+    return basis.copy(
+        methode = basis.methode.copy(zielMenge = zielRaum),
+        zielRaum = zielRaum,
+    )
+}
+
+/**
  * Koordinatenfreie Differentialdarstellung einer Methode.
  *
  * Die Ableitungsfunktion bleibt ein eigenes Methodenobjekt. Dieses Objekt hält
@@ -20,7 +62,7 @@ data class MethodenDifferential(
         operator.pruefeFuer(methode)
     }
 
-    fun ableitungsErgebnis(): DifferentialMethodenErgebnis = differenziereMethodeStrukturiert(
+    fun ableitungsErgebnis(): DifferentialMethodenErgebnis = differenziereMethodeMitOperatorZielraum(
         methode = methode,
         ordnung = ordnung,
         operator = operator,
