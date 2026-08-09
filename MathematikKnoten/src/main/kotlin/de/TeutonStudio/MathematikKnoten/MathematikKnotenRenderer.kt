@@ -76,6 +76,11 @@ class MathematikKnotenRenderer(
                     termZuMethodeFormel(ergebnis),
                     style = MaterialTheme.typography.bodyLarge,
                 )
+                knoten.art == "mathematik.tupel" &&
+                    tupelKonfiguration(knoten).erzeugungsArt == TUPEL_METHODE && ausgabe == null -> LatexFormel(
+                    "\\left(f(1),\\ldots,f(n)\\right)",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 knoten.art == "mathematik.auswerten" && objekt is WahrheitsKonstante -> LatexFormel(
                     objekt.zuLatex(),
                     style = MaterialTheme.typography.bodyLarge,

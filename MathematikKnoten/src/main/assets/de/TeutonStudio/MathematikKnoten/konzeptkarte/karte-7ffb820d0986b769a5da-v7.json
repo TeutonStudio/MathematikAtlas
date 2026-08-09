@@ -141,7 +141,7 @@
       ],
       "parameter": {
         "knotenArt": "mathematik.tupel",
-        "regel": "Geordnetes Tupel aus zwei oder mehr Zahlen.",
+        "regel": "Geordnetes Tupel aus einzelnen Zahlen oder einer Indexmethode.",
         "kategorie": "Zahlen"
       },
       "name": "Tupel",
@@ -184,7 +184,7 @@
       "eigenschaften": {}
     }
   ],
-  "id": "mathematik.tupel|Tupel|festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
+  "id": "mathematik.tupel|Tupel|erzeugungsArt=einzelEingaben;festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
   "ansicht": {
     "x": 0,
     "y": 0,

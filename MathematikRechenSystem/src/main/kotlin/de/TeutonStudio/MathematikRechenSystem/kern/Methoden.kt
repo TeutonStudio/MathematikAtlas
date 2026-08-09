@@ -211,6 +211,17 @@ fun matrixAusMethode(methode: Methode, höhe: Int, breite: Int): Matrix {
     })
 }
 
+/** Erzeugt das Tupel `(f(1), ..., f(n))` aus einer einstelligen Methode. */
+fun tupelAusMethode(methode: Methode, dimension: Int): Tupel {
+    require(dimension > 0) { "Die Tupeldimension muss positiv sein." }
+    require(methode.parameter.size == 1) { "Die Tupelmethode muss genau einen Indexparameter besitzen." }
+    return Tupel(
+        List(dimension) { index ->
+            methode.wendeAn(listOf(RationaleZahl.von((index + 1).toLong())))
+        },
+    )
+}
+
 /** Bild einer Menge unter einer einwertigen Methode: f[M] = { f(x) : x ∈ M }. */
 data class Abbild(val menge: MengenAusdruck, val methode: Methode) : MengenAusdruck {
     override fun zuLatex() = "${methode.name}[${menge.zuLatex()}]"

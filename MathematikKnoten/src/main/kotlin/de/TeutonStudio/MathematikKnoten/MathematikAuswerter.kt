@@ -335,8 +335,19 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(Logarithmus(k.zahl("basis"), k.zahl("argument")), k)))
         }
         registriere("mathematik.tupel") { k ->
-            val werte = k.operatorEingänge { _, index -> Variable("tupel_$index") }.map { it.objekt as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
-            KnotenAuswertungsErgebnis(mapOf("tupel" to BedingterWert(Tupel(werte), annahmen(k))))
+            val tupel = when (tupelKonfiguration(k.knoten).erzeugungsArt) {
+                TUPEL_METHODE -> {
+                    val dimension = k.positiveKonkreteGanzzahl("dimension")
+                    val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Tupelmethode fehlt.")
+                    tupelAusMethode(methode, dimension)
+                }
+                else -> {
+                    val werte = k.operatorEingänge { _, index -> Variable("tupel_$index") }
+                        .map { it.objekt as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
+                    Tupel(werte)
+                }
+            }
+            KnotenAuswertungsErgebnis(mapOf("tupel" to BedingterWert(tupel, annahmen(k))))
         }
         registriere("mathematik.komplexAusTupel") { k ->
             val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Zahlentupel fehlt.")
@@ -672,6 +683,16 @@ object StandardMathematikAuswerter {
     private fun KnotenAuswertungsKontext.matrix(name: String) = eingänge[name]?.objekt as? Matrix ?: error("Matrix $name fehlt.")
     private fun KnotenAuswertungsKontext.aussage(name: String) = eingänge[name]?.objekt as? Aussage ?: error("Aussage $name fehlt.")
     private fun KnotenAuswertungsKontext.parameterInt(name: String) = knoten.parameter[name]?.toIntOrNull()?.takeIf { it > 0 } ?: error("Parameter $name muss eine positive ganze Zahl sein.")
+    private fun KnotenAuswertungsKontext.positiveKonkreteGanzzahl(name: String): Int {
+        val zahl = eingänge[name]?.objekt as? RationaleZahl
+            ?: error("Der Eingang '$name' muss eine konkrete positive ganze Zahl sein.")
+        require(zahl.nenner == java.math.BigInteger.ONE && zahl.zähler.signum() > 0) {
+            "Der Eingang '$name' muss eine konkrete positive ganze Zahl sein."
+        }
+        return runCatching { zahl.zähler.intValueExact() }.getOrElse {
+            error("Der Eingang '$name' überschreitet die unterstützte konkrete Tupeldimension.")
+        }
+    }
     private fun annahmen(k: KnotenAuswertungsKontext) = k.eingänge.values.flatMap { it.annahmen }.toSet()
     private fun reellerZahlwert(
         objekt: ZahlAusdruck,
