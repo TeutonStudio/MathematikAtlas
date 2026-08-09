@@ -7,11 +7,17 @@ class KartenAuswerter(
     private val register: MathematikAuswerterRegister,
     private val kartenQuelle: KartenQuelle = KartenQuelle { null },
     private val nichtAuswertbareKnotenArten: Set<KnotenArtId> = emptySet(),
+    private val nanoZeit: () -> Long = { System.nanoTime() },
 ) {
     private data class CacheEintrag(val signatur: Int, val ergebnis: KnotenAuswertungsErgebnis)
     private val cache = mutableMapOf<KnotenId, CacheEintrag>()
 
     fun leereCache() = cache.clear()
+
+    /** Verwirft ausschließlich das zwischengespeicherte Ergebnis des angegebenen Knotens. */
+    fun verwerfeCache(knotenId: KnotenId) {
+        cache.remove(knotenId)
+    }
 
     fun auswerten(
         karte: KartenDaten,
@@ -65,29 +71,36 @@ class KartenAuswerter(
         topologischeReihenfolge: Map<KnotenId, Int>,
         kartenPfad: Set<KartenVerweis>,
     ): KnotenAuswertungsErgebnis {
+        val startNanos = nanoZeit()
+        fun fehler(text: String) = KnotenAuswertungsErgebnis(
+            emptyMap(),
+            fehler = text,
+            auswertungsDauerNanos = dauerSeit(startNanos),
+        )
+
         val verbundeneEingänge = runCatching {
             sammleEingänge(knoten, verbindungen, karte, ergebnisse)
         }.getOrElse {
-            return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
+            return fehler(it.message ?: it::class.simpleName.orEmpty())
         }
         val eingänge = knoten.eingangsKartenVerweise.entries.fold(verbundeneEingänge) { aktuell, (name, verweis) ->
             if (name in aktuell) return@fold aktuell
             val anschluss = knoten.anschlüsse.firstOrNull {
                 it.richtung == AnschlussRichtung.Eingang && it.name == name
-            } ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Der Karten-Fallback verweist auf den unbekannten Eingang '$name'.")
+            } ?: return fehler("Der Karten-Fallback verweist auf den unbekannten Eingang '$name'.")
             val fallback = werteReferenzierteKarteAus(
                 verweis = verweis,
                 außen = emptyMap(),
                 kartenPfad = kartenPfad,
                 alsMethode = true,
             )
-            fallback.fehler?.let { fehler ->
-                return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Karten-Fallback für '$name': $fehler")
+            fallback.fehler?.let { fallbackFehler ->
+                return fehler("Karten-Fallback für '$name': $fallbackFehler")
             }
             val wert = fallback.ausgaben["methode"]
-                ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Der Karten-Fallback für '$name' liefert keine Methode.")
+                ?: return fehler("Der Karten-Fallback für '$name' liefert keine Methode.")
             if (!anschlussAkzeptiertMethode(anschluss.art, wert.objekt)) {
-                return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
+                return fehler("Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
             }
             aktuell + (name to wert)
         }
@@ -124,7 +137,10 @@ class KartenAuswerter(
         val ergebnis = basis
             .mitVariablenQuellenAusEingängen(eingänge, knoten.art)
             .mitLatexDarstellungen(knoten, eingänge)
-            .copy(eingänge = eingänge)
+            .copy(
+                eingänge = eingänge,
+                auswertungsDauerNanos = dauerSeit(startNanos),
+            )
         cache[knoten.id] = CacheEintrag(signatur, ergebnis)
         return ergebnis
     }
@@ -170,18 +186,31 @@ class KartenAuswerter(
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
         kartenPfad: Set<KartenVerweis>,
     ): KnotenAuswertungsErgebnis {
+        val startNanos = nanoZeit()
         val außen = runCatching {
             sammleEingänge(knoten, verbindungen, karte, ergebnisse)
         }.getOrElse {
-            return KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty())
+            return KnotenAuswertungsErgebnis(
+                emptyMap(),
+                fehler = it.message ?: it::class.simpleName.orEmpty(),
+                auswertungsDauerNanos = dauerSeit(startNanos),
+            )
         }
-        return werteReferenzierteKarteAus(
+        val signatur = 31 * knoten.hashCode() + außen.hashCode()
+        cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
+
+        val ergebnis = werteReferenzierteKarteAus(
             verweis = knoten.kartenVerweis!!,
             außen = außen,
             kartenPfad = kartenPfad,
             alsMethode = knoten.art.startsWith("methode."),
             methodenName = knoten.name,
+        ).copy(
+            eingänge = außen,
+            auswertungsDauerNanos = dauerSeit(startNanos),
         )
+        cache[knoten.id] = CacheEintrag(signatur, ergebnis)
+        return ergebnis
     }
 
     private fun werteReferenzierteKarteAus(
@@ -335,7 +364,7 @@ class KartenAuswerter(
             "mathematik.potenz" -> mapOf("wert" to "\\left(${wert("basis")}\\right)^{${wert("exponent")}}")
             "mathematik.kehrwert" -> mapOf("wert" to "\\left(${wert("zahl")}\\right)^{-1}")
             "mathematik.wurzel" -> mapOf("wert" to "\\sqrt{${wert("radikand")}}")
-            "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}}\\left(${wert("argument")}\\right)")
+            "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}\\left(${wert("argument")}")")
             "mathematik.ableiten" -> mapOf("wert" to "\\frac{d}{d${knoten.parameter["variable"] ?: "x"}}\\left(${wert("term")}\\right)")
             "mathematik.integrieren" -> mapOf("wert" to "\\int ${wert("term")}\\,d${knoten.parameter["variable"] ?: "x"}")
             "mathematik.gleichheit" -> mapOf("aussage" to binär("="))
@@ -398,6 +427,8 @@ class KartenAuswerter(
         }
         return this
     }
+
+    private fun dauerSeit(startNanos: Long): Long = (nanoZeit() - startNanos).coerceAtLeast(0L)
 
     private fun standardwertSchlüssel(name: String) = "$STANDARDWERT_PREFIX$name"
 
