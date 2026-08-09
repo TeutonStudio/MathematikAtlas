@@ -17,6 +17,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.focus.*
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -26,7 +30,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
 import kotlinx.coroutines.delay
@@ -53,7 +57,33 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
     var werkzeug by remember { mutableStateOf(KartenWerkzeug.Auswahl) }
     var editorGröße by remember { mutableStateOf(IntSize.Zero) }
+    var letzterZeiger by remember { mutableStateOf(GraphPunkt(240f, 180f)) }
+    var graphFokussiert by remember { mutableStateOf(true) }
+    val graphFokus = remember { FocusRequester() }
     val aktuelleAnsicht by rememberUpdatedState(zustand.editor.karte.ansicht)
+    fun befehlsKontext() = BefehlsKontext(
+        fokus = if (graphFokussiert) AtlasFokusBereich.Karte else AtlasFokusBereich.Anwendung,
+        zeigerPosition = letzterZeiger,
+        sichtbareMitte = GraphPunkt(
+            (editorGröße.width / dichte.density / 2f - zustand.editor.karte.ansicht.verschiebung.x) / zustand.editor.karte.ansicht.zoom,
+            (editorGröße.height / dichte.density / 2f - zustand.editor.karte.ansicht.verschiebung.y) / zustand.editor.karte.ansicht.zoom,
+        ),
+        anzeigeBreiteDp = editorGröße.width / dichte.density,
+        anzeigeHöheDp = editorGröße.height / dichte.density,
+    )
+    val befehle = remember(zustand.editor) {
+        AtlasBefehlsAusführer(
+            editor = zustand.editor,
+            speichern = zustand::speichereAktuell,
+            knotenAuswahlÖffnen = zustand::öffneKnotenAuswahl,
+            umbenennen = { zustand.ausgewählterKnoten?.let { InspektorSichtbarkeit.öffnen() } },
+            sucheÖffnen = { zustand.linkerBereich = VerwaltungsBereich.Konzepte },
+        )
+    }
+    val tastatur = remember(befehle) { AtlasTastaturAusführer(befehle, ::befehlsKontext) }
+    fun ausführen(befehl: AtlasBefehl) {
+        if (befehle.führeAus(befehl, befehlsKontext())) zustand.aktualisiereAuswertung()
+    }
 
     LaunchedEffect(zustand.editor.karte) {
         zustand.aktualisiereAuswertung()
@@ -64,7 +94,13 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     Row(
         Modifier.fillMaxSize()
             .navigationBarsPadding()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown && (event.isCtrlPressed || event.isMetaPressed) && event.key == Key.S) {
+                    ausführen(AtlasBefehl.Speichern); true
+                } else false
+            }
+            .onKeyEvent { tastatur.verarbeite(it).also { verarbeitet -> if (verarbeitet) zustand.aktualisiereAuswertung() } },
     ) {
         VerwaltungsFenster(
             zustand,
@@ -76,13 +112,18 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                 zustand,
                 onImport = { import.launch(arrayOf("application/json", "text/plain")) },
                 onExport = { export.launch("${zustand.editor.karte.name}.json") },
+                onSpeichern = { ausführen(AtlasBefehl.Speichern) },
             )
             HorizontalDivider()
             Box(
                 Modifier.weight(1f).fillMaxWidth()
                     .clipToBounds()
                     .kartenDropZiel(zustand, dichte.density)
-                    .onSizeChanged { editorGröße = it },
+                    .onSizeChanged { editorGröße = it }
+                    .focusRequester(graphFokus)
+                    .onFocusChanged { graphFokussiert = it.hasFocus }
+                    .focusable()
+                    .onPointerEvent(PointerEventType.Press) { graphFokus.requestFocus() },
             ) {
                 KnotenKartenEditor(
                     zustand = zustand.editor,
@@ -103,6 +144,8 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                         if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(position, start)
                     },
                     beiKnotenDoppelklick = { if (werkzeug == KartenWerkzeug.Auswahl) it.kartenVerweis?.let(zustand::öffne) },
+                    beiHintergrundDoppelklick = { if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(it) },
+                    beiZeigerPosition = { letzterZeiger = it },
                 )
 
                 if (werkzeug == KartenWerkzeug.Verschieben) {
@@ -139,17 +182,10 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                         inhaltEinpassenAktiv = zustand.editor.karte.knoten.isNotEmpty() &&
                             editorGröße.width > 0 && editorGröße.height > 0,
                         onInhaltEinpassen = {
-                            zustand.editor.karte.ansichtFürInhalt(
-                                anzeigeGröße = editorGröße,
-                                dichte = dichte.density,
-                                pufferPx = with(dichte) { 40.dp.toPx() },
-                            )?.let { ansicht ->
-                                zustand.editor.führeAus(
-                                    KartenAktion.AnsichtÄndern(ansicht),
-                                    mitHistorie = false,
-                                )
-                            }
+                            ausführen(AtlasBefehl.InhaltEinpassen)
                         },
+                        onRückgängig = { ausführen(AtlasBefehl.Rückgängig) },
+                        onWiederholen = { ausführen(AtlasBefehl.Wiederholen) },
                         modifier = Modifier.width(152.dp).height(120.dp),
                     )
                     Spacer(Modifier.width(180.dp).height(120.dp))
@@ -296,7 +332,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
 }
 
 @Composable
-private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport: () -> Unit) {
+private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport: () -> Unit, onSpeichern: () -> Unit) {
     var umbenennenGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     var jsonGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     Row(
@@ -315,7 +351,7 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
         TextButton(onClick = { jsonGeöffnet = true }) { Text("JSON anzeigen") }
         TextButton(onClick = onImport) { Text("Import") }
         TextButton(onClick = onExport) { Text("Export") }
-        Button(onClick = zustand::speichereAktuell) { Text("Speichern") }
+        Button(onClick = onSpeichern) { Text("Speichern") }
     }
     if (umbenennenGeöffnet) {
         NameÄndernDialog(
@@ -386,6 +422,8 @@ private fun KartenWerkzeuge(
     onWerkzeug: (KartenWerkzeug) -> Unit,
     inhaltEinpassenAktiv: Boolean,
     onInhaltEinpassen: () -> Unit,
+    onRückgängig: () -> Unit,
+    onWiederholen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier, shape = MaterialTheme.shapes.medium, tonalElevation = 3.dp) {
@@ -395,8 +433,8 @@ private fun KartenWerkzeuge(
             verticalArrangement = Arrangement.Center,
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = editor::rückgängig)
-                KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = editor::wiederholen)
+                KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = onRückgängig)
+                KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = onWiederholen)
             }
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

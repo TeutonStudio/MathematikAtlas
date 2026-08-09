@@ -1,7 +1,8 @@
 package de.TeutonStudio.MathematikAtlas
 
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -9,10 +10,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import java.util.WeakHashMap
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.hypot
 
 private sealed interface KartenDragInhalt {
     data class Karte(val daten: KartenDaten) : KartenDragInhalt
@@ -146,9 +150,11 @@ internal fun Modifier.kartenDragQuelle(zustand: AtlasZustand, karte: KartenDaten
         }
 }
 
-internal fun Modifier.knotenVorlagenDragQuelle(
+internal fun Modifier.konzeptVorlagenInteraktion(
     zustand: AtlasZustand,
     vorlage: KnotenVorlage,
+    onEinfügen: () -> Unit,
+    onDefinition: () -> Unit,
 ): Modifier = composed {
     var ursprung by remember { mutableStateOf(Offset.Zero) }
     var quellGröße by remember { mutableStateOf(Size.Zero) }
@@ -157,22 +163,89 @@ internal fun Modifier.knotenVorlagenDragQuelle(
         ursprung = bounds.topLeft
         quellGröße = bounds.size
     }.pointerInput(vorlage.art, vorlage.name, vorlage.standardParameter) {
-        detectDragGestures(
-            onDragStart = { lokal ->
-                zustand.kartenDragZustand.beginne(
-                    vorlage = vorlage,
-                    position = ursprung + lokal,
-                    griffPosition = lokal,
-                    quellGröße = quellGröße,
-                )
-            },
-            onDrag = { änderung, delta ->
-                änderung.consume()
-                zustand.kartenDragZustand.verschiebe(delta)
-            },
-            onDragEnd = { zustand.kartenDragZustand.ablegen(zustand) },
-            onDragCancel = { zustand.kartenDragZustand.abbrechen() },
-        )
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val primär = when (down.type) {
+                PointerType.Mouse -> currentEvent.buttons.isPrimaryPressed
+                else -> true
+            }
+            if (!primär || down.isConsumed) return@awaitEachGesture
+
+            val art = when (down.type) {
+                PointerType.Touch -> KonzeptZeigerArt.Touch
+                PointerType.Stylus, PointerType.Eraser -> KonzeptZeigerArt.Stift
+                PointerType.Mouse -> KonzeptZeigerArt.Maus
+                else -> KonzeptZeigerArt.Unbekannt
+            }
+            val touchSlopDp = viewConfiguration.touchSlop / density
+            val schwelle = KonzeptGestenSchwellen.für(art, touchSlopDp).bewegungDp * density
+            val automat = KonzeptGestenAutomat(schwelle)
+            automat.drücken()
+            val start = down.position
+            var letztePosition = down.position
+            var gesamtX = 0f
+            var gesamtY = 0f
+            var gehalten = false
+            var verbleibendeHaltezeit = viewConfiguration.longPressTimeoutMillis
+
+            fun wende(effekte: List<KonzeptGestenEffekt>, position: Offset) {
+                effekte.forEach { effekt ->
+                    when (effekt) {
+                        KonzeptGestenEffekt.Einfügen -> onEinfügen()
+                        KonzeptGestenEffekt.DefinitionÖffnen -> onDefinition()
+                        KonzeptGestenEffekt.DragBeginnen -> zustand.kartenDragZustand.beginne(
+                            vorlage = vorlage,
+                            position = ursprung + position,
+                            griffPosition = start,
+                            quellGröße = quellGröße,
+                        )
+                        KonzeptGestenEffekt.DragVerschieben -> zustand.kartenDragZustand.verschiebe(position - letztePosition)
+                        KonzeptGestenEffekt.DragBeenden -> zustand.kartenDragZustand.ablegen(zustand)
+                        KonzeptGestenEffekt.DragAbbrechen -> zustand.kartenDragZustand.abbrechen()
+                    }
+                }
+            }
+
+            while (true) {
+                val ereignis = if (!gehalten) {
+                    withTimeoutOrNull(verbleibendeHaltezeit.coerceAtLeast(1L)) { awaitPointerEvent() }
+                } else awaitPointerEvent()
+                if (ereignis == null) {
+                    gehalten = true
+                    automat.haltezeitErreicht()
+                    continue
+                }
+                val änderung = ereignis.changes.firstOrNull { it.id == down.id }
+                if (änderung == null || ereignis.changes.count { it.pressed } > 1) {
+                    wende(automat.abbrechen(), letztePosition)
+                    break
+                }
+                if (!änderung.pressed) {
+                    wende(automat.loslassen(), änderung.position)
+                    break
+                }
+                if (!gehalten) {
+                    verbleibendeHaltezeit = (
+                        viewConfiguration.longPressTimeoutMillis - (änderung.uptimeMillis - down.uptimeMillis)
+                    ).coerceAtLeast(0L)
+                    if (verbleibendeHaltezeit == 0L) {
+                        gehalten = true
+                        automat.haltezeitErreicht()
+                    }
+                }
+                if (änderung.isConsumed && automat.zustand != KonzeptGestenZustand.Ziehen) {
+                    wende(automat.abbrechen(), änderung.position)
+                    break
+                }
+                val delta = änderung.position - letztePosition
+                gesamtX += delta.x
+                gesamtY += delta.y
+                val effekte = automat.bewegen(hypot(gesamtX, gesamtY))
+                wende(effekte, änderung.position)
+                if (automat.zustand == KonzeptGestenZustand.Ziehen) änderung.consume()
+                letztePosition = änderung.position
+            }
+        }
     }
 }
 

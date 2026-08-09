@@ -5,6 +5,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 
 enum class AuswahlModus { Einzeln, Gruppe }
+enum class AuswahlÄnderung { Ersetzen, Hinzufügen, Umschalten }
 
 @Stable
 class KartenEditorZustand(
@@ -63,7 +64,7 @@ class KartenEditorZustand(
     fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {
         val wirksameAktion = if (
             aktion is KartenAktion.KnotenVerschieben &&
-            auswahlModus == AuswahlModus.Gruppe &&
+            ausgewählteKnoten.size > 1 &&
             aktion.id in ausgewählteKnoten
         ) {
             val aktuell = karte.knoten.firstOrNull { it.id == aktion.id }
@@ -81,18 +82,80 @@ class KartenEditorZustand(
         bereinigeAuswahl()
     }
 
-    fun wähleKnoten(id: KnotenId?) {
+    fun wähleKnoten(id: KnotenId?, änderung: AuswahlÄnderung = AuswahlÄnderung.Ersetzen) {
         if (id == null) {
             ausgewählteKnoten = emptySet()
             ausgewählterKnoten = null
-        } else if (auswahlModus == AuswahlModus.Gruppe) {
-            ausgewählteKnoten = ausgewählteKnoten + id
-            ausgewählterKnoten = id
         } else {
-            ausgewählteKnoten = setOf(id)
-            ausgewählterKnoten = id
+            val effektiv = if (änderung == AuswahlÄnderung.Ersetzen && auswahlModus == AuswahlModus.Gruppe) {
+                AuswahlÄnderung.Hinzufügen
+            } else änderung
+            ausgewählteKnoten = when (effektiv) {
+                AuswahlÄnderung.Ersetzen -> setOf(id)
+                AuswahlÄnderung.Hinzufügen -> ausgewählteKnoten + id
+                AuswahlÄnderung.Umschalten -> if (id in ausgewählteKnoten) ausgewählteKnoten - id else ausgewählteKnoten + id
+            }
+            ausgewählterKnoten = when {
+                id in ausgewählteKnoten -> id
+                else -> ausgewählteKnoten.lastOrNull()
+            }
         }
         ausgewählteVerbindung = null
+    }
+
+    fun wähleAlleKnoten() {
+        ausgewählteKnoten = karte.knoten.mapTo(linkedSetOf()) { it.id }
+        ausgewählterKnoten = ausgewählteKnoten.lastOrNull()
+        ausgewählteVerbindung = null
+    }
+
+    fun wähleKnotenImBereich(bereich: androidx.compose.ui.geometry.Rect, änderung: AuswahlÄnderung) {
+        val treffer = karte.knoten.asSequence().filter { knoten ->
+            val links = knoten.position.x
+            val oben = knoten.position.y
+            val rechts = links + knoten.größe.breite
+            val unten = oben + knoten.größe.höhe
+            rechts >= bereich.left && links <= bereich.right && unten >= bereich.top && oben <= bereich.bottom
+        }.map { it.id }.toSet()
+        ausgewählteKnoten = when (änderung) {
+            AuswahlÄnderung.Ersetzen -> treffer
+            AuswahlÄnderung.Hinzufügen -> ausgewählteKnoten + treffer
+            AuswahlÄnderung.Umschalten -> (ausgewählteKnoten - treffer) + (treffer - ausgewählteKnoten)
+        }
+        ausgewählterKnoten = ausgewählteKnoten.lastOrNull()
+        ausgewählteVerbindung = null
+    }
+
+    fun verschiebeAuswahl(delta: GraphPunkt, mitHistorie: Boolean = true) {
+        if (ausgewählteKnoten.isEmpty() || delta == GraphPunkt.Zero) return
+        führeAus(KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta), mitHistorie)
+    }
+
+    fun wähleRäumlichNächsten(richtung: GraphPunkt): Boolean {
+        val aktuell = karte.knoten.firstOrNull { it.id == ausgewählterKnoten } ?: karte.knoten.firstOrNull() ?: return false
+        val mitte = GraphPunkt(aktuell.position.x + aktuell.größe.breite / 2f, aktuell.position.y + aktuell.größe.höhe / 2f)
+        val kandidat = karte.knoten.asSequence().filter { it.id != aktuell.id }.mapNotNull { knoten ->
+            val delta = GraphPunkt(
+                knoten.position.x + knoten.größe.breite / 2f - mitte.x,
+                knoten.position.y + knoten.größe.höhe / 2f - mitte.y,
+            )
+            val vorwärts = delta.x * richtung.x + delta.y * richtung.y
+            if (vorwärts <= 0f) null else knoten to (delta.x * delta.x + delta.y * delta.y + 3f * vorwärts)
+        }.minByOrNull { it.second }?.first ?: return false
+        wähleKnoten(kandidat.id)
+        return true
+    }
+
+    fun brecheInteraktionAb(): Boolean {
+        if (verbindungsStart != null || verbindungsVorschau != null) {
+            verwerfeVerbindungsInteraktion()
+            return true
+        }
+        if (ausgewählteKnoten.isNotEmpty() || ausgewählteVerbindung != null) {
+            wähleKnoten(null)
+            return true
+        }
+        return false
     }
 
     fun setzeAuswahlModus(modus: AuswahlModus) {
@@ -235,7 +298,7 @@ class KartenEditorZustand(
     }
 
     fun löscheAuswahl() {
-        val knotenIds = if (auswahlModus == AuswahlModus.Gruppe) ausgewählteKnoten else setOfNotNull(ausgewählterKnoten)
+        val knotenIds = ausgewählteKnoten.ifEmpty { setOfNotNull(ausgewählterKnoten) }
         when {
             knotenIds.isNotEmpty() -> führeAus(KartenAktion.KnotenMehrfachLöschen(knotenIds))
             ausgewählteVerbindung != null -> führeAus(KartenAktion.VerbindungLöschen(ausgewählteVerbindung!!))
@@ -246,7 +309,7 @@ class KartenEditorZustand(
     }
 
     fun dupliziereAuswahl() {
-        val ids = if (auswahlModus == AuswahlModus.Gruppe) ausgewählteKnoten else setOfNotNull(ausgewählterKnoten)
+        val ids = ausgewählteKnoten.ifEmpty { setOfNotNull(ausgewählterKnoten) }
         val originale = karte.knoten.filter { it.id in ids }
         if (originale.isEmpty()) return
         val knotenIds = originale.associate { it.id to neueKnotenId() }

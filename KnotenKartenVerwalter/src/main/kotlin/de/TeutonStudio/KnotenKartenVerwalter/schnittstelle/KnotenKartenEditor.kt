@@ -21,15 +21,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.*
-import de.TeutonStudio.KnotenKartenVerwalter.R
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
@@ -56,6 +55,8 @@ fun KnotenKartenEditor(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit = {},
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit = { _, _ -> },
     beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
+    beiHintergrundDoppelklick: (GraphPunkt) -> Unit = {},
+    beiZeigerPosition: (GraphPunkt) -> Unit = {},
     zeigeKnotenInspektor: Boolean = true,
     beiKnotenInspektor: (KnotenDaten) -> Unit = { InspektorSichtbarkeit.öffnen() },
 ) {
@@ -67,6 +68,9 @@ fun KnotenKartenEditor(
     val aktuelleDichte by rememberUpdatedState(dichte.density)
     var anzeigeGröße by remember { mutableStateOf(IntSize.Zero) }
     var magnetischesZiel by remember(karte.id) { mutableStateOf<AnschlussVerweis?>(null) }
+    var auswahlRechteckBildschirm by remember(karte.id) { mutableStateOf<Rect?>(null) }
+    var aktuelleAuswahlÄnderung by remember { mutableStateOf(AuswahlÄnderung.Ersetzen) }
+    var leertasteGedrückt by remember { mutableStateOf(false) }
     LaunchedEffect(zustand.verbindungsStart) {
         if (zustand.verbindungsStart == null) magnetischesZiel = null
     }
@@ -82,16 +86,99 @@ fun KnotenKartenEditor(
         modifier.background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .clipToBounds()
             .onSizeChanged { anzeigeGröße = it }
+            .onPreviewKeyEvent { event ->
+                if (event.key == Key.Spacebar) {
+                    leertasteGedrückt = event.type == KeyEventType.KeyDown
+                }
+                false
+            }
+            .onPointerEvent(PointerEventType.Press) { event ->
+                aktuelleAuswahlÄnderung = when {
+                    event.keyboardModifiers.isCtrlPressed -> AuswahlÄnderung.Umschalten
+                    event.keyboardModifiers.isShiftPressed -> AuswahlÄnderung.Hinzufügen
+                    else -> AuswahlÄnderung.Ersetzen
+                }
+                event.changes.firstOrNull()?.position?.let { position ->
+                    beiZeigerPosition(bildschirmZuWelt(position, aktuelleAnsicht, aktuelleDichte))
+                }
+            }
+            .onPointerEvent(PointerEventType.Move) { event ->
+                event.changes.firstOrNull()?.position?.let { position ->
+                    beiZeigerPosition(bildschirmZuWelt(position, aktuelleAnsicht, aktuelleDichte))
+                }
+            }
+            .onPointerEvent(PointerEventType.Scroll) { event ->
+                val änderung = event.changes.firstOrNull() ?: return@onPointerEvent
+                val bisher = aktuelleAnsicht
+                if (event.keyboardModifiers.isShiftPressed) {
+                    zustand.führeAus(
+                        KartenAktion.AnsichtÄndern(bisher.copy(verschiebung = bisher.verschiebung + GraphPunkt(-änderung.scrollDelta.y * 36f, 0f))),
+                        mitHistorie = false,
+                    )
+                } else {
+                    val faktor = if (änderung.scrollDelta.y < 0f) 1.1f else 1f / 1.1f
+                    val neuerZoom = (bisher.zoom * faktor).coerceIn(.25f, 3.5f)
+                    val effektiv = neuerZoom / bisher.zoom
+                    val zentrum = änderung.position
+                    zustand.führeAus(
+                        KartenAktion.AnsichtÄndern(AnsichtsFenster(
+                            verschiebung = GraphPunkt(
+                                zentrum.x - (zentrum.x - bisher.verschiebung.x) * effektiv,
+                                zentrum.y - (zentrum.y - bisher.verschiebung.y) * effektiv,
+                            ),
+                            zoom = neuerZoom,
+                        )),
+                        mitHistorie = false,
+                    )
+                }
+                änderung.consume()
+            }
+            .sekundärKlick(zustand, karte.id) { pos ->
+                if (!trifftKnoten(pos, aktuelleKarte, aktuelleAnsicht, aktuelleDichte)) {
+                    zustand.wähleKnoten(null)
+                    beiHintergrundKontext(bildschirmZuWelt(pos, aktuelleAnsicht, aktuelleDichte))
+                }
+            }
             .pointerInput(zustand) {
                 awaitEachGesture {
                     var gesamterPan = Offset.Zero
                     var gesamterZoom = 1f
                     var hintergrundGesteAktiv = false
                     val ersterDruck = awaitFirstDown(requireUnconsumed = false)
-                    if (trifftKnoten(ersterDruck.position, aktuelleKarte, aktuelleAnsicht, aktuelleDichte)) {
+                    val maus = ersterDruck.type == PointerType.Mouse
+                    val mittlereTaste = maus && currentEvent.buttons.isTertiaryPressed
+                    val auswahlGeste = maus && currentEvent.buttons.isPrimaryPressed && !leertasteGedrückt
+                    if (trifftKnoten(ersterDruck.position, aktuelleKarte, aktuelleAnsicht, aktuelleDichte) && !mittlereTaste) {
                         do {
                             val ereignis = awaitPointerEvent()
                         } while (ereignis.changes.any { it.pressed })
+                    } else if (auswahlGeste) {
+                        val start = ersterDruck.position
+                        var ende = start
+                        do {
+                            val ereignis = awaitPointerEvent()
+                            val änderung = ereignis.changes.firstOrNull { it.id == ersterDruck.id } ?: break
+                            ende = änderung.position
+                            if (!hintergrundGesteAktiv && (ende - start).getDistance() > viewConfiguration.touchSlop) {
+                                hintergrundGesteAktiv = true
+                            }
+                            if (hintergrundGesteAktiv) {
+                                auswahlRechteckBildschirm = Rect(
+                                    min(start.x, ende.x), min(start.y, ende.y),
+                                    max(start.x, ende.x), max(start.y, ende.y),
+                                )
+                                änderung.consume()
+                            }
+                        } while (ereignis.changes.any { it.pressed })
+                        if (hintergrundGesteAktiv) {
+                            val startWelt = bildschirmZuWelt(start, aktuelleAnsicht, aktuelleDichte)
+                            val endeWelt = bildschirmZuWelt(ende, aktuelleAnsicht, aktuelleDichte)
+                            zustand.wähleKnotenImBereich(
+                                Rect(min(startWelt.x, endeWelt.x), min(startWelt.y, endeWelt.y), max(startWelt.x, endeWelt.x), max(startWelt.y, endeWelt.y)),
+                                aktuelleAuswahlÄnderung,
+                            )
+                        }
+                        auswahlRechteckBildschirm = null
                     } else {
                         do {
                             // In Main wurden die Ereignisse bereits von Knoten und Anschlüssen verarbeitet.
@@ -130,6 +217,7 @@ fun KnotenKartenEditor(
             .pointerInput(karte.id, ansicht) {
                 detectTapGestures(
                     onTap = { zustand.wähleKnoten(null) },
+                    onDoubleTap = { pos -> beiHintergrundDoppelklick(bildschirmZuWelt(pos, aktuelleAnsicht, aktuelleDichte)) },
                     onLongPress = { pos ->
                         zustand.wähleKnoten(null)
                         val welt = GraphPunkt(
@@ -162,7 +250,7 @@ fun KnotenKartenEditor(
                 key(knoten.id) {
                     KnotenDarstellung(
                         knoten = knoten,
-                        ausgewählt = zustand.ausgewählterKnoten == knoten.id,
+                        ausgewählt = knoten.id in zustand.ausgewählteKnoten,
                         zustand = zustand,
                         ansicht = ansicht,
                         dichte = dichte.density,
@@ -174,6 +262,7 @@ fun KnotenKartenEditor(
                         beiAnschlussKontext = beiAnschlussKontext,
                         beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
                         beiDoppelklick = { beiKnotenDoppelklick(knoten) },
+                        auswahlÄnderung = aktuelleAuswahlÄnderung,
                         zeigeKnotenInspektor = zeigeKnotenInspektor,
                         beiInspektorÖffnen = { beiKnotenInspektor(knoten) },
                     )
@@ -198,6 +287,14 @@ fun KnotenKartenEditor(
             },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
         )
+        auswahlRechteckBildschirm?.let { rechteck ->
+            val füllung = MaterialTheme.colorScheme.primary.copy(alpha = .12f)
+            val rahmen = MaterialTheme.colorScheme.primary
+            Canvas(Modifier.fillMaxSize()) {
+                drawRect(füllung, rechteck.topLeft, rechteck.size)
+                drawRect(rahmen, rechteck.topLeft, rechteck.size, style = Stroke(1.dp.toPx()))
+            }
+        }
         zustand.letzteMeldung?.let { meldung ->
             Surface(
                 Modifier.align(Alignment.BottomCenter).padding(16.dp),
@@ -464,6 +561,24 @@ private fun Verbindungen(
 
     Canvas(
         Modifier.fillMaxSize()
+            .sekundärKlick(zustand, verbindungen) { pos ->
+                val treffer = findeVerbindungsTreffer(
+                    position = pos,
+                    geometrien = aktuelleGeometrien,
+                    trefferRadius = trefferRadius,
+                    ausgewählteVerbindung = aktuelleAuswahl,
+                )
+                if (treffer != null) {
+                    zustand.wähleVerbindung(treffer.id)
+                    beiVerbindungKontext(treffer)
+                } else {
+                    zustand.wähleKnoten(null)
+                    beiHintergrundKontext(GraphPunkt(
+                        (pos.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.density,
+                        (pos.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.density,
+                    ))
+                }
+            }
             .pointerInput(verbindungen, karte.knoten, ansicht) {
                 fun trefferAn(position: Offset): VerbindungDaten? = findeVerbindungsTreffer(
                     position = position,
@@ -604,6 +719,7 @@ private fun KnotenDarstellung(
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
+    auswahlÄnderung: AuswahlÄnderung,
     zeigeKnotenInspektor: Boolean,
     beiInspektorÖffnen: () -> Unit,
 ) {
@@ -622,11 +738,32 @@ private fun KnotenDarstellung(
         Card(
             Modifier.fillMaxSize()
                 .border(if (ausgewählt) 3.dp else 1.dp, if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                .pointerHoverIcon(PointerIcon.Hand)
+                .semantics {
+                    contentDescription = "Knoten ${knoten.name}, ${knoten.anschlüsse.size} Anschlüsse"
+                    selected = ausgewählt
+                }
+                .onKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+                    when {
+                        event.key == Key.Enter -> { zustand.wähleKnoten(knoten.id, auswahlÄnderung); true }
+                        event.key == Key.F10 && event.isShiftPressed -> { beiKnotenKontext(knoten); true }
+                        event.isAltPressed && event.key == Key.DirectionLeft -> zustand.wähleRäumlichNächsten(GraphPunkt(-1f, 0f))
+                        event.isAltPressed && event.key == Key.DirectionRight -> zustand.wähleRäumlichNächsten(GraphPunkt(1f, 0f))
+                        event.isAltPressed && event.key == Key.DirectionUp -> zustand.wähleRäumlichNächsten(GraphPunkt(0f, -1f))
+                        event.isAltPressed && event.key == Key.DirectionDown -> zustand.wähleRäumlichNächsten(GraphPunkt(0f, 1f))
+                        else -> false
+                    }
+                }
+                .focusable()
                 .pointerInput(knoten.id, zoom) {
                     detectDragGestures(
                         onDragStart = { start ->
                             ziehbar = renderer.interaktionsModus == KnotenInteraktionsModus.GanzeFlächeZiehbar || start.y <= KOPFZEILE_HÖHE_DP * density
-                            if (ziehbar) { zustand.wähleKnoten(knoten.id); zustand.beginneInteraktion() }
+                            if (ziehbar) {
+                                if (knoten.id !in zustand.ausgewählteKnoten) zustand.wähleKnoten(knoten.id, auswahlÄnderung)
+                                zustand.beginneInteraktion()
+                            }
                         },
                         onDragEnd = { if (ziehbar) zustand.beendeInteraktion(); ziehbar = false },
                         onDragCancel = { if (ziehbar) zustand.beendeInteraktion(); ziehbar = false },
@@ -646,9 +783,13 @@ private fun KnotenDarstellung(
                         },
                     )
                 }
+                .sekundärKlick(zustand, knoten.id) {
+                    if (knoten.id !in zustand.ausgewählteKnoten) zustand.wähleKnoten(knoten.id)
+                    beiKnotenKontext(knoten)
+                }
                 .pointerInput(knoten.id) {
                     detectTapGestures(
-                        onTap = { zustand.wähleKnoten(knoten.id) },
+                        onTap = { zustand.wähleKnoten(knoten.id, auswahlÄnderung) },
                         onLongPress = {
                             zustand.wähleKnoten(knoten.id)
                             beiKnotenKontext(knoten)
@@ -697,6 +838,7 @@ private fun KnotenDarstellung(
             Box(
                 Modifier.align(Alignment.BottomEnd).offset(6.dp, 6.dp).size(18.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .pointerHoverIcon(PointerIcon.Crosshair)
                     .pointerInput(knoten.id, zoom) {
                         detectDragGestures(
                             onDragStart = { zustand.beginneInteraktion() },
@@ -743,13 +885,28 @@ private fun KnotenInspektorSchaltfläche(
             .semantics { contentDescription = "Inspektor öffnen" },
         colors = IconButtonDefaults.iconButtonColors(contentColor = iconFarbe),
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_knoten_inspektor),
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-        )
+        Text("i", style = MaterialTheme.typography.titleMedium)
     }
 }
+
+private fun bildschirmZuWelt(position: Offset, ansicht: AnsichtsFenster, dichte: Float): GraphPunkt = GraphPunkt(
+    (position.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.coerceAtLeast(.0001f),
+    (position.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.coerceAtLeast(.0001f),
+)
+
+private fun Modifier.sekundärKlick(zustand: KartenEditorZustand, key: Any?, aktion: (Offset) -> Unit): Modifier =
+    pointerInput(zustand, key) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            if (down.type != PointerType.Mouse || !currentEvent.buttons.isSecondaryPressed) return@awaitEachGesture
+            down.consume()
+            aktion(down.position)
+            do {
+                val ereignis = awaitPointerEvent()
+                ereignis.changes.forEach { it.consume() }
+            } while (ereignis.changes.any { it.pressed })
+        }
+    }
 
 internal fun farbKontrastVerhältnis(vordergrund: Color, hintergrund: Color): Float {
     val vordergrundLuminanz = vordergrund.copy(alpha = 1f).luminance()
@@ -828,6 +985,15 @@ private fun BoxScope.AnschlussGriff(
     val interaktionsObenLinks = startWelt - GraphPunkt(interaktionsHalbe, interaktionsHalbe)
     Box(
         Modifier.align(ausrichtung).offset(x, y).size(interaktionsGröße.dp)
+            .pointerHoverIcon(PointerIcon.Crosshair)
+            .semantics {
+                contentDescription = "${knoten.name}, Anschluss ${anschluss.name}, ${anschluss.richtung}, ${anschluss.art.wert}"
+            }
+            .sekundärKlick(zustand, ref) {
+                aktuellesZielSetzen(null)
+                zustand.brecheVerbindungsVorschauAb()
+                beiAnschlussKontext(ref)
+            }
             .combinedClickable(
                 enabled = kompatibel,
                 onClick = { zustand.anschlussAngeklickt(ref) },
