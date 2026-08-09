@@ -61,7 +61,7 @@ class MengenOperatorKnotenTest {
             art = "mathematik.vereinigung",
             parameter = emptyMap(),
         )
-        val einmal = KartenDaten(knoten = listOf(alt)).migriereMengenOperatorKnoten()
+        val einmal = KartenDaten(name = "Migration", knoten = listOf(alt)).migriereMengenOperatorKnoten()
         val zweimal = einmal.migriereMengenOperatorKnoten()
 
         assertEquals(MengenRechner.KNOTEN_ART, einmal.knoten.single().art)
@@ -75,7 +75,7 @@ class MengenOperatorKnotenTest {
             art = "mathematik.disjunkt",
             parameter = emptyMap(),
         )
-        val migriert = KartenDaten(knoten = listOf(alt)).migriereMengenOperatorKnoten().knoten.single()
+        val migriert = KartenDaten(name = "Relation", knoten = listOf(alt)).migriereMengenOperatorKnoten().knoten.single()
 
         assertEquals(MengenRelationRechner.KNOTEN_ART, migriert.art)
         assertEquals(MengenRelationsOperator.DISJUNKT.stabileId, migriert.parameter[MENGENRELATION_OPERATOR_PARAMETER])
