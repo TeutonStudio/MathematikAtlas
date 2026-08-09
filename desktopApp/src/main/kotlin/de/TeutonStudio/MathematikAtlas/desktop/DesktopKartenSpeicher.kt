@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas.desktop
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MathematikKartenCodec
+import de.TeutonStudio.MathematikKnoten.MathematikKartenMigrationen
 import java.nio.file.*
 import kotlin.io.path.*
 
@@ -26,15 +27,16 @@ class DesktopKartenSpeicher(
         ?.let(::ladeDatei)
 
     fun speichere(karte: KartenDaten): KartenDaten {
-        val ordner = kartenVerzeichnis.resolve(karte.id.wert).also { it.createDirectories() }
+        val normalisiert = MathematikKartenMigrationen.vorSpeichern(karte)
+        val ordner = kartenVerzeichnis.resolve(normalisiert.id.wert).also { it.createDirectories() }
         val vorhandeneVersion = Files.list(ordner).use { dateien ->
             dateien.toList().map { it.fileName.toString() }
                 .filter { it.matches(Regex("v\\d+\\.json")) }
                 .map { it.removePrefix("v").removeSuffix(".json").toInt() }
                 .maxOrNull() ?: 0
         }
-        val version = if (vorhandeneVersion == 0) karte.version.coerceAtLeast(1) else maxOf(vorhandeneVersion + 1, karte.version)
-        val gespeichert = karte.copy(version = version)
+        val version = if (vorhandeneVersion == 0) normalisiert.version.coerceAtLeast(1) else maxOf(vorhandeneVersion + 1, normalisiert.version)
+        val gespeichert = normalisiert.copy(version = version)
         val ziel = ordner.resolve("v$version.json")
         atomarSchreiben(ziel, MathematikKartenCodec.schreibe(gespeichert))
         atomarSchreiben(aktuellDatei, basis.relativize(ziel).toString())
