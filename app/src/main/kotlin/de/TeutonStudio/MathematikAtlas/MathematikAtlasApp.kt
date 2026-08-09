@@ -4,7 +4,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,8 +18,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.layout.onSizeChanged
@@ -31,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
 import kotlinx.coroutines.delay
 
@@ -123,7 +122,12 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     .focusRequester(graphFokus)
                     .onFocusChanged { graphFokussiert = it.hasFocus }
                     .focusable()
-                    .onPointerEvent(PointerEventType.Press) { graphFokus.requestFocus() },
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false)
+                            graphFokus.requestFocus()
+                        }
+                    },
             ) {
                 KnotenKartenEditor(
                     zustand = zustand.editor,

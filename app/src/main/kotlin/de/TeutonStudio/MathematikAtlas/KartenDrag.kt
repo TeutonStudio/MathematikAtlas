@@ -165,10 +165,7 @@ internal fun Modifier.konzeptVorlagenInteraktion(
     }.pointerInput(vorlage.art, vorlage.name, vorlage.standardParameter) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
-            val primär = when (down.type) {
-                PointerType.Mouse -> currentEvent.buttons.isPrimaryPressed
-                else -> true
-            }
+            val primär = down.pressed
             if (!primär || down.isConsumed) return@awaitEachGesture
 
             val art = when (down.type) {

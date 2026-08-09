@@ -8,7 +8,7 @@ class DesktopKartenSpeicherTest {
     @Test fun `Speichern Neustart und Versionsfolge bleiben erhalten`() {
         val basis = Files.createTempDirectory("atlas-desktop-test")
         val erster = DesktopKartenSpeicher(basis)
-        val karte = KartenDaten(name = "Persistenz", knoten = listOf(KnotenDaten(art = KnotenArtId("test"), name = "A")))
+        val karte = KartenDaten(name = "Persistenz", knoten = listOf(KnotenDaten(art = "test", name = "A")))
         val v1 = erster.speichere(karte)
         val v2 = erster.speichere(v1.copy(name = "Persistenz 2"))
         val nachNeustart = DesktopKartenSpeicher(basis).ladeAktuell()
