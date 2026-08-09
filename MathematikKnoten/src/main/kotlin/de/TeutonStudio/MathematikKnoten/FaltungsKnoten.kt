@@ -63,16 +63,17 @@ object FaltungsKnotenVorlagen {
         art = METHODEN_AUFRUF_ART,
         name = "Methode aufrufen",
         kategorie = "Methoden",
-        beschreibung = "Wendet eine Methode an; unbekannte Signaturen werden sicher als Argumenttupel behandelt.",
+        beschreibung = "Wendet eine Methode an; unbekannte Signaturen verwenden Argument- und Ergebnistupel als sicheren Vertrag.",
         standardGröße = GraphGröße(285f, 135f),
         anschlüsse = listOf(
             eingang("methode", MathematikAnschlussArten.Methode.id, 0),
             eingang("argument-0", MathematikAnschlussArten.Tupel.id, 1),
-            ausgang("wert", MathematikAnschlussArten.Objekt.id),
+            ausgang("wert", MathematikAnschlussArten.Tupel.id),
         ),
         standardParameter = mapOf(
-            METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Objekt.id.wert,
+            METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Tupel.id.wert,
             METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_TUPEL,
+            METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_TUPEL,
             "festeEingänge" to "1",
         ),
     )
