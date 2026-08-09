@@ -2,7 +2,6 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class MengenMassNormTest {
@@ -28,8 +27,8 @@ class MengenMassNormTest {
         val menge = BenannteMenge("A")
         val ergebnis = normEinerMenge(menge, IntegralMass.Allgemein("\\mu"))
 
-        val symbolisch = assertIs<MengenMassNormAusdruck>(ergebnis.wert)
-        assertEquals("\\int_{A} 1\\,\\mathrm d\\mu", symbolisch.zuLatex())
+        assertEquals("\\int_{A} 1\\,\\mathrm d\\mu", ergebnis.wert.zuLatex())
+        assertEquals("\\int_{A}1\\cdot\\mathrm d\\mu", ergebnis.integral.zuLatex())
         assertTrue(ergebnis.voraussetzungen.isNotEmpty())
     }
 
