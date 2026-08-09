@@ -24,7 +24,7 @@ data class MethodenSignatur(
 ) {
     /**
      * Der Wertevorrat besteht standardmäßig aus geordneten Argumenttupeln. Auch ein
-     * einzelnes Argument bleibt dadurch eine eindimensionale Tupelkomponente.
+     * einzelnes Argument bleibt dadurch strukturell ein Einertupel.
      * Nullstellige Methoden verwenden gemäß Atlas-Konvention die leere Menge.
      * Ein expliziter effektiver Gesamtbereich hat Vorrang vor dieser Ableitung.
      */
@@ -39,6 +39,10 @@ enum class MethodenAlias(val anzeigeName: String) {
     Abbildung("Abbildung"),
     Prädikat("Prädikat"),
 }
+
+/** Anzahl der geordneten Argumentplätze. Sie ist ausdrücklich kein Dimensionsbegriff. */
+val Methode.argumentAnzahl: Int
+    get() = parameter.size
 
 /** Die Parameterreihenfolge ist Teil der Semantik und wird nie aus einer Map abgeleitet. */
 fun Methode.methodenSignatur(): MethodenSignatur = MethodenSignatur(
@@ -143,7 +147,7 @@ fun interface MethodenAnforderung {
     data class Stelligkeit(val anzahl: Int) : MethodenAnforderung {
         init { require(anzahl >= 0) }
         override fun prüfe(methode: Methode): String? =
-            if (methode.parameter.size == anzahl) null
+            if (methode.argumentAnzahl == anzahl) null
             else "Die Methode '${methode.name}' muss genau $anzahl Argumente besitzen."
     }
 

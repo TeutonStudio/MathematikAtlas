@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class MethodenGraphTest {
     @Test
-    fun `einstellige methode verwendet ihren wertevorrat direkt als argumentraum`() {
+    fun `einstellige methode behaelt ihren einertupelraum als argumentraum`() {
         val x = Variable("x")
         val methode = Methode(
             name = "f",
@@ -18,15 +18,16 @@ class MethodenGraphTest {
             zielMenge = ReelleZahlen,
             werteVorräte = mapOf(x.name to ReelleZahlen),
         )
+        val argumentRaum = Tupelraum(listOf(ReelleZahlen))
 
-        assertEquals(ReelleZahlen, methode.argumentRaum())
-        assertEquals(KartesischesProdukt(listOf(ReelleZahlen, ReelleZahlen)), methode.graphRaum())
+        assertEquals(argumentRaum, methode.argumentRaum())
+        assertEquals(KartesischesProdukt(listOf(argumentRaum, ReelleZahlen)), methode.graphRaum())
         assertEquals("\\operatorname{Graph}\\left(f\\right)", methode.graphMenge().zuLatex())
         assertEquals(methode, methode.graphMenge().methode)
     }
 
     @Test
-    fun `graphmenge besitzt den erwarteten tupel elementraum`() {
+    fun `graphmenge besitzt den erwarteten geschachtelten tupel elementraum`() {
         val x = Variable("x")
         val methode = Methode(
             name = "f",
@@ -37,7 +38,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(
-            Tupelraum(listOf(ReelleZahlen, GanzeZahlen)),
+            Tupelraum(listOf(Tupelraum(listOf(ReelleZahlen)), GanzeZahlen)),
             inferiereZielmenge(methode.graphMenge()),
         )
     }
@@ -119,7 +120,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(
-            KartesischesProdukt(listOf(ReelleZahlen, ziel)),
+            KartesischesProdukt(listOf(Tupelraum(listOf(ReelleZahlen)), ziel)),
             methode.graphRaum(),
         )
     }
@@ -140,7 +141,7 @@ class MethodenGraphTest {
     }
 
     @Test
-    fun `komplex nach reell besitzt graphraum C kreuz R`() {
+    fun `komplex nach reell besitzt einertupel C kreuz R als graphraum`() {
         val z = Variable("z")
         val methode = Methode(
             name = "f",
@@ -150,11 +151,14 @@ class MethodenGraphTest {
             werteVorräte = mapOf(z.name to KomplexeZahlen),
         )
 
-        assertEquals(KartesischesProdukt(listOf(KomplexeZahlen, ReelleZahlen)), methode.graphRaum())
+        assertEquals(
+            KartesischesProdukt(listOf(Tupelraum(listOf(KomplexeZahlen)), ReelleZahlen)),
+            methode.graphRaum(),
+        )
     }
 
     @Test
-    fun `reell nach komplex bleibt R kreuz C und wird nicht vertauscht`() {
+    fun `reell nach komplex behaelt einertupel R vor C`() {
         val x = Variable("x")
         val methode = Methode(
             name = "f",
@@ -164,11 +168,14 @@ class MethodenGraphTest {
             werteVorräte = mapOf(x.name to ReelleZahlen),
         )
 
-        assertEquals(KartesischesProdukt(listOf(ReelleZahlen, KomplexeZahlen)), methode.graphRaum())
+        assertEquals(
+            KartesischesProdukt(listOf(Tupelraum(listOf(ReelleZahlen)), KomplexeZahlen)),
+            methode.graphRaum(),
+        )
     }
 
     @Test
-    fun `komplex nach komplex bleibt mathematisch gueltige graphmenge`() {
+    fun `komplex nach komplex bleibt mathematisch gueltige graphmenge mit einertupel`() {
         val z = Variable("z")
         val methode = Methode(
             name = "f",
@@ -178,7 +185,10 @@ class MethodenGraphTest {
             werteVorräte = mapOf(z.name to KomplexeZahlen),
         )
 
-        assertEquals(KartesischesProdukt(listOf(KomplexeZahlen, KomplexeZahlen)), methode.graphRaum())
+        assertEquals(
+            KartesischesProdukt(listOf(Tupelraum(listOf(KomplexeZahlen)), KomplexeZahlen)),
+            methode.graphRaum(),
+        )
         assertIs<MethodenGraphMenge>(methode.graphMenge())
     }
 }

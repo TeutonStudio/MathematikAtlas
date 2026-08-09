@@ -13,9 +13,9 @@ internal object MethodenZielmengeKonzeptDateiBD7F443F : ExpliziteKonzeptDatei {
         return WissensEintrag(
             id = id,
             titel = "Methoden-Zielmenge",
-            kurzbeschreibung = "Gibt die deklarierte Zielmenge einer einwertigen Methode aus.",
+            kurzbeschreibung = "Gibt die deklarierte Zielmenge einer Methode aus.",
             fachPfade = setOf(FachPfad.von("algebra", "methoden"), FachPfad.von("analysis", "funktionen"), FachPfad.von("mengenlehre", "mengen")),
-            suchbegriffe = setOf("Gibt die deklarierte Zielmenge einer einwertigen Methode aus.", "Methoden", "Methoden-Zielmenge", "mathematik.menge", "mathematik.methode", "mathematik.methodenZielmenge", "menge", "methode"),
+            suchbegriffe = setOf("Zielmenge einer Methode", "Methoden", "Methoden-Zielmenge", "mathematik.menge", "mathematik.methode", "mathematik.methodenZielmenge", "menge", "methode"),
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,

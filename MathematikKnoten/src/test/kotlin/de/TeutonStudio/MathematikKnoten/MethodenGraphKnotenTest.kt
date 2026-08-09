@@ -59,7 +59,10 @@ class MethodenGraphKnotenTest {
 
         val graph = assertIs<MethodenGraphMenge>(ergebnis.ausgaben.getValue("graph").objekt)
         assertEquals(methode, graph.methode)
-        assertEquals(KartesischesProdukt(listOf(ReelleZahlen, ReelleZahlen)), graph.methode.graphRaum())
+        assertEquals(
+            KartesischesProdukt(listOf(Tupelraum(listOf(ReelleZahlen)), ReelleZahlen)),
+            graph.methode.graphRaum(),
+        )
         assertEquals("\\operatorname{Graph}\\left(f\\right)", ergebnis.ausgaben.getValue("graph").latexDarstellung)
     }
 
