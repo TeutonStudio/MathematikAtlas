@@ -60,13 +60,6 @@ data class Tensorraum(
     }
 }
 
-/** Quellkompatible Fabrik für die zahlreichen bereits konkreten Tensorformen. */
-@Suppress("FunctionName")
-fun Tensorraum(elementMenge: MengenAusdruck, dimensionen: List<Int>): Tensorraum = Tensorraum(
-    elementMenge = elementMenge,
-    dimensionen = dimensionen.map { RationaleZahl.von(it.toLong()) },
-)
-
 /** Der Restklassenring der ganzen Zahlen modulo n. */
 data class ModuloZahlenraum(val modul: Int) : MengenAusdruck {
     init { require(modul >= 2) { "Der Modul muss mindestens 2 sein." } }
