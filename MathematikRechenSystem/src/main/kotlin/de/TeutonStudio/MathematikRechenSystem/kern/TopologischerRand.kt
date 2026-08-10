@@ -23,6 +23,20 @@ data class TopologischerKontext(
     val relativ: Boolean = false,
 )
 
+data class TopologischerAbschluss(
+    val menge: MengenAusdruck,
+    val kontext: TopologischerKontext,
+) : MengenAusdruck {
+    override fun zuLatex(): String = "\\operatorname{cl}_{${kontext.umgebungsraum.zuLatex()}}\\left(${menge.zuLatex()}\\right)"
+}
+
+data class TopologischesInneres(
+    val menge: MengenAusdruck,
+    val kontext: TopologischerKontext,
+) : MengenAusdruck {
+    override fun zuLatex(): String = "\\operatorname{int}_{${kontext.umgebungsraum.zuLatex()}}\\left(${menge.zuLatex()}\\right)"
+}
+
 data class TopologischerRand(
     val menge: MengenAusdruck,
     val kontext: TopologischerKontext,
@@ -34,21 +48,75 @@ data class TopologischerRand(
     }
 }
 
+/** Relatives Komplement im explizit gewählten topologischen Umgebungsraum. */
+fun topologischesKomplement(
+    menge: MengenAusdruck,
+    kontext: TopologischerKontext,
+): MengenAusdruck = mengenDifferenz(kontext.umgebungsraum, menge)
+
+/** Wiederverwendbarer Abschlusskern für Rand- und spätere Topologieknoten. */
+fun topologischerAbschluss(
+    menge: MengenAusdruck,
+    kontext: TopologischerKontext,
+): MengenAusdruck = when (kontext.topologie) {
+    TopologieArt.DISKRET -> menge
+    TopologieArt.INDISKRET -> if (menge == LeereMenge) LeereMenge else kontext.umgebungsraum
+    TopologieArt.KANONISCH_REELL -> when {
+        menge == LeereMenge -> LeereMenge
+        menge == kontext.umgebungsraum -> kontext.umgebungsraum
+        menge == RationaleZahlen && kontext.umgebungsraum == ReelleZahlen -> ReelleZahlen
+        menge is EndlicheMenge -> menge
+        menge is ReellesIntervall -> reellesIntervall(
+            menge.links,
+            linksOffen = false,
+            menge.rechts,
+            rechtsOffen = false,
+        )
+        else -> TopologischerAbschluss(menge, kontext)
+    }
+    TopologieArt.SYMBOLISCH -> TopologischerAbschluss(menge, kontext)
+}
+
+/** Wiederverwendbarer Inneres-Kern für Rand- und spätere Topologieknoten. */
+fun topologischesInneres(
+    menge: MengenAusdruck,
+    kontext: TopologischerKontext,
+): MengenAusdruck = when (kontext.topologie) {
+    TopologieArt.DISKRET -> menge
+    TopologieArt.INDISKRET -> if (menge == kontext.umgebungsraum) kontext.umgebungsraum else LeereMenge
+    TopologieArt.KANONISCH_REELL -> when {
+        menge == LeereMenge -> LeereMenge
+        menge == kontext.umgebungsraum -> kontext.umgebungsraum
+        menge == RationaleZahlen && kontext.umgebungsraum == ReelleZahlen -> LeereMenge
+        menge is EndlicheMenge -> LeereMenge
+        menge is ReellesIntervall -> reellesIntervall(
+            menge.links,
+            linksOffen = true,
+            menge.rechts,
+            rechtsOffen = true,
+        )
+        else -> TopologischesInneres(menge, kontext)
+    }
+    TopologieArt.SYMBOLISCH -> TopologischesInneres(menge, kontext)
+}
+
 /**
- * Exakte Spezialfälle des topologischen Randes; nicht geschlossene Fälle bleiben
- * als strukturierter [TopologischerRand] erhalten statt als Fehler zu enden.
+ * Rand als gemeinsame Topologieoperation. Exakte Spezialfälle werden reduziert;
+ * nicht entscheidbare Fälle bleiben strukturiert statt als Fehler zu enden.
+ * Abschluss, Inneres und Komplement sind separat verfügbar, damit spätere Knoten
+ * denselben mathematischen Kern wiederverwenden.
  */
 fun topologischerRand(
     menge: MengenAusdruck,
     kontext: TopologischerKontext,
 ): MengenAusdruck = when (kontext.topologie) {
+    TopologieArt.SYMBOLISCH -> TopologischerRand(menge, kontext)
     TopologieArt.DISKRET -> LeereMenge
     TopologieArt.INDISKRET -> when {
         menge == LeereMenge || menge == kontext.umgebungsraum -> LeereMenge
         else -> kontext.umgebungsraum
     }
     TopologieArt.KANONISCH_REELL -> kanonischReellerRand(menge, kontext)
-    TopologieArt.SYMBOLISCH -> TopologischerRand(menge, kontext)
 }
 
 private fun kanonischReellerRand(
@@ -60,7 +128,16 @@ private fun kanonischReellerRand(
     menge == RationaleZahlen && kontext.umgebungsraum == ReelleZahlen -> ReelleZahlen
     menge is EndlicheMenge -> menge
     menge is ReellesIntervall -> intervallRand(menge, kontext.umgebungsraum)
-    else -> TopologischerRand(menge, kontext)
+    else -> {
+        val abschluss = topologischerAbschluss(menge, kontext)
+        val inneres = topologischesInneres(menge, kontext)
+        if (abschluss == inneres) LeereMenge
+        else if (abschluss !is TopologischerAbschluss && inneres !is TopologischesInneres) {
+            mengenDifferenz(abschluss, inneres)
+        } else {
+            TopologischerRand(menge, kontext)
+        }
+    }
 }
 
 /** Endpunkte eines Intervalls, mit korrekter relativer Behandlung an Umgebungsraumgrenzen. */
