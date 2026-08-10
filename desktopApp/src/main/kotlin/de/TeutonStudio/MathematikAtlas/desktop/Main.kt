@@ -19,11 +19,15 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
+import de.TeutonStudio.MathematikKnoten.MatlasKartenContainer
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 import java.nio.file.Paths
 import java.util.prefs.Preferences
+import javax.swing.JOptionPane
+
+private const val DESKTOP_APP_VERSION = "2.32.1"
 
 private sealed interface DesktopKontext {
     val position: GraphPunkt
@@ -126,8 +130,28 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
     }
 
     fun exportieren() {
-        dateiWählen(awtFenster, FileDialog.SAVE, "Atlas-Karte exportieren", "${atlas.editor.karte.name}.json")?.let { datei ->
-            runCatching { datei.writeText(atlas.speicher.exportiere(atlas.editor.karte)) }.onFailure { fehler = it.message }
+        val format = JOptionPane.showInputDialog(
+            awtFenster,
+            "Exportformat auswählen:",
+            "Atlas-Karte exportieren",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            arrayOf("JSON", ".matlas"),
+            "JSON",
+        ) as? String ?: return
+        val endung = if (format == ".matlas") MatlasKartenContainer.DATEI_ENDUNG else ".json"
+        val basisName = atlas.editor.karte.name
+            .removeSuffix(".json")
+            .removeSuffix(MatlasKartenContainer.DATEI_ENDUNG)
+            .ifBlank { "Karte" }
+        dateiWählen(awtFenster, FileDialog.SAVE, "Atlas-Karte exportieren", "$basisName$endung")?.let { datei ->
+            runCatching {
+                if (format == ".matlas") {
+                    MatlasKartenContainer.schreibeAtomar(datei.toPath(), atlas.editor.karte, DESKTOP_APP_VERSION)
+                } else {
+                    datei.writeText(atlas.speicher.exportiere(atlas.editor.karte))
+                }
+            }.onFailure { fehler = it.message }
         }
     }
 

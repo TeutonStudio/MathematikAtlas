@@ -33,19 +33,29 @@ data class Abbildungsmenge(
 
 /**
  * Raum endlichdimensionaler Felder über einer Elementmenge.
- * Eine Dimension ergibt A^n, mehrere Dimensionen A^{n x m x ...}.
+ *
+ * Die Achsengrößen bleiben als Zahl-Ausdrücke erhalten. Dadurch verwenden konkrete
+ * und symbolische positive natürliche Dimensionen denselben Kernvertrag. Ob ein
+ * symbolischer Ausdruck tatsächlich natürlich und strikt positiv ist, wird dort
+ * geprüft, wo sein Wertebereich und die zugehörigen Annahmen verfügbar sind.
  */
 data class Tensorraum(
     val elementMenge: MengenAusdruck,
-    val dimensionen: List<Int>,
+    val dimensionen: List<ZahlAusdruck>,
 ) : MengenAusdruck {
     init {
         require(dimensionen.isNotEmpty()) { "Ein Tensorraum benötigt mindestens eine Dimension." }
-        require(dimensionen.all { it > 0 }) { "Alle Tensorraumdimensionen müssen positiv sein." }
+        dimensionen.forEachIndexed { index, dimension ->
+            if (dimension is RationaleZahl) {
+                require(dimension.nenner == java.math.BigInteger.ONE && dimension.zähler.signum() > 0) {
+                    "Tensorraumdimension ${index + 1} muss eine positive natürliche Zahl sein."
+                }
+            }
+        }
     }
 
     override fun zuLatex(): String {
-        val exponent = dimensionen.joinToString("\\times")
+        val exponent = dimensionen.joinToString("\\times") { it.zuLatex() }
         return "${elementMenge.zuLatex()}^{$exponent}"
     }
 }

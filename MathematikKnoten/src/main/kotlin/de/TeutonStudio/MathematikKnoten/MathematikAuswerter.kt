@@ -498,7 +498,8 @@ object StandardMathematikAuswerter {
             val automatisch = methodenQuellen.entries.sortedWith(
                 compareBy<Map.Entry<String, List<VariablenQuelle>>> { entry ->
                     entry.value.minOf { quelle -> k.topologischeReihenfolge[quelle.knotenId] ?: Int.MAX_VALUE }
-                }.thenBy { entry -> entry.value.minOf { quelle -> quelle.knotenId.wert } },
+                }.thenBy { entry -> entry.value.minOf { quelle -> quelle.knotenId.wert } }
+                    .thenBy { entry -> entry.value.minOf { quelle -> quelle.reihenfolge } },
             ).map { it.key }
             val gespeichert = k.knoten.parameter["argumentReihenfolge"].orEmpty()
                 .split(',').map(String::trim).filter { it.isNotBlank() && it in methodenQuellen }.distinct()

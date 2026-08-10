@@ -2,16 +2,11 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.Abbildungsmenge
-import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
-import de.TeutonStudio.MathematikRechenSystem.kern.Matrizenraum
-import de.TeutonStudio.MathematikRechenSystem.kern.ModuloZahlenraum
-import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.Tensorraum
+import de.TeutonStudio.MathematikKartenAdapter.VariablenQuelle
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,6 +15,7 @@ import kotlin.test.assertTrue
 
 class MengenraumKnotenTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
+    private fun dimensionen(vararg werte: Long) = werte.map(RationaleZahl::von)
 
     @Test
     fun `alle Mengenraumknoten besitzen Menge Ausgänge und registrierte Auswerter`() {
@@ -71,7 +67,7 @@ class MengenraumKnotenTest {
         val vektor = register.finde(vektorKnoten.art)!!.auswerten(
             KnotenAuswertungsKontext(vektorKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
-        assertEquals(Tensorraum(ReelleZahlen, listOf(4)), vektor)
+        assertEquals(Tensorraum(ReelleZahlen, dimensionen(4)), vektor)
 
         val matrixKnoten = MengenraumKnotenVorlagen.Matrizenraum.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("zeilen" to "2", "spalten" to "5"),
@@ -87,7 +83,62 @@ class MengenraumKnotenTest {
         val tensor = register.finde(tensorKnoten.art)!!.auswerten(
             KnotenAuswertungsKontext(tensorKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
-        assertEquals(Tensorraum(ReelleZahlen, listOf(2, 3, 4)), tensor)
+        assertEquals(Tensorraum(ReelleZahlen, dimensionen(2, 3, 4)), tensor)
+    }
+
+    @Test
+    fun `Tensorraum erhält symbolische natürliche Dimensionen und macht Positivität sichtbar`() {
+        val n = Variable("n")
+        val m = Variable("m")
+        val dimensionen = BedingterWert(
+            objekt = Tupel(listOf(n, RationaleZahl.von(3), m)),
+            variablenQuellen = listOf(
+                VariablenQuelle(KnotenId("n-quelle"), "n", NatürlicheZahlen),
+                VariablenQuelle(KnotenId("m-quelle"), "m", NatürlicheZahlen),
+            ),
+        )
+        val knoten = MengenraumKnotenVorlagen.Tensorraum.erzeuge(GraphPunkt.Zero)
+        val ergebnis = register.finde(knoten.art)!!.auswerten(
+            KnotenAuswertungsKontext(
+                knoten,
+                mapOf(
+                    "grundmenge" to BedingterWert(ReelleZahlen),
+                    "dimensionen" to dimensionen,
+                ),
+                RechenKontext(),
+            ),
+        ).ausgaben.getValue("menge")
+
+        assertEquals(
+            Tensorraum(ReelleZahlen, listOf(n, RationaleZahl.von(3), m)),
+            ergebnis.objekt,
+        )
+        assertTrue(Vergleich(n, VergleichsArt.Größer, RationaleZahl.Null) in ergebnis.annahmen)
+        assertTrue(Vergleich(m, VergleichsArt.Größer, RationaleZahl.Null) in ergebnis.annahmen)
+        assertEquals("\\mathbb{R}^{n\\times3\\timesm}", ergebnis.objekt.zuLatex())
+    }
+
+    @Test
+    fun `Tensorraum lehnt symbolische Dimension ohne natürlichen Vertrag ab`() {
+        val n = Variable("n")
+        val knoten = MengenraumKnotenVorlagen.Tensorraum.erzeuge(GraphPunkt.Zero)
+        assertFailsWith<IllegalArgumentException> {
+            register.finde(knoten.art)!!.auswerten(
+                KnotenAuswertungsKontext(
+                    knoten,
+                    mapOf(
+                        "grundmenge" to BedingterWert(ReelleZahlen),
+                        "dimensionen" to BedingterWert(
+                            objekt = Tupel(listOf(n)),
+                            variablenQuellen = listOf(
+                                VariablenQuelle(KnotenId("n-quelle"), "n", ReelleZahlen),
+                            ),
+                        ),
+                    ),
+                    RechenKontext(),
+                ),
+            )
+        }
     }
 
     @Test

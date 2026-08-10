@@ -32,6 +32,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
+import de.TeutonStudio.MathematikKnoten.MatlasKartenContainer
 import kotlinx.coroutines.delay
 
 private sealed interface GraphKontext {
@@ -47,12 +48,35 @@ private enum class KartenWerkzeug { Auswahl, Verschieben }
 fun MathematikAtlasApp(zustand: AtlasZustand) {
     val context = LocalContext.current
     val dichte = LocalDensity.current
-    val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        uri?.let { context.contentResolver.openOutputStream(it)?.bufferedWriter()?.use { w -> w.write(zustand.speicher.exportiere(zustand.editor.karte)) } }
+    var exportFehler by remember { mutableStateOf<String?>(null) }
+    val jsonExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(KartenExportFormat.JSON.mimeType)) { uri ->
+        uri?.let {
+            runCatching {
+                context.contentResolver.openOutputStream(it)?.bufferedWriter()?.use { w ->
+                    w.write(zustand.speicher.exportiere(zustand.editor.karte))
+                } ?: error("Die Zieldatei konnte nicht geöffnet werden.")
+            }.onFailure { fehler ->
+                exportFehler = fehler.message ?: "JSON-Export fehlgeschlagen."
+            }
+        }
+    }
+    val matlasExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(KartenExportFormat.MATLAS.mimeType)) { uri ->
+        uri?.let {
+            runCatching {
+                val inhalt = MatlasKartenContainer.schreibe(zustand.editor.karte, BuildConfig.VERSION_NAME)
+                context.contentResolver.openOutputStream(it)?.use { ausgabe ->
+                    ausgabe.write(inhalt)
+                    ausgabe.flush()
+                } ?: error("Die Zieldatei konnte nicht geöffnet werden.")
+            }.onFailure { fehler ->
+                exportFehler = fehler.message ?: ".matlas-Export fehlgeschlagen."
+            }
+        }
     }
     val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { r -> zustand.importiere(r.readText()) } }
     }
+    var exportDialogOffen by remember { mutableStateOf(false) }
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
     var werkzeug by remember { mutableStateOf(KartenWerkzeug.Auswahl) }
     var editorGröße by remember { mutableStateOf(IntSize.Zero) }
@@ -90,6 +114,27 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         zustand.speichereAktuell()
     }
 
+    if (exportDialogOffen) {
+        KartenExportFormatDialog(
+            schließen = { exportDialogOffen = false },
+            exportieren = { format ->
+                exportDialogOffen = false
+                when (format) {
+                    KartenExportFormat.JSON -> jsonExport.launch(normalisiereExportDateiname(zustand.editor.karte.name, format))
+                    KartenExportFormat.MATLAS -> matlasExport.launch(normalisiereExportDateiname(zustand.editor.karte.name, format))
+                }
+            },
+        )
+    }
+    exportFehler?.let { meldung ->
+        AlertDialog(
+            onDismissRequest = { exportFehler = null },
+            title = { Text("Export fehlgeschlagen") },
+            text = { Text(meldung) },
+            confirmButton = { TextButton(onClick = { exportFehler = null }) { Text("OK") } },
+        )
+    }
+
     Row(
         Modifier.fillMaxSize()
             .navigationBarsPadding()
@@ -110,7 +155,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             WerkzeugLeiste(
                 zustand,
                 onImport = { import.launch(arrayOf("application/json", "text/plain")) },
-                onExport = { export.launch("${zustand.editor.karte.name}.json") },
+                onExport = { exportDialogOffen = true },
                 onSpeichern = { ausführen(AtlasBefehl.Speichern) },
             )
             HorizontalDivider()
