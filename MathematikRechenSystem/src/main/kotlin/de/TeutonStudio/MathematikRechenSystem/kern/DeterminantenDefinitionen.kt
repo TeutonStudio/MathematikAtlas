@@ -28,7 +28,10 @@ fun produktiveDeterminante(
     )
     return when (ergebnis) {
         is MatrixRechnerErgebnis.ZahlWert -> ergebnis.wert
-        is MatrixRechnerErgebnis.Bedingt -> SymbolischerZahlAusdruck(ergebnis.latex)
+        is MatrixRechnerErgebnis.Bedingt -> Variable(
+            name = "det_symbolisch_${matrix.hashCode().toUInt()}",
+            latex = ergebnis.latex,
+        )
         is MatrixRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)
         else -> error("Determinantenoperator lieferte unerwartet ${ergebnis::class.simpleName}.")
     }
@@ -125,9 +128,4 @@ private fun permutationsVorzeichen(permutation: List<Int>): Int {
         }
     }
     return if (inversionen % 2 == 0) 1 else -1
-}
-
-/** Symbolischer Fallback für produktive Operatoren, deren Wert noch Bedingungen trägt. */
-private data class SymbolischerZahlAusdruck(val latex: String) : ZahlAusdruck {
-    override fun zuLatex(): String = latex
 }
