@@ -43,6 +43,8 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
 
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
+    private val beiKnotenKlick: (KnotenDaten) -> Unit = {},
+    private val beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
 ) : KnotenRenderer {
     override val interaktionsModus: KnotenInteraktionsModus = KnotenInteraktionsModus.GanzeFlächeZiehbar
 
@@ -101,7 +103,9 @@ class MathematikKnotenRenderer(
                     adjektive.take(3).forEach { adjektiv ->
                         AdjektivMarke(
                             adjektiv = adjektiv,
-                            öffnen = { geöffneteDefinition = adjektiv },
+                            beiKlick = { beiKnotenKlick(knoten) },
+                            beiDoppelklick = { beiKnotenDoppelklick(knoten) },
+                            beiLangdruck = { geöffneteDefinition = adjektiv },
                             modifier = Modifier.weight(1f, fill = false),
                         )
                     }
@@ -208,18 +212,21 @@ class MathematikKnotenRenderer(
 @Composable
 private fun AdjektivMarke(
     adjektiv: AutomatischesAdjektiv,
-    öffnen: () -> Unit,
+    beiKlick: () -> Unit,
+    beiDoppelklick: () -> Unit,
+    beiLangdruck: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier
             .semantics {
                 role = Role.Button
-                contentDescription = "Eigenschaft ${adjektiv.text}. Definition öffnen."
+                contentDescription = "Eigenschaft ${adjektiv.text}. Lang drücken, um die Definition zu öffnen."
             }
             .combinedClickable(
-                onClick = öffnen,
-                onLongClick = öffnen,
+                onClick = beiKlick,
+                onDoubleClick = beiDoppelklick,
+                onLongClick = beiLangdruck,
             ),
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.secondaryContainer,
