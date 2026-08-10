@@ -9,19 +9,7 @@ import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
-import de.TeutonStudio.MathematikRechenSystem.kern.Abbildungsmenge
-import de.TeutonStudio.MathematikRechenSystem.kern.GaußscheGanzeZahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.GaußschePrimzahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge as LeereMengeWert
-import de.TeutonStudio.MathematikRechenSystem.kern.Matrizenraum
-import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
-import de.TeutonStudio.MathematikRechenSystem.kern.ModuloZahlenraum
-import de.TeutonStudio.MathematikRechenSystem.kern.Potenzmenge
-import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
-import de.TeutonStudio.MathematikRechenSystem.kern.Tensorraum
-import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
-import de.TeutonStudio.MathematikRechenSystem.kern.symmetrischeDifferenz
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /** Vorlagen und Auswerter der Mengen- und Koordinatenräume. */
 object MengenraumKnotenVorlagen {
@@ -165,7 +153,7 @@ object MengenraumKnotenVorlagen {
 
 internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
     registriere("mathematik.leereMenge") {
-        mengenraumErgebnis(LeereMengeWert)
+        mengenraumErgebnis(LeereMenge)
     }
     registriere("mathematik.gaussZahlen") {
         mengenraumErgebnis(GaußscheGanzeZahlen)
@@ -218,7 +206,12 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
         )
     }
     registriere("mathematik.tensorraum") { k ->
-        mengenraumErgebnis(Tensorraum(k.mengenraumEingabe("grundmenge"), k.mengenraumDimensionen()), k)
+        val dimensionen = k.mengenraumDimensionen()
+        mengenraumErgebnis(
+            Tensorraum(k.mengenraumEingabe("grundmenge"), dimensionen.werte),
+            k,
+            dimensionen.bedingungen,
+        )
     }
     registriere("mathematik.moduloZahlenraum") { k ->
         mengenraumErgebnis(ModuloZahlenraum(k.mengenraumPositiveGanzzahl("modul", minimum = 2)))
@@ -237,11 +230,12 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
 private fun mengenraumErgebnis(
     menge: MengenAusdruck,
     kontext: KnotenAuswertungsKontext? = null,
+    zusätzlicheAnnahmen: Set<Aussage> = emptySet(),
 ) = KnotenAuswertungsErgebnis(
     mapOf(
         "menge" to BedingterWert(
             objekt = menge,
-            annahmen = kontext?.eingänge?.values?.flatMap { it.annahmen }?.toSet().orEmpty(),
+            annahmen = kontext?.eingänge?.values?.flatMap { it.annahmen }?.toSet().orEmpty() + zusätzlicheAnnahmen,
         ),
     ),
 )
@@ -256,20 +250,44 @@ private fun KnotenAuswertungsKontext.mengenraumPositiveGanzzahl(name: String, mi
     return wert
 }
 
-private fun KnotenAuswertungsKontext.mengenraumDimensionen(): List<Int> {
-    val tupel = eingänge["dimensionen"]?.objekt as? Tupel
+private data class TensorraumDimensionen(
+    val werte: List<ZahlAusdruck>,
+    val bedingungen: Set<Aussage> = emptySet(),
+)
+
+private fun KnotenAuswertungsKontext.mengenraumDimensionen(): TensorraumDimensionen {
+    val eingang = eingänge["dimensionen"]
+    val tupel = eingang?.objekt as? Tupel
     if (tupel != null) {
         require(tupel.elemente.isNotEmpty()) { "Ein Tensorraum benötigt mindestens eine Dimension." }
-        return tupel.elemente.mapIndexed { index, element ->
-            val zahl = element as? RationaleZahl
-                ?: error("Tensorraumdimension ${index + 1} ist keine konkrete natürliche Zahl.")
-            require(
-                zahl.nenner == java.math.BigInteger.ONE &&
-                    zahl.zähler.signum() > 0 &&
-                    zahl.zähler.bitLength() < 31,
-            ) { "Tensorraumdimension ${index + 1} muss eine positive natürliche Zahl sein." }
-            zahl.zähler.toInt()
+        val bedingungen = linkedSetOf<Aussage>()
+        val werte = tupel.elemente.mapIndexed { index, element ->
+            when (element) {
+                is RationaleZahl -> {
+                    require(element.nenner == java.math.BigInteger.ONE && element.zähler.signum() > 0) {
+                        "Tensorraumdimension ${index + 1} muss eine positive natürliche Zahl sein."
+                    }
+                    element
+                }
+                is Variable -> {
+                    val werteVorräte = eingang.variablenQuellen
+                        .filter { it.name == element.name }
+                        .map { it.werteVorrat }
+                        .distinct()
+                    require(werteVorräte.size == 1 && werteVorräte.single() == NatürlicheZahlen) {
+                        "Tensorraumdimension ${index + 1} '${element.name}' benötigt einen nachgewiesenen Wertevorrat in ℕ."
+                    }
+                    val positiv = Vergleich(element, VergleichsArt.Größer, RationaleZahl.Null)
+                    if (positiv !in eingang.annahmen) bedingungen += positiv
+                    element
+                }
+                is ZahlAusdruck -> error(
+                    "Tensorraumdimension ${index + 1} ist symbolisch, besitzt aber keinen nachgewiesenen natürlichen Dimensionsvertrag.",
+                )
+                else -> error("Tensorraumdimension ${index + 1} ist keine Zahl.")
+            }
         }
+        return TensorraumDimensionen(werte, bedingungen)
     }
 
     // Rückwärtskompatibilität alter Karten. Neue Vorlagen schreiben diesen Parameter nicht mehr.
@@ -279,8 +297,8 @@ private fun KnotenAuswertungsKontext.mengenraumDimensionen(): List<Int> {
         .split(',')
         .map(String::trim)
         .filter(String::isNotBlank)
-        .map { it.toIntOrNull() ?: error("Tensorraumdimension '$it' ist keine ganze Zahl.") }
+        .map { it.toLongOrNull() ?: error("Tensorraumdimension '$it' ist keine ganze Zahl.") }
     require(dimensionen.isNotEmpty()) { "Ein Tensorraum benötigt mindestens eine Dimension." }
     require(dimensionen.all { it > 0 }) { "Alle Tensorraumdimensionen müssen positiv sein." }
-    return dimensionen
+    return TensorraumDimensionen(dimensionen.map(RationaleZahl::von))
 }
