@@ -5,23 +5,15 @@ import java.math.BigDecimal
 
 /**
  * Eine numerisch ausgewertete reelle Koordinatenkomponente mit ihrer mathematischen Herkunft.
- *
- * Der Adapter verliert die Quellstruktur absichtlich nicht bereits bei der Extraktion. Spätere
- * Dimensionsvisualisierung kann damit semantische Komponenten statt anonymer Double-Positionen
- * referenzieren.
+ * `semantik` erhält bei zusammengesetzten Skalaren die natürliche Komponentenrolle.
  */
 data class ReelleKoordinatenKomponente(
     val index: Int,
     val ausdruck: ZahlAusdruck,
     val wert: Double,
+    val semantik: String? = null,
 )
 
-/**
- * Strukturierter Vertrag zwischen mathematischem Objekt und räumlicher Darstellung.
- *
- * Eine erforderliche Projektion ist ausdrücklich kein mathematischer Fehler. Ebenso wird eine
- * symbolisch noch offene Struktur nicht mit einer endgültig nicht darstellbaren Struktur vermischt.
- */
 sealed interface KoordinatenErgebnis {
     data class Darstellbar(
         val komponenten: List<ReelleKoordinatenKomponente>,
@@ -48,10 +40,10 @@ sealed interface KoordinatenErgebnis {
 /**
  * Zentraler Adapter für reelle Visualisierungskoordinaten.
  *
- * Er verwendet die Strukturverträge des Mathematik-Rechenkerns. Tupel, Zeilen- und Spaltenvektoren
- * erhalten damit keine voneinander unabhängigen Visualisierer-Sonderregeln mehr. Der
- * domänenerhaltende Auswerter lässt reell eingebettete komplexe Werte zu und kennzeichnet echte
- * komplexe oder quaternionische Werte ausdrücklich als projektionsbedürftig.
+ * Reelle Komponenten werden erst nach der domänenerhaltenden Auswertung gezählt. Dadurch bleiben
+ * mathematisch verschiedene Räume unterscheidbar: ein komplexer Skalar liefert kanonisch
+ * `Re(z), Im(z)`, während ein gewöhnliches Zweiertupel zwei eigenständige Faktoren bleibt.
+ * Produktreihenfolgen wie `C×R` und `R×C` werden beim flachen Entfalten beibehalten.
  */
 object KoordinatenAdapter {
     fun extrahiere(
@@ -113,14 +105,7 @@ object KoordinatenAdapter {
         }
 
         val ausdruecke = when (objekt) {
-            is ZahlAusdruck -> {
-                if (erwarteteDimension != 1) {
-                    return KoordinatenErgebnis.NichtDarstellbar(
-                        "Ein skalares Element ist nur in R¹ eine einzelne reelle Koordinate.",
-                    )
-                }
-                listOf(objekt)
-            }
+            is ZahlAusdruck -> listOf(objekt)
 
             is Tupel, is ZeilenVektor, is SpaltenVektor -> when (
                 val ansicht = runCatching {
@@ -145,62 +130,81 @@ object KoordinatenAdapter {
             )
         }
 
-        if (ausdruecke.size > erwarteteDimension) {
-            return KoordinatenErgebnis.ProjektionErforderlich(
-                vorhandeneDimension = ausdruecke.size,
-                erwarteteDimension = erwarteteDimension,
-                grund = "Die Komponentenstruktur besitzt ${ausdruecke.size} reelle Komponenten, der aktuelle Raum aber nur $erwarteteDimension. Eine Projektion muss ausdrücklich gewählt werden.",
-            )
-        }
-        if (ausdruecke.size != erwarteteDimension) {
-            return KoordinatenErgebnis.NichtDarstellbar(
-                "Koordinatendimension ${ausdruecke.size} statt erwartet $erwarteteDimension.",
-            )
-        }
-
         val kontext = DomaenenKontext(
             variablen = umgebung.mapValues { DomaenenWert.Reell(BigDecimal.valueOf(it.value)) } + domänenUmgebung,
         )
-        val komponenten = ausdruecke.mapIndexed { index, ausdruck ->
+        val komponenten = mutableListOf<ReelleKoordinatenKomponente>()
+
+        ausdruecke.forEachIndexed { quellIndex, ausdruck ->
             when (val ergebnis = DomaenenAuswerter.wert(ausdruck, kontext)) {
-                is DomaenenErgebnis.Wert -> when (val reell = ergebnis.wert.alsReelleKoordinate()) {
-                    is ReelleKoordinateErgebnis.Wert -> {
-                        val wert = reell.wert.toDouble()
-                        if (!wert.isFinite()) {
-                            return KoordinatenErgebnis.NichtDarstellbar(
-                                "Koordinate ${index + 1} ist nicht endlich.",
-                            )
-                        }
-                        ReelleKoordinatenKomponente(index, ausdruck, wert)
+                is DomaenenErgebnis.Wert -> when (val wert = ergebnis.wert) {
+                    is DomaenenWert.Reell -> komponenten += komponentenKomponente(
+                        komponenten.size,
+                        ausdruck,
+                        wert.wert,
+                        if (ausdruecke.size > 1) "Komponente ${quellIndex + 1}" else null,
+                    ) ?: return KoordinatenErgebnis.NichtDarstellbar(
+                        "Koordinate ${komponenten.size + 1} ist nicht endlich.",
+                    )
+                    is DomaenenWert.Komplex -> {
+                        komponenten += komponentenKomponente(
+                            komponenten.size,
+                            ausdruck,
+                            wert.reell,
+                            "Re(${ausdruck.zuLatex()})",
+                        ) ?: return KoordinatenErgebnis.NichtDarstellbar("Realteil ist nicht endlich.")
+                        komponenten += komponentenKomponente(
+                            komponenten.size,
+                            ausdruck,
+                            wert.imaginaer,
+                            "Im(${ausdruck.zuLatex()})",
+                        ) ?: return KoordinatenErgebnis.NichtDarstellbar("Imaginärteil ist nicht endlich.")
                     }
-                    is ReelleKoordinateErgebnis.ProjektionErforderlich -> return KoordinatenErgebnis.ProjektionErforderlich(
-                        vorhandeneDimension = ausdruecke.size - 1 + ergebnis.wert.reelleDimension,
+                    is DomaenenWert.Quaternion -> return KoordinatenErgebnis.ProjektionErforderlich(
+                        vorhandeneDimension = komponenten.size + 4 + (ausdruecke.size - quellIndex - 1),
                         erwarteteDimension = erwarteteDimension,
-                        grund = "Koordinate ${index + 1}: ${reell.grund.nachricht}",
+                        grund = "Koordinate ${quellIndex + 1} ist quaternionisch und benötigt eine ausdrückliche R⁴-Projektion.",
                     )
                 }
                 is DomaenenErgebnis.Unentscheidbar -> return KoordinatenErgebnis.BedingtDarstellbar(
-                    grund = "Koordinate ${index + 1} ist noch nicht entscheidbar: ${ergebnis.grund.nachricht}",
+                    grund = "Koordinate ${quellIndex + 1} ist noch nicht entscheidbar: ${ergebnis.grund.nachricht}",
                 )
                 is DomaenenErgebnis.NichtDefiniert -> return KoordinatenErgebnis.NichtDarstellbar(
-                    "Koordinate ${index + 1} ist nicht definiert: ${ergebnis.grund.nachricht}",
+                    "Koordinate ${quellIndex + 1} ist nicht definiert: ${ergebnis.grund.nachricht}",
                 )
                 is DomaenenErgebnis.NichtEndlich -> return KoordinatenErgebnis.NichtDarstellbar(
-                    "Koordinate ${index + 1} ist nicht endlich: ${ergebnis.grund.nachricht}",
+                    "Koordinate ${quellIndex + 1} ist nicht endlich: ${ergebnis.grund.nachricht}",
                 )
                 is DomaenenErgebnis.NichtUnterstuetzt -> return KoordinatenErgebnis.NichtDarstellbar(
-                    "Koordinate ${index + 1} wird nicht unterstützt: ${ergebnis.grund.nachricht}",
+                    "Koordinate ${quellIndex + 1} wird nicht unterstützt: ${ergebnis.grund.nachricht}",
                 )
             }
         }
 
+        if (komponenten.size > erwarteteDimension) {
+            return KoordinatenErgebnis.ProjektionErforderlich(
+                vorhandeneDimension = komponenten.size,
+                erwarteteDimension = erwarteteDimension,
+                grund = "Die natürliche Komponentenstruktur besitzt ${komponenten.size} reelle Komponenten, der aktuelle Raum aber nur $erwarteteDimension. Eine Projektion muss ausdrücklich gewählt werden.",
+            )
+        }
+        if (komponenten.size != erwarteteDimension) {
+            return KoordinatenErgebnis.NichtDarstellbar(
+                "Koordinatendimension ${komponenten.size} statt erwartet $erwarteteDimension.",
+            )
+        }
+
         return KoordinatenErgebnis.Darstellbar(komponenten)
     }
-}
 
-private val DomaenenWert.reelleDimension: Int
-    get() = when (this) {
-        is DomaenenWert.Reell -> 1
-        is DomaenenWert.Komplex -> 2
-        is DomaenenWert.Quaternion -> 4
+    private fun komponentenKomponente(
+        index: Int,
+        ausdruck: ZahlAusdruck,
+        wert: BigDecimal,
+        semantik: String?,
+    ): ReelleKoordinatenKomponente? {
+        val double = wert.toDouble()
+        if (!double.isFinite()) return null
+        return ReelleKoordinatenKomponente(index, ausdruck, double, semantik)
     }
+}

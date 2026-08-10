@@ -98,7 +98,7 @@ class FormelEditorZustand(
                 id = neueId("operation"),
                 operatorId = requireNotNull(taste.operatorId),
                 argumente = argumente,
-                typ = FormelTyp.ZAHL,
+                typ = taste.ergebnisTyp,
             )
         }
         return ersetzeAuswahl(neu)
@@ -117,6 +117,46 @@ class FormelEditorZustand(
         return ersetzeAuswahl(
             FormelAusdruck.Variable(neueId("variable"), bereinigt, bereinigt, FormelTyp.ZAHL),
         )
+    }
+
+    /** Setzt eine sichtbare, semantisch persistente Klammer um den gewählten Ausdruck. */
+    fun gruppiereAuswahl(): Boolean {
+        val ziel = wurzel.findeCursorAusdruck(cursor.ausdrucksId) ?: return false
+        val neu = when (ziel) {
+            is FormelAusdruck.Operation -> if (!ziel.explizitGruppiert && ziel.operatorId != "formel.gruppierung") {
+                ziel.copy(explizitGruppiert = true)
+            } else {
+                FormelAusdruck.Operation(
+                    id = neueId("gruppierung"),
+                    operatorId = "formel.gruppierung",
+                    argumente = listOf(FormelArgument("inhalt", 0, ziel)),
+                    typ = ziel.typ,
+                )
+            }
+            else -> FormelAusdruck.Operation(
+                id = neueId("gruppierung"),
+                operatorId = "formel.gruppierung",
+                argumente = listOf(FormelArgument("inhalt", 0, ziel)),
+                typ = ziel.typ,
+            )
+        }
+        return ersetzeAuswahl(neu)
+    }
+
+    /** Entfernt genau eine explizite Gruppierungsebene und lässt innere Gruppen unverändert. */
+    fun entgruppiereAuswahl(): Boolean {
+        val ziel = wurzel.findeCursorAusdruck(cursor.ausdrucksId) as? FormelAusdruck.Operation ?: return false
+        val neu = when {
+            ziel.operatorId == "formel.gruppierung" -> ziel.argumente.sortedBy { it.position }.firstOrNull()?.ausdruck ?: return false
+            ziel.explizitGruppiert -> ziel.copy(explizitGruppiert = false)
+            else -> return false
+        }
+        return ersetzeAuswahl(neu)
+    }
+
+    fun kannEntgruppieren(): Boolean {
+        val ziel = wurzel.findeCursorAusdruck(cursor.ausdrucksId) as? FormelAusdruck.Operation ?: return false
+        return ziel.operatorId == "formel.gruppierung" || ziel.explizitGruppiert
     }
 
     fun loescheAuswahl(): Boolean = ersetzeAuswahl(neuerPlatzhalter("argument"))

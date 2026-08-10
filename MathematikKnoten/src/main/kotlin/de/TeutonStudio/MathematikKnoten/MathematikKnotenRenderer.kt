@@ -43,6 +43,8 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
 
 class MathematikKnotenRenderer(
     private val ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis? = { null },
+    private val beiKnotenKlick: (KnotenDaten) -> Unit = {},
+    private val beiKnotenDoppelklick: (KnotenDaten) -> Unit = {},
 ) : KnotenRenderer {
     override val interaktionsModus: KnotenInteraktionsModus = KnotenInteraktionsModus.GanzeFlächeZiehbar
 
@@ -101,7 +103,9 @@ class MathematikKnotenRenderer(
                     adjektive.take(3).forEach { adjektiv ->
                         AdjektivMarke(
                             adjektiv = adjektiv,
-                            öffnen = { geöffneteDefinition = adjektiv },
+                            beiKlick = { beiKnotenKlick(knoten) },
+                            beiDoppelklick = { beiKnotenDoppelklick(knoten) },
+                            beiLangdruck = { geöffneteDefinition = adjektiv },
                             modifier = Modifier.weight(1f, fill = false),
                         )
                     }
@@ -208,18 +212,21 @@ class MathematikKnotenRenderer(
 @Composable
 private fun AdjektivMarke(
     adjektiv: AutomatischesAdjektiv,
-    öffnen: () -> Unit,
+    beiKlick: () -> Unit,
+    beiDoppelklick: () -> Unit,
+    beiLangdruck: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier
             .semantics {
                 role = Role.Button
-                contentDescription = "Eigenschaft ${adjektiv.text}. Definition öffnen."
+                contentDescription = "Eigenschaft ${adjektiv.text}. Lang drücken, um die Definition zu öffnen."
             }
             .combinedClickable(
-                onClick = öffnen,
-                onLongClick = öffnen,
+                onClick = beiKlick,
+                onDoubleClick = beiDoppelklick,
+                onLongClick = beiLangdruck,
             ),
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -261,16 +268,41 @@ private fun AdjektivDefinitionsDialog(
 ) {
     AlertDialog(
         onDismissRequest = schließen,
-        title = { Text(adjektiv.text) },
+        title = { Text("${adjektiv.text} · Pseudokarte") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Automatisch abgeleitete Eigenschaft", style = MaterialTheme.typography.labelLarge)
-                LatexFormel(adjektiv.subjektLatex, style = MaterialTheme.typography.bodyLarge)
-                Text("besitzt die Eigenschaft", style = MaterialTheme.typography.bodyMedium)
-                Text(adjektiv.wissensId, style = MaterialTheme.typography.titleSmall)
-                Text(adjektiv.erklärung, style = MaterialTheme.typography.bodySmall)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(
-                    "Diese schreibgeschützte Pseudokarte erzeugt weder Knoten noch Verbindungen.",
+                    "Automatisch abgeleitete Eigenschaft",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                PseudoDefinitionsKnoten(
+                    rolle = "Subjekt",
+                    inhalt = adjektiv.subjektLatex,
+                    latex = true,
+                )
+                Text("↓", style = MaterialTheme.typography.titleMedium)
+                PseudoDefinitionsKnoten(
+                    rolle = "Begriff",
+                    inhalt = adjektiv.wissensId,
+                )
+                Text("↓", style = MaterialTheme.typography.titleMedium)
+                PseudoDefinitionsKnoten(
+                    rolle = "Aussage",
+                    inhalt = "${adjektiv.subjektLatex} ist ${adjektiv.text}.",
+                )
+                Text(
+                    adjektiv.erklärung,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    "Die drei Knoten und ihre beiden Verbindungen existieren nur in diesem Dialog. Sie verändern weder Karte, Auswahl, Undo/Redo noch Dirty-State.",
+                    modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -278,4 +310,34 @@ private fun AdjektivDefinitionsDialog(
         },
         confirmButton = { TextButton(onClick = schließen) { Text("Schließen") } },
     )
+}
+
+@Composable
+private fun PseudoDefinitionsKnoten(
+    rolle: String,
+    inhalt: String,
+    latex: Boolean = false,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = "$rolle-Knoten: $inhalt"
+            },
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 2.dp,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(rolle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            if (latex) {
+                LatexFormel(inhalt, style = MaterialTheme.typography.bodyLarge)
+            } else {
+                Text(inhalt, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
 }

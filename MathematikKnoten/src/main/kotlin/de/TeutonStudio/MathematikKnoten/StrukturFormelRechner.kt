@@ -129,6 +129,8 @@ object StrukturRechnerOperatoren {
         d("matrix.rang", "Rang", "\\operatorname{rang}A", FormelTyp.ZAHL, "\\operatorname{rang}(A)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.hauptdiagonale", "Hauptdiagonale", "\\operatorname{diag}A", FormelTyp.TUPEL, "(a_{11},a_{22},\\ldots)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.nebendiagonale", "Nebendiagonale", "\\operatorname{antidiag}A", FormelTyp.TUPEL, "(a_{1n},a_{2,n-1},\\ldots)", e("matrix", FormelTyp.MATRIX)),
+        d("matrix.charakteristischesPolynom", "Charakteristisches Polynom", "\\chi_A", FormelTyp.METHODE, "\\chi_A(\\lambda)=\\det(A-\\lambda I)", e("matrix", FormelTyp.MATRIX)),
+        d("matrix.minimalpolynom", "Minimalpolynom", "m_A", FormelTyp.METHODE, "m_A(A)=0,\\quad m_A\\mid\\chi_A", e("matrix", FormelTyp.MATRIX)),
     )
 
     private val tensor = listOf(
@@ -178,7 +180,6 @@ object StrukturFormelRechnerVorlagen {
     val Tensor = standard(StrukturRechnerKnotenFamilie.TENSOR)
     val alle = listOf(Aussagesatz, Vektor, Matrix, Tensor)
 }
-
 
 fun strukturOperatorAlsFormel(definition: StrukturRechnerOperatorDefinition): FormelAusdruck.Operation =
     FormelAusdruck.Operation(
@@ -521,6 +522,7 @@ private fun matrixErgebnisWert(ergebnis: MatrixRechnerErgebnis): MathematischesO
     is MatrixRechnerErgebnis.MatrixWert -> ergebnis.wert
     is MatrixRechnerErgebnis.VektorWert -> ergebnis.wert
     is MatrixRechnerErgebnis.ZahlWert -> ergebnis.wert
+    is MatrixRechnerErgebnis.MethodeWert -> ergebnis.wert
     is MatrixRechnerErgebnis.TupelWert -> ergebnis.wert
     is MatrixRechnerErgebnis.Bedingt -> error(ergebnis.bedingungen.joinToString())
     is MatrixRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)

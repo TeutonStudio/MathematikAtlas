@@ -154,6 +154,13 @@ internal fun FormelBauerDialog(
                         onClick = { if (editor.naechsterPlatzhalter() != null) revision++ },
                         enabled = editor.offenePlatzhalter.isNotEmpty(),
                     ) { Text("Platzhalter →") }
+                    OutlinedButton(onClick = { if (editor.gruppiereAuswahl()) geändert() }) {
+                        Text("Klammern setzen")
+                    }
+                    OutlinedButton(
+                        onClick = { if (editor.entgruppiereAuswahl()) geändert() },
+                        enabled = editor.kannEntgruppieren(),
+                    ) { Text("Klammern entfernen") }
                     TextButton(onClick = { if (editor.loescheAuswahl()) geändert() }) { Text("Auswahl löschen") }
                 }
 

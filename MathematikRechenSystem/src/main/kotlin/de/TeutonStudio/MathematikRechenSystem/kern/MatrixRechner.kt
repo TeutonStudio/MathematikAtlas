@@ -17,6 +17,8 @@ enum class MatrixRechnerOperator(val stabileId: String) {
     RANG("matrix.rang"),
     HAUPTDIAGONALE("matrix.hauptdiagonale"),
     NEBENDIAGONALE("matrix.nebendiagonale"),
+    CHARAKTERISTISCHES_POLYNOM("matrix.charakteristischesPolynom"),
+    MINIMALPOLYNOM("matrix.minimalpolynom"),
 }
 
 data class MatrixForm(val zeilen: Int, val spalten: Int) {
@@ -54,6 +56,12 @@ sealed interface MatrixRechnerErgebnis {
 
     data class ZahlWert(
         val wert: ZahlAusdruck,
+        val zahlbereich: FundamentalerZahlbereich,
+        val bedingungen: List<Aussage> = emptyList(),
+    ) : MatrixRechnerErgebnis
+
+    data class MethodeWert(
+        val wert: Methode,
         val zahlbereich: FundamentalerZahlbereich,
         val bedingungen: List<Aussage> = emptyList(),
     ) : MatrixRechnerErgebnis
@@ -220,6 +228,22 @@ object MatrixRechner {
                     Tupel(List(n) { index -> operand.matrix.zeilen[index][operand.form.spalten - 1 - index] }),
                 )
             }
+            MatrixRechnerOperator.CHARAKTERISTISCHES_POLYNOM -> einMatrix(anfrage) { operand ->
+                if (!operand.form.quadratisch) return@einMatrix quadratFehler("Charakteristisches Polynom", operand.form)
+                matrixPolynomMethodeOderBedingt(
+                    operand = operand,
+                    name = "\\chi_A",
+                    berechnen = ::charakteristischesPolynom,
+                )
+            }
+            MatrixRechnerOperator.MINIMALPOLYNOM -> einMatrix(anfrage) { operand ->
+                if (!operand.form.quadratisch) return@einMatrix quadratFehler("Minimalpolynom", operand.form)
+                matrixPolynomMethodeOderBedingt(
+                    operand = operand,
+                    name = "m_A",
+                    berechnen = ::minimalPolynom,
+                )
+            }
         }
     }
 
@@ -234,6 +258,45 @@ object MatrixRechner {
         argumente.mapIndexed { index, (rolle, ausdruck) -> FormelArgument(rolle, index, ausdruck) },
         ergebnisTyp,
     )
+
+    private fun matrixPolynomMethodeOderBedingt(
+        operand: MatrixOperand,
+        name: String,
+        berechnen: (Matrix) -> MatrixPolynom,
+    ): MatrixRechnerErgebnis {
+        if (operand.zahlbereich !in setOf(
+                FundamentalerZahlbereich.NATUERLICH_POSITIV,
+                FundamentalerZahlbereich.NATUERLICH_MIT_NULL,
+                FundamentalerZahlbereich.GANZ,
+                FundamentalerZahlbereich.RATIONAL,
+            )
+        ) {
+            return MatrixRechnerErgebnis.Bedingt(
+                "${name}(${operand.matrix.zuLatex()})",
+                FormelTyp.METHODE,
+                listOf("Die erste exakte Matrixpolynom-Auswertung benötigt rationale Matrixeinträge."),
+            )
+        }
+        return runCatching { berechnen(operand.matrix) }.fold(
+            onSuccess = { polynom ->
+                val träger = operand.zahlbereich.alsMenge()
+                val methode = Methode(
+                    name = name,
+                    parameter = listOf(polynom.variable),
+                    vorschrift = polynom.alsAusdruck(),
+                    zielMenge = träger,
+                    werteVorräte = mapOf(polynom.variable.name to träger),
+                )
+                MatrixRechnerErgebnis.MethodeWert(methode, operand.zahlbereich)
+            },
+            onFailure = { fehler ->
+                MatrixRechnerErgebnis.Ungueltig(
+                    "matrixpolynom_nicht_berechenbar",
+                    fehler.message ?: "Das Matrixpolynom konnte nicht exakt berechnet werden.",
+                )
+            },
+        )
+    }
 
     private fun matrixPotenz(operand: MatrixOperand, exponent: Int): MatrixRechnerErgebnis {
         if (exponent == 0) return MatrixRechnerErgebnis.MatrixWert(einheitsMatrix(operand.form.zeilen), operand.zahlbereich)

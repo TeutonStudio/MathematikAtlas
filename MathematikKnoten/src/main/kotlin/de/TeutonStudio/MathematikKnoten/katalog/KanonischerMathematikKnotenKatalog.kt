@@ -50,14 +50,24 @@ object KanonischerMathematikKnotenKatalog {
                     )
         }
 
-        return bereinigt +
-            TupelVariableKnotenVorlagen.standard +
-            VektorKonstruktorVorlagen.standard +
-            VektorOrientierungsVorlagen.alle +
-            MultinomVektorKnotenVorlagen.standard +
-            MengenRechnerKnotenVorlagen.standard +
-            MengenRelationsKnotenVorlagen.standard +
-            MengenMassKnotenVorlagen.alle
+        return (
+            bereinigt +
+                TupelVariableKnotenVorlagen.standard +
+                VektorKonstruktorVorlagen.standard +
+                VektorOrientierungsVorlagen.alle +
+                MultinomVektorKnotenVorlagen.standard +
+                MengenRechnerKnotenVorlagen.standard +
+                MengenRelationsKnotenVorlagen.standard +
+                MengenMassKnotenVorlagen.alle +
+                RandKnotenVorlagen.alle +
+                TangentialKnotenVorlagen.alle
+            ).distinctBy { vorlage ->
+                vorlage.art to listOf(
+                    vorlage.standardParameter["operator"].orEmpty(),
+                    vorlage.standardParameter["eingabeModus"].orEmpty(),
+                    vorlage.name,
+                ).joinToString("|")
+            }
     }
 
     private fun kanonisierePraedikatVorlage(vorlage: KnotenVorlage): KnotenVorlage =
