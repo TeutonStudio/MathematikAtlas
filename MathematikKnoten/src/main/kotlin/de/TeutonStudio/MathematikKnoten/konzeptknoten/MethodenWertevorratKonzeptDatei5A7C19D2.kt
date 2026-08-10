@@ -13,11 +13,7 @@ internal object MethodenWertevorratKonzeptDatei5A7C19D2 : ExpliziteKonzeptDatei 
             id = id,
             titel = "Methoden-Wertevorrat",
             kurzbeschreibung = "Gibt den kanonischen Wertevorrat einer Methode als Menge geordneter Argumenttupel aus.",
-            fachPfade = setOf(
-                FachPfad.von("algebra", "methoden"),
-                FachPfad.von("analysis", "funktionen"),
-                FachPfad.von("mengenlehre", "mengen"),
-            ),
+            fachPfade = setOf(FachKatalog.MethodenSignatur),
             suchbegriffe = setOf(
                 "Wertevorrat einer Methode",
                 "Definitionsbereich einer Methode",

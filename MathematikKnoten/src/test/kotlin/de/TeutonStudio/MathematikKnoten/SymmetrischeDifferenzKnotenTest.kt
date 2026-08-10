@@ -9,15 +9,15 @@ import de.TeutonStudio.MathematikRechenSystem.kern.SymmetrischeDifferenz
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class SymmetrischeDifferenzKnotenTest {
     @Test
-    fun `Vorlage ist erzeugbar und der Auswerter liefert eine Menge`() {
+    fun `historische Vorlage bleibt auswertbar aber ist nicht mehr separat erzeugbar`() {
         val vorlage = MengenraumKnotenVorlagen.SymmetrischeDifferenz
-        assertTrue(vorlage in MengenraumKnotenVorlagen.alle)
+        assertFalse(vorlage in MengenraumKnotenVorlagen.alle)
         val knoten = vorlage.erzeuge(GraphPunkt.Zero)
         val auswerter = assertNotNull(GesamterMathematikAuswerter.erzeugeRegister().finde(knoten.art))
 

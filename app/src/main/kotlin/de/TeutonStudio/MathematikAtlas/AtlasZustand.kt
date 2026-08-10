@@ -49,6 +49,7 @@ class AtlasZustand(context: Context) {
             emptyList()
         }
         MengenKnotenKartenQuelle.installieren(this)
+        MengenOperatorInspektorRegistrierung.installieren()
         werteAus()
     }
 

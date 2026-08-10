@@ -7,9 +7,19 @@ enum class MengenRechnerOperator(val stabileId: String) {
     SYMMETRISCHE_DIFFERENZ("menge.symmetrischeDifferenz"),
     KOMPLEMENT("menge.komplement"),
     KARTESISCHES_PRODUKT("menge.kartesischesProdukt"),
+    ITERIERTES_KARTESISCHES_PRODUKT("menge.iteriertesKartesischesProdukt"),
+    ITERIERTE_VEREINIGUNG("menge.iterierteVereinigung"),
+    ITERIERTER_SCHNITT("menge.iterierterSchnitt"),
     POTENZMENGE("menge.potenzmenge"),
     BILD("menge.bild"),
     URBILD("menge.urbild"),
+    ;
+
+    companion object {
+        fun vonIdOderNull(id: String?): MengenRechnerOperator? = entries.firstOrNull { operator ->
+            id == operator.stabileId || id.equals(operator.name, ignoreCase = true)
+        }
+    }
 }
 
 data class MengenRechnerEingabe(
@@ -108,6 +118,13 @@ object MengenRechner {
                     operator,
                 )
             }
+            MengenRechnerOperator.ITERIERTES_KARTESISCHES_PRODUKT,
+            MengenRechnerOperator.ITERIERTE_VEREINIGUNG,
+            MengenRechnerOperator.ITERIERTER_SCHNITT,
+            -> MengenRechnerErgebnis.Ungueltig(
+                "iterationsvertrag",
+                "${operator.name} benötigt eine Mengenmethode und eine Indexmenge und wird deshalb über den Knotenauswerter ausgeführt.",
+            )
             MengenRechnerOperator.POTENZMENGE -> {
                 if (eingaben.size != 1) ungueltigeAnzahl(operator, 1)
                 else MengenRechnerErgebnis.Wert(
@@ -187,9 +204,12 @@ object MengenRechnerMigration {
     val alteKnotenArten: Map<String, MengenRechnerOperator> = mapOf(
         "mathematik.vereinigung" to MengenRechnerOperator.VEREINIGUNG,
         "mathematik.schnitt" to MengenRechnerOperator.SCHNITT,
+        "mathematik.differenz" to MengenRechnerOperator.DIFFERENZ,
         "mathematik.mengendifferenz" to MengenRechnerOperator.DIFFERENZ,
         "mathematik.symmetrischeDifferenz" to MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ,
         "mathematik.kartesischesProdukt" to MengenRechnerOperator.KARTESISCHES_PRODUKT,
-        "mathematik.potenzmenge" to MengenRechnerOperator.POTENZMENGE,
+        "mathematik.iteriertesKartesischesProdukt" to MengenRechnerOperator.ITERIERTES_KARTESISCHES_PRODUKT,
+        "mathematik.iterierteVereinigung" to MengenRechnerOperator.ITERIERTE_VEREINIGUNG,
+        "mathematik.iterierterSchnitt" to MengenRechnerOperator.ITERIERTER_SCHNITT,
     )
 }

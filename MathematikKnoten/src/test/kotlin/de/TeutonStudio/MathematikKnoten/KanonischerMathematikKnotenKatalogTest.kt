@@ -1,6 +1,10 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenRechner
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenRechnerMigration
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenRelationRechner
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenRelationsMigration
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,5 +40,23 @@ class KanonischerMathematikKnotenKatalogTest {
         assertTrue(vorlagen.any { it.art == VEKTOR_KONSTRUKTOR_ART })
         assertTrue(vorlagen.any { it.art == MULTINOMVEKTOR_ART })
         assertFalse(vorlagen.any { it.name.isBlank() || it.kategorie.isBlank() })
+    }
+
+    @Test
+    fun `mengenoperatoren sind konsolidiert und potenzmenge bleibt eigenstaendig sichtbar`() {
+        val kanonischeArten = KanonischerMathematikKnotenKatalog.alle().map { it.art }.toSet()
+        val mengenraumArten = MengenraumKnotenVorlagen.alle.map { it.art }.toSet()
+
+        assertTrue(MengenRechner.KNOTEN_ART in kanonischeArten)
+        assertTrue(MengenRelationRechner.KNOTEN_ART in kanonischeArten)
+        assertTrue("mathematik.potenzmenge" in mengenraumArten)
+        assertFalse("mathematik.potenzmenge" in MengenRechnerMigration.alteKnotenArten)
+        assertFalse("mathematik.symmetrischeDifferenz" in mengenraumArten)
+        MengenRechnerMigration.alteKnotenArten.keys.forEach { alt ->
+            assertFalse(alt in kanonischeArten, "Historischer Mengenoperator $alt darf nicht mehr separat sichtbar sein.")
+        }
+        MengenRelationsMigration.alteKnotenArten.keys.forEach { alt ->
+            assertFalse(alt in kanonischeArten, "Historische Mengenrelation $alt darf nicht mehr separat sichtbar sein.")
+        }
     }
 }

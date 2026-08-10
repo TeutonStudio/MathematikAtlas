@@ -7,6 +7,7 @@ object MathematikAnschlussArten {
     val Zahl = AnschlussArt(AnschlussArtId("mathematik.zahl"), "Zahl", Objekt.id)
     val Aussage = AnschlussArt(AnschlussArtId("mathematik.aussage"), "Aussage", Objekt.id)
     val Menge = AnschlussArt(AnschlussArtId("mathematik.menge"), "Menge", Objekt.id)
+    val Mass = AnschlussArt(AnschlussArtId("mathematik.mass"), "Maß", Objekt.id)
     val Vektor = AnschlussArt(AnschlussArtId("mathematik.vektor"), "Vektor", Objekt.id)
     val SpaltenVektor = AnschlussArt(AnschlussArtId("mathematik.vektor.spalte"), "Spaltenvektor", Vektor.id)
     val ZeilenVektor = AnschlussArt(AnschlussArtId("mathematik.vektor.zeile"), "Zeilenvektor", Vektor.id)
@@ -49,6 +50,7 @@ object MathematikAnschlussArten {
         Zahl,
         Aussage,
         Menge,
+        Mass,
         Vektor,
         SpaltenVektor,
         ZeilenVektor,

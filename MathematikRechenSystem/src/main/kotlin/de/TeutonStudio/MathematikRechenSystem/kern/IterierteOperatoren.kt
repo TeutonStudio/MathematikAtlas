@@ -13,7 +13,7 @@ data class IterierteVereinigung(val methode: Methode, val indexMenge: MengenAusd
 }
 
 data class IteriertesKartesischesProdukt(val methode: Methode, val indexMenge: MengenAusdruck) : MengenAusdruck {
-    override fun zuLatex() = iterationsLatex("\\mathop{\\times}", methode, indexMenge)
+    override fun zuLatex() = iterationsLatex("\\mathop{\\Large\\times}", methode, indexMenge)
 }
 
 /** Die Grundmenge wird ausschließlich aus der validierten Zielmenge der Methode abgeleitet. */
@@ -51,7 +51,10 @@ fun großerOperatorLatex(
     operator: String,
     indexBedingung: String,
     rumpf: String,
-): String = "$operator\\limits_{${indexBedingung}} $rumpf"
+): String {
+    val kanonischerOperator = if (operator == "\\mathop{\\times}") "\\mathop{\\Large\\times}" else operator
+    return "$kanonischerOperator\\limits_{${indexBedingung}} $rumpf"
+}
 
 private fun iterationsLatex(operator: String, methode: Methode, indexMenge: MengenAusdruck): String {
     val parameter = methode.parameter.single().zuLatex()
