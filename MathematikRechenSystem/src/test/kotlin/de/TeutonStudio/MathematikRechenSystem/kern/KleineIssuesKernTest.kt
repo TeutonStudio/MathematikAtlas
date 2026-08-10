@@ -9,7 +9,7 @@ class KleineIssuesKernTest {
             listOf(
                 listOf(RationaleZahl.von(1), RationaleZahl.von(2), RationaleZahl.von(3)),
                 listOf(RationaleZahl.von(0), RationaleZahl.von(4), RationaleZahl.von(5)),
-                listOf(RationaleZahl.von(1), RationaleZahl.von(0), RationaleZahl.von(6)),
+                listOf(RationaleZahl.von(1), RationaleZahl.Null, RationaleZahl.von(6)),
             ),
         )
         val direkt = vereinfache(produktiveDeterminante(matrix, FundamentalerZahlbereich.RATIONAL))
@@ -97,7 +97,7 @@ class KleineIssuesKernTest {
         val methode = Methode(
             name = "f",
             parameter = listOf(x),
-            vorschrift = potenz(x, RationaleZahl.von(2)),
+            vorschrift = Potenz(x, RationaleZahl.von(2)),
             zielMenge = ReelleZahlen,
             werteVorräte = mapOf("x" to ReelleZahlen),
         )
