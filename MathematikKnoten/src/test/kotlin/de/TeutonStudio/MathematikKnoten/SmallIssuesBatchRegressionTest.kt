@@ -2,10 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.Methode
-import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
-import de.TeutonStudio.MathematikRechenSystem.kern.Variable
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -32,6 +29,17 @@ class SmallIssuesBatchRegressionTest {
         )
         assertEquals(listOf(0, 1, 2), tupelWert.variablenQuellen.map { it.reihenfolge })
         assertEquals(1, tupelWert.variablenQuellen.map { it.bindungsId }.distinct().size)
+        assertEquals(
+            listOf("komponente-1", "komponente-2", "komponente-3"),
+            tupelWert.variablenQuellen.map { it.bindungsName },
+        )
+
+        val kartesisch = tupel.kartesischerTupelVertrag(
+            tupelWert.variablenQuellen.associate { it.name to it.werteVorrat },
+        )
+        val gültig = assertIs<StrukturPruefung.Gueltig<KartesischerTupelVertrag>>(kartesisch)
+        assertEquals(3, gültig.wert.laenge)
+        assertEquals(ReelleZahlen, gültig.wert.zahlBereich)
 
         val methodeKnoten = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero).copy(
             id = KnotenId("methode"),
