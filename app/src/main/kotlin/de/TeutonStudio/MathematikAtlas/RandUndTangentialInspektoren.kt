@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.TANGENTIAL_DIFFERENTIALBEGRIFF_PARAMETER
@@ -33,7 +34,7 @@ internal object TangentialKnotenInspektor : KnotenInspektor {
         Text("Ausgabe", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(androidx.compose.ui.unit.dp(8f)),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FilterChip(
                 selected = ausgabeform == TangentialAusgabeForm.METHODE,
@@ -61,7 +62,7 @@ internal object TangentialKnotenInspektor : KnotenInspektor {
         Text("Differentialbegriff", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(androidx.compose.ui.unit.dp(8f)),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FilterChip(
                 selected = begriff == DifferentialBegriff.REELL_FRECHET,
@@ -94,7 +95,7 @@ internal object RandKnotenInspektor : KnotenInspektor {
         Text("Topologie", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(androidx.compose.ui.unit.dp(6f)),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             listOf(
                 "kanonisch" to "kanonisch",
