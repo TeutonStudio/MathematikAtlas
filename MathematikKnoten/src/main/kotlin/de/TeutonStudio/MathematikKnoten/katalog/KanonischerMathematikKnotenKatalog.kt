@@ -4,6 +4,13 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
+/**
+ * Einzige fachliche Quelle für den sichtbaren mathematischen Erstellen-Katalog.
+ *
+ * Der lade-kompatible Basiskatalog darf historische Vorlagen enthalten. Diese
+ * Fassade entscheidet zentral und plattformunabhängig, welche kanonischen
+ * Varianten Android und Desktop tatsächlich zum Erzeugen anbieten.
+ */
 object KanonischerMathematikKnotenKatalog {
     private val historischeOrientierungsDuplikate = setOf(
         "mathematik.vektor",
@@ -37,21 +44,11 @@ object KanonischerMathematikKnotenKatalog {
                     )
         }
 
-        return (
-            bereinigt +
-                TupelVariableKnotenVorlagen.standard +
-                VektorKonstruktorVorlagen.standard +
-                VektorOrientierungsVorlagen.alle +
-                MultinomVektorKnotenVorlagen.standard +
-                RandKnotenVorlagen.alle +
-                TangentialKnotenVorlagen.alle
-            ).distinctBy { vorlage ->
-                vorlage.art to listOf(
-                    vorlage.standardParameter["operator"].orEmpty(),
-                    vorlage.standardParameter["eingabeModus"].orEmpty(),
-                    vorlage.name,
-                ).joinToString("|")
-            }
+        return bereinigt +
+            TupelVariableKnotenVorlagen.standard +
+            VektorKonstruktorVorlagen.standard +
+            VektorOrientierungsVorlagen.alle +
+            MultinomVektorKnotenVorlagen.standard
     }
 
     private fun kanonisierePraedikatVorlage(vorlage: KnotenVorlage): KnotenVorlage =
