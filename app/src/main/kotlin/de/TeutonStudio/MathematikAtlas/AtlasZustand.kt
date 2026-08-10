@@ -205,7 +205,11 @@ class AtlasZustand(context: Context) {
         karten.firstOrNull()?.let { öffne(it) }
     }
 
-    fun renderer() = MathematikKnotenRenderer { knoten -> auswertung.knoten[knoten.id] }
+    fun renderer() = MathematikKnotenRenderer(
+        ergebnisFür = { knoten -> auswertung.knoten[knoten.id] },
+        beiKnotenKlick = { knoten -> editor.wähleKnoten(knoten.id) },
+        beiKnotenDoppelklick = { knoten -> knoten.kartenVerweis?.let(::öffne) },
+    )
 
     fun rendererFür(knoten: KnotenDaten) = (when {
         knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenRenderer
