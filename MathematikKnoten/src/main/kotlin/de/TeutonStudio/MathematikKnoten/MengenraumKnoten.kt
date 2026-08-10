@@ -178,7 +178,10 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
     }
     registriere("mathematik.vektorraum") { k ->
         mengenraumErgebnis(
-            Tensorraum(k.mengenraumEingabe("grundmenge"), listOf(k.mengenraumPositiveGanzzahl("dimension"))),
+            Tensorraum(
+                k.mengenraumEingabe("grundmenge"),
+                listOf(RationaleZahl.von(k.mengenraumPositiveGanzzahl("dimension").toLong())),
+            ),
             k,
         )
     }
