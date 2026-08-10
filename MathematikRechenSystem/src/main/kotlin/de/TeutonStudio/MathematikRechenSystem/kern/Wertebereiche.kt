@@ -134,6 +134,8 @@ private fun inferiereElementMenge(
     is KoordinatenBild -> Tupelraum(List(menge.objekt.raum.dimension) { ReelleZahlen })
     is DifferenzierbarkeitsBereich -> inferiereElementMenge(menge.ursprungsBereich, werteVorräte, annahmen)
     is AbleitungsZielraum -> menge
+    is TopologischerRand -> inferiereElementMenge(menge.kontext.umgebungsraum, werteVorräte, annahmen)
+    is TangentialMenge -> inferiereElementMenge(menge.graphRaum, werteVorräte, annahmen)
     is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum,
     is Potenzmenge, is Abbildungsmenge, is Tensorraum, is ModuloZahlenraum -> menge
 }
