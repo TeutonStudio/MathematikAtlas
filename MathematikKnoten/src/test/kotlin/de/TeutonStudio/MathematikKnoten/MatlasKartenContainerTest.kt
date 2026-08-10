@@ -57,7 +57,7 @@ class MatlasKartenContainerTest {
         val ordner = Files.createTempDirectory("matlas-test")
         try {
             val ziel = ordner.resolve("karte.matlas")
-            Files.writeString(ziel, "alt")
+            Files.write(ziel, "alt".toByteArray(StandardCharsets.UTF_8))
             val karte = KartenDaten(id = KartenId("atomar"), name = "Atomar")
 
             MatlasKartenContainer.schreibeAtomar(ziel, karte, "test")
