@@ -1,5 +1,5 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 /** Escaped internen Bezeichnertext für kontrollierte LaTeX-Beschriftungen. */
-internal fun String.latexText(): String =
+internal fun String.atlasLatexText(): String =
     replace("\\", "").replace("_", "\\_").replace(" ", "\\ ")
