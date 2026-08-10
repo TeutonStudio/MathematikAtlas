@@ -24,11 +24,6 @@ data class CayleyHamiltonNachweis(
         get() = "\\chi_A(A)=0"
 }
 
-/**
- * χ_A(λ)=det(A-λI). Die Koeffizienten werden exakt durch n+1 Auswertungen des
- * produktiven Determinantenoperators und eine Vandermonde-Lösung rekonstruiert.
- * Damit entsteht keine zweite Determinantenimplementierung für Polynome.
- */
 fun charakteristischesPolynom(
     matrix: Matrix,
     variablenName: String = "lambda",
@@ -59,10 +54,6 @@ fun charakteristischesPolynom(
     return MatrixPolynom(Variable(variablenName), trimFuehrendeNullen(koeffizienten))
 }
 
-/**
- * Normiertes Polynom kleinsten positiven Grades mit m_A(A)=0. Für rationale
- * Matrizen wird die erste lineare Abhängigkeit I,A,A²,… exakt bestimmt.
- */
 fun minimalPolynom(
     matrix: Matrix,
     variablenName: String = "lambda",
@@ -80,7 +71,9 @@ fun minimalPolynom(
                 rationalEintrag(potenzen[spaltenIndex], zeilenIndex)
             }
         }
-        val rechts = List(n * n) { index -> -rationalEintrag(potenzen[grad], index) }
+        val rechts = List(n * n) { index ->
+            RationaleZahl.Null - rationalEintrag(potenzen[grad], index)
+        }
         val loesung = loeseLinearesSystem(links, rechts) ?: continue
         val koeffizienten = loesung + RationaleZahl.Eins
         val polynom = MatrixPolynom(Variable(variablenName), koeffizienten)
@@ -118,7 +111,7 @@ fun teiltMinimalpolynomDasCharakteristische(matrix: Matrix): Boolean {
         }
         while (rest.isNotEmpty() && rest.last().istNull()) rest.removeAt(rest.lastIndex)
     }
-    return rest.all(RationaleZahl::istNull)
+    return rest.all { it.istNull() }
 }
 
 private fun requireRationaleMatrix(matrix: Matrix): Matrix = Matrix(
@@ -164,11 +157,6 @@ private fun trimFuehrendeNullen(koeffizienten: List<RationaleZahl>): List<Ration
     return koeffizienten.take(ende + 1)
 }
 
-/**
- * Exakter Gauß-Löser für auch überbestimmte Systeme. Freie Variablen werden 0
- * gesetzt; Inkonsistenz liefert null. Für die hier verwendeten ersten
- * Abhängigkeiten genügt damit eine deterministische Lösung.
- */
 private fun loeseLinearesSystem(
     matrix: List<List<RationaleZahl>>,
     rechteSeite: List<RationaleZahl>,
@@ -197,7 +185,7 @@ private fun loeseLinearesSystem(
         zeile++
         if (zeile == a.size) break
     }
-    if (a.any { row -> row.take(variablen).all(RationaleZahl::istNull) && !row.last().istNull() }) return null
+    if (a.any { row -> row.take(variablen).all { it.istNull() } && !row.last().istNull() }) return null
     return List(variablen) { spalte ->
         pivotZeilen[spalte]?.let { pivotZeile -> a[pivotZeile].last() } ?: RationaleZahl.Null
     }
