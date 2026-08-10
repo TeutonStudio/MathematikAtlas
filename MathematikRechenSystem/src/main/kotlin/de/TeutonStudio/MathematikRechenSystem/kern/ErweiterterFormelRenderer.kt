@@ -17,7 +17,7 @@ internal object ErweiterterFormelRenderer {
             when (ausdruck) {
                 is FormelAusdruck.Literal -> text.append(ausdruck.wert.zuLatex())
                 is FormelAusdruck.Variable -> text.append(ausdruck.latex)
-                is FormelAusdruck.Platzhalter -> text.append("\\square_{${ausdruck.beschriftung.latexText()}}")
+                is FormelAusdruck.Platzhalter -> text.append("\\square_{${ausdruck.beschriftung.atlasLatexText()}}")
                 is FormelAusdruck.Operation -> {
                     bedingungen += ausdruck.bedingungen
                     val eigenePraezedenz = praezedenz(ausdruck.operatorId)
@@ -119,7 +119,7 @@ internal object ErweiterterFormelRenderer {
                 text.append("\\right)")
             }
             else -> {
-                text.append("\\operatorname{${operation.operatorId.latexText()}}\\left(")
+                text.append("\\operatorname{${operation.operatorId.atlasLatexText()}}\\left(")
                 argumente.forEachIndexed { index, argument ->
                     if (index > 0) text.append(',')
                     schreibe(argument, 0)
