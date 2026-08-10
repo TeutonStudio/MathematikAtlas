@@ -67,9 +67,9 @@ fun topologischerAbschluss(
         menge == RationaleZahlen && kontext.umgebungsraum == ReelleZahlen -> ReelleZahlen
         menge is EndlicheMenge -> menge
         menge is ReellesIntervall -> reellesIntervall(
-            menge.links,
+            links = menge.links,
             linksOffen = false,
-            menge.rechts,
+            rechts = menge.rechts,
             rechtsOffen = false,
         )
         else -> TopologischerAbschluss(menge, kontext)
@@ -90,9 +90,9 @@ fun topologischesInneres(
         menge == RationaleZahlen && kontext.umgebungsraum == ReelleZahlen -> LeereMenge
         menge is EndlicheMenge -> LeereMenge
         menge is ReellesIntervall -> reellesIntervall(
-            menge.links,
+            links = menge.links,
             linksOffen = true,
-            menge.rechts,
+            rechts = menge.rechts,
             rechtsOffen = true,
         )
         else -> TopologischesInneres(menge, kontext)
