@@ -10,9 +10,15 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 
 enum class KnotenInteraktionsModus { GanzeFlächeZiehbar, NurKopfzeileZiehbar }
 
-/** Vom Editor bereitgestellte, undo-fähige Schreibschnittstelle für Renderer. */
+/** Vom Editor bereitgestellte, undo-fähige Schreib- und Interaktionsschnittstelle für Renderer. */
 interface KnotenRendererAktionen {
     fun eigenschaftenErsetzen(eigenschaften: Map<String, KnotenEigenschaft>)
+
+    /** Entspricht einem normalen Klick auf die Knotenfläche. */
+    fun knotenAuswählen() {}
+
+    /** Entspricht einem normalen Doppelklick auf die Knotenfläche. */
+    fun knotenDoppelklick() {}
 }
 
 interface KnotenRenderer {
