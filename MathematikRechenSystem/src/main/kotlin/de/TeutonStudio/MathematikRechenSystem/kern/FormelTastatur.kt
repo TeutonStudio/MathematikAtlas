@@ -16,6 +16,7 @@ data class FormelTastaturTaste(
     val operatorId: String? = null,
     val argumentRollen: List<String> = emptyList(),
     val literal: MathematischesObjekt? = null,
+    val ergebnisTyp: FormelTyp = FormelTyp.ZAHL,
 ) {
     init {
         require(id.isNotBlank())
@@ -29,12 +30,19 @@ data class FormelTastaturTaste(
 object FormelTastatur {
     /**
      * Der Standardkatalog wird aus dem stabilen Operatorregister des universellen
-     * Zahlenrechners erzeugt. Neue Standardoperatoren können dadurch nicht mehr
-     * unbemerkt im Rechner existieren, aber im CAS-Formelbauer fehlen.
+     * Zahlenrechners erzeugt. Semantische Schreibweisen, die nicht bloß ein
+     * Zahlenoperator sind, werden anschließend explizit ergänzt.
      */
     val standard: List<FormelTastaturTaste> =
         UniversellerZahlenOperator.entries.map(::standardTaste) +
             listOf(
+                operator("division-rechts", "÷R", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.division.rechts", "dividend", "divisor"),
+                operator("division-links", "÷L", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.division.links", "dividend", "divisor"),
+                operator("differentiationsiteration", "f⁽ⁿ⁾", FormelTastenKategorie.POTENZEN, "iteration.differentiation", "methode", "ordnung", ergebnisTyp = FormelTyp.METHODE),
+                operator("selbstkomposition", "f⟨n⟩", FormelTastenKategorie.POTENZEN, "iteration.selbstkomposition", "methode", "ordnung", ergebnisTyp = FormelTyp.METHODE),
+                operator("restriktion", "f|M", FormelTastenKategorie.FUNKTIONEN, "methode.einschraenkung", "methode", "menge", ergebnisTyp = FormelTyp.METHODE),
+                operator("plus-minus", "±", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.vorzeichen.plusMinus", "operand", ergebnisTyp = FormelTyp.TUPEL),
+                operator("minus-plus", "∓", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.vorzeichen.minusPlus", "operand", ergebnisTyp = FormelTyp.TUPEL),
                 operator("tan", "tan", FormelTastenKategorie.TRIGONOMETRIE, "zahl.tan", "argument"),
                 operator("cot", "cot", FormelTastenKategorie.TRIGONOMETRIE, "zahl.cot", "argument"),
                 operator("sec", "sec", FormelTastenKategorie.TRIGONOMETRIE, "zahl.sec", "argument"),
@@ -175,11 +183,13 @@ object FormelTastatur {
         kategorie: FormelTastenKategorie,
         operatorId: String,
         vararg rollen: String,
+        ergebnisTyp: FormelTyp = FormelTyp.ZAHL,
     ) = FormelTastaturTaste(
         id = id,
         beschriftung = beschriftung,
         kategorie = kategorie,
         operatorId = operatorId,
         argumentRollen = rollen.toList(),
+        ergebnisTyp = ergebnisTyp,
     )
 }
