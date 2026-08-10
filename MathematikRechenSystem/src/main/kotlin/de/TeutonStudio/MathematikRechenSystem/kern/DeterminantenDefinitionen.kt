@@ -98,7 +98,7 @@ fun erklaereDeterminante(
     laplaceZeile0 = laplaceDeterminante(matrix, 0, true, zahlbereich),
     permutation = if (matrix.zeilenAnzahl <= 7) permutationsDeterminante(matrix) else null,
     geometrieZulaessig = zahlbereich in setOf(
-        FundamentalerZahlbereich.NATUERLICH,
+        FundamentalerZahlbereich.NATUERLICH_POSITIV,
         FundamentalerZahlbereich.NATUERLICH_MIT_NULL,
         FundamentalerZahlbereich.GANZ,
         FundamentalerZahlbereich.RATIONAL,
