@@ -46,6 +46,8 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("integral") { registriereIntegralKnoten() },
         MathematikAuswerterPaket("restriktion") { registriereRestriktionsKnoten() },
         MathematikAuswerterPaket("methodengraph") { registriereMethodenGraphKnoten() },
+        MathematikAuswerterPaket("tangentialobjekt") { registriereTangentialKnoten() },
+        MathematikAuswerterPaket("rand") { registriereRandKnoten() },
         MathematikAuswerterPaket("methodenargumente") { registriereMethodenArgumente() },
         MathematikAuswerterPaket("mathematische-eigenschaften") { registriereMathematischeEigenschaften() },
         MathematikAuswerterPaket("exakte-eigenschaften") { registriereExakteEigenschaftsAuswertung() },
