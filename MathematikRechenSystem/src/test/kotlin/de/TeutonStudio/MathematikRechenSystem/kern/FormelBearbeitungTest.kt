@@ -15,7 +15,7 @@ class FormelBearbeitungTest {
     }
 
     @Test
-    fun `import beachtet punkt vor strich und potenz`() {
+    fun `import beachtet punkt vor strich und potenziteration`() {
         val wurzel = assertIs<FormelLatexImportErgebnis.Erfolg>(
             FormelLatexCodec.importiere("a+b\\cdot c^2"),
         ).ausdruck
@@ -23,7 +23,7 @@ class FormelBearbeitungTest {
         assertEquals("zahl.addition", addition.operatorId)
         val multiplikation = assertIs<FormelAusdruck.Operation>(addition.argumente[1].ausdruck)
         assertEquals("zahl.multiplikation", multiplikation.operatorId)
-        assertEquals("zahl.potenz", assertIs<FormelAusdruck.Operation>(multiplikation.argumente[1].ausdruck).operatorId)
+        assertEquals("iteration.multiplikation", assertIs<FormelAusdruck.Operation>(multiplikation.argumente[1].ausdruck).operatorId)
     }
 
     @Test
@@ -67,6 +67,20 @@ class FormelBearbeitungTest {
     }
 
     @Test
+    fun `einzelvariable kann gruppiert und schrittweise entgruppiert werden`() {
+        val editor = FormelEditorZustand()
+        assertIs<FormelLatexImportErgebnis.Erfolg>(editor.importiere("x"))
+        assertTrue(editor.gruppiereAuswahl())
+        assertEquals("\\left(x\\right)", editor.exportiere())
+        assertTrue(editor.gruppiereAuswahl())
+        assertEquals("\\left(\\left(x\\right)\\right)", editor.exportiere())
+        assertTrue(editor.entgruppiereAuswahl())
+        assertEquals("\\left(x\\right)", editor.exportiere())
+        assertTrue(editor.rueckgaengig())
+        assertEquals("\\left(\\left(x\\right)\\right)", editor.exportiere())
+    }
+
+    @Test
     fun `formeltaste erzeugt operation mit navigierbaren platzhaltern`() {
         val editor = FormelEditorZustand()
         val taste = FormelTastatur.standard.single { it.id == "geteilt" }
@@ -100,6 +114,25 @@ class FormelBearbeitungTest {
             FormelLatexCodec.importiere(exportiert),
         ).ausdruck
         assertEquals(FormelLatexCodec.exportiere(original), FormelLatexCodec.exportiere(erneut))
+    }
+
+    @Test
+    fun `iterations restriktions und divisionsnotation roundtrip`() {
+        val faelle = listOf(
+            "f^{(4)}" to "iteration.differentiation",
+            "f^{\\mathrm{IV}}" to "iteration.differentiation",
+            "f^{\\langle 3\\rangle}" to "iteration.selbstkomposition",
+            "f\\vert_{M}" to "methode.einschraenkung",
+            "a\\div_R b" to "algebra.division.rechts",
+            "a\\div_L b" to "algebra.division.links",
+            "\\pm x" to "algebra.vorzeichen.plusMinus",
+            "\\mp x" to "algebra.vorzeichen.minusPlus",
+        )
+        faelle.forEach { (latex, operatorId) ->
+            val importiert = assertIs<FormelLatexImportErgebnis.Erfolg>(FormelLatexCodec.importiere(latex)).ausdruck
+            assertEquals(operatorId, assertIs<FormelAusdruck.Operation>(importiert).operatorId)
+            assertIs<FormelLatexImportErgebnis.Erfolg>(FormelLatexCodec.importiere(FormelLatexCodec.exportiere(importiert)))
+        }
     }
 
     @Test

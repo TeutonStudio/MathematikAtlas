@@ -77,8 +77,10 @@ class DesktopAtlasZustand(
     }
 
     fun rendererFür(knoten: KnotenDaten): KnotenRenderer =
-        MathematikKnotenRenderer { auswertung.knoten[it.id] }
-            .mitAuswertungszeit { auswertung.knoten[it.id] }
+        MathematikKnotenRenderer(
+            ergebnisFür = { auswertung.knoten[it.id] },
+            beiKnotenKlick = { editor.wähleKnoten(it.id) },
+        ).mitAuswertungszeit { auswertung.knoten[it.id] }
 
     fun schließeMeldung() { meldung = null }
 }
