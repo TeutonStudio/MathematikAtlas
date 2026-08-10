@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 
 class MengenraumKnotenTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
+    private fun dimensionen(vararg werte: Long) = werte.map(RationaleZahl::von)
 
     @Test
     fun `alle Mengenraumknoten besitzen Menge Ausgänge und registrierte Auswerter`() {
@@ -66,7 +67,7 @@ class MengenraumKnotenTest {
         val vektor = register.finde(vektorKnoten.art)!!.auswerten(
             KnotenAuswertungsKontext(vektorKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
-        assertEquals(Tensorraum(ReelleZahlen, listOf(4)), vektor)
+        assertEquals(Tensorraum(ReelleZahlen, dimensionen(4)), vektor)
 
         val matrixKnoten = MengenraumKnotenVorlagen.Matrizenraum.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("zeilen" to "2", "spalten" to "5"),
@@ -82,7 +83,7 @@ class MengenraumKnotenTest {
         val tensor = register.finde(tensorKnoten.art)!!.auswerten(
             KnotenAuswertungsKontext(tensorKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
-        assertEquals(Tensorraum(ReelleZahlen, listOf(2, 3, 4)), tensor)
+        assertEquals(Tensorraum(ReelleZahlen, dimensionen(2, 3, 4)), tensor)
     }
 
     @Test
