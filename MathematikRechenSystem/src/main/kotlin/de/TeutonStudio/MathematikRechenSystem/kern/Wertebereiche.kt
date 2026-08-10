@@ -63,11 +63,11 @@ fun inferiereZielmenge(
         elementMenge = maximaleZahlenGrundmenge(
             ausdruck.werte.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) },
         ),
-        dimensionen = ausdruck.dimensionen,
+        dimensionen = ausdruck.dimensionen.map { RationaleZahl.von(it.toLong()) },
     )
     is Tensorartig -> Tensorraum(
         elementMenge = ausdruck.tensorZahlBereich,
-        dimensionen = ausdruck.tensorForm,
+        dimensionen = ausdruck.tensorForm.map { RationaleZahl.von(it.toLong()) },
     )
     is GeometrischerAusdruck -> BenannteMenge("geometrie_${ausdruck.raum.id}", "\\mathcal{G}(${ausdruck.raum.id})")
     is EuklidischerRaum -> BenannteMenge("euklidische_raeume", "\\mathfrak{E}")
