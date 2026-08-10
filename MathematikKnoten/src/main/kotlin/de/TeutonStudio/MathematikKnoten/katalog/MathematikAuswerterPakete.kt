@@ -4,6 +4,14 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikKartenAdapter.registriereMethodenArgumente
 import de.TeutonStudio.MathematikKnoten.*
 
+/**
+ * Benannte Registrierungseinheit für einen fachlich zusammengehörenden Teil des
+ * Mathematik-Auswerterregisters.
+ *
+ * Die Reihenfolge ist Teil des Vertrags: spätere Verfeinerungspakete dürfen
+ * bewusst zuvor registrierte Auswerter umschließen oder ersetzen. Dieser
+ * Mechanismus macht diese bisher nur implizite Reihenfolge sichtbar und testbar.
+ */
 data class MathematikAuswerterPaket(
     val name: String,
     val registrieren: MathematikAuswerterRegister.() -> Unit,
@@ -14,6 +22,7 @@ data class MathematikAuswerterPaket(
 }
 
 object StandardMathematikAuswerterPakete {
+    /** Additive fachliche Registrierungen ohne beabsichtigte finale Wrapperrolle. */
     val basis: List<MathematikAuswerterPaket> = listOf(
         MathematikAuswerterPaket("zahlenrechner") { registriereUniversellenZahlenRechner() },
         MathematikAuswerterPaket("zahlenrechner-erweiterungen") { registriereZahlenRechnerErweiterungen() },
@@ -36,8 +45,6 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("integral") { registriereIntegralKnoten() },
         MathematikAuswerterPaket("restriktion") { registriereRestriktionsKnoten() },
         MathematikAuswerterPaket("methodengraph") { registriereMethodenGraphKnoten() },
-        MathematikAuswerterPaket("tangentialobjekt") { registriereTangentialKnoten() },
-        MathematikAuswerterPaket("rand") { registriereRandKnoten() },
         MathematikAuswerterPaket("methodenargumente") { registriereMethodenArgumente() },
         MathematikAuswerterPaket("mathematische-eigenschaften") { registriereMathematischeEigenschaften() },
         MathematikAuswerterPaket("exakte-eigenschaften") { registriereExakteEigenschaftsAuswertung() },
@@ -45,6 +52,10 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("mengeneigenschaften") { registriereMengenEigenschaftsAuswertung() },
     )
 
+    /**
+     * Bewusst nachgelagerte Adapter. Ihre Reihenfolge darf nicht alphabetisch
+     * sortiert werden, weil mehrere Pakete bestehende Auswerter verfeinern.
+     */
     val verfeinerungen: List<MathematikAuswerterPaket> = listOf(
         MathematikAuswerterPaket("konsolidierte-knoten") { registriereKonsolidierteKnoten() },
         MathematikAuswerterPaket("skalarprodukt-verfeinerung") { registriereSkalarproduktErweiterungen() },
