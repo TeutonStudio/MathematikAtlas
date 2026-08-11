@@ -21,7 +21,7 @@ internal enum class RechnerOperatorBestätigungsAktion {
 internal data class RechnerOperatorAuswahlEintrag(
     val id: String,
     val titel: String,
-    val symbolLatex: String,
+    var symbolLatex: String,
     val kategorie: String,
     val beschreibung: String,
     val suchbegriffe: Set<String> = emptySet(),
@@ -36,6 +36,7 @@ internal data class RechnerOperatorAuswahlEintrag(
         require(art != RechnerOperatorAuswahlArt.OPERATOR || kandidat != null) {
             "Ein Operator benötigt einen konfigurierten Kandidatenknoten."
         }
+        symbolLatex = normalisiereOperatorVorschau(kategorie, symbolLatex)
     }
 
     val eingänge: List<AnschlussDaten>
@@ -72,6 +73,34 @@ internal data class RechnerOperatorAuswahlEintrag(
             yield(anschluss.name)
             yield(anschluss.art.wert)
         }
+    }
+}
+
+/**
+ * Im Operatorwahldialog sind A, B, M, I usw. keine mathematischen Konstanten,
+ * sondern Platzhalter für spätere Anschlusswerte. Wie beim Zahlenrechner werden
+ * sie deshalb als \dots dargestellt. Definitionskarten bleiben unverändert.
+ */
+private fun normalisiereOperatorVorschau(kategorie: String, latex: String): String {
+    if ("Mengenoperator" !in kategorie) return latex
+    return when (latex.replace(" ", "")) {
+        "A\\capB" -> "(\\dots)\\cap(\\dots)"
+        "A\\cupB" -> "(\\dots)\\cup(\\dots)"
+        "A\\setminusB" -> "(\\dots)\\setminus(\\dots)"
+        "A\\timesB" -> "(\\dots)\\times(\\dots)"
+        "U\\setminusA" -> "(\\dots)\\setminus(\\dots)"
+        "\\mathcal{P}(M)" -> "\\mathcal{P}(\\dots)"
+        "M^A" -> "(\\dots)^{(\\dots)}"
+        "M^{\\mathbbZ}", "M^{\\mathbb{Z}}" -> "(\\dots)^{\\mathbb{Z}}"
+        "M^{\\mathbbN_0}", "M^{\\mathbb{N}_0}" -> "(\\dots)^{\\mathbb{N}_0}"
+        "M\\divr" -> "(\\dots)\\div(\\dots)"
+        "f(A)" -> "(\\dots)(\\dots)"
+        "f^{-1}(A)" -> "(\\dots)^{-1}(\\dots)"
+        "\\mathop{\\Large\\times}\\limits_{i\\inI}A(i)" ->
+            "\\mathop{\\Large\\times}\\limits_{i\\in\\dots}(\\dots)(i)"
+        "\\bigcup\\limits_{i\\inI}A(i)" -> "\\bigcup\\limits_{i\\in\\dots}(\\dots)(i)"
+        "\\bigcap\\limits_{i\\inI}A(i)" -> "\\bigcap\\limits_{i\\in\\dots}(\\dots)(i)"
+        else -> latex
     }
 }
 
