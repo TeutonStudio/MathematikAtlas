@@ -51,8 +51,8 @@ object MathematikTypVisualResolver : TypVisualResolver {
         MathematikTypen.Menge -> {
             val element = typ.argumente.firstOrNull()?.let(::beschreibe) ?: TypVisualDescriptor("?", "Unbekannter Elementtyp")
             TypVisualDescriptor(
-                kurztext = "𝒫(${element.kurztext})",
-                tooltip = "Menge von ${element.tooltip}",
+                kurztext = "M⟨${element.kurztext}⟩",
+                tooltip = "Menge mit Elementtyp ${element.tooltip}",
                 segmente = listOf(TypVisualSegment(MathematikTypen.Menge.wert, "M")),
             )
         }
