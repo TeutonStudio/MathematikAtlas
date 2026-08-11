@@ -36,8 +36,16 @@ data class AnschlussDaten(
     val name: String,
     val richtung: AnschlussRichtung = AnschlussRichtung.Neutral,
     val kante: AnschlussKante,
+    /**
+     * Grobe Anschlusskategorie für Editor, Fallback und Legacykarten. Der
+     * konkrete fachliche Werttyp liegt in [vertrag].
+     */
     val art: AnschlussArtId,
     val reihenfolge: Int = 0,
+    /** Semantischer Typ und orthogonale Struktur-/Eigenschaftsanforderungen. */
+    val vertrag: AnschlussVertrag = AnschlussVertrag(),
+    /** Optionale semantische Typinferenz aus anderen Anschlüssen desselben Knotens. */
+    val typInferenz: TypInferenzRegel? = null,
     /** Erlaubt dem Editor, beim Ziehen einer kompatiblen Verbindung einen weiteren Eingang anzubieten. */
     val kannSichErweitern: Boolean = false,
     /** Kennzeichnet einen vom Editor erzeugten, nur bei bestehender Verbindung erhaltenen Eingang. */
