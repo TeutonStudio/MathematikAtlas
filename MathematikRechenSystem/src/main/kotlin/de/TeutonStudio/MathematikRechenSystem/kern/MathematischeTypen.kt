@@ -29,11 +29,9 @@ object MathematischeTypen {
     val Quaternion = TypId("mathematik.zahl.quaternion")
 
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
-        // Tupel sind variadisch und komponentenweise kovariant.
         TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(KartesischesTupel, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(PolarTupel, standardVarianz = TypVarianz.Kovariant),
-        // Einheit und Dimensionsbezug eines Winkels sind invariant.
         TypKonstruktorDefinition(Angulus, standardVarianz = TypVarianz.Invariant),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
@@ -97,6 +95,7 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     RationaleZahlen -> TypAusdruck.Atom(MathematischeTypen.Rational)
     ReelleZahlen, is ReellesIntervall -> TypAusdruck.Atom(MathematischeTypen.Reell)
     KomplexeZahlen -> TypAusdruck.Atom(MathematischeTypen.Komplex)
+    is AngulusRaum -> MathematischeTypen.angulusTyp(einheit, dimensionen)
     is Tupelraum -> TypAusdruck.Parameterisiert(
         MathematischeTypen.Tupel,
         komponenten.map(MengenAusdruck::elementTypAusdruck),
