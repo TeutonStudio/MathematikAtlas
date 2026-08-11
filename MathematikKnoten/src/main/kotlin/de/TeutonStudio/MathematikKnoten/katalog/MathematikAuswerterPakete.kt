@@ -76,14 +76,15 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("vektor-orientierung") { registriereVektorOrientierungsKnoten() },
         MathematikAuswerterPaket("multinomvektor") { registriereMultinomVektor() },
         MathematikAuswerterPaket("polynom-multinom-vertrag") { registrierePolynomMultinomVertrag() },
-        MathematikAuswerterPaket("rechner-methodenhebung") { registriereRechnerMethodenHebung() },
         MathematikAuswerterPaket("angulus-zahlenrechner") { registriereAngulusZahlenRechner() },
+        MathematikAuswerterPaket("rechner-methodenhebung") { registriereRechnerMethodenHebung() },
     )
 
     val alle: List<MathematikAuswerterPaket>
         get() = basis + verfeinerungen
 
     fun installiereIn(register: MathematikAuswerterRegister) {
-        alle.forEach { paket -> paket.installiereIn(register) }
+        alle.forEach { paket -> paket.installiereIn(register)
+        }
     }
 }
