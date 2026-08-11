@@ -46,6 +46,7 @@ open class StandardTypSystem(
         val z = normalisiere(ziel)
         if (z == TypAusdruck.Beliebig) return TypPrüfung.Kompatibel
         if (q == TypAusdruck.Unbekannt || z == TypAusdruck.Unbekannt) return TypPrüfung.Unbestimmt
+        if (q is TypAusdruck.Variable || z is TypAusdruck.Variable) return TypPrüfung.Unbestimmt
         if (q == TypAusdruck.Beliebig) return if (z == TypAusdruck.Beliebig) {
             TypPrüfung.Kompatibel
         } else {
@@ -73,6 +74,16 @@ open class StandardTypSystem(
         if (q is TypAusdruck.Atom && z is TypAusdruck.Atom) {
             return if (istAtomUntertyp(q.id, z.id)) TypPrüfung.Kompatibel
             else TypPrüfung.Inkompatibel("${q.id} ist kein Untertyp von ${z.id}.")
+        }
+
+        // Ein parametrisierter Typ ist zugleich Instanz seines Konstruktortyps,
+        // z.B. Methode<(R),R> <: Methode. Das hält grobe Methodenports offen,
+        // während konkrete Signaturen trotzdem präzise geprüft werden können.
+        if (q is TypAusdruck.Parameterisiert && z is TypAusdruck.Atom && istAtomUntertyp(q.konstruktor, z.id)) {
+            return TypPrüfung.Kompatibel
+        }
+        if (q is TypAusdruck.Atom && z is TypAusdruck.Parameterisiert && istAtomUntertyp(q.id, z.konstruktor)) {
+            return TypPrüfung.Unbestimmt
         }
 
         if (q is TypAusdruck.Parameterisiert && z is TypAusdruck.Parameterisiert) {
@@ -134,7 +145,8 @@ open class StandardTypSystem(
             val ids = normalisiert.map { (it as TypAusdruck.Atom).id }
             return gemeinsameAtomOberart(ids)?.let(TypAusdruck::Atom)
         }
-        val erste = normalisiert.first() as? TypAusdruck.Parameterisiert ?: return normalisiere(TypAusdruck.Vereinigung(normalisiert))
+        val erste = normalisiert.first() as? TypAusdruck.Parameterisiert
+            ?: return normalisiere(TypAusdruck.Vereinigung(normalisiert))
         val parameterisierte = normalisiert.mapNotNull { it as? TypAusdruck.Parameterisiert }
         if (parameterisierte.size == normalisiert.size && parameterisierte.all {
                 it.konstruktor == erste.konstruktor && it.argumente.size == erste.argumente.size
@@ -142,10 +154,11 @@ open class StandardTypSystem(
             val definition = konstruktorNachId[erste.konstruktor]
             val argumente = erste.argumente.indices.map { index ->
                 if (definition?.varianzen?.getOrNull(index) == TypVarianz.Kovariant) {
-                    gemeinsameOberart(parameterisierte.map { it.argumente[index] }) ?: return@map erste.argumente[index]
+                    gemeinsameOberart(parameterisierte.map { it.argumente[index] }) ?: erste.argumente[index]
                 } else {
                     val werte = parameterisierte.map { it.argumente[index] }.distinct()
-                    if (werte.size == 1) werte.single() else return normalisiere(TypAusdruck.Vereinigung(normalisiert))
+                    if (werte.size == 1) werte.single()
+                    else return normalisiere(TypAusdruck.Vereinigung(normalisiert))
                 }
             }
             return TypAusdruck.Parameterisiert(erste.konstruktor, argumente)
