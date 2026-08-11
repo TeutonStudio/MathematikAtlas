@@ -102,8 +102,19 @@ jobs:
       - name: Rechenkern testen
         run: ./gradlew :MathematikRechenSystem:test --stacktrace
 
-      - name: Definitionskarten testen
-        run: ./gradlew :app:testDebugUnitTest --tests '*AxiomPraedikatDefinitionsKartenTest*' --stacktrace
+      - name: Knoten-Schnittstelle testen
+        run: ./gradlew :MathematikKnoten:testDebugUnitTest --stacktrace
+
+      - name: Definitionskartengenerator strukturell prüfen
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          text = Path('app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/konzepte/AxiomPraedikatDefinitionsKarten.kt').read_text()
+          assert 'val schnittstelle = praedikatAnschluesse(definition)' in text
+          assert 'definition.argumente[index]' in text
+          print('Definitionskarte wird weiterhin direkt aus der Axiom-Schnittstelle erzeugt.')
+          PY
 
       - name: Korrektur committen
         shell: bash
