@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,10 @@ fun TypMiniGrafik(
     val segmente = descriptor.segmente.ifEmpty {
         listOf(TypVisualSegment(descriptor.kurztext, descriptor.kurztext))
     }
-    val farben = segmente.map(farbeFürSegment)
+    val farben = ArrayList<Color>(segmente.size)
+    for (segment in segmente) farben += farbeFürSegment(segment)
+    val umriss = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+    val textFarbe = MaterialTheme.colorScheme.onSurface
     Box(
         modifier = modifier
             .height(18.dp)
@@ -58,11 +62,11 @@ fun TypMiniGrafik(
                     }
                 }
             }
-            drawRect(MaterialTheme.colorScheme.outline.copy(alpha = 0.55f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
+            drawRect(umriss, style = Stroke(1.dp.toPx()))
         }
         Text(
             text = descriptor.kurztext,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = textFarbe,
             fontSize = 9.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
