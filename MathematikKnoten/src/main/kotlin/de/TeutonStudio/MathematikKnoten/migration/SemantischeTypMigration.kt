@@ -63,4 +63,4 @@ fun KnotenVorlage.migriereSemantischeTypen(): KnotenVorlage =
     copy(anschlüsse = anschlüsse.map(AnschlussDaten::migriereSemantischenTyp))
 
 fun KartenDaten.migriereSemantischeTypen(): KartenDaten =
-    copy(knoten = knoten.map(KnotenDaten::migriereSemantischenTypen))
+    copy(knoten = knoten.map(KnotenDaten::migriereSemantischeTypen))
