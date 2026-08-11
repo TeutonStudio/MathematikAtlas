@@ -62,5 +62,8 @@ val ErweiterterZahlenOperator.vorschauLatex: String
         ErweiterterZahlenOperator.COTANGENS_HYPERBOLICUS -> "\\coth(\\dots)"
         ErweiterterZahlenOperator.SEKANS_HYPERBOLICUS -> "\\operatorname{sech}(\\dots)"
         ErweiterterZahlenOperator.KOSEKANS_HYPERBOLICUS -> "\\operatorname{csch}(\\dots)"
-        ErweiterterZahlenOperator.POLYNOM -> "(c_i)_i\\cdot\\vec{x}"
+        ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL -> "\\operatorname{AM}(\\dots,\\dots)"
+        ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL -> "\\operatorname{GM}(\\dots,\\dots)"
+        ErweiterterZahlenOperator.STAMMFUNKTION -> "F(x)=\\int_{[c,x]}f(t)\\,\\mathrm dt"
+        ErweiterterZahlenOperator.POLYNOM -> "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb N_0^{\\leq n}"
     }
