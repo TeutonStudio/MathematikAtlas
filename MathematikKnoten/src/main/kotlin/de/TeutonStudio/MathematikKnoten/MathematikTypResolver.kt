@@ -59,15 +59,29 @@ object MathematikTypResolver {
         )
     }
 
+    /** Konkrete Laufzeitwerte tragen, soweit ableitbar, auch Dimension/Form im Typ. */
     fun objektTyp(objekt: MathematischesObjekt): TypAusdruck = when (objekt) {
         is RationaleZahl -> MathematikTypen.rationaleZahl
         is ZahlAusdruck -> MathematikTypen.zahl
         is Aussage -> MathematikTypen.aussage
         is MengenAusdruck -> mengenObjektTyp(objekt)
-        is SpaltenVektor -> MathematikTypen.spaltenVektor
-        is ZeilenVektor -> MathematikTypen.zeilenVektor
-        is Matrix -> MathematikTypen.matrix
-        is Tensor -> MathematikTypen.tensor
+        is SpaltenVektor -> MathematikTypen.spaltenVektor(
+            elementTyp(objekt.tensorZahlBereich),
+            objekt.werte.size,
+        )
+        is ZeilenVektor -> MathematikTypen.zeilenVektor(
+            elementTyp(objekt.tensorZahlBereich),
+            objekt.werte.size,
+        )
+        is Matrix -> MathematikTypen.matrix(
+            elementTyp(objekt.tensorZahlBereich),
+            objekt.zeilenAnzahl,
+            objekt.spaltenAnzahl,
+        )
+        is Tensor -> MathematikTypen.tensor(
+            elementTyp(objekt.tensorZahlBereich),
+            objekt.dimensionen.map(Int::toString),
+        )
         is Tupel -> TypAusdruck.Parameterisiert(TypKernIds.Tupel, objekt.elemente.map(::objektTyp))
         else -> TypAusdruck.Unbekannt
     }
