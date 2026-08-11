@@ -3,7 +3,7 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
-/** Gemeinsamer Laufzeitvertrag für dynamisch typisierte Mathematikausgänge. */
+/** Gemeinsamer Laufzeitvertrag für dynamisch typisierte Atlas-Ausgänge. */
 fun anschlussArtFürMathematischesObjekt(objekt: MathematischesObjekt): AnschlussArtId = when (objekt) {
     is ZahlAusdruck -> MathematikAnschlussArten.Zahl.id
     is Aussage -> MathematikAnschlussArten.Aussage.id
@@ -13,6 +13,8 @@ fun anschlussArtFürMathematischesObjekt(objekt: MathematischesObjekt): Anschlus
     is Matrix -> MathematikAnschlussArten.Matrix.id
     is Tensor -> MathematikAnschlussArten.Tensor.id
     is Tupel -> MathematikAnschlussArten.Tupel.id
+    is SvgGrafik -> MathematikAnschlussArten.SvgGrafik.id
+    is SvgStil -> MathematikAnschlussArten.SvgStil.id
     is Methode -> MathematikAnschlussArten.Methode.id
     is TypisiertesElement -> AnschlussArtId(objekt.anschlussArt)
     else -> MathematikAnschlussArten.Objekt.id
