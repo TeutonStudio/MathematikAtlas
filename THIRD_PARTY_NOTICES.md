@@ -6,6 +6,8 @@ Die in `MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/GodotS
 enthaltenen Vektorpfade der Godot-Strukturtyp-Etiketten wurden aus den gleichnamigen
 SVG-Dateien unter `godotengine/godot/editor/icons` übernommen.
 
+Extraktionsstand: Godot-Commit `2f2a9f4cc6ecba0d802c5f4ca46f0d6d4d88a18b`.
+
 Verwendete EditorIcons:
 
 - `Vector2.svg`
