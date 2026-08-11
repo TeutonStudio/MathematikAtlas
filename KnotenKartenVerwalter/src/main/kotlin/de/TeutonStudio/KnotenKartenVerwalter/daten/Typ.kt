@@ -12,6 +12,11 @@ value class TypVariablenId(val wert: String) {
     override fun toString(): String = wert
 }
 
+/** Fachneutrale Konstruktor-IDs, die auch außerhalb der Mathematik wiederverwendbar sind. */
+object TypKernIds {
+    val Tupel = TypId("kern.tupel")
+}
+
 /**
  * Fachneutraler semantischer Typausdruck eines Anschlusses.
  *
