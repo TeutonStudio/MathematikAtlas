@@ -37,6 +37,7 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("geometrie-transformationen") { registriereGeometrieTransformationen() },
         MathematikAuswerterPaket("mengenraeume") { registriereMengenraumKnoten() },
         MathematikAuswerterPaket("mengen-operatoren") { registriereMengenOperatorKnoten() },
+        MathematikAuswerterPaket("praedikat") { registrierePraedikatKnoten() },
         MathematikAuswerterPaket("aussagenlogik") { registriereAussagenLogikKnoten() },
         MathematikAuswerterPaket("strukturrechner") { registriereStrukturRechnerKnoten() },
         MathematikAuswerterPaket("lineare-strukturen") { registriereLineareStrukturErweiterungen() },
