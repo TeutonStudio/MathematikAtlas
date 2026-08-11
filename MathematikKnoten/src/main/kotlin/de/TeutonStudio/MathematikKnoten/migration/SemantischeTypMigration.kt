@@ -26,19 +26,23 @@ fun AnschlussDaten.migriereSemantischenTyp(): AnschlussDaten {
         }
     }
 
+    // Lokale Bindungen sind für Smart-Casts über die Modulgrenze erforderlich.
+    val artAbbildung = artAbbildungVonEingang
+    val gefolgterEingang = artFolgtEingang
+    val priorisierung = artPriorisiertEingänge
     val migrierteInferenz = typInferenz ?: when {
-        artAbbildungVonEingang != null -> TypInferenzRegel.AbbildungVonEingang(
-            eingang = artAbbildungVonEingang.eingang,
-            abbildung = artAbbildungVonEingang.abbildung.mapKeys { (von, _) ->
+        artAbbildung != null -> TypInferenzRegel.AbbildungVonEingang(
+            eingang = artAbbildung.eingang,
+            abbildung = artAbbildung.abbildung.mapKeys { (von, _) ->
                 TypAusdruck.Atom(TypId(MathematikAnschlussArten.normalisiereMethodenArt(von).wert))
             }.mapValues { (_, zu) ->
                 TypAusdruck.Atom(TypId(MathematikAnschlussArten.normalisiereMethodenArt(zu).wert))
             },
         )
-        artFolgtEingang != null -> TypInferenzRegel.FolgtEingang(artFolgtEingang)
-        artPriorisiertEingänge != null -> TypInferenzRegel.Priorisierung(
-            eingänge = artPriorisiertEingänge.eingänge,
-            prioritäten = artPriorisiertEingänge.prioritäten.map { priorität ->
+        gefolgterEingang != null -> TypInferenzRegel.FolgtEingang(gefolgterEingang)
+        priorisierung != null -> TypInferenzRegel.Priorisierung(
+            eingänge = priorisierung.eingänge,
+            prioritäten = priorisierung.prioritäten.map { priorität ->
                 TypAusdruck.Atom(TypId(MathematikAnschlussArten.normalisiereMethodenArt(priorität).wert))
             },
         )
@@ -59,4 +63,4 @@ fun KnotenVorlage.migriereSemantischeTypen(): KnotenVorlage =
     copy(anschlüsse = anschlüsse.map(AnschlussDaten::migriereSemantischenTyp))
 
 fun KartenDaten.migriereSemantischeTypen(): KartenDaten =
-    copy(knoten = knoten.map(KnotenDaten::migriereSemantischeTypen))
+    copy(knoten = knoten.map(KnotenDaten::migriereSemantischenTypen))
