@@ -59,7 +59,7 @@ class MathematikTypSystemTest {
     }
 
     @Test
-    fun abbildungsmenge_wird_als_methodentyp_aufgeloest() {
+    fun abbildungsmenge_wird_als_einstelliger_methodentyp_aufgeloest() {
         val raum = Abbildungsmenge(
             zielMenge = ReelleZahlen,
             definitionsMenge = KomplexeZahlen,
@@ -68,7 +68,10 @@ class MathematikTypSystemTest {
             TypAusdruck.Parameterisiert(
                 MathematikTypen.Methode,
                 listOf(
-                    TypAusdruck.Atom(MathematikTypen.C),
+                    TypAusdruck.Parameterisiert(
+                        MathematikTypen.Tupel,
+                        listOf(TypAusdruck.Atom(MathematikTypen.C)),
+                    ),
                     TypAusdruck.Atom(MathematikTypen.R),
                 ),
             ),
