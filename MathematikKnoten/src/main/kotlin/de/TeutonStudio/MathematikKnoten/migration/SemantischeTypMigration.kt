@@ -18,6 +18,11 @@ fun KartenDaten.migriereSemantischeTypverträge(): KartenDaten = copy(
     },
 )
 
+/** Neu erzeugte Knoten erhalten denselben Vertrag bereits vor dem ersten Speichern. */
+fun KnotenVorlage.mitSemantischenStandardverträgen(): KnotenVorlage = copy(
+    anschlüsse = anschlüsse.map { it.mitSemantischemStandardvertrag() },
+)
+
 fun AnschlussDaten.mitSemantischemStandardvertrag(): AnschlussDaten {
     val normalisierteArt = MathematikAnschlussArten.normalisiereMethodenArt(art)
     val fallbackTyp = if (zulässigeArten.isNotEmpty()) {
