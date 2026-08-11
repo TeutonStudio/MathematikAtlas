@@ -76,10 +76,12 @@ class MathematikTypSystem : StandardTypSystem(
         AtomTypDefinition(MathematikTypen.Methode, MathematikTypen.Objekt),
     ),
     konstruktoren = listOf(
-        TypKonstruktorDefinition(TypKernIds.Tupel),
+        // Produkttypen sind komponentenweise kovariant. Die Kontravarianz eines
+        // Methoden-Wertevorrats wird eine Ebene darüber durch Methode festgelegt.
+        TypKonstruktorDefinition(TypKernIds.Tupel, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(
             MathematikTypen.Methode,
-            listOf(TypVarianz.Kontravariant, TypVarianz.Kovariant),
+            varianzen = listOf(TypVarianz.Kontravariant, TypVarianz.Kovariant),
         ),
     ),
     anschlussArtTypen = mapOf(
@@ -93,7 +95,9 @@ class MathematikTypSystem : StandardTypSystem(
         MathematikAnschlussArten.ZeilenVektor.id to MathematikTypen.zeilenVektor,
         MathematikAnschlussArten.Matrix.id to MathematikTypen.matrix,
         MathematikAnschlussArten.Tensor.id to MathematikTypen.tensor,
-        MathematikAnschlussArten.Tupel.id to TypAusdruck.Parameterisiert(TypKernIds.Tupel, emptyList()),
+        // Ein generischer Tupelport kennt seine Komponenten noch nicht. Die
+        // grobe AnschlussArt hält ihn dennoch auf Tupel beschränkt.
+        MathematikAnschlussArten.Tupel.id to TypAusdruck.Unbekannt,
         MathematikAnschlussArten.Methode.id to TypAusdruck.Atom(MathematikTypen.Methode),
     ) + MathematikAnschlussArten.historischeMethodenIds.associateWith {
         TypAusdruck.Atom(MathematikTypen.Methode)
