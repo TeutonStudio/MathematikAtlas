@@ -63,6 +63,7 @@ object KanonischerMathematikKnotenKatalog {
                 TangentialKnotenVorlagen.alle
             )
             .map(::methodenfaehigeRechnerVorlage)
+            .map { it.mitSemantischenStandardverträgen() }
             .distinctBy { vorlage ->
                 vorlage.art to listOf(
                     vorlage.standardParameter["operator"].orEmpty(),
