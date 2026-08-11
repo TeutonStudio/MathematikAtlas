@@ -40,10 +40,19 @@ enum class MethodenAlias(val anzeigeName: String) {
     Prädikat("Prädikat"),
 }
 
-/** Anzahl der geordneten Argumentplätze. Sie ist ausdrücklich kein Dimensionsbegriff. */
+/**
+ * Anzahl der geordneten Argumentplätze. Sie ist ausdrücklich kein Dimensionsbegriff.
+ *
+ * Bei der klassischen mathematischen Implementierung ist die Stelligkeit bereits aus
+ * der Parameterliste bekannt und bleibt deshalb auch ohne bekannte Wertevorräte
+ * auslesbar. Andere Methoden dürfen sie über eine vollständige Signatur bereitstellen.
+ */
 val Methode.argumentAnzahl: Int
-    get() = (this as? SignaturtragendeMethode)?.signatur?.argumente?.size
-        ?: error("Die Methode '$name' stellt noch keine mathematische Signatur bereit.")
+    get() = when (this) {
+        is MathematischeMethode -> parameter.size
+        is SignaturtragendeMethode -> signatur.argumente.size
+        else -> error("Die Methode '$name' stellt noch keine mathematische Signatur bereit.")
+    }
 
 /**
  * Gemeinsame Signaturgrenze. Direkte Feldrekonstruktion bleibt ausschließlich Sache
