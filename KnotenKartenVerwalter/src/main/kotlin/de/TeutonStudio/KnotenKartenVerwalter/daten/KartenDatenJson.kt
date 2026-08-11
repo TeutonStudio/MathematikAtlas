@@ -26,11 +26,6 @@ object KartenDatenJson {
 
     fun lese(text: String): KartenDaten = lese(JSONObject(text))
 
-    /**
-     * Dekodiert einen bereits geparsten Objektbaum. Editoren und Importpipelines
-     * können dadurch Syntax- und Schemaprüfung innerhalb einer Textrevision mit
-     * genau einem vollständigen JSON-Parse durchführen.
-     */
     fun lese(json: JSONObject): KartenDaten {
         val ansicht = json.optJSONObject("ansicht")
         return KartenDaten(
@@ -94,9 +89,7 @@ object KartenDatenJson {
                         put("artAbbildungVonEingang", JSONObject().apply {
                             put("eingang", regel.eingang)
                             put("abbildung", JSONObject().apply {
-                                regel.abbildung.entries.sortedBy { it.key.wert }.forEach { (von, zu) ->
-                                    put(von.wert, zu.wert)
-                                }
+                                regel.abbildung.entries.sortedBy { it.key.wert }.forEach { (von, zu) -> put(von.wert, zu.wert) }
                             })
                         })
                     }
@@ -164,9 +157,7 @@ object KartenDatenJson {
                         val prioritäten = regel.optJSONArray("prioritäten") ?: JSONArray()
                         AnschlussArtPriorisierung(
                             eingänge = List(eingänge.length()) { index -> eingänge.getString(index) },
-                            prioritäten = List(prioritäten.length()) { index ->
-                                AnschlussArtId(prioritäten.getString(index))
-                            },
+                            prioritäten = List(prioritäten.length()) { index -> AnschlussArtId(prioritäten.getString(index)) },
                         )
                     },
                 )
@@ -180,9 +171,7 @@ object KartenDatenJson {
 
     private fun anschlussVertragZuJson(vertrag: AnschlussVertrag) = JSONObject().apply {
         put("typ", typZuJson(vertrag.typ))
-        put("anforderungen", JSONArray().apply {
-            vertrag.anforderungen.forEach { put(anforderungZuJson(it)) }
-        })
+        put("anforderungen", JSONArray().apply { vertrag.anforderungen.forEach { put(anforderungZuJson(it)) } })
     }
 
     private fun anschlussVertragVonJson(json: JSONObject) = AnschlussVertrag(
@@ -197,6 +186,10 @@ object KartenDatenJson {
             is TypAusdruck.Atom -> {
                 put("art", "atom")
                 put("id", typ.id.wert)
+            }
+            is TypAusdruck.Literal -> {
+                put("art", "literal")
+                put("wert", typ.wert)
             }
             is TypAusdruck.Parameterisiert -> {
                 put("art", "parameterisiert")
@@ -217,6 +210,7 @@ object KartenDatenJson {
     private fun typVonJson(json: JSONObject): TypAusdruck = when (json.optString("art")) {
         "beliebig" -> TypAusdruck.Beliebig
         "atom" -> TypAusdruck.Atom(TypId(json.getString("id")))
+        "literal" -> TypAusdruck.Literal(json.getString("wert"))
         "parameterisiert" -> TypAusdruck.Parameterisiert(
             konstruktor = TypId(json.getString("konstruktor")),
             argumente = json.optJSONArray("argumente").zuListe(::typVonJson),
@@ -299,8 +293,7 @@ object KartenDatenJson {
         .put("kartenId", kartenId.wert)
         .put("version", version)
 
-    private fun JSONObject.zuKartenVerweis() =
-        KartenVerweis(KartenId(getString("kartenId")), getInt("version"))
+    private fun JSONObject.zuKartenVerweis() = KartenVerweis(KartenId(getString("kartenId")), getInt("version"))
 
     private fun visuelleGruppeZuJson(gruppe: VisuelleKnotenGruppeDaten) = JSONObject().apply {
         put("id", gruppe.id.wert)
