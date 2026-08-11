@@ -62,6 +62,7 @@ object StandardMathematikAuswerterPakete {
      */
     val verfeinerungen: List<MathematikAuswerterPaket> = listOf(
         MathematikAuswerterPaket("konsolidierte-knoten") { registriereKonsolidierteKnoten() },
+        MathematikAuswerterPaket("vektorrechner-erweiterungen") { registriereVektorRechnerErweiterungen() },
         MathematikAuswerterPaket("skalarprodukt-verfeinerung") { registriereSkalarproduktErweiterungen() },
         MathematikAuswerterPaket("strukturformel-rechner") { registriereStrukturFormelRechner() },
         MathematikAuswerterPaket("strukturrechner-kompatibilitaet") { registriereStrukturRechnerKompatibilitaet() },
