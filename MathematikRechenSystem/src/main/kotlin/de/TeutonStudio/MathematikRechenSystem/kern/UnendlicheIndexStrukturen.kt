@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+import de.TeutonStudio.TypSystem.TypAusdruck
+import de.TeutonStudio.TypSystem.TypTragend
+
 /** Ein unendlicher Hyperindex bleibt symbolisch und wird nie in Int oder Long gezwungen. */
 data class HyperNatuerlicherIndex(
     val name: String,
@@ -9,13 +12,20 @@ data class HyperNatuerlicherIndex(
     fun zuLatex(): String = if (unendlich) "$name\\in{}^*\\mathbb N\\setminus\\mathbb N" else name
 }
 
-sealed interface UnendlicheIndexStruktur : MathematischesObjekt {
+sealed interface UnendlicheIndexStruktur : MathematischesObjekt, TypTragend {
     val id: String
     val name: String
     val indexMenge: MengenAusdruck
     val zielMenge: MengenAusdruck
     val vorschrift: Methode
     val nachweislichKonstant: Boolean
+
+    override val typAusdruck: TypAusdruck
+        get() = TypAusdruck.Parameterisiert(
+            MathematischeTypen.UnendlichesTupel,
+            listOf(zielMenge.elementTypAusdruck()),
+        )
+
     fun standardKomponente(index: ZahlAusdruck): MathematischesObjekt
 }
 
