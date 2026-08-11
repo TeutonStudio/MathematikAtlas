@@ -78,14 +78,14 @@ class StandardTypSystemTest {
 
     @Test
     fun `variadische tupel sind komponentenweise kovariant`() {
-        fun t(vararg typen: TypId) = TypAusdruck.Parameterisiert(
+        fun t(typen: List<TypId>) = TypAusdruck.Parameterisiert(
             tupel,
             typen.map(TypAusdruck::Atom),
         )
 
-        assertIs<TypPrüfung.Kompatibel>(system.prüfe(t(r, c), t(c, c)))
-        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(t(c, c), t(r, c)))
-        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(t(r), t(r, c)))
+        assertIs<TypPrüfung.Kompatibel>(system.prüfe(t(listOf(r, c)), t(listOf(c, c))))
+        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(t(listOf(c, c)), t(listOf(r, c))))
+        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(t(listOf(r)), t(listOf(r, c))))
     }
 
     @Test
