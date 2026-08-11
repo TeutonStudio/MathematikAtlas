@@ -61,6 +61,7 @@ object MathematikTypResolver {
 
     /** Konkrete Laufzeitwerte tragen, soweit ableitbar, auch Dimension/Form im Typ. */
     fun objektTyp(objekt: MathematischesObjekt): TypAusdruck = when (objekt) {
+        is Methode -> methodenTyp(objekt)
         is RationaleZahl -> MathematikTypen.rationaleZahl
         is ZahlAusdruck -> MathematikTypen.zahl
         is Aussage -> MathematikTypen.aussage
