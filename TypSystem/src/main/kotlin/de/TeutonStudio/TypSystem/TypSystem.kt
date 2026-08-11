@@ -87,10 +87,8 @@ class StandardTypSystem(
             return TypPrüfung.Inkompatibel("Die Anzahl der Typparameter unterscheidet sich.")
         }
         val definition = konstruktoren[quelle.konstruktor]
-        val varianzen = if (definition?.varianzen?.size == quelle.argumente.size) {
-            definition.varianzen
-        } else {
-            List(quelle.argumente.size) { TypVarianz.Invariant }
+        val varianzen = List(quelle.argumente.size) { index ->
+            definition?.varianzen?.getOrNull(index) ?: definition?.standardVarianz ?: TypVarianz.Invariant
         }
         quelle.argumente.indices.forEach { index ->
             val q = quelle.argumente[index]
