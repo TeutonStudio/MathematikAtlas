@@ -214,8 +214,8 @@ internal object VektorRechnerErweiterterInspektor : KnotenInspektor {
         if (operator == VektorRechnerOperator.DISTANZ) {
             Text("Metrik", style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                val aktuell = VektorMetrik.vonIdOderStandard(knoten.parameter[VEKTOR_RECHNER_METRIK])
-                VektorMetrik.entries.forEach { metrik ->
+                val aktuell = VektorMetriken.vonIdOderStandard(knoten.parameter[VEKTOR_RECHNER_METRIK])
+                VektorMetriken.alle.forEach { metrik ->
                     FilterChip(
                         selected = aktuell == metrik,
                         onClick = { aktionen.parameter(VEKTOR_RECHNER_METRIK, metrik.stabileId) },
