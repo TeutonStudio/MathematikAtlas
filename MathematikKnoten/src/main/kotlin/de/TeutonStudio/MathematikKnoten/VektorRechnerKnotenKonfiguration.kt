@@ -202,10 +202,6 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                 ausgaben = mapOf(ausgangName to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
                 eingänge = kontext.eingänge,
             )
-            is VektorRechnerErgebnis.ObjektWert -> KnotenAuswertungsErgebnis(
-                ausgaben = mapOf(ausgangName to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
-                eingänge = kontext.eingänge,
-            )
             is VektorRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)
         }
     }
