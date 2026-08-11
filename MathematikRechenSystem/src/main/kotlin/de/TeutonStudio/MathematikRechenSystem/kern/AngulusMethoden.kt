@@ -11,8 +11,9 @@ sealed interface AngulusMethodenOperation {
         override val zielMenge = AngulusRaum(AngulusEinheit.RADIAN)
         override fun wendeAn(wert: MathematischesObjekt): Angulus {
             val zahl = wert as? ZahlAusdruck ?: error("Angulus erwartet einen Zahlenwert.")
-            val argument = (zahl as? KomplexeZahl)?.let(::Argument)
-                ?: symbolischerZahlterm("arg-${zahl.zuLatex()}", "\\arg\\left(${zahl.zuLatex()}\\right)")
+            val argument = (zahl as? KomplexeZahl)?.let {
+                de.TeutonStudio.MathematikRechenSystem.kern.Argument(it)
+            } ?: symbolischerZahlterm("arg-${zahl.zuLatex()}", "\\arg\\left(${zahl.zuLatex()}\\right)")
             return Angulus(argument, AngulusEinheit.RADIAN)
         }
     }
@@ -20,15 +21,21 @@ sealed interface AngulusMethodenOperation {
     data object ArcSinus : AngulusMethodenOperation {
         override val name = "arcsin"
         override val zielMenge = AngulusRaum(AngulusEinheit.RADIAN)
-        override fun wendeAn(wert: MathematischesObjekt): Angulus =
-            Angulus(ArcSinus(wert as? ZahlAusdruck ?: error("Arcus Sinus erwartet eine Zahl.")))
+        override fun wendeAn(wert: MathematischesObjekt): Angulus = Angulus(
+            de.TeutonStudio.MathematikRechenSystem.kern.ArcSinus(
+                wert as? ZahlAusdruck ?: error("Arcus Sinus erwartet eine Zahl."),
+            ),
+        )
     }
 
     data object ArcCosinus : AngulusMethodenOperation {
         override val name = "arccos"
         override val zielMenge = AngulusRaum(AngulusEinheit.RADIAN)
-        override fun wendeAn(wert: MathematischesObjekt): Angulus =
-            Angulus(ArcCosinus(wert as? ZahlAusdruck ?: error("Arcus Cosinus erwartet eine Zahl.")))
+        override fun wendeAn(wert: MathematischesObjekt): Angulus = Angulus(
+            de.TeutonStudio.MathematikRechenSystem.kern.ArcCosinus(
+                wert as? ZahlAusdruck ?: error("Arcus Cosinus erwartet eine Zahl."),
+            ),
+        )
     }
 
     data object ArcTangens : AngulusMethodenOperation {
@@ -44,14 +51,14 @@ sealed interface AngulusMethodenOperation {
         override val name = "sin"
         override val zielMenge = ReelleZahlen
         override fun wendeAn(wert: MathematischesObjekt): ZahlAusdruck =
-            Sinus(wert.alsRadian().wert)
+            de.TeutonStudio.MathematikRechenSystem.kern.Sinus(wert.alsRadian().wert)
     }
 
     data object Cosinus : AngulusMethodenOperation {
         override val name = "cos"
         override val zielMenge = ReelleZahlen
         override fun wendeAn(wert: MathematischesObjekt): ZahlAusdruck =
-            Cosinus(wert.alsRadian().wert)
+            de.TeutonStudio.MathematikRechenSystem.kern.Cosinus(wert.alsRadian().wert)
     }
 
     data object Tangens : AngulusMethodenOperation {
