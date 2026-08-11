@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.PathParser
@@ -85,15 +86,14 @@ fun MathematischesObjekt.godotStrukturTyp(
     if (istPlaneStruktur()) return GodotStrukturTyp.PLANE
 
     if (this is Matrix) {
-        return when {
-            zeilenAnzahl == 4 && spaltenAnzahl == 4 -> GodotStrukturTyp.PROJECTION
-            zeilenAnzahl == 3 && spaltenAnzahl == 3 -> GodotStrukturTyp.BASIS
-            else -> null
+        when {
+            zeilenAnzahl == 4 && spaltenAnzahl == 4 -> return GodotStrukturTyp.PROJECTION
+            zeilenAnzahl == 3 && spaltenAnzahl == 3 -> return GodotStrukturTyp.BASIS
         }
     }
 
     val komponenten = numerischeVektorKomponenten() ?: return null
-    val ganzzahlig = komponenten.all(ZahlAusdruck::istExaktGanzzahlig)
+    val ganzzahlig = komponenten.all { it.istExaktGanzzahlig() }
     return when (komponenten.size) {
         2 -> if (ganzzahlig) GodotStrukturTyp.VECTOR2I else GodotStrukturTyp.VECTOR2
         3 -> if (ganzzahlig) GodotStrukturTyp.VECTOR3I else GodotStrukturTyp.VECTOR3
@@ -134,7 +134,7 @@ fun KnotenRenderer.mitGodotStrukturEtiketten(
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
-                        etiketten.forEach(GodotStrukturEtikett::Darstellung)
+                        for (etikett in etiketten) etikett.Darstellung()
                     }
                 }
             }
@@ -189,9 +189,9 @@ private fun ZahlAusdruck.istExaktGanzzahlig(): Boolean =
 
 private fun MathematischesObjekt.alleSkalareGanzzahlig(): Boolean = when (this) {
     is ZahlAusdruck -> istExaktGanzzahlig()
-    is OrientierterVektor -> werte.all(ZahlAusdruck::istExaktGanzzahlig)
-    is Tupel -> elemente.all(MathematischesObjekt::alleSkalareGanzzahlig)
-    is Matrix -> zeilen.flatten().all(ZahlAusdruck::istExaktGanzzahlig)
+    is OrientierterVektor -> werte.all { it.istExaktGanzzahlig() }
+    is Tupel -> elemente.all { it.alleSkalareGanzzahlig() }
+    is Matrix -> zeilen.flatten().all { it.istExaktGanzzahlig() }
     else -> false
 }
 
@@ -323,7 +323,7 @@ internal fun GodotEditorIcon(icon: GodotEditorIcon, modifier: Modifier = Modifie
         val versatzY = (size.height - icon.höhe * faktor) / 2f
         withTransform({
             translate(versatzX, versatzY)
-            scale(faktor, faktor)
+            scale(faktor, faktor, pivot = Offset.Zero)
         }) {
             pfade.forEach { (definition, path) ->
                 drawPath(path, definition.farbe.copy(alpha = definition.alpha))
