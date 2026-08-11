@@ -5,42 +5,75 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.TUPEL_AUFLÖSEN_ART
+import de.TeutonStudio.MathematikKnoten.VEKTOR_RECHNER_OPERATOR
 import de.TeutonStudio.MathematikKnoten.anschlussArtFürMathematischesObjekt
+import de.TeutonStudio.MathematikRechenSystem.kern.OrientierterVektor
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
+import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner
+import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechnerOperator
 
 internal const val TUPEL_AUFLÖSEN_ANZAHL = "tupelAuflösen.anzahl"
+internal const val VEKTOR_ZERLEGEN_ANZAHL = "vektorZerlegen.anzahl"
 
 /**
- * Synchronisiert den letzten erfolgreich bekannten Tupelvertrag mit den
- * dynamischen Ausgängen. Bei einer fehlgeschlagenen/fehlenden Tupelauswertung
- * bleibt der bestehende Vertrag unverändert.
+ * Synchronisiert den letzten erfolgreich bekannten Tupel-/Vektorvertrag mit den
+ * dynamischen Ausgängen. Bei fehlgeschlagener Auswertung bleibt der bestehende
+ * Vertrag unverändert; dadurch flackert die Graphstruktur nicht zwischen zwei
+ * Auswertungszuständen.
  */
 internal fun synchronisiereTupelAuflöser(
     karte: KartenDaten,
     auswertung: KartenAuswertungsErgebnis,
     prüfung: GraphPrüfung,
 ): KartenDaten {
+    fun istDynamischerAuflöser(knoten: KnotenDaten): Boolean =
+        knoten.art == TUPEL_AUFLÖSEN_ART ||
+            (
+                knoten.art == VektorRechner.KNOTEN_ART &&
+                    VektorRechnerOperator.vonIdOderNull(knoten.parameter[VEKTOR_RECHNER_OPERATOR]) ==
+                    VektorRechnerOperator.ZERLEGEN
+                )
+
     val idErsetzungen = buildMap {
-        karte.knoten.filter { it.art == TUPEL_AUFLÖSEN_ART }.forEach { knoten ->
+        karte.knoten.filter(::istDynamischerAuflöser).forEach { knoten ->
             knoten.anschlüsse
                 .filter { it.richtung == AnschlussRichtung.Ausgang }
                 .sortedBy { it.reihenfolge }
                 .forEachIndexed { index, anschluss ->
                     val alt = AnschlussVerweis(knoten.id, anschluss.id)
-                    val neu = AnschlussVerweis(knoten.id, elementId(knoten.id, index))
+                    val neu = AnschlussVerweis(knoten.id, elementId(knoten.id, index, knoten.art))
                     if (alt != neu) put(alt, neu)
                 }
         }
     }
 
     val synchronisierteKnoten = karte.knoten.map { knoten ->
-        if (knoten.art != TUPEL_AUFLÖSEN_ART) return@map knoten
-        val tupel = auswertung.knoten[knoten.id]
-            ?.eingänge
-            ?.get("tupel")
-            ?.objekt as? Tupel
-            ?: return@map knoten
-        synchronisiereTupelAuflöserKnoten(knoten, tupel)
+        when {
+            knoten.art == TUPEL_AUFLÖSEN_ART -> {
+                val tupel = auswertung.knoten[knoten.id]
+                    ?.eingänge
+                    ?.get("tupel")
+                    ?.objekt as? Tupel
+                    ?: return@map knoten
+                synchronisiereAuflöserKnoten(knoten, tupel.elemente, "tupel", TUPEL_AUFLÖSEN_ANZAHL)
+            }
+            knoten.art == VektorRechner.KNOTEN_ART &&
+                VektorRechnerOperator.vonIdOderNull(knoten.parameter[VEKTOR_RECHNER_OPERATOR]) ==
+                VektorRechnerOperator.ZERLEGEN -> {
+                val struktur = auswertung.knoten[knoten.id]
+                    ?.eingänge
+                    ?.get("struktur")
+                    ?.objekt
+                    ?: return@map knoten
+                val elemente = when (struktur) {
+                    is Tupel -> struktur.elemente
+                    is OrientierterVektor -> struktur.werte
+                    else -> return@map knoten
+                }
+                synchronisiereAuflöserKnoten(knoten, elemente, "struktur", VEKTOR_ZERLEGEN_ANZAHL)
+            }
+            else -> knoten
+        }
     }
 
     var ergebnis = karte.copy(
@@ -69,27 +102,33 @@ internal fun synchronisiereTupelAuflöser(
     return ergebnis.copy(verbindungen = gültigeVerbindungen)
 }
 
-private fun synchronisiereTupelAuflöserKnoten(knoten: KnotenDaten, tupel: Tupel): KnotenDaten {
+private fun synchronisiereAuflöserKnoten(
+    knoten: KnotenDaten,
+    elemente: List<de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt>,
+    eingangsName: String,
+    anzahlParameter: String,
+): KnotenDaten {
     val eingang = knoten.anschlüsse.firstOrNull {
-        it.richtung == AnschlussRichtung.Eingang && it.name == "tupel"
+        it.richtung == AnschlussRichtung.Eingang && it.name == eingangsName
     } ?: return knoten
     val bisherigeAusgänge = knoten.anschlüsse
         .filter { it.richtung == AnschlussRichtung.Ausgang }
         .sortedBy { it.reihenfolge }
 
-    val ausgänge = tupel.elemente.mapIndexed { index, element ->
+    val ausgänge = elemente.mapIndexed { index, element ->
         (bisherigeAusgänge.getOrNull(index) ?: AnschlussDaten(
-            id = elementId(knoten.id, index),
+            id = elementId(knoten.id, index, knoten.art),
             name = "element-${index + 1}",
             richtung = AnschlussRichtung.Ausgang,
             kante = AnschlussKante.Rechts,
             art = anschlussArtFürMathematischesObjekt(element),
         )).copy(
-            id = elementId(knoten.id, index),
+            id = elementId(knoten.id, index, knoten.art),
             name = "element-${index + 1}",
             richtung = AnschlussRichtung.Ausgang,
             kante = AnschlussKante.Rechts,
             art = anschlussArtFürMathematischesObjekt(element),
+            zulässigeArten = emptySet(),
             reihenfolge = index,
             kannSichErweitern = false,
             dynamischErzeugt = true,
@@ -100,9 +139,15 @@ private fun synchronisiereTupelAuflöserKnoten(knoten: KnotenDaten, tupel: Tupel
     return knoten.copy(
         anschlüsse = listOf(eingang.copy(reihenfolge = 0)) + ausgänge,
         größe = knoten.größe.copy(höhe = maxOf(knoten.größe.höhe, mindestHöhe)),
-        parameter = knoten.parameter + (TUPEL_AUFLÖSEN_ANZAHL to ausgänge.size.toString()),
+        parameter = knoten.parameter + (anzahlParameter to ausgänge.size.toString()),
     )
 }
 
-private fun elementId(knotenId: KnotenId, index: Int) =
-    AnschlussId("${knotenId.wert}:tupelAuflösen:element:${index + 1}")
+private fun elementId(knotenId: KnotenId, index: Int, knotenArt: String) =
+    AnschlussId(
+        if (knotenArt == TUPEL_AUFLÖSEN_ART) {
+            "${knotenId.wert}:tupelAuflösen:element:${index + 1}"
+        } else {
+            "${knotenId.wert}:vektorZerlegen:element:${index + 1}"
+        },
+    )
