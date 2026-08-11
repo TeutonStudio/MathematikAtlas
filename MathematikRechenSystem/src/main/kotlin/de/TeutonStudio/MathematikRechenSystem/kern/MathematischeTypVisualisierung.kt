@@ -13,6 +13,7 @@ import de.TeutonStudio.TypSystem.zuVisualDescriptor
 fun mathematischerTypKurzname(id: TypId): String = when (id) {
     MathematischeTypen.Objekt -> "Obj"
     MathematischeTypen.Zahl -> "Zahl"
+    MathematischeTypen.Angulus -> "∠"
     MathematischeTypen.Aussage -> "Aussage"
     MathematischeTypen.Menge -> "Menge"
     MathematischeTypen.Mass -> "μ"
@@ -22,6 +23,8 @@ fun mathematischerTypKurzname(id: TypId): String = when (id) {
     MathematischeTypen.Matrix -> "Matrix"
     MathematischeTypen.Tensor -> "Tensor"
     MathematischeTypen.Tupel -> "Tupel"
+    MathematischeTypen.KartesischesTupel -> "Kart"
+    MathematischeTypen.PolarTupel -> "Polar"
     MathematischeTypen.Methode -> "ƒ"
     MathematischeTypen.Natuerlich -> "ℕ⁺"
     MathematischeTypen.NatuerlichMitNull -> "ℕ₀"
