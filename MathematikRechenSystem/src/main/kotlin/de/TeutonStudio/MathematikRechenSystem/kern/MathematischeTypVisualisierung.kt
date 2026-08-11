@@ -22,6 +22,7 @@ fun mathematischerTypKurzname(id: TypId): String = when (id) {
     MathematischeTypen.Matrix -> "Matrix"
     MathematischeTypen.Tensor -> "Tensor"
     MathematischeTypen.Tupel -> "Tupel"
+    MathematischeTypen.UnendlichesTupel -> "Tupel∞"
     MathematischeTypen.Methode -> "ƒ"
     MathematischeTypen.Natuerlich -> "ℕ⁺"
     MathematischeTypen.NatuerlichMitNull -> "ℕ₀"
