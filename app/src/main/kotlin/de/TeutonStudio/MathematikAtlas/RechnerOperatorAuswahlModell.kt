@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.MathematikKnoten.normalisiereAngulusZahlenRechner
 import java.text.Normalizer
 import java.util.Locale
 
@@ -26,7 +27,7 @@ internal data class RechnerOperatorAuswahlEintrag(
     val beschreibung: String,
     val suchbegriffe: Set<String> = emptySet(),
     val status: String? = null,
-    val kandidat: KnotenDaten? = null,
+    var kandidat: KnotenDaten? = null,
     val art: RechnerOperatorAuswahlArt = RechnerOperatorAuswahlArt.OPERATOR,
 ) {
     init {
@@ -37,6 +38,7 @@ internal data class RechnerOperatorAuswahlEintrag(
             "Ein Operator benötigt einen konfigurierten Kandidatenknoten."
         }
         symbolLatex = normalisiereOperatorVorschau(kategorie, symbolLatex)
+        kandidat = kandidat?.let(::normalisiereAngulusZahlenRechner)
     }
 
     val eingänge: List<AnschlussDaten>
