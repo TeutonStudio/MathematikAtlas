@@ -151,5 +151,6 @@ private fun inferiereElementMenge(
     is TopologischesInneres -> inferiereElementMenge(menge.kontext.umgebungsraum, werteVorräte, annahmen)
     is TangentialMenge -> inferiereElementMenge(menge.graphRaum, werteVorräte, annahmen)
     is Tupelraum, is Folgenraum, is Vektorraum, is Matrizenraum,
-    is Potenzmenge, is Abbildungsmenge, is Tensorraum, is ModuloZahlenraum -> menge
+    is Potenzmenge, is Abbildungsmenge, is Tensorraum, is ModuloZahlenraum,
+    is AngulusRaum -> menge
 }
