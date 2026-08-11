@@ -172,13 +172,11 @@ data class SvgText(
     override val id: String,
     val position: SvgPunkt,
     val inhalt: String,
-    /** Kennzeichnet mathematischen LaTeX-Inhalt. Der Serializer bewahrt ihn verlustfrei als Metadatum. */
     val mathematikLatex: Boolean = false,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
 ) : SvgElement
 
-/** Definitionen werden getrennt vom sichtbaren Elementbaum geführt. */
 sealed interface SvgDefinition {
     val id: String
 }
@@ -188,10 +186,7 @@ data class SvgSymbolDefinition(
     val elemente: List<SvgElement>,
 ) : SvgDefinition
 
-/**
- * Unveränderlicher SVG-Dokumentwert. Jeder SVG-Knoten reicht diesen vollständigen AST weiter
- * und ergänzt oder verändert genau den eigenen Verarbeitungsschritt.
- */
+/** Vollständiger unveränderlicher SVG-AST, der von Knoten zu Knoten weitergereicht wird. */
 data class SvgGrafik(
     val viewport: SvgViewport = SvgViewport(),
     val koordinatenraum: SvgKoordinatenraum = SvgKoordinatenraum(),
@@ -207,7 +202,6 @@ data class SvgGrafik(
     override fun zuLatex(): String = "\\operatorname{SVG}_{${elemente.size}}"
 
     fun mitElement(element: SvgElement): SvgGrafik = copy(elemente = elemente + element)
-
     fun mitElementen(neu: List<SvgElement>): SvgGrafik = copy(elemente = elemente + neu)
 
     fun gruppiere(id: String, stil: SvgStil? = null): SvgGrafik =
@@ -377,7 +371,7 @@ object SvgSerializer {
 
     private fun StringBuilder.appendGemeinsam(element: SvgElement) {
         append(" id=\"").append(xmlId(element.id)).append("\"")
-        element.stil?.let(::appendStil)
+        element.stil?.let { appendStil(it) }
         if (element.transformationen.isNotEmpty()) {
             append(" transform=\"")
             append(element.transformationen.joinToString(" ", transform = ::transformation))
