@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.compose.runtime.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.VerbindungsDragZielHinweis
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
 import de.TeutonStudio.MathematikAtlas.speicher.KartenSpeicher
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikKnoten.katalog.OperatorKnotenSuchindex
 import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenRenderer
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 
 @Stable
 class AtlasZustand(context: Context) {
@@ -50,6 +53,9 @@ class AtlasZustand(context: Context) {
         }
         MengenKnotenKartenQuelle.installieren(this)
         MengenOperatorInspektorRegistrierung.installieren()
+        VerbindungsDragZielHinweis.installiere { dragZustand, ziel ->
+            methodenSignaturFürDragZiel(dragZustand, ziel)
+        }
         werteAus()
     }
 
@@ -225,10 +231,13 @@ class AtlasZustand(context: Context) {
         sichereKnotenKategorieAuswahl()
     }
 
-    fun knotenKategorien(): List<String> = alleKnotenVorlagen().map { it.kategorie }.distinct()
+    fun knotenKategorien(): List<String> = suchbareVorlagen().map { it.kategorie }.distinct()
 
-    fun sichtbareVorlagen(): List<KnotenVorlage> = alleKnotenVorlagen().filter { vorlage ->
-        val suchePasst = suchText.isBlank() || vorlage.name.contains(suchText, ignoreCase = true) || vorlage.kategorie.contains(suchText, ignoreCase = true) || vorlage.beschreibung.contains(suchText, ignoreCase = true)
+    fun sichtbareVorlagen(): List<KnotenVorlage> = suchbareVorlagen().filter { vorlage ->
+        val suchePasst = suchText.isBlank() ||
+            vorlage.name.contains(suchText, ignoreCase = true) ||
+            vorlage.kategorie.contains(suchText, ignoreCase = true) ||
+            vorlage.beschreibung.contains(suchText, ignoreCase = true)
         suchePasst && istKompatibelMitOffenerVerbindung(vorlage)
     }
 
@@ -240,6 +249,14 @@ class AtlasZustand(context: Context) {
 
     private fun sichereKnotenKategorieAuswahl() {
         if (aktiveKnotenKategorie() == null) ausgewählteKnotenKategorie = null
+    }
+
+    private fun suchbareVorlagen(): List<KnotenVorlage> {
+        val basis = alleKnotenVorlagen()
+        val operatorTreffer = if (suchText.isBlank()) emptyList() else OperatorKnotenSuchindex.suche(suchText, basis)
+        return (operatorTreffer + basis).distinctBy { vorlage ->
+            vorlage.art to vorlage.standardParameter.toSortedMap().entries.joinToString("|") { "${it.key}=${it.value}" }
+        }
     }
 
     private fun alleKnotenVorlagen(): List<KnotenVorlage> =
@@ -271,6 +288,29 @@ class AtlasZustand(context: Context) {
         if (graphPrüfung.prüfe(karte, erster, zweiter) !is VerbindungsPrüfung.Erlaubt) return null
         val (von, zu) = graphPrüfung.normalisiere(karte, erster, zweiter) ?: return null
         return VerbindungDaten(von = von, zu = zu)
+    }
+
+    private fun methodenSignaturFürDragZiel(
+        dragZustand: KartenEditorZustand,
+        ziel: AnschlussVerweis,
+    ): String? {
+        val start = dragZustand.verbindungsStart ?: return null
+        if (!dragZustand.kompatibelMitStart(ziel)) return null
+        val (von, _) = graphPrüfung.normalisiere(dragZustand.karte, start, ziel) ?: return null
+        val quellKnoten = dragZustand.karte.knoten.firstOrNull { it.id == von.knotenId } ?: return null
+        val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == von.anschlussId } ?: return null
+        val methode = auswertung.knoten[quellKnoten.id]
+            ?.ausgaben
+            ?.get(quellAnschluss.name)
+            ?.objekt as? Methode
+            ?: return null
+        val werteVorrat = when {
+            methode.werteVorräte.size == 1 -> methode.werteVorräte.single().zuLatex()
+            methode.werteVorräte.size > 1 -> methode.werteVorräte.joinToString(" × ") { it.zuLatex() }
+            methode.effektiverWerteVorrat != null -> methode.effektiverWerteVorrat.zuLatex()
+            else -> "W"
+        }
+        return "$werteVorrat → ${methode.zielMenge.zuLatex()}"
     }
 
     private fun KartenDaten.validierungsFehler(): String? {
@@ -312,7 +352,8 @@ class AtlasZustand(context: Context) {
 
         val ersteAuswertung = laufzeit.auswerten(editor.karte)
         val mitRestriktionsAnschlüssen = synchronisiereRestriktionsAnschlüsse(editor.karte, ersteAuswertung)
-        val synchronisiert = synchronisiereMethodenAufrufe(mitRestriktionsAnschlüssen, ersteAuswertung, graphPrüfung)
+        val mitAuflösern = synchronisiereTupelAuflöser(mitRestriktionsAnschlüssen, ersteAuswertung, graphPrüfung)
+        val synchronisiert = synchronisiereMethodenAufrufe(mitAuflösern, ersteAuswertung, graphPrüfung)
         if (synchronisiert == editor.karte) {
             auswertung = ersteAuswertung
             return
