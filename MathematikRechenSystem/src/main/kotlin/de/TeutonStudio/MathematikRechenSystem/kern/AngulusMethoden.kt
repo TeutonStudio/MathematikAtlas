@@ -137,5 +137,56 @@ data class AngulusTransformierteMethode(
     override fun zuLatex(): String = "$name:${signatur.werteVorrat.zuLatex()}\\to${signatur.zielMenge.zuLatex()}"
 }
 
+/** Punktweise Polar-Konstruktion aus skalarem oder methodischem Radius/Winkel. */
+data class PolarKomplexMethode(
+    val radiusQuelle: MathematischesObjekt,
+    val winkelQuelle: MathematischesObjekt,
+) : MathematischAuswertbareMethode {
+    private val methoden = listOf(radiusQuelle, winkelQuelle).filterIsInstance<Methode>()
+    private val basis: SignaturtragendeMethode = methoden.firstOrNull() as? SignaturtragendeMethode
+        ?: error("Eine PolarKomplexMethode benötigt mindestens eine signaturtragende Methode.")
+
+    init {
+        require(methoden.all { it is MathematischAuswertbareMethode && it is SignaturtragendeMethode }) {
+            "Polar verknüpfte Methoden müssen mathematisch auswertbar sein."
+        }
+        val basisSignatur = basis.signatur
+        require(methoden.drop(1).all { methode ->
+            val signatur = (methode as SignaturtragendeMethode).signatur
+            signatur.argumente.map { it.parameter.name } == basisSignatur.argumente.map { it.parameter.name } &&
+                signatur.argumente.map { it.werteVorrat } == basisSignatur.argumente.map { it.werteVorrat }
+        }) {
+            "Radius- und Winkelmethode der Polarform benötigen dieselbe Argument-Signatur."
+        }
+    }
+
+    override val name: String
+        get() = "polar(${quellenName(radiusQuelle)},${quellenName(winkelQuelle)})"
+
+    override val signatur: MethodenSignatur
+        get() = basis.signatur.copy(zielMenge = KomplexeZahlen)
+
+    override fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
+        val radius = werteQuelleAus(radiusQuelle, argumente) as? ZahlAusdruck
+            ?: error("Die Polar-Radiusquelle muss eine Zahl liefern.")
+        val winkel = werteQuelleAus(winkelQuelle, argumente) as? Angulus
+            ?: error("Die Polar-Winkelquelle muss einen Angulus liefern.")
+        return komplexAusPolar(radius, winkel)
+    }
+
+    override fun zuLatex(): String = "$name:${signatur.werteVorrat.zuLatex()}\\to${KomplexeZahlen.zuLatex()}"
+}
+
+private fun werteQuelleAus(
+    quelle: MathematischesObjekt,
+    argumente: Map<String, MathematischesObjekt>,
+): MathematischesObjekt = when (quelle) {
+    is MathematischAuswertbareMethode -> quelle.wendeMathematischAn(argumente)
+    else -> quelle
+}
+
+private fun quellenName(quelle: MathematischesObjekt): String =
+    (quelle as? Methode)?.name ?: quelle.zuLatex()
+
 fun Methode.erzwingeAngulusEinheit(ziel: AngulusEinheit): Methode =
     AngulusTransformierteMethode(this, AngulusMethodenOperation.Konvertiere(ziel))
