@@ -1,8 +1,11 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeTypen
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlenOperatorHebungsArt
+import de.TeutonStudio.TypSystem.AnschlussVertrag
+import de.TeutonStudio.TypSystem.TypAusdruck
 
 private val variadischeZahlenOperatoren = setOf(
     UniversellerZahlenOperator.ADDITION,
@@ -14,6 +17,17 @@ private val variadischeZahlenOperatoren = setOf(
 private val komplexKonstruktoren = setOf(
     UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
     UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH,
+)
+
+private val angulusErzeuger = setOf(
+    UniversellerZahlenOperator.KOMPLEXER_WINKEL,
+    UniversellerZahlenOperator.ARCSINUS,
+    UniversellerZahlenOperator.ARCCOSINUS,
+)
+
+private val angulusVerbraucher = setOf(
+    UniversellerZahlenOperator.SINUS,
+    UniversellerZahlenOperator.COSINUS,
 )
 
 private val binaereZahlenOperatoren = setOf(
@@ -30,6 +44,7 @@ fun istVariadischerZahlenOperator(operator: UniversellerZahlenOperator): Boolean
 fun istKomplexKonstruktor(operator: UniversellerZahlenOperator): Boolean =
     operator in komplexKonstruktoren
 
+/** Nur für die verlustfreie Migration alter Karten; neue Knoten verwenden Angulus. */
 fun verwendetGradWinkel(operator: UniversellerZahlenOperator): Boolean = operator in setOf(
     UniversellerZahlenOperator.SINUS,
     UniversellerZahlenOperator.COSINUS,
@@ -71,6 +86,7 @@ fun konfiguriereZahlenRechner(
             kannSichErweitern = vorgabe.kannSichErweitern,
             dynamischErzeugt = index >= 2 && operator in variadischeZahlenOperatoren,
             zulässigeArten = vorgabe.zulässigeArten,
+            vertrag = vorgabe.vertrag,
         )
     }
     val punktweiseEingangsNamen = eingänge
@@ -78,16 +94,27 @@ fun konfiguriereZahlenRechner(
         .map { it.name }
     val vorhandenerAusgang = vorhandene[AnschlussRichtung.Ausgang to "wert"]?.firstOrNull()
         ?: knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
+    val skalareAusgangsArt = if (operator in angulusErzeuger) {
+        MathematikAnschlussArten.Angulus.id
+    } else {
+        MathematikAnschlussArten.Zahl.id
+    }
+    val skalareAusgangsVertrag = if (operator in angulusErzeuger) {
+        AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Angulus))
+    } else {
+        AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Zahl))
+    }
     val ausgang = (vorhandenerAusgang ?: AnschlussDaten(
         name = "wert",
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
-        art = MathematikAnschlussArten.Zahl.id,
+        art = skalareAusgangsArt,
+        vertrag = skalareAusgangsVertrag,
     )).copy(
         name = "wert",
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
-        art = MathematikAnschlussArten.Zahl.id,
+        art = skalareAusgangsArt,
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
@@ -101,6 +128,7 @@ fun konfiguriereZahlenRechner(
                 prioritäten = listOf(MathematikAnschlussArten.Methode.id),
             )
         },
+        vertrag = skalareAusgangsVertrag,
     )
     val parameter = knoten.parameter + mapOf(
         ZAHLENRECHNER_OPERATOR to operator.stabileId,
@@ -119,10 +147,25 @@ private fun gewünschteZahlenRechnerEingänge(
     komplexEingabe: String,
     festeEingänge: Int,
 ): List<AnschlussDaten> = when {
-    operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
-        eingang("tupel", MathematikAnschlussArten.Tupel.id),
+    operator == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
+        eingang(
+            "tupel",
+            MathematikAnschlussArten.PolarTupel.id,
+            vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.PolarTupel)),
+        ),
     )
-    operator in komplexKonstruktoren -> listOf(
+    operator == UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
+        eingang(
+            "tupel",
+            MathematikAnschlussArten.KartesischesTupel.id,
+            vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.KartesischesTupel)),
+        ),
+    )
+    operator == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> listOf(
+        zahlenOderMethodenEingang("a"),
+        angulusOderMethodenEingang("b"),
+    )
+    operator == UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH -> listOf(
         zahlenOderMethodenEingang("a"),
         zahlenOderMethodenEingang("b"),
     )
@@ -146,6 +189,7 @@ private fun gewünschteZahlenRechnerEingänge(
         zahlenOderMethodenEingang("a"),
         zahlenOderMethodenEingang("b"),
     )
+    operator in angulusVerbraucher -> listOf(angulusOderMethodenEingang("a"))
     operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE ->
         listOf(zahlenOderMethodenEingang("a"))
     else -> listOf(eingang("a", MathematikAnschlussArten.Zahl.id))
@@ -164,11 +208,22 @@ private fun zahlenOderMethodenEingang(
     ),
 )
 
+private fun angulusOderMethodenEingang(name: String): AnschlussDaten = eingang(
+    name = name,
+    art = MathematikAnschlussArten.Objekt.id,
+    zulässigeArten = setOf(
+        MathematikAnschlussArten.Angulus.id,
+        MathematikAnschlussArten.Methode.id,
+    ),
+    vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Angulus)),
+)
+
 private fun eingang(
     name: String,
     art: AnschlussArtId,
     erweiterbar: Boolean = false,
     zulässigeArten: Set<AnschlussArtId> = emptySet(),
+    vertrag: AnschlussVertrag = AnschlussVertrag(),
 ): AnschlussDaten = AnschlussDaten(
     name = name,
     richtung = AnschlussRichtung.Eingang,
@@ -176,4 +231,5 @@ private fun eingang(
     art = art,
     kannSichErweitern = erweiterbar,
     zulässigeArten = zulässigeArten,
+    vertrag = vertrag,
 )
