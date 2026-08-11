@@ -10,7 +10,7 @@ class ZahlenRechnerPolynomTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
 
     @Test
-    fun `Polynomzustand verwendet Koordinaten und Argument als Eingänge`() {
+    fun `Polynomzustand verwendet Koordinaten und methodenfaehiges Argument als Eingänge`() {
         val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
         val polynom = konfiguriereErweitertenZahlenRechner(
             basis,
@@ -28,9 +28,15 @@ class ZahlenRechnerPolynomTest {
             setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.Vektor.id),
             eingänge[0].zulässigeArten,
         )
-        assertEquals(MathematikAnschlussArten.Zahl.id, eingänge[1].art)
+        assertEquals(MathematikAnschlussArten.Objekt.id, eingänge[1].art)
+        assertEquals(
+            setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
+            eingänge[1].zulässigeArten,
+        )
         assertEquals(MathematikAnschlussArten.Zahl.id, ausgang.art)
-        assertNull(ausgang.artPriorisiertEingänge)
+        val priorisierung = assertNotNull(ausgang.artPriorisiertEingänge)
+        assertEquals(listOf("argument"), priorisierung.eingänge)
+        assertEquals(listOf(MathematikAnschlussArten.Methode.id), priorisierung.prioritäten)
     }
 
     @Test
