@@ -148,42 +148,46 @@ fun konfiguriereVektorRechner(
         gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
     } else gewuenscht
     val neu = erhalteVektorRechnerAnschlussIds(knoten.anschlüsse, signatur)
-    return knoten.copy(
-        name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) {
-            "Vektorrechner"
-        } else knoten.name,
-        anschlüsse = neu,
-        parameter = knoten.parameter + mapOf(
-            VEKTOR_RECHNER_OPERATOR to operator.stabileId,
-            VEKTOR_RECHNER_METRIK to (knoten.parameter[VEKTOR_RECHNER_METRIK] ?: VektorMetriken.standard.stabileId),
-            VEKTOR_RECHNER_ACHSE to (knoten.parameter[VEKTOR_RECHNER_ACHSE] ?: "1"),
-            VEKTOR_RECHNER_STRUKTUR_AUSGABE to (
-                knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE] ?: VektorStrukturAusgabe.TUPEL.stabileId
-            ),
-            INTEGRAL_MASS_MODUS_PARAMETER to (
-                knoten.parameter[INTEGRAL_MASS_MODUS_PARAMETER] ?: IntegralMassModus.AUTO.name
-            ),
-            INTEGRAL_MASS_SYMBOL_PARAMETER to (
-                knoten.parameter[INTEGRAL_MASS_SYMBOL_PARAMETER] ?: "\\mu"
+    return normalisiereRechnerMethodenAnschluesse(
+        knoten.copy(
+            name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) {
+                "Vektorrechner"
+            } else knoten.name,
+            anschlüsse = neu,
+            parameter = knoten.parameter + mapOf(
+                VEKTOR_RECHNER_OPERATOR to operator.stabileId,
+                VEKTOR_RECHNER_METRIK to (knoten.parameter[VEKTOR_RECHNER_METRIK] ?: VektorMetriken.standard.stabileId),
+                VEKTOR_RECHNER_ACHSE to (knoten.parameter[VEKTOR_RECHNER_ACHSE] ?: "1"),
+                VEKTOR_RECHNER_STRUKTUR_AUSGABE to (
+                    knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE] ?: VektorStrukturAusgabe.TUPEL.stabileId
+                ),
+                INTEGRAL_MASS_MODUS_PARAMETER to (
+                    knoten.parameter[INTEGRAL_MASS_MODUS_PARAMETER] ?: IntegralMassModus.AUTO.name
+                ),
+                INTEGRAL_MASS_SYMBOL_PARAMETER to (
+                    knoten.parameter[INTEGRAL_MASS_SYMBOL_PARAMETER] ?: "\\mu"
+                ),
             ),
         ),
     )
 }
 
-fun vektorRechnerVorlage(operator: VektorRechnerOperator): KnotenVorlage = KnotenVorlage(
-    art = VektorRechner.KNOTEN_ART,
-    name = "Vektorrechner · ${operator.titel}",
-    kategorie = "Lineare Algebra: Vektorrechner",
-    beschreibung = "Vorkonfigurierte Variante des kanonischen Vektorrechners für ${operator.titel}.",
-    standardGröße = GraphGröße(285f, 145f),
-    anschlüsse = vektorRechnerAnschluesse(operator),
-    standardParameter = mapOf(
-        VEKTOR_RECHNER_OPERATOR to operator.stabileId,
-        VEKTOR_RECHNER_METRIK to VektorMetriken.standard.stabileId,
-        VEKTOR_RECHNER_ACHSE to "1",
-        VEKTOR_RECHNER_STRUKTUR_AUSGABE to VektorStrukturAusgabe.TUPEL.stabileId,
-        INTEGRAL_MASS_MODUS_PARAMETER to IntegralMassModus.AUTO.name,
-        INTEGRAL_MASS_SYMBOL_PARAMETER to "\\mu",
+fun vektorRechnerVorlage(operator: VektorRechnerOperator): KnotenVorlage = methodenfaehigeRechnerVorlage(
+    KnotenVorlage(
+        art = VektorRechner.KNOTEN_ART,
+        name = "Vektorrechner · ${operator.titel}",
+        kategorie = "Lineare Algebra: Vektorrechner",
+        beschreibung = "Vorkonfigurierte Variante des kanonischen Vektorrechners für ${operator.titel}.",
+        standardGröße = GraphGröße(285f, 145f),
+        anschlüsse = vektorRechnerAnschluesse(operator),
+        standardParameter = mapOf(
+            VEKTOR_RECHNER_OPERATOR to operator.stabileId,
+            VEKTOR_RECHNER_METRIK to VektorMetriken.standard.stabileId,
+            VEKTOR_RECHNER_ACHSE to "1",
+            VEKTOR_RECHNER_STRUKTUR_AUSGABE to VektorStrukturAusgabe.TUPEL.stabileId,
+            INTEGRAL_MASS_MODUS_PARAMETER to IntegralMassModus.AUTO.name,
+            INTEGRAL_MASS_SYMBOL_PARAMETER to "\\mu",
+        ),
     ),
 )
 
