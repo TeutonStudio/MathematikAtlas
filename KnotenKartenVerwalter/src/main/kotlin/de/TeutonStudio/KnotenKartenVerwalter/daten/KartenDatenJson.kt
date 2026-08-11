@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 /** Reiner JSON-Codec für [KartenDaten], ohne App-, Datei- oder Migrationszuständigkeit. */
 object KartenDatenJson {
-    const val FORMAT_VERSION = 7
+    const val FORMAT_VERSION = 8
 
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
         put("formatVersion", FORMAT_VERSION)
@@ -104,6 +104,10 @@ object KartenDatenJson {
                             put("prioritäten", JSONArray(regel.prioritäten.map { it.wert }))
                         })
                     }
+                    if (anschluss.vertrag != AnschlussVertrag()) {
+                        put("vertrag", anschluss.vertrag.zuJson())
+                    }
+                    anschluss.typInferenz?.let { put("typInferenz", it.zuJson()) }
                 })
             }
         })
@@ -165,6 +169,8 @@ object KartenDatenJson {
                             },
                         )
                     },
+                    vertrag = anschlussVertragVonJson(anschluss.optJSONObject("vertrag")),
+                    typInferenz = typInferenzVonJson(anschluss.optJSONObject("typInferenz")),
                 )
             },
             parameter = parameter,
