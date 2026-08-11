@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.mathematikTypSystem
 
 internal enum class KartenKnotenZustand { Schnittstelle, Methode }
 
@@ -92,7 +93,7 @@ internal fun AtlasZustand.prüfeKartenKandidat(
             (verbindung.zu.knotenId == knoten.id && verbindung.zu.anschlussId !in kandidatIds)
     }?.let { return KartenKnotenKompatibilität(karte, false, "Mindestens ein verbundener Anschluss fehlt in dieser Karte.") }
 
-    val prüfung = GraphPrüfung(anschlussArten)
+    val prüfung = GraphPrüfung(anschlussArten, mathematikTypSystem(anschlussArten))
     var probe = editor.karte.copy(
         knoten = editor.karte.knoten.map { if (it.id == knoten.id) kandidat else it },
         verbindungen = editor.karte.verbindungen.filterNot { it in incident },
