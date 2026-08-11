@@ -33,7 +33,7 @@ class AxiomOperatorenTest {
 
     @Test
     fun `Axiomregister enthaelt Peano ZF ZFC und algebraische Strukturen`() {
-        val ids = AxiomOperatoren.alle.mapTo(setOf()) { it.stabileId }
+        val ids = AxiomOperatoren.alle.mapTo(mutableSetOf<String>()) { it.stabileId }
 
         assertTrue("axiom.peano.induktion" in ids)
         assertTrue("axiom.zf.extensionalitaet" in ids)
