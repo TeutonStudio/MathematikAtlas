@@ -26,8 +26,6 @@ interface TypSystem {
     fun prüfe(quelle: TypAusdruck, ziel: TypAusdruck): TypPrüfung
     fun normalisiere(typ: TypAusdruck): TypAusdruck
     fun gemeinsameOberart(typen: List<TypAusdruck>): TypAusdruck?
-
-    /** Migrations-/Fallbackbrücke von einer groben Anschlusskategorie zum semantischen Typ. */
     fun typFürAnschlussArt(art: AnschlussArtId): TypAusdruck = TypAusdruck.Unbekannt
 }
 
@@ -48,11 +46,7 @@ open class StandardTypSystem(
         if (z == TypAusdruck.Beliebig) return TypPrüfung.Kompatibel
         if (q == TypAusdruck.Unbekannt || z == TypAusdruck.Unbekannt) return TypPrüfung.Unbestimmt
         if (q is TypAusdruck.Variable || z is TypAusdruck.Variable) return TypPrüfung.Unbestimmt
-        if (q == TypAusdruck.Beliebig) return if (z == TypAusdruck.Beliebig) {
-            TypPrüfung.Kompatibel
-        } else {
-            TypPrüfung.Unbestimmt
-        }
+        if (q == TypAusdruck.Beliebig) return if (z == TypAusdruck.Beliebig) TypPrüfung.Kompatibel else TypPrüfung.Unbestimmt
         if (q == z) return TypPrüfung.Kompatibel
 
         if (q is TypAusdruck.Vereinigung) {
@@ -71,22 +65,16 @@ open class StandardTypSystem(
                 else -> TypPrüfung.Unbestimmt
             }
         }
-
         if (q is TypAusdruck.Atom && z is TypAusdruck.Atom) {
             return if (istAtomUntertyp(q.id, z.id)) TypPrüfung.Kompatibel
             else TypPrüfung.Inkompatibel("${q.id} ist kein Untertyp von ${z.id}.")
         }
-
-        // Ein parametrisierter Typ ist zugleich Instanz seines Konstruktortyps,
-        // z.B. Methode<(R),R> <: Methode. Das hält grobe Methodenports offen,
-        // während konkrete Signaturen trotzdem präzise geprüft werden können.
         if (q is TypAusdruck.Parameterisiert && z is TypAusdruck.Atom && istAtomUntertyp(q.konstruktor, z.id)) {
             return TypPrüfung.Kompatibel
         }
         if (q is TypAusdruck.Atom && z is TypAusdruck.Parameterisiert && istAtomUntertyp(q.id, z.konstruktor)) {
             return TypPrüfung.Unbestimmt
         }
-
         if (q is TypAusdruck.Parameterisiert && z is TypAusdruck.Parameterisiert) {
             if (q.konstruktor != z.konstruktor || q.argumente.size != z.argumente.size) {
                 return TypPrüfung.Inkompatibel("Die Typkonstruktoren sind verschieden.")
@@ -111,7 +99,6 @@ open class StandardTypSystem(
                 else -> TypPrüfung.Unbestimmt
             }
         }
-
         return TypPrüfung.Inkompatibel("$q kann nicht an $z angeschlossen werden.")
     }
 
@@ -122,8 +109,7 @@ open class StandardTypSystem(
     }
 
     private fun normalisiereVereinigung(alternativen: List<TypAusdruck>): TypAusdruck {
-        val flach = alternativen.flatMap { if (it is TypAusdruck.Vereinigung) it.alternativen else listOf(it) }
-            .distinct()
+        val flach = alternativen.flatMap { if (it is TypAusdruck.Vereinigung) it.alternativen else listOf(it) }.distinct()
         if (flach.any { it == TypAusdruck.Beliebig }) return TypAusdruck.Beliebig
         val ohneRedundanz = flach.filterIndexed { index, kandidat ->
             flach.withIndex().none { (andererIndex, anderer) ->
@@ -142,8 +128,7 @@ open class StandardTypSystem(
         if (normalisiert.isEmpty()) return null
         if (normalisiert.size == 1) return normalisiert.single()
         if (normalisiert.all { it is TypAusdruck.Atom }) {
-            val ids = normalisiert.map { (it as TypAusdruck.Atom).id }
-            return gemeinsameAtomOberart(ids)?.let(TypAusdruck::Atom)
+            return gemeinsameAtomOberart(normalisiert.map { (it as TypAusdruck.Atom).id })?.let(TypAusdruck::Atom)
         }
         val erste = normalisiert.first() as? TypAusdruck.Parameterisiert
             ?: return normalisiere(TypAusdruck.Vereinigung(normalisiert))
@@ -154,12 +139,10 @@ open class StandardTypSystem(
             val definition = konstruktorNachId[erste.konstruktor]
             val argumente = erste.argumente.indices.map { index ->
                 when (definition.varianzFür(index)) {
-                    TypVarianz.Kovariant -> gemeinsameOberart(parameterisierte.map { it.argumente[index] })
-                        ?: erste.argumente[index]
+                    TypVarianz.Kovariant -> gemeinsameOberart(parameterisierte.map { it.argumente[index] }) ?: erste.argumente[index]
                     TypVarianz.Invariant, TypVarianz.Kontravariant -> {
                         val werte = parameterisierte.map { it.argumente[index] }.distinct()
-                        if (werte.size == 1) werte.single()
-                        else return normalisiere(TypAusdruck.Vereinigung(normalisiert))
+                        if (werte.size == 1) werte.single() else return normalisiere(TypAusdruck.Vereinigung(normalisiert))
                     }
                 }
             }
@@ -196,8 +179,9 @@ open class StandardTypSystem(
         TypAusdruck.Beliebig -> "0:*"
         TypAusdruck.Unbekannt -> "9:?"
         is TypAusdruck.Atom -> "1:${typ.id.wert}"
-        is TypAusdruck.Parameterisiert -> "2:${typ.konstruktor.wert}:${typ.argumente.joinToString { sortierSchlüssel(it) }}"
-        is TypAusdruck.Vereinigung -> "3:${typ.alternativen.joinToString { sortierSchlüssel(it) }}"
-        is TypAusdruck.Variable -> "4:${typ.id.wert}"
+        is TypAusdruck.Literal -> "2:${typ.wert}"
+        is TypAusdruck.Parameterisiert -> "3:${typ.konstruktor.wert}:${typ.argumente.joinToString { sortierSchlüssel(it) }}"
+        is TypAusdruck.Vereinigung -> "4:${typ.alternativen.joinToString { sortierSchlüssel(it) }}"
+        is TypAusdruck.Variable -> "5:${typ.id.wert}"
     }
 }
