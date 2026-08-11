@@ -11,6 +11,10 @@ enum class MengenRechnerOperator(val stabileId: String) {
     ITERIERTE_VEREINIGUNG("menge.iterierteVereinigung"),
     ITERIERTER_SCHNITT("menge.iterierterSchnitt"),
     POTENZMENGE("menge.potenzmenge"),
+    ABBILDUNGSMENGE("menge.abbildungsmenge"),
+    FOLGENMENGE("menge.folgenmenge"),
+    HALBFOLGENMENGE("menge.halbfolgenmenge"),
+    KLASSIFIZIERTE_MENGE("menge.klassifizierteMenge"),
     BILD("menge.bild"),
     URBILD("menge.urbild"),
     ;
@@ -133,6 +137,39 @@ object MengenRechner {
                     operator,
                 )
             }
+            MengenRechnerOperator.ABBILDUNGSMENGE -> binaer(eingaben, "zielmenge", "argumentmenge") { ziel, argument ->
+                MengenRechnerErgebnis.Wert(
+                    Abbildungsmenge(zielMenge = ziel.menge, definitionsMenge = argument.menge),
+                    null,
+                    operator,
+                )
+            }
+            MengenRechnerOperator.FOLGENMENGE -> {
+                if (eingaben.size != 1) ungueltigeAnzahl(operator, 1)
+                else MengenRechnerErgebnis.Wert(
+                    Abbildungsmenge(
+                        zielMenge = eingaben.single().menge,
+                        definitionsMenge = GanzeZahlen,
+                    ),
+                    null,
+                    operator,
+                )
+            }
+            MengenRechnerOperator.HALBFOLGENMENGE -> {
+                if (eingaben.size != 1) ungueltigeAnzahl(operator, 1)
+                else MengenRechnerErgebnis.Wert(
+                    Abbildungsmenge(
+                        zielMenge = eingaben.single().menge,
+                        definitionsMenge = NichtnegativeGanzeZahlenSemantik.menge,
+                    ),
+                    null,
+                    operator,
+                )
+            }
+            MengenRechnerOperator.KLASSIFIZIERTE_MENGE -> MengenRechnerErgebnis.Ungueltig(
+                "relationsvertrag",
+                "Die klassifizierte Menge benötigt zusätzlich ein Prädikat/Relation und wird über den Knotenauswerter ausgeführt.",
+            )
             MengenRechnerOperator.BILD,
             MengenRechnerOperator.URBILD,
             -> MengenRechnerErgebnis.Bedingt(
