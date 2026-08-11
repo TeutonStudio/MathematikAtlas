@@ -304,10 +304,11 @@ class AtlasZustand(context: Context) {
             ?.get(quellAnschluss.name)
             ?.objekt as? Methode
             ?: return null
+        val effektiverWerteVorrat = methode.effektiverWerteVorrat
         val werteVorrat = when {
-            methode.werteVorräte.size == 1 -> methode.werteVorräte.single().zuLatex()
-            methode.werteVorräte.size > 1 -> methode.werteVorräte.joinToString(" × ") { it.zuLatex() }
-            methode.effektiverWerteVorrat != null -> methode.effektiverWerteVorrat.zuLatex()
+            methode.werteVorräte.size == 1 -> methode.werteVorräte.values.single().zuLatex()
+            methode.werteVorräte.size > 1 -> methode.werteVorräte.values.joinToString(" × ") { it.zuLatex() }
+            effektiverWerteVorrat != null -> effektiverWerteVorrat.zuLatex()
             else -> "W"
         }
         return "$werteVorrat → ${methode.zielMenge.zuLatex()}"

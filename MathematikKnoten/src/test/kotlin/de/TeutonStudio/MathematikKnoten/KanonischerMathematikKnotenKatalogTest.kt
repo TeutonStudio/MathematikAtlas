@@ -5,6 +5,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.MengenRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenRechnerMigration
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenRelationRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenRelationsMigration
+import de.TeutonStudio.MathematikRechenSystem.kern.RelationsOperatoren
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,12 +44,13 @@ class KanonischerMathematikKnotenKatalogTest {
     }
 
     @Test
-    fun `mengenoperatoren sind konsolidiert und potenzmenge bleibt eigenstaendig sichtbar`() {
+    fun `mengenoperatoren sind konsolidiert relationen liegen im praedikat und potenzmenge bleibt eigenstaendig sichtbar`() {
         val kanonischeArten = KanonischerMathematikKnotenKatalog.alle().map { it.art }.toSet()
         val mengenraumArten = MengenraumKnotenVorlagen.alle.map { it.art }.toSet()
 
         assertTrue(MengenRechner.KNOTEN_ART in kanonischeArten)
-        assertTrue(MengenRelationRechner.KNOTEN_ART in kanonischeArten)
+        assertTrue(RelationsOperatoren.KNOTEN_ART in kanonischeArten)
+        assertFalse(MengenRelationRechner.KNOTEN_ART in kanonischeArten)
         assertTrue("mathematik.potenzmenge" in mengenraumArten)
         assertFalse("mathematik.potenzmenge" in MengenRechnerMigration.alteKnotenArten)
         assertFalse("mathematik.symmetrischeDifferenz" in mengenraumArten)
