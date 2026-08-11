@@ -1,14 +1,16 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 /**
- * Einziger physischer Laufzeittyp für mathematische Methoden.
+ * Konkrete symbolische Implementierung mathematischer Methoden.
  *
- * Mehrere öffentliche Kartenausgänge werden als ein geordnetes Tupel in [vorschrift]
- * und als ein Tupelraum in [zielMenge] gespeichert. [ausgabeNamen] bewahrt nur die
- * öffentliche Benennung und Reihenfolge der Tupelkomponenten.
+ * [Methode] ist der offene fachliche Obervertrag. Diese Klasse bewahrt die bisherige
+ * Mathematiksemantik: mehrere öffentliche Kartenausgänge werden als ein geordnetes
+ * Tupel in [vorschrift] und als ein Tupelraum in [zielMenge] gespeichert.
+ * [ausgabeNamen] bewahrt nur die öffentliche Benennung und Reihenfolge der
+ * Tupelkomponenten.
  */
-data class Methode(
-    val name: String,
+data class MathematischeMethode(
+    override val name: String,
     val parameter: List<MethodenParameter>,
     val vorschrift: MathematischesObjekt,
     val zielMenge: MengenAusdruck,
@@ -23,7 +25,7 @@ data class Methode(
     val effektiverWerteVorrat: MengenAusdruck? = null,
     /** Strukturierte Herkunft einer Restriktion mit optionalen Ergänzungszweigen. */
     val bereichsanpassung: MethodenBereichsanpassung? = null,
-) : MathematischesObjekt {
+) : MathematischAuswertbareMethode {
     init {
         require(parameter.map { it.name }.distinct().size == parameter.size) {
             "Methodenparameter müssen eindeutige Namen haben."
@@ -44,6 +46,19 @@ data class Methode(
             }
         }
     }
+
+    override val signatur: MethodenSignatur
+        get() = MethodenSignatur(
+            argumente = parameter.map { parameter ->
+                MethodenArgument(
+                    parameter = parameter,
+                    werteVorrat = werteVorräte[parameter.name]
+                        ?: error("Für das Methodenargument '${parameter.name}' konnte kein Wertevorrat ermittelt werden."),
+                )
+            },
+            zielMenge = zielMenge,
+            effektiverWerteVorrat = effektiverWerteVorrat,
+        )
 
     /**
      * Ausschließlich für Lademigrationen und historische Testdaten. Produktiver Code
@@ -136,11 +151,11 @@ data class Methode(
         require(argumente.size == parameter.size) {
             "Die Methode '$name' erwartet ${parameter.size} Argumente, erhielt aber ${argumente.size}."
         }
-        return wendeAn(parameter.map(MethodenParameter::name).zip(argumente).toMap())
+        return wendeMathematischAn(parameter.map(MethodenParameter::name).zip(argumente).toMap())
     }
 
-    /** Namensbasierte Anwendung mit genau einem Ergebnisobjekt. */
-    fun wendeAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
+    /** Namensbasierte mathematische Anwendung mit genau einem Ergebnisobjekt. */
+    override fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
         val fehlend = parameter.map(MethodenParameter::name).filterNot(argumente::containsKey)
         require(fehlend.isEmpty()) {
             "Für die Methode '$name' fehlen die Argumente ${fehlend.joinToString()}."
@@ -231,12 +246,15 @@ fun MengenAusdruck.hatDifferentialBegriff() = this == ReelleZahlen
 fun MengenAusdruck.hatIntegralBegriff() = this == ReelleZahlen
 
 private fun Methode.einwertigeZahlMethode(): Triple<Variable, String, ZahlAusdruck> {
-    require(parameter.size == 1 && ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
-    val (name, ausgabe) = einzigeAusgabe()
-    return Triple(parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."), name, ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."))
+    val mathematisch = alsMathematischeMethode("symbolische Komposition oder Iteration")
+    require(mathematisch.parameter.size == 1 && mathematisch.ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
+    val (name, ausgabe) = mathematisch.einzigeAusgabe()
+    return Triple(mathematisch.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."), name, ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."))
 }
 
 fun komponiere(außen: Methode, innen: Methode): Methode {
+    außen.alsMathematischeMethode("symbolische Komposition")
+    innen.alsMathematischeMethode("symbolische Komposition")
     val (x, ausgabeAußen, termAußen) = außen.einwertigeZahlMethode()
     val (t, ausgabeInnen, termInnen) = innen.einwertigeZahlMethode()
     val wertevorrat = innen.werteVorräte[t.name] ?: error("Die innere Methode benötigt einen Wertevorrat.")
@@ -254,6 +272,7 @@ fun komponiere(außen: Methode, innen: Methode): Methode {
 }
 
 fun iteriere(methode: Methode, exponent: Int): Methode {
+    methode.alsMathematischeMethode("symbolische Iteration")
     require(exponent >= 0) { "Der Iterationsexponent muss nichtnegativ sein." }
     val (x, ausgabe, term) = methode.einwertigeZahlMethode()
     val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
@@ -265,11 +284,12 @@ fun iteriere(methode: Methode, exponent: Int): Methode {
         zielMenge = wertevorrat,
         werteVorräte = mapOf(x.name to wertevorrat),
     )
-    repeat(exponent) { ergebnis = komponiere(methode, ergebnis) }
+    repeat(exponent) { ergebnis = komponiere(methode, ergebnis).alsMathematischeMethode("symbolische Iteration") }
     return ergebnis.copy(name = "${methode.name}^{${exponent}}")
 }
 
 fun differenziereMethode(methode: Methode): Methode {
+    methode.alsMathematischeMethode("symbolische Differentiation")
     require(methode.parameter.size == 1 && methode.ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
     val x = methode.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."); val (ausgabe, wert) = methode.einzigeAusgabe()
     val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
@@ -284,6 +304,7 @@ fun differenziereMethode(methode: Methode): Methode {
 }
 
 fun integriereMethode(methode: Methode): Methode {
+    methode.alsMathematischeMethode("symbolische Integration")
     require(methode.parameter.size == 1 && methode.ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
     val x = methode.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."); val (ausgabe, wert) = methode.einzigeAusgabe()
     val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
@@ -298,6 +319,7 @@ fun integriereMethode(methode: Methode): Methode {
 }
 
 fun bildeAb(menge: MengenAusdruck, methode: Methode): MengenAusdruck {
+    methode.alsMathematischeMethode("Bildmengenbildung")
     require(methode.parameter.size == 1) { "Die Abbildung muss genau einen freien Parameter besitzen." }
     methode.einzigeAusgabe()
     if (menge !is EndlicheMenge) return Abbild(menge, methode)
@@ -407,7 +429,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is SpaltenVektor -> SpaltenVektor(objekt.werte.map { ersetze(it, bindungen) })
     is ZeilenVektor -> ZeilenVektor(objekt.werte.map { ersetze(it, bindungen) })
     is Matrix -> Matrix(objekt.zeilen.map { zeile -> zeile.map { ersetze(it, bindungen) } })
-    is Methode -> {
+    is MathematischeMethode -> {
         val freieBindungen = bindungen - objekt.parameter.map { it.name }.toSet()
         objekt.copy(
             vorschrift = ersetze(objekt.vorschrift, freieBindungen),
@@ -500,7 +522,7 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is EchteTeilmengeBeziehung -> listOf(links, rechts).enthalteneMethodenParameter()
     is ObermengenBeziehung -> listOf(links, rechts).enthalteneMethodenParameter()
     is Disjunktheit -> listOf(links, rechts).enthalteneMethodenParameter()
-    is Methode -> {
+    is MathematischeMethode -> {
         val gebundeneNamen = parameter.map { it.name }.toSet()
         val direkteParameter = (listOf(vorschrift, zielMenge) + werteVorräte.values + listOfNotNull(effektiverWerteVorrat))
             .enthalteneMethodenParameter()
