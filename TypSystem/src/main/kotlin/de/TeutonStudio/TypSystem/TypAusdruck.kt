@@ -49,9 +49,17 @@ sealed interface TypAusdruck {
 
 enum class TypVarianz { Kovariant, Kontravariant, Invariant }
 
+/**
+ * Beschreibt die Varianz eines parametrisierten Typkonstruktors.
+ *
+ * [standardVarianz] gilt auch für Konstruktoren variabler Stelligkeit wie Tupel und
+ * Tensor. [varianzen] kann einzelne Positionen überschreiben; nicht aufgeführte
+ * Positionen fallen auf [standardVarianz] zurück.
+ */
 data class TypKonstruktorDefinition(
     val id: TypId,
     val varianzen: List<TypVarianz> = emptyList(),
+    val standardVarianz: TypVarianz = TypVarianz.Invariant,
 )
 
 /** Erweiterbarer Anforderungshaken. G0.3 registriert konkrete Struktur- und Axiomprüfer. */
