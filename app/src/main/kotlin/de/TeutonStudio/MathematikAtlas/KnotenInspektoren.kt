@@ -79,6 +79,8 @@ object KnotenInspektorRegister {
         de.TeutonStudio.MathematikRechenSystem.kern.TensorRechner.KNOTEN_ART to StrukturRechnerInspektor,
         de.TeutonStudio.MathematikKnoten.TANGENTIAL_KNOTEN_ART to TangentialKnotenInspektor,
         de.TeutonStudio.MathematikKnoten.RAND_KNOTEN_ART to RandKnotenInspektor,
+        de.TeutonStudio.MathematikKnoten.SVG_KNOTEN_ART to SvgKnotenInspektor,
+        de.TeutonStudio.MathematikKnoten.SVG_STIL_KNOTEN_ART to SvgStilKnotenInspektor,
         GeometrieTeilobjektTyp.Ecke.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Kante.knotenArt to GeometrieTeilobjektInspektor,
         GeometrieTeilobjektTyp.Fläche.knotenArt to GeometrieTeilobjektInspektor,
