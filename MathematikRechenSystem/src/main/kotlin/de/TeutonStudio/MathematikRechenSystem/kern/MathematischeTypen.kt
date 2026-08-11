@@ -18,6 +18,7 @@ object MathematischeTypen {
     val Methode = TypId("mathematik.methode")
 
     val Natuerlich = TypId("mathematik.zahl.natuerlich")
+    val NatuerlichMitNull = TypId("mathematik.zahl.natuerlich-mit-null")
     val Ganz = TypId("mathematik.zahl.ganz")
     val Rational = TypId("mathematik.zahl.rational")
     val Reell = TypId("mathematik.zahl.reell")
@@ -36,7 +37,8 @@ object MathematischeTypen {
     fun istAtomUntertyp(von: TypId, erwartet: TypId): Boolean {
         if (von == erwartet) return true
         val eltern = mapOf(
-            Natuerlich to Ganz,
+            Natuerlich to NatuerlichMitNull,
+            NatuerlichMitNull to Ganz,
             Ganz to Rational,
             Rational to Reell,
             Reell to Komplex,
@@ -103,7 +105,8 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
         listOf(elementMenge.elementTypAusdruck()) + dimensionen.map { TypAusdruck.Literal(it.zuLatex()) },
     )
     is BeschraenkteZahlmenge -> when (traeger) {
-        FundamentalerZahlbereich.NATUERLICH -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
+        FundamentalerZahlbereich.NATUERLICH_POSITIV -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
+        FundamentalerZahlbereich.NATUERLICH_MIT_NULL -> TypAusdruck.Atom(MathematischeTypen.NatuerlichMitNull)
         FundamentalerZahlbereich.GANZ -> TypAusdruck.Atom(MathematischeTypen.Ganz)
         FundamentalerZahlbereich.RATIONAL -> TypAusdruck.Atom(MathematischeTypen.Rational)
         FundamentalerZahlbereich.REELL -> TypAusdruck.Atom(MathematischeTypen.Reell)
