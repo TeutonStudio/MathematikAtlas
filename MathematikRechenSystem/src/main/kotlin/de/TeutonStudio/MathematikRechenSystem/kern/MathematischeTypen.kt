@@ -26,7 +26,8 @@ object MathematischeTypen {
     val Quaternion = TypId("mathematik.zahl.quaternion")
 
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
-        TypKonstruktorDefinition(Tupel),
+        // Tupel sind variadisch und komponentenweise kovariant.
+        TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(Matrix, listOf(TypVarianz.Kovariant, TypVarianz.Invariant, TypVarianz.Invariant)),
