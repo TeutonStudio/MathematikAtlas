@@ -2,29 +2,53 @@
 
 ## Godot Engine – EditorIcons
 
-Die in `MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/GodotStrukturEtiketten.kt`
-enthaltenen Vektorpfade der Godot-Strukturtyp-Etiketten wurden aus den gleichnamigen
+Die in `MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/GodotVariantEtiketten.kt`
+enthaltenen Vektorpfade der Godot-Variant-Typetiketten wurden aus den gleichnamigen
 SVG-Dateien unter `godotengine/godot/editor/icons` übernommen.
 
 Extraktionsstand: Godot-Commit `2f2a9f4cc6ecba0d802c5f4ca46f0d6d4d88a18b`.
 
-Verwendete EditorIcons:
+Verwendete EditorIcons des vollständigen eingebauten Variant-Katalogs:
 
+- `Variant.svg`
+- `bool.svg`
+- `int.svg`
+- `float.svg`
+- `String.svg`
 - `Vector2.svg`
 - `Vector2i.svg`
-- `Vector3.svg`
-- `Vector3i.svg`
-- `Vector4.svg`
-- `Vector4i.svg`
 - `Rect2.svg`
 - `Rect2i.svg`
+- `Vector3.svg`
+- `Vector3i.svg`
 - `Transform2D.svg`
-- `Transform3D.svg`
+- `Vector4.svg`
+- `Vector4i.svg`
 - `Plane.svg`
 - `Quaternion.svg`
-- `Projection.svg`
 - `AABB.svg`
 - `Basis.svg`
+- `Transform3D.svg`
+- `Projection.svg`
+- `Color.svg`
+- `StringName.svg`
+- `NodePath.svg`
+- `RID.svg`
+- `Object.svg`
+- `Callable.svg`
+- `Signal.svg`
+- `Dictionary.svg`
+- `Array.svg`
+- `PackedByteArray.svg`
+- `PackedInt32Array.svg`
+- `PackedInt64Array.svg`
+- `PackedFloat32Array.svg`
+- `PackedFloat64Array.svg`
+- `PackedStringArray.svg`
+- `PackedVector2Array.svg`
+- `PackedVector3Array.svg`
+- `PackedColorArray.svg`
+- `PackedVector4Array.svg`
 
 Godot Engine wird unter der MIT-Lizenz veröffentlicht:
 
