@@ -116,30 +116,50 @@ private val angulusVerbraucherOperationen: Set<AngulusMethodenOperation> = setOf
 
 private fun wertePolarAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
     val tupelModus = kontext.knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] == ZAHLENRECHNER_KOMPLEX_TUPEL
-    val (radius, winkel) = if (tupelModus) {
-        val tupel = kontext.eingänge["tupel"]?.objekt as? Tupel
-            ?: error("Der PolarTupel-Eingang fehlt.")
-        require(tupel.koordinatenArt() == TupelKoordinatenArt.POLAR && tupel.elemente.size == 2) {
-            "Die komplexe Polarform erwartet einen PolarTupel aus genau (Zahl, Angulus)."
-        }
-        (tupel.elemente[0] as ZahlAusdruck) to (tupel.elemente[1] as Angulus)
+    if (tupelModus) return wertePolarTupelAus(kontext)
+
+    val radiusQuelle = kontext.eingänge["a"]?.objekt ?: error("Der Radius fehlt.")
+    val winkelQuelle = kontext.eingänge["b"]?.objekt ?: error("Der Winkel fehlt.")
+    val objekt: MathematischesObjekt = if (radiusQuelle is Methode || winkelQuelle is Methode) {
+        PolarKomplexMethode(radiusQuelle, winkelQuelle)
     } else {
-        val radius = kontext.eingänge["a"]?.objekt as? ZahlAusdruck
-            ?: error("Der Radius muss eine Zahl sein.")
-        val winkel = kontext.eingänge["b"]?.objekt as? Angulus
-            ?: error("Der Winkel muss ein Angulus sein.")
-        radius to winkel
+        val radius = radiusQuelle as? ZahlAusdruck ?: error("Der Radius muss eine Zahl sein.")
+        val winkel = winkelQuelle as? Angulus ?: error("Der Winkel muss ein Angulus sein.")
+        komplexAusPolar(radius, winkel)
     }
-    val objekt = komplexAusPolar(radius, winkel)
-    val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
+    val methode = objekt as? SignaturtragendeMethode
+    val quellWerte = kontext.eingänge.values
     return KnotenAuswertungsErgebnis(
         ausgaben = mapOf(
             "wert" to BedingterWert(
                 objekt = objekt,
-                annahmen = annahmen,
+                annahmen = quellWerte.flatMap { it.annahmen }.toSet(),
+                zielMenge = methode?.signatur?.zielMenge,
+                werteVorrat = methode?.signatur?.werteVorrat ?: KomplexeZahlen,
+                reelleVariablen = reelleVariablen(quellWerte),
+                variablenQuellen = quellWerte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
+            ),
+        ),
+        eingänge = kontext.eingänge,
+        warnungen = listOf("Der Polarwinkel wird für die komplexe Auswertung zwangsweise in Radian konvertiert."),
+    )
+}
+
+private fun wertePolarTupelAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+    val tupelWert = kontext.eingänge["tupel"] ?: error("Der PolarTupel-Eingang fehlt.")
+    val tupel = tupelWert.objekt as? Tupel ?: error("Der PolarTupel-Eingang erwartet ein Tupel.")
+    require(tupel.koordinatenArt() == TupelKoordinatenArt.POLAR && tupel.elemente.size == 2) {
+        "Die komplexe Polarform erwartet einen PolarTupel aus genau (Zahl, Angulus)."
+    }
+    val objekt = komplexAusPolar(tupel.elemente[0] as ZahlAusdruck, tupel.elemente[1] as Angulus)
+    return KnotenAuswertungsErgebnis(
+        ausgaben = mapOf(
+            "wert" to BedingterWert(
+                objekt = objekt,
+                annahmen = tupelWert.annahmen,
                 werteVorrat = KomplexeZahlen,
-                reelleVariablen = reelleVariablen(kontext.eingänge.values),
-                variablenQuellen = kontext.eingänge.values.flatMap { it.variablenQuellen }.geordnetEindeutig(),
+                reelleVariablen = tupelWert.reelleVariablen,
+                variablenQuellen = tupelWert.variablenQuellen,
             ),
         ),
         eingänge = kontext.eingänge,
