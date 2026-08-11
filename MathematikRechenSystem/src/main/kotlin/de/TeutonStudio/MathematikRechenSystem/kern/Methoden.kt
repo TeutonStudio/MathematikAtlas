@@ -11,20 +11,20 @@ package de.TeutonStudio.MathematikRechenSystem.kern
  */
 data class MathematischeMethode(
     override val name: String,
-    val parameter: List<MethodenParameter>,
-    val vorschrift: MathematischesObjekt,
-    val zielMenge: MengenAusdruck,
+    override val parameter: List<MethodenParameter>,
+    override val vorschrift: MathematischesObjekt,
+    override val zielMenge: MengenAusdruck,
     /** Definitionsmengen der Parameter, in derselben Reihenfolge wie [parameter]. */
-    val werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
-    val ausgabeNamen: List<String> = listOf("wert"),
+    override val werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
+    override val ausgabeNamen: List<String> = listOf("wert"),
     /**
      * Optionaler gemeinsamer Definitionsbereich der vollständigen Argumentbelegung.
      * Er überschreibt nur die aus den Parameter-Wertevorräten abgeleitete Gesamtmenge
      * und erlaubt insbesondere nicht-kartesische Restriktionen mehrstelliger Methoden.
      */
-    val effektiverWerteVorrat: MengenAusdruck? = null,
+    override val effektiverWerteVorrat: MengenAusdruck? = null,
     /** Strukturierte Herkunft einer Restriktion mit optionalen Ergänzungszweigen. */
-    val bereichsanpassung: MethodenBereichsanpassung? = null,
+    override val bereichsanpassung: MethodenBereichsanpassung? = null,
 ) : MathematischAuswertbareMethode {
     init {
         require(parameter.map { it.name }.distinct().size == parameter.size) {
@@ -80,7 +80,7 @@ data class MathematischeMethode(
         ausgabeNamen = ausgaben.keys.toList(),
     )
 
-    fun vorschriftFür(ausgabe: String): MathematischesObjekt {
+    override fun vorschriftFür(ausgabe: String): MathematischesObjekt {
         val index = ausgabeNamen.indexOf(ausgabe)
         require(index >= 0) { "Die Methode '$name' besitzt keine öffentliche Ausgabe '$ausgabe'." }
         return if (ausgabeNamen.size == 1) vorschrift else (vorschrift as Tupel).elemente[index]
@@ -110,7 +110,7 @@ data class MathematischeMethode(
             "$argumentTupel \\mapsto $bild\\end{cases}"
     }
 
-    fun zielMengeFür(ausgabe: String): MengenAusdruck {
+    override fun zielMengeFür(ausgabe: String): MengenAusdruck {
         val index = ausgabeNamen.indexOf(ausgabe)
         require(index >= 0) { "Die Methode '$name' besitzt keine öffentliche Ausgabe '$ausgabe'." }
         val ziel = if (ausgabeNamen.size == 1) zielMenge else (zielMenge as Tupelraum).komponenten[index]
@@ -120,16 +120,16 @@ data class MathematischeMethode(
         return ziel
     }
 
-    fun zielMengeFür(ausgabe: String, bindungen: Map<String, MathematischesObjekt>): MengenAusdruck =
+    override fun zielMengeFür(ausgabe: String, bindungen: Map<String, MathematischesObjekt>): MengenAusdruck =
         ersetze(zielMengeFür(ausgabe), bindungen) as MengenAusdruck
 
-    val einzigeZielMenge: MengenAusdruck
+    override val einzigeZielMenge: MengenAusdruck
         get() = zielMengeFür(einzigeAusgabe().first)
 
-    val grundMenge: MengenAusdruck
+    override val grundMenge: MengenAusdruck
         get() = grundMengeFürMengenAusgabe()
 
-    fun grundMengeFürMengenAusgabe(): MengenAusdruck {
+    override fun grundMengeFürMengenAusgabe(): MengenAusdruck {
         require(parameter.size == 1) { "Die Methode '$name' muss genau einen freien Parameter besitzen." }
         val (_, wert) = einzigeAusgabe()
         require(wert is MengenAusdruck) { "Die Methode '$name' muss eine Menge ausgeben." }
@@ -143,11 +143,11 @@ data class MathematischeMethode(
         return grundMenge
     }
 
-    fun binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode =
+    override fun binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode =
         GebundeneMethode(this, bindungen.filterKeys { key -> parameter.any { it.name == key } })
 
     /** Kanonische Anwendung mit genau einem Ergebnisobjekt. */
-    fun wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt {
+    override fun wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt {
         require(argumente.size == parameter.size) {
             "Die Methode '$name' erwartet ${parameter.size} Argumente, erhielt aber ${argumente.size}."
         }
@@ -163,12 +163,12 @@ data class MathematischeMethode(
         return vereinfacheObjekt(ersetze(vorschrift, argumente))
     }
 
-    fun einzigeAusgabe(): Pair<String, MathematischesObjekt> {
+    override fun einzigeAusgabe(): Pair<String, MathematischesObjekt> {
         require(ausgabeNamen.size == 1) { "Die Methode '$name' muss genau eine öffentliche Ausgabe besitzen." }
         return ausgabeNamen.single() to vorschriftFür(ausgabeNamen.single())
     }
 
-    fun prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> {
+    override fun prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> {
         require(parameter.size == 1) { "Die Methode '$name' muss genau einen freien Parameter besitzen." }
         require(parameter.single() is Variable) { "Die Methode '$name' benötigt für eine Iteration einen Zahlenparameter." }
         val ausgabe = einzigeAusgabe()
