@@ -263,8 +263,15 @@ private fun erhalteOderErzeugeEingang(
 ): AnschlussDaten {
     val art = anschlussArt(typ)
     val zulässige = zulässigeAnschlussArten(typ)
-    val vorhanden = knoten.anschlüsse.firstOrNull {
-        it.name == name && it.richtung == AnschlussRichtung.Eingang && it.art == art && it.zulässigeArten == zulässige
+    val vorhanden = knoten.anschlüsse.firstOrNull { anschluss ->
+        anschluss.name == name &&
+            anschluss.richtung == AnschlussRichtung.Eingang &&
+            (
+                anschluss.art == art && anschluss.zulässigeArten == zulässige ||
+                    anschluss.art == MathematikAnschlussArten.Objekt.id &&
+                    art in anschluss.zulässigeArten &&
+                    MathematikAnschlussArten.Methode.id in anschluss.zulässigeArten
+                )
     }
     return vorhanden?.copy(
         name = name,
