@@ -60,5 +60,6 @@ object MathematikKartenMigrationen {
         .migriereUniversellenZahlenRechner()
         .migriereMengenOperatorKnoten()
         .migrierePraedikatKnoten()
+        .migriereVektorRechnerKonfiguration()
         .migriereStrukturierteDivision()
 }
