@@ -30,6 +30,11 @@ sealed interface TypAusdruck {
 
     data class Atom(val id: TypId) : TypAusdruck
 
+    /** Typniveau-Konstante, z.B. eine Vektordimension oder Tensorform. */
+    data class Literal(val wert: String) : TypAusdruck {
+        init { require(wert.isNotBlank()) { "Ein Typ-Literal darf nicht leer sein." } }
+    }
+
     data class Parameterisiert(
         val konstruktor: TypId,
         val argumente: List<TypAusdruck>,
