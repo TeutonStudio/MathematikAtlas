@@ -6,6 +6,7 @@ import de.TeutonStudio.TypSystem.*
 object MathematischeTypen {
     val Objekt = TypId("mathematik.objekt")
     val Zahl = TypId("mathematik.zahl")
+    val Angulus = TypId("mathematik.angulus")
     val Aussage = TypId("mathematik.aussage")
     val Menge = TypId("mathematik.menge")
     val Mass = TypId("mathematik.mass")
@@ -15,6 +16,8 @@ object MathematischeTypen {
     val Matrix = TypId("mathematik.matrix")
     val Tensor = TypId("mathematik.tensor")
     val Tupel = TypId("typ.tupel")
+    val KartesischesTupel = TypId("mathematik.tupel.kartesisch")
+    val PolarTupel = TypId("mathematik.tupel.polar")
     val Methode = TypId("mathematik.methode")
 
     val Natuerlich = TypId("mathematik.zahl.natuerlich")
@@ -28,11 +31,23 @@ object MathematischeTypen {
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
         // Tupel sind variadisch und komponentenweise kovariant.
         TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
+        TypKonstruktorDefinition(KartesischesTupel, standardVarianz = TypVarianz.Kovariant),
+        TypKonstruktorDefinition(PolarTupel, standardVarianz = TypVarianz.Kovariant),
+        // Einheit und Dimensionsbezug eines Winkels sind invariant.
+        TypKonstruktorDefinition(Angulus, standardVarianz = TypVarianz.Invariant),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(Matrix, listOf(TypVarianz.Kovariant, TypVarianz.Invariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(Tensor),
         TypKonstruktorDefinition(Methode, listOf(TypVarianz.Kontravariant, TypVarianz.Kovariant)),
+    )
+
+    fun angulusTyp(einheit: AngulusEinheit, dimensionen: List<String>): TypAusdruck = TypAusdruck.Parameterisiert(
+        Angulus,
+        listOf(
+            TypAusdruck.Literal(einheit.stabileId),
+            TypAusdruck.Literal(dimensionen.joinToString(separator = ",").ifBlank { "unbestimmt" }),
+        ),
     )
 
     fun istAtomUntertyp(von: TypId, erwartet: TypId): Boolean {
@@ -46,6 +61,7 @@ object MathematischeTypen {
             Komplex to Quaternion,
             Quaternion to Zahl,
             Zahl to Objekt,
+            Angulus to Objekt,
             Aussage to Objekt,
             Menge to Objekt,
             Mass to Objekt,
@@ -55,6 +71,8 @@ object MathematischeTypen {
             Matrix to Objekt,
             Tensor to Objekt,
             Tupel to Objekt,
+            KartesischesTupel to Tupel,
+            PolarTupel to Tupel,
             Methode to Objekt,
         )
         var aktuell: TypId? = von
