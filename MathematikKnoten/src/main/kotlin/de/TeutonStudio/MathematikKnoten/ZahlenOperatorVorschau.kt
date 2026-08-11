@@ -33,8 +33,8 @@ val UniversellerZahlenOperator.vorschauLatex: String
         UniversellerZahlenOperator.AUFRUNDUNG -> "\\lceil\\dots\\rceil"
         UniversellerZahlenOperator.RUNDUNG -> "\\lfloor\\dots\\rceil"
         UniversellerZahlenOperator.KONJUGIERTE -> "\\overline{(\\dots)}"
-        UniversellerZahlenOperator.REALTEIL -> "\\operatorname{Re}(\\dots)"
-        UniversellerZahlenOperator.IMAGINAERTEIL -> "\\operatorname{Im}(\\dots)"
+        UniversellerZahlenOperator.REALTEIL -> "\\mathcal{Re}(\\dots)"
+        UniversellerZahlenOperator.IMAGINAERTEIL -> "\\mathcal{Im}(\\dots)"
         UniversellerZahlenOperator.KOMPLEXER_WINKEL -> "\\arg(\\dots)"
         UniversellerZahlenOperator.KOMPLEXER_RADIUS -> "|\\dots|"
         UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> "(r,\\varphi)\\mapsto r e^{i\\varphi}"
@@ -65,5 +65,5 @@ val ErweiterterZahlenOperator.vorschauLatex: String
         ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL -> "\\operatorname{AM}(\\dots,\\dots)"
         ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL -> "\\operatorname{GM}(\\dots,\\dots)"
         ErweiterterZahlenOperator.STAMMFUNKTION -> "F(x)=\\int_{[c,x]}f(t)\\,\\mathrm dt"
-        ErweiterterZahlenOperator.POLYNOM -> "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb N_0^{\\leq n}"
+        ErweiterterZahlenOperator.POLYNOM -> "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb{N}_0^{\\leq n}"
     }
