@@ -53,5 +53,9 @@ jobs:
       - name: JVM-Tests ausführen
         run: ./gradlew test --stacktrace
 
+      - name: Fehlgeschlagene JVM-Tests ausgeben
+        if: failure()
+        run: python3 scripts/zeige_testfehler.py
+
       - name: Android-Debug-Build erstellen
         run: ./gradlew :app:assembleDebug --stacktrace
