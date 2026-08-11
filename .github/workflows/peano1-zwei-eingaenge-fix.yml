@@ -1,0 +1,146 @@
+name: Peano 1 Zwei-Eingaenge Fix
+
+on:
+  push:
+    branches:
+      - agent/fix-peano1-zwei-eingaenge
+    paths:
+      - .github/workflows/peano1-zwei-eingaenge-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-peano1-zwei-eingaenge
+          fetch-depth: 0
+
+      - name: Peano 1 auf Menge und Multiplikation reduzieren
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          axiom_path = Path('MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/AxiomOperatoren.kt')
+          text = axiom_path.read_text()
+
+          neutral_anchor = '''    private fun neutralAussage(menge: MengenAusdruck, op: Methode, neutral: MathematischesObjekt): Aussage? =
+        endlich(menge) { e ->
+            konjunktion(listOf(element(neutral, menge)) + e.flatMap { x ->
+                listOf(
+                    Gleichheit(aufruf(op, neutral, x), x),
+                    Gleichheit(aufruf(op, x, neutral), x),
+                )
+            })
+        }
+'''
+          neutral_replacement = neutral_anchor + '''
+    private fun neutralesElementExistiertAussage(menge: MengenAusdruck, op: Methode): Aussage? =
+        endlich(menge) { elemente ->
+            val kandidaten = elemente.map { neutral ->
+                checkNotNull(neutralAussage(menge, op, neutral))
+            }
+            when (kandidaten.size) {
+                0 -> WahrheitsKonstante(false)
+                1 -> kandidaten.single()
+                else -> Disjunktion(kandidaten)
+            }
+        }
+'''
+          if neutral_anchor not in text:
+              raise SystemExit('neutralAussage-Anker nicht gefunden')
+          text = text.replace(neutral_anchor, neutral_replacement, 1)
+
+          old_peano = '''        d(
+            "axiom.peano.null", "Peano 1 · Neutrales Element", setOf("peano"), "Natürliche Zahlen · Peano",
+            "e\\\\in M\\\\land\\\\forall n\\\\in M:\\\\;e\\\\cdot n=n=n\\\\cdot e",
+            setOf("Peano 1", "neutrales Element", "Identität", "Null gehört zu N"),
+            a("menge", AxiomArgumentArt.MENGE),
+            a("operation", AxiomArgumentArt.METHODE, 2),
+            a("neutral", AxiomArgumentArt.OBJEKT),
+        ) { w ->
+            val n = menge(w, 0); val op = methode(w, 1); val neutral = w[2]
+            instanz(
+                "axiom.peano.null",
+                "Peano 1 · Neutrales Element",
+                setOf("peano"),
+                "${neutral.zuLatex()}\\\\in${n.zuLatex()}\\\\land\\\\forall n\\\\in${n.zuLatex()}:\\\\;${op.name}(${neutral.zuLatex()},n)=n=${op.name}(n,${neutral.zuLatex()})",
+                runCatching { neutralAussage(n, op, neutral) }.getOrNull(),
+            )
+        },'''
+          new_peano = '''        d(
+            "axiom.peano.null", "Peano 1 · Neutrales Element", setOf("peano"), "Natürliche Zahlen · Peano",
+            "\\\\exists e\\\\in M:\\\\;\\\\forall n\\\\in M:\\\\;e\\\\cdot n=n=n\\\\cdot e",
+            setOf("Peano 1", "neutrales Element", "Identität", "Null gehört zu N"),
+            a("menge", AxiomArgumentArt.MENGE),
+            a("multiplikation", AxiomArgumentArt.METHODE, 2),
+        ) { w ->
+            val n = menge(w, 0); val mal = methode(w, 1)
+            instanz(
+                "axiom.peano.null",
+                "Peano 1 · Neutrales Element",
+                setOf("peano"),
+                "\\\\exists e\\\\in${n.zuLatex()}:\\\\;\\\\forall n\\\\in${n.zuLatex()}:\\\\;${mal.name}(e,n)=n=${mal.name}(n,e)",
+                runCatching { neutralesElementExistiertAussage(n, mal) }.getOrNull(),
+            )
+        },'''
+          if old_peano not in text:
+              raise SystemExit('Peano-1-Block nicht gefunden')
+          axiom_path.write_text(text.replace(old_peano, new_peano, 1))
+
+          test_path = Path('MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/AxiomOperatorenTest.kt')
+          test = test_path.read_text()
+          start = test.index('    @Test\n    fun `Peano 1 fordert ein zur Operation neutrales Element innerhalb des Traegers`()')
+          end = test.index('    @Test\n    fun `Peano Nachfolgerabschluss wird auf endlichem Traeger ausgewertet`', start)
+          replacement = '''    @Test
+    fun `Peano 1 hat nur Menge und Multiplikation und fordert ein internes neutrales Element`() {
+        val singleton = EndlicheMenge(setOf(RationaleZahl.Null))
+        val mitNeutral = konstanteBinaereOperation(singleton, RationaleZahl.Null)
+        val ohneNeutral = konstanteBinaereOperation(zweiElemente, RationaleZahl.Null)
+        val definition = checkNotNull(AxiomOperatoren.vonIdOderNull("axiom.peano.null"))
+
+        assertEquals(listOf("menge", "multiplikation"), definition.argumente.map(AxiomArgument::rolle))
+        assertEquals("Peano 1 · Neutrales Element", definition.titel)
+
+        val wahr = definition.werteAus(
+            mapOf(
+                "menge" to singleton,
+                "multiplikation" to mitNeutral,
+            ),
+        )
+        val falsch = definition.werteAus(
+            mapOf(
+                "menge" to zweiElemente,
+                "multiplikation" to ohneNeutral,
+            ),
+        )
+
+        assertEquals(Wahrheitswert.Wahr, wahr.entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Lüge, falsch.entscheide().wahrheitswert)
+        assertTrue(wahr.zuLatex().contains("\\\\exists e\\\\in"))
+    }
+
+'''
+          test_path.write_text(test[:start] + replacement + test[end:])
+          PY
+
+      - name: Rechenkern testen
+        run: ./gradlew :MathematikRechenSystem:test --stacktrace
+
+      - name: Axiom-Definitionskarten testen
+        run: ./gradlew :app:testDebugUnitTest --tests '*AxiomPraedikatDefinitionsKartenTest*' --stacktrace
+
+      - name: Korrektur committen
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/peano1-zwei-eingaenge-fix.yml
+          git add MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/AxiomOperatoren.kt
+          git add MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/AxiomOperatorenTest.kt
+          git commit -m "fix: Peano 1 auf Menge und Multiplikation reduzieren"
+          git push origin HEAD:agent/fix-peano1-zwei-eingaenge
