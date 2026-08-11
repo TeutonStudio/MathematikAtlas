@@ -18,7 +18,7 @@ class RelationsOperatorenTest {
     }
 
     @Test
-    fun `Teil oder Gleichmenge ist Halbordnung aber keine behauptete Totalordnung`() {
+    fun `Teilmenge ist Halbordnung aber keine behauptete Totalordnung`() {
         val relation = checkNotNull(
             RelationsOperatoren.vonIdOderNull(MengenRelationsOperator.TEIL_ODER_GLEICHMENGE.stabileId),
         )
@@ -26,6 +26,14 @@ class RelationsOperatorenTest {
 
         assertTrue(RelationsKlasse.HALBORDNUNG in klassen)
         assertTrue(RelationsKlasse.TOTALORDNUNG !in klassen)
+    }
+
+    @Test
+    fun `Mengenrelationsnamen unterscheiden echte und nicht strikte Inklusion`() {
+        assertEquals("Echte Teilmenge", MengenRelationsOperator.TEILMENGE.titel)
+        assertEquals("Echte Übermenge", MengenRelationsOperator.UEBERMENGE.titel)
+        assertEquals("Teilmenge", MengenRelationsOperator.TEIL_ODER_GLEICHMENGE.titel)
+        assertEquals("Übermenge", MengenRelationsOperator.UEBER_ODER_GLEICHMENGE.titel)
     }
 
     @Test
