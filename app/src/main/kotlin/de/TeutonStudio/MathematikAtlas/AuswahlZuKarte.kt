@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVertrag
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsFenster
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
@@ -35,6 +36,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.findeAnschluss
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.mathematikTypSystem
 import java.util.UUID
 
 internal data class KartenGrenzAnschlussVorschlag(
@@ -42,6 +44,7 @@ internal data class KartenGrenzAnschlussVorschlag(
     val innererAnschluss: AnschlussVerweis,
     val äußererAnschluss: AnschlussVerweis,
     val art: AnschlussArtId,
+    val vertrag: AnschlussVertrag,
     val vorgeschlagenerName: String,
     val beschreibung: String,
 )
@@ -95,7 +98,7 @@ internal fun KartenDaten.vorschauFürNeueKarte(
         if (fehlende.isNotEmpty()) add("${fehlende.size} ausgewählte Knoten existieren nicht mehr.")
     }.toMutableList()
     val ausgewählteIds = ausgewählteKnoten.mapTo(mutableSetOf(), KnotenDaten::id)
-    val prüfung = GraphPrüfung(anschlussArten)
+    val prüfung = GraphPrüfung(anschlussArten, mathematikTypSystem(anschlussArten))
     val innereVerbindungen = mutableListOf<VerbindungDaten>()
     val eingänge = mutableListOf<KartenGrenzAnschlussVorschlag>()
     val ausgänge = mutableListOf<KartenGrenzAnschlussVorschlag>()
@@ -161,6 +164,7 @@ private fun KartenDaten.grenzVorschlag(
         innererAnschluss = innererAnschluss,
         äußererAnschluss = äußererAnschluss,
         art = prüfung.effektiveArt(this, verbindung.von),
+        vertrag = AnschlussVertrag(typ = prüfung.effektiverTyp(this, verbindung.von)),
         vorgeschlagenerName = name,
         beschreibung = beschreibung,
     )
@@ -224,6 +228,7 @@ internal fun AuswahlKartenVorschau.materialisiere(
         val anschluss = basis.anschlüsse.single().copy(
             id = AnschlussId(deterministischeId(namensraum, "karten-eingang-anschluss", vorschlag.verbindungsId.wert)),
             art = vorschlag.art,
+            vertrag = vorschlag.vertrag,
         )
         basis.copy(
             id = KnotenId(deterministischeId(namensraum, "karten-eingang", vorschlag.verbindungsId.wert)),
@@ -237,6 +242,7 @@ internal fun AuswahlKartenVorschau.materialisiere(
         val anschluss = basis.anschlüsse.single().copy(
             id = AnschlussId(deterministischeId(namensraum, "karten-ausgang-anschluss", vorschlag.verbindungsId.wert)),
             art = vorschlag.art,
+            vertrag = vorschlag.vertrag,
         )
         basis.copy(
             id = KnotenId(deterministischeId(namensraum, "karten-ausgang", vorschlag.verbindungsId.wert)),
