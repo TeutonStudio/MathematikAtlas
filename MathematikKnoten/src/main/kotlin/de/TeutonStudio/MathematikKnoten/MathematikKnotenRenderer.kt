@@ -25,6 +25,8 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MENGENKONSTRUKTOR_ART
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikKartenAdapter.prädikatsArgumente
+import de.TeutonStudio.MathematikKnoten.godot.GodotDatentypEtiketten
+import de.TeutonStudio.MathematikKnoten.godot.godotDatentypEtikettenFür
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 internal fun variablenFormel(knoten: KnotenDaten): String {
@@ -53,6 +55,10 @@ class MathematikKnotenRenderer(
         val ergebnis = ergebnisFür(knoten)
         val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
         val objekt = ausgabe?.objekt
+        val godotEtiketten = ergebnis?.ausgaben?.values
+            ?.flatMap { ausgabeWert -> godotDatentypEtikettenFür(ausgabeWert.objekt) }
+            ?.distinctBy { it.typ }
+            .orEmpty()
         var geöffneteDefinition by remember(knoten.id) { mutableStateOf<AutomatischesAdjektiv?>(null) }
 
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -60,6 +66,7 @@ class MathematikKnotenRenderer(
             (objekt as? Methode)?.let { methode ->
                 Text(methode.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
             }
+            GodotDatentypEtiketten(godotEtiketten)
             when {
                 knoten.art == MENGENKONSTRUKTOR_ART -> LatexFormel(
                     mengenkonstruktorFormel(knoten),
