@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlenOperatorHebungsArt
 import de.TeutonStudio.TypSystem.AnschlussVertrag
 import de.TeutonStudio.TypSystem.TypAusdruck
+import de.TeutonStudio.TypSystem.TypInferenzRegel
 
 private val variadischeZahlenOperatoren = setOf(
     UniversellerZahlenOperator.ADDITION,
@@ -37,6 +38,10 @@ private val binaereZahlenOperatoren = setOf(
     UniversellerZahlenOperator.LOGARITHMUS,
     UniversellerZahlenOperator.MODULO,
 )
+
+private val zahlTyp = TypAusdruck.Atom(MathematischeTypen.Zahl)
+private val angulusTyp = TypAusdruck.Atom(MathematischeTypen.Angulus)
+private val methodenTyp = TypAusdruck.Atom(MathematischeTypen.Methode)
 
 fun istVariadischerZahlenOperator(operator: UniversellerZahlenOperator): Boolean =
     operator in variadischeZahlenOperatoren
@@ -87,6 +92,7 @@ fun konfiguriereZahlenRechner(
             dynamischErzeugt = index >= 2 && operator in variadischeZahlenOperatoren,
             zulässigeArten = vorgabe.zulässigeArten,
             vertrag = vorgabe.vertrag,
+            typInferenz = vorgabe.typInferenz,
         )
     }
     val punktweiseEingangsNamen = eingänge
@@ -99,11 +105,22 @@ fun konfiguriereZahlenRechner(
     } else {
         MathematikAnschlussArten.Zahl.id
     }
-    val skalareAusgangsVertrag = if (operator in angulusErzeuger) {
-        AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Angulus))
+    val skalareAusgangsVertrag = if (operator in angulusErzeuger && punktweiseEingangsNamen.isNotEmpty()) {
+        AnschlussVertrag(TypAusdruck.Vereinigung(listOf(angulusTyp, methodenTyp)))
+    } else if (operator in angulusErzeuger) {
+        AnschlussVertrag(angulusTyp)
     } else {
-        AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Zahl))
+        AnschlussVertrag(zahlTyp)
     }
+    val typInferenz = if (operator in angulusErzeuger && eingänge.any { it.name == "a" }) {
+        TypInferenzRegel.AbbildungVonEingang(
+            eingang = "a",
+            abbildung = mapOf(
+                zahlTyp to angulusTyp,
+                methodenTyp to methodenTyp,
+            ),
+        )
+    } else null
     val ausgang = (vorhandenerAusgang ?: AnschlussDaten(
         name = "wert",
         richtung = AnschlussRichtung.Ausgang,
@@ -129,6 +146,7 @@ fun konfiguriereZahlenRechner(
             )
         },
         vertrag = skalareAusgangsVertrag,
+        typInferenz = typInferenz,
     )
     val parameter = knoten.parameter + mapOf(
         ZAHLENRECHNER_OPERATOR to operator.stabileId,
@@ -215,7 +233,7 @@ private fun angulusOderMethodenEingang(name: String): AnschlussDaten = eingang(
         MathematikAnschlussArten.Angulus.id,
         MathematikAnschlussArten.Methode.id,
     ),
-    vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Angulus)),
+    vertrag = AnschlussVertrag(TypAusdruck.Vereinigung(listOf(angulusTyp, methodenTyp))),
 )
 
 private fun eingang(
