@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
+import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,7 +25,7 @@ class GodotStrukturEtikettenTest {
             Matrix(werte.map { wert -> listOf(wert) }),
         )
 
-        kandidaten.forEach { assertEquals(GodotStrukturTyp.VECTOR2, it.godotStrukturTyp()) }
+        kandidaten.forEach { assertEquals(GodotVariantTyp.VECTOR2, it.godotStrukturVariantTyp()) }
     }
 
     @Test
@@ -32,22 +35,31 @@ class GodotStrukturEtikettenTest {
             Tupel(werte),
             ZeilenVektor(werte),
             SpaltenVektor(werte),
-        ).forEach { assertEquals(GodotStrukturTyp.VECTOR3, it.godotStrukturTyp()) }
+        ).forEach { assertEquals(GodotVariantTyp.VECTOR3, it.godotStrukturVariantTyp()) }
     }
 
     @Test
     fun `Vector4 erkennt vierdimensionale Koordinatenstruktur`() {
         val werte = variablen(4)
-        assertEquals(GodotStrukturTyp.VECTOR4, Tupel(werte).godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.VECTOR4, ZeilenVektor(werte).godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.VECTOR4, SpaltenVektor(werte).godotStrukturTyp())
+        assertEquals(GodotVariantTyp.VECTOR4, Tupel(werte).godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.VECTOR4, ZeilenVektor(werte).godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.VECTOR4, SpaltenVektor(werte).godotStrukturVariantTyp())
     }
 
     @Test
     fun `ganzzahlige Vektoren erhalten Integer Godot Typen`() {
-        assertEquals(GodotStrukturTyp.VECTOR2I, Tupel(ganze(2)).godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.VECTOR3I, ZeilenVektor(ganze(3)).godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.VECTOR4I, SpaltenVektor(ganze(4)).godotStrukturTyp())
+        assertEquals(GodotVariantTyp.VECTOR2I, Tupel(ganze(2)).godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.VECTOR3I, ZeilenVektor(ganze(3)).godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.VECTOR4I, SpaltenVektor(ganze(4)).godotStrukturVariantTyp())
+    }
+
+    @Test
+    fun `Color und Quaternion bleiben semantisch von Vector4 getrennt`() {
+        val vierer = Tupel(variablen(4, "q"))
+
+        assertEquals(GodotVariantTyp.VECTOR4, vierer.godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.COLOR, vierer.godotStrukturVariantTyp("Farbe RGBA"))
+        assertEquals(GodotVariantTyp.QUATERNION, vierer.godotStrukturVariantTyp("Quaternion Rotation"))
     }
 
     @Test
@@ -55,26 +67,20 @@ class GodotStrukturEtikettenTest {
         val rect = Tupel(listOf(Tupel(variablen(2, "p")), Tupel(variablen(2, "s"))))
         val rectI = Tupel(listOf(Tupel(ganze(2)), Tupel(ganze(2))))
 
-        assertEquals(GodotStrukturTyp.RECT2, rect.godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.RECT2I, rectI.godotStrukturTyp())
+        assertEquals(GodotVariantTyp.RECT2, rect.godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.RECT2I, rectI.godotStrukturVariantTyp())
     }
 
     @Test
     fun `AABB wird als Paar dreidimensionaler Vektoren erkannt`() {
         val aabb = Tupel(listOf(Tupel(variablen(3, "p")), Tupel(variablen(3, "s"))))
-        assertEquals(GodotStrukturTyp.AABB, aabb.godotStrukturTyp())
+        assertEquals(GodotVariantTyp.AABB, aabb.godotStrukturVariantTyp())
     }
 
     @Test
     fun `Plane wird als Normalenvektor und Abstand erkannt`() {
         val plane = Tupel(listOf(Tupel(variablen(3, "n")), Variable("d")))
-        assertEquals(GodotStrukturTyp.PLANE, plane.godotStrukturTyp())
-    }
-
-    @Test
-    fun `Quaternion wird bei semantischem Hinweis aus vier Koordinaten erkannt`() {
-        val quaternion = Tupel(variablen(4, "q"))
-        assertEquals(GodotStrukturTyp.QUATERNION, quaternion.godotStrukturTyp("Quaternion Rotation"))
+        assertEquals(GodotVariantTyp.PLANE, plane.godotStrukturVariantTyp())
     }
 
     @Test
@@ -94,14 +100,14 @@ class GodotStrukturEtikettenTest {
             ),
         )
 
-        assertEquals(GodotStrukturTyp.TRANSFORM2D, affin.godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.TRANSFORM2D, komponenten.godotStrukturTyp())
+        assertEquals(GodotVariantTyp.TRANSFORM2D, affin.godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.TRANSFORM2D, komponenten.godotStrukturVariantTyp())
     }
 
     @Test
     fun `Basis erkennt allgemeine drei mal drei Matrix`() {
         val basis = Matrix(List(3) { zeile -> List(3) { spalte -> Variable("b${zeile}${spalte}") } })
-        assertEquals(GodotStrukturTyp.BASIS, basis.godotStrukturTyp())
+        assertEquals(GodotVariantTyp.BASIS, basis.godotStrukturVariantTyp())
     }
 
     @Test
@@ -117,25 +123,72 @@ class GodotStrukturEtikettenTest {
         val basis = Matrix(List(3) { zeile -> List(3) { spalte -> Variable("m${zeile}${spalte}") } })
         val komponenten = Tupel(listOf(basis, Tupel(variablen(3, "o"))))
 
-        assertEquals(GodotStrukturTyp.TRANSFORM3D, affin.godotStrukturTyp())
-        assertEquals(GodotStrukturTyp.TRANSFORM3D, komponenten.godotStrukturTyp())
+        assertEquals(GodotVariantTyp.TRANSFORM3D, affin.godotStrukturVariantTyp())
+        assertEquals(GodotVariantTyp.TRANSFORM3D, komponenten.godotStrukturVariantTyp())
     }
 
     @Test
     fun `Projection erkennt allgemeine vier mal vier Matrix`() {
         val projektion = Matrix(List(4) { zeile -> List(4) { spalte -> Variable("p${zeile}${spalte}") } })
-        assertEquals(GodotStrukturTyp.PROJECTION, projektion.godotStrukturTyp())
+        assertEquals(GodotVariantTyp.PROJECTION, projektion.godotStrukturVariantTyp())
     }
 
     @Test
-    fun `Katalog enthält alle Orchestrator Struct Pin Typen`() {
+    fun `atomare Atlas Ausgaben erhalten bool int und float Etiketten`() {
+        val ergebnis = KnotenAuswertungsErgebnis(
+            ausgaben = mapOf(
+                "aussage" to BedingterWert(WahrheitsKonstante(true)),
+                "ganz" to BedingterWert(RationaleZahl.von(42)),
+                "bruch" to BedingterWert(RationaleZahl.von(1, 2)),
+            ),
+        )
+        val typen = ergebnis.godotVariantEtiketten(KnotenDaten(art = "test", name = "Atomar"))
+            .associate { etikett -> etikett.ausgangName to etikett.typ }
+
+        assertEquals(GodotVariantTyp.BOOL, typen["aussage"])
+        assertEquals(GodotVariantTyp.INT, typen["ganz"])
+        assertEquals(GodotVariantTyp.FLOAT, typen["bruch"])
+    }
+
+    @Test
+    fun `langes homogenes Zahlentupel wird PackedInt64Array`() {
+        val ergebnis = KnotenAuswertungsErgebnis(
+            mapOf("werte" to BedingterWert(Tupel(ganze(5)))),
+        )
+        val etikett = ergebnis.godotVariantEtiketten(KnotenDaten(art = "test", name = "Werte")).single()
+
+        assertEquals(GodotVariantTyp.PACKED_INT64_ARRAY, etikett.typ)
+    }
+
+    @Test
+    fun `langes bool Tupel behält Array mit Elementtyp`() {
+        val aussagen = List(5) { index -> AussagenParameter("p$index") }
+        val ergebnis = KnotenAuswertungsErgebnis(
+            mapOf("werte" to BedingterWert(Tupel(aussagen))),
+        )
+        val etikett = ergebnis.godotVariantEtiketten(KnotenDaten(art = "test", name = "Werte")).single()
+
+        assertEquals(GodotVariantTyp.ARRAY, etikett.typ)
+        assertEquals(GodotVariantTyp.BOOL, etikett.elementTyp)
+    }
+
+    @Test
+    fun `Katalog entspricht allen sichtbaren eingebauten Godot Variant Typicons`() {
         assertEquals(
             setOf(
-                "Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i",
-                "Rect2", "Rect2i", "Transform2D", "Transform3D", "Plane", "Quaternion",
-                "Projection", "AABB", "Basis",
+                "Variant",
+                "bool", "int", "float", "String",
+                "Vector2", "Vector2i", "Rect2", "Rect2i", "Vector3", "Vector3i",
+                "Transform2D", "Vector4", "Vector4i", "Plane", "Quaternion", "AABB",
+                "Basis", "Transform3D", "Projection",
+                "Color", "StringName", "NodePath", "RID", "Object", "Callable", "Signal",
+                "Dictionary", "Array",
+                "PackedByteArray", "PackedInt32Array", "PackedInt64Array",
+                "PackedFloat32Array", "PackedFloat64Array", "PackedStringArray",
+                "PackedVector2Array", "PackedVector3Array", "PackedColorArray", "PackedVector4Array",
             ),
-            GodotStrukturTyp.entries.mapTo(mutableSetOf(), GodotStrukturTyp::godotName),
+            GodotVariantTyp.entries.mapTo(mutableSetOf(), GodotVariantTyp::godotName),
         )
+        assertEquals(39, GodotVariantTyp.entries.size)
     }
 }
