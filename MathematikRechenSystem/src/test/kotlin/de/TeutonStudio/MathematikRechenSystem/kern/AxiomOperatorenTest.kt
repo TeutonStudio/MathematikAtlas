@@ -70,32 +70,31 @@ class AxiomOperatorenTest {
     }
 
     @Test
-    fun `Peano 1 fordert ein zur Operation neutrales Element innerhalb des Traegers`() {
-        val menge = EndlicheMenge(setOf(RationaleZahl.Null))
-        val operation = konstanteBinaereOperation(menge, RationaleZahl.Null)
+    fun `Peano 1 hat nur Menge und Multiplikation und fordert ein internes neutrales Element`() {
+        val singleton = EndlicheMenge(setOf(RationaleZahl.Null))
+        val mitNeutral = konstanteBinaereOperation(singleton, RationaleZahl.Null)
+        val ohneNeutral = konstanteBinaereOperation(zweiElemente, RationaleZahl.Null)
         val definition = checkNotNull(AxiomOperatoren.vonIdOderNull("axiom.peano.null"))
 
-        assertEquals(listOf("menge", "operation", "neutral"), definition.argumente.map(AxiomArgument::rolle))
+        assertEquals(listOf("menge", "multiplikation"), definition.argumente.map(AxiomArgument::rolle))
         assertEquals("Peano 1 · Neutrales Element", definition.titel)
 
-        val enthalten = definition.werteAus(
-            mapOf(
-                "menge" to menge,
-                "operation" to operation,
-                "neutral" to RationaleZahl.Null,
+        val wahr = definition.werteAus(
+            mapOf<String, MathematischesObjekt>(
+                "menge" to singleton,
+                "multiplikation" to mitNeutral,
             ),
         )
-        val ausserhalb = definition.werteAus(
-            mapOf(
-                "menge" to menge,
-                "operation" to operation,
-                "neutral" to RationaleZahl.Eins,
+        val falsch = definition.werteAus(
+            mapOf<String, MathematischesObjekt>(
+                "menge" to zweiElemente,
+                "multiplikation" to ohneNeutral,
             ),
         )
 
-        assertEquals(Wahrheitswert.Wahr, enthalten.entscheide().wahrheitswert)
-        assertEquals(Wahrheitswert.Lüge, ausserhalb.entscheide().wahrheitswert)
-        assertTrue(enthalten.zuLatex().contains("\\in"))
+        assertEquals(Wahrheitswert.Wahr, wahr.entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Lüge, falsch.entscheide().wahrheitswert)
+        assertTrue(wahr.zuLatex().contains("\\exists e\\in"))
     }
 
     @Test

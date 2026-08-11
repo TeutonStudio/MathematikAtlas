@@ -177,6 +177,18 @@ object AxiomOperatoren {
             })
         }
 
+    private fun neutralesElementExistiertAussage(menge: MengenAusdruck, op: Methode): Aussage? =
+    endlich(menge) { elemente ->
+        val kandidaten = elemente.map { neutral ->
+            checkNotNull(neutralAussage(menge, op, neutral))
+        }
+        when (kandidaten.size) {
+            0 -> WahrheitsKonstante(false)
+            1 -> kandidaten.single()
+            else -> Disjunktion(kandidaten)
+        }
+    }
+
     private fun inversAussage(
         menge: MengenAusdruck,
         op: Methode,
@@ -340,22 +352,21 @@ object AxiomOperatoren {
 
     private val peanoAxiome: List<AxiomOperatorDefinition> = listOf(
         d(
-            "axiom.peano.null", "Peano 1 · Neutrales Element", setOf("peano"), "Natürliche Zahlen · Peano",
-            "e\\in M\\land\\forall n\\in M:\\;e\\cdot n=n=n\\cdot e",
-            setOf("Peano 1", "neutrales Element", "Identität", "Null gehört zu N"),
-            a("menge", AxiomArgumentArt.MENGE),
-            a("operation", AxiomArgumentArt.METHODE, 2),
-            a("neutral", AxiomArgumentArt.OBJEKT),
-        ) { w ->
-            val n = menge(w, 0); val op = methode(w, 1); val neutral = w[2]
-            instanz(
-                "axiom.peano.null",
-                "Peano 1 · Neutrales Element",
-                setOf("peano"),
-                "${neutral.zuLatex()}\\in${n.zuLatex()}\\land\\forall n\\in${n.zuLatex()}:\\;${op.name}(${neutral.zuLatex()},n)=n=${op.name}(n,${neutral.zuLatex()})",
-                runCatching { neutralAussage(n, op, neutral) }.getOrNull(),
-            )
-        },
+    "axiom.peano.null", "Peano 1 · Neutrales Element", setOf("peano"), "Natürliche Zahlen · Peano",
+    "\\exists e\\in M:\\;\\forall n\\in M:\\;e\\cdot n=n=n\\cdot e",
+    setOf("Peano 1", "neutrales Element", "Identität", "Null gehört zu N"),
+    a("menge", AxiomArgumentArt.MENGE),
+    a("multiplikation", AxiomArgumentArt.METHODE, 2),
+) { w ->
+    val n = menge(w, 0); val mal = methode(w, 1)
+    instanz(
+        "axiom.peano.null",
+        "Peano 1 · Neutrales Element",
+        setOf("peano"),
+        "\\exists e\\in${n.zuLatex()}:\\;\\forall n\\in${n.zuLatex()}:\\;${mal.name}(e,n)=n=${mal.name}(n,e)",
+        runCatching { neutralesElementExistiertAussage(n, mal) }.getOrNull(),
+    )
+},
         d(
             "axiom.peano.nachfolgerAbgeschlossen", "Peano 2 · Nachfolgerabschluss", setOf("peano"), "Natürliche Zahlen · Peano",
             "n\\in N\\Rightarrow S(n)\\in N", setOf("Peano 2", "Nachfolger"),
