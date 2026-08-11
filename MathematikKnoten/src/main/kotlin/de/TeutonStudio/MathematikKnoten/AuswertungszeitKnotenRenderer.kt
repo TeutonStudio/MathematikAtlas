@@ -10,7 +10,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 
 /**
  * Ergänzt jeden Renderer um dieselbe Laufzeitdiagnose und die aus der aktuellen
- * mathematischen Ausgabe ableitbaren Godot-Strukturtyp-Etiketten.
+ * mathematischen Ausgabe ableitbaren Godot-Variant-Typetiketten.
  *
  * Beide Dekorationen sind reine Darstellung und verändern weder Knotenmodell noch
  * Anschlussgeometrie oder Persistenz.
@@ -18,7 +18,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 fun KnotenRenderer.mitAuswertungszeit(
     ergebnisFür: (KnotenDaten) -> KnotenAuswertungsErgebnis?,
 ): KnotenRenderer {
-    val basis = this.mitGodotStrukturEtiketten(ergebnisFür)
+    val basis = this.mitGodotVariantEtiketten(ergebnisFür)
     return object : KnotenRenderer {
         override val interaktionsModus: KnotenInteraktionsModus get() = basis.interaktionsModus
 
