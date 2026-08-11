@@ -17,6 +17,7 @@ data class FormelTastaturTaste(
     val argumentRollen: List<String> = emptyList(),
     val literal: MathematischesObjekt? = null,
     val ergebnisTyp: FormelTyp = FormelTyp.ZAHL,
+    val beschriftungLatex: String? = null,
 ) {
     init {
         require(id.isNotBlank())
@@ -28,18 +29,30 @@ data class FormelTastaturTaste(
 
 /** UI-neutrale Tastenbelegung. Tasten erzeugen Ausdrucksobjekte, niemals Roh-LaTeX. */
 object FormelTastatur {
-    /**
-     * Der Standardkatalog wird aus dem stabilen Operatorregister des universellen
-     * Zahlenrechners erzeugt. Semantische Schreibweisen, die nicht bloß ein
-     * Zahlenoperator sind, werden anschließend explizit ergänzt.
-     */
     val standard: List<FormelTastaturTaste> =
         UniversellerZahlenOperator.entries.map(::standardTaste) +
             listOf(
                 operator("division-rechts", "÷R", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.division.rechts", "dividend", "divisor"),
                 operator("division-links", "÷L", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.division.links", "dividend", "divisor"),
                 operator("differentiationsiteration", "f⁽ⁿ⁾", FormelTastenKategorie.POTENZEN, "iteration.differentiation", "methode", "ordnung", ergebnisTyp = FormelTyp.METHODE),
-                operator("selbstkomposition", "f⟨n⟩", FormelTastenKategorie.POTENZEN, "iteration.selbstkomposition", "methode", "ordnung", ergebnisTyp = FormelTyp.METHODE),
+                FormelTastaturTaste(
+                    id = "selbstkomposition",
+                    beschriftung = "f⟨n⟩",
+                    beschriftungLatex = "f^{\\langle n\\rangle}",
+                    kategorie = FormelTastenKategorie.POTENZEN,
+                    operatorId = "iteration.selbstkomposition",
+                    argumentRollen = listOf("methode", "ordnung"),
+                    ergebnisTyp = FormelTyp.METHODE,
+                ),
+                FormelTastaturTaste(
+                    id = "umkehrfunktion",
+                    beschriftung = "f⟨−1⟩",
+                    beschriftungLatex = "f^{\\langle -1\\rangle}",
+                    kategorie = FormelTastenKategorie.POTENZEN,
+                    operatorId = "methode.umkehrfunktion",
+                    argumentRollen = listOf("methode"),
+                    ergebnisTyp = FormelTyp.METHODE,
+                ),
                 operator("restriktion", "f|M", FormelTastenKategorie.FUNKTIONEN, "methode.einschraenkung", "methode", "menge", ergebnisTyp = FormelTyp.METHODE),
                 operator("plus-minus", "±", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.vorzeichen.plusMinus", "operand", ergebnisTyp = FormelTyp.TUPEL),
                 operator("minus-plus", "∓", FormelTastenKategorie.GRUNDRECHNUNG, "algebra.vorzeichen.minusPlus", "operand", ergebnisTyp = FormelTyp.TUPEL),
