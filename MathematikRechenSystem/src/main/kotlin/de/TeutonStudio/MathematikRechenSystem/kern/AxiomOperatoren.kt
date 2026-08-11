@@ -340,13 +340,21 @@ object AxiomOperatoren {
 
     private val peanoAxiome: List<AxiomOperatorDefinition> = listOf(
         d(
-            "axiom.peano.null", "Peano 1 · Null", setOf("peano"), "Natürliche Zahlen · Peano",
-            "0\\in N", setOf("Peano 1", "Null gehört zu N"),
-            a("menge", AxiomArgumentArt.MENGE), a("null", AxiomArgumentArt.OBJEKT),
+            "axiom.peano.null", "Peano 1 · Neutrales Element", setOf("peano"), "Natürliche Zahlen · Peano",
+            "e\\in M\\land\\forall n\\in M:\\;e\\cdot n=n=n\\cdot e",
+            setOf("Peano 1", "neutrales Element", "Identität", "Null gehört zu N"),
+            a("menge", AxiomArgumentArt.MENGE),
+            a("operation", AxiomArgumentArt.METHODE, 2),
+            a("neutral", AxiomArgumentArt.OBJEKT),
         ) { w ->
-            val n = menge(w, 0); val zero = w[1]
-            instanz("axiom.peano.null", "Peano 1 · Null", setOf("peano"),
-                "${zero.zuLatex()}\\in${n.zuLatex()}", element(zero, n))
+            val n = menge(w, 0); val op = methode(w, 1); val neutral = w[2]
+            instanz(
+                "axiom.peano.null",
+                "Peano 1 · Neutrales Element",
+                setOf("peano"),
+                "${neutral.zuLatex()}\\in${n.zuLatex()}\\land\\forall n\\in${n.zuLatex()}:\\;${op.name}(${neutral.zuLatex()},n)=n=${op.name}(n,${neutral.zuLatex()})",
+                runCatching { neutralAussage(n, op, neutral) }.getOrNull(),
+            )
         },
         d(
             "axiom.peano.nachfolgerAbgeschlossen", "Peano 2 · Nachfolgerabschluss", setOf("peano"), "Natürliche Zahlen · Peano",

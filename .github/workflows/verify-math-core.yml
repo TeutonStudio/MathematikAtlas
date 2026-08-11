@@ -50,8 +50,23 @@ jobs:
       - name: Gradle Wrapper ausführbar machen
         run: chmod +x gradlew
 
-      - name: JVM-Tests ausführen
-        run: ./gradlew test --stacktrace
+      - name: Neutralen Typkern testen
+        run: ./gradlew :TypSystem:test --stacktrace
+
+      - name: MathematikRechenSystem testen
+        run: ./gradlew :MathematikRechenSystem:test --stacktrace
+
+      - name: KnotenKartenVerwalter testen
+        run: ./gradlew :KnotenKartenVerwalter:testDebugUnitTest --stacktrace
+
+      - name: MathematikKartenAdapter testen
+        run: ./gradlew :MathematikKartenAdapter:testDebugUnitTest --stacktrace
+
+      - name: MathematikKnoten testen
+        run: ./gradlew :MathematikKnoten:testDebugUnitTest --stacktrace
+
+      - name: App testen
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
 
       - name: Android-Debug-Build erstellen
         run: ./gradlew :app:assembleDebug --stacktrace

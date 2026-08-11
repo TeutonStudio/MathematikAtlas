@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+import de.TeutonStudio.TypSystem.TypAusdruck
+import de.TeutonStudio.TypSystem.TypId
+import de.TeutonStudio.TypSystem.TypPrüfung
+
 /** Die eine wiederverwendbare Zielmenge aller Prädikate. */
 val WahrheitsMenge: MengenAusdruck = EndlicheMenge(
     setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)),
@@ -165,10 +169,38 @@ fun interface MethodenAnforderung {
         }
     }
 
+    /**
+     * Bevorzugte G0.2-Anforderung: Das Ergebnis wird gegen einen semantischen Typ geprüft,
+     * nicht gegen eine UI-Anschluss-ID. Unbestimmte Typen werden als Diagnose zurückgegeben,
+     * niemals stillschweigend wie `Beliebig` behandelt.
+     */
+    data class ErgebnisTyp(val typ: TypAusdruck) : MethodenAnforderung {
+        override fun prüfe(methode: Methode): String? {
+            val signatur = (methode as? SignaturtragendeMethode)?.signatur
+                ?: return "Die Methode '${methode.name}' besitzt keine mathematische Signatur."
+            val quellTyp = signatur.zielMenge.elementTypAusdruck()
+            return when (val ergebnis = MathematischeTypen.typSystem.prüfe(quellTyp, typ)) {
+                TypPrüfung.Kompatibel -> null
+                is TypPrüfung.Unbestimmt ->
+                    "Der Ergebnistyp der Methode '${methode.name}' ist noch unbestimmt: ${ergebnis.grund}"
+                is TypPrüfung.Inkompatibel ->
+                    "Der Ergebnistyp der Methode '${methode.name}' ist nicht kompatibel: ${ergebnis.grund}"
+            }
+        }
+    }
+
+    /**
+     * Legacy-Adapter für bestehende Knotenparameter. Neue Fachlogik soll [ErgebnisTyp]
+     * verwenden. Bei noch nicht inferierbaren Mengen bleibt der historische Laufzeitcheck
+     * als konservativer Migrationspfad erhalten.
+     */
     data class ErgebnisArt(val anschlussArt: String) : MethodenAnforderung {
         override fun prüfe(methode: Methode): String? {
+            val semantisch = ErgebnisTyp(TypAusdruck.Atom(TypId(anschlussArt))).prüfe(methode)
+            if (semantisch == null) return null
+
             val mathematisch = methode as? MathematischeMethode
-                ?: return "Die Methode '${methode.name}' besitzt keine symbolische mathematische Ausgabe."
+                ?: return semantisch
             val passt = when (anschlussArt) {
                 "mathematik.objekt" -> true
                 "mathematik.zahl" -> mathematisch.vorschrift is ZahlAusdruck

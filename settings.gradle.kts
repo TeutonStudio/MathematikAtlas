@@ -15,6 +15,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "MathematikAtlas"
+include(":TypSystem")
 include(":app")
 include(":KnotenKartenVerwalter")
 include(":MathematikRechenSystem")

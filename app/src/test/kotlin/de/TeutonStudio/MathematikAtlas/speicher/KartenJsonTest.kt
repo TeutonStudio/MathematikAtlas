@@ -5,15 +5,52 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import kotlin.test.*
 
 class KartenJsonTest {
-    @Test fun `Version sieben rundet verschachtelte Eigenschaften`() {
+    @Test fun `Version acht rundet verschachtelte Eigenschaften`() {
         val eigenschaften = mapOf("konfiguration" to KnotenEigenschaft.Objekt(mapOf(
             "kamera" to KnotenEigenschaft.Objekt(mapOf("zoom" to KnotenEigenschaft.Dezimalzahl(1.25), "aktiv" to KnotenEigenschaft.Wahrheitswert(true))),
             "farben" to KnotenEigenschaft.Liste(listOf(KnotenEigenschaft.Farbe(0xFF2563EB), KnotenEigenschaft.Text("Ozean"))),
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 7"))
+        assertTrue(text.contains("\"formatVersion\": 8"))
         assertEquals(karte, KartenJson.lese(text))
+    }
+
+    @Test fun `Version sieben ohne Typvertrag bleibt lesbar`() {
+        val text = """
+            {
+              "formatVersion":7,
+              "id":"karte",
+              "name":"Format 7",
+              "version":1,
+              "erstelltAm":1,
+              "ansicht":{"x":0,"y":0,"zoom":1},
+              "knoten":[{
+                "id":"knoten",
+                "art":"test",
+                "name":"Alt",
+                "position":{"x":0,"y":0},
+                "größe":{"breite":200,"höhe":100},
+                "parameter":{},
+                "eigenschaften":{},
+                "anschlüsse":[{
+                  "id":"anschluss",
+                  "name":"wert",
+                  "richtung":"Ausgang",
+                  "kante":"Rechts",
+                  "art":"mathematik.zahl",
+                  "reihenfolge":0,
+                  "kannSichErweitern":false,
+                  "dynamischErzeugt":false
+                }]
+              }],
+              "verbindungen":[],
+              "visuelleGruppen":[]
+            }
+        """.trimIndent()
+
+        val anschluss = KartenJson.lese(text).knoten.single().anschlüsse.single()
+        assertEquals(AnschlussArtId("mathematik.zahl"), anschluss.art)
     }
 
     @Test fun `Visuelle Gruppen behalten Titel Geometrie und gültige Kinder beim Roundtrip`() {

@@ -1,7 +1,9 @@
 package de.TeutonStudio.MathematikRechenSystem
 
 import de.TeutonStudio.MathematikRechenSystem.kern.*
+import de.TeutonStudio.TypSystem.TypAusdruck
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -28,6 +30,63 @@ class MethodenAnforderungTest {
         assertNull(MethodenAnforderung.ErgebnisArt("mathematik.zahl").prüfe(zahlMethode))
         assertNull(MethodenAnforderung.ErgebnisArt("mathematik.menge").prüfe(mengenMethode))
         assertNotNull(MethodenAnforderung.ErgebnisArt("mathematik.zahl").prüfe(mengenMethode))
+    }
+
+    @Test
+    fun `ergebnistyp nutzt semantische zahlbereichshierarchie`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+
+        assertNull(
+            MethodenAnforderung.ErgebnisTyp(
+                TypAusdruck.Atom(MathematischeTypen.Komplex),
+            ).prüfe(methode),
+        )
+        assertNotNull(
+            MethodenAnforderung.ErgebnisTyp(
+                TypAusdruck.Atom(MathematischeTypen.Ganz),
+            ).prüfe(methode),
+        )
+    }
+
+    @Test
+    fun `methodensignatur bleibt auch bei einem argument ein tupeltyp`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+
+        val typ = assertNotNull(methode.typAusdruck as? TypAusdruck.Parameterisiert)
+        assertEquals(MathematischeTypen.Methode, typ.konstruktor)
+        val argumentTyp = assertNotNull(typ.argumente.firstOrNull() as? TypAusdruck.Parameterisiert)
+        assertEquals(MathematischeTypen.Tupel, argumentTyp.konstruktor)
+        assertEquals(1, argumentTyp.argumente.size)
+    }
+
+    @Test
+    fun `mathematische typvisualisierung nutzt kanonische glyphen`() {
+        val visual = TypAusdruck.Parameterisiert(
+            MathematischeTypen.Methode,
+            listOf(
+                TypAusdruck.Parameterisiert(
+                    MathematischeTypen.Tupel,
+                    listOf(TypAusdruck.Atom(MathematischeTypen.Reell)),
+                ),
+                TypAusdruck.Atom(MathematischeTypen.Komplex),
+            ),
+        ).mathematischeTypVisualisierung()
+
+        assertEquals("(ℝ) → ℂ", visual.kurzLabel)
     }
 
     @Test
@@ -90,6 +149,7 @@ class MethodenAnforderungTest {
         assertTrue(diagnose.contains("Zielmenge"))
         assertTrue(diagnose.contains("\\mathcal F"))
     }
+
     @Test
     fun `zahlenmengenerkennung deckt strukturierte Mengenkonstruktionen ab`() {
         val x = Variable("x")
@@ -121,5 +181,4 @@ class MethodenAnforderungTest {
         assertTrue(MengenDifferenz(ReelleZahlen, unbekannt).istZahlenmenge())
         assertTrue(!unbekannt.istZahlenmenge())
     }
-
 }

@@ -31,6 +31,18 @@ class AxiomOperatorenTest {
         )
     }
 
+    private fun konstanteBinaereOperation(menge: MengenAusdruck, wert: MathematischesObjekt): Methode {
+        val x = Variable("x")
+        val y = Variable("y")
+        return Methode(
+            name = "\\cdot",
+            parameter = listOf(x, y),
+            vorschrift = wert,
+            zielMenge = menge,
+            werteVorräte = mapOf(x.name to zweiElemente, y.name to zweiElemente),
+        )
+    }
+
     @Test
     fun `Axiomregister enthaelt Peano ZF ZFC und algebraische Strukturen`() {
         val ids = AxiomOperatoren.alle.mapTo(mutableSetOf<String>()) { it.stabileId }
@@ -55,6 +67,35 @@ class AxiomOperatorenTest {
 
         assertEquals(Wahrheitswert.Wahr, aussage.entscheide().wahrheitswert)
         assertTrue(aussage.zuLatex().contains("\\forall x\\in"))
+    }
+
+    @Test
+    fun `Peano 1 fordert ein zur Operation neutrales Element innerhalb des Traegers`() {
+        val menge = EndlicheMenge(setOf(RationaleZahl.Null))
+        val operation = konstanteBinaereOperation(menge, RationaleZahl.Null)
+        val definition = checkNotNull(AxiomOperatoren.vonIdOderNull("axiom.peano.null"))
+
+        assertEquals(listOf("menge", "operation", "neutral"), definition.argumente.map(AxiomArgument::rolle))
+        assertEquals("Peano 1 · Neutrales Element", definition.titel)
+
+        val enthalten = definition.werteAus(
+            mapOf(
+                "menge" to menge,
+                "operation" to operation,
+                "neutral" to RationaleZahl.Null,
+            ),
+        )
+        val ausserhalb = definition.werteAus(
+            mapOf(
+                "menge" to menge,
+                "operation" to operation,
+                "neutral" to RationaleZahl.Eins,
+            ),
+        )
+
+        assertEquals(Wahrheitswert.Wahr, enthalten.entscheide().wahrheitswert)
+        assertEquals(Wahrheitswert.Lüge, ausserhalb.entscheide().wahrheitswert)
+        assertTrue(enthalten.zuLatex().contains("\\in"))
     }
 
     @Test
