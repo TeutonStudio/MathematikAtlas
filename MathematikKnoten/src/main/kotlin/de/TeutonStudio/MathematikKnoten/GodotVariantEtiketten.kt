@@ -194,7 +194,7 @@ private fun Tupel.godotArrayAbleitung(semantikHinweis: String): GodotTypAbleitun
         GodotVariantTyp.COLOR -> GodotVariantTyp.PACKED_COLOR_ARRAY
         else -> null
     }
-    return packed?.let(::GodotTypAbleitung)
+    return packed?.let { typ -> GodotTypAbleitung(typ) }
         ?: GodotTypAbleitung(GodotVariantTyp.ARRAY, elementTyp = einheitlich)
 }
 
@@ -384,6 +384,13 @@ private fun grafik(
     breite: Float = 16f,
     höhe: Float = 12f,
     vararg pfade: GodotIconPfad,
+) = GodotIconGrafik(breite, höhe, pfade.toList())
+
+/** Helfer für aus SVG-Einpfaddefinitionen direkt übernommene Arrays. */
+private fun grafik(
+    pfade: Array<GodotIconPfad>,
+    breite: Float = 16f,
+    höhe: Float = 12f,
 ) = GodotIconGrafik(breite, höhe, pfade.toList())
 
 private fun pfad(rgb: Long, daten: String, alpha: Float = 1f) = GodotIconPfad(
