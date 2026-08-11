@@ -18,6 +18,7 @@ data class AtomTypDefinition(
 data class TypKonstruktorDefinition(
     val id: TypId,
     val varianzen: List<TypVarianz> = emptyList(),
+    val standardVarianz: TypVarianz = TypVarianz.Invariant,
 )
 
 /** Fachneutraler Dienst für semantische Typkompatibilität und Normalisierung. */
@@ -91,9 +92,8 @@ open class StandardTypSystem(
                 return TypPrüfung.Inkompatibel("Die Typkonstruktoren sind verschieden.")
             }
             val definition = konstruktorNachId[q.konstruktor]
-            val varianzen = definition?.varianzen.orEmpty()
             val ergebnisse = q.argumente.indices.map { index ->
-                when (varianzen.getOrElse(index) { TypVarianz.Invariant }) {
+                when (definition.varianzFür(index)) {
                     TypVarianz.Kovariant -> prüfe(q.argumente[index], z.argumente[index])
                     TypVarianz.Kontravariant -> prüfe(z.argumente[index], q.argumente[index])
                     TypVarianz.Invariant -> {
@@ -153,18 +153,23 @@ open class StandardTypSystem(
             }) {
             val definition = konstruktorNachId[erste.konstruktor]
             val argumente = erste.argumente.indices.map { index ->
-                if (definition?.varianzen?.getOrNull(index) == TypVarianz.Kovariant) {
-                    gemeinsameOberart(parameterisierte.map { it.argumente[index] }) ?: erste.argumente[index]
-                } else {
-                    val werte = parameterisierte.map { it.argumente[index] }.distinct()
-                    if (werte.size == 1) werte.single()
-                    else return normalisiere(TypAusdruck.Vereinigung(normalisiert))
+                when (definition.varianzFür(index)) {
+                    TypVarianz.Kovariant -> gemeinsameOberart(parameterisierte.map { it.argumente[index] })
+                        ?: erste.argumente[index]
+                    TypVarianz.Invariant, TypVarianz.Kontravariant -> {
+                        val werte = parameterisierte.map { it.argumente[index] }.distinct()
+                        if (werte.size == 1) werte.single()
+                        else return normalisiere(TypAusdruck.Vereinigung(normalisiert))
+                    }
                 }
             }
             return TypAusdruck.Parameterisiert(erste.konstruktor, argumente)
         }
         return normalisiere(TypAusdruck.Vereinigung(normalisiert))
     }
+
+    private fun TypKonstruktorDefinition?.varianzFür(index: Int): TypVarianz =
+        this?.varianzen?.getOrNull(index) ?: this?.standardVarianz ?: TypVarianz.Invariant
 
     private fun istAtomUntertyp(von: TypId, erwartet: TypId): Boolean {
         var aktuell: TypId? = von
