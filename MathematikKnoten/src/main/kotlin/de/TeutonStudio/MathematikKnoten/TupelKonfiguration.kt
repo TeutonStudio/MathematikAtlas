@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtAbbildung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
@@ -8,6 +10,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.MINDESTEINGÄNGE_PARAMETER
+import de.TeutonStudio.TypSystem.TypInferenzRegel
 
 const val TUPEL_EINZEL_EINGABEN = "einzelEingaben"
 const val TUPEL_METHODE = "methode"
@@ -38,9 +41,28 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
                     1 -> "b"
                     else -> "input${index + 1}"
                 }
-                tupelEingang(vorhandene[name], name, MathematikAnschlussArten.Zahl.id, index, erweiterbar = true)
+                // Ein allgemeines Tupel darf nicht heimlich auf Zahlen beschränkt sein.
+                tupelEingang(vorhandene[name], name, MathematikAnschlussArten.Objekt.id, index, erweiterbar = true)
             }
         }
+    }
+    val elementEingänge = eingänge.takeIf { art == TUPEL_EINZEL_EINGABEN }.orEmpty()
+    val klassifikationsEingang = when {
+        elementEingänge.size >= 2 -> elementEingänge[1].name
+        elementEingänge.size == 1 -> elementEingänge[0].name
+        else -> null
+    }
+    val artAbbildung = klassifikationsEingang?.let { name ->
+        AnschlussArtAbbildung(
+            eingang = name,
+            abbildung = mapOf(
+                MathematikAnschlussArten.Zahl.id to MathematikAnschlussArten.KartesischesTupel.id,
+                MathematikAnschlussArten.Angulus.id to MathematikAnschlussArten.PolarTupel.id,
+            ),
+        )
+    }
+    val typInferenz = elementEingänge.takeIf { it.isNotEmpty() }?.let { elemente ->
+        TypInferenzRegel.TupelAus(elemente.map { it.name })
     }
     val ausgang = vorhandene["tupel"]?.copy(
         name = "tupel",
@@ -50,11 +72,15 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
+        artAbbildungVonEingang = artAbbildung,
+        typInferenz = typInferenz,
     ) ?: AnschlussDaten(
         name = "tupel",
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
         art = MathematikAnschlussArten.Tupel.id,
+        artAbbildungVonEingang = artAbbildung,
+        typInferenz = typInferenz,
     )
     val parameter = when (art) {
         TUPEL_METHODE -> knoten.parameter - MINDESTEINGÄNGE_PARAMETER
@@ -70,7 +96,7 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
 private fun tupelEingang(
     vorhanden: AnschlussDaten?,
     name: String,
-    art: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId,
+    art: AnschlussArtId,
     reihenfolge: Int,
     erweiterbar: Boolean = false,
 ): AnschlussDaten = vorhanden?.copy(
@@ -81,6 +107,7 @@ private fun tupelEingang(
     reihenfolge = reihenfolge,
     kannSichErweitern = erweiterbar,
     dynamischErzeugt = false,
+    zulässigeArten = emptySet(),
 ) ?: AnschlussDaten(
     name = name,
     richtung = AnschlussRichtung.Eingang,
