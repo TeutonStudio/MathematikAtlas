@@ -22,7 +22,10 @@ class ZahlenOperatorVorschauTest {
         assertEquals("\\operatorname{Im}(\\dots)", UniversellerZahlenOperator.IMAGINAERTEIL.vorschauLatex)
         assertEquals("\\sin(\\dots)", UniversellerZahlenOperator.SINUS.vorschauLatex)
         assertEquals("\\sinh(\\dots)", ErweiterterZahlenOperator.SINUS_HYPERBOLICUS.vorschauLatex)
-        assertEquals("(c_i)_i\\cdot\\vec{x}", ErweiterterZahlenOperator.POLYNOM.vorschauLatex)
+        assertEquals(
+            "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb N_0^{\\leq n}",
+            ErweiterterZahlenOperator.POLYNOM.vorschauLatex,
+        )
     }
 
     @Test

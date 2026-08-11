@@ -76,6 +76,7 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("vektor-orientierung") { registriereVektorOrientierungsKnoten() },
         MathematikAuswerterPaket("multinomvektor") { registriereMultinomVektor() },
         MathematikAuswerterPaket("polynom-multinom-vertrag") { registrierePolynomMultinomVertrag() },
+        MathematikAuswerterPaket("rechner-methodenhebung") { registriereRechnerMethodenHebung() },
     )
 
     val alle: List<MathematikAuswerterPaket>

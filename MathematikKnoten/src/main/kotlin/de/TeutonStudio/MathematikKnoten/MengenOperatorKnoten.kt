@@ -20,6 +20,11 @@ private val sichtbareMengenRechnerOperatoren = listOf(
     MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ,
     MengenRechnerOperator.ITERIERTE_VEREINIGUNG,
     MengenRechnerOperator.ITERIERTER_SCHNITT,
+    MengenRechnerOperator.POTENZMENGE,
+    MengenRechnerOperator.ABBILDUNGSMENGE,
+    MengenRechnerOperator.FOLGENMENGE,
+    MengenRechnerOperator.HALBFOLGENMENGE,
+    MengenRechnerOperator.KLASSIFIZIERTE_MENGE,
 )
 
 fun sichtbareMengenRechnerOperatoren(): List<MengenRechnerOperator> = sichtbareMengenRechnerOperatoren
@@ -35,6 +40,10 @@ fun MengenRechnerOperator.titel(): String = when (this) {
     MengenRechnerOperator.ITERIERTER_SCHNITT -> "Iterierter Schnitt"
     MengenRechnerOperator.KOMPLEMENT -> "Komplement"
     MengenRechnerOperator.POTENZMENGE -> "Potenzmenge"
+    MengenRechnerOperator.ABBILDUNGSMENGE -> "Abbildungsmenge"
+    MengenRechnerOperator.FOLGENMENGE -> "Folgenmenge"
+    MengenRechnerOperator.HALBFOLGENMENGE -> "Halbfolgenmenge"
+    MengenRechnerOperator.KLASSIFIZIERTE_MENGE -> "Klassifizierte Menge"
     MengenRechnerOperator.BILD -> "Bild"
     MengenRechnerOperator.URBILD -> "Urbild"
 }
@@ -50,7 +59,11 @@ fun MengenRechnerOperator.vorschauLatex(): String = when (this) {
     MengenRechnerOperator.ITERIERTE_VEREINIGUNG -> "\\bigcup\\limits_{i\\in I}A(i)"
     MengenRechnerOperator.ITERIERTER_SCHNITT -> "\\bigcap\\limits_{i\\in I}A(i)"
     MengenRechnerOperator.KOMPLEMENT -> "U\\setminus A"
-    MengenRechnerOperator.POTENZMENGE -> "\\mathcal P(A)"
+    MengenRechnerOperator.POTENZMENGE -> "\\mathcal{P}(M)"
+    MengenRechnerOperator.ABBILDUNGSMENGE -> "M^A"
+    MengenRechnerOperator.FOLGENMENGE -> "M^{\\mathbb Z}"
+    MengenRechnerOperator.HALBFOLGENMENGE -> "M^{\\mathbb N_0}"
+    MengenRechnerOperator.KLASSIFIZIERTE_MENGE -> "M\\div r"
     MengenRechnerOperator.BILD -> "f(A)"
     MengenRechnerOperator.URBILD -> "f^{-1}(A)"
 }
@@ -68,6 +81,12 @@ fun MengenRechnerOperator.definitionLatex(): String = when (this) {
         "\\bigcup\\limits_{i\\in I}A(i)=\\{x\\mid\\exists i\\in I:x\\in A(i)\\}"
     MengenRechnerOperator.ITERIERTER_SCHNITT ->
         "\\bigcap\\limits_{i\\in I}A(i)=\\{x\\mid\\forall i\\in I:x\\in A(i)\\}"
+    MengenRechnerOperator.POTENZMENGE -> "\\mathcal{P}(M)=\\{A\\mid A\\subseteq M\\}"
+    MengenRechnerOperator.ABBILDUNGSMENGE -> "M^A:=\\{f\\mid f:A\\to M\\}"
+    MengenRechnerOperator.FOLGENMENGE -> "M^{\\mathbb Z}:=\\{f\\mid f:\\mathbb Z\\to M\\}"
+    MengenRechnerOperator.HALBFOLGENMENGE -> "M^{\\mathbb N_0}:=\\{f\\mid f:\\mathbb N_0\\to M\\}"
+    MengenRechnerOperator.KLASSIFIZIERTE_MENGE ->
+        "M\\div r:=\\{[x]_r\\mid x\\in M\\},\\quad [x]_r=\\{y\\in M\\mid r(x,y)\\}"
     else -> vorschauLatex()
 }
 
@@ -144,12 +163,14 @@ fun konfiguriereMengenRechner(
     val bisherigerTitel = MengenRechnerOperator.vonIdOderNull(knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER])?.titel()
     val automatischerName = bisherigerTitel != null && knoten.name == bisherigerTitel ||
         sichtbareMengenRechnerOperatoren.any { it.titel() == knoten.name }
-    return knoten.copy(
-        name = if (automatischerName) operator.titel() else knoten.name,
-        anschlüsse = anschluesse,
-        parameter = knoten.parameter + mapOf(
-            MENGENRECHNER_OPERATOR_PARAMETER to operator.stabileId,
-            "festeEingänge" to festeEingänge.toString(),
+    return normalisiereRechnerMethodenAnschluesse(
+        knoten.copy(
+            name = if (automatischerName) operator.titel() else knoten.name,
+            anschlüsse = anschluesse,
+            parameter = knoten.parameter + mapOf(
+                MENGENRECHNER_OPERATOR_PARAMETER to operator.stabileId,
+                "festeEingänge" to festeEingänge.toString(),
+            ),
         ),
     )
 }
@@ -227,7 +248,22 @@ private fun werteMengenRechnerAus(kontext: KnotenAuswertungsKontext): KnotenAusw
     val objekt: MengenAusdruck
     val warnungen = mutableListOf<String>()
 
-    if (operator in setOf(
+    if (operator == MengenRechnerOperator.KLASSIFIZIERTE_MENGE) {
+        val menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
+            ?: error("Die klassifizierte Menge benötigt eine Grundmenge M.")
+        val relation = kontext.eingänge["relation"]?.objekt as? Methode
+            ?: error("Die klassifizierte Menge benötigt eine zweistellige Relation als Prädikat.")
+        require(relation.istPrädikat() && relation.argumentAnzahl == 2) {
+            "Die Klassifikationsrelation muss ein zweistelliges Prädikat sein."
+        }
+        val relationName = relation.name.ifBlank { "r" }
+        objekt = BenannteMenge(
+            name = "klassifizierteMenge:${menge.zuLatex()}:$relationName",
+            latex = "${menge.zuLatex()}\\div $relationName",
+        )
+        warnungen += "Klassifikation setzt voraus, dass $relationName auf ${menge.zuLatex()} reflexiv, symmetrisch und transitiv ist."
+        warnungen += "Definition: ${menge.zuLatex()}\\div $relationName=\\{[x]_$relationName\\mid x\\in${menge.zuLatex()}\\}"
+    } else if (operator in setOf(
             MengenRechnerOperator.ITERIERTES_KARTESISCHES_PRODUKT,
             MengenRechnerOperator.ITERIERTE_VEREINIGUNG,
             MengenRechnerOperator.ITERIERTER_SCHNITT,
@@ -369,6 +405,18 @@ private fun mengenRechnerAnschluesse(
     -> listOf(
         eingang("methode", MathematikAnschlussArten.Methode.id, 0),
         eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1),
+        ausgang("menge", MathematikAnschlussArten.Menge.id),
+    )
+
+    MengenRechnerOperator.ABBILDUNGSMENGE -> listOf(
+        eingang("zielmenge", MathematikAnschlussArten.Menge.id, 0),
+        eingang("argumentmenge", MathematikAnschlussArten.Menge.id, 1),
+        ausgang("menge", MathematikAnschlussArten.Menge.id),
+    )
+
+    MengenRechnerOperator.KLASSIFIZIERTE_MENGE -> listOf(
+        eingang("menge", MathematikAnschlussArten.Menge.id, 0),
+        eingang("relation", MathematikAnschlussArten.Methode.id, 1),
         ausgang("menge", MathematikAnschlussArten.Menge.id),
     )
 

@@ -356,7 +356,9 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             )
         }
 
-        if (standardOperator != null && istVariadischerZahlenOperator(standardOperator)) {
+        val erweiterterMittelwert = erweiterterOperator == ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL ||
+            erweiterterOperator == ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL
+        if ((standardOperator != null && istVariadischerZahlenOperator(standardOperator)) || erweiterterMittelwert) {
             val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
             Text("Feste Operanden", style = MaterialTheme.typography.titleSmall)
             Row(
@@ -366,11 +368,14 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             ) {
                 OutlinedButton(
                     onClick = {
+                        val neueAnzahl = (anzahl - 1).coerceAtLeast(2)
+                        val basis = knoten.copy(parameter = knoten.parameter + ("festeEingänge" to neueAnzahl.toString()))
                         aktionen.knoten(
-                            konfiguriereZahlenRechner(
-                                knoten = knoten,
-                                festeEingänge = (anzahl - 1).coerceAtLeast(2),
-                            ),
+                            if (erweiterterMittelwert) {
+                                konfiguriereErweitertenZahlenRechner(basis, requireNotNull(erweiterterOperator))
+                            } else {
+                                konfiguriereZahlenRechner(knoten = knoten, festeEingänge = neueAnzahl)
+                            },
                         )
                     },
                     enabled = anzahl > 2,
@@ -378,11 +383,14 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 Text(anzahl.toString(), modifier = Modifier.weight(1f))
                 OutlinedButton(
                     onClick = {
+                        val neueAnzahl = anzahl + 1
+                        val basis = knoten.copy(parameter = knoten.parameter + ("festeEingänge" to neueAnzahl.toString()))
                         aktionen.knoten(
-                            konfiguriereZahlenRechner(
-                                knoten = knoten,
-                                festeEingänge = anzahl + 1,
-                            ),
+                            if (erweiterterMittelwert) {
+                                konfiguriereErweitertenZahlenRechner(basis, requireNotNull(erweiterterOperator))
+                            } else {
+                                konfiguriereZahlenRechner(knoten = knoten, festeEingänge = neueAnzahl)
+                            },
                         )
                     },
                 ) { Text("+") }
@@ -537,6 +545,10 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
 }
 
 private fun erweiterteZahlenKategorie(operator: ErweiterterZahlenOperator): String = when (operator) {
+    ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL,
+    ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL,
+    -> "Grundrechenarten"
+    ErweiterterZahlenOperator.STAMMFUNKTION -> "Analysis"
     ErweiterterZahlenOperator.POLYNOM -> "Algebra"
     ErweiterterZahlenOperator.TANGENS,
     ErweiterterZahlenOperator.COTANGENS,

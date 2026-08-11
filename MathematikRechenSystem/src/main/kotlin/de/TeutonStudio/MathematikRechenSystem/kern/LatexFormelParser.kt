@@ -87,11 +87,19 @@ internal class LatexFormelParser(quelle: String) {
             return when {
                 roh.startsWith("\\langle") && roh.endsWith("\\rangle") -> {
                     val innen = roh.removePrefix("\\langle").removeSuffix("\\rangle").trim()
-                    operation(
-                        "iteration.selbstkomposition",
-                        listOf("methode" to basis, "ordnung" to importiereTeilAusdruck(innen)),
-                        FormelTyp.METHODE,
-                    )
+                    if (innen == "-1" || innen == "−1") {
+                        operation(
+                            "methode.umkehrfunktion",
+                            listOf("methode" to basis),
+                            FormelTyp.METHODE,
+                        )
+                    } else {
+                        operation(
+                            "iteration.selbstkomposition",
+                            listOf("methode" to basis, "ordnung" to importiereTeilAusdruck(innen)),
+                            FormelTyp.METHODE,
+                        )
+                    }
                 }
                 roh.startsWith('(') && roh.endsWith(')') -> operation(
                     "iteration.differentiation",

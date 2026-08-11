@@ -54,6 +54,7 @@ internal fun operatorRollen(operatorId: String, anzahl: Int): List<String> = whe
     "algebra.division.rechts", "algebra.division.links" -> listOf("dividend", "divisor")
     "zahl.potenz", "iteration.multiplikation" -> listOf("basis", "ordnung")
     "iteration.differentiation", "iteration.selbstkomposition" -> listOf("methode", "ordnung")
+    "methode.umkehrfunktion" -> listOf("methode")
     "methode.einschraenkung" -> listOf("methode", "menge")
     "algebra.vorzeichen.plusMinus", "algebra.vorzeichen.minusPlus" -> listOf("operand")
     "formel.gruppierung" -> listOf("inhalt")
