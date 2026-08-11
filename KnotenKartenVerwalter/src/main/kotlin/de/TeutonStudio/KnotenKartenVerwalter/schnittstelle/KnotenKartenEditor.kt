@@ -51,6 +51,11 @@ fun KnotenKartenEditor(
     modifier: Modifier = Modifier,
     rendererFür: (KnotenDaten) -> KnotenRenderer = { StandardKnotenRenderer },
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color = { MaterialTheme.colorScheme.primary },
+    typVisualFürAnschluss: (AnschlussDaten) -> TypVisualDescriptor? = { anschluss ->
+        anschluss.vertrag.typ
+            .takeUnless { it == TypAusdruck.Unbekannt }
+            ?.let(StandardTypVisualAuflöser::beschreibe)
+    },
     beiHintergrundKontext: (GraphPunkt) -> Unit = {},
     beiKnotenKontext: (KnotenDaten) -> Unit = {},
     beiVerbindungKontext: (VerbindungDaten) -> Unit = {},
@@ -187,8 +192,6 @@ fun KnotenKartenEditor(
                         auswahlRechteckBildschirm = null
                     } else {
                         do {
-                            // In Main wurden die Ereignisse bereits von Knoten und Anschlüssen verarbeitet.
-                            // Nur eine nicht konsumierte Geste transformiert deshalb die Hintergrundansicht.
                             val ereignis = awaitPointerEvent()
                             if (ereignis.changes.none { it.isConsumed }) {
                                 val pan = ereignis.calculatePan()
@@ -202,9 +205,6 @@ fun KnotenKartenEditor(
                                 if (hintergrundGesteAktiv && (pan != Offset.Zero || zoom != 1f)) {
                                     val bisherigeAnsicht = aktuelleAnsicht
                                     val neuerZoom = (bisherigeAnsicht.zoom * zoom).coerceIn(0.25f, 3.5f)
-                                    // Der Mittelpunkt der Finger bleibt beim Skalieren unter
-                                    // demselben visuellen Punkt. Der effektive Faktor berücksichtigt
-                                    // auch die Zoom-Grenzen.
                                     val zoomFaktor = neuerZoom / bisherigeAnsicht.zoom
                                     val vorherigerMittelpunkt = ereignis.calculateCentroid(useCurrent = false)
                                     val aktuellerMittelpunkt = ereignis.calculateCentroid(useCurrent = true)
@@ -236,12 +236,7 @@ fun KnotenKartenEditor(
             }
     ) {
         Raster(ansicht)
-        // Die Kameratransformation wird je Objekt aus Welt- in Bildschirmkoordinaten
-        // berechnet. Anders als eine große, skalierte Welt-Box begrenzt das die Karte
-        // nicht künstlich auf eine feste Fläche.
         Box(Modifier.fillMaxSize()) {
-            // Die Schlüssel sorgen dafür, dass die Hintergrundebene bei jedem Drag sofort
-            // mit den aktuellen Knotenpositionen neu gezeichnet wird.
             key(sichtbareVerbindungen, zustand.verbindungsStart, zustand.verbindungsVorschau) {
                 Verbindungen(
                     karte = karte,
@@ -262,6 +257,7 @@ fun KnotenKartenEditor(
                         dichte = dichte.density,
                         renderer = rendererFür(knoten),
                         farbeFürAnschluss = farbeFürAnschluss,
+                        typVisualFürAnschluss = typVisualFürAnschluss,
                         magnetischesZiel = magnetischesZiel,
                         beiMagnetischemZiel = { magnetischesZiel = it },
                         beiKnotenKontext = beiKnotenKontext,
@@ -512,11 +508,6 @@ internal data class VerbindungsVorschauEndpunkte(
     val ziel: Offset,
 )
 
-/**
- * Normalisiert die Vorschau in dieselbe semantische Richtung wie gespeicherte Edges.
- * Wird an einem Eingang gezogen, ist der Zeiger die vorläufige Quelle und der feste
- * Eingang das Ziel. Bei einem Ausgang bleibt der feste Anschluss die Quelle.
- */
 internal fun normalisiereVerbindungsVorschauEndpunkte(
     festerAnschluss: Offset,
     zeiger: Offset,
@@ -719,6 +710,7 @@ private fun KnotenDarstellung(
     dichte: Float,
     renderer: KnotenRenderer,
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
+    typVisualFürAnschluss: (AnschlussDaten) -> TypVisualDescriptor?,
     magnetischesZiel: AnschlussVerweis?,
     beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiKnotenKontext: (KnotenDaten) -> Unit,
@@ -779,9 +771,6 @@ private fun KnotenDarstellung(
                             val aktuell = zustand.karte.knoten.firstOrNull { it.id == knoten.id }
                             if (aktuell != null) {
                                 zustand.führeAus(
-                                    // PointerInput liefert innerhalb des skalierten Layers lokale,
-                                    // bereits entzoomte Koordinaten. Nur die Pixeldichte muss noch
-                                    // in die Graph-Koordinaten umgerechnet werden.
                                     KartenAktion.KnotenVerschieben(aktuell.id, aktuell.position + GraphPunkt(delta.x / density, delta.y / density)),
                                     mitHistorie = false,
                                 )
@@ -856,6 +845,7 @@ private fun KnotenDarstellung(
                     anzahl = anschlüsse.size,
                     zustand = zustand,
                     farben = farben,
+                    typVisual = typVisualFürAnschluss(anschluss),
                     magnetischesZiel = magnetischesZiel,
                     beiMagnetischemZiel = beiMagnetischemZiel,
                     beiAnschlussKontext = beiAnschlussKontext,
@@ -945,12 +935,6 @@ internal fun farbKontrastVerhältnis(vordergrund: Color, hintergrund: Color): Fl
     return (heller + 0.05f) / (dunkler + 0.05f)
 }
 
-/**
- * Bewahrt die Profilfarbe, solange sie auf dem Knoten ausreichend kontrastiert.
- * Andernfalls wird sie nur so weit in Richtung Schwarz oder Weiß verschoben,
- * wie für die Erkennbarkeit erforderlich ist. Ein zusätzlicher Icon-Hintergrund
- * ist dadurch weder nötig noch erlaubt.
- */
 internal fun kontrastAdaptiveProfilFarbe(
     profilFarbe: Color,
     hintergrund: Color,
@@ -983,6 +967,7 @@ private fun BoxScope.AnschlussGriff(
     anzahl: Int,
     zustand: KartenEditorZustand,
     farben: List<Color>,
+    typVisual: TypVisualDescriptor?,
     magnetischesZiel: AnschlussVerweis?,
     beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
@@ -1012,7 +997,7 @@ private fun BoxScope.AnschlussGriff(
     var zugZiel by remember(knoten.id, anschluss.id) { mutableStateOf<AnschlussVerweis?>(null) }
     val startWelt = anschlussPositionWelt(knoten, anschluss)
     val interaktionsObenLinks = startWelt - GraphPunkt(interaktionsHalbe, interaktionsHalbe)
-    val typenText = if (anschluss.zulässigeArten.isNotEmpty()) {
+    val typenText = typVisual?.tooltipText ?: if (anschluss.zulässigeArten.isNotEmpty()) {
         anschluss.zulässigeArten.sortedBy { it.wert }.joinToString(" oder ") { it.wert }
     } else {
         anschluss.art.wert
@@ -1057,8 +1042,6 @@ private fun BoxScope.AnschlussGriff(
                     onDrag = { änderung, _ ->
                         änderung.consume()
                         val zeigerWelt = interaktionsObenLinks + GraphPunkt(
-                            // Absolute lokale Pointerposition statt Delta-Akkumulation:
-                            // dadurch werden Touch-Slop und Overslop nicht doppelt addiert.
                             änderung.position.x / density,
                             änderung.position.y / density,
                         )
@@ -1121,6 +1104,19 @@ private fun BoxScope.AnschlussGriff(
             größe = sichtbareGröße,
             zoom = zoom,
         )
+        typVisual?.let { descriptor ->
+            val modifier = when (anschluss.kante) {
+                AnschlussKante.Links -> Modifier.align(Alignment.CenterEnd).offset(x = (34f / zoom).dp)
+                AnschlussKante.Rechts -> Modifier.align(Alignment.CenterStart).offset(x = (-34f / zoom).dp)
+                AnschlussKante.Oben -> Modifier.align(Alignment.BottomCenter).offset(y = (24f / zoom).dp)
+                AnschlussKante.Unten -> Modifier.align(Alignment.TopCenter).offset(y = (-24f / zoom).dp)
+            }
+            TypMiniGrafik(
+                descriptor = descriptor,
+                modifier = modifier.zIndex(12f),
+                zoom = zoom,
+            )
+        }
         if (eingerastet) {
             Box(
                 Modifier.size((24f / zoom).dp)
@@ -1231,13 +1227,6 @@ private fun anschlussBildschirmPosition(
     ansicht: AnsichtsFenster,
 ): Offset = anschlussPositionWelt(karte, ref)?.let { weltZuBildschirm(it, dichte, ansicht) } ?: Offset.Zero
 
-/**
- * Der sichtbare Ausschnitt der Kartenwelt in Graph-Koordinaten.
- *
- * Die Verschiebung der Ansicht liegt in Bildschirm-Pixeln vor; die Welt selbst
- * wird dagegen in dp gespeichert. Deshalb wird nach der Rücktransformation des
- * Zooms zusätzlich durch die Pixeldichte geteilt.
- */
 internal fun sichtbarerWeltBereich(
     ansicht: AnsichtsFenster,
     anzeigeGröße: IntSize,
@@ -1275,7 +1264,6 @@ private fun KartenDaten.inhaltsGrenzen(puffer: Float): Rect? {
     return Rect(links - puffer, oben - puffer, rechts + puffer, unten + puffer)
 }
 
-/** Zeichnung und Viewport-Culling verwenden dieselbe kubische Verbindungsgeometrie. */
 private fun VerbindungDaten.istImBereich(
     karte: KartenDaten,
     bereich: Rect,
