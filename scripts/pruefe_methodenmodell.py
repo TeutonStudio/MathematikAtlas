@@ -66,6 +66,23 @@ if aufruf_datei.exists():
             f"{aufruf_datei.relative_to(wurzel)}: Methodenaufruf ist nicht an die mathematische Auswertungs-Capability gebunden"
         )
 
+# Mathematische Konstruktionen müssen die offene Methode-Grenze explizit verengen.
+graph_datei = kern / "MethodenGraph.kt"
+if graph_datei.exists():
+    graph_text = graph_datei.read_text(encoding="utf-8")
+    if "val methode: MathematischeMethode" not in graph_text:
+        fehler.append(f"{graph_datei.relative_to(wurzel)}: Graphmenge speichert keine explizite MathematischeMethode")
+    if 'alsMathematischeMethode("einen mathematischen Funktionsgraphen")' not in graph_text:
+        fehler.append(f"{graph_datei.relative_to(wurzel)}: Graphkonstruktion prüft die mathematische Capability nicht")
+
+restriktions_datei = kern / "MethodenRestriktion.kt"
+if restriktions_datei.exists():
+    restriktions_text = restriktions_datei.read_text(encoding="utf-8")
+    if 'basis.alsMathematischeMethode("mathematische Restriktion")' not in restriktions_text:
+        fehler.append(f"{restriktions_datei.relative_to(wurzel)}: Restriktion verengt die Basismethode nicht")
+    if "val basis: MathematischeMethode" not in restriktions_text:
+        fehler.append(f"{restriktions_datei.relative_to(wurzel)}: Restriktionsherkunft speichert keine mathematische Basis")
+
 if fehler:
     print("Das Methodenmodell verletzt den G0.1-Vertrag:")
     print("\n".join(f"- {eintrag}" for eintrag in fehler))
