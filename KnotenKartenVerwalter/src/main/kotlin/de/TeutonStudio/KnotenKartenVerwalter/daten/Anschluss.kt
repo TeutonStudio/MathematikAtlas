@@ -1,5 +1,8 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten
 
+import de.TeutonStudio.TypSystem.AnschlussVertrag
+import de.TeutonStudio.TypSystem.TypInferenzRegel
+
 enum class AnschlussRichtung { Neutral, Eingang, Ausgang }
 enum class AnschlussKante { Links, Rechts, Oben, Unten }
 
@@ -36,6 +39,10 @@ data class AnschlussDaten(
     val name: String,
     val richtung: AnschlussRichtung = AnschlussRichtung.Neutral,
     val kante: AnschlussKante,
+    /**
+     * Grobe Anschlusskategorie und Legacy-Fallback. Der konkrete semantische Werttyp
+     * liegt seit G0.2 in [vertrag].
+     */
     val art: AnschlussArtId,
     val reihenfolge: Int = 0,
     /** Erlaubt dem Editor, beim Ziehen einer kompatiblen Verbindung einen weiteren Eingang anzubieten. */
@@ -58,6 +65,16 @@ data class AnschlussDaten(
     val artAbbildungVonEingang: AnschlussArtAbbildung? = null,
     /** Typabhängige Ausgangsart, die eine Quellart über mehrere Eingänge priorisiert. */
     val artPriorisiertEingänge: AnschlussArtPriorisierung? = null,
+    /**
+     * Semantischer Vertrag des tatsächlich fließenden Werts. Unbekannt bedeutet,
+     * dass die Graphprüfung weiterhin konservativ auf [art] zurückfällt.
+     */
+    val vertrag: AnschlussVertrag = AnschlussVertrag(),
+    /**
+     * Optionale semantische Typinferenz. Sie ergänzt die historischen Art-Regeln,
+     * bis alle produktiven Knoten auf den G0.2-Typkern migriert sind.
+     */
+    val typInferenz: TypInferenzRegel? = null,
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)
