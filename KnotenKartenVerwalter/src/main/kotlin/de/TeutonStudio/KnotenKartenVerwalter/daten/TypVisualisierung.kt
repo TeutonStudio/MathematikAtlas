@@ -16,7 +16,6 @@ data class TypVisualDescriptor(
     val tooltip: String = kurztext,
     val segmente: List<TypVisualSegment> = emptyList(),
 ) {
-    /** Mehr als ein Segment wird am Handle als Oder-/Mehrfarbtyp dargestellt. */
     val istMehrfachTyp: Boolean get() = segmente.size > 1
 }
 
@@ -24,7 +23,6 @@ fun interface TypVisualResolver {
     fun beschreibe(typ: TypAusdruck): TypVisualDescriptor
 }
 
-/** Konservativer Resolver für Domänen, die noch keine eigene Typnotation registriert haben. */
 object StandardTypVisualResolver : TypVisualResolver {
     override fun beschreibe(typ: TypAusdruck): TypVisualDescriptor = when (typ) {
         TypAusdruck.Beliebig -> TypVisualDescriptor("*", "Beliebiger Typ")
@@ -34,6 +32,7 @@ object StandardTypVisualResolver : TypVisualResolver {
             tooltip = typ.id.wert,
             segmente = listOf(TypVisualSegment(typ.id.wert, typ.id.wert.substringAfterLast('.'))),
         )
+        is TypAusdruck.Literal -> TypVisualDescriptor(typ.wert, "Typkonstante ${typ.wert}")
         is TypAusdruck.Parameterisiert -> {
             val argumente = typ.argumente.joinToString(",") { beschreibe(it).kurztext }
             TypVisualDescriptor(
