@@ -50,20 +50,35 @@ jobs:
       - name: Gradle Wrapper ausführbar machen
         run: chmod +x gradlew
 
-      - name: JVM- und Android-Unit-Tests ausführen
-        run: |
-          ./gradlew \
-            :TypSystem:test \
-            :MathematikRechenSystem:test \
-            :KnotenKartenVerwalter:testDebugUnitTest \
-            :KnotenKartenVerwalter:testReleaseUnitTest \
-            :MathematikKartenAdapter:testDebugUnitTest \
-            :MathematikKartenAdapter:testReleaseUnitTest \
-            :MathematikKnoten:testDebugUnitTest \
-            :MathematikKnoten:testReleaseUnitTest \
-            :app:testDebugUnitTest \
-            :app:testReleaseUnitTest \
-            --stacktrace
+      - name: TypSystem testen
+        run: ./gradlew :TypSystem:test --stacktrace
+
+      - name: MathematikRechenSystem testen
+        run: ./gradlew :MathematikRechenSystem:test --stacktrace
+
+      - name: KnotenKartenVerwalter Debug testen
+        run: ./gradlew :KnotenKartenVerwalter:testDebugUnitTest --stacktrace
+
+      - name: KnotenKartenVerwalter Release testen
+        run: ./gradlew :KnotenKartenVerwalter:testReleaseUnitTest --stacktrace
+
+      - name: MathematikKartenAdapter Debug testen
+        run: ./gradlew :MathematikKartenAdapter:testDebugUnitTest --stacktrace
+
+      - name: MathematikKartenAdapter Release testen
+        run: ./gradlew :MathematikKartenAdapter:testReleaseUnitTest --stacktrace
+
+      - name: MathematikKnoten Debug testen
+        run: ./gradlew :MathematikKnoten:testDebugUnitTest --stacktrace
+
+      - name: MathematikKnoten Release testen
+        run: ./gradlew :MathematikKnoten:testReleaseUnitTest --stacktrace
+
+      - name: App Debug testen
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: App Release testen
+        run: ./gradlew :app:testReleaseUnitTest --stacktrace
 
       - name: Android-Debug-Build erstellen
         run: ./gradlew :app:assembleDebug --stacktrace
