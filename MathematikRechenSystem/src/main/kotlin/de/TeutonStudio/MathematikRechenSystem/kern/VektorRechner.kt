@@ -26,17 +26,57 @@ enum class VektorRechnerOperator(val stabileId: String, val titel: String) {
     }
 }
 
-enum class VektorMetrik(val stabileId: String, val titel: String) {
-    EUKLIDISCH("metrik.l2", "Euklidisch (L²)"),
-    L1("metrik.l1", "Manhattan (L¹)"),
-    LINF("metrik.linf", "Maximum (L∞)"),
-    ;
-
-    companion object {
-        fun vonIdOderStandard(id: String?): VektorMetrik = entries.firstOrNull {
-            it.stabileId == id || it.name.equals(id, ignoreCase = true)
-        } ?: EUKLIDISCH
+/**
+ * Kleine austauschbare Metrikbeschreibung für den Vektorrechner.
+ *
+ * Sie ist absichtlich kein eigener Metrikraum. Sobald der allgemeine Metrikraum
+ * aus #386 vorliegt, kann dessen Metrikobjekt hier registriert werden, ohne die
+ * Distanzoperation oder den Inspector erneut umzubauen.
+ */
+data class VektorMetrikDefinition(
+    val stabileId: String,
+    val titel: String,
+    val suchbegriffe: Set<String> = emptySet(),
+    val auswerten: (List<ZahlAusdruck>) -> ZahlAusdruck,
+) {
+    init {
+        require(stabileId.isNotBlank())
+        require(titel.isNotBlank())
     }
+}
+
+object VektorMetriken {
+    val euklidisch = VektorMetrikDefinition(
+        stabileId = "metrik.l2",
+        titel = "Euklidisch (L²)",
+        suchbegriffe = setOf("L2", "euklidisch"),
+    ) { differenzen ->
+        Wurzel(addition(differenzen.map { Potenz(it, RationaleZahl.von(2)) }))
+    }
+
+    val l1 = VektorMetrikDefinition(
+        stabileId = "metrik.l1",
+        titel = "Manhattan (L¹)",
+        suchbegriffe = setOf("L1", "Manhattan"),
+    ) { differenzen -> addition(differenzen.map(::Betrag)) }
+
+    val lInf = VektorMetrikDefinition(
+        stabileId = "metrik.linf",
+        titel = "Maximum (L∞)",
+        suchbegriffe = setOf("Linf", "Maximum", "Supremumsmetrik"),
+    ) { differenzen ->
+        differenzen.map(::Betrag).let { betraege ->
+            if (betraege.size == 1) betraege.single() else maximum(betraege)
+        }
+    }
+
+    val alle: List<VektorMetrikDefinition> = listOf(euklidisch, l1, lInf)
+    val standard: VektorMetrikDefinition = euklidisch
+
+    private val nachId = alle.associateBy(VektorMetrikDefinition::stabileId)
+
+    fun vonIdOderStandard(id: String?): VektorMetrikDefinition =
+        nachId[id] ?: standard
 }
 
 enum class VektorStrukturAusgabe(val stabileId: String, val titel: String) {
@@ -92,7 +132,7 @@ data class VektorRechnerAnfrage(
     val methode: Methode? = null,
     val menge: MengenAusdruck? = null,
     val mass: IntegralMass? = null,
-    val metrik: VektorMetrik = VektorMetrik.EUKLIDISCH,
+    val metrik: VektorMetrikDefinition = VektorMetriken.standard,
     val achse: Int = 1,
     val strukturAusgabe: VektorStrukturAusgabe = VektorStrukturAusgabe.TUPEL,
 )
@@ -272,18 +312,14 @@ object VektorRechner {
     private fun distanz(
         vektoren: List<OrientierterVektor>,
         quellen: List<VektorQuelle>,
-        metrik: VektorMetrik,
+        metrik: VektorMetrikDefinition,
     ): VektorRechnerErgebnis {
         if (vektoren.size != 2) return anzahlFehler("Distanz", "genau zwei Vektoren")
         val differenzen = vektoren[0].werte.zip(vektoren[1].werte, ::subtraktion)
-        val wert = when (metrik) {
-            VektorMetrik.EUKLIDISCH -> Wurzel(addition(differenzen.map { Potenz(it, RationaleZahl.von(2)) }))
-            VektorMetrik.L1 -> addition(differenzen.map(::Betrag))
-            VektorMetrik.LINF -> differenzen.map(::Betrag).let { betraege ->
-                if (betraege.size == 1) betraege.single() else maximum(betraege)
-            }
-        }
-        return VektorRechnerErgebnis.ZahlWert(wert, gemeinsamerBereich(quellen))
+        return VektorRechnerErgebnis.ZahlWert(
+            metrik.auswerten(differenzen),
+            gemeinsamerBereich(quellen),
+        )
     }
 
     private fun winkel(vektoren: List<OrientierterVektor>): VektorRechnerErgebnis {
