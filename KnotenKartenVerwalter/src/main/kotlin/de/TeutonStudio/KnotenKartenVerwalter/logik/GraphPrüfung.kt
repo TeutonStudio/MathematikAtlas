@@ -7,7 +7,10 @@ sealed interface VerbindungsPrüfung {
     data class Abgelehnt(val grund: String) : VerbindungsPrüfung
 }
 
-class GraphPrüfung(private val arten: AnschlussArtRegister) {
+class GraphPrüfung(
+    private val arten: AnschlussArtRegister,
+    private val typen: TypSystem = StandardTypSystem(),
+) {
     fun prüfe(karte: KartenDaten, erster: AnschlussVerweis, zweiter: AnschlussVerweis): VerbindungsPrüfung {
         if (erster == zweiter) return VerbindungsPrüfung.Abgelehnt("Ein Anschluss kann nicht mit sich selbst verbunden werden.")
         val a = karte.findeAnschluss(erster) ?: return VerbindungsPrüfung.Abgelehnt("Erster Anschluss fehlt.")
@@ -33,6 +36,15 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         if (!arten.istUnterart(ausgangsArt, eingangsArt)) {
             return VerbindungsPrüfung.Abgelehnt("$ausgangsArt kann nicht an $eingangsArt angeschlossen werden.")
         }
+
+        when (val semantik = prüfeSemantik(probe, ausgang.second, eingang.second)) {
+            TypPrüfung.Kompatibel, TypPrüfung.Unbestimmt -> Unit
+            is TypPrüfung.Inkompatibel -> return VerbindungsPrüfung.Abgelehnt(semantik.grund)
+        }
+        fehlendeAnforderung(probe, ausgang.second, eingang.second)?.let { anforderung ->
+            return VerbindungsPrüfung.Abgelehnt("Die Quelle erfüllt die Anforderung '${anforderung.id}' nicht.")
+        }
+
         if (erzeugtZyklus(ohneAlteEingangsVerbindung, ausgang.second.knotenId, eingang.second.knotenId)) {
             return VerbindungsPrüfung.Abgelehnt("Zirkuläre Verbindungen sind nicht erlaubt.")
         }
@@ -42,7 +54,7 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
             val von = effektiveArt(probe, ungültigeFolgeVerbindung.von)
             val zu = effektiveArt(probe, ungültigeFolgeVerbindung.zu)
             return VerbindungsPrüfung.Abgelehnt(
-                "Die Verbindung würde einen abhängigen Ausgang von $von auf einen mit $zu inkompatiblen Typ ändern.",
+                "Die Verbindung würde einen abhängigen Ausgang von $von auf einen inkompatiblen Typ ändern.",
             )
         }
         return VerbindungsPrüfung.Erlaubt
@@ -57,6 +69,18 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
     /** Liefert die deklarierte oder aus verbundenen Eingängen zentral abgeleitete Anschlussart. */
     fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis): AnschlussArtId =
         effektiveArt(karte, ref, mutableSetOf())
+
+    /** Liefert den semantischen Typ einschließlich Typinferenz und Legacy-Fallback. */
+    fun effektiverTyp(karte: KartenDaten, ref: AnschlussVerweis): TypAusdruck =
+        typen.normalisiere(effektiverTyp(karte, ref, mutableSetOf()))
+
+    fun effektiverVertrag(karte: KartenDaten, ref: AnschlussVerweis): AnschlussVertrag {
+        val anschluss = karte.findeAnschluss(ref) ?: return AnschlussVertrag()
+        return AnschlussVertrag(
+            typ = effektiverTyp(karte, ref),
+            anforderungen = effektiveAnforderungen(karte, ref, mutableSetOf()).distinct(),
+        )
+    }
 
     private fun effektiveArt(
         karte: KartenDaten,
@@ -118,6 +142,73 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         return arten.gemeinsameOberart(quellArten) ?: anschluss.art
     }
 
+    private fun effektiverTyp(
+        karte: KartenDaten,
+        ref: AnschlussVerweis,
+        besucht: MutableSet<AnschlussVerweis>,
+    ): TypAusdruck {
+        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return TypAusdruck.Unbekannt
+        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return TypAusdruck.Unbekannt
+        if (!besucht.add(ref)) return deklarierterOderFallbackTyp(anschluss)
+
+        fun quellTyp(eingangsName: String): TypAusdruck? {
+            val eingang = knoten.anschlüsse.firstOrNull {
+                it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
+            } ?: return null
+            val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
+            val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return null
+            return effektiverTyp(karte, quelle, besucht.toMutableSet())
+        }
+
+        return when (val regel = anschluss.typInferenz) {
+            null -> deklarierterOderFallbackTyp(anschluss)
+            is TypInferenzRegel.Fest -> regel.typ
+            is TypInferenzRegel.FolgtEingang -> quellTyp(regel.eingang) ?: deklarierterOderFallbackTyp(anschluss)
+            is TypInferenzRegel.GemeinsameOberart -> {
+                typen.gemeinsameOberart(regel.eingänge.mapNotNull(::quellTyp)) ?: deklarierterOderFallbackTyp(anschluss)
+            }
+            is TypInferenzRegel.Priorisierung -> {
+                val quellen = regel.eingänge.mapNotNull(::quellTyp)
+                regel.prioritäten.firstOrNull { priorität ->
+                    quellen.any { typen.prüfe(it, priorität) == TypPrüfung.Kompatibel }
+                } ?: deklarierterOderFallbackTyp(anschluss)
+            }
+            is TypInferenzRegel.TupelAus -> {
+                val komponenten = regel.eingänge.mapNotNull(::quellTyp)
+                if (komponenten.size == regel.eingänge.size) {
+                    TypAusdruck.Parameterisiert(TypKernIds.Tupel, komponenten)
+                } else deklarierterOderFallbackTyp(anschluss)
+            }
+            is TypInferenzRegel.KomponenteVonTupel -> {
+                val tupel = quellTyp(regel.eingang) as? TypAusdruck.Parameterisiert
+                if (tupel?.konstruktor == TypKernIds.Tupel) {
+                    tupel.argumente.getOrNull(regel.index) ?: deklarierterOderFallbackTyp(anschluss)
+                } else deklarierterOderFallbackTyp(anschluss)
+            }
+        }
+    }
+
+    private fun deklarierterOderFallbackTyp(anschluss: AnschlussDaten): TypAusdruck =
+        anschluss.vertrag.typ.takeUnless { it == TypAusdruck.Unbekannt }
+            ?: typen.typFürAnschlussArt(anschluss.art)
+
+    private fun effektiveAnforderungen(
+        karte: KartenDaten,
+        ref: AnschlussVerweis,
+        besucht: MutableSet<AnschlussVerweis>,
+    ): List<TypAnforderung> {
+        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return emptyList()
+        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return emptyList()
+        if (!besucht.add(ref)) return anschluss.vertrag.anforderungen
+        val folgt = anschluss.typInferenz as? TypInferenzRegel.FolgtEingang ?: return anschluss.vertrag.anforderungen
+        val eingang = knoten.anschlüsse.firstOrNull {
+            it.name == folgt.eingang && it.richtung == AnschlussRichtung.Eingang
+        } ?: return anschluss.vertrag.anforderungen
+        val quelle = karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, eingang.id) }?.von
+            ?: return anschluss.vertrag.anforderungen
+        return anschluss.vertrag.anforderungen + effektiveAnforderungen(karte, quelle, besucht)
+    }
+
     fun ändereAnschlussArt(karte: KartenDaten, ref: AnschlussVerweis, art: AnschlussArtId): KartenDaten {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return karte
         val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return karte
@@ -128,6 +219,19 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
             }) else it
         })
         return mitNeuerArt.copy(verbindungen = mitNeuerArt.verbindungen.filter { istTypkompatibel(mitNeuerArt, it) })
+    }
+
+    fun ändereAnschlussTyp(karte: KartenDaten, ref: AnschlussVerweis, typ: TypAusdruck): KartenDaten {
+        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return karte
+        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return karte
+        val normalisiert = typen.normalisiere(typ)
+        if (anschluss.vertrag.typ == normalisiert) return karte
+        val mitNeuemTyp = karte.copy(knoten = karte.knoten.map {
+            if (it.id == knoten.id) it.copy(anschlüsse = it.anschlüsse.map { a ->
+                if (a.id == anschluss.id) a.copy(vertrag = a.vertrag.copy(typ = normalisiert)) else a
+            }) else it
+        })
+        return mitNeuemTyp.copy(verbindungen = mitNeuemTyp.verbindungen.filter { istTypkompatibel(mitNeuemTyp, it) })
     }
 
     private fun richte(
@@ -142,13 +246,27 @@ class GraphPrüfung(private val arten: AnschlussArtRegister) {
         else -> null
     }
 
+    private fun prüfeSemantik(karte: KartenDaten, ausgang: AnschlussVerweis, eingang: AnschlussVerweis): TypPrüfung =
+        typen.prüfe(effektiverTyp(karte, ausgang), effektiverTyp(karte, eingang))
+
+    private fun fehlendeAnforderung(
+        karte: KartenDaten,
+        ausgang: AnschlussVerweis,
+        eingang: AnschlussVerweis,
+    ): TypAnforderung? {
+        val vorhanden = effektiverVertrag(karte, ausgang).anforderungen.toSet()
+        return effektiverVertrag(karte, eingang).anforderungen.firstOrNull { it !in vorhanden }
+    }
+
     private fun istTypkompatibel(karte: KartenDaten, verbindung: VerbindungDaten): Boolean {
         val von = karte.findeAnschluss(verbindung.von) ?: return false
         val zu = karte.findeAnschluss(verbindung.zu) ?: return false
-        val (_, eingang) = richte(von, verbindung.von, zu, verbindung.zu) ?: return false
-        val ausgangsArt = effektiveArt(karte, verbindung.von)
+        val (ausgang, eingang) = richte(von, verbindung.von, zu, verbindung.zu) ?: return false
+        val ausgangsArt = effektiveArt(karte, ausgang.second)
         if (eingang.first.zulässigeArten.isNotEmpty() && eingang.first.zulässigeArten.none { erlaubt -> arten.istUnterart(ausgangsArt, erlaubt) }) return false
-        return arten.istUnterart(ausgangsArt, effektiveArt(karte, verbindung.zu))
+        if (!arten.istUnterart(ausgangsArt, effektiveArt(karte, eingang.second))) return false
+        if (prüfeSemantik(karte, ausgang.second, eingang.second) is TypPrüfung.Inkompatibel) return false
+        return fehlendeAnforderung(karte, ausgang.second, eingang.second) == null
     }
 
     private fun erzeugtZyklus(karte: KartenDaten, von: KnotenId, zu: KnotenId): Boolean {
