@@ -91,6 +91,16 @@ sealed interface TypInferenzRegel {
         init { require(fälle.isNotEmpty()) { "Eine Typabbildung benötigt mindestens einen Fall." } }
     }
 
+    data class Priorisierung(
+        val eingänge: List<String>,
+        val prioritäten: List<TypAusdruck>,
+    ) : TypInferenzRegel {
+        init {
+            require(eingänge.isNotEmpty()) { "Eine Typpriorisierung benötigt Eingänge." }
+            require(prioritäten.isNotEmpty()) { "Eine Typpriorisierung benötigt Prioritäten." }
+        }
+    }
+
     data class TupelAusEingängen(
         val eingänge: List<String>,
         val konstruktor: TypId = TypId("mathematik.tupel"),
