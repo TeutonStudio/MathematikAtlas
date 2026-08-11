@@ -1,29 +1,31 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+import de.TeutonStudio.TypSystem.TypAusdruck
+import de.TeutonStudio.TypSystem.TypTragend
+
 /**
  * Offener Oberbegriff für methodenartige Werte im Atlas.
  *
  * Eine Methode muss nicht automatisch eine symbolische mathematische Vorschrift
- * besitzen oder durch Variablensubstitution ausführbar sein. Die mathematischen
- * Member unten sind ein Übergangsvertrag für den bestehenden Code: Fremdmethoden
- * müssen sie nicht überschreiben und erhalten bei ihrer Verwendung einen klaren
- * Capability-Fehler.
- *
- * Bis G0.2 transportiert der gemeinsame Kartenruntime-Wertkanal ausschließlich
- * [MathematischesObjekt]. Deshalb bleibt Methode vorerst ein indirekter Untertyp
- * davon. Die Ausführungssemantik ist bereits vollständig über Capabilities getrennt.
+ * besitzen oder durch Variablensubstitution ausführbar sein. Der semantische Typ
+ * ist seit G0.2 Teil des gemeinsamen neutralen Typkerns; fremde Methoden können
+ * ihn überschreiben, ohne mathematische Auswertungs-Capabilities zu erben.
  */
-interface Methode : MathematischesObjekt {
+interface Methode : MathematischesObjekt, TypTragend {
     val name: String
 
     /** Sichere Minimaldarstellung für Methoden ohne mathematischen Formelrumpf. */
     override fun zuLatex(): String = name
 
+    /** Allgemeiner Typkanal für Mathematik-, Script- und spätere Engine-Methoden. */
+    override val typAusdruck: TypAusdruck
+        get() = methodenTypAusdruck()
+
     /*
      * Quellkompatible mathematische Übergangsoberfläche. Diese Eigenschaften sind
      * absichtlich nicht abstrakt: Eine neue Domänenmethode implementiert weiterhin
      * nur den kleinen Obervertrag. MathematischeMethode überschreibt alle Member mit
-     * echten Daten. G0.2 ersetzt diese Übergangsfläche durch den allgemeinen Typkern.
+     * echten Daten. Fachcode soll neue Typanforderungen über [typAusdruck] ausdrücken.
      */
     val parameter: List<MethodenParameter>
         get() = alsMathematischeMethode("mathematische Parameter").parameter
@@ -88,7 +90,7 @@ interface Methode : MathematischesObjekt {
 
 /**
  * Capability für Methoden, die die heutige mathematische [MethodenSignatur]
- * bereitstellen. G0.2 verallgemeinert diesen Vertrag auf den neuen Typkern.
+ * bereitstellen. Sie liefert über G0.2 automatisch einen strukturierten Methodentyp.
  */
 interface SignaturtragendeMethode : Methode {
     val signatur: MethodenSignatur
