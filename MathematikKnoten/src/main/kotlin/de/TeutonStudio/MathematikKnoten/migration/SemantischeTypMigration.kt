@@ -12,9 +12,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
  */
 fun KartenDaten.migriereSemantischeTypverträge(): KartenDaten = copy(
     knoten = knoten.map { knoten ->
-        knoten.copy(
-            anschlüsse = knoten.anschlüsse.map { it.mitSemantischemStandardvertrag() },
-        )
+        knoten.copy(anschlüsse = knoten.anschlüsse.map { it.mitSemantischemStandardvertrag() })
     },
 )
 
@@ -38,8 +36,6 @@ fun AnschlussDaten.mitSemantischemStandardvertrag(): AnschlussDaten {
     }
 
     val inferenz = typInferenz ?: when {
-        artFolgtEingang != null -> TypInferenzRegel.FolgtEingang(artFolgtEingang)
-        artVereinigtEingänge.isNotEmpty() -> TypInferenzRegel.GemeinsameOberart(artVereinigtEingänge)
         artAbbildungVonEingang != null -> TypInferenzRegel.AbbildungVonEingang(
             eingang = artAbbildungVonEingang.eingang,
             fälle = artAbbildungVonEingang.abbildung.entries
@@ -51,6 +47,14 @@ fun AnschlussDaten.mitSemantischemStandardvertrag(): AnschlussDaten {
                     )
                 },
         )
+        artFolgtEingang != null -> TypInferenzRegel.FolgtEingang(artFolgtEingang)
+        artPriorisiertEingänge != null -> TypInferenzRegel.Priorisierung(
+            eingänge = artPriorisiertEingänge.eingänge,
+            prioritäten = artPriorisiertEingänge.prioritäten.map { priorität ->
+                TypAusdruck.Atom(TypId(MathematikAnschlussArten.normalisiereMethodenArt(priorität).wert))
+            },
+        )
+        artVereinigtEingänge.isNotEmpty() -> TypInferenzRegel.GemeinsameOberart(artVereinigtEingänge)
         else -> null
     }
 
