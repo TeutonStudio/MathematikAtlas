@@ -56,6 +56,22 @@ jobs:
       - name: MathematikRechenSystem-Tests ausführen
         run: ./gradlew :MathematikRechenSystem:test --stacktrace
 
+      - name: KnotenKartenVerwalter-Tests diagnostizieren
+        continue-on-error: true
+        run: ./gradlew :KnotenKartenVerwalter:testDebugUnitTest --stacktrace
+
+      - name: MathematikKartenAdapter-Tests diagnostizieren
+        continue-on-error: true
+        run: ./gradlew :MathematikKartenAdapter:testDebugUnitTest --stacktrace
+
+      - name: MathematikKnoten-Tests diagnostizieren
+        continue-on-error: true
+        run: ./gradlew :MathematikKnoten:testDebugUnitTest --stacktrace
+
+      - name: App-Tests diagnostizieren
+        continue-on-error: true
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
       - name: Vollständige JVM-Tests ausführen
         run: ./gradlew test --stacktrace
 
