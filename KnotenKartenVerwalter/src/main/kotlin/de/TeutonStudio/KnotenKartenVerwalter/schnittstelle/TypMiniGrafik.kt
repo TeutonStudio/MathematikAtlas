@@ -4,7 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.matchParentSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +40,11 @@ fun TypMiniGrafik(
     val segmente = descriptor.segmente.ifEmpty {
         listOf(TypVisualSegment("typ", descriptor.kurzLabel))
     }
-    val farben = segmente.map { farbeFürSegment(it) }.ifEmpty { listOf(fallback) }
+    val farben = mutableListOf<Color>()
+    for (segment in segmente) {
+        farben += farbeFürSegment(segment)
+    }
+    if (farben.isEmpty()) farben += fallback
 
     Box(
         modifier
@@ -50,7 +54,7 @@ fun TypMiniGrafik(
             .border(2.dp, rahmen, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.matchParentSize()) {
+        Canvas(Modifier.fillMaxSize()) {
             when (descriptor.muster) {
                 TypVisualMuster.Einfach -> drawRect(farben.first())
                 TypVisualMuster.Gestreift -> {
