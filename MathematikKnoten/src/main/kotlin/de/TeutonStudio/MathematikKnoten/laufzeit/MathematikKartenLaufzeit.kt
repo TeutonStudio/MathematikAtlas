@@ -19,7 +19,8 @@ class MathematikKartenLaufzeit(
     nichtAuswertbareKnotenArten: Set<KnotenArtId> = emptySet(),
 ) {
     val anschlussArten = AnschlussArtRegister(MathematikAnschlussArten.alle)
-    val graphPrüfung = GraphPrüfung(anschlussArten)
+    val typSystem = MathematikTypSystem()
+    val graphPrüfung = GraphPrüfung(anschlussArten, typSystem)
     val vorlagen: List<KnotenVorlage> = KanonischerMathematikKnotenKatalog.alle()
 
     private val auswerter = KartenAuswerter(
