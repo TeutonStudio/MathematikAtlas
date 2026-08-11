@@ -46,6 +46,7 @@ object MathematikKartenMigrationen {
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
         .migriereRechnerMethodenAnschluesse()
+        .migriereSemantischeTypverträge()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
         .let(::migriereTranspositionsKnoten)
@@ -53,6 +54,7 @@ object MathematikKartenMigrationen {
         .migriereHyperAnalysisKnoten()
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
+        .migriereSemantischeTypverträge()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
         .migriereTensorraumDimensionen()
@@ -64,4 +66,5 @@ object MathematikKartenMigrationen {
         .migriereVektorRechnerKonfiguration()
         .migriereStrukturierteDivision()
         .migriereRechnerMethodenAnschluesse()
+        .migriereSemantischeTypverträge()
 }
