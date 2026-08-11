@@ -17,6 +17,23 @@ enum class AngulusEinheit(val stabileId: String, val kurzname: String) {
     }
 }
 
+/** Trägermenge von Winkeln mit festgelegter Einheit und optionalem Dimensionsbezug. */
+data class AngulusRaum(
+    val einheit: AngulusEinheit = AngulusEinheit.RADIAN,
+    val dimensionen: List<String> = emptyList(),
+) : MengenAusdruck {
+    init {
+        require(dimensionen.none { it.isBlank() }) { "Angulus-Dimensionen dürfen nicht leer sein." }
+    }
+
+    override fun zuLatex(): String {
+        val dimension = dimensionen.takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = "_{", postfix = "}", separator = ",")
+            .orEmpty()
+        return "\\operatorname{Angulus}^{\\mathrm{${einheit.kurzname}}}$dimension"
+    }
+}
+
 /**
  * Ein Winkel ist kein nackter Zahlenwert. Neben der Einheit trägt er den
  * Dimensionsbezug, beispielsweise ["x", "y"] für einen Winkel in der xy-Ebene.
@@ -28,8 +45,10 @@ data class Angulus(
     val dimensionen: List<String> = emptyList(),
 ) : MathematischesObjekt, TypTragend {
     init {
-        require(dimensionen.none(String::isBlank)) { "Angulus-Dimensionen dürfen nicht leer sein." }
+        require(dimensionen.none { it.isBlank() }) { "Angulus-Dimensionen dürfen nicht leer sein." }
     }
+
+    val raum: AngulusRaum get() = AngulusRaum(einheit, dimensionen)
 
     override fun zuLatex(): String = when (einheit) {
         AngulusEinheit.RADIAN -> "${wert.zuLatex()}\\,\\mathrm{rad}"
@@ -62,6 +81,12 @@ fun angulus(
     einheit: AngulusEinheit = AngulusEinheit.RADIAN,
     dimensionen: List<String> = emptyList(),
 ): Angulus = Angulus(wert, einheit, dimensionen)
+
+/** Polarform erzwingt intern Radian, bewahrt aber die Einheit am sichtbaren Winkelwert. */
+fun komplexAusPolar(radius: ZahlAusdruck, winkel: Angulus): KomplexeZahl {
+    val radian = winkel.inEinheit(AngulusEinheit.RADIAN)
+    return komplexAusPolar(radius, radian.wert, gradWinkel = false, gradAlsBogenmassAuswerten = true)
+}
 
 enum class TupelKoordinatenArt { ALLGEMEIN, KARTESISCH, POLAR }
 
