@@ -49,9 +49,10 @@ class MethodenErweiterungsnahtTest {
             zielMenge = ReelleZahlen,
             werteVorräte = mapOf(x.name to ReelleZahlen),
         )
+        val zwei = RationaleZahl.von(2L)
 
         assertIs<MathematischeMethode>(methode)
         assertTrue(methode is MathematischAuswertbareMethode)
-        assertEquals(RationaleZahl.von(2), methode.wendeAn(mapOf("x" to RationaleZahl.von(2))))
+        assertEquals(zwei, methode.wendeAn(mapOf("x" to zwei)))
     }
 }
