@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeTypen
+import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import de.TeutonStudio.TypSystem.AnschlussVertrag
 import de.TeutonStudio.TypSystem.TypAusdruck
 import de.TeutonStudio.TypSystem.TypInferenzRegel
