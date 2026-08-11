@@ -58,6 +58,14 @@ data class AnschlussDaten(
     val artAbbildungVonEingang: AnschlussArtAbbildung? = null,
     /** Typabhängige Ausgangsart, die eine Quellart über mehrere Eingänge priorisiert. */
     val artPriorisiertEingänge: AnschlussArtPriorisierung? = null,
+    /**
+     * Semantischer Vertrag des Anschlusses. [art] bleibt die grobe Kategorie und
+     * Legacy-Persistenz; der Vertrag beschreibt den konkreten Werttyp und
+     * zusätzliche fachliche Anforderungen.
+     */
+    val vertrag: AnschlussVertrag = AnschlussVertrag(),
+    /** Optionaler semantischer Typfluss, unabhängig von der historischen Artinferenz. */
+    val typInferenz: TypInferenzRegel? = null,
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)
