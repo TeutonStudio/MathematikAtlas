@@ -1,0 +1,68 @@
+name: G0.2 KKV Release Diagnose
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+
+      - name: Release-Hauptcode kompilieren
+        id: main
+        continue-on-error: true
+        run: ./gradlew :KnotenKartenVerwalter:compileReleaseKotlin --console=plain --stacktrace > kkv-main.log 2>&1
+
+      - name: Release-Testcode kompilieren
+        id: testcompile
+        continue-on-error: true
+        run: ./gradlew :KnotenKartenVerwalter:compileReleaseUnitTestKotlin --console=plain --stacktrace > kkv-testcompile.log 2>&1
+
+      - name: Release-Tests ausführen
+        id: tests
+        continue-on-error: true
+        run: ./gradlew :KnotenKartenVerwalter:testReleaseUnitTest --console=plain --stacktrace > kkv-tests.log 2>&1
+
+      - name: Kompakte Diagnose ausgeben
+        if: always()
+        run: |
+          for f in kkv-main.log kkv-testcompile.log kkv-tests.log; do
+            echo "===== $f ====="
+            grep -E "(^e:|FAILED|FAILURE:|Caused by:|There were failing tests|[0-9]+ tests completed|AssertionError|expected:|but was:|Compilation error)" "$f" | tail -n 120 || true
+          done
+          echo "===== JUnit failures ====="
+          find KnotenKartenVerwalter/build/test-results -name '*.xml' -type f -print0 2>/dev/null \
+            | xargs -0 grep -H -E '<testsuite|<failure|<error' \
+            | tail -n 200 || true
+
+      - name: Diagnoseartefakt hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kkv-release-diagnose
+          if-no-files-found: ignore
+          path: |
+            kkv-main.log
+            kkv-testcompile.log
+            kkv-tests.log
+            KnotenKartenVerwalter/build/test-results/
+
+      - name: Fehlerstatus wiederherstellen
+        if: always()
+        run: |
+          if grep -q "BUILD FAILED\|FAILURE:" kkv-main.log kkv-testcompile.log kkv-tests.log 2>/dev/null; then
+            exit 1
+          fi
