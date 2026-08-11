@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? {
     kleineIssuesKonzeptFürKnoten(knoten)?.let { return it }
+    axiomPraedikatKonzept(knoten)?.let { return it }
     if (knoten.art == "mathematik.endlicheMenge") return endlicheMengeKonzept(knoten)
     if (knoten.art == MENGEN_KNOTEN_ART) {
         val verweis = knoten.kartenVerweis ?: return null
