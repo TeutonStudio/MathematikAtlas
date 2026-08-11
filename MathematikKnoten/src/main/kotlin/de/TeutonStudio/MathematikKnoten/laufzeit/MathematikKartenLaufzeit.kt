@@ -22,6 +22,7 @@ class MathematikKartenLaufzeit(
     val typSystem = erzeugeMathematikKartenTypSystem(anschlussArten)
     val graphPrüfung = GraphPrüfung(anschlussArten, typSystem)
     val vorlagen: List<KnotenVorlage> = KanonischerMathematikKnotenKatalog.alle()
+        .map(KnotenVorlage::migriereSemantischeTypen)
 
     private val auswerter = KartenAuswerter(
         register = GesamterMathematikAuswerter.erzeugeRegister(),
