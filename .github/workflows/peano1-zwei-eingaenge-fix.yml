@@ -14,15 +14,99 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch anwenden
+
+      - name: Peano 1 korrigieren
+        shell: bash
         run: |
-          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgpheGlvbV9wYXRoID0gUGF0aCgiTWF0aGVtYXRpa1JlY2hlblN5c3RlbS9zcmMvbWFpbi9rb3RsaW4vZGUvVGV1dG9uU3R1ZGlvL01hdGhlbWF0aWtSZWNoZW5TeXN0ZW0va2Vybi9BeGlvbU9wZXJhdG9yZW4ua3QiKQp0ZXh0ID0gYXhpb21fcGF0aC5yZWFkX3RleHQoKQoKaGVscGVyID0gcicnJwogICAgcHJpdmF0ZSBmdW4gbmV1dHJhbGVzRWxlbWVudEV4aXN0aWVydEF1c3NhZ2UobWVuZ2U6IE1lbmdlbkF1c2RydWNrLCBvcDogTWV0aG9kZSk6IEF1c3NhZ2U/ID0KICAgICAgICBlbmRsaWNoKG1lbmdlKSB7IGVsZW1lbnRlIC0+CiAgICAgICAgICAgIHZhbCBrYW5kaWRhdGVuID0gZWxlbWVudGUubWFwIHsgbmV1dHJhbCAtPgogICAgICAgICAgICAgICAgY2hlY2tOb3ROdWxsKG5ldXRyYWxBdXNzYWdlKG1lbmdlLCBvcCwgbmV1dHJhbCkpCiAgICAgICAgICAgIH0KICAgICAgICAgICAgd2hlbiAoa2FuZGlkYXRlbi5zaXplKSB7CiAgICAgICAgICAgICAgICAwIC0+IFdhaHJoZWl0c0tvbnN0YW50ZShmYWxzZSkKICAgICAgICAgICAgICAgIDEgLT4ga2FuZGlkYXRlbi5zaW5nbGUoKQogICAgICAgICAgICAgICAgZWxzZSAtPiBEaXNqdW5rdGlvbihrYW5kaWRhdGVuKQogICAgICAgICAgICB9CiAgICAgICAgfQoKJycnCmlmICJwcml2YXRlIGZ1biBuZXV0cmFsZXNFbGVtZW50RXhpc3RpZXJ0QXVzc2FnZSIgbm90IGluIHRleHQ6CiAgICBtYXJrZXIgPSAiICAgIHByaXZhdGUgZnVuIGludmVyc0F1c3NhZ2UoIgogICAgaWR4ID0gdGV4dC5pbmRleChtYXJrZXIpCiAgICB0ZXh0ID0gdGV4dFs6aWR4XSArIGhlbHBlciArIHRleHRbaWR4Ol0KCnN0YXJ0ID0gdGV4dC5pbmRleCgnICAgICAgICBkKFxuICAgICAgICAgICAgImF4aW9tLnBlYW5vLm51bGwiJykKZW5kID0gdGV4dC5pbmRleCgnICAgICAgICBkKFxuICAgICAgICAgICAgImF4aW9tLnBlYW5vLm5hY2hmb2xnZXJBYmdlc2NobG9zc2VuIicsIHN0YXJ0KQpwZWFubyA9IHInJycgICAgICAgIGQoCiAgICAgICAgICAgICJheGlvbS5wZWFuby5udWxsIiwgIlBlYW5vIDEgwrcgTmV1dHJhbGVzIEVsZW1lbnQiLCBzZXRPZigicGVhbm8iKSwgIk5hdMO8cmxpY2hlIFphaGxlbiDCtyBQZWFubyIsCiAgICAgICAgICAgICJcXGV4aXN0cyBlXFxpbiBNOlxcO1xcZm9yYWxsIG5cXGluIE06XFw7ZVxcY2RvdCBuPW49blxcY2RvdCBlIiwKICAgICAgICAgICAgc2V0T2YoIlBlYW5vIDEiLCAibmV1dHJhbGVzIEVsZW1lbnQiLCAiSWRlbnRpdMOkdCIsICJOdWxsIGdlaMO2cnQgenUgTiIpLAogICAgICAgICAgICBhKCJtZW5nZSIsIEF4aW9tQXJndW1lbnRBcnQuTUVOR0UpLAogICAgICAgICAgICBhKCJtdWx0aXBsaWthdGlvbiIsIEF4aW9tQXJndW1lbnRBcnQuTUVUSE9ERSwgMiksCiAgICAgICAgKSB7IHcgLT4KICAgICAgICAgICAgdmFsIG4gPSBtZW5nZSh3LCAwKTsgdmFsIG1hbCA9IG1ldGhvZGUodywgMSkKICAgICAgICAgICAgaW5zdGFueigKICAgICAgICAgICAgICAgICJheGlvbS5wZWFuby5udWxsIiwKICAgICAgICAgICAgICAgICJQZWFubyAxIMK3IE5ldXRyYWxlcyBFbGVtZW50IiwKICAgICAgICAgICAgICAgIHNldE9mKCJwZWFubyIpLAogICAgICAgICAgICAgICAgIlxcZXhpc3RzIGVcXGluJHtuLnp1TGF0ZXgoKX06XFw7XFxmb3JhbGwgblxcaW4ke24uenVMYXRleCgpfTpcXDske21hbC5uYW1lfShlLG4pPW49JHttYWwubmFtZX0obixlKSIsCiAgICAgICAgICAgICAgICBydW5DYXRjaGluZyB7IG5ldXRyYWxlc0VsZW1lbnRFeGlzdGllcnRBdXNzYWdlKG4sIG1hbCkgfS5nZXRPck51bGwoKSwKICAgICAgICAgICAgKQogICAgICAgIH0sCicnJwp0ZXh0ID0gdGV4dFs6c3RhcnRdICsgcGVhbm8gKyB0ZXh0W2VuZDpdCmF4aW9tX3BhdGgud3JpdGVfdGV4dCh0ZXh0KQoKdGVzdF9wYXRoID0gUGF0aCgiTWF0aGVtYXRpa1JlY2hlblN5c3RlbS9zcmMvdGVzdC9rb3RsaW4vZGUvVGV1dG9uU3R1ZGlvL01hdGhlbWF0aWtSZWNoZW5TeXN0ZW0va2Vybi9BeGlvbU9wZXJhdG9yZW5UZXN0Lmt0IikKdGVzdCA9IHRlc3RfcGF0aC5yZWFkX3RleHQoKQpzdGFydCA9IHRlc3QuaW5kZXgoIiAgICBAVGVzdFxuICAgIGZ1biBgUGVhbm8gMSIpCmVuZCA9IHRlc3QuaW5kZXgoIiAgICBAVGVzdFxuICAgIGZ1biBgUGVhbm8gTmFjaGZvbGdlcmFic2NobHVzcyIsIHN0YXJ0KQpyZXBsYWNlbWVudCA9IHInJycgICAgQFRlc3QKICAgIGZ1biBgUGVhbm8gMSBoYXQgbnVyIE1lbmdlIHVuZCBNdWx0aXBsaWthdGlvbiB1bmQgZm9yZGVydCBlaW4gaW50ZXJuZXMgbmV1dHJhbGVzIEVsZW1lbnRgKCkgewogICAgICAgIHZhbCBzaW5nbGV0b24gPSBFbmRsaWNoZU1lbmdlKHNldE9mKFJhdGlvbmFsZVphaGwuTnVsbCkpCiAgICAgICAgdmFsIG1pdE5ldXRyYWwgPSBrb25zdGFudGVCaW5hZXJlT3BlcmF0aW9uKHNpbmdsZXRvbiwgUmF0aW9uYWxlWmFobC5OdWxsKQogICAgICAgIHZhbCBvaG5lTmV1dHJhbCA9IGtvbnN0YW50ZUJpbmFlcmVPcGVyYXRpb24oendlaUVsZW1lbnRlLCBSYXRpb25hbGVaYWhsLk51bGwpCiAgICAgICAgdmFsIGRlZmluaXRpb24gPSBjaGVja05vdE51bGwoQXhpb21PcGVyYXRvcmVuLnZvbklkT2Rlck51bGwoImF4aW9tLnBlYW5vLm51bGwiKSkKCiAgICAgICAgYXNzZXJ0RXF1YWxzKGxpc3RPZigibWVuZ2UiLCAibXVsdGlwbGlrYXRpb24iKSwgZGVmaW5pdGlvbi5hcmd1bWVudGUubWFwKEF4aW9tQXJndW1lbnQ6OnJvbGxlKSkKICAgICAgICBhc3NlcnRFcXVhbHMoIlBlYW5vIDEgwrcgTmV1dHJhbGVzIEVsZW1lbnQiLCBkZWZpbml0aW9uLnRpdGVsKQoKICAgICAgICB2YWwgd2FociA9IGRlZmluaXRpb24ud2VydGVBdXMoCiAgICAgICAgICAgIG1hcE9mPFN0cmluZywgTWF0aGVtYXRpc2NoZXNPYmpla3Q+KAogICAgICAgICAgICAgICAgIm1lbmdlIiB0byBzaW5nbGV0b24sCiAgICAgICAgICAgICAgICAibXVsdGlwbGlrYXRpb24iIHRvIG1pdE5ldXRyYWwsCiAgICAgICAgICAgICksCiAgICAgICAgKQogICAgICAgIHZhbCBmYWxzY2ggPSBkZWZpbml0aW9uLndlcnRlQXVzKAogICAgICAgICAgICBtYXBPZjxTdHJpbmcsIE1hdGhlbWF0aXNjaGVzT2JqZWt0PigKICAgICAgICAgICAgICAgICJtZW5nZSIgdG8gendlaUVsZW1lbnRlLAogICAgICAgICAgICAgICAgIm11bHRpcGxpaWthdGlvbiIgdG8gb2huZU5ldXRyYWwsCiAgICAgICAgICAgICksCiAgICAgICAgKQoKICAgICAgICBhc3NlcnRFcXVhbHMoV2FocmhlaXRzd2VydC5XYWhyLCB3YWhyLmVudHNjaGVpZGUoKS53YWhyaGVpdHN3ZXJ0KQogICAgICAgIGFzc2VydEVxdWFscyhXYWhyaGVpdHN3ZXJ0LkzDvGdlLCBmYWxzY2guZW50c2NoZWlkZSgpLndhaHJoZWl0c3dlcnQpCiAgICAgICAgYXNzZXJ0VHJ1ZSh3YWhyLnp1TGF0ZXgoKS5jb250YWlucygiXFxcXGV4aXN0cyBlXFxcXGluIikpCiAgICB9CgoJycnCnRlc3RfcGF0aC53cml0ZV90ZXh0KHRlc3RbOnN0YXJ0XSArIHJlcGxhY2VtZW50ICsgdGVzdFtlbmQ6XSkK' | base64 -d > /tmp/peano_patch.py
-          python3 /tmp/peano_patch.py
+          python3 <<'PY'
+          from pathlib import Path
+
+          axiom_path = Path("MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/AxiomOperatoren.kt")
+          text = axiom_path.read_text()
+
+          if "private fun neutralesElementExistiertAussage" not in text:
+              marker = "    private fun inversAussage("
+              index = text.index(marker)
+              helper = '''    private fun neutralesElementExistiertAussage(menge: MengenAusdruck, op: Methode): Aussage? =
+              endlich(menge) { elemente ->
+                  val kandidaten = elemente.map { neutral ->
+                      checkNotNull(neutralAussage(menge, op, neutral))
+                  }
+                  when (kandidaten.size) {
+                      0 -> WahrheitsKonstante(false)
+                      1 -> kandidaten.single()
+                      else -> Disjunktion(kandidaten)
+                  }
+              }
+
+          '''
+              text = text[:index] + helper + text[index:]
+
+          start = text.index('        d(\n            "axiom.peano.null"')
+          end = text.index('        d(\n            "axiom.peano.nachfolgerAbgeschlossen"', start)
+          peano = r'''        d(
+              "axiom.peano.null", "Peano 1 · Neutrales Element", setOf("peano"), "Natürliche Zahlen · Peano",
+              "\\exists e\\in M:\\;\\forall n\\in M:\\;e\\cdot n=n=n\\cdot e",
+              setOf("Peano 1", "neutrales Element", "Identität", "Null gehört zu N"),
+              a("menge", AxiomArgumentArt.MENGE),
+              a("multiplikation", AxiomArgumentArt.METHODE, 2),
+          ) { w ->
+              val n = menge(w, 0); val mal = methode(w, 1)
+              instanz(
+                  "axiom.peano.null",
+                  "Peano 1 · Neutrales Element",
+                  setOf("peano"),
+                  "\\exists e\\in${n.zuLatex()}:\\;\\forall n\\in${n.zuLatex()}:\\;${mal.name}(e,n)=n=${mal.name}(n,e)",
+                  runCatching { neutralesElementExistiertAussage(n, mal) }.getOrNull(),
+              )
+          },
+          '''
+          axiom_path.write_text(text[:start] + peano + text[end:])
+
+          test_path = Path("MathematikRechenSystem/src/test/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/AxiomOperatorenTest.kt")
+          test = test_path.read_text()
+          start = test.index("    @Test\n    fun `Peano 1")
+          end = test.index("    @Test\n    fun `Peano Nachfolgerabschluss", start)
+          replacement = r'''    @Test
+              fun `Peano 1 hat nur Menge und Multiplikation und fordert ein internes neutrales Element`() {
+                  val singleton = EndlicheMenge(setOf(RationaleZahl.Null))
+                  val mitNeutral = konstanteBinaereOperation(singleton, RationaleZahl.Null)
+                  val ohneNeutral = konstanteBinaereOperation(zweiElemente, RationaleZahl.Null)
+                  val definition = checkNotNull(AxiomOperatoren.vonIdOderNull("axiom.peano.null"))
+
+                  assertEquals(listOf("menge", "multiplikation"), definition.argumente.map(AxiomArgument::rolle))
+                  assertEquals("Peano 1 · Neutrales Element", definition.titel)
+
+                  val wahr = definition.werteAus(
+                      mapOf<String, MathematischesObjekt>(
+                          "menge" to singleton,
+                          "multiplikation" to mitNeutral,
+                      ),
+                  )
+                  val falsch = definition.werteAus(
+                      mapOf<String, MathematischesObjekt>(
+                          "menge" to zweiElemente,
+                          "multiplikation" to ohneNeutral,
+                      ),
+                  )
+
+                  assertEquals(Wahrheitswert.Wahr, wahr.entscheide().wahrheitswert)
+                  assertEquals(Wahrheitswert.Lüge, falsch.entscheide().wahrheitswert)
+                  assertTrue(wahr.zuLatex().contains("\\exists e\\in"))
+              }
+
+          '''
+          test_path.write_text(test[:start] + replacement + test[end:])
+          PY
+
       - name: Rechenkern testen
         run: ./gradlew :MathematikRechenSystem:test --stacktrace
+
       - name: Definitionskarten testen
         run: ./gradlew :app:testDebugUnitTest --tests '*AxiomPraedikatDefinitionsKartenTest*' --stacktrace
-      - name: Commit
+
+      - name: Korrektur committen
+        shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
