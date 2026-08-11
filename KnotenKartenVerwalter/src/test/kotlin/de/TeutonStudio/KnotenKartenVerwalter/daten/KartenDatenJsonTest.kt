@@ -1,12 +1,15 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten
 
+import de.TeutonStudio.TypSystem.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class KartenDatenJsonTest {
     @Test
-    fun `Roundtrip erhält Identitäten Anschlüsse Eigenschaften und Gruppen`() {
+    fun `Roundtrip erhält Identitäten Anschlüsse Eigenschaften Gruppen und Typverträge`() {
+        val reell = TypAusdruck.Atom(TypId("mathematik.zahl.reell"))
+        val komplex = TypAusdruck.Atom(TypId("mathematik.zahl.komplex"))
         val quelle = KnotenDaten(
             id = KnotenId("quelle"),
             art = "test.quelle",
@@ -21,6 +24,7 @@ class KartenDatenJsonTest {
                     kante = AnschlussKante.Rechts,
                     art = AnschlussArtId("mathematik.zahl"),
                     zulässigeArten = setOf(AnschlussArtId("mathematik.zahl")),
+                    vertrag = AnschlussVertrag(reell),
                 ),
             ),
             parameter = mapOf("wert" to "2"),
@@ -55,6 +59,11 @@ class KartenDatenJsonTest {
                         eingänge = listOf("wert"),
                         prioritäten = listOf(AnschlussArtId("mathematik.methode")),
                     ),
+                    vertrag = AnschlussVertrag(
+                        typ = TypAusdruck.Vereinigung(listOf(reell, komplex)),
+                        anforderungen = listOf(TypAnforderung("struktur.test", mapOf("rang" to "2"))),
+                    ),
+                    typInferenz = TypInferenzRegel.FolgtEingang("wert"),
                 ),
             ),
         )
@@ -87,8 +96,43 @@ class KartenDatenJsonTest {
         val gelesen = KartenDatenJson.lese(text)
 
         assertEquals(karte, gelesen)
+        assertEquals(8, KartenDatenJson.FORMAT_VERSION)
         assertEquals(KartenDatenJson.FORMAT_VERSION, KartenDatenJson.formatVersion(text))
         assertTrue(text.contains("artAbbildungVonEingang"))
         assertTrue(text.contains("artPriorisiertEingänge"))
+        assertTrue(text.contains("typInferenz"))
+        assertTrue(text.contains("struktur.test"))
+    }
+
+    @Test
+    fun `Format 7 ohne Typvertrag bleibt lesbar und unbekannt`() {
+        val alt = """
+            {
+              "formatVersion": 7,
+              "id": "alt",
+              "name": "Alt",
+              "version": 1,
+              "knoten": [{
+                "id": "k",
+                "art": "test",
+                "name": "K",
+                "position": {"x":0,"y":0},
+                "größe": {"breite":200,"höhe":100},
+                "anschlüsse": [{
+                  "id":"a",
+                  "name":"wert",
+                  "richtung":"Ausgang",
+                  "kante":"Rechts",
+                  "art":"mathematik.zahl",
+                  "reihenfolge":0
+                }]
+              }],
+              "verbindungen": [],
+              "visuelleGruppen": []
+            }
+        """.trimIndent()
+
+        val gelesen = KartenDatenJson.lese(alt)
+        assertEquals(TypAusdruck.Unbekannt, gelesen.knoten.single().anschlüsse.single().vertrag.typ)
     }
 }
