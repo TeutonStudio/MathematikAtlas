@@ -18,12 +18,12 @@ class ZahlenOperatorVorschauTest {
         )
         assertEquals("\\min(\\dots,\\dots)", UniversellerZahlenOperator.MINIMUM.vorschauLatex)
         assertEquals("\\max(\\dots,\\dots)", UniversellerZahlenOperator.MAXIMUM.vorschauLatex)
-        assertEquals("\\operatorname{Re}(\\dots)", UniversellerZahlenOperator.REALTEIL.vorschauLatex)
-        assertEquals("\\operatorname{Im}(\\dots)", UniversellerZahlenOperator.IMAGINAERTEIL.vorschauLatex)
+        assertEquals("\\mathcal{Re}(\\dots)", UniversellerZahlenOperator.REALTEIL.vorschauLatex)
+        assertEquals("\\mathcal{Im}(\\dots)", UniversellerZahlenOperator.IMAGINAERTEIL.vorschauLatex)
         assertEquals("\\sin(\\dots)", UniversellerZahlenOperator.SINUS.vorschauLatex)
         assertEquals("\\sinh(\\dots)", ErweiterterZahlenOperator.SINUS_HYPERBOLICUS.vorschauLatex)
         assertEquals(
-            "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb N_0^{\\leq n}",
+            "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb{N}_0^{\\leq n}",
             ErweiterterZahlenOperator.POLYNOM.vorschauLatex,
         )
     }
