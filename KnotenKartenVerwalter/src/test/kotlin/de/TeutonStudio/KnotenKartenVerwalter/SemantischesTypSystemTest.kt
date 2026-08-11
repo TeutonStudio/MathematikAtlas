@@ -20,7 +20,7 @@ class SemantischesTypSystemTest {
             AtomTypDefinition(methode, objekt),
         ),
         konstruktoren = listOf(
-            TypKonstruktorDefinition(TypKernIds.Tupel),
+            TypKonstruktorDefinition(TypKernIds.Tupel, standardVarianz = TypVarianz.Kovariant),
             TypKonstruktorDefinition(methode, listOf(TypVarianz.Kontravariant, TypVarianz.Kovariant)),
         ),
     )
@@ -47,16 +47,21 @@ class SemantischesTypSystemTest {
         assertIs<TypPrüfung.Inkompatibel>(system.prüfe(quelle, TypAusdruck.Atom(reell)))
     }
 
-    @Test fun `Tupel bleibt komponentenweise invariant`() {
-        val exakt = TypAusdruck.Parameterisiert(
+    @Test fun `Tupel sind komponentenweise kovariant und behalten ihre Laenge`() {
+        val enger = TypAusdruck.Parameterisiert(
+            TypKernIds.Tupel,
+            listOf(TypAusdruck.Atom(ganz), TypAusdruck.Atom(reell)),
+        )
+        val weiter = TypAusdruck.Parameterisiert(
             TypKernIds.Tupel,
             listOf(TypAusdruck.Atom(reell), TypAusdruck.Atom(komplex)),
         )
-        val verändert = TypAusdruck.Parameterisiert(
+        val falscheLänge = TypAusdruck.Parameterisiert(
             TypKernIds.Tupel,
-            listOf(TypAusdruck.Atom(ganz), TypAusdruck.Atom(komplex)),
+            listOf(TypAusdruck.Atom(reell)),
         )
-        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(verändert, exakt))
+        assertEquals(TypPrüfung.Kompatibel, system.prüfe(enger, weiter))
+        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(enger, falscheLänge))
     }
 
     @Test fun `Methoden sind in Argumenten kontra und im Ergebnis kovariant`() {
