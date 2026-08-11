@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -22,9 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
-import de.TeutonStudio.MathematikKnoten.SVG_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.SVG_OPERATOR_PARAMETER
-import de.TeutonStudio.MathematikKnoten.SVG_STIL_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.SvgOperatorDefinition
 import de.TeutonStudio.MathematikKnoten.SvgOperatoren
 import de.TeutonStudio.MathematikKnoten.konfiguriereSvgKnoten
