@@ -57,30 +57,17 @@ fun verwendetGradWinkel(operator: UniversellerZahlenOperator): Boolean = operato
     UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
 )
 
-/**
- * Erzeugt die Anschlusskonfiguration eines Zahlenrechnerzustands und erhält
- * vorhandene Anschluss-IDs anhand ihrer semantischen Rolle. Dadurch bleiben
- * kompatible Edges bei Operatorwechseln bestehen.
- */
 fun konfiguriereZahlenRechner(
     knoten: KnotenDaten,
-    operator: UniversellerZahlenOperator = UniversellerZahlenOperator.vonId(
-        knoten.parameter[ZAHLENRECHNER_OPERATOR],
-    ),
+    operator: UniversellerZahlenOperator = UniversellerZahlenOperator.vonId(knoten.parameter[ZAHLENRECHNER_OPERATOR]),
     komplexEingabe: String = knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE]
         ?.takeIf { it == ZAHLENRECHNER_KOMPLEX_TUPEL || it == ZAHLENRECHNER_KOMPLEX_SEPARIERT }
         ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT,
     festeEingänge: Int = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2,
 ): KnotenDaten {
-    require(knoten.art == ZAHLENRECHNER_ART) {
-        "Nur ein universeller Zahlenrechner kann so konfiguriert werden."
-    }
+    require(knoten.art == ZAHLENRECHNER_ART) { "Nur ein universeller Zahlenrechner kann so konfiguriert werden." }
     val vorhandene = knoten.anschlüsse.groupBy { it.richtung to it.name }
-    val gewünschteEingänge = gewünschteZahlenRechnerEingänge(
-        operator = operator,
-        komplexEingabe = komplexEingabe,
-        festeEingänge = festeEingänge,
-    )
+    val gewünschteEingänge = gewünschteZahlenRechnerEingänge(operator, komplexEingabe, festeEingänge)
     val eingänge = gewünschteEingänge.mapIndexed { index, vorgabe ->
         val vorhanden = vorhandene[AnschlussRichtung.Eingang to vorgabe.name]?.firstOrNull()
         (vorhanden ?: vorgabe).copy(
@@ -101,25 +88,17 @@ fun konfiguriereZahlenRechner(
         .map { it.name }
     val vorhandenerAusgang = vorhandene[AnschlussRichtung.Ausgang to "wert"]?.firstOrNull()
         ?: knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
-    val skalareAusgangsArt = if (operator in angulusErzeuger) {
-        MathematikAnschlussArten.Angulus.id
-    } else {
-        MathematikAnschlussArten.Zahl.id
-    }
-    val skalareAusgangsVertrag = if (operator in angulusErzeuger && punktweiseEingangsNamen.isNotEmpty()) {
-        AnschlussVertrag(TypAusdruck.Vereinigung(listOf(angulusTyp, methodenTyp)))
-    } else if (operator in angulusErzeuger) {
-        AnschlussVertrag(angulusTyp)
-    } else {
-        vorhandenerAusgang?.vertrag ?: AnschlussVertrag()
+    val skalareAusgangsArt = if (operator in angulusErzeuger) MathematikAnschlussArten.Angulus.id else MathematikAnschlussArten.Zahl.id
+    val skalareAusgangsVertrag = when {
+        operator in angulusErzeuger && punktweiseEingangsNamen.isNotEmpty() ->
+            AnschlussVertrag(TypAusdruck.Vereinigung(listOf(angulusTyp, methodenTyp)))
+        operator in angulusErzeuger -> AnschlussVertrag(angulusTyp)
+        else -> vorhandenerAusgang?.vertrag ?: AnschlussVertrag()
     }
     val typInferenz = if (operator in angulusErzeuger && eingänge.any { it.name == "a" }) {
         TypInferenzRegel.AbbildungVonEingang(
             eingang = "a",
-            abbildung = mapOf(
-                zahlTyp to angulusTyp,
-                methodenTyp to methodenTyp,
-            ),
+            abbildung = mapOf(zahlTyp to angulusTyp, methodenTyp to methodenTyp),
         )
     } else null
     val ausgang = (vorhandenerAusgang ?: AnschlussDaten(
@@ -141,23 +120,19 @@ fun konfiguriereZahlenRechner(
         zulässigeArten = emptySet(),
         artAbbildungVonEingang = null,
         artPriorisiertEingänge = punktweiseEingangsNamen.takeIf { it.isNotEmpty() }?.let { namen ->
-            AnschlussArtPriorisierung(
-                eingänge = namen,
-                prioritäten = listOf(MathematikAnschlussArten.Methode.id),
-            )
+            AnschlussArtPriorisierung(eingänge = namen, prioritäten = listOf(MathematikAnschlussArten.Methode.id))
         },
         vertrag = skalareAusgangsVertrag,
         typInferenz = typInferenz,
     )
-    val parameter = knoten.parameter + mapOf(
-        ZAHLENRECHNER_OPERATOR to operator.stabileId,
-        ZAHLENRECHNER_KOMPLEX_EINGABE to komplexEingabe,
-        "festeEingänge" to festeEingänge.toString(),
-    )
     return knoten.copy(
         name = zahlenRechnerNameFürWechsel(knoten, operator.titel),
         anschlüsse = eingänge + ausgang,
-        parameter = parameter,
+        parameter = knoten.parameter + mapOf(
+            ZAHLENRECHNER_OPERATOR to operator.stabileId,
+            ZAHLENRECHNER_KOMPLEX_EINGABE to komplexEingabe,
+            "festeEingänge" to festeEingänge.toString(),
+        ),
     )
 }
 
@@ -166,19 +141,8 @@ private fun gewünschteZahlenRechnerEingänge(
     komplexEingabe: String,
     festeEingänge: Int,
 ): List<AnschlussDaten> = when {
-    operator == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
-        eingang(
-            "tupel",
-            MathematikAnschlussArten.PolarTupel.id,
-            vertrag = AnschlussVertrag(tupelTyp),
-        ),
-    )
-    operator == UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
-        eingang(
-            "tupel",
-            MathematikAnschlussArten.KartesischesTupel.id,
-            vertrag = AnschlussVertrag(tupelTyp),
-        ),
+    operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
+        eingang("tupel", MathematikAnschlussArten.Tupel.id, vertrag = AnschlussVertrag(tupelTyp)),
     )
     operator == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> listOf(
         zahlenOderMethodenEingang("a"),
@@ -188,8 +152,7 @@ private fun gewünschteZahlenRechnerEingänge(
         zahlenOderMethodenEingang("a"),
         zahlenOderMethodenEingang("b"),
     )
-    operator == UniversellerZahlenOperator.ITERIERTE_SUMME ||
-        operator == UniversellerZahlenOperator.ITERIERTES_PRODUKT -> listOf(
+    operator == UniversellerZahlenOperator.ITERIERTE_SUMME || operator == UniversellerZahlenOperator.ITERIERTES_PRODUKT -> listOf(
         eingang("methode", MathematikAnschlussArten.ZahlMethode.id),
         eingang("indexmenge", MathematikAnschlussArten.Menge.id),
     )
@@ -199,41 +162,25 @@ private fun gewünschteZahlenRechnerEingänge(
         eingang("c", MathematikAnschlussArten.Zahl.id),
     )
     operator in variadischeZahlenOperatoren -> List(festeEingänge) { index ->
-        zahlenOderMethodenEingang(
-            name = ('a'.code + index).toChar().toString(),
-            erweiterbar = true,
-        )
+        zahlenOderMethodenEingang(('a'.code + index).toChar().toString(), erweiterbar = true)
     }
-    operator in binaereZahlenOperatoren -> listOf(
-        zahlenOderMethodenEingang("a"),
-        zahlenOderMethodenEingang("b"),
-    )
+    operator in binaereZahlenOperatoren -> listOf(zahlenOderMethodenEingang("a"), zahlenOderMethodenEingang("b"))
     operator in angulusVerbraucher -> listOf(angulusOderMethodenEingang("a"))
-    operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE ->
-        listOf(zahlenOderMethodenEingang("a"))
+    operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE -> listOf(zahlenOderMethodenEingang("a"))
     else -> listOf(eingang("a", MathematikAnschlussArten.Zahl.id))
 }
 
-private fun zahlenOderMethodenEingang(
-    name: String,
-    erweiterbar: Boolean = false,
-): AnschlussDaten = eingang(
+private fun zahlenOderMethodenEingang(name: String, erweiterbar: Boolean = false): AnschlussDaten = eingang(
     name = name,
     art = MathematikAnschlussArten.Objekt.id,
     erweiterbar = erweiterbar,
-    zulässigeArten = setOf(
-        MathematikAnschlussArten.Zahl.id,
-        MathematikAnschlussArten.Methode.id,
-    ),
+    zulässigeArten = setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
 )
 
 private fun angulusOderMethodenEingang(name: String): AnschlussDaten = eingang(
     name = name,
     art = MathematikAnschlussArten.Objekt.id,
-    zulässigeArten = setOf(
-        MathematikAnschlussArten.Angulus.id,
-        MathematikAnschlussArten.Methode.id,
-    ),
+    zulässigeArten = setOf(MathematikAnschlussArten.Angulus.id, MathematikAnschlussArten.Methode.id),
     vertrag = AnschlussVertrag(TypAusdruck.Vereinigung(listOf(angulusTyp, methodenTyp))),
 )
 
