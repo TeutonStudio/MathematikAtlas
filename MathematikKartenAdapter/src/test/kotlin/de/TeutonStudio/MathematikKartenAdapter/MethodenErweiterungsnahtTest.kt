@@ -6,7 +6,6 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
-import de.TeutonStudio.MathematikRechenSystem.kern.wendeAn
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
