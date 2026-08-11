@@ -42,6 +42,7 @@ private val binaereZahlenOperatoren = setOf(
 private val zahlTyp = TypAusdruck.Atom(MathematischeTypen.Zahl)
 private val angulusTyp = TypAusdruck.Atom(MathematischeTypen.Angulus)
 private val methodenTyp = TypAusdruck.Atom(MathematischeTypen.Methode)
+private val tupelTyp = TypAusdruck.Atom(MathematischeTypen.Tupel)
 
 fun istVariadischerZahlenOperator(operator: UniversellerZahlenOperator): Boolean =
     operator in variadischeZahlenOperatoren
@@ -169,14 +170,16 @@ private fun gewünschteZahlenRechnerEingänge(
         eingang(
             "tupel",
             MathematikAnschlussArten.PolarTupel.id,
-            vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.PolarTupel)),
+            // Die konkrete Polar-Klassifikation liegt derzeit in der groben Anschlussart;
+            // G0.2 bewahrt parallel den vollständigen Tupel<T1,...>-Vertrag.
+            vertrag = AnschlussVertrag(tupelTyp),
         ),
     )
     operator == UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
         eingang(
             "tupel",
             MathematikAnschlussArten.KartesischesTupel.id,
-            vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.KartesischesTupel)),
+            vertrag = AnschlussVertrag(tupelTyp),
         ),
     )
     operator == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> listOf(
