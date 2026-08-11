@@ -142,7 +142,10 @@ class MathematikTypResolver(
         is Tupelraum -> tupelTyp(menge.komponenten.map(::elementTyp))
         is KartesischesProdukt -> tupelTyp(menge.mengen.map(::elementTyp))
         is Folgenraum -> TypAusdruck.Parameterisiert(MathematikTypen.Folge, listOf(elementTyp(menge.elementMenge)))
-        is Abbildungsmenge -> methodenTyp(elementTyp(menge.definitionsMenge), elementTyp(menge.zielMenge))
+        is Abbildungsmenge -> methodenTyp(
+            tupelTyp(listOf(elementTyp(menge.definitionsMenge))),
+            elementTyp(menge.zielMenge),
+        )
         is Potenzmenge -> TypAusdruck.Parameterisiert(MathematikTypen.Menge, listOf(elementTyp(menge.grundMenge)))
 
         is GefilterteMenge -> elementTyp(menge.menge)
