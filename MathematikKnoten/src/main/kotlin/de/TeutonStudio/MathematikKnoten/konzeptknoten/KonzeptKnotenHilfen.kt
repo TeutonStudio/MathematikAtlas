@@ -45,6 +45,14 @@ private fun KnotenVorlage.suchbegriffe(): Set<String> = buildList {
     addAll(anschlüsse.map { it.art.wert })
 }.bereinigteSuchbegriffe()
 
+private fun KnotenVorlage.fachPfade() =
+    FachKatalog.fürVorlage(
+        art = art,
+        name = name,
+        kategorie = kategorie,
+        besitztKartenVerweis = kartenVerweis != null,
+    ) + FachKatalog.fürAxiomId(standardParameter["operator"].orEmpty())
+
 internal fun einzelnesVorlagenKonzept(
     vorlage: KnotenVorlage,
     id: WissensId = WissensId(vorlage.stabileKonzeptId()),
@@ -53,12 +61,7 @@ internal fun einzelnesVorlagenKonzept(
     id = id,
     titel = vorlage.name,
     kurzbeschreibung = vorlage.wissensBeschreibung(),
-    fachPfade = FachKatalog.fürVorlage(
-        art = vorlage.art,
-        name = vorlage.name,
-        kategorie = vorlage.kategorie,
-        besitztKartenVerweis = vorlage.kartenVerweis != null,
-    ),
+    fachPfade = vorlage.fachPfade(),
     suchbegriffe = vorlage.suchbegriffe(),
     reifegrad = WissensReifegrad.Geprüft,
     knotenArten = setOf(vorlage.art),
@@ -109,14 +112,7 @@ internal fun gruppiertesVorlagenKonzept(
         id = id,
         titel = titel,
         kurzbeschreibung = beschreibung,
-        fachPfade = vorlagen.flatMap { vorlage ->
-            FachKatalog.fürVorlage(
-                art = vorlage.art,
-                name = vorlage.name,
-                kategorie = vorlage.kategorie,
-                besitztKartenVerweis = vorlage.kartenVerweis != null,
-            )
-        }.toSet(),
+        fachPfade = vorlagen.flatMap { vorlage -> vorlage.fachPfade() }.toSet(),
         suchbegriffe = (
             zusätzlicheSuchbegriffe +
                 vorlagen.flatMap { it.suchbegriffe() }

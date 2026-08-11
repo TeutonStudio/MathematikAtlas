@@ -1,39 +1,33 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 /**
- * Der Graph einer Methode als eigenständiger symbolischer Mengenausdruck.
- *
- * Die Methode bleibt die einzige Quelle der Wahrheit für Definitions- und Zielraum.
- * Restriktionen oder Erweiterungen wirken deshalb automatisch über die aktuelle
- * Methodensignatur auf den Graphen.
+ * Der Graph einer symbolischen mathematischen Methode als eigenständiger Mengenausdruck.
+ * Engine- oder Scriptmethoden besitzen nicht allein aufgrund einer Signatur einen
+ * mathematischen Graphen und werden deshalb an der Erzeugungsgrenze ausgeschlossen.
  */
 data class MethodenGraphMenge(
-    val methode: Methode,
+    val methode: MathematischeMethode,
 ) : MengenAusdruck {
     override fun zuLatex(): String = "\\operatorname{Graph}\\left(${methode.name}\\right)"
 }
 
 /**
- * Kanonischer Argumentraum einer Methode.
+ * Kanonischer Argumentraum einer signaturtragenden Methode.
  *
- * Der Argumentraum ist unabhängig von der Kartenprojektion immer der in der
- * Methodensignatur definierte Wertevorrat. Insbesondere bleibt auch ein einzelner
- * Argumentplatz als Einertupelraum strukturell erhalten. Ein expliziter effektiver
- * Wertevorrat, etwa nach einer Restriktion auf eine nicht-kartesische Teilmenge,
- * hat weiterhin Vorrang.
- *
- * Die Signatur kann von Aufrufern vorab berechnet werden. Der optionale Parameter
- * hält ältere, dateilokale Hilfsfunktionen mit demselben Kurzname konfliktfrei,
- * bis diese schrittweise auf den zentralen Methodenvertrag umgestellt werden.
+ * Diese reine Signaturprojektion ist bewusst allgemeiner als der mathematische Graph:
+ * G0.2 kann sie auf den allgemeinen Typkern heben, ohne Scriptmethoden zu mathematischen
+ * Abbildungen umzudeuten.
  */
 fun Methode.argumentRaum(signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
     signatur.werteVorrat
 
-/** Umgebender Produktraum Graph(f) ⊆ W×Z. */
+/** Umgebender Produktraum Graph(f) ⊆ W×Z einer symbolischen mathematischen Methode. */
 fun Methode.graphRaum(): MengenAusdruck {
-    val signatur = methodenSignatur()
-    return KartesischesProdukt(listOf(argumentRaum(signatur), signatur.zielMenge))
+    val mathematisch = alsMathematischeMethode("einen mathematischen Funktionsgraphen")
+    val signatur = mathematisch.methodenSignatur()
+    return KartesischesProdukt(listOf(mathematisch.argumentRaum(signatur), signatur.zielMenge))
 }
 
 /** Erzeugt die symbolische Graphmenge ohne den Methodenvertrag zu duplizieren. */
-fun Methode.graphMenge(): MethodenGraphMenge = MethodenGraphMenge(this)
+fun Methode.graphMenge(): MethodenGraphMenge =
+    MethodenGraphMenge(alsMathematischeMethode("einen mathematischen Funktionsgraphen"))

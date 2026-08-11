@@ -27,16 +27,23 @@ object FachKatalog {
     val MengenlehreOperationen = FachPfad.von("mengenlehre", "mengenoperationen")
     val MengenlehreDefinitionen = FachPfad.von("mengenlehre", "mengendefinitionen")
     val MengenlehreKonstruktionen = FachPfad.von("mengenlehre", "konstruktionen")
+    val MengenlehreAxiome = FachPfad.von("mengenlehre", "axiome")
     val MengenEigenschaftenTopologie = FachPfad.von("mengenlehre", "eigenschaften", "topologie")
     val MengenEigenschaftenKonvexität = FachPfad.von("mengenlehre", "eigenschaften", "konvexitaet")
 
     val LogikAussagen = FachPfad.von("logik", "aussagen")
     val LogikPrädikate = FachPfad.von("logik", "praedikate")
+    val LogikAxiome = FachPfad.von("logik", "praedikate", "axiome")
     val LogikQuantoren = FachPfad.von("logik", "quantoren")
+
+    val ArithmetikNatürlicheZahlen = FachPfad.von("arithmetik", "natuerliche-zahlen")
 
     val AlgebraZahlen = FachPfad.von("algebra", "zahlen")
     val AlgebraOperationen = FachPfad.von("algebra", "operationen")
     val AlgebraMethoden = FachPfad.von("algebra", "methoden")
+    val AlgebraStrukturen = FachPfad.von("algebra", "strukturen")
+    val AlgebraStrukturenGruppen = FachPfad.von("algebra", "strukturen", "gruppen")
+    val AlgebraStrukturenRingeKörper = FachPfad.von("algebra", "strukturen", "ringe-koerper")
 
     val TopologieGrundbegriffe = FachPfad.von("topologie", "grundbegriffe")
     val StochastikGrundbegriffe = FachPfad.von("stochastik", "grundbegriffe")
@@ -64,18 +71,43 @@ object FachKatalog {
         MengenlehreOperationen,
         MengenlehreDefinitionen,
         MengenlehreKonstruktionen,
+        MengenlehreAxiome,
         MengenEigenschaftenTopologie,
         MengenEigenschaftenKonvexität,
         LogikAussagen,
         LogikPrädikate,
+        LogikAxiome,
         LogikQuantoren,
+        ArithmetikNatürlicheZahlen,
         AlgebraZahlen,
         AlgebraOperationen,
         AlgebraMethoden,
+        AlgebraStrukturen,
+        AlgebraStrukturenGruppen,
+        AlgebraStrukturenRingeKörper,
         TopologieGrundbegriffe,
         StochastikGrundbegriffe,
         EigeneKarten,
     )
+
+    fun fürAxiomId(axiomId: String): Set<FachPfad> = buildSet {
+        if (!axiomId.startsWith("axiom.")) return@buildSet
+        add(LogikAxiome)
+        when {
+            axiomId.startsWith("axiom.peano.") -> add(ArithmetikNatürlicheZahlen)
+            axiomId.startsWith("axiom.zf.") || axiomId.startsWith("axiom.zfc.") -> add(MengenlehreAxiome)
+            axiomId.startsWith("axiom.relation.") -> add(LogikPrädikate)
+            axiomId.startsWith("axiom.algebra.") -> {
+                add(AlgebraStrukturen)
+                if (listOf("halbgruppe", "monoid", "gruppe", "abelscheGruppe").any(axiomId::endsWith)) {
+                    add(AlgebraStrukturenGruppen)
+                }
+                if (listOf("halbring", "ringOhneEins", "ring", "kommutativerRing", "integritaetsbereich", "schiefkoerper", "koerper").any(axiomId::endsWith)) {
+                    add(AlgebraStrukturenRingeKörper)
+                }
+            }
+        }
+    }
 
     fun fürVorlage(
         art: String,

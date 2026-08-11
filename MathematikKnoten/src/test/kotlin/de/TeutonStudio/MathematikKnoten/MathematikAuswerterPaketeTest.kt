@@ -22,7 +22,11 @@ class MathematikAuswerterPaketeTest {
 
         assertTrue(alle.indexOf(letzteBasis) < alle.indexOf(ersteVerfeinerung))
         assertEquals("konsolidierte-knoten", ersteVerfeinerung)
-        assertEquals("polynom-multinom-vertrag", StandardMathematikAuswerterPakete.verfeinerungen.last().name)
+        assertEquals("rechner-methodenhebung", StandardMathematikAuswerterPakete.verfeinerungen.last().name)
+        assertTrue(
+            StandardMathematikAuswerterPakete.verfeinerungen.indexOfFirst { it.name == "polynom-multinom-vertrag" } <
+                StandardMathematikAuswerterPakete.verfeinerungen.indexOfFirst { it.name == "rechner-methodenhebung" },
+        )
     }
 
     @Test

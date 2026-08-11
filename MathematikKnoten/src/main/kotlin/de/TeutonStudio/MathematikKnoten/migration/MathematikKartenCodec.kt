@@ -45,6 +45,7 @@ object MathematikKartenMigrationen {
         .migriereHyperAnalysisKnoten()
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
+        .migriereRechnerMethodenAnschluesse()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
         .let(::migriereTranspositionsKnoten)
@@ -62,4 +63,5 @@ object MathematikKartenMigrationen {
         .migrierePraedikatKnoten()
         .migriereVektorRechnerKonfiguration()
         .migriereStrukturierteDivision()
+        .migriereRechnerMethodenAnschluesse()
 }

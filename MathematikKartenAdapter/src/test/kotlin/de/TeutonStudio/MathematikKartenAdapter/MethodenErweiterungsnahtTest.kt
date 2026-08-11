@@ -1,0 +1,83 @@
+package de.TeutonStudio.MathematikKartenAdapter
+
+import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischAuswertbareMethode
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeMethode
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
+import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
+import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
+import de.TeutonStudio.MathematikRechenSystem.kern.Variable
+import de.TeutonStudio.MathematikRechenSystem.kern.graphMenge
+import de.TeutonStudio.MathematikRechenSystem.kern.restriktiereMethode
+import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+
+private data class FremdMethode(
+    override val name: String,
+) : Methode
+
+class MethodenErweiterungsnahtTest {
+    @Test
+    fun `fremde methode kann ausserhalb des mathematikkerns implementiert werden`() {
+        val fremd: Methode = FremdMethode("engine_method")
+
+        assertEquals("engine_method", fremd.name)
+        assertEquals("engine_method", fremd.zuLatex())
+        assertFalse(fremd is MathematischAuswertbareMethode)
+    }
+
+    @Test
+    fun `fremde methode wird nicht versehentlich mathematisch ausgewertet`() {
+        val fremd: Methode = FremdMethode("engine_method")
+
+        val fehler = assertFailsWith<IllegalStateException> {
+            fremd.wendeAn(emptyMap())
+        }
+
+        assertContains(fehler.message.orEmpty(), "keine mathematische Auswertungs-Capability")
+    }
+
+    @Test
+    fun `fremde methode besitzt nicht automatisch einen mathematischen graphen`() {
+        val fremd: Methode = FremdMethode("engine_method")
+
+        val fehler = assertFailsWith<IllegalStateException> {
+            fremd.graphMenge()
+        }
+
+        assertContains(fehler.message.orEmpty(), "mathematischen Funktionsgraphen")
+    }
+
+    @Test
+    fun `fremde methode kann nicht mathematisch restringiert werden`() {
+        val fremd: Methode = FremdMethode("engine_method")
+
+        val fehler = assertFailsWith<IllegalStateException> {
+            restriktiereMethode(fremd, LeereMenge)
+        }
+
+        assertContains(fehler.message.orEmpty(), "mathematische Restriktion")
+    }
+
+    @Test
+    fun `bestehender Methode Konstruktor erzeugt weiterhin mathematische Implementierung`() {
+        val x = Variable("x")
+        val methode: Methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+        val zwei = RationaleZahl.von(2L)
+
+        assertIs<MathematischeMethode>(methode)
+        assertTrue(methode is MathematischAuswertbareMethode)
+        assertEquals(zwei, methode.wendeAn(mapOf("x" to zwei)))
+    }
+}

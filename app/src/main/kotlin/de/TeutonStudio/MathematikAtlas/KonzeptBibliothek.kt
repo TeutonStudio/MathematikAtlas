@@ -136,6 +136,7 @@ internal object KonzeptBibliothekRegister {
                 KonzeptKategorie("mengenoperationen", "Mengenoperationen"),
                 KonzeptKategorie("mengendefinitionen", "Mengendefinitionen"),
                 KonzeptKategorie("konstruktionen", "Konstruktionen"),
+                KonzeptKategorie("axiome", "Axiome"),
                 KonzeptKategorie(
                     "eigenschaften",
                     "Eigenschaften",
@@ -151,9 +152,18 @@ internal object KonzeptBibliothekRegister {
             "Logik",
             listOf(
                 KonzeptKategorie("aussagen", "Aussagen"),
-                KonzeptKategorie("praedikate", "Prädikate"),
+                KonzeptKategorie(
+                    "praedikate",
+                    "Prädikate",
+                    listOf(KonzeptKategorie("axiome", "Axiome")),
+                ),
                 KonzeptKategorie("quantoren", "Quantoren"),
             ),
+        ),
+        KonzeptKategorie(
+            "arithmetik",
+            "Arithmetik",
+            listOf(KonzeptKategorie("natuerliche-zahlen", "Natürliche Zahlen")),
         ),
         KonzeptKategorie(
             "algebra",
@@ -162,6 +172,14 @@ internal object KonzeptBibliothekRegister {
                 KonzeptKategorie("zahlen", "Zahlen"),
                 KonzeptKategorie("operationen", "Operationen"),
                 KonzeptKategorie("methoden", "Methoden und Abbildungen"),
+                KonzeptKategorie(
+                    "strukturen",
+                    "Strukturen",
+                    listOf(
+                        KonzeptKategorie("gruppen", "Gruppen"),
+                        KonzeptKategorie("ringe-koerper", "Ringe und Körper"),
+                    ),
+                ),
             ),
         ),
         KonzeptKategorie("topologie", "Topologie", listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe"))),

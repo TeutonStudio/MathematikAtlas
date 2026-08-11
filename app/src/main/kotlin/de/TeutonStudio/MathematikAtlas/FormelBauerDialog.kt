@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 @Composable
@@ -215,7 +216,10 @@ internal fun FormelBauerDialog(
                         OutlinedButton(
                             onClick = { if (editor.druecke(taste)) geändert() },
                             modifier = Modifier.fillMaxWidth(),
-                        ) { Text(taste.beschriftung) }
+                        ) {
+                            taste.beschriftungLatex?.let { LatexText(it, style = MaterialTheme.typography.labelLarge) }
+                                ?: Text(taste.beschriftung)
+                        }
                     }
                 }
 

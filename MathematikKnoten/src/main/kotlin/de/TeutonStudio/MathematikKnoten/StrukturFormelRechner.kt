@@ -161,16 +161,18 @@ object StrukturRechnerOperatoren {
 object StrukturFormelRechnerVorlagen {
     private fun standard(familie: StrukturRechnerKnotenFamilie): KnotenVorlage {
         val operator = StrukturRechnerOperatoren.fuer(familie).first()
-        return KnotenVorlage(
-            art = familie.knotenArt,
-            name = familie.titel,
-            kategorie = familie.kategorie,
-            beschreibung = "Einheitlicher ${familie.titel} mit operatorabhängigen Anschlüssen und typisiertem CAS-Formelmodus.",
-            standardGröße = GraphGröße(300f, 145f),
-            anschlüsse = operator.eingänge.mapIndexed { index, eingang ->
-                neuerEingang(eingang.name, eingang.typ, index)
-            } + neuerAusgang(operator.ergebnisTyp),
-            standardParameter = mapOf(RECHNER_OPERATOR_PARAMETER to operator.id),
+        return methodenfaehigeRechnerVorlage(
+            KnotenVorlage(
+                art = familie.knotenArt,
+                name = familie.titel,
+                kategorie = familie.kategorie,
+                beschreibung = "Einheitlicher ${familie.titel} mit operatorabhängigen Anschlüssen und typisiertem CAS-Formelmodus.",
+                standardGröße = GraphGröße(300f, 145f),
+                anschlüsse = operator.eingänge.mapIndexed { index, eingang ->
+                    neuerEingang(eingang.name, eingang.typ, index)
+                } + neuerAusgang(operator.ergebnisTyp),
+                standardParameter = mapOf(RECHNER_OPERATOR_PARAMETER to operator.id),
+            ),
         )
     }
 
@@ -210,13 +212,15 @@ fun konfiguriereStrukturRechner(
     val anschlüsse = operator.eingänge.mapIndexed { index, eingang ->
         erhalteOderErzeugeEingang(knoten, eingang.name, eingang.typ, index)
     } + erhalteOderErzeugeAusgang(knoten, operator.ergebnisTyp)
-    return knoten.copy(
-        anschlüsse = anschlüsse,
-        parameter = knoten.parameter
-            .minus(STRUKTUR_RECHNER_FORMEL_AUSDRUCK)
-            .minus(STRUKTUR_RECHNER_FORMEL_LATEX)
-            .minus(STRUKTUR_RECHNER_FORMEL_VARIABLEN) +
-            (RECHNER_OPERATOR_PARAMETER to operator.id),
+    return normalisiereRechnerMethodenAnschluesse(
+        knoten.copy(
+            anschlüsse = anschlüsse,
+            parameter = knoten.parameter
+                .minus(STRUKTUR_RECHNER_FORMEL_AUSDRUCK)
+                .minus(STRUKTUR_RECHNER_FORMEL_LATEX)
+                .minus(STRUKTUR_RECHNER_FORMEL_VARIABLEN) +
+                (RECHNER_OPERATOR_PARAMETER to operator.id),
+        ),
     )
 }
 
@@ -233,13 +237,15 @@ fun konfiguriereStrukturRechnerFormel(
     val anschlüsse = variablen.mapIndexed { index, variable ->
         erhalteOderErzeugeEingang(knoten, variable.name, variable.typ, index)
     } + erhalteOderErzeugeAusgang(knoten, wurzel.typ)
-    return knoten.copy(
-        anschlüsse = anschlüsse,
-        parameter = knoten.parameter + mapOf(
-            RECHNER_OPERATOR_PARAMETER to familie.formelOperatorId,
-            STRUKTUR_RECHNER_FORMEL_AUSDRUCK to StrukturFormelCodec.kodieren(wurzel),
-            STRUKTUR_RECHNER_FORMEL_LATEX to StrukturFormelDarstellung.latex(wurzel, quantorVariable),
-            STRUKTUR_RECHNER_FORMEL_VARIABLEN to variablen.joinToString(",") { "${it.name}:${it.typ.name}" },
+    return normalisiereRechnerMethodenAnschluesse(
+        knoten.copy(
+            anschlüsse = anschlüsse,
+            parameter = knoten.parameter + mapOf(
+                RECHNER_OPERATOR_PARAMETER to familie.formelOperatorId,
+                STRUKTUR_RECHNER_FORMEL_AUSDRUCK to StrukturFormelCodec.kodieren(wurzel),
+                STRUKTUR_RECHNER_FORMEL_LATEX to StrukturFormelDarstellung.latex(wurzel, quantorVariable),
+                STRUKTUR_RECHNER_FORMEL_VARIABLEN to variablen.joinToString(",") { "${it.name}:${it.typ.name}" },
+            ),
         ),
     )
 }
@@ -257,8 +263,15 @@ private fun erhalteOderErzeugeEingang(
 ): AnschlussDaten {
     val art = anschlussArt(typ)
     val zulässige = zulässigeAnschlussArten(typ)
-    val vorhanden = knoten.anschlüsse.firstOrNull {
-        it.name == name && it.richtung == AnschlussRichtung.Eingang && it.art == art && it.zulässigeArten == zulässige
+    val vorhanden = knoten.anschlüsse.firstOrNull { anschluss ->
+        anschluss.name == name &&
+            anschluss.richtung == AnschlussRichtung.Eingang &&
+            (
+                anschluss.art == art && anschluss.zulässigeArten == zulässige ||
+                    anschluss.art == MathematikAnschlussArten.Objekt.id &&
+                    art in anschluss.zulässigeArten &&
+                    MathematikAnschlussArten.Methode.id in anschluss.zulässigeArten
+                )
     }
     return vorhanden?.copy(
         name = name,

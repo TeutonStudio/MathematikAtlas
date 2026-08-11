@@ -67,6 +67,10 @@ internal object ErweiterterFormelRenderer {
                 schreibe(argumente.argumentOderPlatzhalter(1, operation.id, "ordnung"), 0)
                 text.append("\\rangle}")
             }
+            "methode.umkehrfunktion" -> {
+                schreibe(argumente.argumentOderPlatzhalter(0, operation.id, "methode"), praezedenz)
+                text.append("^{\\langle -1\\rangle}")
+            }
             "methode.einschraenkung" -> {
                 schreibe(argumente.argumentOderPlatzhalter(0, operation.id, "methode"), praezedenz)
                 text.append("\\vert_{")
@@ -247,7 +251,9 @@ internal object ErweiterterFormelRenderer {
     private fun praezedenz(operatorId: String): Int = when (operatorId) {
         "zahl.addition", "zahl.subtraktion" -> 10
         "zahl.multiplikation", "zahl.division", "algebra.division.rechts", "algebra.division.links" -> 20
-        "zahl.potenz", "iteration.multiplikation", "iteration.differentiation", "iteration.selbstkomposition" -> 30
+        "zahl.potenz", "iteration.multiplikation", "iteration.differentiation", "iteration.selbstkomposition",
+        "methode.umkehrfunktion",
+        -> 30
         "methode.einschraenkung" -> 35
         "formel.gruppierung" -> 50
         else -> 40

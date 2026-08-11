@@ -31,7 +31,7 @@ internal object MengenOperatorInspektorRegistrierung {
         register[MengenRechner.KNOTEN_ART] = MengenRechnerInspektor
         register[MengenRelationRechner.KNOTEN_ART] = MengenRelationsInspektor
         register[MENGEN_MASS_KNOTEN_ART] = MengenMassInspektor
-        register[RelationsOperatoren.KNOTEN_ART] = PraedikatRelationsInspektor
+        register[RelationsOperatoren.KNOTEN_ART] = PraedikatInspektor
         register[VektorRechner.KNOTEN_ART] = VektorRechnerErweiterterInspektor
     }
 }
@@ -113,7 +113,7 @@ internal object MengenRelationsInspektor : KnotenInspektor {
     }
 }
 
-internal object PraedikatRelationsInspektor : KnotenInspektor {
+internal object PraedikatInspektor : KnotenInspektor {
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,
@@ -121,39 +121,101 @@ internal object PraedikatRelationsInspektor : KnotenInspektor {
         aktionen: KnotenInspektorAktionen,
     ) {
         val operatorId = knoten.parameter[RelationsOperatoren.OPERATOR_PARAMETER]
-        val operator = RelationsOperatoren.vonIdOderNull(operatorId) ?: RelationsOperatoren.standard()
+        val relation = RelationsOperatoren.vonIdOderNull(operatorId)
+        val axiom = AxiomOperatoren.vonIdOderNull(operatorId)
+        val gespeicherteSeite = knoten.parameter[PRAEDIKAT_SEITE_PARAMETER]
+        val startSeite = when {
+            axiom != null -> PRAEDIKAT_SEITE_AXIOME
+            relation != null -> PRAEDIKAT_SEITE_RELATIONEN
+            gespeicherteSeite == PRAEDIKAT_SEITE_AXIOME -> PRAEDIKAT_SEITE_AXIOME
+            else -> PRAEDIKAT_SEITE_RELATIONEN
+        }
+        var seite by remember(knoten.id, operatorId) { mutableStateOf(startSeite) }
         var dialogOffen by remember(knoten.id, operatorId) { mutableStateOf(false) }
-        val eintraege = remember(knoten) {
-            RelationsOperatoren.alle.map { kandidat ->
-                RechnerOperatorAuswahlEintrag(
-                    id = kandidat.stabileId,
-                    titel = kandidat.titel,
-                    symbolLatex = kandidat.symbolLatex,
-                    kategorie = kandidat.kategorie,
-                    beschreibung = kandidat.argumente.joinToString(prefix = "Argumente: ") { it.rolle },
-                    suchbegriffe = kandidat.suchbegriffe + kandidat.stabileId,
-                    kandidat = konfigurierePraedikat(knoten, kandidat),
-                )
+
+        val eintraege = remember(knoten, seite) {
+            if (seite == PRAEDIKAT_SEITE_AXIOME) {
+                AxiomOperatoren.alle.map { kandidat ->
+                    RechnerOperatorAuswahlEintrag(
+                        id = kandidat.stabileId,
+                        titel = kandidat.titel,
+                        symbolLatex = kandidat.symbolLatex,
+                        kategorie = kandidat.kategorie,
+                        beschreibung = buildString {
+                            append("Axiomensystem: ")
+                            append(kandidat.systeme.sorted().joinToString())
+                            if (kandidat.argumente.isNotEmpty()) {
+                                append(" · Argumente: ")
+                                append(kandidat.argumente.joinToString { argument ->
+                                    argument.stelligkeit?.let { "${argument.rolle}[$it]" } ?: argument.rolle
+                                })
+                            }
+                        },
+                        suchbegriffe = kandidat.suchbegriffe + kandidat.stabileId + kandidat.systeme,
+                        kandidat = konfigurierePraedikat(knoten, kandidat),
+                    )
+                }
+            } else {
+                RelationsOperatoren.alle.map { kandidat ->
+                    RechnerOperatorAuswahlEintrag(
+                        id = kandidat.stabileId,
+                        titel = kandidat.titel,
+                        symbolLatex = kandidat.symbolLatex,
+                        kategorie = kandidat.kategorie,
+                        beschreibung = kandidat.argumente.joinToString(prefix = "Argumente: ") { it.rolle },
+                        suchbegriffe = kandidat.suchbegriffe + kandidat.stabileId,
+                        kandidat = konfigurierePraedikat(knoten, kandidat),
+                    )
+                }
             }
         }
 
-        Text("Relation", style = MaterialTheme.typography.titleSmall)
-        OutlinedButton(onClick = { dialogOffen = true }, modifier = Modifier.fillMaxWidth()) {
-            Text(operator.titel, modifier = Modifier.weight(1f))
-            LatexText(operator.symbolLatex, style = MaterialTheme.typography.labelMedium)
+        Text("Prädikatseite", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            FilterChip(
+                selected = seite == PRAEDIKAT_SEITE_RELATIONEN,
+                onClick = { seite = PRAEDIKAT_SEITE_RELATIONEN },
+                label = { Text("Relationen") },
+            )
+            FilterChip(
+                selected = seite == PRAEDIKAT_SEITE_AXIOME,
+                onClick = { seite = PRAEDIKAT_SEITE_AXIOME },
+                label = { Text("Axiome") },
+            )
         }
-        operator.relationsStruktur?.kompakteKlassen()?.takeIf { it.isNotEmpty() }?.let { klassen ->
+
+        val aktuellerTitel = relation?.titel ?: axiom?.titel ?: "Operator auswählen"
+        val aktuellesSymbol = relation?.symbolLatex ?: axiom?.symbolLatex ?: "?"
+        Text(if (axiom != null) "Axiom" else "Relation", style = MaterialTheme.typography.titleSmall)
+        OutlinedButton(onClick = { dialogOffen = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(aktuellerTitel, modifier = Modifier.weight(1f))
+            LatexText(aktuellesSymbol, style = MaterialTheme.typography.labelMedium)
+        }
+
+        relation?.relationsStruktur?.kompakteKlassen()?.takeIf { it.isNotEmpty() }?.let { klassen ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
                 klassen.forEach { klasse ->
                     FilterChip(selected = true, onClick = {}, label = { Text(klasse.titel) })
                 }
             }
         }
+        axiom?.let { definition ->
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                definition.systeme.sorted().forEach { system ->
+                    val titel = AxiomOperatoren.systeme.firstOrNull { it.stabileId == system }?.titel ?: system
+                    FilterChip(selected = true, onClick = {}, label = { Text(titel) })
+                }
+            }
+        }
+
         if (dialogOffen) {
             RechnerOperatorAuswahlDialog(
-                familienTitel = "Prädikat · Relationen",
+                familienTitel = if (seite == PRAEDIKAT_SEITE_AXIOME) "Prädikat · Axiome" else "Prädikat · Relationen",
                 einträge = eintraege,
-                aktuelleId = operator.stabileId,
+                aktuelleId = operatorId?.takeIf {
+                    (seite == PRAEDIKAT_SEITE_AXIOME && AxiomOperatoren.vonIdOderNull(it) != null) ||
+                        (seite == PRAEDIKAT_SEITE_RELATIONEN && RelationsOperatoren.vonIdOderNull(it) != null)
+                },
                 auswirkungFür = { eintrag -> eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen) },
                 schließen = { dialogOffen = false },
                 operatorÜbernehmen = { eintrag ->
