@@ -42,45 +42,47 @@ enum class MethodenAlias(val anzeigeName: String) {
 
 /** Anzahl der geordneten Argumentplätze. Sie ist ausdrücklich kein Dimensionsbegriff. */
 val Methode.argumentAnzahl: Int
-    get() = parameter.size
+    get() = (this as? SignaturtragendeMethode)?.signatur?.argumente?.size
+        ?: error("Die Methode '$name' stellt noch keine mathematische Signatur bereit.")
 
-/** Die Parameterreihenfolge ist Teil der Semantik und wird nie aus einer Map abgeleitet. */
-fun Methode.methodenSignatur(): MethodenSignatur = MethodenSignatur(
-    argumente = parameter.map { parameter ->
-        MethodenArgument(
-            parameter = parameter,
-            werteVorrat = werteVorräte[parameter.name]
-                ?: error("Für das Methodenargument '${parameter.name}' konnte kein Wertevorrat ermittelt werden."),
-        )
-    },
-    zielMenge = zielMenge,
-    effektiverWerteVorrat = effektiverWerteVorrat,
-)
+/**
+ * Gemeinsame Signaturgrenze. Direkte Feldrekonstruktion bleibt ausschließlich Sache
+ * der konkreten Implementierung und wird nicht mehr von generischem Methodencode dupliziert.
+ */
+fun Methode.methodenSignatur(): MethodenSignatur =
+    (this as? SignaturtragendeMethode)?.signatur
+        ?: error("Die Methode '$name' stellt keine mathematische Signatur bereit.")
 
 /**
  * Wendet die Methode vollständig an und vereinheitlicht historische
  * Mehrfachausgaben zu genau einem Ergebnisobjekt.
  */
-fun Methode.wendeKanonischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt =
-    wendeAn(argumente)
+fun Methode.wendeKanonischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
+    val auswertbar = this as? MathematischAuswertbareMethode
+        ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
+    return auswertbar.wendeMathematischAn(argumente)
+}
 
-/** Prädikate werden nicht durch Entscheidbarkeit, sondern nur durch ihre Signatur erkannt. */
-fun Methode.istPrädikat(): Boolean =
-    runCatching { vorschrift is Aussage && zielMenge == WahrheitsMenge }.getOrDefault(false)
+/** Prädikate werden nicht durch Entscheidbarkeit, sondern nur durch ihre mathematische Semantik erkannt. */
+fun Methode.istPrädikat(): Boolean {
+    val mathematisch = this as? MathematischeMethode ?: return false
+    return mathematisch.vorschrift is Aussage && mathematisch.zielMenge == WahrheitsMenge
+}
 
 /** Funktionen verarbeiten und liefern ausschließlich Zahl-, Vektor-, Matrix- oder Tensorräume. */
-fun Methode.istFunktion(): Boolean = runCatching {
-    val signatur = methodenSignatur()
-    signatur.argumente.all { it.werteVorrat.istFunktionalerRaum() } &&
+fun Methode.istFunktion(): Boolean {
+    val signatur = (this as? SignaturtragendeMethode)?.signatur ?: return false
+    return signatur.argumente.all { it.werteVorrat.istFunktionalerRaum() } &&
         signatur.zielMenge.istFunktionalerRaum()
-}.getOrDefault(false)
+}
 
 /** Abbildungen nehmen Mengenobjekte entgegen und liefern ein Mengenobjekt. */
-fun Methode.istAbbildung(): Boolean = runCatching {
-    parameter.isNotEmpty() &&
-        parameter.all { it.istMengenArgument() } &&
-        vorschrift is MengenAusdruck
-}.getOrDefault(false)
+fun Methode.istAbbildung(): Boolean {
+    val mathematisch = this as? MathematischeMethode ?: return false
+    return mathematisch.parameter.isNotEmpty() &&
+        mathematisch.parameter.all { it.istMengenArgument() } &&
+        mathematisch.vorschrift is MengenAusdruck
+}
 
 fun Methode.aliase(): Set<MethodenAlias> = buildSet {
     if (istFunktion()) add(MethodenAlias.Funktion)
@@ -146,23 +148,28 @@ fun interface MethodenAnforderung {
 
     data class Stelligkeit(val anzahl: Int) : MethodenAnforderung {
         init { require(anzahl >= 0) }
-        override fun prüfe(methode: Methode): String? =
-            if (methode.argumentAnzahl == anzahl) null
+        override fun prüfe(methode: Methode): String? {
+            val signatur = (methode as? SignaturtragendeMethode)?.signatur
+                ?: return "Die Methode '${methode.name}' besitzt keine mathematische Signatur."
+            return if (signatur.argumente.size == anzahl) null
             else "Die Methode '${methode.name}' muss genau $anzahl Argumente besitzen."
+        }
     }
 
     data class ErgebnisArt(val anschlussArt: String) : MethodenAnforderung {
         override fun prüfe(methode: Methode): String? {
+            val mathematisch = methode as? MathematischeMethode
+                ?: return "Die Methode '${methode.name}' besitzt keine symbolische mathematische Ausgabe."
             val passt = when (anschlussArt) {
                 "mathematik.objekt" -> true
-                "mathematik.zahl" -> methode.vorschrift is ZahlAusdruck
-                "mathematik.aussage" -> methode.istPrädikat()
-                "mathematik.menge" -> methode.vorschrift is MengenAusdruck
-                "mathematik.vektor.spalte" -> methode.vorschrift is SpaltenVektor
-                "mathematik.vektor.zeile" -> methode.vorschrift is ZeilenVektor
-                "mathematik.matrix" -> methode.vorschrift is Matrix
-                "mathematik.tensor" -> methode.vorschrift is Tensor
-                else -> (methode.vorschrift as? TypisiertesElement)?.anschlussArt == anschlussArt
+                "mathematik.zahl" -> mathematisch.vorschrift is ZahlAusdruck
+                "mathematik.aussage" -> mathematisch.istPrädikat()
+                "mathematik.menge" -> mathematisch.vorschrift is MengenAusdruck
+                "mathematik.vektor.spalte" -> mathematisch.vorschrift is SpaltenVektor
+                "mathematik.vektor.zeile" -> mathematisch.vorschrift is ZeilenVektor
+                "mathematik.matrix" -> mathematisch.vorschrift is Matrix
+                "mathematik.tensor" -> mathematisch.vorschrift is Tensor
+                else -> (mathematisch.vorschrift as? TypisiertesElement)?.anschlussArt == anschlussArt
             }
             return if (passt) null else
                 "Die Methode '${methode.name}' liefert kein Ergebnis der Anschlussart '$anschlussArt'."
