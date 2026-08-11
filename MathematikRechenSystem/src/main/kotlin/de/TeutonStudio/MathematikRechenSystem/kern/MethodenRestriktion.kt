@@ -8,20 +8,21 @@ enum class AbdeckungsStatus {
 
 /** Dauerhafte semantische Beschreibung eines tatsächlich verwendeten Ergänzungszweigs. */
 data class MethodenBereichsergänzung(
-    val methode: Methode,
+    val methode: MathematischeMethode,
     val werteVorrat: MengenAusdruck,
     val effektiverBereich: MengenAusdruck,
 )
 
 /**
- * Strukturierte Herkunft einer auf einen neuen Wertevorrat angepassten Methode.
+ * Strukturierte Herkunft einer auf einen neuen Wertevorrat angepassten mathematischen Methode.
  *
  * Die kompakte Darstellung `f\vert_M` bleibt damit von der vollständigen Semantik
  * getrennt. Basis, M, Reihenfolge und effektive Ergänzungsbereiche bleiben auch
- * downstream rekonstruierbar.
+ * downstream rekonstruierbar. Engine-/Scriptmethoden sind keine mathematischen
+ * Restriktionszweige und können hier nicht versehentlich gespeichert werden.
  */
 data class MethodenBereichsanpassung(
-    val basis: Methode,
+    val basis: MathematischeMethode,
     val werteVorrat: MengenAusdruck,
     val ergänzungen: List<MethodenBereichsergänzung>,
 )
@@ -29,11 +30,11 @@ data class MethodenBereichsanpassung(
 internal fun MethodenBereichsanpassung.ersetze(
     bindungen: Map<String, MathematischesObjekt>,
 ): MethodenBereichsanpassung = copy(
-    basis = ersetze(basis, bindungen) as Methode,
+    basis = ersetze(basis, bindungen) as MathematischeMethode,
     werteVorrat = ersetze(werteVorrat, bindungen) as MengenAusdruck,
     ergänzungen = ergänzungen.map { ergänzung ->
         ergänzung.copy(
-            methode = ersetze(ergänzung.methode, bindungen) as Methode,
+            methode = ersetze(ergänzung.methode, bindungen) as MathematischeMethode,
             werteVorrat = ersetze(ergänzung.werteVorrat, bindungen) as MengenAusdruck,
             effektiverBereich = ersetze(ergänzung.effektiverBereich, bindungen) as MengenAusdruck,
         )
@@ -41,14 +42,14 @@ internal fun MethodenBereichsanpassung.ersetze(
 )
 
 data class MethodenErgänzungsBereich(
-    val methode: Methode,
+    val methode: MathematischeMethode,
     val werteVorrat: MengenAusdruck,
     val effektiverBereich: MengenAusdruck,
     val zielPrüfung: AussageErgebnis,
 )
 
 data class MethodenRestriktionsErgebnis(
-    val methode: Methode?,
+    val methode: MathematischeMethode?,
     val basisWerteVorrat: MengenAusdruck,
     val gewünschterWerteVorrat: MengenAusdruck,
     val zielMenge: MengenAusdruck,
@@ -71,28 +72,28 @@ data class MethodenRestriktionsErgebnis(
 }
 
 /**
- * Gesamtdefinitionsbereich einer Methode für Bereichsoperationen.
- *
- * Bei einstelligen Methoden ist der natürliche Wertevorrat der eine Parameterbereich,
- * bei mehrstelligen Methoden das geordnete Produkt. Eine bereits explizit gesetzte
- * effektive Gesamtmenge hat immer Vorrang.
+ * Gesamtdefinitionsbereich einer mathematischen Methode für Bereichsoperationen.
  */
-fun Methode.bereichsWerteVorrat(): MengenAusdruck = effektiverWerteVorrat ?: when (parameter.size) {
-    0 -> LeereMenge
-    1 -> werteVorräte[parameter.single().name]
-        ?: error("Für das Methodenargument '${parameter.single().name}' fehlt der Wertevorrat.")
-    else -> Tupelraum(parameter.map { parameter ->
-        werteVorräte[parameter.name]
-            ?: error("Für das Methodenargument '${parameter.name}' fehlt der Wertevorrat.")
-    })
+fun Methode.bereichsWerteVorrat(): MengenAusdruck {
+    val mathematisch = alsMathematischeMethode("mathematische Bereichsoperationen")
+    return mathematisch.effektiverWerteVorrat ?: when (mathematisch.parameter.size) {
+        0 -> LeereMenge
+        1 -> mathematisch.werteVorräte[mathematisch.parameter.single().name]
+            ?: error("Für das Methodenargument '${mathematisch.parameter.single().name}' fehlt der Wertevorrat.")
+        else -> Tupelraum(mathematisch.parameter.map { parameter ->
+            mathematisch.werteVorräte[parameter.name]
+                ?: error("Für das Methodenargument '${parameter.name}' fehlt der Wertevorrat.")
+        })
+    }
 }
 
 /**
  * Restriktion beziehungsweise priorisierte Erweiterung einer Methode auf [menge].
  *
- * Die Basismethode besitzt höchste Priorität. Jede Ergänzung wird nur auf dem Teil
- * ihres Wertevorrats wirksam, der nach allen früheren Zweigen noch offen ist.
- * Dadurch kann eine spätere Ergänzung niemals einen früher definierten Wert überschreiben.
+ * Die öffentliche Signatur bleibt aus Kompatibilitätsgründen bei [Methode], aber die
+ * Funktion validiert am Einstieg, dass Basis und Ergänzungen echte symbolische
+ * [MathematischeMethode]n sind. Damit kann eine spätere ScriptMethod nicht durch
+ * `copy(vorschrift = ...)` in eine mathematische Fallvorschrift umgedeutet werden.
  */
 fun restriktiereMethode(
     basis: Methode,
@@ -100,15 +101,19 @@ fun restriktiereMethode(
     ergänzungen: List<Methode> = emptyList(),
     kontext: RechenKontext = RechenKontext(),
 ): MethodenRestriktionsErgebnis {
-    val basisWerteVorrat = basis.bereichsWerteVorrat()
-    val zielMenge = basis.zielMenge
+    val mathematischeBasis = basis.alsMathematischeMethode("mathematische Restriktion")
+    val mathematischeErgänzungen = ergänzungen.mapIndexed { index, ergänzung ->
+        ergänzung.alsMathematischeMethode("mathematische Restriktion als Ergänzung ${index + 1}")
+    }
+    val basisWerteVorrat = mathematischeBasis.bereichsWerteVorrat()
+    val zielMenge = mathematischeBasis.zielMenge
     val ergänzungsErgebnisse = mutableListOf<MethodenErgänzungsBereich>()
     val bedingungen = linkedSetOf<Aussage>()
     val warnungen = mutableListOf<String>()
 
     var abgedeckteGrundlage: MengenAusdruck = basisWerteVorrat
-    ergänzungen.forEachIndexed { index, ergänzung ->
-        prüfeEingabeform(basis, ergänzung, index)
+    mathematischeErgänzungen.forEachIndexed { index, ergänzung ->
+        prüfeEingabeform(mathematischeBasis, ergänzung, index)
         val restVorher = mengenDifferenz(menge, abgedeckteGrundlage)
         val ergänzungsWerteVorrat = ergänzung.bereichsWerteVorrat()
         val effektiverBereich = schneide(listOf(restVorher, ergänzungsWerteVorrat))
@@ -143,13 +148,13 @@ fun restriktiereMethode(
     val kannMethodeBilden = abdeckungsPrüfung.wahrheitswert != Wahrheitswert.Lüge && !zielVerletzt
 
     val resultierendeMethode = if (kannMethodeBilden) {
-        val vorschrift = priorisierteVorschrift(basis, ergänzungsErgebnisse)
-        basis.copy(
-            name = "${basis.name}\\vert_{${menge.zuLatex()}}",
+        val vorschrift = priorisierteVorschrift(mathematischeBasis, ergänzungsErgebnisse)
+        mathematischeBasis.copy(
+            name = "${mathematischeBasis.name}\\vert_{${menge.zuLatex()}}",
             vorschrift = vorschrift,
             effektiverWerteVorrat = menge,
             bereichsanpassung = MethodenBereichsanpassung(
-                basis = basis,
+                basis = mathematischeBasis,
                 werteVorrat = menge,
                 ergänzungen = ergänzungsErgebnisse.map { ergänzung ->
                     MethodenBereichsergänzung(
@@ -176,7 +181,7 @@ fun restriktiereMethode(
     )
 }
 
-private fun prüfeEingabeform(basis: Methode, ergänzung: Methode, index: Int) {
+private fun prüfeEingabeform(basis: MathematischeMethode, ergänzung: MathematischeMethode, index: Int) {
     require(ergänzung.parameter.size == basis.parameter.size) {
         "Ergänzung ${index + 1} besitzt ${ergänzung.parameter.size} Argumente, benötigt werden ${basis.parameter.size}."
     }
@@ -196,7 +201,7 @@ private fun gleicheParameterArt(links: MethodenParameter, rechts: MethodenParame
 }
 
 private fun prüfeErgänzungsBild(
-    methode: Methode,
+    methode: MathematischeMethode,
     effektiverBereich: MengenAusdruck,
     zielMenge: MengenAusdruck,
     kontext: RechenKontext,
@@ -224,7 +229,7 @@ private fun prüfeErgänzungsBild(
     return prüfeTeilmenge(Abbild(effektiverBereich, methode), zielMenge, kontext)
 }
 
-private fun Methode.wendeAufGesamtArgumentAn(argument: MathematischesObjekt): MathematischesObjekt = when (parameter.size) {
+private fun MathematischeMethode.wendeAufGesamtArgumentAn(argument: MathematischesObjekt): MathematischesObjekt = when (parameter.size) {
     0 -> wendeAn(emptyList())
     1 -> wendeAn(listOf(argument))
     else -> {
@@ -238,7 +243,7 @@ private fun Methode.wendeAufGesamtArgumentAn(argument: MathematischesObjekt): Ma
 }
 
 private fun priorisierteVorschrift(
-    basis: Methode,
+    basis: MathematischeMethode,
     ergänzungen: List<MethodenErgänzungsBereich>,
 ): MathematischesObjekt {
     if (ergänzungen.isEmpty()) return basis.vorschrift
