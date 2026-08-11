@@ -50,46 +50,20 @@ jobs:
       - name: Gradle Wrapper ausführbar machen
         run: chmod +x gradlew
 
-      - name: TypSystem-Tests ausführen
-        run: ./gradlew :TypSystem:test --stacktrace
-
-      - name: MathematikRechenSystem-Tests ausführen
-        run: ./gradlew :MathematikRechenSystem:test --stacktrace
-
-      - name: KnotenKartenVerwalter-Debugtests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :KnotenKartenVerwalter:testDebugUnitTest --stacktrace
-
-      - name: MathematikKartenAdapter-Debugtests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :MathematikKartenAdapter:testDebugUnitTest --stacktrace
-
-      - name: MathematikKnoten-Debugtests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :MathematikKnoten:testDebugUnitTest --stacktrace
-
-      - name: App-Debugtests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
-
-      - name: KnotenKartenVerwalter-Releasetests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :KnotenKartenVerwalter:testReleaseUnitTest --stacktrace
-
-      - name: MathematikKartenAdapter-Releasetests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :MathematikKartenAdapter:testReleaseUnitTest --stacktrace
-
-      - name: MathematikKnoten-Releasetests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :MathematikKnoten:testReleaseUnitTest --stacktrace
-
-      - name: App-Releasetests diagnostizieren
-        continue-on-error: true
-        run: ./gradlew :app:testReleaseUnitTest --stacktrace
-
-      - name: Vollständige JVM-Tests ausführen
-        run: ./gradlew test --stacktrace
+      - name: JVM- und Android-Unit-Tests ausführen
+        run: |
+          ./gradlew \
+            :TypSystem:test \
+            :MathematikRechenSystem:test \
+            :KnotenKartenVerwalter:testDebugUnitTest \
+            :KnotenKartenVerwalter:testReleaseUnitTest \
+            :MathematikKartenAdapter:testDebugUnitTest \
+            :MathematikKartenAdapter:testReleaseUnitTest \
+            :MathematikKnoten:testDebugUnitTest \
+            :MathematikKnoten:testReleaseUnitTest \
+            :app:testDebugUnitTest \
+            :app:testReleaseUnitTest \
+            --stacktrace
 
       - name: Android-Debug-Build erstellen
         run: ./gradlew :app:assembleDebug --stacktrace
