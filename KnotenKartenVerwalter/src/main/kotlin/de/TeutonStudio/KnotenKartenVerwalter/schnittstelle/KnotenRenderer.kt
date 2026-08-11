@@ -20,6 +20,15 @@ interface KnotenRenderer {
     @Composable fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen)
 
     /**
+     * Optionale, abgeleitete Etiketten am Knotenrand.
+     *
+     * Etiketten gehören ausdrücklich nicht zur persistierten Knotengeometrie. Sie sind
+     * eine Renderer-Ebene für Typen, Eigenschaften oder andere aus dem aktuellen
+     * Knoten-/Auswertungszustand ableitbare Markierungen.
+     */
+    @Composable fun Etiketten(knoten: KnotenDaten, ausgewählt: Boolean) {}
+
+    /**
      * Optionale Diagnosezeile außerhalb des logischen Knotenrechtecks.
      * Sie verändert weder gespeicherte Knotengröße noch Anschluss- oder Treffergeometrie.
      */
