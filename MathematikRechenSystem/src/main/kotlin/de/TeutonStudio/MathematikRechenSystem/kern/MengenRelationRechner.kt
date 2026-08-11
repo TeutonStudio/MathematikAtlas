@@ -5,10 +5,10 @@ enum class MengenRelationsOperator(
     val titel: String,
     val symbolLatex: String,
 ) {
-    UEBERMENGE("menge.relation.uebermenge", "Übermenge", "A\\supset B"),
-    TEILMENGE("menge.relation.teilmenge", "Teilmenge", "A\\subset B"),
-    UEBER_ODER_GLEICHMENGE("menge.relation.ueberOderGleichmenge", "Gleich oder Übermenge", "A\\supseteq B"),
-    TEIL_ODER_GLEICHMENGE("menge.relation.teilOderGleichmenge", "Gleich oder Teilmenge", "A\\subseteq B"),
+    UEBERMENGE("menge.relation.uebermenge", "Echte Übermenge", "A\\supset B"),
+    TEILMENGE("menge.relation.teilmenge", "Echte Teilmenge", "A\\subset B"),
+    UEBER_ODER_GLEICHMENGE("menge.relation.ueberOderGleichmenge", "Übermenge", "A\\supseteq B"),
+    TEIL_ODER_GLEICHMENGE("menge.relation.teilOderGleichmenge", "Teilmenge", "A\\subseteq B"),
     ELEMENT("menge.relation.element", "Element", "x\\in A"),
     DISJUNKT("menge.relation.disjunkt", "Disjunkt", "A\\cap B=\\varnothing"),
     ;
