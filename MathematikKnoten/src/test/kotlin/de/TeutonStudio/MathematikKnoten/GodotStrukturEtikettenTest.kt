@@ -19,7 +19,7 @@ class GodotStrukturEtikettenTest {
             ZeilenVektor(werte),
             SpaltenVektor(werte),
             Matrix(listOf(werte)),
-            Matrix(werte.map(::listOf)),
+            Matrix(werte.map { wert -> listOf(wert) }),
         )
 
         kandidaten.forEach { assertEquals(GodotStrukturTyp.VECTOR2, it.godotStrukturTyp()) }
