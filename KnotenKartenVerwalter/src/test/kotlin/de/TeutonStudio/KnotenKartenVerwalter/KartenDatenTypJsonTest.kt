@@ -51,30 +51,47 @@ class KartenDatenTypJsonTest {
     }
 
     @Test fun `Format 7 ohne Typfelder bleibt lesbar`() {
-        val karte = KartenDaten(
-            name = "Alt",
-            knoten = listOf(
-                KnotenDaten(
-                    art = "test",
-                    name = "Alt",
-                    anschlüsse = listOf(
-                        AnschlussDaten(
-                            name = "wert",
-                            richtung = AnschlussRichtung.Ausgang,
-                            kante = AnschlussKante.Rechts,
-                            art = AnschlussArtId("objekt"),
-                        ),
-                    ),
-                ),
-            ),
-        )
-        val format8 = KartenDatenJson.schreibe(karte)
-        val format7 = format8
-            .replace("\"formatVersion\": 8", "\"formatVersion\": 7")
-            .replace(Regex(",?\\s*\"vertrag\"\\s*:\\s*\\{\\s*\"typ\"\\s*:\\s*\\{\\s*\"art\"\\s*:\\s*\"unbekannt\"\\s*}\\s*,\\s*\"anforderungen\"\\s*:\\s*\\[\\s*]\\s*}"), "")
+        val format7 = """
+            {
+              "formatVersion": 7,
+              "id": "karte-alt",
+              "name": "Alt",
+              "version": 1,
+              "erstelltAm": 0,
+              "archiviert": false,
+              "ansicht": {"x": 0, "y": 0, "zoom": 1},
+              "knoten": [
+                {
+                  "id": "knoten-alt",
+                  "art": "test",
+                  "name": "Alt",
+                  "position": {"x": 0, "y": 0},
+                  "größe": {"breite": 180, "höhe": 100},
+                  "parameter": {},
+                  "eigenschaften": {},
+                  "anschlüsse": [
+                    {
+                      "id": "anschluss-alt",
+                      "name": "wert",
+                      "richtung": "Ausgang",
+                      "kante": "Rechts",
+                      "art": "objekt",
+                      "reihenfolge": 0,
+                      "kannSichErweitern": false,
+                      "dynamischErzeugt": false
+                    }
+                  ]
+                }
+              ],
+              "verbindungen": [],
+              "visuelleGruppen": []
+            }
+        """.trimIndent()
 
         val geladen = KartenDatenJson.lese(format7)
 
+        assertEquals(7, KartenDatenJson.formatVersion(format7))
         assertEquals(TypAusdruck.Unbekannt, geladen.knoten.single().anschlüsse.single().vertrag.typ)
+        assertNull(geladen.knoten.single().anschlüsse.single().typInferenz)
     }
 }
