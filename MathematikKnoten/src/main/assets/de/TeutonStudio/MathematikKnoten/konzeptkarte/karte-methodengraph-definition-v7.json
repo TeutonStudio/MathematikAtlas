@@ -1,83 +1,335 @@
 {
   "erstelltAm": 1786176000000,
-  "verbindungen": [],
+  "verbindungen": [
+    {
+      "von": { "knotenId": "graph-funktion", "anschlussId": "graph-funktion-wert" },
+      "id": "graph-v1",
+      "zu": { "knotenId": "graph-argumente", "anschlussId": "graph-argumente-methode" }
+    },
+    {
+      "von": { "knotenId": "graph-funktion", "anschlussId": "graph-funktion-wert" },
+      "id": "graph-v2",
+      "zu": { "knotenId": "graph-aufruf", "anschlussId": "graph-aufruf-methode" }
+    },
+    {
+      "von": { "knotenId": "graph-funktion", "anschlussId": "graph-funktion-wert" },
+      "id": "graph-v3",
+      "zu": { "knotenId": "graph-wertevorrat", "anschlussId": "graph-wertevorrat-methode" }
+    },
+    {
+      "von": { "knotenId": "graph-argumente", "anschlussId": "graph-argumente-argumente" },
+      "id": "graph-v4",
+      "zu": { "knotenId": "graph-aufruf", "anschlussId": "graph-aufruf-argument" }
+    },
+    {
+      "von": { "knotenId": "graph-argumente", "anschlussId": "graph-argumente-argumente" },
+      "id": "graph-v5",
+      "zu": { "knotenId": "graph-punkt", "anschlussId": "graph-punkt-tupel1" }
+    },
+    {
+      "von": { "knotenId": "graph-aufruf", "anschlussId": "graph-aufruf-wert" },
+      "id": "graph-v6",
+      "zu": { "knotenId": "graph-punkt", "anschlussId": "graph-punkt-tupel2" }
+    },
+    {
+      "von": { "knotenId": "graph-punkt", "anschlussId": "graph-punkt-tupel" },
+      "id": "graph-v7",
+      "zu": { "knotenId": "graph-punktmethode", "anschlussId": "graph-punktmethode-term" }
+    },
+    {
+      "von": { "knotenId": "graph-punktmethode", "anschlussId": "graph-punktmethode-methode" },
+      "id": "graph-v8",
+      "zu": { "knotenId": "graph-bildmenge", "anschlussId": "graph-bildmenge-methode" }
+    },
+    {
+      "von": { "knotenId": "graph-wertevorrat", "anschlussId": "graph-wertevorrat-menge" },
+      "id": "graph-v9",
+      "zu": { "knotenId": "graph-bildmenge", "anschlussId": "graph-bildmenge-menge" }
+    },
+    {
+      "von": { "knotenId": "graph-bildmenge", "anschlussId": "graph-bildmenge-ausgang" },
+      "id": "graph-v10",
+      "zu": { "knotenId": "graph-ausgang", "anschlussId": "graph-ausgang-menge" }
+    }
+  ],
   "visuelleGruppen": [],
   "archiviert": false,
   "name": "Definition des Funktionsgraphen",
   "knoten": [
     {
-      "art": "konzept.regel",
-      "größe": { "breite": 660, "höhe": 190 },
-      "anschlüsse": [],
+      "art": "mathematik.kartenEingang",
+      "größe": { "breite": 230, "höhe": 105 },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-funktion-wert",
+          "reihenfolge": 0
+        }
+      ],
       "parameter": {
-        "knotenArt": "mathematik.methodenGraph",
-        "regel": "Für eine Methode f: W → Z ist Graph(f) = {(x,f(x)) | x ∈ W} ⊆ W × Z. Der Graph ist selbst eine Menge und kein Darstellungsmodus.",
-        "kategorie": "Analysis: Funktionen"
+        "name": "funktion",
+        "methodenAusgang.wert.argumentprojektion": "tupel",
+        "methodenAusgang.wert.ergebnisprojektion": "tupel"
       },
-      "name": "Definition",
-      "id": "methodengraph-definition-regel",
-      "position": { "x": 70, "y": 55 },
+      "name": "Karten-Eingang",
+      "id": "graph-funktion",
+      "position": { "x": 40, "y": 210 },
       "eigenschaften": {}
     },
     {
-      "art": "konzept.regel",
-      "größe": { "breite": 660, "höhe": 180 },
-      "anschlüsse": [],
-      "parameter": {
-        "knotenArt": "mathematik.methodenGraph",
-        "regel": "W ist der aktuelle Argumentraum und Z die aktuelle Zielmenge der Methode. Der Graph liegt daher kanonisch im Produktraum W × Z; fehlende Bereichsinformation wird nicht geraten.",
-        "kategorie": "Mengenlehre: Konstruktionen"
-      },
-      "name": "Argument- und Zielraum",
-      "id": "methodengraph-raeume-regel",
-      "position": { "x": 70, "y": 280 },
+      "art": "mathematik.methodenArgumente",
+      "größe": { "breite": 280, "höhe": 115 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-argumente-methode",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "argumente",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-argumente-argumente",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": { "methodenArgumente.projektion": "tupel" },
+      "name": "Methodenargumente",
+      "id": "graph-argumente",
+      "position": { "x": 350, "y": 40 },
       "eigenschaften": {}
     },
     {
-      "art": "konzept.regel",
-      "größe": { "breite": 660, "höhe": 200 },
-      "anschlüsse": [],
+      "art": "mathematik.methodeAufrufen",
+      "größe": { "breite": 285, "höhe": 135 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-aufruf-methode",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "argument-0",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-aufruf-argument",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-aufruf-wert",
+          "reihenfolge": 0
+        }
+      ],
       "parameter": {
-        "knotenArt": "mathematik.methodenGraph",
-        "regel": "Bei mehreren Argumenten bleibt W = W₁ × … × Wₙ ein geordneter Argumentraum; ein Graphpunkt ist semantisch ((x₁,…,xₙ), f(x₁,…,xₙ)). Mehrere Ausgaben bleiben entsprechend als strukturierter Zielraum Z erhalten.",
-        "kategorie": "Analysis: Funktionen"
+        "methodenAufruf.argumentprojektion": "tupel",
+        "methodenAufruf.ergebnisprojektion": "tupel",
+        "methodenAnwendung.ergebnisArt": "mathematik.tupel",
+        "festeEingänge": "1"
       },
-      "name": "Mehrere Argumente und Ausgaben",
-      "id": "methodengraph-struktur-regel",
-      "position": { "x": 70, "y": 495 },
+      "name": "Methode aufrufen",
+      "id": "graph-aufruf",
+      "position": { "x": 700, "y": 120 },
       "eigenschaften": {}
     },
     {
-      "art": "konzept.regel",
-      "größe": { "breite": 660, "höhe": 180 },
-      "anschlüsse": [],
-      "parameter": {
-        "knotenArt": "mathematik.methodenGraph",
-        "regel": "Restriktion und Erweiterung verändern ausschließlich die Methodensignatur. Graph(f) übernimmt den daraus resultierenden effektiven Wertevorrat automatisch; ein eigener Synchronisationszustand des Graphen existiert nicht.",
-        "kategorie": "Analysis: Funktionen"
-      },
-      "name": "Restriktion und Erweiterung",
-      "id": "methodengraph-bereich-regel",
-      "position": { "x": 70, "y": 730 },
+      "art": "mathematik.methodenWertevorrat",
+      "größe": { "breite": 250, "höhe": 105 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-wertevorrat-methode",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-wertevorrat-menge",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Methoden-Wertevorrat",
+      "id": "graph-wertevorrat",
+      "position": { "x": 700, "y": 360 },
       "eigenschaften": {}
     },
     {
-      "art": "konzept.regel",
-      "größe": { "breite": 660, "höhe": 230 },
-      "anschlüsse": [],
+      "art": "mathematik.tupelErgänzen",
+      "größe": { "breite": 270, "höhe": 125 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": true,
+          "name": "tupel1",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-punkt-tupel1",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": true,
+          "name": "tupel2",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-punkt-tupel2",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "tupel",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-punkt-tupel",
+          "reihenfolge": 0
+        }
+      ],
       "parameter": {
-        "knotenArt": "mathematik.methodenGraph",
-        "regel": "Beispiele: f: ℝ→ℝ liefert Graph(f)⊆ℝ×ℝ; f: ℂ→ℝ liefert Graph(f)⊆ℂ×ℝ; f: ℝ→ℂ liefert Graph(f)⊆ℝ×ℂ; f: ℂ→ℂ liefert einen mathematisch gültigen vierdimensionalen Graphraum. Ob dieser Raum bereits visualisiert werden kann, ändert die Graphmenge nicht.",
-        "kategorie": "Visualisierung"
+        "modus": "tupelErgänzen",
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
       },
-      "name": "Visualisierung und Beispiele",
-      "id": "methodengraph-visualisierung-regel",
-      "position": { "x": 70, "y": 945 },
+      "name": "Tupel ergänzen",
+      "id": "graph-punkt",
+      "position": { "x": 1040, "y": 95 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.termZuMethode",
+      "größe": { "breite": 265, "höhe": 135 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-punktmethode-term",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-punktmethode-methode",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": { "name": "f", "argumentReihenfolge": "" },
+      "name": "Term zu Methode",
+      "id": "graph-punktmethode",
+      "position": { "x": 1370, "y": 100 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.abbild",
+      "größe": { "breite": 255, "höhe": 115 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-bildmenge-menge",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-bildmenge-methode",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "graph-bildmenge-ausgang",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Bildmenge",
+      "id": "graph-bildmenge",
+      "position": { "x": 1690, "y": 190 },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": { "breite": 220, "höhe": 100 },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "graph-ausgang-menge",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": { "name": "Graph" },
+      "name": "Karten-Ausgang",
+      "id": "graph-ausgang",
+      "position": { "x": 2010, "y": 200 },
       "eigenschaften": {}
     }
   ],
   "id": "mathematik.methodenGraph|Graph|.definition",
-  "ansicht": { "x": 0, "y": 0, "zoom": 1 },
+  "ansicht": { "x": -20, "y": -20, "zoom": 0.55 },
   "formatVersion": 7,
   "version": 1
 }
