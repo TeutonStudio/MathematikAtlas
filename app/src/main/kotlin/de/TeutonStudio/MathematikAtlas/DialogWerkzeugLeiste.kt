@@ -25,6 +25,7 @@ internal enum class DialogWerkzeugId {
     KONZEPTBIBLIOTHEK,
     ZAHLENFORMEL,
     DIMENSIONSVISUALISIERUNG,
+    LEGENDE,
 }
 
 internal sealed interface WerkzeugVerfügbarkeit {
@@ -32,7 +33,7 @@ internal sealed interface WerkzeugVerfügbarkeit {
     data class Deaktiviert(val grund: String) : WerkzeugVerfügbarkeit
 }
 
-private enum class AktiverWerkzeugDialog { Formel, Dimension }
+private enum class AktiverWerkzeugDialog { Formel, Dimension, Legende }
 
 private data class Mengenausgang(
     val knoten: KnotenDaten,
@@ -62,43 +63,60 @@ internal fun DialogWerkzeugLeiste(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
     ) {
-        Row(Modifier.fillMaxSize()) {
-            VerticalDivider()
+        Box(Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 6.dp),
+                modifier = Modifier.fillMaxSize().padding(vertical = 6.dp, end = 1.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    DialogWerkzeugKnopf(
+                        id = DialogWerkzeugId.KONZEPTBIBLIOTHEK,
+                        name = "Konzeptbibliothek",
+                        verfügbarkeit = WerkzeugVerfügbarkeit.Verfügbar,
+                        onClick = {
+                            aktiverDialog = null
+                            KnotenWählerModusSpeicher(context).speichere(KnotenWählerModus.Konzeptbibliothek)
+                            zustand.setzeSuchText("")
+                            zustand.öffneKnotenAuswahl(zustand.dialogWerkzeugEinfügePosition())
+                        },
+                    )
+                    DialogWerkzeugKnopf(
+                        id = DialogWerkzeugId.ZAHLENFORMEL,
+                        name = "CAS-/Zahlenformelbauer",
+                        verfügbarkeit = WerkzeugVerfügbarkeit.Verfügbar,
+                        onClick = {
+                            zustand.schließeKnotenAuswahl()
+                            aktiverDialog = AktiverWerkzeugDialog.Formel
+                        },
+                    )
+                    DialogWerkzeugKnopf(
+                        id = DialogWerkzeugId.DIMENSIONSVISUALISIERUNG,
+                        name = "Dimensionsvisualisierung",
+                        verfügbarkeit = dimensionVerfügbarkeit,
+                        onClick = {
+                            zustand.schließeKnotenAuswahl()
+                            aktiverDialog = AktiverWerkzeugDialog.Dimension
+                        },
+                    )
+                }
+                HorizontalDivider(Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
                 DialogWerkzeugKnopf(
-                    id = DialogWerkzeugId.KONZEPTBIBLIOTHEK,
-                    name = "Konzeptbibliothek",
-                    verfügbarkeit = WerkzeugVerfügbarkeit.Verfügbar,
-                    onClick = {
-                        aktiverDialog = null
-                        KnotenWählerModusSpeicher(context).speichere(KnotenWählerModus.Konzeptbibliothek)
-                        zustand.setzeSuchText("")
-                        zustand.öffneKnotenAuswahl(zustand.dialogWerkzeugEinfügePosition())
-                    },
-                )
-                DialogWerkzeugKnopf(
-                    id = DialogWerkzeugId.ZAHLENFORMEL,
-                    name = "CAS-/Zahlenformelbauer",
+                    id = DialogWerkzeugId.LEGENDE,
+                    name = "Legende",
                     verfügbarkeit = WerkzeugVerfügbarkeit.Verfügbar,
                     onClick = {
                         zustand.schließeKnotenAuswahl()
-                        aktiverDialog = AktiverWerkzeugDialog.Formel
-                    },
-                )
-                DialogWerkzeugKnopf(
-                    id = DialogWerkzeugId.DIMENSIONSVISUALISIERUNG,
-                    name = "Dimensionsvisualisierung",
-                    verfügbarkeit = dimensionVerfügbarkeit,
-                    onClick = {
-                        zustand.schließeKnotenAuswahl()
-                        aktiverDialog = AktiverWerkzeugDialog.Dimension
+                        aktiverDialog = AktiverWerkzeugDialog.Legende
                     },
                 )
             }
+            VerticalDivider(
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+            )
         }
     }
 
@@ -125,6 +143,11 @@ internal fun DialogWerkzeugLeiste(
                 fügeVisualisierungAtomarEin(zustand, quelle, dimension)
                 aktiverDialog = null
             },
+        )
+
+        AktiverWerkzeugDialog.Legende -> AnschlussLegendenDialog(
+            zustand = zustand,
+            schließen = { aktiverDialog = null },
         )
 
         null -> Unit
@@ -186,6 +209,18 @@ private fun WerkzeugGlyph(id: DialogWerkzeugId, modifier: Modifier = Modifier) {
                 drawLine(farbe, Offset(w * .2f, h * .8f), Offset(w * .8f, h * .8f), stroke, StrokeCap.Round)
                 drawLine(farbe, Offset(w * .2f, h * .8f), Offset(w * .2f, h * .2f), stroke, StrokeCap.Round)
                 drawLine(farbe, Offset(w * .2f, h * .8f), Offset(w * .68f, h * .35f), stroke, StrokeCap.Round)
+            }
+            DialogWerkzeugId.LEGENDE -> {
+                listOf(.24f, .5f, .76f).forEach { y ->
+                    drawCircle(farbe, radius = stroke * .7f, center = Offset(w * .22f, h * y))
+                    drawLine(
+                        farbe,
+                        Offset(w * .4f, h * y),
+                        Offset(w * .84f, h * y),
+                        stroke * .72f,
+                        StrokeCap.Round,
+                    )
+                }
             }
         }
     }
