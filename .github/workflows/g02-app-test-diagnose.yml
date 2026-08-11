@@ -1,0 +1,55 @@
+name: G0.2 App Test Diagnose
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+
+      - name: App-Debugtests ausführen
+        id: tests
+        continue-on-error: true
+        run: ./gradlew :app:testDebugUnitTest --console=plain --stacktrace > app-tests.log 2>&1
+
+      - name: Kompakte Diagnose ausgeben
+        if: always()
+        run: |
+          echo "===== Gradle ====="
+          grep -E "(^e:|FAILED|FAILURE:|Caused by:|There were failing tests|[0-9]+ tests completed|AssertionError|expected:|but was:|Compilation error)" app-tests.log | tail -n 200 || true
+          echo "===== JUnit failures ====="
+          find app/build/test-results/testDebugUnitTest -name '*.xml' -type f -print0 2>/dev/null \
+            | xargs -0 grep -H -E '<testsuite|<failure|<error' \
+            | tail -n 300 || true
+
+      - name: Diagnoseartefakt hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g02-app-test-diagnose
+          if-no-files-found: ignore
+          path: |
+            app-tests.log
+            app/build/test-results/testDebugUnitTest/
+            app/build/reports/tests/testDebugUnitTest/
+
+      - name: Fehlerstatus wiederherstellen
+        if: always()
+        run: |
+          if grep -q "BUILD FAILED\|FAILURE:" app-tests.log 2>/dev/null; then
+            exit 1
+          fi
