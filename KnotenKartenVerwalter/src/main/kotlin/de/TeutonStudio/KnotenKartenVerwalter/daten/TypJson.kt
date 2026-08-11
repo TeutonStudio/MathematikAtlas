@@ -39,14 +39,8 @@ internal fun TypAusdruck.zuJson(): JSONObject = JSONObject().apply {
     when (this@zuJson) {
         TypAusdruck.Beliebig -> put("art", "beliebig")
         TypAusdruck.Unbekannt -> put("art", "unbekannt")
-        is TypAusdruck.Atom -> {
-            put("art", "atom")
-            put("id", id.wert)
-        }
-        is TypAusdruck.Variable -> {
-            put("art", "variable")
-            put("id", id.wert)
-        }
+        is TypAusdruck.Atom -> { put("art", "atom"); put("id", id.wert) }
+        is TypAusdruck.Variable -> { put("art", "variable"); put("id", id.wert) }
         is TypAusdruck.Parameterisiert -> {
             put("art", "parameterisiert")
             put("konstruktor", konstruktor.wert)
@@ -71,10 +65,7 @@ internal fun typAusdruckVonJson(json: JSONObject?): TypAusdruck? {
             val argumente = typListeVonJson(json.optJSONArray("argumente"))
             argumente.takeIf { it.isNotEmpty() }?.let { TypAusdruck.Parameterisiert(TypId(konstruktor), it) }
         }
-        "vereinigung" -> {
-            val alternativen = typListeVonJson(json.optJSONArray("alternativen"))
-            alternativen.takeIf { it.isNotEmpty() }?.let(TypAusdruck::Vereinigung)
-        }
+        "vereinigung" -> typListeVonJson(json.optJSONArray("alternativen")).takeIf { it.isNotEmpty() }?.let(TypAusdruck::Vereinigung)
         else -> null
     }
 }
@@ -82,34 +73,26 @@ internal fun typAusdruckVonJson(json: JSONObject?): TypAusdruck? {
 private fun typListeVonJson(array: JSONArray?): List<TypAusdruck> {
     if (array == null) return emptyList()
     return buildList {
-        for (index in 0 until array.length()) {
-            typAusdruckVonJson(array.optJSONObject(index))?.let(::add)
-        }
+        for (index in 0 until array.length()) typAusdruckVonJson(array.optJSONObject(index))?.let(::add)
     }
 }
 
 internal fun TypInferenzRegel.zuJson(): JSONObject = JSONObject().apply {
     when (val regel = this@zuJson) {
-        is TypInferenzRegel.FolgtEingang -> {
-            put("art", "folgtEingang")
-            put("eingang", regel.eingang)
-        }
-        is TypInferenzRegel.GemeinsameOberart -> {
-            put("art", "gemeinsameOberart")
-            put("eingänge", JSONArray(regel.eingänge))
-        }
-        is TypInferenzRegel.VereinigungAusEingängen -> {
-            put("art", "vereinigungAusEingängen")
-            put("eingänge", JSONArray(regel.eingänge))
-        }
+        is TypInferenzRegel.FolgtEingang -> { put("art", "folgtEingang"); put("eingang", regel.eingang) }
+        is TypInferenzRegel.GemeinsameOberart -> { put("art", "gemeinsameOberart"); put("eingänge", JSONArray(regel.eingänge)) }
+        is TypInferenzRegel.VereinigungAusEingängen -> { put("art", "vereinigungAusEingängen"); put("eingänge", JSONArray(regel.eingänge)) }
         is TypInferenzRegel.AbbildungVonEingang -> {
             put("art", "abbildungVonEingang")
             put("eingang", regel.eingang)
             put("fälle", JSONArray().apply {
-                regel.fälle.forEach { fall ->
-                    put(JSONObject().put("von", fall.von.zuJson()).put("zu", fall.zu.zuJson()))
-                }
+                regel.fälle.forEach { fall -> put(JSONObject().put("von", fall.von.zuJson()).put("zu", fall.zu.zuJson())) }
             })
+        }
+        is TypInferenzRegel.Priorisierung -> {
+            put("art", "priorisierung")
+            put("eingänge", JSONArray(regel.eingänge))
+            put("prioritäten", JSONArray().apply { regel.prioritäten.forEach { put(it.zuJson()) } })
         }
         is TypInferenzRegel.TupelAusEingängen -> {
             put("art", "tupelAusEingängen")
@@ -144,10 +127,14 @@ internal fun typInferenzVonJson(json: JSONObject?): TypInferenzRegel? {
             }
             fälle.takeIf { it.isNotEmpty() }?.let { TypInferenzRegel.AbbildungVonEingang(eingang, it) }
         }
+        "priorisierung" -> {
+            val eingänge = stringListe(json.optJSONArray("eingänge"))
+            val prioritäten = typListeVonJson(json.optJSONArray("prioritäten"))
+            if (eingänge.isNotEmpty() && prioritäten.isNotEmpty()) TypInferenzRegel.Priorisierung(eingänge, prioritäten) else null
+        }
         "tupelAusEingängen" -> {
             val eingänge = stringListe(json.optJSONArray("eingänge"))
-            val konstruktor = json.optString("konstruktor", "mathematik.tupel").takeIf(String::isNotBlank)
-                ?: "mathematik.tupel"
+            val konstruktor = json.optString("konstruktor", "mathematik.tupel").takeIf(String::isNotBlank) ?: "mathematik.tupel"
             eingänge.takeIf { it.isNotEmpty() }?.let { TypInferenzRegel.TupelAusEingängen(it, TypId(konstruktor)) }
         }
         "komponenteAusEingang" -> {
