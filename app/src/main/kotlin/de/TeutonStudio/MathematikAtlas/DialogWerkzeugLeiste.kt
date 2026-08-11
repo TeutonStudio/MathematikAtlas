@@ -65,7 +65,7 @@ internal fun DialogWerkzeugLeiste(
     ) {
         Box(Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(vertical = 6.dp, end = 1.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp, vertical = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
@@ -115,7 +115,7 @@ internal fun DialogWerkzeugLeiste(
                 )
             }
             VerticalDivider(
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(),
             )
         }
     }
