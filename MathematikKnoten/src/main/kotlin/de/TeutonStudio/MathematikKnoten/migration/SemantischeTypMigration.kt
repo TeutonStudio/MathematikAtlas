@@ -7,6 +7,8 @@ import de.TeutonStudio.TypSystem.*
  * Spiegelt die produktiven G0.1-Anschlussregeln verlustfrei in den semantischen
  * G0.2-Typvertrag. Die alten Felder bleiben als grobe Kategorie und Ladevertrag
  * erhalten; dadurch ist diese Migration idempotent und rückwärtskompatibel.
+ * Historische Anschlussarten werden nur für den semantischen Typ normalisiert,
+ * nicht in diesem Schritt selbst umgeschrieben.
  */
 fun AnschlussDaten.migriereSemantischenTyp(): AnschlussDaten {
     val normalisierteArt = MathematikAnschlussArten.normalisiereMethodenArt(art)
@@ -45,7 +47,6 @@ fun AnschlussDaten.migriereSemantischenTyp(): AnschlussDaten {
     }
 
     return copy(
-        art = normalisierteArt,
         vertrag = vertrag.copy(typ = migrierterTyp),
         typInferenz = migrierteInferenz,
     )
