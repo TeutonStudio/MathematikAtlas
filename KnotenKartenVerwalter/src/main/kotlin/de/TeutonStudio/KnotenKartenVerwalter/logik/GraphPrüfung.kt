@@ -70,15 +70,9 @@ class GraphPrüfung(
         return richte(a, erster, b, zweiter)?.let { it.first.second to it.second.second }
     }
 
-    /** Liefert die deklarierte oder aus verbundenen Eingängen zentral abgeleitete Anschlussart. */
-    fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis): AnschlussArtId =
-        effektiveArt(karte, ref, mutableSetOf())
+    fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis): AnschlussArtId = effektiveArt(karte, ref, mutableSetOf())
 
-    private fun effektiveArt(
-        karte: KartenDaten,
-        ref: AnschlussVerweis,
-        besucht: MutableSet<AnschlussVerweis>,
-    ): AnschlussArtId {
+    private fun effektiveArt(karte: KartenDaten, ref: AnschlussVerweis, besucht: MutableSet<AnschlussVerweis>): AnschlussArtId {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return AnschlussArtId("unbekannt")
         val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return AnschlussArtId("unbekannt")
 
@@ -90,13 +84,11 @@ class GraphPrüfung(
                 ?: regel.abbildung.entries.firstOrNull { (von, _) -> arten.istUnterart(quellArt, von) }?.value
                 ?: anschluss.art
         }
-
         anschluss.artFolgtEingang?.let { eingangsName ->
             if (!besucht.add(ref)) return anschluss.art
             val quelle = quelleFürEingang(karte, knoten, eingangsName) ?: return anschluss.art
             return effektiveArt(karte, quelle, besucht)
         }
-
         anschluss.artPriorisiertEingänge?.let { regel ->
             if (!besucht.add(ref)) return anschluss.art
             val quellArten = regel.eingänge.mapNotNull { eingangsName ->
@@ -107,7 +99,6 @@ class GraphPrüfung(
                 quellArten.any { quellArt -> arten.istUnterart(quellArt, priorität) }
             } ?: anschluss.art
         }
-
         if (anschluss.artVereinigtEingänge.isEmpty()) return anschluss.art
         if (!besucht.add(ref)) return anschluss.art
         val quellArten = anschluss.artVereinigtEingänge.mapNotNull { eingangsName ->
@@ -117,62 +108,48 @@ class GraphPrüfung(
         return arten.gemeinsameOberart(quellArten) ?: anschluss.art
     }
 
-    /**
-     * Liefert den effektiven semantischen Typ. Fehlt ein expliziter G0.2-Vertrag,
-     * wird die effektive AnschlussArt konservativ als atomarer Typ gespiegelt.
-     */
-    fun effektiverTyp(karte: KartenDaten, ref: AnschlussVerweis): TypAusdruck =
-        effektiverTyp(karte, ref, mutableSetOf())
+    fun effektiverTyp(karte: KartenDaten, ref: AnschlussVerweis): TypAusdruck = effektiverTyp(karte, ref, mutableSetOf())
 
-    private fun effektiverTyp(
-        karte: KartenDaten,
-        ref: AnschlussVerweis,
-        besucht: MutableSet<AnschlussVerweis>,
-    ): TypAusdruck {
-        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId }
-            ?: return TypAusdruck.Unbekannt
-        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId }
-            ?: return TypAusdruck.Unbekannt
+    private fun effektiverTyp(karte: KartenDaten, ref: AnschlussVerweis, besucht: MutableSet<AnschlussVerweis>): TypAusdruck {
+        val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return TypAusdruck.Unbekannt
+        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return TypAusdruck.Unbekannt
         if (!besucht.add(ref)) return typFallback(karte, ref, anschluss)
 
         val inferiert = when (val regel = anschluss.typInferenz) {
             null -> null
-            is TypInferenzRegel.FolgtEingang -> {
-                quelleFürEingang(karte, knoten, regel.eingang)?.let { quelle ->
-                    effektiverTyp(karte, quelle, besucht.toMutableSet())
-                }
+            is TypInferenzRegel.FolgtEingang -> quelleFürEingang(karte, knoten, regel.eingang)?.let {
+                effektiverTyp(karte, it, besucht.toMutableSet())
             }
-            is TypInferenzRegel.GemeinsameOberart -> {
-                val quellTypen = quellTypen(karte, knoten, regel.eingänge, besucht)
-                typen.gemeinsameOberart(quellTypen)
-            }
-            is TypInferenzRegel.VereinigungAusEingängen -> {
-                val quellTypen = quellTypen(karte, knoten, regel.eingänge, besucht)
-                quellTypen.takeIf { it.isNotEmpty() }?.let { typen.normalisiere(TypAusdruck.Vereinigung(it)) }
-            }
+            is TypInferenzRegel.GemeinsameOberart -> typen.gemeinsameOberart(quellTypen(karte, knoten, regel.eingänge, besucht))
+            is TypInferenzRegel.VereinigungAusEingängen -> quellTypen(karte, knoten, regel.eingänge, besucht)
+                .takeIf { it.isNotEmpty() }
+                ?.let { typen.normalisiere(TypAusdruck.Vereinigung(it)) }
             is TypInferenzRegel.AbbildungVonEingang -> {
-                val quelle = quelleFürEingang(karte, knoten, regel.eingang)
-                val quellTyp = quelle?.let { effektiverTyp(karte, it, besucht.toMutableSet()) }
+                val quellTyp = quelleFürEingang(karte, knoten, regel.eingang)?.let {
+                    effektiverTyp(karte, it, besucht.toMutableSet())
+                }
                 quellTyp?.let { typ ->
                     regel.fälle.firstOrNull { fall ->
-                        typen.normalisiere(typ) == typen.normalisiere(fall.von) ||
-                            typen.prüfe(typ, fall.von) == TypPrüfung.Kompatibel
+                        typen.normalisiere(typ) == typen.normalisiere(fall.von) || typen.prüfe(typ, fall.von) == TypPrüfung.Kompatibel
                     }?.zu
                 }
             }
-            is TypInferenzRegel.TupelAusEingängen -> {
+            is TypInferenzRegel.Priorisierung -> {
                 val quellTypen = quellTypen(karte, knoten, regel.eingänge, besucht)
-                quellTypen.takeIf { it.isNotEmpty() }?.let {
-                    TypAusdruck.Parameterisiert(regel.konstruktor, it)
+                regel.prioritäten.firstOrNull { priorität ->
+                    quellTypen.any { quellTyp -> typen.prüfe(quellTyp, priorität) == TypPrüfung.Kompatibel }
                 }
             }
+            is TypInferenzRegel.TupelAusEingängen -> quellTypen(karte, knoten, regel.eingänge, besucht)
+                .takeIf { it.isNotEmpty() }
+                ?.let { TypAusdruck.Parameterisiert(regel.konstruktor, it) }
             is TypInferenzRegel.KomponenteAusEingang -> {
-                val quelle = quelleFürEingang(karte, knoten, regel.eingang)
-                val quellTyp = quelle?.let { effektiverTyp(karte, it, besucht.toMutableSet()) }
+                val quellTyp = quelleFürEingang(karte, knoten, regel.eingang)?.let {
+                    effektiverTyp(karte, it, besucht.toMutableSet())
+                }
                 quellTyp?.let { komponentenTyp(it, regel.index, regel.konstruktor) }
             }
         }
-
         return typen.normalisiere(inferiert ?: typFallback(karte, ref, anschluss))
     }
 
@@ -180,32 +157,19 @@ class GraphPrüfung(
         anschluss.vertrag.typ.takeUnless { it == TypAusdruck.Unbekannt }
             ?: TypAusdruck.Atom(TypId(effektiveArt(karte, ref).wert))
 
-    private fun quellTypen(
-        karte: KartenDaten,
-        knoten: KnotenDaten,
-        eingänge: List<String>,
-        besucht: Set<AnschlussVerweis>,
-    ): List<TypAusdruck> = eingänge.mapNotNull { name ->
-        quelleFürEingang(karte, knoten, name)?.let { quelle ->
-            effektiverTyp(karte, quelle, besucht.toMutableSet())
-        }
-    }
+    private fun quellTypen(karte: KartenDaten, knoten: KnotenDaten, eingänge: List<String>, besucht: Set<AnschlussVerweis>): List<TypAusdruck> =
+        eingänge.mapNotNull { name -> quelleFürEingang(karte, knoten, name)?.let { effektiverTyp(karte, it, besucht.toMutableSet()) } }
 
     private fun komponentenTyp(typ: TypAusdruck, index: Int, konstruktor: TypId?): TypAusdruck? = when (val norm = typen.normalisiere(typ)) {
-        is TypAusdruck.Parameterisiert -> if (konstruktor == null || norm.konstruktor == konstruktor) {
-            norm.argumente.getOrNull(index)
-        } else null
-        is TypAusdruck.Vereinigung -> {
-            val komponenten = norm.alternativen.mapNotNull { komponentenTyp(it, index, konstruktor) }
-            komponenten.takeIf { it.isNotEmpty() }?.let { typen.normalisiere(TypAusdruck.Vereinigung(it)) }
-        }
+        is TypAusdruck.Parameterisiert -> if (konstruktor == null || norm.konstruktor == konstruktor) norm.argumente.getOrNull(index) else null
+        is TypAusdruck.Vereinigung -> norm.alternativen.mapNotNull { komponentenTyp(it, index, konstruktor) }
+            .takeIf { it.isNotEmpty() }
+            ?.let { typen.normalisiere(TypAusdruck.Vereinigung(it)) }
         else -> null
     }
 
     private fun quelleFürEingang(karte: KartenDaten, knoten: KnotenDaten, eingangsName: String): AnschlussVerweis? {
-        val eingang = knoten.anschlüsse.firstOrNull {
-            it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
-        } ?: return null
+        val eingang = knoten.anschlüsse.firstOrNull { it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang } ?: return null
         return karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, eingang.id) }?.von
     }
 
@@ -214,9 +178,7 @@ class GraphPrüfung(
         val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return karte
         if (anschluss.art == art) return karte
         val mitNeuerArt = karte.copy(knoten = karte.knoten.map {
-            if (it.id == knoten.id) it.copy(anschlüsse = it.anschlüsse.map { a ->
-                if (a.id == anschluss.id) a.copy(art = art) else a
-            }) else it
+            if (it.id == knoten.id) it.copy(anschlüsse = it.anschlüsse.map { a -> if (a.id == anschluss.id) a.copy(art = art) else a }) else it
         })
         return mitNeuerArt.copy(verbindungen = mitNeuerArt.verbindungen.filter { istTypkompatibel(mitNeuerArt, it) })
     }
@@ -234,10 +196,7 @@ class GraphPrüfung(
         return mitNeuemTyp.copy(verbindungen = mitNeuemTyp.verbindungen.filter { istTypkompatibel(mitNeuemTyp, it) })
     }
 
-    private fun richte(
-        a: AnschlussDaten, aRef: AnschlussVerweis,
-        b: AnschlussDaten, bRef: AnschlussVerweis,
-    ): Pair<Pair<AnschlussDaten, AnschlussVerweis>, Pair<AnschlussDaten, AnschlussVerweis>>? = when {
+    private fun richte(a: AnschlussDaten, aRef: AnschlussVerweis, b: AnschlussDaten, bRef: AnschlussVerweis): Pair<Pair<AnschlussDaten, AnschlussVerweis>, Pair<AnschlussDaten, AnschlussVerweis>>? = when {
         a.richtung == AnschlussRichtung.Ausgang && b.richtung == AnschlussRichtung.Eingang -> (a to aRef) to (b to bRef)
         b.richtung == AnschlussRichtung.Ausgang && a.richtung == AnschlussRichtung.Eingang -> (b to bRef) to (a to aRef)
         a.richtung == AnschlussRichtung.Neutral && b.richtung == AnschlussRichtung.Neutral -> (a to aRef) to (b to bRef)
