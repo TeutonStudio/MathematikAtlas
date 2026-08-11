@@ -118,7 +118,7 @@ class RechnerErweiterungen410Test {
     @Test
     fun `Polynomvorschau verwendet Koeffizienten und Potenzvektor`() {
         assertEquals(
-            "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb N_0^{\\leq n}",
+            "(c_k)_k\\cdot(x^k)_k\\text{ für }k\\in\\mathbb{N}_0^{\\leq n}",
             ErweiterterZahlenOperator.POLYNOM.vorschauLatex,
         )
     }
