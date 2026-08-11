@@ -90,20 +90,33 @@ fun vektorRechnerAnschluesse(operator: VektorRechnerOperator): List<AnschlussDat
             eingang("methode", MathematikAnschlussArten.Methode.id, reihe = 0),
             eingang("menge", MathematikAnschlussArten.Menge.id, reihe = 1),
             eingang("mass", MathematikAnschlussArten.Mass.id, reihe = 2),
-            ausgang(MathematikAnschlussArten.Objekt.id, setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.Vektor.id)),
+            ausgang(
+                MathematikAnschlussArten.Objekt.id,
+                setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.Vektor.id),
+            ),
         )
         VektorRechnerOperator.ZERLEGEN -> listOf(
             eingang("struktur", MathematikAnschlussArten.Objekt.id, strukturZulaessigeArten, 0),
-            ausgang(MathematikAnschlussArten.Tupel.id),
+            AnschlussDaten(
+                name = "element-1",
+                richtung = AnschlussRichtung.Ausgang,
+                kante = AnschlussKante.Rechts,
+                art = MathematikAnschlussArten.Objekt.id,
+                reihenfolge = 0,
+                dynamischErzeugt = true,
+            ),
         )
         VektorRechnerOperator.ZUSAMMENFUEHREN -> listOf(
             eingang("element.1", MathematikAnschlussArten.Objekt.id, strukturZulaessigeArten, 0),
             eingang("element.2", MathematikAnschlussArten.Objekt.id, strukturZulaessigeArten, 1, erweiterbar = true),
-            ausgang(MathematikAnschlussArten.Objekt.id, setOf(
-                MathematikAnschlussArten.Tupel.id,
-                MathematikAnschlussArten.SpaltenVektor.id,
-                MathematikAnschlussArten.ZeilenVektor.id,
-            )),
+            ausgang(
+                MathematikAnschlussArten.Objekt.id,
+                setOf(
+                    MathematikAnschlussArten.Tupel.id,
+                    MathematikAnschlussArten.SpaltenVektor.id,
+                    MathematikAnschlussArten.ZeilenVektor.id,
+                ),
+            ),
         )
     }
 }
@@ -115,13 +128,17 @@ fun konfiguriereVektorRechner(
     require(knoten.art == VektorRechner.KNOTEN_ART)
     val neu = erhalteVektorRechnerAnschlussIds(knoten.anschlüsse, vektorRechnerAnschluesse(operator))
     return knoten.copy(
-        name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) "Vektorrechner" else knoten.name,
+        name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) {
+            "Vektorrechner"
+        } else knoten.name,
         anschlüsse = neu,
         parameter = knoten.parameter + mapOf(
             VEKTOR_RECHNER_OPERATOR to operator.stabileId,
             VEKTOR_RECHNER_METRIK to (knoten.parameter[VEKTOR_RECHNER_METRIK] ?: VektorMetrik.EUKLIDISCH.stabileId),
             VEKTOR_RECHNER_ACHSE to (knoten.parameter[VEKTOR_RECHNER_ACHSE] ?: "1"),
-            VEKTOR_RECHNER_STRUKTUR_AUSGABE to (knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE] ?: VektorStrukturAusgabe.TUPEL.stabileId),
+            VEKTOR_RECHNER_STRUKTUR_AUSGABE to (
+                knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE] ?: VektorStrukturAusgabe.TUPEL.stabileId
+                ),
         ),
     )
 }
@@ -145,6 +162,31 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
     registriere(VektorRechner.KNOTEN_ART) { kontext ->
         val operator = VektorRechnerOperator.vonIdOderNull(kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR])
             ?: VektorRechnerOperator.SKALARPRODUKT
+        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
+
+        if (operator == VektorRechnerOperator.ZERLEGEN) {
+            val struktur = kontext.eingänge["struktur"]?.objekt
+                ?: error("Zerlegen benötigt einen Vektor oder ein Tupel.")
+            val elemente = when (struktur) {
+                is Tupel -> struktur.elemente
+                is OrientierterVektor -> struktur.werte
+                else -> error("Zerlegen akzeptiert nur Tupel und Vektoren.")
+            }
+            val ausgänge = kontext.knoten.anschlüsse
+                .filter { it.richtung == AnschlussRichtung.Ausgang }
+                .sortedBy { it.reihenfolge }
+                .mapIndexedNotNull { index, anschluss ->
+                    elemente.getOrNull(index)?.let { element ->
+                        anschluss.name to BedingterWert(element, annahmen)
+                    }
+                }
+                .toMap()
+            return@registriere KnotenAuswertungsErgebnis(
+                ausgaben = ausgänge,
+                eingänge = kontext.eingänge,
+            )
+        }
+
         val vektorNamen = when (operator) {
             VektorRechnerOperator.ADDITION -> kontext.eingänge.keys.filter { it.startsWith("vektor.") }.sorted()
             VektorRechnerOperator.SUBTRAKTION,
@@ -166,7 +208,6 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
         val quellen = vektorNamen.mapNotNull { name -> kontext.eingänge[name]?.objekt?.let(::vektorQuelleErweitert) }
         val skalare = listOfNotNull(kontext.eingänge["skalar"]?.objekt as? ZahlAusdruck)
         val objekte = when (operator) {
-            VektorRechnerOperator.ZERLEGEN -> listOfNotNull(kontext.eingänge["struktur"]?.objekt)
             VektorRechnerOperator.ZUSAMMENFUEHREN -> kontext.eingänge
                 .filterKeys { it.startsWith("element.") }
                 .toList()
@@ -190,7 +231,6 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                 ),
             ),
         )
-        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
         val ausgangName = kontext.knoten.anschlüsse.singleOrNull { it.richtung == AnschlussRichtung.Ausgang }?.name
             ?: VEKTOR_RECHNER_ERGEBNIS
         when (ergebnis) {
