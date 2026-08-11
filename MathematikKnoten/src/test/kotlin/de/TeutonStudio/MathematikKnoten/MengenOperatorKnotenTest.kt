@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class MengenOperatorKnotenTest {
     @Test
-    fun `sichtbarer mengenrechner umfasst exakt die acht konsolidierten operatoren`() {
+    fun `sichtbarer mengenrechner umfasst die kanonischen operatoren`() {
         assertEquals(
             setOf(
                 MengenRechnerOperator.SCHNITT,
@@ -20,6 +20,11 @@ class MengenOperatorKnotenTest {
                 MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ,
                 MengenRechnerOperator.ITERIERTE_VEREINIGUNG,
                 MengenRechnerOperator.ITERIERTER_SCHNITT,
+                MengenRechnerOperator.POTENZMENGE,
+                MengenRechnerOperator.ABBILDUNGSMENGE,
+                MengenRechnerOperator.FOLGENMENGE,
+                MengenRechnerOperator.HALBFOLGENMENGE,
+                MengenRechnerOperator.KLASSIFIZIERTE_MENGE,
             ),
             sichtbareMengenRechnerOperatoren().toSet(),
         )
