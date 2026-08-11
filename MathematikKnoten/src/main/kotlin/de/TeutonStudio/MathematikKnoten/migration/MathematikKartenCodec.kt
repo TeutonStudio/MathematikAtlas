@@ -59,5 +59,6 @@ object MathematikKartenMigrationen {
         .migriereMethodenAnschlüsse()
         .migriereUniversellenZahlenRechner()
         .migriereMengenOperatorKnoten()
+        .migrierePraedikatKnoten()
         .migriereStrukturierteDivision()
 }
