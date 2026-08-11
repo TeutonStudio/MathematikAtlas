@@ -26,11 +26,11 @@ object MathematischeTypen {
     val Quaternion = TypId("mathematik.zahl.quaternion")
 
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
-        TypKonstruktorDefinition(Tupel),
+        TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(Matrix, listOf(TypVarianz.Kovariant, TypVarianz.Invariant, TypVarianz.Invariant)),
-        TypKonstruktorDefinition(Tensor),
+        TypKonstruktorDefinition(Tensor, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(Methode, listOf(TypVarianz.Kontravariant, TypVarianz.Kovariant)),
     )
 
