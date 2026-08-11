@@ -168,25 +168,29 @@ internal fun AnschlussSymbol(
 ) {
     val plan = anschlussSymbolPlan(anschluss)
     val fallback = fallbackFarben.ifEmpty { listOf(MaterialTheme.colorScheme.primary) }
-    fun farbe(id: String): Color = farbeFürAnschluss(
-        anschluss.copy(
-            art = AnschlussArtId(normalisiereFarbId(id)),
-            zulässigeArten = emptySet(),
-        ),
-    ).let { if (aktiviert) it else it.copy(alpha = .2f) }
+    val farbeFürId: @Composable (String) -> Color = { id ->
+        farbeFürAnschluss(
+            anschluss.copy(
+                art = AnschlussArtId(normalisiereFarbId(id)),
+                zulässigeArten = emptySet(),
+            ),
+        ).let { if (aktiviert) it else it.copy(alpha = .2f) }
+    }
 
     val standardFarben = fallback.map { if (aktiviert) it else it.copy(alpha = .2f) }
-    val ringFarben = when (plan) {
-        is AnschlussSymbolPlan.Tupel -> plan.ringe.map { ring -> ring.farben.map(::farbe) }
-        else -> emptyList()
+    val ringFarben = mutableListOf<List<Color>>()
+    if (plan is AnschlussSymbolPlan.Tupel) {
+        for (ring in plan.ringe) {
+            val aufgelöst = mutableListOf<Color>()
+            for (id in ring.farben) aufgelöst += farbeFürId(id)
+            ringFarben += aufgelöst
+        }
     }
-    val argumentFarben = when (plan) {
-        is AnschlussSymbolPlan.Methode -> plan.argumentFarben.map(::farbe)
-        else -> emptyList()
-    }
-    val ausgabeFarben = when (plan) {
-        is AnschlussSymbolPlan.Methode -> plan.ausgabeFarben.map(::farbe)
-        else -> emptyList()
+    val argumentFarben = mutableListOf<Color>()
+    val ausgabeFarben = mutableListOf<Color>()
+    if (plan is AnschlussSymbolPlan.Methode) {
+        for (id in plan.argumentFarben) argumentFarben += farbeFürId(id)
+        for (id in plan.ausgabeFarben) ausgabeFarben += farbeFürId(id)
     }
     val rahmen = MaterialTheme.colorScheme.surface
     val pfeil = MaterialTheme.colorScheme.onSurface
