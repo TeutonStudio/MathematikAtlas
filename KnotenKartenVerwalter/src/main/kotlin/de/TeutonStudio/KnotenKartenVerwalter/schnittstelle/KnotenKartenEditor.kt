@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.input.key.*
@@ -817,7 +818,12 @@ private fun KnotenDarstellung(
                 .align(Alignment.BottomStart)
                 .offset(y = 22.dp)
                 .fillMaxWidth()
-                .height(18.dp),
+                .height(18.dp)
+                .then(
+                    if (ausgewählt) {
+                        Modifier.border(3.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                    } else Modifier
+                ),
             contentAlignment = Alignment.CenterStart,
         ) {
             renderer.Fußzeile(knoten, ausgewählt)
@@ -835,13 +841,21 @@ private fun KnotenDarstellung(
 
         knoten.anschlüsse.groupBy { it.kante }.forEach { (_, anschlüsse) ->
             anschlüsse.sortedBy { it.reihenfolge }.forEachIndexed { index, anschluss ->
+                val farbArten = if (anschluss.zulässigeArten.isNotEmpty()) {
+                    anschluss.zulässigeArten.sortedBy { it.wert }
+                } else {
+                    listOf(anschluss.art)
+                }
+                val farben = farbArten.map { art ->
+                    farbeFürAnschluss(anschluss.copy(art = art, zulässigeArten = emptySet()))
+                }
                 AnschlussGriff(
                     knoten = knoten,
                     anschluss = anschluss,
                     index = index,
                     anzahl = anschlüsse.size,
                     zustand = zustand,
-                    farbe = farbeFürAnschluss(anschluss),
+                    farben = farben,
                     magnetischesZiel = magnetischesZiel,
                     beiMagnetischemZiel = beiMagnetischemZiel,
                     beiAnschlussKontext = beiAnschlussKontext,
@@ -882,7 +896,6 @@ private fun KnotenDarstellung(
         }
     }
 }
-
 
 @Composable
 private fun KnotenInspektorSchaltfläche(
@@ -969,7 +982,7 @@ private fun BoxScope.AnschlussGriff(
     index: Int,
     anzahl: Int,
     zustand: KartenEditorZustand,
-    farbe: Color,
+    farben: List<Color>,
     magnetischesZiel: AnschlussVerweis?,
     beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
@@ -999,11 +1012,24 @@ private fun BoxScope.AnschlussGriff(
     var zugZiel by remember(knoten.id, anschluss.id) { mutableStateOf<AnschlussVerweis?>(null) }
     val startWelt = anschlussPositionWelt(knoten, anschluss)
     val interaktionsObenLinks = startWelt - GraphPunkt(interaktionsHalbe, interaktionsHalbe)
+    val typenText = if (anschluss.zulässigeArten.isNotEmpty()) {
+        anschluss.zulässigeArten.sortedBy { it.wert }.joinToString(" oder ") { it.wert }
+    } else {
+        anschluss.art.wert
+    }
+    val signaturHinweis = if (
+        zustand.verbindungsStart != null &&
+        zustand.verbindungsStart != ref &&
+        kompatibel
+    ) {
+        VerbindungsDragZielHinweis.textFür(zustand, ref)
+    } else null
+
     Box(
         Modifier.align(ausrichtung).offset(x, y).size(interaktionsGröße.dp)
             .pointerHoverIcon(PointerIcon.Crosshair)
             .semantics {
-                contentDescription = "${knoten.name}, Anschluss ${anschluss.name}, ${anschluss.richtung}, ${anschluss.art.wert}"
+                contentDescription = "${knoten.name}, Anschluss ${anschluss.name}, ${anschluss.richtung}, zulässige Typen $typenText"
             }
             .sekundärKlick(zustand, ref) {
                 aktuellesZielSetzen(null)
@@ -1071,10 +1097,29 @@ private fun BoxScope.AnschlussGriff(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            Modifier.size(sichtbareGröße.dp)
-                .background(if (kompatibel) farbe else farbe.copy(alpha = .2f), CircleShape)
-                .border((2f / zoom).dp, MaterialTheme.colorScheme.surface, CircleShape)
+        signaturHinweis?.let { text ->
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-34f / zoom).dp)
+                    .zIndex(20f),
+                shape = MaterialTheme.shapes.small,
+                tonalElevation = 6.dp,
+                shadowElevation = 4.dp,
+                border = BorderStroke((1f / zoom).dp, MaterialTheme.colorScheme.outlineVariant),
+            ) {
+                Text(
+                    text = text,
+                    modifier = Modifier.padding(horizontal = (8f / zoom).dp, vertical = (4f / zoom).dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                )
+            }
+        }
+        MehrfarbenAnschluss(
+            farben = if (kompatibel) farben else farben.map { it.copy(alpha = .2f) },
+            größe = sichtbareGröße,
+            zoom = zoom,
         )
         if (eingerastet) {
             Box(
@@ -1082,6 +1127,41 @@ private fun BoxScope.AnschlussGriff(
                     .border((3f / zoom).dp, MaterialTheme.colorScheme.tertiary, CircleShape)
             )
         }
+    }
+}
+
+@Composable
+private fun MehrfarbenAnschluss(
+    farben: List<Color>,
+    größe: Float,
+    zoom: Float,
+) {
+    val sichereFarben = farben.ifEmpty { listOf(MaterialTheme.colorScheme.primary) }
+    Box(Modifier.size(größe.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize().clip(CircleShape)) {
+            if (sichereFarben.size == 1) {
+                drawRect(sichereFarben.single())
+            } else {
+                val streifenBreite = (size.minDimension / sichereFarben.size.coerceAtLeast(2)).coerceAtLeast(2f)
+                rotate(-45f) {
+                    var x = -size.width * 1.5f
+                    var index = 0
+                    while (x < size.width * 2.5f) {
+                        drawRect(
+                            color = sichereFarben[index % sichereFarben.size],
+                            topLeft = Offset(x, -size.height),
+                            size = Size(streifenBreite, size.height * 3f),
+                        )
+                        x += streifenBreite
+                        index += 1
+                    }
+                }
+            }
+        }
+        Box(
+            Modifier.fillMaxSize()
+                .border((2f / zoom).dp, MaterialTheme.colorScheme.surface, CircleShape),
+        )
     }
 }
 

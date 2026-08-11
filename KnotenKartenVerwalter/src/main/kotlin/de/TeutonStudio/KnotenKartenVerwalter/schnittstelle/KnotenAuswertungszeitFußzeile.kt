@@ -41,7 +41,7 @@ fun KnotenAuswertungszeitFußzeile(dauerNanos: Long?) {
             contentAlignment = Alignment.CenterStart,
         ) {
             Text(
-                text = "Δt  $formatiert",
+                text = "Δzeit  $formatiert",
                 modifier = Modifier.semantics {
                     contentDescription = "Letzte Auswertungsdauer $formatiert"
                 },

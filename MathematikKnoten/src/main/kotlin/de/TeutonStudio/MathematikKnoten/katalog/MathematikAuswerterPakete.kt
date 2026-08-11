@@ -37,6 +37,7 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("geometrie-transformationen") { registriereGeometrieTransformationen() },
         MathematikAuswerterPaket("mengenraeume") { registriereMengenraumKnoten() },
         MathematikAuswerterPaket("mengen-operatoren") { registriereMengenOperatorKnoten() },
+        MathematikAuswerterPaket("praedikat") { registrierePraedikatKnoten() },
         MathematikAuswerterPaket("aussagenlogik") { registriereAussagenLogikKnoten() },
         MathematikAuswerterPaket("strukturrechner") { registriereStrukturRechnerKnoten() },
         MathematikAuswerterPaket("lineare-strukturen") { registriereLineareStrukturErweiterungen() },
@@ -61,6 +62,7 @@ object StandardMathematikAuswerterPakete {
      */
     val verfeinerungen: List<MathematikAuswerterPaket> = listOf(
         MathematikAuswerterPaket("konsolidierte-knoten") { registriereKonsolidierteKnoten() },
+        MathematikAuswerterPaket("vektorrechner-erweiterungen") { registriereVektorRechnerErweiterungen() },
         MathematikAuswerterPaket("skalarprodukt-verfeinerung") { registriereSkalarproduktErweiterungen() },
         MathematikAuswerterPaket("strukturformel-rechner") { registriereStrukturFormelRechner() },
         MathematikAuswerterPaket("strukturrechner-kompatibilitaet") { registriereStrukturRechnerKompatibilitaet() },

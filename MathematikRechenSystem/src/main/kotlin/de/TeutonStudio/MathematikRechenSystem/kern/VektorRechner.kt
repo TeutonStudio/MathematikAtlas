@@ -1,17 +1,95 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-enum class VektorRechnerOperator(val stabileId: String) {
-    ADDITION("vektor.addition"),
-    SUBTRAKTION("vektor.subtraktion"),
-    SKALARMULTIPLIKATION("vektor.skalarmultiplikation"),
-    NEGATION("vektor.negation"),
-    SKALARPRODUKT("vektor.skalarprodukt"),
-    KREUZPRODUKT("vektor.kreuzprodukt"),
-    NORM("vektor.norm"),
-    NORMALISIERUNG("vektor.normalisierung"),
-    HADAMARD_PRODUKT("vektor.hadamard"),
-    PROJEKTION("vektor.projektion"),
-    WINKEL("vektor.winkel"),
+enum class VektorRechnerOperator(val stabileId: String, val titel: String) {
+    ADDITION("vektor.addition", "Addition"),
+    SUBTRAKTION("vektor.subtraktion", "Subtraktion"),
+    SKALARMULTIPLIKATION("vektor.skalarmultiplikation", "Skalarmultiplikation"),
+    NEGATION("vektor.negation", "Negation"),
+    SKALARPRODUKT("vektor.skalarprodukt", "Skalarprodukt"),
+    KREUZPRODUKT("vektor.kreuzprodukt", "Kreuzprodukt"),
+    NORM("vektor.norm", "Norm"),
+    NORMALISIERUNG("vektor.normalisierung", "Normalisierung"),
+    HADAMARD_PRODUKT("vektor.hadamard", "Hadamard-Produkt"),
+    PROJEKTION("vektor.projektion", "Projektion"),
+    WINKEL("vektor.winkel", "Winkel"),
+    DISTANZ("vektor.distanz", "Distanz"),
+    WINKEL_ZU_ACHSE("vektor.winkelZuAchse", "Winkel zu Achse"),
+    VEKTORFELD_INTEGRIEREN("vektor.vektorfeldIntegral", "Vektorfeld integrieren"),
+    ZERLEGEN("vektor.zerlegen", "Zerlegen"),
+    ZUSAMMENFUEHREN("vektor.zusammenfuehren", "Zusammenführen"),
+    ;
+
+    companion object {
+        fun vonIdOderNull(id: String?): VektorRechnerOperator? = entries.firstOrNull {
+            it.stabileId == id || it.name.equals(id, ignoreCase = true)
+        }
+    }
+}
+
+/**
+ * Kleine austauschbare Metrikbeschreibung für den Vektorrechner.
+ *
+ * Sie ist absichtlich kein eigener Metrikraum. Sobald der allgemeine Metrikraum
+ * aus #386 vorliegt, kann dessen Metrikobjekt hier registriert werden, ohne die
+ * Distanzoperation oder den Inspector erneut umzubauen.
+ */
+data class VektorMetrikDefinition(
+    val stabileId: String,
+    val titel: String,
+    val suchbegriffe: Set<String> = emptySet(),
+    val auswerten: (List<ZahlAusdruck>) -> ZahlAusdruck,
+) {
+    init {
+        require(stabileId.isNotBlank())
+        require(titel.isNotBlank())
+    }
+}
+
+object VektorMetriken {
+    val euklidisch = VektorMetrikDefinition(
+        stabileId = "metrik.l2",
+        titel = "Euklidisch (L²)",
+        suchbegriffe = setOf("L2", "euklidisch"),
+    ) { differenzen ->
+        Wurzel(addition(differenzen.map { Potenz(it, RationaleZahl.von(2)) }))
+    }
+
+    val l1 = VektorMetrikDefinition(
+        stabileId = "metrik.l1",
+        titel = "Manhattan (L¹)",
+        suchbegriffe = setOf("L1", "Manhattan"),
+    ) { differenzen -> addition(differenzen.map(::Betrag)) }
+
+    val lInf = VektorMetrikDefinition(
+        stabileId = "metrik.linf",
+        titel = "Maximum (L∞)",
+        suchbegriffe = setOf("Linf", "Maximum", "Supremumsmetrik"),
+    ) { differenzen ->
+        differenzen.map(::Betrag).let { betraege ->
+            if (betraege.size == 1) betraege.single() else maximum(betraege)
+        }
+    }
+
+    val alle: List<VektorMetrikDefinition> = listOf(euklidisch, l1, lInf)
+    val standard: VektorMetrikDefinition = euklidisch
+
+    private val nachId = alle.associateBy(VektorMetrikDefinition::stabileId)
+
+    fun vonIdOderStandard(id: String?): VektorMetrikDefinition =
+        nachId[id] ?: standard
+}
+
+enum class VektorStrukturAusgabe(val stabileId: String, val titel: String) {
+    TUPEL("tupel", "Tupel"),
+    SPALTE("spalte", "Spaltenvektor"),
+    ZEILE("zeile", "Zeilenvektor"),
+    ;
+
+    companion object {
+        fun vonIdOderStandard(id: String?): VektorStrukturAusgabe = entries.firstOrNull {
+            it.stabileId == id || it.name.equals(id, ignoreCase = true)
+        } ?: TUPEL
+    }
 }
 
 data class KartesischerKoordinatenVertrag(
@@ -48,14 +126,27 @@ sealed interface VektorQuelle {
 
 data class VektorRechnerAnfrage(
     val operator: VektorRechnerOperator,
-    val vektoren: List<VektorQuelle>,
+    val vektoren: List<VektorQuelle> = emptyList(),
     val skalare: List<ZahlAusdruck> = emptyList(),
+    val objekte: List<MathematischesObjekt> = emptyList(),
+    val methode: Methode? = null,
+    val menge: MengenAusdruck? = null,
+    val mass: IntegralMass? = null,
+    val metrik: VektorMetrikDefinition = VektorMetriken.standard,
+    val achse: Int = 1,
+    val strukturAusgabe: VektorStrukturAusgabe = VektorStrukturAusgabe.TUPEL,
 )
 
 sealed interface VektorRechnerErgebnis {
+    /**
+     * Historischer Erfolgszweig des Vektorrechners. Er trägt heute bewusst ein
+     * allgemeines mathematisches Objekt, damit strukturkompatible Operatoren wie
+     * Zerlegen/Zusammenführen ohne neuen direkten sealed-Subtype auskommen.
+     * Für echte Vektorwerte bleibt [vertrag] gesetzt.
+     */
     data class VektorWert(
-        val wert: OrientierterVektor,
-        val vertrag: KartesischerKoordinatenVertrag,
+        val wert: MathematischesObjekt,
+        val vertrag: KartesischerKoordinatenVertrag? = null,
         val bedingungen: List<Aussage> = emptyList(),
     ) : VektorRechnerErgebnis
 
@@ -76,6 +167,10 @@ object VektorRechner {
     const val KNOTEN_ART = "mathematik.vektorrechner"
 
     fun erzeuge(anfrage: VektorRechnerAnfrage): VektorRechnerErgebnis {
+        if (anfrage.operator == VektorRechnerOperator.ZERLEGEN) return zerlege(anfrage)
+        if (anfrage.operator == VektorRechnerOperator.ZUSAMMENFUEHREN) return fuehreZusammen(anfrage)
+        if (anfrage.operator == VektorRechnerOperator.VEKTORFELD_INTEGRIEREN) return integriereVektorfeld(anfrage)
+
         val vektoren = anfrage.vektoren.mapIndexed { index, quelle ->
             when (val ergebnis = materialisiere(quelle)) {
                 is Materialisierung.Erfolg -> ergebnis.vektor
@@ -147,10 +242,7 @@ object VektorRechner {
             }
             VektorRechnerOperator.NORM -> {
                 if (vektoren.size != 1) return anzahlFehler("Norm", "genau einen Vektor")
-                VektorRechnerErgebnis.ZahlWert(
-                    norm(vektoren.single()),
-                    FundamentalerZahlbereich.REELL,
-                )
+                VektorRechnerErgebnis.ZahlWert(norm(vektoren.single()), FundamentalerZahlbereich.REELL)
             }
             VektorRechnerOperator.NORMALISIERUNG -> {
                 if (vektoren.size != 1) return anzahlFehler("Normalisierung", "genau einen Vektor")
@@ -173,9 +265,7 @@ object VektorRechner {
                 vektorErgebnis(
                     orientiereWie(
                         vektoren.first(),
-                        vektoren[0].werte.zip(vektoren[1].werte) { links, rechts ->
-                            multiplikation(links, rechts)
-                        },
+                        vektoren[0].werte.zip(vektoren[1].werte) { links, rechts -> multiplikation(links, rechts) },
                     ),
                     anfrage.vektoren.first().vertrag,
                 )
@@ -197,30 +287,13 @@ object VektorRechner {
                     listOf(Ungleichheit(nenner, RationaleZahl.Null)),
                 )
             }
-            VektorRechnerOperator.WINKEL -> {
-                if (vektoren.size != 2) return anzahlFehler("Winkel", "genau zwei Vektoren")
-                val normA = norm(vektoren[0])
-                val normB = norm(vektoren[1])
-                if (vektoren.any(::istExakterNullvektor)) {
-                    return VektorRechnerErgebnis.Ungueltig(
-                        "winkel_nullvektor",
-                        "Der Winkel zu einem Nullvektor ist nicht definiert.",
-                    )
-                }
-                VektorRechnerErgebnis.ZahlWert(
-                    ArcCosinus(
-                        Division(
-                            skalarproduktOhneOrientierungsZwang(vektoren[0], vektoren[1]),
-                            multiplikation(normA, normB),
-                        ),
-                    ),
-                    FundamentalerZahlbereich.REELL,
-                    listOf(
-                        Ungleichheit(normA, RationaleZahl.Null),
-                        Ungleichheit(normB, RationaleZahl.Null),
-                    ),
-                )
-            }
+            VektorRechnerOperator.WINKEL -> winkel(vektoren)
+            VektorRechnerOperator.DISTANZ -> distanz(vektoren, anfrage.vektoren, anfrage.metrik)
+            VektorRechnerOperator.WINKEL_ZU_ACHSE -> winkelZuAchse(vektoren, anfrage.achse)
+            VektorRechnerOperator.VEKTORFELD_INTEGRIEREN,
+            VektorRechnerOperator.ZERLEGEN,
+            VektorRechnerOperator.ZUSAMMENFUEHREN,
+            -> error("Spezialoperator wurde vor der Vektormaterialisierung abgefangen.")
         }
     }
 
@@ -235,6 +308,178 @@ object VektorRechner {
         argumente.mapIndexed { index, (rolle, ausdruck) -> FormelArgument(rolle, index, ausdruck) },
         ergebnisTyp,
     )
+
+    private fun distanz(
+        vektoren: List<OrientierterVektor>,
+        quellen: List<VektorQuelle>,
+        metrik: VektorMetrikDefinition,
+    ): VektorRechnerErgebnis {
+        if (vektoren.size != 2) return anzahlFehler("Distanz", "genau zwei Vektoren")
+        val differenzen = vektoren[0].werte.zip(vektoren[1].werte, ::subtraktion)
+        return VektorRechnerErgebnis.ZahlWert(
+            metrik.auswerten(differenzen),
+            gemeinsamerBereich(quellen),
+        )
+    }
+
+    private fun winkel(vektoren: List<OrientierterVektor>): VektorRechnerErgebnis {
+        if (vektoren.size != 2) return anzahlFehler("Winkel", "genau zwei Vektoren")
+        val normA = norm(vektoren[0])
+        val normB = norm(vektoren[1])
+        if (vektoren.any(::istExakterNullvektor)) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "winkel_nullvektor",
+                "Der Winkel zu einem Nullvektor ist nicht definiert.",
+            )
+        }
+        return VektorRechnerErgebnis.ZahlWert(
+            ArcCosinus(
+                Division(
+                    skalarproduktOhneOrientierungsZwang(vektoren[0], vektoren[1]),
+                    multiplikation(normA, normB),
+                ),
+            ),
+            FundamentalerZahlbereich.REELL,
+            listOf(Ungleichheit(normA, RationaleZahl.Null), Ungleichheit(normB, RationaleZahl.Null)),
+        )
+    }
+
+    private fun winkelZuAchse(vektoren: List<OrientierterVektor>, achse: Int): VektorRechnerErgebnis {
+        if (vektoren.size != 1) return anzahlFehler("Winkel zu Achse", "genau einen Vektor")
+        val vektor = vektoren.single()
+        if (achse !in 1..vektor.werte.size) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "achse_ausserhalb_dimension",
+                "Achse $achse liegt außerhalb der Dimension ${vektor.werte.size}; Achsen werden 1-basiert gezählt.",
+            )
+        }
+        if (istExakterNullvektor(vektor)) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "winkel_nullvektor",
+                "Der Winkel des Nullvektors zu einer Achse ist nicht definiert.",
+            )
+        }
+        val laenge = norm(vektor)
+        return VektorRechnerErgebnis.ZahlWert(
+            ArcCosinus(Division(vektor.werte[achse - 1], laenge)),
+            FundamentalerZahlbereich.REELL,
+            listOf(Ungleichheit(laenge, RationaleZahl.Null)),
+        )
+    }
+
+    private fun zerlege(anfrage: VektorRechnerAnfrage): VektorRechnerErgebnis {
+        val objekt = anfrage.objekte.singleOrNull() ?: anfrage.vektoren.singleOrNull()?.let { quelle ->
+            when (val materialisiert = materialisiere(quelle)) {
+                is Materialisierung.Erfolg -> materialisiert.vektor
+                is Materialisierung.Fehler -> return VektorRechnerErgebnis.Ungueltig(
+                    materialisiert.code,
+                    materialisiert.nachricht,
+                )
+            }
+        } ?: return anzahlFehler("Zerlegen", "genau ein Tupel oder einen Vektor")
+        val elemente = when (objekt) {
+            is Tupel -> objekt.elemente
+            is OrientierterVektor -> objekt.werte
+            else -> return VektorRechnerErgebnis.Ungueltig(
+                "struktur_nicht_zerlegbar",
+                "Zerlegen akzeptiert Tupel und Vektoren.",
+            )
+        }
+        return VektorRechnerErgebnis.VektorWert(Tupel(elemente))
+    }
+
+    private fun fuehreZusammen(anfrage: VektorRechnerAnfrage): VektorRechnerErgebnis {
+        if (anfrage.objekte.isEmpty()) return anzahlFehler("Zusammenführen", "mindestens ein Element oder Tupel")
+        val elemente = anfrage.objekte.flatMap { objekt ->
+            when (objekt) {
+                is Tupel -> objekt.elemente
+                is OrientierterVektor -> objekt.werte
+                else -> listOf(objekt)
+            }
+        }
+        if (elemente.isEmpty()) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "struktur_leer",
+                "Eine leere Struktur kann nicht zusammengeführt werden.",
+            )
+        }
+        return when (anfrage.strukturAusgabe) {
+            VektorStrukturAusgabe.TUPEL -> VektorRechnerErgebnis.VektorWert(Tupel(elemente))
+            VektorStrukturAusgabe.SPALTE,
+            VektorStrukturAusgabe.ZEILE,
+            -> {
+                val zahlen = elemente.mapIndexed { index, objekt ->
+                    objekt as? ZahlAusdruck ?: return VektorRechnerErgebnis.Ungueltig(
+                        "vektor_komponente_keine_zahl",
+                        "Komponente ${index + 1} ist keine Zahl und kann deshalb nicht in einen Vektor übernommen werden.",
+                    )
+                }
+                VektorRechnerErgebnis.VektorWert(
+                    if (anfrage.strukturAusgabe == VektorStrukturAusgabe.ZEILE) {
+                        ZeilenVektor(zahlen)
+                    } else {
+                        SpaltenVektor(zahlen)
+                    },
+                )
+            }
+        }
+    }
+
+    private fun integriereVektorfeld(anfrage: VektorRechnerAnfrage): VektorRechnerErgebnis {
+        val methode = anfrage.methode ?: return VektorRechnerErgebnis.Ungueltig(
+            "vektorfeld_fehlt",
+            "Vektorfeld integrieren benötigt eine Methode.",
+        )
+        val menge = anfrage.menge ?: return VektorRechnerErgebnis.Ungueltig(
+            "integrationsmenge_fehlt",
+            "Vektorfeld integrieren benötigt eine Integrationsmenge.",
+        )
+        val mass = anfrage.mass ?: return VektorRechnerErgebnis.Ungueltig(
+            "integrationsmass_fehlt",
+            "Für das Vektorfeldintegral muss das Integrationsmaß explizit verbunden werden.",
+        )
+        val komponenten = when (val vorschrift = methode.vorschrift) {
+            is OrientierterVektor -> vorschrift.werte
+            is Tupel -> vorschrift.elemente.mapIndexed { index, objekt ->
+                objekt as? ZahlAusdruck ?: return VektorRechnerErgebnis.Ungueltig(
+                    "vektorfeld_komponente_keine_zahl",
+                    "Komponente ${index + 1} des Vektorfelds ist keine Zahl.",
+                )
+            }
+            else -> return VektorRechnerErgebnis.Ungueltig(
+                "methode_nicht_vektorwertig",
+                "Die Methode muss einen Vektor oder ein Zahlentupel ausgeben.",
+            )
+        }
+        val bereich = IntegralBereich(listOf(menge))
+        if (methode.parameter.size != bereich.dimension) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "integral_dimension",
+                "Methodenstelligkeit und Dimension des Integrationsbereichs stimmen nicht überein.",
+            )
+        }
+        val integrierteKomponenten = komponenten.mapIndexed { index, term ->
+            val komponentenMethode = Methode(
+                name = "${methode.name}_{${index + 1}}",
+                parameter = methode.parameter,
+                vorschrift = term,
+                zielMenge = ReelleZahlen,
+                werteVorräte = methode.werteVorräte,
+                effektiverWerteVorrat = methode.effektiverWerteVorrat,
+                bereichsanpassung = methode.bereichsanpassung,
+            )
+            val integral = runCatching {
+                methodenIntegral(komponentenMethode, bereich, kurz = false, mass = mass)
+            }.getOrElse { fehler ->
+                return VektorRechnerErgebnis.Ungueltig(
+                    "vektorfeld_integral",
+                    fehler.message ?: "Vektorfeldintegral nicht auswertbar.",
+                )
+            }
+            werteIntegralAus(integral).wert
+        }
+        return VektorRechnerErgebnis.VektorWert(Tupel(integrierteKomponenten))
+    }
 
     private fun materialisiere(quelle: VektorQuelle): Materialisierung = when (quelle) {
         is VektorQuelle.Vektor -> Materialisierung.Erfolg(quelle.wert)
@@ -259,16 +504,20 @@ object VektorRechner {
     private fun pruefeVertraege(quellen: List<VektorQuelle>): VektorRechnerErgebnis.Ungueltig? {
         if (quellen.isEmpty()) return null
         val dimensionen = quellen.map { it.vertrag.dimension }.distinct()
-        if (dimensionen.size > 1) return VektorRechnerErgebnis.Ungueltig(
-            "dimensionen_inkompatibel",
-            "Vektoroperation benötigt gleiche Dimensionen; erhalten: ${dimensionen.joinToString()}.",
-        )
+        if (dimensionen.size > 1) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "dimensionen_inkompatibel",
+                "Vektoroperation benötigt gleiche Dimensionen; erhalten: ${dimensionen.joinToString()}.",
+            )
+        }
         val systeme = quellen.map { it.vertrag.koordinatensystemId }.distinct()
         val basen = quellen.map { it.vertrag.basisId }.distinct()
-        if (systeme.size > 1 || basen.size > 1) return VektorRechnerErgebnis.Ungueltig(
-            "koordinatenvertraege_inkompatibel",
-            "Koordinatensysteme und Basen müssen übereinstimmen oder explizit umgerechnet werden.",
-        )
+        if (systeme.size > 1 || basen.size > 1) {
+            return VektorRechnerErgebnis.Ungueltig(
+                "koordinatenvertraege_inkompatibel",
+                "Koordinatensysteme und Basen müssen übereinstimmen oder explizit umgerechnet werden.",
+            )
+        }
         return null
     }
 
