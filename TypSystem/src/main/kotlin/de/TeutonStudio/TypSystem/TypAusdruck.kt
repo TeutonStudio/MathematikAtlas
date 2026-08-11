@@ -51,7 +51,13 @@ enum class TypVarianz { Kovariant, Kontravariant, Invariant }
 
 data class TypKonstruktorDefinition(
     val id: TypId,
+    /**
+     * Explizite Varianz je Typparameter. Ist die Liste kürzer als der tatsächlich
+     * verwendete parameterisierte Typ, gilt für die restlichen Parameter
+     * [standardVarianz]. Das ist insbesondere für variadische Tupel erforderlich.
+     */
     val varianzen: List<TypVarianz> = emptyList(),
+    val standardVarianz: TypVarianz = TypVarianz.Invariant,
 )
 
 /** Erweiterbarer Anforderungshaken. G0.3 registriert konkrete Struktur- und Axiomprüfer. */
@@ -60,6 +66,27 @@ data class TypAnforderung(
     val parameter: Map<String, String> = emptyMap(),
 ) {
     init { require(id.isNotBlank()) { "Eine Typanforderung benötigt eine ID." } }
+}
+
+/**
+ * Kanonische Namensräume für Anforderungen. G0.2 legt nur die stabilen IDs fest;
+ * die fachlichen Prüfer werden in den jeweiligen Domänen registriert.
+ */
+object TypAnforderungen {
+    fun struktur(id: String, parameter: Map<String, String> = emptyMap()): TypAnforderung =
+        TypAnforderung("struktur.${id.trim()}", parameter).also {
+            require(id.isNotBlank()) { "Eine Struktur-Anforderung benötigt eine ID." }
+        }
+
+    fun eigenschaft(id: String, parameter: Map<String, String> = emptyMap()): TypAnforderung =
+        TypAnforderung("eigenschaft.${id.trim()}", parameter).also {
+            require(id.isNotBlank()) { "Eine Eigenschafts-Anforderung benötigt eine ID." }
+        }
+
+    fun axiom(id: String, parameter: Map<String, String> = emptyMap()): TypAnforderung =
+        TypAnforderung("axiom.${id.trim()}", parameter).also {
+            require(id.isNotBlank()) { "Eine Axiom-Anforderung benötigt eine ID." }
+        }
 }
 
 data class AnschlussVertrag(
