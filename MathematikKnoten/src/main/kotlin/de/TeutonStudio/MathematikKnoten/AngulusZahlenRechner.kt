@@ -4,8 +4,9 @@ import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /**
- * Letzte Verfeinerung des Zahlenrechners für den semantischen Angulus-Typ.
- * Bestehende nicht-winkelbezogene Operatoren werden unverändert delegiert.
+ * Verfeinert den Zahlenrechner um den semantischen Angulus-Typ. Neue Winkelwerte
+ * laufen über Angulus; historische nackte Zahl-/Zahlmethoden werden weiterhin an
+ * den bisherigen Auswerter delegiert, damit gespeicherte Karten nicht brechen.
  */
 fun MathematikAuswerterRegister.registriereAngulusZahlenRechner() {
     val basis = requireNotNull(finde(ZAHLENRECHNER_ART))
@@ -14,29 +15,52 @@ fun MathematikAuswerterRegister.registriereAngulusZahlenRechner() {
         val standard = UniversellerZahlenOperator.vonIdOderNull(id)
         val erweitert = ErweiterterZahlenOperator.vonId(id)
         when {
-            standard != null && standard in angulusStandardOperatoren -> werteAngulusStandardAus(kontext, standard)
-            erweitert != null && erweitert in angulusErweiterteOperatoren -> werteAngulusErweitertAus(kontext, erweitert)
+            standard in setOf(
+                UniversellerZahlenOperator.KOMPLEXER_WINKEL,
+                UniversellerZahlenOperator.ARCSINUS,
+                UniversellerZahlenOperator.ARCCOSINUS,
+            ) -> werteAngulusStandardAus(kontext, requireNotNull(standard))
+
+            standard in setOf(UniversellerZahlenOperator.SINUS, UniversellerZahlenOperator.COSINUS) ->
+                if (kontext.eingänge["a"]?.objekt.istAngulusQuelle()) {
+                    werteAngulusStandardAus(kontext, requireNotNull(standard))
+                } else basis.auswerten(kontext)
+
+            standard == UniversellerZahlenOperator.KOMPLEX_AUS_POLAR ->
+                if (kontext.verwendetNeuenPolarvertrag()) wertePolarAus(kontext) else basis.auswerten(kontext)
+
+            erweitert == ErweiterterZahlenOperator.ARCTANGENS ->
+                werteAngulusErweitertAus(kontext, erweitert)
+
+            erweitert in setOf(
+                ErweiterterZahlenOperator.TANGENS,
+                ErweiterterZahlenOperator.COTANGENS,
+                ErweiterterZahlenOperator.SEKANS,
+                ErweiterterZahlenOperator.KOSEKANS,
+            ) -> if (kontext.eingänge["a"]?.objekt.istAngulusQuelle()) {
+                werteAngulusErweitertAus(kontext, requireNotNull(erweitert))
+            } else basis.auswerten(kontext)
+
             else -> basis.auswerten(kontext)
         }
     }
 }
 
-private val angulusStandardOperatoren = setOf(
-    UniversellerZahlenOperator.KOMPLEXER_WINKEL,
-    UniversellerZahlenOperator.ARCSINUS,
-    UniversellerZahlenOperator.ARCCOSINUS,
-    UniversellerZahlenOperator.SINUS,
-    UniversellerZahlenOperator.COSINUS,
-    UniversellerZahlenOperator.KOMPLEX_AUS_POLAR,
-)
+private fun MathematischesObjekt?.istAngulusQuelle(): Boolean = when (this) {
+    is Angulus -> true
+    is Methode -> runCatching { methodenSignatur().zielMenge is AngulusRaum }.getOrDefault(false)
+    else -> false
+}
 
-private val angulusErweiterteOperatoren = setOf(
-    ErweiterterZahlenOperator.TANGENS,
-    ErweiterterZahlenOperator.COTANGENS,
-    ErweiterterZahlenOperator.SEKANS,
-    ErweiterterZahlenOperator.KOSEKANS,
-    ErweiterterZahlenOperator.ARCTANGENS,
-)
+private fun KnotenAuswertungsKontext.verwendetNeuenPolarvertrag(): Boolean {
+    val tupelModus = knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] == ZAHLENRECHNER_KOMPLEX_TUPEL
+    return if (tupelModus) {
+        val tupel = eingänge["tupel"]?.objekt as? Tupel
+        tupel?.koordinatenArt() == TupelKoordinatenArt.POLAR
+    } else {
+        eingänge["b"]?.objekt.istAngulusQuelle()
+    }
+}
 
 private fun werteAngulusStandardAus(
     kontext: KnotenAuswertungsKontext,
