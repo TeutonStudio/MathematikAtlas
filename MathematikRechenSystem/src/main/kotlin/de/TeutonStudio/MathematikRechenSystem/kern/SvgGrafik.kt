@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import de.TeutonStudio.TypSystem.TypAusdruck
 import de.TeutonStudio.TypSystem.TypTragend
+import java.math.BigDecimal
 import kotlin.math.abs
 
 /** Rechteckiger SVG-Zeichenbereich. */
@@ -430,8 +431,7 @@ object SvgSerializer {
     private fun zahl(wert: Double): String {
         require(wert.isFinite()) { "SVG kann keine nichtendliche Koordinate serialisieren." }
         if (abs(wert) < 1e-12) return "0"
-        val ganz = wert.toLong()
-        return if (wert == ganz.toDouble()) ganz.toString() else wert.toString().trimEnd('0').trimEnd('.')
+        return BigDecimal.valueOf(wert).stripTrailingZeros().toPlainString()
     }
 
     private fun xmlId(wert: String): String = xml(wert.ifBlank { "element" })
