@@ -14,6 +14,12 @@ object MathematikAnschlussArten {
         elternArt = Objekt.id,
         beschreibung = "Ein skalarer numerischer Wert.",
     )
+    val Angulus = AnschlussArt(
+        id = AnschlussArtId("mathematik.angulus"),
+        name = "Angulus",
+        elternArt = Objekt.id,
+        beschreibung = "Ein Winkel mit expliziter Einheit (Radian, Grad oder Gon) und Dimensionsbezug.",
+    )
     val Aussage = AnschlussArt(
         id = AnschlussArtId("mathematik.aussage"),
         name = "Aussage",
@@ -67,6 +73,18 @@ object MathematikAnschlussArten {
         name = "Tupel",
         elternArt = Objekt.id,
         beschreibung = "Eine geordnete endliche Folge mathematischer Objekte.",
+    )
+    val KartesischesTupel = AnschlussArt(
+        id = AnschlussArtId("mathematik.tupel.kartesisch"),
+        name = "Kartesisches Tupel",
+        elternArt = Tupel.id,
+        beschreibung = "Ein Tupel, dessen Komponenten ausschließlich Zahlen sind.",
+    )
+    val PolarTupel = AnschlussArt(
+        id = AnschlussArtId("mathematik.tupel.polar"),
+        name = "PolarTupel",
+        elternArt = Tupel.id,
+        beschreibung = "Ein Tupel aus Radius (Zahl) und mindestens einem Angulus.",
     )
 
     /** Einzige produktive Anschlussart für sämtliche Methoden. */
@@ -137,6 +155,7 @@ object MathematikAnschlussArten {
     val alle = listOf(
         Objekt,
         Zahl,
+        Angulus,
         Aussage,
         Menge,
         Mass,
@@ -146,6 +165,8 @@ object MathematikAnschlussArten {
         Matrix,
         Tensor,
         Tupel,
+        KartesischesTupel,
+        PolarTupel,
         Methode,
         LegacyMethode,
         LegacyAussageMethode,
