@@ -4,7 +4,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import kotlin.test.*
 
 class KartenDatenTypJsonTest {
-    @Test fun `Format 8 erhält Typvertrag und Inferenz`() {
+    @Test fun `Format 8 erhält Typvertrag Literale Vereinigung und Inferenz`() {
         val anschluss = AnschlussDaten(
             name = "wert",
             richtung = AnschlussRichtung.Ausgang,
@@ -16,7 +16,16 @@ class KartenDatenTypJsonTest {
                     listOf(
                         TypAusdruck.Parameterisiert(
                             TypKernIds.Tupel,
-                            listOf(TypAusdruck.Atom(TypId("math.zahl.reell"))),
+                            listOf(
+                                TypAusdruck.Parameterisiert(
+                                    TypId("math.matrix"),
+                                    listOf(
+                                        TypAusdruck.Atom(TypId("math.zahl.reell")),
+                                        TypAusdruck.Literal("3"),
+                                        TypAusdruck.Literal("4"),
+                                    ),
+                                ),
+                            ),
                         ),
                         TypAusdruck.Vereinigung(
                             listOf(
