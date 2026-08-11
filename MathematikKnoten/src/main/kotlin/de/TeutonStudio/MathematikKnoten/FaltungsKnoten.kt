@@ -123,6 +123,18 @@ object FaltungsKnotenVorlagen {
         ),
     )
 
+    val MethodenWertegrundraum = KnotenVorlage(
+        art = METHODEN_WERTEGRUNDRAUM_ART,
+        name = "Methoden-Wertegrundraum",
+        kategorie = "Methoden",
+        beschreibung = "Gibt M aus einem homogenen Methoden-Wertevorrat M^n aus.",
+        standardGröße = GraphGröße(270f, 105f),
+        anschlüsse = listOf(
+            eingang("methode", MathematikAnschlussArten.Methode.id),
+            ausgang("menge", MathematikAnschlussArten.Menge.id),
+        ),
+    )
+
     val MethodenArgumente = KnotenVorlage(
         art = METHODEN_ARGUMENTE_ART,
         name = "Methodenargumente",
@@ -159,6 +171,7 @@ object FaltungsKnotenVorlagen {
         MethodenAnwendungObjekt,
         MethodenZielmenge,
         MethodenWertevorrat,
+        MethodenWertegrundraum,
         MethodenArgumente,
     )
 

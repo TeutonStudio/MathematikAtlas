@@ -9,6 +9,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
 import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
 
 const val METHODEN_WERTEVORRAT_ART = "mathematik.methodenWertevorrat"
+const val METHODEN_WERTEGRUNDRAUM_ART = "mathematik.methodenWertegrundraum"
 const val METHODEN_ARGUMENTANZAHL_ART = "mathematik.methodenArgumentanzahl"
 const val METHODEN_ARGUMENTE_ART = "mathematik.methodenArgumente"
 const val METHODEN_ARGUMENTE_PROJEKTION = "methodenArgumente.projektion"
@@ -21,6 +22,7 @@ fun methodenArgumentAusgangName(argument: MethodenArgument, index: Int): String 
 
 fun MathematikAuswerterRegister.registriereMethodenArgumente() {
     registriere(METHODEN_ARGUMENTE_ART, MethodenArgumenteAuswerter)
+    registriere(METHODEN_WERTEGRUNDRAUM_ART, MethodenWertegrundraumAuswerter)
 }
 
 internal object MethodenWertevorratAuswerter : MathematikKnotenAuswerter {
@@ -32,6 +34,29 @@ internal object MethodenWertevorratAuswerter : MathematikKnotenAuswerter {
             ausgaben = mapOf(
                 "menge" to BedingterWert(
                     objekt = werteVorrat,
+                    variablenQuellen = methodenWert.variablenQuellen,
+                ),
+            ),
+        )
+    }
+}
+
+internal object MethodenWertegrundraumAuswerter : MathematikKnotenAuswerter {
+    override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+        val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
+        val methode = methodenWert.objekt as? Methode ?: error("Eine konkrete Methode fehlt.")
+        val argumente = methode.methodenSignatur().argumente
+        check(argumente.isNotEmpty()) {
+            "Eine nullstellige Methode besitzt keinen Wertegrundraum."
+        }
+        val grundraum = argumente.first().werteVorrat
+        check(argumente.all { it.werteVorrat == grundraum }) {
+            "Die Methodenargumente besitzen keinen gemeinsamen Wertegrundraum."
+        }
+        return KnotenAuswertungsErgebnis(
+            ausgaben = mapOf(
+                "menge" to BedingterWert(
+                    objekt = grundraum,
                     variablenQuellen = methodenWert.variablenQuellen,
                 ),
             ),
