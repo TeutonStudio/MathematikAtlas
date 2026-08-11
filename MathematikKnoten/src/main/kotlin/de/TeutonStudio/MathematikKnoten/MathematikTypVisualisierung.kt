@@ -2,11 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 
-/**
- * Mathematische Notation für die Orchestrator-artigen Minigrafiken an Ports.
- * Die Segmentschlüssel bleiben stabile semantische IDs; die UI darf daraus
- * Farben, Muster oder spätere SVG-Glyphen ableiten.
- */
+/** Mathematische Notation für kompakte, Orchestrator-artige Typgrafiken an Ports. */
 object MathematikTypVisualResolver : TypVisualResolver {
     override fun beschreibe(typ: TypAusdruck): TypVisualDescriptor = when (typ) {
         TypAusdruck.Beliebig -> TypVisualDescriptor("*", "Beliebiger mathematischer Typ")
@@ -21,10 +17,12 @@ object MathematikTypVisualResolver : TypVisualResolver {
     private fun atom(id: TypId): TypVisualDescriptor {
         val text = when (id) {
             MathematikTypen.NatürlicheZahl -> "ℕ"
+            MathematikTypen.NichtnegativeGanzeZahl -> "ℕ₀"
             MathematikTypen.GanzeZahl -> "ℤ"
             MathematikTypen.RationaleZahl -> "ℚ"
             MathematikTypen.ReelleZahl -> "ℝ"
             MathematikTypen.KomplexeZahl -> "ℂ"
+            MathematikTypen.QuaternionZahl -> "ℍ"
             MathematikTypen.Zahl -> "Zahl"
             MathematikTypen.Aussage -> "𝔹"
             MathematikTypen.Menge -> "M"
@@ -38,11 +36,7 @@ object MathematikTypVisualResolver : TypVisualResolver {
             MathematikTypen.Objekt -> "Obj"
             else -> id.wert.substringAfterLast('.')
         }
-        return TypVisualDescriptor(
-            kurztext = text,
-            tooltip = id.wert,
-            segmente = listOf(TypVisualSegment(id.wert, text)),
-        )
+        return TypVisualDescriptor(text, id.wert, listOf(TypVisualSegment(id.wert, text)))
     }
 
     private fun parameterisiert(typ: TypAusdruck.Parameterisiert): TypVisualDescriptor = when (typ.konstruktor) {
@@ -104,9 +98,7 @@ object MathematikTypVisualResolver : TypVisualResolver {
             kurztext = teile.joinToString("∨") { it.kurztext },
             tooltip = teile.joinToString(" oder ") { it.tooltip },
             segmente = teile.flatMap { descriptor ->
-                descriptor.segmente.ifEmpty {
-                    listOf(TypVisualSegment(descriptor.kurztext, descriptor.kurztext))
-                }
+                descriptor.segmente.ifEmpty { listOf(TypVisualSegment(descriptor.kurztext, descriptor.kurztext)) }
             }.distinctBy(TypVisualSegment::schlüssel),
         )
     }
