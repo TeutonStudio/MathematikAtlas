@@ -856,6 +856,7 @@ private fun KnotenDarstellung(
                     anzahl = anschlüsse.size,
                     zustand = zustand,
                     farben = farben,
+                    farbeFürAnschluss = farbeFürAnschluss,
                     magnetischesZiel = magnetischesZiel,
                     beiMagnetischemZiel = beiMagnetischemZiel,
                     beiAnschlussKontext = beiAnschlussKontext,
@@ -983,6 +984,7 @@ private fun BoxScope.AnschlussGriff(
     anzahl: Int,
     zustand: KartenEditorZustand,
     farben: List<Color>,
+    farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
     magnetischesZiel: AnschlussVerweis?,
     beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
@@ -1116,10 +1118,13 @@ private fun BoxScope.AnschlussGriff(
                 )
             }
         }
-        MehrfarbenAnschluss(
-            farben = if (kompatibel) farben else farben.map { it.copy(alpha = .2f) },
+        AnschlussSymbol(
+            anschluss = anschluss,
+            fallbackFarben = farben,
             größe = sichtbareGröße,
             zoom = zoom,
+            aktiviert = kompatibel,
+            farbeFürAnschluss = farbeFürAnschluss,
         )
         if (eingerastet) {
             Box(

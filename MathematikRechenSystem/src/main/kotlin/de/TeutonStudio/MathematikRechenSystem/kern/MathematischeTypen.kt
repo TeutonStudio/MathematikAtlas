@@ -15,6 +15,7 @@ object MathematischeTypen {
     val Matrix = TypId("mathematik.matrix")
     val Tensor = TypId("mathematik.tensor")
     val Tupel = TypId("typ.tupel")
+    val UnendlichesTupel = TypId("typ.tupel.unendlich")
     val Methode = TypId("mathematik.methode")
 
     val Natuerlich = TypId("mathematik.zahl.natuerlich")
@@ -28,6 +29,8 @@ object MathematischeTypen {
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
         // Tupel sind variadisch und komponentenweise kovariant.
         TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
+        // Unendliche Tupel sind homogene, nicht materialisierte Indexstrukturen.
+        TypKonstruktorDefinition(UnendlichesTupel, listOf(TypVarianz.Kovariant)),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(Matrix, listOf(TypVarianz.Kovariant, TypVarianz.Invariant, TypVarianz.Invariant)),
@@ -55,6 +58,7 @@ object MathematischeTypen {
             Matrix to Objekt,
             Tensor to Objekt,
             Tupel to Objekt,
+            UnendlichesTupel to Objekt,
             Methode to Objekt,
         )
         var aktuell: TypId? = von
