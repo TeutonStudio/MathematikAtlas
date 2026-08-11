@@ -1,11 +1,12 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten
 
+import de.TeutonStudio.TypSystem.*
 import org.json.JSONArray
 import org.json.JSONObject
 
 /** Reiner JSON-Codec für [KartenDaten], ohne App-, Datei- oder Migrationszuständigkeit. */
 object KartenDatenJson {
-    const val FORMAT_VERSION = 7
+    const val FORMAT_VERSION = 8
 
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
         put("formatVersion", FORMAT_VERSION)
@@ -104,6 +105,13 @@ object KartenDatenJson {
                             put("prioritäten", JSONArray(regel.prioritäten.map { it.wert }))
                         })
                     }
+                    if (
+                        anschluss.vertrag.typ != TypAusdruck.Unbekannt ||
+                        anschluss.vertrag.anforderungen.isNotEmpty()
+                    ) {
+                        put("vertrag", vertragZuJson(anschluss.vertrag))
+                    }
+                    anschluss.typInferenz?.let { put("typInferenz", typInferenzZuJson(it)) }
                 })
             }
         })
@@ -165,6 +173,8 @@ object KartenDatenJson {
                             },
                         )
                     },
+                    vertrag = anschluss.optJSONObject("vertrag")?.let(::vertragVonJson) ?: AnschlussVertrag(),
+                    typInferenz = anschluss.optJSONObject("typInferenz")?.let(::typInferenzVonJson),
                 )
             },
             parameter = parameter,
@@ -173,6 +183,141 @@ object KartenDatenJson {
             eingangsKartenVerweise = eingangsVerweise,
         )
     }
+
+    private fun vertragZuJson(vertrag: AnschlussVertrag) = JSONObject().apply {
+        put("typ", typZuJson(vertrag.typ))
+        if (vertrag.anforderungen.isNotEmpty()) {
+            put("anforderungen", JSONArray().apply {
+                vertrag.anforderungen.forEach { anforderung ->
+                    put(JSONObject().apply {
+                        put("id", anforderung.id)
+                        if (anforderung.parameter.isNotEmpty()) put("parameter", JSONObject(anforderung.parameter))
+                    })
+                }
+            })
+        }
+    }
+
+    private fun vertragVonJson(json: JSONObject): AnschlussVertrag = AnschlussVertrag(
+        typ = json.optJSONObject("typ")?.let(::typVonJson) ?: TypAusdruck.Unbekannt,
+        anforderungen = json.optJSONArray("anforderungen")?.zuListe { anforderung ->
+            val parameter = anforderung.optJSONObject("parameter") ?: JSONObject()
+            TypAnforderung(
+                id = anforderung.getString("id"),
+                parameter = parameter.keys().asSequence().associateWith { parameter.optString(it) },
+            )
+        } ?: emptyList(),
+    )
+
+    private fun typZuJson(typ: TypAusdruck): JSONObject = JSONObject().apply {
+        when (typ) {
+            TypAusdruck.Beliebig -> put("art", "beliebig")
+            TypAusdruck.Unbekannt -> put("art", "unbekannt")
+            is TypAusdruck.Atom -> {
+                put("art", "atom")
+                put("id", typ.id.wert)
+            }
+            is TypAusdruck.Parameterisiert -> {
+                put("art", "parameterisiert")
+                put("konstruktor", typ.konstruktor.wert)
+                put("argumente", JSONArray().apply { typ.argumente.forEach { put(typZuJson(it)) } })
+            }
+            is TypAusdruck.Vereinigung -> {
+                put("art", "vereinigung")
+                put("alternativen", JSONArray().apply { typ.alternativen.forEach { put(typZuJson(it)) } })
+            }
+            is TypAusdruck.Variable -> {
+                put("art", "variable")
+                put("id", typ.id.wert)
+            }
+            is TypAusdruck.Literal -> {
+                put("art", "literal")
+                put("wert", typ.wert)
+            }
+        }
+    }
+
+    private fun typVonJson(json: JSONObject): TypAusdruck = when (json.optString("art")) {
+        "beliebig" -> TypAusdruck.Beliebig
+        "unbekannt" -> TypAusdruck.Unbekannt
+        "atom" -> TypAusdruck.Atom(TypId(json.getString("id")))
+        "parameterisiert" -> TypAusdruck.Parameterisiert(
+            konstruktor = TypId(json.getString("konstruktor")),
+            argumente = json.optJSONArray("argumente")?.zuListe(::typVonJson) ?: emptyList(),
+        )
+        "vereinigung" -> {
+            val alternativen = json.optJSONArray("alternativen")?.zuListe(::typVonJson).orEmpty()
+            if (alternativen.isEmpty()) TypAusdruck.Unbekannt else TypAusdruck.Vereinigung(alternativen)
+        }
+        "variable" -> TypAusdruck.Variable(TypVariablenId(json.getString("id")))
+        "literal" -> TypAusdruck.Literal(json.getString("wert"))
+        else -> TypAusdruck.Unbekannt
+    }
+
+    private fun typInferenzZuJson(regel: TypInferenzRegel): JSONObject = JSONObject().apply {
+        when (regel) {
+            is TypInferenzRegel.FolgtEingang -> {
+                put("art", "folgtEingang")
+                put("eingang", regel.eingang)
+            }
+            is TypInferenzRegel.GemeinsameOberart -> {
+                put("art", "gemeinsameOberart")
+                put("eingänge", JSONArray(regel.eingänge))
+            }
+            is TypInferenzRegel.Vereinigung -> {
+                put("art", "vereinigung")
+                put("eingänge", JSONArray(regel.eingänge))
+            }
+            is TypInferenzRegel.TupelAus -> {
+                put("art", "tupelAus")
+                put("eingänge", JSONArray(regel.eingänge))
+            }
+            is TypInferenzRegel.KomponenteVonTupel -> {
+                put("art", "komponenteVonTupel")
+                put("eingang", regel.eingang)
+                put("index", regel.index)
+            }
+            is TypInferenzRegel.AbbildungVonEingang -> {
+                put("art", "abbildungVonEingang")
+                put("eingang", regel.eingang)
+                put("abbildung", JSONArray().apply {
+                    regel.abbildung.forEach { (von, zu) ->
+                        put(JSONObject().put("von", typZuJson(von)).put("zu", typZuJson(zu)))
+                    }
+                })
+            }
+            is TypInferenzRegel.Priorisierung -> {
+                put("art", "priorisierung")
+                put("eingänge", JSONArray(regel.eingänge))
+                put("prioritäten", JSONArray().apply { regel.prioritäten.forEach { put(typZuJson(it)) } })
+            }
+        }
+    }
+
+    private fun typInferenzVonJson(json: JSONObject): TypInferenzRegel? = when (json.optString("art")) {
+        "folgtEingang" -> TypInferenzRegel.FolgtEingang(json.getString("eingang"))
+        "gemeinsameOberart" -> TypInferenzRegel.GemeinsameOberart(json.stringListe("eingänge"))
+        "vereinigung" -> TypInferenzRegel.Vereinigung(json.stringListe("eingänge"))
+        "tupelAus" -> TypInferenzRegel.TupelAus(json.stringListe("eingänge"))
+        "komponenteVonTupel" -> TypInferenzRegel.KomponenteVonTupel(
+            json.getString("eingang"),
+            json.getInt("index"),
+        )
+        "abbildungVonEingang" -> TypInferenzRegel.AbbildungVonEingang(
+            eingang = json.getString("eingang"),
+            abbildung = json.optJSONArray("abbildung")?.zuListe { eintrag ->
+                typVonJson(eintrag.getJSONObject("von")) to typVonJson(eintrag.getJSONObject("zu"))
+            }?.toMap() ?: emptyMap(),
+        )
+        "priorisierung" -> TypInferenzRegel.Priorisierung(
+            eingänge = json.stringListe("eingänge"),
+            prioritäten = json.optJSONArray("prioritäten")?.zuListe(::typVonJson) ?: emptyList(),
+        )
+        else -> null
+    }
+
+    private fun JSONObject.stringListe(name: String): List<String> =
+        optJSONArray(name)?.let { array -> List(array.length()) { index -> array.getString(index) } } ?: emptyList()
 
     private fun KartenVerweis.zuJson() = JSONObject()
         .put("kartenId", kartenId.wert)
