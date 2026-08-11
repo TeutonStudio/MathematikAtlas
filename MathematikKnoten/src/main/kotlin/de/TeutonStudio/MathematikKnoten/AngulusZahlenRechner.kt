@@ -14,8 +14,8 @@ fun MathematikAuswerterRegister.registriereAngulusZahlenRechner() {
         val standard = UniversellerZahlenOperator.vonIdOderNull(id)
         val erweitert = ErweiterterZahlenOperator.vonId(id)
         when {
-            standard in angulusStandardOperatoren -> werteAngulusStandardAus(kontext, requireNotNull(standard))
-            erweitert in angulusErweiterteOperatoren -> werteAngulusErweitertAus(kontext, requireNotNull(erweitert))
+            standard != null && standard in angulusStandardOperatoren -> werteAngulusStandardAus(kontext, standard)
+            erweitert != null && erweitert in angulusErweiterteOperatoren -> werteAngulusErweitertAus(kontext, erweitert)
             else -> basis.auswerten(kontext)
         }
     }
@@ -80,16 +80,16 @@ private fun transformiereEinzelEingang(
         is Methode -> AngulusTransformierteMethode(wert, operation)
         else -> operation.wendeAn(wert)
     }
-    val methode = objekt as? Methode
+    val methode = objekt as? SignaturtragendeMethode
     val angulus = objekt as? Angulus
     return KnotenAuswertungsErgebnis(
         ausgaben = mapOf(
             "wert" to BedingterWert(
                 objekt = objekt,
                 annahmen = eingang.annahmen,
-                zielMenge = methode?.let { (it as SignaturtragendeMethode).signatur.zielMenge },
+                zielMenge = methode?.signatur?.zielMenge,
                 werteVorrat = when {
-                    methode is SignaturtragendeMethode -> methode.signatur.werteVorrat
+                    methode != null -> methode.signatur.werteVorrat
                     angulus != null -> angulus.raum
                     else -> operation.zielMenge
                 },
