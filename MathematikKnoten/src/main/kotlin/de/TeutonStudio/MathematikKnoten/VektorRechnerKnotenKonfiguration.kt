@@ -134,7 +134,7 @@ fun konfiguriereVektorRechner(
         anschlüsse = neu,
         parameter = knoten.parameter + mapOf(
             VEKTOR_RECHNER_OPERATOR to operator.stabileId,
-            VEKTOR_RECHNER_METRIK to (knoten.parameter[VEKTOR_RECHNER_METRIK] ?: VektorMetrik.EUKLIDISCH.stabileId),
+            VEKTOR_RECHNER_METRIK to (knoten.parameter[VEKTOR_RECHNER_METRIK] ?: VektorMetriken.standard.stabileId),
             VEKTOR_RECHNER_ACHSE to (knoten.parameter[VEKTOR_RECHNER_ACHSE] ?: "1"),
             VEKTOR_RECHNER_STRUKTUR_AUSGABE to (
                 knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE] ?: VektorStrukturAusgabe.TUPEL.stabileId
@@ -152,7 +152,7 @@ fun vektorRechnerVorlage(operator: VektorRechnerOperator): KnotenVorlage = Knote
     anschlüsse = vektorRechnerAnschluesse(operator),
     standardParameter = mapOf(
         VEKTOR_RECHNER_OPERATOR to operator.stabileId,
-        VEKTOR_RECHNER_METRIK to VektorMetrik.EUKLIDISCH.stabileId,
+        VEKTOR_RECHNER_METRIK to VektorMetriken.standard.stabileId,
         VEKTOR_RECHNER_ACHSE to "1",
         VEKTOR_RECHNER_STRUKTUR_AUSGABE to VektorStrukturAusgabe.TUPEL.stabileId,
     ),
@@ -224,7 +224,7 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                 methode = kontext.eingänge["methode"]?.objekt as? Methode,
                 menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck,
                 mass = kontext.eingänge["mass"]?.objekt as? IntegralMass,
-                metrik = VektorMetrik.vonIdOderStandard(kontext.knoten.parameter[VEKTOR_RECHNER_METRIK]),
+                metrik = VektorMetriken.vonIdOderStandard(kontext.knoten.parameter[VEKTOR_RECHNER_METRIK]),
                 achse = kontext.knoten.parameter[VEKTOR_RECHNER_ACHSE]?.toIntOrNull() ?: 1,
                 strukturAusgabe = VektorStrukturAusgabe.vonIdOderStandard(
                     kontext.knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE],
