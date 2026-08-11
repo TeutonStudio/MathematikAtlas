@@ -98,6 +98,21 @@ object OperatorKnotenSuchindex {
                 ),
             )
         }
+
+        AxiomOperatoren.alle.forEach { axiom ->
+            val basis = PraedikatKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
+            val konfiguriert = konfigurierePraedikat(basis, axiom)
+            add(
+                Eintrag(
+                    begriffe = axiom.suchbegriffe + axiom.titel + axiom.stabileId + axiom.systeme,
+                    vorlage = konfiguriert.alsSuchVorlage(
+                        name = "Prädikat · ${axiom.titel}",
+                        kategorie = "Operatoren: Axiome · ${axiom.kategorie}",
+                        beschreibung = "Axiom-Prädikat ${axiom.titel}; Systeme: ${axiom.systeme.sorted().joinToString()}.",
+                    ),
+                ),
+            )
+        }
     }
 
     private fun KnotenDaten.alsSuchVorlage(

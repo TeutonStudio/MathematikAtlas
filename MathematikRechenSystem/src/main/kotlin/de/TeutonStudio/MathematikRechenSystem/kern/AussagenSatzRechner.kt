@@ -1,14 +1,40 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+enum class LogischerTyp(val latex: String) {
+    OBJEKT("\\mathsf{Objekt}"),
+    MENGE("\\mathsf{Menge}"),
+    ZAHL("\\mathsf{Zahl}"),
+    METHODE("\\mathsf{Methode}"),
+    PRAEDIKAT("\\mathsf{Prädikat}"),
+}
+
+sealed interface QuantorBereich : MathematischesObjekt {
+    data class Menge(val menge: MengenAusdruck) : QuantorBereich {
+        override fun zuLatex(): String = menge.zuLatex()
+    }
+
+    data class Typ(val typ: LogischerTyp) : QuantorBereich {
+        override fun zuLatex(): String = typ.latex
+    }
+}
+
 data class LogischeVariable(
     val id: String,
     val name: String,
-    val bereich: MengenAusdruck,
+    val quantorBereich: QuantorBereich,
 ) : MathematischesObjekt {
+    constructor(id: String, name: String, bereich: MengenAusdruck) :
+        this(id, name, QuantorBereich.Menge(bereich))
+
     init {
         require(id.isNotBlank())
         require(name.isNotBlank())
     }
+
+    /** Quellkompatibler Mengenbereich; Typquantoren besitzen absichtlich keine Universalmenge. */
+    val bereich: MengenAusdruck?
+        get() = (quantorBereich as? QuantorBereich.Menge)?.menge
+
     override fun zuLatex(): String = name
 }
 
@@ -108,11 +134,16 @@ data class QuantifizierteAussage(
     init { require(operator in quantoren) }
 
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
-        val elemente = (variable.bereich as? EndlicheMenge)?.elemente
+        val mengenBereich = (variable.quantorBereich as? QuantorBereich.Menge)?.menge
+        val elemente = (mengenBereich as? EndlicheMenge)?.elemente
             ?: return AussageErgebnis(
                 null,
                 EntscheidungsStatus.Unbekannt,
-                "Quantoren über unendlichen oder symbolischen Bereichen bleiben symbolisch.",
+                if (variable.quantorBereich is QuantorBereich.Typ) {
+                    "Typquantoren bleiben symbolisch; es wird keine Universalmenge konstruiert."
+                } else {
+                    "Quantoren über unendlichen oder symbolischen Bereichen bleiben symbolisch."
+                },
             )
         val ergebnisse = elemente.map { element ->
             val eingesetzt = ersetze(rumpf, mapOf(variable.name to element)) as? Aussage
@@ -142,7 +173,11 @@ data class QuantifizierteAussage(
             AussagenSatzOperator.EINDEUTIGER_EXISTENZQUANTOR -> "\\exists!"
             else -> error("Kein Quantor: $operator")
         }
-        return "$symbol ${variable.name}\\in${variable.bereich.zuLatex()}:\\;${rumpf.zuLatex()}"
+        val bindung = when (val bereich = variable.quantorBereich) {
+            is QuantorBereich.Menge -> "${variable.name}\\in${bereich.menge.zuLatex()}"
+            is QuantorBereich.Typ -> "${variable.name}:${bereich.typ.latex}"
+        }
+        return "$symbol $bindung:\\;${rumpf.zuLatex()}"
     }
 }
 

@@ -21,11 +21,23 @@ fun inferiereZielmenge(
         )
     is Aussage -> WahrheitsMenge
     is LogischeVariable -> ausdruck.bereich
+        ?: error(
+            "Die logische Variable '${ausdruck.name}' ist über den Typ " +
+                "'${ausdruck.quantorBereich.zuLatex()}' gebunden. Für Typquantoren wird bewusst keine Universalmenge erzeugt.",
+        )
     is LogischerAusdruck -> WahrheitsMenge
-    is PraedikatAusdruck -> when (ausdruck.parameter.size) {
-        0 -> WahrheitsMenge
-        1 -> Abbildungsmenge(ausdruck.parameter.single().bereich, WahrheitsMenge)
-        else -> Abbildungsmenge(Tupelraum(ausdruck.parameter.map { it.bereich }), WahrheitsMenge)
+    is PraedikatAusdruck -> {
+        val bereiche = ausdruck.parameter.map { parameter ->
+            parameter.bereich ?: error(
+                "Für den typgebundenen Prädikatsparameter '${parameter.name}' kann keine Abbildungsmenge " +
+                    "aus einer fingierten Universalmenge abgeleitet werden.",
+            )
+        }
+        when (bereiche.size) {
+            0 -> WahrheitsMenge
+            1 -> Abbildungsmenge(bereiche.single(), WahrheitsMenge)
+            else -> Abbildungsmenge(Tupelraum(bereiche), WahrheitsMenge)
+        }
     }
     is UnendlicheIndexStruktur -> Abbildungsmenge(ausdruck.indexMenge, ausdruck.zielMenge)
     is TensorDimensionenErgebnis -> Tupelraum(
