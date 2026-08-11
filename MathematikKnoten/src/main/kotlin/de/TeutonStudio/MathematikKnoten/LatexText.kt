@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\{#1\\right\\
 private const val ATLAS_IMPLIES_MACRO = "\\newcommand{\\implies}{\\Rightarrow}"
 private const val ATLAS_IFF_MACRO = "\\newcommand{\\iff}{\\Leftrightarrow}"
 private const val ATLAS_LONGTO_MACRO = "\\newcommand{\\longto}{\\longrightarrow}"
+private const val GROSSES_KARTESISCHES_PRODUKT = "\\mathop{\\Large\\times}"
 private val ATLAS_MACROS = listOf(
     ATLAS_SET_MACRO,
     ATLAS_IMPLIES_MACRO,
@@ -43,13 +45,9 @@ private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
  * Zentrale LaTeX-Fassade des Atlas.
  *
  * Gewöhnliche mathematische Layoutarbeit wird vollständig an den nativen
- * Compose-Multiplatform-Renderer delegiert. Der Atlas interpretiert insbesondere
- * keine Brüche, Matrizen, skalierenden Klammern oder großen Operatoren selbst.
- *
- * Zwei Atlas-spezifische Kompatibilitätsregeln bleiben bewusst erhalten:
- * - die Atlas-Integralglyphe für einfache Formeln außerhalb komplexer Umgebungen;
- * - historische nicht-bedingte `cases`-Blöcke von Methoden werden als linke große
- *   Klammer mit einer Matrix gerendert, damit der Renderer kein „if“ ergänzt.
+ * Compose-Multiplatform-Renderer delegiert. Zwei Renderer-Lücken werden explizit
+ * überbrückt: die Atlas-Integralglyphe und das iterierte kartesische Produkt.
+ * Historische nicht-bedingte `cases`-Blöcke bleiben ebenfalls kompatibel.
  */
 @Composable
 fun LatexText(
@@ -58,6 +56,30 @@ fun LatexText(
     style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     val normalisiert = normalisiereLatexQuelltext(latex)
+    val grossesProdukt = normalisiert
+        .takeUnless { "\\begin{" in it }
+        ?.let(::zerlegeGrossesKartesischesProdukt)
+
+    if (grossesProdukt != null) {
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            if (grossesProdukt.vorher.isNotBlank()) {
+                EchterLatexText(grossesProdukt.vorher, style = style)
+            }
+            AtlasGrossesKartesischesProdukt(
+                untereAnnotation = grossesProdukt.untereAnnotation,
+                style = style,
+            )
+            if (grossesProdukt.nachher.isNotBlank()) {
+                LatexText(latex = grossesProdukt.nachher, style = style)
+            }
+        }
+        return
+    }
+
     val integral = normalisiert
         .takeUnless { "\\begin{" in it }
         ?.let(::zerlegeIntegralOperator)
@@ -116,13 +138,38 @@ private fun EchterLatexText(
 }
 
 /**
+ * Kanonisiert ausschließlich Schreibweisen, die mathematisch äquivalent sind,
+ * aber vom eingebetteten Renderer unterschiedlich gut verstanden werden.
+ */
+internal fun kanonisiereAtlasLatex(latex: String): String {
+    val linkeMengenKlammer = "\u0001"
+    val rechteMengenKlammer = "\u0002"
+    return latex
+        .replace("\\mathbb N_0", "\\mathbb{N}_0")
+        .replace("\\mathbb N", "\\mathbb{N}")
+        .replace("\\mathbb Z", "\\mathbb{Z}")
+        .replace("\\mathbb Q", "\\mathbb{Q}")
+        .replace("\\mathbb R", "\\mathbb{R}")
+        .replace("\\mathbb C", "\\mathbb{C}")
+        .replace("\\mathbb H", "\\mathbb{H}")
+        .replace("\\operatorname{Re}", "\\mathcal{Re}")
+        .replace("\\operatorname{Im}", "\\mathcal{Im}")
+        .replace("\\left\\{", linkeMengenKlammer)
+        .replace("\\right\\}", rechteMengenKlammer)
+        .replace("\\{", "\\left\\{")
+        .replace("\\}", "\\right\\}")
+        .replace(linkeMengenKlammer, "\\left\\{")
+        .replace(rechteMengenKlammer, "\\right\\}")
+}
+
+/**
  * Ergänzt nur Atlas-eigene Kompatibilitätsmakros und die bisherigen farbigen
  * Wahrheitswerte. Mathematisches Layout wird ansonsten nicht mehr umgeschrieben.
  */
 internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String {
     val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
     val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
-    val rendererKompatibel = ersetzeNichtBedingteCases(latex)
+    val rendererKompatibel = kanonisiereAtlasLatex(ersetzeNichtBedingteCases(latex))
     val farbig = rendererKompatibel
         .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
         .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
@@ -160,6 +207,53 @@ internal fun ersetzeNichtBedingteCases(latex: String): String {
         }
     }
     return text
+}
+
+@Composable
+private fun AtlasGrossesKartesischesProdukt(
+    untereAnnotation: String?,
+    style: TextStyle,
+) {
+    val schriftgroesse = style.fontSize.value.takeIf { it.isFinite() && it > 0f } ?: 18f
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "×",
+            style = style.copy(fontSize = (schriftgroesse * 1.55f).sp),
+        )
+        if (!untereAnnotation.isNullOrBlank()) {
+            EchterLatexText(
+                latex = untereAnnotation,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+internal data class GrossesKartesischesProduktTeile(
+    val position: Int,
+    val vorher: String,
+    val untereAnnotation: String?,
+    val nachher: String,
+)
+
+/** Zerlegt exakt den Atlas-Operator `\\mathop{\\Large\\times}\\limits_{...}`. */
+internal fun zerlegeGrossesKartesischesProdukt(latex: String): GrossesKartesischesProduktTeile? {
+    val start = latex.indexOf(GROSSES_KARTESISCHES_PRODUKT)
+    if (start < 0) return null
+    var position = start + GROSSES_KARTESISCHES_PRODUKT.length
+    while (position < latex.length && latex[position].isWhitespace()) position++
+    if (latex.startsWith("\\limits", position)) {
+        position += "\\limits".length
+        while (position < latex.length && latex[position].isWhitespace()) position++
+    }
+    if (latex.getOrNull(position) != '_') return null
+    val argument = liesLatexArgument(latex, position + 1) ?: return null
+    return GrossesKartesischesProduktTeile(
+        position = start,
+        vorher = latex.substring(0, start).trimEnd(),
+        untereAnnotation = argument.text,
+        nachher = latex.substring(argument.ende).trimStart(),
+    )
 }
 
 @Composable
