@@ -41,6 +41,33 @@ object MathematikTypen {
     fun tupel(vararg komponenten: TypAusdruck): TypAusdruck =
         TypAusdruck.Parameterisiert(TypKernIds.Tupel, komponenten.toList())
 
+    fun mengeVon(elementTyp: TypAusdruck): TypAusdruck =
+        TypAusdruck.Parameterisiert(Menge, listOf(elementTyp))
+
+    fun spaltenVektor(elementTyp: TypAusdruck, dimension: Int): TypAusdruck =
+        TypAusdruck.Parameterisiert(
+            SpaltenVektor,
+            listOf(elementTyp, TypAusdruck.Literal(dimension.toString())),
+        )
+
+    fun zeilenVektor(elementTyp: TypAusdruck, dimension: Int): TypAusdruck =
+        TypAusdruck.Parameterisiert(
+            ZeilenVektor,
+            listOf(elementTyp, TypAusdruck.Literal(dimension.toString())),
+        )
+
+    fun matrix(elementTyp: TypAusdruck, zeilen: Int, spalten: Int): TypAusdruck =
+        TypAusdruck.Parameterisiert(
+            Matrix,
+            listOf(elementTyp, TypAusdruck.Literal(zeilen.toString()), TypAusdruck.Literal(spalten.toString())),
+        )
+
+    fun tensor(elementTyp: TypAusdruck, form: List<String>): TypAusdruck =
+        TypAusdruck.Parameterisiert(
+            Tensor,
+            listOf(elementTyp, TypAusdruck.Literal(form.joinToString("×"))),
+        )
+
     fun methode(argumente: List<TypAusdruck>, ziel: TypAusdruck): TypAusdruck =
         TypAusdruck.Parameterisiert(
             Methode,
@@ -76,9 +103,24 @@ class MathematikTypSystem : StandardTypSystem(
         AtomTypDefinition(MathematikTypen.Methode, MathematikTypen.Objekt),
     ),
     konstruktoren = listOf(
-        // Produkttypen sind komponentenweise kovariant. Die Kontravarianz eines
-        // Methoden-Wertevorrats wird eine Ebene darüber durch Methode festgelegt.
         TypKonstruktorDefinition(TypKernIds.Tupel, standardVarianz = TypVarianz.Kovariant),
+        TypKonstruktorDefinition(MathematikTypen.Menge, listOf(TypVarianz.Kovariant)),
+        TypKonstruktorDefinition(
+            MathematikTypen.SpaltenVektor,
+            listOf(TypVarianz.Kovariant, TypVarianz.Invariant),
+        ),
+        TypKonstruktorDefinition(
+            MathematikTypen.ZeilenVektor,
+            listOf(TypVarianz.Kovariant, TypVarianz.Invariant),
+        ),
+        TypKonstruktorDefinition(
+            MathematikTypen.Matrix,
+            listOf(TypVarianz.Kovariant, TypVarianz.Invariant, TypVarianz.Invariant),
+        ),
+        TypKonstruktorDefinition(
+            MathematikTypen.Tensor,
+            listOf(TypVarianz.Kovariant, TypVarianz.Invariant),
+        ),
         TypKonstruktorDefinition(
             MathematikTypen.Methode,
             varianzen = listOf(TypVarianz.Kontravariant, TypVarianz.Kovariant),
@@ -95,8 +137,6 @@ class MathematikTypSystem : StandardTypSystem(
         MathematikAnschlussArten.ZeilenVektor.id to MathematikTypen.zeilenVektor,
         MathematikAnschlussArten.Matrix.id to MathematikTypen.matrix,
         MathematikAnschlussArten.Tensor.id to MathematikTypen.tensor,
-        // Ein generischer Tupelport kennt seine Komponenten noch nicht. Die
-        // grobe AnschlussArt hält ihn dennoch auf Tupel beschränkt.
         MathematikAnschlussArten.Tupel.id to TypAusdruck.Unbekannt,
         MathematikAnschlussArten.Methode.id to TypAusdruck.Atom(MathematikTypen.Methode),
     ) + MathematikAnschlussArten.historischeMethodenIds.associateWith {
