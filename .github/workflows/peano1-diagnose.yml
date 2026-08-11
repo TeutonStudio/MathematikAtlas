@@ -16,12 +16,11 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import base64, re, subprocess
+          import base64, subprocess
           text = Path('.github/workflows/peano1-zwei-eingaenge-fix.yml').read_text()
-          match = re.search(r"echo '([A-Za-z0-9+/=]+)' \\| base64 -d", text)
-          if not match:
-              raise SystemExit('Patch-Payload nicht gefunden')
-          Path('/tmp/peano_patch.py').write_bytes(base64.b64decode(match.group(1)))
+          line = next(line for line in text.splitlines() if " | base64 -d > /tmp/peano_patch.py" in line)
+          payload = line.split("echo '", 1)[1].split("' | base64", 1)[0]
+          Path('/tmp/peano_patch.py').write_bytes(base64.b64decode(payload))
           subprocess.run(['python3', '/tmp/peano_patch.py'], check=True)
           PY
       - name: Axiomtest mit Diagnose
