@@ -118,13 +118,13 @@ private fun synchronisiereAuflöserKnoten(
     val ausgänge = elemente.mapIndexed { index, element ->
         (bisherigeAusgänge.getOrNull(index) ?: AnschlussDaten(
             id = elementId(knoten.id, index, knoten.art),
-            name = "element-${index + 1}",
+            name = "element${index + 1}",
             richtung = AnschlussRichtung.Ausgang,
             kante = AnschlussKante.Rechts,
             art = anschlussArtFürMathematischesObjekt(element),
         )).copy(
             id = elementId(knoten.id, index, knoten.art),
-            name = "element-${index + 1}",
+            name = "element${index + 1}",
             richtung = AnschlussRichtung.Ausgang,
             kante = AnschlussKante.Rechts,
             art = anschlussArtFürMathematischesObjekt(element),
