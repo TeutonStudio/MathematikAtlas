@@ -111,7 +111,7 @@ fun konfiguriereZahlenRechner(
     } else if (operator in angulusErzeuger) {
         AnschlussVertrag(angulusTyp)
     } else {
-        AnschlussVertrag(zahlTyp)
+        vorhandenerAusgang?.vertrag ?: AnschlussVertrag()
     }
     val typInferenz = if (operator in angulusErzeuger && eingänge.any { it.name == "a" }) {
         TypInferenzRegel.AbbildungVonEingang(
@@ -170,8 +170,6 @@ private fun gewünschteZahlenRechnerEingänge(
         eingang(
             "tupel",
             MathematikAnschlussArten.PolarTupel.id,
-            // Die konkrete Polar-Klassifikation liegt derzeit in der groben Anschlussart;
-            // G0.2 bewahrt parallel den vollständigen Tupel<T1,...>-Vertrag.
             vertrag = AnschlussVertrag(tupelTyp),
         ),
     )
