@@ -32,11 +32,15 @@ class MainActivity : ComponentActivity() {
                     darstellungsSpeicher.speichere(modus)
                 },
             ) {
-                Row(Modifier.fillMaxSize().statusBarsPadding()) {
-                    DialogWerkzeugLeiste(zustand)
+                Row(
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical)),
+                ) {
                     Box(Modifier.weight(1f).fillMaxHeight()) {
                         MathematikAtlasApp(zustand)
                     }
+                    DialogWerkzeugLeiste(zustand)
                 }
             }
         }
