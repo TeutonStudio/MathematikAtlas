@@ -83,7 +83,7 @@ class AngulusZahlenRechnerTest {
             komplexEingabe = ZAHLENRECHNER_KOMPLEX_TUPEL,
         )
         val eingang = knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }
-        assertEquals(MathematikAnschlussArten.PolarTupel.id, eingang.art)
+        assertEquals(MathematikAnschlussArten.Tupel.id, eingang.art)
 
         val polar = Tupel(
             listOf(
@@ -91,6 +91,7 @@ class AngulusZahlenRechnerTest {
                 Angulus(RationaleZahl.von(90), AngulusEinheit.GRAD),
             ),
         )
+        assertEquals(TupelKoordinatenArt.POLAR, polar.koordinatenArt())
         val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
