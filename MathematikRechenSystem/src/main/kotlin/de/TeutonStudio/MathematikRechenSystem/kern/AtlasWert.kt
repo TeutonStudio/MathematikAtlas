@@ -7,7 +7,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
  * eine LaTeX-Darstellung. Mathematik, Darstellung und spätere Engine-/Scriptwerte
  * hängen sich ausschließlich über ihre eigenen Capabilities darunter.
  */
-interface AtlasWert
+interface AtlasWert {}
 
 /**
  * Neutrale UI-Projektion für beliebige Atlaswerte.
