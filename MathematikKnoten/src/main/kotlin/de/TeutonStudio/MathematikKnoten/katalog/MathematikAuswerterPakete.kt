@@ -65,8 +65,8 @@ object StandardMathematikAuswerterPakete {
      * sortiert werden, weil mehrere Pakete bestehende Auswerter verfeinern.
      */
     val verfeinerungen: List<MathematikAuswerterPaket> = listOf(
-        MathematikAuswerterPaket("tupel-null-dimension") { registriereTupelNullDimension() },
         MathematikAuswerterPaket("konsolidierte-knoten") { registriereKonsolidierteKnoten() },
+        MathematikAuswerterPaket("tupel-null-dimension") { registriereTupelNullDimension() },
         MathematikAuswerterPaket("vektorrechner-erweiterungen") { registriereVektorRechnerErweiterungen() },
         MathematikAuswerterPaket("skalarprodukt-verfeinerung") { registriereSkalarproduktErweiterungen() },
         MathematikAuswerterPaket("strukturformel-rechner") { registriereStrukturFormelRechner() },
