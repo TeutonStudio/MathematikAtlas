@@ -120,6 +120,17 @@ for bestandteil in (
 if "zielInnen == wertevorratAußen" in methoden_text:
     fehler.append(f"{methoden_datei.relative_to(wurzel)}: Komposition verlangt weiterhin unnötige Mengengleichheit")
 
+typ_datei = kern / "MathematischeTypen.kt"
+typ_text = typ_datei.read_text(encoding="utf-8")
+if 'val AtlasWert = TypId("atlas.wert")' not in typ_text:
+    fehler.append(f"{typ_datei.relative_to(wurzel)}: neutraler Typobervertrag atlas.wert fehlt")
+for verboten in ("Methode to Objekt", "Grafik to Objekt", "SvgStil to Objekt"):
+    if verboten in typ_text:
+        fehler.append(f"{typ_datei.relative_to(wurzel)}: neutrale Typdomäne ist wieder mathematisch gekoppelt: '{verboten}'")
+for erforderlich in ("Objekt to AtlasWert", "Methode to AtlasWert", "Grafik to AtlasWert"):
+    if erforderlich not in typ_text:
+        fehler.append(f"{typ_datei.relative_to(wurzel)}: Typbeziehung '{erforderlich}' fehlt")
+
 mengen_datei = kern / "Mengen.kt"
 mengen_text = mengen_datei.read_text(encoding="utf-8")
 tupelraum_block = mengen_text.split("data class Tupelraum", 1)[1].split("data class Folgenraum", 1)[0]
@@ -147,6 +158,38 @@ laufzeit_datei = wurzel / "MathematikKartenAdapter/src/main/kotlin/de/TeutonStud
 laufzeit_text = laufzeit_datei.read_text(encoding="utf-8")
 if "val objekt: AtlasWert" not in laufzeit_text:
     fehler.append(f"{laufzeit_datei.relative_to(wurzel)}: allgemeiner Laufzeitkanal transportiert nicht AtlasWert")
+
+# Die generische UI-Synchronisierung darf ihre Handles nicht mehr aus Mathematikfeldern ableiten.
+sync_datei = wurzel / "app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/MethodenAufrufSynchronisierung.kt"
+if sync_datei.exists():
+    sync_text = sync_datei.read_text(encoding="utf-8")
+    for verboten in (
+        "methode.parameter",
+        "methode.vorschrift",
+        "methode.zielMenge",
+        "methode.werteVorräte",
+        "methode.effektiverWerteVorrat",
+    ):
+        if verboten in sync_text:
+            fehler.append(
+                f"{sync_datei.relative_to(wurzel)}: generische Handle-Synchronisierung liest mathematisches Feld '{verboten}'"
+            )
+    for erforderlich in (
+        "SignaturtragendeMethode",
+        "AnschlussVertrag(komponent.typ)",
+        "signatur.ergebnisTyp",
+        "mathematischeSignatur",
+    ):
+        if erforderlich not in sync_text:
+            fehler.append(f"{sync_datei.relative_to(wurzel)}: neutrale Handle-Ableitung '{erforderlich}' fehlt")
+
+anschluss_datei = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/MathematikAnschlussArten.kt"
+if anschluss_datei.exists():
+    anschluss_text = anschluss_datei.read_text(encoding="utf-8")
+    if 'id = AnschlussArtId("atlas.wert")' not in anschluss_text:
+        fehler.append(f"{anschluss_datei.relative_to(wurzel)}: AtlasWert-Anschlussart fehlt")
+    if "val Methode = AnschlussArt(" not in anschluss_text or "elternArt = AtlasWert.id" not in anschluss_text:
+        fehler.append(f"{anschluss_datei.relative_to(wurzel)}: Methodenanschluss ist nicht unter AtlasWert eingeordnet")
 
 # Mathematische Konstruktionen müssen die offene Methode-Grenze explizit verengen.
 graph_datei = kern / "MethodenGraph.kt"
