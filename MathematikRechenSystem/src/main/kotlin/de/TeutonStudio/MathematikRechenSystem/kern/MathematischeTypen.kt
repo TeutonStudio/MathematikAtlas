@@ -8,6 +8,9 @@ object MathematischeTypen {
     val Zahl = TypId("mathematik.zahl")
     val Aussage = TypId("mathematik.aussage")
     val Menge = TypId("mathematik.menge")
+    val Topologie = TypId("mathematik.topologie")
+    val TopologischerRaum = TypId("mathematik.raum.topologisch")
+    val MetrischerRaum = TypId("mathematik.raum.metrisch")
     val Mass = TypId("mathematik.mass")
     val Vektor = TypId("mathematik.vektor")
     val SpaltenVektor = TypId("mathematik.vektor.spalte")
@@ -56,6 +59,9 @@ object MathematischeTypen {
             Zahl to Objekt,
             Aussage to Objekt,
             Menge to Objekt,
+            Topologie to Objekt,
+            TopologischerRaum to Objekt,
+            MetrischerRaum to TopologischerRaum,
             Mass to Objekt,
             Vektor to Objekt,
             SpaltenVektor to Vektor,
