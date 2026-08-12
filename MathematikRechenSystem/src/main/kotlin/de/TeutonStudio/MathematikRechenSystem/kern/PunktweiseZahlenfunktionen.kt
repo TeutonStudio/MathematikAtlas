@@ -14,7 +14,7 @@ data class PunktweiseZahlenVorbereitung(
 )
 
 fun bereitePunktweiseZahlenfunktionVor(
-    operanden: Map<String, MathematischesObjekt>,
+    operanden: Map<String, AtlasWert>,
 ): PunktweiseZahlenVorbereitung {
     val methoden = operanden.values.filterIsInstance<Methode>()
     require(methoden.isNotEmpty()) { "Eine punktweise Hebung benötigt mindestens eine Zahlenfunktion." }
