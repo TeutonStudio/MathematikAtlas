@@ -17,6 +17,7 @@ enum class TopologieArt(val persistenzWert: String) {
     }
 }
 
+/** Historischer Kontextvertrag; bleibt ausschließlich für die Kartenmigration erhalten. */
 data class TopologischerKontext(
     val umgebungsraum: MengenAusdruck,
     val topologie: TopologieArt,
@@ -46,6 +47,20 @@ data class TopologischerRand(
     } else {
         "\\partial_{${kontext.umgebungsraum.zuLatex()}} ${menge.zuLatex()}"
     }
+}
+
+/**
+ * Symbolischer Rand im neuen gemeinsamen Strukturvertrag. Anders als der
+ * historische [TopologischerKontext] bewahrt dieses Objekt die tatsächliche
+ * Topologie und kann daher auch Teilraum-, Produkt- und metrisch induzierte
+ * Topologien ohne Informationsverlust weiterreichen.
+ */
+data class TopologischerRandImRaum(
+    val menge: MengenAusdruck,
+    val raum: TopologischerRaum,
+) : MengenAusdruck {
+    override fun zuLatex(): String =
+        "\\partial_{${raum.traeger.zuLatex()}} ${menge.zuLatex()}"
 }
 
 /** Relatives Komplement im explizit gewählten topologischen Umgebungsraum. */
@@ -101,10 +116,43 @@ fun topologischesInneres(
 }
 
 /**
- * Rand als gemeinsame Topologieoperation. Exakte Spezialfälle werden reduziert;
- * nicht entscheidbare Fälle bleiben strukturiert statt als Fehler zu enden.
- * Abschluss, Inneres und Komplement sind separat verfügbar, damit spätere Knoten
- * denselben mathematischen Kern wiederverwenden.
+ * Neuer kanonischer Randvertrag. Alle topologischen Verbraucher sollen diesen
+ * Einstieg verwenden; exakte Spezialfälle werden intern weiterhin wiederverwendet.
+ */
+fun topologischerRand(
+    menge: MengenAusdruck,
+    raum: TopologischerRaum,
+): MengenAusdruck {
+    val teilmenge = teilMengenStatus(menge, raum.traeger)
+    require(teilmenge != AussageStatus.WIDERLEGT) {
+        "Die Menge ${menge.zuLatex()} ist keine Teilmenge des Trägers ${raum.traeger.zuLatex()}."
+    }
+    if (menge == LeereMenge || menge == raum.traeger) return LeereMenge
+
+    return when (val topologie = raum.topologie) {
+        is DiskreteTopologie -> LeereMenge
+        is IndiskreteTopologie -> raum.traeger
+        is StandardTopologie -> {
+            if (topologie.kennung == StandardTopologieKennung.REELL && raum.traeger == ReelleZahlen) {
+                topologischerRand(
+                    menge,
+                    TopologischerKontext(ReelleZahlen, TopologieArt.KANONISCH_REELL),
+                )
+            } else {
+                TopologischerRandImRaum(menge, raum)
+            }
+        }
+        is TeilraumTopologie,
+        is ProduktTopologie,
+        is MetrischInduzierteTopologie,
+        is SymbolischeTopologie,
+        -> TopologischerRandImRaum(menge, raum)
+    }
+}
+
+/**
+ * Historischer Einstieg für bestehende gespeicherte Karten. Neue Knoten verwenden
+ * [topologischerRand] mit einem echten [TopologischerRaum].
  */
 fun topologischerRand(
     menge: MengenAusdruck,
