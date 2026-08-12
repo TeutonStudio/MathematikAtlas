@@ -12,12 +12,13 @@ data class MethodenGraphMenge(
 }
 
 /**
- * Kanonischer mathematischer Argumentraum. Die neutrale [MethodenSignatur] wird nur
- * aus Quellkompatibilität als Parameter akzeptiert und bestimmt keine Menge mehr.
+ * Kanonischer mathematischer Argumentraum. Der Parameter bleibt ausschließlich für
+ * alte Aufrufer erhalten und bestimmt den Raum nicht mehr.
  */
-@Deprecated("Mathematische Mengen kommen aus mathematischeMethodenSignatur(), nicht aus MethodenSignatur.")
-fun Methode.argumentRaum(@Suppress("UNUSED_PARAMETER") signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
-    mathematischeMethodenSignatur().definitionsRaum
+@Deprecated("Mathematische Mengen kommen aus mathematischeMethodenSignatur().")
+fun Methode.argumentRaum(
+    @Suppress("UNUSED_PARAMETER") signatur: LegacyMathematischeMethodenSignatur = methodenSignatur(),
+): MengenAusdruck = mathematischeMethodenSignatur().definitionsRaum
 
 /** Umgebender Produktraum Graph(f) ⊆ D_f × Z_f einer symbolischen mathematischen Methode. */
 fun Methode.graphRaum(): MengenAusdruck {
