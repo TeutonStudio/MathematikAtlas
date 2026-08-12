@@ -16,6 +16,18 @@ class StrukturVertraegeTest {
     }
 
     @Test
+    fun `0 Tupel besitzt tensorielle Sicht der Stufe null`() {
+        val tupel = Tupel(emptyList())
+        val ansicht = assertIs<StrukturPruefung.Gueltig<TensorielleAnsicht>>(tupel.tensorielleAnsicht()).wert
+
+        assertEquals(emptyList(), tupel.elemente)
+        assertEquals(emptyList(), ansicht.form)
+        assertEquals(emptyList(), ansicht.komponenten)
+        assertEquals(0, ansicht.stufe)
+        assertEquals(tupel, ansicht.quelle)
+    }
+
+    @Test
     fun `heterogenes Tupel nennt erste nichtnumerische Komponente`() {
         val ergebnis = Tupel(
             listOf<MathematischesObjekt>(RationaleZahl.Eins, WahrheitsKonstante(true)),
