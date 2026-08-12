@@ -181,7 +181,7 @@ class MethodenFundamentTest {
             DifferentialOrdnung.Konkret(1),
             DifferentialOperator.Total,
         ).methode
-        val latex = ableitung.zuLatex()
+        val latex = ableitung.alsMathematischeMethode("Methodendarstellung").zuLatex()
 
         assertEquals("f'", ableitung.name)
         assertTrue(latex.startsWith("f':\\begin{cases}"))
