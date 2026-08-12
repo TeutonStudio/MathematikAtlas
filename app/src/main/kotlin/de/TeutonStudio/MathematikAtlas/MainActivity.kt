@@ -33,10 +33,10 @@ class MainActivity : ComponentActivity() {
                 },
             ) {
                 Row(Modifier.fillMaxSize().statusBarsPadding()) {
-                    DialogWerkzeugLeiste(zustand)
                     Box(Modifier.weight(1f).fillMaxHeight()) {
                         MathematikAtlasApp(zustand)
                     }
+                    DialogWerkzeugLeiste(zustand)
                 }
             }
         }
