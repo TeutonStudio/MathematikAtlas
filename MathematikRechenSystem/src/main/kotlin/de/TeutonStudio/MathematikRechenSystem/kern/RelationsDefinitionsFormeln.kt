@@ -15,7 +15,7 @@ data class RelationsDefinitionsFormel(
 ) {
     init {
         require(latex.isNotBlank())
-        require(vorausgesetzteAxiomIds.none(String::isBlank))
+        require(vorausgesetzteAxiomIds.none { it.isBlank() })
     }
 }
 
