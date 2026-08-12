@@ -82,7 +82,7 @@ object SvgErweiterteOperatoren {
         mapOf("zielId" to "", "mitZentrum" to "false", "zentrumX" to "0", "zentrumY" to "0"),
     )
     val Matrix = SvgOperatorDefinition(
-        "matrix", "Transformationsmatrix", "\\begin{pmatrix}a&c&e\\\\b&d&f\end{pmatrix}", "Transformation",
+        "matrix", "Transformationsmatrix", "\\begin{pmatrix}a&c&e\\\\b&d&f\\end{pmatrix}", "Transformation",
         "Hängt eine affine SVG-Matrixtransformation an ausgewählte Elemente.",
         svgZahlen("a", "b", "c", "d", "e", "f"),
         mapOf("zielId" to ""),

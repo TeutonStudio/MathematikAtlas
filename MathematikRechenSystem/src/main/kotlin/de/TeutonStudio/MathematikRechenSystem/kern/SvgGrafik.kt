@@ -337,7 +337,8 @@ data class SvgGrafik(
 
     fun dupliziereElement(zielId: String, neueId: String): SvgGrafik {
         val belegt = elementIds()
-        val kopieId = eindeutigeId(neueId.ifBlank { "$zielId-kopie" }, belegt)
+        val gewünschteId = neueId.ifBlank { "$zielId-kopie" }
+        val kopieId = if (gewünschteId in belegt) eindeutigeId(gewünschteId, belegt) else gewünschteId
         return copy(elemente = elemente.dupliziereRekursiv(zielId, kopieId))
     }
 
