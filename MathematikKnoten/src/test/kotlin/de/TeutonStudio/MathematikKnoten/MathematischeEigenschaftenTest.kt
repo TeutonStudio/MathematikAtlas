@@ -88,7 +88,7 @@ class MathematischeEigenschaftenTest {
     }
 
     @Test
-    fun `Mengeneigenschaften werden relativ zum reellen Umgebungsraum entschieden`() {
+    fun `topologische Mengeneigenschaften ohne Raum bleiben bedingt`() {
         val intervall = ReellesIntervall(
             links = RationaleZahl.von(0),
             linksOffen = true,
@@ -108,8 +108,9 @@ class MathematischeEigenschaftenTest {
         )
 
         val aussage = assertIs<EigenschaftsAussage>(ergebnis.ausgaben.getValue("aussage").objekt)
-        assertEquals(AussageStatus.BEWIESEN, aussage.aussageStatus)
+        assertEquals(AussageStatus.BEDINGT, aussage.aussageStatus)
         assertEquals(UnterstuetzungsStatus.IMPLEMENTIERT, aussage.unterstuetzung)
+        assertEquals("topologischer-raum-fehlt", aussage.diagnose?.code)
     }
 
     @Test
