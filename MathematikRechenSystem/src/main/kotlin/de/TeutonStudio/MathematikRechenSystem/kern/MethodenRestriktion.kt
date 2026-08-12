@@ -152,11 +152,22 @@ data class MethodenBereichsanpassungsErgebnis(
         get() = ergänzungen.any { it.zielPrüfung.wahrheitswert == Wahrheitswert.Lüge }
 }
 
+/**
+ * Bereichsoperatoren verwenden die mathematische Gesamtmenge der Argumentwerte,
+ * nicht den neutralen Tupel-Typvertrag. Bei genau einem Argument bleibt daher die
+ * übliche skalare Definitionsmenge erhalten; erst mehrstellige Methoden verwenden
+ * einen Tupelraum. Ein bereits gesetzter effektiver Bereich hat immer Vorrang.
+ */
+private fun MathematischeMethode.bereichsDefinitionsmenge(): MengenAusdruck =
+    mathematischeSignatur.effektiverDefinitionsRaum ?: when (mathematischeSignatur.argumente.size) {
+        0 -> Tupelraum(emptyList())
+        1 -> mathematischeSignatur.argumente.single().definitionsMenge
+        else -> mathematischeSignatur.definitionsRaum
+    }
+
 /** Gesamtdefinitionsraum einer mathematischen Methode für Bereichsoperationen. */
 fun Methode.bereichsWerteVorrat(): MengenAusdruck =
-    alsMathematischeMethode("mathematische Bereichsoperationen")
-        .mathematischeSignatur
-        .definitionsRaum
+    alsMathematischeMethode("mathematische Bereichsoperationen").bereichsDefinitionsmenge()
 
 /**
  * Mathematisch reine Restriktion von [basis] auf [menge].
@@ -171,7 +182,7 @@ fun restriktiereMethode(
     kontext: RechenKontext = RechenKontext(),
 ): MethodenRestriktionsErgebnis {
     val mathematischeBasis = basis.alsMathematischeMethode("mathematische Restriktion")
-    val basisWerteVorrat = mathematischeBasis.mathematischeSignatur.definitionsRaum
+    val basisWerteVorrat = mathematischeBasis.bereichsDefinitionsmenge()
     val teilmengenPrüfung = prüfeTeilmenge(menge, basisWerteVorrat, kontext)
     val bedingungen = linkedSetOf<Aussage>()
     if (teilmengenPrüfung.wahrheitswert == null) {
@@ -207,7 +218,7 @@ fun passeMethodenBereichAn(
     val mathematischeErgänzungen = ergänzungen.mapIndexed { index, ergänzung ->
         ergänzung.alsMathematischeMethode("mathematische Bereichsanpassung als Ergänzung ${index + 1}")
     }
-    val basisWerteVorrat = mathematischeBasis.mathematischeSignatur.definitionsRaum
+    val basisWerteVorrat = mathematischeBasis.bereichsDefinitionsmenge()
     val zielRaum = mathematischeBasis.mathematischeSignatur.zielRaum
     val ergänzungsErgebnisse = mutableListOf<MethodenErgänzungsBereich>()
     val bedingungen = linkedSetOf<Aussage>()
@@ -217,7 +228,7 @@ fun passeMethodenBereichAn(
     mathematischeErgänzungen.forEachIndexed { index, ergänzung ->
         prüfeEingabeform(mathematischeBasis, ergänzung, index)
         val restVorher = mengenDifferenz(menge, abgedeckteGrundlage)
-        val ergänzungsWerteVorrat = ergänzung.mathematischeSignatur.definitionsRaum
+        val ergänzungsWerteVorrat = ergänzung.bereichsDefinitionsmenge()
         val effektiverBereich = schneide(listOf(restVorher, ergänzungsWerteVorrat))
         val zielPrüfung = prüfeErgänzungsBild(
             methode = ergänzung,
@@ -341,14 +352,14 @@ private fun priorisierteVorschrift(anpassung: MethodenBereichsanpassung): Mathem
     if (anpassung.ergänzungen.isEmpty()) return anpassung.basis.vorschrift
 
     val basis = anpassung.basis
-    val argument = when (basis.parameter.size) {
+    val argument: MathematischesObjekt = when (basis.parameter.size) {
         0 -> Tupel(emptyList())
-        1 -> Tupel(listOf(basis.parameter.single()))
+        1 -> basis.parameter.single() as MathematischesObjekt
         else -> Tupel(basis.parameter.map { it as MathematischesObjekt })
     }
     val zweige = buildList {
         add(
-            schneide(listOf(anpassung.werteVorrat, basis.mathematischeSignatur.definitionsRaum)) to
+            schneide(listOf(anpassung.werteVorrat, basis.bereichsDefinitionsmenge())) to
                 basis.vorschrift,
         )
         anpassung.ergänzungen.forEach { ergänzung ->
