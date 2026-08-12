@@ -1,10 +1,12 @@
 package de.TeutonStudio.MathematikKartenAdapter
 
 import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeArgumentKomponente
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
+import de.TeutonStudio.MathematikRechenSystem.kern.SignaturtragendeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
-import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
+import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
 import de.TeutonStudio.MathematikRechenSystem.kern.mathematischeMethodenSignatur
 
 const val METHODEN_WERTEVORRAT_ART = "mathematik.methodenWertevorrat"
@@ -71,10 +73,15 @@ internal object MethodenArgumentanzahlAuswerter : MathematikKnotenAuswerter {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
         val methode = methodenWert.objekt as? Methode
             ?: error("Die Methodensignatur ist noch unbekannt.")
+        val argumentAnzahl = when (methode) {
+            is MathematischeMethode -> methode.parameter.size
+            is SignaturtragendeMethode -> methode.signatur.argumente.size
+            else -> error("Die Methode '${methode.name}' stellt keine semantische Argumentstruktur bereit.")
+        }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "anzahl" to BedingterWert(
-                    objekt = RationaleZahl.von(methode.argumentAnzahl.toLong()),
+                    objekt = RationaleZahl.von(argumentAnzahl.toLong()),
                     variablenQuellen = methodenWert.variablenQuellen,
                 ),
             ),
@@ -141,12 +148,11 @@ internal object MethodenZielmengeSignaturAuswerter : MathematikKnotenAuswerter {
         val signatur = methode.mathematischeMethodenSignatur()
         val projektion = kontext.knoten.parameter[METHODEN_ZIELMENGE_ERGEBNISPROJEKTION]
             ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
-        val zielMenge = if (
-            projektion == METHODEN_ERGEBNISPROJEKTION_DIREKT && signatur.ergebnisse.size == 1
-        ) {
-            signatur.ergebnisse.single().zielMenge
-        } else {
-            signatur.zielRaum
+        val zielMenge = when {
+            signatur.ergebnisse.size != 1 -> signatur.zielRaum
+            projektion == METHODEN_ERGEBNISPROJEKTION_DIREKT -> signatur.ergebnisse.single().zielMenge
+            signatur.ergebnisse.single().zielMenge is Tupelraum -> signatur.ergebnisse.single().zielMenge
+            else -> Tupelraum(listOf(signatur.ergebnisse.single().zielMenge))
         }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
