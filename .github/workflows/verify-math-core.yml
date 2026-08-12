@@ -54,7 +54,20 @@ jobs:
         run: ./gradlew :TypSystem:test --stacktrace
 
       - name: MathematikRechenSystem testen
-        run: ./gradlew :MathematikRechenSystem:test --stacktrace
+        id: mathematik-rechensystem-test
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew :MathematikRechenSystem:test --stacktrace --console=plain 2>&1 | tee mathematik-rechensystem-test.log
+
+      - name: MathematikRechenSystem-Testlog sichern
+        if: always() && steps.mathematik-rechensystem-test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mathematik-rechensystem-testlog
+          path: mathematik-rechensystem-test.log
+          if-no-files-found: error
+          retention-days: 7
 
       - name: KnotenKartenVerwalter testen
         run: ./gradlew :KnotenKartenVerwalter:testDebugUnitTest --stacktrace
