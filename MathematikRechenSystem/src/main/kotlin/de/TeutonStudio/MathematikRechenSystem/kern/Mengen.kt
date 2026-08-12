@@ -276,6 +276,8 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
                 )
             } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
+        is Tupelraum -> entscheideTupelraumElement(element, menge, kontext)
+        is KartesischesProdukt -> entscheideTupelraumElement(element, Tupelraum(menge.mengen), kontext)
         LeereMenge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         RationaleZahlen, ReelleZahlen -> if (element is RationaleZahl) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         GanzeZahlen -> if (element is RationaleZahl) {
@@ -304,6 +306,28 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
     override fun zuLatex() = "${element.zuLatex()} \\in ${menge.zuLatex()}"
 }
 
+private fun entscheideTupelraumElement(
+    element: MathematischesObjekt,
+    raum: Tupelraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    val tupel = element as? Tupel
+        ?: return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+    if (tupel.elemente.size != raum.komponenten.size) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+    }
+    val ergebnisse = tupel.elemente.zip(raum.komponenten).map { (wert, menge) ->
+        ElementBeziehung(wert, menge).entscheide(kontext)
+    }
+    return when {
+        ergebnisse.any { it.wahrheitswert == Wahrheitswert.Lüge } ->
+            AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+        ergebnisse.all { it.wahrheitswert == Wahrheitswert.Wahr } ->
+            AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
+}
+
 data class TeilmengenBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = prüfeTeilmenge(links, rechts, kontext)
     override fun zuLatex() = "${links.zuLatex()} \\subseteq ${rechts.zuLatex()}"
@@ -320,6 +344,14 @@ fun prüfeTeilmenge(
 ): AussageErgebnis = when {
     teilMenge == LeereMenge || teilMenge == grundMenge ->
         AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+    teilMenge is Tupelraum && grundMenge is Tupelraum ->
+        prüfeTupelraumTeilmenge(teilMenge, grundMenge, kontext)
+    teilMenge is KartesischesProdukt && grundMenge is Tupelraum ->
+        prüfeTupelraumTeilmenge(Tupelraum(teilMenge.mengen), grundMenge, kontext)
+    teilMenge is Tupelraum && grundMenge is KartesischesProdukt ->
+        prüfeTupelraumTeilmenge(teilMenge, Tupelraum(grundMenge.mengen), kontext)
+    teilMenge is KartesischesProdukt && grundMenge is KartesischesProdukt ->
+        prüfeTupelraumTeilmenge(Tupelraum(teilMenge.mengen), Tupelraum(grundMenge.mengen), kontext)
     teilMenge is EndlicheMenge && grundMenge is EndlicheMenge -> {
         val wahr = grundMenge.elemente.containsAll(teilMenge.elemente)
         AussageErgebnis(
@@ -338,6 +370,26 @@ fun prüfeTeilmenge(
         }
     }
     else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+}
+
+private fun prüfeTupelraumTeilmenge(
+    teilMenge: Tupelraum,
+    grundMenge: Tupelraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    if (teilMenge.komponenten.size != grundMenge.komponenten.size) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+    }
+    val komponentenPrüfungen = teilMenge.komponenten.zip(grundMenge.komponenten).map { (teil, grund) ->
+        prüfeTeilmenge(teil, grund, kontext)
+    }
+    return when {
+        komponentenPrüfungen.any { it.wahrheitswert == Wahrheitswert.Lüge } ->
+            AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+        komponentenPrüfungen.all { it.wahrheitswert == Wahrheitswert.Wahr } ->
+            AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
 }
 
 data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
