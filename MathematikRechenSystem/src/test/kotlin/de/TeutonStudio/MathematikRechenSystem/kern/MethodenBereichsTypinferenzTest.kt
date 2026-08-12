@@ -24,9 +24,9 @@ class MethodenBereichsTypinferenzTest {
         assertIs<SignaturtragendeMethode>(anpassung)
         assertEquals(basis.typAusdruck, restriktion.typAusdruck)
         assertEquals(basis.typAusdruck, anpassung.typAusdruck)
-        assertEquals(ReelleZahlen, restriktion.methodenSignatur().zielMenge)
-        assertEquals(ReelleZahlen, anpassung.methodenSignatur().zielMenge)
-        assertEquals(ReelleZahlen, restriktion.methodenSignatur().werteVorrat)
-        assertEquals(ReelleZahlen, anpassung.methodenSignatur().werteVorrat)
+        assertEquals(ReelleZahlen, restriktion.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
+        assertEquals(ReelleZahlen, anpassung.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), restriktion.mathematischeMethodenSignatur().definitionsRaum)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), anpassung.mathematischeMethodenSignatur().definitionsRaum)
     }
 }
