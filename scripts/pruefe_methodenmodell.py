@@ -43,10 +43,18 @@ else:
         "interface Methode",
         "interface SignaturtragendeMethode",
         "interface MathematischAuswertbareMethode",
+        "interface BereichsanpassungsTragendeMethode",
     )
     for vertrag in erforderliche_vertraege:
         if vertrag not in vertrag_text:
             fehler.append(f"{vertrag_datei.relative_to(wurzel)}: erforderlicher Vertrag '{vertrag}' fehlt")
+
+    if "interface Methode" in vertrag_text and "interface SignaturtragendeMethode" in vertrag_text:
+        methode_obervertrag = vertrag_text.split("interface Methode", 1)[1].split("interface SignaturtragendeMethode", 1)[0]
+        if "bereichsanpassung" in methode_obervertrag:
+            fehler.append(
+                f"{vertrag_datei.relative_to(wurzel)}: Bereichsanpassung darf kein Sonderfall im allgemeinen Methode-Obervertrag sein"
+            )
 
 methoden_datei = kern / "Methoden.kt"
 methoden_text = methoden_datei.read_text(encoding="utf-8")
@@ -82,10 +90,52 @@ if restriktions_datei.exists():
         fehler.append(f"{restriktions_datei.relative_to(wurzel)}: Restriktion verengt die Basismethode nicht")
     if "val basis: MathematischeMethode" not in restriktions_text:
         fehler.append(f"{restriktions_datei.relative_to(wurzel)}: Restriktionsherkunft speichert keine mathematische Basis")
+    for bestandteil in (
+        "data class MethodenRestriktion",
+        "data class MethodenBereichsanpassung",
+        "fun passeMethodenBereichAn(",
+    ):
+        if bestandteil not in restriktions_text:
+            fehler.append(f"{restriktions_datei.relative_to(wurzel)}: getrennte Methodenbereich-Semantik '{bestandteil}' fehlt")
+    restriktions_signatur = re.search(
+        r"fun\s+restriktiereMethode\s*\((.*?)\)\s*:\s*MethodenRestriktionsErgebnis",
+        restriktions_text,
+        flags=re.DOTALL,
+    )
+    if restriktions_signatur is None:
+        fehler.append(f"{restriktions_datei.relative_to(wurzel)}: kanonische Restriktionsfunktion fehlt")
+    elif "ergänz" in restriktions_signatur.group(1).lower():
+        fehler.append(
+            f"{restriktions_datei.relative_to(wurzel)}: reine Restriktion darf keine Ergänzungsmethoden akzeptieren"
+        )
+    if "\\\\operatorname{Bereichsanpassung}" not in restriktions_text:
+        fehler.append(
+            f"{restriktions_datei.relative_to(wurzel)}: Bereichsanpassung benötigt eine von f|_M getrennte Darstellung"
+        )
+
+knoten_datei = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/RestriktionsKnoten.kt"
+if knoten_datei.exists():
+    knoten_text = knoten_datei.read_text(encoding="utf-8")
+    for bestandteil in (
+        "METHODEN_BEREICHS_OPERATOR_RESTRIKTION",
+        "METHODEN_BEREICHS_OPERATOR_ANPASSUNG",
+        "val Restriktion = KnotenVorlage(",
+        "val Bereichsanpassung = KnotenVorlage(",
+    ):
+        if bestandteil not in knoten_text:
+            fehler.append(f"{knoten_datei.relative_to(wurzel)}: getrennte Knotenvariante '{bestandteil}' fehlt")
+
+codec_datei = wurzel / "MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/migration/MathematikKartenCodec.kt"
+if codec_datei.exists():
+    codec_text = codec_datei.read_text(encoding="utf-8")
+    if codec_text.count(".migriereMethodenBereichsOperatoren()") < 2:
+        fehler.append(
+            f"{codec_datei.relative_to(wurzel)}: Methodenbereich-Migration muss vor Speichern und nach Dekodierung laufen"
+        )
 
 if fehler:
-    print("Das Methodenmodell verletzt den G0.1-Vertrag:")
+    print("Das Methodenmodell verletzt den G0.1/G0.2-Vertrag:")
     print("\n".join(f"- {eintrag}" for eintrag in fehler))
     sys.exit(1)
 
-print("G0.1-Methodenmodell erfolgreich geprüft.")
+print("G0.1/G0.2-Methodenmodell und Methodenbereich-Vertrag erfolgreich geprüft.")
