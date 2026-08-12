@@ -11,21 +11,15 @@ data class MethodenGraphMenge(
     override fun zuLatex(): String = "\\operatorname{Graph}\\left(${methode.name}\\right)"
 }
 
-/**
- * Kanonischer Argumentraum einer signaturtragenden Methode.
- *
- * Diese reine Signaturprojektion ist bewusst allgemeiner als der mathematische Graph:
- * G0.2 kann sie auf den allgemeinen Typkern heben, ohne Scriptmethoden zu mathematischen
- * Abbildungen umzudeuten.
- */
-fun Methode.argumentRaum(signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
-    signatur.werteVorrat
+/** Kanonischer mathematischer Argumentraum. Allgemeine Methoden besitzen keinen Mengenraum. */
+fun Methode.argumentRaum(): MengenAusdruck =
+    mathematischeMethodenSignatur().definitionsRaum
 
-/** Umgebender Produktraum Graph(f) ⊆ W×Z einer symbolischen mathematischen Methode. */
+/** Umgebender Produktraum Graph(f) ⊆ D_f × Z_f einer symbolischen mathematischen Methode. */
 fun Methode.graphRaum(): MengenAusdruck {
     val mathematisch = alsMathematischeMethode("einen mathematischen Funktionsgraphen")
-    val signatur = mathematisch.methodenSignatur()
-    return KartesischesProdukt(listOf(mathematisch.argumentRaum(signatur), signatur.zielMenge))
+    val signatur = mathematisch.mathematischeMethodenSignatur()
+    return Tupelraum(listOf(signatur.definitionsRaum, signatur.zielRaum))
 }
 
 /** Erzeugt die symbolische Graphmenge ohne den Methodenvertrag zu duplizieren. */
