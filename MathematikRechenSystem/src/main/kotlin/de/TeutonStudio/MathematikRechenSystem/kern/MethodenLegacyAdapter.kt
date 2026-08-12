@@ -23,6 +23,16 @@ typealias MethodenArgument = MathematischeArgumentKomponente
 val MathematischeArgumentKomponente.werteVorrat: MengenAusdruck
     get() = definitionsMenge
 
+/** Eindeutige Substitutionsüberladung für bereits mathematisch verengte Methoden. */
+@Deprecated("Verwende die symbolische MathematischeMethode direkt.")
+fun ersetze(
+    methode: MathematischeMethode,
+    bindungen: Map<String, MathematischesObjekt>,
+): MathematischeMethode = ersetze(
+    methode as MathematischesObjekt,
+    bindungen,
+) as MathematischeMethode
+
 /** Mathematische Substitution einer statisch nur als allgemeine Methode bekannten Methode. */
 @Deprecated("Verenge den Aufrufer auf MathematischeMethode bzw. SymbolischMathematischeMethode.")
 fun ersetze(
@@ -31,7 +41,7 @@ fun ersetze(
 ): Methode = ersetze(
     methode.alsMathematischeMethode("mathematische Substitution"),
     bindungen,
-) as MathematischeMethode
+)
 
 /** Mathematische Parameteranalyse an einer expliziten Capability-Grenze. */
 @Deprecated("Verenge den Aufrufer auf eine mathematische Methode.")
@@ -59,7 +69,7 @@ fun Iterable<AtlasWert>.enthalteneMethodenParameter(): Set<MethodenParameter> =
  * Bestandteil von [AtlasWert] oder [Methode].
  */
 fun Methode.zuLatex(): String = when (this) {
-    is LatexDarstellbar -> this.zuLatex()
+    is LatexDarstellbar -> (this as LatexDarstellbar).zuLatex()
     else -> name
 }
 
