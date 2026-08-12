@@ -15,7 +15,7 @@ internal object MethodenEigenschaftKonzeptDateiA53F6C21 : ExpliziteKonzeptDatei 
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passend = vorlagen.nachVarianten(varianten)
-        return gruppiertesVorlagenKonzept(
+        val basis = gruppiertesVorlagenKonzept(
             id = id,
             titel = "Methodeneigenschaft",
             beschreibung = "Gemeinsamer Eigenschaftsknoten für Regularität, Integrabilität sowie globale Konvexität und Konkavität.",
@@ -25,8 +25,9 @@ internal object MethodenEigenschaftKonzeptDateiA53F6C21 : ExpliziteKonzeptDatei 
                 "stetig", "differenzierbar", "C n", "D n", "Riemann-integrierbar",
                 "Lebesgue-integrierbar", "konvex", "konkav", "concave",
             ),
-        ).copy(
-            fachPfade = setOf(
+        )
+        return basis.copy(
+            fachPfade = basis.fachPfade + setOf(
                 FachKatalog.AnalysisEigenschaftenRegularität,
                 FachKatalog.AnalysisEigenschaftenIntegrabilität,
                 FachKatalog.AnalysisEigenschaftenFunktionsgeometrie,
