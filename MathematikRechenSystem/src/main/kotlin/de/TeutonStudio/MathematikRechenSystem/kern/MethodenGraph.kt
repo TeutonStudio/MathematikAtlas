@@ -12,7 +12,7 @@ data class MethodenGraphMenge(
 }
 
 /** Kanonischer mathematischer Argumentraum. Allgemeine Methoden besitzen keinen Mengenraum. */
-fun Methode.argumentRaum(): MengenAusdruck =
+fun Methode.argumentRaum(@Suppress("UNUSED_PARAMETER") kanonisch: Boolean = true): MengenAusdruck =
     mathematischeMethodenSignatur().definitionsRaum
 
 /** Expliziter Alias für Aufrufer, die die Mathematikgrenze im Namen sichtbar machen möchten. */
