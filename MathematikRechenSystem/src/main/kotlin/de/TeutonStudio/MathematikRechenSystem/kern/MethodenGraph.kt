@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 /**
  * Der Graph einer symbolischen mathematischen Methode als eigenständiger Mengenausdruck.
- * Engine- oder Scriptmethoden besitzen nicht allein aufgrund einer Signatur einen
+ * Engine- oder Scriptmethoden besitzen nicht allein aufgrund einer Typ-Signatur einen
  * mathematischen Graphen und werden deshalb an der Erzeugungsgrenze ausgeschlossen.
  */
 data class MethodenGraphMenge(
@@ -12,20 +12,22 @@ data class MethodenGraphMenge(
 }
 
 /**
- * Kanonischer Argumentraum einer signaturtragenden Methode.
- *
- * Diese reine Signaturprojektion ist bewusst allgemeiner als der mathematische Graph:
- * G0.2 kann sie auf den allgemeinen Typkern heben, ohne Scriptmethoden zu mathematischen
- * Abbildungen umzudeuten.
+ * Kanonischer mathematischer Argumentraum. Die neutrale [MethodenSignatur] wird nur
+ * aus Quellkompatibilität als Parameter akzeptiert und bestimmt keine Menge mehr.
  */
-fun Methode.argumentRaum(signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
-    signatur.werteVorrat
+@Deprecated("Mathematische Mengen kommen aus mathematischeMethodenSignatur(), nicht aus MethodenSignatur.")
+fun Methode.argumentRaum(@Suppress("UNUSED_PARAMETER") signatur: MethodenSignatur = methodenSignatur()): MengenAusdruck =
+    mathematischeMethodenSignatur().definitionsRaum
 
-/** Umgebender Produktraum Graph(f) ⊆ W×Z einer symbolischen mathematischen Methode. */
+/** Umgebender Produktraum Graph(f) ⊆ D_f × Z_f einer symbolischen mathematischen Methode. */
 fun Methode.graphRaum(): MengenAusdruck {
     val mathematisch = alsMathematischeMethode("einen mathematischen Funktionsgraphen")
-    val signatur = mathematisch.methodenSignatur()
-    return KartesischesProdukt(listOf(mathematisch.argumentRaum(signatur), signatur.zielMenge))
+    return kartesischesProdukt(
+        listOf(
+            mathematisch.mathematischeSignatur.definitionsRaum,
+            mathematisch.mathematischeSignatur.zielRaum,
+        ),
+    )
 }
 
 /** Erzeugt die symbolische Graphmenge ohne den Methodenvertrag zu duplizieren. */
