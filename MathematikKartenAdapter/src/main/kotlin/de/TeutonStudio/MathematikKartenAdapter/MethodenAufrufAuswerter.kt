@@ -10,64 +10,56 @@ const val METHODEN_ERGEBNISPROJEKTION_DIREKT = "direkt"
 const val METHODEN_ERGEBNISPROJEKTION_TUPEL = "tupel"
 
 /**
- * Allgemeiner Methodenaufruf mit rein graphischer Argument- und Ergebnisprojektion.
+ * Mathematischer Methodenaufruf mit rein graphischer Argument- und Ergebnisprojektion.
  *
- * Nur [MathematischAuswertbareMethode] darf an dieser Adaptergrenze als mathematische
- * Vorschrift ausgeführt werden. Ein anderer [Methode]-Untertyp bleibt ein gültiger
- * Methodenwert, wird hier aber lediglich symbolisch projiziert. Damit erbt eine
- * spätere ScriptMethod nicht versehentlich die Substitutionssemantik des AMRS.
+ * Der allgemeine [Methode]-Vertrag ist absichtlich nicht ausführbar. Dieser Adapter
+ * gehört zum MathematikKartenAdapter und akzeptiert deshalb ausschließlich die
+ * explizite [MathematischAuswertbareMethode]-Capability. Eine spätere Script- oder
+ * Engine-Auswertung bekommt ihre eigene Laufzeit-Capability statt eines künstlichen
+ * [MathematischesObjekt]-Aufrufs.
  */
 internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
-        val methodenObjekt = methodenWert.objekt
-        val methode = methodenObjekt as? Methode
+        val methode = methodenWert.objekt as? Methode
+            ?: error("Der Methodenanschluss enthält keinen Methodenwert.")
         val auswertbareMethode = methode as? MathematischAuswertbareMethode
-        val mathematischeMethode = methode?.let {
-            runCatching { it.alsMathematischeMethode("mathematischen Methodenaufruf") }.getOrNull()
-        }
+            ?: error(
+                "Die Methode '${methode.name}' besitzt keine mathematische Auswertungs-Capability. " +
+                    "Nichtmathematische Methoden benötigen ihre eigene Script-/Engine-Auswertung.",
+            )
+        val mathematischeMethode = methode.alsMathematischeMethode("mathematischen Methodenaufruf")
         val argumentAnschlüsse = kontext.knoten.anschlüsse
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
         val argumentProjektion = kontext.knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION]
             ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT
         val ergebnisProjektion = kontext.knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION]
-            ?: if (auswertbareMethode != null) {
-                METHODEN_ERGEBNISPROJEKTION_DIREKT
-            } else {
-                METHODEN_ERGEBNISPROJEKTION_TUPEL
-            }
+            ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
 
-        val argumentWerte = if (mathematischeMethode != null) {
-            when (argumentProjektion) {
-                METHODEN_ARGUMENTPROJEKTION_TUPEL -> tupelArgumente(mathematischeMethode, argumentAnschlüsse, kontext)
-                else -> separierteArgumente(mathematischeMethode, argumentAnschlüsse, kontext)
-            }
-        } else {
-            freieProjektionsArgumente(argumentAnschlüsse, kontext)
+        val argumentWerte = when (argumentProjektion) {
+            METHODEN_ARGUMENTPROJEKTION_TUPEL -> tupelArgumente(mathematischeMethode, argumentAnschlüsse, kontext)
+            else -> separierteArgumente(mathematischeMethode, argumentAnschlüsse, kontext)
         }
-
-        val argumente = argumentWerte.map(BedingterWert::objekt)
-        val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
-            ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
-        val (roherWert, roheZielMenge) = if (
-            mathematischeMethode != null && auswertbareMethode != null
-        ) {
-            val ausgabe = mathematischeMethode.einzigeAusgabe()
-            val bindungen = mathematischeMethode.parameter
-                .mapIndexed { index, parameter -> parameter.name to argumente[index] }
-                .toMap()
-            auswertbareMethode.wendeMathematischAn(bindungen) to mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
-        } else {
-            symbolischerProjektionsAnwendungsWert(methodenObjekt, argumente, ergebnisArt) to null
+        val argumente = argumentWerte.mapIndexed { index, wert ->
+            wert.objekt as? MathematischesObjekt
+                ?: error(
+                    "Das ${index + 1}. Argument der mathematischen Methode '${methode.name}' " +
+                        "ist kein mathematischer Atlaswert.",
+                )
         }
+        val ausgabe = mathematischeMethode.einzigeAusgabe()
+        val bindungen = mathematischeMethode.parameter
+            .mapIndexed { index, parameter -> parameter.name to argumente[index] }
+            .toMap()
+        val roherWert = auswertbareMethode.wendeMathematischAn(bindungen)
+        val roheZielMenge = mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
         val (wert, zielMenge) = projiziereMethodenErgebnis(
             wert = roherWert,
             zielMenge = roheZielMenge,
             projektion = ergebnisProjektion,
         )
-        val methodenReferenz = methode?.name ?: methodenWert.anzeigeLatex()
-        val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
+        val anwendungsLatex = "${methode.name}(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
         val projiziertesLatex = if (
             ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && roherWert !is Tupel
         ) {
@@ -87,20 +79,6 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
                 ),
             ),
         )
-    }
-
-    private fun freieProjektionsArgumente(
-        argumentAnschlüsse: List<de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten>,
-        kontext: KnotenAuswertungsKontext,
-    ): List<BedingterWert> {
-        val letztesVerbundenesArgument = argumentAnschlüsse.indexOfLast { kontext.eingänge[it.name] != null }
-        if (letztesVerbundenesArgument < 0) return emptyList()
-        val verwendeteAnschlüsse = argumentAnschlüsse.take(letztesVerbundenesArgument + 1)
-        val fehlendes = verwendeteAnschlüsse.firstOrNull { kontext.eingänge[it.name] == null }
-        require(fehlendes == null) {
-            "Vor dem verbundenen Argument '${verwendeteAnschlüsse.last().name}' fehlt '${fehlendes?.name}'."
-        }
-        return verwendeteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
     }
 
     private fun separierteArgumente(
@@ -169,19 +147,4 @@ internal fun projiziereMethodenErgebnis(
         else -> Tupelraum(listOf(zielMenge))
     }
     return projizierterWert to projizierteZielMenge
-}
-
-private fun symbolischerProjektionsAnwendungsWert(
-    methode: MathematischesObjekt,
-    argumente: List<MathematischesObjekt>,
-    ergebnisArt: String,
-): MathematischesObjekt {
-    val latex = "${methode.zuLatex()}(${argumente.joinToString(",") { it.zuLatex() }})"
-    val kennung = latex.replace("\\", "_").replace(Regex("[^\\p{L}\\p{N}_]+"), "_")
-    return when (ergebnisArt) {
-        "mathematik.zahl" -> Variable(kennung)
-        "mathematik.aussage" -> AussagenParameter(kennung, latex)
-        "mathematik.menge" -> MengenParameter(kennung, latex)
-        else -> TypisiertesElement(kennung, ergebnisArt, latex)
-    }
 }
