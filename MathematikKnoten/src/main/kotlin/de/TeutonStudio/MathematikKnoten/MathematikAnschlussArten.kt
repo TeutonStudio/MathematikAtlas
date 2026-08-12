@@ -26,6 +26,24 @@ object MathematikAnschlussArten {
         elternArt = Objekt.id,
         beschreibung = "Eine Menge mathematischer Objekte.",
     )
+    val Topologie = AnschlussArt(
+        id = AnschlussArtId("mathematik.topologie"),
+        name = "Topologie",
+        elternArt = Objekt.id,
+        beschreibung = "Eine Topologie τ auf einer expliziten Trägermenge.",
+    )
+    val TopologischerRaum = AnschlussArt(
+        id = AnschlussArtId("mathematik.raum.topologisch"),
+        name = "Topologischer Raum",
+        elternArt = Objekt.id,
+        beschreibung = "Eine Trägermenge zusammen mit einer expliziten Topologie (X,τ).",
+    )
+    val MetrischerRaum = AnschlussArt(
+        id = AnschlussArtId("mathematik.raum.metrisch"),
+        name = "Metrischer Raum",
+        elternArt = TopologischerRaum.id,
+        beschreibung = "Ein metrischer Raum (X,d), der über τ_d zugleich eine topologische Struktur trägt.",
+    )
     val Mass = AnschlussArt(
         id = AnschlussArtId("mathematik.mass"),
         name = "Maß",
@@ -159,6 +177,9 @@ object MathematikAnschlussArten {
         Zahl,
         Aussage,
         Menge,
+        Topologie,
+        TopologischerRaum,
+        MetrischerRaum,
         Mass,
         Vektor,
         SpaltenVektor,
