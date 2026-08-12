@@ -46,15 +46,18 @@ val Methode.bereichsanpassung: MethodenBereichsanpassung?
     get() = (this as? BereichsanpassungsTragendeMethode)?.bereichsanpassung
 
 /**
- * Capability für Methoden, die der Mathematikkern durch Bindung mathematischer
- * Argumente auswerten darf. Eine mathematisch auswertbare Methode ist zugleich ein
- * mathematisches Objekt; eine bloß [SignaturtragendeMethode] ausdrücklich nicht.
+ * Capability für Methoden, die der Mathematikkern auswerten darf.
+ *
+ * Die kanonische Auswertung ist immer `Tupel -> Tupel`. Die namenbasierte Variante
+ * bleibt als gezielter Legacy-Adapter bestehen, solange ältere Mathematikoperatoren
+ * noch skalare Einzelausgaben erwarten.
  */
 interface MathematischAuswertbareMethode :
     SignaturtragendeMethode,
     MathematischeSignaturtragendeMethode,
     BereichsanpassungsTragendeMethode,
     MathematischesObjekt {
+    fun wendeKanonischMathematischAn(argumente: Tupel): Tupel
     fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt
 }
 
@@ -82,7 +85,7 @@ fun Methode.alsMathematischeMethode(operation: String = "diese Operation"): Math
 val Methode.parameter: List<MethodenParameter>
     get() = alsMathematischeMethode("mathematische Parameter").parameter
 
-@Deprecated("Mathematische Legacy-Projektion; verwende die konkrete mathematische Capability.")
+@Deprecated("Mathematische Legacy-Projektion; verwende die kanonische Vorschrift der mathematischen Methode.")
 val Methode.vorschrift: MathematischesObjekt
     get() = alsMathematischeMethode("eine symbolische Vorschrift").vorschrift
 
@@ -128,13 +131,22 @@ fun Methode.grundMengeFürMengenAusgabe(): MengenAusdruck =
 fun Methode.binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode =
     alsMathematischeMethode("symbolische Parameterbindung").binde(bindungen)
 
+/** Historische skalare Projektion für bestehende Mathematikoperatoren. */
 fun Methode.wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt =
     alsMathematischeMethode("mathematische Auswertung").wendeAn(argumente)
 
+/** Historische namenbasierte Projektion für bestehende Mathematikoperatoren. */
 fun Methode.wendeAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
     val auswertbar = this as? MathematischAuswertbareMethode
         ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
     return auswertbar.wendeMathematischAn(argumente)
+}
+
+/** Kanonische mathematische Anwendung, unabhängig von der Zahl der Komponenten. */
+fun Methode.wendeKanonischAn(argumente: Tupel): Tupel {
+    val auswertbar = this as? MathematischAuswertbareMethode
+        ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
+    return auswertbar.wendeKanonischMathematischAn(argumente)
 }
 
 fun Methode.einzigeAusgabe(): Pair<String, MathematischesObjekt> =
@@ -143,7 +155,7 @@ fun Methode.einzigeAusgabe(): Pair<String, MathematischesObjekt> =
 fun Methode.prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> =
     alsMathematischeMethode("mathematische Iteration").prüfeAlsIterationsMethode(erwartetMengenwert)
 
-/** Quellkompatibler kanonischer Konstruktor für bestehende Mathematikaufrufer. */
+/** Quellkompatibler Konstruktor für bestehende Mathematikaufrufer. */
 @Suppress("FunctionName")
 fun Methode(
     name: String,
