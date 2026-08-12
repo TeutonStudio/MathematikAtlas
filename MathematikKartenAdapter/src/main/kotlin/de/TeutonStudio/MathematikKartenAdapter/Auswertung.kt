@@ -16,24 +16,31 @@ data class ArgumentIdentität(
 
 enum class ArgumentQuellenArt { Wert, Aussage }
 
+/**
+ * Generischer Laufzeitwertkanal einer Karte.
+ *
+ * [objekt] ist absichtlich nur [AtlasWert]. Mathematische Nebeninformationen bleiben
+ * optionale Metadaten für mathematische Pfade; Grafik-, Script- oder spätere
+ * Enginewerte müssen deshalb nicht zu [MathematischesObjekt] werden.
+ */
 data class BedingterWert(
-    val objekt: MathematischesObjekt,
+    val objekt: AtlasWert,
     val annahmen: Set<Aussage> = emptySet(),
-    /** Metadaten einer öffentlichen Methodenausgabe, kein zweiter Rückgabewert. */
+    /** Metadaten einer öffentlichen mathematischen Methodenausgabe, kein zweiter Rückgabewert. */
     val zielMenge: MengenAusdruck? = null,
-    /** Definitionsmenge einer Variable; relevant beim Aufbau einer Methode. */
+    /** Definitionsmenge einer mathematischen Variable; für neutrale Werte nicht gesetzt. */
     val werteVorrat: MengenAusdruck? = null,
     /** Laufzeitmetadaten für Variablen, deren Wertebereich nachweisbar reell ist. */
     val reelleVariablen: Map<String, MengenAusdruck> = emptyMap(),
     /**
-     * Nichtpersistierte Herkunft aller freien Methodenargumente.
+     * Nichtpersistierte Herkunft aller freien mathematischen Methodenargumente.
      *
      * Der historische Name bleibt aus Quellkompatibilitätsgründen bestehen. Die
-     * Einträge unterscheiden nun gewöhnliche Werte- und Aussageargumente und
-     * besitzen eine stabile semantische Identität.
+     * Einträge unterscheiden gewöhnliche Werte- und Aussageargumente und besitzen
+     * eine stabile semantische Identität.
      */
     val variablenQuellen: List<VariablenQuelle> = emptyList(),
-    /** Pfadgebundene Darstellung; verändert das mathematische Objekt ausdrücklich nicht. */
+    /** Pfadgebundene Darstellung; verändert den Atlaswert ausdrücklich nicht. */
     val latexDarstellung: String? = null,
     /** Gemeinsame Anschlussart der Elemente einer mengenwertigen Ausgabe. */
     val elementArt: AnschlussArtId? = null,
@@ -41,11 +48,11 @@ data class BedingterWert(
     val symbolischeMethode: Boolean = false,
 )
 
-/** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die kanonische Struktur-Darstellung. */
+/** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die neutrale Atlasprojektion. */
 fun BedingterWert.anzeigeLatex(): String = when {
     latexDarstellung == DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG && objekt is DefinierteMenge ->
         objekt.zuDoppelpunktLatex()
-    else -> latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuStrukturLatex()
+    else -> latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuAtlasAnzeigeText()
 }
 
 data class VariablenQuelle(
