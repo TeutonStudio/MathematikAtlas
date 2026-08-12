@@ -9,12 +9,15 @@ package de.TeutonStudio.MathematikRechenSystem.kern
  */
 interface AtlasWert
 
-interface MathematischesObjekt : AtlasWert {
+/** Optionale Darstellungscapability. Sie ist ausdrücklich kein Bestandteil von [AtlasWert]. */
+interface LatexDarstellbar {
     fun zuLatex(): String
 }
 
+interface MathematischesObjekt : AtlasWert, LatexDarstellbar
+
 /** Nichtmathematischer, über den allgemeinen Atlas-Wertkanal transportierbarer Darstellungswert. */
-interface DarstellungsWert : AtlasWert
+interface DarstellungsWert : AtlasWert, LatexDarstellbar
 
 /** Gemeinsamer Obervertrag für strukturierte Grafikformate wie SVG und später TikZ. */
 interface Grafik : DarstellungsWert
