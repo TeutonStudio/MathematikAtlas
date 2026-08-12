@@ -95,7 +95,7 @@ class TupelKnotenTest {
     }
 
     @Test
-    fun `Dimension muss konkret ganzzahlig und positiv sein`() {
+    fun `Dimension muss konkret ganzzahlig und nichtnegativ sein`() {
         val knoten = konfiguriereTupel(MathematikKnotenVorlagen.Tupel.erzeuge(GraphPunkt.Zero), TUPEL_METHODE)
         val methode = Methode(
             name = "f",
@@ -104,18 +104,25 @@ class TupelKnotenTest {
             zielMenge = BenannteMenge("Z", "\\mathbb{Z}"),
         )
 
-        listOf(RationaleZahl.Null, RationaleZahl.von(3, 2)).forEach { dimension ->
-            val fehler = assertFailsWith<IllegalArgumentException> {
-                auswerter.auswerten(
-                    KnotenAuswertungsKontext(
-                        knoten,
-                        mapOf("dimension" to BedingterWert(dimension), "methode" to BedingterWert(methode)),
-                        RechenKontext(),
-                    ),
-                )
-            }
-            assertContains(fehler.message.orEmpty(), "konkrete positive ganze Zahl")
+        val nullErgebnis = GesamterMathematikAuswerter.erzeugeRegister().finde("mathematik.tupel")!!.auswerten(
+            KnotenAuswertungsKontext(
+                knoten,
+                mapOf("dimension" to BedingterWert(RationaleZahl.Null), "methode" to BedingterWert(methode)),
+                RechenKontext(),
+            ),
+        )
+        assertEquals(emptyList(), assertIs<Tupel>(nullErgebnis.ausgaben.getValue("tupel").objekt).elemente)
+
+        val fehler = assertFailsWith<IllegalArgumentException> {
+            auswerter.auswerten(
+                KnotenAuswertungsKontext(
+                    knoten,
+                    mapOf("dimension" to BedingterWert(RationaleZahl.von(3, 2)), "methode" to BedingterWert(methode)),
+                    RechenKontext(),
+                ),
+            )
         }
+        assertContains(fehler.message.orEmpty(), "konkrete positive ganze Zahl")
     }
 
     @Test
@@ -157,6 +164,6 @@ class TupelKnotenTest {
         )
         zustand.rückgängig()
         assertEquals(1, zustand.karte.verbindungen.size)
-        assertEquals(a.id, zustand.karte.knoten.first { it.id == tupel.id }.anschlüsse.first { it.name == "a" }.id)
+        assertEquals(a.id, zustand.karte.knoten.first { it.name == "a" }.id)
     }
 }
