@@ -7,8 +7,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.TypSystem.AnschlussVertrag
+import de.TeutonStudio.TypSystem.TypAusdruck
+import de.TeutonStudio.TypSystem.TypId
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AnschlussLegendeTest {
@@ -59,6 +63,41 @@ class AnschlussLegendeTest {
         )
         assertTrue(einträge[1].gestreift)
         assertTrue(einträge.flatMap { it.arten }.all { it.beschreibung.isNotBlank() })
+    }
+
+    @Test
+    fun `semantischer Methodenanschluss erscheint unbedingt als Methode in der Legende`() {
+        val argument = TypAusdruck.Parameterisiert(
+            TypId("typ.tupel"),
+            listOf(TypAusdruck.Atom(TypId("mathematik.zahl"))),
+        )
+        val methodenTyp = TypAusdruck.Parameterisiert(
+            TypId("mathematik.methode"),
+            listOf(argument, TypAusdruck.Atom(TypId("mathematik.menge"))),
+        )
+        val methode = AnschlussDaten(
+            name = "f",
+            kante = AnschlussKante.Rechts,
+            art = MathematikAnschlussArten.Objekt.id,
+            vertrag = AnschlussVertrag(typ = methodenTyp),
+        )
+        val karte = KartenDaten(
+            name = "Methodenlegende",
+            knoten = listOf(
+                KnotenDaten(
+                    art = "test.methode",
+                    name = "Methode",
+                    anschlüsse = listOf(methode),
+                ),
+            ),
+        )
+
+        val eintrag = anschlussLegendenEinträge(karte, register)
+            .firstOrNull { it.arten.singleOrNull()?.id == MathematikAnschlussArten.Methode.id }
+
+        assertNotNull(eintrag)
+        assertEquals("Methode", eintrag.titel)
+        assertEquals(methodenTyp, eintrag.symbolAnschluss.vertrag.typ)
     }
 
     @Test
