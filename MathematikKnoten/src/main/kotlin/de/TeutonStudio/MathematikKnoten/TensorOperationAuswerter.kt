@@ -48,23 +48,6 @@ private fun werteTensorOperationAus(
         is AchsenErgebnis.Wert -> achsenErgebnis.spezifikation
         is AchsenErgebnis.Fehler -> return fehlerErgebnis(kontext, achsenErgebnis.nachricht)
     }
-    val stufe = tensorStufe(operanden.values)
-    if (stufe != null && !definition.pruefeStufe(stufe)) {
-        return fehlerErgebnis(
-            kontext,
-            "${definition.titel} ist für Tensorstufe $stufe nicht freigeschaltet.",
-        )
-    }
-    val validierung = definition.validiere(
-        TensorOperationKontext(
-            stufe = stufe,
-            achsen = achsen.sichtbareIndizes(),
-            operandAnzahl = operanden.size,
-        ),
-    )
-    if (!validierung.gueltig) {
-        return fehlerErgebnis(kontext, validierung.fehler.joinToString(" "))
-    }
 
     val eingaben = operanden.map { (rolle, objekt) ->
         TensorRechnerEingabe(rolle.wert, objekt)
@@ -88,7 +71,7 @@ private fun werteTensorOperationAus(
         },
     )
 
-    if (definition.unterstuetzungsStatus != TensorOperationUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT) {
+    if (definition.unterstuetzungsStatus != TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT) {
         return symbolischesTensorErgebnis(kontext, definition, operanden, achsen)
     }
 
