@@ -98,9 +98,9 @@ fun KartenEditorZustand.setzeTensorRechnerOperator(knotenId: KnotenId, operator:
  */
 internal fun MathematikAuswerterRegister.registriereLineareStrukturErweiterungen() {
     registriere(SKALARPRODUKT_ART) { kontext ->
-        val links = kontext.eingänge["links"]?.objekt
+        val links = kontext.eingänge["links"]?.mathematischesObjekt("Linker Skalarprodukt-Eingang")
             ?: return@registriere kontext.fehler("Linker Eingang fehlt.")
-        val rechts = kontext.eingänge["rechts"]?.objekt
+        val rechts = kontext.eingänge["rechts"]?.mathematischesObjekt("Rechter Skalarprodukt-Eingang")
             ?: return@registriere kontext.fehler("Rechter Eingang fehlt.")
         val linearitaet = runCatching {
             SkalarproduktLinearitaet.valueOf(
@@ -176,13 +176,17 @@ private fun tensorEingaben(
 ): List<TensorRechnerEingabe> = when (operator) {
     TensorRechnerOperator.SKALARMULTIPLIKATION -> listOfNotNull(
         (kontext.eingänge["skalar"] ?: kontext.eingänge["links"])
-            ?.objekt?.let { TensorRechnerEingabe("skalar", it) },
+            ?.let { TensorRechnerEingabe("skalar", it.mathematischesObjekt("Skalar des Tensorrechners")) },
         (kontext.eingänge["tensor"] ?: kontext.eingänge["rechts"])
-            ?.objekt?.let { TensorRechnerEingabe("tensor", it) },
+            ?.let { TensorRechnerEingabe("tensor", it.mathematischesObjekt("Tensor des Tensorrechners")) },
     )
     TensorRechnerOperator.TENSORPRODUKT -> listOfNotNull(
-        kontext.eingänge["links"]?.objekt?.let { TensorRechnerEingabe("links", it) },
-        kontext.eingänge["rechts"]?.objekt?.let { TensorRechnerEingabe("rechts", it) },
+        kontext.eingänge["links"]?.let {
+            TensorRechnerEingabe("links", it.mathematischesObjekt("Linker Tensorrechner-Eingang"))
+        },
+        kontext.eingänge["rechts"]?.let {
+            TensorRechnerEingabe("rechts", it.mathematischesObjekt("Rechter Tensorrechner-Eingang"))
+        },
     )
     TensorRechnerOperator.ACHSENPERMUTATION,
     TensorRechnerOperator.TRANSPONIEREN,
@@ -192,11 +196,15 @@ private fun tensorEingaben(
     TensorRechnerOperator.NORM,
     -> listOfNotNull(
         (kontext.eingänge["tensor"] ?: kontext.eingänge["links"])
-            ?.objekt?.let { TensorRechnerEingabe("tensor", it) },
+            ?.let { TensorRechnerEingabe("tensor", it.mathematischesObjekt("Tensorrechner-Eingang")) },
     )
     else -> listOfNotNull(
-        kontext.eingänge["links"]?.objekt?.let { TensorRechnerEingabe("links", it) },
-        kontext.eingänge["rechts"]?.objekt?.let { TensorRechnerEingabe("rechts", it) },
+        kontext.eingänge["links"]?.let {
+            TensorRechnerEingabe("links", it.mathematischesObjekt("Linker Tensorrechner-Eingang"))
+        },
+        kontext.eingänge["rechts"]?.let {
+            TensorRechnerEingabe("rechts", it.mathematischesObjekt("Rechter Tensorrechner-Eingang"))
+        },
     )
 }
 
@@ -242,7 +250,7 @@ private fun KnotenAuswertungsKontext.komponentenAnsicht(
     anschlussName: String,
     bezeichnung: String,
 ): NumerischeKomponentenAnsicht {
-    val objekt = eingänge[anschlussName]?.objekt ?: error("$bezeichnung fehlt.")
+    val objekt = eingänge[anschlussName]?.mathematischesObjekt(bezeichnung) ?: error("$bezeichnung fehlt.")
     return when (val ansicht = objekt.numerischeKomponentenAnsicht()) {
         is StrukturPruefung.Gueltig -> ansicht.wert
         is StrukturPruefung.Bedingt -> error(ansicht.bedingungen.joinToString())
