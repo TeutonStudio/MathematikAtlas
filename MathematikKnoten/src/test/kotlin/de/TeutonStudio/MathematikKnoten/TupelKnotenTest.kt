@@ -164,6 +164,6 @@ class TupelKnotenTest {
         )
         zustand.rückgängig()
         assertEquals(1, zustand.karte.verbindungen.size)
-        assertEquals(a.id, zustand.karte.knoten.first { it.name == "a" }.id)
+        assertEquals(a.id, zustand.karte.knoten.first { it.id == tupel.id }.anschlüsse.first { it.name == "a" }.id)
     }
 }
