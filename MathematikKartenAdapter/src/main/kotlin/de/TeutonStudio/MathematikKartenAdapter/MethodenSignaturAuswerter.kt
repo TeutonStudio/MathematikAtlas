@@ -120,7 +120,7 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
             }
             else -> mapOf(
                 "argumente" to BedingterWert(
-                    objekt = Tupel(werte.map(BedingterWert::objekt)),
+                    objekt = Tupel(argumente.map { it.parameter }),
                     variablenQuellen = werte.flatMap(BedingterWert::variablenQuellen).distinct(),
                 ),
             )
