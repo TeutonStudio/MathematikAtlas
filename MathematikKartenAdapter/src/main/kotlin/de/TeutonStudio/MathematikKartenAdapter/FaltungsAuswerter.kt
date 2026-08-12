@@ -24,6 +24,7 @@ internal object FaltungskonstruktorAuswerter : MathematikKnotenAuswerter {
         val indexMenge = kontext.eingänge["indexmenge"]?.objekt as? MengenAusdruck
             ?: error("Die Indexmenge fehlt.")
         val neutral = kontext.eingänge["neutral"] ?: error("Das neutrale Element fehlt.")
+        val neutralesObjekt = neutral.mathematischesObjekt("Das neutrale Element der Faltung")
         val indexName = kontext.knoten.parameter[FALTUNG_INDEXNAME]?.trim().orEmpty().ifBlank { "i" }
         val akkumulatorName = kontext.knoten.parameter[FALTUNG_AKKUMULATORNAME]?.trim().orEmpty().ifBlank { "a" }
         val akkumulatorArt = kontext.knoten.anschlüsse.firstOrNull { it.name == "akkumulator" }
@@ -64,7 +65,7 @@ internal object FaltungskonstruktorAuswerter : MathematikKnotenAuswerter {
                             bindungsId = paarId,
                             bindungsName = FALTUNG_ROLLE_AKKUMULATOR,
                             gebundeneArt = akkumulatorArt,
-                            bindungsWert = neutral.objekt,
+                            bindungsWert = neutralesObjekt,
                         ),
                     ),
                 ),
@@ -81,6 +82,7 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
         val operator = kontext.knoten.parameter[FALTUNG_OPERATOR]?.trim().orEmpty()
         val nächster = kontext.eingänge["nächsterAkkumulator"]
             ?: error("Der nächste Akkumulatorwert fehlt.")
+        val nächstesObjekt = nächster.mathematischesObjekt("Der Faltungskörper")
         val gebundeneQuellen = nächster.variablenQuellen
             .filter { it.bindungsId == paarId }
             .distinctBy { Triple(it.bindungsName, it.name, it.knotenId) }
@@ -97,15 +99,15 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
             akkumulatorQuelle.name,
             akkumulatorQuelle.gebundeneArt ?: AnschlussArtId("mathematik.objekt"),
         )
-        val ergebnis = if (indexMenge is EndlicheMenge) {
+        val ergebnis: MathematischesObjekt = if (indexMenge is EndlicheMenge) {
             indexMenge.elemente.sortedBy { it.zuLatex() }.fold(neutral) { aktueller, indexWert ->
                 ersetze(
-                    nächster.objekt,
+                    nächstesObjekt,
                     mapOf(index.name to indexWert, akkumulator.name to aktueller),
                 )
             }
         } else {
-            val iterationsTerm = entferneAkkumulator(nächster.objekt, akkumulator, operator)
+            val iterationsTerm = entferneAkkumulator(nächstesObjekt, akkumulator, operator)
             val zielMenge = nächster.zielMenge ?: akkumulatorQuelle.werteVorrat
             val methodenName = when (operator) {
                 "konjunktion", "disjunktion", "adjunktion" -> "P"
@@ -146,29 +148,44 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
     }
 }
 
+/**
+ * Historischer mathematischer Anwendungs-Knoten. Konkrete Methoden benötigen die
+ * mathematische Auswertungs-Capability; neutrale Script-/Engine-Methoden werden hier
+ * nicht in mathematische Platzhalter konvertiert.
+ */
 internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
         val argumentAnschlüsse = kontext.knoten.anschlüsse
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
-        val methode = methodenWert.objekt
-        val argumentWerte = if (methode is Methode) {
-            val benötigteAnschlüsse = argumentAnschlüsse.take(methode.parameter.size)
-            require(benötigteAnschlüsse.size == methode.parameter.size) {
-                "Die Methode '${methode.name}' benötigt ${methode.parameter.size} Argumentanschlüsse, vorhanden sind ${argumentAnschlüsse.size}."
+        val methodenObjekt = methodenWert.objekt
+        val konkreteMethode = methodenObjekt as? Methode
+        val mathematischeMethode = konkreteMethode?.let {
+            require(it is MathematischAuswertbareMethode) {
+                "Die Methode '${it.name}' besitzt keine mathematische Auswertungs-Capability."
+            }
+            it.alsMathematischeMethode("historische mathematische Methodenanwendung")
+        }
+
+        val argumentWerte = if (mathematischeMethode != null) {
+            val benötigteAnschlüsse = argumentAnschlüsse.take(mathematischeMethode.parameter.size)
+            require(benötigteAnschlüsse.size == mathematischeMethode.parameter.size) {
+                "Die Methode '${mathematischeMethode.name}' benötigt ${mathematischeMethode.parameter.size} Argumentanschlüsse, vorhanden sind ${argumentAnschlüsse.size}."
             }
             val fehlende = benötigteAnschlüsse.filter { kontext.eingänge[it.name] == null }
             require(fehlende.isEmpty()) {
-                "Der Methode '${methode.name}' fehlen die Argumente ${fehlende.joinToString { "'${it.name}'" }}."
+                "Der Methode '${mathematischeMethode.name}' fehlen die Argumente ${fehlende.joinToString { "'${it.name}'" }}."
             }
-            val überzählige = argumentAnschlüsse.drop(methode.parameter.size)
+            val überzählige = argumentAnschlüsse.drop(mathematischeMethode.parameter.size)
                 .filter { kontext.eingänge[it.name] != null }
             require(überzählige.isEmpty()) {
-                "Die Methode '${methode.name}' benötigt ${methode.parameter.size} Argumente; überzählig verbunden sind ${überzählige.joinToString { "'${it.name}'" }}."
+                "Die Methode '${mathematischeMethode.name}' benötigt ${mathematischeMethode.parameter.size} Argumente; überzählig verbunden sind ${überzählige.joinToString { "'${it.name}'" }}."
             }
             benötigteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
         } else {
+            val symbol = methodenObjekt as? MathematischesObjekt
+                ?: error("Nichtmathematische Methoden benötigen eine eigene Script-/Engine-Auswertung.")
             val letztesVerbundenesArgument = argumentAnschlüsse.indexOfLast { kontext.eingänge[it.name] != null }
             if (letztesVerbundenesArgument < 0) emptyList() else {
                 val verwendeteAnschlüsse = argumentAnschlüsse.take(letztesVerbundenesArgument + 1)
@@ -179,17 +196,21 @@ internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
                 verwendeteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
             }
         }
-        val argumente = argumentWerte.map(BedingterWert::objekt)
+        val argumente = argumentWerte.mapIndexed { index, wert ->
+            wert.mathematischesObjekt("Das ${index + 1}. Argument der Methodenanwendung")
+        }
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
-        val (wert, zielMenge) = if (methode is Methode) {
-            val ausgabe = methode.einzigeAusgabe()
-            val bindungen = methode.parameter.mapIndexed { index, parameter -> parameter.name to argumente[index] }.toMap()
-            methode.wendeAn(bindungen) to methode.zielMengeFür(ausgabe.first, bindungen)
+        val (wert, zielMenge) = if (mathematischeMethode != null) {
+            val ausgabe = mathematischeMethode.einzigeAusgabe()
+            val bindungen = mathematischeMethode.parameter
+                .mapIndexed { index, parameter -> parameter.name to argumente[index] }
+                .toMap()
+            mathematischeMethode.wendeAn(bindungen) to mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
         } else {
-            symbolischerAnwendungsWert(methode, argumente, ergebnisArt) to null
+            symbolischerAnwendungsWert(methodenObjekt as MathematischesObjekt, argumente, ergebnisArt) to null
         }
-        val methodenReferenz = if (methode is Methode) methode.name else methodenWert.anzeigeLatex()
+        val methodenReferenz = konkreteMethode?.name ?: methodenWert.anzeigeLatex()
         val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
@@ -210,7 +231,14 @@ internal object MethodenZielmengeAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methode = kontext.eingänge["methode"]?.objekt as? Methode
             ?: error("Eine konkrete Methode fehlt.")
-        val zielMenge = methode.einzigeZielMenge
+        val mathematisch = methode as? MathematischeSignaturtragendeMethode
+            ?: error("Die Methode '${methode.name}' besitzt keine mathematische Zielraum-Capability.")
+        val signatur = mathematisch.mathematischeSignatur
+        val zielMenge: MengenAusdruck = if (signatur.ergebnisse.size == 1) {
+            signatur.ergebnisse.single().zielMenge
+        } else {
+            signatur.zielRaum
+        }
         return KnotenAuswertungsErgebnis(
             mapOf(
                 "menge" to BedingterWert(
