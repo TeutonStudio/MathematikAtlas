@@ -30,6 +30,28 @@ class TopologischeStrukturKnotenTest {
     }
 
     @Test
+    fun `leerer Produktfaktor bleibt auch neben unendlicher Menge endlich`() {
+        val produkt = KartesischesProdukt(
+            listOf(
+                EndlicheMenge(emptySet()),
+                ReelleZahlen,
+            ),
+        )
+        val vertrag = kardinalitaetsVertrag(produkt)
+
+        assertEquals(EndlichkeitsStatus.ENDLICH, vertrag.endlichkeit)
+        assertEquals(AbzaehlbarkeitsStatus.ABZAEHLBAR, vertrag.abzaehlbarkeit)
+    }
+
+    @Test
+    fun `Folgenraum über leerer Elementmenge enthält nur leere Folge`() {
+        val vertrag = kardinalitaetsVertrag(Folgenraum(EndlicheMenge(emptySet())))
+
+        assertEquals(EndlichkeitsStatus.ENDLICH, vertrag.endlichkeit)
+        assertEquals(AbzaehlbarkeitsStatus.ABZAEHLBAR, vertrag.abzaehlbarkeit)
+    }
+
+    @Test
     fun `nackte Menge erhält nur intrinsische automatische Adjektive`() {
         val ids = automatischeAdjektive(ReelleZahlen).map { it.eigenschaftId }
 
@@ -71,6 +93,14 @@ class TopologischeStrukturKnotenTest {
     }
 
     @Test
+    fun `Restklassenring wird nicht als Teilmenge der reellen Zahlen geraten`() {
+        assertEquals(
+            AussageStatus.UNENTSCHEIDBAR,
+            teilMengenStatus(ModuloZahlenraum(5), ReelleZahlen),
+        )
+    }
+
+    @Test
     fun `Offenheit ohne Raum ist bedingt statt implizit reell`() {
         val intervall = ReellesIntervall(
             links = RationaleZahl.von(0),
@@ -80,7 +110,10 @@ class TopologischeStrukturKnotenTest {
         )
         val knoten = MathematischeEigenschaftKnotenVorlagen.MengenEigenschaft
             .erzeuge(GraphPunkt.Zero)
-            .copy(parameter = MathematischeEigenschaftKnotenVorlagen.MengenEigenschaft.standardParameter + (EIGENSCHAFT_PARAMETER to "offen"))
+            .copy(
+                parameter = MathematischeEigenschaftKnotenVorlagen.MengenEigenschaft.standardParameter +
+                    (EIGENSCHAFT_PARAMETER to "offen"),
+            )
         val ergebnis = register.finde(knoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
@@ -147,7 +180,22 @@ class TopologischeStrukturKnotenTest {
     }
 
     @Test
-    fun `Stetigkeit verlangt kompatible Quell- und Zielräume`() {
+    fun `nichtreeller Metrikzielraum wird abgelehnt`() {
+        val x = Variable("x")
+        val y = Variable("y")
+        val d = Methode(
+            name = "d",
+            parameter = listOf(x, y),
+            vorschrift = RationaleZahl.von(0),
+            zielMenge = KomplexeZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen, y.name to ReelleZahlen),
+        )
+
+        assertIs<StrukturPruefung.Ungueltig>(pruefeMetrik(ReelleZahlen, d))
+    }
+
+    @Test
+    fun `Stetigkeit verlangt kompatible effektive Quell- und Zielräume`() {
         val x = Variable("x")
         val methode = Methode(
             name = "f",
@@ -156,9 +204,11 @@ class TopologischeStrukturKnotenTest {
             zielMenge = ReelleZahlen,
             werteVorräte = mapOf(x.name to ReelleZahlen),
         )
-        val quellTraeger = methode.methodenSignatur().werteVorrat
-        val quellRaum = TopologischerRaum(quellTraeger, DiskreteTopologie(quellTraeger))
-        val zielRaum = TopologischerRaum(ReelleZahlen, StandardTopologie(ReelleZahlen, StandardTopologieKennung.REELL))
+        val quellRaum = TopologischerRaum(ReelleZahlen, DiskreteTopologie(ReelleZahlen))
+        val zielRaum = TopologischerRaum(
+            ReelleZahlen,
+            StandardTopologie(ReelleZahlen, StandardTopologieKennung.REELL),
+        )
         val knoten = konfiguriereMethodenEigenschaftKnoten(
             MathematischeEigenschaftKnotenVorlagen.MethodenEigenschaft.erzeuge(GraphPunkt.Zero),
             "stetig",
