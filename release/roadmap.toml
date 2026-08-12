@@ -1,8 +1,8 @@
 schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
-current_series = "2.32.x"
-current_version = "2.32.2"
+current_series = "2.33.x"
+current_version = "2.33.0"
 first_guarded_version = "2.3.13"
 
 releases = [
@@ -99,4 +99,5 @@ releases = [
   { version = "2.32.0", title = "Nativer LaTeX-Renderer und Methodenargument-Reflexion", roadmap = "v2.32.x Methoden, LaTeX und Definitionskarten", status = "released", previous_release = "2.31.0", branch = "agent/v2.32.0-latex-methoden-korrekturen", kind = "feature", version_axis = "y", new_node_types = ["mathematik.methodenArgumente"], reason = "Führt mit mathematik.methodenArgumente einen neuen separat erzeugbaren Reflexionsknoten ein, behandelt unbekannte Methodensignaturen ohne erfundene Stelligkeit und ersetzt die visuellen LaTeX-Sonderparser für Brüche, Matrizen, cases und große Operatoren durch einen nativen Compose-Multiplatform-Renderer." },
   { version = "2.32.1", title = "Kanonischer Knotenkatalog und Architekturrefactor", roadmap = "v2.32.x Architektur und Plattformkonsolidierung", status = "released", previous_release = "2.32.0", branch = "release/v2.32.1-architektur-refactor", kind = "refactor", version_axis = "x", reason = "Zentralisiert den sichtbaren Mathematikknoten-Katalog für Android und Desktop, gliedert Auswerterregistrierungen in explizite Phasen, sortiert globale Knotenadapter fachlich ein und dokumentiert die verbleibende Desktop-Shadowmodul-Schuld ohne neuen registrierten Knotentyp." },
   { version = "2.32.2", title = "Methodenfundament, methodenfähige Rechner und Axiomprädikate", roadmap = "v2.32.x Methoden, Rechner und Axiome", status = "released", previous_release = "2.32.1", branch = "release/v2.32.2-integration", kind = "feature", version_axis = "x", reason = "Integriert präzisierte Mengenrelationsbezeichnungen, ein erweiterbares Methodenfundament, methoden- und prädikatfähige Rechner sowie parametrisierte Axiome in bestehende Knotentypen und führt keinen neuen registrierten und separat erzeugbaren Knotentyp ein." },
+  { version = "2.33.0", title = "SVG-Grafikknoten und Operatorendialog", roadmap = "v2.33.x SVG-Grafiken und Grafikverarbeitung", status = "released", previous_release = "2.32.2", branch = "release/v2.33.0-svg-grafikknoten", kind = "feature", version_axis = "y", new_node_types = ["grafik.svg.knoten", "grafik.svg.stil"], reason = "Führt einen separat erzeugbaren SVG-Grafikknoten mit strukturiertem SVG-AST und Operatorendialog sowie einen wiederverwendbaren SVG-Stil-Knoten ein; SVG-Grundformen, Pfade, Text, Gruppierung und Kombination werden typisiert ausgewertet." },
 ]
