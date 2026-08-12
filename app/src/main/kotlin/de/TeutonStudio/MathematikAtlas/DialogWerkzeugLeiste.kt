@@ -63,7 +63,9 @@ internal fun DialogWerkzeugLeiste(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
     ) {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().windowInsetsPadding(
+            WindowInsets.systemBars.only(WindowInsetsSides.Vertical)
+        )) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(vertical = 6.dp).padding(end = 1.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
