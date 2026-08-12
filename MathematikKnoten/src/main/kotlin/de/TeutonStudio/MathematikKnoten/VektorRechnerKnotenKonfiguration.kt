@@ -239,7 +239,9 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
             else -> emptyList()
         }
         val quellen = vektorNamen.mapNotNull { name ->
-            kontext.eingänge[name]?.objekt?.let(::vektorQuelleErweitert)
+            kontext.eingänge[name]
+                ?.mathematischesObjekt("Vektoroperand '$name'")
+                ?.let(::vektorQuelleErweitert)
         }
         val skalare = listOfNotNull(kontext.eingänge["skalar"]?.objekt as? ZahlAusdruck)
         val objekte = when (operator) {
@@ -247,7 +249,7 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                 .filterKeys { it.startsWith("element.") }
                 .toList()
                 .sortedBy { (name, _) -> name.substringAfterLast('.').toIntOrNull() ?: Int.MAX_VALUE }
-                .map { it.second.objekt }
+                .map { (name, wert) -> wert.mathematischesObjekt("Vektorelement '$name'") }
             else -> emptyList()
         }
         val integrationsMenge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
