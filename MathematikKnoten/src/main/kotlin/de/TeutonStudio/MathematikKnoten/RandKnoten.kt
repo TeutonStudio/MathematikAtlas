@@ -8,12 +8,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
-import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
-import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
-import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
-import de.TeutonStudio.MathematikRechenSystem.kern.TopologieArt
-import de.TeutonStudio.MathematikRechenSystem.kern.TopologischerKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.topologischerRand
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 const val RAND_KNOTEN_ART = "mathematik.rand"
 
@@ -22,8 +17,8 @@ object RandKnotenVorlagen {
         art = RAND_KNOTEN_ART,
         name = "Rand",
         kategorie = "Mengenlehre: Topologie",
-        beschreibung = "Topologischer Rand ∂_X A einer Menge A in einem gewählten Umgebungsraum X.",
-        standardGröße = GraphGröße(230f, 112f),
+        beschreibung = "Topologischer Rand ∂_X A einer Menge A im explizit verbundenen topologischen Raum X.",
+        standardGröße = GraphGröße(255f, 125f),
         anschlüsse = listOf(
             AnschlussDaten(
                 name = "menge",
@@ -32,16 +27,17 @@ object RandKnotenVorlagen {
                 art = MathematikAnschlussArten.Menge.id,
             ),
             AnschlussDaten(
+                name = "raum",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.TopologischerRaum.id,
+            ),
+            AnschlussDaten(
                 name = "rand",
                 richtung = AnschlussRichtung.Ausgang,
                 kante = AnschlussKante.Rechts,
                 art = MathematikAnschlussArten.Menge.id,
             ),
-        ),
-        standardParameter = mapOf(
-            "topologie" to "kanonisch",
-            "umgebungsraum" to "R",
-            "relativ" to "false",
         ),
     )
 
@@ -52,18 +48,28 @@ internal fun MathematikAuswerterRegister.registriereRandKnoten() {
     registriere(RAND_KNOTEN_ART) { kontext ->
         val menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
             ?: error("Für den Rand fehlt die Menge.")
-        val parameter = kontext.knoten.parameter
-        val umgebungsraum = parseRandUmgebungsraum(parameter["umgebungsraum"])
-        val topologie = TopologieArt.ausPersistenz(parameter["topologie"])
-        val relativ = parameter["relativ"].toBoolean()
-        val rand = topologischerRand(
-            menge,
-            TopologischerKontext(
-                umgebungsraum = umgebungsraum,
-                topologie = topologie,
-                relativ = relativ,
-            ),
-        )
+        val raum = when (val struktur = kontext.eingänge["raum"]?.objekt) {
+            is TopologischerRaum -> struktur
+            is MetrischerRaum -> struktur.alsTopologischerRaum
+            null -> migriereHistorischenRandRaum(kontext.knoten.parameter)
+                ?: return@registriere KnotenAuswertungsErgebnis(
+                    ausgaben = emptyMap(),
+                    fehler = "Für den Rand fehlt der topologische Raum.",
+                    eingänge = kontext.eingänge,
+                )
+            else -> return@registriere KnotenAuswertungsErgebnis(
+                ausgaben = emptyMap(),
+                fehler = "Der Raumanschluss enthält keinen topologischen oder metrischen Raum.",
+                eingänge = kontext.eingänge,
+            )
+        }
+        val rand = runCatching { topologischerRand(menge, raum) }.getOrElse { fehler ->
+            return@registriere KnotenAuswertungsErgebnis(
+                ausgaben = emptyMap(),
+                fehler = fehler.message ?: "Der Rand konnte in diesem topologischen Raum nicht gebildet werden.",
+                eingänge = kontext.eingänge,
+            )
+        }
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "rand" to BedingterWert(
@@ -72,11 +78,35 @@ internal fun MathematikAuswerterRegister.registriereRandKnoten() {
                     latexDarstellung = rand.zuLatex(),
                 ),
             ),
+            eingänge = kontext.eingänge,
+            warnungen = if (kontext.eingänge["raum"] == null) {
+                listOf("Historische Randparameter wurden als strukturierter topologischer Raum interpretiert; neue Karten speichern den Raum über den Strukturanschluss.")
+            } else emptyList(),
         )
     }
 }
 
-private fun parseRandUmgebungsraum(wert: String?): MengenAusdruck = when (wert?.trim()?.lowercase()) {
-    null, "", "r", "reell", "\\mathbb r", "\\mathbb{r}" -> ReelleZahlen
+/**
+ * Einziger Kompatibilitätspfad für Karten aus der Zeit vor #386. Fehlen die alten
+ * Parameter vollständig, wird ausdrücklich kein ℝ-Raum mehr erfunden.
+ */
+private fun migriereHistorischenRandRaum(parameter: Map<String, String>): TopologischerRaum? {
+    val hatAltenKontext = "topologie" in parameter || "umgebungsraum" in parameter
+    if (!hatAltenKontext) return null
+    val traeger = parseHistorischenRandUmgebungsraum(parameter["umgebungsraum"]) ?: return null
+    val topologie = when (parameter["topologie"]?.trim()?.lowercase()) {
+        null, "", "kanonisch", "automatisch", "kanonisch:r", "r", "reell" ->
+            StandardTopologieRegister.fuer(traeger) ?: return null
+        "diskret" -> DiskreteTopologie(traeger)
+        "indiskret", "trivial" -> IndiskreteTopologie(traeger)
+        "symbolisch" -> SymbolischeTopologie(traeger)
+        else -> SymbolischeTopologie(traeger, parameter["topologie"]!!.trim())
+    }
+    return TopologischerRaum(traeger, topologie)
+}
+
+private fun parseHistorischenRandUmgebungsraum(wert: String?): MengenAusdruck? = when (wert?.trim()?.lowercase()) {
+    null, "" -> null
+    "r", "reell", "\\mathbb r", "\\mathbb{r}" -> ReelleZahlen
     else -> BenannteMenge(wert.trim(), wert.trim())
 }
