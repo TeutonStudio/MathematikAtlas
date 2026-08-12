@@ -31,7 +31,7 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
             tupelEingang(vorhandene["methode"], "methode", MathematikAnschlussArten.Methode.id, 1),
         )
         else -> {
-            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2
+            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(0) ?: 2
             List(anzahl) { index ->
                 val name = when (index) {
                     0 -> "a"
@@ -59,9 +59,9 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
     val parameter = when (art) {
         TUPEL_METHODE -> knoten.parameter - MINDESTEINGÄNGE_PARAMETER
         else -> knoten.parameter + mapOf(
-            "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(1) ?: 2).toString(),
+            "festeEingänge" to (knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(0) ?: 2).toString(),
             "operatorAnzeige" to (knoten.parameter["operatorAnzeige"] ?: "wert"),
-            MINDESTEINGÄNGE_PARAMETER to "1",
+            MINDESTEINGÄNGE_PARAMETER to "0",
         )
     } + ("erzeugungsArt" to art)
     return knoten.copy(anschlüsse = eingänge + ausgang, parameter = parameter)
@@ -96,12 +96,12 @@ fun KartenEditorZustand.setzeTupelKonfiguration(knotenId: KnotenId, erzeugungsAr
     führeAus(KartenAktion.KnotenKonfigurationErsetzen(knotenId, konfiguriert.parameter, konfiguriert.anschlüsse))
 }
 
-/** Setzt ausschließlich für den Elementmodus die feste Tupellänge; Einertupel sind gültig. */
+/** Setzt ausschließlich für den Elementmodus die feste Tupellänge; auch das leere 0-Tupel ist gültig. */
 fun KartenEditorZustand.setzeTupelEingangAnzahl(knotenId: KnotenId, anzahl: Int) {
     val knoten = karte.knoten.firstOrNull { it.id == knotenId && it.art == TUPEL_ART } ?: return
     val vorbereitet = knoten.copy(
         parameter = knoten.parameter + mapOf(
-            "festeEingänge" to anzahl.coerceAtLeast(1).toString(),
+            "festeEingänge" to anzahl.coerceAtLeast(0).toString(),
             "erzeugungsArt" to TUPEL_EINZEL_EINGABEN,
         ),
     )
