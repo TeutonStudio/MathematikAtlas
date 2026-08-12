@@ -40,12 +40,12 @@ object RelationsDefinitionsFormeln {
 
     private val nachId: Map<String, RelationsDefinitionsFormel> = mapOf(
         "relation.gleichheit" to formel(
-            latex = "a=b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
+            "a=b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
             "axiom.zf.paarmenge",
             hinweis = "Menge(M) ist die Typbedingung, dass M eine Menge ist. Die Rückrichtung benutzt die durch das Paarmengenaxiom verfügbare Einzelmenge {a}.",
         ),
         "relation.ungleichheit" to formel(
-            latex = "a\\neq b\\Longleftrightarrow\\exists M\\left(\\operatorname{Menge}(M)\\land\\neg\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
+            "a\\neq b\\Longleftrightarrow\\exists M\\left(\\operatorname{Menge}(M)\\land\\neg\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
             "axiom.zf.paarmenge",
             hinweis = "Die Ungleichheit ist die Negation der Gleichheit; äquivalent existiert eine Menge, die genau eines der beiden Objekte enthält.",
         ),
