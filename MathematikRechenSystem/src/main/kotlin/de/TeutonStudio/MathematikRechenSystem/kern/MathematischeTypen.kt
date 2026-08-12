@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import de.TeutonStudio.TypSystem.*
 
-/** Kanonische IDs und Konstruktoren des mathematischen G0.2-Typkerns. */
+/** Kanonische IDs und Konstruktoren des gemeinsamen neutralen Typkerns. */
 object MathematischeTypen {
     val Objekt = TypId("mathematik.objekt")
     val Zahl = TypId("mathematik.zahl")
@@ -19,9 +19,14 @@ object MathematischeTypen {
     val Tensor = TypId("mathematik.tensor")
     val Tupel = TypId("typ.tupel")
     val UnendlichesTupel = TypId("typ.tupel.unendlich")
+
+    /**
+     * Historisch stabile Typ-ID des Methodenanschlusses. Der String bleibt aus
+     * Persistenzkompatibilität bestehen; seine Semantik ist seit G0.5 domänenneutral.
+     */
     val Methode = TypId("mathematik.methode")
 
-    /** Nichtmathematische Darstellungswerte benutzen denselben neutralen G0.2-Typkern. */
+    /** Nichtmathematische Darstellungswerte benutzen denselben neutralen Typkern. */
     val Grafik = TypId("grafik")
     val SvgGrafik = TypId("grafik.svg")
     val SvgStil = TypId("grafik.svg.stil")
@@ -35,9 +40,8 @@ object MathematischeTypen {
     val Quaternion = TypId("mathematik.zahl.quaternion")
 
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
-        // Tupel sind variadisch und komponentenweise kovariant.
+        // Tupel sind variadisch und komponentenweise kovariant, einschließlich Tupel<>.
         TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
-        // Unendliche Tupel sind homogene, nicht materialisierte Indexstrukturen.
         TypKonstruktorDefinition(UnendlichesTupel, listOf(TypVarianz.Kovariant)),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
@@ -135,16 +139,14 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     else -> TypAusdruck.Unbekannt
 }
 
-fun MethodenSignatur.typAusdruck(): TypAusdruck {
-    val argumentTyp = TypAusdruck.Parameterisiert(
-        MathematischeTypen.Tupel,
-        argumente.map { it.werteVorrat.elementTypAusdruck() },
-    )
-    return TypAusdruck.Parameterisiert(
-        MathematischeTypen.Methode,
-        listOf(argumentTyp, zielMenge.elementTypAusdruck()),
-    )
-}
+/**
+ * Jede Methode ist typseitig kanonisch `Tupel<...> -> Tupel<...>`.
+ * Einertupel und leere Tupel kollabieren nicht.
+ */
+fun MethodenSignatur.typAusdruck(): TypAusdruck = TypAusdruck.Parameterisiert(
+    MathematischeTypen.Methode,
+    listOf(argumentTupelTyp, ergebnisTupelTyp),
+)
 
 /** Semantischer Typ einer Methode, unabhängig von ihrer Ausführungs-Capability. */
 fun Methode.methodenTypAusdruck(): TypAusdruck =
