@@ -114,13 +114,44 @@ data class MathematischeMethodenSignatur(
         )
 
     private fun prüfePositionen(komponenten: List<Pair<String, Int>>, rolle: String) {
-        require(komponenten.map(Pair<String, Int>::first).distinct().size == komponenten.size) {
+        require(komponenten.map { it.first }.distinct().size == komponenten.size) {
             "$rolle-Komponenten benötigen eindeutige stabile IDs."
         }
-        require(komponenten.map(Pair<String, Int>::second).sorted() == komponenten.indices.toList()) {
+        require(komponenten.map { it.second }.sorted() == komponenten.indices.toList()) {
             "$rolle-Komponenten benötigen lückenlose Positionen 0..n-1."
         }
     }
+}
+
+/**
+ * Historische mathematische Argumentprojektion. Sie existiert nur, damit älterer
+ * Mathematikcode während der Migration nicht wieder Mengen in [MethodenSignatur]
+ * erzwingt.
+ */
+@Deprecated("Verwende MathematischeArgumentKomponente bzw. MethodenKomponente.")
+data class MethodenArgument(
+    val parameter: MethodenParameter,
+    val werteVorrat: MengenAusdruck,
+)
+
+/**
+ * Zentraler Legacy-Adapter der alten mengenbasierten Methodensignatur.
+ *
+ * Dieser Typ ist ausdrücklich NICHT der allgemeine Methodenvertrag. Neue Aufrufer
+ * verwenden [MethodenSignatur] beziehungsweise [MathematischeMethodenSignatur].
+ */
+@Deprecated("Verwende neutraleMethodenSignatur() oder mathematischeMethodenSignatur().")
+data class LegacyMathematischeMethodenSignatur(
+    val argumente: List<MethodenArgument>,
+    val zielMenge: MengenAusdruck,
+    val effektiverWerteVorrat: MengenAusdruck? = null,
+) {
+    val werteVorrat: MengenAusdruck
+        get() = effektiverWerteVorrat ?: when (argumente.size) {
+            0 -> Tupelraum(emptyList())
+            1 -> argumente.single().werteVorrat
+            else -> Tupelraum(argumente.map(MethodenArgument::werteVorrat))
+        }
 }
 
 /** Fachliche, ausschließlich abgeleitete Nutzerbegriffe unterhalb von Methode. */
@@ -135,10 +166,37 @@ val Methode.argumentAnzahl: Int
     get() = (this as? SignaturtragendeMethode)?.signatur?.argumente?.size
         ?: error("Die Methode '$name' stellt keine semantische Signatur bereit.")
 
-/** Neutrale Signaturgrenze für generischen Methoden-/Graphcode. */
-fun Methode.methodenSignatur(): MethodenSignatur =
+/** Neutrale Signaturgrenze für neuen generischen Methoden-/Graphcode. */
+fun Methode.neutraleMethodenSignatur(): MethodenSignatur =
     (this as? SignaturtragendeMethode)?.signatur
         ?: error("Die Methode '$name' stellt keine semantische Signatur bereit.")
+
+/**
+ * Quellkompatible mathematische Legacy-Projektion.
+ *
+ * Die alte Funktionsbezeichnung bleibt vorübergehend erhalten, weil zahlreiche
+ * ausschließlich mathematische Prüfer sie verwenden. Generischer Code darf sie nicht
+ * benutzen; der Architekturwächter behandelt diese Funktion als Migrationsgrenze.
+ */
+@Deprecated("Mathematische Legacy-Projektion; verwende neutraleMethodenSignatur() oder mathematischeMethodenSignatur().")
+fun Methode.methodenSignatur(): LegacyMathematischeMethodenSignatur {
+    val mathematisch = mathematischeMethodenSignatur()
+    val legacyZiel = when (mathematisch.ergebnisse.size) {
+        0 -> Tupelraum(emptyList())
+        1 -> mathematisch.ergebnisse.single().zielMenge
+        else -> mathematisch.zielRaum
+    }
+    val effektiverLegacyBereich = mathematisch.effektiverDefinitionsRaum?.let { bereich ->
+        if (mathematisch.argumente.isEmpty() && bereich == LeereMenge) Tupelraum(emptyList()) else bereich
+    }
+    return LegacyMathematischeMethodenSignatur(
+        argumente = mathematisch.argumente.map { argument ->
+            MethodenArgument(argument.parameter, argument.definitionsMenge)
+        },
+        zielMenge = legacyZiel,
+        effektiverWerteVorrat = effektiverLegacyBereich,
+    )
+}
 
 /** Explizite Mathematikgrenze für Mengen-/Raumsemantik. */
 fun Methode.mathematischeMethodenSignatur(): MathematischeMethodenSignatur =
