@@ -5,7 +5,6 @@ import de.TeutonStudio.TypSystem.TypTragend
 import java.math.BigDecimal
 import kotlin.math.abs
 
-/** Rechteckiger SVG-Zeichenbereich. */
 data class SvgViewport(
     val minX: Double = 0.0,
     val minY: Double = 0.0,
@@ -18,10 +17,6 @@ data class SvgViewport(
     }
 }
 
-/**
- * Mathematischer Koordinatenraum, der zentral in den SVG-Zeichenraum abgebildet wird.
- * Mathematisch wächst y nach oben; SVG wächst y nach unten.
- */
 data class SvgKoordinatenraum(
     val xMin: Double = -10.0,
     val xMax: Double = 10.0,
@@ -42,7 +37,6 @@ data class SvgKoordinatenraum(
 
 data class SvgPunkt(val x: Double, val y: Double)
 
-/** Wiederverwendbarer Stilwert für SVG-Ergänzungsknoten. */
 data class SvgStil(
     val füllung: String = "none",
     val kontur: String = "currentColor",
@@ -102,6 +96,7 @@ sealed interface SvgElement {
     val id: String
     val stil: SvgStil?
     val transformationen: List<SvgTransformation>
+    val attribute: Map<String, String>
 }
 
 data class SvgGruppe(
@@ -109,6 +104,7 @@ data class SvgGruppe(
     val kinder: List<SvgElement>,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgPfad(
@@ -116,6 +112,7 @@ data class SvgPfad(
     val segmente: List<SvgPfadSegment>,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgLinie(
@@ -124,6 +121,7 @@ data class SvgLinie(
     val ende: SvgPunkt,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgRechteck(
@@ -135,6 +133,7 @@ data class SvgRechteck(
     val radiusY: Double = 0.0,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgKreis(
@@ -143,6 +142,7 @@ data class SvgKreis(
     val radius: Double,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgEllipse(
@@ -152,6 +152,7 @@ data class SvgEllipse(
     val radiusY: Double,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgPolygon(
@@ -159,6 +160,7 @@ data class SvgPolygon(
     val punkte: List<SvgPunkt>,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgLinienzug(
@@ -166,6 +168,7 @@ data class SvgLinienzug(
     val punkte: List<SvgPunkt>,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
 
 data class SvgText(
@@ -175,7 +178,55 @@ data class SvgText(
     val mathematikLatex: Boolean = false,
     override val stil: SvgStil? = null,
     override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
 ) : SvgElement
+
+data class SvgVerwendung(
+    override val id: String,
+    val referenzId: String,
+    val position: SvgPunkt = SvgPunkt(0.0, 0.0),
+    val breite: Double? = null,
+    val höhe: Double? = null,
+    override val stil: SvgStil? = null,
+    override val transformationen: List<SvgTransformation> = emptyList(),
+    override val attribute: Map<String, String> = emptyMap(),
+) : SvgElement
+
+data class SvgFarbStopp(
+    val offset: Double,
+    val farbe: String,
+    val deckkraft: Double = 1.0,
+) {
+    init {
+        require(offset in 0.0..1.0) { "Ein SVG-Farbstopp benötigt einen Offset zwischen 0 und 1." }
+        require(deckkraft in 0.0..1.0) { "Die Deckkraft eines SVG-Farbstopps muss zwischen 0 und 1 liegen." }
+    }
+}
+
+enum class SvgFilterPrimitivArt(val tagName: String) {
+    Blend("feBlend"),
+    ColorMatrix("feColorMatrix"),
+    ComponentTransfer("feComponentTransfer"),
+    Composite("feComposite"),
+    ConvolveMatrix("feConvolveMatrix"),
+    DiffuseLighting("feDiffuseLighting"),
+    DisplacementMap("feDisplacementMap"),
+    DropShadow("feDropShadow"),
+    Flood("feFlood"),
+    GaussianBlur("feGaussianBlur"),
+    Image("feImage"),
+    Merge("feMerge"),
+    Morphology("feMorphology"),
+    Offset("feOffset"),
+    SpecularLighting("feSpecularLighting"),
+    Tile("feTile"),
+    Turbulence("feTurbulence"),
+}
+
+data class SvgFilterPrimitiv(
+    val art: SvgFilterPrimitivArt,
+    val attribute: Map<String, String> = emptyMap(),
+)
 
 sealed interface SvgDefinition {
     val id: String
@@ -186,7 +237,52 @@ data class SvgSymbolDefinition(
     val elemente: List<SvgElement>,
 ) : SvgDefinition
 
-/** Vollständiger unveränderlicher SVG-AST, der von Knoten zu Knoten weitergereicht wird. */
+data class SvgMarkerDefinition(
+    override val id: String,
+    val elemente: List<SvgElement>,
+    val refX: Double = 0.0,
+    val refY: Double = 0.0,
+    val markerBreite: Double = 3.0,
+    val markerHöhe: Double = 3.0,
+    val orientierung: String = "auto",
+) : SvgDefinition
+
+data class SvgClipPfadDefinition(
+    override val id: String,
+    val elemente: List<SvgElement>,
+) : SvgDefinition
+
+data class SvgMaskenDefinition(
+    override val id: String,
+    val elemente: List<SvgElement>,
+) : SvgDefinition
+
+data class SvgLinearerVerlaufDefinition(
+    override val id: String,
+    val start: SvgPunkt = SvgPunkt(0.0, 0.0),
+    val ende: SvgPunkt = SvgPunkt(1.0, 0.0),
+    val stopps: List<SvgFarbStopp>,
+) : SvgDefinition
+
+data class SvgRadialerVerlaufDefinition(
+    override val id: String,
+    val mittelpunkt: SvgPunkt = SvgPunkt(0.5, 0.5),
+    val radius: Double = 0.5,
+    val stopps: List<SvgFarbStopp>,
+) : SvgDefinition
+
+data class SvgPatternDefinition(
+    override val id: String,
+    val breite: Double,
+    val höhe: Double,
+    val elemente: List<SvgElement>,
+) : SvgDefinition
+
+data class SvgFilterDefinition(
+    override val id: String,
+    val primitive: List<SvgFilterPrimitiv>,
+) : SvgDefinition
+
 data class SvgGrafik(
     val viewport: SvgViewport = SvgViewport(),
     val koordinatenraum: SvgKoordinatenraum = SvgKoordinatenraum(),
@@ -195,6 +291,9 @@ data class SvgGrafik(
     val breite: String = "100%",
     val höhe: String = "100%",
     val preserveAspectRatio: String = "xMidYMid meet",
+    val titel: String? = null,
+    val beschreibung: String? = null,
+    val metadaten: String? = null,
 ) : Grafik, TypTragend {
     override val typAusdruck: TypAusdruck
         get() = TypAusdruck.Atom(MathematischeTypen.SvgGrafik)
@@ -204,21 +303,66 @@ data class SvgGrafik(
     fun mitElement(element: SvgElement): SvgGrafik = copy(elemente = elemente + element)
     fun mitElementen(neu: List<SvgElement>): SvgGrafik = copy(elemente = elemente + neu)
 
+    fun mitDefinition(definition: SvgDefinition): SvgGrafik = copy(
+        definitionen = definitionen.filterNot { it.id == definition.id } + definition,
+    )
+
     fun gruppiere(id: String, stil: SvgStil? = null): SvgGrafik =
         copy(elemente = listOf(SvgGruppe(id = id, kinder = elemente, stil = stil)))
 
+    fun gruppeAuflösen(zielId: String? = null): SvgGrafik =
+        copy(elemente = elemente.flacheGruppe(zielId?.takeIf { it.isNotBlank() }))
+
+    fun findeElement(id: String): SvgElement? = elemente.firstNotNullOfOrNull { it.finde(id) }
+
+    fun elementAuswahl(zielId: String?): List<SvgElement> {
+        val id = zielId?.trim().orEmpty()
+        return if (id.isBlank()) elemente else listOfNotNull(findeElement(id))
+    }
+
+    fun transformiere(zielId: String?, transformation: SvgTransformation): SvgGrafik =
+        ändereElemente(zielId) { it.mitTransformation(transformation) }
+
+    fun stilisiere(zielId: String?, stil: SvgStil): SvgGrafik =
+        ändereElemente(zielId) { it.mitStil(stil) }
+
+    fun setzeAttribut(zielId: String?, name: String, wert: String?): SvgGrafik =
+        ändereElemente(zielId) { element ->
+            val neu = element.attribute.toMutableMap()
+            if (wert == null) neu.remove(name) else neu[name] = wert
+            element.mitAttributen(neu)
+        }
+
+    fun entferneElement(zielId: String): SvgGrafik = copy(elemente = elemente.entferneRekursiv(zielId))
+
+    fun dupliziereElement(zielId: String, neueId: String): SvgGrafik {
+        val belegt = elementIds()
+        val kopieId = eindeutigeId(neueId.ifBlank { "$zielId-kopie" }, belegt)
+        return copy(elemente = elemente.dupliziereRekursiv(zielId, kopieId))
+    }
+
+    fun ordneElement(zielId: String, delta: Int, ganz: Boolean = false): SvgGrafik =
+        copy(elemente = elemente.ordneRekursiv(zielId, delta, ganz))
+
     fun kombiniere(andere: SvgGrafik): SvgGrafik {
+        val belegteDefinitionen = definitionen.mapTo(mutableSetOf()) { it.id }
+        val mapping = linkedMapOf<String, String>()
+        andere.definitionen.forEach { definition ->
+            val neu = if (definition.id in belegteDefinitionen) eindeutigeId(definition.id, belegteDefinitionen) else definition.id
+            mapping[definition.id] = neu
+            belegteDefinitionen += neu
+        }
+
+        val neueDefinitionen = andere.definitionen.map { definition ->
+            definition.mitId(mapping.getValue(definition.id)).umschreibeReferenzen(mapping)
+        }
+
         val belegteIds = elementIds().toMutableSet()
         val neueElemente = andere.elemente.map { element ->
-            element.mitEindeutigerId(belegteIds).also { belegteIds += it.id }
+            val umgeschrieben = element.umschreibeReferenzen(mapping)
+            umgeschrieben.mitEindeutigerId(belegteIds).also { belegteIds += it.id }
         }
-        val belegteDefinitionen = definitionen.mapTo(mutableSetOf()) { it.id }
-        val neueDefinitionen = andere.definitionen.map { definition ->
-            if (definition.id !in belegteDefinitionen) definition
-            else when (definition) {
-                is SvgSymbolDefinition -> definition.copy(id = eindeutigeId(definition.id, belegteDefinitionen))
-            }
-        }
+
         return copy(
             elemente = elemente + neueElemente,
             definitionen = definitionen + neueDefinitionen,
@@ -227,7 +371,7 @@ data class SvgGrafik(
 
     fun zuSvg(): String = SvgSerializer.serialisiere(this)
 
-    private fun elementIds(): Set<String> = buildSet {
+    fun elementIds(): Set<String> = buildSet {
         fun sammle(element: SvgElement) {
             add(element.id)
             if (element is SvgGruppe) element.kinder.forEach(::sammle)
@@ -235,25 +379,189 @@ data class SvgGrafik(
         elemente.forEach(::sammle)
     }
 
+    private fun ändereElemente(zielId: String?, änderung: (SvgElement) -> SvgElement): SvgGrafik {
+        val id = zielId?.trim().orEmpty()
+        return if (id.isBlank()) {
+            copy(elemente = elemente.map(änderung))
+        } else {
+            copy(elemente = elemente.map { it.mappeRekursiv(id, änderung) })
+        }
+    }
+
     companion object {
         fun standard(): SvgGrafik = SvgGrafik()
     }
 }
 
-private fun SvgElement.mitEindeutigerId(belegt: Set<String>): SvgElement {
-    if (id !in belegt) return this
-    val neueId = eindeutigeId(id, belegt)
-    return when (this) {
-        is SvgGruppe -> copy(id = neueId)
-        is SvgPfad -> copy(id = neueId)
-        is SvgLinie -> copy(id = neueId)
-        is SvgRechteck -> copy(id = neueId)
-        is SvgKreis -> copy(id = neueId)
-        is SvgEllipse -> copy(id = neueId)
-        is SvgPolygon -> copy(id = neueId)
-        is SvgLinienzug -> copy(id = neueId)
-        is SvgText -> copy(id = neueId)
+private fun SvgElement.finde(id: String): SvgElement? = when {
+    this.id == id -> this
+    this is SvgGruppe -> kinder.firstNotNullOfOrNull { it.finde(id) }
+    else -> null
+}
+
+private fun SvgElement.mappeRekursiv(id: String, änderung: (SvgElement) -> SvgElement): SvgElement {
+    if (this.id == id) return änderung(this)
+    return if (this is SvgGruppe) copy(kinder = kinder.map { it.mappeRekursiv(id, änderung) }) else this
+}
+
+private fun List<SvgElement>.entferneRekursiv(id: String): List<SvgElement> = mapNotNull { element ->
+    when {
+        element.id == id -> null
+        element is SvgGruppe -> element.copy(kinder = element.kinder.entferneRekursiv(id))
+        else -> element
     }
+}
+
+private fun List<SvgElement>.dupliziereRekursiv(id: String, neueId: String): List<SvgElement> = buildList {
+    for (element in this@dupliziereRekursiv) {
+        add(element)
+        if (element.id == id) {
+            add(element.mitId(neueId))
+        } else if (element is SvgGruppe) {
+            removeAt(lastIndex)
+            add(element.copy(kinder = element.kinder.dupliziereRekursiv(id, neueId)))
+        }
+    }
+}
+
+private fun List<SvgElement>.ordneRekursiv(id: String, delta: Int, ganz: Boolean): List<SvgElement> {
+    val index = indexOfFirst { it.id == id }
+    if (index >= 0) {
+        val mutable = toMutableList()
+        val element = mutable.removeAt(index)
+        val ziel = when {
+            ganz && delta < 0 -> 0
+            ganz && delta > 0 -> mutable.size
+            else -> (index + delta).coerceIn(0, mutable.size)
+        }
+        mutable.add(ziel, element)
+        return mutable
+    }
+    return map { element ->
+        if (element is SvgGruppe) element.copy(kinder = element.kinder.ordneRekursiv(id, delta, ganz)) else element
+    }
+}
+
+private fun List<SvgElement>.flacheGruppe(zielId: String?): List<SvgElement> = buildList {
+    for (element in this@flacheGruppe) {
+        when {
+            element is SvgGruppe && (zielId == null || element.id == zielId) -> addAll(element.kinder)
+            element is SvgGruppe -> add(element.copy(kinder = element.kinder.flacheGruppe(zielId)))
+            else -> add(element)
+        }
+    }
+}
+
+private fun SvgElement.mitStil(neu: SvgStil?): SvgElement = when (this) {
+    is SvgGruppe -> copy(stil = neu)
+    is SvgPfad -> copy(stil = neu)
+    is SvgLinie -> copy(stil = neu)
+    is SvgRechteck -> copy(stil = neu)
+    is SvgKreis -> copy(stil = neu)
+    is SvgEllipse -> copy(stil = neu)
+    is SvgPolygon -> copy(stil = neu)
+    is SvgLinienzug -> copy(stil = neu)
+    is SvgText -> copy(stil = neu)
+    is SvgVerwendung -> copy(stil = neu)
+}
+
+private fun SvgElement.mitTransformation(neu: SvgTransformation): SvgElement = when (this) {
+    is SvgGruppe -> copy(transformationen = transformationen + neu)
+    is SvgPfad -> copy(transformationen = transformationen + neu)
+    is SvgLinie -> copy(transformationen = transformationen + neu)
+    is SvgRechteck -> copy(transformationen = transformationen + neu)
+    is SvgKreis -> copy(transformationen = transformationen + neu)
+    is SvgEllipse -> copy(transformationen = transformationen + neu)
+    is SvgPolygon -> copy(transformationen = transformationen + neu)
+    is SvgLinienzug -> copy(transformationen = transformationen + neu)
+    is SvgText -> copy(transformationen = transformationen + neu)
+    is SvgVerwendung -> copy(transformationen = transformationen + neu)
+}
+
+private fun SvgElement.mitAttributen(neu: Map<String, String>): SvgElement = when (this) {
+    is SvgGruppe -> copy(attribute = neu)
+    is SvgPfad -> copy(attribute = neu)
+    is SvgLinie -> copy(attribute = neu)
+    is SvgRechteck -> copy(attribute = neu)
+    is SvgKreis -> copy(attribute = neu)
+    is SvgEllipse -> copy(attribute = neu)
+    is SvgPolygon -> copy(attribute = neu)
+    is SvgLinienzug -> copy(attribute = neu)
+    is SvgText -> copy(attribute = neu)
+    is SvgVerwendung -> copy(attribute = neu)
+}
+
+private fun SvgElement.mitId(neueId: String): SvgElement = when (this) {
+    is SvgGruppe -> copy(id = neueId)
+    is SvgPfad -> copy(id = neueId)
+    is SvgLinie -> copy(id = neueId)
+    is SvgRechteck -> copy(id = neueId)
+    is SvgKreis -> copy(id = neueId)
+    is SvgEllipse -> copy(id = neueId)
+    is SvgPolygon -> copy(id = neueId)
+    is SvgLinienzug -> copy(id = neueId)
+    is SvgText -> copy(id = neueId)
+    is SvgVerwendung -> copy(id = neueId)
+}
+
+private fun SvgElement.mitEindeutigerId(belegt: Set<String>): SvgElement =
+    if (id !in belegt) this else mitId(eindeutigeId(id, belegt))
+
+private fun SvgElement.umschreibeReferenzen(mapping: Map<String, String>): SvgElement {
+    val neueAttribute = attribute.mapValues { (_, wert) -> referenzWert(wert, mapping) }
+    return when (this) {
+        is SvgGruppe -> copy(
+            kinder = kinder.map { it.umschreibeReferenzen(mapping) },
+            attribute = neueAttribute,
+        )
+        is SvgPfad -> copy(attribute = neueAttribute)
+        is SvgLinie -> copy(attribute = neueAttribute)
+        is SvgRechteck -> copy(attribute = neueAttribute)
+        is SvgKreis -> copy(attribute = neueAttribute)
+        is SvgEllipse -> copy(attribute = neueAttribute)
+        is SvgPolygon -> copy(attribute = neueAttribute)
+        is SvgLinienzug -> copy(attribute = neueAttribute)
+        is SvgText -> copy(attribute = neueAttribute)
+        is SvgVerwendung -> copy(
+            referenzId = mapping[referenzId] ?: referenzId,
+            attribute = neueAttribute,
+        )
+    }
+}
+
+private fun SvgDefinition.mitId(neueId: String): SvgDefinition = when (this) {
+    is SvgSymbolDefinition -> copy(id = neueId)
+    is SvgMarkerDefinition -> copy(id = neueId)
+    is SvgClipPfadDefinition -> copy(id = neueId)
+    is SvgMaskenDefinition -> copy(id = neueId)
+    is SvgLinearerVerlaufDefinition -> copy(id = neueId)
+    is SvgRadialerVerlaufDefinition -> copy(id = neueId)
+    is SvgPatternDefinition -> copy(id = neueId)
+    is SvgFilterDefinition -> copy(id = neueId)
+}
+
+private fun SvgDefinition.umschreibeReferenzen(mapping: Map<String, String>): SvgDefinition = when (this) {
+    is SvgSymbolDefinition -> copy(elemente = elemente.map { it.umschreibeReferenzen(mapping) })
+    is SvgMarkerDefinition -> copy(elemente = elemente.map { it.umschreibeReferenzen(mapping) })
+    is SvgClipPfadDefinition -> copy(elemente = elemente.map { it.umschreibeReferenzen(mapping) })
+    is SvgMaskenDefinition -> copy(elemente = elemente.map { it.umschreibeReferenzen(mapping) })
+    is SvgLinearerVerlaufDefinition -> this
+    is SvgRadialerVerlaufDefinition -> this
+    is SvgPatternDefinition -> copy(elemente = elemente.map { it.umschreibeReferenzen(mapping) })
+    is SvgFilterDefinition -> copy(
+        primitive = primitive.map { primitiv ->
+            primitiv.copy(attribute = primitiv.attribute.mapValues { (_, wert) -> referenzWert(wert, mapping) })
+        },
+    )
+}
+
+private fun referenzWert(wert: String, mapping: Map<String, String>): String {
+    var ergebnis = wert
+    mapping.forEach { (alt, neu) ->
+        ergebnis = ergebnis.replace("url(#$alt)", "url(#$neu)")
+        if (ergebnis == "#$alt") ergebnis = "#$neu"
+    }
+    return ergebnis
 }
 
 private fun eindeutigeId(basis: String, belegt: Set<String>): String {
@@ -278,21 +586,90 @@ object SvgSerializer {
             .append(zahl(viewport.breite)).append(' ')
             .append(zahl(viewport.höhe)).append("\"")
         append(" preserveAspectRatio=\"").append(xml(grafik.preserveAspectRatio)).append("\">")
+
+        grafik.titel?.takeIf { it.isNotBlank() }?.let { append("<title>").append(xml(it)).append("</title>") }
+        grafik.beschreibung?.takeIf { it.isNotBlank() }?.let { append("<desc>").append(xml(it)).append("</desc>") }
+        grafik.metadaten?.takeIf { it.isNotBlank() }?.let { append("<metadata>").append(xml(it)).append("</metadata>") }
+
         if (grafik.definitionen.isNotEmpty()) {
             append("<defs>")
-            grafik.definitionen.forEach { definition ->
-                when (definition) {
-                    is SvgSymbolDefinition -> {
-                        append("<symbol id=\"").append(xmlId(definition.id)).append("\">")
-                        definition.elemente.forEach { appendElement(it) }
-                        append("</symbol>")
-                    }
-                }
-            }
+            grafik.definitionen.forEach { appendDefinition(it) }
             append("</defs>")
         }
         grafik.elemente.forEach { appendElement(it) }
         append("</svg>")
+    }
+
+    private fun StringBuilder.appendDefinition(definition: SvgDefinition) {
+        when (definition) {
+            is SvgSymbolDefinition -> {
+                append("<symbol id=\"").append(xmlId(definition.id)).append("\">")
+                definition.elemente.forEach { appendElement(it) }
+                append("</symbol>")
+            }
+            is SvgMarkerDefinition -> {
+                append("<marker id=\"").append(xmlId(definition.id)).append("\"")
+                attribut("refX", definition.refX)
+                attribut("refY", definition.refY)
+                attribut("markerWidth", definition.markerBreite)
+                attribut("markerHeight", definition.markerHöhe)
+                append(" orient=\"").append(xml(definition.orientierung)).append("\">")
+                definition.elemente.forEach { appendElement(it) }
+                append("</marker>")
+            }
+            is SvgClipPfadDefinition -> {
+                append("<clipPath id=\"").append(xmlId(definition.id)).append("\">")
+                definition.elemente.forEach { appendElement(it) }
+                append("</clipPath>")
+            }
+            is SvgMaskenDefinition -> {
+                append("<mask id=\"").append(xmlId(definition.id)).append("\">")
+                definition.elemente.forEach { appendElement(it) }
+                append("</mask>")
+            }
+            is SvgLinearerVerlaufDefinition -> {
+                append("<linearGradient id=\"").append(xmlId(definition.id)).append("\"")
+                attribut("x1", definition.start.x)
+                attribut("y1", definition.start.y)
+                attribut("x2", definition.ende.x)
+                attribut("y2", definition.ende.y)
+                append('>')
+                definition.stopps.forEach { appendStopp(it) }
+                append("</linearGradient>")
+            }
+            is SvgRadialerVerlaufDefinition -> {
+                append("<radialGradient id=\"").append(xmlId(definition.id)).append("\"")
+                attribut("cx", definition.mittelpunkt.x)
+                attribut("cy", definition.mittelpunkt.y)
+                attribut("r", definition.radius)
+                append('>')
+                definition.stopps.forEach { appendStopp(it) }
+                append("</radialGradient>")
+            }
+            is SvgPatternDefinition -> {
+                append("<pattern id=\"").append(xmlId(definition.id)).append("\" patternUnits=\"userSpaceOnUse\"")
+                attribut("width", definition.breite)
+                attribut("height", definition.höhe)
+                append('>')
+                definition.elemente.forEach { appendElement(it) }
+                append("</pattern>")
+            }
+            is SvgFilterDefinition -> {
+                append("<filter id=\"").append(xmlId(definition.id)).append("\">")
+                definition.primitive.forEach { primitiv ->
+                    append('<').append(primitiv.art.tagName)
+                    appendAttribute(primitiv.attribute)
+                    append("/>")
+                }
+                append("</filter>")
+            }
+        }
+    }
+
+    private fun StringBuilder.appendStopp(stopp: SvgFarbStopp) {
+        append("<stop offset=\"").append(zahl(stopp.offset * 100.0)).append("%\"")
+        append(" stop-color=\"").append(xml(stopp.farbe)).append("\"")
+        append(" stop-opacity=\"").append(zahl(stopp.deckkraft)).append("\"/>")
     }
 
     private fun StringBuilder.appendElement(element: SvgElement) {
@@ -366,6 +743,16 @@ object SvgSerializer {
                 }
                 append('>').append(xml(element.inhalt)).append("</text>")
             }
+            is SvgVerwendung -> {
+                append("<use")
+                appendGemeinsam(element)
+                append(" href=\"#").append(xmlId(element.referenzId)).append("\"")
+                attribut("x", element.position.x)
+                attribut("y", element.position.y)
+                element.breite?.let { attribut("width", it) }
+                element.höhe?.let { attribut("height", it) }
+                append("/>")
+            }
         }
     }
 
@@ -376,6 +763,14 @@ object SvgSerializer {
             append(" transform=\"")
             append(element.transformationen.joinToString(" ", transform = ::transformation))
             append('"')
+        }
+        appendAttribute(element.attribute)
+    }
+
+    private fun StringBuilder.appendAttribute(attribute: Map<String, String>) {
+        attribute.toSortedMap().forEach { (name, wert) ->
+            require(ATTRIBUT_NAME.matches(name)) { "Ungültiger SVG-Attributname '$name'." }
+            append(' ').append(name).append("=\"").append(xml(wert)).append("\"")
         }
     }
 
@@ -442,4 +837,6 @@ object SvgSerializer {
             }
         }
     }
+
+    private val ATTRIBUT_NAME = Regex("[A-Za-z_][A-Za-z0-9_.:-]*")
 }
