@@ -4,6 +4,9 @@ import de.TeutonStudio.TypSystem.*
 
 /** Kanonische IDs und Konstruktoren des gemeinsamen neutralen Typkerns. */
 object MathematischeTypen {
+    /** Domänenneutraler Obertyp sämtlicher durch den Atlas transportierbarer Werte. */
+    val AtlasWert = TypId("atlas.wert")
+
     val Objekt = TypId("mathematik.objekt")
     val Zahl = TypId("mathematik.zahl")
     val Aussage = TypId("mathematik.aussage")
@@ -69,10 +72,11 @@ object MathematischeTypen {
             Tensor to Objekt,
             Tupel to Objekt,
             UnendlichesTupel to Objekt,
-            Methode to Objekt,
-            Grafik to Objekt,
+            Objekt to AtlasWert,
+            Methode to AtlasWert,
+            Grafik to AtlasWert,
             SvgGrafik to Grafik,
-            SvgStil to Objekt,
+            SvgStil to AtlasWert,
         )
         var aktuell: TypId? = von
         val besucht = mutableSetOf<TypId>()
