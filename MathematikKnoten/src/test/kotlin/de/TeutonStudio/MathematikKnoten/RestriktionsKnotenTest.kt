@@ -191,7 +191,7 @@ class RestriktionsKnotenTest {
         assertEquals(einmal, zweimal)
     }
 
-    private fun auswerter(): KnotenAuswerter {
+    private fun auswerter(): MathematikKnotenAuswerter {
         val register = MathematikAuswerterRegister().apply { registriereRestriktionsKnoten() }
         return assertNotNull(register.finde(RESTRIKTIONS_KNOTEN_ART))
     }
