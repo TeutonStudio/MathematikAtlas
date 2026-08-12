@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class MethodenFundamentTest {
@@ -20,14 +21,14 @@ class MethodenFundamentTest {
             werteVorräte = linkedMapOf(x.name to ReelleZahlen, y.name to GanzeZahlen),
         )
 
-        val signatur = methode.methodenSignatur()
-        assertEquals(listOf("x", "y"), signatur.argumente.map { it.parameter.name })
-        assertEquals(Tupelraum(listOf(ReelleZahlen, GanzeZahlen)), signatur.werteVorrat)
-        assertEquals(ReelleZahlen, signatur.zielMenge)
+        val signatur = methode.mathematischeMethodenSignatur()
+        assertEquals(listOf("x", "y"), signatur.argumente.map { it.name })
+        assertEquals(Tupelraum(listOf(ReelleZahlen, GanzeZahlen)), signatur.definitionsRaum)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), signatur.zielRaum)
     }
 
     @Test
-    fun `nullstellige methode verwendet leere menge`() {
+    fun `nullstellige methode verwendet leeren tupelraum statt leere menge`() {
         val methode = Methode(
             name = "c",
             parameter = emptyList(),
@@ -35,8 +36,31 @@ class MethodenFundamentTest {
             zielMengen = mapOf("wert" to ReelleZahlen),
         )
 
-        assertEquals(LeereMenge, methode.methodenSignatur().werteVorrat)
-        assertEquals(RationaleZahl.Eins, methode.wendeKanonischAn(emptyMap()))
+        val signatur = methode.mathematischeMethodenSignatur()
+        assertEquals(Tupelraum(emptyList()), signatur.definitionsRaum)
+        assertNotEquals(LeereMenge, signatur.definitionsRaum)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), signatur.zielRaum)
+        assertEquals(Tupel(listOf(RationaleZahl.Eins)), methode.wendeKanonischAn(Tupel(emptyList())))
+    }
+
+    @Test
+    fun `einstellige methode kollabiert weder argument noch ergebnis`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to GanzeZahlen),
+        )
+
+        val mathematisch = methode.mathematischeMethodenSignatur()
+        val neutral = methode.neutraleMethodenSignatur()
+        assertEquals(Tupelraum(listOf(GanzeZahlen)), mathematisch.definitionsRaum)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), mathematisch.zielRaum)
+        assertEquals(1, neutral.argumentTupelTyp.argumente.size)
+        assertEquals(1, neutral.ergebnisTupelTyp.argumente.size)
+        assertEquals(Tupel(listOf(RationaleZahl.Eins)), methode.wendeKanonischAn(Tupel(listOf(RationaleZahl.Eins))))
     }
 
     @Test
@@ -50,7 +74,8 @@ class MethodenFundamentTest {
 
         assertIs<Tupel>(methode.vorschrift)
         assertEquals(Tupelraum(listOf(ReelleZahlen, ReelleZahlen)), methode.zielMenge)
-        assertEquals(Tupel(listOf(RationaleZahl.Null, RationaleZahl.Eins)), methode.wendeKanonischAn(emptyMap()))
+        assertEquals(Tupel(listOf(RationaleZahl.Null, RationaleZahl.Eins)), methode.wendeKanonischAn(Tupel(emptyList())))
+        assertEquals(Tupelraum(listOf(ReelleZahlen, ReelleZahlen)), methode.mathematischeMethodenSignatur().zielRaum)
     }
 
     @Test
@@ -86,8 +111,9 @@ class MethodenFundamentTest {
         assertTrue(MethodenAlias.Prädikat in prädikat.aliase())
         assertEquals("Methode · Prädikat", prädikat.aliasAnzeige())
     }
+
     @Test
-    fun `kanonische methode besitzt genau eine vorschrift und zielmenge`() {
+    fun `legacy einzelziel bleibt komponentenprojektion waehrend zielraum tupel bleibt`() {
         val x = Variable("x")
         val methode = Methode(
             name = "f",
@@ -99,6 +125,7 @@ class MethodenFundamentTest {
 
         assertEquals(addition(RationaleZahl.von(2), RationaleZahl.Eins), methode.wendeAn(listOf(RationaleZahl.von(2))))
         assertEquals(ReelleZahlen, methode.zielMenge)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), methode.mathematischeMethodenSignatur().zielRaum)
         assertEquals(listOf("wert"), methode.ausgabeNamen)
     }
 
@@ -115,10 +142,11 @@ class MethodenFundamentTest {
         assertEquals(Tupel(listOf(RationaleZahl.Null, RationaleZahl.Eins)), methode.wendeAn(emptyList()))
         assertEquals(RationaleZahl.Null, methode.vorschriftFür("links"))
         assertEquals(GanzeZahlen, methode.zielMengeFür("rechts"))
+        assertEquals(Tupelraum(listOf(GanzeZahlen, GanzeZahlen)), methode.mathematischeMethodenSignatur().zielRaum)
     }
 
     @Test
-    fun `methode rendert Signatur und Term gemeinsam in cases Umgebung`() {
+    fun `methode rendert kanonische raeume und tupelterm gemeinsam in cases Umgebung`() {
         val x = Variable("x")
         val y = Variable("y")
         val methode = Methode(
@@ -131,8 +159,8 @@ class MethodenFundamentTest {
 
         val latex = methode.zuLatex()
         assertTrue(latex.startsWith("f:\\begin{cases}"))
-        assertTrue(latex.contains("\\mathbb{R} \\times \\mathbb{Z} \\longrightarrow \\mathbb{R}"))
-        assertTrue(latex.contains("\\left(x,y\\right) \\mapsto x + y"))
+        assertTrue(latex.contains("\\mathbb{R} \\times \\mathbb{Z} \\longrightarrow \\operatorname{Tupelraum}"))
+        assertTrue(latex.contains("\\left(x,y\\right) \\mapsto \\left(x + y\\right)"))
         assertTrue(latex.endsWith("\\end{cases}"))
     }
 
@@ -157,8 +185,7 @@ class MethodenFundamentTest {
 
         assertEquals("f'", ableitung.name)
         assertTrue(latex.startsWith("f':\\begin{cases}"))
-        assertTrue(latex.contains("\\left(x,y\\right) \\mapsto f'\\left(x,y\\right)"))
+        assertTrue(latex.contains("f'\\left(x,y\\right)"))
         assertTrue(latex.contains("\\mathcal L"))
     }
-
 }
