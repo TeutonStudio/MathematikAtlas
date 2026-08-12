@@ -104,8 +104,16 @@ data class MathematischeMethodenSignatur(
                 .map(MathematischeArgumentKomponente::definitionsMenge),
         )
 
+    /**
+     * Tatsächlicher mathematischer Definitionsraum. Historische nullstellige Daten,
+     * die `LeereMenge` als leeres kartesisches Produkt gespeichert haben, werden hier
+     * einmalig semantisch auf `{()}` normalisiert.
+     */
     val definitionsRaum: MengenAusdruck
-        get() = effektiverDefinitionsRaum ?: kanonischerArgumentRaum
+        get() = when {
+            argumente.isEmpty() && effektiverDefinitionsRaum == LeereMenge -> kanonischerArgumentRaum
+            else -> effektiverDefinitionsRaum ?: kanonischerArgumentRaum
+        }
 
     val zielRaum: Tupelraum
         get() = Tupelraum(
