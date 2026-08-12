@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import de.TeutonStudio.TypSystem.*
 
-/** Kanonische IDs und Konstruktoren des mathematischen G0.2-Typkerns. */
+/** Kanonische IDs und Konstruktoren des gemeinsamen neutralen Typkerns. */
 object MathematischeTypen {
     val Objekt = TypId("mathematik.objekt")
     val Zahl = TypId("mathematik.zahl")
@@ -21,7 +21,7 @@ object MathematischeTypen {
     val UnendlichesTupel = TypId("typ.tupel.unendlich")
     val Methode = TypId("mathematik.methode")
 
-    /** Nichtmathematische Darstellungswerte benutzen denselben neutralen G0.2-Typkern. */
+    /** Nichtmathematische Darstellungswerte benutzen denselben neutralen Typkern. */
     val Grafik = TypId("grafik")
     val SvgGrafik = TypId("grafik.svg")
     val SvgStil = TypId("grafik.svg.stil")
@@ -35,9 +35,8 @@ object MathematischeTypen {
     val Quaternion = TypId("mathematik.zahl.quaternion")
 
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
-        // Tupel sind variadisch und komponentenweise kovariant.
+        // Tupel sind variadisch, einschließlich Tupel<>, und komponentenweise kovariant.
         TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
-        // Unendliche Tupel sind homogene, nicht materialisierte Indexstrukturen.
         TypKonstruktorDefinition(UnendlichesTupel, listOf(TypVarianz.Kovariant)),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
         TypKonstruktorDefinition(ZeilenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
@@ -90,7 +89,7 @@ object MathematischeTypen {
     )
 }
 
-/** Typ eines Elements, das aus dieser Menge gewählt wird. Die Inferenz bleibt konservativ. */
+/** Typ eines Elements, das aus dieser mathematischen Menge gewählt wird. */
 fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     NatürlicheZahlen -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
     GanzeZahlen -> TypAusdruck.Atom(MathematischeTypen.Ganz)
@@ -135,18 +134,10 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     else -> TypAusdruck.Unbekannt
 }
 
-fun MethodenSignatur.typAusdruck(): TypAusdruck {
-    val argumentTyp = TypAusdruck.Parameterisiert(
-        MathematischeTypen.Tupel,
-        argumente.map { it.werteVorrat.elementTypAusdruck() },
-    )
-    return TypAusdruck.Parameterisiert(
-        MathematischeTypen.Methode,
-        listOf(argumentTyp, zielMenge.elementTypAusdruck()),
-    )
-}
+/** Neutrale MethodenSignatur ist immer Methode<Tupel<...>, Tupel<...>>. */
+fun MethodenSignatur.typAusdruck(): TypAusdruck = typAusdruck
 
-/** Semantischer Typ einer Methode, unabhängig von ihrer Ausführungs-Capability. */
+/** Semantischer Typ einer Methode, unabhängig von ihrer Ausführungs- oder Mathematik-Capability. */
 fun Methode.methodenTypAusdruck(): TypAusdruck =
-    (this as? SignaturtragendeMethode)?.signatur?.typAusdruck()
+    (this as? SignaturtragendeMethode)?.signatur?.typAusdruck
         ?: TypAusdruck.Atom(MathematischeTypen.Methode)
