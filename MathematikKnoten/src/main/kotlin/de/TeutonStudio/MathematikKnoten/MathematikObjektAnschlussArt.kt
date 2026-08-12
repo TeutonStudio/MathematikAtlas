@@ -8,6 +8,9 @@ fun anschlussArtFürMathematischesObjekt(objekt: MathematischesObjekt): Anschlus
     is ZahlAusdruck -> MathematikAnschlussArten.Zahl.id
     is Aussage -> MathematikAnschlussArten.Aussage.id
     is MengenAusdruck -> MathematikAnschlussArten.Menge.id
+    is Topologie -> MathematikAnschlussArten.Topologie.id
+    is MetrischerRaum -> MathematikAnschlussArten.MetrischerRaum.id
+    is TopologischerRaum -> MathematikAnschlussArten.TopologischerRaum.id
     is SpaltenVektor -> MathematikAnschlussArten.SpaltenVektor.id
     is ZeilenVektor -> MathematikAnschlussArten.ZeilenVektor.id
     is Matrix -> MathematikAnschlussArten.Matrix.id
