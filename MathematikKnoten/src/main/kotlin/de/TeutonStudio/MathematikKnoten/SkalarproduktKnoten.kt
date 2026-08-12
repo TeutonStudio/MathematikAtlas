@@ -109,8 +109,8 @@ internal fun MathematikAuswerterRegister.registriereSkalarproduktErweiterungen()
 }
 
 private fun KnotenAuswertungsKontext.werteSkalarproduktAus(): KnotenAuswertungsErgebnis {
-    val links = eingänge["links"]?.objekt ?: error("Der linke Vektor fehlt.")
-    val rechts = eingänge["rechts"]?.objekt ?: error("Der rechte Vektor fehlt.")
+    val links = mathematischerEingang("links", "Linker Skalarproduktoperand")
+    val rechts = mathematischerEingang("rechts", "Rechter Skalarproduktoperand")
     val linkeAnsicht = when (val ergebnis = links.numerischeKomponentenAnsicht()) {
         is StrukturPruefung.Gueltig -> ergebnis.wert
         is StrukturPruefung.Bedingt -> error(ergebnis.bedingungen.joinToString())
