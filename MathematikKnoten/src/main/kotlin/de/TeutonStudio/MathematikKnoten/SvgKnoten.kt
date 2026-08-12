@@ -104,7 +104,7 @@ object SvgOperatoren {
         id = "text",
         titel = "Text / Mathematik",
         symbol = "\\mathrm{Text}",
-        kategorie = "Beschriftung",
+        kategorie = "Text",
         beschreibung = "Ergänzt Text oder bewahrt eine mathematische LaTeX-Beschriftung verlustfrei im SVG-AST.",
         zahlen = listOf("x", "y"),
         standardParameter = mapOf("text" to "x", "mathematikLatex" to "true"),
@@ -129,7 +129,21 @@ object SvgOperatoren {
         ),
     )
 
-    val alle = listOf(Dokument, Linie, Rechteck, Kreis, Ellipse, Polygon, Linienzug, Pfad, Text, Gruppe, Kombinieren)
+    private val grundOperatoren = listOf(
+        Dokument,
+        Linie,
+        Rechteck,
+        Kreis,
+        Ellipse,
+        Polygon,
+        Linienzug,
+        Pfad,
+        Text,
+        Gruppe,
+        Kombinieren,
+    )
+
+    val alle: List<SvgOperatorDefinition> = grundOperatoren + SvgErweiterteOperatoren.alle
 
     fun finde(id: String?): SvgOperatorDefinition = alle.firstOrNull { it.id == id } ?: Dokument
 
@@ -164,7 +178,7 @@ object SvgKnotenVorlagen {
         art = SVG_KNOTEN_ART,
         name = "SVG",
         kategorie = "Grafik: SVG",
-        beschreibung = "Einheitlicher SVG-Knoten, der einen vollständigen SVG-AST übernimmt oder bei unbelegtem Eingang neu beginnt und ihn um den ausgewählten Operator erweitert.",
+        beschreibung = "Universeller SVG-Knoten: übernimmt einen vollständigen SVG-AST oder beginnt ohne Eingang neu und führt genau einen im Dialog gewählten SVG-Operator aus.",
         standardGröße = GraphGröße(300f, 150f),
         anschlüsse = SvgOperatoren.Dokument.anschlüsse,
         standardParameter = SvgOperatoren.Dokument.standardParameter + (SVG_OPERATOR_PARAMETER to SvgOperatoren.Dokument.id),
@@ -174,7 +188,7 @@ object SvgKnotenVorlagen {
         art = SVG_STIL_KNOTEN_ART,
         name = "SVG-Stil",
         kategorie = "Grafik: SVG",
-        beschreibung = "Wiederverwendbarer Stil für SVG-Ergänzungsknoten.",
+        beschreibung = "Wiederverwendbarer Stil für SVG-Ergänzungs- und Bearbeitungsknoten.",
         standardGröße = GraphGröße(240f, 115f),
         anschlüsse = listOf(
             AnschlussDaten(
@@ -241,6 +255,7 @@ fun MathematikAuswerterRegister.registriereSvgKnoten() {
         val stil = kontext.eingänge["stil"]?.objekt as? SvgStil ?: SvgStil()
         val id = "svg-${kontext.knoten.id.wert}-${operator.id}".replace(Regex("[^A-Za-z0-9_.:-]"), "-")
         val parameter = kontext.knoten.parameter
+        var erweiterteWarnungen: List<String> = emptyList()
 
         val grafik = when (operator) {
             SvgOperatoren.Dokument -> basis.copy(
@@ -332,16 +347,22 @@ fun MathematikAuswerterRegister.registriereSvgKnoten() {
                 zweiter != null -> zweiter
                 else -> SvgGrafik.standard()
             }
-            else -> basis
+            else -> SvgErweiterteOperatorAuswertung.auswerten(operator, kontext, basis, stil).let {
+                erweiterteWarnungen = it.warnungen
+                it.grafik
+            }
         }
 
-        val warnungen = if (
-            operator == SvgOperatoren.Kombinieren &&
-            erster != null && zweiter != null &&
-            (erster.viewport != zweiter.viewport || erster.koordinatenraum != zweiter.koordinatenraum)
-        ) {
-            listOf("Die kombinierten SVGs besitzen unterschiedliche Dokumenträume; der erste SVG-Eingang bestimmt ViewBox und Koordinatenraum des Ergebnisses.")
-        } else emptyList()
+        val warnungen = buildList {
+            if (
+                operator == SvgOperatoren.Kombinieren &&
+                erster != null && zweiter != null &&
+                (erster.viewport != zweiter.viewport || erster.koordinatenraum != zweiter.koordinatenraum)
+            ) {
+                add("Die kombinierten SVGs besitzen unterschiedliche Dokumenträume; der erste SVG-Eingang bestimmt ViewBox und Koordinatenraum des Ergebnisses.")
+            }
+            addAll(erweiterteWarnungen)
+        }
 
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf("svg" to BedingterWert(grafik)),
@@ -416,7 +437,6 @@ private fun parsePunkte(roh: String?): List<SvgPunkt> {
     }
 }
 
-/** Kleiner, absichtlich strukturierter Pfadparser statt Weiterreichen roher XML-Fragmente. */
 private fun parsePfad(roh: String, grafik: SvgGrafik): List<SvgPfadSegment> {
     val tokens = Regex("[MLCQAZ]|[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?", RegexOption.IGNORE_CASE)
         .findAll(roh)
