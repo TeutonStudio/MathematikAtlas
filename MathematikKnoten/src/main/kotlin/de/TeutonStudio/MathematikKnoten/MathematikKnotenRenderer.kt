@@ -159,7 +159,12 @@ class MathematikKnotenRenderer(
         val methode = methodenWert?.objekt as? Methode
         val indexWert = ergebnis?.eingänge?.get("indexmenge")
         val indexMenge = indexWert?.let { it.anzeigeLatex() } ?: "I"
-        val parameter = methode?.parameter?.singleOrNull()?.zuLatex() ?: "i"
+        val parameter = methode?.let { aktuelleMethode ->
+            runCatching {
+                aktuelleMethode.mathematischeMethodenSignatur()
+                    .argumente.singleOrNull()?.parameter?.zuLatex()
+            }.getOrNull()
+        } ?: "i"
         val name = methodenWert?.let { it.latexDarstellung } ?: methode?.name ?: "f"
         val zeichen = when (knoten.art) {
             "mathematik.iterierteSumme" -> "\\sum"
@@ -191,15 +196,16 @@ class MathematikKnotenRenderer(
             ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
         val methode = ausgewertet.ausgaben["methode"]?.objekt as? Methode
             ?: return "f:\\begin{cases}? \\longrightarrow ?\\end{cases}"
+        val mathematisch = methode.alsMathematischeMethode("Darstellung der Termmethode")
         if (methode.istPrädikat()) {
             val termEingang = ausgewertet.eingänge["term"]
             val argumentQuellen = termEingang?.let { it.prädikatsArgumente() }.orEmpty()
             return runCatching { methode.kompaktePrädikatsDarstellung(argumentQuellen = argumentQuellen) }
-                .getOrElse { methode.zuLatex() }
+                .getOrElse { mathematisch.zuLatex() }
         }
 
         return runCatching { methode.zuFallunterscheidungsLatex() }
-            .getOrElse { methode.zuLatex() }
+            .getOrElse { mathematisch.zuLatex() }
     }
 
     private companion object {
