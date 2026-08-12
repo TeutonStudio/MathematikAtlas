@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
+import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 
@@ -27,6 +28,7 @@ fun MathematikAuswerterRegister.registriereTupelNullDimension() {
         } == true
         if (!istNull) return@registriere bisher.auswerten(kontext)
 
+        kontext.eingänge["methode"]?.objekt as? Methode ?: error("Tupelmethode fehlt.")
         val annahmen = kontext.eingänge.values.flatMapTo(linkedSetOf()) { it.annahmen }
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
