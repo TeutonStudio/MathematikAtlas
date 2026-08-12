@@ -12,7 +12,7 @@ data class MethodenGraphMenge(
 }
 
 /** Kanonischer mathematischer Argumentraum. Allgemeine Methoden besitzen keinen Mengenraum. */
-fun Methode.argumentRaum(): MengenAusdruck =
+fun Methode.mathematischerArgumentRaum(): MengenAusdruck =
     mathematischeMethodenSignatur().definitionsRaum
 
 /** Umgebender Produktraum Graph(f) ⊆ D_f × Z_f einer symbolischen mathematischen Methode. */
