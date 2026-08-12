@@ -48,12 +48,40 @@ val Methode.bereichsanpassung: MethodenBereichsanpassung?
     get() = (this as? BereichsanpassungsTragendeMethode)?.bereichsanpassung
 
 /**
- * Capability für Methoden, die der Mathematikkern durch Bindung mathematischer
- * Argumente auswerten darf. Sie setzt eine mathematische Signatur voraus, macht die
- * allgemeine Methode selbst aber nicht zu einem [MathematischesObjekt].
+ * Mathematische Auswertung ist eine optionale Capability einer allgemeinen Methode.
+ * Sie macht die konkrete mathematische Methode zugleich zu einem mathematischen Objekt,
+ * ohne diese Forderung auf [Methode] oder [SignaturtragendeMethode] zu übertragen.
  */
-interface MathematischAuswertbareMethode : MathematischeSignaturtragendeMethode, BereichsanpassungsTragendeMethode {
+interface MathematischAuswertbareMethode :
+    MathematischeSignaturtragendeMethode,
+    BereichsanpassungsTragendeMethode,
+    MathematischesObjekt {
     fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt
+}
+
+/**
+ * Symbolische Mathematik-Capability mit der heute noch benötigten Parameter- und
+ * Vorschriftsoberfläche. Sie bündelt die Legacy-Felder an genau einer Mathematikgrenze,
+ * statt sie im allgemeinen [Methode]-Vertrag zu verewigen.
+ */
+interface SymbolischMathematischeMethode : MathematischAuswertbareMethode {
+    val parameter: List<MethodenParameter>
+    val vorschrift: MathematischesObjekt
+    val zielMenge: MengenAusdruck
+    val werteVorräte: Map<String, MengenAusdruck>
+    val ausgabeNamen: List<String>
+    val effektiverWerteVorrat: MengenAusdruck?
+
+    fun vorschriftFür(ausgabe: String): MathematischesObjekt
+    fun zielMengeFür(ausgabe: String): MengenAusdruck
+    fun zielMengeFür(ausgabe: String, bindungen: Map<String, MathematischesObjekt>): MengenAusdruck
+    val einzigeZielMenge: MengenAusdruck
+    val grundMenge: MengenAusdruck
+    fun grundMengeFürMengenAusgabe(): MengenAusdruck
+    fun binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode
+    fun wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt
+    fun einzigeAusgabe(): Pair<String, MathematischesObjekt>
+    fun prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt>
 }
 
 /**
@@ -186,11 +214,7 @@ fun Methode(
     werteVorräte = werteVorräte,
 )
 
-/**
- * `copy` kann wegen der von Kotlin generierten Data-Class-Methode nicht Bestandteil
- * des Interface sein. Für statisch als Methode typisierte mathematische Werte bleibt
- * deshalb genau dieser eine Übergangsadapter bestehen.
- */
+/** Übergangsadapter für statisch als [Methode] typisierte mathematische Werte. */
 @Deprecated("Mathematische Legacy-Projektion; verenge zuerst auf MathematischeMethode.")
 fun Methode.copy(
     name: String = this.name,
