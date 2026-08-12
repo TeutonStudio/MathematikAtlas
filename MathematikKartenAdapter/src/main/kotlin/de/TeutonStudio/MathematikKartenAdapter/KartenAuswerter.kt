@@ -99,7 +99,12 @@ class KartenAuswerter(
             }
             val wert = fallback.ausgaben["methode"]
                 ?: return fehler("Der Karten-Fallback für '$name' liefert keine Methode.")
-            if (!anschlussAkzeptiertMethode(anschluss.art, wert.objekt)) {
+            val mathematischesObjekt = runCatching {
+                wert.mathematischesObjekt("Der Karten-Fallback für '$name'")
+            }.getOrElse {
+                return fehler(it.message ?: it::class.simpleName.orEmpty())
+            }
+            if (!anschlussAkzeptiertMethode(anschluss.art, mathematischesObjekt)) {
                 return fehler("Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
             }
             aktuell + (name to wert)
@@ -263,9 +268,12 @@ class KartenAuswerter(
             name to requireNotNull(werte[name]) { "Für den Methodenausgang '$name' fehlt ein Wert." }
         }
         val vorschrift = if (geordneteWerte.size == 1) {
-            geordneteWerte.single().second.objekt
+            val (name, wert) = geordneteWerte.single()
+            wert.mathematischesObjekt("Methodenausgang '$name'")
         } else {
-            Tupel(geordneteWerte.map { it.second.objekt })
+            Tupel(geordneteWerte.map { (name, wert) ->
+                wert.mathematischesObjekt("Methodenausgang '$name'")
+            })
         }
         val zielMenge = if (geordneteWerte.size == 1) {
             geordneteWerte.single().second.zielMenge
@@ -364,7 +372,7 @@ class KartenAuswerter(
             "mathematik.potenz" -> mapOf("wert" to "\\left(${wert("basis")}\\right)^{${wert("exponent")}}")
             "mathematik.kehrwert" -> mapOf("wert" to "\\left(${wert("zahl")}\\right)^{-1}")
             "mathematik.wurzel" -> mapOf("wert" to "\\sqrt{${wert("radikand")}}")
-            "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}}\\left(${wert("argument")}\\right)")
+            "mathematik.logarithmus" -> mapOf("wert" to "\\log_{${wert("basis")}\\left(${wert("argument")}}\\right)")
             "mathematik.ableiten" -> mapOf("wert" to "\\frac{d}{d${knoten.parameter["variable"] ?: "x"}}\\left(${wert("term")}\\right)")
             "mathematik.integrieren" -> mapOf("wert" to "\\int ${wert("term")}\\,d${knoten.parameter["variable"] ?: "x"}")
             "mathematik.gleichheit" -> mapOf("aussage" to binär("="))
@@ -427,7 +435,6 @@ class KartenAuswerter(
         }
         return this
     }
-
     private fun dauerSeit(startNanos: Long): Long = (nanoZeit() - startNanos).coerceAtLeast(0L)
 
     private fun standardwertSchlüssel(name: String) = "$STANDARDWERT_PREFIX$name"
