@@ -18,8 +18,10 @@ import de.TeutonStudio.MathematikKnoten.PRAEDIKAT_SEITE_RELATIONEN
 import de.TeutonStudio.MathematikKnoten.praedikatAnschluesse
 import de.TeutonStudio.MathematikRechenSystem.kern.RelationsArgument
 import de.TeutonStudio.MathematikRechenSystem.kern.RelationsArgumentArt
+import de.TeutonStudio.MathematikRechenSystem.kern.RelationsDefinitionsFormel
 import de.TeutonStudio.MathematikRechenSystem.kern.RelationsOperatorDefinition
 import de.TeutonStudio.MathematikRechenSystem.kern.RelationsOperatoren
+import de.TeutonStudio.MathematikRechenSystem.kern.definitionsFormel
 
 /**
  * Liefert für jede Variante des kanonischen Relations-Prädikatknotens eine
@@ -33,6 +35,7 @@ internal fun relationPraedikatKonzept(knoten: KnotenDaten): KonzeptDefinition? {
 
     val operatorId = knoten.parameter[RelationsOperatoren.OPERATOR_PARAMETER]
     val definition = RelationsOperatoren.vonIdOderNull(operatorId) ?: return null
+    val definitionsFormel = definition.definitionsFormel
     val relationsKlassen = definition.relationsStruktur?.kompakteKlassen().orEmpty()
 
     return KonzeptDefinition(
@@ -42,6 +45,15 @@ internal fun relationPraedikatKonzept(knoten: KnotenDaten): KonzeptDefinition? {
             append("Definitionskarte der Relation ")
             append(definition.titel)
             append(". Die Eingänge entsprechen den Relationsargumenten; der Ausgang ist die daraus gebildete Aussage.")
+            if (definitionsFormel.hinweis.isNotBlank()) {
+                append(' ')
+                append(definitionsFormel.hinweis)
+            }
+            if (definitionsFormel.vorausgesetzteAxiomIds.isNotEmpty()) {
+                append(" Vorausgesetzte Axiome: ")
+                append(definitionsFormel.vorausgesetzteAxiomIds.sorted().joinToString())
+                append('.')
+            }
             if (relationsKlassen.isNotEmpty()) {
                 append(" Nachgewiesene Relationsklasse: ")
                 append(relationsKlassen.joinToString { it.titel })
@@ -49,12 +61,15 @@ internal fun relationPraedikatKonzept(knoten: KnotenDaten): KonzeptDefinition? {
             }
         },
         pfad = listOf("Aussagen", "Prädikate", "Relationen", definition.kategorie),
-        tags = definition.suchbegriffe + relationsKlassen.map { it.titel } + setOf(
-            "Relation",
-            "Prädikat",
-            definition.titel,
-            definition.stabileId,
-        ),
+        tags = definition.suchbegriffe +
+            relationsKlassen.map { it.titel } +
+            definitionsFormel.vorausgesetzteAxiomIds +
+            setOf(
+                "Relation",
+                "Prädikat",
+                definition.titel,
+                definition.stabileId,
+            ),
         knotenArten = setOf(RelationsOperatoren.KNOTEN_ART),
         knotenParameter = mapOf(
             RelationsOperatoren.OPERATOR_PARAMETER to definition.stabileId,
@@ -65,13 +80,16 @@ internal fun relationPraedikatKonzept(knoten: KnotenDaten): KonzeptDefinition? {
                 id = "definition",
                 titel = definition.symbolLatex,
                 rolle = KonzeptReiterRolle.Definition,
-                karte = relationPraedikatDefinitionsKarte(definition),
+                karte = relationPraedikatDefinitionsKarte(definition, definitionsFormel),
             ),
         ),
     )
 }
 
-private fun relationPraedikatDefinitionsKarte(definition: RelationsOperatorDefinition): KartenDaten {
+private fun relationPraedikatDefinitionsKarte(
+    definition: RelationsOperatorDefinition,
+    definitionsFormel: RelationsDefinitionsFormel,
+): KartenDaten {
     val suffix = definition.stabileId.replace('.', '-')
     val prefix = "definition-relation-$suffix"
     val schnittstelle = praedikatAnschluesse(definition)
@@ -79,6 +97,7 @@ private fun relationPraedikatDefinitionsKarte(definition: RelationsOperatorDefin
         .filter { it.richtung == AnschlussRichtung.Eingang }
         .sortedBy { it.reihenfolge }
     val ausgang = schnittstelle.single { it.richtung == AnschlussRichtung.Ausgang }
+    val regelBreite = (360f + definitionsFormel.latex.length * 4f).coerceIn(540f, 980f)
 
     val regelAnschlüsse = schnittstelle.mapIndexed { index, anschluss ->
         anschluss.copy(id = AnschlussId("$prefix-regel-$index"))
@@ -88,12 +107,15 @@ private fun relationPraedikatDefinitionsKarte(definition: RelationsOperatorDefin
         art = KonzeptKnotenArten.REGEL,
         name = definition.titel,
         position = GraphPunkt(390f, 70f),
-        größe = GraphGröße(540f, maxOf(190f, 125f + 38f * eingänge.size)),
+        größe = GraphGröße(regelBreite, maxOf(190f, 125f + 38f * eingänge.size)),
         anschlüsse = regelAnschlüsse,
         parameter = mapOf(
-            "regel" to definition.symbolLatex,
+            "regel" to definitionsFormel.latex,
             "regelInhaltArt" to DokumentationsInhaltArt.DISPLAY_LATEX.name,
-            "definition" to definition.symbolLatex,
+            "definition" to definitionsFormel.latex,
+            "definitionsHinweis" to definitionsFormel.hinweis,
+            "vorausgesetzteAxiome" to definitionsFormel.vorausgesetzteAxiomIds.sorted().joinToString(),
+            "symbol" to definition.symbolLatex,
             "operator" to definition.stabileId,
             "relationsklassen" to definition.relationsStruktur
                 ?.kompakteKlassen()
@@ -111,7 +133,12 @@ private fun relationPraedikatDefinitionsKarte(definition: RelationsOperatorDefin
             index = index,
         )
     }
-    val ausgangsKnoten = relationAusgang(prefix, ausgang, eingänge.size)
+    val ausgangsKnoten = relationAusgang(
+        prefix = prefix,
+        anschluss = ausgang,
+        eingangsAnzahl = eingänge.size,
+        x = 390f + regelBreite + 80f,
+    )
 
     val regelEingänge = regel.anschlüsse
         .filter { it.richtung == AnschlussRichtung.Eingang }
@@ -180,13 +207,14 @@ private fun relationAusgang(
     prefix: String,
     anschluss: AnschlussDaten,
     eingangsAnzahl: Int,
+    x: Float,
 ): KnotenDaten {
     val id = "$prefix-ausgang"
     return KnotenDaten(
         id = KnotenId(id),
         art = KonzeptKnotenArten.AUSGANG,
         name = "Aussage",
-        position = GraphPunkt(1010f, 70f + maxOf(0, eingangsAnzahl - 1) * 60f),
+        position = GraphPunkt(x, 70f + maxOf(0, eingangsAnzahl - 1) * 60f),
         größe = GraphGröße(240f, 96f),
         anschlüsse = listOf(
             AnschlussDaten(
