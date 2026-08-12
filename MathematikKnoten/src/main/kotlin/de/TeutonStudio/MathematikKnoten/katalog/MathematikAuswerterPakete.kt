@@ -55,6 +55,9 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("exakte-eigenschaften") { registriereExakteEigenschaftsAuswertung() },
         MathematikAuswerterPaket("folgen-und-signaturen") { registriereFolgenUndSignaturEigenschaften() },
         MathematikAuswerterPaket("mengeneigenschaften") { registriereMengenEigenschaftsAuswertung() },
+        // Muss nach den historischen Eigenschaftsauswertern laufen: dieses Paket entfernt
+        // deren impliziten R-Fallback und delegiert nur nicht-topologische Altvarianten zurück.
+        MathematikAuswerterPaket("topologische-strukturen") { registriereTopologischeStrukturen() },
     )
 
     /**
