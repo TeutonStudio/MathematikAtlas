@@ -6,6 +6,35 @@ enum class AbdeckungsStatus {
     Unbekannt,
 }
 
+/**
+ * Strukturierter Methodenoperator für die mathematisch reine Restriktion `f|_M`.
+ *
+ * Die Voraussetzung `M ⊆ D_f` wird bereits beim Erzeugen geprüft. Der Operator
+ * besitzt absichtlich weder Ergänzungsmethoden noch Ersatzwerte.
+ */
+data class MethodenRestriktion(
+    val basis: MathematischeMethode,
+    val werteVorrat: MengenAusdruck,
+) : MathematischAuswertbareMethode {
+    override val name: String
+        get() = "${basis.name}\\vert_{${werteVorrat.zuLatex()}}"
+
+    override val signatur: MethodenSignatur
+        get() = basis.signatur.copy(effektiverWerteVorrat = werteVorrat)
+
+    override fun zuLatex(): String = name
+
+    override fun wendeMathematischAn(
+        argumente: Map<String, MathematischesObjekt>,
+    ): MathematischesObjekt = basis.wendeMathematischAn(argumente)
+
+    internal fun materialisiere(): MathematischeMethode = basis.copy(
+        name = name,
+        effektiverWerteVorrat = werteVorrat,
+        bereichsanpassung = null,
+    )
+}
+
 /** Dauerhafte semantische Beschreibung eines tatsächlich verwendeten Ergänzungszweigs. */
 data class MethodenBereichsergänzung(
     val methode: MathematischeMethode,
@@ -14,18 +43,40 @@ data class MethodenBereichsergänzung(
 )
 
 /**
- * Strukturierte Herkunft einer auf einen neuen Wertevorrat angepassten mathematischen Methode.
+ * Eigener höherer Methodenoperator für eine gewünschte Definitionsmenge mit
+ * geordneten Ergänzungsmethoden. Frühere Methoden besitzen immer Priorität.
  *
- * Die kompakte Darstellung `f\vert_M` bleibt damit von der vollständigen Semantik
- * getrennt. Basis, M, Reihenfolge und effektive Ergänzungsbereiche bleiben auch
- * downstream rekonstruierbar. Engine-/Scriptmethoden sind keine mathematischen
- * Restriktionszweige und können hier nicht versehentlich gespeichert werden.
+ * Dieser Typ ist ausdrücklich keine Restriktion und rendert deshalb niemals als
+ * `f|_M`. Die Fallvorschrift wird erst an der mathematischen Materialisierungsgrenze
+ * erzeugt und bleibt aus Basis, Zielbereich und geordneten Zweigen rekonstruierbar.
  */
 data class MethodenBereichsanpassung(
     val basis: MathematischeMethode,
     val werteVorrat: MengenAusdruck,
     val ergänzungen: List<MethodenBereichsergänzung>,
-)
+) : MathematischAuswertbareMethode {
+    override val name: String
+        get() = "\\operatorname{Bereichsanpassung}\\!\\left(${basis.name},${werteVorrat.zuLatex()}\\right)"
+
+    override val signatur: MethodenSignatur
+        get() = basis.signatur.copy(effektiverWerteVorrat = werteVorrat)
+
+    override val bereichsanpassung: MethodenBereichsanpassung
+        get() = this
+
+    override fun zuLatex(): String = name
+
+    override fun wendeMathematischAn(
+        argumente: Map<String, MathematischesObjekt>,
+    ): MathematischesObjekt = materialisiere().wendeMathematischAn(argumente)
+
+    internal fun materialisiere(): MathematischeMethode = basis.copy(
+        name = name,
+        vorschrift = priorisierteVorschrift(this),
+        effektiverWerteVorrat = werteVorrat,
+        bereichsanpassung = this,
+    )
+}
 
 internal fun MethodenBereichsanpassung.ersetze(
     bindungen: Map<String, MathematischesObjekt>,
@@ -41,6 +92,18 @@ internal fun MethodenBereichsanpassung.ersetze(
     },
 )
 
+data class MethodenRestriktionsErgebnis(
+    val methode: MethodenRestriktion?,
+    val basisWerteVorrat: MengenAusdruck,
+    val gewünschterWerteVorrat: MengenAusdruck,
+    val zielMenge: MengenAusdruck,
+    val teilmengenPrüfung: AussageErgebnis,
+    val bedingungen: Set<Aussage>,
+) {
+    val istGültig: Boolean
+        get() = teilmengenPrüfung.wahrheitswert != Wahrheitswert.Lüge
+}
+
 data class MethodenErgänzungsBereich(
     val methode: MathematischeMethode,
     val werteVorrat: MengenAusdruck,
@@ -48,8 +111,8 @@ data class MethodenErgänzungsBereich(
     val zielPrüfung: AussageErgebnis,
 )
 
-data class MethodenRestriktionsErgebnis(
-    val methode: MathematischeMethode?,
+data class MethodenBereichsanpassungsErgebnis(
+    val methode: MethodenBereichsanpassung?,
     val basisWerteVorrat: MengenAusdruck,
     val gewünschterWerteVorrat: MengenAusdruck,
     val zielMenge: MengenAusdruck,
@@ -71,9 +134,7 @@ data class MethodenRestriktionsErgebnis(
         get() = ergänzungen.any { it.zielPrüfung.wahrheitswert == Wahrheitswert.Lüge }
 }
 
-/**
- * Gesamtdefinitionsbereich einer mathematischen Methode für Bereichsoperationen.
- */
+/** Gesamtdefinitionsbereich einer mathematischen Methode für Bereichsoperationen. */
 fun Methode.bereichsWerteVorrat(): MengenAusdruck {
     val mathematisch = alsMathematischeMethode("mathematische Bereichsoperationen")
     return mathematisch.effektiverWerteVorrat ?: when (mathematisch.parameter.size) {
@@ -88,22 +149,53 @@ fun Methode.bereichsWerteVorrat(): MengenAusdruck {
 }
 
 /**
- * Restriktion beziehungsweise priorisierte Erweiterung einer Methode auf [menge].
+ * Mathematisch reine Restriktion von [basis] auf [menge].
  *
- * Die öffentliche Signatur bleibt aus Kompatibilitätsgründen bei [Methode], aber die
- * Funktion validiert am Einstieg, dass Basis und Ergänzungen echte symbolische
- * [MathematischeMethode]n sind. Damit kann eine spätere ScriptMethod nicht durch
- * `copy(vorschrift = ...)` in eine mathematische Fallvorschrift umgedeutet werden.
+ * Genau der Vertrag `M ⊆ D_f` ist zulässig. Eine falsche Teilmengenbeziehung erzeugt
+ * keine Methode; eine unentscheidbare Beziehung bleibt als sichtbare Voraussetzung
+ * erhalten. Diese Funktion besitzt absichtlich keinen Ergänzungsparameter.
  */
 fun restriktiereMethode(
     basis: Methode,
     menge: MengenAusdruck,
-    ergänzungen: List<Methode> = emptyList(),
     kontext: RechenKontext = RechenKontext(),
 ): MethodenRestriktionsErgebnis {
     val mathematischeBasis = basis.alsMathematischeMethode("mathematische Restriktion")
+    val basisWerteVorrat = mathematischeBasis.bereichsWerteVorrat()
+    val teilmengenPrüfung = prüfeTeilmenge(menge, basisWerteVorrat, kontext)
+    val bedingungen = linkedSetOf<Aussage>()
+    if (teilmengenPrüfung.wahrheitswert == null) {
+        bedingungen += TeilmengenBeziehung(menge, basisWerteVorrat)
+    }
+    val methode = if (teilmengenPrüfung.wahrheitswert == Wahrheitswert.Lüge) null
+    else MethodenRestriktion(mathematischeBasis, menge)
+
+    return MethodenRestriktionsErgebnis(
+        methode = methode,
+        basisWerteVorrat = basisWerteVorrat,
+        gewünschterWerteVorrat = menge,
+        zielMenge = mathematischeBasis.zielMenge,
+        teilmengenPrüfung = teilmengenPrüfung,
+        bedingungen = bedingungen,
+    )
+}
+
+/**
+ * Passt den Definitionsbereich einer Methode an eine gewünschte Menge an.
+ *
+ * Die Basismethode besitzt höchste Priorität. Danach werden [ergänzungen] in ihrer
+ * Listenreihenfolge geprüft; jeder Zweig erhält ausschließlich den bis dahin offenen
+ * Teil der gewünschten Menge. Damit gilt deterministisch: erste passende Methode gewinnt.
+ */
+fun passeMethodenBereichAn(
+    basis: Methode,
+    menge: MengenAusdruck,
+    ergänzungen: List<Methode> = emptyList(),
+    kontext: RechenKontext = RechenKontext(),
+): MethodenBereichsanpassungsErgebnis {
+    val mathematischeBasis = basis.alsMathematischeMethode("mathematische Bereichsanpassung")
     val mathematischeErgänzungen = ergänzungen.mapIndexed { index, ergänzung ->
-        ergänzung.alsMathematischeMethode("mathematische Restriktion als Ergänzung ${index + 1}")
+        ergänzung.alsMathematischeMethode("mathematische Bereichsanpassung als Ergänzung ${index + 1}")
     }
     val basisWerteVorrat = mathematischeBasis.bereichsWerteVorrat()
     val zielMenge = mathematischeBasis.zielMenge
@@ -148,26 +240,20 @@ fun restriktiereMethode(
     val kannMethodeBilden = abdeckungsPrüfung.wahrheitswert != Wahrheitswert.Lüge && !zielVerletzt
 
     val resultierendeMethode = if (kannMethodeBilden) {
-        val vorschrift = priorisierteVorschrift(mathematischeBasis, ergänzungsErgebnisse)
-        mathematischeBasis.copy(
-            name = "${mathematischeBasis.name}\\vert_{${menge.zuLatex()}}",
-            vorschrift = vorschrift,
-            effektiverWerteVorrat = menge,
-            bereichsanpassung = MethodenBereichsanpassung(
-                basis = mathematischeBasis,
-                werteVorrat = menge,
-                ergänzungen = ergänzungsErgebnisse.map { ergänzung ->
-                    MethodenBereichsergänzung(
-                        methode = ergänzung.methode,
-                        werteVorrat = ergänzung.werteVorrat,
-                        effektiverBereich = ergänzung.effektiverBereich,
-                    )
-                },
-            ),
+        MethodenBereichsanpassung(
+            basis = mathematischeBasis,
+            werteVorrat = menge,
+            ergänzungen = ergänzungsErgebnisse.map { ergänzung ->
+                MethodenBereichsergänzung(
+                    methode = ergänzung.methode,
+                    werteVorrat = ergänzung.werteVorrat,
+                    effektiverBereich = ergänzung.effektiverBereich,
+                )
+            },
         )
     } else null
 
-    return MethodenRestriktionsErgebnis(
+    return MethodenBereichsanpassungsErgebnis(
         methode = resultierendeMethode,
         basisWerteVorrat = basisWerteVorrat,
         gewünschterWerteVorrat = menge,
@@ -242,20 +328,21 @@ private fun MathematischeMethode.wendeAufGesamtArgumentAn(argument: Mathematisch
     }
 }
 
-private fun priorisierteVorschrift(
-    basis: MathematischeMethode,
-    ergänzungen: List<MethodenErgänzungsBereich>,
-): MathematischesObjekt {
-    if (ergänzungen.isEmpty()) return basis.vorschrift
+private fun priorisierteVorschrift(anpassung: MethodenBereichsanpassung): MathematischesObjekt {
+    if (anpassung.ergänzungen.isEmpty()) return anpassung.basis.vorschrift
 
+    val basis = anpassung.basis
     val argument = when (basis.parameter.size) {
         0 -> Tupel(emptyList())
         1 -> basis.parameter.single()
         else -> Tupel(basis.parameter.map { it as MathematischesObjekt })
     }
     val zweige = buildList {
-        add(basis.bereichsWerteVorrat() to basis.vorschrift)
-        ergänzungen.forEach { ergänzung ->
+        add(
+            schneide(listOf(anpassung.werteVorrat, basis.bereichsWerteVorrat())) to
+                basis.vorschrift,
+        )
+        anpassung.ergänzungen.forEach { ergänzung ->
             val bindungen = ergänzung.methode.parameter.zip(basis.parameter)
                 .associate { (quelle, ziel) -> quelle.name to ziel as MathematischesObjekt }
             add(ergänzung.effektiverBereich to ersetze(ergänzung.methode.vorschrift, bindungen))
