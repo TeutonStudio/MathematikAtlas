@@ -7,10 +7,13 @@ sealed interface MathematischesObjekt : AtlasWert {
 /**
  * Nichtmathematische, aber über den Atlas-Wertkanal transportierbare Darstellungswerte.
  *
- * Darstellung ist ausdrücklich keine Unterart von Mathematik. Insbesondere müssen
- * Grafikwerte weder Mengen-/Termsemantik noch `zuLatex()` implementieren.
+ * Darstellung ist ausdrücklich keine Unterart von Mathematik. Die historische
+ * `zuLatex()`-Projektion bleibt hier vorübergehend ausschließlich als lokale
+ * UI-Kompatibilität erhalten; sie ist kein Bestandteil von [AtlasWert].
  */
-interface DarstellungsWert : AtlasWert
+interface DarstellungsWert : AtlasWert {
+    fun zuLatex(): String = toString()
+}
 
 /** Gemeinsamer Obervertrag für strukturierte Grafikformate wie SVG und später TikZ. */
 interface Grafik : DarstellungsWert
