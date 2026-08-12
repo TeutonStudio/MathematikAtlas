@@ -69,7 +69,13 @@ for eigenschaft in ("val ausgaben:", "val zielMengen:"):
 aufruf_datei = wurzel / "MathematikKartenAdapter/src/main/kotlin/de/TeutonStudio/MathematikKartenAdapter/MethodenAufrufAuswerter.kt"
 if aufruf_datei.exists():
     aufruf_text = aufruf_datei.read_text(encoding="utf-8")
-    if "methode is MathematischAuswertbareMethode" not in aufruf_text:
+    if not any(
+        muster in aufruf_text
+        for muster in (
+            "methode is MathematischAuswertbareMethode",
+            "methode as? MathematischAuswertbareMethode",
+        )
+    ):
         fehler.append(
             f"{aufruf_datei.relative_to(wurzel)}: Methodenaufruf ist nicht an die mathematische Auswertungs-Capability gebunden"
         )
