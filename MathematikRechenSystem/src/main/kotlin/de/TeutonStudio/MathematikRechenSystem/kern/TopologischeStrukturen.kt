@@ -79,8 +79,10 @@ private fun intervallKardinalitaet(intervall: ReellesIntervall): KardinalitaetsV
         links != null && rechts != null && links > rechts -> endlichAbzaehlbar("Das Intervall ist leer.")
         links != null && rechts != null && links == rechts && (intervall.linksOffen || intervall.rechtsOffen) ->
             endlichAbzaehlbar("Das offene degenerierte Intervall ist leer.")
-        links != null && rechts != null && links == rechts -> endlichAbzaehlbar("Das degenerierte abgeschlossene Intervall ist eine einelementige Menge.")
-        links != null && rechts != null -> unendlichUeberabzaehlbar("Jedes nichtdegenerierte reelle Intervall ist überabzählbar.")
+        links != null && rechts != null && links == rechts ->
+            endlichAbzaehlbar("Das degenerierte abgeschlossene Intervall ist eine einelementige Menge.")
+        links != null && rechts != null ->
+            unendlichUeberabzaehlbar("Jedes nichtdegenerierte reelle Intervall ist überabzählbar.")
         else -> KardinalitaetsVertrag(
             EndlichkeitsStatus.UNENTSCHEIDBAR,
             AbzaehlbarkeitsStatus.UNENTSCHEIDBAR,
@@ -135,7 +137,8 @@ private fun schnittKardinalitaet(mengen: List<MengenAusdruck>): KardinalitaetsVe
 private fun differenzKardinalitaet(differenz: MengenDifferenz): KardinalitaetsVertrag {
     val links = kardinalitaetsVertrag(differenz.links)
     return when {
-        links.endlichkeit == EndlichkeitsStatus.ENDLICH -> endlichAbzaehlbar("Eine Teilmenge einer endlichen Menge ist endlich.")
+        links.endlichkeit == EndlichkeitsStatus.ENDLICH ->
+            endlichAbzaehlbar("Eine Teilmenge einer endlichen Menge ist endlich.")
         links.abzaehlbarkeit == AbzaehlbarkeitsStatus.ABZAEHLBAR -> KardinalitaetsVertrag(
             EndlichkeitsStatus.UNENTSCHEIDBAR,
             AbzaehlbarkeitsStatus.ABZAEHLBAR,
@@ -151,19 +154,28 @@ private fun differenzKardinalitaet(differenz: MengenDifferenz): KardinalitaetsVe
 
 private fun produktKardinalitaet(faktoren: List<MengenAusdruck>): KardinalitaetsVertrag {
     if (faktoren.isEmpty()) return endlichAbzaehlbar("Das leere Produkt besitzt genau ein leeres Tupel.")
-    if (faktoren.any { it == LeereMenge }) return endlichAbzaehlbar("Ein kartesisches Produkt mit leerem Faktor ist leer.")
+    if (faktoren.any(::istNachweisbarLeer)) {
+        return endlichAbzaehlbar("Ein kartesisches Produkt mit leerem Faktor ist leer.")
+    }
     val vertraege = faktoren.map(::kardinalitaetsVertrag)
     if (vertraege.all { it.endlichkeit == EndlichkeitsStatus.ENDLICH }) {
         return endlichAbzaehlbar("Ein endliches Produkt endlicher Mengen ist endlich.")
     }
-    if (vertraege.all { it.abzaehlbarkeit == AbzaehlbarkeitsStatus.ABZAEHLBAR }) {
-        return unendlichAbzaehlbar("Ein endliches Produkt abzählbarer, nichtleerer Mengen ist abzählbar; mindestens ein Faktor ist unendlich.")
+    if (
+        vertraege.all { it.abzaehlbarkeit == AbzaehlbarkeitsStatus.ABZAEHLBAR } &&
+        faktoren.all(::istNachweisbarNichtLeer)
+    ) {
+        return unendlichAbzaehlbar(
+            "Ein endliches Produkt abzählbarer, nichtleerer Mengen ist abzählbar; mindestens ein Faktor ist unendlich.",
+        )
     }
     if (
         vertraege.any { it.abzaehlbarkeit == AbzaehlbarkeitsStatus.UEBERABZAEHLBAR } &&
         faktoren.all(::istNachweisbarNichtLeer)
     ) {
-        return unendlichUeberabzaehlbar("Das Produkt enthält einen überabzählbaren Faktor und alle übrigen Faktoren sind nachweisbar nichtleer.")
+        return unendlichUeberabzaehlbar(
+            "Das Produkt enthält einen überabzählbaren Faktor und alle übrigen Faktoren sind nachweisbar nichtleer.",
+        )
     }
     return KardinalitaetsVertrag(
         EndlichkeitsStatus.UNENTSCHEIDBAR,
@@ -195,8 +207,10 @@ private fun tensorKardinalitaet(raum: Tensorraum): KardinalitaetsVertrag {
 private fun potenzmengenKardinalitaet(grundMenge: MengenAusdruck): KardinalitaetsVertrag {
     val basis = kardinalitaetsVertrag(grundMenge)
     return when (basis.endlichkeit) {
-        EndlichkeitsStatus.ENDLICH -> endlichAbzaehlbar("Die Potenzmenge einer endlichen Menge ist endlich.")
-        EndlichkeitsStatus.UNENDLICH -> unendlichUeberabzaehlbar("Nach Cantor ist die Potenzmenge einer unendlichen Menge überabzählbar.")
+        EndlichkeitsStatus.ENDLICH ->
+            endlichAbzaehlbar("Die Potenzmenge einer endlichen Menge ist endlich.")
+        EndlichkeitsStatus.UNENDLICH ->
+            unendlichUeberabzaehlbar("Nach Cantor ist die Potenzmenge einer unendlichen Menge überabzählbar.")
         EndlichkeitsStatus.UNENTSCHEIDBAR -> KardinalitaetsVertrag(
             EndlichkeitsStatus.UNENTSCHEIDBAR,
             AbzaehlbarkeitsStatus.UNENTSCHEIDBAR,
@@ -208,7 +222,8 @@ private fun potenzmengenKardinalitaet(grundMenge: MengenAusdruck): Kardinalitaet
 private fun teilMengenKardinalitaet(oberMenge: MengenAusdruck): KardinalitaetsVertrag {
     val ober = kardinalitaetsVertrag(oberMenge)
     return when {
-        ober.endlichkeit == EndlichkeitsStatus.ENDLICH -> endlichAbzaehlbar("Eine Teilmenge einer endlichen Menge ist endlich.")
+        ober.endlichkeit == EndlichkeitsStatus.ENDLICH ->
+            endlichAbzaehlbar("Eine Teilmenge einer endlichen Menge ist endlich.")
         ober.abzaehlbarkeit == AbzaehlbarkeitsStatus.ABZAEHLBAR -> KardinalitaetsVertrag(
             EndlichkeitsStatus.UNENTSCHEIDBAR,
             AbzaehlbarkeitsStatus.ABZAEHLBAR,
@@ -225,7 +240,8 @@ private fun teilMengenKardinalitaet(oberMenge: MengenAusdruck): KardinalitaetsVe
 private fun definierteMengenKardinalitaet(menge: DefinierteMenge): KardinalitaetsVertrag {
     val produkt = produktKardinalitaet(menge.variablen.map { it.grundMenge })
     return when {
-        produkt.endlichkeit == EndlichkeitsStatus.ENDLICH -> endlichAbzaehlbar("Die definierte Menge liegt in einem endlichen Grundraum.")
+        produkt.endlichkeit == EndlichkeitsStatus.ENDLICH ->
+            endlichAbzaehlbar("Die definierte Menge liegt in einem endlichen Grundraum.")
         produkt.abzaehlbarkeit == AbzaehlbarkeitsStatus.ABZAEHLBAR -> KardinalitaetsVertrag(
             EndlichkeitsStatus.UNENTSCHEIDBAR,
             AbzaehlbarkeitsStatus.ABZAEHLBAR,
@@ -240,20 +256,34 @@ private fun definierteMengenKardinalitaet(menge: DefinierteMenge): Kardinalitaet
 }
 
 private fun folgenraumKardinalitaet(elementMenge: MengenAusdruck): KardinalitaetsVertrag {
+    if (istNachweisbarLeer(elementMenge)) {
+        return endlichAbzaehlbar("Über einer leeren Elementmenge enthält der Raum endlicher Folgen nur die leere Folge.")
+    }
     val elemente = kardinalitaetsVertrag(elementMenge)
     return when (elemente.abzaehlbarkeit) {
-        AbzaehlbarkeitsStatus.ABZAEHLBAR -> unendlichAbzaehlbar(
-            "Die Menge endlicher Folgen über einer nichtleeren abzählbaren Menge ist abzählbar.",
-        )
-        AbzaehlbarkeitsStatus.UEBERABZAEHLBAR -> unendlichUeberabzaehlbar(
-            "Bereits die Folgen der Länge eins bilden eine überabzählbare Teilmenge.",
-        )
+        AbzaehlbarkeitsStatus.ABZAEHLBAR -> if (istNachweisbarNichtLeer(elementMenge)) {
+            unendlichAbzaehlbar("Die Menge endlicher Folgen über einer nichtleeren abzählbaren Menge ist abzählbar unendlich.")
+        } else {
+            KardinalitaetsVertrag(
+                EndlichkeitsStatus.UNENTSCHEIDBAR,
+                AbzaehlbarkeitsStatus.ABZAEHLBAR,
+                "Die Menge endlicher Folgen ist abzählbar; die Nichtleerheit der Elementmenge ist nicht nachgewiesen.",
+            )
+        }
+        AbzaehlbarkeitsStatus.UEBERABZAEHLBAR ->
+            unendlichUeberabzaehlbar("Bereits die Folgen der Länge eins bilden eine überabzählbare Teilmenge.")
         AbzaehlbarkeitsStatus.UNENTSCHEIDBAR -> KardinalitaetsVertrag(
             EndlichkeitsStatus.UNENTSCHEIDBAR,
             AbzaehlbarkeitsStatus.UNENTSCHEIDBAR,
             "Die Elementmenge besitzt keinen ausreichenden Kardinalitätsvertrag.",
         )
     }
+}
+
+private fun istNachweisbarLeer(menge: MengenAusdruck): Boolean = when (menge) {
+    LeereMenge -> true
+    is EndlicheMenge -> menge.elemente.isEmpty()
+    else -> false
 }
 
 private fun istNachweisbarNichtLeer(menge: MengenAusdruck): Boolean = when (menge) {
@@ -368,7 +398,10 @@ object StandardTopologieRegister {
         KomplexeZahlen -> StandardTopologie(traeger, StandardTopologieKennung.KOMPLEX)
         is ReellesIntervall -> TeilraumTopologie(
             traeger,
-            TopologischerRaum(ReelleZahlen, StandardTopologie(ReelleZahlen, StandardTopologieKennung.REELL)),
+            TopologischerRaum(
+                ReelleZahlen,
+                StandardTopologie(ReelleZahlen, StandardTopologieKennung.REELL),
+            ),
         )
         is Vektorraum -> when (traeger.skalarMenge) {
             ReelleZahlen, KomplexeZahlen -> StandardTopologie(traeger, StandardTopologieKennung.EUKLIDISCH)
@@ -394,16 +427,22 @@ data class MetrikVertrag(
  */
 fun pruefeMetrik(traeger: MengenAusdruck, metrik: Methode): StrukturPruefung<MetrikVertrag> {
     val signatur = runCatching { metrik.methodenSignatur() }.getOrElse {
-        return StrukturPruefung.Ungueltig(it.message ?: "Die Metrik besitzt keine vollständige Methodensignatur.")
+        return StrukturPruefung.Ungueltig(
+            it.message ?: "Die Metrik besitzt keine vollständige Methodensignatur.",
+        )
     }
     if (signatur.argumente.size != 2) {
         return StrukturPruefung.Ungueltig("Eine Metrik benötigt genau zwei Argumente aus demselben Träger.")
     }
     if (signatur.argumente.any { it.werteVorrat != traeger }) {
-        return StrukturPruefung.Ungueltig("Beide Metrikargumente müssen den Träger ${traeger.zuLatex()} als Wertevorrat besitzen.")
+        return StrukturPruefung.Ungueltig(
+            "Beide Metrikargumente müssen den Träger ${traeger.zuLatex()} als Wertevorrat besitzen.",
+        )
     }
-    if (!signatur.zielMenge.istZahlenmenge()) {
-        return StrukturPruefung.Ungueltig("Eine Metrik muss reelle, nichtnegative Werte liefern.")
+    if (!signatur.zielMenge.istReellerWertebereich()) {
+        return StrukturPruefung.Ungueltig(
+            "Eine Metrik muss Werte in einem reellen Wertebereich liefern; Nichtnegativität wird als Metrikaxiom geprüft.",
+        )
     }
     val axiome = listOf(
         "d(x,y) \\ge 0",
@@ -417,12 +456,23 @@ fun pruefeMetrik(traeger: MengenAusdruck, metrik: Methode): StrukturPruefung<Met
     )
 }
 
+private fun MengenAusdruck.istReellerWertebereich(): Boolean = when (this) {
+    is ReellesIntervall -> true
+    is BeschraenkteZahlmenge ->
+        FundamentaleZahlbereiche.istTeilbereich(traeger, FundamentalerZahlbereich.REELL)
+    else -> fundamentalerZahlbereichOderNull()?.let {
+        FundamentaleZahlbereiche.istTeilbereich(it, FundamentalerZahlbereich.REELL)
+    } ?: false
+}
+
 /** Konservative Teilmengenprüfung für die derzeit strukturell bekannten Fälle. */
 fun teilMengenStatus(teil: MengenAusdruck, ganz: MengenAusdruck): AussageStatus = when {
     teil == LeereMenge || teil == ganz -> AussageStatus.BEWIESEN
     ganz is EndlicheMenge && teil is EndlicheMenge ->
         if (teil.elemente.all { it in ganz.elemente }) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
-    ganz == ReelleZahlen && teil.istZahlenmenge() && teil != KomplexeZahlen -> AussageStatus.BEWIESEN
+    ganz == ReelleZahlen && teil.istReellerWertebereich() -> AussageStatus.BEWIESEN
+    ganz == ReelleZahlen && teil is EndlicheMenge && teil.elemente.all { it is RationaleZahl } ->
+        AussageStatus.BEWIESEN
     else -> AussageStatus.UNENTSCHEIDBAR
 }
 
@@ -463,13 +513,16 @@ private fun standardTopologischeEigenschaft(
     }
     return if (offen) {
         when (menge) {
-            is ReellesIntervall -> if (menge.linksOffen && menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
-            is EndlicheMenge -> if (menge.elemente.isEmpty()) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
+            is ReellesIntervall ->
+                if (menge.linksOffen && menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
+            is EndlicheMenge ->
+                if (menge.elemente.isEmpty()) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
             else -> AussageStatus.UNENTSCHEIDBAR
         }
     } else {
         when (menge) {
-            is ReellesIntervall -> if (!menge.linksOffen && !menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
+            is ReellesIntervall ->
+                if (!menge.linksOffen && !menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
             is EndlicheMenge -> AussageStatus.BEWIESEN
             else -> AussageStatus.UNENTSCHEIDBAR
         }
