@@ -1,0 +1,50 @@
+name: SVG branch targeted fixes
+
+on:
+  push:
+    branches:
+      - agent/v2.34.0-svg-operatoren-planung
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v2.34.0-svg-operatoren-planung
+      - name: Apply targeted fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          operatoren = Path('MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/SvgErweiterteOperatoren.kt')
+          text = operatoren.read_text()
+          old = r'&f\end{pmatrix}'
+          new = r'&f\\end{pmatrix}'
+          if old not in text:
+              raise SystemExit('Matrix-LaTeX-Zielstelle nicht gefunden')
+          operatoren.write_text(text.replace(old, new, 1))
+
+          grafik = Path('MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/SvgGrafik.kt')
+          text = grafik.read_text()
+          old = '        val kopieId = eindeutigeId(neueId.ifBlank { "$zielId-kopie" }, belegt)\n'
+          new = (
+              '        val gewünschteId = neueId.ifBlank { "$zielId-kopie" }\n'
+              '        val kopieId = if (gewünschteId in belegt) eindeutigeId(gewünschteId, belegt) else gewünschteId\n'
+          )
+          if old not in text:
+              raise SystemExit('Duplikat-ID-Zielstelle nicht gefunden')
+          grafik.write_text(text.replace(old, new, 1))
+      - name: Commit fixes
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add MathematikKnoten/src/main/kotlin/de/TeutonStudio/MathematikKnoten/SvgErweiterteOperatoren.kt \
+                  MathematikRechenSystem/src/main/kotlin/de/TeutonStudio/MathematikRechenSystem/kern/SvgGrafik.kt
+          git commit -m "SVG-Operatoren Buildfehler korrigieren"
+          git push origin HEAD:agent/v2.34.0-svg-operatoren-planung
