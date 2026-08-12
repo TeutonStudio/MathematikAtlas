@@ -60,13 +60,15 @@ object KanonischerMathematikKnotenKatalog {
                 PraedikatKnotenVorlagen.standard +
                 MengenMassKnotenVorlagen.alle +
                 RandKnotenVorlagen.alle +
-                TangentialKnotenVorlagen.alle
+                TangentialKnotenVorlagen.alle +
+                SvgKnotenVorlagen.alle
             )
             .map(::methodenfaehigeRechnerVorlage)
             .distinctBy { vorlage ->
                 vorlage.art to listOf(
                     vorlage.standardParameter["operator"].orEmpty(),
                     vorlage.standardParameter["eingabeModus"].orEmpty(),
+                    vorlage.standardParameter[SVG_OPERATOR_PARAMETER].orEmpty(),
                     vorlage.name,
                 ).joinToString("|")
             }

@@ -18,6 +18,11 @@ object MathematischeTypen {
     val UnendlichesTupel = TypId("typ.tupel.unendlich")
     val Methode = TypId("mathematik.methode")
 
+    /** Nichtmathematische Darstellungswerte benutzen denselben neutralen G0.2-Typkern. */
+    val Grafik = TypId("grafik")
+    val SvgGrafik = TypId("grafik.svg")
+    val SvgStil = TypId("grafik.svg.stil")
+
     val Natuerlich = TypId("mathematik.zahl.natuerlich")
     val NatuerlichMitNull = TypId("mathematik.zahl.natuerlich-mit-null")
     val Ganz = TypId("mathematik.zahl.ganz")
@@ -60,6 +65,9 @@ object MathematischeTypen {
             Tupel to Objekt,
             UnendlichesTupel to Objekt,
             Methode to Objekt,
+            Grafik to Objekt,
+            SvgGrafik to Grafik,
+            SvgStil to Objekt,
         )
         var aktuell: TypId? = von
         val besucht = mutableSetOf<TypId>()

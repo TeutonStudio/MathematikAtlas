@@ -69,6 +69,26 @@ object MathematikAnschlussArten {
         beschreibung = "Eine geordnete endliche Folge mathematischer Objekte.",
     )
 
+    /** Gemeinsame Grafikdomäne für SVG und spätere strukturierte Ausgabeformate. */
+    val Grafik = AnschlussArt(
+        id = AnschlussArtId("grafik"),
+        name = "Grafik",
+        elternArt = Objekt.id,
+        beschreibung = "Eine strukturierte Grafik, die durch Grafikknoten schrittweise aufgebaut wird.",
+    )
+    val SvgGrafik = AnschlussArt(
+        id = AnschlussArtId("grafik.svg"),
+        name = "SVG-Grafik",
+        elternArt = Grafik.id,
+        beschreibung = "Ein unveränderlicher SVG-AST mit ViewBox, Definitionen und sichtbaren Elementen.",
+    )
+    val SvgStil = AnschlussArt(
+        id = AnschlussArtId("grafik.svg.stil"),
+        name = "SVG-Stil",
+        elternArt = Objekt.id,
+        beschreibung = "Wiederverwendbare Füll-, Kontur- und Linienattribute für SVG-Ergänzungen.",
+    )
+
     /** Einzige produktive Anschlussart für sämtliche Methoden. */
     val Methode = AnschlussArt(
         id = AnschlussArtId("mathematik.methode"),
@@ -146,6 +166,9 @@ object MathematikAnschlussArten {
         Matrix,
         Tensor,
         Tupel,
+        Grafik,
+        SvgGrafik,
+        SvgStil,
         Methode,
         LegacyMethode,
         LegacyAussageMethode,

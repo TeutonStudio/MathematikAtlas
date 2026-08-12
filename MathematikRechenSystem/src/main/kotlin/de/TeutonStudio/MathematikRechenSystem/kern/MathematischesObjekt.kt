@@ -4,6 +4,16 @@ sealed interface MathematischesObjekt {
     fun zuLatex(): String
 }
 
+/**
+ * Nicht rein mathematische, aber über den bestehenden Atlas-Wertkanal transportierbare
+ * Darstellungswerte. Der Übergangsvertrag hält Grafikwerte vom mathematischen Ausdrucksbaum
+ * getrennt, bis der allgemeine Laufzeitwertkanal vollständig aus dem Mathematikadapter gelöst ist.
+ */
+interface DarstellungsWert : MathematischesObjekt
+
+/** Gemeinsamer Obervertrag für strukturierte Grafikformate wie SVG und später TikZ. */
+interface Grafik : DarstellungsWert
+
 /** Ein benannter, bei einer [Methode] bindbarer Parameter. */
 sealed interface MethodenParameter : MathematischesObjekt {
     val name: String
