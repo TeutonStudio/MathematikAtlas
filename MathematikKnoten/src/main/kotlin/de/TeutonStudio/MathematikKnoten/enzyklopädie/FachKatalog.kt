@@ -28,8 +28,10 @@ object FachKatalog {
     val MengenlehreDefinitionen = FachPfad.von("mengenlehre", "mengendefinitionen")
     val MengenlehreKonstruktionen = FachPfad.von("mengenlehre", "konstruktionen")
     val MengenlehreAxiome = FachPfad.von("mengenlehre", "axiome")
+    val MengenEigenschaftenKardinalität = FachPfad.von("mengenlehre", "eigenschaften", "kardinalitaet")
     val MengenEigenschaftenTopologie = FachPfad.von("mengenlehre", "eigenschaften", "topologie")
     val MengenEigenschaftenKonvexität = FachPfad.von("mengenlehre", "eigenschaften", "konvexitaet")
+    val MengenlehreTopologieRäume = FachPfad.von("mengenlehre", "topologie", "raeume")
 
     val LogikAussagen = FachPfad.von("logik", "aussagen")
     val LogikPrädikate = FachPfad.von("logik", "praedikate")
@@ -46,6 +48,7 @@ object FachKatalog {
     val AlgebraStrukturenRingeKörper = FachPfad.von("algebra", "strukturen", "ringe-koerper")
 
     val TopologieGrundbegriffe = FachPfad.von("topologie", "grundbegriffe")
+    val TopologieAbbildungen = FachPfad.von("topologie", "abbildungen")
     val StochastikGrundbegriffe = FachPfad.von("stochastik", "grundbegriffe")
     val EigeneKarten = FachPfad.von("eigene-karten")
 
@@ -72,8 +75,10 @@ object FachKatalog {
         MengenlehreDefinitionen,
         MengenlehreKonstruktionen,
         MengenlehreAxiome,
+        MengenEigenschaftenKardinalität,
         MengenEigenschaftenTopologie,
         MengenEigenschaftenKonvexität,
+        MengenlehreTopologieRäume,
         LogikAussagen,
         LogikPrädikate,
         LogikAxiome,
@@ -86,6 +91,7 @@ object FachKatalog {
         AlgebraStrukturenGruppen,
         AlgebraStrukturenRingeKörper,
         TopologieGrundbegriffe,
+        TopologieAbbildungen,
         StochastikGrundbegriffe,
         EigeneKarten,
     )
@@ -114,10 +120,12 @@ object FachKatalog {
         name: String,
         kategorie: String,
         besitztKartenVerweis: Boolean,
+        standardParameter: Map<String, String> = emptyMap(),
     ): Set<FachPfad> {
         val artKlein = art.lowercase()
         val nameKlein = name.lowercase()
         val kategorieKlein = kategorie.lowercase()
+        val eigenschaft = standardParameter["eigenschaft"]?.trim()?.lowercase().orEmpty()
 
         if (artKlein == "mathematik.methodengraph") {
             return setOf(AnalysisFunktionen, MengenlehreKonstruktionen)
@@ -129,11 +137,21 @@ object FachKatalog {
             }
 
             when {
+                artKlein in setOf("mathematik.topologischerraum", "mathematik.metrischerraum") -> {
+                    add(MengenlehreTopologieRäume)
+                    add(TopologieGrundbegriffe)
+                }
                 "methodeneigenschaft" in artKlein -> {
-                    add(AnalysisEigenschaftenRegularität)
-                    add(AnalysisEigenschaftenIntegrabilität)
-                    add(AnalysisEigenschaftenFunktionsgeometrie)
-                    add(AlgebraMethoden)
+                    if (eigenschaft == "stetig") {
+                        add(AnalysisEigenschaftenRegularität)
+                        add(TopologieAbbildungen)
+                        add(AlgebraMethoden)
+                    } else {
+                        add(AnalysisEigenschaftenRegularität)
+                        add(AnalysisEigenschaftenIntegrabilität)
+                        add(AnalysisEigenschaftenFunktionsgeometrie)
+                        add(AlgebraMethoden)
+                    }
                 }
                 "analysiseigenschaft" in artKlein -> {
                     add(AnalysisEigenschaftenFunktionsgeometrie)
@@ -148,10 +166,19 @@ object FachKatalog {
                     add(MethodenSignatur)
                     add(AlgebraMethoden)
                 }
-                "mengeneigenschaft" in artKlein -> {
-                    add(MengenEigenschaftenTopologie)
-                    add(MengenEigenschaftenKonvexität)
-                    add(TopologieGrundbegriffe)
+                "mengeneigenschaft" in artKlein -> when (eigenschaft) {
+                    "endlich", "unendlich", "abzählbar", "abzaehlbar", "überabzählbar", "ueberabzaehlbar", "uberabzahlbar" ->
+                        add(MengenEigenschaftenKardinalität)
+                    "offen", "abgeschlossen", "geschlossen" -> {
+                        add(MengenEigenschaftenTopologie)
+                        add(TopologieGrundbegriffe)
+                    }
+                    "konvexe-menge" -> add(MengenEigenschaftenKonvexität)
+                    else -> {
+                        add(MengenEigenschaftenKardinalität)
+                        add(MengenEigenschaftenTopologie)
+                        add(MengenEigenschaftenKonvexität)
+                    }
                 }
             }
 
