@@ -181,3 +181,54 @@ data class BegriffsAussage(
 
     override fun zuLatex(): String = formelLatex
 }
+
+const val VEKTORRAUM_BEGRIFF_ID = "lina.vektorraum"
+const val LINEARE_ABBILDUNG_BEGRIFF_ID = "lina.lineareAbbildung"
+
+val VEKTORRAUM_SPEZIFIKATION = BegriffsSpezifikation(
+    id = VEKTORRAUM_BEGRIFF_ID,
+    name = "Vektorraum",
+    rollen = listOf(
+        BegriffsRolle("menge", "Trägermenge", BegriffsRollenArt.MENGE),
+        BegriffsRolle("addition", "Addition", BegriffsRollenArt.METHODE),
+        BegriffsRolle("skalareMultiplikation", "Skalare Multiplikation", BegriffsRollenArt.METHODE),
+    ),
+    axiome = listOf(
+        BegriffsAxiom("abschluss", "Abgeschlossenheit", "u+v\\in V"),
+        BegriffsAxiom("assoziativ", "Assoziativität", "(u+v)+w=u+(v+w)"),
+        BegriffsAxiom("nullvektor", "Nullvektor", "u+0_V=u"),
+        BegriffsAxiom("inverses", "Additives Inverses", "u+(-u)=0_V"),
+        BegriffsAxiom("kommutativ", "Kommutativität", "u+v=v+u"),
+        BegriffsAxiom("distributivVektor", "Distributivität über Vektoraddition", "a(u+v)=au+av"),
+        BegriffsAxiom("distributivSkalar", "Distributivität über Skalaraddition", "(a+b)u=au+bu"),
+        BegriffsAxiom("skalarAssoziativ", "Assoziativität der Skalarmultiplikation", "(ab)u=a(bu)"),
+        BegriffsAxiom("skalarEins", "Einselement des Körpers", "1_Ku=u"),
+    ),
+    beispiele = listOf(
+        BegriffsBeispiel("kn", "K^n", setOf("satz.vektorraum.komponentenweise")),
+        BegriffsBeispiel("matrizen", "Matrizenraum", setOf("satz.vektorraum.matrizen")),
+        BegriffsBeispiel("polynome", "Polynomraum", setOf("satz.vektorraum.polynome")),
+        BegriffsBeispiel("methoden", "Methodenraum", setOf("satz.vektorraum.punktweise")),
+        BegriffsBeispiel("nullraum", "Nullvektorraum", setOf("satz.vektorraum.nullraum")),
+    ),
+)
+
+val LINEARE_ABBILDUNG_SPEZIFIKATION = BegriffsSpezifikation(
+    id = LINEARE_ABBILDUNG_BEGRIFF_ID,
+    name = "Lineare Abbildung",
+    rollen = listOf(
+        BegriffsRolle("definitionsraum", "Definitionsraum", BegriffsRollenArt.AUSSAGE),
+        BegriffsRolle("zielraum", "Zielraum", BegriffsRollenArt.AUSSAGE),
+        BegriffsRolle("methode", "Methode", BegriffsRollenArt.METHODE),
+    ),
+    axiome = listOf(
+        BegriffsAxiom("additiv", "Additivität", "f(u+v)=f(u)+f(v)"),
+        BegriffsAxiom("homogen", "Homogenität", "f(au)=af(u)"),
+    ),
+    beispiele = listOf(
+        BegriffsBeispiel("identitaet", "Identität", setOf("satz.linear.identitaet")),
+        BegriffsBeispiel("nullabbildung", "Nullabbildung", setOf("satz.linear.nullabbildung")),
+        BegriffsBeispiel("matrixabbildung", "Matrixabbildung", setOf("satz.linear.matrix")),
+        BegriffsBeispiel("quadrat", "Gegenbeispiel x²", emptySet()),
+    ),
+)
