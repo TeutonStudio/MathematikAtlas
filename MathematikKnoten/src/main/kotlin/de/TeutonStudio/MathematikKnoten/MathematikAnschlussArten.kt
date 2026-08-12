@@ -3,10 +3,23 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 
 object MathematikAnschlussArten {
+    /**
+     * Domänenneutrale Oberart aller Atlas-Laufzeitwerte.
+     *
+     * Die Anschlussart ergänzt den bereits neutralen Typkern nur als grobe
+     * Editor-/Legacy-Kategorie. Präzise Typinformation liegt in AnschlussVertrag.typ.
+     */
+    val AtlasWert = AnschlussArt(
+        id = AnschlussArtId("atlas.wert"),
+        name = "Atlas-Wert",
+        beschreibung = "Beliebiger domänenneutraler Laufzeitwert des Atlas.",
+    )
+
     val Objekt = AnschlussArt(
         id = AnschlussArtId("mathematik.objekt"),
         name = "Mathematisches Objekt",
-        beschreibung = "Beliebiges mathematisches Objekt; Oberart der allgemeinen Atlas-Datentypen.",
+        elternArt = AtlasWert.id,
+        beschreibung = "Beliebiges mathematisches Objekt.",
     )
     val Zahl = AnschlussArt(
         id = AnschlussArtId("mathematik.zahl"),
@@ -91,7 +104,7 @@ object MathematikAnschlussArten {
     val Grafik = AnschlussArt(
         id = AnschlussArtId("grafik"),
         name = "Grafik",
-        elternArt = Objekt.id,
+        elternArt = AtlasWert.id,
         beschreibung = "Eine strukturierte Grafik, die durch Grafikknoten schrittweise aufgebaut wird.",
     )
     val SvgGrafik = AnschlussArt(
@@ -103,7 +116,7 @@ object MathematikAnschlussArten {
     val SvgStil = AnschlussArt(
         id = AnschlussArtId("grafik.svg.stil"),
         name = "SVG-Stil",
-        elternArt = Objekt.id,
+        elternArt = AtlasWert.id,
         beschreibung = "Wiederverwendbare Füll-, Kontur- und Linienattribute für SVG-Ergänzungen.",
     )
 
@@ -111,8 +124,8 @@ object MathematikAnschlussArten {
     val Methode = AnschlussArt(
         id = AnschlussArtId("mathematik.methode"),
         name = "Methode",
-        elternArt = Objekt.id,
-        beschreibung = "Eine aufrufbare Methode bzw. Abbildung mit Argumenten und Ergebnis.",
+        elternArt = AtlasWert.id,
+        beschreibung = "Eine aufrufbare Methode mit neutraler semantischer Ein-/Ausgabesignatur.",
     )
 
     /** Quellkompatible Namen; alle liefern dieselbe produktive Anschlussart. */
@@ -173,6 +186,7 @@ object MathematikAnschlussArten {
         if (art in historischeMethodenIds) Methode.id else art
 
     val alle = listOf(
+        AtlasWert,
         Objekt,
         Zahl,
         Aussage,
