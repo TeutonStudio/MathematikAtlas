@@ -17,6 +17,8 @@ jobs:
       - name: Android SDK 36 installieren
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Architektur prüfen
-        run: python3 scripts/pruefe_architektur.py
+        run: |
+          python3 scripts/pruefe_architektur.py
+          python3 scripts/pruefe_methodenmodell.py
       - name: Bauen und testen
         run: ./gradlew --stacktrace test :app:assembleDebug

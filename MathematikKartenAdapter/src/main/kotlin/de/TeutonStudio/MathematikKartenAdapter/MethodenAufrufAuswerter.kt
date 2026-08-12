@@ -20,15 +20,19 @@ const val METHODEN_ERGEBNISPROJEKTION_TUPEL = "tupel"
 internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
-        val methode = methodenWert.objekt
-        val mathematischeMethode = methode as? MathematischeMethode
+        val methodenObjekt = methodenWert.objekt
+        val methode = methodenObjekt as? Methode
+        val auswertbareMethode = methode as? MathematischAuswertbareMethode
+        val mathematischeMethode = methode?.let {
+            runCatching { it.alsMathematischeMethode("mathematischen Methodenaufruf") }.getOrNull()
+        }
         val argumentAnschlüsse = kontext.knoten.anschlüsse
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
         val argumentProjektion = kontext.knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION]
             ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT
         val ergebnisProjektion = kontext.knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION]
-            ?: if (methode is MathematischAuswertbareMethode) {
+            ?: if (auswertbareMethode != null) {
                 METHODEN_ERGEBNISPROJEKTION_DIREKT
             } else {
                 METHODEN_ERGEBNISPROJEKTION_TUPEL
@@ -47,22 +51,22 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
         val (roherWert, roheZielMenge) = if (
-            mathematischeMethode != null && methode is MathematischAuswertbareMethode
+            mathematischeMethode != null && auswertbareMethode != null
         ) {
             val ausgabe = mathematischeMethode.einzigeAusgabe()
             val bindungen = mathematischeMethode.parameter
                 .mapIndexed { index, parameter -> parameter.name to argumente[index] }
                 .toMap()
-            methode.wendeMathematischAn(bindungen) to mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
+            auswertbareMethode.wendeMathematischAn(bindungen) to mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
         } else {
-            symbolischerProjektionsAnwendungsWert(methode, argumente, ergebnisArt) to null
+            symbolischerProjektionsAnwendungsWert(methodenObjekt, argumente, ergebnisArt) to null
         }
         val (wert, zielMenge) = projiziereMethodenErgebnis(
             wert = roherWert,
             zielMenge = roheZielMenge,
             projektion = ergebnisProjektion,
         )
-        val methodenReferenz = (methode as? Methode)?.name ?: methodenWert.anzeigeLatex()
+        val methodenReferenz = methode?.name ?: methodenWert.anzeigeLatex()
         val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
         val projiziertesLatex = if (
             ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && roherWert !is Tupel

@@ -45,9 +45,6 @@ interface Methode : MathematischesObjekt, TypTragend {
     val effektiverWerteVorrat: MengenAusdruck?
         get() = alsMathematischeMethode("einen mathematischen Wertevorrat").effektiverWerteVorrat
 
-    val bereichsanpassung: MethodenBereichsanpassung?
-        get() = alsMathematischeMethode("mathematische Bereichsanpassungen").bereichsanpassung
-
     fun vorschriftFür(ausgabe: String): MathematischesObjekt =
         alsMathematischeMethode("eine symbolische Vorschrift").vorschriftFür(ausgabe)
 
@@ -97,22 +94,42 @@ interface SignaturtragendeMethode : Methode {
 }
 
 /**
+ * Übergangs-Capability für mathematische Methoden, die eine strukturierte Herkunft
+ * aus einer Bereichsanpassung tragen. Sie gehört ausdrücklich nicht zum allgemeinen
+ * [Methode]-Vertrag und kann von Script-/Engine-Methoden vollständig ignoriert werden.
+ */
+interface BereichsanpassungsTragendeMethode : Methode {
+    val bereichsanpassung: MethodenBereichsanpassung?
+        get() = null
+}
+
+/** Quellkompatible Projektion der optionalen Bereichsanpassungs-Herkunft. */
+val Methode.bereichsanpassung: MethodenBereichsanpassung?
+    get() = (this as? BereichsanpassungsTragendeMethode)?.bereichsanpassung
+
+/**
  * Capability für Methoden, die der Mathematikkern rein durch Bindung mathematischer
  * Argumente auswerten darf. Script- oder Engine-Methoden dürfen diese Capability
  * ausdrücklich nicht allein aufgrund von [Methode] erhalten.
+ *
+ * Die zusätzliche Herkunfts-Capability ist ein Übergangsvertrag für die konkrete
+ * Mathematikimplementierung; ihr Default ist leer und sie erweitert [Methode] nicht.
  */
-interface MathematischAuswertbareMethode : SignaturtragendeMethode {
+interface MathematischAuswertbareMethode : SignaturtragendeMethode, BereichsanpassungsTragendeMethode {
     fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt
 }
 
 /**
  * Liefert die konkrete mathematische Implementierung oder einen fachlich eindeutigen
- * Fehler. Mathematische Operatoren benutzen diese Grenze, statt bei jeder Methode
- * stillschweigend eine symbolische Vorschrift vorauszusetzen.
+ * Fehler. Strukturierte mathematische Methodenoperatoren werden an dieser expliziten
+ * Mathematikgrenze materialisiert; der allgemeine [Methode]-Vertrag erfährt davon nichts.
  */
-fun Methode.alsMathematischeMethode(operation: String = "diese Operation"): MathematischeMethode =
-    this as? MathematischeMethode
-        ?: error("Die Methode '$name' unterstützt $operation nicht als symbolische mathematische Methode.")
+fun Methode.alsMathematischeMethode(operation: String = "diese Operation"): MathematischeMethode = when (this) {
+    is MathematischeMethode -> this
+    is MethodenRestriktion -> materialisiere()
+    is MethodenBereichsanpassung -> materialisiere()
+    else -> error("Die Methode '$name' unterstützt $operation nicht als symbolische mathematische Methode.")
+}
 
 /** Quellkompatibler kanonischer Konstruktor für bestehende Aufrufer. */
 @Suppress("FunctionName")
