@@ -1,68 +1,115 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+import de.TeutonStudio.TypSystem.TypPrüfung
+
 /**
  * Konkrete symbolische Implementierung mathematischer Methoden.
  *
- * [Methode] ist der offene fachliche Obervertrag. Diese Klasse bewahrt die bisherige
- * Mathematiksemantik: mehrere öffentliche Kartenausgänge werden als ein geordnetes
- * Tupel in [vorschrift] und als ein Tupelraum in [zielMenge] gespeichert.
- * [ausgabeNamen] bewahrt nur die öffentliche Benennung und Reihenfolge der
- * Tupelkomponenten.
+ * [Methode] ist der domänenneutrale Obervertrag. Die hier noch physisch vorhandenen
+ * Felder [vorschrift], [zielMenge], [werteVorräte] und [effektiverWerteVorrat] sind
+ * die zentrale Legacy-Speicheroberfläche für bestehende Karten. Die fachliche Semantik
+ * wird über [mathematischeSignatur], [ergebnisTupel] und [zielRaum] kanonisch als
+ * Tupel -> Tupel projiziert. Neu generischer Code darf diese Legacy-Felder nicht lesen.
  */
 data class MathematischeMethode(
     override val name: String,
     override val parameter: List<MethodenParameter>,
     override val vorschrift: MathematischesObjekt,
     override val zielMenge: MengenAusdruck,
-    /** Definitionsmengen der Parameter, in derselben Reihenfolge wie [parameter]. */
+    /** Legacy-Speicher der Komponenten-Definitionsmengen. */
     override val werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     override val ausgabeNamen: List<String> = listOf("wert"),
-    /**
-     * Optionaler gemeinsamer Definitionsbereich der vollständigen Argumentbelegung.
-     * Er überschreibt nur die aus den Parameter-Wertevorräten abgeleitete Gesamtmenge
-     * und erlaubt insbesondere nicht-kartesische Restriktionen mehrstelliger Methoden.
-     */
+    /** Legacy-Speicher eines tatsächlichen gemeinsamen Definitionsraums. */
     override val effektiverWerteVorrat: MengenAusdruck? = null,
     /** Strukturierte Herkunft einer Restriktion mit optionalen Ergänzungszweigen. */
     override val bereichsanpassung: MethodenBereichsanpassung? = null,
-) : MathematischAuswertbareMethode {
+) : SymbolischMathematischeMethode {
     init {
         require(parameter.map { it.name }.distinct().size == parameter.size) {
             "Methodenparameter müssen eindeutige Namen haben."
         }
         require(werteVorräte.keys.all { key -> parameter.any { it.name == key } }) {
-            "Wertevorräte dürfen nur für Parameter definiert werden."
+            "Definitionsmengen dürfen nur für vorhandene Methodenparameter definiert werden."
         }
-        require(ausgabeNamen.isNotEmpty()) { "Eine Methode benötigt genau eine Vorschrift." }
         require(ausgabeNamen.distinct().size == ausgabeNamen.size) {
             "Öffentliche Methodenausgaben benötigen eindeutige Namen."
         }
-        if (ausgabeNamen.size > 1) {
-            require(vorschrift is Tupel && vorschrift.elemente.size == ausgabeNamen.size) {
-                "Mehrere öffentliche Ausgaben müssen als geordnetes Ergebnistupel gespeichert werden."
+        when (ausgabeNamen.size) {
+            0 -> {
+                require(vorschrift is Tupel && vorschrift.elemente.isEmpty()) {
+                    "Eine ergebnislose Methode verwendet intern das leere Ergebnistupel ()."
+                }
+                require(zielMenge is Tupelraum && zielMenge.komponenten.isEmpty()) {
+                    "Eine ergebnislose Methode verwendet den Zielraum {()} ."
+                }
             }
-            require(zielMenge is Tupelraum && zielMenge.komponenten.size == ausgabeNamen.size) {
-                "Mehrere öffentliche Ausgaben benötigen einen synchronen Produktzielraum."
+            1 -> {
+                if (vorschrift is Tupel) require(vorschrift.elemente.size == 1) {
+                    "Eine einwertige kanonisch gepackte Methode benötigt genau eine Tupelkomponente."
+                }
+                if (zielMenge is Tupelraum) require(zielMenge.komponenten.size == 1) {
+                    "Eine einwertige kanonisch gepackte Methode benötigt genau eine Zielkomponente."
+                }
+            }
+            else -> {
+                require(vorschrift is Tupel && vorschrift.elemente.size == ausgabeNamen.size) {
+                    "Mehrere öffentliche Ausgaben müssen als geordnetes Ergebnistupel gespeichert werden."
+                }
+                require(zielMenge is Tupelraum && zielMenge.komponenten.size == ausgabeNamen.size) {
+                    "Mehrere öffentliche Ausgaben benötigen einen synchronen Produktzielraum."
+                }
             }
         }
     }
 
-    override val signatur: MethodenSignatur
-        get() = MethodenSignatur(
-            argumente = parameter.map { parameter ->
-                MethodenArgument(
+    /** Kanonische symbolische Ergebnistupel-Sicht, unabhängig von historischen Einzelwertspeichern. */
+    val ergebnisTupel: Tupel
+        get() = when (ausgabeNamen.size) {
+            0 -> vorschrift as Tupel
+            1 -> if (vorschrift is Tupel) vorschrift else Tupel(listOf(vorschrift))
+            else -> vorschrift as Tupel
+        }
+
+    private val ergebnisZielMengen: List<MengenAusdruck>
+        get() = when (ausgabeNamen.size) {
+            0 -> emptyList()
+            1 -> if (zielMenge is Tupelraum) zielMenge.komponenten else listOf(zielMenge)
+            else -> (zielMenge as Tupelraum).komponenten
+        }
+
+    /** Kanonischer mathematischer Zielraum, auch bei null oder einer Ausgabe. */
+    val zielRaum: Tupelraum
+        get() = Tupelraum(ergebnisZielMengen)
+
+    override val mathematischeSignatur: MathematischeMethodenSignatur
+        get() = MathematischeMethodenSignatur(
+            argumente = parameter.mapIndexed { index, parameter ->
+                MathematischeArgumentKomponente(
+                    id = "argument-$index",
+                    name = parameter.name,
+                    position = index,
                     parameter = parameter,
-                    werteVorrat = werteVorräte[parameter.name]
-                        ?: error("Für das Methodenargument '${parameter.name}' konnte kein Wertevorrat ermittelt werden."),
+                    definitionsMenge = werteVorräte[parameter.name]
+                        ?: error("Für das Methodenargument '${parameter.name}' konnte keine Definitionsmenge ermittelt werden."),
                 )
             },
-            zielMenge = zielMenge,
-            effektiverWerteVorrat = effektiverWerteVorrat,
+            ergebnisse = ausgabeNamen.mapIndexed { index, ausgabe ->
+                MathematischeErgebnisKomponente(
+                    id = "ergebnis-$index",
+                    name = ausgabe,
+                    position = index,
+                    zielMenge = ergebnisZielMengen[index],
+                )
+            },
+            effektiverDefinitionsRaum = normalisiereLegacyDefinitionsRaum(
+                effektiverWerteVorrat,
+                parameter.size,
+            ),
         )
 
     /**
-     * Ausschließlich für Lademigrationen und historische Testdaten. Produktiver Code
-     * konstruiert Methoden über [vorschrift], [zielMenge] und [ausgabeNamen].
+     * Ausschließlich für Lademigrationen und historische Testdaten. Die gelesenen
+     * Einzelausgaben werden sofort zu einer konsistenten Tupelprojektion normalisiert.
      */
     @Deprecated("Nur für historische Daten; verwende den kanonischen Methoden-Konstruktor.")
     constructor(
@@ -74,8 +121,8 @@ data class MathematischeMethode(
     ) : this(
         name = name,
         parameter = parameter,
-        vorschrift = kanonischeVorschrift(name, ausgaben),
-        zielMenge = kanonischeZielMenge(name, ausgaben, zielMengen, werteVorräte),
+        vorschrift = kanonischeVorschrift(ausgaben),
+        zielMenge = kanonischeZielMenge(name, ausgaben.keys.toList(), zielMengen),
         werteVorräte = werteVorräte,
         ausgabeNamen = ausgaben.keys.toList(),
     )
@@ -83,37 +130,38 @@ data class MathematischeMethode(
     override fun vorschriftFür(ausgabe: String): MathematischesObjekt {
         val index = ausgabeNamen.indexOf(ausgabe)
         require(index >= 0) { "Die Methode '$name' besitzt keine öffentliche Ausgabe '$ausgabe'." }
-        return if (ausgabeNamen.size == 1) vorschrift else (vorschrift as Tupel).elemente[index]
+        return ergebnisTupel.elemente[index]
     }
 
     override fun zuLatex(): String = zuFallunterscheidungsLatex()
 
-    /** Gemeinsame große Darstellung einer Methode mit Signatur und Termzeile. */
+    /** Gemeinsame große Darstellung einer Methode mit kanonischem Raumvertrag und Termzeile. */
     fun zuFallunterscheidungsLatex(): String {
-        val signatur = runCatching { methodenSignatur() }.getOrNull()
+        val signatur = runCatching { mathematischeSignatur }.getOrNull()
         val argumente = parameter.joinToString(",") { it.zuLatex() }
         val argumentTupel = when (parameter.size) {
-            0 -> "\\varnothing"
-            1 -> argumente
+            0 -> "()"
+            1 -> "\\left($argumente\\right)"
             else -> "\\left($argumente\\right)"
         }
-        val bild = when (val ausdruck = vorschrift) {
+        val bildObjekt = if (ausgabeNamen.size == 1) ergebnisTupel.elemente.single() else ergebnisTupel
+        val bild = when (bildObjekt) {
             is AbleitungsMethodenAusdruck -> {
                 val aufrufArgumente = parameter.joinToString(",") { it.zuLatex() }
-                "${ausdruck.zuLatex()}\\left($aufrufArgumente\\right)"
+                "${bildObjekt.zuLatex()}\\left($aufrufArgumente\\right)"
             }
-            else -> ausdruck.zuLatex()
+            else -> bildObjekt.zuLatex()
         }
         return "$name:\\begin{cases}" +
-            "${signatur?.werteVorrat?.zuLatex() ?: "?"} \\longrightarrow " +
-            "${signatur?.zielMenge?.zuLatex() ?: zielMenge.zuLatex()}\\\\" +
+            "${signatur?.definitionsRaum?.zuLatex() ?: "?"} \\longrightarrow " +
+            "${signatur?.zielRaum?.zuLatex() ?: zielRaum.zuLatex()}\\\\" +
             "$argumentTupel \\mapsto $bild\\end{cases}"
     }
 
     override fun zielMengeFür(ausgabe: String): MengenAusdruck {
         val index = ausgabeNamen.indexOf(ausgabe)
         require(index >= 0) { "Die Methode '$name' besitzt keine öffentliche Ausgabe '$ausgabe'." }
-        val ziel = if (ausgabeNamen.size == 1) zielMenge else (zielMenge as Tupelraum).komponenten[index]
+        val ziel = ergebnisZielMengen[index]
         check(ziel !is FehlendeObermenge) {
             "Für die öffentliche Ausgabe '$ausgabe' der Methode '$name' fehlt die Zielmenge."
         }
@@ -146,7 +194,7 @@ data class MathematischeMethode(
     override fun binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode =
         GebundeneMethode(this, bindungen.filterKeys { key -> parameter.any { it.name == key } })
 
-    /** Kanonische Anwendung mit genau einem Ergebnisobjekt. */
+    /** Legacy-Direktprojektion einer mathematischen Anwendung. */
     override fun wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt {
         require(argumente.size == parameter.size) {
             "Die Methode '$name' erwartet ${parameter.size} Argumente, erhielt aber ${argumente.size}."
@@ -154,13 +202,28 @@ data class MathematischeMethode(
         return wendeMathematischAn(parameter.map(MethodenParameter::name).zip(argumente).toMap())
     }
 
-    /** Namensbasierte mathematische Anwendung mit genau einem Ergebnisobjekt. */
+    /** Kanonische mathematische Anwendung mit Tupelargument und Tupelergebnis. */
+    fun wendeMathematischAlsTupelAn(argumente: Tupel): Tupel {
+        require(argumente.elemente.size == parameter.size) {
+            "Die Methode '$name' erwartet ein ${parameter.size}-Tupel, erhielt aber ${argumente.elemente.size} Komponenten."
+        }
+        val bindungen = parameter.map(MethodenParameter::name).zip(argumente.elemente).toMap()
+        val ausgewertet = ergebnisTupel.elemente.map { vereinfacheObjekt(ersetze(it, bindungen)) }
+        return Tupel(ausgewertet)
+    }
+
+    /**
+     * Namensbasierte Legacy-Projektion. Der Kern wertet zuerst kanonisch als Tupel aus;
+     * genau eine Ergebniskomponente wird für Bestandsaufrufer anschließend ausgepackt.
+     */
     override fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
         val fehlend = parameter.map(MethodenParameter::name).filterNot(argumente::containsKey)
         require(fehlend.isEmpty()) {
             "Für die Methode '$name' fehlen die Argumente ${fehlend.joinToString()}."
         }
-        return vereinfacheObjekt(ersetze(vorschrift, argumente))
+        val tupel = Tupel(parameter.map { argumente.getValue(it.name) })
+        val ergebnis = wendeMathematischAlsTupelAn(tupel)
+        return if (ergebnis.elemente.size == 1) ergebnis.elemente.single() else ergebnis
     }
 
     override fun einzigeAusgabe(): Pair<String, MathematischesObjekt> {
@@ -182,40 +245,44 @@ data class MathematischeMethode(
     }
 }
 
-private fun kanonischeVorschrift(
-    name: String,
-    ausgaben: Map<String, MathematischesObjekt>,
-): MathematischesObjekt {
-    require(ausgaben.isNotEmpty()) { "Die Methode '$name' benötigt eine Vorschrift." }
-    return if (ausgaben.size == 1) ausgaben.values.single() else Tupel(ausgaben.values.toList())
+private fun normalisiereLegacyDefinitionsRaum(
+    raum: MengenAusdruck?,
+    stelligkeit: Int,
+): MengenAusdruck? = when {
+    raum == null -> null
+    stelligkeit == 0 && raum == LeereMenge -> Tupelraum(emptyList())
+    stelligkeit == 1 && raum !is Tupelraum -> Tupelraum(listOf(raum))
+    else -> raum
 }
+
+private fun kanonischeVorschrift(ausgaben: Map<String, MathematischesObjekt>): MathematischesObjekt =
+    Tupel(ausgaben.values.toList())
 
 private fun kanonischeZielMenge(
     name: String,
-    ausgaben: Map<String, MathematischesObjekt>,
+    ausgabeNamen: List<String>,
     zielMengen: Map<String, MengenAusdruck>,
-    werteVorräte: Map<String, MengenAusdruck>,
 ): MengenAusdruck {
-    require(zielMengen.keys.all(ausgaben::containsKey)) {
+    require(zielMengen.keys.all(ausgabeNamen::contains)) {
         "Zielmengen dürfen nur für vorhandene Ausgaben definiert werden."
     }
-    val ziele = ausgaben.keys.map { ausgabe ->
+    val ziele = ausgabeNamen.map { ausgabe ->
         zielMengen[ausgabe] ?: FehlendeObermenge("methode.$name.$ausgabe")
     }
-    return if (ziele.size == 1) ziele.single() else Tupelraum(ziele)
+    return Tupelraum(ziele)
 }
 
 /** Erzeugt eine [höhe] mal [breite]-Matrix aus einer Zahlmethode `f(zeile, spalte)`. */
 fun matrixAusMethode(methode: Methode, höhe: Int, breite: Int): Matrix {
     require(höhe > 0) { "Die Matrixhöhe muss positiv sein." }
     require(breite > 0) { "Die Matrixbreite muss positiv sein." }
-    require(methode.parameter.size == 2) { "Die Matrixmethode muss genau zwei Parameter für Zeile und Spalte besitzen." }
-    val (ausgabeName, ausgabe) = methode.einzigeAusgabe()
+    val mathematisch = methode.alsMathematischeMethode("Matrixerzeugung")
+    require(mathematisch.parameter.size == 2) { "Die Matrixmethode muss genau zwei Parameter für Zeile und Spalte besitzen." }
+    val (_, ausgabe) = mathematisch.einzigeAusgabe()
     require(ausgabe is ZahlAusdruck) { "Die Matrixmethode muss eine Zahl ausgeben." }
-    val (zeilenParameter, spaltenParameter) = methode.parameter
     return Matrix(List(höhe) { zeile ->
         List(breite) { spalte ->
-            methode.wendeAn(
+            mathematisch.wendeAn(
                 listOf(
                     RationaleZahl.von(zeile.toLong()),
                     RationaleZahl.von(spalte.toLong()),
@@ -229,15 +296,16 @@ fun matrixAusMethode(methode: Methode, höhe: Int, breite: Int): Matrix {
 /** Erzeugt das Tupel `(f(1), ..., f(n))` aus einer einstelligen Methode. */
 fun tupelAusMethode(methode: Methode, dimension: Int): Tupel {
     require(dimension > 0) { "Die Tupeldimension muss positiv sein." }
-    require(methode.parameter.size == 1) { "Die Tupelmethode muss genau einen Indexparameter besitzen." }
+    val mathematisch = methode.alsMathematischeMethode("Tupelerzeugung")
+    require(mathematisch.parameter.size == 1) { "Die Tupelmethode muss genau einen Indexparameter besitzen." }
     return Tupel(
         List(dimension) { index ->
-            methode.wendeAn(listOf(RationaleZahl.von((index + 1).toLong())))
+            mathematisch.wendeAn(listOf(RationaleZahl.von((index + 1).toLong())))
         },
     )
 }
 
-/** Bild einer Menge unter einer einwertigen Methode: f[M] = { f(x) : x ∈ M }. */
+/** Bild einer Menge unter einer einwertigen mathematischen Methode: f[M]. */
 data class Abbild(val menge: MengenAusdruck, val methode: Methode) : MengenAusdruck {
     override fun zuLatex() = "${methode.name}[${menge.zuLatex()}]"
 }
@@ -247,36 +315,115 @@ fun MengenAusdruck.hatIntegralBegriff() = this == ReelleZahlen
 
 private fun Methode.einwertigeZahlMethode(): Triple<Variable, String, ZahlAusdruck> {
     val mathematisch = alsMathematischeMethode("symbolische Komposition oder Iteration")
-    require(mathematisch.parameter.size == 1 && mathematisch.ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
+    require(mathematisch.parameter.size == 1 && mathematisch.ausgabeNamen.size == 1) {
+        "Die Methode muss genau einen Parameter und eine Ausgabe besitzen."
+    }
     val (name, ausgabe) = mathematisch.einzigeAusgabe()
-    return Triple(mathematisch.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."), name, ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."))
+    return Triple(
+        mathematisch.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."),
+        name,
+        ausgabe as? ZahlAusdruck ?: error("Die Methode muss eine Zahl ausgeben."),
+    )
+}
+
+/** Ergebnis einer rein typseitigen, domänenneutralen Kompositionsprüfung. */
+data class MethodenTypKompositionsPrüfung(val typPrüfung: TypPrüfung) {
+    val kompatibel: Boolean
+        get() = typPrüfung == TypPrüfung.Kompatibel
+}
+
+/** Allgemeine Methodenkomposition prüft ausschließlich Tupel-Ausgabe gegen Tupel-Eingabe. */
+fun prüfeMethodenTypKomposition(außen: Methode, innen: Methode): MethodenTypKompositionsPrüfung {
+    val außenSignatur = außen.methodenSignatur()
+    val innenSignatur = innen.methodenSignatur()
+    return MethodenTypKompositionsPrüfung(
+        MathematischeTypen.typSystem.prüfe(innenSignatur.ergebnisTyp, außenSignatur.argumentTyp),
+    )
+}
+
+/** Strukturierte mathematische Kompositionsdiagnose. */
+data class MathematischeKompositionsPrüfung(
+    val bildPrüfung: AussageErgebnis,
+    val zielraumPrüfung: AussageErgebnis,
+    val kompatibilität: AussageErgebnis,
+    val bedingungen: Set<Aussage>,
+)
+
+/**
+ * Prüft für g ∘ f zuerst die tatsächliche Bildmenge f[A], soweit sie bestimmbar ist.
+ * Ist sie unbekannt, genügt konservativ die stärkere Bedingung Ziel(f) ⊆ Definitionsmenge(g).
+ */
+fun prüfeMathematischeKomposition(
+    außen: Methode,
+    innen: Methode,
+    kontext: RechenKontext = RechenKontext(),
+): MathematischeKompositionsPrüfung {
+    val außenMathematisch = außen.alsMathematischeMethode("mathematische Kompositionsprüfung")
+    val innenMathematisch = innen.alsMathematischeMethode("mathematische Kompositionsprüfung")
+    val (x, _, _) = außenMathematisch.einwertigeZahlMethode()
+    val (t, ausgabeInnen, _) = innenMathematisch.einwertigeZahlMethode()
+    val innenDefinitionsmenge = innenMathematisch.werteVorräte[t.name]
+        ?: error("Die innere Methode benötigt eine Komponenten-Definitionsmenge.")
+    val außenDefinitionsmenge = außenMathematisch.werteVorräte[x.name]
+        ?: error("Die äußere Methode benötigt eine Komponenten-Definitionsmenge.")
+    val zielInnen = innenMathematisch.zielMengeFür(ausgabeInnen)
+    val bildInnen = bildeAb(innenDefinitionsmenge, innenMathematisch)
+    val bildPrüfung = prüfeTeilmenge(bildInnen, außenDefinitionsmenge, kontext)
+    val zielraumPrüfung = prüfeTeilmenge(zielInnen, außenDefinitionsmenge, kontext)
+    val kompatibilität = when {
+        bildPrüfung.wahrheitswert == Wahrheitswert.Wahr -> bildPrüfung
+        bildPrüfung.wahrheitswert == Wahrheitswert.Lüge -> bildPrüfung
+        zielraumPrüfung.wahrheitswert == Wahrheitswert.Wahr -> zielraumPrüfung
+        else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
+    val bedingungen = if (kompatibilität.wahrheitswert == null) {
+        setOf(TeilmengenBeziehung(Abbild(innenDefinitionsmenge, innenMathematisch), außenDefinitionsmenge))
+    } else emptySet()
+    return MathematischeKompositionsPrüfung(
+        bildPrüfung = bildPrüfung,
+        zielraumPrüfung = zielraumPrüfung,
+        kompatibilität = kompatibilität,
+        bedingungen = bedingungen,
+    )
 }
 
 fun komponiere(außen: Methode, innen: Methode): Methode {
-    außen.alsMathematischeMethode("symbolische Komposition")
-    innen.alsMathematischeMethode("symbolische Komposition")
-    val (x, ausgabeAußen, termAußen) = außen.einwertigeZahlMethode()
-    val (t, ausgabeInnen, termInnen) = innen.einwertigeZahlMethode()
-    val wertevorrat = innen.werteVorräte[t.name] ?: error("Die innere Methode benötigt einen Wertevorrat.")
-    val zielInnen = innen.zielMengeFür(ausgabeInnen)
-    val wertevorratAußen = außen.werteVorräte[x.name] ?: error("Die äußere Methode benötigt einen Wertevorrat.")
-    require(zielInnen == wertevorratAußen) { "Zielmenge der inneren Methode und Wertevorrat der äußeren Methode müssen übereinstimmen." }
+    val außenMathematisch = außen.alsMathematischeMethode("symbolische Komposition")
+    val innenMathematisch = innen.alsMathematischeMethode("symbolische Komposition")
+    val typPrüfung = prüfeMethodenTypKomposition(außenMathematisch, innenMathematisch).typPrüfung
+    require(typPrüfung !is TypPrüfung.Inkompatibel) {
+        "Die neutralen Tupelsignaturen der Methoden sind nicht kompatibel: ${typPrüfung.grund}"
+    }
+    val mengenPrüfung = prüfeMathematischeKomposition(außenMathematisch, innenMathematisch)
+    require(mengenPrüfung.kompatibilität.wahrheitswert == Wahrheitswert.Wahr) {
+        when (mengenPrüfung.kompatibilität.wahrheitswert) {
+            Wahrheitswert.Lüge -> "Die Bildmenge der inneren Methode liegt nicht im Definitionsbereich der äußeren Methode."
+            else -> "Die Totalität der Komposition ist nicht nachweisbar; erforderlich ist f[A] ⊆ C."
+        }
+    }
+    val (x, ausgabeAußen, termAußen) = außenMathematisch.einwertigeZahlMethode()
+    val (t, _, termInnen) = innenMathematisch.einwertigeZahlMethode()
+    val wertevorrat = innenMathematisch.werteVorräte[t.name]
+        ?: error("Die innere Methode benötigt eine Definitionsmenge.")
     return Methode(
         name = "${außen.name}\\circ${innen.name}",
         parameter = listOf(t),
         vorschrift = ersetze(termAußen, mapOf(x.name to termInnen)),
-        zielMenge = außen.zielMengeFür(ausgabeAußen),
+        zielMenge = außenMathematisch.zielMengeFür(ausgabeAußen),
         werteVorräte = mapOf(t.name to wertevorrat),
-        effektiverWerteVorrat = innen.effektiverWerteVorrat,
+        effektiverWerteVorrat = innenMathematisch.effektiverWerteVorrat,
     )
 }
 
 fun iteriere(methode: Methode, exponent: Int): Methode {
-    methode.alsMathematischeMethode("symbolische Iteration")
+    val mathematisch = methode.alsMathematischeMethode("symbolische Iteration")
     require(exponent >= 0) { "Der Iterationsexponent muss nichtnegativ sein." }
-    val (x, ausgabe, term) = methode.einwertigeZahlMethode()
-    val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
-    require(methode.zielMengeFür(ausgabe) == wertevorrat) { "Iteration ist nur für Endomorphismen definiert." }
+    val (x, _, _) = mathematisch.einwertigeZahlMethode()
+    val wertevorrat = mathematisch.werteVorräte[x.name] ?: error("Die Methode benötigt eine Definitionsmenge.")
+    val selbstKompatibel = prüfeMathematischeKomposition(mathematisch, mathematisch).kompatibilität
+    require(selbstKompatibel.wahrheitswert == Wahrheitswert.Wahr) {
+        "Iteration benötigt den Nachweis f[D] ⊆ D."
+    }
     var ergebnis = Methode(
         name = "id",
         parameter = listOf(x),
@@ -284,48 +431,55 @@ fun iteriere(methode: Methode, exponent: Int): Methode {
         zielMenge = wertevorrat,
         werteVorräte = mapOf(x.name to wertevorrat),
     )
-    repeat(exponent) { ergebnis = komponiere(methode, ergebnis).alsMathematischeMethode("symbolische Iteration") }
+    repeat(exponent) {
+        ergebnis = komponiere(mathematisch, ergebnis).alsMathematischeMethode("symbolische Iteration")
+    }
     return ergebnis.copy(name = "${methode.name}^{${exponent}}")
 }
 
 fun differenziereMethode(methode: Methode): Methode {
-    methode.alsMathematischeMethode("symbolische Differentiation")
-    require(methode.parameter.size == 1 && methode.ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
-    val x = methode.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."); val (ausgabe, wert) = methode.einzigeAusgabe()
-    val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
-    require(wertevorrat.hatDifferentialBegriff()) { "Der Wertevorrat definiert keinen Differentialbegriff." }
+    val mathematisch = methode.alsMathematischeMethode("symbolische Differentiation")
+    require(mathematisch.parameter.size == 1 && mathematisch.ausgabeNamen.size == 1) {
+        "Die Methode muss genau einen Parameter und eine Ausgabe besitzen."
+    }
+    val x = mathematisch.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen.")
+    val (_, wert) = mathematisch.einzigeAusgabe()
+    val wertevorrat = mathematisch.werteVorräte[x.name] ?: error("Die Methode benötigt eine Definitionsmenge.")
+    require(wertevorrat.hatDifferentialBegriff()) { "Die Definitionsmenge definiert keinen Differentialbegriff." }
     val abgeleitet = when (wert) {
         is ZahlAusdruck -> ableiten(wert, x).ergebnis
         is SpaltenVektor -> SpaltenVektor(wert.werte.map { ableiten(it, x).ergebnis })
         is ZeilenVektor -> ZeilenVektor(wert.werte.map { ableiten(it, x).ergebnis })
         else -> error("Die Methode muss eine Zahl oder einen orientierten Vektor ausgeben.")
     }
-    return methode.copy(name = "${methode.name}'", vorschrift = abgeleitet)
+    return mathematisch.copy(name = "${mathematisch.name}'", vorschrift = abgeleitet)
 }
 
 fun integriereMethode(methode: Methode): Methode {
-    methode.alsMathematischeMethode("symbolische Integration")
-    require(methode.parameter.size == 1 && methode.ausgabeNamen.size == 1) { "Die Methode muss genau einen Parameter und eine Ausgabe besitzen." }
-    val x = methode.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen."); val (ausgabe, wert) = methode.einzigeAusgabe()
-    val wertevorrat = methode.werteVorräte[x.name] ?: error("Die Methode benötigt einen Wertevorrat.")
-    require(wertevorrat.hatIntegralBegriff()) { "Der Wertevorrat definiert keinen Integralbegriff." }
+    val mathematisch = methode.alsMathematischeMethode("symbolische Integration")
+    require(mathematisch.parameter.size == 1 && mathematisch.ausgabeNamen.size == 1) {
+        "Die Methode muss genau einen Parameter und eine Ausgabe besitzen."
+    }
+    val x = mathematisch.parameter.single() as? Variable ?: error("Die Methode muss einen Zahlenparameter besitzen.")
+    val (_, wert) = mathematisch.einzigeAusgabe()
+    val wertevorrat = mathematisch.werteVorräte[x.name] ?: error("Die Methode benötigt eine Definitionsmenge.")
+    require(wertevorrat.hatIntegralBegriff()) { "Die Definitionsmenge definiert keinen Integralbegriff." }
     val integriert = when (wert) {
         is ZahlAusdruck -> integrieren(wert, x).ergebnis
         is SpaltenVektor -> SpaltenVektor(wert.werte.map { integrieren(it, x).ergebnis })
         is ZeilenVektor -> ZeilenVektor(wert.werte.map { integrieren(it, x).ergebnis })
         else -> error("Die Methode muss eine Zahl oder einen orientierten Vektor ausgeben.")
     }
-    return methode.copy(name = "\\int ${methode.name}", vorschrift = integriert)
+    return mathematisch.copy(name = "\\int ${mathematisch.name}", vorschrift = integriert)
 }
 
 fun bildeAb(menge: MengenAusdruck, methode: Methode): MengenAusdruck {
-    methode.alsMathematischeMethode("Bildmengenbildung")
-    require(methode.parameter.size == 1) { "Die Abbildung muss genau einen freien Parameter besitzen." }
-    methode.einzigeAusgabe()
-    if (menge !is EndlicheMenge) return Abbild(menge, methode)
-    val parameter = methode.parameter.single()
+    val mathematisch = methode.alsMathematischeMethode("Bildmengenbildung")
+    require(mathematisch.parameter.size == 1) { "Die Abbildung muss genau einen freien Parameter besitzen." }
+    mathematisch.einzigeAusgabe()
+    if (menge !is EndlicheMenge) return Abbild(menge, mathematisch)
     return EndlicheMenge(menge.elemente.map { element ->
-        methode.wendeAn(listOf(element))
+        mathematisch.wendeAn(listOf(element))
     }.toSet())
 }
 
