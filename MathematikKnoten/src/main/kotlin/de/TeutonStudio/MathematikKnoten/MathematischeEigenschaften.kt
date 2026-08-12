@@ -10,12 +10,14 @@ import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
+import de.TeutonStudio.MathematikRechenSystem.kern.AbzaehlbarkeitsStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.AussageStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.DefinierteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.EigenschaftsAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.EigenschaftsDiagnose
 import de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge
+import de.TeutonStudio.MathematikRechenSystem.kern.EndlichkeitsStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.GebundeneMengenVariable
 import de.TeutonStudio.MathematikRechenSystem.kern.KomplexeZahlen
@@ -33,6 +35,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UnterstuetzungsStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.Vektorraum
 import de.TeutonStudio.MathematikRechenSystem.kern.ZeilenVektor
+import de.TeutonStudio.MathematikRechenSystem.kern.kardinalitaetsVertrag
 
 const val METHODEN_EIGENSCHAFT_KNOTEN_ART = "mathematik.methodenEigenschaft"
 const val ANALYSIS_EIGENSCHAFT_KNOTEN_ART = "mathematik.analysisEigenschaft"
@@ -47,7 +50,7 @@ const val EIGENSCHAFT_STRENGE_PARAMETER = "strenge"
 const val EIGENSCHAFT_KONTEXT_PARAMETER = "kontext"
 
 enum class EigenschaftsSubjektArt { Methode, Menge, Folge, Methodensignatur, Argumentstelle }
-enum class EigenschaftsGruppe { Regularität, Integrabilität, Funktionsgeometrie, Signatur, Folge, Wertart, Topologie, Konvexität }
+enum class EigenschaftsGruppe { Regularität, Integrabilität, Funktionsgeometrie, Signatur, Folge, Wertart, Kardinalität, Topologie, Konvexität }
 
 data class MathematischeEigenschaftDefinition(
     val id: String,
@@ -60,6 +63,7 @@ data class MathematischeEigenschaftDefinition(
     val aliase: Set<String> = emptySet(),
     val benötigtOrdnung: Boolean = false,
     val benötigtUmgebungsraum: Boolean = false,
+    val strukturAnforderungen: Set<StrukturAnforderung> = emptySet(),
 ) {
     init {
         require(id.isNotBlank())
@@ -69,16 +73,28 @@ data class MathematischeEigenschaftDefinition(
     }
 }
 
-/** Kanonisches Register aller durch dieses Epic eingeführten Eigenschaftsbegriffe. */
+/** Kanonisches Register aller mathematischen Eigenschaftsbegriffe. */
 object MathematischeEigenschaftRegister {
-    val Stetig = definition("stetig", "Stetigkeit", "stetig", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Regularität, 100)
+    val Stetig = definition(
+        "stetig", "Stetigkeit", "stetig", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Regularität, 100,
+        strukturAnforderungen = setOf(StrukturAnforderung.QUELL_TOPOLOGIE, StrukturAnforderung.ZIEL_TOPOLOGIE),
+    )
     val Differenzierbar = definition("differenzierbar", "Differenzierbarkeit", "differenzierbar", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Regularität, 110)
     val Cn = definition("c-n", "Cⁿ-Regularität", "Cⁿ", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Regularität, 120, benötigtOrdnung = true)
     val Dn = definition("d-n", "Dⁿ-Regularität", "Dⁿ", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Regularität, 121, benötigtOrdnung = true)
     val RiemannIntegrierbar = definition("riemann-integrierbar", "Riemann-Integrierbarkeit", "Riemann-integrierbar", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Integrabilität, 130)
     val LebesgueIntegrierbar = definition("lebesgue-integrierbar", "Lebesgue-Integrierbarkeit", "Lebesgue-integrierbar", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Integrabilität, 131)
-    val Konvex = definition("konvex", "Konvexität", "konvex", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Konvexität, 140, benötigtUmgebungsraum = true)
-    val Konkav = definition("konkav", "Konkavität", "konkav", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Konvexität, 141, benötigtUmgebungsraum = true, aliase = setOf("concave"))
+    val Konvex = definition(
+        "konvex", "Konvexität", "konvex", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Konvexität, 140,
+        benötigtUmgebungsraum = true,
+        strukturAnforderungen = setOf(StrukturAnforderung.AFFINE_STRUKTUR),
+    )
+    val Konkav = definition(
+        "konkav", "Konkavität", "konkav", EigenschaftsSubjektArt.Methode, EigenschaftsGruppe.Konvexität, 141,
+        aliase = setOf("concave"),
+        benötigtUmgebungsraum = true,
+        strukturAnforderungen = setOf(StrukturAnforderung.AFFINE_STRUKTUR),
+    )
 
     val Einstellig = definition("einstellig", "Einstelligkeit", "einstellig", EigenschaftsSubjektArt.Methodensignatur, EigenschaftsGruppe.Signatur, 200, aliase = setOf("univariat"))
     val Mehrstellig = definition("mehrstellig", "Mehrstelligkeit", "mehrstellig", EigenschaftsSubjektArt.Methodensignatur, EigenschaftsGruppe.Signatur, 201, aliase = setOf("multivariat"))
@@ -90,9 +106,32 @@ object MathematischeEigenschaftRegister {
     val Polynomwertig = definition("polynomwertig", "Polynomwertigkeit", "polynomwertig", EigenschaftsSubjektArt.Folge, EigenschaftsGruppe.Wertart, 222)
     val Vektorwertig = definition("vektorwertig", "Vektorwertigkeit", "vektorwertig", EigenschaftsSubjektArt.Folge, EigenschaftsGruppe.Wertart, 223)
 
-    val Offen = definition("offen", "Offenheit", "offen", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Topologie, 300, benötigtUmgebungsraum = true)
-    val Abgeschlossen = definition("abgeschlossen", "Abgeschlossenheit", "abgeschlossen", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Topologie, 301, benötigtUmgebungsraum = true)
-    val KonvexeMenge = definition("konvexe-menge", "Konvexe Menge", "konvex", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Konvexität, 302, benötigtUmgebungsraum = true)
+    val Endlich = definition("endlich", "Endlichkeit", "endlich", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Kardinalität, 280)
+    val Unendlich = definition("unendlich", "Unendlichkeit", "unendlich", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Kardinalität, 281)
+    val Abzaehlbar = definition(
+        "abzählbar", "Abzählbarkeit", "abzählbar", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Kardinalität, 282,
+        aliase = setOf("abzaehlbar"),
+    )
+    val Ueberabzaehlbar = definition(
+        "überabzählbar", "Überabzählbarkeit", "überabzählbar", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Kardinalität, 283,
+        aliase = setOf("ueberabzaehlbar", "uberabzahlbar"),
+    )
+
+    val Offen = definition(
+        "offen", "Offenheit", "offen", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Topologie, 300,
+        benötigtUmgebungsraum = true,
+        strukturAnforderungen = setOf(StrukturAnforderung.TOPOLOGISCHER_RAUM),
+    )
+    val Abgeschlossen = definition(
+        "abgeschlossen", "Abgeschlossenheit", "abgeschlossen", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Topologie, 301,
+        benötigtUmgebungsraum = true,
+        strukturAnforderungen = setOf(StrukturAnforderung.TOPOLOGISCHER_RAUM),
+    )
+    val KonvexeMenge = definition(
+        "konvexe-menge", "Konvexe Menge", "konvex", EigenschaftsSubjektArt.Menge, EigenschaftsGruppe.Konvexität, 302,
+        benötigtUmgebungsraum = true,
+        strukturAnforderungen = setOf(StrukturAnforderung.AFFINE_STRUKTUR),
+    )
 
     val Minimum = definition("minimumstellen", "Minimumstellen", "Minimumstelle", EigenschaftsSubjektArt.Argumentstelle, EigenschaftsGruppe.Funktionsgeometrie, 400)
     val Maximum = definition("maximumstellen", "Maximumstellen", "Maximumstelle", EigenschaftsSubjektArt.Argumentstelle, EigenschaftsGruppe.Funktionsgeometrie, 401)
@@ -106,6 +145,7 @@ object MathematischeEigenschaftRegister {
         Stetig, Differenzierbar, Cn, Dn, RiemannIntegrierbar, LebesgueIntegrierbar, Konvex, Konkav,
         Einstellig, Mehrstellig,
         EinseitigeFolge, ZweiseitigeFolge, Reellwertig, Komplexwertig, Polynomwertig, Vektorwertig,
+        Endlich, Unendlich, Abzaehlbar, Ueberabzaehlbar,
         Offen, Abgeschlossen, KonvexeMenge,
         Minimum, Maximum, Extremum, Sattelpunkt, Konvexitaetsbereich, Konkavitaetsbereich, Wendestelle,
     )
@@ -127,6 +167,7 @@ object MathematischeEigenschaftRegister {
         aliase: Set<String> = emptySet(),
         benötigtOrdnung: Boolean = false,
         benötigtUmgebungsraum: Boolean = false,
+        strukturAnforderungen: Set<StrukturAnforderung> = emptySet(),
     ) = MathematischeEigenschaftDefinition(
         id = id,
         titel = titel,
@@ -138,6 +179,7 @@ object MathematischeEigenschaftRegister {
         aliase = aliase,
         benötigtOrdnung = benötigtOrdnung,
         benötigtUmgebungsraum = benötigtUmgebungsraum,
+        strukturAnforderungen = strukturAnforderungen,
     )
 }
 
@@ -243,14 +285,16 @@ fun automatischeAdjektive(objekt: Any): List<AutomatischesAdjektiv> {
             wertArt(objekt)?.let(::add)
         }
         is MengenAusdruck -> buildList {
-            mengenAussage(objekt, MathematischeEigenschaftRegister.Offen).takeIf { it.aussageStatus == AussageStatus.BEWIESEN }?.let {
-                add(MathematischeEigenschaftRegister.Offen)
+            val vertrag = kardinalitaetsVertrag(objekt)
+            when (vertrag.endlichkeit) {
+                EndlichkeitsStatus.ENDLICH -> add(MathematischeEigenschaftRegister.Endlich)
+                EndlichkeitsStatus.UNENDLICH -> add(MathematischeEigenschaftRegister.Unendlich)
+                EndlichkeitsStatus.UNENTSCHEIDBAR -> Unit
             }
-            mengenAussage(objekt, MathematischeEigenschaftRegister.Abgeschlossen).takeIf { it.aussageStatus == AussageStatus.BEWIESEN }?.let {
-                add(MathematischeEigenschaftRegister.Abgeschlossen)
-            }
-            mengenAussage(objekt, MathematischeEigenschaftRegister.KonvexeMenge).takeIf { it.aussageStatus == AussageStatus.BEWIESEN }?.let {
-                add(MathematischeEigenschaftRegister.KonvexeMenge)
+            when (vertrag.abzaehlbarkeit) {
+                AbzaehlbarkeitsStatus.ABZAEHLBAR -> add(MathematischeEigenschaftRegister.Abzaehlbar)
+                AbzaehlbarkeitsStatus.UEBERABZAEHLBAR -> add(MathematischeEigenschaftRegister.Ueberabzaehlbar)
+                AbzaehlbarkeitsStatus.UNENTSCHEIDBAR -> Unit
             }
         }
         else -> emptyList()
@@ -267,7 +311,7 @@ fun automatischeAdjektive(objekt: Any): List<AutomatischesAdjektiv> {
                     is MengenAusdruck -> objekt.zuLatex()
                     else -> objekt.toString()
                 },
-                erklärung = "${definition.titel} ist eine automatisch aus der mathematischen Struktur abgeleitete Eigenschaft. Die Anzeige ist nicht persistiert.",
+                erklärung = "${definition.titel} ist eine automatisch aus der vorhandenen mathematischen Struktur abgeleitete Eigenschaft. Die Anzeige ist nicht persistiert.",
                 rang = definition.rang,
             )
         }
@@ -357,16 +401,13 @@ object MathematischeEigenschaftKnotenVorlagen {
         art = MENGEN_EIGENSCHAFT_KNOTEN_ART,
         name = "Mengeneigenschaft",
         kategorie = "Mengen: Eigenschaften",
-        beschreibung = "Prüft Offenheit, Abgeschlossenheit oder Konvexität relativ zu einem expliziten Umgebungsraum.",
+        beschreibung = "Prüft intrinsische, topologische oder affine Mengeneigenschaften mit den jeweils benötigten Strukturanschlüssen.",
         standardGröße = GraphGröße(285f, 120f),
         anschlüsse = listOf(
             eingang("menge", MathematikAnschlussArten.Menge.id),
             ausgang("aussage", MathematikAnschlussArten.Aussage.id),
         ),
-        standardParameter = mapOf(
-            EIGENSCHAFT_PARAMETER to MathematischeEigenschaftRegister.Offen.id,
-            EIGENSCHAFT_KONTEXT_PARAMETER to "R",
-        ),
+        standardParameter = mapOf(EIGENSCHAFT_PARAMETER to MathematischeEigenschaftRegister.Offen.id),
     )
 
     val alle = listOf(MethodenEigenschaft, AnalysisEigenschaft, FolgenEigenschaft, MethodenStelligkeit, MengenEigenschaft)
@@ -561,18 +602,38 @@ private fun mengenAussage(
     definition: MathematischeEigenschaftDefinition,
 ): EigenschaftsAussage {
     val status = when (definition.id) {
-        MathematischeEigenschaftRegister.Offen.id -> when (menge) {
-            LeereMenge -> AussageStatus.BEWIESEN
-            is ReellesIntervall -> if (menge.linksOffen && menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
-            is EndlicheMenge -> if (menge.elemente.isEmpty()) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
-            else -> AussageStatus.UNENTSCHEIDBAR
+        MathematischeEigenschaftRegister.Endlich.id,
+        MathematischeEigenschaftRegister.Unendlich.id,
+        MathematischeEigenschaftRegister.Abzaehlbar.id,
+        MathematischeEigenschaftRegister.Ueberabzaehlbar.id,
+        -> {
+            val vertrag = kardinalitaetsVertrag(menge)
+            when (definition.id) {
+                MathematischeEigenschaftRegister.Endlich.id -> when (vertrag.endlichkeit) {
+                    EndlichkeitsStatus.ENDLICH -> AussageStatus.BEWIESEN
+                    EndlichkeitsStatus.UNENDLICH -> AussageStatus.WIDERLEGT
+                    EndlichkeitsStatus.UNENTSCHEIDBAR -> AussageStatus.UNENTSCHEIDBAR
+                }
+                MathematischeEigenschaftRegister.Unendlich.id -> when (vertrag.endlichkeit) {
+                    EndlichkeitsStatus.ENDLICH -> AussageStatus.WIDERLEGT
+                    EndlichkeitsStatus.UNENDLICH -> AussageStatus.BEWIESEN
+                    EndlichkeitsStatus.UNENTSCHEIDBAR -> AussageStatus.UNENTSCHEIDBAR
+                }
+                MathematischeEigenschaftRegister.Abzaehlbar.id -> when (vertrag.abzaehlbarkeit) {
+                    AbzaehlbarkeitsStatus.ABZAEHLBAR -> AussageStatus.BEWIESEN
+                    AbzaehlbarkeitsStatus.UEBERABZAEHLBAR -> AussageStatus.WIDERLEGT
+                    AbzaehlbarkeitsStatus.UNENTSCHEIDBAR -> AussageStatus.UNENTSCHEIDBAR
+                }
+                else -> when (vertrag.abzaehlbarkeit) {
+                    AbzaehlbarkeitsStatus.ABZAEHLBAR -> AussageStatus.WIDERLEGT
+                    AbzaehlbarkeitsStatus.UEBERABZAEHLBAR -> AussageStatus.BEWIESEN
+                    AbzaehlbarkeitsStatus.UNENTSCHEIDBAR -> AussageStatus.UNENTSCHEIDBAR
+                }
+            }
         }
-        MathematischeEigenschaftRegister.Abgeschlossen.id -> when (menge) {
-            LeereMenge -> AussageStatus.BEWIESEN
-            is ReellesIntervall -> if (!menge.linksOffen && !menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
-            is EndlicheMenge -> AussageStatus.BEWIESEN
-            else -> AussageStatus.UNENTSCHEIDBAR
-        }
+        MathematischeEigenschaftRegister.Offen.id,
+        MathematischeEigenschaftRegister.Abgeschlossen.id,
+        -> AussageStatus.BEDINGT
         MathematischeEigenschaftRegister.KonvexeMenge.id -> when (menge) {
             LeereMenge, is ReellesIntervall -> AussageStatus.BEWIESEN
             is EndlicheMenge -> if (menge.elemente.size <= 1) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
@@ -580,6 +641,7 @@ private fun mengenAussage(
         }
         else -> AussageStatus.UNENTSCHEIDBAR
     }
+    val topologieFehlt = definition.strukturAnforderungen.contains(StrukturAnforderung.TOPOLOGISCHER_RAUM)
     return EigenschaftsAussage(
         eigenschaftId = definition.id,
         eigenschaftLatex = definition.adjektiv,
@@ -587,15 +649,20 @@ private fun mengenAussage(
         unterstuetzung = UnterstuetzungsStatus.IMPLEMENTIERT,
         aussageStatus = status,
         diagnose = EigenschaftsDiagnose(
-            code = "mengenstruktur-${definition.id}",
-            nachricht = if (status == AussageStatus.UNENTSCHEIDBAR) {
-                "Die Mengenstruktur reicht ohne explizite Topologie oder affine Struktur nicht für einen Beweis."
-            } else {
-                "Die Eigenschaft folgt aus der kanonischen Mengenstruktur im Umgebungsraum R."
+            code = when {
+                topologieFehlt -> "topologischer-raum-fehlt"
+                definition.gruppe == EigenschaftsGruppe.Kardinalität -> "kardinalitaet-${definition.id}"
+                else -> "mengenstruktur-${definition.id}"
             },
-            voraussetzungen = if (definition.benötigtUmgebungsraum) listOf("Umgebungsraum R") else emptyList(),
+            nachricht = when {
+                topologieFehlt -> "Topologischer Raum fehlt. Die Eigenschaft wird nicht aus einer nackten Menge geraten."
+                definition.gruppe == EigenschaftsGruppe.Kardinalität -> "Die Eigenschaft folgt ausschließlich aus dem Kardinalitätsvertrag der Menge."
+                status == AussageStatus.UNENTSCHEIDBAR -> "Die Mengenstruktur reicht ohne die benötigte zusätzliche Struktur nicht für einen Beweis."
+                else -> "Die Eigenschaft folgt aus der vorhandenen mathematischen Struktur."
+            },
+            voraussetzungen = definition.strukturAnforderungen.map { it.name },
         ),
-        kontextLatex = "\\mathbb{R}",
+        kontextLatex = null,
     )
 }
 
@@ -646,7 +713,8 @@ private fun KnotenAuswertungsKontext.aussageErgebnis(aussage: EigenschaftsAussag
     ausgaben = mapOf("aussage" to BedingterWert(aussage, gemeinsameAnnahmen())),
     eingänge = eingänge,
     warnungen = aussage.diagnose?.takeIf {
-        aussage.unterstuetzung != UnterstuetzungsStatus.IMPLEMENTIERT || aussage.aussageStatus == AussageStatus.UNENTSCHEIDBAR
+        aussage.unterstuetzung != UnterstuetzungsStatus.IMPLEMENTIERT ||
+            aussage.aussageStatus in setOf(AussageStatus.BEDINGT, AussageStatus.UNENTSCHEIDBAR)
     }?.let { listOf(it.nachricht) }.orEmpty(),
 )
 

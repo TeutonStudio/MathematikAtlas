@@ -37,6 +37,7 @@ object KanonischerMathematikKnotenKatalog {
     fun alle(): List<KnotenVorlage> {
         val basis = de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen()
             .map(::kanonisierePraedikatVorlage)
+            .map(::topologieFaehigeEigenschaftsVorlage)
             .map(::methodenfaehigeRechnerVorlage)
         val bereinigt = basis.filterNot { vorlage ->
             vorlage.art in historischeOrientierungsDuplikate ||
@@ -61,8 +62,10 @@ object KanonischerMathematikKnotenKatalog {
                 MengenMassKnotenVorlagen.alle +
                 RandKnotenVorlagen.alle +
                 TangentialKnotenVorlagen.alle +
+                TopologischeStrukturKnotenVorlagen.alle +
                 SvgKnotenVorlagen.alle
             )
+            .map(::topologieFaehigeEigenschaftsVorlage)
             .map(::methodenfaehigeRechnerVorlage)
             .distinctBy { vorlage ->
                 vorlage.art to listOf(

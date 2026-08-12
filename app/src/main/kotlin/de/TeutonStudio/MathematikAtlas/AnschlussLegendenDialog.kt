@@ -1,31 +1,27 @@
 package de.TeutonStudio.MathematikAtlas
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AnschlussSymbol
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.sichtbareAnschlussArtIds
 
 internal data class AnschlussLegendenEintrag(
     val arten: List<AnschlussArt>,
+    val symbolAnschluss: AnschlussDaten,
 ) {
     init {
         require(arten.isNotEmpty()) { "Ein Legendeneintrag benötigt mindestens eine Anschlussart." }
@@ -36,10 +32,16 @@ internal data class AnschlussLegendenEintrag(
     val gestreift: Boolean = arten.size > 1
 }
 
+private data class AnschlussLegendenSignatur(
+    val ids: List<AnschlussArtId>,
+    val symbolAnschluss: AnschlussDaten,
+)
+
 /**
- * Leitet die Legende ausschließlich aus den Anschlüssen der aktuell geöffneten Karte ab.
- * Dieselbe Regel wie im Editor gilt: [de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten.zulässigeArten]
- * ersetzt bei einer ODER-Signatur die einzelne deklarierte Anschlussart.
+ * Leitet die Legende aus den tatsächlich sichtbaren Anschlusssymbolen der geöffneten Karte ab.
+ * Semantische Methoden- und Tupelverträge werden dabei als solche geführt, selbst wenn ihre
+ * physische Anschlussart allgemeiner ist. Dadurch kann insbesondere eine Methode nicht mehr
+ * als bloßes "Mathematisches Objekt" aus der Legende verschwinden.
  */
 internal fun anschlussLegendenEinträge(
     karte: KartenDaten,
@@ -48,18 +50,19 @@ internal fun anschlussLegendenEinträge(
     val signaturen = karte.knoten
         .flatMap { it.anschlüsse }
         .map { anschluss ->
-            val arten = if (anschluss.zulässigeArten.isNotEmpty()) {
-                anschluss.zulässigeArten
-            } else {
-                setOf(anschluss.art)
-            }
-            arten.sortedBy { it.wert }
+            AnschlussLegendenSignatur(
+                ids = sichtbareAnschlussArtIds(anschluss),
+                symbolAnschluss = anschluss,
+            )
         }
-        .distinct()
+        .distinctBy { it.ids }
 
     return signaturen
-        .map { ids ->
-            AnschlussLegendenEintrag(ids.map { id -> register.legendenArt(id) })
+        .map { signatur ->
+            AnschlussLegendenEintrag(
+                arten = signatur.ids.map { id -> register.legendenArt(id) },
+                symbolAnschluss = signatur.symbolAnschluss,
+            )
         }
         .sortedWith(
             compareBy<AnschlussLegendenEintrag>(
@@ -155,8 +158,13 @@ private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
                 .semantics { contentDescription = "Anschluss ${eintrag.titel}" },
             contentAlignment = Alignment.Center,
         ) {
-            LegendenAnschlussSymbol(
-                farben = eintrag.arten.map { art -> anschlussFarbe(art.id.wert) },
+            AnschlussSymbol(
+                anschluss = eintrag.symbolAnschluss,
+                fallbackFarben = eintrag.arten.map { art -> anschlussFarbe(art.id.wert) },
+                größe = 20f,
+                zoom = 1f,
+                aktiviert = true,
+                farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
             )
         }
         Column(
@@ -180,39 +188,5 @@ private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
                 )
             }
         }
-    }
-}
-
-/** Entspricht der diagonalen Mehrfarbdarstellung der Anschlüsse im Karteneditor. */
-@Composable
-private fun LegendenAnschlussSymbol(
-    farben: List<Color>,
-) {
-    val sichereFarben = farben.ifEmpty { listOf(MaterialTheme.colorScheme.primary) }
-    Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(20.dp).clip(CircleShape)) {
-            if (sichereFarben.size == 1) {
-                drawRect(sichereFarben.single())
-            } else {
-                val streifenBreite = (size.minDimension / sichereFarben.size.coerceAtLeast(2)).coerceAtLeast(2f)
-                rotate(-45f) {
-                    var x = -size.width * 1.5f
-                    var index = 0
-                    while (x < size.width * 2.5f) {
-                        drawRect(
-                            color = sichereFarben[index % sichereFarben.size],
-                            topLeft = Offset(x, -size.height),
-                            size = Size(streifenBreite, size.height * 3f),
-                        )
-                        x += streifenBreite
-                        index += 1
-                    }
-                }
-            }
-        }
-        Box(
-            Modifier.size(20.dp)
-                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
-        )
     }
 }

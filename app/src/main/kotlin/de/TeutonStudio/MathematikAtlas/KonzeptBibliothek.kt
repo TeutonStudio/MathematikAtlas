@@ -74,11 +74,7 @@ internal data class KonzeptBibliothekFilter(
     val kategoriePfad: List<String>? = null,
 )
 
-/**
- * App-Adapter auf die kanonische Enzyklopädiequelle im Modul MathematikKnoten.
- * Kanonische Mathematikvorlagen werden dort validiert; App-Erweiterungen wie
- * Geometrie-, Mengenraum- und Kartenvorlagen bleiben ergänzend einfügbar.
- */
+/** App-Adapter auf die kanonische Enzyklopädiequelle im Modul MathematikKnoten. */
 internal object KonzeptBibliothekRegister {
     val kategorien: List<KonzeptKategorie> = listOf(
         KonzeptKategorie(
@@ -141,9 +137,15 @@ internal object KonzeptBibliothekRegister {
                     "eigenschaften",
                     "Eigenschaften",
                     listOf(
+                        KonzeptKategorie("kardinalitaet", "Kardinalität"),
                         KonzeptKategorie("topologie", "Topologie"),
                         KonzeptKategorie("konvexitaet", "Konvexität"),
                     ),
+                ),
+                KonzeptKategorie(
+                    "topologie",
+                    "Topologie",
+                    listOf(KonzeptKategorie("raeume", "Räume")),
                 ),
             ),
         ),
@@ -182,7 +184,14 @@ internal object KonzeptBibliothekRegister {
                 ),
             ),
         ),
-        KonzeptKategorie("topologie", "Topologie", listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe"))),
+        KonzeptKategorie(
+            "topologie",
+            "Topologie",
+            listOf(
+                KonzeptKategorie("grundbegriffe", "Grundbegriffe"),
+                KonzeptKategorie("abbildungen", "Abbildungen"),
+            ),
+        ),
         KonzeptKategorie("stochastik", "Stochastik", listOf(KonzeptKategorie("grundbegriffe", "Grundbegriffe"))),
         KonzeptKategorie("eigene-karten", "Eigene Karten"),
     )
@@ -202,12 +211,6 @@ internal object KonzeptBibliothekRegister {
             .mapTo(linkedSetOf(), KnotenVorlage::bibliotheksId)
         val vollständigeKanonischeVorlagen = alleMathematikDefinitionsVorlagen()
 
-        /*
-         * Das Konzeptregister validiert einen vollständigen, geschlossenen
-         * Mathematikkatalog. Teilmengen sind eine Darstellungsfrage der App und
-         * werden deshalb erst nach der kanonischen Erzeugung gefiltert. Geplante
-         * Konzepte bleiben unabhängig von der Auswahl sichtbar.
-         */
         val kanonischeEinträge = KonzeptKnotenRegister.erstelle(vollständigeKanonischeVorlagen).flatMap { wissen ->
             val kategoriePfade = wissen.fachPfade
                 .map { it.segmente }
@@ -323,10 +326,29 @@ internal object KonzeptBibliothekRegister {
         val art = vorlage.art.lowercase()
         val name = vorlage.name.lowercase()
         val kategorie = vorlage.kategorie.lowercase()
+        val eigenschaft = vorlage.standardParameter["eigenschaft"]?.lowercase().orEmpty()
         val pfade = linkedSetOf<List<String>>()
 
         if (kategorie in setOf("eigene karten", "gespeicherte karten", "gruppen") || vorlage.kartenVerweis != null) {
             pfade += listOf("eigene-karten")
+        }
+
+        if (art in setOf("mathematik.topologischerraum", "mathematik.metrischerraum")) {
+            pfade += listOf("mengenlehre", "topologie", "raeume")
+            pfade += listOf("topologie", "grundbegriffe")
+        }
+        if (art.contains("mengeneigenschaft")) {
+            when (eigenschaft) {
+                "endlich", "unendlich", "abzählbar", "abzaehlbar", "überabzählbar", "ueberabzaehlbar", "uberabzahlbar" ->
+                    pfade += listOf("mengenlehre", "eigenschaften", "kardinalitaet")
+                "offen", "abgeschlossen", "geschlossen" ->
+                    pfade += listOf("mengenlehre", "eigenschaften", "topologie")
+                "konvexe-menge" -> pfade += listOf("mengenlehre", "eigenschaften", "konvexitaet")
+            }
+        }
+        if (art.contains("methodeneigenschaft") && eigenschaft == "stetig") {
+            pfade += listOf("analysis", "eigenschaften", "regularitaet")
+            pfade += listOf("topologie", "abbildungen")
         }
 
         if (kategorie.startsWith("geometrie:") || art.contains("geometrie")) {

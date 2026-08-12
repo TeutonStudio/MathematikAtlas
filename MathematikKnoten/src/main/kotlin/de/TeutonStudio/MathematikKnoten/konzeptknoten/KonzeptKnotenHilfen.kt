@@ -51,6 +51,7 @@ private fun KnotenVorlage.fachPfade() =
         name = name,
         kategorie = kategorie,
         besitztKartenVerweis = kartenVerweis != null,
+        standardParameter = standardParameter,
     ) + FachKatalog.fürAxiomId(standardParameter["operator"].orEmpty())
 
 internal fun einzelnesVorlagenKonzept(
@@ -101,13 +102,6 @@ internal fun gruppiertesVorlagenKonzept(
         primär = true,
     )
 
-    /*
-     * Explizite Konzeptdateien werden auch für Teilkataloge aufgerufen. Ein
-     * leerer Treffer ist deshalb ein aussortierbarer Kandidat und kein Fehler;
-     * KonzeptKnotenRegister entfernt verfügbare Einträge ohne Vorlage vor der
-     * Sortierung und Validierung. So funktionieren Suche, Vorschau und Tests
-     * auch mit einzelnen Vorlagen statt nur mit dem vollständigen Atlas.
-     */
     return WissensEintrag(
         id = id,
         titel = titel,

@@ -24,39 +24,53 @@ class AnschlussSymbolTest {
             TypId("mathematik.methode"),
             listOf(argument, menge),
         )
-        val plan = assertIs<AnschlussSymbolPlan.Methode>(anschlussSymbolPlan(anschluss(methode)))
+        val anschluss = anschluss(methode)
+        val plan = assertIs<AnschlussSymbolPlan.Methode>(anschlussSymbolPlan(anschluss))
 
         assertEquals(listOf("mathematik.zahl", "mathematik.aussage"), plan.argumentFarben)
         assertEquals(listOf("mathematik.menge"), plan.ausgabeFarben)
+        assertEquals(
+            listOf(AnschlussArtId("mathematik.methode")),
+            sichtbareAnschlussArtIds(anschluss),
+        )
+    }
+
+    @Test
+    fun `Methodenhalbkreise verwenden dreifachen bisherigen Abstand`() {
+        assertEquals(3f, METHODEN_HALBKREIS_ABSTAND_FAKTOR)
     }
 
     @Test
     fun `Methode ohne Signatur fällt auf Tupel beider Seiten zurück`() {
-        val plan = assertIs<AnschlussSymbolPlan.Methode>(
-            anschlussSymbolPlan(
-                AnschlussDaten(
-                    name = "methode",
-                    kante = AnschlussKante.Links,
-                    art = AnschlussArtId("mathematik.methode"),
-                ),
-            ),
+        val anschluss = AnschlussDaten(
+            name = "methode",
+            kante = AnschlussKante.Links,
+            art = AnschlussArtId("mathematik.methode"),
         )
+        val plan = assertIs<AnschlussSymbolPlan.Methode>(anschlussSymbolPlan(anschluss))
 
         assertEquals(listOf("mathematik.tupel"), plan.argumentFarben)
         assertEquals(listOf("mathematik.tupel"), plan.ausgabeFarben)
+        assertEquals(
+            listOf(AnschlussArtId("mathematik.methode")),
+            sichtbareAnschlussArtIds(anschluss),
+        )
     }
 
     @Test
     fun `Endliches Tupel erhält einen Ring je Element in Reihenfolge`() {
-        val plan = assertIs<AnschlussSymbolPlan.Tupel>(
-            anschlussSymbolPlan(anschluss(tupel(zahl, aussage, menge))),
-        )
+        val anschluss = anschluss(tupel(zahl, aussage, menge))
+        val plan = assertIs<AnschlussSymbolPlan.Tupel>(anschlussSymbolPlan(anschluss))
 
         assertEquals(3, plan.ringe.size)
         assertEquals(listOf("mathematik.zahl"), plan.ringe[0].farben)
         assertEquals(listOf("mathematik.aussage"), plan.ringe[1].farben)
         assertEquals(listOf("mathematik.menge"), plan.ringe[2].farben)
         assertTrue(plan.ringe.none { it.gepunktet })
+        assertEquals(
+            listOf(AnschlussArtId("mathematik.tupel")),
+            sichtbareAnschlussArtIds(anschluss),
+        )
     }
 
     @Test
@@ -71,6 +85,27 @@ class AnschlussSymbolTest {
         assertTrue(plan.ringe.take(3).none { it.gepunktet })
         assertTrue(plan.ringe.takeLast(2).all { it.gepunktet })
         assertTrue(plan.ringe.all { it.farben == listOf("mathematik.zahl") })
+    }
+
+    @Test
+    fun `Standardanschluss bewahrt ODER Signatur für Legende`() {
+        val gemischt = AnschlussDaten(
+            name = "wert",
+            kante = AnschlussKante.Links,
+            art = AnschlussArtId("mathematik.objekt"),
+            zulässigeArten = setOf(
+                AnschlussArtId("mathematik.zahl"),
+                AnschlussArtId("mathematik.menge"),
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                AnschlussArtId("mathematik.menge"),
+                AnschlussArtId("mathematik.zahl"),
+            ),
+            sichtbareAnschlussArtIds(gemischt),
+        )
     }
 
     @Test

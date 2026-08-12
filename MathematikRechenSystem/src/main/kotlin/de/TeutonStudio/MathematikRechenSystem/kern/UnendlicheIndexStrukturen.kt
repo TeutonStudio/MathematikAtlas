@@ -152,7 +152,8 @@ data class HyperErweiterteIndexStruktur(val original: UnendlicheIndexStruktur) {
 fun UnendlicheIndexStruktur.hyperErweiterung(): HyperErweiterteIndexStruktur =
     HyperErweiterteIndexStruktur(this)
 
-data class MetrikVertrag(
+/** Metrikvertrag der Nichtstandardanalyse; bewusst getrennt vom allgemeinen Raumvertrag. */
+data class NichtstandardMetrikVertrag(
     val traeger: MengenAusdruck,
     val abstandLatex: String,
     val axiome: NachweisStatus,
@@ -161,20 +162,20 @@ data class MetrikVertrag(
     init { require(abstandLatex.isNotBlank()) }
 }
 
-fun standardMetrik(traeger: MengenAusdruck): MetrikVertrag? = when (
+fun standardMetrik(traeger: MengenAusdruck): NichtstandardMetrikVertrag? = when (
     traeger.fundamentalerZahlbereichOderNull()
 ) {
     FundamentalerZahlbereich.RATIONAL,
     FundamentalerZahlbereich.REELL,
-    -> MetrikVertrag(traeger, "|x-y|", NachweisStatus.Nachgewiesen, true)
+    -> NichtstandardMetrikVertrag(traeger, "|x-y|", NachweisStatus.Nachgewiesen, true)
     FundamentalerZahlbereich.KOMPLEX ->
-        MetrikVertrag(traeger, "|x-y|_{\\mathbb C}", NachweisStatus.Nachgewiesen, true)
+        NichtstandardMetrikVertrag(traeger, "|x-y|_{\\mathbb C}", NachweisStatus.Nachgewiesen, true)
     else -> null
 }
 
 data class NichtstandardCauchyAussage(
     val tupel: UnnatuerlichesKartesischesTupel,
-    val metrik: MetrikVertrag,
+    val metrik: NichtstandardMetrikVertrag,
 ) : Aussage {
     init {
         require(metrik.traeger == tupel.zielMenge)
@@ -207,7 +208,7 @@ sealed interface CauchyErgebnis {
 
 fun pruefeCauchy(
     tupel: UnnatuerlichesKartesischesTupel,
-    metrik: MetrikVertrag? = standardMetrik(tupel.zielMenge),
+    metrik: NichtstandardMetrikVertrag? = standardMetrik(tupel.zielMenge),
 ): CauchyErgebnis {
     val aufgeloest = metrik ?: return CauchyErgebnis.NichtAnwendbar(
         "Für ${tupel.zielMenge.zuLatex()} ist keine eindeutige Metrik registriert.",

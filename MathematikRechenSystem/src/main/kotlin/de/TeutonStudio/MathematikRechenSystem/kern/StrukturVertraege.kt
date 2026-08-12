@@ -42,7 +42,13 @@ interface Tensorartig : MathematischesObjekt {
     fun tensorKomponente(indizes: List<Int>): ZahlAusdruck
 }
 
-/** Explizite tensorielle Ansicht, auch für Zahlen und kartesische Tupel. */
+/**
+ * Explizite tensorielle Ansicht, auch für Zahlen und kartesische Tupel.
+ *
+ * Das leere Tupel `()` besitzt die leere Form und ist damit ein Tensor der
+ * Stufe 0. Es besitzt keine Komponenten; der Zahlbereich ist für diesen
+ * Grenzfall lediglich neutrale Metadaten und wird kanonisch als C geführt.
+ */
 data class TensorielleAnsicht(
     val form: List<Int>,
     val zahlBereich: MengenAusdruck,
@@ -50,14 +56,20 @@ data class TensorielleAnsicht(
     val quelle: MathematischesObjekt,
 ) {
     init {
-        require(form.isNotEmpty()) { "Tensoren nullter Stufe sind im Mathematik Atlas nicht definiert." }
-        require(form.all { it > 0 }) { "Tensorformen müssen positive Achsenlängen besitzen." }
-        require(komponenten.size == form.sicheresProdukt()) {
-            "Die Komponentenanzahl muss dem Produkt der Tensorform entsprechen."
+        if (form.isEmpty()) {
+            require(komponenten.isEmpty()) { "Ein Tensor der Stufe 0 besitzt keine Komponenten." }
+        } else {
+            require(form.all { it > 0 }) { "Tensorformen müssen positive Achsenlängen besitzen." }
+            require(komponenten.size == form.sicheresProdukt()) {
+                "Die Komponentenanzahl muss dem Produkt der Tensorform entsprechen."
+            }
         }
     }
     val stufe: Int get() = form.size
-    fun komponente(indizes: List<Int>): ZahlAusdruck = komponenten[tensorLinearerIndex(indizes, form)]
+    fun komponente(indizes: List<Int>): ZahlAusdruck {
+        require(form.isNotEmpty()) { "Ein Tensor der Stufe 0 besitzt keine Komponente." }
+        return komponenten[tensorLinearerIndex(indizes, form)]
+    }
 }
 
 fun Tupel.kartesischerTupelVertrag(
@@ -106,7 +118,11 @@ fun MathematischesObjekt.tensorielleAnsicht(
     is Tensorartig -> StrukturPruefung.Gueltig(
         TensorielleAnsicht(tensorForm, tensorZahlBereich, tensorForm.indizesFolge().map(::tensorKomponente), this),
     )
-    is Tupel -> when (val komponenten = numerischeKomponentenAnsicht(werteVorraete = werteVorraete)) {
+    is Tupel -> if (elemente.isEmpty()) {
+        StrukturPruefung.Gueltig(
+            TensorielleAnsicht(emptyList(), KomplexeZahlen, emptyList(), this),
+        )
+    } else when (val komponenten = numerischeKomponentenAnsicht(werteVorraete = werteVorraete)) {
         is StrukturPruefung.Gueltig -> StrukturPruefung.Gueltig(
             TensorielleAnsicht(listOf(komponenten.wert.laenge), komponenten.wert.zahlBereich, komponenten.wert.komponenten, this),
         )

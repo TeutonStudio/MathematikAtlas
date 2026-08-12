@@ -51,7 +51,10 @@ internal fun AussagenOperatorDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         BoxWithConstraints(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(12.dp),
             contentAlignment = Alignment.Center,
         ) {
             val gewünschteBreite = if (direkteArt != null) {
@@ -231,9 +234,9 @@ private fun TabellenIndexZelle(index: BigInteger) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-  index.toString(),
-  style = MaterialTheme.typography.bodySmall,
-  color = MaterialTheme.colorScheme.onSurfaceVariant,
+            index.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -273,7 +276,7 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
         "disjunktion" -> Triple(
             "\\bigvee_{idx \\in \\Set{A}} methode(idx)",
             Wahrheitswert.Lüge,
-            "Wahr, sobald mindestens eine von der Methode erzeugte Aussage wahr ist.",
+            "Wahr, sobald mindestens eine von der Methode erzeugten Aussage wahr ist.",
         )
         "adjunktion" -> Triple(
             "\\stackrel{\\bullet}{\\bigvee}_{idx \\in \\Set{A}} methode(idx)",

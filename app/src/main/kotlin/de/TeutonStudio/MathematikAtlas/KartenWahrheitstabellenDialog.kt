@@ -114,7 +114,13 @@ internal fun KartenWahrheitstabellenDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
             val gewünschteBreite = (tabellenBreite + 48.dp)
                 .coerceAtLeast(420.dp)
                 .coerceAtMost(980.dp)

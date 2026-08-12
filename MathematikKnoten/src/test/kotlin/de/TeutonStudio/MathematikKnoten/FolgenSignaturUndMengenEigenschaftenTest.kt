@@ -4,15 +4,20 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.AussageStatus
+import de.TeutonStudio.MathematikRechenSystem.kern.DiskreteTopologie
 import de.TeutonStudio.MathematikRechenSystem.kern.EigenschaftsAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen
+import de.TeutonStudio.MathematikRechenSystem.kern.IndiskreteTopologie
 import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
+import de.TeutonStudio.MathematikRechenSystem.kern.TopologischerRaum
 import de.TeutonStudio.MathematikRechenSystem.kern.UnterstuetzungsStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import kotlin.test.Test
@@ -65,8 +70,10 @@ class FolgenSignaturUndMengenEigenschaftenTest {
     @Test
     fun `Diskrete Topologie macht jede Menge offen`() {
         val menge = EndlicheMenge(setOf(RationaleZahl.Null, RationaleZahl.Eins))
+        val traeger = EndlicheMenge(setOf(RationaleZahl.Null, RationaleZahl.Eins, RationaleZahl.von(2)))
+        val raum = TopologischerRaum(traeger, DiskreteTopologie(traeger))
 
-        val aussage = prüfeMenge(menge, "offen", mapOf("topologie" to "diskret"))
+        val aussage = prüfeMenge(menge, "offen", raum = raum)
 
         assertEquals(AussageStatus.BEWIESEN, aussage.aussageStatus)
     }
@@ -74,18 +81,20 @@ class FolgenSignaturUndMengenEigenschaftenTest {
     @Test
     fun `Indiskrete Topologie unterscheidet Teilmenge und Umgebungsraum`() {
         val teilmenge = EndlicheMenge(setOf(RationaleZahl.Null))
+        val traeger = EndlicheMenge(setOf(RationaleZahl.Null, RationaleZahl.Eins))
+        val raum = TopologischerRaum(traeger, IndiskreteTopologie(traeger))
 
         assertEquals(
             AussageStatus.WIDERLEGT,
-            prüfeMenge(teilmenge, "offen", mapOf("topologie" to "indiskret")).aussageStatus,
+            prüfeMenge(teilmenge, "offen", raum = raum).aussageStatus,
         )
         assertEquals(
             AussageStatus.BEWIESEN,
-            prüfeMenge(teilmenge, "offen", mapOf("topologie" to "indiskret", "istUmgebungsraum" to "true")).aussageStatus,
+            prüfeMenge(traeger, "offen", raum = raum).aussageStatus,
         )
         assertEquals(
             AussageStatus.BEWIESEN,
-            prüfeMenge(LeereMenge, "abgeschlossen", mapOf("topologie" to "indiskret")).aussageStatus,
+            prüfeMenge(LeereMenge, "abgeschlossen", raum = raum).aussageStatus,
         )
     }
 
@@ -122,21 +131,35 @@ class FolgenSignaturUndMengenEigenschaftenTest {
     }
 
     private fun prüfeMenge(
-        menge: de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck,
+        menge: MengenAusdruck,
         eigenschaft: String,
-        parameter: Map<String, String>,
+        parameter: Map<String, String> = emptyMap(),
+        raum: TopologischerRaum? = null,
     ): EigenschaftsAussage {
-        val knoten = MathematischeEigenschaftKnotenVorlagen.MengenEigenschaft.erzeuge(GraphPunkt.Zero).copy(
+        val basis = MathematischeEigenschaftKnotenVorlagen.MengenEigenschaft.erzeuge(GraphPunkt.Zero).copy(
             parameter = MathematischeEigenschaftKnotenVorlagen.MengenEigenschaft.standardParameter + parameter +
                 (EIGENSCHAFT_PARAMETER to eigenschaft),
         )
-        return aussage(knoten, "menge", menge)
+        val knoten = konfiguriereMengenEigenschaftKnoten(basis, eigenschaft)
+        val eingänge = buildMap {
+            put("menge", BedingterWert(menge))
+            raum?.let { put("raum", BedingterWert(it)) }
+        }
+        return assertIs(
+            register.finde(knoten.art)!!.auswerten(
+                KnotenAuswertungsKontext(
+                    knoten = knoten,
+                    eingänge = eingänge,
+                    rechenKontext = RechenKontext(),
+                ),
+            ).ausgaben.getValue("aussage").objekt,
+        )
     }
 
     private fun aussage(
         knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten,
         eingang: String,
-        objekt: de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt,
+        objekt: MathematischesObjekt,
     ): EigenschaftsAussage = assertIs(
         register.finde(knoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
@@ -150,7 +173,7 @@ class FolgenSignaturUndMengenEigenschaftenTest {
     private fun methode(
         name: String,
         index: Variable,
-        indexMenge: de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck,
+        indexMenge: MengenAusdruck,
     ) = Methode(
         name = name,
         parameter = listOf(index),

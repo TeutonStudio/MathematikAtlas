@@ -159,7 +159,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
                         knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN
                     ) {
-                        val mindestAnzahl = if (knoten.art == "mathematik.tupel") 1 else 2
+                        val mindestAnzahl = if (knoten.art == "mathematik.tupel") 0 else 2
                         val wert = knoten.parameter["festeEingänge"] ?: "2"
                         var text by remember(knoten.id, wert) { mutableStateOf(wert) }
                         OutlinedTextField(
@@ -296,9 +296,9 @@ private fun TupelInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
     }
     Text(
         if (konfiguration.erzeugungsArt == TUPEL_METHODE) {
-            "Erzeugt für eine konkrete ganze Dimension n ≥ 1 das Tupel (f(1), …, f(n)). Die einstellige Methode darf beliebige mathematische Objekte liefern."
+            "Erzeugt für eine konkrete ganze Dimension n ≥ 0 das Tupel (f(1), …, f(n)); für n = 0 entsteht (). Die einstellige Methode darf beliebige mathematische Objekte liefern."
         } else {
-            "Erzeugt ein Zahlentupel aus den geordneten Eingängen."
+            "Erzeugt ein Zahlentupel aus den geordneten Eingängen; bei 0 Eingängen entsteht ()."
         },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

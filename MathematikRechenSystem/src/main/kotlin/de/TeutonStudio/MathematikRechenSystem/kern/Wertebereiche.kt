@@ -147,6 +147,7 @@ private fun inferiereElementMenge(
     is DifferenzierbarkeitsBereich -> inferiereElementMenge(menge.ursprungsBereich, werteVorräte, annahmen)
     is AbleitungsZielraum -> menge
     is TopologischerRand -> inferiereElementMenge(menge.kontext.umgebungsraum, werteVorräte, annahmen)
+    is TopologischerRandImRaum -> inferiereElementMenge(menge.raum.traeger, werteVorräte, annahmen)
     is TopologischerAbschluss -> inferiereElementMenge(menge.kontext.umgebungsraum, werteVorräte, annahmen)
     is TopologischesInneres -> inferiereElementMenge(menge.kontext.umgebungsraum, werteVorräte, annahmen)
     is TangentialMenge -> inferiereElementMenge(menge.graphRaum, werteVorräte, annahmen)

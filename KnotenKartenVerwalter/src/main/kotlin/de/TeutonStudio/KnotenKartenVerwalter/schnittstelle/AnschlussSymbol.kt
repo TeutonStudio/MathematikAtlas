@@ -30,6 +30,8 @@ private const val UNENDLICHES_TUPEL_TYP = "typ.tupel.unendlich"
 private const val LEGACY_TUPEL_ART = "mathematik.tupel"
 private const val METHODEN_TYP = "mathematik.methode"
 private const val LEGACY_METHODEN_PREFIX = "mathematik.funktion"
+private const val METHODEN_TRENNBREITE_ANTEIL = .08f
+internal const val METHODEN_HALBKREIS_ABSTAND_FAKTOR = 3f
 
 internal sealed interface AnschlussSymbolPlan {
     data object Standard : AnschlussSymbolPlan
@@ -72,6 +74,20 @@ internal fun anschlussSymbolPlan(anschluss: AnschlussDaten): AnschlussSymbolPlan
         return AnschlussSymbolPlan.Tupel(tupelRingPlan(emptyList(), unendlich = false))
     }
     return AnschlussSymbolPlan.Standard
+}
+
+/**
+ * Liefert die Anschlussarten, unter denen ein Anschluss in einer Legende erscheinen soll.
+ * Semantische Methoden- und Tupelverträge haben Vorrang vor der häufig allgemeineren
+ * physischen Anschlussart, damit Legende und tatsächlich gezeichnetes Symbol übereinstimmen.
+ */
+fun sichtbareAnschlussArtIds(anschluss: AnschlussDaten): List<AnschlussArtId> = when (anschlussSymbolPlan(anschluss)) {
+    is AnschlussSymbolPlan.Methode -> listOf(AnschlussArtId(METHODEN_TYP))
+    is AnschlussSymbolPlan.Tupel -> listOf(AnschlussArtId(LEGACY_TUPEL_ART))
+    AnschlussSymbolPlan.Standard -> {
+        val arten = if (anschluss.zulässigeArten.isNotEmpty()) anschluss.zulässigeArten else setOf(anschluss.art)
+        arten.sortedBy { it.wert }
+    }
 }
 
 private fun AnschlussDaten.istLegacyMethode(): Boolean =
@@ -157,8 +173,12 @@ internal fun normalisiereFarbId(id: String): String = when {
     else -> id
 }
 
+/**
+ * Gemeinsames Anschluss-Symbol für Editor und Legende. Dadurch werden insbesondere
+ * Methodenanschlüsse in beiden Oberflächen mit derselben Halbkreis-/Pfeildarstellung gezeigt.
+ */
 @Composable
-internal fun AnschlussSymbol(
+fun AnschlussSymbol(
     anschluss: AnschlussDaten,
     fallbackFarben: List<Color>,
     größe: Float,
@@ -238,22 +258,29 @@ internal fun AnschlussSymbol(
                 }
 
                 is AnschlussSymbolPlan.Methode -> {
-                    clipRect(right = size.width / 2f) {
+                    val trennBreite = (
+                        size.minDimension * METHODEN_TRENNBREITE_ANTEIL * METHODEN_HALBKREIS_ABSTAND_FAKTOR
+                        ).coerceAtLeast(1f)
+                    val halbeTrennung = trennBreite / 2f
+                    clipRect(right = center.x - halbeTrennung) {
                         zeichneGestreifteFläche(argumentFarben.ifEmpty { standardFarben })
                     }
-                    clipRect(left = size.width / 2f) {
+                    clipRect(left = center.x + halbeTrennung) {
                         zeichneGestreifteFläche(ausgabeFarben.ifEmpty { standardFarben })
                     }
-                    val trennBreite = (size.minDimension * .08f).coerceAtLeast(1f)
-                    drawLine(rahmen, Offset(center.x, 0f), Offset(center.x, size.height), trennBreite)
+                    drawRect(
+                        color = rahmen,
+                        topLeft = Offset(center.x - halbeTrennung, 0f),
+                        size = Size(trennBreite, size.height),
+                    )
 
-                    val start = Offset(size.width * .28f, center.y)
-                    val ende = Offset(size.width * .72f, center.y)
+                    val start = Offset(size.width * .24f, center.y)
+                    val ende = Offset(size.width * .76f, center.y)
                     val pfeilBreite = (size.minDimension * .09f).coerceAtLeast(1f)
                     val hinterlegung = pfeilBreite * 2.4f
                     drawLine(rahmen, start, ende, hinterlegung, cap = StrokeCap.Round)
                     drawLine(pfeil, start, ende, pfeilBreite, cap = StrokeCap.Round)
-                    val spitzeX = size.width * .60f
+                    val spitzeX = size.width * .62f
                     val spitzeY = size.height * .36f
                     val untenY = size.height * .64f
                     drawLine(rahmen, Offset(spitzeX, spitzeY), ende, hinterlegung, cap = StrokeCap.Round)

@@ -55,6 +55,9 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("exakte-eigenschaften") { registriereExakteEigenschaftsAuswertung() },
         MathematikAuswerterPaket("folgen-und-signaturen") { registriereFolgenUndSignaturEigenschaften() },
         MathematikAuswerterPaket("mengeneigenschaften") { registriereMengenEigenschaftsAuswertung() },
+        // Muss nach den historischen Eigenschaftsauswertern laufen: dieses Paket entfernt
+        // deren impliziten R-Fallback und delegiert nur nicht-topologische Altvarianten zurück.
+        MathematikAuswerterPaket("topologische-strukturen") { registriereTopologischeStrukturen() },
     )
 
     /**
@@ -63,6 +66,7 @@ object StandardMathematikAuswerterPakete {
      */
     val verfeinerungen: List<MathematikAuswerterPaket> = listOf(
         MathematikAuswerterPaket("konsolidierte-knoten") { registriereKonsolidierteKnoten() },
+        MathematikAuswerterPaket("tupel-null-dimension") { registriereTupelNullDimension() },
         MathematikAuswerterPaket("vektorrechner-erweiterungen") { registriereVektorRechnerErweiterungen() },
         MathematikAuswerterPaket("skalarprodukt-verfeinerung") { registriereSkalarproduktErweiterungen() },
         MathematikAuswerterPaket("strukturformel-rechner") { registriereStrukturFormelRechner() },
