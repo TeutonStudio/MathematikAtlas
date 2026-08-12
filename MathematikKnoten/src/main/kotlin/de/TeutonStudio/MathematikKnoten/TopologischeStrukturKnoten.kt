@@ -436,6 +436,8 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
     }
 
     val erwarteteQuelle = signatur.effektiverWerteVorrat
+        ?: signatur.argumente.singleOrNull()?.werteVorrat
+        ?: signatur.werteVorrat
     val falscheQuelle = quellRaum.traeger != erwarteteQuelle
     val falschesZiel = zielRaum.traeger != signatur.zielMenge
     if (falscheQuelle || falschesZiel) {
