@@ -113,7 +113,7 @@ class MethodenAnforderungTest {
         )
 
         assertNull(MethodenAnforderung.Zahlenfunktion.prüfe(methode))
-        assertTrue(methode.methodenSignatur().effektiverWerteVorrat === diagonale)
+        assertTrue(methode.mathematischeMethodenSignatur().effektiverDefinitionsRaum === diagonale)
     }
 
     @Test
