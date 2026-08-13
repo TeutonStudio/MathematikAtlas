@@ -235,7 +235,15 @@ class KartenAuswerter(
             val name = öffentlicherKartenName(eingang)
             val ausgangsArt = eingang.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }?.art
                 ?: AnschlussArtId("mathematik.objekt")
-            val wert = außen[name] ?: symbolischerEingangswert(ausgangsArt, name, eingang.id).also { symbolisch ->
+            val methodenSignatur = if (ausgangsArt.wert == "mathematik.methode") {
+                deklarierteMethodenSignatur(eingang)
+            } else null
+            val wert = außen[name] ?: symbolischerEingangswert(
+                art = ausgangsArt,
+                name = name,
+                knotenId = eingang.id,
+                methodenSignatur = methodenSignatur,
+            ).also { symbolisch ->
                 if (!alsMethode) return@also
                 val parameter = symbolisch.objekt as? MethodenParameter
                     ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Karteneingang '$name' ist kein Methodenparameter.")
