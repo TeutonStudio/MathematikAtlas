@@ -43,9 +43,9 @@ data class BegriffsSpezifikation(
 }
 
 /**
- * Rollenbelegung eines Begriffs. Methodenrollen sind Atlaswerte, nicht automatisch
- * mathematische Objekte; die Spezifikation bestimmt über [BegriffsRollenArt], welche
- * Capability für eine konkrete Rolle verlangt wird.
+ * Rollenbelegung ist ein neutraler Wertkanal. Ob eine Rolle eine mathematische Menge,
+ * Aussage oder Methode verlangt, wird durch [BegriffsRolle.art] und die jeweilige
+ * Prüfung validiert, nicht durch eine pauschale `MathematischesObjekt`-Schranke.
  */
 data class BegriffsKandidat(
     val spezifikationId: String,
@@ -77,10 +77,9 @@ private data class BegriffsAxiomAussage(
     override fun zuLatex(): String = "\\operatorname{${axiom.name.replace(" ", "\\ ")}}"
 }
 
-
 /**
  * Maschinenlesbare Einzelprüfung eines Axioms. Ein Gegenbeispiel wird nur
- * gespeichert, wenn die Widerlegung durch konkrete Werte entstanden ist.
+ * gespeichert, wenn die Widerlegung durch konkrete mathematische Werte entstanden ist.
  */
 data class BegriffsAxiomPruefung(
     val id: String,
@@ -233,4 +232,3 @@ val LINEARE_ABBILDUNG_SPEZIFIKATION = BegriffsSpezifikation(
         BegriffsBeispiel("quadrat", "Gegenbeispiel x²", emptySet()),
     ),
 )
-

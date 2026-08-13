@@ -362,15 +362,12 @@ fun totaleAbleitung(
 fun eindimensionaleAbleitungenStimmenUeberein(methode: Methode): Boolean =
     methode.parameter.size == 1
 
-/**
- * Differentialoperationen verwenden denselben kanonischen mathematischen Argumentraum
- * wie der übrige Methodenkern. Insbesondere bleibt ein einstelliger Bereich Tupelraum(W)
- * und nullstellige Methoden werden an dieser fachlichen Grenze abgelehnt.
- */
 private fun Methode.argumentRaum(): MengenAusdruck {
-    val signatur = mathematischeMethodenSignatur()
-    require(signatur.argumente.isNotEmpty()) { "Eine Differentiation benötigt mindestens ein formales Argument." }
-    return signatur.definitionsRaum
+    require(parameter.isNotEmpty()) { "Eine Differentiation benötigt mindestens ein formales Argument." }
+    val komponenten = parameter.map { parameter ->
+        werteVorräte[parameter.name] ?: FehlendeObermenge("differential.${name}.${parameter.name}")
+    }
+    return if (komponenten.size == 1) komponenten.single() else Tupelraum(komponenten)
 }
 
 private fun Methode.ableitungsZielRaum(
