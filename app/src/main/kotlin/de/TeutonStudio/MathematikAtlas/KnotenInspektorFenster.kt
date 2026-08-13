@@ -45,9 +45,6 @@ private val INSPEKTOR_RAND = 16.dp
 @Composable
 internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
     val knoten = zustand.ausgewählterKnoten
-    LaunchedEffect(knoten?.id) {
-        if (knoten == null) InspektorSichtbarkeit.schließen()
-    }
     if (!InspektorSichtbarkeit.offen || knoten == null) return
 
     Layout(
@@ -65,13 +62,13 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(AtlasAbstände.RahmenInnen),
+                    verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Inhalt),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
                     ) {
                         Text("Inspektor", modifier = Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
                         TextButton(onClick = InspektorSichtbarkeit::schließen) { Text("Schließen") }
@@ -79,7 +76,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
                     ) {
                         Text(knoten.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
                         TextButton(onClick = { knotenUmbenennenGeöffnet = true }) { Text("Umbenennen") }
@@ -104,6 +101,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     }
                     Text(knoten.art, style = MaterialTheme.typography.labelMedium)
                     StandardwerteEditor(knoten, zustand)
+                    MethodenAufrufArgumentProjektionEditor(knoten, zustand)
+                    KarteneingangMethodenSignaturEditor(knoten, zustand)
                     MethodenAusgangProjektionEditor(knoten, zustand)
                     if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
                     IterierteMethodenKartenInspektor(knoten, zustand)
@@ -144,8 +143,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                                     zustand.editor.karte.vorschauKnotenErsetzen(knoten)
                             },
                         )
-                        Spacer(Modifier.height(4.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Spacer(Modifier.height(AtlasAbstände.SehrKlein))
+                        Row(horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung)) {
                             OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
                             Button(
                                 onClick = zustand::löscheAuswahlMitMengendefinition,
@@ -186,7 +185,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
                         ) {
                             Text("Anzeige: Namen", modifier = Modifier.weight(1f))
                             Switch(
@@ -215,6 +214,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
                         ) && !it.startsWith(STANDARDWERT_PREFIX) &&
                             !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.") &&
+                            !it.startsWith("methodenAufruf.") && !it.startsWith("kartenMethode.signatur.") &&
                             !it.startsWith(METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX)
                     }.forEach { (schlüssel, wert) ->
                         var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
@@ -228,8 +228,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
-                    Spacer(Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Spacer(Modifier.height(AtlasAbstände.SehrKlein))
+                    Row(horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung)) {
                         OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
                         Button(
                             onClick = zustand::löscheAuswahlMitMengendefinition,
@@ -439,46 +439,15 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
     if (methodenAusgänge.isEmpty()) return
 
     HorizontalDivider()
-    Text("Methodenprojektion", style = MaterialTheme.typography.titleSmall)
+    Text("Methodenergebnis-Projektion", style = MaterialTheme.typography.titleSmall)
     Text(
-        "Argument- und Ergebnisprojektion verändern die Karten-Schnittstelle der Methode, nicht ihre geordnete Parameterliste oder Rechenvorschrift.",
+        "Die Argumentdarstellung wird am jeweiligen Verbraucher eingestellt. Hier bleibt nur die Darstellung des Methodenergebnisses konfigurierbar; die Methodensignatur selbst ändert sich dadurch nicht.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     methodenAusgänge.forEach { ausgang ->
         if (methodenAusgänge.size > 1) {
             Text(ausgang.name, style = MaterialTheme.typography.labelLarge)
-        }
-
-        Text("Argumente", style = MaterialTheme.typography.labelMedium)
-        val argumentProjektion = knoten.methodenAusgangArgumentprojektion(ausgang.name)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-            FilterChip(
-                selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
-                onClick = {
-                    zustand.editor.führeAus(
-                        KartenAktion.KnotenParameterÄndern(
-                            knoten.id,
-                            methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
-                            METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
-                        ),
-                    )
-                },
-                label = { Text("Separiert") },
-            )
-            FilterChip(
-                selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL,
-                onClick = {
-                    zustand.editor.führeAus(
-                        KartenAktion.KnotenParameterÄndern(
-                            knoten.id,
-                            methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
-                            METHODEN_ARGUMENTPROJEKTION_TUPEL,
-                        ),
-                    )
-                },
-                label = { Text("Ein Tupel") },
-            )
         }
 
         val methode = zustand.auswertung.knoten[knoten.id]
@@ -497,7 +466,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
             )
         } else {
             val ergebnisProjektion = knoten.methodenAusgangErgebnisprojektion(ausgang.name)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Klein), modifier = Modifier.fillMaxWidth()) {
                 FilterChip(
                     selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_DIREKT,
                     onClick = {
@@ -585,7 +554,7 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung)) {
         OutlinedTextField(
             value = höheText,
             onValueChange = { text ->
