@@ -53,23 +53,15 @@ class KompositionTest {
 
     @Test
     fun `meldet die konkrete inkompatible Übergangsstelle`() {
-        val außenDomain = EndlicheMenge(setOf(RationaleZahl.Null))
-        val inneresBild = EndlicheMenge(setOf(RationaleZahl.Eins))
-        val außen = methode("f", listOf(x), x, definitionsmenge = außenDomain, zielmenge = ReelleZahlen)
-        val innen = methode(
-            "g",
-            listOf(x),
-            RationaleZahl.Eins,
-            definitionsmenge = ReelleZahlen,
-            zielmenge = inneresBild,
-        )
+        val außen = methode("f", listOf(x), x, definitionsmenge = ReelleZahlen)
+        val innen = methode("g", listOf(x), x, zielmenge = KomplexeZahlen)
 
         val prüfung = prüfeKompositionsKette(listOf(außen, innen))
 
         assertTrue(!prüfung.istGültig)
         assertEquals(1, prüfung.fehler.single().äußerePosition)
         assertEquals(2, prüfung.fehler.single().innerePosition)
-        assertTrue(prüfung.fehler.single().grund.contains("liegt nicht"))
+        assertTrue(prüfung.fehler.single().grund.contains("passt nicht"))
         assertFailsWith<IllegalArgumentException> { komponiere(listOf(außen, innen)) }
     }
 }

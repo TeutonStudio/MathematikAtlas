@@ -1,24 +1,28 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-sealed interface MathematischesObjekt : AtlasWert {
+/**
+ * Domänenneutraler Laufzeitwert des Atlas.
+ *
+ * Der Vertrag besitzt absichtlich keinerlei Mathematik-, LaTeX-, Mengen- oder
+ * Auswertungssemantik. Script-, Engine- und Darstellungswerte können ihn deshalb
+ * implementieren, ohne künstlich zu mathematischen Objekten zu werden.
+ */
+interface AtlasWert
+
+/** Optionale Darstellungscapability. Sie ist ausdrücklich kein Bestandteil von [AtlasWert]. */
+interface LatexDarstellbar {
     fun zuLatex(): String
 }
 
-/**
- * Nichtmathematische, aber über den Atlas-Wertkanal transportierbare Darstellungswerte.
- *
- * Darstellung ist ausdrücklich keine Unterart von Mathematik. Die historische
- * `zuLatex()`-Projektion bleibt hier vorübergehend ausschließlich als lokale
- * UI-Kompatibilität erhalten; sie ist kein Bestandteil von [AtlasWert].
- */
-interface DarstellungsWert : AtlasWert {
-    fun zuLatex(): String = toString()
-}
+interface MathematischesObjekt : AtlasWert, LatexDarstellbar
+
+/** Nichtmathematischer, über den allgemeinen Atlas-Wertkanal transportierbarer Darstellungswert. */
+interface DarstellungsWert : AtlasWert, LatexDarstellbar
 
 /** Gemeinsamer Obervertrag für strukturierte Grafikformate wie SVG und später TikZ. */
 interface Grafik : DarstellungsWert
 
-/** Ein benannter, bei einer mathematischen Methode bindbarer Parameter. */
+/** Ein benannter, bei einer mathematischen [Methode] bindbarer Parameter. */
 sealed interface MethodenParameter : MathematischesObjekt {
     val name: String
 }

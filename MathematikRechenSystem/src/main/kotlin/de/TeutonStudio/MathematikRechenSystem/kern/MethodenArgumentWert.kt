@@ -1,18 +1,18 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 /**
- * Strukturelle mathematische Reflexionsansicht eines einzelnen Methodenarguments.
+ * Strukturelle Reflexionsansicht eines einzelnen Methodenarguments.
  *
- * Der Wert enthält bewusst die mathematische Komponente, nicht die neutrale
- * [MethodenKomponente]. Definitionsmengen sind eine Mathematik-Capability und keine
- * Eigenschaft beliebiger Script-/Engine-Argumente.
+ * Der Wert enthält bewusst die echte Parameterinstanz und ihren Wertevorrat. Damit
+ * bleibt die Information beim Verdrahten erhalten und wird nicht auf einen bloßen
+ * Anzeigestring reduziert.
  */
 data class MethodenArgumentWert(
-    val argument: MathematischeArgumentKomponente,
+    val argument: MethodenArgument,
 ) : MathematischesObjekt {
     val parameter: MethodenParameter get() = argument.parameter
-    val name: String get() = argument.name
-    val werteVorrat: MengenAusdruck get() = argument.definitionsMenge
+    val name: String get() = parameter.name
+    val werteVorrat: MengenAusdruck get() = argument.werteVorrat
 
     override fun zuLatex(): String = "${parameter.zuLatex()} \\in ${werteVorrat.zuLatex()}"
 }

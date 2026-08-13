@@ -113,7 +113,7 @@ class MethodenAnforderungTest {
         )
 
         assertNull(MethodenAnforderung.Zahlenfunktion.prüfe(methode))
-        assertTrue(methode.methodenSignatur().effektiverWerteVorrat === diagonale)
+        assertTrue(methode.mathematischeMethodenSignatur().effektiverDefinitionsRaum === diagonale)
     }
 
     @Test
@@ -147,7 +147,7 @@ class MethodenAnforderungTest {
 
         val diagnose = assertNotNull(MethodenAnforderung.Zahlenfunktion.prüfe(methode))
         assertTrue(diagnose.contains("Zielmenge"))
-        assertTrue(diagnose.contains("\\mathbb H"))
+        assertTrue(diagnose.contains("\\mathcal F"))
     }
 
     @Test

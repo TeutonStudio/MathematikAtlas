@@ -4,7 +4,7 @@ import de.TeutonStudio.TypSystem.*
 
 /** Kanonische IDs und Konstruktoren des gemeinsamen neutralen Typkerns. */
 object MathematischeTypen {
-    /** Domänenneutraler Obertyp für alle durch den Atlas transportierbaren Werte. */
+    /** Domänenneutraler Obertyp sämtlicher durch den Atlas transportierbarer Werte. */
     val AtlasWert = TypId("atlas.wert")
 
     val Objekt = TypId("mathematik.objekt")
@@ -22,11 +22,6 @@ object MathematischeTypen {
     val Tensor = TypId("mathematik.tensor")
     val Tupel = TypId("typ.tupel")
     val UnendlichesTupel = TypId("typ.tupel.unendlich")
-
-    /**
-     * Historisch stabile Typ-ID des Methodenanschlusses. Der String bleibt aus
-     * Persistenzkompatibilität bestehen; seine Semantik ist seit G0.5 domänenneutral.
-     */
     val Methode = TypId("mathematik.methode")
 
     /** Nichtmathematische Darstellungswerte benutzen denselben neutralen Typkern. */
@@ -43,7 +38,7 @@ object MathematischeTypen {
     val Quaternion = TypId("mathematik.zahl.quaternion")
 
     val konstruktoren: List<TypKonstruktorDefinition> = listOf(
-        // Tupel sind variadisch und komponentenweise kovariant, einschließlich Tupel<>.
+        // Tupel sind variadisch, einschließlich Tupel<>, und komponentenweise kovariant.
         TypKonstruktorDefinition(Tupel, standardVarianz = TypVarianz.Kovariant),
         TypKonstruktorDefinition(UnendlichesTupel, listOf(TypVarianz.Kovariant)),
         TypKonstruktorDefinition(SpaltenVektor, listOf(TypVarianz.Kovariant, TypVarianz.Invariant)),
@@ -98,7 +93,7 @@ object MathematischeTypen {
     )
 }
 
-/** Typ eines Elements, das aus dieser Menge gewählt wird. Die Inferenz bleibt konservativ. */
+/** Typ eines Elements, das aus dieser mathematischen Menge gewählt wird. */
 fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     NatürlicheZahlen -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
     GanzeZahlen -> TypAusdruck.Atom(MathematischeTypen.Ganz)
@@ -143,16 +138,10 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     else -> TypAusdruck.Unbekannt
 }
 
-/**
- * Jede Methode ist typseitig kanonisch `Tupel<...> -> Tupel<...>`.
- * Einertupel und leere Tupel kollabieren nicht.
- */
-fun MethodenSignatur.typAusdruck(): TypAusdruck = TypAusdruck.Parameterisiert(
-    MathematischeTypen.Methode,
-    listOf(argumentTupelTyp, ergebnisTupelTyp),
-)
+/** Neutrale MethodenSignatur ist immer Methode<Tupel<...>, Tupel<...>>. */
+fun MethodenSignatur.typAusdruck(): TypAusdruck = typAusdruck
 
-/** Semantischer Typ einer Methode, unabhängig von ihrer Ausführungs-Capability. */
+/** Semantischer Typ einer Methode, unabhängig von ihrer Ausführungs- oder Mathematik-Capability. */
 fun Methode.methodenTypAusdruck(): TypAusdruck =
-    (this as? SignaturtragendeMethode)?.signatur?.typAusdruck()
+    (this as? SignaturtragendeMethode)?.signatur?.typAusdruck
         ?: TypAusdruck.Atom(MathematischeTypen.Methode)

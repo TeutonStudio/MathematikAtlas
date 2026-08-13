@@ -8,8 +8,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class MethodenGraphTest {
-    private fun zielTupel(ziel: MengenAusdruck) = Tupelraum(listOf(ziel))
-
     @Test
     fun `einstellige methode behaelt ihren einertupelraum als argumentraum`() {
         val x = Variable("x")
@@ -23,7 +21,7 @@ class MethodenGraphTest {
         val argumentRaum = Tupelraum(listOf(ReelleZahlen))
 
         assertEquals(argumentRaum, methode.argumentRaum())
-        assertEquals(KartesischesProdukt(listOf(argumentRaum, zielTupel(ReelleZahlen))), methode.graphRaum())
+        assertEquals(KartesischesProdukt(listOf(argumentRaum, ReelleZahlen)), methode.graphRaum())
         assertEquals("\\operatorname{Graph}\\left(f\\right)", methode.graphMenge().zuLatex())
         assertEquals(methode, methode.graphMenge().methode)
     }
@@ -40,7 +38,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(
-            Tupelraum(listOf(Tupelraum(listOf(ReelleZahlen)), Tupelraum(listOf(GanzeZahlen)))),
+            Tupelraum(listOf(Tupelraum(listOf(ReelleZahlen)), GanzeZahlen)),
             inferiereZielmenge(methode.graphMenge()),
         )
     }
@@ -63,7 +61,7 @@ class MethodenGraphTest {
 
         assertEquals(argumentRaum, methode.argumentRaum())
         assertEquals(
-            KartesischesProdukt(listOf(argumentRaum, zielTupel(ReelleZahlen))),
+            KartesischesProdukt(listOf(argumentRaum, ReelleZahlen)),
             methode.graphRaum(),
         )
         assertIs<Tupelraum>((methode.graphRaum() as KartesischesProdukt).mengen.first())
@@ -88,7 +86,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(intervall, methode.argumentRaum())
-        assertEquals(KartesischesProdukt(listOf(intervall, zielTupel(ReelleZahlen))), methode.graphRaum())
+        assertEquals(KartesischesProdukt(listOf(intervall, ReelleZahlen)), methode.graphRaum())
     }
 
     @Test
@@ -105,7 +103,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(erweitert, methode.argumentRaum())
-        assertEquals(KartesischesProdukt(listOf(erweitert, zielTupel(ReelleZahlen))), methode.graphRaum())
+        assertEquals(KartesischesProdukt(listOf(erweitert, ReelleZahlen)), methode.graphRaum())
     }
 
     @Test
@@ -139,7 +137,7 @@ class MethodenGraphTest {
 
         val fehler = assertFailsWith<IllegalStateException> { methode.graphRaum() }
         assertTrue(fehler.message.orEmpty().contains("x"))
-        assertTrue(fehler.message.orEmpty().contains("Definitionsmenge"))
+        assertTrue(fehler.message.orEmpty().contains("Wertevorrat"))
     }
 
     @Test
@@ -154,7 +152,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(
-            KartesischesProdukt(listOf(Tupelraum(listOf(KomplexeZahlen)), zielTupel(ReelleZahlen))),
+            KartesischesProdukt(listOf(Tupelraum(listOf(KomplexeZahlen)), ReelleZahlen)),
             methode.graphRaum(),
         )
     }
@@ -171,7 +169,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(
-            KartesischesProdukt(listOf(Tupelraum(listOf(ReelleZahlen)), zielTupel(KomplexeZahlen))),
+            KartesischesProdukt(listOf(Tupelraum(listOf(ReelleZahlen)), KomplexeZahlen)),
             methode.graphRaum(),
         )
     }
@@ -188,7 +186,7 @@ class MethodenGraphTest {
         )
 
         assertEquals(
-            KartesischesProdukt(listOf(Tupelraum(listOf(KomplexeZahlen)), zielTupel(KomplexeZahlen))),
+            KartesischesProdukt(listOf(Tupelraum(listOf(KomplexeZahlen)), KomplexeZahlen)),
             methode.graphRaum(),
         )
         assertIs<MethodenGraphMenge>(methode.graphMenge())
