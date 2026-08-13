@@ -75,8 +75,8 @@ class VektorRechnerErweiterungenTest {
         val feld = Methode(
             name = "F",
             parameter = listOf(x),
-            vorschrift = Tupel(listOf(x, x)),
-            zielMenge = ReelleZahlen,
+            vorschrift = SpaltenVektor(listOf(x, x)),
+            zielMenge = Vektorraum(VektorOrientierung.Spalte, 2, ReelleZahlen),
             werteVorräte = mapOf("x" to ReelleZahlen),
         )
 
