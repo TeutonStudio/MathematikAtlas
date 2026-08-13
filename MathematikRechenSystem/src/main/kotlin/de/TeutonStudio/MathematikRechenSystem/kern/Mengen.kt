@@ -65,8 +65,24 @@ fun mengenDifferenz(links: MengenAusdruck, rechts: MengenAusdruck): MengenAusdru
     else -> MengenDifferenz(links, rechts)
 }
 
-/** Ein geordnetes Tupel ist ein endliches Abbildungsobjekt auf einer geordneten Indexmenge. */
-data class Tupel(val elemente: List<MathematischesObjekt>) : MathematischesObjekt {
+/**
+ * Geordnetes Tupel als endliches Abbildungsobjekt auf I_n={1,...,n}.
+ *
+ * Die Liste ist ausschließlich die materialisierte Speicherform. Fachcode soll für
+ * mathematische Indizes [wertAn] und für bewusst technische Positionszugriffe
+ * [wertAnPosition] verwenden. Ein Einertupel kollabiert nicht zu seiner Komponente.
+ */
+data class Tupel(val elemente: List<MathematischesObjekt>) : EndlichIndexiertesObjekt {
+    override val anzahl: Int get() = elemente.size
+    override val indexMenge: MengenAusdruck get() = endlicheGeordneteIndexMenge(anzahl)
+
+    override fun wertAn(index: MathematischesObjekt): MathematischesObjekt =
+        wertAnPosition(mathematischeIndexPosition(index, anzahl))
+
+    override fun wertAnPosition(position: Int): MathematischesObjekt = elemente.getOrElse(position) {
+        throw IndexOutOfBoundsException("Tupelposition $position liegt außerhalb von 0..<${elemente.size}.")
+    }
+
     override fun zuLatex() = if (elemente.isEmpty()) "()"
     else elemente.joinToString(prefix = "\\left(", postfix = "\\right)") { it.zuLatex() }
 }
@@ -119,7 +135,7 @@ data class Matrizenraum(
     val skalarMenge: MengenAusdruck,
 ) : MengenAusdruck {
     init { require(zeilen > 0 && spalten > 0) }
-    override fun zuLatex() = "${skalarMenge.zuLatex()}^{${zeilen}\\times ${spalten}}"
+    override fun zuLatex() = "${skalarMenge.zuLatex()}^{${zeilen}\\times${spalten}}"
 }
 
 /** Eine Variable mit ihrer Grundmenge innerhalb einer [DefinierteMenge]. */
@@ -162,15 +178,17 @@ data class GefilterteMenge(
     val methode: Methode,
 ) : MengenAusdruck {
     init {
-        require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
-        require(methode.ausgabeNamen.size == 1 && methode.vorschrift is Aussage) {
+        val mathematisch = methode.alsMathematischeMethode("Mengenfilter")
+        require(mathematisch.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
+        require(mathematisch.ausgabeNamen.size == 1 && mathematisch.einzigeAusgabe().second is Aussage) {
             "Eine Filtermethode muss genau eine Aussage ausgeben."
         }
     }
 
     override fun zuLatex(): String {
-        val parameter = methode.parameter.single()
-        val bedingung = methode.vorschrift as Aussage
+        val mathematisch = methode.alsMathematischeMethode("Mengenfilter")
+        val parameter = mathematisch.parameter.single()
+        val bedingung = mathematisch.einzigeAusgabe().second as Aussage
         return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"
     }
 }
@@ -181,23 +199,24 @@ fun filtereMenge(
     methode: Methode,
     kontext: RechenKontext = RechenKontext(),
 ): MengenAusdruck {
-    require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
-    val (_, ausgabe) = methode.einzigeAusgabe()
+    val mathematisch = methode.alsMathematischeMethode("Mengenfilter")
+    require(mathematisch.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
+    val (_, ausgabe) = mathematisch.einzigeAusgabe()
     require(ausgabe is Aussage) { "Eine Filtermethode muss eine Aussage ausgeben." }
     if (menge == LeereMenge) return LeereMenge
     if (menge is EndlicheMenge) {
         val behalten = linkedSetOf<MathematischesObjekt>()
         for (element in menge.elemente.sortedBy(::strukturellerSchlüssel)) {
-            val bedingung = methode.wendeAn(listOf(element)) as Aussage
+            val bedingung = mathematisch.wendeAn(listOf(element)) as Aussage
             when (bedingung.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> behalten += element
                 Wahrheitswert.Lüge -> Unit
-                null -> return GefilterteMenge(menge, methode)
+                null -> return GefilterteMenge(menge, mathematisch)
             }
         }
         return if (behalten.isEmpty()) LeereMenge else EndlicheMenge(behalten)
     }
-    return GefilterteMenge(menge, methode)
+    return GefilterteMenge(menge, mathematisch)
 }
 
 sealed interface Mächtigkeit : MathematischesObjekt
