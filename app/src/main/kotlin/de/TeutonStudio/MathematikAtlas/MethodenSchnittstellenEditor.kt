@@ -51,12 +51,7 @@ internal fun MethodenAufrufArgumentProjektionEditor(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        FilterChip(
-            selected = true,
-            onClick = {},
-            enabled = false,
-            label = { Text("Ein Tupel") },
-        )
+        FilterChip(selected = true, onClick = {}, enabled = false, label = { Text("Ein Tupel") })
         return
     }
 
@@ -72,15 +67,10 @@ internal fun MethodenAufrufArgumentProjektionEditor(
     fun anfordern(projektion: String) {
         if (projektion == aktuell) return
         if (verbundenesArgumentVorhanden()) ausstehend = projektion
-        else zustand.editor.führeAus(
-            KartenAktion.KnotenParameterÄndern(knoten.id, METHODEN_AUFRUF_ARGUMENTPROJEKTION, projektion),
-        )
+        else zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, METHODEN_AUFRUF_ARGUMENTPROJEKTION, projektion))
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Klein),
-    ) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Klein)) {
         FilterChip(
             selected = aktuell == METHODEN_ARGUMENTPROJEKTION_TUPEL,
             onClick = { anfordern(METHODEN_ARGUMENTPROJEKTION_TUPEL) },
@@ -107,21 +97,11 @@ internal fun MethodenAufrufArgumentProjektionEditor(
         AlertDialog(
             onDismissRequest = { ausstehend = null },
             title = { Text("Argumentdarstellung wechseln?") },
-            text = {
-                Text(
-                    "Am Aufruf sind bereits Argumente verbunden. Beim Wechsel werden nur Verbindungen erhalten, die nach der neuen Tupelprojektion weiterhin typ- und anschlusskompatibel sind.",
-                )
-            },
+            text = { Text("Am Aufruf sind bereits Argumente verbunden. Beim Wechsel werden nur Verbindungen erhalten, die nach der neuen Tupelprojektion weiterhin typ- und anschlusskompatibel sind.") },
             confirmButton = {
                 TextButton(onClick = {
                     ausstehend = null
-                    zustand.editor.führeAus(
-                        KartenAktion.KnotenParameterÄndern(
-                            knoten.id,
-                            METHODEN_AUFRUF_ARGUMENTPROJEKTION,
-                            projektion,
-                        ),
-                    )
+                    zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, METHODEN_AUFRUF_ARGUMENTPROJEKTION, projektion))
                 }) { Text("Wechseln") }
             },
             dismissButton = { TextButton(onClick = { ausstehend = null }) { Text("Abbrechen") } },
@@ -140,10 +120,7 @@ internal fun KarteneingangMethodenSignaturEditor(
     } ?: return
 
     val aktiv = knoten.parameter[KARTEN_METHODEN_SIGNATUR_AKTIV] == "true"
-    val anzahl = knoten.parameter[KARTEN_METHODEN_ARGUMENT_ANZAHL]
-        ?.toIntOrNull()
-        ?.coerceAtLeast(0)
-        ?: 1
+    val anzahl = knoten.parameter[KARTEN_METHODEN_ARGUMENT_ANZAHL]?.toIntOrNull()?.coerceAtLeast(0) ?: 1
     val signatur = deklarierteMethodenSignatur(knoten)
     val erwarteterVertrag = methodenVertrag(signatur)
 
@@ -153,11 +130,8 @@ internal fun KarteneingangMethodenSignaturEditor(
                 if (anschluss.id == methodenAusgang.id) anschluss.copy(vertrag = erwarteterVertrag) else anschluss
             }
             zustand.editor.führeAus(
-                KartenAktion.KnotenKonfigurationErsetzen(
-                    id = knoten.id,
-                    parameter = knoten.parameter,
-                    anschlüsse = anschlüsse,
-                ),
+                KartenAktion.KnotenKonfigurationErsetzen(id = knoten.id, parameter = knoten.parameter, anschlüsse = anschlüsse),
+                mitHistorie = false,
             )
         }
     }
@@ -169,13 +143,7 @@ internal fun KarteneingangMethodenSignaturEditor(
         val anschlüsse = knoten.anschlüsse.map { anschluss ->
             if (anschluss.id == methodenAusgang.id) anschluss.copy(vertrag = vertrag) else anschluss
         }
-        zustand.editor.führeAus(
-            KartenAktion.KnotenKonfigurationErsetzen(
-                id = knoten.id,
-                parameter = parameter,
-                anschlüsse = anschlüsse,
-            ),
-        )
+        zustand.editor.führeAus(KartenAktion.KnotenKonfigurationErsetzen(id = knoten.id, parameter = parameter, anschlüsse = anschlüsse))
     }
 
     HorizontalDivider()
@@ -193,19 +161,13 @@ internal fun KarteneingangMethodenSignaturEditor(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Switch(
-            checked = aktiv,
-            onCheckedChange = { setze(KARTEN_METHODEN_SIGNATUR_AKTIV, it.toString()) },
-        )
+        Switch(checked = aktiv, onCheckedChange = { setze(KARTEN_METHODEN_SIGNATUR_AKTIV, it.toString()) })
     }
 
     if (!aktiv) return
 
     OutlinedCard(Modifier.fillMaxWidth()) {
-        Column(
-            Modifier.fillMaxWidth().padding(AtlasAbstände.Inhalt),
-            verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
-        ) {
+        Column(Modifier.fillMaxWidth().padding(AtlasAbstände.Inhalt), verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung)) {
             Text("Argumenttupel", style = MaterialTheme.typography.titleSmall)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -213,24 +175,18 @@ internal fun KarteneingangMethodenSignaturEditor(
                 horizontalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
             ) {
                 Text("Komponenten", modifier = Modifier.weight(1f))
-                IconButton(
-                    onClick = { setze(KARTEN_METHODEN_ARGUMENT_ANZAHL, (anzahl - 1).coerceAtLeast(0).toString()) },
-                    enabled = anzahl > 0,
-                ) { Text("−", style = MaterialTheme.typography.titleLarge) }
+                IconButton(onClick = { setze(KARTEN_METHODEN_ARGUMENT_ANZAHL, (anzahl - 1).coerceAtLeast(0).toString()) }, enabled = anzahl > 0) {
+                    Text("−", style = MaterialTheme.typography.titleLarge)
+                }
                 Text(anzahl.toString(), style = MaterialTheme.typography.titleMedium)
                 IconButton(onClick = { setze(KARTEN_METHODEN_ARGUMENT_ANZAHL, (anzahl + 1).toString()) }) {
                     Text("+", style = MaterialTheme.typography.titleLarge)
                 }
             }
-            if (anzahl == 0) {
-                Text("Leeres Argumenttupel ().", style = MaterialTheme.typography.bodySmall)
-            }
+            if (anzahl == 0) Text("Leeres Argumenttupel ().", style = MaterialTheme.typography.bodySmall)
             repeat(anzahl) { index ->
                 OutlinedCard(Modifier.fillMaxWidth()) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(AtlasAbstände.Inhalt),
-                        verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
-                    ) {
+                    Column(Modifier.fillMaxWidth().padding(AtlasAbstände.Inhalt), verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung)) {
                         Text("Argument ${index + 1}", style = MaterialTheme.typography.labelLarge)
                         OutlinedTextField(
                             value = knoten.parameter[kartenMethodenArgumentNameSchlüssel(index)] ?: "x${index + 1}",
@@ -254,10 +210,7 @@ internal fun KarteneingangMethodenSignaturEditor(
     }
 
     OutlinedCard(Modifier.fillMaxWidth()) {
-        Column(
-            Modifier.fillMaxWidth().padding(AtlasAbstände.Inhalt),
-            verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung),
-        ) {
+        Column(Modifier.fillMaxWidth().padding(AtlasAbstände.Inhalt), verticalArrangement = Arrangement.spacedBy(AtlasAbstände.Steuerung)) {
             Text("Zielmenge", style = MaterialTheme.typography.titleSmall)
             OutlinedTextField(
                 value = knoten.parameter[KARTEN_METHODEN_ZIELMENGE].orEmpty(),
@@ -271,10 +224,9 @@ internal fun KarteneingangMethodenSignaturEditor(
     }
 
     signatur?.let { methode ->
-        val argumentText = if (methode.argumente.isEmpty()) "()" else methode.argumente.joinToString(
-            prefix = "(",
-            postfix = ")",
-        ) { argument -> "${argument.parameter.name}∈${argument.werteVorrat.zuLatex()}" }
+        val argumentText = if (methode.argumente.isEmpty()) "()" else methode.argumente.joinToString(prefix = "(", postfix = ")") {
+            argument -> "${argument.parameter.name}∈${argument.werteVorrat.zuLatex()}"
+        }
         Text(
             "$argumentText → ${methode.zielMenge.zuLatex()}",
             style = MaterialTheme.typography.bodySmall,
