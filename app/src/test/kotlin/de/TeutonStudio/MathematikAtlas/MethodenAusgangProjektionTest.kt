@@ -15,7 +15,7 @@ class MethodenAusgangProjektionTest {
     private val prüfung = GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle))
 
     @Test
-    fun `Tupelprojektion der Methodenquelle erzeugt genau einen Tupelanschluss am Aufruf`() {
+    fun `Tupelprojektion des Methodenaufrufs erzeugt genau einen Tupelanschluss`() {
         val x = Variable("x")
         val y = Variable("y")
         val methode = Methode(
@@ -41,7 +41,7 @@ class MethodenAusgangProjektionTest {
     }
 
     @Test
-    fun `separierte Projektion der Methodenquelle erzeugt einen Anschluss je Argument`() {
+    fun `separierte Projektion des Methodenaufrufs erzeugt einen Anschluss je Argument`() {
         val x = Variable("x")
         val y = MengenParameter("A")
         val methode = Methode(
@@ -96,7 +96,12 @@ class MethodenAusgangProjektionTest {
 
     private fun verbundeneKarte(methode: Methode, projektion: String): Pair<KartenDaten, KnotenDaten> {
         val quelle = methodenQuelle(projektion)
-        val aufruf = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
+        val aufruf = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero).let { erzeugt ->
+            erzeugt.copy(
+                parameter = erzeugt.parameter +
+                    (METHODEN_AUFRUF_ARGUMENTPROJEKTION to projektion),
+            )
+        }
         val methodenEingang = aufruf.anschlüsse.single {
             it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
         }
