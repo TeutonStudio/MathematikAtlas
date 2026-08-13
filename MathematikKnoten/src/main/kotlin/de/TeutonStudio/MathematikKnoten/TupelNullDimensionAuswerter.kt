@@ -3,7 +3,6 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
-import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 
@@ -12,6 +11,10 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
  * Positive Dimensionen und der Elementmodus bleiben vollständig beim bestehenden
  * Auswerter, damit deren etablierte Platzhalter-, Annahmen- und Fehlerssemantik
  * unverändert erhalten bleibt.
+ *
+ * Für n = 0 ist die Indexmenge leer. Die erzeugende Methode wird daher mathematisch
+ * niemals aufgerufen und ist auch als Eingang nicht erforderlich: Es existiert exakt
+ * die leere endliche Indexabbildung `()`.
  */
 fun MathematikAuswerterRegister.registriereTupelNullDimension() {
     val bisher = finde("mathematik.tupel")
@@ -28,7 +31,6 @@ fun MathematikAuswerterRegister.registriereTupelNullDimension() {
         } == true
         if (!istNull) return@registriere bisher.auswerten(kontext)
 
-        kontext.eingänge["methode"]?.objekt as? Methode ?: error("Tupelmethode fehlt.")
         val annahmen = kontext.eingänge.values.flatMapTo(linkedSetOf()) { it.annahmen }
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
