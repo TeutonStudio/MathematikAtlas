@@ -17,7 +17,7 @@ class MethodenAufrufSynchronisierungTest {
     private val prüfung = GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle))
 
     @Test
-    fun `einstellige Zahlmethode erzeugt genau einen typisierten Argumentanschluss`() {
+    fun `einstellige Zahlmethode bleibt standardmaessig ein Einertupelanschluss`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
         val x = Variable("x")
         val methode = Methode(
@@ -35,7 +35,8 @@ class MethodenAufrufSynchronisierungTest {
         assertEquals(1, argumente.size)
         assertEquals("argument-0", argumente.single().name)
         assertEquals(AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"), argumente.single().id)
-        assertEquals(MathematikAnschlussArten.Zahl.id, argumente.single().art)
+        assertEquals(MathematikAnschlussArten.Tupel.id, argumente.single().art)
+        assertEquals(METHODEN_ARGUMENTPROJEKTION_TUPEL, ergebnisKnoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION])
         assertEquals(MathematikAnschlussArten.Zahl.id, ergebnisKnoten.wertAusgang().art)
         assertEquals("1", ergebnisKnoten.parameter[METHODEN_AUFRUF_STELLIGKEIT])
         assertEquals("x", ergebnisKnoten.parameter["${METHODEN_AUFRUF_PARAMETER_PREFIX}0.name"])
@@ -45,8 +46,13 @@ class MethodenAufrufSynchronisierungTest {
     }
 
     @Test
-    fun `mehrstellige Methode erhält deterministische Anschluss IDs und Parameterreihenfolge`() {
-        val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
+    fun `mehrstellige Methode erhaelt im separierten Modus deterministische Anschluss IDs und Parameterreihenfolge`() {
+        val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero).let { erzeugt ->
+            erzeugt.copy(
+                parameter = erzeugt.parameter +
+                    (METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_SEPARIERT),
+            )
+        }
         val ursprünglicheIds = knoten.argumente().map { it.id }
         val x = Variable("x")
         val menge = MengenParameter("A")
@@ -75,8 +81,13 @@ class MethodenAufrufSynchronisierungTest {
     }
 
     @Test
-    fun `bestehende Argumentkante wird auf deterministische Anschluss ID migriert`() {
-        val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
+    fun `bestehende separierte Argumentkante wird auf deterministische Anschluss ID migriert`() {
+        val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero).let { erzeugt ->
+            erzeugt.copy(
+                parameter = erzeugt.parameter +
+                    (METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_SEPARIERT),
+            )
+        }
         val altesArgument = knoten.argumente().first()
         val quelle = KnotenDaten(
             id = KnotenId("quelle"),
