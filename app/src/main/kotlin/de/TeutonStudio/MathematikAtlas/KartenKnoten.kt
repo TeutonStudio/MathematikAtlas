@@ -21,8 +21,8 @@ internal fun AtlasZustand.kartenVorlage(
 ): KnotenVorlage {
     val anschlüsse = when (zustand) {
         KartenKnotenZustand.Schnittstelle ->
-            öffentlicheKartenAnschlüsse(karte, "mathematik.kartenEingang", AnschlussRichtung.Eingang, AnschlussKante.Links) +
-                öffentlicheKartenAnschlüsse(karte, "mathematik.kartenAusgang", AnschlussRichtung.Ausgang, AnschlussKante.Rechts)
+            öffentlicheKartenAnschlüsseMitVertrag(karte, "mathematik.kartenEingang", AnschlussRichtung.Eingang, AnschlussKante.Links) +
+                öffentlicheKartenAnschlüsseMitVertrag(karte, "mathematik.kartenAusgang", AnschlussRichtung.Ausgang, AnschlussKante.Rechts)
         KartenKnotenZustand.Methode -> listOf(
             AnschlussDaten(
                 name = "methode",
