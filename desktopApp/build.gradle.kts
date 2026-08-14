@@ -71,7 +71,9 @@ compose.desktop {
 // Desktop-Start aus der systemd-Benutzersitzung ergänzt. Gültige geerbte Werte
 // haben Vorrang, damit z. B. SSH-X11-Forwarding nicht auf die lokale Sitzung
 // umgebogen wird.
-tasks.named<JavaExec>("run") {
+tasks.withType<JavaExec>().configureEach {
+    if (name != "run") return@configureEach
+
     doFirst {
         if (!System.getProperty("os.name").startsWith("Linux", ignoreCase = true)) return@doFirst
 
