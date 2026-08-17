@@ -9,10 +9,15 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/KnotenKartenVerwalter" />
+            <option value="$PROJECT_DIR$/KnotenKartenVerwalterDesktop" />
             <option value="$PROJECT_DIR$/MathematikKartenAdapter" />
+            <option value="$PROJECT_DIR$/MathematikKartenAdapterDesktop" />
             <option value="$PROJECT_DIR$/MathematikKnoten" />
+            <option value="$PROJECT_DIR$/MathematikKnotenDesktop" />
             <option value="$PROJECT_DIR$/MathematikRechenSystem" />
+            <option value="$PROJECT_DIR$/TypSystem" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/desktopApp" />
           </set>
         </option>
       </GradleProjectSettings>
