@@ -129,7 +129,8 @@ private fun leeresIndexProdukt(): EndlicheMenge = EndlicheMenge(
             name = "\\varnothing",
             parameter = emptyList(),
             vorschrift = Tupel(emptyList()),
-            zielMenge = EndlicheMenge(setOf(Tupel(emptyList()))),
+            zielMenge = Tupelraum(emptyList()),
+            ausgabeNamen = emptyList(),
         ),
     ),
 )

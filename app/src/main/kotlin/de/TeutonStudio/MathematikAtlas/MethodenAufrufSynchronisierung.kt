@@ -5,8 +5,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
-import de.TeutonStudio.MathematikKnoten.anschlussArtFürMathematischesObjekt
 import de.TeutonStudio.MathematikRechenSystem.kern.*
+import de.TeutonStudio.TypSystem.AnschlussVertrag
+import de.TeutonStudio.TypSystem.TypAusdruck
 
 internal const val METHODEN_AUFRUF_STELLIGKEIT = "methodenAufruf.stelligkeit"
 internal const val METHODEN_AUFRUF_ZIELMENGE = "methodenAufruf.zielMenge"
@@ -31,9 +32,9 @@ internal fun KnotenDaten.methodenAusgangErgebnisprojektion(anschlussName: String
         ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
 
 /**
- * Synchronisiert alle UI-Projektionen, die von einer konkreten Methodensignatur
- * abhängen. Eine unbekannte Methode erzeugt dabei niemals eine geratene Stelligkeit.
- * Ebenso bleibt ihre Ausgabe über den universellen Tupelvertrag verdrahtbar.
+ * Synchronisiert UI-Projektionen ausschließlich aus der neutralen Methodensignatur.
+ * Mathematische Mengen werden nur als optionale Zusatzmetadaten angehängt und bestimmen
+ * weder Anzahl noch Typ der allgemeinen Handles.
  */
 internal fun synchronisiereMethodenAufrufe(
     karte: KartenDaten,
@@ -156,7 +157,12 @@ private fun synchronisiereMethodenAufruf(
         val argumente = listOf(tupelAnschluss(knoten.id, bisherigeArgumente.firstOrNull()))
         return knoten.copy(
             anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
-                ausgang.copy(art = MathematikAnschlussArten.Tupel.id),
+                ausgang.copy(
+                    art = MathematikAnschlussArten.Tupel.id,
+                    vertrag = AnschlussVertrag(
+                        TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, emptyList()),
+                    ),
+                ),
             parameter = knoten.parameter
                 .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }
                 .minus(METHODEN_AUFRUF_STELLIGKEIT)
@@ -169,75 +175,83 @@ private fun synchronisiereMethodenAufruf(
         )
     }
 
-    val ausgabe = runCatching { methode.einzigeAusgabe().second }.getOrElse { fehler ->
-        return knoten.copy(parameter = knoten.parameter + (
-            METHODEN_AUFRUF_VERTRAGSFEHLER to (fehler.message ?: "Die Methode benötigt genau eine Ausgabe.")
-        ))
+    val signatur = (methode as? SignaturtragendeMethode)?.signatur ?: return knoten.copy(
+        parameter = knoten.parameter + (
+            METHODEN_AUFRUF_VERTRAGSFEHLER to "Die Methode '${methode.name}' besitzt keine neutrale Methodensignatur."
+        ),
+    )
+    val mathematischeSignatur = (methode as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur
+
+    val effektiveErgebnisProjektion = when {
+        ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL -> METHODEN_ERGEBNISPROJEKTION_TUPEL
+        signatur.ergebnisse.size == 1 -> METHODEN_ERGEBNISPROJEKTION_DIREKT
+        else -> METHODEN_ERGEBNISPROJEKTION_TUPEL
     }
-    val zielMenge = runCatching { methode.methodenSignatur().zielMenge }.getOrElse { fehler ->
-        return knoten.copy(parameter = knoten.parameter + (
-            METHODEN_AUFRUF_VERTRAGSFEHLER to (fehler.message ?: "Die Zielmenge der Methode fehlt.")
-        ))
-    }
-    val effektiveErgebnisProjektion = if (
-        zielMenge is Tupelraum || ausgabe is Tupel || ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL
-    ) {
-        METHODEN_ERGEBNISPROJEKTION_TUPEL
+    val ergebnisTyp = if (effektiveErgebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL) {
+        signatur.ergebnisTyp
     } else {
-        METHODEN_ERGEBNISPROJEKTION_DIREKT
+        signatur.ergebnisse.single().typ
     }
-    val roheErgebnisArt = anschlussArtFürMathematischesObjekt(ausgabe)
-    val ergebnisArt = if (effektiveErgebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL) {
-        MathematikAnschlussArten.Tupel.id
-    } else {
-        roheErgebnisArt
-    }
-    val projizierteZielMenge = if (
-        effektiveErgebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && zielMenge !is Tupelraum
-    ) {
-        Tupelraum(listOf(zielMenge))
-    } else {
-        zielMenge
-    }
+    val ergebnisArt = anschlussArtFürTyp(ergebnisTyp)
+
     val argumente = if (argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
-        if (methode.parameter.isEmpty()) emptyList()
-        else listOf(tupelAnschluss(knoten.id, bisherigeArgumente.firstOrNull()))
+        if (signatur.argumente.isEmpty()) emptyList()
+        else listOf(
+            tupelAnschluss(knoten.id, bisherigeArgumente.firstOrNull()).copy(
+                vertrag = AnschlussVertrag(signatur.argumentTyp),
+            ),
+        )
     } else {
-        methode.parameter.mapIndexed { index, parameter ->
+        signatur.argumente.mapIndexed { index, komponent ->
             val bisher = bisherigeArgumente.getOrNull(index)
             (bisher ?: AnschlussDaten(
                 id = argumentId(knoten.id, index),
                 name = "argument-$index",
                 richtung = AnschlussRichtung.Eingang,
                 kante = AnschlussKante.Links,
-                art = anschlussArtFürParameter(parameter),
+                art = anschlussArtFürTyp(komponent.typ),
             )).copy(
                 id = argumentId(knoten.id, index),
                 name = "argument-$index",
-                art = anschlussArtFürParameter(parameter),
+                art = anschlussArtFürTyp(komponent.typ),
                 reihenfolge = index + 1,
                 kannSichErweitern = false,
                 dynamischErzeugt = false,
+                vertrag = AnschlussVertrag(komponent.typ),
             )
         }
     }
+
     val vertragsParameter = buildMap {
-        put(METHODEN_AUFRUF_STELLIGKEIT, methode.parameter.size.toString())
-        put(METHODEN_AUFRUF_ZIELMENGE, projizierteZielMenge.zuLatex())
+        put(METHODEN_AUFRUF_STELLIGKEIT, signatur.argumente.size.toString())
         put(METHODEN_ANWENDUNG_ERGEBNIS_ART, ergebnisArt.wert)
         put(METHODEN_AUFRUF_ARGUMENTPROJEKTION, argumentProjektion)
         put(METHODEN_AUFRUF_ERGEBNISPROJEKTION, effektiveErgebnisProjektion)
         put("festeEingänge", argumente.size.toString())
-        methode.parameter.forEachIndexed { index, parameter ->
+        mathematischeSignatur?.let { mathematisch ->
+            val ziel = if (effektiveErgebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL) {
+                mathematisch.zielRaum
+            } else {
+                mathematisch.ergebnisse.single().zielMenge
+            }
+            put(METHODEN_AUFRUF_ZIELMENGE, ziel.zuLatex())
+        }
+        signatur.argumente.forEachIndexed { index, komponent ->
             val präfix = "$METHODEN_AUFRUF_PARAMETER_PREFIX$index."
-            put("${präfix}name", parameter.name)
-            put("${präfix}art", anschlussArtFürParameter(parameter).wert)
-            methode.werteVorräte[parameter.name]?.let { put("${präfix}werteVorrat", it.zuLatex()) }
+            put("${präfix}id", komponent.id)
+            put("${präfix}name", komponent.name)
+            put("${präfix}art", anschlussArtFürTyp(komponent.typ).wert)
+            mathematischeSignatur?.argumente?.getOrNull(index)?.definitionsMenge?.let {
+                put("${präfix}werteVorrat", it.zuLatex())
+            }
         }
     }
     return knoten.copy(
         anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
-            ausgang.copy(art = ergebnisArt),
+            ausgang.copy(
+                art = ergebnisArt,
+                vertrag = AnschlussVertrag(ergebnisTyp),
+            ),
         parameter = knoten.parameter
             .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }
             .minus(METHODEN_AUFRUF_STELLIGKEIT)
@@ -254,11 +268,14 @@ private fun synchronisiereMethodenArgumente(
     val methodenEingang = knoten.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
     } ?: return knoten
-    val projektion = if (methode == null) METHODEN_ARGUMENTPROJEKTION_TUPEL else konfigurierteProjektion
+    val signatur = (methode as? SignaturtragendeMethode)?.signatur
+    val projektion = if (signatur == null) METHODEN_ARGUMENTPROJEKTION_TUPEL else konfigurierteProjektion
     val bisherigeAusgänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
 
     val ausgänge = if (projektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
         val bisher = bisherigeAusgänge.firstOrNull { it.name == "argumente" }
+        val tupelTyp = signatur?.argumentTyp
+            ?: TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, emptyList())
         listOf(
             (bisher ?: AnschlussDaten(
                 id = methodenArgumentTupelId(knoten.id),
@@ -273,10 +290,11 @@ private fun synchronisiereMethodenArgumente(
                 reihenfolge = 0,
                 kannSichErweitern = false,
                 dynamischErzeugt = false,
+                vertrag = AnschlussVertrag(tupelTyp),
             ),
         )
     } else {
-        val signatur = runCatching { requireNotNull(methode).methodenSignatur() }.getOrNull() ?: return knoten
+        requireNotNull(signatur)
         buildList {
             signatur.argumente.forEachIndexed { index, argument ->
                 val name = methodenArgumentAusgangName(argument, index)
@@ -288,14 +306,15 @@ private fun synchronisiereMethodenArgumente(
                         name = name,
                         richtung = AnschlussRichtung.Ausgang,
                         kante = AnschlussKante.Rechts,
-                        art = MathematikAnschlussArten.Objekt.id,
+                        art = anschlussArtFürTyp(argument.typ),
                     )).copy(
                         id = methodenArgumentId(knoten.id, index),
                         name = name,
-                        art = MathematikAnschlussArten.Objekt.id,
+                        art = anschlussArtFürTyp(argument.typ),
                         reihenfolge = index,
                         kannSichErweitern = false,
                         dynamischErzeugt = false,
+                        vertrag = AnschlussVertrag(argument.typ),
                     ),
                 )
             }
@@ -314,6 +333,7 @@ private fun synchronisiereMethodenArgumente(
                     reihenfolge = signatur.argumente.size,
                     kannSichErweitern = false,
                     dynamischErzeugt = false,
+                    vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.NatuerlichMitNull)),
                 ),
             )
         }
@@ -357,10 +377,21 @@ private fun methodenArgumentId(knotenId: KnotenId, index: Int) =
 private fun methodenArgumentDimensionId(knotenId: KnotenId) =
     AnschlussId("${knotenId.wert}:methodenArgumente:dimension")
 
-private fun anschlussArtFürParameter(parameter: MethodenParameter): AnschlussArtId = when (parameter) {
-    is Variable -> MathematikAnschlussArten.Zahl.id
-    is AussagenParameter -> MathematikAnschlussArten.Aussage.id
-    is MengenParameter -> MathematikAnschlussArten.Menge.id
-    is TypisiertesElement -> AnschlussArtId(parameter.anschlussArt)
-    is AllgemeinerParameter -> MathematikAnschlussArten.Objekt.id
+/**
+ * Grobe Anschlussart als UI-Fallback. Der präzise semantische Typ bleibt immer im
+ * [AnschlussVertrag], weshalb unbekannte spätere Engine-Typen nicht auf Mathematik
+ * abgebildet werden müssen.
+ */
+private fun anschlussArtFürTyp(typ: TypAusdruck): AnschlussArtId = when (typ) {
+    is TypAusdruck.Atom -> AnschlussArtId(typ.id.wert)
+    is TypAusdruck.Parameterisiert -> when (typ.konstruktor) {
+        MathematischeTypen.Tupel -> MathematikAnschlussArten.Tupel.id
+        else -> AnschlussArtId(typ.konstruktor.wert)
+    }
+    TypAusdruck.Beliebig,
+    TypAusdruck.Unbekannt,
+    is TypAusdruck.Variable,
+    is TypAusdruck.Vereinigung,
+    is TypAusdruck.Literal,
+    -> MathematikAnschlussArten.AtlasWert.id
 }

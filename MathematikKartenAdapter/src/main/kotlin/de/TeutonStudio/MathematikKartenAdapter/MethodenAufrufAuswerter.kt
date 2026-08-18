@@ -10,12 +10,12 @@ const val METHODEN_ERGEBNISPROJEKTION_DIREKT = "direkt"
 const val METHODEN_ERGEBNISPROJEKTION_TUPEL = "tupel"
 
 /**
- * Allgemeiner Methodenaufruf mit rein graphischer Argument- und Ergebnisprojektion.
+ * Methodenaufruf mit rein graphischer Argument- und Ergebnisprojektion.
  *
- * Nur [MathematischAuswertbareMethode] darf an dieser Adaptergrenze als mathematische
- * Vorschrift ausgeführt werden. Ein anderer [Methode]-Untertyp bleibt ein gültiger
- * Methodenwert, wird hier aber lediglich symbolisch projiziert. Damit erbt eine
- * spätere ScriptMethod nicht versehentlich die Substitutionssemantik des AMRS.
+ * Dieser Mathematikadapter führt ausschließlich [MathematischAuswertbareMethode] aus.
+ * Eine allgemeine Script-/Engine-Methode ist ein gültiger Methodenwert, wird hier aber
+ * nicht durch mathematische Substitution oder künstliche Symbolwerte interpretiert.
+ * Dafür kann später eine eigene Auswertungs-Capability registriert werden.
  */
 internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
@@ -26,6 +26,13 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         val mathematischeMethode = methode?.let {
             runCatching { it.alsMathematischeMethode("mathematischen Methodenaufruf") }.getOrNull()
         }
+        if (methode != null && auswertbareMethode == null) {
+            error(
+                "Die Methode '${methode.name}' besitzt keine in diesem Adapter registrierte Auswertungs-Capability. " +
+                    "Allgemeine Methoden werden nicht automatisch mathematisch interpretiert.",
+            )
+        }
+
         val argumentAnschlüsse = kontext.knoten.anschlüsse
             .filter { it.name != "methode" && it.name != "wert" }
             .sortedBy { it.reihenfolge }
@@ -47,7 +54,10 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
             freieProjektionsArgumente(argumentAnschlüsse, kontext)
         }
 
-        val argumente = argumentWerte.map(BedingterWert::objekt)
+        val mathematischeArgumente = argumentWerte.map { wert ->
+            wert.objekt as? MathematischesObjekt
+                ?: error("Der Mathematikadapter kann das Argument '${wert.anzeigeLatex()}' nicht mathematisch auswerten.")
+        }
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
         val (roherWert, roheZielMenge) = if (
@@ -55,11 +65,13 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         ) {
             val ausgabe = mathematischeMethode.einzigeAusgabe()
             val bindungen = mathematischeMethode.parameter
-                .mapIndexed { index, parameter -> parameter.name to argumente[index] }
+                .mapIndexed { index, parameter -> parameter.name to mathematischeArgumente[index] }
                 .toMap()
             auswertbareMethode.wendeMathematischAn(bindungen) to mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
         } else {
-            symbolischerProjektionsAnwendungsWert(methodenObjekt, argumente, ergebnisArt) to null
+            val symbolischeMethode = methodenObjekt as? MathematischesObjekt
+                ?: error("Eine symbolische Methodenprojektion benötigt ein mathematisches Methodenobjekt.")
+            symbolischerProjektionsAnwendungsWert(symbolischeMethode, mathematischeArgumente, ergebnisArt) to null
         }
         val (wert, zielMenge) = projiziereMethodenErgebnis(
             wert = roherWert,
@@ -149,7 +161,7 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
             val parameter = methode.parameter[index]
             tupelWert.copy(
                 objekt = element,
-                werteVorrat = methode.werteVorräte[parameter.name],
+                werteVorrat = methode.mathematischeSignatur.argumente[index].definitionsMenge,
                 latexDarstellung = null,
             )
         }

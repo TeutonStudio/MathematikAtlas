@@ -16,12 +16,17 @@ data class ArgumentIdentität(
 
 enum class ArgumentQuellenArt { Wert, Aussage }
 
+/**
+ * Allgemeiner Laufzeitwertkanal des Atlas. Mathematische Metadaten sind optional und
+ * werden nur von mathematischen Auswertern gesetzt; Grafik-, Script- und spätere
+ * Engine-Werte können denselben Kanal ohne MathematischesObjekt-Attrappe benutzen.
+ */
 data class BedingterWert(
-    val objekt: MathematischesObjekt,
+    val objekt: AtlasWert,
     val annahmen: Set<Aussage> = emptySet(),
-    /** Metadaten einer öffentlichen Methodenausgabe, kein zweiter Rückgabewert. */
+    /** Mathematische Metadaten einer öffentlichen Methodenausgabe. */
     val zielMenge: MengenAusdruck? = null,
-    /** Definitionsmenge einer Variable; relevant beim Aufbau einer Methode. */
+    /** Mathematische Definitionsmenge einer Variable; relevant beim Methodenaufbau. */
     val werteVorrat: MengenAusdruck? = null,
     /** Laufzeitmetadaten für Variablen, deren Wertebereich nachweisbar reell ist. */
     val reelleVariablen: Map<String, MengenAusdruck> = emptyMap(),
@@ -29,11 +34,11 @@ data class BedingterWert(
      * Nichtpersistierte Herkunft aller freien Methodenargumente.
      *
      * Der historische Name bleibt aus Quellkompatibilitätsgründen bestehen. Die
-     * Einträge unterscheiden nun gewöhnliche Werte- und Aussageargumente und
-     * besitzen eine stabile semantische Identität.
+     * Einträge unterscheiden gewöhnliche Werte- und Aussageargumente und besitzen
+     * eine stabile semantische Identität.
      */
     val variablenQuellen: List<VariablenQuelle> = emptyList(),
-    /** Pfadgebundene Darstellung; verändert das mathematische Objekt ausdrücklich nicht. */
+    /** Pfadgebundene Darstellung; verändert den Atlaswert ausdrücklich nicht. */
     val latexDarstellung: String? = null,
     /** Gemeinsame Anschlussart der Elemente einer mengenwertigen Ausgabe. */
     val elementArt: AnschlussArtId? = null,
@@ -41,11 +46,17 @@ data class BedingterWert(
     val symbolischeMethode: Boolean = false,
 )
 
-/** Verwendet eine gesetzte Darstellungsoptimierung, andernfalls die kanonische Struktur-Darstellung. */
+/**
+ * Neutrale Darstellungsgrenze: AtlasWert selbst verlangt kein LaTeX. Mathematik nutzt
+ * ihre Struktur-Darstellung, andere Werte optional [LatexDarstellbar] oder toString().
+ */
 fun BedingterWert.anzeigeLatex(): String = when {
     latexDarstellung == DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG && objekt is DefinierteMenge ->
         objekt.zuDoppelpunktLatex()
-    else -> latexDarstellung?.takeIf { it.isNotBlank() } ?: objekt.zuStrukturLatex()
+    !latexDarstellung.isNullOrBlank() -> latexDarstellung
+    objekt is MathematischesObjekt -> objekt.zuStrukturLatex()
+    objekt is LatexDarstellbar -> objekt.zuLatex()
+    else -> objekt.toString()
 }
 
 data class VariablenQuelle(

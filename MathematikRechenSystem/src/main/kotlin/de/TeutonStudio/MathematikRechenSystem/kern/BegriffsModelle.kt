@@ -42,9 +42,14 @@ data class BegriffsSpezifikation(
     }
 }
 
+/**
+ * Rollenbelegung eines Begriffs. Methodenrollen sind Atlaswerte, nicht automatisch
+ * mathematische Objekte; die Spezifikation bestimmt über [BegriffsRollenArt], welche
+ * Capability für eine konkrete Rolle verlangt wird.
+ */
 data class BegriffsKandidat(
     val spezifikationId: String,
-    val belegung: Map<String, MathematischesObjekt>,
+    val belegung: Map<String, AtlasWert>,
     val quellenIdentitaeten: Map<String, String> = emptyMap(),
     val zertifikatReferenzen: Set<String> = emptySet(),
 ) {
