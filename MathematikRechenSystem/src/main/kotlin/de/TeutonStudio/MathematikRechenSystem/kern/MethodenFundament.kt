@@ -9,32 +9,157 @@ val WahrheitsMenge: MengenAusdruck = EndlicheMenge(
     setOf(WahrheitsKonstante(true), WahrheitsKonstante(false)),
 )
 
+/**
+ * Domänenneutrale Komponente einer Methodensignatur.
+ *
+ * Die stabile [id] ist Identität; [name] ist ausschließlich sichtbare Benennung.
+ * Die [position] macht die Reihenfolge explizit. Mathematische Mengen gehören
+ * ausdrücklich nicht in diesen Vertrag.
+ */
+data class MethodenKomponente(
+    val id: String,
+    val name: String,
+    val position: Int,
+    val typ: TypAusdruck,
+) {
+    init {
+        require(id.isNotBlank()) { "Eine Methodenkomponente benötigt eine stabile ID." }
+        require(position >= 0) { "Die Position einer Methodenkomponente darf nicht negativ sein." }
+    }
+}
+
+/**
+ * Neutrale semantische Signatur einer Methode.
+ *
+ * Argument- und Ergebnisstruktur sind symmetrisch. Intern ist der Methodenvertrag
+ * dadurch immer `Tupel<A1,...,An> -> Tupel<R1,...,Rm>`, auch für 0 oder 1 Komponente.
+ */
+data class MethodenSignatur(
+    val argumente: List<MethodenKomponente>,
+    val ergebnisse: List<MethodenKomponente>,
+) {
+    init {
+        prüfeKomponenten(argumente, "Argument")
+        prüfeKomponenten(ergebnisse, "Ergebnis")
+    }
+
+    val argumentTupelTyp: TypAusdruck.Parameterisiert
+        get() = TypAusdruck.Parameterisiert(
+            MathematischeTypen.Tupel,
+            argumente.sortedBy(MethodenKomponente::position).map(MethodenKomponente::typ),
+        )
+
+    val ergebnisTupelTyp: TypAusdruck.Parameterisiert
+        get() = TypAusdruck.Parameterisiert(
+            MathematischeTypen.Tupel,
+            ergebnisse.sortedBy(MethodenKomponente::position).map(MethodenKomponente::typ),
+        )
+
+    private fun prüfeKomponenten(komponenten: List<MethodenKomponente>, rolle: String) {
+        require(komponenten.map(MethodenKomponente::id).distinct().size == komponenten.size) {
+            "$rolle-Komponenten benötigen eindeutige stabile IDs."
+        }
+        require(komponenten.map(MethodenKomponente::position).sorted() == komponenten.indices.toList()) {
+            "$rolle-Komponenten benötigen lückenlose Positionen 0..n-1."
+        }
+    }
+}
+
+/** Mathematische Metadaten einer Argumentkomponente. */
+data class MathematischeArgumentKomponente(
+    val id: String,
+    val name: String,
+    val position: Int,
+    val parameter: MethodenParameter,
+    val definitionsMenge: MengenAusdruck,
+)
+
+/** Mathematische Metadaten einer Ergebniskomponente. */
+data class MathematischeErgebnisKomponente(
+    val id: String,
+    val name: String,
+    val position: Int,
+    val zielMenge: MengenAusdruck,
+)
+
+/**
+ * Zusätzliche mathematische Raum-/Mengensignatur einer Methode.
+ *
+ * Komponenten-Definitionsmengen und Zielmengen werden nicht mit ihren Typen
+ * verwechselt. Der kanonische Argumentraum und der Zielraum sind stets Tupelräume.
+ */
+data class MathematischeMethodenSignatur(
+    val argumente: List<MathematischeArgumentKomponente>,
+    val ergebnisse: List<MathematischeErgebnisKomponente>,
+    val effektiverDefinitionsRaum: MengenAusdruck? = null,
+) {
+    init {
+        prüfePositionen(argumente.map { it.id to it.position }, "Argument")
+        prüfePositionen(ergebnisse.map { it.id to it.position }, "Ergebnis")
+    }
+
+    val kanonischerArgumentRaum: Tupelraum
+        get() = Tupelraum(
+            argumente.sortedBy(MathematischeArgumentKomponente::position)
+                .map(MathematischeArgumentKomponente::definitionsMenge),
+        )
+
+    /**
+     * Tatsächlicher mathematischer Definitionsraum. Historische nullstellige Daten,
+     * die `LeereMenge` als leeres kartesisches Produkt gespeichert haben, werden hier
+     * einmalig semantisch auf `{()}` normalisiert.
+     */
+    val definitionsRaum: MengenAusdruck
+        get() = when {
+            argumente.isEmpty() && effektiverDefinitionsRaum == LeereMenge -> kanonischerArgumentRaum
+            else -> effektiverDefinitionsRaum ?: kanonischerArgumentRaum
+        }
+
+    val zielRaum: Tupelraum
+        get() = Tupelraum(
+            ergebnisse.sortedBy(MathematischeErgebnisKomponente::position)
+                .map(MathematischeErgebnisKomponente::zielMenge),
+        )
+
+    private fun prüfePositionen(komponenten: List<Pair<String, Int>>, rolle: String) {
+        require(komponenten.map { it.first }.distinct().size == komponenten.size) {
+            "$rolle-Komponenten benötigen eindeutige stabile IDs."
+        }
+        require(komponenten.map { it.second }.sorted() == komponenten.indices.toList()) {
+            "$rolle-Komponenten benötigen lückenlose Positionen 0..n-1."
+        }
+    }
+}
+
+/**
+ * Historische mathematische Argumentprojektion. Sie existiert nur, damit älterer
+ * Mathematikcode während der Migration nicht wieder Mengen in [MethodenSignatur]
+ * erzwingt.
+ */
+@Deprecated("Verwende MathematischeArgumentKomponente bzw. MethodenKomponente.")
 data class MethodenArgument(
     val parameter: MethodenParameter,
     val werteVorrat: MengenAusdruck,
 )
 
-data class MethodenSignatur(
+/**
+ * Zentraler Legacy-Adapter der alten mengenbasierten Methodensignatur.
+ *
+ * Dieser Typ ist ausdrücklich NICHT der allgemeine Methodenvertrag. Neue Aufrufer
+ * verwenden [MethodenSignatur] beziehungsweise [MathematischeMethodenSignatur].
+ */
+@Deprecated("Verwende neutraleMethodenSignatur() oder mathematischeMethodenSignatur().")
+data class LegacyMathematischeMethodenSignatur(
     val argumente: List<MethodenArgument>,
     val zielMenge: MengenAusdruck,
-    /**
-     * Optionaler gemeinsamer Definitionsbereich der vollständigen Argumentbelegung.
-     *
-     * Er wird benötigt, wenn der tatsächliche Bereich nicht als kartesisches Produkt
-     * der einzelnen Parameter-Wertevorräte darstellbar ist, beispielsweise bei einer
-     * Restriktion auf die Diagonale in R².
-     */
     val effektiverWerteVorrat: MengenAusdruck? = null,
 ) {
-    /**
-     * Der Wertevorrat besteht standardmäßig aus geordneten Argumenttupeln. Auch ein
-     * einzelnes Argument bleibt dadurch strukturell ein Einertupel.
-     * Nullstellige Methoden verwenden gemäß Atlas-Konvention die leere Menge.
-     * Ein expliziter effektiver Gesamtbereich hat Vorrang vor dieser Ableitung.
-     */
     val werteVorrat: MengenAusdruck
-        get() = effektiverWerteVorrat
-            ?: if (argumente.isEmpty()) LeereMenge else Tupelraum(argumente.map { it.werteVorrat })
+        get() = effektiverWerteVorrat ?: when (argumente.size) {
+            0 -> Tupelraum(emptyList())
+            1 -> argumente.single().werteVorrat
+            else -> Tupelraum(argumente.map(MethodenArgument::werteVorrat))
+        }
 }
 
 /** Fachliche, ausschließlich abgeleitete Nutzerbegriffe unterhalb von Methode. */
@@ -44,49 +169,66 @@ enum class MethodenAlias(val anzeigeName: String) {
     Prädikat("Prädikat"),
 }
 
-/**
- * Anzahl der geordneten Argumentplätze. Sie ist ausdrücklich kein Dimensionsbegriff.
- *
- * Bei der klassischen mathematischen Implementierung ist die Stelligkeit bereits aus
- * der Parameterliste bekannt und bleibt deshalb auch ohne bekannte Wertevorräte
- * auslesbar. Andere Methoden dürfen sie über eine vollständige Signatur bereitstellen.
- */
+/** Anzahl der geordneten Argumentkomponenten, ausdrücklich kein Dimensionsbegriff. */
 val Methode.argumentAnzahl: Int
-    get() = when (this) {
-        is MathematischeMethode -> parameter.size
-        is SignaturtragendeMethode -> signatur.argumente.size
-        else -> error("Die Methode '$name' stellt noch keine mathematische Signatur bereit.")
-    }
+    get() = (this as? SignaturtragendeMethode)?.signatur?.argumente?.size
+        ?: error("Die Methode '$name' stellt keine semantische Signatur bereit.")
 
-/**
- * Gemeinsame Signaturgrenze. Direkte Feldrekonstruktion bleibt ausschließlich Sache
- * der konkreten Implementierung und wird nicht mehr von generischem Methodencode dupliziert.
- */
-fun Methode.methodenSignatur(): MethodenSignatur =
+/** Neutrale Signaturgrenze für neuen generischen Methoden-/Graphcode. */
+fun Methode.neutraleMethodenSignatur(): MethodenSignatur =
     (this as? SignaturtragendeMethode)?.signatur
-        ?: error("Die Methode '$name' stellt keine mathematische Signatur bereit.")
+        ?: error("Die Methode '$name' stellt keine semantische Signatur bereit.")
 
 /**
- * Wendet die Methode vollständig an und vereinheitlicht historische
- * Mehrfachausgaben zu genau einem Ergebnisobjekt.
+ * Quellkompatible mathematische Legacy-Projektion.
+ *
+ * Die alte Funktionsbezeichnung bleibt vorübergehend erhalten, weil zahlreiche
+ * ausschließlich mathematische Prüfer sie verwenden. Generischer Code darf sie nicht
+ * benutzen; der Architekturwächter behandelt diese Funktion als Migrationsgrenze.
  */
+@Deprecated("Mathematische Legacy-Projektion; verwende neutraleMethodenSignatur() oder mathematischeMethodenSignatur().")
+fun Methode.methodenSignatur(): LegacyMathematischeMethodenSignatur {
+    val mathematisch = mathematischeMethodenSignatur()
+    val legacyZiel = when (mathematisch.ergebnisse.size) {
+        0 -> Tupelraum(emptyList())
+        1 -> mathematisch.ergebnisse.single().zielMenge
+        else -> mathematisch.zielRaum
+    }
+    val effektiverLegacyBereich = mathematisch.effektiverDefinitionsRaum?.let { bereich ->
+        if (mathematisch.argumente.isEmpty() && bereich == LeereMenge) Tupelraum(emptyList()) else bereich
+    }
+    return LegacyMathematischeMethodenSignatur(
+        argumente = mathematisch.argumente.map { argument ->
+            MethodenArgument(argument.parameter, argument.definitionsMenge)
+        },
+        zielMenge = legacyZiel,
+        effektiverWerteVorrat = effektiverLegacyBereich,
+    )
+}
+
+/** Explizite Mathematikgrenze für Mengen-/Raumsemantik. */
+fun Methode.mathematischeMethodenSignatur(): MathematischeMethodenSignatur =
+    (this as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur
+        ?: error("Die Methode '$name' stellt keine mathematische Raum-/Mengensignatur bereit.")
+
+/** Wendet ausschließlich mathematisch auswertbare Methoden vollständig an. */
 fun Methode.wendeKanonischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
     val auswertbar = this as? MathematischAuswertbareMethode
         ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
     return auswertbar.wendeMathematischAn(argumente)
 }
 
-/** Prädikate werden nicht durch Entscheidbarkeit, sondern nur durch ihre mathematische Semantik erkannt. */
+/** Prädikate werden nicht durch Entscheidbarkeit, sondern nur durch mathematische Semantik erkannt. */
 fun Methode.istPrädikat(): Boolean {
     val mathematisch = this as? MathematischeMethode ?: return false
-    return mathematisch.vorschrift is Aussage && mathematisch.zielMenge == WahrheitsMenge
+    return mathematisch.vorschrift is Aussage && mathematisch.zielMengeFür(mathematisch.ausgabeNamen.single()) == WahrheitsMenge
 }
 
 /** Funktionen verarbeiten und liefern ausschließlich Zahl-, Vektor-, Matrix- oder Tensorräume. */
 fun Methode.istFunktion(): Boolean {
-    val signatur = (this as? SignaturtragendeMethode)?.signatur ?: return false
-    return signatur.argumente.all { it.werteVorrat.istFunktionalerRaum() } &&
-        signatur.zielMenge.istFunktionalerRaum()
+    val signatur = (this as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur ?: return false
+    return signatur.argumente.all { it.definitionsMenge.istFunktionalerRaum() } &&
+        signatur.ergebnisse.all { it.zielMenge.istFunktionalerRaum() }
 }
 
 /** Abbildungen nehmen Mengenobjekte entgegen und liefern ein Mengenobjekt. */
@@ -122,13 +264,7 @@ private fun MengenAusdruck.istFunktionalerRaum(): Boolean = when (this) {
     else -> istZahlenmenge()
 }
 
-/**
- * Erkennt ausschließlich strukturell belegte Teilmengen der Hamilton-Quaternionen.
- *
- * Unbekannte benannte Mengen werden absichtlich nicht anhand ihres sichtbaren Namens
- * als Zahlenmenge geraten. Bei einem Schnitt genügt dagegen ein numerischer Faktor:
- * Der gesamte Schnitt ist bereits Teilmenge dieses Faktors.
- */
+/** Erkennt ausschließlich strukturell belegte Teilmengen der Hamilton-Quaternionen. */
 fun MengenAusdruck.istZahlenmenge(): Boolean = when (this) {
     LeereMenge -> true
     is BeschraenkteZahlmenge -> FundamentaleZahlbereiche.istTeilbereich(
@@ -163,22 +299,22 @@ fun interface MethodenAnforderung {
         init { require(anzahl >= 0) }
         override fun prüfe(methode: Methode): String? {
             val signatur = (methode as? SignaturtragendeMethode)?.signatur
-                ?: return "Die Methode '${methode.name}' besitzt keine mathematische Signatur."
+                ?: return "Die Methode '${methode.name}' besitzt keine semantische Signatur."
             return if (signatur.argumente.size == anzahl) null
             else "Die Methode '${methode.name}' muss genau $anzahl Argumente besitzen."
         }
     }
 
-    /**
-     * Bevorzugte G0.2-Anforderung: Das Ergebnis wird gegen einen semantischen Typ geprüft,
-     * nicht gegen eine UI-Anschluss-ID. Unbestimmte Typen werden als Diagnose zurückgegeben,
-     * niemals stillschweigend wie `Beliebig` behandelt.
-     */
+    /** Allgemeine typbasierte Ergebnisanforderung ohne mathematische Mengen. */
     data class ErgebnisTyp(val typ: TypAusdruck) : MethodenAnforderung {
         override fun prüfe(methode: Methode): String? {
             val signatur = (methode as? SignaturtragendeMethode)?.signatur
-                ?: return "Die Methode '${methode.name}' besitzt keine mathematische Signatur."
-            val quellTyp = signatur.zielMenge.elementTypAusdruck()
+                ?: return "Die Methode '${methode.name}' besitzt keine semantische Signatur."
+            val quellTyp = if (signatur.ergebnisse.size == 1) {
+                signatur.ergebnisse.single().typ
+            } else {
+                signatur.ergebnisTupelTyp
+            }
             return when (val ergebnis = MathematischeTypen.typSystem.prüfe(quellTyp, typ)) {
                 TypPrüfung.Kompatibel -> null
                 is TypPrüfung.Unbestimmt ->
@@ -189,11 +325,7 @@ fun interface MethodenAnforderung {
         }
     }
 
-    /**
-     * Legacy-Adapter für bestehende Knotenparameter. Neue Fachlogik soll [ErgebnisTyp]
-     * verwenden. Bei noch nicht inferierbaren Mengen bleibt der historische Laufzeitcheck
-     * als konservativer Migrationspfad erhalten.
-     */
+    /** Legacy-Adapter für bestehende Knotenparameter. */
     data class ErgebnisArt(val anschlussArt: String) : MethodenAnforderung {
         override fun prüfe(methode: Methode): String? {
             val semantisch = ErgebnisTyp(TypAusdruck.Atom(TypId(anschlussArt))).prüfe(methode)
@@ -223,36 +355,36 @@ fun interface MethodenAnforderung {
             else "Die Methode '${methode.name}' erfüllt das Prädikatskriterium nicht."
     }
 
-    /** Endlichstellige Methode mit ausschließlich numerischen Argument- und Zielräumen. */
+    /** Endlichstellige mathematische Methode mit ausschließlich numerischen Mengenräumen. */
     data object Zahlenfunktion : MethodenAnforderung {
-        override fun prüfe(methode: Methode): String? = runCatching {
-            val signatur = methode.methodenSignatur()
+        override fun prüfe(methode: Methode): String? {
+            val signatur = (methode as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur
+                ?: return "Die Methode '${methode.name}' besitzt keine mathematische Raum-/Mengensignatur."
             val nichtNumerischesArgument = signatur.argumente.withIndex().firstOrNull { (_, argument) ->
-                !argument.werteVorrat.istZahlenmenge()
+                !argument.definitionsMenge.istZahlenmenge()
             }
-            when {
+            return when {
                 nichtNumerischesArgument != null -> {
                     val (index, argument) = nichtNumerischesArgument
-                    "Das ${index + 1}. Argument '${argument.parameter.name}' der Methode " +
-                        "'${methode.name}' besitzt mit ${argument.werteVorrat.zuLatex()} " +
-                        "keinen nachgewiesenen Zahlenraum innerhalb von \\mathbb H."
+                    "Das ${index + 1}. Argument '${argument.name}' der Methode '${methode.name}' besitzt mit " +
+                        "${argument.definitionsMenge.zuLatex()} keinen nachgewiesenen Zahlenraum innerhalb von \\mathbb H."
                 }
-                !signatur.zielMenge.istZahlenmenge() ->
-                    "Die Zielmenge ${signatur.zielMenge.zuLatex()} der Methode " +
-                        "'${methode.name}' ist keine nachgewiesene Teilmenge von \\mathbb H."
+                signatur.ergebnisse.any { !it.zielMenge.istZahlenmenge() } ->
+                    "Mindestens eine Zielmenge der Methode '${methode.name}' ist keine nachgewiesene Teilmenge von \\mathbb H."
                 else -> null
             }
-        }.getOrElse { fehler ->
-            fehler.message ?: "Die Methodensignatur ist unvollständig."
         }
     }
 
     data object Endomorphismus : MethodenAnforderung {
-        override fun prüfe(methode: Methode): String? = runCatching {
-            val signatur = methode.methodenSignatur()
-            if (signatur.argumente.size == 1 && signatur.argumente.single().werteVorrat == signatur.zielMenge) null
-            else "Die Methode '${methode.name}' ist kein Endomorphismus."
-        }.getOrElse { it.message ?: "Die Methodensignatur ist unvollständig." }
+        override fun prüfe(methode: Methode): String? {
+            val signatur = (methode as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur
+                ?: return "Die Methode '${methode.name}' besitzt keine mathematische Raum-/Mengensignatur."
+            return if (
+                signatur.argumente.size == 1 && signatur.ergebnisse.size == 1 &&
+                signatur.argumente.single().definitionsMenge == signatur.ergebnisse.single().zielMenge
+            ) null else "Die Methode '${methode.name}' ist kein Endomorphismus."
+        }
     }
 
     data class Alle(val anforderungen: List<MethodenAnforderung>) : MethodenAnforderung {

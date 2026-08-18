@@ -10,13 +10,15 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import java.math.BigInteger
 
 /**
- * Registriert den Registryvertrag als letzte Tensorrechner-Schicht.
- * Konkret vorhandene Operationen verwenden weiterhin den bestehenden Rechenkern;
- * übrige gültige Operationen bleiben strukturierte symbolische Ergebnisse.
+ * Liefert dem konsolidierten Tensorrechner die zentrale semantische
+ * Operations-Registry aus dem Mathematikkern. Dadurch sind Inspector,
+ * Handle-Vertrag und Auswertung an dieselben stabilen Operations-IDs gebunden.
+ *
+ * @see TensorOperationRegister
  */
 internal fun MathematikAuswerterRegister.registriereTensorOperationRegistry() {
     requireNotNull(finde(TensorRechner.KNOTEN_ART)) {
-        "Der bestehende Tensorrechner muss vor der Registry-Brücke registriert sein."
+        "Der Tensorrechner muss vor der Tensor-Operationsregistry registriert sein."
     }
     registriere(
         TensorRechner.KNOTEN_ART,
@@ -27,96 +29,68 @@ internal fun MathematikAuswerterRegister.registriereTensorOperationRegistry() {
 private fun werteTensorOperationAus(
     kontext: KnotenAuswertungsKontext,
 ): KnotenAuswertungsErgebnis {
-    kontext.knoten.parameter[TENSOR_ACHSEN_MIGRATIONSFEHLER]?.let { fehler ->
-        return fehlerErgebnis(kontext, "$fehler Öffne den Inspector und bestätige die sichtbaren Achsen.")
-    }
     val definition = aktuelleTensorOperationDefinition(kontext.knoten)
-    val operanden = definition.eingangsRollen.mapNotNull { rolle ->
-        tensorEingang(kontext, definition, rolle)?.objekt?.let { rolle to it }
+    val operanden: Map<TensorHandleRolle, MathematischesObjekt> = definition.eingangsRollen.mapNotNull { rolle ->
+        tensorEingang(kontext, definition, rolle)?.let { wert ->
+            rolle to wert.mathematischesObjekt("Tensoroperand '${rolle.wert}'")
+        }
     }.toMap(linkedMapOf())
-    val fehlendeRollen = definition.eingangsRollen.filterNot(operanden::containsKey)
+    val fehlendeRollen = definition.eingangsRollen.filterNot { it in operanden }
     if (fehlendeRollen.isNotEmpty()) {
         return fehlerErgebnis(
             kontext,
-            "Fehlende Tensorrollen: ${fehlendeRollen.joinToString { it.wert }}.",
+            "${definition.titel}: fehlende Eingänge ${fehlendeRollen.joinToString { it.wert }}.",
         )
     }
 
     val achsenErgebnis = ermittleAchsen(kontext, definition, operanden)
-    if (achsenErgebnis is AchsenErgebnis.Fehler) {
-        return fehlerErgebnis(kontext, achsenErgebnis.nachricht)
-    }
-    val achsen = (achsenErgebnis as AchsenErgebnis.Wert).spezifikation
-    val legacyOperator = definition.alsBestehenderTensorOperatorOderNull()
-    if (legacyOperator == null) {
-        return symbolischesTensorErgebnis(kontext, definition, operanden, achsen)
+    val achsen = when (achsenErgebnis) {
+        is AchsenErgebnis.Wert -> achsenErgebnis.spezifikation
+        is AchsenErgebnis.Fehler -> return fehlerErgebnis(kontext, achsenErgebnis.nachricht)
     }
 
-    val sichtbar = achsen.sichtbareIndizes()
-    val stufe = tensorStufe(operanden.values)
-    val interneAchsen = when (definition.id.wert) {
-        TensorRechnerOperator.ACHSENPERMUTATION.stabileId -> {
-            val rang = stufe ?: return fehlerErgebnis(
-                kontext,
-                "Für die Achsenpermutation konnte keine Tensorstufe bestimmt werden.",
-            )
-            val werte = if (sichtbar.isEmpty()) {
-                standardTensorPermutation(rang).map { it + 1 }
-            } else {
-                sichtbar
-            }
-            runCatching { normalisiereTensorPermutation(werte, rang) }.getOrElse { fehler ->
-                return fehlerErgebnis(
-                    kontext,
-                    fehler.message ?: "Ungültige Achsenpermutation.",
-                )
-            }
-        }
-        TensorRechnerOperator.KONTRAKTION.stabileId,
-        TensorRechnerOperator.ACHSENSCHNITT.stabileId,
-        -> {
-            val rang = stufe ?: return fehlerErgebnis(
-                kontext,
-                "Für die Achsenoperation konnte keine Tensorstufe bestimmt werden.",
-            )
-            runCatching { normalisiereTensorAchsen(sichtbar, rang).map { it.position } }.getOrElse { fehler ->
-                return fehlerErgebnis(
-                    kontext,
-                    fehler.message ?: "Ungültige Tensorachse.",
-                )
-            }
-        }
-        else -> emptyList()
-    }
-    val indizes = when (
-        val gelesen = parseGanzeListe(
-            kontext.knoten.parameter[TENSOR_OPERATION_PARAMETER]
-                ?: kontext.knoten.parameter["indizes"],
-            "Operationsparameter",
-        )
-    ) {
-        is GanzzahlListenErgebnis.Wert -> gelesen.werte
-        is GanzzahlListenErgebnis.Fehler -> return fehlerErgebnis(kontext, gelesen.nachricht)
-    }
     val eingaben = operanden.map { (rolle, objekt) ->
         TensorRechnerEingabe(rolle.wert, objekt)
     }
-    val rechenErgebnis = TensorRechner.erzeuge(
-        operator = legacyOperator,
-        eingaben = eingaben,
-        konfiguration = TensorRechnerKonfiguration(
-            achsen = interneAchsen,
-            indizes = indizes,
-            permutation = if (legacyOperator == TensorRechnerOperator.ACHSENPERMUTATION) interneAchsen else emptyList(),
-        ),
+    val konfiguration = TensorRechnerKonfiguration(
+        achsen = when (definition.id.wert) {
+            TensorRechnerOperator.KONTRAKTION.stabileId -> achsen.sichtbareIndizes()
+            else -> emptyList()
+        },
+        permutation = when (definition.id.wert) {
+            TensorRechnerOperator.ACHSENPERMUTATION.stabileId,
+            TensorRechnerOperator.TRANSPONIEREN.stabileId,
+            -> achsen.sichtbareIndizes()
+            else -> emptyList()
+        },
+        indizes = when (definition.id.wert) {
+            TensorRechnerOperator.ACHSENSCHNITT.stabileId,
+            TensorRechnerOperator.INDEXAUSWERTUNG.stabileId,
+            -> achsen.sichtbareIndizes()
+            else -> emptyList()
+        },
     )
+
+    if (definition.unterstuetzungsStatus != TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT) {
+        return symbolischesTensorErgebnis(kontext, definition, operanden, achsen)
+    }
+
+    val operator = TensorRechnerOperator.entries.firstOrNull { it.stabileId == definition.id.wert }
+        ?: return fehlerErgebnis(
+            kontext,
+            "Die konkrete Operation '${definition.id.wert}' ist nicht mit dem Tensorrechner verknüpft.",
+        )
+    val rechenErgebnis = TensorRechner.erzeuge(operator, eingaben, konfiguration)
     return when (rechenErgebnis) {
         is TensorRechnerErgebnis.Wert -> {
-            val rolle = definition.ausgangsRollen.single()
-            val ausgangsName = ausgangsName(kontext, definition, rolle)
+            val ausgang = definition.ausgangsRollen.singleOrNull()
+                ?: return fehlerErgebnis(
+                    kontext,
+                    "${definition.titel} erwartet ${definition.ausgangsRollen.size} Ausgänge; die konkrete Registry liefert aktuell genau einen Wert.",
+                )
             KnotenAuswertungsErgebnis(
                 ausgaben = mapOf(
-                    ausgangsName to BedingterWert(
+                    ausgangsName(kontext, definition, ausgang) to BedingterWert(
                         objekt = rechenErgebnis.objekt,
                         annahmen = kontext.annahmen(),
                         latexDarstellung = rechenErgebnis.objekt.zuLatex(),
@@ -228,7 +202,9 @@ private fun ermittleAchsen(
                     "Achsenspezifikation",
                 )
             } else {
-                val werte = eintraege.map { ganzzahlOderNull(it.value.objekt) }
+                val werte = eintraege.map { (name, wert) ->
+                    ganzzahlOderNull(wert.mathematischesObjekt("Dynamischer Achseneingang '$name'"))
+                }
                 if (werte.any { it == null }) {
                     GanzzahlListenErgebnis.Fehler(
                         "Jeder dynamische Achseneingang muss eine ganze Zahl im Int-Bereich liefern.",

@@ -399,12 +399,14 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
     )
 }
 
-private fun werteStrukturFormelAus(kontext: KnotenAuswertungsKontext): MathematischesObjekt {
+private fun werteStrukturFormelAus(kontext: KnotenAuswertungsKontext): AtlasWert {
     val wurzel = ladeStrukturRechnerFormel(kontext.knoten) ?: error("Die gespeicherte Strukturformel fehlt oder ist beschädigt.")
     require(FormelAusdruckPruefer.pruefe(wurzel) == FormelPruefung.Gueltig) { "Die gespeicherte Strukturformel ist unvollständig." }
     val variablen = strukturFormelVariablen(wurzel).associate { variable ->
-        variable.name to (kontext.eingänge[variable.name]?.objekt
-            ?: error("Formeleingang '${variable.name}' fehlt."))
+        variable.name to (
+            kontext.eingänge[variable.name]?.mathematischesObjekt("Formeleingang '${variable.name}'")
+                ?: error("Formeleingang '${variable.name}' fehlt.")
+            )
     }
     return werteFormelAusdruckAus(wurzel, variablen, kontext.knoten)
 }
@@ -413,7 +415,7 @@ private fun werteFormelAusdruckAus(
     ausdruck: FormelAusdruck,
     variablen: Map<String, MathematischesObjekt>,
     knoten: KnotenDaten,
-): MathematischesObjekt = when (ausdruck) {
+): AtlasWert = when (ausdruck) {
     is FormelAusdruck.Literal -> ausdruck.wert
     is FormelAusdruck.Variable -> variablen[ausdruck.name] ?: error("Variable ${ausdruck.name} ist nicht belegt.")
     is FormelAusdruck.Platzhalter -> error("Die Formel enthält den offenen Platzhalter ${ausdruck.beschriftung}.")
@@ -427,15 +429,20 @@ private fun werteFormelAusdruckAus(
 
 private fun werteFormelOperationAus(
     operatorId: String,
-    argumente: Map<String, MathematischesObjekt>,
+    argumente: Map<String, AtlasWert>,
     knoten: KnotenDaten,
-): MathematischesObjekt = when {
-    operatorId.startsWith("zahl.") -> werteZahlFormelAus(operatorId, argumente.values.toList())
-    operatorId.startsWith("aussage.") -> werteAussagenFormelAus(operatorId, argumente, knoten)
-    operatorId.startsWith("vektor.") -> werteVektorFormelAus(operatorId, argumente)
-    operatorId.startsWith("matrix.") -> werteMatrixFormelAus(operatorId, argumente)
-    operatorId.startsWith("tensor.") -> werteTensorFormelAus(operatorId, argumente, knoten)
-    else -> error("Unbekannter Formeloperator $operatorId.")
+): AtlasWert {
+    val mathematischeArgumente = argumente.mapValues { (rolle, wert) ->
+        wert.alsMathematischesObjekt("Formelargument '$rolle'")
+    }
+    return when {
+        operatorId.startsWith("zahl.") -> werteZahlFormelAus(operatorId, mathematischeArgumente.values.toList())
+        operatorId.startsWith("aussage.") -> werteAussagenFormelAus(operatorId, mathematischeArgumente, knoten)
+        operatorId.startsWith("vektor.") -> werteVektorFormelAus(operatorId, mathematischeArgumente)
+        operatorId.startsWith("matrix.") -> werteMatrixFormelAus(operatorId, mathematischeArgumente)
+        operatorId.startsWith("tensor.") -> werteTensorFormelAus(operatorId, mathematischeArgumente, knoten)
+        else -> error("Unbekannter Formeloperator $operatorId.")
+    }
 }
 
 private fun werteZahlFormelAus(operatorId: String, argumente: List<MathematischesObjekt>): ZahlAusdruck {
@@ -490,7 +497,7 @@ private fun werteVektorFormelAus(
 private fun werteMatrixFormelAus(
     operatorId: String,
     argumente: Map<String, MathematischesObjekt>,
-): MathematischesObjekt {
+): AtlasWert {
     val operator = MatrixRechnerOperator.entries.firstOrNull { it.stabileId == operatorId }
         ?: error("Unbekannter Matrixoperator $operatorId.")
     val matrizen = argumente.mapNotNull { (rolle, objekt) ->
@@ -518,10 +525,12 @@ private fun werteStrukturOperatorAus(
     kontext: KnotenAuswertungsKontext,
     familie: StrukturRechnerKnotenFamilie,
     definition: StrukturRechnerOperatorDefinition,
-): MathematischesObjekt {
+): AtlasWert {
     val argumente = definition.eingänge.associate { eingang ->
-        eingang.name to (kontext.eingänge[eingang.name]?.objekt
-            ?: error("Eingang '${eingang.name}' fehlt."))
+        eingang.name to (
+            kontext.eingänge[eingang.name]?.mathematischesObjekt("Strukturoperator-Eingang '${eingang.name}'")
+                ?: error("Eingang '${eingang.name}' fehlt.")
+            )
     }
     return when (familie) {
         StrukturRechnerKnotenFamilie.AUSSAGESATZ -> werteAussagenFormelAus(definition.id, argumente, kontext.knoten)
@@ -531,7 +540,7 @@ private fun werteStrukturOperatorAus(
     }
 }
 
-private fun matrixErgebnisWert(ergebnis: MatrixRechnerErgebnis): MathematischesObjekt = when (ergebnis) {
+private fun matrixErgebnisWert(ergebnis: MatrixRechnerErgebnis): AtlasWert = when (ergebnis) {
     is MatrixRechnerErgebnis.MatrixWert -> ergebnis.wert
     is MatrixRechnerErgebnis.VektorWert -> ergebnis.wert
     is MatrixRechnerErgebnis.ZahlWert -> ergebnis.wert

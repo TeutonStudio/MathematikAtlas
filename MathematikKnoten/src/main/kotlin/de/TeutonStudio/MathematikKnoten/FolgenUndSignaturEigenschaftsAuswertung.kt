@@ -19,6 +19,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
 import de.TeutonStudio.MathematikRechenSystem.kern.UnterstuetzungsStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.Vektorraum
 import de.TeutonStudio.MathematikRechenSystem.kern.ZeilenVektor
+import de.TeutonStudio.MathematikRechenSystem.kern.alsMathematischeMethode
 
 /** Verbindliche Persistenzwerte aus #279 mit Migration der ersten Entwurfsnamen. */
 private fun normalisierteFolgenEigenschaft(kennung: String): MathematischeEigenschaftDefinition? = when (kennung.trim().lowercase()) {
@@ -102,17 +103,20 @@ internal fun MathematikAuswerterRegister.registriereFolgenUndSignaturEigenschaft
     }
 }
 
-private fun wertArtDefinition(methode: Methode): MathematischeEigenschaftDefinition? = when {
-    methode.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen) ->
-        MathematischeEigenschaftRegister.Reellwertig
-    methode.zielMenge == KomplexeZahlen -> MathematischeEigenschaftRegister.Komplexwertig
-    methode.zielMenge is Vektorraum || methode.zielMenge is Matrizenraum || methode.zielMenge is Tupelraum ->
-        MathematischeEigenschaftRegister.Vektorwertig
-    methode.vorschrift is SpaltenVektor || methode.vorschrift is ZeilenVektor ->
-        MathematischeEigenschaftRegister.Vektorwertig
-    methode.vorschrift::class.simpleName?.contains("Polynom", ignoreCase = true) == true ->
-        MathematischeEigenschaftRegister.Polynomwertig
-    else -> null
+private fun wertArtDefinition(methode: Methode): MathematischeEigenschaftDefinition? {
+    val mathematisch = runCatching { methode.alsMathematischeMethode("Folgen-Wertart") }.getOrNull() ?: return null
+    return when {
+        mathematisch.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen) ->
+            MathematischeEigenschaftRegister.Reellwertig
+        mathematisch.zielMenge == KomplexeZahlen -> MathematischeEigenschaftRegister.Komplexwertig
+        mathematisch.zielMenge is Vektorraum || mathematisch.zielMenge is Matrizenraum || mathematisch.zielMenge is Tupelraum ->
+            MathematischeEigenschaftRegister.Vektorwertig
+        mathematisch.vorschrift is SpaltenVektor || mathematisch.vorschrift is ZeilenVektor ->
+            MathematischeEigenschaftRegister.Vektorwertig
+        mathematisch.vorschrift::class.simpleName?.contains("Polynom", ignoreCase = true) == true ->
+            MathematischeEigenschaftRegister.Polynomwertig
+        else -> null
+    }
 }
 
 private fun KnotenAuswertungsKontext.eigenschaftsAussageAusgabe(aussage: EigenschaftsAussage) =

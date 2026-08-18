@@ -27,7 +27,10 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Vergleich
 import de.TeutonStudio.MathematikRechenSystem.kern.VergleichsArt
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.ableiten
+import de.TeutonStudio.MathematikRechenSystem.kern.alsMathematischeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.löseLinear
+import de.TeutonStudio.MathematikRechenSystem.kern.mathematischeMethodenSignatur
+import de.TeutonStudio.MathematikRechenSystem.kern.neutraleMethodenSignatur
 import de.TeutonStudio.MathematikRechenSystem.kern.vereinfache
 
 private enum class GlobaleKrümmung {
@@ -140,7 +143,7 @@ private fun globaleKonvexitätsAussage(
         )
     }
 
-    if (methode.parameter.size > 1) {
+    if (methode.neutraleMethodenSignatur().argumente.size > 1) {
         return EigenschaftsAussage(
             eigenschaftId = definition.id,
             eigenschaftLatex = definition.adjektiv,
@@ -209,19 +212,24 @@ private fun reguläreMethodenEigenschaft(
     definition: MathematischeEigenschaftDefinition,
     parameter: Map<String, String>,
 ): EigenschaftsAussage {
-    val reelleSignatur = methode.parameter.isNotEmpty() && methode.parameter.all { parameterEintrag ->
-        methode.werteVorräte[parameterEintrag.name] in setOf(
+    val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrNull()
+    val reelleSignatur = signatur != null &&
+        signatur.argumente.isNotEmpty() &&
+        signatur.argumente.all { argument ->
+            argument.definitionsMenge in setOf(
+                de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
+                de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
+                de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
+                ReelleZahlen,
+            )
+        } &&
+        signatur.ergebnisse.size == 1 &&
+        signatur.ergebnisse.single().zielMenge in setOf(
             de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
             de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
             de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
             ReelleZahlen,
         )
-    } && methode.zielMenge in setOf(
-        de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
-        de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
-        de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
-        ReelleZahlen,
-    )
     val istIntegrabilität = definition.gruppe == EigenschaftsGruppe.Integrabilität
     val integralBegriff = parameter["integralBegriff"].orEmpty()
     val maßKontext = parameter["integrationsKontextReferenz"].orEmpty()
@@ -354,11 +362,13 @@ private fun symbolischeStellenMenge(
     streng: Boolean,
     grund: String,
 ): MengenAusdruck {
-    val variablen = methode.parameter.mapIndexed { index, parameter ->
+    val signatur = methode.mathematischeMethodenSignatur()
+    val variablen = signatur.argumente.sortedBy { it.position }.mapIndexed { index, argument ->
+        val parameter = argument.parameter
         val variable = parameter as? Variable ?: Variable(parameter.name.ifBlank { "x_${index + 1}" })
         GebundeneMengenVariable(
             variable,
-            methode.werteVorräte[parameter.name] ?: ReelleZahlen,
+            argument.definitionsMenge,
         )
     }.ifEmpty { listOf(GebundeneMengenVariable(Variable("x"), ReelleZahlen)) }
     return DefinierteMenge(
@@ -378,21 +388,25 @@ private fun symbolischeStellenMenge(
 }
 
 private fun analysiereAbleitungen(methode: Methode): AbleitungsAnalyse? {
-    val variable = methode.parameter.singleOrNull() as? Variable ?: return null
-    val definitionsMenge = methode.werteVorräte[variable.name] ?: return null
+    val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrNull() ?: return null
+    val argument = signatur.argumente.singleOrNull() ?: return null
+    val variable = argument.parameter as? Variable ?: return null
+    val definitionsMenge = argument.definitionsMenge
+    val zielMenge = signatur.ergebnisse.singleOrNull()?.zielMenge ?: return null
     if (definitionsMenge !in setOf(
             de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
             de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
             de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
             ReelleZahlen,
-        ) || methode.zielMenge !in setOf(
+        ) || zielMenge !in setOf(
             de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
             de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
             de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
             ReelleZahlen,
         )
     ) return null
-    val term = methode.vorschrift as? ZahlAusdruck ?: return null
+    val mathematisch = runCatching { methode.alsMathematischeMethode("Ableitungsanalyse") }.getOrNull() ?: return null
+    val term = mathematisch.vorschrift as? ZahlAusdruck ?: return null
     val erste = runCatching { ableiten(term, variable).ergebnis }.getOrNull() ?: return null
     val zweite = runCatching { ableiten(erste, variable).ergebnis }.getOrNull() ?: return null
     val dritte = runCatching { ableiten(zweite, variable).ergebnis }.getOrNull()
@@ -454,21 +468,28 @@ private fun vereinigeExakt(links: MengenAusdruck, rechts: MengenAusdruck): Menge
     else -> de.TeutonStudio.MathematikRechenSystem.kern.Vereinigung(listOf(links, rechts))
 }
 
-private fun konvexitätsSignaturFehler(methode: Methode): String? = when {
-    methode.zielMenge == KomplexeZahlen -> "Komplexe Zahlen besitzen keine mit der Feldstruktur verträgliche kanonische Gesamtordnung für eine Jensen-Ungleichung."
-    methode.zielMenge != ReelleZahlen && methode.zielMenge !in setOf(
-        de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
-        de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
-        de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
-    ) -> "Funktionskonvexität benötigt eine geordnete skalare Zielstruktur."
-    methode.parameter.isEmpty() -> "Eine nullstellige Methode besitzt keinen Argumentbereich für konvexe Kombinationen."
-    methode.parameter.any { methode.werteVorräte[it.name] !in setOf(
-        de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
-        de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
-        de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
-        ReelleZahlen,
-    ) } -> "Der Argumentbereich benötigt eine sichtbare reelle affine Struktur."
-    else -> null
+private fun konvexitätsSignaturFehler(methode: Methode): String? {
+    val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrElse {
+        return "Funktionskonvexität benötigt eine mathematische Raum-/Mengensignatur."
+    }
+    val zielMenge = signatur.ergebnisse.singleOrNull()?.zielMenge
+        ?: return "Funktionskonvexität benötigt genau eine skalare Ergebniskomponente."
+    return when {
+        zielMenge == KomplexeZahlen -> "Komplexe Zahlen besitzen keine mit der Feldstruktur verträgliche kanonische Gesamtordnung für eine Jensen-Ungleichung."
+        zielMenge != ReelleZahlen && zielMenge !in setOf(
+            de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
+            de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
+            de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
+        ) -> "Funktionskonvexität benötigt eine geordnete skalare Zielstruktur."
+        signatur.argumente.isEmpty() -> "Eine nullstellige Methode besitzt keinen Argumentbereich für konvexe Kombinationen."
+        signatur.argumente.any { it.definitionsMenge !in setOf(
+            de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen,
+            de.TeutonStudio.MathematikRechenSystem.kern.GanzeZahlen,
+            de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahlen,
+            ReelleZahlen,
+        ) } -> "Der Argumentbereich benötigt eine sichtbare reelle affine Struktur."
+        else -> null
+    }
 }
 
 private fun String?.istStreng(): Boolean = when (this?.trim()?.lowercase()) {

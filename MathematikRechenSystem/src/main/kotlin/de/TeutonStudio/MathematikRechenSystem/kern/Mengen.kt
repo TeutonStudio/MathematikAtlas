@@ -70,15 +70,27 @@ data class Tupel(val elemente: List<MathematischesObjekt>) : MathematischesObjek
     override fun zuLatex() = elemente.joinToString(prefix = "\\left(", postfix = "\\right)") { it.zuLatex() }
 }
 
+/** Symbolischer Produkt-Ausdruck; 0 und 1 Faktoren werden durch [kartesischesProdukt] kanonisch als Tupelraum erzeugt. */
 data class KartesischesProdukt(val mengen: List<MengenAusdruck>) : MengenAusdruck {
-    init { require(mengen.size >= 2) }
-    override fun zuLatex() = mengen.joinToString(" \\times ") { it.zuLatex() }
+    override fun zuLatex() = when (mengen.size) {
+        0 -> "\\{()\\}"
+        1 -> "\\operatorname{Tupelraum}\\!\\left(${mengen.single().zuLatex()}\\right)"
+        else -> mengen.joinToString(" \\times ") { it.zuLatex() }
+    }
 }
 
-/** Trägermenge geordneter Tupel, auch für einstellige Tupel. */
+/**
+ * Kanonisches endliches kartesisches Produkt geordneter Tupel.
+ *
+ * Der leere Tupelraum enthält genau das leere Tupel und ist daher `{()}`, nicht `∅`.
+ * Auch ein einzelner Faktor bleibt ein Raum von Einertupeln und kollabiert nicht zum Faktor.
+ */
 data class Tupelraum(val komponenten: List<MengenAusdruck>) : MengenAusdruck {
-    init { require(komponenten.isNotEmpty()) }
-    override fun zuLatex() = komponenten.joinToString(" \\times ") { it.zuLatex() }
+    override fun zuLatex() = when (komponenten.size) {
+        0 -> "\\{()\\}"
+        1 -> "\\operatorname{Tupelraum}\\!\\left(${komponenten.single().zuLatex()}\\right)"
+        else -> komponenten.joinToString(" \\times ") { it.zuLatex() }
+    }
 }
 
 /** Trägermenge endlicher Tupel variabler Länge über einer Elementmenge. */
@@ -145,21 +157,21 @@ data class DefinierteMenge(
     }
 }
 
-/** Symbolischer Filter einer Menge durch eine einstellige aussagewertige Methode. */
+/** Symbolischer Filter einer Menge durch eine einstellige aussagewertige mathematische Methode. */
 data class GefilterteMenge(
     val menge: MengenAusdruck,
-    val methode: Methode,
+    val methode: MathematischeMethode,
 ) : MengenAusdruck {
     init {
         require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
-        require(methode.ausgabeNamen.size == 1 && methode.vorschrift is Aussage) {
+        require(methode.ausgabeNamen.size == 1 && methode.vorschriftFür(methode.ausgabeNamen.single()) is Aussage) {
             "Eine Filtermethode muss genau eine Aussage ausgeben."
         }
     }
 
     override fun zuLatex(): String {
         val parameter = methode.parameter.single()
-        val bedingung = methode.vorschrift as Aussage
+        val bedingung = methode.vorschriftFür(methode.ausgabeNamen.single()) as Aussage
         return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"
     }
 }
@@ -170,23 +182,24 @@ fun filtereMenge(
     methode: Methode,
     kontext: RechenKontext = RechenKontext(),
 ): MengenAusdruck {
-    require(methode.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
-    val (_, ausgabe) = methode.einzigeAusgabe()
+    val mathematisch = methode.alsMathematischeMethode("mathematische Mengenfilterung")
+    require(mathematisch.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
+    val (_, ausgabe) = mathematisch.einzigeAusgabe()
     require(ausgabe is Aussage) { "Eine Filtermethode muss eine Aussage ausgeben." }
     if (menge == LeereMenge) return LeereMenge
     if (menge is EndlicheMenge) {
         val behalten = linkedSetOf<MathematischesObjekt>()
         for (element in menge.elemente.sortedBy(::strukturellerSchlüssel)) {
-            val bedingung = methode.wendeAn(listOf(element)) as Aussage
+            val bedingung = mathematisch.wendeAn(listOf(element)) as Aussage
             when (bedingung.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> behalten += element
                 Wahrheitswert.Lüge -> Unit
-                null -> return GefilterteMenge(menge, methode)
+                null -> return GefilterteMenge(menge, mathematisch)
             }
         }
         return if (behalten.isEmpty()) LeereMenge else EndlicheMenge(behalten)
     }
-    return GefilterteMenge(menge, methode)
+    return GefilterteMenge(menge, mathematisch)
 }
 
 sealed interface Mächtigkeit : MathematischesObjekt
@@ -223,16 +236,24 @@ fun schneide(mengen: Iterable<MengenAusdruck>, grundMenge: MengenAusdruck? = nul
     return if (eindeutig.size == 1) eindeutig.single() else Schnitt(eindeutig, grundMenge)
 }
 
+/**
+ * Endliches kartesisches Produkt mit dem leeren Produkt `{()}` als neutralem Basisfall.
+ * 0 und 1 Faktoren werden nicht künstlich auf `∅` beziehungsweise den Faktor kollabiert.
+ */
 fun kartesischesProdukt(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
     val faktoren = mengen.toList()
-    require(faktoren.size >= 2) { "Ein kartesisches Produkt benötigt mindestens zwei Mengen." }
+    if (faktoren.isEmpty()) return Tupelraum(emptyList())
     if (faktoren.any { it == LeereMenge }) return LeereMenge
     if (faktoren.all { it is EndlicheMenge }) {
-        val tupel = faktoren.filterIsInstance<EndlicheMenge>().fold(listOf(emptyList<MathematischesObjekt>())) { bisher, menge ->
-            bisher.flatMap { präfix -> menge.elemente.sortedBy(::strukturellerSchlüssel).map { präfix + it } }
-        }
+        val tupel = faktoren.filterIsInstance<EndlicheMenge>()
+            .fold(listOf(emptyList<MathematischesObjekt>())) { bisher, menge ->
+                bisher.flatMap { präfix ->
+                    menge.elemente.sortedBy(::strukturellerSchlüssel).map { präfix + it }
+                }
+            }
         return EndlicheMenge(tupel.map(::Tupel).toSet())
     }
+    if (faktoren.size == 1) return Tupelraum(faktoren)
     return KartesischesProdukt(faktoren)
 }
 
@@ -255,6 +276,8 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
                 )
             } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
+        is Tupelraum -> entscheideTupelraumElement(element, menge, kontext)
+        is KartesischesProdukt -> entscheideTupelraumElement(element, Tupelraum(menge.mengen), kontext)
         LeereMenge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         RationaleZahlen, ReelleZahlen -> if (element is RationaleZahl) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         GanzeZahlen -> if (element is RationaleZahl) {
@@ -283,6 +306,28 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
     override fun zuLatex() = "${element.zuLatex()} \\in ${menge.zuLatex()}"
 }
 
+private fun entscheideTupelraumElement(
+    element: MathematischesObjekt,
+    raum: Tupelraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    val tupel = element as? Tupel
+        ?: return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+    if (tupel.elemente.size != raum.komponenten.size) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+    }
+    val ergebnisse = tupel.elemente.zip(raum.komponenten).map { (wert, menge) ->
+        ElementBeziehung(wert, menge).entscheide(kontext)
+    }
+    return when {
+        ergebnisse.any { it.wahrheitswert == Wahrheitswert.Lüge } ->
+            AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+        ergebnisse.all { it.wahrheitswert == Wahrheitswert.Wahr } ->
+            AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
+}
+
 data class TeilmengenBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = prüfeTeilmenge(links, rechts, kontext)
     override fun zuLatex() = "${links.zuLatex()} \\subseteq ${rechts.zuLatex()}"
@@ -299,6 +344,14 @@ fun prüfeTeilmenge(
 ): AussageErgebnis = when {
     teilMenge == LeereMenge || teilMenge == grundMenge ->
         AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+    teilMenge is Tupelraum && grundMenge is Tupelraum ->
+        prüfeTupelraumTeilmenge(teilMenge, grundMenge, kontext)
+    teilMenge is KartesischesProdukt && grundMenge is Tupelraum ->
+        prüfeTupelraumTeilmenge(Tupelraum(teilMenge.mengen), grundMenge, kontext)
+    teilMenge is Tupelraum && grundMenge is KartesischesProdukt ->
+        prüfeTupelraumTeilmenge(teilMenge, Tupelraum(grundMenge.mengen), kontext)
+    teilMenge is KartesischesProdukt && grundMenge is KartesischesProdukt ->
+        prüfeTupelraumTeilmenge(Tupelraum(teilMenge.mengen), Tupelraum(grundMenge.mengen), kontext)
     teilMenge is EndlicheMenge && grundMenge is EndlicheMenge -> {
         val wahr = grundMenge.elemente.containsAll(teilMenge.elemente)
         AussageErgebnis(
@@ -317,6 +370,26 @@ fun prüfeTeilmenge(
         }
     }
     else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+}
+
+private fun prüfeTupelraumTeilmenge(
+    teilMenge: Tupelraum,
+    grundMenge: Tupelraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    if (teilMenge.komponenten.size != grundMenge.komponenten.size) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+    }
+    val komponentenPrüfungen = teilMenge.komponenten.zip(grundMenge.komponenten).map { (teil, grund) ->
+        prüfeTeilmenge(teil, grund, kontext)
+    }
+    return when {
+        komponentenPrüfungen.any { it.wahrheitswert == Wahrheitswert.Lüge } ->
+            AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+        komponentenPrüfungen.all { it.wahrheitswert == Wahrheitswert.Wahr } ->
+            AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
 }
 
 data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {

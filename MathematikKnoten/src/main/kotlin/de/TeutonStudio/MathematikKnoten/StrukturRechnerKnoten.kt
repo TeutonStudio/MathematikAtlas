@@ -132,8 +132,8 @@ object StrukturRechnerKnotenVorlagen {
 
 internal fun MathematikAuswerterRegister.registriereStrukturRechnerKnoten() {
     registriere(SKALARPRODUKT_ART) { kontext ->
-        val links = kontext.eingänge["links"]?.objekt ?: error("Linker Eingang fehlt.")
-        val rechts = kontext.eingänge["rechts"]?.objekt ?: error("Rechter Eingang fehlt.")
+        val links = kontext.mathematischerEingang("links", "Linker Skalarproduktoperand")
+        val rechts = kontext.mathematischerEingang("rechts", "Rechter Skalarproduktoperand")
         val linearitaet = runCatching {
             SkalarproduktLinearitaet.valueOf(
                 kontext.knoten.parameter["linearitaet"] ?: SkalarproduktLinearitaet.RECHTSLINEAR.name,
@@ -161,8 +161,8 @@ internal fun MathematikAuswerterRegister.registriereStrukturRechnerKnoten() {
     }
 
     registriere(TENSORPRODUKT_ART) { kontext ->
-        val links = kontext.eingänge["links"]?.objekt ?: error("Linker Eingang fehlt.")
-        val rechts = kontext.eingänge["rechts"]?.objekt ?: error("Rechter Eingang fehlt.")
+        val links = kontext.mathematischerEingang("links", "Linker Tensorproduktoperand")
+        val rechts = kontext.mathematischerEingang("rechts", "Rechter Tensorproduktoperand")
         val wert = when (val ergebnis = tensorprodukt(links, rechts)) {
             is StrukturPruefung.Gueltig -> ergebnis.wert
             is StrukturPruefung.Bedingt -> ergebnis.wert ?: error(ergebnis.bedingungen.joinToString())
@@ -176,7 +176,7 @@ internal fun MathematikAuswerterRegister.registriereStrukturRechnerKnoten() {
     }
 
     registriere(DIMENSIONEN_ART) { kontext ->
-        val objekt = kontext.eingänge["objekt"]?.objekt ?: error("Objekteingang fehlt.")
+        val objekt = kontext.mathematischerEingang("objekt", "Dimensionsobjekt")
         val wert = when (val ergebnis = tensorDimensionen(objekt)) {
             is StrukturPruefung.Gueltig -> ergebnis.wert
             is StrukturPruefung.Bedingt -> ergebnis.wert ?: error(ergebnis.bedingungen.joinToString())
@@ -194,8 +194,8 @@ internal fun MathematikAuswerterRegister.registriereStrukturRechnerKnoten() {
 
     registriere(TensorRechner.KNOTEN_ART) { kontext ->
         val operator = tensorOperator(kontext.knoten.parameter[RECHNER_OPERATOR_PARAMETER])
-        val links = kontext.eingänge["links"]?.objekt
-        val rechts = kontext.eingänge["rechts"]?.objekt
+        val links = kontext.eingänge["links"]?.mathematischesObjekt("Linker Tensorrechner-Eingang")
+        val rechts = kontext.eingänge["rechts"]?.mathematischesObjekt("Rechter Tensorrechner-Eingang")
         val eingaben = when (operator) {
             TensorRechnerOperator.SKALARMULTIPLIKATION -> listOfNotNull(
                 links?.let { TensorRechnerEingabe("skalar", it) },

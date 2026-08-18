@@ -147,7 +147,7 @@ class MethodenAnforderungTest {
 
         val diagnose = assertNotNull(MethodenAnforderung.Zahlenfunktion.prüfe(methode))
         assertTrue(diagnose.contains("Zielmenge"))
-        assertTrue(diagnose.contains("\\mathcal F"))
+        assertTrue(diagnose.contains("\\mathbb H"))
     }
 
     @Test

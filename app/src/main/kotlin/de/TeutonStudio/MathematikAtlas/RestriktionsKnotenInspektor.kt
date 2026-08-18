@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
@@ -28,10 +29,17 @@ internal object RestriktionsKnotenInspektor : KnotenInspektor {
         val menge = ergebnis?.eingänge?.get("menge")?.objekt as? MengenAusdruck
 
         HorizontalDivider()
-        if (knoten.methodenBereichsOperator() == METHODEN_BEREICHS_OPERATOR_ANPASSUNG) {
-            BereichsanpassungsInhalt(knoten, ergebnis, basis, menge, aktionen)
-        } else {
-            RestriktionsInhalt(ergebnis, basis, menge)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (knoten.methodenBereichsOperator() == METHODEN_BEREICHS_OPERATOR_ANPASSUNG) {
+                BereichsanpassungsInhalt(knoten, ergebnis, basis, menge, aktionen)
+            } else {
+                RestriktionsInhalt(ergebnis, basis, menge)
+            }
         }
     }
 }
@@ -119,14 +127,18 @@ private fun BereichsanpassungsInhalt(
             )
 
             if (ergänzungsPaare.isNotEmpty()) {
-                HorizontalDivider()
+                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
                 Text("Geordnete Ergänzungen · erste passende Methode gewinnt", style = MaterialTheme.typography.titleSmall)
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     ergänzungsPaare.forEachIndexed { index, (anschluss, methode) ->
                         val fachErgebnis = diagnose.ergänzungen.getOrNull(index)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(
                                 buildString {
@@ -149,7 +161,7 @@ private fun BereichsanpassungsInhalt(
                                         ),
                                     )
                                 },
-                                contentPadding = PaddingValues(horizontal = 8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                             ) { Text("↑") }
                             OutlinedButton(
                                 enabled = index < ergänzungsPaare.lastIndex,
@@ -162,7 +174,7 @@ private fun BereichsanpassungsInhalt(
                                         ),
                                     )
                                 },
-                                contentPadding = PaddingValues(horizontal = 8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                             ) { Text("↓") }
                         }
                     }
@@ -170,7 +182,7 @@ private fun BereichsanpassungsInhalt(
             }
 
             diagnose.methode?.let { methode ->
-                HorizontalDivider()
+                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
                 Text("Resultierende Fallvorschrift", style = MaterialTheme.typography.titleSmall)
                 Text(
                     methode.alsMathematischeMethode("Darstellung der Bereichsanpassung").zuFallunterscheidungsLatex(),
@@ -218,7 +230,7 @@ private fun DiagnoseZeile(name: String, wert: String) {
         "$name = $wert",
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 1.dp),
+            .padding(vertical = 2.dp),
         style = MaterialTheme.typography.bodySmall,
     )
 }

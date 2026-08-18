@@ -54,7 +54,18 @@ jobs:
         run: ./gradlew :TypSystem:test --stacktrace
 
       - name: MathematikRechenSystem testen
-        run: ./gradlew :MathematikRechenSystem:test --stacktrace
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew :MathematikRechenSystem:test --stacktrace 2>&1 | tee mathekern-ci.log
+
+      - name: Mathematikkern-Fehlerlog bereitstellen
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mathekern-ci-log
+          path: mathekern-ci.log
+          if-no-files-found: ignore
 
       - name: KnotenKartenVerwalter testen
         run: ./gradlew :KnotenKartenVerwalter:testDebugUnitTest --stacktrace

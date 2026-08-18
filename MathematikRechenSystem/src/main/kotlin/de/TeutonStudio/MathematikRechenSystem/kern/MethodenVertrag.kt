@@ -4,93 +4,31 @@ import de.TeutonStudio.TypSystem.TypAusdruck
 import de.TeutonStudio.TypSystem.TypTragend
 
 /**
- * Offener Oberbegriff für methodenartige Werte im Atlas.
+ * Domänenneutraler Oberbegriff für methodenartige Atlaswerte.
  *
- * Eine Methode muss nicht automatisch eine symbolische mathematische Vorschrift
- * besitzen oder durch Variablensubstitution ausführbar sein. Der semantische Typ
- * ist seit G0.2 Teil des gemeinsamen neutralen Typkerns; fremde Methoden können
- * ihn überschreiben, ohne mathematische Auswertungs-Capabilities zu erben.
+ * Der allgemeine Vertrag kennt ausschließlich Name und semantischen Typ. Er setzt
+ * weder [MathematischesObjekt] noch [MengenAusdruck], symbolische Vorschriften oder
+ * mathematische Auswertung voraus. Damit können spätere Script-/Engine-Methoden den
+ * Methodenkanal verwenden, ohne künstlich zu mathematischen Objekten zu werden.
  */
-interface Methode : MathematischesObjekt, TypTragend {
+interface Methode : AtlasWert, TypTragend {
     val name: String
 
-    /** Sichere Minimaldarstellung für Methoden ohne mathematischen Formelrumpf. */
-    override fun zuLatex(): String = name
-
-    /** Allgemeiner Typkanal für Mathematik-, Script- und spätere Engine-Methoden. */
     override val typAusdruck: TypAusdruck
         get() = methodenTypAusdruck()
+}
 
-    /*
-     * Quellkompatible mathematische Übergangsoberfläche. Diese Eigenschaften sind
-     * absichtlich nicht abstrakt: Eine neue Domänenmethode implementiert weiterhin
-     * nur den kleinen Obervertrag. MathematischeMethode überschreibt alle Member mit
-     * echten Daten. Fachcode soll neue Typanforderungen über [typAusdruck] ausdrücken.
-     */
-    val parameter: List<MethodenParameter>
-        get() = alsMathematischeMethode("mathematische Parameter").parameter
-
-    val vorschrift: MathematischesObjekt
-        get() = alsMathematischeMethode("eine symbolische Vorschrift").vorschrift
-
-    val zielMenge: MengenAusdruck
-        get() = alsMathematischeMethode("eine mathematische Zielmenge").zielMenge
-
-    val werteVorräte: Map<String, MengenAusdruck>
-        get() = alsMathematischeMethode("mathematische Wertevorräte").werteVorräte
-
-    val ausgabeNamen: List<String>
-        get() = alsMathematischeMethode("mathematische Ausgaben").ausgabeNamen
-
-    val effektiverWerteVorrat: MengenAusdruck?
-        get() = alsMathematischeMethode("einen mathematischen Wertevorrat").effektiverWerteVorrat
-
-    fun vorschriftFür(ausgabe: String): MathematischesObjekt =
-        alsMathematischeMethode("eine symbolische Vorschrift").vorschriftFür(ausgabe)
-
-    fun zielMengeFür(ausgabe: String): MengenAusdruck =
-        alsMathematischeMethode("eine mathematische Zielmenge").zielMengeFür(ausgabe)
-
-    fun zielMengeFür(
-        ausgabe: String,
-        bindungen: Map<String, MathematischesObjekt>,
-    ): MengenAusdruck = alsMathematischeMethode("eine mathematische Zielmenge")
-        .zielMengeFür(ausgabe, bindungen)
-
-    val einzigeZielMenge: MengenAusdruck
-        get() = alsMathematischeMethode("eine mathematische Zielmenge").einzigeZielMenge
-
-    val grundMenge: MengenAusdruck
-        get() = alsMathematischeMethode("eine mathematische Grundmenge").grundMenge
-
-    fun grundMengeFürMengenAusgabe(): MengenAusdruck =
-        alsMathematischeMethode("eine mengenwertige mathematische Vorschrift").grundMengeFürMengenAusgabe()
-
-    fun binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode =
-        alsMathematischeMethode("symbolische Parameterbindung").binde(bindungen)
-
-    fun wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt =
-        alsMathematischeMethode("mathematische Auswertung").wendeAn(argumente)
-
-    fun wendeAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
-        val auswertbar = this as? MathematischAuswertbareMethode
-            ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
-        return auswertbar.wendeMathematischAn(argumente)
-    }
-
-    fun einzigeAusgabe(): Pair<String, MathematischesObjekt> =
-        alsMathematischeMethode("eine symbolische mathematische Ausgabe").einzigeAusgabe()
-
-    fun prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> =
-        alsMathematischeMethode("mathematische Iteration").prüfeAlsIterationsMethode(erwartetMengenwert)
+/** Capability für Methoden mit neutraler, ausschließlich typbasierter Signatur. */
+interface SignaturtragendeMethode : Methode {
+    val signatur: MethodenSignatur
 }
 
 /**
- * Capability für Methoden, die die heutige mathematische [MethodenSignatur]
- * bereitstellen. Sie liefert über G0.2 automatisch einen strukturierten Methodentyp.
+ * Zusätzliche Capability ausschließlich für mathematische Mengen-/Raumsemantik.
+ * Typinformation und mathematische Definitions-/Zielmengen bleiben dadurch getrennt.
  */
-interface SignaturtragendeMethode : Methode {
-    val signatur: MethodenSignatur
+interface MathematischeSignaturtragendeMethode : Methode {
+    val mathematischeSignatur: MathematischeMethodenSignatur
 }
 
 /**
@@ -103,26 +41,30 @@ interface BereichsanpassungsTragendeMethode : Methode {
         get() = null
 }
 
-/** Quellkompatible Projektion der optionalen Bereichsanpassungs-Herkunft. */
+/** Projektion der optionalen Bereichsanpassungs-Herkunft. */
 val Methode.bereichsanpassung: MethodenBereichsanpassung?
     get() = (this as? BereichsanpassungsTragendeMethode)?.bereichsanpassung
 
 /**
- * Capability für Methoden, die der Mathematikkern rein durch Bindung mathematischer
- * Argumente auswerten darf. Script- oder Engine-Methoden dürfen diese Capability
- * ausdrücklich nicht allein aufgrund von [Methode] erhalten.
+ * Capability für Methoden, die der Mathematikkern auswerten darf.
  *
- * Die zusätzliche Herkunfts-Capability ist ein Übergangsvertrag für die konkrete
- * Mathematikimplementierung; ihr Default ist leer und sie erweitert [Methode] nicht.
+ * Die kanonische Auswertung ist immer `Tupel -> Tupel`. Die namenbasierte Variante
+ * bleibt als gezielter Legacy-Adapter bestehen, solange ältere Mathematikoperatoren
+ * noch skalare Einzelausgaben erwarten.
  */
-interface MathematischAuswertbareMethode : SignaturtragendeMethode, BereichsanpassungsTragendeMethode {
+interface MathematischAuswertbareMethode :
+    SignaturtragendeMethode,
+    MathematischeSignaturtragendeMethode,
+    BereichsanpassungsTragendeMethode,
+    MathematischesObjekt {
+    fun wendeKanonischMathematischAn(argumente: Tupel): Tupel
     fun wendeMathematischAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt
 }
 
 /**
  * Liefert die konkrete mathematische Implementierung oder einen fachlich eindeutigen
- * Fehler. Strukturierte mathematische Methodenoperatoren werden an dieser expliziten
- * Mathematikgrenze materialisiert; der allgemeine [Methode]-Vertrag erfährt davon nichts.
+ * Fehler. Strukturierte mathematische Methodenoperatoren werden nur an dieser Grenze
+ * materialisiert; der allgemeine [Methode]-Vertrag erfährt davon nichts.
  */
 fun Methode.alsMathematischeMethode(operation: String = "diese Operation"): MathematischeMethode = when (this) {
     is MathematischeMethode -> this
@@ -131,7 +73,89 @@ fun Methode.alsMathematischeMethode(operation: String = "diese Operation"): Math
     else -> error("Die Methode '$name' unterstützt $operation nicht als symbolische mathematische Methode.")
 }
 
-/** Quellkompatibler kanonischer Konstruktor für bestehende Aufrufer. */
+/*
+ * Zentral gebündelte mathematische Legacy-Projektionen.
+ *
+ * Sie sind absichtlich Extension-Adapter und damit NICHT Teil des allgemeinen
+ * Methode-Vertrags. Bestehender Mathematikcode kann schrittweise migriert werden;
+ * neuer generischer Graph-/Scriptcode soll diese Adapter nicht verwenden.
+ */
+
+@Deprecated("Mathematische Legacy-Projektion; verwende MathematischeSignaturtragendeMethode.mathematischeSignatur.")
+val Methode.parameter: List<MethodenParameter>
+    get() = alsMathematischeMethode("mathematische Parameter").parameter
+
+@Deprecated("Mathematische Legacy-Projektion; verwende die kanonische Vorschrift der mathematischen Methode.")
+val Methode.vorschrift: MathematischesObjekt
+    get() = alsMathematischeMethode("eine symbolische Vorschrift").vorschrift
+
+@Deprecated("Mathematische Legacy-Projektion; verwende mathematischeSignatur.zielRaum bzw. zielMengeFür().")
+val Methode.zielMenge: MengenAusdruck
+    get() = alsMathematischeMethode("eine mathematische Zielmenge").zielMenge
+
+@Deprecated("Mathematische Legacy-Projektion; verwende mathematischeSignatur.argumente.")
+val Methode.werteVorräte: Map<String, MengenAusdruck>
+    get() = alsMathematischeMethode("mathematische Definitionsmengen").werteVorräte
+
+@Deprecated("Mathematische Legacy-Projektion; verwende mathematischeSignatur.ergebnisse.")
+val Methode.ausgabeNamen: List<String>
+    get() = alsMathematischeMethode("mathematische Ausgaben").ausgabeNamen
+
+@Deprecated("Umbenannt; verwende mathematischeSignatur.effektiverDefinitionsRaum.")
+val Methode.effektiverWerteVorrat: MengenAusdruck?
+    get() = alsMathematischeMethode("einen mathematischen Definitionsraum").effektiverWerteVorrat
+
+@Deprecated("Mathematische Legacy-Projektion; verwende die konkrete mathematische Capability.")
+fun Methode.vorschriftFür(ausgabe: String): MathematischesObjekt =
+    alsMathematischeMethode("eine symbolische Vorschrift").vorschriftFür(ausgabe)
+
+fun Methode.zielMengeFür(ausgabe: String): MengenAusdruck =
+    alsMathematischeMethode("eine mathematische Zielmenge").zielMengeFür(ausgabe)
+
+fun Methode.zielMengeFür(
+    ausgabe: String,
+    bindungen: Map<String, MathematischesObjekt>,
+): MengenAusdruck = alsMathematischeMethode("eine mathematische Zielmenge")
+    .zielMengeFür(ausgabe, bindungen)
+
+val Methode.einzigeZielMenge: MengenAusdruck
+    get() = alsMathematischeMethode("eine mathematische Zielmenge").einzigeZielMenge
+
+@Deprecated("Mathematische Legacy-Projektion; nur für mengenwertige Iterationsmethoden.")
+val Methode.grundMenge: MengenAusdruck
+    get() = alsMathematischeMethode("eine mathematische Grundmenge").grundMenge
+
+fun Methode.grundMengeFürMengenAusgabe(): MengenAusdruck =
+    alsMathematischeMethode("eine mengenwertige mathematische Vorschrift").grundMengeFürMengenAusgabe()
+
+fun Methode.binde(bindungen: Map<String, MathematischesObjekt>): GebundeneMethode =
+    alsMathematischeMethode("symbolische Parameterbindung").binde(bindungen)
+
+/** Historische skalare Projektion für bestehende Mathematikoperatoren. */
+fun Methode.wendeAn(argumente: List<MathematischesObjekt>): MathematischesObjekt =
+    alsMathematischeMethode("mathematische Auswertung").wendeAn(argumente)
+
+/** Historische namenbasierte Projektion für bestehende Mathematikoperatoren. */
+fun Methode.wendeAn(argumente: Map<String, MathematischesObjekt>): MathematischesObjekt {
+    val auswertbar = this as? MathematischAuswertbareMethode
+        ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
+    return auswertbar.wendeMathematischAn(argumente)
+}
+
+/** Kanonische mathematische Anwendung, unabhängig von der Zahl der Komponenten. */
+fun Methode.wendeKanonischAn(argumente: Tupel): Tupel {
+    val auswertbar = this as? MathematischAuswertbareMethode
+        ?: error("Die Methode '$name' besitzt keine mathematische Auswertungs-Capability.")
+    return auswertbar.wendeKanonischMathematischAn(argumente)
+}
+
+fun Methode.einzigeAusgabe(): Pair<String, MathematischesObjekt> =
+    alsMathematischeMethode("eine symbolische mathematische Ausgabe").einzigeAusgabe()
+
+fun Methode.prüfeAlsIterationsMethode(erwartetMengenwert: Boolean): Pair<String, MathematischesObjekt> =
+    alsMathematischeMethode("mathematische Iteration").prüfeAlsIterationsMethode(erwartetMengenwert)
+
+/** Quellkompatibler Konstruktor für bestehende Mathematikaufrufer. */
 @Suppress("FunctionName")
 fun Methode(
     name: String,
@@ -153,7 +177,7 @@ fun Methode(
     bereichsanpassung = bereichsanpassung,
 )
 
-/** Quellkompatibler historischer Konstruktor ausschließlich für Lademigrationen/Testdaten. */
+/** Historischer Konstruktor ausschließlich für Lademigrationen/Testdaten. */
 @Deprecated("Nur für historische Daten; verwende den kanonischen Methoden-Konstruktor.")
 @Suppress("FunctionName")
 fun Methode(
@@ -173,7 +197,7 @@ fun Methode(
 /**
  * `copy` kann wegen der von Kotlin generierten Data-Class-Methode nicht Bestandteil
  * des Interface sein. Für statisch als Methode typisierte mathematische Werte bleibt
- * deshalb genau dieser eine Übergangsadapter bestehen.
+ * deshalb genau dieser zentrale Übergangsadapter bestehen.
  */
 fun Methode.copy(
     name: String = this.name,

@@ -10,7 +10,10 @@ internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
         val rechts = k.eingänge["rechts"] ?: error("Rechte Seite fehlt.")
         KnotenAuswertungsErgebnis(mapOf(
             "aussage" to BedingterWert(
-                objekt = Ungleichheit(links.objekt, rechts.objekt),
+                objekt = Ungleichheit(
+                    links.mathematischesObjekt("Linke Seite der Ungleichheit"),
+                    rechts.mathematischesObjekt("Rechte Seite der Ungleichheit"),
+                ),
                 annahmen = links.annahmen + rechts.annahmen,
                 latexDarstellung = "${links.anzeigeLatex()} \\neq ${rechts.anzeigeLatex()}",
             ),
@@ -72,7 +75,11 @@ internal fun MathematikAuswerterRegister.registriereDivisionUndKehrwert() {
                 quotientWert to quotientWert.annahmen
             } else {
                 BedingterWert(
-                    objekt = FallAusdruck(nullErsatz.objekt, divisorNull, quotient),
+                    objekt = FallAusdruck(
+                        nullErsatz.mathematischesObjekt("Ersatzwert für Nenner 0"),
+                        divisorNull,
+                        quotient,
+                    ),
                     annahmen = annahmen,
                     reelleVariablen = reelle,
                     variablenQuellen = quellen,

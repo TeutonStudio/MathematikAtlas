@@ -103,8 +103,9 @@ internal fun MathematikAuswerterRegister.registrierePraedikatKnoten() {
 
         val argumentRollen = relation?.argumente?.map { it.rolle } ?: axiom!!.argumente.map { it.rolle }
         val argumente = argumentRollen.associateWith { rolle ->
-            kontext.eingänge[rolle]?.objekt
-                ?: error("Für '${relation?.titel ?: axiom?.titel}' fehlt der Eingang '$rolle'.")
+            kontext.eingänge[rolle]?.mathematischesObjekt(
+                "Prädikatseingang '$rolle' für '${relation?.titel ?: axiom?.titel}'",
+            ) ?: error("Für '${relation?.titel ?: axiom?.titel}' fehlt der Eingang '$rolle'.")
         }
         val aussage = relation?.werteAus(argumente) ?: axiom!!.werteAus(argumente)
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
