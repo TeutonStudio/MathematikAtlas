@@ -26,4 +26,4 @@ Pfad-READMEs sind Orientierung. Bei Widerspruch gilt der nachweisbare Code- und 
 - `scripts/`: Repository-, Release- und Strukturprüfungen
 - `.github/`: GitHub-Automation und CI
 
-Die lokalen READMEs in `.agents/` und `.codex/` werden in einem separaten Schritt ergänzt, da der GitHub-Connector direkte Schreibaktionen dort derzeit blockiert.
+Lokale Verantwortungs-READMEs für `.agents/` und `.codex/` sind weiterhin ein eigener Strukturbaustein und werden getrennt von einzelnen neuen Agenten oder Skills gepflegt.
