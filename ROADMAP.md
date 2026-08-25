@@ -40,6 +40,8 @@ Geplant sind Kotlin- und Java-Strukturen, Quellcodeerzeugung und formale Darstel
 
 Geplant sind Godot-Szenen, GDScript und ein Orchestrator als wiederverwendbare Vorlage für interaktive Anwendungen.
 
+Für die Godot-Implementierung gelten **Godots Scene Graph und der Orchestrator als Architekturvorlagen**. Szenen-, Knoten-, Hierarchie- und Lebenszyklusstrukturen sollen sich am Scene Graph orientieren; die übergeordnete Koordination von Szenen, Abläufen und Bindungen soll sich am Orchestrator-Muster orientieren. Diese Vorlagen werden über Adapter an den domänenneutralen Atlas-Kern angebunden und dürfen dessen allgemeine Werte- und Methodenverträge nicht von Godot abhängig machen.
+
 ### v8.y.x – Godot-Erweiterungen
 
 Geplant sind Integrationen für NobodyWho, Voxel Tools, LimboAI und weitere spezialisierte Godot-Systeme.
