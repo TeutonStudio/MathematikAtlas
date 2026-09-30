@@ -58,6 +58,22 @@ Ein Gruppenknoten enthält lediglich einen generischen `KartenVerweis`. Erst der
 
 `DefinierteMenge` beschreibt Mengen mit gebundenen Variablen, Grundmengen und einer `Aussage`. `freieVariablen()` entfernt gebundene Namen zentral rekursiv; die Substitution von Aussagen bleibt strukturerhaltend. Der Knoten „Lineare Gleichung lösen“ bleibt ein spezieller linearer Löser, während „Lösungsmenge“ eine Aussage ohne Lösungsalgorithmus als symbolische `DefinierteMenge` repräsentiert.
 
+## Godot-Architekturvorlage
+
+Für die geplante Godot-Integration gelten **Godots Scene Graph und der Orchestrator als verbindliche Architekturvorlagen**.
+
+Der Scene Graph dient als Referenz für:
+
+- hierarchische Szenen- und Knotenstrukturen,
+- Eltern-Kind-Beziehungen und Besitzverhältnisse,
+- Lebenszyklus und Instanziierung,
+- wiederverwendbare Teilbäume beziehungsweise Szenen,
+- die Zuordnung von Verhalten und Zustand zu konkreten Laufzeitobjekten.
+
+Der Orchestrator dient als Referenz für die übergeordnete Koordination solcher Laufzeitstrukturen, insbesondere für das Erzeugen und Verbinden von Szenen, das Steuern von Abläufen, das Binden von Atlas-Werten an Godot-Objekte und die Koordination zwischen mehreren beteiligten Systemen.
+
+Diese Vorlagen definieren die Godot-seitige Integrationsarchitektur, **nicht** den allgemeinen Atlas-Kern. `MathematikRechenSystem`, allgemeine Laufzeitwerte, Methodenverträge und der generische Karteneditor bleiben engine-neutral. Godot-spezifische `Node`-, `Resource`-, `PackedScene`-, Script- oder Animationswerte werden über eigene Adapter und Laufzeittypen angebunden und dürfen nicht künstlich zu mathematischen Objekten oder Mengen gemacht werden.
+
 ## Erweiterung
 
 Ein neues mathematisches Konzept benötigt gewöhnlich:

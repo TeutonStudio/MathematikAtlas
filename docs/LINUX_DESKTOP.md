@@ -10,6 +10,18 @@ Das Desktopziel verwendet denselben Rechenkern, dieselben Knotenvorlagen, densel
 ./gradlew :desktopApp:packageRpm
 ```
 
+Unter Linux ergänzt `:desktopApp:run` fehlende grafische Sitzungsvariablen (`DISPLAY`, `XAUTHORITY`, `WAYLAND_DISPLAY`, `XDG_SESSION_TYPE`) aus `systemctl --user show-environment`. Das behebt insbesondere Starts aus Android Studio oder aus einem bereits laufenden Gradle-Daemon, der die aktuelle GNOME-/Wayland-Sitzung nicht vollständig geerbt hat. Bereits vorhandene, brauchbare Variablen haben Vorrang, damit beispielsweise SSH-X11-Forwarding erhalten bleibt.
+
+Fehlt auch in der systemd-Benutzersitzung ein `DISPLAY`, bricht der Task mit einer gezielten Fehlermeldung ab. Zur Diagnose:
+
+```bash
+echo "DISPLAY=$DISPLAY"
+echo "XAUTHORITY=$XAUTHORITY"
+systemctl --user show-environment | grep -E '^(DISPLAY|XAUTHORITY|WAYLAND_DISPLAY|XDG_SESSION_TYPE)='
+```
+
+Für Android Studio liegt die gemeinsame Run-Konfiguration **MathematikAtlas Desktop** im Projekt. Sie startet denselben Gradle-Task `:desktopApp:run`; zusätzliche manuelle Umgebungsvariablen in der IDE sind damit normalerweise nicht nötig.
+
 Das RPM liegt anschließend unter `desktopApp/build/compose/binaries/main/rpm`. Karten werden in `$XDG_DATA_HOME/MathematikAtlas` oder, wenn die Variable fehlt, in `~/.local/share/MathematikAtlas` versioniert und atomar gespeichert.
 
 ## Eingabevertrag
