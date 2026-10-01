@@ -19,8 +19,10 @@ Diese Dateien bilden das versionierte Projektgedächtnis und den Arbeitsablauf f
 | `/.codex/config.toml` | projektweite Multi-Agent-Konfiguration, sofern lokal benötigt |
 | `/.codex/agents/` | Codex-Subagenten einschließlich `master_verwalter` |
 | `/.codex/agents/issue-verwalter.toml` | klärt Anforderungen, erstellt Issues und pflegt den kanonischen technischen Lösungsplan |
+| `/.codex/agents/readme-lokalisierer.toml` | erstellt und synchronisiert die mehrsprachige öffentliche README-Struktur |
 | `/.agents/skills/neuer-knoten/SKILL.md` | wiederverwendbarer Ablauf für neue Knoten |
 | `/.agents/skills/release-verwalten/SKILL.md` | verbindlicher Ablauf für Versionen, Branches und `master`-Integration |
+| `/.agents/skills/readme-lokalisieren/SKILL.md` | wiederverwendbarer Ablauf für README-Sprachverzeichnis und synchronisierte Übersetzungen |
 | `/release/roadmap.toml` | maschinenlesbarer Versions- und Releasezustand |
 | `/docs/codex/RELEASE_WORKFLOW.md` | Branchmodell, Versionsregeln und Integrationsablauf |
 | `/docs/codex/PROJECT_CONTEXT.md` | stabile Produkt- und Begriffsgrundlage |
@@ -59,6 +61,18 @@ Danach lässt sich die Konfiguration prüfen:
 ```text
 Fasse die geladenen Repository-Anweisungen zusammen. Nenne die verfügbaren projektspezifischen Subagenten und Skills. Ändere keine Dateien.
 ```
+
+## README lokalisieren
+
+Für eine neue oder zu synchronisierende mehrsprachige Projekt-README verwende:
+
+```text
+$readme-lokalisieren
+
+Erstelle beziehungsweise synchronisiere die öffentliche README-Struktur. README.md soll ausschließlich das Sprachverzeichnis enthalten. Deutsch über README_ger.md steht zuerst, Englisch über README_eng.md an zweiter Stelle. Halte alle vorhandenen Sprachfassungen inhaltlich gleichwertig und prüfe ihre Links und technischen Beispiele gegen das Repository.
+```
+
+Der Subagent `readme_lokalisierer` übernimmt denselben Auftrag als schreibende Dokumentationsrolle. Standardmäßig ist `README_ger.md` die kanonische Inhaltsfassung; weitere Sprachen werden nur übernommen, wenn sie bereits existieren oder ausdrücklich angefordert wurden.
 
 ## Release prüfen oder beginnen
 
