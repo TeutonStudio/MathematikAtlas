@@ -13,3 +13,4 @@ Priorisierte nächste Schritte:
 7. Compose-UI-Tests für Drag, Verbindungserstellung, Breadcrumbs und Dateidialoge erweitern.
 8. Den R³-Sampler von der aktuellen Oberflächen-Punktwolke auf Marching Cubes oder Marching Tetrahedra erweitern und perspektivische Projektion ergänzen.
 9. Weitere Mengenformen und farbcodierende Ausdrücke ergänzen; die erste Visualisierung unterstützt eine zusätzliche gebundene Variable als kontinuierlichen Farbkanal.
+10. Die Godot-Grundintegration so vorbereiten, dass **Godots Scene Graph und der Orchestrator als Architekturvorlagen** dienen: Scene-Graph-Strukturen bilden die Referenz für Szenen, Knoten, Hierarchien und Lebenszyklen; der Orchestrator bildet die Referenz für übergeordnete Ablauf-, Bindungs- und Szenenkoordination. Die Umsetzung erfolgt über engine-spezifische Adapter, ohne den allgemeinen Werte-, Methoden- oder Kartenkern an Godot zu koppeln.
