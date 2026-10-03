@@ -22,13 +22,13 @@ class BildmengeSynchronisierungTest {
             parameter = mapOf(BILDMENGE_ARGUMENT_MODUS to BILDMENGE_MODUS_EINZELMENGEN),
         )
         val auswertung = KartenAuswertungsErgebnis(
-            knoten = mapOf(
+            mapOf(
                 knoten.id to KnotenAuswertungsErgebnis(
                     ausgaben = emptyMap(),
                     eingänge = mapOf("methode" to BedingterWert(methode)),
                 ),
             ),
-            fehler = emptyList(),
+            emptyList(),
         )
 
         val einmal = synchronisiereBildmengenAnschlüsse(KartenDaten(name = "Test", knoten = listOf(knoten)), auswertung)
