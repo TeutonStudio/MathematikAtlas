@@ -220,14 +220,14 @@ private fun enthältNumerisch(
 ): NumerischesErgebnis<Boolean> = when (menge) {
     LeereMenge -> NumerischesErgebnis.Wert(false)
     ReelleZahlen, RationaleZahlen, KomplexeZahlen -> NumerischesErgebnis.Wert(wert.isFinite())
-    GanzeZahlen -> NumerischesErgebnis.Wert(istNaheGanzzahl(wert, optionen.toleranz))
+    GanzeZahlen -> NumerischesErgebnis.Wert(wert.isFinite() && wert == round(wert))
     NatürlicheZahlen -> NumerischesErgebnis.Wert(
-        wert >= -optionen.toleranz && istNaheGanzzahl(wert, optionen.toleranz),
+        wert.isFinite() && wert >= 1.0 && wert == round(wert),
     )
     is ReellesIntervall -> wertIntern(menge.links, umgebung, optionen).flatMap { links ->
         wertIntern(menge.rechts, umgebung, optionen).map { rechts ->
-            val linksErfüllt = if (menge.linksOffen) wert > links + optionen.toleranz else wert >= links - optionen.toleranz
-            val rechtsErfüllt = if (menge.rechtsOffen) wert < rechts - optionen.toleranz else wert <= rechts + optionen.toleranz
+            val linksErfüllt = if (menge.linksOffen) wert > links else wert >= links
+            val rechtsErfüllt = if (menge.rechtsOffen) wert < rechts else wert <= rechts
             linksErfüllt && rechtsErfüllt
         }
     }
@@ -240,7 +240,7 @@ private fun enthältNumerisch(
                 is NumerischesErgebnis.Fehler -> return ergebnis
             }
         }
-        NumerischesErgebnis.Wert(elemente.any { abs(it - wert) <= optionen.toleranz })
+        NumerischesErgebnis.Wert(elemente.any { it == wert })
     }
     is Vereinigung -> enthältMindestensEine(menge.mengen, wert, umgebung, optionen)
     is Schnitt -> enthältAlle(menge.mengen, wert, umgebung, optionen)

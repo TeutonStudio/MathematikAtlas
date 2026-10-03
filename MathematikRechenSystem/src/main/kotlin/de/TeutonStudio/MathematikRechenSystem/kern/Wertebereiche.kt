@@ -119,6 +119,7 @@ private fun inferiereElementMenge(
     is DefinierteMenge -> if (menge.variablen.size == 1) menge.variablen.single().grundMenge
         else Tupelraum(menge.variablen.map { it.grundMenge })
     is GefilterteMenge -> inferiereElementMenge(menge.menge, werteVorräte, annahmen)
+    is OrbitBeschraenktheitsMenge -> inferiereElementMenge(menge.parameterRaum, werteVorräte, annahmen)
     is MengenParameter -> error(
         "Für die Mengenvariable '${menge.name}' ist keine Element- oder Obermenge festgelegt.",
     )

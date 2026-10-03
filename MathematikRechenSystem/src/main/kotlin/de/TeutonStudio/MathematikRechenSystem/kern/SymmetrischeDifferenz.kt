@@ -21,8 +21,15 @@ fun symmetrischeDifferenz(
     links == LeereMenge -> rechts
     rechts == LeereMenge -> links
     links is EndlicheMenge && rechts is EndlicheMenge -> {
-        val elemente = (links.elemente - rechts.elemente) + (rechts.elemente - links.elemente)
-        if (elemente.isEmpty()) LeereMenge else EndlicheMenge(elemente)
+        val a = mengenDifferenz(links, rechts)
+        val b = mengenDifferenz(rechts, links)
+        if (a is EndlicheMenge && b is EndlicheMenge) {
+            val elemente = a.elemente + b.elemente
+            if (elemente.isEmpty()) LeereMenge else EndlicheMenge(elemente)
+        } else {
+            val (erster, zweiter) = listOf(links, rechts).sortedBy(::strukturellerSchlüssel)
+            SymmetrischeDifferenz(erster, zweiter)
+        }
     }
     else -> {
         val (erster, zweiter) = listOf(links, rechts).sortedBy(::strukturellerSchlüssel)

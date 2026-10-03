@@ -37,6 +37,22 @@ data class Gleichheit(val links: MathematischesObjekt, val rechts: Mathematische
         val r = if (rechts is ZahlAusdruck) vereinfache(rechts, kontext) else rechts
         return when {
             l == r -> AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen, "Beide Seiten sind identisch.")
+            l is WahrheitsKonstante && r is WahrheitsKonstante ->
+                AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+            l is Tupel && r is Tupel -> if (l.elemente.size != r.elemente.size) {
+                AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+            } else Konjunktion(l.elemente.zip(r.elemente).map { (a, b) -> Gleichheit(a, b) }).entscheide(kontext)
+            l is KomplexeZahl && r is KomplexeZahl -> Konjunktion(
+                listOf(Gleichheit(l.realteil, r.realteil), Gleichheit(l.imaginärteil, r.imaginärteil)),
+            ).entscheide(kontext)
+            l is KomplexeZahl && r is RationaleZahl -> Konjunktion(
+                listOf(Gleichheit(l.realteil, r), Gleichheit(l.imaginärteil, RationaleZahl.Null)),
+            ).entscheide(kontext)
+            l is RationaleZahl && r is KomplexeZahl -> Konjunktion(
+                listOf(Gleichheit(l, r.realteil), Gleichheit(RationaleZahl.Null, r.imaginärteil)),
+            ).entscheide(kontext)
+            l is ZahlAusdruck && r is Tupel || l is Tupel && r is ZahlAusdruck ->
+                AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Skalar und Tupel haben verschiedene Träger.")
             l is RationaleZahl && r is RationaleZahl -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
             l is ZahlAusdruck && r is MengenAusdruck || l is MengenAusdruck && r is ZahlAusdruck ->
                 AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Eine Zahl kann nicht mit einer Menge gleich sein.")

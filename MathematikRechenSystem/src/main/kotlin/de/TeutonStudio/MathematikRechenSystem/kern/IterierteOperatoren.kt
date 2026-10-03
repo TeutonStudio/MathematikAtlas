@@ -40,7 +40,7 @@ data class IterierteDisjunktion(val methode: Methode, val indexMenge: MengenAusd
 
 data class IterierteAdjunktion(val methode: Methode, val indexMenge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis =
-        if (indexMenge is EndlicheMenge) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion).entscheide(kontext)
+        if (indexMenge is EndlicheMenge && eindeutigeEndlicheElemente(indexMenge) != null) iteriereAussagen(methode, indexMenge, IterierteAussagenArt.Adjunktion).entscheide(kontext)
         else symbolischeAussagenIteration()
 
     override fun zuLatex() = iterationsLatex("\\mathop{\\stackrel{\\bullet}{\\bigvee}}", methode, indexMenge)
@@ -78,8 +78,9 @@ private fun iteriereZahlen(methode: Methode, indexMenge: MengenAusdruck, produkt
     methode.prüfeAlsIterationsMethode(erwartetMengenwert = false)
     if (indexMenge == LeereMenge) return if (produkt) RationaleZahl.Eins else RationaleZahl.Null
     if (indexMenge !is EndlicheMenge) return if (produkt) IteriertesProdukt(methode, indexMenge) else IterierteSumme(methode, indexMenge)
-    val parameter = methode.parameter.single()
-    val werte = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
+    val elemente = eindeutigeEndlicheElemente(indexMenge)
+        ?: return if (produkt) IteriertesProdukt(methode, indexMenge) else IterierteSumme(methode, indexMenge)
+    val werte = elemente.map { index ->
         val zahl = index as? ZahlAusdruck ?: error("Die Indexmenge der Methode '${methode.name}' muss Zahlen enthalten.")
         methode.wendeAn(listOf(zahl)) as? ZahlAusdruck
             ?: error("Die Methode '${methode.name}' liefert keinen Zahlwert.")
@@ -94,7 +95,7 @@ fun iteriertesKartesischesProdukt(methode: Methode, indexMenge: MengenAusdruck):
     if (indexMenge == LeereMenge) return leeresIndexProdukt()
     if (indexMenge !is EndlicheMenge) return IteriertesKartesischesProdukt(methode, indexMenge)
     val parameter = methode.parameter.single()
-    val indexe = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
+    val indexe = (eindeutigeEndlicheElemente(indexMenge) ?: return IteriertesKartesischesProdukt(methode, indexMenge)).map { index ->
         index as? ZahlAusdruck ?: error("Die Indexmenge muss Zahlen enthalten.")
     }
     if (indexe.isEmpty()) return leeresIndexProdukt()
@@ -179,7 +180,10 @@ private fun iteriereAussagen(
         IterierteAussagenArt.Adjunktion -> IterierteAdjunktion(methode, indexMenge)
     }
     val parameter = methode.parameter.single()
-    val aussagen = indexMenge.elemente.sortedBy(::strukturellerSchlüssel).map { index ->
+    val elemente = if (art == IterierteAussagenArt.Adjunktion) {
+        eindeutigeEndlicheElemente(indexMenge) ?: return IterierteAdjunktion(methode, indexMenge)
+    } else indexMenge.elemente.sortedBy(::strukturellerSchlüssel)
+    val aussagen = elemente.map { index ->
         methode.wendeAn(listOf(index)) as? Aussage
             ?: error("Die Methode '${methode.name}' liefert keine Aussage.")
     }

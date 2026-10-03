@@ -1,8 +1,13 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
+import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.MathematikKartenLaufzeit
+import de.TeutonStudio.MathematikRechenSystem.kern.OrbitBeschraenktheitsMenge
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class BeispielKartenTest {
@@ -35,5 +40,18 @@ class BeispielKartenTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun `Mandelbrot Beispiel bleibt eine ausführbare generische Orbitkarte`() {
+        val karte = BeispielKarten.alle().single { it.name == "Mandelbrot-Menge als Orbitfamilie" }
+        assertEquals(karte, KartenJson.lese(KartenJson.schreibe(karte)))
+        val ergebnis = MathematikKartenLaufzeit().auswerten(karte)
+
+        assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
+        val mengenKnoten = karte.knoten.single { it.art == MathematikKnotenVorlagen.OrbitBeschraenktheit.art }
+        assertIs<OrbitBeschraenktheitsMenge>(
+            ergebnis.knoten.getValue(mengenKnoten.id).ausgaben.getValue("menge").objekt,
+        )
     }
 }
