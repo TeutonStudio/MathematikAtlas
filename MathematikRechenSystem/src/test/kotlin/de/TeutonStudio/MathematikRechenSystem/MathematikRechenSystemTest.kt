@@ -106,13 +106,10 @@ class MathematikRechenSystemTest {
         assertEquals(elemente, bildeAb(elemente, identität))
     }
 
-    @Test fun abbildBenötigtEineEinwertigeMethode() {
+    @Test fun abbildBenötigtGenauEineÖffentlicheAusgabe() {
         val a = AllgemeinerParameter("a")
         val menge = EndlicheMenge(setOf(WahrheitsKonstante(true)))
 
-        assertFailsWith<IllegalArgumentException> {
-            bildeAb(menge, Methode("f", listOf(a, AllgemeinerParameter("b")), mapOf("wert" to a)))
-        }
         assertFailsWith<IllegalArgumentException> {
             bildeAb(menge, Methode("g", listOf(a), mapOf("links" to a, "rechts" to a)))
         }
