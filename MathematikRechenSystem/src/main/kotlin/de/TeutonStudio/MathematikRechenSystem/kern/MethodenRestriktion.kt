@@ -315,19 +315,6 @@ private fun prüfeErgänzungsBild(
     return prüfeTeilmenge(Abbild(effektiverBereich, methode), zielMenge, kontext)
 }
 
-private fun MathematischeMethode.wendeAufGesamtArgumentAn(argument: MathematischesObjekt): MathematischesObjekt = when (parameter.size) {
-    0 -> wendeAn(emptyList())
-    1 -> wendeAn(listOf(argument))
-    else -> {
-        val tupel = argument as? Tupel
-            ?: error("Eine mehrstellige Methode benötigt im Gesamtwertebereich Tupelargumente.")
-        require(tupel.elemente.size == parameter.size) {
-            "Das Tupelargument besitzt ${tupel.elemente.size} Komponenten, benötigt werden ${parameter.size}."
-        }
-        wendeAn(tupel.elemente)
-    }
-}
-
 private fun priorisierteVorschrift(anpassung: MethodenBereichsanpassung): MathematischesObjekt {
     if (anpassung.ergänzungen.isEmpty()) return anpassung.basis.vorschrift
 
