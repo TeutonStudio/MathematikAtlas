@@ -554,7 +554,24 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.abbild") { k ->
             val methode = k.eingänge["methode"]?.objekt as? Methode ?: error("Methode fehlt.")
-            KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(bildeAb(k.menge("menge"), methode), annahmen(k))))
+            val mathematisch = methode.alsMathematischeMethode("Bildmengenbildung")
+            val definitionsMenge = if (
+                k.knoten.parameter[BILDMENGE_ARGUMENT_MODUS] == BILDMENGE_MODUS_EINZELMENGEN
+            ) {
+                require(mathematisch.parameter.isNotEmpty()) {
+                    "Die Bildmengenbildung benötigt mindestens ein Methodenargument."
+                }
+                val mengen = mathematisch.parameter.indices.map { index ->
+                    k.eingänge[bildmengeArgumentName(index)]?.objekt as? MengenAusdruck
+                        ?: error("Menge für Methodenargument ${index + 1} fehlt.")
+                }
+                if (mengen.size == 1) mengen.single() else kartesischesProdukt(mengen)
+            } else {
+                k.menge("menge")
+            }
+            KnotenAuswertungsErgebnis(
+                mapOf("menge" to BedingterWert(bildeAb(definitionsMenge, mathematisch), annahmen(k))),
+            )
         }
         registriere("mathematik.termZuMethode") { k ->
             val termWert = k.eingänge["term"] ?: error("Term fehlt.")
@@ -690,7 +707,13 @@ object StandardMathematikAuswerter {
         registriere("mathematik.kreuzproduktZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(kreuzprodukt(k.zeile("a"), k.zeile("b")), annahmen(k)))) }
         registriere("mathematik.transponiereSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.spalte("vektor").transponiert(), annahmen(k)))) }
         registriere("mathematik.transponiereZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.zeile("vektor").transponiert(), annahmen(k)))) }
-        registriere("mathematik.matrixProdukt") { k -> KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(k.matrix("a") * k.matrix("b"), annahmen(k)))) }
+        registriere("mathematik.matrixProdukt") { k ->
+            val links = k.eingänge["a"]?.objekt ?: error("Linker Matrixfaktor fehlt.")
+            val rechts = k.eingänge["b"]?.objekt ?: error("Rechter Matrixfaktor fehlt.")
+            KnotenAuswertungsErgebnis(
+                mapOf("matrix" to BedingterWert(matrixProdukt(links, rechts), annahmen(k))),
+            )
+        }
         registriere("mathematik.transponiereMatrix") { k -> KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(k.matrix("matrix").transponiert(), annahmen(k)))) }
         registriere("mathematik.matrixInvertieren") { k ->
             val matrix = k.eingänge["matrix"]?.objekt as? Matrix ?: error("Matrix fehlt.")
