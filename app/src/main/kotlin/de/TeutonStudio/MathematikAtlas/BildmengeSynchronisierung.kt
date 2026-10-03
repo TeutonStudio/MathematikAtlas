@@ -97,9 +97,11 @@ private fun synchronisiereBildmengenKnoten(
                 methodenEingang.copy(reihenfolge = 1),
                 ausgang,
             ),
-            parameter = knoten.parameter + (BILDMENGE_ARGUMENT_MODUS to BILDMENGE_MODUS_PRODUKT)
-                .takeIf { modus != BILDMENGE_MODUS_EINZELMENGEN || methode == null }
-                .orEmpty(),
+            parameter = if (BILDMENGE_ARGUMENT_MODUS in knoten.parameter) {
+                knoten.parameter
+            } else {
+                knoten.parameter + (BILDMENGE_ARGUMENT_MODUS to BILDMENGE_MODUS_PRODUKT)
+            },
         )
     }
 
