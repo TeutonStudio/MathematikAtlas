@@ -16,13 +16,7 @@ internal fun synchronisiereBildmengenAnschlüsse(
 ): KartenDaten {
     val synchronisierteKnoten = karte.knoten.map { knoten ->
         if (knoten.art != "mathematik.abbild") return@map knoten
-
-        val methode = auswertung.knoten[knoten.id]
-            ?.eingänge
-            ?.get("methode")
-            ?.objekt as? Methode
-
-        synchronisiereBildmengenKnoten(knoten, methode)
+        synchronisiereBildmengenKnoten(knoten, methodeFürBildmenge(karte, knoten, auswertung))
     }
 
     val vorhandeneAnschlüsse = synchronisierteKnoten.flatMap { knoten ->
@@ -37,12 +31,33 @@ internal fun synchronisiereBildmengenAnschlüsse(
     )
 }
 
+private fun methodeFürBildmenge(
+    karte: KartenDaten,
+    knoten: KnotenDaten,
+    auswertung: KartenAuswertungsErgebnis,
+): Methode? {
+    auswertung.knoten[knoten.id]?.eingänge?.get("methode")?.objekt?.let { objekt ->
+        if (objekt is Methode) return objekt
+    }
+    val methodenEingang = knoten.anschlüsse.firstOrNull {
+        it.name == "methode" && it.richtung == AnschlussRichtung.Eingang
+    } ?: return null
+    val verbindung = karte.verbindungen.singleOrNull {
+        it.zu == AnschlussVerweis(knoten.id, methodenEingang.id)
+    } ?: return null
+    val quellKnoten = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId } ?: return null
+    val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId } ?: return null
+    return auswertung.knoten[quellKnoten.id]?.ausgaben?.get(quellAnschluss.name)?.objekt as? Methode
+}
+
 private fun synchronisiereBildmengenKnoten(
     knoten: KnotenDaten,
     methode: Methode?,
 ): KnotenDaten {
-    val bisher = knoten.anschlüsse.associateBy(AnschlussDaten::name)
-    val methodenEingang = (bisher["methode"] ?: AnschlussDaten(
+    fun vorhanden(name: String, richtung: AnschlussRichtung): AnschlussDaten? =
+        knoten.anschlüsse.firstOrNull { it.name == name && it.richtung == richtung }
+
+    val methodenEingang = (vorhanden("methode", AnschlussRichtung.Eingang) ?: AnschlussDaten(
         name = "methode",
         richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links,
@@ -55,7 +70,7 @@ private fun synchronisiereBildmengenKnoten(
         kannSichErweitern = false,
         dynamischErzeugt = false,
     )
-    val ausgang = (bisher["menge"]?.takeIf { it.richtung == AnschlussRichtung.Ausgang }
+    val ausgang = (vorhanden("menge", AnschlussRichtung.Ausgang)
         ?: knoten.anschlüsse.firstOrNull {
             it.richtung == AnschlussRichtung.Ausgang && it.art == MathematikAnschlussArten.Menge.id
         }
@@ -76,7 +91,7 @@ private fun synchronisiereBildmengenKnoten(
 
     val modus = knoten.parameter[BILDMENGE_ARGUMENT_MODUS] ?: BILDMENGE_MODUS_PRODUKT
     if (modus != BILDMENGE_MODUS_EINZELMENGEN || methode == null) {
-        val mengenEingang = (bisher["menge"]?.takeIf { it.richtung == AnschlussRichtung.Eingang }
+        val mengenEingang = (vorhanden("menge", AnschlussRichtung.Eingang)
             ?: AnschlussDaten(
                 name = "menge",
                 richtung = AnschlussRichtung.Eingang,
@@ -107,7 +122,7 @@ private fun synchronisiereBildmengenKnoten(
 
     val mengenEingänge = methode.parameter.mapIndexed { index, _ ->
         val name = bildmengeArgumentName(index)
-        (bisher[name] ?: AnschlussDaten(
+        (vorhanden(name, AnschlussRichtung.Eingang) ?: AnschlussDaten(
             name = name,
             richtung = AnschlussRichtung.Eingang,
             kante = AnschlussKante.Links,
