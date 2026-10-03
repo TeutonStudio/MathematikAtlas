@@ -353,7 +353,8 @@ class AtlasZustand(context: Context) {
 
         val ersteAuswertung = laufzeit.auswerten(editor.karte)
         val mitRestriktionsAnschlüssen = synchronisiereRestriktionsAnschlüsse(editor.karte, ersteAuswertung)
-        val mitAuflösern = synchronisiereTupelAuflöser(mitRestriktionsAnschlüssen, ersteAuswertung, graphPrüfung)
+        val mitBildmengenAnschlüssen = synchronisiereBildmengenAnschlüsse(mitRestriktionsAnschlüssen, ersteAuswertung)
+        val mitAuflösern = synchronisiereTupelAuflöser(mitBildmengenAnschlüssen, ersteAuswertung, graphPrüfung)
         val synchronisiert = synchronisiereMethodenAufrufe(mitAuflösern, ersteAuswertung, graphPrüfung)
         if (synchronisiert == editor.karte) {
             auswertung = ersteAuswertung
