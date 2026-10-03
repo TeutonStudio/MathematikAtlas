@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsErgebnis
+import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsQualität
 import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsSampler
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
@@ -204,6 +205,32 @@ class MethodenVisualisierungTest {
         )
 
         assertTrue("Gesamtbudget" in ergebnis.grund)
+    }
+
+    @Test
+    fun `Methodenbild unterscheidet leeres Sichtfenster von leerer Domäne`() {
+        val x = Variable("x")
+        val identität = Methode(
+            name = "identität",
+            parameter = listOf(x),
+            vorschrift = x,
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to NatürlicheZahlen),
+        )
+        val negativ = konfiguration(RaumDimension.R2).copy(
+            bereiche = AchsenBereiche(
+                ZahlenBereich(-10.0, -1.0),
+                ZahlenBereich(-1.0, 1.0),
+                ZahlenBereich(-1.0, 1.0),
+            ),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+            VisualisierungsSampler.sample(Abbild(NatürlicheZahlen, identität), negativ),
+        )
+
+        assertTrue(ergebnis.punkte.isEmpty())
+        assertEquals(VisualisierungsQualität.KeineTrefferImFenster, ergebnis.qualität)
     }
 
     private fun konfiguration(

@@ -281,7 +281,7 @@ internal class StandardKartenInstaller(
         if (marker.exists()) return
 
         val aktuell = speicher.liste(archivierteEinschließen = true)
-        val erwartete = BeispielKarten.alle()
+        val erwartete = BeispielKarten.historische()
         val ordnung = ordnungsSpeicher.lade()
         val papierkorbIds = speicher.papierkorbEinträge()
             .flatMapTo(mutableSetOf()) { it.kartenIds }

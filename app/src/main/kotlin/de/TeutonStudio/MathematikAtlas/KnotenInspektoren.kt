@@ -20,8 +20,11 @@ import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikRechenSystem.kern.Abbild
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
+import de.TeutonStudio.MathematikRechenSystem.kern.MethodenParameter
+import de.TeutonStudio.MathematikRechenSystem.kern.OrbitFamilie
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensor
 import de.TeutonStudio.MathematikRechenSystem.kern.VektorOrientierung
+import de.TeutonStudio.MathematikRechenSystem.kern.alsMathematischeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.parseTensorPermutationOderNull
 import de.TeutonStudio.MathematikRechenSystem.kern.standardTensorPermutation
 
@@ -52,6 +55,7 @@ object KnotenInspektorRegister {
         TUPEL_VARIABLE_ART to TupelVariablenInspektor,
         "mathematik.allgemeinerParameter" to AllgemeineParameterInspektor,
         "mathematik.termZuMethode" to TermZuMethodeInspektor,
+        "mathematik.orbit" to OrbitInspektor,
         "mathematik.methodeAufrufen" to MethodenAufrufInspektor,
         "mathematik.ordnungsrelation" to OrdnungsrelationInspektor,
         "mathematik.endlicheMenge" to EndlicheMengeInspektor,
@@ -189,6 +193,73 @@ private object TermZuMethodeInspektor : KnotenInspektor {
         }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
+}
+
+private object OrbitInspektor : KnotenInspektor {
+    @Composable
+    override fun Inhalt(
+        knoten: KnotenDaten,
+        ergebnis: KnotenAuswertungsErgebnis?,
+        aktionen: KnotenInspektorAktionen,
+    ) {
+        Text("Zustandsargument", style = MaterialTheme.typography.titleSmall)
+        val auswahl = orbitArgumentAuswahl(knoten, ergebnis)
+        val parameter = auswahl.parameter
+        val gewählt = auswahl.gewählt
+        if (parameter.size != 2) {
+            Text(
+                "Verbinde eine mathematische Methode mit genau zwei Argumenten.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            if (auswahl.veraltet) {
+                Text(
+                    "Die gespeicherte Auswahl '$gewählt' gehört nicht mehr zur verbundenen Methode. Wähle ein neues Zustandsargument.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                parameter.forEach { argument ->
+                    FilterChip(
+                        selected = argument.name == gewählt,
+                        onClick = { aktionen.parameter("zustandsArgument", argument.name) },
+                        label = { Text(argument.name) },
+                    )
+                }
+            }
+            Text(
+                "Das andere Argument ist der Parameter der Beschränktheitsmenge.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    }
+}
+
+internal data class OrbitArgumentAuswahl(
+    val parameter: List<MethodenParameter>,
+    val gewählt: String,
+    val veraltet: Boolean,
+)
+
+internal fun orbitArgumentAuswahl(
+    knoten: KnotenDaten,
+    ergebnis: KnotenAuswertungsErgebnis?,
+): OrbitArgumentAuswahl {
+    val verbundeneMethode = ergebnis?.eingänge?.get("schritt")?.objekt as? Methode
+    val ausgegebeneMethode = (ergebnis?.ausgaben?.get("orbit")?.objekt as? OrbitFamilie)?.schritt
+    val parameter = listOfNotNull(verbundeneMethode, ausgegebeneMethode).firstNotNullOfOrNull { methode ->
+        runCatching { methode.alsMathematischeMethode("die Orbitargument-Auswahl").parameter }.getOrNull()
+    }.orEmpty()
+    val gespeichert = knoten.parameter["zustandsArgument"].orEmpty()
+    val gewählt = gespeichert.ifBlank { parameter.firstOrNull()?.name.orEmpty() }
+    return OrbitArgumentAuswahl(
+        parameter = parameter,
+        gewählt = gewählt,
+        veraltet = gespeichert.isNotBlank() && parameter.none { it.name == gespeichert },
+    )
 }
 
 private object MethodenAufrufInspektor : KnotenInspektor {
@@ -468,6 +539,9 @@ private object VisualisierungsInspektor : KnotenInspektor {
             FilterChip(config.dimension == RaumDimension.R1, { ändern(config.copy(dimension = RaumDimension.R1)) }, label = { Text("R¹") })
             FilterChip(config.dimension == RaumDimension.R2, { ändern(config.copy(dimension = RaumDimension.R2)) }, label = { Text("R²") })
             FilterChip(config.dimension == RaumDimension.R3, { ändern(config.copy(dimension = RaumDimension.R3)) }, label = { Text("R³") })
+            FilterChip(config.dimension == RaumDimension.C, {
+                ändern(config.copy(dimension = RaumDimension.C, achsen = AchsenZuordnung("re", "im", null)))
+            }, label = { Text("ℂ") })
         }
         Text("Methodenvisualisierung", style = MaterialTheme.typography.titleSmall)
         if (methode == null) {
@@ -507,9 +581,10 @@ private object VisualisierungsInspektor : KnotenInspektor {
         if (config.dimension == RaumDimension.R3) BereichFeld("${methode?.parameter?.getOrNull(2)?.name ?: "Z"}-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
         Text("Sampling", style = MaterialTheme.typography.titleSmall)
         if (config.dimension == RaumDimension.R1) ParameterFeld("R¹-Auflösung", config.sampling.auflösung1D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung1D = n.coerceIn(16, 2_000)))) } }
-        if (config.dimension == RaumDimension.R2) ParameterFeld("R²-Auflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
+        if (config.dimension == RaumDimension.R2 || config.dimension == RaumDimension.C) ParameterFeld("Flächenauflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
         if (config.dimension == RaumDimension.R3) ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
         ParameterFeld("Gesamtbudget", config.sampling.maximalesRasterBudget.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximalesRasterBudget = n.coerceIn(1_000, 2_000_000)))) } }
+        ParameterFeld("Orbit-Schritte", config.sampling.maximaleOrbitSchritte.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximaleOrbitSchritte = n.coerceIn(1, 100_000)))) } }
         ParameterFeld("Toleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
         Text("Farbe", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
@@ -519,10 +594,44 @@ private object VisualisierungsInspektor : KnotenInspektor {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { listOf("Ozean", "Sonnenuntergang", "Wald").forEach { palette -> FilterChip(config.farbe.palette == palette, { ändern(config.copy(farbe = config.farbe.copy(palette = palette))) }, label = { Text(palette) }) } }
             BereichFeld("Farbwertbereich", config.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)) { ändern(config.copy(farbe = config.farbe.copy(bereich = it))) }
         }
+        Text("Feste Schnitte", style = MaterialTheme.typography.titleSmall)
+        ParameterFeld(
+            "Variable=Wert (mit Komma)",
+            config.festeSchnitte.entries.joinToString(", ") { "${it.key}=${it.value}" },
+        ) { text ->
+            val schnitte = text.split(',').mapNotNull { eintrag ->
+                val teile = eintrag.split('=', limit = 2).map(String::trim)
+                val wert = teile.getOrNull(1)?.toDoubleOrNull()
+                if (teile.size != 2 || teile[0].isBlank() || wert == null || !wert.isFinite()) null else teile[0] to wert
+            }.toMap()
+            if (text.isBlank() || schnitte.isNotEmpty()) ändern(config.copy(festeSchnitte = schnitte))
+        }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         OutlinedButton(onClick = { ändern(config.copy(kamera = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0))) }) { Text("Standardansicht wiederherstellen") }
     }
 }
 
 @Composable private fun ParameterFeld(label: String, wert: String, ändern: (String) -> Unit) { var text by remember(label, wert) { mutableStateOf(wert) }; OutlinedTextField(text, { text = it; ändern(it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth()) }
-@Composable private fun BereichFeld(label: String, bereich: ZahlenBereich, ändern: (ZahlenBereich) -> Unit) { var text by remember(label, bereich) { mutableStateOf("${bereich.minimum}, ${bereich.maximum}") }; OutlinedTextField(text, { text = it; val p = it.split(',').map(String::trim); if (p.size == 2) { val a = p[0].toDoubleOrNull(); val b = p[1].toDoubleOrNull(); if (a != null && b != null && a < b) ändern(ZahlenBereich(a, b)) } }, label = { Text("$label: Minimum, Maximum") }, modifier = Modifier.fillMaxWidth()) }
+internal fun parseZahlenBereich(text: String): ZahlenBereich? {
+    val teile = text.split(',').map(String::trim)
+    if (teile.size != 2) return null
+    val minimum = teile[0].toDoubleOrNull() ?: return null
+    val maximum = teile[1].toDoubleOrNull() ?: return null
+    if (!minimum.isFinite() || !maximum.isFinite() || minimum >= maximum) return null
+    if (!(maximum - minimum).isFinite()) return null
+    return runCatching { ZahlenBereich(minimum, maximum) }.getOrNull()
+}
+
+@Composable
+private fun BereichFeld(label: String, bereich: ZahlenBereich, ändern: (ZahlenBereich) -> Unit) {
+    var text by remember(label, bereich) { mutableStateOf("${bereich.minimum}, ${bereich.maximum}") }
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it
+            parseZahlenBereich(it)?.let(ändern)
+        },
+        label = { Text("$label: Minimum, Maximum") },
+        modifier = Modifier.fillMaxWidth(),
+    )
+}

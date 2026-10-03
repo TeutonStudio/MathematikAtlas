@@ -61,7 +61,11 @@ data class MengenDifferenz(val links: MengenAusdruck, val rechts: MengenAusdruck
 fun mengenDifferenz(links: MengenAusdruck, rechts: MengenAusdruck): MengenAusdruck = when {
     links == LeereMenge -> LeereMenge
     rechts == LeereMenge -> links
-    links is EndlicheMenge && rechts is EndlicheMenge -> EndlicheMenge(links.elemente - rechts.elemente)
+    links is EndlicheMenge && rechts is EndlicheMenge -> {
+        val entscheidungen = links.elemente.associateWith { ElementBeziehung(it, rechts).entscheide().wahrheitswert }
+        if (entscheidungen.values.any { it == null }) MengenDifferenz(links, rechts)
+        else EndlicheMenge(entscheidungen.filterValues { it == Wahrheitswert.Lüge }.keys)
+    }
     else -> MengenDifferenz(links, rechts)
 }
 
@@ -195,7 +199,9 @@ data object AbzählbarUnendlich : Mächtigkeit { override fun zuLatex() = "|M| =
 data object Überabzählbar : Mächtigkeit { override fun zuLatex() = "|M| > \\aleph_0" }
 
 fun mächtigkeit(menge: MengenAusdruck): Mächtigkeit = when (menge) {
-    is EndlicheMenge -> EndlicheMächtigkeit(RationaleZahl.von(menge.elemente.size.toLong()))
+    is EndlicheMenge -> EndlicheMächtigkeit(RationaleZahl.von(
+        (eindeutigeEndlicheElemente(menge) ?: error("Die Mächtigkeit dieser Menge ist noch nicht entscheidbar.")).size.toLong(),
+    ))
     NatürlicheZahlen, GanzeZahlen, RationaleZahlen -> AbzählbarUnendlich
     ReelleZahlen, KomplexeZahlen -> Überabzählbar
     else -> error("Die Mächtigkeit dieser Menge ist noch nicht entscheidbar.")
@@ -216,8 +222,13 @@ fun schneide(mengen: Iterable<MengenAusdruck>, grundMenge: MengenAusdruck? = nul
     if (flach.isEmpty()) return grundMenge ?: error("Ein leerer Schnitt benötigt eine Grundmenge.")
     if (flach.any { it == LeereMenge }) return LeereMenge
     if (flach.all { it is EndlicheMenge }) {
-        val elemente = flach.filterIsInstance<EndlicheMenge>().map { it.elemente }.reduce { links, rechts -> links.intersect(rechts) }
-        return EndlicheMenge(elemente)
+        val erste = (flach.first() as EndlicheMenge).elemente
+        val entscheidungen = erste.associateWith { element ->
+            Konjunktion(flach.drop(1).map { ElementBeziehung(element, it) }).entscheide().wahrheitswert
+        }
+        if (entscheidungen.values.none { it == null }) {
+            return EndlicheMenge(entscheidungen.filterValues { it == Wahrheitswert.Wahr }.keys)
+        }
     }
     val eindeutig = flach.distinct().sortedBy(::strukturellerSchlüssel)
     return if (eindeutig.size == 1) eindeutig.single() else Schnitt(eindeutig, grundMenge)
@@ -240,9 +251,18 @@ internal fun strukturellerSchlüssel(objekt: MathematischesObjekt): String = "${
 
 data class ElementBeziehung(val element: MathematischesObjekt, val menge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = when (menge) {
-        is EndlicheMenge -> if (element in menge.elemente) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+        is EndlicheMenge -> Disjunktion(menge.elemente.map { Gleichheit(element, it) }).entscheide(kontext)
+        is KartesischesProdukt -> entscheideTupelMitgliedschaft(element, menge.mengen, kontext)
+        is Tupelraum -> entscheideTupelMitgliedschaft(element, menge.komponenten, kontext)
+        is Vereinigung -> Disjunktion(menge.mengen.map { ElementBeziehung(element, it) }).entscheide(kontext)
+        is Schnitt -> if (menge.mengen.isEmpty()) {
+            menge.grundMenge?.let { ElementBeziehung(element, it).entscheide(kontext) }
+                ?: AussageErgebnis(null, EntscheidungsStatus.NichtAuswertbar, "Ein leerer Schnitt benötigt eine Grundmenge.")
+        } else Konjunktion(menge.mengen.map { ElementBeziehung(element, it) }).entscheide(kontext)
+        is MengenDifferenz -> Konjunktion(listOf(ElementBeziehung(element, menge.links), Negation(ElementBeziehung(element, menge.rechts)))).entscheide(kontext)
+        is SymmetrischeDifferenz -> Negation(Äquivalenz(ElementBeziehung(element, menge.links), ElementBeziehung(element, menge.rechts))).entscheide(kontext)
         is ReellesIntervall -> {
-            val wert = element as? RationaleZahl
+            val wert = (element as? ZahlAusdruck)?.let { vereinfache(it, kontext) } as? RationaleZahl
             val links = vereinfache(menge.links, kontext) as? RationaleZahl
             val rechts = vereinfache(menge.rechts, kontext) as? RationaleZahl
             if (wert != null && links != null && rechts != null) {
@@ -257,6 +277,11 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         }
         LeereMenge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
         RationaleZahlen, ReelleZahlen -> if (element is RationaleZahl) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen) else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        KomplexeZahlen -> if (
+            element is RationaleZahl ||
+            element is KomplexeZahl && element.realteil is RationaleZahl && element.imaginärteil is RationaleZahl
+        ) AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         GanzeZahlen -> if (element is RationaleZahl) {
             val wahr = element.nenner == java.math.BigInteger.ONE
             AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
@@ -265,6 +290,23 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
             val wahr = element.nenner == java.math.BigInteger.ONE && element.zähler.signum() > 0
             AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
         } else AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        is OrbitBeschraenktheitsMenge -> when (val entscheidung = entscheideOrbitBeschraenktheit(menge, element)) {
+            is OrbitEntscheidung.Enthalten -> AussageErgebnis(
+                Wahrheitswert.Wahr,
+                EntscheidungsStatus.Bewiesen,
+                entscheidung.grund,
+            )
+            is OrbitEntscheidung.Ausgeschlossen -> AussageErgebnis(
+                Wahrheitswert.Lüge,
+                EntscheidungsStatus.Widerlegt,
+                entscheidung.grund,
+            )
+            is OrbitEntscheidung.Unbekannt -> AussageErgebnis(
+                null,
+                EntscheidungsStatus.Unbekannt,
+                entscheidung.grund,
+            )
+        }
         is GefilterteMenge -> {
             val grundErgebnis = ElementBeziehung(element, menge.menge).entscheide(kontext)
             if (grundErgebnis.wahrheitswert == Wahrheitswert.Lüge) grundErgebnis else {
@@ -299,11 +341,13 @@ fun prüfeTeilmenge(
 ): AussageErgebnis = when {
     teilMenge == LeereMenge || teilMenge == grundMenge ->
         AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
-    teilMenge is EndlicheMenge && grundMenge is EndlicheMenge -> {
-        val wahr = grundMenge.elemente.containsAll(teilMenge.elemente)
+    zahlenmengenRang(teilMenge) != null && zahlenmengenRang(grundMenge) != null -> {
+        val enthalten = zahlenmengenRang(teilMenge)!! <= zahlenmengenRang(grundMenge)!!
         AussageErgebnis(
-            if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
-            if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
+            if (enthalten) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
+            if (enthalten) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
+            if (enthalten) "Die kanonische Zahlenmengeninklusion ist erfüllt."
+            else "Die kanonische Zahlenmengeninklusion ist widerlegt.",
         )
     }
     teilMenge is EndlicheMenge -> {
@@ -319,13 +363,36 @@ fun prüfeTeilmenge(
     else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
 }
 
+private fun entscheideTupelMitgliedschaft(
+    element: MathematischesObjekt,
+    komponenten: List<MengenAusdruck>,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    val tupel = element as? Tupel ?: return when (element) {
+        is AllgemeinerParameter, is TypisiertesElement ->
+            AussageErgebnis(null, EntscheidungsStatus.Unbekannt, "Der allgemeine Parameter ist noch nicht als Tupel belegt.")
+        else -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Ein kartesischer Raum enthält nur Tupel.")
+    }
+    if (tupel.elemente.size != komponenten.size) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Die Tupeldimension stimmt nicht mit dem Raum überein.")
+    }
+    return Konjunktion(
+        tupel.elemente.zip(komponenten).map { (wert, menge) -> ElementBeziehung(wert, menge) },
+    ).entscheide(kontext)
+}
+
+private fun zahlenmengenRang(menge: MengenAusdruck): Int? = when (menge) {
+    NatürlicheZahlen -> 0
+    GanzeZahlen -> 1
+    RationaleZahlen -> 2
+    ReelleZahlen -> 3
+    KomplexeZahlen -> 4
+    else -> null
+}
+
 data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
-        if (links is EndlicheMenge && rechts is EndlicheMenge) {
-            val wahr = rechts.elemente.containsAll(links.elemente) && links.elemente != rechts.elemente
-            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
-        }
-        return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+        return Konjunktion(listOf(TeilmengenBeziehung(links, rechts), Negation(TeilmengenBeziehung(rechts, links)))).entscheide(kontext)
     }
     override fun zuLatex() = "${links.zuLatex()} \\subset ${rechts.zuLatex()}"
 }
@@ -339,8 +406,7 @@ data class ObermengenBeziehung(val links: MengenAusdruck, val rechts: MengenAusd
 data class Disjunktheit(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         if (links is EndlicheMenge && rechts is EndlicheMenge) {
-            val wahr = links.elemente.intersect(rechts.elemente).isEmpty()
-            return AussageErgebnis(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, if (wahr) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt)
+            return Konjunktion(links.elemente.map { Negation(ElementBeziehung(it, rechts)) }).entscheide(kontext)
         }
         if (links == LeereMenge || rechts == LeereMenge) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
@@ -353,3 +419,15 @@ val GanzeZahlen = BenannteMenge("Ganze Zahlen", "\\mathbb{Z}")
 val RationaleZahlen = BenannteMenge("Rationale Zahlen", "\\mathbb{Q}")
 val ReelleZahlen = BenannteMenge("Reelle Zahlen", "\\mathbb{R}")
 val KomplexeZahlen = BenannteMenge("Komplexe Zahlen", "\\mathbb{C}")
+
+/** Representatives can be enumerated/countable only when their distinctness is proved. */
+internal fun eindeutigeEndlicheElemente(menge: EndlicheMenge): List<MathematischesObjekt>? {
+    val eindeutig = mutableListOf<MathematischesObjekt>()
+    for (element in menge.elemente.sortedBy(::strukturellerSchlüssel)) {
+        val vergleiche = eindeutig.map { Gleichheit(element, it).entscheide().wahrheitswert }
+        if (Wahrheitswert.Wahr in vergleiche) continue
+        if (null in vergleiche) return null
+        eindeutig += element
+    }
+    return eindeutig
+}

@@ -6,6 +6,18 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.*
 
 class VisualisierungsNormalisierungTest {
+    private fun VisualisierungsErgebnis.punkteEinesDarstellbarenErgebnisses(): List<VisualisierungsPunkt> = when (this) {
+        is VisualisierungsErgebnis.Erfolgreich -> punkte
+        is VisualisierungsErgebnis.Teilweise -> punkte
+        else -> fail("Erwartete ein darstellbares Ergebnis, erhielt $this")
+    }
+
+    private fun VisualisierungsErgebnis.hinweiseEinesDarstellbarenErgebnisses(): List<String> = when (this) {
+        is VisualisierungsErgebnis.Erfolgreich -> hinweise
+        is VisualisierungsErgebnis.Teilweise -> hinweise
+        else -> fail("Erwartete ein darstellbares Ergebnis, erhielt $this")
+    }
+
     private fun konfiguration(
         dimension: RaumDimension = RaumDimension.R2,
         auflösung: Int = 5,
@@ -148,8 +160,8 @@ class VisualisierungsNormalisierungTest {
             VisualisierungsSampler.sample(r3, konfiguration(RaumDimension.R3, auflösung = 4)),
         )
 
-        assertEquals(25, ergebnis2.punkte.size)
-        assertTrue(ergebnis2.punkte.all { it.x in 0.0..1.0 && it.y in 2.0..3.0 })
+        assertEquals(5, ergebnis2.punkte.size)
+        assertTrue(ergebnis2.punkte.all { it.x in 0.0..1.0 && it.y == 2.0 })
         assertEquals(64, ergebnis3.punkte.size)
         assertTrue(ergebnis3.punkte.all { it.z != null && it.x in 0.0..1.0 && it.y in 0.0..1.0 && it.z!! in 0.0..1.0 })
     }
@@ -198,12 +210,11 @@ class VisualisierungsNormalisierungTest {
             WahrheitsKonstante(true),
         )
 
-        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(menge, konfiguration(auflösung = 7)),
-        )
+        val ergebnis = VisualisierungsSampler.sample(menge, konfiguration(auflösung = 7))
+        val punkte = ergebnis.punkteEinesDarstellbarenErgebnisses()
 
-        assertTrue(ergebnis.punkte.isNotEmpty())
-        assertTrue(ergebnis.punkte.all { it.x in 0.0..1.0 && it.y in setOf(0.0, 1.0) })
+        assertTrue(punkte.isNotEmpty())
+        assertTrue(punkte.all { it.x in 0.0..1.0 && it.y in setOf(0.0, 1.0) })
     }
 
     @Test
@@ -247,22 +258,18 @@ class VisualisierungsNormalisierungTest {
             ),
         )
 
-        val vereinigung = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(Vereinigung(listOf(links, rechts)), konfiguration(auflösung = 7)),
-        )
-        val schnitt = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(Schnitt(listOf(links, rechts)), konfiguration(auflösung = 7)),
-        )
-        val differenz = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(MengenDifferenz(links, rechts), konfiguration(auflösung = 7)),
-        )
-        val symmetrisch = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(SymmetrischeDifferenz(links, rechts), konfiguration(auflösung = 7)),
-        )
+        val vereinigung = VisualisierungsSampler.sample(Vereinigung(listOf(links, rechts)), konfiguration(auflösung = 7))
+            .punkteEinesDarstellbarenErgebnisses()
+        val schnitt = VisualisierungsSampler.sample(Schnitt(listOf(links, rechts)), konfiguration(auflösung = 7))
+            .punkteEinesDarstellbarenErgebnisses()
+        val differenz = VisualisierungsSampler.sample(MengenDifferenz(links, rechts), konfiguration(auflösung = 7))
+            .punkteEinesDarstellbarenErgebnisses()
+        val symmetrisch = VisualisierungsSampler.sample(SymmetrischeDifferenz(links, rechts), konfiguration(auflösung = 7))
+            .punkteEinesDarstellbarenErgebnisses()
 
-        assertTrue(vereinigung.punkte.size > schnitt.punkte.size)
-        assertTrue(differenz.punkte.all { it.x < 0.0 })
-        assertTrue(symmetrisch.punkte.none { it.x == 0.0 })
+        assertTrue(vereinigung.size > schnitt.size)
+        assertTrue(differenz.all { it.x < 0.0 })
+        assertTrue(symmetrisch.none { it.x == 0.0 })
     }
 
     @Test
@@ -298,12 +305,11 @@ class VisualisierungsNormalisierungTest {
         assertIs<VisualisierungsErgebnis.NichtDarstellbar>(
             VisualisierungsSampler.sample(menge, konfiguration(prädikatsFenster = false)),
         )
-        val angenähert = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(menge, konfiguration(auflösung = 4, prädikatsFenster = true)),
-        )
-        assertEquals(16, angenähert.punkte.size)
-        assertTrue(angenähert.hinweise.any { "Fensterbegrenzte Approximation" in it })
-        assertTrue(angenähert.hinweise.any { "Ergebnisqualität" in it && "Sichtfenster" in it })
+        val angenähert = VisualisierungsSampler.sample(menge, konfiguration(auflösung = 4, prädikatsFenster = true))
+        assertEquals(16, angenähert.punkteEinesDarstellbarenErgebnisses().size)
+        val hinweise = angenähert.hinweiseEinesDarstellbarenErgebnisses()
+        assertTrue(hinweise.any { "Fensterbegrenzte Approximation" in it })
+        assertTrue(hinweise.any { "Ergebnisqualität" in it && "Sichtfenster" in it })
     }
 
     @Test
@@ -322,12 +328,11 @@ class VisualisierungsNormalisierungTest {
             bedingung,
         )
 
-        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(menge, konfiguration(auflösung = 7)),
-        )
+        val ergebnis = VisualisierungsSampler.sample(menge, konfiguration(auflösung = 7))
+        val punkte = ergebnis.punkteEinesDarstellbarenErgebnisses()
 
-        assertTrue(ergebnis.punkte.isNotEmpty())
-        assertTrue(ergebnis.punkte.all { it.x >= 0.0 && it.y % 1.0 == 0.0 })
+        assertTrue(punkte.isNotEmpty())
+        assertTrue(punkte.all { it.x >= 0.0 && it.y % 1.0 == 0.0 })
     }
 
     @Test

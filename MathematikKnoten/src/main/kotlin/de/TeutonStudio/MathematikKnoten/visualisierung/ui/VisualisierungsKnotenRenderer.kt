@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -27,8 +28,10 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.*
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlin.math.*
+import kotlin.coroutines.coroutineContext
 
 /** Compose-Renderer mit abbrechbarem Hintergrundsampling und lokaler Kamerasteuerung. */
 class VisualisierungsKnotenRenderer(
@@ -37,16 +40,19 @@ class VisualisierungsKnotenRenderer(
     override val interaktionsModus = KnotenInteraktionsModus.NurKopfzeileZiehbar
 
     @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
-        val menge = ergebnisFür(knoten)?.eingänge?.get("menge")?.objekt as? MengenAusdruck
+        val mengenWert = ergebnisFür(knoten)?.eingänge?.get("menge")
+        val menge = mengenWert?.objekt as? MengenAusdruck
         var konfiguration by remember(knoten.id, knoten.eigenschaften) { mutableStateOf(VisualisierungsKonfiguration.aus(knoten.eigenschaften)) }
         fun ändern(neu: VisualisierungsKonfiguration) {
             konfiguration = neu
             aktionen.eigenschaftenErsetzen(neu.zuEigenschaften())
         }
-        val ergebnis by produceState<VisualisierungsErgebnis?>(null, menge, konfiguration.samplingSignatur()) {
+        val ergebnis by produceState<VisualisierungsErgebnis?>(null, mengenWert, konfiguration.samplingSignatur()) {
             value = if (menge == null) VisualisierungsErgebnis.NichtDarstellbar("Verbinde eine Menge mit dem Eingang.") else {
                 delay(140)
-                withContext(Dispatchers.Default) { VisualisierungsSampler.sample(menge, konfiguration) }
+                withContext(Dispatchers.Default) {
+                    VisualisierungsSampler.sample(menge, konfiguration) { coroutineContext.ensureActive() }
+                }
             }
         }
         Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -64,6 +70,25 @@ class VisualisierungsKnotenRenderer(
                 Steuerung(konfiguration, ::ändern, Modifier.width(128.dp).fillMaxHeight())
             }
             LatexText(legende(konfiguration), style = MaterialTheme.typography.bodySmall)
+            val annahmen = mengenWert?.annahmen.orEmpty()
+            if (annahmen.isNotEmpty()) {
+                LatexText(
+                    "Annahmen: " + annahmen.joinToString(", ") { it.zuLatex() },
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            val hatZellen = when (val wert = ergebnis) {
+                is VisualisierungsErgebnis.Erfolgreich -> wert.zellen.isNotEmpty()
+                is VisualisierungsErgebnis.Teilweise -> wert.zellen.isNotEmpty()
+                else -> false
+            }
+            if (hatZellen) {
+                Text(
+                    "Zellen: Blau = bewiesen enthalten, Orange = gemischt, Grau schraffiert beziehungsweise als Drahtzelle = unbestimmt.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             when (val wert = ergebnis) {
                 is VisualisierungsErgebnis.NichtDarstellbar -> Text(wert.grund, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
                 is VisualisierungsErgebnis.BedingtDarstellbar -> Text(
@@ -77,7 +102,11 @@ class VisualisierungsKnotenRenderer(
                     style = MaterialTheme.typography.labelSmall,
                 )
                 is VisualisierungsErgebnis.Teilweise -> Text(wert.hinweise.joinToString(" "), style = MaterialTheme.typography.labelSmall)
-                is VisualisierungsErgebnis.Erfolgreich -> if (wert.istApproximation) Text("Numerische Approximation", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                is VisualisierungsErgebnis.Erfolgreich -> if (wert.hinweise.isNotEmpty()) {
+                    Text(wert.hinweise.joinToString(" "), style = MaterialTheme.typography.labelSmall)
+                } else if (wert.istApproximation) {
+                    Text("Numerische Approximation", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 null -> Text("Berechne Darstellung …", style = MaterialTheme.typography.labelSmall)
             }
         }
@@ -97,7 +126,7 @@ class VisualisierungsKnotenRenderer(
         detectTransformGestures { _, pan, zoom, _ ->
             val neu = when (konfiguration.dimension) {
                 RaumDimension.R3 -> kamera.copy(rotationY = kamera.rotationY + pan.x * 0.5, rotationX = kamera.rotationX + pan.y * 0.5, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
-                RaumDimension.R2 -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, translationY = kamera.translationY + pan.y / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
+                RaumDimension.R2, RaumDimension.C -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, translationY = kamera.translationY + pan.y / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
                 RaumDimension.R1 -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
             }
             onKamera(neu)
@@ -106,7 +135,7 @@ class VisualisierungsKnotenRenderer(
         drawRect(hintergrund)
         when (konfiguration.dimension) {
             RaumDimension.R1 -> zeichneZahlengerade(konfiguration, raster, beschriftung)
-            RaumDimension.R2 -> {
+            RaumDimension.R2, RaumDimension.C -> {
                 val center = Offset(size.width / 2f, size.height / 2f)
                 drawLine(raster, Offset(0f, center.y), Offset(size.width, center.y), 1f)
                 drawLine(raster, Offset(center.x, 0f), Offset(center.x, size.height), 1f)
@@ -114,6 +143,12 @@ class VisualisierungsKnotenRenderer(
             }
             RaumDimension.R3 -> zeichne3DAchsen(konfiguration, xAchse, yAchse, zAchse)
         }
+        val zellen = when (ergebnis) {
+            is VisualisierungsErgebnis.Erfolgreich -> ergebnis.zellen
+            is VisualisierungsErgebnis.Teilweise -> ergebnis.zellen
+            else -> emptyList()
+        }
+        zellen.forEach { zeichneZelle(it, konfiguration) }
         val punkte = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.punkte; is VisualisierungsErgebnis.Teilweise -> ergebnis.punkte; else -> emptyList() }
         val intervalle = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.intervalle; is VisualisierungsErgebnis.Teilweise -> ergebnis.intervalle; else -> emptyList() }
         if (konfiguration.dimension == RaumDimension.R1) {
@@ -123,14 +158,100 @@ class VisualisierungsKnotenRenderer(
             val projektion = projekt(punkt, konfiguration, size.width, size.height)
             val radius = when (konfiguration.dimension) {
                 RaumDimension.R1 -> 5.0f
-                RaumDimension.R2 -> 2.2f
+                RaumDimension.R2, RaumDimension.C -> 2.2f
                 RaumDimension.R3 -> 2.8f
             }
             drawCircle(farbeFür(punkt.farbwert, konfiguration), radius, projektion)
+            if (punkt.weitereFarbwerte.isNotEmpty()) {
+                drawCircle(Color.Magenta.copy(alpha = 0.85f), radius + 2.5f, projektion, style = Stroke(1.5f))
+            }
         }
         drawRect(rahmen, style = Stroke(1f))
     }
 }
+
+private fun DrawScope.zeichneZelle(zelle: VisualisierungsZelle, c: VisualisierungsKonfiguration) {
+    if (zelle.status == ZellenStatus.Ausgeschlossen || zelle.minimum.size != c.dimension.raumDimension) return
+    val farbe = when (zelle.status) {
+        ZellenStatus.Enthalten -> Color(0xFF2563EB)
+        ZellenStatus.Gemischt -> Color(0xFFF59E0B)
+        ZellenStatus.Unbekannt -> Color(0xFF6B7280)
+        ZellenStatus.Ausgeschlossen -> return
+    }
+    if (c.dimension == RaumDimension.R3) {
+        val mitte = zelle.minimum.zip(zelle.maximum) { a, b -> (a + b) / 2.0 }
+        val ecken = List(8) { maske ->
+            VisualisierungsPunkt(
+                if (maske and 1 == 0) zelle.minimum[0] else zelle.maximum[0],
+                if (maske and 2 == 0) zelle.minimum[1] else zelle.maximum[1],
+                if (maske and 4 == 0) zelle.minimum[2] else zelle.maximum[2],
+            )
+        }.map { projekt(it, c, size.width, size.height) }
+        repeat(8) { maske ->
+            repeat(3) { achse ->
+                val bit = 1 shl achse
+                if (maske and bit == 0) {
+                    drawLine(farbe.copy(alpha = 0.55f), ecken[maske], ecken[maske or bit], 1f)
+                }
+            }
+        }
+        val punkt = VisualisierungsPunkt(mitte[0], mitte[1], mitte[2])
+        drawCircle(
+            farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.45f else 0.7f),
+            if (zelle.status == ZellenStatus.Enthalten) 2.5f else 3.5f,
+            projekt(punkt, c, size.width, size.height),
+        )
+        return
+    }
+    if (c.dimension == RaumDimension.R1) {
+        val von = projekt(VisualisierungsPunkt(zelle.minimum[0], 0.0), c, size.width, size.height).x
+        val bis = projekt(VisualisierungsPunkt(zelle.maximum[0], 0.0), c, size.width, size.height).x
+        val links = min(von, bis)
+        val rechts = max(von, bis)
+        val y = size.height / 2f
+        drawLine(
+            farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.55f else 0.4f),
+            Offset(links, y),
+            Offset(rechts, y),
+            7.dp.toPx(),
+        )
+        if (zelle.status != ZellenStatus.Enthalten) {
+            var x = links
+            val halbeHöhe = 6.dp.toPx()
+            val abstand = 8.dp.toPx()
+            while (x <= rechts) {
+                drawLine(farbe.copy(alpha = 0.85f), Offset(x, y - halbeHöhe), Offset(x, y + halbeHöhe), 1f)
+                x += abstand
+            }
+        }
+        return
+    }
+    val a = projekt(VisualisierungsPunkt(zelle.minimum[0], zelle.minimum[1]), c, size.width, size.height)
+    val b = projekt(VisualisierungsPunkt(zelle.maximum[0], zelle.maximum[1]), c, size.width, size.height)
+    val links = min(a.x, b.x)
+    val rechts = max(a.x, b.x)
+    val oben = min(a.y, b.y)
+    val unten = max(a.y, b.y)
+    if (rechts <= links || unten <= oben) return
+    drawRect(farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.18f else 0.1f), Offset(links, oben), androidx.compose.ui.geometry.Size(rechts - links, unten - oben))
+    if (zelle.status != ZellenStatus.Enthalten) {
+        clipRect(links, oben, rechts, unten) {
+            var x = links - (unten - oben)
+            val abstand = 8.dp.toPx()
+            while (x < rechts) {
+                drawLine(farbe.copy(alpha = 0.75f), Offset(x, unten), Offset(x + (unten - oben), oben), 1f)
+                x += abstand
+            }
+        }
+    }
+}
+
+private val RaumDimension.raumDimension: Int
+    get() = when (this) {
+        RaumDimension.R1 -> 1
+        RaumDimension.R2, RaumDimension.C -> 2
+        RaumDimension.R3 -> 3
+    }
 
 private fun DrawScope.achsenPaint(farbe: Color) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     color = farbe.toArgb()
@@ -272,7 +393,7 @@ private fun farbeFür(wert: Double?, c: VisualisierungsKonfiguration): Color {
         val schritt = (c.bereiche.x.maximum - c.bereiche.x.minimum) * .1
         val verschiebungen = when (c.dimension) {
             RaumDimension.R1 -> listOf("X" to { d: Double -> c.kamera.copy(translationX = c.kamera.translationX + d) })
-            RaumDimension.R2 -> listOf(
+            RaumDimension.R2, RaumDimension.C -> listOf(
                 "X" to { d: Double -> c.kamera.copy(translationX = c.kamera.translationX + d) },
                 "Y" to { d: Double -> c.kamera.copy(translationY = c.kamera.translationY + d) },
             )
@@ -297,6 +418,7 @@ private fun legende(c: VisualisierungsKonfiguration): String {
     val achsen = when (c.dimension) {
         RaumDimension.R1 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x}"
         RaumDimension.R2 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y}"
+        RaumDimension.C -> "\\operatorname{Re}(z)\\text{-Achse}: ${c.achsen.x},\\quad \\operatorname{Im}(z)\\text{-Achse}: ${c.achsen.y}"
         RaumDimension.R3 -> "${c.achsen.x}\\text{-Achse}: ${c.achsen.x},\\quad ${c.achsen.y}\\text{-Achse}: ${c.achsen.y},\\quad ${c.achsen.z}\\text{-Achse}: ${c.achsen.z}"
     }
     return achsen + if (c.farbe.modus == FarbModus.Spektrum) ",\\quad \\operatorname{Farbe}: ${c.farbe.variable ?: "t"},\\quad ${farbBereich.minimum}\\le ${c.farbe.variable ?: "t"}\\le ${farbBereich.maximum}" else ""
@@ -306,4 +428,5 @@ private fun raumName(dimension: RaumDimension): String = when (dimension) {
     RaumDimension.R1 -> "R¹"
     RaumDimension.R2 -> "R²"
     RaumDimension.R3 -> "R³"
+    RaumDimension.C -> "ℂ"
 }

@@ -413,6 +413,82 @@ object StandardMathematikAuswerter {
             require(menge.objekt is MengenAusdruck) { "Der Visualisierungseingang enthält keine Menge." }
             KnotenAuswertungsErgebnis(mapOf("menge" to menge))
         }
+        registriere("mathematik.orbit") { k ->
+            val verbundenerSchritt = k.eingänge["schritt"]?.objekt as? Methode
+                ?: error("Für eine Orbitfamilie muss eine Iterationsmethode verbunden sein.")
+            val start = k.eingänge["start"]?.objekt
+                ?: error("Für eine Orbitfamilie muss ein Startwert oder eine Startmethode verbunden sein.")
+            val mathematisch = verbundenerSchritt.alsMathematischeMethode("eine Orbititeration")
+            require(mathematisch.parameter.size == 2) {
+                "Eine Orbititeration benötigt genau zwei Parameter: Zustand und Parameter."
+            }
+            val zustandsName = k.knoten.parameter["zustandsArgument"].orEmpty().ifBlank {
+                mathematisch.parameter.first().name
+            }
+            val zustandsIndex = mathematisch.parameter.indexOfFirst { it.name == zustandsName }
+            val zustand = mathematisch.parameter.getOrNull(zustandsIndex)
+                ?: error("Das gewählte Zustandsargument '$zustandsName' gehört nicht zur Iterationsmethode.")
+            val reihenfolge = listOf(zustandsIndex) + mathematisch.parameter.indices.filterNot { it == zustandsIndex }
+            val effektiverWerteVorrat = mathematisch.effektiverWerteVorrat?.let { bereich ->
+                if (zustandsIndex == 0) bereich else permutiereMethodenBereich(bereich, reihenfolge)
+                    ?: error("Der effektive Methodenbereich kann für das gewählte Zustandsargument nicht sicher umgeordnet werden.")
+            }
+            val schritt = mathematisch.copy(
+                parameter = reihenfolge.map(mathematisch.parameter::get),
+                effektiverWerteVorrat = effektiverWerteVorrat,
+            )
+            val schrittSignatur = schritt.methodenSignatur()
+            val zustandsRaum = schrittSignatur.argumente.first().werteVorrat
+            require(prüfeTeilmenge(schrittSignatur.zielMenge, zustandsRaum).wahrheitswert != Wahrheitswert.Lüge) {
+                "Die Zielmenge der Iterationsmethode ist mit dem Wertevorrat des Zustandsarguments unvereinbar."
+            }
+            when (start) {
+                is Methode -> require(
+                    prüfeTeilmenge(start.methodenSignatur().zielMenge, zustandsRaum).wahrheitswert != Wahrheitswert.Lüge,
+                ) {
+                    "Die Zielmenge der Startmethode ist mit dem Wertevorrat des Zustandsarguments unvereinbar."
+                }
+                else -> require(ElementBeziehung(start, zustandsRaum).entscheide().wahrheitswert != Wahrheitswert.Lüge) {
+                    "Der Orbitstart liegt außerhalb des Wertevorrats des Zustandsarguments."
+                }
+            }
+            KnotenAuswertungsErgebnis(
+                mapOf(
+                    "orbit" to BedingterWert(
+                        objekt = OrbitFamilie(schritt, start),
+                        annahmen = annahmen(k),
+                        reelleVariablen = reelleVariablen(k.eingänge.values),
+                    ),
+                ),
+            )
+        }
+        registriere("mathematik.orbitBeschraenktheit") { k ->
+            val orbit = k.eingänge["orbit"]?.objekt as? OrbitFamilie
+                ?: error("Für die Beschränktheitsmenge muss eine Orbitfamilie verbunden sein.")
+            val parameterRaum = k.eingänge["parameterraum"]?.objekt as? MengenAusdruck
+                ?: error("Für die Beschränktheitsmenge muss ein Parameterraum verbunden sein.")
+            val schrittSignatur = orbit.schritt.methodenSignatur()
+            val parameterWerteVorrat = schrittSignatur.argumente[1].werteVorrat
+            require(prüfeTeilmenge(parameterRaum, parameterWerteVorrat).wahrheitswert != Wahrheitswert.Lüge) {
+                "Der Parameterraum ist nicht mit dem Wertevorrat des Parameterarguments vereinbar."
+            }
+            (orbit.start as? Methode)?.methodenSignatur()?.let { startSignatur ->
+                val startBereich = startSignatur.effektiverWerteVorrat
+                    ?: startSignatur.argumente.single().werteVorrat
+                require(prüfeTeilmenge(parameterRaum, startBereich).wahrheitswert != Wahrheitswert.Lüge) {
+                    "Der Parameterraum ist nicht mit dem Wertevorrat der Startmethode vereinbar."
+                }
+            }
+            KnotenAuswertungsErgebnis(
+                mapOf(
+                    "menge" to BedingterWert(
+                        objekt = OrbitBeschraenktheitsMenge(orbit, parameterRaum),
+                        annahmen = annahmen(k),
+                        reelleVariablen = reelleVariablen(k.eingänge.values),
+                    ),
+                ),
+            )
+        }
         registriere("mathematik.vereinigung") { k ->
             val mengen = k.operatorEingänge { anschluss, index ->
                 BenannteMenge(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
@@ -757,3 +833,19 @@ private fun unbekannteKennung(
     knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten,
     anschluss: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten,
 ) = "unbekannt_${knoten.id.wert}_${anschluss.id.wert}"
+
+private fun permutiereMethodenBereich(
+    bereich: MengenAusdruck,
+    reihenfolge: List<Int>,
+): MengenAusdruck? = when (bereich) {
+    is Tupelraum -> bereich.komponenten.takeIf { it.size == reihenfolge.size }
+        ?.let { komponenten -> Tupelraum(reihenfolge.map(komponenten::get)) }
+    is KartesischesProdukt -> bereich.mengen.takeIf { it.size == reihenfolge.size }
+        ?.let { komponenten -> KartesischesProdukt(reihenfolge.map(komponenten::get)) }
+    is EndlicheMenge -> {
+        val tupel = bereich.elemente.map { it as? Tupel ?: return null }
+        if (tupel.any { it.elemente.size != reihenfolge.size }) null
+        else EndlicheMenge(tupel.map { wert -> Tupel(reihenfolge.map(wert.elemente::get)) }.toSet())
+    }
+    else -> null
+}

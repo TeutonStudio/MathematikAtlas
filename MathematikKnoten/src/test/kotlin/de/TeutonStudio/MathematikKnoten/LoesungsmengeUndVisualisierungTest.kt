@@ -30,10 +30,15 @@ class LoesungsmengeUndVisualisierungTest {
     @Test fun `Sampler zeichnet Punkte Kreis und Kugel`() {
         val c2 = VisualisierungsKonfiguration(achsen = AchsenZuordnung("x", "y", "z"), bereiche = AchsenBereiche(ZahlenBereich(-2.0, 2.0), ZahlenBereich(-2.0, 2.0), ZahlenBereich(-2.0, 2.0)), sampling = SamplingKonfiguration(40, 16, .1))
         assertIs<VisualisierungsErgebnis.Erfolgreich>(VisualisierungsSampler.sample(EndlicheMenge(setOf(Tupel(listOf(RationaleZahl.Eins, RationaleZahl.Null)))), c2))
+        fun punkte(ergebnis: VisualisierungsErgebnis): List<VisualisierungsPunkt> = when (ergebnis) {
+            is VisualisierungsErgebnis.Erfolgreich -> ergebnis.punkte
+            is VisualisierungsErgebnis.Teilweise -> ergebnis.punkte
+            else -> emptyList()
+        }
         val x = Variable("x"); val y = Variable("y"); val z = Variable("z")
         val kreis = DefinierteMenge(listOf(GebundeneMengenVariable(x, ReelleZahlen), GebundeneMengenVariable(y, ReelleZahlen)), Gleichheit(addition(Potenz(x, RationaleZahl.von(2)), Potenz(y, RationaleZahl.von(2))), RationaleZahl.Eins))
-        assertTrue((VisualisierungsSampler.sample(kreis, c2) as VisualisierungsErgebnis.Erfolgreich).punkte.isNotEmpty())
+        assertTrue(punkte(VisualisierungsSampler.sample(kreis, c2)).isNotEmpty())
         val kugel = DefinierteMenge(listOf(GebundeneMengenVariable(x, ReelleZahlen), GebundeneMengenVariable(y, ReelleZahlen), GebundeneMengenVariable(z, ReelleZahlen)), Gleichheit(addition(Potenz(x, RationaleZahl.von(2)), Potenz(y, RationaleZahl.von(2)), Potenz(z, RationaleZahl.von(2))), RationaleZahl.Eins))
-        assertTrue((VisualisierungsSampler.sample(kugel, c2.copy(dimension = RaumDimension.R3)) as VisualisierungsErgebnis.Erfolgreich).punkte.isNotEmpty())
+        assertTrue(punkte(VisualisierungsSampler.sample(kugel, c2.copy(dimension = RaumDimension.R3))).isNotEmpty())
     }
 }

@@ -440,6 +440,14 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
         )
     }
     is Abbild -> Abbild(ersetze(objekt.menge, bindungen) as MengenAusdruck, ersetze(objekt.methode, bindungen) as Methode)
+    is OrbitFamilie -> OrbitFamilie(
+        schritt = ersetze(objekt.schritt, bindungen) as Methode,
+        start = ersetze(objekt.start, bindungen),
+    )
+    is OrbitBeschraenktheitsMenge -> OrbitBeschraenktheitsMenge(
+        orbit = ersetze(objekt.orbit, bindungen) as OrbitFamilie,
+        parameterRaum = ersetze(objekt.parameterRaum, bindungen) as MengenAusdruck,
+    )
     is GebundeneMethode -> objekt.copy(bindungen = objekt.bindungen.mapValues { ersetze(it.value, bindungen) })
     is IterierteSumme -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
     is IteriertesProdukt -> objekt.copy(indexMenge = ersetze(objekt.indexMenge, bindungen) as MengenAusdruck)
@@ -541,6 +549,8 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
             bindungen.values.enthalteneMethodenParameter()
     }
     is Abbild -> setOf(menge, methode).enthalteneMethodenParameter()
+    is OrbitFamilie -> setOf(schritt, start).enthalteneMethodenParameter()
+    is OrbitBeschraenktheitsMenge -> setOf(orbit, parameterRaum).enthalteneMethodenParameter()
     is IterierteSumme -> setOf(methode, indexMenge).enthalteneMethodenParameter()
     is IteriertesProdukt -> setOf(methode, indexMenge).enthalteneMethodenParameter()
     is IterierteVereinigung -> setOf(methode, indexMenge).enthalteneMethodenParameter()

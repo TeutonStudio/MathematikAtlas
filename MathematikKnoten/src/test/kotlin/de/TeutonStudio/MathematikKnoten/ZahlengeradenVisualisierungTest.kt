@@ -112,11 +112,13 @@ class ZahlengeradenVisualisierungTest {
     }
 
     @Test
-    fun `nicht exakt darstellbare dichte Grundmenge liefert Diagnose`() {
-        val ergebnis = assertIs<VisualisierungsErgebnis.NichtDarstellbar>(
+    fun `dichte rationale Grundmenge bleibt als gemischte Zellen sichtbar`() {
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
             VisualisierungsSampler.sample(RationaleZahlen, konfiguration()),
         )
 
-        assertTrue(ergebnis.grund.contains("dicht"))
+        assertTrue(ergebnis.punkte.isNotEmpty())
+        assertTrue(ergebnis.intervalle.isEmpty())
+        assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.Gemischt })
     }
 }
