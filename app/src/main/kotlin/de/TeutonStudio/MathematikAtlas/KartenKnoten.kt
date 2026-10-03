@@ -166,6 +166,5 @@ private fun schnittstellenFehler(karte: KartenDaten, zustand: KartenKnotenZustan
     val ausgänge = namen("mathematik.kartenAusgang")
     if (eingänge.distinct().size != eingänge.size) return "Öffentliche Karten-Eingänge benötigen eindeutige Namen."
     if (ausgänge.distinct().size != ausgänge.size) return "Öffentliche Karten-Ausgänge benötigen eindeutige Namen."
-    if (zustand == KartenKnotenZustand.Methode && ausgänge.isEmpty()) return "Eine Kartenmethode benötigt mindestens einen Ausgang."
     return null
 }

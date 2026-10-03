@@ -6,12 +6,9 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /**
  * Gemeinsamer Vertrag der wertartigen Rechnerknoten:
- * Ein gewöhnlicher Werteingang T darf alternativ eine Methode W -> T tragen.
- * Sobald mindestens ein solcher Operand eine Methode ist, wird die konkrete
- * Rechneroperation punktweise über die gemeinsame Methodensignatur gehoben.
- *
- * Echte Methodenoperanden eines Operators besitzen bereits die Anschlussart
- * [MathematikAnschlussArten.Methode] und werden ausdrücklich nicht erneut gehoben.
+ * Ein gewöhnlicher mathematischer Werteingang T darf alternativ eine mathematische
+ * Methode W -> T tragen. Allgemeine Script-/Engine-Methoden werden hier ausdrücklich
+ * nicht punktweise in mathematische Rechneroperationen gehoben.
  */
 private val methodenHebbareRechnerArten: Set<KnotenArtId> = setOf(
     MengenRechner.KNOTEN_ART,
@@ -33,23 +30,14 @@ private val methodenHebbareWertArten: Set<AnschlussArtId> = setOf(
     MathematikAnschlussArten.Tensor.id,
 )
 
-/**
- * Macht die statische Knotenschnittstelle methodenfähig. Die Funktion ist
- * idempotent und kann deshalb auf Vorlagen, geladene Karten und Inspector-
- * Kandidaten gleichermaßen angewandt werden.
- */
 fun normalisiereRechnerMethodenAnschluesse(knoten: KnotenDaten): KnotenDaten {
     if (knoten.art !in methodenHebbareRechnerArten) return knoten
 
-    // Operatoren, die selbst Methoden ausgeben, werden nicht zu Methoden höherer
-    // Ordnung gehoben. Das bestehende Methodenmodell ist absichtlich erster Ordnung.
     if (knoten.anschlüsse.any {
             it.richtung == AnschlussRichtung.Ausgang && it.art == MathematikAnschlussArten.Methode.id
         }
     ) return knoten
 
-    // Das Vektorfeldintegral konsumiert eine Methode als mathematischen Operanden;
-    // seine Integrationsmenge ist kein punktweise zu hebender Werteparameter.
     if (
         knoten.art == VektorRechner.KNOTEN_ART &&
         knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.VEKTORFELD_INTEGRIEREN.stabileId
@@ -115,7 +103,7 @@ private data class AllgemeineMethodenHebung(
         name: String,
         vorschrift: MathematischesObjekt,
         zielMenge: MengenAusdruck,
-    ): Methode = Methode(
+    ): MathematischeMethode = Methode(
         name = name,
         parameter = parameter,
         vorschrift = vorschrift,
@@ -128,15 +116,14 @@ private data class AllgemeineMethodenHebung(
 private fun bereiteAllgemeineMethodenHebungVor(
     operanden: Map<String, MathematischesObjekt>,
 ): AllgemeineMethodenHebung {
-    val methoden = operanden.values.filterIsInstance<Methode>()
+    val methoden = operanden.values.filterIsInstance<MathematischeMethode>()
     require(methoden.isNotEmpty())
     val basis = methoden.first()
-    val stelligkeit = basis.argumentAnzahl
-    require(methoden.all { it.argumentAnzahl == stelligkeit }) {
-        "Punktweise verknüpfte Methoden müssen dieselbe Argumentanzahl besitzen."
+    val stelligkeit = basis.signatur.argumente.size
+    require(methoden.all { it.signatur.argumente.size == stelligkeit }) {
+        "Punktweise verknüpfte mathematische Methoden müssen dieselbe Argumentanzahl besitzen."
     }
 
-    val signaturen = methoden.map(Methode::methodenSignatur)
     val basisParameter = basis.parameter
     val umbenennungen = methoden.associateWith { methode ->
         methode.parameter.mapIndexed { index, parameter ->
@@ -145,10 +132,9 @@ private fun bereiteAllgemeineMethodenHebungVor(
     }
 
     val werteVorraete = basisParameter.mapIndexed { index, parameter ->
-        val mengen = signaturen.mapIndexed { methodenIndex, signatur ->
-            val menge = signatur.argumente[index].werteVorrat
-            val bindungen = umbenennungen.getValue(methoden[methodenIndex])
-            @Suppress("UNCHECKED_CAST")
+        val mengen = methoden.map { methode ->
+            val menge = methode.mathematischeSignatur.argumente[index].definitionsMenge
+            val bindungen = umbenennungen.getValue(methode)
             (ersetze(menge, bindungen) as? MengenAusdruck) ?: menge
         }
         parameter.name to schneide(mengen)
@@ -162,12 +148,11 @@ private fun bereiteAllgemeineMethodenHebungVor(
     }
     val effektiverWerteVorrat = when {
         effektive.isNotEmpty() -> schneide(effektive)
-        stelligkeit == 0 -> null
         else -> Tupelraum(basisParameter.map { werteVorraete.getValue(it.name) })
     }
 
     val angeglicheneOperanden = operanden.mapValues { (_, objekt) ->
-        if (objekt !is Methode) objekt else {
+        if (objekt !is MathematischeMethode) objekt else {
             val bindungen = umbenennungen.getValue(objekt)
             ersetze(objekt.vorschrift, bindungen)
         }
@@ -181,11 +166,6 @@ private fun bereiteAllgemeineMethodenHebungVor(
     )
 }
 
-/**
- * Letzte Rechner-Verfeinerung. Sie umschließt die bereits vollständig
- * registrierten Fachauswerter und verändert daher deren eigentliche Mathematik
- * nicht, sondern nur den Übergang Wert <-> Methode.
- */
 fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
     methodenHebbareRechnerArten.forEach { art ->
         val basis = finde(art) ?: return@forEach
@@ -197,11 +177,21 @@ fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
                         MathematikAnschlussArten.Methode.id in anschluss.zulässigeArten
                 }
                 .mapTo(linkedSetOf()) { it.name }
-            val methodenOperanden = kontext.eingänge
+            val roheOperanden = kontext.eingänge
                 .filterKeys { it in hebbareNamen }
                 .mapValues { it.value.objekt }
-            if (methodenOperanden.values.none { it is Methode }) {
+            if (roheOperanden.values.none { it is Methode }) {
                 return@registriere basis.auswerten(kontext)
+            }
+            val nichtMathematischeMethode = roheOperanden.values
+                .filterIsInstance<Methode>()
+                .firstOrNull { it !is MathematischeMethode }
+            require(nichtMathematischeMethode == null) {
+                "Die allgemeine Methode '${nichtMathematischeMethode?.name}' kann nicht durch einen mathematischen Rechner punktweise gehoben werden."
+            }
+            val methodenOperanden = roheOperanden.mapValues { (name, objekt) ->
+                objekt as? MathematischesObjekt
+                    ?: error("Der mathematische Rechneroperand '$name' ist kein MathematischesObjekt.")
             }
 
             val hebung = bereiteAllgemeineMethodenHebungVor(methodenOperanden)
@@ -210,7 +200,7 @@ fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
                     wert.copy(
                         objekt = objekt,
                         zielMenge = null,
-                        werteVorrat = (wert.objekt as? Methode)?.zielMenge ?: wert.werteVorrat,
+                        werteVorrat = (wert.objekt as? MathematischeMethode)?.zielRaum ?: wert.werteVorrat,
                         latexDarstellung = null,
                     )
                 } ?: wert
@@ -224,24 +214,26 @@ fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
                 require(wert.objekt !is Methode) {
                     "Der Ausgang '$ausgang' liefert bereits eine Methode und kann nicht zusätzlich punktweise gehoben werden."
                 }
-                val ziel = when (wert.objekt) {
+                val mathematischerWert = wert.objekt as? MathematischesObjekt
+                    ?: error("Der mathematische Rechnerausgang '$ausgang' ist kein MathematischesObjekt.")
+                val ziel = when (mathematischerWert) {
                     is Aussage -> WahrheitsMenge
                     else -> wert.zielMenge ?: inferiereZielmenge(
-                        wert.objekt,
+                        mathematischerWert,
                         hebung.werteVorraete,
                         annahmen + wert.annahmen,
                     )
                 }
                 val methode = hebung.methode(
                     name = punktweiserRechnerMethodenName(kontext, ausgang),
-                    vorschrift = wert.objekt,
+                    vorschrift = mathematischerWert,
                     zielMenge = ziel,
                 )
                 BedingterWert(
                     objekt = methode,
                     annahmen = annahmen + wert.annahmen,
                     zielMenge = ziel,
-                    werteVorrat = methode.methodenSignatur().werteVorrat,
+                    werteVorrat = methode.mathematischeSignatur.definitionsRaum,
                     reelleVariablen = reelleVariablen(quellWerte),
                     variablenQuellen = quellWerte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
                 )
@@ -249,7 +241,7 @@ fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
             konkret.copy(
                 ausgaben = ausgaben,
                 eingänge = kontext.eingänge,
-                warnungen = konkret.warnungen + "Punktweise Methodenhebung: Wertausgang wurde zu Methode/Prädikat angehoben.",
+                warnungen = konkret.warnungen + "Punktweise Methodenhebung: Wertausgang wurde zu mathematischer Methode/Prädikat angehoben.",
             )
         }
     }

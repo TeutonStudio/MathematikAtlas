@@ -5,9 +5,11 @@ internal data class MethodenVertrag(
     val zielMenge: MengenAusdruck,
 )
 
+/** Mathematischer Strukturvertrag. Generische Scriptmethoden besitzen absichtlich keinen solchen Vertrag. */
 internal fun Methode.vertragOderNull(): MethodenVertrag? = runCatching {
-    val signatur = methodenSignatur()
-    MethodenVertrag(signatur.argumente.map { it.werteVorrat }, signatur.zielMenge)
+    val signatur = mathematischeMethodenSignatur()
+    val ziel = signatur.ergebnisse.singleOrNull()?.zielMenge ?: return@runCatching null
+    MethodenVertrag(signatur.argumente.map { it.definitionsMenge }, ziel)
 }.getOrNull()
 
 internal fun statusAus(pruefungen: List<BegriffsAxiomPruefung>): NachweisStatus {
@@ -178,14 +180,14 @@ fun pruefeVektorraum(
     val skalarKoerper = skalarVertrag?.argumentMengen?.firstOrNull()
 
     val signaturFehler = buildList {
-        if (addVertrag == null) add("Die Additionsmethode besitzt keine vollständige Signatur.")
+        if (addVertrag == null) add("Die Additionsmethode besitzt keine vollständige mathematische Signatur.")
         else {
             if (addVertrag.argumentMengen != listOf(traegerMenge, traegerMenge)) {
                 add("Addition muss V × V als Definitionsmenge besitzen.")
             }
             if (addVertrag.zielMenge != traegerMenge) add("Addition muss nach V abbilden.")
         }
-        if (skalarVertrag == null) add("Die skalare Multiplikation besitzt keine vollständige Signatur.")
+        if (skalarVertrag == null) add("Die skalare Multiplikation besitzt keine vollständige mathematische Signatur.")
         else {
             if (skalarVertrag.argumentMengen.size != 2 ||
                 skalarVertrag.argumentMengen.getOrNull(1) != traegerMenge
@@ -311,4 +313,3 @@ fun pruefeVektorraum(
         "${traegerMenge.zuLatex()}\\ \\operatorname{ist\\ ein\\ Vektorraum\\ ueber}\\ ${skalarKoerper.zuLatex()}",
     )
 }
-

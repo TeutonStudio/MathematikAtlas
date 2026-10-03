@@ -130,7 +130,10 @@ private fun inferiereElementMenge(
         "Für die Anschlussart '${menge.anschlussArt}' ist keine Obermenge festgelegt.",
     )
     is Abbild -> menge.methode.einzigeZielMenge
-    is MethodenGraphMenge -> Tupelraum(listOf(menge.methode.argumentRaum(), menge.methode.methodenSignatur().zielMenge))
+    is MethodenGraphMenge -> {
+        val signatur = menge.methode.mathematischeMethodenSignatur()
+        Tupelraum(listOf(signatur.definitionsRaum, signatur.zielRaum))
+    }
     is IterierteVereinigung -> menge.methode.grundMengeFürMengenAusgabe()
     is IterierterSchnitt -> menge.methode.grundMengeFürMengenAusgabe()
     is IteriertesKartesischesProdukt -> Folgenraum(menge.methode.grundMengeFürMengenAusgabe())

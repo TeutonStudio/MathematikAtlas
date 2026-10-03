@@ -4,6 +4,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class StrukturVertraegeTest {
     @Test
@@ -16,15 +17,13 @@ class StrukturVertraegeTest {
     }
 
     @Test
-    fun `0 Tupel besitzt tensorielle Sicht der Stufe null`() {
+    fun `0 Tupel ist kein Tensor`() {
         val tupel = Tupel(emptyList())
-        val ansicht = assertIs<StrukturPruefung.Gueltig<TensorielleAnsicht>>(tupel.tensorielleAnsicht()).wert
+        val fehler = assertIs<StrukturPruefung.Ungueltig>(tupel.tensorielleAnsicht())
 
         assertEquals(emptyList(), tupel.elemente)
-        assertEquals(emptyList(), ansicht.form)
-        assertEquals(emptyList(), ansicht.komponenten)
-        assertEquals(0, ansicht.stufe)
-        assertEquals(tupel, ansicht.quelle)
+        assertTrue(fehler.grund.contains("kein Tensor"))
+        assertTrue(fehler.grund.contains("Tensorstufe 0"))
     }
 
     @Test

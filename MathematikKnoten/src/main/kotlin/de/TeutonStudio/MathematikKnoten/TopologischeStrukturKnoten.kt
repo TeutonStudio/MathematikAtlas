@@ -1,333 +1,152 @@
 package de.TeutonStudio.MathematikKnoten
 
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
-import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphGröße
-import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
-import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
-import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
-import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
-import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
-import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
-import de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
-const val TOPOLOGISCHER_RAUM_KNOTEN_ART = "mathematik.topologischerRaum"
-const val METRISCHER_RAUM_KNOTEN_ART = "mathematik.metrischerRaum"
-const val TOPOLOGIE_MODUS_PARAMETER = "topologieModus"
-const val TOPOLOGIE_SYMBOL_PARAMETER = "topologieSymbol"
+const val TOPOLOGIE_ART = "mathematik.topologie"
+const val TOPOLOGISCHER_RAUM_ART = "mathematik.topologischerRaum"
+const val METRISCHER_RAUM_ART = "mathematik.metrischerRaum"
+const val METRIK_ART = "mathematik.metrik"
+const val STRUKTUR_EIGENSCHAFT_KNOTEN_ART = "mathematik.strukturEigenschaft"
+const val EIGENSCHAFT_PARAMETER = "eigenschaft"
 
-/** Anforderungen, die eine Eigenschaft zusätzlich zu ihrem Subjekt benötigt. */
-enum class StrukturAnforderung {
-    TOPOLOGISCHER_RAUM,
-    AFFINE_STRUKTUR,
-    QUELL_TOPOLOGIE,
-    ZIEL_TOPOLOGIE,
-}
-
-data class ErweiterteEigenschaftDefinition(
-    val id: String,
-    val titel: String,
-    val adjektiv: String,
-    val strukturAnforderungen: Set<StrukturAnforderung> = emptySet(),
-)
-
-object StrukturEigenschaften {
-    val Endlich = ErweiterteEigenschaftDefinition("endlich", "Endlichkeit", "endlich")
-    val Unendlich = ErweiterteEigenschaftDefinition("unendlich", "Unendlichkeit", "unendlich")
-    val Abzaehlbar = ErweiterteEigenschaftDefinition("abzählbar", "Abzählbarkeit", "abzählbar")
-    val Ueberabzaehlbar = ErweiterteEigenschaftDefinition("überabzählbar", "Überabzählbarkeit", "überabzählbar")
-
-    val intrinsischeMengenEigenschaften = listOf(Endlich, Unendlich, Abzaehlbar, Ueberabzaehlbar)
-    val intrinsischeIds = intrinsischeMengenEigenschaften.mapTo(linkedSetOf()) { it.id }
-
-    fun findeIntrinsisch(id: String?): ErweiterteEigenschaftDefinition? {
-        val normalisiert = id.orEmpty().trim().lowercase()
-            .replace("ueberabzaehlbar", "überabzählbar")
-            .replace("uberabzahlbar", "überabzählbar")
-            .replace("abzaehlbar", "abzählbar")
-        return intrinsischeMengenEigenschaften.firstOrNull { it.id == normalisiert }
-    }
-
-    fun strukturAnforderungen(id: String?): Set<StrukturAnforderung> = when (id?.trim()?.lowercase()) {
-        "offen", "abgeschlossen", "geschlossen" -> setOf(StrukturAnforderung.TOPOLOGISCHER_RAUM)
-        "konvexe-menge" -> setOf(StrukturAnforderung.AFFINE_STRUKTUR)
-        "stetig" -> setOf(StrukturAnforderung.QUELL_TOPOLOGIE, StrukturAnforderung.ZIEL_TOPOLOGIE)
-        else -> emptySet()
-    }
-}
+private val TOPOLOGIE_ID = AnschlussArtId(TOPOLOGIE_ART)
+private val TOPOLOGISCHER_RAUM_ID = AnschlussArtId(TOPOLOGISCHER_RAUM_ART)
+private val METRISCHER_RAUM_ID = AnschlussArtId(METRISCHER_RAUM_ART)
+private val METRIK_ID = AnschlussArtId(METRIK_ART)
 
 object TopologischeStrukturKnotenVorlagen {
-    private fun eingang(name: String, art: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId) = AnschlussDaten(
-        name = name,
-        richtung = AnschlussRichtung.Eingang,
-        kante = AnschlussKante.Links,
-        art = art,
-    )
-
-    private fun ausgang(name: String, art: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId) = AnschlussDaten(
-        name = name,
-        richtung = AnschlussRichtung.Ausgang,
-        kante = AnschlussKante.Rechts,
-        art = art,
+    val Topologie = KnotenVorlage(
+        art = TOPOLOGIE_ART,
+        name = "Topologie",
+        kategorie = "Topologie",
+        beschreibung = "Erzeugt eine explizite Topologie τ auf einer Trägermenge X.",
+        standardGröße = GraphGröße(260f, 150f),
+        anschlüsse = listOf(
+            AnschlussDaten("träger", AnschlussRichtung.Eingang, AnschlussKante.Links, AnschlussArtId("mathematik.menge")),
+            AnschlussDaten("offeneMengen", AnschlussRichtung.Eingang, AnschlussKante.Links, AnschlussArtId("mathematik.menge")),
+            AnschlussDaten("topologie", AnschlussRichtung.Ausgang, AnschlussKante.Rechts, TOPOLOGIE_ID),
+        ),
     )
 
     val TopologischerRaum = KnotenVorlage(
-        art = TOPOLOGISCHER_RAUM_KNOTEN_ART,
+        art = TOPOLOGISCHER_RAUM_ART,
         name = "Topologischer Raum",
-        kategorie = "Mengenlehre: Topologie",
-        beschreibung = "Erweitert eine Menge X explizit um eine Topologie τ und erzeugt den Raum (X,τ).",
-        standardGröße = GraphGröße(300f, 135f),
+        kategorie = "Topologie",
+        beschreibung = "Verbindet eine Trägermenge X mit einer expliziten Topologie τ.",
+        standardGröße = GraphGröße(280f, 140f),
         anschlüsse = listOf(
-            eingang("menge", MathematikAnschlussArten.Menge.id),
-            eingang("topologie", MathematikAnschlussArten.Topologie.id),
-            ausgang("raum", MathematikAnschlussArten.TopologischerRaum.id),
-        ),
-        standardParameter = mapOf(
-            TOPOLOGIE_MODUS_PARAMETER to "kanonisch",
-            TOPOLOGIE_SYMBOL_PARAMETER to "\\tau",
+            AnschlussDaten("träger", AnschlussRichtung.Eingang, AnschlussKante.Links, AnschlussArtId("mathematik.menge")),
+            AnschlussDaten("topologie", AnschlussRichtung.Eingang, AnschlussKante.Links, TOPOLOGIE_ID),
+            AnschlussDaten("raum", AnschlussRichtung.Ausgang, AnschlussKante.Rechts, TOPOLOGISCHER_RAUM_ID),
         ),
     )
 
     val MetrischerRaum = KnotenVorlage(
-        art = METRISCHER_RAUM_KNOTEN_ART,
+        art = METRISCHER_RAUM_ART,
         name = "Metrischer Raum",
-        kategorie = "Mengenlehre: Topologie",
-        beschreibung = "Erweitert eine Menge X um eine Metrik d und liefert zusätzlich die induzierte topologische Raumsicht (X,τ_d).",
-        standardGröße = GraphGröße(315f, 145f),
+        kategorie = "Topologie",
+        beschreibung = "Verbindet eine Trägermenge X mit einer expliziten Metrik d und der induzierten Topologie.",
+        standardGröße = GraphGröße(280f, 140f),
         anschlüsse = listOf(
-            eingang("menge", MathematikAnschlussArten.Menge.id),
-            eingang("metrik", MathematikAnschlussArten.Methode.id),
-            ausgang("raum", MathematikAnschlussArten.MetrischerRaum.id),
-            ausgang("topologie", MathematikAnschlussArten.TopologischerRaum.id),
+            AnschlussDaten("träger", AnschlussRichtung.Eingang, AnschlussKante.Links, AnschlussArtId("mathematik.menge")),
+            AnschlussDaten("metrik", AnschlussRichtung.Eingang, AnschlussKante.Links, METRIK_ID),
+            AnschlussDaten("raum", AnschlussRichtung.Ausgang, AnschlussKante.Rechts, METRISCHER_RAUM_ID),
         ),
     )
 
-    val alle = listOf(TopologischerRaum, MetrischerRaum)
-}
-
-/**
- * Sichtbare Eigenschaftsvorlagen erhalten nur die für ihren aktuellen Modus nötigen
- * Strukturanschlüsse. Historische Karten bleiben über ihre bestehenden Anschlüsse ladbar.
- */
-fun topologieFaehigeEigenschaftsVorlage(vorlage: KnotenVorlage): KnotenVorlage = when (vorlage.art) {
-    MENGEN_EIGENSCHAFT_KNOTEN_ART -> konfiguriereMengenEigenschaftVorlage(vorlage)
-    METHODEN_EIGENSCHAFT_KNOTEN_ART -> konfiguriereMethodenEigenschaftVorlage(vorlage)
-    else -> vorlage
-}
-
-private fun konfiguriereMengenEigenschaftVorlage(vorlage: KnotenVorlage): KnotenVorlage {
-    val eigenschaft = vorlage.standardParameter[EIGENSCHAFT_PARAMETER]
-    val basis = vorlage.anschlüsse.filterNot { it.name == "raum" }
-    val anschlüsse = if (
-        StrukturEigenschaften.strukturAnforderungen(eigenschaft).contains(StrukturAnforderung.TOPOLOGISCHER_RAUM)
-    ) {
-        basis.mitEingangVorAusgang("raum", MathematikAnschlussArten.TopologischerRaum.id)
-    } else basis
-    return vorlage.copy(
-        beschreibung = "Prüft intrinsische oder strukturabhängige Mengeneigenschaften ohne impliziten Umgebungsraum.",
-        anschlüsse = anschlüsse,
-        standardParameter = vorlage.standardParameter - EIGENSCHAFT_KONTEXT_PARAMETER - "umgebungsraum" - "topologie",
+    val Eigenschaft = KnotenVorlage(
+        art = STRUKTUR_EIGENSCHAFT_KNOTEN_ART,
+        name = "Eigenschaft",
+        kategorie = "Eigenschaften",
+        beschreibung = "Prüft eine strukturabhängige mathematische Eigenschaft mit sichtbarem Kontext.",
+        standardGröße = GraphGröße(270f, 150f),
+        anschlüsse = listOf(
+            AnschlussDaten("objekt", AnschlussRichtung.Eingang, AnschlussKante.Links, AnschlussArtId("mathematik.objekt")),
+            AnschlussDaten("aussage", AnschlussRichtung.Ausgang, AnschlussKante.Rechts, AnschlussArtId("mathematik.aussage")),
+        ),
+        parameter = mapOf(EIGENSCHAFT_PARAMETER to StrukturEigenschaften.Endlich.id),
     )
 }
 
-private fun konfiguriereMethodenEigenschaftVorlage(vorlage: KnotenVorlage): KnotenVorlage {
-    val eigenschaft = vorlage.standardParameter[EIGENSCHAFT_PARAMETER]
-    val basis = vorlage.anschlüsse.filterNot { it.name in setOf("quellRaum", "zielRaum") }
-    val anschlüsse = if (eigenschaft == MathematischeEigenschaftRegister.Stetig.id) {
-        basis
-            .mitEingangVorAusgang("quellRaum", MathematikAnschlussArten.TopologischerRaum.id)
-            .mitEingangVorAusgang("zielRaum", MathematikAnschlussArten.TopologischerRaum.id)
-    } else basis
-    return vorlage.copy(anschlüsse = anschlüsse)
+fun registriereTopologischeStrukturAnschlussArten(register: AnschlussArtRegister) {
+    register.registriere(AnschlussArtDefinition(TOPOLOGIE_ID, "Topologie", AnschlussKategorie.Menge, 0xFF00897B))
+    register.registriere(AnschlussArtDefinition(TOPOLOGISCHER_RAUM_ID, "Topologischer Raum", AnschlussKategorie.Menge, 0xFF00796B))
+    register.registriere(AnschlussArtDefinition(METRIK_ID, "Metrik", AnschlussKategorie.Methode, 0xFF5E35B1))
+    register.registriere(AnschlussArtDefinition(METRISCHER_RAUM_ID, "Metrischer Raum", AnschlussKategorie.Menge, 0xFF00695C))
 }
 
-fun konfiguriereMengenEigenschaftKnoten(knoten: KnotenDaten, eigenschaftId: String): KnotenDaten {
-    val altNachRolle = knoten.anschlüsse.associateBy { it.name to it.richtung }
-    val basis = knoten.anschlüsse.filterNot { it.name == "raum" }
-    val brauchtRaum = StrukturEigenschaften.strukturAnforderungen(eigenschaftId)
-        .contains(StrukturAnforderung.TOPOLOGISCHER_RAUM)
-    val neu = if (brauchtRaum) {
-        basis.mitEingangVorAusgang("raum", MathematikAnschlussArten.TopologischerRaum.id)
-    } else basis
-    return knoten.copy(
-        anschlüsse = neu.map { ziel ->
-            altNachRolle[ziel.name to ziel.richtung]?.let { ziel.copy(id = it.id) } ?: ziel
-        },
-        parameter = knoten.parameter + (EIGENSCHAFT_PARAMETER to eigenschaftId),
-    )
-}
-
-fun konfiguriereMethodenEigenschaftKnoten(knoten: KnotenDaten, eigenschaftId: String): KnotenDaten {
-    val altNachRolle = knoten.anschlüsse.associateBy { it.name to it.richtung }
-    val basis = knoten.anschlüsse.filterNot { it.name in setOf("quellRaum", "zielRaum") }
-    val neu = if (eigenschaftId == MathematischeEigenschaftRegister.Stetig.id) {
-        basis
-            .mitEingangVorAusgang("quellRaum", MathematikAnschlussArten.TopologischerRaum.id)
-            .mitEingangVorAusgang("zielRaum", MathematikAnschlussArten.TopologischerRaum.id)
-    } else basis
-    return knoten.copy(
-        anschlüsse = neu.map { ziel ->
-            altNachRolle[ziel.name to ziel.richtung]?.let { ziel.copy(id = it.id) } ?: ziel
-        },
-        parameter = knoten.parameter + (EIGENSCHAFT_PARAMETER to eigenschaftId),
-    )
-}
-
-private fun List<AnschlussDaten>.mitEingangVorAusgang(
-    name: String,
-    art: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId,
-): List<AnschlussDaten> {
-    if (any { it.name == name && it.richtung == AnschlussRichtung.Eingang }) return this
-    val eingang = AnschlussDaten(
-        name = name,
-        richtung = AnschlussRichtung.Eingang,
-        kante = AnschlussKante.Links,
-        art = art,
-    )
-    val ersterAusgang = indexOfFirst { it.richtung == AnschlussRichtung.Ausgang }.takeIf { it >= 0 } ?: size
-    return take(ersterAusgang) + eingang + drop(ersterAusgang)
-}
-
-internal fun MathematikAuswerterRegister.registriereTopologischeStrukturen() {
-    registriere(TOPOLOGISCHER_RAUM_KNOTEN_ART, MathematikKnotenAuswerter(::werteTopologischenRaumAus))
-    registriere(METRISCHER_RAUM_KNOTEN_ART, MathematikKnotenAuswerter(::werteMetrischenRaumAus))
-
-    val bisherigeMengenAuswertung = finde(MENGEN_EIGENSCHAFT_KNOTEN_ART)
-    registriere(MENGEN_EIGENSCHAFT_KNOTEN_ART) { kontext ->
-        val id = kontext.knoten.parameter[EIGENSCHAFT_PARAMETER].orEmpty().trim().lowercase()
-        when {
-            StrukturEigenschaften.findeIntrinsisch(id) != null -> intrinsischeMengenEigenschaft(kontext)
-            id in setOf("offen", "abgeschlossen", "geschlossen") -> topologischeMengenEigenschaft(kontext)
-            else -> bisherigeMengenAuswertung?.auswerten(kontext)
-                ?: error("Für die Mengeneigenschaft '$id' ist kein Auswerter registriert.")
-        }
+fun MathematikAuswerterRegister.registriereTopologischeStrukturAuswerter() {
+    registriere(TOPOLOGIE_ART) { kontext ->
+        val traeger = kontext.eingänge["träger"]?.objekt as? MengenAusdruck
+            ?: error("Die Trägermenge X fehlt.")
+        val offeneMengen = kontext.eingänge["offeneMengen"]?.objekt as? MengenAusdruck
+            ?: error("Die Familie der offenen Mengen fehlt.")
+        val topologie = Topologie(traeger, offeneMengen)
+        KnotenAuswertungsErgebnis(mapOf("topologie" to BedingterWert(topologie, kontext.gemeinsameAnnahmenTopologie())))
     }
+    registriere(TOPOLOGISCHER_RAUM_ART) { kontext ->
+        val traeger = kontext.eingänge["träger"]?.objekt as? MengenAusdruck
+            ?: error("Die Trägermenge X fehlt.")
+        val topologie = kontext.eingänge["topologie"]?.objekt as? Topologie
+            ?: error("Die Topologie τ fehlt.")
+        require(topologie.traeger == traeger) { "Die Topologie ist nicht auf der verbundenen Trägermenge definiert." }
+        KnotenAuswertungsErgebnis(
+            mapOf("raum" to BedingterWert(TopologischerRaum(traeger, topologie), kontext.gemeinsameAnnahmenTopologie())),
+        )
+    }
+    registriere(METRISCHER_RAUM_ART) { kontext ->
+        val traeger = kontext.eingänge["träger"]?.objekt as? MengenAusdruck
+            ?: error("Die Trägermenge X fehlt.")
+        val metrik = kontext.eingänge["metrik"]?.objekt as? Metrik
+            ?: error("Die Metrik d fehlt.")
+        require(metrik.traeger == traeger) { "Die Metrik ist nicht auf der verbundenen Trägermenge definiert." }
+        val raum = MetrischerRaum(traeger, metrik)
+        KnotenAuswertungsErgebnis(mapOf("raum" to BedingterWert(raum, kontext.gemeinsameAnnahmenTopologie())))
+    }
+    registriere(STRUKTUR_EIGENSCHAFT_KNOTEN_ART) { kontext -> werteStrukturEigenschaftAus(kontext) }
+}
 
-    val bisherigeMethodenAuswertung = finde(METHODEN_EIGENSCHAFT_KNOTEN_ART)
-    registriere(METHODEN_EIGENSCHAFT_KNOTEN_ART) { kontext ->
-        val id = kontext.knoten.parameter[EIGENSCHAFT_PARAMETER].orEmpty().trim().lowercase()
-        if (id == MathematischeEigenschaftRegister.Stetig.id) {
-            stetigkeitsEigenschaft(kontext)
-        } else {
-            bisherigeMethodenAuswertung?.auswerten(kontext)
-                ?: error("Für die Methodeneigenschaft '$id' ist kein Auswerter registriert.")
-        }
+private fun werteStrukturEigenschaftAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+    val id = kontext.knoten.parameter[EIGENSCHAFT_PARAMETER].orEmpty().trim().lowercase()
+    return when (id) {
+        "endlich", "unendlich", "abzählbar", "ueberabzaehlbar", "überabzählbar" ->
+            kardinalitaetsEigenschaft(kontext, id)
+        "offen", "abgeschlossen" -> topologischeMengenEigenschaft(kontext)
+        "stetig" -> stetigkeitsEigenschaft(kontext)
+        else -> kontext.eigenschaftsErgebnis(
+            EigenschaftsAussage(
+                eigenschaftId = id,
+                eigenschaftLatex = id,
+                subjektLatex = kontext.eingänge["objekt"]?.anzeigeLatex().orEmpty(),
+                unterstuetzung = UnterstuetzungsStatus.NOCH_NICHT_IMPLEMENTIERT,
+                aussageStatus = AussageStatus.UNENTSCHEIDBAR,
+                diagnose = EigenschaftsDiagnose("eigenschaft-unbekannt", "Für '$id' ist noch keine strukturierte Prüfung registriert."),
+            ),
+        )
     }
 }
 
-private fun werteTopologischenRaumAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
-    val menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
-        ?: return KnotenAuswertungsErgebnis(
-            emptyMap(),
-            fehler = "Für den topologischen Raum fehlt die Trägermenge.",
-            eingänge = kontext.eingänge,
-        )
-    val verbunden = kontext.eingänge["topologie"]?.objekt as? Topologie
-    val topologie = verbunden ?: when (kontext.knoten.parameter[TOPOLOGIE_MODUS_PARAMETER]?.trim()?.lowercase()) {
-        "diskret" -> DiskreteTopologie(menge)
-        "indiskret", "trivial" -> IndiskreteTopologie(menge)
-        "symbolisch", "benutzerdefiniert" -> SymbolischeTopologie(
-            menge,
-            kontext.knoten.parameter[TOPOLOGIE_SYMBOL_PARAMETER]?.takeIf { it.isNotBlank() } ?: "\\tau",
-        )
-        null, "", "kanonisch", "automatisch" -> StandardTopologieRegister.fuer(menge)
-            ?: return KnotenAuswertungsErgebnis(
-                emptyMap(),
-                fehler = "Für ${menge.zuLatex()} ist keine kanonische Standardtopologie registriert. Wähle diskret, indiskret oder symbolisch.",
-                eingänge = kontext.eingänge,
-            )
-        else -> return KnotenAuswertungsErgebnis(
-            emptyMap(),
-            fehler = "Unbekannter Topologiemodus '${kontext.knoten.parameter[TOPOLOGIE_MODUS_PARAMETER]}'.",
-            eingänge = kontext.eingänge,
-        )
-    }
-    if (topologie.traeger != menge) {
-        return KnotenAuswertungsErgebnis(
-            emptyMap(),
-            fehler = "Die verbundene Topologie gehört zu ${topologie.traeger.zuLatex()} statt zur Trägermenge ${menge.zuLatex()}.",
-            eingänge = kontext.eingänge,
-        )
-    }
-    val raum = TopologischerRaum(menge, topologie)
-    val warnungen = if (topologieAxiomStatus(topologie) == TopologieAxiomStatus.BEDINGT) {
-        listOf("Die symbolische Topologie wird unter der Voraussetzung verwendet, dass sie die Topologieaxiome erfüllt.")
-    } else emptyList()
-    return KnotenAuswertungsErgebnis(
-        ausgaben = mapOf("raum" to BedingterWert(raum, kontext.gemeinsameAnnahmenTopologie())),
-        eingänge = kontext.eingänge,
-        warnungen = warnungen,
-    )
-}
-
-private fun werteMetrischenRaumAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
-    val menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
-        ?: return KnotenAuswertungsErgebnis(
-            emptyMap(),
-            fehler = "Für den metrischen Raum fehlt die Trägermenge.",
-            eingänge = kontext.eingänge,
-        )
-    val metrik = kontext.eingänge["metrik"]?.objekt as? Methode
-        ?: return KnotenAuswertungsErgebnis(
-            emptyMap(),
-            fehler = "Für den metrischen Raum fehlt die Metrik.",
-            eingänge = kontext.eingänge,
-        )
-
-    return when (val pruefung = pruefeMetrik(menge, metrik)) {
-        is StrukturPruefung.Ungueltig ->
-            KnotenAuswertungsErgebnis(emptyMap(), fehler = pruefung.grund, eingänge = kontext.eingänge)
-        is StrukturPruefung.Unentscheidbar ->
-            KnotenAuswertungsErgebnis(emptyMap(), fehler = pruefung.grund, eingänge = kontext.eingänge)
-        is StrukturPruefung.Gueltig ->
-            metrischerRaumErgebnis(kontext, MetrischerRaum(menge, metrik), emptyList())
-        is StrukturPruefung.Bedingt -> {
-            val raum = pruefung.wert?.let { MetrischerRaum(it.traeger, it.metrik) }
-                ?: return KnotenAuswertungsErgebnis(
-                    emptyMap(),
-                    fehler = "Die Metrikstruktur ist noch unvollständig.",
-                    eingänge = kontext.eingänge,
-                )
-            metrischerRaumErgebnis(
-                kontext,
-                raum,
-                listOf("Metrikaxiome noch nicht bewiesen: ${pruefung.bedingungen.joinToString(", ")}.")
-            )
-        }
-    }
-}
-
-private fun metrischerRaumErgebnis(
+private fun kardinalitaetsEigenschaft(
     kontext: KnotenAuswertungsKontext,
-    raum: MetrischerRaum,
-    warnungen: List<String>,
+    id: String,
 ): KnotenAuswertungsErgebnis {
-    val annahmen = kontext.gemeinsameAnnahmenTopologie()
-    return KnotenAuswertungsErgebnis(
-        ausgaben = mapOf(
-            "raum" to BedingterWert(raum, annahmen),
-            "topologie" to BedingterWert(raum.alsTopologischerRaum, annahmen),
-        ),
-        eingänge = kontext.eingänge,
-        warnungen = warnungen,
-    )
-}
-
-private fun intrinsischeMengenEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
-    val menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
+    val menge = kontext.eingänge["objekt"]?.objekt as? MengenAusdruck
+        ?: kontext.eingänge["menge"]?.objekt as? MengenAusdruck
         ?: error("Die zu prüfende Menge fehlt.")
-    val definition = StrukturEigenschaften.findeIntrinsisch(kontext.knoten.parameter[EIGENSCHAFT_PARAMETER])
-        ?: error("Unbekannte intrinsische Mengeneigenschaft.")
     val vertrag = kardinalitaetsVertrag(menge)
-    val status = when (definition.id) {
-        StrukturEigenschaften.Endlich.id -> vertrag.endlichkeit.alsAussageStatus(erwartetEndlich = true)
-        StrukturEigenschaften.Unendlich.id -> vertrag.endlichkeit.alsAussageStatus(erwartetEndlich = false)
-        StrukturEigenschaften.Abzaehlbar.id ->
-            vertrag.abzaehlbarkeit.alsAussageStatus(erwartetAbzaehlbar = true)
-        StrukturEigenschaften.Ueberabzaehlbar.id ->
-            vertrag.abzaehlbarkeit.alsAussageStatus(erwartetAbzaehlbar = false)
+    val definition = when (id) {
+        "endlich" -> StrukturEigenschaften.Endlich
+        "unendlich" -> StrukturEigenschaften.Unendlich
+        "abzählbar" -> StrukturEigenschaften.Abzaehlbar
+        else -> StrukturEigenschaften.Ueberabzaehlbar
+    }
+    val status = when (definition) {
+        StrukturEigenschaften.Endlich -> vertrag.endlichkeit.alsAussageStatus(erwartetEndlich = true)
+        StrukturEigenschaften.Unendlich -> vertrag.endlichkeit.alsAussageStatus(erwartetEndlich = false)
+        StrukturEigenschaften.Abzaehlbar -> vertrag.abzaehlbarkeit.alsAussageStatus(erwartetAbzaehlbar = true)
+        StrukturEigenschaften.Ueberabzaehlbar -> vertrag.abzaehlbarkeit.alsAussageStatus(erwartetAbzaehlbar = false)
         else -> AussageStatus.UNENTSCHEIDBAR
     }
     return kontext.eigenschaftsErgebnis(
@@ -419,7 +238,7 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
         )
     }
 
-    val signatur = runCatching { methode.methodenSignatur() }.getOrElse { fehler ->
+    val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrElse { fehler ->
         return kontext.eigenschaftsErgebnis(
             EigenschaftsAussage(
                 eigenschaftId = "stetig",
@@ -429,17 +248,18 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
                 aussageStatus = AussageStatus.UNENTSCHEIDBAR,
                 diagnose = EigenschaftsDiagnose(
                     code = "stetigkeits-signatur-fehlt",
-                    nachricht = fehler.message ?: "Die Methodensignatur ist unvollständig.",
+                    nachricht = fehler.message ?: "Die mathematische Methodensignatur ist unvollständig.",
                 ),
             ),
         )
     }
 
-    val erwarteteQuelle = signatur.effektiverWerteVorrat
-        ?: signatur.argumente.singleOrNull()?.werteVorrat
-        ?: signatur.werteVorrat
+    val erwarteteQuelle = signatur.effektiverDefinitionsRaum
+        ?: signatur.argumente.singleOrNull()?.definitionsMenge
+        ?: signatur.kanonischerArgumentRaum
+    val erwartetesZiel = if (signatur.ergebnisse.size == 1) signatur.ergebnisse.single().zielMenge else signatur.zielRaum
     val falscheQuelle = quellRaum.traeger != erwarteteQuelle
-    val falschesZiel = zielRaum.traeger != signatur.zielMenge
+    val falschesZiel = zielRaum.traeger != erwartetesZiel
     if (falscheQuelle || falschesZiel) {
         return kontext.eigenschaftsErgebnis(
             EigenschaftsAussage(
@@ -452,7 +272,7 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
                     code = "stetigkeits-signatur-inkompatibel",
                     nachricht = buildString {
                         append("Die verbundenen Räume passen nicht zur Methodensignatur. ")
-                        append("Erwartet: ${erwarteteQuelle.zuLatex()} → ${signatur.zielMenge.zuLatex()}; ")
+                        append("Erwartet: ${erwarteteQuelle.zuLatex()} → ${erwartetesZiel.zuLatex()}; ")
                         append("verbunden: ${quellRaum.traeger.zuLatex()} → ${zielRaum.traeger.zuLatex()}.")
                     },
                 ),
@@ -490,7 +310,7 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
     )
 }
 
-private fun MathematischesObjekt?.alsTopologischerRaumOderNull(): TopologischerRaum? = when (this) {
+private fun AtlasWert?.alsTopologischerRaumOderNull(): TopologischerRaum? = when (this) {
     is TopologischerRaum -> this
     is MetrischerRaum -> alsTopologischerRaum
     else -> null
@@ -522,7 +342,6 @@ private fun KnotenAuswertungsKontext.eigenschaftsErgebnis(aussage: EigenschaftsA
 private fun KnotenAuswertungsKontext.gemeinsameAnnahmenTopologie(): Set<Aussage> =
     eingänge.values.flatMap { it.annahmen }.toSet()
 
-/** Intrinsische Mengeneigenschaften können ohne Strukturkontext automatisch erscheinen. */
 fun automatischeAdjektive(objekt: MengenAusdruck): List<AutomatischesAdjektiv> {
     val vertrag = kardinalitaetsVertrag(objekt)
     val eigenschaften = buildList {
@@ -549,7 +368,6 @@ fun automatischeAdjektive(objekt: MengenAusdruck): List<AutomatischesAdjektiv> {
     }
 }
 
-/** Bei einem strukturierten Raum dürfen zusätzlich tatsächlich belegte Topologieadjektive erscheinen. */
 fun automatischeAdjektive(objekt: TopologischerRaum): List<AutomatischesAdjektiv> = buildList {
     addAll(automatischeAdjektive(objekt.traeger))
     listOf(

@@ -61,7 +61,7 @@ class KompositionTest {
         assertTrue(!prüfung.istGültig)
         assertEquals(1, prüfung.fehler.single().äußerePosition)
         assertEquals(2, prüfung.fehler.single().innerePosition)
-        assertTrue(prüfung.fehler.single().grund.contains("passt nicht"))
+        assertTrue(prüfung.fehler.single().grund.contains("passen nicht"))
         assertFailsWith<IllegalArgumentException> { komponiere(listOf(außen, innen)) }
     }
 }

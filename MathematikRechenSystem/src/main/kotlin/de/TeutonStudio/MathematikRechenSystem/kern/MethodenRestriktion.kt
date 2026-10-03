@@ -9,8 +9,10 @@ enum class AbdeckungsStatus {
 /**
  * Strukturierter Methodenoperator für die mathematisch reine Restriktion `f|_M`.
  *
- * Die Voraussetzung `M ⊆ D_f` wird bereits beim Erzeugen geprüft. Der Operator
- * besitzt absichtlich weder Ergänzungsmethoden noch Ersatzwerte.
+ * [werteVorrat] bleibt als persistenznaher Legacy-Name erhalten. Fachlich ist er der
+ * eingeschränkte Definitionsraum. Bei einstelligen historischen Karten darf weiterhin
+ * die Komponentenmenge W übergeben werden; die mathematische Signatur normalisiert sie
+ * unmittelbar zu Tupelraum(W).
  */
 data class MethodenRestriktion(
     val basis: MathematischeMethode,
@@ -19,8 +21,10 @@ data class MethodenRestriktion(
     override val name: String
         get() = "${basis.name}\\vert_{${werteVorrat.zuLatex()}}"
 
-    override val signatur: MethodenSignatur
-        get() = basis.signatur.copy(effektiverWerteVorrat = werteVorrat)
+    override val mathematischeSignatur: MathematischeMethodenSignatur
+        get() = basis.mathematischeSignatur.copy(
+            effektiverDefinitionsRaum = kanonisiereBereichsRaum(werteVorrat, basis.parameter.size),
+        )
 
     override fun zuLatex(): String = name
 
@@ -47,8 +51,7 @@ data class MethodenBereichsergänzung(
  * geordneten Ergänzungsmethoden. Frühere Methoden besitzen immer Priorität.
  *
  * Dieser Typ ist ausdrücklich keine Restriktion und rendert deshalb niemals als
- * `f|_M`. Die Fallvorschrift wird erst an der mathematischen Materialisierungsgrenze
- * erzeugt und bleibt aus Basis, Zielbereich und geordneten Zweigen rekonstruierbar.
+ * `f|_M`. Zielraum und Ergebnisstruktur stammen unverändert von der Basismethode.
  */
 data class MethodenBereichsanpassung(
     val basis: MathematischeMethode,
@@ -58,8 +61,10 @@ data class MethodenBereichsanpassung(
     override val name: String
         get() = "\\operatorname{Bereichsanpassung}\\!\\left(${basis.name},${werteVorrat.zuLatex()}\\right)"
 
-    override val signatur: MethodenSignatur
-        get() = basis.signatur.copy(effektiverWerteVorrat = werteVorrat)
+    override val mathematischeSignatur: MathematischeMethodenSignatur
+        get() = basis.mathematischeSignatur.copy(
+            effektiverDefinitionsRaum = kanonisiereBereichsRaum(werteVorrat, basis.parameter.size),
+        )
 
     override val bereichsanpassung: MethodenBereichsanpassung
         get() = this
@@ -134,26 +139,44 @@ data class MethodenBereichsanpassungsErgebnis(
         get() = ergänzungen.any { it.zielPrüfung.wahrheitswert == Wahrheitswert.Lüge }
 }
 
-/** Gesamtdefinitionsbereich einer mathematischen Methode für Bereichsoperationen. */
+/** Kanonischer mathematischer Definitionsraum einer Methode. */
+fun Methode.definitionsRaum(): MengenAusdruck =
+    (this as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur?.definitionsRaum
+        ?: error("Die Methode '$name' besitzt keine mathematische Raum-/Mengensignatur.")
+
+/**
+ * Persistenznaher Bereich für die vorhandenen Bereichsoperatoren. Bei einstelligen
+ * Methoden wird der Einertupelraum bewusst an der Adaptergrenze auf seine Komponente
+ * projiziert, damit historische Karten und endliche Mengenoperationen stabil bleiben.
+ */
+@Deprecated("Verwende definitionsRaum(); diese Projektion existiert nur für Legacy-Bereichsoperatoren.")
 fun Methode.bereichsWerteVorrat(): MengenAusdruck {
     val mathematisch = alsMathematischeMethode("mathematische Bereichsoperationen")
-    return mathematisch.effektiverWerteVorrat ?: when (mathematisch.parameter.size) {
-        0 -> LeereMenge
+    val effektiver = mathematisch.effektiverWerteVorrat
+    if (effektiver != null) return effektiver
+    return when (mathematisch.parameter.size) {
+        0 -> Tupelraum(emptyList())
         1 -> mathematisch.werteVorräte[mathematisch.parameter.single().name]
-            ?: error("Für das Methodenargument '${mathematisch.parameter.single().name}' fehlt der Wertevorrat.")
+            ?: error("Für das Methodenargument '${mathematisch.parameter.single().name}' fehlt die Definitionsmenge.")
         else -> Tupelraum(mathematisch.parameter.map { parameter ->
             mathematisch.werteVorräte[parameter.name]
-                ?: error("Für das Methodenargument '${parameter.name}' fehlt der Wertevorrat.")
+                ?: error("Für das Methodenargument '${parameter.name}' fehlt die Definitionsmenge.")
         })
     }
+}
+
+private fun kanonisiereBereichsRaum(menge: MengenAusdruck, stelligkeit: Int): MengenAusdruck = when {
+    stelligkeit == 0 && menge == LeereMenge -> Tupelraum(emptyList())
+    stelligkeit == 1 && menge !is Tupelraum -> Tupelraum(listOf(menge))
+    else -> menge
 }
 
 /**
  * Mathematisch reine Restriktion von [basis] auf [menge].
  *
- * Genau der Vertrag `M ⊆ D_f` ist zulässig. Eine falsche Teilmengenbeziehung erzeugt
- * keine Methode; eine unentscheidbare Beziehung bleibt als sichtbare Voraussetzung
- * erhalten. Diese Funktion besitzt absichtlich keinen Ergänzungsparameter.
+ * Genau der Vertrag `M ⊆ D_f` ist zulässig. Für historische einstellige Karten wird
+ * die Komponentenmenge an dieser ergonomischen Grenze geprüft und anschließend in der
+ * Signatur zum Einertupelraum kanonisiert. Eine Restriktion verändert niemals den Zielraum.
  */
 fun restriktiereMethode(
     basis: Methode,
@@ -162,10 +185,11 @@ fun restriktiereMethode(
 ): MethodenRestriktionsErgebnis {
     val mathematischeBasis = basis.alsMathematischeMethode("mathematische Restriktion")
     val basisWerteVorrat = mathematischeBasis.bereichsWerteVorrat()
-    val teilmengenPrüfung = prüfeTeilmenge(menge, basisWerteVorrat, kontext)
+    val prüfMenge = if (mathematischeBasis.parameter.size == 0 && menge == LeereMenge) Tupelraum(emptyList()) else menge
+    val teilmengenPrüfung = prüfeTeilmenge(prüfMenge, basisWerteVorrat, kontext)
     val bedingungen = linkedSetOf<Aussage>()
     if (teilmengenPrüfung.wahrheitswert == null) {
-        bedingungen += TeilmengenBeziehung(menge, basisWerteVorrat)
+        bedingungen += TeilmengenBeziehung(prüfMenge, basisWerteVorrat)
     }
     val methode = if (teilmengenPrüfung.wahrheitswert == Wahrheitswert.Lüge) null
     else MethodenRestriktion(mathematischeBasis, menge)
@@ -219,7 +243,7 @@ fun passeMethodenBereichAn(
             bedingungen += TeilmengenBeziehung(Abbild(effektiverBereich, ergänzung), zielMenge)
         }
         if (effektiverBereich == LeereMenge) {
-            warnungen += "Ergänzung ${index + 1} deckt keinen noch offenen Teil des gewünschten Wertevorrats ab."
+            warnungen += "Ergänzung ${index + 1} deckt keinen noch offenen Teil des gewünschten Definitionsbereichs ab."
         }
         ergänzungsErgebnisse += MethodenErgänzungsBereich(
             methode = ergänzung,
@@ -268,22 +292,22 @@ fun passeMethodenBereichAn(
 }
 
 private fun prüfeEingabeform(basis: MathematischeMethode, ergänzung: MathematischeMethode, index: Int) {
-    require(ergänzung.parameter.size == basis.parameter.size) {
-        "Ergänzung ${index + 1} besitzt ${ergänzung.parameter.size} Argumente, benötigt werden ${basis.parameter.size}."
+    val typPrüfung = prüfeMethodenTypKomposition(
+        außen = object : SignaturtragendeMethode {
+            override val name = "Basis-Eingabe"
+            override val signatur = MethodenSignatur(basis.signatur.argumente, emptyList())
+        },
+        innen = object : SignaturtragendeMethode {
+            override val name = "Ergänzungs-Eingabe"
+            override val signatur = MethodenSignatur(emptyList(), ergänzung.signatur.argumente)
+        },
+    ).typPrüfung
+    require(typPrüfung !is de.TeutonStudio.TypSystem.TypPrüfung.Inkompatibel) {
+        "Ergänzung ${index + 1} besitzt eine inkompatible neutrale Eingabesignatur: ${typPrüfung.grund}"
     }
     require(ergänzung.ausgabeNamen.size == basis.ausgabeNamen.size) {
         "Ergänzung ${index + 1} besitzt eine andere Anzahl öffentlicher Ausgaben als die Basismethode."
     }
-    basis.parameter.zip(ergänzung.parameter).forEachIndexed { parameterIndex, (erwartet, tatsächlich) ->
-        require(gleicheParameterArt(erwartet, tatsächlich)) {
-            "Ergänzung ${index + 1} besitzt an Argument ${parameterIndex + 1} eine inkompatible Parameterart."
-        }
-    }
-}
-
-private fun gleicheParameterArt(links: MethodenParameter, rechts: MethodenParameter): Boolean = when {
-    links is TypisiertesElement && rechts is TypisiertesElement -> links.anschlussArt == rechts.anschlussArt
-    else -> links::class == rechts::class
 }
 
 private fun prüfeErgänzungsBild(
@@ -320,7 +344,7 @@ private fun MathematischeMethode.wendeAufGesamtArgumentAn(argument: Mathematisch
     1 -> wendeAn(listOf(argument))
     else -> {
         val tupel = argument as? Tupel
-            ?: error("Eine mehrstellige Methode benötigt im Gesamtwertebereich Tupelargumente.")
+            ?: error("Eine mehrstellige Methode benötigt im Gesamtdefinitionsbereich Tupelargumente.")
         require(tupel.elemente.size == parameter.size) {
             "Das Tupelargument besitzt ${tupel.elemente.size} Komponenten, benötigt werden ${parameter.size}."
         }

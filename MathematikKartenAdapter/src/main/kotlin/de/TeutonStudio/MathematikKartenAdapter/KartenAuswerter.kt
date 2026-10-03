@@ -145,11 +145,13 @@ class KartenAuswerter(
         return ergebnis
     }
 
-    private fun anschlussAkzeptiertMethode(art: AnschlussArtId, objekt: MathematischesObjekt): Boolean {
+    private fun anschlussAkzeptiertMethode(art: AnschlussArtId, objekt: AtlasWert): Boolean {
         val methode = objekt as? Methode ?: return false
-        val ausgabe = runCatching { methode.vorschrift }.getOrNull() ?: return false
+        if (art.wert == "mathematik.methode" || art.wert == "mathematik.funktion") return true
+        val symbolisch = methode as? SymbolischMathematischeMethode ?: return false
+        val ausgabeName = symbolisch.ausgabeNamen.singleOrNull() ?: return false
+        val ausgabe = symbolisch.vorschriftFür(ausgabeName)
         return when (art.wert) {
-            "mathematik.methode", "mathematik.funktion" -> true
             "mathematik.funktion.zahl" -> ausgabe is ZahlAusdruck
             "mathematik.funktion.aussage" -> methode.istPrädikat()
             "mathematik.funktion.menge" -> ausgabe is MengenAusdruck
@@ -256,33 +258,34 @@ class KartenAuswerter(
             internErgebnis.knoten[ausgang.id]?.ausgaben?.get("wert")?.let { name to it }
         }.toMap(LinkedHashMap())
         if (!alsMethode) return KnotenAuswertungsErgebnis(werte)
-        if (ausgänge.isEmpty()) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Kartenmethode benötigt mindestens einen öffentlichen Ausgang.")
         if (werte.size != ausgänge.size) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Nicht alle öffentlichen Kartenausgänge liefern einen Wert.")
 
         val geordneteWerte = ausgangsNamen.map { name ->
             name to requireNotNull(werte[name]) { "Für den Methodenausgang '$name' fehlt ein Wert." }
         }
-        val vorschrift = if (geordneteWerte.size == 1) {
-            geordneteWerte.single().second.objekt
-        } else {
-            Tupel(geordneteWerte.map { it.second.objekt })
+        val mathematischeAusgaben = linkedMapOf<String, MathematischesObjekt>()
+        val zielMengen = linkedMapOf<String, MengenAusdruck>()
+        geordneteWerte.forEach { (name, wert) ->
+            val objekt = wert.objekt as? MathematischesObjekt
+                ?: return KnotenAuswertungsErgebnis(
+                    emptyMap(),
+                    fehler = "Die mathematische Kartenausgabe '$name' liefert keinen mathematischen Wert.",
+                )
+            val ziel = wert.zielMenge
+                ?: return KnotenAuswertungsErgebnis(
+                    emptyMap(),
+                    fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.",
+                )
+            mathematischeAusgaben[name] = objekt
+            zielMengen[name] = ziel
         }
-        val zielMenge = if (geordneteWerte.size == 1) {
-            geordneteWerte.single().second.zielMenge
-                ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '${geordneteWerte.single().first}' fehlt die Zielmenge.")
-        } else {
-            Tupelraum(geordneteWerte.map { (name, wert) ->
-                wert.zielMenge
-                    ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.")
-            })
-        }
-        val methode = Methode(
+        @Suppress("DEPRECATION")
+        val methode = MathematischeMethode(
             name = methodenName?.trim().orEmpty().ifBlank { intern.name },
             parameter = freie.distinctBy { it.name },
-            vorschrift = vorschrift,
-            zielMenge = zielMenge,
+            ausgaben = mathematischeAusgaben,
+            zielMengen = zielMengen,
             werteVorräte = werteVorräte,
-            ausgabeNamen = ausgangsNamen,
         )
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, latexDarstellung = methode.name)))
     }

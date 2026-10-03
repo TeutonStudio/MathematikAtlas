@@ -3,12 +3,9 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
-import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
-import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
-import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -29,23 +26,13 @@ class TupelNullDimensionTest {
     }
 
     @Test
-    fun `Methodenmodus erzeugt bei Dimension null das 0 Tupel`() {
+    fun `Methodenmodus erzeugt bei Dimension null ohne Methodenverbindung das 0 Tupel`() {
         val knoten = konfiguriereTupel(MathematikKnotenVorlagen.Tupel.erzeuge(GraphPunkt.Zero), TUPEL_METHODE)
-        val index = Variable("i")
-        val methode = Methode(
-            name = "f",
-            parameter = listOf(index),
-            vorschrift = index,
-            zielMenge = BenannteMenge("Z", "\\mathbb{Z}"),
-        )
 
         val ergebnis = auswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
-                mapOf(
-                    "dimension" to BedingterWert(RationaleZahl.Null),
-                    "methode" to BedingterWert(methode),
-                ),
+                mapOf("dimension" to BedingterWert(RationaleZahl.Null)),
                 RechenKontext(),
             ),
         )

@@ -15,7 +15,7 @@ class MethodenArgumentraumTest {
             werteVorräte = mapOf(x.name to ReelleZahlen),
         )
 
-        assertEquals(Tupelraum(listOf(ReelleZahlen)), methode.methodenSignatur().werteVorrat)
+        assertEquals(Tupelraum(listOf(ReelleZahlen)), methode.mathematischeMethodenSignatur().definitionsRaum)
         assertEquals(Tupelraum(listOf(ReelleZahlen)), methode.argumentRaum())
     }
 

@@ -19,31 +19,31 @@ fun bereitePunktweiseZahlenfunktionVor(
     val methoden = operanden.values.filterIsInstance<Methode>()
     require(methoden.isNotEmpty()) { "Eine punktweise Hebung benötigt mindestens eine Zahlenfunktion." }
     methoden.forEach { methode ->
-        MethodenAnforderung.Zahlenfunktion.prüfe(methode)?.let { diagnose ->
-            error(diagnose)
-        }
+        MethodenAnforderung.Zahlenfunktion.prüfe(methode)?.let { diagnose -> error(diagnose) }
         require(methode.vorschrift is ZahlAusdruck) {
             "Die Methode '${methode.name}' besitzt trotz numerischer Zielmenge keine Zahlvorschrift."
         }
     }
 
     val basis = methoden.first()
-    val stelligkeit = basis.parameter.size
-    val abweichend = methoden.firstOrNull { it.parameter.size != stelligkeit }
+    val stelligkeit = basis.methodenSignatur().argumente.size
+    val abweichend = methoden.firstOrNull { it.methodenSignatur().argumente.size != stelligkeit }
     require(abweichend == null) {
         "Die Zahlenfunktionen müssen dieselbe Stelligkeit besitzen; '${basis.name}' hat " +
-            "$stelligkeit Argumente, '${abweichend?.name}' dagegen ${abweichend?.parameter?.size}."
+            "$stelligkeit Argumente, '${abweichend?.name}' dagegen ${abweichend?.methodenSignatur()?.argumente?.size}."
     }
-    val parameter = basis.parameter.map { alt -> Variable(alt.name, alt.zuLatex()) }
+    val basisMathematisch = basis.alsMathematischeMethode("punktweise Zahlenhebung")
+    val parameter = basisMathematisch.parameter.map { alt -> Variable(alt.name, alt.zuLatex()) }
 
     fun bindungen(methode: Methode): Map<String, MathematischesObjekt> =
-        methode.parameter.mapIndexed { index, alt -> alt.name to parameter[index] }.toMap()
+        methode.alsMathematischeMethode("punktweise Zahlenhebung").parameter
+            .mapIndexed { index, alt -> alt.name to parameter[index] }.toMap()
 
     val komponenten = parameter.indices.map { index ->
         normalisiereZahlmengenSchnitt(
             methoden.map { methode ->
-                val argument = methode.methodenSignatur().argumente[index]
-                benenneMethodenBereichUm(argument.werteVorrat, bindungen(methode))
+                val argument = methode.mathematischeMethodenSignatur().argumente[index]
+                benenneMethodenBereichUm(argument.definitionsMenge, bindungen(methode))
             },
         )
     }
@@ -52,11 +52,11 @@ fun bereitePunktweiseZahlenfunktionVor(
     }.toMap(LinkedHashMap())
 
     val expliziteBereiche = methoden.mapNotNull { methode ->
-        methode.effektiverWerteVorrat?.let { bereich ->
+        methode.alsMathematischeMethode("punktweise Zahlenhebung").effektiverWerteVorrat?.let { bereich ->
             benenneMethodenBereichUm(bereich, bindungen(methode))
         }
     }
-    val kartesischerBereich = if (parameter.isEmpty()) LeereMenge else Tupelraum(komponenten)
+    val kartesischerBereich = Tupelraum(komponenten)
     val effektiverBereich = if (expliziteBereiche.isEmpty()) {
         kartesischerBereich
     } else {
@@ -93,11 +93,8 @@ fun PunktweiseZahlenVorbereitung.erzeugeMethode(
         require(parameter.isNotEmpty()) {
             "Wertabhängige Definitionsbedingungen nullstelliger Methoden sind nicht darstellbar."
         }
-        val bedingung = if (definitionsBedingungen.size == 1) {
-            definitionsBedingungen.single()
-        } else {
-            Konjunktion(definitionsBedingungen)
-        }
+        val bedingung = if (definitionsBedingungen.size == 1) definitionsBedingungen.single()
+        else Konjunktion(definitionsBedingungen)
         val bedingterBereich = DefinierteMenge(
             variablen = parameter.map { variable ->
                 GebundeneMengenVariable(variable, werteVorräte.getValue(variable.name))
