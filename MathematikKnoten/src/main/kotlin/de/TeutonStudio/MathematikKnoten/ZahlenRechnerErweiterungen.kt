@@ -329,7 +329,7 @@ private fun werteUnaerenErweitertenOperatorAus(
     val latex = "${operator.symbolLatex}\\left($effektivLatex\\right)"
     val zahlObjekt = symbolischerZahlterm("${operator.stabileId}:$latex", latex)
     val bedingungen = erweiterteDefinitionsBedingungen(operator, argument)
-    val objekt: MathematischesObjekt = if (vorbereitung == null) {
+    val objekt: AtlasWert = if (vorbereitung == null) {
         zahlObjekt
     } else {
         val ziel = methode.zielMenge.fundamentalerZahlbereichOderNull()?.let { bereich ->
@@ -392,7 +392,7 @@ private fun werteMittelAus(
             UnentscheidbareAussage("${zahl.zuLatex()}\\ge 0", "reelles geometrisches Mittel")
         }
     } else emptyList()
-    val objekt: MathematischesObjekt = vorbereitung?.erzeugeMethode(
+    val objekt: AtlasWert = vorbereitung?.erzeugeMethode(
         name = "${operator.symbolLatex}(${vorbereitung.methodenNamen.values.joinToString(",")})",
         vorschrift = ausdruck,
         zielMenge = inferiereZahlenWertevorrat(ausdruck),
@@ -474,7 +474,7 @@ private fun wertePolynomAus(kontext: KnotenAuswertungsKontext): KnotenAuswertung
     val argument = vorbereitung?.operanden?.getValue("argument")
         ?: (argumentWert.objekt as? ZahlAusdruck ?: error("Das Polynomargument ist weder Zahl noch Zahlenfunktion."))
     val ausdruck = polynomAusKoeffizienten(koeffizienten, argument)
-    val objekt: MathematischesObjekt = vorbereitung?.erzeugeMethode(
+    val objekt: AtlasWert = vorbereitung?.erzeugeMethode(
         name = "p(${argumentMethode?.name})",
         vorschrift = ausdruck,
         zielMenge = inferiereZahlenWertevorrat(ausdruck),

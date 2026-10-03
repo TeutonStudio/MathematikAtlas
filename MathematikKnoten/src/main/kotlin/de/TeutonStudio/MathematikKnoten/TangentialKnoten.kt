@@ -14,6 +14,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.TangentialAusgabeForm
 import de.TeutonStudio.MathematikRechenSystem.kern.TangentialErgebnis
+import de.TeutonStudio.MathematikRechenSystem.kern.alsMathematischeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.tangentialObjekt
 
 const val TANGENTIAL_KNOTEN_ART = "mathematik.tangentialObjekt"
@@ -83,7 +84,9 @@ internal fun MathematikAuswerterRegister.registriereTangentialKnoten() {
                     "tangente" to BedingterWert(
                         objekt = ergebnis.methode,
                         annahmen = annahmen,
-                        latexDarstellung = ergebnis.methode.zuLatex(),
+                        latexDarstellung = ergebnis.methode
+                            .alsMathematischeMethode("Tangentialmethode")
+                            .zuLatex(),
                     ),
                 ),
                 warnungen = listOf(ergebnis.verwendeteRegel),

@@ -260,8 +260,8 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(wert, k)))
         }
         registriere("mathematik.gleichheit") { k ->
-            val links = k.eingänge["links"]?.objekt ?: error("Linke Seite fehlt.")
-            val rechts = k.eingänge["rechts"]?.objekt ?: error("Rechte Seite fehlt.")
+            val links = k.objekt("links")
+            val rechts = k.objekt("rechts")
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Gleichheit(links, rechts), annahmen(k))))
         }
         registriere("mathematik.wahr") { KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(WahrheitsKonstante(true)))) }
@@ -305,7 +305,10 @@ object StandardMathematikAuswerter {
             val eingang = k.eingänge["term"]
                 ?: k.eingänge["objekt"]
                 ?: error("Term fehlt.")
-            val vereinfachung = vereinfacheTerm(eingang.objekt, k.rechenKontext)
+            val vereinfachung = vereinfacheTerm(
+                eingang.mathematischesObjekt("Auszuwertender Term"),
+                k.rechenKontext,
+            )
             val ausgangsName = k.knoten.anschlüsse.firstOrNull {
                 it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
             }?.name ?: "term"
@@ -363,7 +366,7 @@ object StandardMathematikAuswerter {
         registriere("mathematik.einzelmenge") { k ->
             val element = k.eingänge["element"] ?: error("Element fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
-                objekt = EndlicheMenge(setOf(element.objekt)),
+                objekt = EndlicheMenge(setOf(element.mathematischesObjekt("Element der Einzelmenge"))),
                 annahmen = element.annahmen,
                 reelleVariablen = element.reelleVariablen,
                 variablenQuellen = element.variablenQuellen,
@@ -482,7 +485,7 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.termZuMethode") { k ->
             val termWert = k.eingänge["term"] ?: error("Term fehlt.")
-            val term = termWert.objekt
+            val term = termWert.mathematischesObjekt("Term der Methodenbildung")
             val freieParameter = term.freieMethodenParameter().associateBy { it.name }
             val quellenNachName = termWert.variablenQuellen
                 .filter { it.name in freieParameter }
@@ -657,7 +660,13 @@ object StandardMathematikAuswerter {
             val basis = when (aussage.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> wahr
                 Wahrheitswert.Lüge -> lüge
-                null -> BedingterWert(FallAusdruck(wahr.objekt, aussage, lüge.objekt))
+                null -> BedingterWert(
+                    FallAusdruck(
+                        wahr.mathematischesObjekt("Wahr-Zweig der Fallunterscheidung"),
+                        aussage,
+                        lüge.mathematischesObjekt("Lüge-Zweig der Fallunterscheidung"),
+                    ),
+                )
             }
             KnotenAuswertungsErgebnis(mapOf(
                 "wert" to basis.copy(
@@ -676,7 +685,8 @@ object StandardMathematikAuswerter {
     }
 
     private fun KnotenAuswertungsKontext.zahl(name: String) = eingänge[name]?.objekt as? ZahlAusdruck ?: error("Zahleingang $name fehlt.")
-    private fun KnotenAuswertungsKontext.objekt(name: String) = eingänge[name]?.objekt ?: error("Eingang $name fehlt.")
+    private fun KnotenAuswertungsKontext.objekt(name: String) =
+        eingänge[name]?.mathematischesObjekt("Eingang '$name'") ?: error("Eingang $name fehlt.")
     private fun KnotenAuswertungsKontext.menge(name: String) = eingänge[name]?.objekt as? MengenAusdruck ?: error("Mengeneingang $name fehlt.")
     private fun KnotenAuswertungsKontext.komplex(name: String) = eingänge[name]?.objekt as? KomplexeZahl ?: error("Komplexe Zahl $name fehlt.")
     private fun KnotenAuswertungsKontext.spalte(name: String) = eingänge[name]?.objekt as? SpaltenVektor ?: error("Spaltenvektor $name fehlt.")

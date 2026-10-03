@@ -35,7 +35,10 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UnterstuetzungsStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.Vektorraum
 import de.TeutonStudio.MathematikRechenSystem.kern.ZeilenVektor
+import de.TeutonStudio.MathematikRechenSystem.kern.alsMathematischeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.kardinalitaetsVertrag
+import de.TeutonStudio.MathematikRechenSystem.kern.mathematischeMethodenSignatur
+import de.TeutonStudio.MathematikRechenSystem.kern.neutraleMethodenSignatur
 
 const val METHODEN_EIGENSCHAFT_KNOTEN_ART = "mathematik.methodenEigenschaft"
 const val ANALYSIS_EIGENSCHAFT_KNOTEN_ART = "mathematik.analysisEigenschaft"
@@ -208,18 +211,21 @@ data class MethodenSignaturAnsicht(
     }
 
     companion object {
-        fun von(methode: Methode, ansicht: ArgumentAnsicht = ArgumentAnsicht.EinzelArgumente): MethodenSignaturAnsicht =
-            MethodenSignaturAnsicht(
-                stelligkeit = methode.parameter.size,
-                rollen = methode.parameter.mapIndexed { index, parameter ->
+        fun von(methode: Methode, ansicht: ArgumentAnsicht = ArgumentAnsicht.EinzelArgumente): MethodenSignaturAnsicht {
+            val signatur = methode.neutraleMethodenSignatur()
+            val argumente = signatur.argumente.sortedBy { it.position }
+            return MethodenSignaturAnsicht(
+                stelligkeit = argumente.size,
+                rollen = argumente.map { argument ->
                     ArgumentRolle(
-                        stabileId = "argument.$index.${parameter.name}",
-                        sichtbarerName = parameter.name,
-                        position = index,
+                        stabileId = argument.id,
+                        sichtbarerName = argument.name.ifBlank { argument.id },
+                        position = argument.position,
                     )
                 },
                 ansicht = ansicht,
             )
+        }
     }
 }
 
@@ -230,9 +236,9 @@ enum class FolgenArt(val indexMenge: MengenAusdruck) {
 
     companion object {
         fun aus(methode: Methode): FolgenArt {
-            if (methode.parameter.size != 1) return KeineFolge
-            val parameter = methode.parameter.single()
-            return when (methode.werteVorräte[parameter.name]) {
+            val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrNull() ?: return KeineFolge
+            if (signatur.argumente.size != 1) return KeineFolge
+            return when (signatur.argumente.single().definitionsMenge) {
                 NatürlicheZahlen -> Einseitig
                 GanzeZahlen -> Zweiseitig
                 else -> KeineFolge
@@ -254,11 +260,26 @@ data class FolgenVertrag(
     val zielMenge: MengenAusdruck,
 ) {
     companion object {
-        fun von(methode: Methode): FolgenVertrag = FolgenVertrag(
-            art = FolgenArt.aus(methode),
-            indexRolle = methode.parameter.singleOrNull()?.let { ArgumentRolle("index.${it.name}", it.name, 0) },
-            zielMenge = methode.zielMenge,
-        )
+        fun von(methode: Methode): FolgenVertrag {
+            val signatur = methode.mathematischeMethodenSignatur()
+            val index = signatur.argumente.singleOrNull()
+            val ziel = when (signatur.ergebnisse.size) {
+                0 -> Tupelraum(emptyList())
+                1 -> signatur.ergebnisse.single().zielMenge
+                else -> signatur.zielRaum
+            }
+            return FolgenVertrag(
+                art = FolgenArt.aus(methode),
+                indexRolle = index?.let {
+                    ArgumentRolle(
+                        stabileId = it.id,
+                        sichtbarerName = it.name.ifBlank { it.id },
+                        position = it.position,
+                    )
+                },
+                zielMenge = ziel,
+            )
+        }
     }
 }
 
@@ -420,9 +441,11 @@ object KonvexitaetsKern {
         definition: MathematischeEigenschaftDefinition,
         streng: Boolean,
     ): EigenschaftsAussage {
-        val passend = methode.parameter.isNotEmpty() && methode.parameter.all { parameter ->
-            methode.werteVorräte[parameter.name] in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
-        } && methode.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+        val signatur = methode.mathematischeMethodenSignatur()
+        val passend = signatur.argumente.isNotEmpty() && signatur.argumente.all { argument ->
+            argument.definitionsMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+        } && signatur.ergebnisse.size == 1 &&
+            signatur.ergebnisse.single().zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
         val support = if (passend) UnterstuetzungsStatus.IMPLEMENTIERT else UnterstuetzungsStatus.MATHEMATISCH_NICHT_MOEGLICH
         return EigenschaftsAussage(
             eigenschaftId = definition.id,
@@ -439,8 +462,8 @@ object KonvexitaetsKern {
                 },
                 voraussetzungen = listOf("konvexer Definitionsbereich", "geordnete reelle Zielstruktur"),
             ),
-            kontextLatex = methode.parameter.joinToString(",") { parameter ->
-                methode.werteVorräte[parameter.name]?.zuLatex() ?: "?"
+            kontextLatex = signatur.argumente.sortedBy { it.position }.joinToString(",") {
+                it.definitionsMenge.zuLatex()
             },
         )
     }
@@ -501,7 +524,8 @@ internal fun MathematikAuswerterRegister.registriereMathematischeEigenschaften()
     registriere(METHODEN_STELLIGKEIT_KNOTEN_ART) { kontext ->
         val methode = kontext.methode()
         val definition = kontext.definition(EigenschaftsSubjektArt.Methodensignatur)
-        val istEinstellig = methode.parameter.size == 1
+        val signatur = methode.neutraleMethodenSignatur()
+        val istEinstellig = signatur.argumente.size == 1
         val erwartetEinstellig = definition.id == MathematischeEigenschaftRegister.Einstellig.id
         val wahr = istEinstellig == erwartetEinstellig
         kontext.aussageErgebnis(
@@ -512,8 +536,8 @@ internal fun MathematikAuswerterRegister.registriereMathematischeEigenschaften()
                 unterstuetzung = UnterstuetzungsStatus.IMPLEMENTIERT,
                 aussageStatus = if (wahr) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT,
                 diagnose = EigenschaftsDiagnose(
-                    code = "stelligkeit-${methode.parameter.size}",
-                    nachricht = "Die Signatur besitzt ${methode.parameter.size} stabile Argumentrollen.",
+                    code = "stelligkeit-${signatur.argumente.size}",
+                    nachricht = "Die Signatur besitzt ${signatur.argumente.size} stabile Argumentrollen.",
                 ),
             ),
         )
@@ -531,9 +555,11 @@ private fun methodenAussage(
     definition: MathematischeEigenschaftDefinition,
     parameter: Map<String, String>,
 ): EigenschaftsAussage {
-    val istReelleZahlmethode = methode.parameter.isNotEmpty() && methode.parameter.all {
-        methode.werteVorräte[it.name] in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
-    } && methode.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+    val signatur = methode.mathematischeMethodenSignatur()
+    val istReelleZahlmethode = signatur.argumente.isNotEmpty() && signatur.argumente.all {
+        it.definitionsMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+    } && signatur.ergebnisse.size == 1 &&
+        signatur.ergebnisse.single().zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
     val support = when (definition.gruppe) {
         EigenschaftsGruppe.Regularität,
         EigenschaftsGruppe.Integrabilität,
@@ -568,6 +594,7 @@ private fun folgenAussage(
     definition: MathematischeEigenschaftDefinition,
 ): EigenschaftsAussage {
     val art = FolgenArt.aus(methode)
+    val vertrag = FolgenVertrag.von(methode)
     val wertDefinition = wertArt(methode)
     val wahr = when (definition.id) {
         MathematischeEigenschaftRegister.EinseitigeFolge.id -> art == FolgenArt.Einseitig
@@ -583,18 +610,21 @@ private fun folgenAussage(
         aussageStatus = if (!entscheidbar) AussageStatus.UNENTSCHEIDBAR else if (wahr) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT,
         diagnose = EigenschaftsDiagnose(
             code = "folgenvertrag-${art.name.lowercase()}",
-            nachricht = "Indexmenge: ${art.indexMenge.zuLatex()}, Zielmenge: ${methode.zielMenge.zuLatex()}.",
+            nachricht = "Indexmenge: ${art.indexMenge.zuLatex()}, Zielmenge: ${vertrag.zielMenge.zuLatex()}.",
         ),
     )
 }
 
-private fun wertArt(methode: Methode): MathematischeEigenschaftDefinition? = when {
-    methode.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen) -> MathematischeEigenschaftRegister.Reellwertig
-    methode.zielMenge == KomplexeZahlen -> MathematischeEigenschaftRegister.Komplexwertig
-    methode.zielMenge is Vektorraum || methode.vorschrift is SpaltenVektor || methode.vorschrift is ZeilenVektor -> MathematischeEigenschaftRegister.Vektorwertig
-    methode.zielMenge is Matrizenraum || methode.zielMenge is Tupelraum -> MathematischeEigenschaftRegister.Vektorwertig
-    methode.vorschrift::class.simpleName?.contains("Polynom", ignoreCase = true) == true -> MathematischeEigenschaftRegister.Polynomwertig
-    else -> null
+private fun wertArt(methode: Methode): MathematischeEigenschaftDefinition? {
+    val mathematisch = runCatching { methode.alsMathematischeMethode("Wertart einer Methode") }.getOrNull() ?: return null
+    return when {
+        mathematisch.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen) -> MathematischeEigenschaftRegister.Reellwertig
+        mathematisch.zielMenge == KomplexeZahlen -> MathematischeEigenschaftRegister.Komplexwertig
+        mathematisch.zielMenge is Vektorraum || mathematisch.vorschrift is SpaltenVektor || mathematisch.vorschrift is ZeilenVektor -> MathematischeEigenschaftRegister.Vektorwertig
+        mathematisch.zielMenge is Matrizenraum || mathematisch.zielMenge is Tupelraum -> MathematischeEigenschaftRegister.Vektorwertig
+        mathematisch.vorschrift::class.simpleName?.contains("Polynom", ignoreCase = true) == true -> MathematischeEigenschaftRegister.Polynomwertig
+        else -> null
+    }
 }
 
 private fun mengenAussage(
@@ -671,11 +701,13 @@ private fun positionsMenge(
     definition: MathematischeEigenschaftDefinition,
     streng: Boolean,
 ): MengenAusdruck {
-    val variablen = methode.parameter.mapIndexed { index, parameter ->
+    val signatur = methode.mathematischeMethodenSignatur()
+    val variablen = signatur.argumente.sortedBy { it.position }.mapIndexed { index, argument ->
+        val parameter = argument.parameter
         val variable = parameter as? Variable ?: Variable(parameter.name.ifBlank { "x_${index + 1}" })
         GebundeneMengenVariable(
             variable = variable,
-            grundMenge = methode.werteVorräte[parameter.name] ?: ReelleZahlen,
+            grundMenge = argument.definitionsMenge,
         )
     }.ifEmpty {
         listOf(GebundeneMengenVariable(Variable("x"), ReelleZahlen))

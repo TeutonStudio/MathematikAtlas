@@ -167,7 +167,10 @@ internal fun MathematikAuswerterRegister.registriereTupelOperationKnoten() {
                         ?: error("Element ${index + 1} ist nicht verbunden.")
                 }
                 verwendeteWerte = listOf(basisWert) + elementWerte
-                ergänzeTupelUmElemente(basis, elementWerte.map(BedingterWert::objekt))
+                ergänzeTupelUmElemente(
+                    basis,
+                    elementWerte.mathematischeObjekte("Tupel-Ergänzungselement"),
+                )
             }
         }
 

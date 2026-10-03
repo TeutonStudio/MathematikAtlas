@@ -126,7 +126,7 @@ private data class AllgemeineMethodenHebung(
 }
 
 private fun bereiteAllgemeineMethodenHebungVor(
-    operanden: Map<String, MathematischesObjekt>,
+    operanden: Map<String, AtlasWert>,
 ): AllgemeineMethodenHebung {
     val methoden = operanden.values.filterIsInstance<Methode>()
     require(methoden.isNotEmpty())
@@ -136,10 +136,15 @@ private fun bereiteAllgemeineMethodenHebungVor(
         "Punktweise verknüpfte Methoden müssen dieselbe Argumentanzahl besitzen."
     }
 
+    // Punktweise Rechnerhebung ist eine mathematische Capability. Neutrale Script-
+    // oder Engine-Methoden dürfen hier nicht über eine erfundene Vorschrift laufen.
+    val mathematischeMethoden = methoden.associateWith { methode ->
+        methode.alsMathematischeMethode("Punktweise Rechnerhebung von '${methode.name}'")
+    }
     val signaturen = methoden.map(Methode::methodenSignatur)
-    val basisParameter = basis.parameter
+    val basisParameter = mathematischeMethoden.getValue(basis).parameter
     val umbenennungen = methoden.associateWith { methode ->
-        methode.parameter.mapIndexed { index, parameter ->
+        mathematischeMethoden.getValue(methode).parameter.mapIndexed { index, parameter ->
             parameter.name to basisParameter[index]
         }.toMap()
     }
@@ -155,7 +160,7 @@ private fun bereiteAllgemeineMethodenHebungVor(
     }.toMap(LinkedHashMap())
 
     val effektive = methoden.mapNotNull { methode ->
-        methode.effektiverWerteVorrat?.let { menge ->
+        mathematischeMethoden.getValue(methode).effektiverWerteVorrat?.let { menge ->
             val bindungen = umbenennungen.getValue(methode)
             (ersetze(menge, bindungen) as? MengenAusdruck) ?: menge
         }
@@ -166,10 +171,12 @@ private fun bereiteAllgemeineMethodenHebungVor(
         else -> Tupelraum(basisParameter.map { werteVorraete.getValue(it.name) })
     }
 
-    val angeglicheneOperanden = operanden.mapValues { (_, objekt) ->
-        if (objekt !is Methode) objekt else {
+    val angeglicheneOperanden: Map<String, MathematischesObjekt> = operanden.mapValues { (name, objekt) ->
+        if (objekt !is Methode) {
+            objekt.alsMathematischesObjekt("Punktweiser Rechneroperand '$name'")
+        } else {
             val bindungen = umbenennungen.getValue(objekt)
-            ersetze(objekt.vorschrift, bindungen)
+            ersetze(mathematischeMethoden.getValue(objekt).vorschrift, bindungen)
         }
     }
 
@@ -197,7 +204,7 @@ fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
                         MathematikAnschlussArten.Methode.id in anschluss.zulässigeArten
                 }
                 .mapTo(linkedSetOf()) { it.name }
-            val methodenOperanden = kontext.eingänge
+            val methodenOperanden: Map<String, AtlasWert> = kontext.eingänge
                 .filterKeys { it in hebbareNamen }
                 .mapValues { it.value.objekt }
             if (methodenOperanden.values.none { it is Methode }) {
@@ -224,17 +231,18 @@ fun MathematikAuswerterRegister.registriereRechnerMethodenHebung() {
                 require(wert.objekt !is Methode) {
                     "Der Ausgang '$ausgang' liefert bereits eine Methode und kann nicht zusätzlich punktweise gehoben werden."
                 }
-                val ziel = when (wert.objekt) {
+                val mathematischerWert = wert.mathematischesObjekt("Punktweiser Rechnerausgang '$ausgang'")
+                val ziel = when (mathematischerWert) {
                     is Aussage -> WahrheitsMenge
                     else -> wert.zielMenge ?: inferiereZielmenge(
-                        wert.objekt,
+                        mathematischerWert,
                         hebung.werteVorraete,
                         annahmen + wert.annahmen,
                     )
                 }
                 val methode = hebung.methode(
                     name = punktweiserRechnerMethodenName(kontext, ausgang),
-                    vorschrift = wert.objekt,
+                    vorschrift = mathematischerWert,
                     zielMenge = ziel,
                 )
                 BedingterWert(

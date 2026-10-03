@@ -99,7 +99,12 @@ class KartenAuswerter(
             }
             val wert = fallback.ausgaben["methode"]
                 ?: return fehler("Der Karten-Fallback für '$name' liefert keine Methode.")
-            if (!anschlussAkzeptiertMethode(anschluss.art, wert.objekt)) {
+            val mathematischesObjekt = runCatching {
+                wert.mathematischesObjekt("Der Karten-Fallback für '$name'")
+            }.getOrElse {
+                return fehler(it.message ?: it::class.simpleName.orEmpty())
+            }
+            if (!anschlussAkzeptiertMethode(anschluss.art, mathematischesObjekt)) {
                 return fehler("Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
             }
             aktuell + (name to wert)
@@ -263,9 +268,12 @@ class KartenAuswerter(
             name to requireNotNull(werte[name]) { "Für den Methodenausgang '$name' fehlt ein Wert." }
         }
         val vorschrift = if (geordneteWerte.size == 1) {
-            geordneteWerte.single().second.objekt
+            val (name, wert) = geordneteWerte.single()
+            wert.mathematischesObjekt("Methodenausgang '$name'")
         } else {
-            Tupel(geordneteWerte.map { it.second.objekt })
+            Tupel(geordneteWerte.map { (name, wert) ->
+                wert.mathematischesObjekt("Methodenausgang '$name'")
+            })
         }
         val zielMenge = if (geordneteWerte.size == 1) {
             geordneteWerte.single().second.zielMenge

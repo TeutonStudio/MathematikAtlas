@@ -117,11 +117,6 @@ private fun standardAnschluesse(operator: UniversellerZahlenOperator): List<Ansc
     }
 }
 
-/**
- * Der Erstellen-Dialog darf mehrere vorkonfigurierte Varianten zeigen. Alle
- * Varianten erzeugen dieselbe stabile Knotenart und unterscheiden sich nur im
- * persistierten Operatorzustand.
- */
 object ZahlenRechnerKnotenVorlagen {
     val alle: List<KnotenVorlage> = UniversellerZahlenOperator.entries.map { operator ->
         KnotenVorlage(
@@ -156,7 +151,6 @@ object ZahlenRechnerKnotenVorlagen {
     }
 }
 
-/** Nur diese historischen Zahl-zu-Zahl-Knoten verschwinden aus dem Katalog. */
 val historischeZahlenRechnerArten: Set<String> = setOf(
     "mathematik.addition",
     "mathematik.subtraktion",
@@ -247,10 +241,6 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
     else -> null
 }
 
-/**
- * Idempotente Lade-Migration. Knoten- und Anschluss-IDs bleiben erhalten, damit
- * bestehende Edges exakt auf denselben semantischen Argumenten landen.
- */
 fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
     knoten = knoten.map { alt ->
         if (alt.art == ZAHLENRECHNER_ART) {
@@ -401,7 +391,7 @@ internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() 
 }
 
 private data class UniverselleZahlenAusgabe(
-    val objekt: MathematischesObjekt,
+    val objekt: AtlasWert,
     val bereich: ZahlenRechnerBereich,
     val latex: String? = null,
     val schritte: List<UmformungsSchritt> = emptyList(),
@@ -851,11 +841,12 @@ private fun punktweiseDefinitionsBedingungen(
 
 private fun punktweiserMethodenName(
     operator: UniversellerZahlenOperator,
-    operanden: Map<String, MathematischesObjekt>,
+    operanden: Map<String, AtlasWert>,
 ): String {
-    fun anzeige(objekt: MathematischesObjekt): String = when (objekt) {
+    fun anzeige(objekt: AtlasWert): String = when (objekt) {
         is Methode -> objekt.name
-        else -> objekt.zuLatex()
+        is MathematischesObjekt -> objekt.zuLatex()
+        else -> error("Punktweise Zahlenoperatoren akzeptieren nur Zahlen oder Methoden.")
     }
     val werte = operanden.values.map(::anzeige)
     return when (operator) {

@@ -2,8 +2,8 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 /**
  * Kanonische gemeinsame Signatur und Zahlterme für eine punktweise Operation.
- * Skalare bleiben unverändert; Methoden werden auf die Parameter der ersten
- * Methode alpha-umbenannt, ohne sichtbare LaTeX-Texte als Fachdaten auszuwerten.
+ * Skalare bleiben unverändert; mathematische Methoden werden auf die Parameter der
+ * ersten Methode alpha-umbenannt, ohne sichtbare LaTeX-Texte als Fachdaten auszuwerten.
  */
 data class PunktweiseZahlenVorbereitung(
     val parameter: List<Variable>,
@@ -14,36 +14,36 @@ data class PunktweiseZahlenVorbereitung(
 )
 
 fun bereitePunktweiseZahlenfunktionVor(
-    operanden: Map<String, MathematischesObjekt>,
+    operanden: Map<String, AtlasWert>,
 ): PunktweiseZahlenVorbereitung {
     val methoden = operanden.values.filterIsInstance<Methode>()
     require(methoden.isNotEmpty()) { "Eine punktweise Hebung benötigt mindestens eine Zahlenfunktion." }
     methoden.forEach { methode ->
-        MethodenAnforderung.Zahlenfunktion.prüfe(methode)?.let { diagnose ->
-            error(diagnose)
-        }
-        require(methode.vorschrift is ZahlAusdruck) {
+        MethodenAnforderung.Zahlenfunktion.prüfe(methode)?.let { diagnose -> error(diagnose) }
+        val mathematisch = methode.alsMathematischeMethode("punktweise Zahlenfunktion")
+        require(mathematisch.vorschrift is ZahlAusdruck) {
             "Die Methode '${methode.name}' besitzt trotz numerischer Zielmenge keine Zahlvorschrift."
         }
     }
 
-    val basis = methoden.first()
+    val basis = methoden.first().alsMathematischeMethode("punktweise Zahlenfunktion")
     val stelligkeit = basis.parameter.size
-    val abweichend = methoden.firstOrNull { it.parameter.size != stelligkeit }
+    val abweichend = methoden.firstOrNull { it.methodenSignatur().argumente.size != stelligkeit }
     require(abweichend == null) {
         "Die Zahlenfunktionen müssen dieselbe Stelligkeit besitzen; '${basis.name}' hat " +
-            "$stelligkeit Argumente, '${abweichend?.name}' dagegen ${abweichend?.parameter?.size}."
+            "$stelligkeit Argumente, '${abweichend?.name}' dagegen ${abweichend?.methodenSignatur()?.argumente?.size}."
     }
     val parameter = basis.parameter.map { alt -> Variable(alt.name, alt.zuLatex()) }
 
     fun bindungen(methode: Methode): Map<String, MathematischesObjekt> =
-        methode.parameter.mapIndexed { index, alt -> alt.name to parameter[index] }.toMap()
+        methode.alsMathematischeMethode("punktweise Zahlenfunktion")
+            .parameter.mapIndexed { index, alt -> alt.name to parameter[index] }.toMap()
 
     val komponenten = parameter.indices.map { index ->
         normalisiereZahlmengenSchnitt(
             methoden.map { methode ->
-                val argument = methode.methodenSignatur().argumente[index]
-                benenneMethodenBereichUm(argument.werteVorrat, bindungen(methode))
+                val argument = methode.mathematischeMethodenSignatur().argumente[index]
+                benenneMethodenBereichUm(argument.definitionsMenge, bindungen(methode))
             },
         )
     }
@@ -52,11 +52,11 @@ fun bereitePunktweiseZahlenfunktionVor(
     }.toMap(LinkedHashMap())
 
     val expliziteBereiche = methoden.mapNotNull { methode ->
-        methode.effektiverWerteVorrat?.let { bereich ->
+        methode.mathematischeMethodenSignatur().effektiverDefinitionsRaum?.let { bereich ->
             benenneMethodenBereichUm(bereich, bindungen(methode))
         }
     }
-    val kartesischerBereich = if (parameter.isEmpty()) LeereMenge else Tupelraum(komponenten)
+    val kartesischerBereich = Tupelraum(komponenten)
     val effektiverBereich = if (expliziteBereiche.isEmpty()) {
         kartesischerBereich
     } else {
@@ -66,7 +66,10 @@ fun bereitePunktweiseZahlenfunktionVor(
     val zahlOperanden = operanden.mapValues { (_, objekt) ->
         when (objekt) {
             is ZahlAusdruck -> objekt
-            is Methode -> ersetze(objekt.vorschrift as ZahlAusdruck, bindungen(objekt))
+            is Methode -> {
+                val mathematisch = objekt.alsMathematischeMethode("punktweise Zahlenfunktion")
+                ersetze(mathematisch.vorschrift as ZahlAusdruck, bindungen(mathematisch))
+            }
             else -> error("Punktweise Zahlenoperatoren akzeptieren nur Zahlen oder Zahlenfunktionen.")
         }
     }

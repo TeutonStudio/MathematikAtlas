@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 class AxiomOperatorenTest {
     private val zweiElemente = EndlicheMenge(setOf(RationaleZahl.Null, RationaleZahl.Eins))
 
-    private fun gleichheitsPraedikat(): Methode {
+    private fun gleichheitsPraedikat(): MathematischeMethode {
         val x = Variable("x")
         val y = Variable("y")
         return Methode(
@@ -20,7 +20,7 @@ class AxiomOperatorenTest {
         )
     }
 
-    private fun identitaet(name: String = "S"): Methode {
+    private fun identitaet(name: String = "S"): MathematischeMethode {
         val x = Variable("x")
         return Methode(
             name = name,
@@ -31,7 +31,7 @@ class AxiomOperatorenTest {
         )
     }
 
-    private fun konstanteBinaereOperation(menge: MengenAusdruck, wert: MathematischesObjekt): Methode {
+    private fun konstanteBinaereOperation(menge: MengenAusdruck, wert: MathematischesObjekt): MathematischeMethode {
         val x = Variable("x")
         val y = Variable("y")
         return Methode(

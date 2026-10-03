@@ -3,12 +3,14 @@ package de.TeutonStudio.MathematikKartenAdapter
 import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.MathematischAuswertbareMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeMethode
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.ReelleZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.graphMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.restriktiereMethode
+import de.TeutonStudio.MathematikRechenSystem.kern.wendeAn
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -27,7 +29,6 @@ class MethodenErweiterungsnahtTest {
         val fremd: Methode = FremdMethode("engine_method")
 
         assertEquals("engine_method", fremd.name)
-        assertEquals("engine_method", fremd.zuLatex())
         assertFalse(fremd is MathematischAuswertbareMethode)
     }
 
@@ -36,7 +37,7 @@ class MethodenErweiterungsnahtTest {
         val fremd: Methode = FremdMethode("engine_method")
 
         val fehler = assertFailsWith<IllegalStateException> {
-            fremd.wendeAn(emptyMap())
+            fremd.wendeAn(emptyMap<String, MathematischesObjekt>())
         }
 
         assertContains(fehler.message.orEmpty(), "keine mathematische Auswertungs-Capability")

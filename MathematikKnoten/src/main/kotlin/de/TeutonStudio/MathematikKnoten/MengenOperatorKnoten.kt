@@ -329,11 +329,15 @@ private fun werteMengenRelationAus(kontext: KnotenAuswertungsKontext): KnotenAus
         kontext.knoten.parameter[MENGENRELATION_OPERATOR_PARAMETER],
     ) ?: error("Unbekannter Mengenrelations-Operator.")
     val (links, rechts) = if (operator == MengenRelationsOperator.ELEMENT) {
-        (kontext.eingänge["element"]?.objekt ?: error("Das Element fehlt.")) to
-            (kontext.eingänge["menge"]?.objekt ?: error("Die Menge fehlt."))
+        (kontext.eingänge["element"]?.mathematischesObjekt("Element der Mengenrelation")
+            ?: error("Das Element fehlt.")) to
+            (kontext.eingänge["menge"]?.mathematischesObjekt("Menge der Elementrelation")
+                ?: error("Die Menge fehlt."))
     } else {
-        (kontext.eingänge["links"]?.objekt ?: error("Die linke Menge fehlt.")) to
-            (kontext.eingänge["rechts"]?.objekt ?: error("Die rechte Menge fehlt."))
+        (kontext.eingänge["links"]?.mathematischesObjekt("Linke Menge der Mengenrelation")
+            ?: error("Die linke Menge fehlt.")) to
+            (kontext.eingänge["rechts"]?.mathematischesObjekt("Rechte Menge der Mengenrelation")
+                ?: error("Die rechte Menge fehlt."))
     }
     val aussage = MengenRelationRechner.erzeuge(operator, links, rechts)
     return KnotenAuswertungsErgebnis(

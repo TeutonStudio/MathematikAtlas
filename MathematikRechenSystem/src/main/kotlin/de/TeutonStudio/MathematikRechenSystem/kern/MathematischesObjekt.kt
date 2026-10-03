@@ -1,20 +1,24 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-sealed interface MathematischesObjekt {
+sealed interface MathematischesObjekt : AtlasWert {
     fun zuLatex(): String
 }
 
 /**
- * Nicht rein mathematische, aber über den bestehenden Atlas-Wertkanal transportierbare
- * Darstellungswerte. Der Übergangsvertrag hält Grafikwerte vom mathematischen Ausdrucksbaum
- * getrennt, bis der allgemeine Laufzeitwertkanal vollständig aus dem Mathematikadapter gelöst ist.
+ * Nichtmathematische, aber über den Atlas-Wertkanal transportierbare Darstellungswerte.
+ *
+ * Darstellung ist ausdrücklich keine Unterart von Mathematik. Die historische
+ * `zuLatex()`-Projektion bleibt hier vorübergehend ausschließlich als lokale
+ * UI-Kompatibilität erhalten; sie ist kein Bestandteil von [AtlasWert].
  */
-interface DarstellungsWert : MathematischesObjekt
+interface DarstellungsWert : AtlasWert {
+    fun zuLatex(): String = toString()
+}
 
 /** Gemeinsamer Obervertrag für strukturierte Grafikformate wie SVG und später TikZ. */
 interface Grafik : DarstellungsWert
 
-/** Ein benannter, bei einer [Methode] bindbarer Parameter. */
+/** Ein benannter, bei einer mathematischen Methode bindbarer Parameter. */
 sealed interface MethodenParameter : MathematischesObjekt {
     val name: String
 }

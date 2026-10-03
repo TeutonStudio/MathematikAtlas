@@ -419,7 +419,7 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
         )
     }
 
-    val signatur = runCatching { methode.methodenSignatur() }.getOrElse { fehler ->
+    val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrElse { fehler ->
         return kontext.eigenschaftsErgebnis(
             EigenschaftsAussage(
                 eigenschaftId = "stetig",
@@ -435,11 +435,18 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
         )
     }
 
-    val erwarteteQuelle = signatur.effektiverWerteVorrat
-        ?: signatur.argumente.singleOrNull()?.werteVorrat
-        ?: signatur.werteVorrat
+    val erwarteteQuelle = when (signatur.argumente.size) {
+        0 -> Tupelraum(emptyList())
+        1 -> signatur.argumente.single().definitionsMenge
+        else -> signatur.definitionsRaum
+    }
+    val erwartetesZiel = when (signatur.ergebnisse.size) {
+        0 -> Tupelraum(emptyList())
+        1 -> signatur.ergebnisse.single().zielMenge
+        else -> signatur.zielRaum
+    }
     val falscheQuelle = quellRaum.traeger != erwarteteQuelle
-    val falschesZiel = zielRaum.traeger != signatur.zielMenge
+    val falschesZiel = zielRaum.traeger != erwartetesZiel
     if (falscheQuelle || falschesZiel) {
         return kontext.eigenschaftsErgebnis(
             EigenschaftsAussage(
@@ -452,7 +459,7 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
                     code = "stetigkeits-signatur-inkompatibel",
                     nachricht = buildString {
                         append("Die verbundenen Räume passen nicht zur Methodensignatur. ")
-                        append("Erwartet: ${erwarteteQuelle.zuLatex()} → ${signatur.zielMenge.zuLatex()}; ")
+                        append("Erwartet: ${erwarteteQuelle.zuLatex()} → ${erwartetesZiel.zuLatex()}; ")
                         append("verbunden: ${quellRaum.traeger.zuLatex()} → ${zielRaum.traeger.zuLatex()}.")
                     },
                 ),
@@ -490,7 +497,7 @@ private fun stetigkeitsEigenschaft(kontext: KnotenAuswertungsKontext): KnotenAus
     )
 }
 
-private fun MathematischesObjekt?.alsTopologischerRaumOderNull(): TopologischerRaum? = when (this) {
+private fun AtlasWert?.alsTopologischerRaumOderNull(): TopologischerRaum? = when (this) {
     is TopologischerRaum -> this
     is MetrischerRaum -> alsTopologischerRaum
     else -> null

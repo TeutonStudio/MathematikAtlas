@@ -186,7 +186,7 @@ private fun werteZahlenRechnerDifferentialAus(
     }
 
     val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet() + ergebnis.voraussetzungen
-    val objekt: MathematischesObjekt
+    val objekt: AtlasWert
     val latex: String?
     val definition: String
     when (ergebnisArt) {

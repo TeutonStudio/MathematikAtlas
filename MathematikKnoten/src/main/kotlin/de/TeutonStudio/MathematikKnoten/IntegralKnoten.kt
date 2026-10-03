@@ -162,7 +162,7 @@ private fun KnotenAuswertungsKontext.erzeugeTermIntegral(
     bereich: IntegralBereich,
     mass: IntegralMass,
 ): StrukturiertesIntegral {
-    val term = eingänge["term"]?.objekt
+    val term = eingänge["term"]?.mathematischesObjekt("Integrand der Termform")
         ?: error("Die Termform benötigt einen Integranden.")
     val variablen = when (val objekt = eingänge["variable"]?.objekt) {
         is Variable -> listOf(objekt)

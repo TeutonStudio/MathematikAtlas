@@ -26,7 +26,17 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - name: Desktop- und gemeinsame Tests
-        run: ./gradlew :KnotenKartenVerwalterDesktop:test :MathematikKartenAdapterDesktop:test :MathematikKnotenDesktop:test :desktopApp:test --stacktrace
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew :KnotenKartenVerwalterDesktop:test :MathematikKartenAdapterDesktop:test :MathematikKnotenDesktop:test :desktopApp:test --stacktrace 2>&1 | tee desktop-ci.log
+      - name: Fehlerlog bereitstellen
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-ci-log
+          path: desktop-ci.log
+          if-no-files-found: warn
       - name: RPM bauen
         run: ./gradlew :desktopApp:packageRpm --stacktrace
       - name: RPM installieren, starten, Neustartpersistenz prüfen und deinstallieren
