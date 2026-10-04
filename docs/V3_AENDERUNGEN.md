@@ -587,3 +587,208 @@ Falls ein Aussage-Standardwert im Inspektor angeboten wird, verwendet er ebenfal
 12. Android- und Desktop-Oberfläche verwenden dieselbe gespeicherte Semantik.
 13. `KnotenKartenVerwalter` erhält keine Abhängigkeit auf mathematische Anschlussarten oder Wahrheitswerte.
 14. Bestehende Zahl-Standardwerte funktionieren unverändert weiter.
+
+
+### V3-006 – Einheitliche Geometrie für Typ- und Repräsentationsadapter
+
+**Status:** analysiert, Umsetzung geplant
+
+Knoten, deren primäre Aufgabe darin besteht, einen vorhandenen mathematischen Inhalt in einen anderen Typ, Vertrag oder eine andere Repräsentationshülle zu überführen, sollen sich geometrisch klar von normalen Rechen- und Fachknoten unterscheiden.
+
+Normale Knoten bleiben grundsätzlich abgerundete Rechtecke. Reine beziehungsweise überwiegende **Adapter-/Konverterknoten** erhalten dagegen eine eigene, einheitliche Form.
+
+Verbindliche Beispiele sind zunächst:
+
+- `Term zu Methode`,
+- `Aussage zu Methode`,
+- `Tupel zu Spaltenvektor`,
+- `Tupel zu Zeilenvektor` beziehungsweise der konsolidierte `Tupel zu Vektor`-Knoten.
+
+#### Semantische Abgrenzung
+
+Ein Adapterknoten gehört zu dieser Darstellungsfamilie, wenn er im Wesentlichen
+
+```
+gleicher mathematischer Inhalt
+→ anderer Typ / anderer Vertrag / andere Repräsentationsform
+```
+
+abbildet und keine eigenständige mathematische Operation auf dem Inhalt ausführt.
+
+Typische Merkmale:
+
+- normalerweise genau ein fachlicher Eingang und ein fachlicher Ausgang,
+- der Ausgang entsteht hauptsächlich durch Umhüllen, Typisieren, Orientieren oder Binden vorhandener Information,
+- der wesentliche Inhalt des Eingangswerts bleibt nachvollziehbar erhalten,
+- der Knoten stellt eher eine Grenze zwischen zwei Darstellungs- oder Vertragsformen als einen Rechenschritt dar.
+
+Nicht allein wegen eines unterschiedlichen Ein- und Ausgangstyps zu dieser Familie gehören beispielsweise:
+
+- Betrag beziehungsweise Radius,
+- Ableitung und Integration,
+- Kreuzprodukt,
+- Mächtigkeit,
+- Real- oder Imaginärteil,
+- Vektor zu Polynom, sofern dabei die Komponenten als Koeffizienten einer neuen mathematischen Struktur interpretiert werden,
+- sonstige Operationen, die tatsächlich neue mathematische Information berechnen oder verwerfen.
+
+Die Einordnung erfolgt daher explizit über eine UI-/Knotenklassifikation und nicht automatisch nach der Regel „Eingangstyp != Ausgangstyp“.
+
+#### Geometrie
+
+Als gemeinsame Adapterform wird ein **horizontal ausgerichtetes, an beiden Seiten abgeschrägtes Rechteck** verwendet, visuell also ein flaches Hexagon:
+
+```
+    ____________
+   /            \
+--<              >--
+   \____________/
+```
+
+Die Form vermittelt einen gerichteten Übergang von links nach rechts:
+
+- Eingänge liegen weiterhin an der linken Seite,
+- Ausgänge weiterhin an der rechten Seite,
+- die abgeschrägten Seiten markieren den Übergangscharakter,
+- obere und untere Kante bleiben weitgehend horizontal, damit Text und Formelinhalt genügend Platz besitzen.
+
+Die Form darf nicht wie eine Raute wirken, da eine Raute üblicherweise eine Entscheidung oder Verzweigung signalisiert. Ebenso soll sie nicht als bloße Pillenform umgesetzt werden, weil dies weiterhin wie ein stärker abgerundeter normaler Knoten wirken würde.
+
+#### Kompaktere Darstellung
+
+Adapterknoten sollen zusätzlich einfacher und kompakter als normale Fachknoten sein.
+
+Bevorzugte Darstellung:
+
+- zentraler kurzer Titel oder eine kompakte Typabbildung,
+- optional eine kleine Transformation wie `Tupel → Spalte` beziehungsweise `Term → Methode`,
+- keine unnötige große Inhaltsfläche,
+- keine wiederholte Langbeschreibung direkt im Knoten,
+- detaillierte Konfiguration bleibt im Inspector,
+- ein Adapter ohne zusätzliche Konfiguration darf deutlich niedriger und schmaler als ein normaler Knoten sein.
+
+Wo die Anschlussarten bereits eindeutig sichtbar sind, darf die Knotenbeschriftung sehr knapp bleiben.
+
+#### Ist-Analyse
+
+Die äußere Knotenform ist derzeit nicht Teil des Renderer- oder Vorlagenvertrags.
+
+`KnotenKartenEditor.KnotenDarstellung()` erzeugt für jeden Knoten zentral:
+
+```kotlin
+Card(
+    Modifier.fillMaxSize()
+        .border(..., MaterialTheme.shapes.medium),
+    ...
+)
+```
+
+und verwendet damit für alle normalen Knoten dieselbe abgerundete Rechteckform.
+
+`KnotenRenderer` kann derzeit lediglich
+
+- den Inhaltsbereich,
+- den Interaktionsmodus und
+- eine optionale Fußzeile
+
+bereitstellen. Eine äußere Geometrie kann ein mathematischer Renderer aktuell nicht auswählen.
+
+Dadurch sehen `mathematik.termZuMethode` und `mathematik.tupelZuSpalte` trotz ihres Adaptercharakters geometrisch genauso aus wie Addition, Kreuzprodukt oder andere eigentliche Operationen.
+
+#### Zielarchitektur
+
+Der fachneutrale Karteneditor erhält einen kleinen allgemeinen Vertrag für Knotengeometrien. Er darf dabei nicht wissen, was ein mathematischer Adapter ist.
+
+Geeignet ist beispielsweise eine fachneutrale Klassifikation:
+
+```kotlin
+enum class KnotenForm {
+    AbgerundetesRechteck,
+    Adapter,
+}
+```
+
+oder ein gleichwertiger allgemeiner Formvertrag.
+
+Die tatsächliche Compose-`Shape` für `Adapter` wird zentral im Editor umgesetzt. Dadurch verwenden Android und Desktop dieselbe Geometrie.
+
+Die mathematische Schicht entscheidet lediglich, welche Knotenart diese Form erhält.
+
+Die Forminformation kann entweder
+
+- vom `KnotenRenderer` bereitgestellt werden oder
+- als allgemeine Darstellungsmetadaten der Knotenvorlage geführt werden.
+
+Bevorzugt wird ein Renderer-/Darstellungsvertrag, solange die Form keine fachliche oder persistenzrelevante Eigenschaft des mathematischen Knotens ist. Eine reine UI-Geometrie soll nicht ohne Grund das gespeicherte mathematische Kartenmodell erweitern.
+
+#### Gemeinsame Form für Card, Rahmen und Auswahl
+
+Die gewählte Knotenform muss konsequent auf alle sichtbaren Schichten angewendet werden:
+
+- Hintergrundfläche,
+- Card beziehungsweise Surface,
+- normaler Rahmen,
+- Auswahlrahmen,
+- Hover-/Fokusdarstellung,
+- gegebenenfalls Schatten und Clip.
+
+Es darf nicht lediglich ein Hexagon in ein weiterhin sichtbares abgerundetes Rechteck gezeichnet werden. Der ganze Knoten muss tatsächlich die neue Silhouette besitzen. Die Menschheit hat bereits genug UI-Elemente, bei denen drei verschiedene Rahmen übereinander so tun, als seien sie Absicht.
+
+#### Interaktion und Trefferfläche
+
+Die visuelle Form darf die Bedienbarkeit nicht verschlechtern.
+
+- Handles bleiben an ihren semantischen linken beziehungsweise rechten Positionen.
+- Die abgeschrägten Seiten müssen ausreichend Platz für Handle-Trefferflächen lassen.
+- Knotenverschiebung, Auswahl, Kontextmenü und Inspector bleiben unverändert erreichbar.
+- Eine rechteckige interne Pointer-Trefferbox ist als erste Implementierung zulässig, solange sie nicht sichtbar über die Form hinausragt und keine benachbarten Knoten störend überlappt.
+- Langfristig kann die exakte Shape auch für Hit-Testing verwendet werden, falls dies messbar oder UX-seitig erforderlich ist.
+
+#### Klassifikation der bestehenden Knoten
+
+Für die erste Umsetzung werden mindestens alle ein-zu-eins-artigen Transformationsknoten geprüft und explizit einer der beiden Gruppen zugeordnet:
+
+1. **Adapter / Typ- oder Repräsentationsänderung**
+2. **echte mathematische Operation**
+
+Explizit als Adapter vorgesehen:
+
+- `mathematik.termZuMethode` in der Term- und Aussagevariante,
+- `mathematik.tupelZuSpalte`,
+- die historische beziehungsweise orientierte Zeilenvariante `mathematik.tupelZuZeile`,
+- der daraus konsolidierte `Tupel zu Vektor`-Knoten.
+
+Weitere Knoten werden nur aufgenommen, wenn ihre Semantik dieselbe Adaptereigenschaft erfüllt. Die Darstellung darf nicht allein anhand des Namens oder einer unterschiedlichen Anschlussart automatisch gewählt werden.
+
+#### Verhältnis zu Gleichheit und Selbigkeit
+
+Die neue Adapterdarstellung passt zur in V3-004 eingeführten Trennung von Gleichheit und Selbigkeit:
+
+Ein Typadapter kann einen inhaltlich gleichen Wert erzeugen, der wegen seines anderen mathematischen Strukturtyps nicht selbig mit dem Eingang ist.
+
+Beispielsweise:
+
+```
+Tupel(1,2)
+    → [Tupel zu Spalte]
+SpaltenVektor(1,2)
+```
+
+Der Adapter macht damit im Graphen sichtbar, dass an dieser Stelle bewusst eine Typ-/Strukturgrenze überschritten wird.
+
+Die Geometrie selbst bestimmt jedoch keinerlei Gleichheitssemantik. Sie visualisiert lediglich die bereits fachlich definierte Transformation.
+
+#### Abnahmekriterien
+
+1. Normale Rechen- und Fachknoten bleiben abgerundete Rechtecke.
+2. `Term zu Methode` und `Aussage zu Methode` verwenden die neue Adaptergeometrie.
+3. `Tupel zu Vektor` beziehungsweise die Zeilen-/Spaltenvarianten verwenden dieselbe Adaptergeometrie.
+4. Die Adapterform ist auf Android und Desktop identisch.
+5. Hintergrund, Clip, Rahmen, Auswahlrahmen und Schatten folgen derselben Form.
+6. Handles bleiben korrekt positioniert und vollständig bedienbar.
+7. Adapterknoten sind kompakter als vergleichbare normale Fachknoten, sofern ihr Inhalt keine größere Fläche benötigt.
+8. Ein Knoten wird nicht automatisch nur deshalb Adapter, weil Ein- und Ausgang unterschiedliche Typen besitzen.
+9. Mathematische Operationen wie Ableitung, Betrag, Kreuzprodukt oder Mächtigkeit behalten die normale Knotengeometrie.
+10. Die Formklassifikation bleibt fachneutral im Karteneditor; die Entscheidung, welche mathematische Knotenart Adapter ist, liegt in `MathematikKnoten`.
+11. Die neue Geometrie verändert keine Auswertung, Persistenz oder mathematische Semantik.
+12. Preview-/Screenshot-Tests vergleichen mindestens normalen Rechenknoten, `Term zu Methode` und `Tupel zu Vektor` bei hellem und dunklem Theme.
