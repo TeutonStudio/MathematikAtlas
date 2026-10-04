@@ -237,10 +237,41 @@ fun tupelAusMethode(methode: Methode, dimension: Int): Tupel {
     )
 }
 
-/** Bild einer Menge unter einer einwertigen Methode: f[M] = { f(x) : x ∈ M }. */
+/**
+ * Bild einer Menge unter einer Methode.
+ *
+ * Bei mehrstelligen Methoden enthält die Definitionsmenge Gesamtargumente als Tupel:
+ * f[M] = { f(x₁,…,xₙ) | (x₁,…,xₙ) ∈ M }.
+ */
 data class Abbild(val menge: MengenAusdruck, val methode: Methode) : MengenAusdruck {
     override fun zuLatex() = "${methode.name}[${menge.zuLatex()}]"
 }
+
+/**
+ * Zerlegt ein Element des Gesamtdefinitionsbereichs in die geordnete Argumentliste
+ * der Methode. Ein Tupel bleibt bei einstelligen Methoden bewusst ein einzelnes
+ * Argument; erst mehrstellige Methoden interpretieren es als Argumentbelegung.
+ */
+fun Methode.argumenteAusGesamtArgument(argument: MathematischesObjekt): List<MathematischesObjekt> {
+    val mathematisch = alsMathematischeMethode("Auswertung eines Gesamtarguments")
+    return when (mathematisch.parameter.size) {
+        0 -> emptyList()
+        1 -> listOf(argument)
+        else -> {
+            val tupel = argument as? Tupel
+                ?: error("Die mehrstellige Methode '${mathematisch.name}' benötigt Tupel als Gesamtargumente.")
+            require(tupel.elemente.size == mathematisch.parameter.size) {
+                "Das Gesamtargument für '${mathematisch.name}' besitzt ${tupel.elemente.size} Komponenten, " +
+                    "benötigt werden ${mathematisch.parameter.size}."
+            }
+            tupel.elemente
+        }
+    }
+}
+
+/** Wendet eine Methode auf ein Element ihres Gesamtdefinitionsbereichs an. */
+fun Methode.wendeAufGesamtArgumentAn(argument: MathematischesObjekt): MathematischesObjekt =
+    wendeAn(argumenteAusGesamtArgument(argument))
 
 fun MengenAusdruck.hatDifferentialBegriff() = this == ReelleZahlen
 fun MengenAusdruck.hatIntegralBegriff() = this == ReelleZahlen
@@ -319,13 +350,12 @@ fun integriereMethode(methode: Methode): Methode {
 }
 
 fun bildeAb(menge: MengenAusdruck, methode: Methode): MengenAusdruck {
-    methode.alsMathematischeMethode("Bildmengenbildung")
-    require(methode.parameter.size == 1) { "Die Abbildung muss genau einen freien Parameter besitzen." }
-    methode.einzigeAusgabe()
-    if (menge !is EndlicheMenge) return Abbild(menge, methode)
-    val parameter = methode.parameter.single()
+    val mathematisch = methode.alsMathematischeMethode("Bildmengenbildung")
+    require(mathematisch.parameter.isNotEmpty()) { "Die Bildmengenbildung benötigt mindestens ein Methodenargument." }
+    mathematisch.einzigeAusgabe()
+    if (menge !is EndlicheMenge) return Abbild(menge, mathematisch)
     return EndlicheMenge(menge.elemente.map { element ->
-        methode.wendeAn(listOf(element))
+        mathematisch.wendeAufGesamtArgumentAn(element)
     }.toSet())
 }
 

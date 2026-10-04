@@ -261,8 +261,14 @@ object MathematikKnotenVorlagen {
         listOf(eingang("methode", MathematikAnschlussArten.MengenMethode.id), eingang("indexmenge", MathematikAnschlussArten.Menge.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
     val Abbild = KnotenVorlage(
-        "mathematik.abbild", "Bildmenge", "Mengen", "Bestimmt die Bildmenge einer Menge unter einer einwertigen Methode: f(M) = { f(x) : x ∈ M }.", GraphGröße(255f, 115f),
-        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Methode.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        "mathematik.abbild", "Bildmenge", "Mengen",
+        "Bestimmt die Bildmenge einer Methode. Mehrstellige Methoden verwenden wahlweise ein kartesisches Produkt oder eine Menge je Argument.",
+        GraphGröße(285f, 135f),
+        listOf(
+            eingang("menge", MathematikAnschlussArten.Menge.id, 0),
+            eingang("methode", MathematikAnschlussArten.Methode.id, 1),
+            ausgang("menge", MathematikAnschlussArten.Menge.id),
+        ),
     )
     val TermZuMethode = KnotenVorlage(
         "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem allgemeinen Term eine Methode mit automatisch abgeleiteten Variablen und Zielmenge.", GraphGröße(265f, 135f),
@@ -367,7 +373,38 @@ object MathematikKnotenVorlagen {
     // Nur noch für API- und Ladekompatibilität; nicht mehr im Erstellen-Dialog gelistet.
     val TransponiereSpalte = KnotenVorlage("mathematik.transponiereSpalte", "Transponiere Spalte", "Vektoren", "Wandelt eine Spalte in eine Zeile um.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)))
     val TransponiereZeile = KnotenVorlage("mathematik.transponiereZeile", "Transponiere Zeile", "Vektoren", "Wandelt eine Zeile in eine Spalte um.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.ZeilenVektor.id), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)))
-    val MatrixProdukt = KnotenVorlage("mathematik.matrixProdukt", "Matrixprodukt", "Rechnen", "Multipliziert zwei kompatible Matrizen.", GraphGröße(230f, 110f), listOf(eingang("a", MathematikAnschlussArten.Matrix.id, 0), eingang("b", MathematikAnschlussArten.Matrix.id, 1), ausgang("matrix", MathematikAnschlussArten.Matrix.id)))
+    val MatrixProdukt = KnotenVorlage(
+        "mathematik.matrixProdukt", "Matrixprodukt", "Rechnen",
+        "Multipliziert kompatible Matrizen; Spalten werden als n×1 und Zeilen als 1×n interpretiert.",
+        GraphGröße(245f, 115f),
+        listOf(
+            AnschlussDaten(
+                name = "a",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.Objekt.id,
+                reihenfolge = 0,
+                zulässigeArten = setOf(
+                    MathematikAnschlussArten.Matrix.id,
+                    MathematikAnschlussArten.SpaltenVektor.id,
+                    MathematikAnschlussArten.ZeilenVektor.id,
+                ),
+            ),
+            AnschlussDaten(
+                name = "b",
+                richtung = AnschlussRichtung.Eingang,
+                kante = AnschlussKante.Links,
+                art = MathematikAnschlussArten.Objekt.id,
+                reihenfolge = 1,
+                zulässigeArten = setOf(
+                    MathematikAnschlussArten.Matrix.id,
+                    MathematikAnschlussArten.SpaltenVektor.id,
+                    MathematikAnschlussArten.ZeilenVektor.id,
+                ),
+            ),
+            ausgang("matrix", MathematikAnschlussArten.Matrix.id),
+        ),
+    )
     val TransponiereMatrix = KnotenVorlage("mathematik.transponiereMatrix", "Transponiere Matrix", "Rechnen", "Transponiert eine Matrix.", GraphGröße(230f, 105f), listOf(eingang("matrix", MathematikAnschlussArten.Matrix.id), ausgang("matrix", MathematikAnschlussArten.Matrix.id)))
     val MatrixInvertieren = KnotenVorlage(
         "mathematik.matrixInvertieren", "Matrix invertieren", "Rechnen", "Invertiert eine rationale quadratische Matrix exakt.", GraphGröße(245f, 110f),

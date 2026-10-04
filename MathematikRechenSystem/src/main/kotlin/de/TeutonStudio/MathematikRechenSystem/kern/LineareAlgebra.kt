@@ -119,6 +119,24 @@ data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck, Tensorartig 
     }
 }
 
+/**
+ * Kanonische Matrixansicht eines Operanden im Matrixprodukt.
+ *
+ * Orientierte Vektoren behalten ihre mathematische Orientierung:
+ * Spaltenvektoren werden als n×1-, Zeilenvektoren als 1×n-Matrizen interpretiert.
+ * Außerhalb eines Matrixprodukts bleiben die Typen weiterhin getrennt.
+ */
+fun MathematischesObjekt.alsMatrixFaktor(): Matrix = when (this) {
+    is Matrix -> this
+    is SpaltenVektor -> Matrix(werte.map(::listOf))
+    is ZeilenVektor -> Matrix(listOf(werte))
+    else -> error("Ein Matrixprodukt akzeptiert nur Matrizen, Spaltenvektoren und Zeilenvektoren.")
+}
+
+/** Multipliziert Matrizen und orientierte Vektoren über ihre kanonische Matrixansicht. */
+fun matrixProdukt(links: MathematischesObjekt, rechts: MathematischesObjekt): Matrix =
+    links.alsMatrixFaktor() * rechts.alsMatrixFaktor()
+
 /** Formatiert Zeilen als LaTeX-`pmatrix`; `\\` trennt die Zeilen, `&` die Spalten. */
 private fun List<List<ZahlAusdruck>>.zuPmatrixLatex(): String = joinToString(
     prefix = "\\begin{pmatrix}",

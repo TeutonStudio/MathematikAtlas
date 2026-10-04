@@ -11,8 +11,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KnotenErsetzungsAuswirkung
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKnoten.BILDMENGE_ARGUMENT_MODUS
+import de.TeutonStudio.MathematikKnoten.BILDMENGE_MODUS_EINZELMENGEN
+import de.TeutonStudio.MathematikKnoten.BILDMENGE_MODUS_PRODUKT
 import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.bildmengeArgumentName
 import de.TeutonStudio.MathematikKnoten.TUPEL_ERGÄNZEN_ART
 import de.TeutonStudio.MathematikKnoten.TUPEL_VARIABLE_ART
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
@@ -48,6 +52,7 @@ interface KnotenInspektorAktionen {
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
+        "mathematik.abbild" to BildmengeInspektor,
         "mathematik.visualisierung" to VisualisierungsInspektor,
         "mathematik.kartenEingang" to KartenSchnittstellenInspektor,
         "mathematik.kartenAusgang" to KartenSchnittstellenInspektor,
@@ -90,6 +95,51 @@ object KnotenInspektorRegister {
         GeometrieTeilobjektTyp.Fläche.knotenArt to GeometrieTeilobjektInspektor,
     )
     fun finde(art: String) = inspektoren[art]
+}
+
+private object BildmengeInspektor : KnotenInspektor {
+    @Composable
+    override fun Inhalt(
+        knoten: KnotenDaten,
+        ergebnis: KnotenAuswertungsErgebnis?,
+        aktionen: KnotenInspektorAktionen,
+    ) {
+        val modus = knoten.parameter[BILDMENGE_ARGUMENT_MODUS] ?: BILDMENGE_MODUS_PRODUKT
+        val methode = ergebnis?.eingänge?.get("methode")?.objekt as? Methode
+
+        Text("Argumentbereich", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = modus == BILDMENGE_MODUS_PRODUKT,
+                onClick = { aktionen.parameter(BILDMENGE_ARGUMENT_MODUS, BILDMENGE_MODUS_PRODUKT) },
+                label = { Text("Kartesisches Produkt") },
+            )
+            FilterChip(
+                selected = modus == BILDMENGE_MODUS_EINZELMENGEN,
+                onClick = { aktionen.parameter(BILDMENGE_ARGUMENT_MODUS, BILDMENGE_MODUS_EINZELMENGEN) },
+                label = { Text("Je Argument") },
+            )
+        }
+
+        Text(
+            if (modus == BILDMENGE_MODUS_PRODUKT) {
+                "Der Mengeneingang enthält vollständige Methodenargumente. Bei mehreren Argumenten sind das Tupel aus einem kartesischen Produkt."
+            } else {
+                "Für jedes Methodenargument wird eine eigene Menge verbunden; der Knoten bildet daraus intern das kartesische Produkt."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        if (modus == BILDMENGE_MODUS_EINZELMENGEN && methode != null) {
+            methode.parameter.forEachIndexed { index, parameter ->
+                Text(
+                    "${parameter.name} ← ${bildmengeArgumentName(index)}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
 }
 
 private object OrdnungsrelationInspektor : KnotenInspektor {
