@@ -213,3 +213,223 @@ Dabei werden bereits korrekt gepolsterte Komponenten nicht nur deshalb veränder
 6. Die Korrektur funktioniert auf schmalen Android-Displays ebenso wie auf großen beziehungsweise Desktop-Fenstern, ohne unnötig nutzbare Inhaltsfläche zu verlieren.
 7. Für mindestens einen schmalen und einen breiten Layoutzustand werden Compose-Previews oder UI-Screenshots der wichtigsten Dialogtypen verglichen.
 8. Neue UI-Komponenten können die gemeinsamen Spacing-Rollen wiederverwenden, ohne erneut frei gewählte Paddingwerte einzuführen.
+
+
+### V3-004 – Gleichheit und Selbigkeit als getrennte Relationen
+
+**Status:** analysiert, Umsetzung geplant
+
+Der Mathematik Atlas trennt künftig zwei bislang vermischte Begriffe:
+
+- **Gleichheit** `=` vergleicht den mathematischen Inhalt.
+- **Selbigkeit** vergleicht zusätzlich den mathematischen Datentyp beziehungsweise die Strukturart auf jeder Verschachtelungsebene.
+
+Damit ist Selbigkeit strenger als Gleichheit. Zwei Objekte können gleich sein, ohne selbig zu sein. Sind zwei Objekte selbig, müssen sie dagegen immer auch gleich sein.
+
+#### Begriffsdefinition
+
+**Gleichheit** ist eine rekursive Inhaltsrelation. Zwei Werte sind gleich, wenn sie derselben explizit definierten Inhaltsfamilie angehören und ihre mathematisch relevanten Inhalte rekursiv gleich sind. Repräsentations- beziehungsweise Strukturtypen dürfen dabei ignoriert werden, wenn für diese Typen ausdrücklich dieselbe Inhaltsfamilie definiert ist.
+
+**Selbigkeit** ist eine rekursive typisierte Strukturrelation. Zwei Werte sind nur dann selbig, wenn:
+
+1. ihr mathematischer Struktur- beziehungsweise Datentyp derselbe ist,
+2. ihre Struktur dieselbe Form besitzt,
+3. alle enthaltenen Bestandteile paarweise wiederum selbig sind.
+
+Selbigkeit bedeutet ausdrücklich **nicht Kotlin-Referenzidentität** und nicht „dieselbe Instanz im Arbeitsspeicher“. Zwei getrennt erzeugte Spaltenvektoren können selbig sein, wenn sie denselben Strukturtyp besitzen und ihre Komponenten rekursiv selbig sind.
+
+Der Vergleich erfolgt auf mathematisch ausgewerteten beziehungsweise normalisierten Werten, nicht auf der exakten Quelltext- oder AST-Schreibweise. Beispielsweise darf ein zu derselben rationalen Zahl vereinfachter Zahlterm denselben mathematischen Zahlenwert repräsentieren. Der Strukturtyp nach der mathematischen Normalisierung bleibt für Selbigkeit jedoch relevant.
+
+#### Grundgesetz
+
+Für alle unterstützten mathematischen Objekte gilt:
+
+```
+selbig(a, b) => gleich(a, b)
+```
+
+Die Umkehrung gilt ausdrücklich nicht.
+
+Soweit eine Relation entscheidbar ist, sollen sowohl Gleichheit als auch Selbigkeit reflexiv, symmetrisch und transitiv sein und damit jeweils eine Äquivalenzrelation bilden.
+
+#### Verbindliche Beispiele
+
+| Links | Rechts | Gleich | Selbig |
+|---|---|---:|---:|
+| `Tupel(1, 2)` | `Tupel(1, 2)` | ja | ja |
+| `Tupel(1, 2)` | `SpaltenVektor(1, 2)` | ja | nein |
+| `Tupel(1, 2)` | `ZeilenVektor(1, 2)` | ja | nein |
+| `SpaltenVektor(1, 2)` | `ZeilenVektor(1, 2)` | ja | nein |
+| `SpaltenVektor(1, 2)` | `SpaltenVektor(1, 2)` | ja | ja |
+| `ZeilenVektor(1, 2)` | `ZeilenVektor(1, 2)` | ja | ja |
+| `SpaltenVektor(1, 2)` | `SpaltenVektor(1, 3)` | nein | nein |
+| `Tupel(1, 2)` | `Tupel(1, 2, 3)` | nein | nein |
+
+Die Typprüfung der Selbigkeit gilt **rekursiv auf allen Ebenen**. Deshalb gilt beispielsweise:
+
+- `SpaltenVektor(Tupel(1, 2))` und `SpaltenVektor(SpaltenVektor(1, 2))` können inhaltlich gleich sein, sind aber nicht selbig.
+- Zwei Spaltenvektoren sind nur dann selbig, wenn ihre korrespondierenden Komponenten nicht nur gleich, sondern jeweils wiederum selbig sind.
+- Dasselbe gilt für Zeilenvektoren und andere zusammengesetzte mathematische Objekte.
+
+Die bereits vorhandene Gleichheit zwischen einer rationalen Zahl `r` und einer komplexen Zahl `r + 0i` ist ein weiteres Beispiel für die Trennung: inhaltlich können sie gleich sein; selbig sind sie wegen des unterschiedlichen Zahltyps nicht.
+
+#### Inhaltsfamilien
+
+Die Gleichheit darf Typen nicht beliebig miteinander vergleichen. Cross-Type-Gleichheit wird nur über explizite Inhaltsfamilien zugelassen.
+
+Für den ersten verbindlichen Umfang gilt:
+
+- `Tupel`, `SpaltenVektor` und `ZeilenVektor` gehören bezüglich der Gleichheit zur Familie **geordnete Komponentenfolge**.
+- Ihre äußere Repräsentationsart und Vektororientierung werden für `=` ignoriert.
+- Anzahl und Reihenfolge der Komponenten bleiben Teil des Inhalts.
+- Für Selbigkeit bleiben `Tupel`, `SpaltenVektor` und `ZeilenVektor` drei verschiedene Strukturtypen.
+- Eine `Matrix` behält ihre zweidimensionale Form als Inhaltsbestandteil. Matrizen werden nicht lediglich flach als Komponentenfolge verglichen. Ob eine `1×n`- oder `n×1`-Matrix künftig zusätzlich in eine gemeinsame Inhaltsfamilie mit orientierten Vektoren aufgenommen wird, muss ausdrücklich definiert werden und geschieht nicht implizit.
+- Mengen verwenden eine ungeordnete Inhaltssemantik. Bei Gleichheit werden Elemente über Gleichheit verglichen; bei Selbigkeit über Selbigkeit.
+- Für bisher nicht ausdrücklich cross-type-fähige Objektarten gilt konservativ: unterschiedliche Strukturtypen beweisen keine Gleichheit. Das Ergebnis bleibt unbekannt, sofern ihre Ungleichheit nicht fachlich nachgewiesen werden kann.
+
+#### Ist-Analyse
+
+Die aktuelle Implementierung vermischt mathematische und technische Gleichheit:
+
+- `Gleichheit.entscheide()` beginnt nach einer Zahlvereinfachung mit `l == r`. Damit wird Kotlin-`equals` als mathematischer Wahrheitsbeweis verwendet.
+- Danach existieren einzelne Sonderfälle für `Tupel`, `KomplexeZahl` und rationale Zahlen.
+- Tupel werden bereits komponentenweise rekursiv über `Gleichheit` verglichen.
+- `SpaltenVektor`, `ZeilenVektor` und `Matrix` besitzen derzeit keine entsprechende allgemeine Gleichheitssemantik. Unterschiedliche Vektor-/Tupeltypen mit gleichem Inhalt werden deshalb nicht nach dem neuen Begriff behandelt.
+- `relation.gleichheit` ist als allgemeiner Prädikatoperator registriert und als Äquivalenzrelation markiert.
+- `Ungleichheit` ist direkt als Negation der bestehenden `Gleichheit` implementiert.
+- `<=` und `>=` verwenden in ihrer Definitionsformel die Gleichheit. Das soll weiterhin die Inhaltsgleichheit sein.
+- Gleichungen, Lösungsverfahren, Fallunterscheidungen und mathematische Bedingungen verwenden `Gleichheit` als Wertgleichheit. Diese Verwendung bleibt grundsätzlich richtig.
+- `ElementBeziehung` prüft die Mitgliedschaft in endlichen Mengen derzeit über `Gleichheit`.
+- `eindeutigeEndlicheElemente` entfernt beziehungsweise identifiziert Elemente ebenfalls über `Gleichheit`.
+- Die aktuelle kanonische Definitionsformel von Gleichheit lautet sinngemäß: Zwei Objekte sind gleich, wenn sie in exakt denselben Mengen enthalten sind. Diese Definition beschreibt nach der neuen Begriffstrennung nicht mehr die lockere Inhaltsgleichheit.
+
+#### Auswirkungen auf Mengen
+
+Die neue Trennung muss auch in der Mengenlogik sichtbar sein.
+
+Wenn `Tupel(1,2) = SpaltenVektor(1,2)`, aber beide nicht selbig sind, darf eine Menge, die explizit den Tupelwert als Element enthält, nicht allein aufgrund der Inhaltsgleichheit so behandelt werden, als enthalte sie automatisch auch den Spaltenvektor als dasselbe Element.
+
+Deshalb gilt für die elementare Mengenidentität:
+
+- **Mitgliedschaft in einer konkret materialisierten endlichen Menge wird über Selbigkeit der Elemente bestimmt.**
+- **Eindeutigkeit und Kardinalität materialisierter Mengenelemente verwenden Selbigkeit.**
+- Zwei gleichinhaltige, aber nicht selbige Objekte dürfen somit als verschiedene konkrete Elemente repräsentiert werden.
+- Die **Gleichheit zweier Mengen** darf weiterhin eine inhaltlich-extensionalere Aussage sein und Elemente über Gleichheit zuordnen.
+- Die **Selbigkeit zweier Mengen** verlangt denselben Mengentyp beziehungsweise dieselbe Mengenstruktur und eine Zuordnung selbiger Elemente.
+
+Diese Trennung verhindert, dass die Typinformation von Zeile, Spalte und Tupel durch die Mengenimplementierung wieder verloren geht.
+
+#### Definitionskarten
+
+Die bisherige Gleichheitsdefinition über Ununterscheidbarkeit durch Mengenmitgliedschaft wird neu eingeordnet.
+
+Die bisherige Formel
+
+```latex
+a=b
+\Longleftrightarrow
+\forall M\left(
+  \operatorname{Menge}(M)
+  \Rightarrow
+  (a\in M\Leftrightarrow b\in M)
+\right)
+```
+
+passt nach der neuen Semantik zur **Selbigkeit**, sofern Mengenmitgliedschaft konkrete Elemente über Selbigkeit bestimmt.
+
+Für Gleichheit wird stattdessen eine explizite Inhaltsdefinition benötigt. Konzeptionell:
+
+```latex
+a=b
+\Longleftrightarrow
+\operatorname{Inhalt}(a)
+\;\mathrel{\stackrel{?}{=}}\;
+\operatorname{Inhalt}(b)
+```
+
+`Inhalt` ist dabei keine pauschale Typauslöschung, sondern die je Inhaltsfamilie definierte mathematische Inhaltsprojektion. Für Tupel, Zeile und Spalte ist dies beispielsweise dieselbe geordnete Folge rekursiv projizierter Komponenten.
+
+Die Definitionskarte muss die rekursive Regel und die zulässigen Cross-Type-Inhaltsfamilien sichtbar machen; sie darf nicht behaupten, beliebige Objekte mit zufällig ähnlicher Darstellung seien gleich.
+
+#### Symbol der Selbigkeit
+
+Gewünscht ist ein eigenes Gleichheitszeichen mit einem Fragezeichen am Gleichheitszeichen, vom Nutzer als `\substack{?}{=}` angegeben.
+
+Der aktuelle native LaTeX-Renderer unterstützt `\stackrel`, aber bislang kein `\substack`. Für die Umsetzung bestehen daher zwei zulässige Wege:
+
+1. `\substack` gezielt im Renderer ergänzen und die gewünschte Schreibweise direkt unterstützen, oder
+2. die visuell entsprechende vorhandene Darstellung `\stackrel{?}{=}` als kanonisches Selbigkeitszeichen verwenden.
+
+Die endgültige Darstellung muss projektweit einheitlich sein: Rechenkern, Prädikatauswahl, Definitionskarten, Renderer, Suchindex und Tests dürfen nicht verschiedene Symbole verwenden.
+
+#### Zielarchitektur im Rechenkern
+
+Mathematische Gleichheit und Selbigkeit werden ausdrücklich von Kotlin-`equals` und Referenzidentität getrennt.
+
+Vorgesehen ist ein zentraler Vergleichspfad im `MathematikRechenSystem`, beispielsweise mit den beiden Operationen:
+
+```
+entscheideGleichheit(links, rechts, kontext)
+entscheideSelbigkeit(links, rechts, kontext)
+```
+
+oder einem gemeinsamen Vergleichsdienst mit zwei Modi.
+
+Der Vergleichspfad muss:
+
+- Zahlen vor dem Wertvergleich mit den bereits vorhandenen mathematischen Regeln vereinfachen,
+- Inhaltsfamilien explizit erkennen,
+- zusammengesetzte Werte rekursiv vergleichen,
+- für Selbigkeit auf jeder Rekursionsebene den exakten mathematischen Strukturtyp prüfen,
+- `Bewiesen`, `Widerlegt`, `Unbekannt` und gegebenenfalls `NichtAuswertbar` beibehalten,
+- inkompatible Typen nur dann als widerlegt behandeln, wenn die Semantik dies tatsächlich beweist,
+- keinen mathematischen Vergleich durch Kotlin-`equals` ersetzen.
+
+Kotlin-`equals/hashCode` der Datenklassen bleiben technische Strukturmechanismen für Collections, Caches und interne Datenhaltung und werden nicht auf die neue mathematische Gleichheit umdefiniert.
+
+#### Prädikatoperatoren
+
+- `relation.gleichheit` bleibt bestehen und erhält die neue Inhaltssemantik.
+- Neu kommt `relation.selbigkeit` hinzu.
+- `relation.selbigkeit` verwendet dieselben allgemeinen Objekteingänge `links` und `rechts`.
+- Beide Relationen werden als Äquivalenzrelationen beschrieben.
+- Für Selbigkeit werden Suchbegriffe wie „selbig“, „dasselbe“, „gleicher Typ und Inhalt“ und das gewählte Symbol registriert.
+- `relation.ungleichheit` bleibt die Negation von **Gleichheit**, nicht die Negation von Selbigkeit.
+- Eine Nicht-Selbigkeit kann bei Bedarf als `Negation(Selbigkeit(...))` dargestellt werden; ein eigener Operator ist durch diese Anforderung noch nicht vorgeschrieben.
+- Da der generische Prädikatknoten bereits verschiedene Relationsoperatoren trägt, benötigt Selbigkeit keinen neuen fachlichen Knotentyp, sondern eine neue Relationsoperator-Variante.
+
+#### Auswirkungen auf bestehende Systeme
+
+Bei der Umsetzung müssen mindestens folgende Stellen geprüft und bewusst auf Gleichheit oder Selbigkeit festgelegt werden:
+
+- `Gleichheit` und `Ungleichheit` in `Aussagen.kt`,
+- `RelationsOperatoren`,
+- Relations-Definitionsformeln und automatisch erzeugte Definitionskarten,
+- endliche Mengen, Mitgliedschaft, Eindeutigkeit und Mächtigkeit,
+- Vereinigung, Schnitt, Differenz und kartesische Produkte,
+- Gleichungs- und Lösungsverfahren,
+- Fallunterscheidungen und Bedingungen,
+- Tupel- und Vektoroperationen,
+- Matrix- und Tensorstrukturen,
+- Methodenargumente und Methodenbildmengen,
+- Visualisierungs- und Koordinatenadapter,
+- Suchindex, Prädikatauswahl und Konzeptbibliothek,
+- vorhandene Tests, die Kotlin-Strukturgleichheit implizit mit mathematischer Gleichheit gleichsetzen.
+
+#### Abnahmekriterien
+
+1. `Tupel(1,2) = SpaltenVektor(1,2)` wird als wahr entschieden.
+2. `Tupel(1,2)` und `SpaltenVektor(1,2)` sind nicht selbig.
+3. `ZeilenVektor(1,2) = SpaltenVektor(1,2)` wird als wahr entschieden.
+4. Ein Zeilen- und ein Spaltenvektor sind unabhängig von ihren Komponenten niemals selbig.
+5. Zwei Spaltenvektoren sind genau dann selbig, wenn sie gleich lang sind und alle korrespondierenden Komponenten rekursiv selbig sind.
+6. Zwei Zeilenvektoren erfüllen dieselbe rekursive Selbigkeitsregel.
+7. Ein unterschiedlicher Datentyp auf einer beliebigen inneren Verschachtelungsebene kann Selbigkeit widerlegen, obwohl die äußeren Objekte inhaltlich gleich bleiben.
+8. Selbigkeit impliziert in allen getesteten Fällen Gleichheit.
+9. Gleichheit und Selbigkeit verwenden weder Kotlin-Referenzidentität noch eine globale Umdefinition von `equals/hashCode`.
+10. Mitgliedschaft und Eindeutigkeit materialisierter endlicher Mengen unterscheiden gleichinhaltige, aber nicht selbige Elemente.
+11. `Ungleichheit` bleibt exakt die logische Negation der neuen Inhaltsgleichheit.
+12. Bestehende Gleichungslöser, `<=`/`>=` und mathematische Bedingungen verwenden weiterhin Gleichheit und werden nicht versehentlich auf Selbigkeit umgestellt.
+13. `relation.selbigkeit` ist im Prädikatdialog auswählbar, auswertbar, suchbar und besitzt eine Definitionskarte.
+14. Gleichheits- und Selbigkeitsdarstellung sind in Rechenkern, UI und Definitionskarten konsistent.
+15. Tests decken mindestens rationale/komplexe Zahlen, Tupel, Zeilenvektoren, Spaltenvektoren, verschachtelte Strukturen, Matrizen und endliche Mengen ab.
