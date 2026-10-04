@@ -24,6 +24,8 @@ Der Mathematik Atlas befindet sich im Versionsraum **v2.y.x – Mathematischer K
 
 Geplant sind strukturierte Inhalte und Erzeugungspfade für SVG, TikZ, LaTeX, Mermaid, HTML und weitere dokumentorientierte Formate.
 
+Die konkreten für v3 beschlossenen Änderungen werden fortlaufend in [docs/V3_AENDERUNGEN.md](docs/V3_AENDERUNGEN.md) dokumentiert.
+
 ### v4.y.x – Animation
 
 Geplant sind animierte mathematische Darstellungen, insbesondere über Manim oder geeignete Alternativen.
