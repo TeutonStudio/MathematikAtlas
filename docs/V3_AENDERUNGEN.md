@@ -433,3 +433,157 @@ Bei der Umsetzung müssen mindestens folgende Stellen geprüft und bewusst auf G
 13. `relation.selbigkeit` ist im Prädikatdialog auswählbar, auswertbar, suchbar und besitzt eine Definitionskarte.
 14. Gleichheits- und Selbigkeitsdarstellung sind in Rechenkern, UI und Definitionskarten konsistent.
 15. Tests decken mindestens rationale/komplexe Zahlen, Tupel, Zeilenvektoren, Spaltenvektoren, verschachtelte Strukturen, Matrizen und endliche Mengen ab.
+
+
+### V3-005 – Wahr/Falsch-Schalter an unverbundenen Aussage-Eingängen
+
+**Status:** analysiert, Umsetzung geplant
+
+Jeder konkrete Eingang vom mathematischen Typ **Aussage** erhält direkt am Knoten einen binären Standardwert-Schalter, solange dieser Eingang nicht durch eine Edge belegt ist.
+
+Der Schalter definiert den Wert, den der Eingang ohne Verbindung liefert:
+
+- **aus** = `Falsch` beziehungsweise `WahrheitsKonstante(false)`
+- **ein** = `Wahr` beziehungsweise `WahrheitsKonstante(true)`
+
+Damit sind unverbundene Aussage-Eingänge unmittelbar benutzbar und benötigen keinen zusätzlichen Wahr-/Falsch-Knoten nur zur Belegung eines konstanten Eingangs.
+
+#### Ist-Analyse
+
+Der Atlas besitzt bereits ein allgemeines Parameter-Schema für Standardwerte mit Schlüsseln der Form
+
+```
+standardwert.<anschlussname>
+```
+
+Dieses wird aktuell jedoch nur für Zahl-Eingänge ausgewertet:
+
+- `KnotenInspektorFenster.StandardwerteEditor` bietet nur für nicht dynamische Zahl-Eingänge ein Textfeld an.
+- `KartenAuswerter.sammleEingänge()` erzeugt nur für Zahl-Eingänge aus einem gespeicherten `standardwert.*` einen `RationaleZahl`-Wert.
+- Aussage-Eingänge ohne Verbindung besitzen deshalb keinen allgemeinen Fallback.
+- Einzelne Aussagenoperatoren reagieren unterschiedlich auf fehlende Eingänge: manche brechen mit „Aussage fehlt“ ab, andere erzeugen für unverbundene dynamische Eingänge eine `UnentscheidbareAussage`. Diese Sonderfälle sollen durch einen einheitlichen Standardwertpfad ersetzt werden, soweit tatsächlich ein konkreter Aussage-Eingang vorhanden ist.
+- Die eigentlichen Anschlussgriffe werden im domänenneutralen Modul `KnotenKartenVerwalter` gezeichnet. Dieses Modul kennt absichtlich keine `MathematikAnschlussArten` und darf deshalb keine Aussage-spezifische Logik erhalten.
+
+#### UI-Verhalten
+
+Für jeden Aussage-Eingang gilt:
+
+1. **Unverbunden:** Neben dem Anschluss wird ein kompakter Wahr/Falsch-Schalter angezeigt.
+2. **Verbunden:** Der Schalter wird ausgeblendet. Der über die Edge kommende Wert hat vollständig Vorrang.
+3. **Verbindung getrennt:** Der Schalter erscheint wieder mit seinem zuvor gespeicherten Zustand.
+4. Eine Verbindung verändert oder löscht den gespeicherten Standardwert nicht.
+5. Das Umschalten ist eine normale undo-/redo-fähige Kartenänderung.
+6. Der Zustand wird mit der Karte persistiert und nach erneutem Öffnen identisch wiederhergestellt.
+7. Der Schalter muss sowohl per Touch als auch Maus zuverlässig bedienbar sein und eine zugängliche Semantik wie „Standardwert <Eingangsname>: Wahr/Falsch“ besitzen.
+8. Das Betätigen des Schalters darf keinen Node-Drag und keinen Verbindungs-Drag auslösen.
+
+Der Schalter sitzt visuell beim zugehörigen Eingang und nicht nur im Inspektor. Dadurch bleibt sichtbar, welcher Wahrheitswert tatsächlich verwendet wird, ohne zuerst den Knoten auswählen und einen separaten Dialog öffnen zu müssen.
+
+#### Standardwert und Speicherung
+
+Das bestehende Standardwert-Schema wird erweitert statt dupliziert.
+
+Für einen Aussage-Eingang `a` wird beispielsweise gespeichert:
+
+```
+standardwert.a=true
+```
+
+beziehungsweise
+
+```
+standardwert.a=false
+```
+
+Fehlt bei einer älteren Karte der Parameter vollständig, wird der Eingang deterministisch mit **Falsch** initialisiert beziehungsweise interpretiert. Sobald der Benutzer den Schalter betätigt, wird der explizite Wert gespeichert.
+
+Die Persistenz benutzt den stabilen Anschlussnamen wie das bestehende Zahl-Standardwertsystem. Bei Knotenmodi, die Anschlussnamen ersetzen, müssen Konfigurations- und Migrationspfade prüfen, ob der zugehörige Standardwert erhalten, umbenannt oder bewusst entfernt werden muss.
+
+#### Auswertung
+
+`KartenAuswerter.sammleEingänge()` wird so erweitert, dass nach den echten Edge-Verbindungen auch unverbundene Aussage-Eingänge materialisiert werden.
+
+Für einen nicht verbundenen Aussage-Eingang entsteht:
+
+```kotlin
+BedingterWert(
+    objekt = WahrheitsKonstante(standardwert),
+    latexDarstellung = WahrheitsKonstante(standardwert).zuLatex(),
+)
+```
+
+Dabei gilt strikt:
+
+```
+verbundener Wert > gespeicherter Standardwert > impliziter Standard Falsch
+```
+
+Ein verbundener Eingang darf also niemals zusätzlich den Standardwert in die Auswertung einmischen.
+
+Die Fallback-Erzeugung gehört in den gemeinsamen Kartenadapter und nicht in jeden einzelnen Knotenauswerter. Aussagenknoten sollen ihre Eingänge anschließend genauso lesen können, als käme der Wert von einem normalen Wahr-/Falsch-Knoten.
+
+#### Dynamische Aussage-Eingänge
+
+Bei erweiterbaren Operatoren wie Konjunktion, Disjunktion oder Adjunktion muss zwischen **konkretem Eingang** und einem ausschließlich zur Erzeugung weiterer Eingänge dienenden Erweiterungsplatz unterschieden werden.
+
+- Jeder zur aktuellen Operatorstelligkeit gehörende konkrete Aussage-Eingang besitzt den Schalter, wenn er unverbunden ist.
+- Ein rein technischer Reserve-/Erweiterungshandle darf nicht allein durch seinen impliziten Standardwert als tatsächlich belegtes zusätzliches Argument zählen.
+- Das Umschalten eines solchen Anschlusses macht ihn dagegen zu einem bewusst verwendeten Argument; falls die dynamische Eingangslogik einen neuen Reserveanschluss benötigt, muss sie danach denselben Mechanismus anwenden wie beim Verbinden einer Edge.
+- Automatische Bereinigung darf einen bewusst gesetzten Standardwert nicht wie einen vollständig leeren dynamischen Eingang entfernen.
+
+Damit entsteht bei variadischen Operatoren keine endlose Reihe falscher Standardargumente nur deshalb, weil ein neuer Reservehandle erzeugt wird.
+
+#### Architektur der Anschlussdarstellung
+
+Die Aussage-spezifische Entscheidung bleibt außerhalb des domänenneutralen `KnotenKartenVerwalter`.
+
+Dafür soll der Karteneditor einen kleinen optionalen Erweiterungspunkt für Anschluss-UI erhalten, beispielsweise sinngemäß:
+
+```kotlin
+anschlussZusatz: @Composable (
+    knoten: KnotenDaten,
+    anschluss: AnschlussDaten,
+    verbunden: Boolean,
+) -> Unit
+```
+
+Der Mathematik-Atlas kann darüber für unverbundene Aussage-Eingänge den Schalter einsetzen.
+
+Der generische Editor selbst kennt dabei weder `MathematikAnschlussArten.Aussage` noch `WahrheitsKonstante` oder die Bedeutung des Schalters. So bleibt die bereits etablierte Trennung zwischen allgemeinem Node-Editor und mathematischer Domäne erhalten.
+
+Alternativ ist ein gleichwertiger generischer Anschluss-Decorator zulässig, sofern dieselbe Modulgrenze gewahrt bleibt.
+
+#### Darstellung und Skalierung
+
+Der Schalter gehört logisch zum Knoteninhalt, nicht zum zoomunabhängig groß gehaltenen Trefferbereich des Handles.
+
+- Er bewegt und skaliert sich zusammen mit dem Knoten.
+- Die Bedienfläche muss bei üblichen Zoomstufen noch sicher erreichbar sein.
+- Bei sehr kleinem Zoom darf die Darstellung vereinfacht oder ausgeblendet werden, sofern der mathematische Standardwert bestehen bleibt.
+- Der Schalter darf Handle, Anschlussfarbe und Verbindungsziel nicht verdecken.
+- Bei mehreren Aussage-Eingängen muss eindeutig erkennbar bleiben, welcher Schalter zu welchem Anschluss gehört.
+
+#### Verhältnis zum Inspektor
+
+Der Inline-Schalter ist die primäre Bedienoberfläche für Aussage-Standardwerte.
+
+Der bestehende Abschnitt „Standardwerte“ im Inspektor kann zusätzlich um Aussage-Eingänge erweitert werden, muss aber denselben gespeicherten Parameter bearbeiten. Es dürfen nicht zwei voneinander unabhängige Zustände entstehen.
+
+Falls ein Aussage-Standardwert im Inspektor angeboten wird, verwendet er ebenfalls einen `Switch` und kein freies Textfeld.
+
+#### Abnahmekriterien
+
+1. Jeder unverbundene konkrete Eingang mit `MathematikAnschlussArten.Aussage` zeigt direkt am Knoten einen Wahr/Falsch-Schalter.
+2. Ein neuer Aussage-Eingang ohne gespeicherten Wert liefert deterministisch `Falsch`.
+3. Schalter auf „Wahr“ erzeugt bei der Kartenauswertung `WahrheitsKonstante(true)`.
+4. Schalter auf „Falsch“ erzeugt `WahrheitsKonstante(false)`.
+5. Wird eine Edge mit dem Eingang verbunden, verschwindet der Schalter und ausschließlich der verbundene Wert wird ausgewertet.
+6. Wird die Edge wieder entfernt, erscheint der Schalter mit seinem vorherigen gespeicherten Zustand.
+7. Umschalten unterstützt Undo und Redo und wird mit der Karte persistiert.
+8. Negation, Implikation, Äquivalenz, Konjunktion, Disjunktion, Adjunktion und weitere Knoten mit Aussage-Eingängen können unverbundene Aussage-Eingänge über diesen gemeinsamen Mechanismus auswerten.
+9. Dynamische Reserveeingänge zählen nicht allein wegen ihres impliziten Falsch-Werts als zusätzliches Operatorargument.
+10. Ein explizit umgeschalteter dynamischer Eingang bleibt erhalten und wird als bewusst verwendetes Argument behandelt.
+11. Touch auf den Schalter verschiebt den Knoten nicht und startet keine Handle-Verbindung.
+12. Android- und Desktop-Oberfläche verwenden dieselbe gespeicherte Semantik.
+13. `KnotenKartenVerwalter` erhält keine Abhängigkeit auf mathematische Anschlussarten oder Wahrheitswerte.
+14. Bestehende Zahl-Standardwerte funktionieren unverändert weiter.
