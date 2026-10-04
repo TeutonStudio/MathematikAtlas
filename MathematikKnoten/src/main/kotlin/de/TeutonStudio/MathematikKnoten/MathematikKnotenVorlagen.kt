@@ -269,7 +269,6 @@ object MathematikKnotenVorlagen {
             eingang("methode", MathematikAnschlussArten.Methode.id, 1),
             ausgang("menge", MathematikAnschlussArten.Menge.id),
         ),
-        mapOf(BILDMENGE_ARGUMENT_MODUS to BILDMENGE_MODUS_PRODUKT),
     )
     val TermZuMethode = KnotenVorlage(
         "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem allgemeinen Term eine Methode mit automatisch abgeleiteten Variablen und Zielmenge.", GraphGröße(265f, 135f),
