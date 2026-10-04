@@ -130,3 +130,86 @@ Anschlüsse und andere Bedienelemente, deren sichtbare beziehungsweise anklickba
 7. Eine Viewportänderung erzeugt keine neue fachliche Kartenversion.
 8. Für die Umsetzung wird eine reproduzierbare große Testkarte mit mindestens 1.000 Knoten und 1.500 Verbindungen bereitgestellt. Pan und Zoom werden auf einem festgelegten Android-Referenzgerät beziehungsweise Emulator mit Frame-Timing gemessen; die Messung muss gegenüber dem Ausgangsstand eine deutliche Reduktion von Jank und CPU-Arbeit nachweisen.
 9. Auswahl, Knoten-Drag, Größenänderung, Verbindungstreffer, Anschluss-Drag, visuelle Gruppen, MiniMap und Undo/Redo bleiben funktional unverändert.
+
+
+### V3-003 – Einheitliche Innenabstände für Dialoge und Karten
+
+**Status:** analysiert, Umsetzung geplant
+
+Dialoge, Karten und vergleichbare hervorgehobene Inhaltsflächen müssen im gesamten Atlas konsistente Innenabstände verwenden. Texte, Formeln, Eingabefelder und Aktionszeilen dürfen nicht unmittelbar oder optisch zu dicht an Karten- beziehungsweise Dialogrändern liegen.
+
+#### Ist-Analyse
+
+Die Compose-Oberfläche verwendet aktuell kein gemeinsames Spacing- oder Padding-System. Abstände werden lokal mit zahlreichen Einzelwerten wie 10, 12, 14, 16, 20 oder 24 dp festgelegt.
+
+Mehrere neuere Komponenten zeigen bereits das gewünschte Muster, beispielsweise:
+
+- `OperatorKachel` im Rechner-Operator-Auswahldialog mit 12 dp Innenabstand,
+- Detailflächen im selben Dialog mit 16 dp,
+- Karten im Papierkorb mit 16 dp,
+- Karten im Inspektor der endlichen Menge mit 10 beziehungsweise 12 dp,
+- verschiedene Formel- und Strukturvorschauen mit 12 beziehungsweise 16 dp.
+
+Andere Dialog- und Surface-Strukturen setzen ihre Abstände dagegen unabhängig voneinander zusammen. Insbesondere bei selbst aufgebauten `Dialog` + `Surface`-Oberflächen existiert kein zentraler Vertrag dafür, welcher Abstand zwischen Rahmen, Textinhalt, Listen, Eingabefeldern und Aktionsbereichen einzuhalten ist.
+
+Material-`AlertDialog` besitzt bereits eigene Layoutabstände und soll nicht pauschal zusätzlich doppelt gepolstert werden. Die Korrektur betrifft vor allem selbst aufgebaute Dialogflächen sowie `Card`, `OutlinedCard` und als Karte verwendete `Surface`-Container.
+
+#### Anforderungen
+
+- Für den Atlas wird ein kleiner gemeinsamer Satz semantischer Abstände definiert, statt neue rohe dp-Werte in jedem Dialog einzeln zu verteilen.
+- Mindestens folgende Rollen werden unterschieden:
+  - kompakter Innenabstand für kleine Chips, Hinweise und sehr dichte Hilfsflächen,
+  - Standard-Innenabstand für Cards und OutlinedCards mit Textinhalt,
+  - größerer Inhaltsabstand für Hauptbereiche eigener Dialoge,
+  - Abstand zwischen logisch getrennten Elementen innerhalb einer Karte,
+  - Abstand zwischen Dialogrand und äußerem Dialoginhalt.
+- Eine normale texttragende Card erhält standardmäßig einen wahrnehmbaren Innenabstand. Als Ausgangswert sind etwa 12 bis 16 dp angemessen; die konkrete Festlegung erfolgt einmal zentral.
+- Überschrift, Fließtext, LaTeX-Inhalt und Eingabeelemente dürfen bei normalen Karten nicht ohne bewusste Full-Bleed-Ausnahme unmittelbar am Kartenrand beginnen.
+- Selbst aufgebaute Dialoge mit `Dialog` und `Surface` erhalten eine konsistente Struktur aus Kopf, Inhaltsbereich und Aktionsbereich. Diese Bereiche verwenden gemeinsame horizontale Grundabstände.
+- Scrollbare Inhalte müssen ihre Innenabstände auch am ersten und letzten Element behalten. Das Padding darf nicht dadurch verloren gehen, dass nur die äußere `LazyColumn` oder der Scrollcontainer dimensioniert wird.
+- Karten innerhalb von `LazyColumn`, `LazyVerticalGrid` oder anderen Listen behalten ihren eigenen Innenabstand unabhängig vom Abstand zwischen den Listenelementen.
+- Bestehende Material-Komponenten mit bereits korrektem internem Padding, insbesondere `AlertDialog`, `ListItem`, `Button`, `TextField` und ähnliche Komponenten, werden nicht zusätzlich blind doppelt gepolstert.
+- Full-Bleed-Inhalte wie Canvas, Diagramme, Bildflächen, Editoren oder bewusst randfüllende Vorschauen dürfen weiterhin bis an den Container reichen. Text- oder Steuerelement-Overlays innerhalb solcher Flächen benötigen jedoch wieder einen eigenen sicheren Abstand.
+- Die Knotenkarte selbst wird von dieser Anforderung nicht pauschal vergrößert. Knotendarstellungen besitzen eigene Größen- und Zoomanforderungen und werden separat beurteilt.
+
+#### Technische Richtung
+
+Die Abstände sollen über eine zentrale, fachneutrale UI-Konvention bereitgestellt werden, beispielsweise durch semantisch benannte Konstanten oder kleine Layout-Helfer. Entscheidend ist nicht der konkrete Name, sondern dass neue Dialoge und Karten nicht erneut freie Einzelwerte erfinden.
+
+Mögliche Rollen sind beispielsweise:
+
+- `Kompakt`
+- `KartenInhalt`
+- `DialogInhalt`
+- `DialogAußen`
+- `ElementAbstandKlein`
+- `ElementAbstandNormal`
+
+Dabei sollen keine unnötig komplexen Wrapper-Composables entstehen. Wo `Modifier.padding(...)` und `Arrangement.spacedBy(...)` mit zentralen Werten ausreichen, bleiben diese die bevorzugte Lösung.
+
+#### Prüfbereich
+
+Bei der Umsetzung werden mindestens folgende UI-Gruppen vollständig durchgesehen:
+
+- Knotenauswahl und Konzeptbibliothek,
+- Rechner- und Operatorauswahldialoge,
+- Formel- und Strukturformelbauer,
+- Einstellungen und Profilverwaltung,
+- Kartenexport, Karten-JSON und Kartenverwaltung,
+- Wahrheits- und Umformungstabellen,
+- Inspektor-Unterdialoge und Bestätigungsdialoge,
+- mathematische Konzeptdialoge,
+- alle `Card`, `OutlinedCard` und als Informationskarte verwendeten `Surface`-Container im `app`-Modul.
+
+Dabei werden bereits korrekt gepolsterte Komponenten nicht nur deshalb verändert, um einen Diff zu erzeugen. Ziel ist visuelle Konsistenz, nicht dekorative Codebewegung.
+
+#### Abnahmekriterien
+
+1. Kein normaler Textblock innerhalb einer Card oder cardartigen Surface liegt ohne bewusste Full-Bleed-Ausnahme unmittelbar am Rand.
+2. Karten mit vergleichbarer Funktion verwenden denselben oder semantisch gleichwertigen Innenabstand.
+3. Eigene große Dialoge besitzen konsistente horizontale Grundabstände zwischen Kopf, Inhalt und Aktionsbereich.
+4. Scrollbare Dialoginhalte behalten oben, unten und seitlich ausreichende Abstände.
+5. Material-`AlertDialog` und andere Komponenten mit eigenem korrektem Content-Padding erhalten kein unnötiges zusätzliches Doppel-Padding.
+6. Die Korrektur funktioniert auf schmalen Android-Displays ebenso wie auf großen beziehungsweise Desktop-Fenstern, ohne unnötig nutzbare Inhaltsfläche zu verlieren.
+7. Für mindestens einen schmalen und einen breiten Layoutzustand werden Compose-Previews oder UI-Screenshots der wichtigsten Dialogtypen verglichen.
+8. Neue UI-Komponenten können die gemeinsamen Spacing-Rollen wiederverwenden, ohne erneut frei gewählte Paddingwerte einzuführen.
