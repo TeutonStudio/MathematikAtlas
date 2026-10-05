@@ -69,6 +69,98 @@ Erweiterungsarchitektur, ohne neue persistierbare Knotentypen einzuführen.
 - Ist die neueste Kartenversion beschädigt, verwendet Bibliothek und
   `ladeAktuell` die jüngste noch lesbare Version.
 
+## Geplante Alpha-Erweiterungen
+
+### 7. Kartenbibliothek nach Herkunft filtern
+
+Die bisher gemeinsam dargestellte Kartenbibliothek soll nach der Herkunft der
+Karten getrennt werden. Die Auswahl erfolgt über ein Dropdown-Menü links neben
+der Aktion zum Archivieren der aktuellen Karte.
+
+Die Bibliothek unterscheidet drei Bereiche:
+
+- **Eigene Karten:** lokal vom Nutzer erstellte Karten und Sammlungen.
+- **Vordefinierte Karten:** mit der Anwendung ausgelieferte Standardkarten.
+- **Fremdnutzerkarten:** importierte Karten und Sammlungen anderer Nutzer oder
+  aus externen Quellen.
+
+Die Zuordnung darf nicht aus sichtbaren Ordnernamen wie `Standardkarten` oder
+`Freigaben` abgeleitet werden. Vorhandene Provenienzdaten für Standardkarten
+und Freigabepakete bilden die Grundlage; für weitere externe JSON-, `.matlas`-
+und Linkimporte wird eine app-lokale Herkunftsmetadaten-Schicht ergänzt. Das
+allgemeine `KartenDaten`- und Graphformat bleibt davon unberührt.
+
+#### Bereichsabhängige Aktionen
+
+- Bei **Eigene Karten** bleiben `Neue Karte` und `Ordner +` erhalten.
+- Bei **Vordefinierte Karten** werden weder `Neue Karte` noch `Ordner +`
+  angeboten.
+- Bei **Fremdnutzerkarten** wird `Neue Karte` durch `Karten importieren`
+  ersetzt.
+- `Ordner +` wird bei **Fremdnutzerkarten** durch
+  `Eigene veröffentlichen` ersetzt.
+- Der Archivieren-Button bleibt unabhängig vom gewählten Bibliotheksfilter auf
+  die aktuell geöffnete Karte bezogen.
+
+Beim Filtern werden nicht nur Karten, sondern auch die sichtbaren Ordnerbäume
+reduziert. Ein Ordner wird in den Bereichen für vordefinierte oder fremde
+Karten nur angezeigt, wenn er eine sichtbare Karte oder einen sichtbaren
+Unterordner enthält. Eigene leere Benutzerordner bleiben dagegen sichtbar.
+
+#### Karten importieren
+
+Der neue Importdialog bündelt die bislang verteilten Importwege und bietet drei
+Eingabearten:
+
+1. **JSON:** Karten-JSON beziehungsweise ein bestehendes Freigabepaket direkt
+   einfügen oder als Datei auswählen.
+2. **.matlas:** einen versionierten `.matlas`-Container als Datei auswählen
+   und über die vorhandene validierte Container-Pipeline importieren.
+3. **Link:** eine HTTPS-Adresse angeben, deren Inhalt als JSON oder
+   `.matlas` geladen und anschließend durch dieselbe Importpipeline geprüft
+   wird.
+
+Dateiendungen und MIME-Typen dienen nur als Hinweise; das tatsächliche Format
+wird anhand des Inhalts erkannt. Linkimporte erhalten Größen-, Timeout- und
+Redirect-Grenzen und akzeptieren keine lokalen oder unsicheren URL-Schemata.
+
+Alle Importwege aktualisieren Kartenbestand, Ordnung und Herkunft atomar und
+öffnen nach erfolgreichem Import die importierte Wurzelkarte. Extern
+importierte Karten erscheinen anschließend unter **Fremdnutzerkarten**. Eine
+erneut importierte Freigabe der eigenen lokalen Profilidentität bleibt den
+eigenen Karten zugeordnet.
+
+#### Eigene veröffentlichen
+
+`Eigene veröffentlichen` öffnet einen zentralen Dialog für ausschließlich
+eigene Karten und Sammlungen. Die erste Ausbaustufe verwendet die vorhandene
+Freigabepaket- und Android-Teilen-Pipeline. Die Veröffentlichungslogik wird
+hinter einem eigenen Dienst gekapselt, damit später ein servergestützter
+öffentlicher Kartenlink ergänzt werden kann, ohne die Bibliotheksoberfläche
+erneut umzubauen.
+
+Toolbar-Import und Bibliotheksimport verwenden dieselbe Importlogik; parallele
+Sonderimplementierungen für Dateiauswahl, JSON und `.matlas` sollen nicht
+bestehen bleiben.
+
+#### Abnahmekriterien
+
+- Der Filter trennt eigene, vordefinierte und fremde Karten anhand stabiler
+  Herkunftsdaten.
+- Ordner erscheinen nur in den jeweils passenden Bereichen.
+- Die Aktionsleiste entspricht für jeden Bereich exakt dem beschriebenen
+  Zustand.
+- JSON-, Freigabepaket-, `.matlas`- und Linkimport laufen durch eine gemeinsame
+  validierte Importpipeline.
+- Ein `.matlas`-Export kann wieder eingelesen werden und Prüfsummen- oder
+  Manifestfehler werden abgewiesen.
+- Import und Veröffentlichung verändern weder das neutrale Graphformat noch
+  bestehende Karten- oder Knoten-IDs unnötig.
+- Modelltests decken Herkunftspriorität und Ordnerfilterung ab; Importtests
+  prüfen Format-Erkennung, Roundtrip und fehlerhafte Container.
+- Die Verwaltungsfenster-Vorschau zeigt die drei Bibliothekszustände mit den
+  jeweils korrekten Aktionen.
+
 ## Verifikation
 
 - Repository-, Releaseplan- und Versionsfolgeprüfung
