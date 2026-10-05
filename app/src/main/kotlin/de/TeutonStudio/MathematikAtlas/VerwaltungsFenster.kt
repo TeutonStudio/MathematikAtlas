@@ -20,7 +20,7 @@ import de.TeutonStudio.MathematikAtlas.speicher.*
 import de.TeutonStudio.MathematikKnoten.LatexText
 
 @Composable
-internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
+internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier, importAnfordern: () -> Unit = {}) {
     val context = LocalContext.current
     val profilSpeicher = remember(context) { LokalesProfilSpeicher(context) }
     var profil by remember { mutableStateOf(profilSpeicher.lade()) }
@@ -46,7 +46,7 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
             }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (zustand.linkerBereich) {
-                    VerwaltungsBereich.Karten -> KartenListe(zustand)
+                    VerwaltungsBereich.Karten -> KartenListe(zustand, importAnfordern)
                     VerwaltungsBereich.Konzepte -> KonzeptListe(zustand)
                     VerwaltungsBereich.Variablen -> VariablenListe(zustand)
                     VerwaltungsBereich.Auswertung -> AuswertungsListe(zustand)
@@ -116,7 +116,7 @@ private fun ProfilLeiste(profil: LokalesProfil, onClick: () -> Unit) {
 }
 
 @Composable
-private fun KartenListe(zustand: AtlasZustand) {
+private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
     val context = LocalContext.current
     val ordnungsSpeicher = remember(context) { KartenOrdnungSpeicher(context) }
     var ordnung by remember(ordnungsSpeicher) { mutableStateOf(ordnungsSpeicher.lade()) }
@@ -125,6 +125,8 @@ private fun KartenListe(zustand: AtlasZustand) {
     var ordnerMenü by remember { mutableStateOf<List<String>?>(null) }
     var kartenMenü by remember { mutableStateOf<KartenId?>(null) }
     var freigabeFehler by remember { mutableStateOf<String?>(null) }
+    var herkunftFilter by remember { mutableStateOf(KartenHerkunft.EIGEN) }
+    var filterMenü by remember { mutableStateOf(false) }
     val kartenAenderungsVersion = KartenAenderungsSignal.version
 
     LaunchedEffect(kartenAenderungsVersion, ordnungsSpeicher) {
@@ -147,21 +149,75 @@ private fun KartenListe(zustand: AtlasZustand) {
     val sichtbareKarten = remember(zustand.karten, kartenAenderungsVersion) {
         zustand.speicher.liste()
     }
-    val einträge = remember(sichtbareKarten, ordnung, eingeklappteOrdner) {
-        kartenListenEinträge(sichtbareKarten, ordnung, eingeklappteOrdner)
+    val herkunft = remember(sichtbareKarten, kartenAenderungsVersion) {
+        sichtbareKarten.associate { it.id to zustand.speicher.herkunftFür(it.id) }
+    }
+    val fremdVerwalteteOrdner = remember(kartenAenderungsVersion) { zustand.speicher.fremdVerwalteteOrdner() }
+    val einträge = remember(sichtbareKarten, ordnung, eingeklappteOrdner, herkunft, herkunftFilter, fremdVerwalteteOrdner) {
+        kartenListenEinträge(
+            sichtbareKarten,
+            ordnung,
+            eingeklappteOrdner,
+            herkunft,
+            herkunftFilter,
+            fremdVerwalteteOrdner,
+        )
     }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard),
             horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
-            Button(onClick = zustand::neueKarte, modifier = Modifier.weight(1f)) { Text("Neue Karte") }
-            OutlinedButton(onClick = { dialog = KartenOrdnerDialog.OrdnerAnlegen }, modifier = Modifier.weight(1f)) { Text("Ordner +") }
+            Box(Modifier.weight(1f)) {
+                OutlinedButton(onClick = { filterMenü = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(herkunftFilter.titel)
+                }
+                DropdownMenu(expanded = filterMenü, onDismissRequest = { filterMenü = false }) {
+                    KartenHerkunft.entries.forEach { auswahl ->
+                        DropdownMenuItem(
+                            text = { Text(auswahl.titel) },
+                            onClick = { herkunftFilter = auswahl; filterMenü = false },
+                        )
+                    }
+                }
+            }
+            OutlinedButton(
+                onClick = zustand::archiviereAktuell,
+                enabled = herkunftFilter == KartenHerkunft.EIGEN &&
+                    zustand.speicher.herkunftFür(zustand.editor.karte.id) == KartenHerkunft.EIGEN,
+                modifier = Modifier.weight(1f),
+            ) { Text("Archivieren") }
         }
-        OutlinedButton(
-            onClick = zustand::archiviereAktuell,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich),
-        ) { Text("Aktuelle Karte archivieren") }
+        if (herkunftFilter == KartenHerkunft.EIGEN) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+            ) {
+                Button(onClick = zustand::neueKarte, modifier = Modifier.weight(1f)) { Text("Neue Karte") }
+                OutlinedButton(onClick = { dialog = KartenOrdnerDialog.OrdnerAnlegen }, modifier = Modifier.weight(1f)) { Text("Ordner +") }
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.winzig),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+            ) {
+                OutlinedButton(onClick = importAnfordern, modifier = Modifier.weight(1f)) { Text("Importieren") }
+                OutlinedButton(
+                    onClick = {
+                        val karte = zustand.editor.karte
+                        freigeben(karte.name) {
+                            zustand.speicher.erstelleFreigabePaket(karte.name, FreigabeArt.Karte, listOf(karte), ordnung)
+                        }
+                    },
+                    enabled = zustand.speicher.herkunftFür(zustand.editor.karte.id) == KartenHerkunft.EIGEN,
+                    modifier = Modifier.weight(1f),
+                ) { Text("Veröffentlichen") }
+            }
+        } else if (herkunftFilter == KartenHerkunft.FREMD) {
+            OutlinedButton(
+                onClick = importAnfordern,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich),
+            ) { Text("Importieren") }
+        }
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(LocalAtlasAbstände.current.standard),
@@ -178,7 +234,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                             supportingContent = {
                                 if (eintrag.pfad.size > 1) Text(formatiereOrdnerPfad(eintrag.pfad.dropLast(1)))
                             },
-                            trailingContent = {
+                            trailingContent = if (herkunftFilter == KartenHerkunft.EIGEN) ({
                                 Box {
                                     TextButton(onClick = { ordnerMenü = eintrag.pfad }) { Text("⋮") }
                                     DropdownMenu(
@@ -220,7 +276,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                                         )
                                     }
                                 }
-                            },
+                            }) else null,
                             modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                                 .clip(MaterialTheme.shapes.medium)
                                 .clickable {
@@ -234,7 +290,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                     is KartenListenEintrag.Karte -> ListItem(
                         headlineContent = { Text(eintrag.karte.name) },
                         supportingContent = { Text("Version ${eintrag.karte.version}") },
-                        trailingContent = {
+                        trailingContent = if (herkunftFilter == KartenHerkunft.EIGEN) ({
                             Box {
                                 TextButton(onClick = { kartenMenü = eintrag.karte.id }) { Text("⋮") }
                                 DropdownMenu(
@@ -264,7 +320,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                                     )
                                 }
                             }
-                        },
+                        }) else null,
                         modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                             .clip(MaterialTheme.shapes.medium)
                             .kartenDragQuelle(zustand, eintrag.karte)
@@ -277,7 +333,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                 }
             }
             if (einträge.isEmpty()) item {
-                Text("Keine Karten vorhanden.", Modifier.padding(LocalAtlasAbstände.current.bereich), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Keine ${herkunftFilter.titel.lowercase()} vorhanden.", Modifier.padding(LocalAtlasAbstände.current.bereich), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

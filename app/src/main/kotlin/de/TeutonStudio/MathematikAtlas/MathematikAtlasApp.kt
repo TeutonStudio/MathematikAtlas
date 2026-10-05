@@ -87,22 +87,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             }
         }
     }
-    val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let {
-            coroutineScope.launch {
-                runCatching {
-                    val inhalt = withContext(Dispatchers.IO) {
-                        context.contentResolver.openInputStream(it)?.use { eingabe -> eingabe.readBytes() }
-                            ?: error("Die Quelldatei konnte nicht geöffnet werden.")
-                    }
-                    val istZip = inhalt.size >= 4 && inhalt[0] == 'P'.code.toByte() && inhalt[1] == 'K'.code.toByte()
-                    if (istZip) zustand.importiere(inhalt) else zustand.importiere(inhalt.toString(Charsets.UTF_8))
-                }.onFailure { fehler ->
-                    dateiFehler = fehler.message ?: "Import fehlgeschlagen."
-                }
-            }
-        }
-    }
+    var importDialogOffen by remember { mutableStateOf(false) }
     var exportDialogOffen by remember { mutableStateOf(false) }
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
     var werkzeug by remember { mutableStateOf(KartenWerkzeug.Auswahl) }
@@ -155,6 +140,9 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             },
         )
     }
+    if (importDialogOffen) {
+        KartenImportDialog(zustand = zustand, schließen = { importDialogOffen = false })
+    }
     dateiFehler?.let { meldung ->
         AlertDialog(
             onDismissRequest = { dateiFehler = null },
@@ -178,13 +166,14 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         VerwaltungsFenster(
             zustand,
             Modifier.width(280.dp).fillMaxHeight().zIndex(1f),
+            importAnfordern = { importDialogOffen = true },
         )
         VerticalDivider()
         Column(Modifier.weight(1f).fillMaxHeight()) {
             WerkzeugLeiste(
                 zustand,
                 onImport = {
-                    import.launch(arrayOf("application/json", "text/plain", KartenExportFormat.MATLAS.mimeType))
+                    importDialogOffen = true
                 },
                 onExport = { exportDialogOffen = true },
                 onSpeichern = { ausführen(AtlasBefehl.Speichern) },

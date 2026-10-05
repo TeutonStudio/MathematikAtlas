@@ -238,8 +238,9 @@ class AtlasZustand(context: Context) {
     }
 
     fun importiere(container: ByteArray) {
-        val karte = MatlasKartenContainer.lese(container)
-        importiere(MathematikKartenCodec.schreibe(karte))
+        val karte = speicher.importiere(container)
+        karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
+        öffne(karte)
     }
 
     /** Übernimmt bearbeitetes Karten-JSON. Referenzierte Versionen werden vom Speicher automatisch fortgeschrieben. */

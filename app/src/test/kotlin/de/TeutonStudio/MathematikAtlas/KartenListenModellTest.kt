@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
 import de.TeutonStudio.MathematikAtlas.speicher.KartenOrdnung
+import de.TeutonStudio.MathematikAtlas.speicher.KartenHerkunft
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -58,5 +59,38 @@ class KartenListenModellTest {
 
         assertEquals(1, lineareAlgebra.tiefe)
         assertEquals(2, matrixKarte.tiefe)
+    }
+
+    @Test
+    fun `Herkunftsfilter zeigt nur Karten und notwendige Ordner der Auswahl`() {
+        val einträge = kartenListenEinträge(
+            karten,
+            ordnung,
+            herkunft = mapOf(
+                wurzel.id to KartenHerkunft.EIGEN,
+                algebra.id to KartenHerkunft.VORDEFINIERT,
+                matrizen.id to KartenHerkunft.FREMD,
+                analysis.id to KartenHerkunft.EIGEN,
+            ),
+            filter = KartenHerkunft.FREMD,
+        )
+
+        assertEquals(listOf(matrizen.id), einträge.filterIsInstance<KartenListenEintrag.Karte>().map { it.karte.id })
+        assertEquals(
+            setOf(listOf("Algebra"), listOf("Algebra", "Lineare Algebra")),
+            einträge.filterIsInstance<KartenListenEintrag.Ordner>().map { it.pfad }.toSet(),
+        )
+    }
+
+    @Test
+    fun `fremd verwaltete leere Ordner erscheinen nicht unter eigenen Karten`() {
+        val einträge = kartenListenEinträge(
+            karten = listOf(wurzel),
+            ordnung = KartenOrdnung().mitOrdner(listOf("Freigaben", "Ada")),
+            fremdVerwalteteOrdner = setOf(listOf("Freigaben")),
+        )
+
+        assertTrue(einträge.none { it is KartenListenEintrag.Ordner })
+        assertTrue(einträge.any { it is KartenListenEintrag.Karte && it.karte.id == wurzel.id })
     }
 }
