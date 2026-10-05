@@ -34,7 +34,7 @@ internal object TangentialKnotenInspektor : KnotenInspektor {
         Text("Ausgabe", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             FilterChip(
                 selected = ausgabeform == TangentialAusgabeForm.METHODE,
@@ -62,7 +62,7 @@ internal object TangentialKnotenInspektor : KnotenInspektor {
         Text("Differentialbegriff", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             FilterChip(
                 selected = begriff == DifferentialBegriff.REELL_FRECHET,
@@ -95,7 +95,7 @@ internal object RandKnotenInspektor : KnotenInspektor {
         Text("Topologie", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
         ) {
             listOf(
                 "kanonisch" to "kanonisch",

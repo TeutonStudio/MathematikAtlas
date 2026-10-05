@@ -2,8 +2,10 @@ package de.TeutonStudio.KnotenKartenVerwalter
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnsichtsFenster
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphGröße
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.VisuelleKnotenGruppeDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -76,6 +78,22 @@ class ViewportHistorieTest {
         assertTrue(zustand.kannWiederholen())
     }
 
+    @Test
+    fun nurSemantischeAktionenErhöhenDieAuswertungsrevision() {
+        val zustand = editor()
+        val knoten = zustand.karte.knoten.single()
+        val anfang = zustand.auswertungsRevision
+
+        zustand.führeAus(KartenAktion.AnsichtÄndern(AnsichtsFenster(GraphPunkt(10f, 20f), 1.2f)))
+        zustand.führeAus(KartenAktion.KnotenVerschieben(knoten.id, GraphPunkt(200f, 100f)))
+        zustand.führeAus(KartenAktion.KnotenGrößeÄndern(knoten.id, knoten.größe.copy(breite = 300f)))
+        zustand.führeAus(KartenAktion.VisuelleGruppeTitelÄndern(zustand.karte.visuelleGruppen.single().id, "Neu"))
+        assertEquals(anfang, zustand.auswertungsRevision)
+
+        zustand.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, "wert", "2"))
+        assertEquals(anfang + 1, zustand.auswertungsRevision)
+    }
+
     private fun editor(): KartenEditorZustand = KartenEditorZustand(
         KartenDaten(
             name = "Viewport-Historie",
@@ -84,6 +102,13 @@ class ViewportHistorieTest {
                     art = "test.knoten",
                     name = "Historienrelevanter Inhalt",
                     position = GraphPunkt(80f, 80f),
+                ),
+            ),
+            visuelleGruppen = listOf(
+                VisuelleKnotenGruppeDaten(
+                    titel = "Layout",
+                    position = GraphPunkt(1_000f, 1_000f),
+                    größe = GraphGröße(200f, 160f),
                 ),
             ),
         ),

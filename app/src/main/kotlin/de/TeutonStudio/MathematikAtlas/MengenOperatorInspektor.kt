@@ -171,7 +171,7 @@ internal object PraedikatInspektor : KnotenInspektor {
         }
 
         Text("Prädikatseite", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
             FilterChip(
                 selected = seite == PRAEDIKAT_SEITE_RELATIONEN,
                 onClick = { seite = PRAEDIKAT_SEITE_RELATIONEN },
@@ -193,14 +193,14 @@ internal object PraedikatInspektor : KnotenInspektor {
         }
 
         relation?.relationsStruktur?.kompakteKlassen()?.takeIf { it.isNotEmpty() }?.let { klassen ->
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
                 klassen.forEach { klasse ->
                     FilterChip(selected = true, onClick = {}, label = { Text(klasse.titel) })
                 }
             }
         }
         axiom?.let { definition ->
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
                 definition.systeme.sorted().forEach { system ->
                     val titel = AxiomOperatoren.systeme.firstOrNull { it.stabileId == system }?.titel ?: system
                     FilterChip(selected = true, onClick = {}, label = { Text(titel) })
@@ -275,7 +275,7 @@ internal object VektorRechnerErweiterterInspektor : KnotenInspektor {
 
         if (operator == VektorRechnerOperator.DISTANZ) {
             Text("Metrik", style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
                 val aktuell = VektorMetriken.vonIdOderStandard(knoten.parameter[VEKTOR_RECHNER_METRIK])
                 VektorMetriken.alle.forEach { metrik ->
                     FilterChip(
@@ -306,7 +306,7 @@ internal object VektorRechnerErweiterterInspektor : KnotenInspektor {
         }
         if (operator == VektorRechnerOperator.ZUSAMMENFUEHREN) {
             Text("Ausgabe", style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
                 val aktuell = VektorStrukturAusgabe.vonIdOderStandard(knoten.parameter[VEKTOR_RECHNER_STRUKTUR_AUSGABE])
                 VektorStrukturAusgabe.entries.forEach { ausgabe ->
                     FilterChip(
@@ -376,7 +376,7 @@ internal object MengenMassInspektor : KnotenInspektor {
         Text("Maß", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
         ) {
             listOf(
                 IntegralMassModus.STANDARD_REELL to "Lebesgue",

@@ -129,7 +129,7 @@ object DomaenenAuswerter {
                 is Cosinus -> reelleFunktion(ausdruck.argument, tiefe, "cos", ::cos)
                 is ArcSinus -> reelleFunktionMitBereich(ausdruck.argument, tiefe, "arcsin", -1.0, 1.0, ::asin)
                 is ArcCosinus -> reelleFunktionMitBereich(ausdruck.argument, tiefe, "arccos", -1.0, 1.0, ::acos)
-                is Exponentialfunktion -> reelleFunktion(ausdruck.argument, tiefe, "exp", ::exp)
+                is Exponentialfunktion -> exponentialfunktion(ausdruck.argument, tiefe)
                 is NatürlicherLogarithmus -> reelleFunktionMitPruefung(
                     ausdruck.argument,
                     tiefe,
@@ -264,6 +264,21 @@ object DomaenenAuswerter {
             if (reell >= 0.0) reell(sqrt(reell))
             else DomaenenErgebnis.Wert(DomaenenWert.Komplex(BigDecimal.ZERO, dezimal(sqrt(-reell))))
         }
+
+        private fun exponentialfunktion(argument: ZahlAusdruck, tiefe: Int): DomaenenErgebnis =
+            unaer(argument, tiefe) { wert ->
+                when (wert) {
+                    is DomaenenWert.Reell -> reell(exp(wert.wert.toDouble()))
+                    is DomaenenWert.Komplex -> {
+                        val betrag = exp(wert.reell.toDouble())
+                        val winkel = wert.imaginaer.toDouble()
+                        komplex(betrag * cos(winkel), betrag * sin(winkel))
+                    }
+                    is DomaenenWert.Quaternion -> nichtUnterstuetzt(
+                        "exp ist für echte Quaternionen noch nicht registriert.",
+                    )
+                }
+            }
 
         private fun reelleFunktion(
             argument: ZahlAusdruck,
@@ -401,6 +416,13 @@ object DomaenenAuswerter {
                 StrukturierterAuswertungsGrund("nicht_endlich", "Die Auswertung ergab keinen endlichen Wert."),
             )
             return DomaenenErgebnis.Wert(DomaenenWert.Reell(dezimal(wert)))
+        }
+
+        private fun komplex(reell: Double, imaginaer: Double): DomaenenErgebnis {
+            if (!reell.isFinite() || !imaginaer.isFinite()) return DomaenenErgebnis.NichtEndlich(
+                StrukturierterAuswertungsGrund("nicht_endlich", "Die Auswertung ergab keinen endlichen komplexen Wert."),
+            )
+            return DomaenenErgebnis.Wert(DomaenenWert.Komplex(dezimal(reell), dezimal(imaginaer)))
         }
 
         private fun dezimal(wert: Double): BigDecimal = BigDecimal.valueOf(wert).round(kontext.mathContext)

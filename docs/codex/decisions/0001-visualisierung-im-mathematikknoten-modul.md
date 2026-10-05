@@ -40,11 +40,16 @@ Visualisierungslogik direkt in `MathematikAtlasApp.kt` einbetten.
 
 ### Risiken
 
-- Die gegenwärtige R³-Punktwolke ist eine erkennbare, aber keine triangulierte Oberfläche.
+- Adaptive Netze können die gewünschte Zieldichte vor Erreichen des konfigurierten
+  Auswertungsbudgets verfehlen. Dieser Zustand muss als teilweise Darstellung
+  sichtbar bleiben; numerische Füllung darf nicht als analytischer Nachweis gelten.
 
 ## Umsetzung und Verifikation
 
-Die Sampler- und Knotentests sowie der vollständige Gradle-Testlauf decken die Trennung und die ersten R²/R³-Fälle ab.
+Die Sampler- und Knotentests decken die Trennung, adaptive Kurven und Methodenflächen,
+gefüllte R²-Regionen sowie R³-Isoflächen und Volumenzellen ab. Laufzeitgeometrie und
+Statistik bleiben nicht persistiert; die vorhandenen Qualitätsparameter bleiben
+rückwärtskompatible Knoteneigenschaften.
 
 ## Ersetzt durch
 

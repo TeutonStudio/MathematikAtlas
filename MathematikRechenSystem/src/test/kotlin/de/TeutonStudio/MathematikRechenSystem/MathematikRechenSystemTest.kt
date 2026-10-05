@@ -16,6 +16,15 @@ class MathematikRechenSystemTest {
         assertEquals(2, term.summanden.size)
     }
 
+    @Test fun komplexerFaktorWirdInProduktenGeklammert() {
+        val term = multiplikation(
+            Variable("phi", "\\varphi"),
+            KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins),
+        )
+
+        assertEquals("\\varphi \\cdot \\left(0 + i\\right)", term.zuLatex())
+    }
+
     @Test fun extremwerteWertenRationaleZahlenExaktAusUndBleibenSonstSymbolisch() {
         assertEquals(RationaleZahl.von(7), maximum(RationaleZahl.von(-2), RationaleZahl.von(7), RationaleZahl.von(3)))
         assertEquals(RationaleZahl.von(-2), minimum(RationaleZahl.von(-2), RationaleZahl.von(7), RationaleZahl.von(3)))

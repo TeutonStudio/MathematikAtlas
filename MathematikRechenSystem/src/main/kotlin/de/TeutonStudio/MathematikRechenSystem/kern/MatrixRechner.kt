@@ -19,7 +19,10 @@ enum class MatrixRechnerOperator(val stabileId: String) {
     NEBENDIAGONALE("matrix.nebendiagonale"),
     CHARAKTERISTISCHES_POLYNOM("matrix.charakteristischesPolynom"),
     MINIMALPOLYNOM("matrix.minimalpolynom"),
+    ZERLEGEN("matrix.zerlegen"),
 }
+
+enum class MatrixZerlegeRichtung { ZEILEN, SPALTEN }
 
 data class MatrixForm(val zeilen: Int, val spalten: Int) {
     init { require(zeilen > 0 && spalten > 0) }
@@ -40,6 +43,7 @@ data class MatrixRechnerAnfrage(
     val matrizen: List<MatrixOperand>,
     val skalare: List<ZahlAusdruck> = emptyList(),
     val vektoren: List<OrientierterVektor> = emptyList(),
+    val zerlegeRichtung: MatrixZerlegeRichtung = MatrixZerlegeRichtung.ZEILEN,
 )
 
 sealed interface MatrixRechnerErgebnis {
@@ -86,6 +90,18 @@ object MatrixRechner {
         } ?: FundamentalerZahlbereich.REELL
 
         return when (anfrage.operator) {
+            MatrixRechnerOperator.ZERLEGEN -> einMatrix(anfrage) { operand ->
+                MatrixRechnerErgebnis.TupelWert(
+                    Tupel(
+                        when (anfrage.zerlegeRichtung) {
+                            MatrixZerlegeRichtung.ZEILEN -> operand.matrix.zeilen.map(::ZeilenVektor)
+                            MatrixZerlegeRichtung.SPALTEN -> List(operand.matrix.spaltenAnzahl) { spalte ->
+                                SpaltenVektor(operand.matrix.zeilen.map { it[spalte] })
+                            }
+                        },
+                    ),
+                )
+            }
             MatrixRechnerOperator.ADDITION -> {
                 if (anfrage.matrizen.size < 2) return anzahlFehler("Addition", "mindestens zwei Matrizen")
                 gleicheForm(anfrage.matrizen)?.let { return it }

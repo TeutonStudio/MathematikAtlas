@@ -39,7 +39,7 @@ internal fun EinstellungenDialogV2291(
         Box(
             Modifier.fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(12.dp),
+                .padding(LocalAtlasAbstände.current.bereich),
             contentAlignment = Alignment.Center,
         ) {
             Surface(
@@ -113,7 +113,7 @@ internal fun EinstellungenDialogV2291(
 
                         HorizontalDivider()
                         Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
                             horizontalArrangement = Arrangement.End,
                         ) {
                             TextButton(onClick = schließen) { Text("Fertig") }
@@ -133,9 +133,9 @@ private fun EinstellungenKopf(
     schließen: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
     ) {
         if (kompakt && kannZurück) {
             TextButton(onClick = zurück) { Text("‹ Zurück") }
@@ -164,8 +164,8 @@ private fun EinstellungenNavigationBreit(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier.verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.bereich),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
     ) {
         EinstellungenNavigationEbeneBreit(
             ebene = navigation,
@@ -234,8 +234,8 @@ private fun EinstellungenNavigationKompakt(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier.verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.inhalt),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
     ) {
         if (ordnerTitel != null) {
             Text(ordnerTitel, style = MaterialTheme.typography.titleLarge)
@@ -270,8 +270,8 @@ private fun EinstellungsSeiteInhalt(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier.verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.weit),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
     ) {
         when (seite) {
             EinstellungsSeiteId.Darstellung -> DarstellungEinstellungsSeite()
@@ -301,14 +301,14 @@ private fun DarstellungEinstellungsSeite() {
             color = if (ausgewählt) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
         ) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.winzig),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 RadioButton(
                     selected = ausgewählt,
                     onClick = { darstellung.ändereModus(modus) },
                 )
-                Column(Modifier.padding(vertical = 8.dp)) {
+                Column(Modifier.padding(vertical = LocalAtlasAbstände.current.standard)) {
                     Text(modus.anzeigeName, style = MaterialTheme.typography.bodyLarge)
                     Text(
                         modus.einstellungsBeschreibung(),
@@ -343,7 +343,7 @@ private fun BeispielkartenEinstellungsSeite(zustand: AtlasZustand) {
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             Text(
                 "Neue Sätze werden unter „Beispiel Karten“, „Beispiel Karten 2“, … gespeichert.",
                 style = MaterialTheme.typography.bodySmall,

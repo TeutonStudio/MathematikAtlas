@@ -118,7 +118,7 @@ internal fun KartenWahrheitstabellenDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(12.dp),
+                .padding(LocalAtlasAbstände.current.bereich),
             contentAlignment = Alignment.Center,
         ) {
             val gewünschteBreite = (tabellenBreite + 48.dp)
@@ -140,8 +140,8 @@ internal fun KartenWahrheitstabellenDialog(
                             .fillMaxWidth()
                             .heightIn(max = maximaleInhaltsHöhe)
                             .verticalScroll(rememberScrollState())
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                            .padding(LocalAtlasAbstände.current.dialog),
+                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                     ) {
                         KartenTabellenEingabeKonfiguration(
                             zustand = zustand,

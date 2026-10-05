@@ -108,15 +108,17 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            Modifier.fillMaxWidth(.96f).fillMaxHeight(.92f).widthIn(max = 1360.dp),
+            Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
+                .fillMaxWidth(.96f).fillMaxHeight(.92f).widthIn(max = 1360.dp),
             shape = MaterialTheme.shapes.large,
             tonalElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("JSON der aktuellen Karte", style = MaterialTheme.typography.titleLarge)
@@ -156,7 +158,7 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
                 } else {
                     Text(
                         "Strukturwerkzeuge stehen nach einer vollständigen Prüfung wieder bereit.",
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -184,7 +186,7 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
                 )
                 HorizontalDivider()
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
                     horizontalArrangement = Arrangement.End,
                 ) {
                     TextButton(onClick = ::dialogSchließen) { Text("Verwerfen") }
@@ -247,7 +249,7 @@ private fun JsonEditorV2311(
     }
 
     Surface(
-        modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+        modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
         shape = RoundedCornerShape(8.dp),
         color = farben.hintergrund,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -274,7 +276,7 @@ private fun JsonEditorV2311(
                     onValueChange = onWert,
                     modifier = Modifier
                         .width((längsteZeile * 8 + 120).coerceIn(900, 6000).dp)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard)
                         .onPreviewKeyEvent { ereignis ->
                             if (ereignis.type != KeyEventType.KeyDown || !ereignis.isCtrlPressed) return@onPreviewKeyEvent false
                             when {
@@ -331,7 +333,7 @@ private fun JsonZeilenRandV2311(
                         .fillMaxWidth()
                         .height(zeilenHöhe)
                         .absoluteOffset(y = zeilenHöhe * (zeile - 1).toFloat())
-                        .padding(end = 8.dp),
+                        .padding(end = LocalAtlasAbstände.current.standard),
                     color = if (zeile == cursorZeile) MaterialTheme.colorScheme.primary else farben.zeilennummer,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
@@ -355,11 +357,11 @@ private fun JsonStrukturWerkzeugeV2311(
         jsonIdKontextV2311(prüfung.idBereiche, wert.selection.start)
     }
     val listen = prüfung.listen.filter { it.schlüssel in unterstützteListenV2311 }
-    Column(modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.eng), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
         if (idKontext != null) {
             val optionen = remember(idKontext, karte) { idOptionenV2311(idKontext, karte) }
             var offen by remember(idKontext) { mutableStateOf(false) }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 Text("${idKontext.schlüssel}:", style = MaterialTheme.typography.labelMedium)
                 ExposedDropdownMenuBox(
                     expanded = offen,
@@ -403,7 +405,7 @@ private fun JsonStrukturWerkzeugeV2311(
         if (listen.isNotEmpty()) {
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
             ) {
                 listen.forEach { liste ->
                     AssistChip(
@@ -440,9 +442,9 @@ private fun JsonStatusV2311(
         else -> "Syntax und Kartenschema gültig"
     }
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 7.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.eng),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
     ) {
         Text("Zeile ${position.zeile}, Spalte ${position.spalte}", style = MaterialTheme.typography.labelSmall)
         Text("${zeilenIndex.zeilenAnzahl} Zeilen", style = MaterialTheme.typography.labelSmall)

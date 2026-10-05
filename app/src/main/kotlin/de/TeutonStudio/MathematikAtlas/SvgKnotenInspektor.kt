@@ -53,8 +53,8 @@ internal object SvgKnotenInspektor : KnotenInspektor {
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
             ) {
                 Text(operator.kategorie, style = MaterialTheme.typography.labelLarge)
                 Text(operator.beschreibung, style = MaterialTheme.typography.bodySmall)
@@ -75,8 +75,8 @@ internal object SvgKnotenInspektor : KnotenInspektor {
                 color = MaterialTheme.colorScheme.surfaceContainer,
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
                 ) {
                     Text("SVG-Zwischenstand", style = MaterialTheme.typography.labelLarge)
                     Text("${grafik.elemente.size} sichtbare Elemente · ${grafik.definitionen.size} Definitionen")
@@ -178,7 +178,7 @@ internal object SvgKnotenInspektor : KnotenInspektor {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     Text("Mathematisches LaTeX", modifier = Modifier.weight(1f))
                     Switch(

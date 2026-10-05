@@ -23,7 +23,7 @@ internal fun KonzeptBibliothekDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Box(
-            Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(12.dp),
+            Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(LocalAtlasAbstände.current.bereich),
             contentAlignment = Alignment.Center,
         ) {
             Surface(
@@ -33,8 +33,8 @@ internal fun KonzeptBibliothekDialog(
             ) {
                 Column(Modifier.fillMaxSize()) {
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
@@ -53,7 +53,7 @@ internal fun KonzeptBibliothekDialog(
                         zustand = zustand,
                         position = position,
                         vorlagen = vorlagen,
-                        modifier = Modifier.fillMaxSize().padding(20.dp),
+                        modifier = Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog),
                     )
                 }
             }

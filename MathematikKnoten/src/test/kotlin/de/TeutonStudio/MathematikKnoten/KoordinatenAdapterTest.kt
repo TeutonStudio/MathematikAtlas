@@ -30,6 +30,51 @@ class KoordinatenAdapterTest {
     }
 
     @Test
+    fun `eins mal n Matrix wird wie ein Zeilenvektor entfaltet`() {
+        val ergebnis = assertIs<KoordinatenErgebnis.Darstellbar>(
+            KoordinatenAdapter.extrahiere(
+                Matrix(listOf(listOf(RationaleZahl.Eins, RationaleZahl.von(2), RationaleZahl.von(3)))),
+                3,
+            ),
+        )
+
+        assertEquals(listOf(1.0, 2.0, 3.0), ergebnis.werte)
+    }
+
+    @Test
+    fun `n mal eins Matrix wird wie ein Spaltenvektor entfaltet`() {
+        val ergebnis = assertIs<KoordinatenErgebnis.Darstellbar>(
+            KoordinatenAdapter.extrahiere(
+                Matrix(
+                    listOf(
+                        listOf(RationaleZahl.Eins),
+                        listOf(RationaleZahl.von(2)),
+                        listOf(RationaleZahl.von(3)),
+                    ),
+                ),
+                3,
+            ),
+        )
+
+        assertEquals(listOf(1.0, 2.0, 3.0), ergebnis.werte)
+    }
+
+    @Test
+    fun `echte Matrix wird nicht stillschweigend als Vektor abgeflacht`() {
+        assertIs<KoordinatenErgebnis.NichtDarstellbar>(
+            KoordinatenAdapter.extrahiere(
+                Matrix(
+                    listOf(
+                        listOf(RationaleZahl.Eins, RationaleZahl.von(2)),
+                        listOf(RationaleZahl.von(3), RationaleZahl.von(4)),
+                    ),
+                ),
+                4,
+            ),
+        )
+    }
+
+    @Test
     fun `Variablen werden mit numerischer Umgebung ausgewertet`() {
         val ergebnis = assertIs<KoordinatenErgebnis.Darstellbar>(
             KoordinatenAdapter.extrahiere(

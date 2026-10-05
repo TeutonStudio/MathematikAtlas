@@ -18,7 +18,37 @@ data class VisualisierungsPunkt(
     val weitereFarbwerte: List<Double> = emptyList(),
 )
 
-enum class ZellenStatus { Enthalten, Ausgeschlossen, Gemischt, Unbekannt }
+enum class DarstellungsNachweis {
+    Exakt,
+    Bewiesen,
+    Numerisch,
+    Gemischt,
+    Unbekannt,
+}
+
+data class VisualisierungsLinie(
+    val punkte: List<VisualisierungsPunkt>,
+    val nachweis: DarstellungsNachweis = DarstellungsNachweis.Numerisch,
+)
+
+data class VisualisierungsDreieck(
+    val a: VisualisierungsPunkt,
+    val b: VisualisierungsPunkt,
+    val c: VisualisierungsPunkt,
+    val nachweis: DarstellungsNachweis = DarstellungsNachweis.Numerisch,
+)
+
+data class VisualisierungsStatistik(
+    val auswertungen: Int = 0,
+    val stützpunkte: Int = 0,
+    val linien: Int = 0,
+    val dreiecke: Int = 0,
+    val zellen: Int = 0,
+    val maximaleTiefe: Int = 0,
+    val budgetErschöpft: Boolean = false,
+)
+
+enum class ZellenStatus { Enthalten, NumerischEnthalten, Ausgeschlossen, Gemischt, Unbekannt }
 
 data class VisualisierungsZelle(
     val minimum: List<Double>,
@@ -60,6 +90,9 @@ sealed interface VisualisierungsErgebnis {
         val qualität: VisualisierungsQualität = if (istApproximation) VisualisierungsQualität.Approximation else VisualisierungsQualität.Exakt,
         val intervalle: List<VisualisierungsIntervall> = emptyList(),
         val zellen: List<VisualisierungsZelle> = emptyList(),
+        val linien: List<VisualisierungsLinie> = emptyList(),
+        val dreiecke: List<VisualisierungsDreieck> = emptyList(),
+        val statistik: VisualisierungsStatistik = VisualisierungsStatistik(),
     ) : VisualisierungsErgebnis
 
     data class Teilweise(
@@ -68,6 +101,9 @@ sealed interface VisualisierungsErgebnis {
         val qualität: VisualisierungsQualität = VisualisierungsQualität.Teilweise,
         val intervalle: List<VisualisierungsIntervall> = emptyList(),
         val zellen: List<VisualisierungsZelle> = emptyList(),
+        val linien: List<VisualisierungsLinie> = emptyList(),
+        val dreiecke: List<VisualisierungsDreieck> = emptyList(),
+        val statistik: VisualisierungsStatistik = VisualisierungsStatistik(),
     ) : VisualisierungsErgebnis
 
     data class BedingtDarstellbar(
@@ -1002,6 +1038,7 @@ object VisualisierungsSampler {
         val punkte = mutableListOf<VisualisierungsPunkt>()
         val unbekannteGründe = linkedSetOf<String>()
         val zellen = adaptiveZellen(region, bereiche, n, zellBudget, abbruchPrüfen)
+        val rasterWerte = linkedMapOf<List<Int>, NumerischeMitgliedschaft>()
         val indices = IntArray(region.dimension)
         fun besuche(tiefe: Int) {
             abbruchPrüfen()
@@ -1017,6 +1054,14 @@ object VisualisierungsSampler {
             }
             val farbWerte = region.farbMitgliedschaft?.invoke(koordinaten)
             if (farbWerte != null) {
+                rasterWerte[indices.toList()] = when {
+                    farbWerte.any { it.second == NumerischeMitgliedschaft.Enthalten } -> NumerischeMitgliedschaft.Enthalten
+                    farbWerte.any { it.second is NumerischeMitgliedschaft.Grenze } ->
+                        farbWerte.first { it.second is NumerischeMitgliedschaft.Grenze }.second
+                    farbWerte.any { it.second is NumerischeMitgliedschaft.Unbekannt } ->
+                        farbWerte.first { it.second is NumerischeMitgliedschaft.Unbekannt }.second
+                    else -> NumerischeMitgliedschaft.NichtEnthalten
+                }
                 farbWerte.forEach { (farbe, wert) ->
                     when (wert) {
                         NumerischeMitgliedschaft.Enthalten -> punkte += koordinaten.alsPunkt(c).copy(farbwert = farbe)
@@ -1029,7 +1074,9 @@ object VisualisierungsSampler {
                 }
                 return
             }
-            when (val wert = region.mitgliedschaft(koordinaten)) {
+            val wert = region.mitgliedschaft(koordinaten)
+            rasterWerte[indices.toList()] = wert
+            when (wert) {
                 NumerischeMitgliedschaft.Enthalten -> punkte += koordinaten.alsPunkt(c)
                 NumerischeMitgliedschaft.NichtEnthalten -> Unit
                 is NumerischeMitgliedschaft.Unbekannt -> unbekannteGründe += wert.grund
@@ -1041,17 +1088,30 @@ object VisualisierungsSampler {
             }
         }
         besuche(0)
+        val rasterGeometrie = RasterGeometrie.erzeuge(region.dimension, n, bereiche, rasterWerte)
+        val alleZellen = zellen + rasterGeometrie.zellen
         val zusammengefasst = punkte.groupBy { Triple(it.x, it.y, it.z) }.values.map { gleichePosition ->
             val farben = gleichePosition.mapNotNull { it.farbwert }.distinct().sorted()
             gleichePosition.first().copy(farbwert = farben.firstOrNull(), weitereFarbwerte = farben.drop(1))
         }
-        val offeneZellen = zellen.filter { it.status == ZellenStatus.Unbekannt || it.status == ZellenStatus.Gemischt }
+        val offeneZellen = alleZellen.filter { it.status == ZellenStatus.Unbekannt || it.status == ZellenStatus.Gemischt }
+        val statistik = VisualisierungsStatistik(
+            auswertungen = rasterWerte.size,
+            stützpunkte = zusammengefasst.size,
+            linien = rasterGeometrie.linien.size,
+            dreiecke = rasterGeometrie.dreiecke.size,
+            zellen = alleZellen.size,
+            budgetErschöpft = alleZellen.any { it.grund?.contains("budget", ignoreCase = true) == true },
+        )
         if (zusammengefasst.isEmpty() && unbekannteGründe.isEmpty() && offeneZellen.isEmpty()) {
             return VisualisierungsErgebnis.Erfolgreich(
                 emptyList(), true,
                 region.hinweise + "Im gewählten Fenster wurden keine Treffer gefunden.",
                 VisualisierungsQualität.KeineTrefferImFenster,
-                zellen = zellen,
+                zellen = alleZellen,
+                linien = rasterGeometrie.linien,
+                dreiecke = rasterGeometrie.dreiecke,
+                statistik = statistik,
             )
         }
         val farbDetails = zusammengefasst.filter { it.weitereFarbwerte.isNotEmpty() }.take(4).map { punkt ->
@@ -1071,14 +1131,20 @@ object VisualisierungsSampler {
             return VisualisierungsErgebnis.Teilweise(
                 punkte = zusammengefasst,
                 hinweise = gemeinsameHinweise.distinct(),
-                zellen = zellen,
+                zellen = alleZellen,
+                linien = rasterGeometrie.linien,
+                dreiecke = rasterGeometrie.dreiecke,
+                statistik = statistik,
             )
         }
         return VisualisierungsErgebnis.Erfolgreich(
             zusammengefasst,
             istApproximation = true,
             hinweise = gemeinsameHinweise.distinct(),
-            zellen = zellen,
+            zellen = alleZellen,
+            linien = rasterGeometrie.linien,
+            dreiecke = rasterGeometrie.dreiecke,
+            statistik = statistik,
         )
     }
 
@@ -1162,6 +1228,9 @@ object VisualisierungsSampler {
         }
         val modus = when (konfiguration.methodenModus) {
             MethodenDarstellungsModus.Automatisch -> when {
+                methode.ausgabeNamen.size == 1 && methode.vorschrift is ZahlAusdruck &&
+                    methode.zielMenge == KomplexeZahlen ->
+                    MethodenDarstellungsModus.Bild
                 methode.ausgabeNamen.size == 1 && methode.vorschrift is ZahlAusdruck && parameter.size <= 2 ->
                     MethodenDarstellungsModus.Funktionsgraph
                 methode.ausgabeNamen.size == 1 &&
@@ -1205,7 +1274,12 @@ object VisualisierungsSampler {
         val domänen = faktoren.mapIndexed { index, faktor ->
             val bereich = bereiche.getOrNull(index)
                 ?: return VisualisierungsErgebnis.NichtDarstellbar("Für Parameter ${index + 1} fehlt ein Inspectorbereich.")
-            when (val ergebnis = faktorDomäne(faktor, bereich, domänenKonfiguration)) {
+            when (val ergebnis = faktorDomäne(
+                faktor,
+                bereich,
+                domänenKonfiguration,
+                beschränkeEndlichesIntervallAufSichtfenster = false,
+            )) {
                 is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
                 is DomänenErgebnis.Fehler -> return VisualisierungsErgebnis.NichtDarstellbar(
                     "Parameter '${parameter[index].name}' ist nicht darstellbar: ${ergebnis.grund}",
@@ -1224,6 +1298,71 @@ object VisualisierungsSampler {
                 else VisualisierungsQualität.KeineTrefferImFenster,
             )
         }
+        fun werteKoordinaten(argumente: List<Double>): KoordinatenErgebnis {
+            val umgebung = parameter.map { it.name }.zip(argumente).toMap()
+            return when (modus) {
+                MethodenDarstellungsModus.Funktionsgraph -> funktionsgraphKoordinaten(methode, argumente, umgebung, konfiguration)
+                MethodenDarstellungsModus.Bild -> {
+                    if (methode.ausgabeNamen.size != 1) {
+                        KoordinatenErgebnis.NichtDarstellbar("Der Bildmodus benötigt genau eine zusammengesetzte Methodenausgabe")
+                    } else KoordinatenAdapter.extrahiere(
+                        methode.vorschrift,
+                        konfiguration.raumDimension,
+                        umgebung,
+                    )
+                }
+                MethodenDarstellungsModus.Koordinatenausgabe -> koordinatenausgabe(methode, umgebung, konfiguration)
+                MethodenDarstellungsModus.Automatisch -> error("Der automatische Methodenmodus muss vor dem Sampling aufgelöst sein.")
+            }
+        }
+        val kontinuierlich = parameter.size in 1..2 && domänen.all { it.istApproximation && it.werte.size >= 2 }
+        if (kontinuierlich) {
+            val parameterBereiche = domänen.map { domäne -> ZahlenBereich(domäne.werte.min(), domäne.werte.max()) }
+            val adaptiv = AdaptiveMethodenGeometrie.sample(
+                parameterBereiche,
+                konfiguration,
+                auswerten = { argumente ->
+                    val umgebung = parameter.map { it.name }.zip(argumente).toMap()
+                    when (val koordinaten = werteKoordinaten(argumente)) {
+                        is KoordinatenErgebnis.Darstellbar -> AdaptivePunktAuswertung(
+                            koordinaten.werte.alsPunkt(konfiguration, umgebung),
+                        )
+                        else -> AdaptivePunktAuswertung(null, koordinaten.beschreibung)
+                    }
+                },
+                abbruchPrüfen = abbruchPrüfen,
+            )
+            val hinweise = domänen.flatMap { it.hinweise }.distinct() +
+                "Methodenmodus: ${modus.name}; adaptive Bildraumabtastung mit ${adaptiv.statistik.auswertungen} Auswertungen."
+            val budgetHinweis = if (adaptiv.statistik.budgetErschöpft) {
+                listOf("Das Auswertungsbudget wurde vor Erreichen der Zielauflösung ausgeschöpft.")
+            } else emptyList()
+            if (adaptiv.punkte.isEmpty()) {
+                return VisualisierungsErgebnis.NichtDarstellbar(
+                    "Die Methode erzeugt keine zusammenhängend darstellbaren Werte. " +
+                        (adaptiv.diagnosen + budgetHinweis).distinct().joinToString(" "),
+                )
+            }
+            val alleHinweise = (hinweise + adaptiv.diagnosen.map { "Nicht dargestellt: $it" } + budgetHinweis).distinct()
+            return if (adaptiv.diagnosen.isNotEmpty() || adaptiv.statistik.budgetErschöpft) {
+                VisualisierungsErgebnis.Teilweise(
+                    punkte = adaptiv.punkte,
+                    hinweise = alleHinweise,
+                    linien = adaptiv.linien,
+                    dreiecke = adaptiv.dreiecke,
+                    statistik = adaptiv.statistik,
+                )
+            } else {
+                VisualisierungsErgebnis.Erfolgreich(
+                    punkte = adaptiv.punkte,
+                    istApproximation = true,
+                    hinweise = alleHinweise,
+                    linien = adaptiv.linien,
+                    dreiecke = adaptiv.dreiecke,
+                    statistik = adaptiv.statistik,
+                )
+            }
+        }
         val erwartetePunkte = domänen.fold(1L) { akk, domäne ->
             if (akk > Long.MAX_VALUE / domäne.werte.size) Long.MAX_VALUE else akk * domäne.werte.size
         }
@@ -1241,20 +1380,7 @@ object VisualisierungsSampler {
         kombinationen.forEach { argumente ->
             abbruchPrüfen()
             val umgebung = parameter.map { it.name }.zip(argumente).toMap()
-            val koordinaten = when (modus) {
-                MethodenDarstellungsModus.Funktionsgraph -> funktionsgraphKoordinaten(methode, argumente, umgebung, konfiguration)
-                MethodenDarstellungsModus.Bild -> {
-                    if (methode.ausgabeNamen.size != 1) {
-                        KoordinatenErgebnis.NichtDarstellbar("Der Bildmodus benötigt genau eine zusammengesetzte Methodenausgabe")
-                    } else KoordinatenAdapter.extrahiere(
-                        methode.vorschrift,
-                        konfiguration.raumDimension,
-                        umgebung,
-                    )
-                }
-                MethodenDarstellungsModus.Koordinatenausgabe -> koordinatenausgabe(methode, umgebung, konfiguration)
-                MethodenDarstellungsModus.Automatisch -> error("Der automatische Methodenmodus muss vor dem Sampling aufgelöst sein.")
-            }
+            val koordinaten = werteKoordinaten(argumente)
             when (koordinaten) {
                 is KoordinatenErgebnis.Darstellbar -> punkte += koordinaten.werte.alsPunkt(konfiguration, umgebung)
                 is KoordinatenErgebnis.BedingtDarstellbar,
@@ -1294,6 +1420,10 @@ object VisualisierungsSampler {
                 punkte,
                 domänen.any { it.istApproximation },
                 domänenHinweise,
+                statistik = VisualisierungsStatistik(
+                    auswertungen = erwartetePunkte.toInt(),
+                    stützpunkte = punkte.size,
+                ),
             )
         }
     }
@@ -1606,6 +1736,7 @@ object VisualisierungsSampler {
         faktor: MengenAusdruck,
         bereich: ZahlenBereich,
         c: VisualisierungsKonfiguration,
+        beschränkeEndlichesIntervallAufSichtfenster: Boolean = true,
     ): DomänenErgebnis = when (faktor) {
         LeereMenge -> DomänenErgebnis.Erfolgreich(NumerischeDomäne(emptyList(), false, mathematischLeer = true))
         is EndlicheMenge -> {
@@ -1629,8 +1760,8 @@ object VisualisierungsSampler {
             if (mathematischLeer) {
                 return DomänenErgebnis.Erfolgreich(NumerischeDomäne(emptyList(), false, mathematischLeer = true))
             }
-            val sichtbarLinks = maxOf(links, bereich.minimum)
-            val sichtbarRechts = minOf(rechts, bereich.maximum)
+            val sichtbarLinks = if (beschränkeEndlichesIntervallAufSichtfenster) maxOf(links, bereich.minimum) else links
+            val sichtbarRechts = if (beschränkeEndlichesIntervallAufSichtfenster) minOf(rechts, bereich.maximum) else rechts
             if (sichtbarLinks > sichtbarRechts) {
                 return DomänenErgebnis.Erfolgreich(
                     NumerischeDomäne(emptyList(), true, listOf("Das Intervall hat im sichtbaren Achsenbereich keine Treffer.")),
@@ -1651,7 +1782,13 @@ object VisualisierungsSampler {
                 NumerischeDomäne(
                     werte,
                     true,
-                    listOf("Der sichtbare Teil eines kontinuierlichen Produktfaktors wird mit ${werte.size} Werten angenähert."),
+                    listOf(
+                        if (beschränkeEndlichesIntervallAufSichtfenster) {
+                            "Der sichtbare Teil eines kontinuierlichen Produktfaktors wird mit ${werte.size} Werten angenähert."
+                        } else {
+                            "Das endliche Parameterintervall wird mit ${werte.size} Werten angenähert."
+                        },
+                    ),
                 ),
             )
         }

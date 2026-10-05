@@ -6,13 +6,18 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 
 enum class AuswahlModus { Einzeln, Gruppe }
 enum class AuswahlÄnderung { Ersetzen, Hinzufügen, Umschalten }
+enum class VerbindungsAblageErgebnis { NeueVerbindungAufHintergrund, BestehendeVerbindungGelöst, StartBeibehalten, KeineAktiveVerbindung }
 
 @Stable
 class KartenEditorZustand(
     startKarte: KartenDaten,
     private val prüfung: GraphPrüfung,
 ) {
-    var karte by mutableStateOf(startKarte.bereinigteVisuelleGruppen())
+    var karte by mutableStateOf(
+        startKarte.bereinigteVisuelleGruppen().mitAutomatischenVisuellenGruppenMitgliedschaften(),
+    )
+        private set
+    var auswertungsRevision by mutableStateOf(0L)
         private set
     var auswahlModus by mutableStateOf(AuswahlModus.Einzeln)
         private set
@@ -38,7 +43,9 @@ class KartenEditorZustand(
     private var neuZuVerdrahtendeVerbindung: VerbindungDaten? = null
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
-        karte = neu.bereinigteVisuelleGruppen()
+        val vorher = karte
+        karte = neu.bereinigteVisuelleGruppen().mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         ausgewählteKnoten = emptySet()
         ausgewählterKnoten = null
         ausgewählteVerbindung = null
@@ -57,11 +64,25 @@ class KartenEditorZustand(
     fun beendeInteraktion() {
         val start = interaktionsStart ?: return
         interaktionsStart = null
+        karte = karte.bereinigteVisuelleGruppen().mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (start == karte) return
         merkeFürRückgängig(start)
     }
 
+    /** Verwirft die noch nicht bestätigte Gestenänderung, ohne einen Historieneintrag anzulegen. */
+    fun verwerfeLaufendeInteraktion(): Boolean {
+        val start = interaktionsStart ?: return false
+        interaktionsStart = null
+        karte = start
+        bereinigeAuswahl()
+        return true
+    }
+
     fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {
+        if (aktion is KartenAktion.AnsichtÄndern) {
+            if (karte.ansicht != aktion.ansicht) karte = karte.copy(ansicht = aktion.ansicht)
+            return
+        }
         val wirksameAktion = if (
             aktion is KartenAktion.KnotenVerschieben &&
             ausgewählteKnoten.size > 1 &&
@@ -72,13 +93,15 @@ class KartenEditorZustand(
             KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
         } else aktion
         val standVorAktion = karte.ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
-        val neu = karte.wendeAn(wirksameAktion)
+        var neu = karte.wendeAn(wirksameAktion)
             .ohneUnverbundeneDynamischeEingänge()
             .bereinigteVisuelleGruppen()
+        if (interaktionsStart == null) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (neu == karte) return
         val historienRelevant = mitHistorie && wirksameAktion !is KartenAktion.AnsichtÄndern
         if (historienRelevant) merkeFürRückgängig(standVorAktion)
         karte = neu
+        if (wirksameAktion.istAuswertungsRelevant()) auswertungsRevision += 1
         bereinigeAuswahl()
     }
 
@@ -208,9 +231,12 @@ class KartenEditorZustand(
      * Beendet einen Drag ohne Ziel. Bei einer Neuverdrahtung entspricht das dem
      * bewussten Abziehen des Eingangs und löscht die alte Verbindung als einen Undo-Schritt.
      */
-    fun beendeVerbindungsVorschau(startBeibehalten: Boolean = false) {
+    fun beendeVerbindungsVorschau(startBeibehalten: Boolean = false): VerbindungsAblageErgebnis {
+        val hatteAktivenStart = verbindungsStart != null
         verbindungsVorschau = null
-        if (startBeibehalten) return
+        if (startBeibehalten) return if (hatteAktivenStart) {
+            VerbindungsAblageErgebnis.StartBeibehalten
+        } else VerbindungsAblageErgebnis.KeineAktiveVerbindung
 
         val abgezogeneVerbindung = neuZuVerdrahtendeVerbindung
         verbindungsStart = null
@@ -218,8 +244,12 @@ class KartenEditorZustand(
         letzteMeldung = null
         if (abgezogeneVerbindung != null && karte.verbindungen.any { it.id == abgezogeneVerbindung.id }) {
             führeAus(KartenAktion.VerbindungLöschen(abgezogeneVerbindung.id))
+            return VerbindungsAblageErgebnis.BestehendeVerbindungGelöst
         } else {
             entferneUnverbundeneDynamischeEingänge()
+            return if (hatteAktivenStart) {
+                VerbindungsAblageErgebnis.NeueVerbindungAufHintergrund
+            } else VerbindungsAblageErgebnis.KeineAktiveVerbindung
         }
     }
 
@@ -398,7 +428,8 @@ class KartenEditorZustand(
         }).ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
         if (neu == vorher) return
         merkeFürRückgängig(vorher)
-        karte = neu
+        karte = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        auswertungsRevision += 1
     }
 
     /** Vertauscht einen Eingang mit seinem direkten Nachbarn und erhält alle Verbindungen über die Anschluss-IDs. */
@@ -428,7 +459,8 @@ class KartenEditorZustand(
             .bereinigteVisuelleGruppen()
         if (neu == vorher) return
         merkeFürRückgängig(vorher)
-        karte = neu
+        karte = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        auswertungsRevision += 1
     }
 
     fun kannRückgängig() = rückgängigVerfügbar
@@ -439,9 +471,12 @@ class KartenEditorZustand(
         val aktuelleAnsicht = karte.ansicht
         verwerfeVerbindungsInteraktion()
         wiederholen.fügeBegrenztHinzu(karte)
+        val vorher = karte
         karte = rückgängig.removeLast()
             .copy(ansicht = aktuelleAnsicht)
             .bereinigteVisuelleGruppen()
+            .mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         aktualisiereHistorienStatus()
         bereinigeAuswahl()
     }
@@ -451,9 +486,12 @@ class KartenEditorZustand(
         val aktuelleAnsicht = karte.ansicht
         verwerfeVerbindungsInteraktion()
         rückgängig.fügeBegrenztHinzu(karte)
+        val vorher = karte
         karte = wiederholen.removeLast()
             .copy(ansicht = aktuelleAnsicht)
             .bereinigteVisuelleGruppen()
+            .mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         aktualisiereHistorienStatus()
         bereinigeAuswahl()
     }
@@ -558,6 +596,26 @@ class KartenEditorZustand(
         })
     }
 }
+
+private fun KartenAktion.istAuswertungsRelevant(): Boolean = when (this) {
+    is KartenAktion.AnsichtÄndern,
+    is KartenAktion.KnotenVerschieben,
+    is KartenAktion.KnotenMehrfachVerschieben,
+    is KartenAktion.KnotenGrößeÄndern,
+    is KartenAktion.VisuelleGruppeErstellen,
+    is KartenAktion.VisuelleGruppeVerschieben,
+    is KartenAktion.VisuelleGruppeGrößeÄndern,
+    is KartenAktion.VisuelleGruppeTitelÄndern,
+    is KartenAktion.VisuelleGruppenKinderZuordnen,
+    is KartenAktion.VisuelleGruppeLöschen,
+    is KartenAktion.VisuelleGruppierungAufheben -> false
+    else -> true
+}
+
+private fun KartenDaten.hatGleichenAuswertungsinhaltWie(anderer: KartenDaten): Boolean =
+    knoten.map { it.copy(position = GraphPunkt.Zero, größe = GraphGröße()) } ==
+        anderer.knoten.map { it.copy(position = GraphPunkt.Zero, größe = GraphGröße()) } &&
+        verbindungen == anderer.verbindungen
 
 @Composable
 fun merkeKartenEditorZustand(startKarte: KartenDaten, prüfung: GraphPrüfung): KartenEditorZustand =

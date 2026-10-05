@@ -269,6 +269,7 @@ private fun eingangsArt(rolle: TensorHandleRolle): AnschlussArtId = when (rolle.
 
 private fun ausgangsArt(rolle: TensorHandleRolle): AnschlussArtId = when (rolle.wert) {
     "wert", "rang" -> MathematikAnschlussArten.Zahl.id
+    "methode" -> MathematikAnschlussArten.Methode.id
     else -> MathematikAnschlussArten.Objekt.id
 }
 

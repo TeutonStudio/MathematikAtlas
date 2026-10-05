@@ -76,7 +76,7 @@ internal object NotizKnotenRenderer : KnotenRenderer {
                 text = knoten.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                    .padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard),
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -87,7 +87,7 @@ internal object NotizKnotenRenderer : KnotenRenderer {
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(12.dp),
+                    .padding(LocalAtlasAbstände.current.bereich),
                 fontSize = notizSchriftgrößeSp(knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER]).sp,
                 textAlign = notizTextAusrichtung(knoten.parameter[NOTIZ_AUSRICHTUNG_PARAMETER]),
                 overflow = TextOverflow.Clip,
@@ -121,11 +121,11 @@ internal object NotizKnotenInspektor : KnotenInspektor {
         )
 
         Text("Ausrichtung", style = MaterialTheme.typography.titleSmall)
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
             ausrichtungen.chunked(2).forEach { zeile ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     zeile.forEach { (schlüssel, bezeichnung) ->
                         FilterChip(
@@ -144,7 +144,7 @@ internal object NotizKnotenInspektor : KnotenInspektor {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
         ) {
             OutlinedButton(
                 onClick = {

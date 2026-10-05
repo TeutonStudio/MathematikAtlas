@@ -265,7 +265,7 @@ internal object MengenKnotenInspektor : KnotenInspektor {
             ExposedDropdownMenu(expanded = geöffnet, onDismissRequest = { geöffnet = false }) {
                 einträge.forEach { eintrag ->
                     DropdownMenuItem(
-                        text = { Text(eintrag.titel, modifier = Modifier.padding(vertical = 2.dp)) },
+                        text = { Text(eintrag.titel, modifier = Modifier.padding(vertical = LocalAtlasAbstände.current.haarlinie)) },
                         onClick = {
                             geöffnet = false
                             eintrag.eingebaut?.let { auswahl ->
@@ -449,7 +449,7 @@ private fun SkalarproduktDefinitionAuswahl(
             it.name == knoten.parameter[SKALARPRODUKT_LINEARITAET_PARAMETER]
         } ?: SkalarproduktLinearitaet.RECHTSLINEAR
         Text("Quaternionische Linearitätsseite", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), modifier = Modifier.fillMaxWidth()) {
             FilterChip(
                 selected = aktuell == SkalarproduktLinearitaet.RECHTSLINEAR,
                 onClick = {
@@ -561,7 +561,7 @@ internal object SkalarproduktBegriffInspektor : KnotenInspektor {
             val linearitaet = SkalarproduktLinearitaet.entries.firstOrNull {
                 it.name == knoten.parameter[SKALARPRODUKT_LINEARITAET_PARAMETER]
             } ?: SkalarproduktLinearitaet.RECHTSLINEAR
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), modifier = Modifier.fillMaxWidth()) {
                 FilterChip(
                     selected = linearitaet == SkalarproduktLinearitaet.RECHTSLINEAR,
                     onClick = {

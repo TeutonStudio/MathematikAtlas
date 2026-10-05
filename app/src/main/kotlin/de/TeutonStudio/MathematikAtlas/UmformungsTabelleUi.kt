@@ -56,9 +56,9 @@ internal fun UmformungsTabellenAnsicht(
 
     Column(modifier) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             OutlinedButton(
                 onClick = { ausgewählterBlock = (ausgewählterBlock - 1).coerceAtLeast(0) },
@@ -109,13 +109,13 @@ private fun UmformungsTabellenBlockAnsicht(
             .fillMaxWidth()
             .background(hintergrund)
             .clickable(onClick = auswählen)
-            .padding(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(vertical = LocalAtlasAbstände.current.bereich),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
     ) {
         Text(
             if (block.schritt == 0) "Ausgangsmatrix" else "Nach Schritt ${block.schritt}",
             style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt),
         )
         Row(Modifier.horizontalScroll(rememberScrollState())) {
             Column(Modifier.widthIn(min = 420.dp)) {
@@ -132,7 +132,7 @@ private fun UmformungsTabellenBlockAnsicht(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(
-                            modifier = Modifier.requiredWidth(190.dp).padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.requiredWidth(190.dp).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.winzig),
                             contentAlignment = Alignment.CenterStart,
                         ) {
                             Text(
@@ -149,7 +149,7 @@ private fun UmformungsTabellenBlockAnsicht(
                                 VerticalDivider(Modifier.height(48.dp).width(2.dp))
                             }
                             Box(
-                                modifier = Modifier.requiredWidth(82.dp).padding(horizontal = 6.dp),
+                                modifier = Modifier.requiredWidth(82.dp).padding(horizontal = LocalAtlasAbstände.current.eng),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 LatexText(wert.zuLatex(), style = MaterialTheme.typography.bodyMedium)
@@ -165,7 +165,7 @@ private fun UmformungsTabellenBlockAnsicht(
 @Composable
 private fun TabellenKopf(spalten: List<UmformungsTabellenSpalte>) {
     Row(modifier = Modifier.height(44.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.requiredWidth(190.dp).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.requiredWidth(190.dp).padding(horizontal = LocalAtlasAbstände.current.standard), contentAlignment = Alignment.CenterStart) {
             Text("Operation", fontWeight = FontWeight.SemiBold)
         }
         Box(Modifier.requiredWidth(52.dp), contentAlignment = Alignment.Center) {

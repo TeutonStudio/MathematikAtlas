@@ -18,7 +18,7 @@ internal object OrientierungsKnotenInspektor : KnotenInspektor {
     ) {
         val orientierung = orientierungFürOrientierungsKnoten(knoten)
         Text("Orientierung", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             FilterChip(
                 selected = orientierung == VEKTOR_ORIENTIERUNG_SPALTE,
                 onClick = { aktionen.knoten(konfiguriereOrientierungsKnoten(knoten, VEKTOR_ORIENTIERUNG_SPALTE)) },

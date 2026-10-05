@@ -26,7 +26,7 @@ internal object TupelErgänzenInspektor : KnotenInspektor {
         Text("Ergänzungsart", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             FilterChip(
                 selected = aktuell == TupelErgänzenModus.Tupel,
@@ -70,7 +70,7 @@ internal object TupelErgänzenInspektor : KnotenInspektor {
                 onDismissRequest = { ausstehend = null },
                 title = { Text("Ergänzungsart wechseln?") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
                         Text("Der Moduswechsel entfernt ${vorschau.entfallendeVerbindungen.size} Verbindung(en).")
                         if (vorschau.entfallendeAnschlüsse.isNotEmpty()) {
                             Text(

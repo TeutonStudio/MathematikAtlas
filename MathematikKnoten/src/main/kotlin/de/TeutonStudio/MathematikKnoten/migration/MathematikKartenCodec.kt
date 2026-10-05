@@ -40,6 +40,7 @@ object MathematikKartenCodec {
 
 object MathematikKartenMigrationen {
     fun vorSpeichern(karte: KartenDaten): KartenDaten = karte
+        .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
         .normalisiereStrukturierteDivisionVorSpeichern()
         .migriereTensorOperationKnoten()
@@ -49,6 +50,7 @@ object MathematikKartenMigrationen {
         .migriereRechnerMethodenAnschluesse()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
+        .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
         .let(::migriereTranspositionsKnoten)
         .migriereTensorOperationKnoten()

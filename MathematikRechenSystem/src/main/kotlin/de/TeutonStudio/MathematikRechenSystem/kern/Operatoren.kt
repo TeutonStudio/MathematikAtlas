@@ -14,7 +14,7 @@ class Addition private constructor(val summanden: List<ZahlAusdruck>) : ZahlAusd
 class Multiplikation private constructor(val faktoren: List<ZahlAusdruck>) : ZahlAusdruck {
     init { require(faktoren.size >= 2) }
     override fun zuLatex(): String = faktoren.joinToString(" \\cdot ") {
-        if (it is Addition) "\\left(${it.zuLatex()}\\right)" else it.zuLatex()
+        if (it is Addition || it is KomplexeZahl) "\\left(${it.zuLatex()}\\right)" else it.zuLatex()
     }
     override fun equals(other: Any?) = other is Multiplikation && faktoren == other.faktoren
     override fun hashCode() = faktoren.hashCode()
@@ -259,6 +259,7 @@ fun istNachweisbarReell(
             istNachweisbarReell(ausdruck.lüge, variableIstReell, annahmen + Negation(ausdruck.aussage))
     is IterierteSumme, is IteriertesProdukt -> false
     is DifferentialVariable, is DifferentialTerm, is SymbolischerHyperReellerWert -> false
+    is StrukturAchsenLaenge, is SymbolischeZahlKomponente -> false
 }
 
 /**
@@ -341,6 +342,8 @@ fun inferiereZahlenWertevorrat(
     is DifferentialVariable, is DifferentialTerm, is SymbolischerHyperReellerWert -> error(
         "${ausdruck::class.simpleName} lebt außerhalb der klassischen N-Z-Q-R-C-Wertevorratsinferenz.",
     )
+    is StrukturAchsenLaenge -> NatürlicheZahlen
+    is SymbolischeZahlKomponente -> KomplexeZahlen
 }
 
 private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)

@@ -67,7 +67,7 @@ internal fun RechnerOperatorAuswahlDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(12.dp)
+                .padding(LocalAtlasAbstände.current.bereich)
                 .onPreviewKeyEvent { ereignis ->
                     when {
                         ereignis.type != KeyEventType.KeyDown -> false
@@ -103,8 +103,8 @@ internal fun RechnerOperatorAuswahlDialog(
 
                     if (breit) {
                         Row(
-                            modifier = Modifier.fillMaxWidth().weight(1f).padding(20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxWidth().weight(1f).padding(LocalAtlasAbstände.current.dialog),
+                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
                         ) {
                             KategorienSpalte(kategorien, kategorie, { kategorie = it }, Modifier.width(210.dp))
                             AuswahlBereich(
@@ -128,8 +128,8 @@ internal fun RechnerOperatorAuswahlDialog(
                         }
                     } else {
                         Column(
-                            modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth().weight(1f).padding(LocalAtlasAbstände.current.inhalt),
+                            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                         ) {
                             KategorienZeile(kategorien, kategorie, { kategorie = it })
                             AuswahlBereich(
@@ -173,8 +173,8 @@ internal fun RechnerOperatorAuswahlDialog(
 @Composable
 private fun DialogKopf(familienTitel: String, schließen: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -196,7 +196,11 @@ private fun KategorienSpalte(
     auswählen: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = LocalAtlasAbstände.current.liste,
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+    ) {
         item {
             FilterChip(
                 selected = ausgewählt == null,
@@ -222,7 +226,10 @@ private fun KategorienZeile(
     ausgewählt: String?,
     auswählen: (String?) -> Unit,
 ) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyRow(
+        contentPadding = LocalAtlasAbstände.current.liste,
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+    ) {
         item {
             FilterChip(
                 selected = ausgewählt == null,
@@ -251,7 +258,7 @@ private fun AuswahlBereich(
     leeren: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         OutlinedTextField(
             value = suchtext,
             onValueChange = suchtextÄndern,
@@ -273,8 +280,9 @@ private fun AuswahlBereich(
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(210.dp),
                 modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = LocalAtlasAbstände.current.liste,
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 items(einträge, key = { it.id }) { eintrag ->
                     OperatorKachel(
@@ -309,8 +317,8 @@ private fun OperatorKachel(
         colors = CardDefaults.outlinedCardColors(containerColor = farbe),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -346,13 +354,13 @@ private fun OperatorDetails(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         if (eintrag == null) {
-            Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.inhalt), contentAlignment = Alignment.Center) {
                 Text("Wähle einen Operator für die Detailansicht.")
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.inhalt),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 item {
                     Text(eintrag.titel, style = MaterialTheme.typography.titleLarge)
@@ -439,8 +447,8 @@ private fun DialogAktionen(
     bestätigen: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(onClick = abbrechen) { Text("Abbrechen") }

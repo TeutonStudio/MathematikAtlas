@@ -42,7 +42,7 @@ Dieser Debug-Quellordner macht die sichtbaren Oberflächen des Mathematik Atlas 
 
 - `FreigabeTeilen.kt` enthält ausschließlich die Android-Intent-Integration und keine sichtbare Compose-Oberfläche.
 - `ProfilScroll.kt` ist nur eine lokale Modifier-Brücke.
-- `KartenJsonDialog.kt` ist die ältere JSON-Oberfläche. Die produktiv verwendete Fassung `KartenJsonDialogV2311.kt` besitzt die Preview.
+- `KartenJsonDialog.kt` enthält weiterhin die gemeinsam getestete Analysebasis. Die produktiv verwendete, größenbewusste Fassung `KartenJsonDialogV2311.kt` besitzt die Preview.
 - Kleine Tabellenzellen, Divider, Spacer und rein interne Unterkomponenten werden über ihre übergeordnete Oberfläche beurteilt.
 
 ## Prüfen

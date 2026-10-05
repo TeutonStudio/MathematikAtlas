@@ -9,6 +9,14 @@ const val MENGENDEFINITION_PAAR = "mengendefinition.paar"
 const val MENGENDEFINITION_MENGENNAME = "mengenName"
 const val MENGENDEFINITION_ELEMENTNAME = "elementName"
 const val MENGENDEFINITION_ELEMENTART = "elementArt"
+const val MENGENDEFINITION_FORMMODUS = "strukturForm.modus"
+const val MENGENDEFINITION_FORMEINGABE = "strukturForm.eingabe"
+const val MENGENDEFINITION_FORM = "strukturForm.wert"
+const val STRUKTURFORM_UNBEKANNT = "unbekannt"
+const val STRUKTURFORM_INSPEKTOR = "inspektor"
+const val STRUKTURFORM_EINGANG = "eingang"
+const val STRUKTURFORM_EINZELN = "einzeln"
+const val STRUKTURFORM_TUPEL = "tupel"
 /** Altparameter aus v2.8.0; wird nur noch beim Laden verborgen und fachlich ignoriert. */
 const val MENGENDEFINITION_ELEMENTMENGE = "elementMenge"
 
@@ -25,7 +33,8 @@ internal object MengenkonstruktorAuswerter : MathematikKnotenAuswerter {
             kontext.knoten.parameter[MENGENDEFINITION_ELEMENTART]
                 ?.trim().orEmpty().ifBlank { "mathematik.zahl" },
         )
-        val element = elementAusdruck(elementName, elementArt)
+        val strukturForm = strukturForm(kontext, elementArt)
+        val element = elementAusdruck(elementName, elementArt, strukturForm)
         val oberMenge = kontext.eingänge["oberMenge"]?.objekt as? MengenAusdruck
             ?: FehlendeObermenge(elementArt.wert)
 
@@ -90,9 +99,71 @@ internal object MengendefinatorAuswerter : MathematikKnotenAuswerter {
     }
 }
 
-private fun elementAusdruck(name: String, art: AnschlussArtId): MethodenParameter = when (art.wert) {
+private fun elementAusdruck(
+    name: String,
+    art: AnschlussArtId,
+    strukturForm: List<ZahlAusdruck>? = null,
+): MethodenParameter = when (art.wert) {
     "mathematik.zahl" -> Variable(name)
     "mathematik.aussage" -> AussagenParameter(name)
     "mathematik.menge" -> MengenParameter(name)
-    else -> TypisiertesElement(name, art.wert)
+    else -> TypisiertesElement(name, art.wert, strukturForm = strukturForm)
 }
+
+private fun strukturForm(kontext: KnotenAuswertungsKontext, art: AnschlussArtId): List<ZahlAusdruck>? {
+    if (!art.istFormArt()) return null
+    val form = when (kontext.knoten.parameter[MENGENDEFINITION_FORMMODUS] ?: STRUKTURFORM_UNBEKANNT) {
+        STRUKTURFORM_INSPEKTOR -> parseStrukturForm(kontext.knoten.parameter[MENGENDEFINITION_FORM])
+        STRUKTURFORM_EINGANG -> if (
+            kontext.knoten.parameter[MENGENDEFINITION_FORMEINGABE] == STRUKTURFORM_TUPEL
+        ) {
+            val tupel = kontext.eingänge["dimensionen"]?.objekt as? Tupel
+                ?: error("Für die Strukturform muss ein Zahlentupel verbunden sein.")
+            tupel.elemente.mapIndexed { index, element ->
+                element as? ZahlAusdruck ?: error("Dimension ${index + 1} ist keine Zahl.")
+            }
+        } else {
+            kontext.knoten.anschlüsse
+                .filter { it.richtung.name == "Eingang" && it.name.startsWith("dimension.") }
+                .sortedBy { it.reihenfolge }
+                .map { anschluss -> kontext.eingänge[anschluss.name]?.objekt as? ZahlAusdruck
+                    ?: error("Für ${anschluss.name} muss eine Dimension verbunden sein.") }
+        }
+        else -> return null
+    }
+    validiereStrukturForm(form, art)
+    return form
+}
+
+fun parseStrukturForm(text: String?): List<ZahlAusdruck> {
+    val teile = text.orEmpty().split(',').map(String::trim)
+    require(teile.isNotEmpty() && teile.none(String::isBlank)) {
+        "Die Strukturform muss kommaseparierte positive Ganzzahlen oder Variablennamen enthalten."
+    }
+    return teile.map { teil ->
+        teil.toLongOrNull()?.let(RationaleZahl::von)
+            ?: teil.takeIf { it.matches(Regex("[A-Za-z][A-Za-z0-9_]*")) }?.let(::Variable)
+            ?: error("'$teil' ist keine positive Ganzzahl oder Variable.")
+    }.also { form ->
+        require(form.all { it is Variable || (it as? RationaleZahl)?.let { zahl ->
+            zahl.nenner == java.math.BigInteger.ONE && zahl.zähler.signum() > 0
+        } == true }) { "Dimensionen müssen positive ganze Zahlen oder Variablen sein." }
+    }
+}
+
+private fun validiereStrukturForm(form: List<ZahlAusdruck>, art: AnschlussArtId) {
+    require(form.isNotEmpty()) { "Eine bekannte Strukturform benötigt mindestens eine Achse." }
+    when (art.wert) {
+        "mathematik.tupel", "mathematik.vektor.spalte", "mathematik.vektor.zeile" ->
+            require(form.size == 1) { "Tupel und Vektoren besitzen genau eine Achse." }
+        "mathematik.matrix" -> require(form.size == 2) { "Matrizen besitzen genau zwei Achsen." }
+    }
+}
+
+private fun AnschlussArtId.istFormArt(): Boolean = wert in setOf(
+    "mathematik.tupel",
+    "mathematik.vektor.spalte",
+    "mathematik.vektor.zeile",
+    "mathematik.matrix",
+    "mathematik.tensor",
+)

@@ -39,6 +39,12 @@ private fun VisuelleGruppenEbeneVorschau() {
         )
     }
     MathematikAtlasVorschauRahmen {
-        VisuelleGruppenEbene(zustand.editor)
+        VisuelleGruppenEbene(zustand.editor) { knotenId ->
+            when (knotenId) {
+                erster.id -> 8_100_000L
+                zweiter.id -> 4_300_000L
+                else -> null
+            }
+        }
     }
 }

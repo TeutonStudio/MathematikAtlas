@@ -21,7 +21,7 @@ internal fun KartenKnotenInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
 
     HorizontalDivider()
     Text("KartenKnoten", style = MaterialTheme.typography.titleSmall)
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         FilterChip(
             selected = aktuellerZustand == KartenKnotenZustand.Schnittstelle,
             onClick = { zustand.setzeKartenKnotenZustand(knoten, KartenKnotenZustand.Schnittstelle) },

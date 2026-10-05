@@ -104,7 +104,7 @@ internal fun AnschlussLegendenDialog(
             } else {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     if (einträge.any { it.gestreift }) {
                         Text(
@@ -114,7 +114,7 @@ internal fun AnschlussLegendenDialog(
                         )
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.winzig),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -149,7 +149,7 @@ internal fun AnschlussLegendenDialog(
 @Composable
 private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.winzig, vertical = LocalAtlasAbstände.current.standard),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -169,7 +169,7 @@ private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
         }
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
         ) {
             Text(eintrag.titel, style = MaterialTheme.typography.labelLarge)
             if (eintrag.gestreift) {

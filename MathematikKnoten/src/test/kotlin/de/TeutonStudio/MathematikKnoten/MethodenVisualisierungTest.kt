@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsErgebnis
+import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsPunkt
 import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsQualität
 import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.VisualisierungsSampler
 import de.TeutonStudio.MathematikRechenSystem.kern.*
@@ -9,8 +10,50 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 class MethodenVisualisierungTest {
+    @Test
+    fun `exp i phi wird ueber dem vollstaendigen Parameterintervall als Kreisbild dargestellt`() {
+        val phi = Variable("phi", "\\varphi")
+        val methode = Methode(
+            name = "f",
+            parameter = listOf(phi),
+            vorschrift = Exponentialfunktion(
+                multiplikation(KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins), phi),
+            ),
+            zielMenge = KomplexeZahlen,
+            werteVorräte = mapOf(phi.name to ReelleZahlen),
+        )
+        val konfiguration = konfiguration(RaumDimension.C, auflösung = 29).copy(
+            bereiche = AchsenBereiche(
+                ZahlenBereich(-1.1, 1.1),
+                ZahlenBereich(-1.1, 1.1),
+                ZahlenBereich(-1.0, 1.0),
+            ),
+        )
+        val abbild = Abbild(
+            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(7), false),
+            methode,
+        )
+
+        assertEquals(RaumDimension.C, empfohleneRaumDimension(abbild))
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+            VisualisierungsSampler.sample(abbild, konfiguration),
+        )
+
+        assertTrue(ergebnis.punkte.size >= 29)
+        assertTrue(ergebnis.linien.isNotEmpty())
+        assertTrue(ergebnis.statistik.auswertungen <= konfiguration.sampling.maximalesRasterBudget)
+        assertTrue(ergebnis.punkte.all { abs(sqrt(it.x * it.x + it.y * it.y) - 1.0) < 1e-12 })
+        assertTrue(ergebnis.punkte.any { it.x < -0.99 })
+        assertTrue(ergebnis.punkte.any { it.y < -0.99 })
+        assertTrue(ergebnis.hinweise.any { "Bild" in it })
+        assertTrue(ergebnis.hinweise.any { "endliche Parameterintervall" in it })
+    }
+
     @Test
     fun `skalare einstellige Methode wird automatisch als R2 Funktionsgraph dargestellt`() {
         val x = Variable("x")
@@ -30,7 +73,8 @@ class MethodenVisualisierungTest {
             VisualisierungsSampler.sample(abbild, konfiguration(RaumDimension.R2, auflösung = 5)),
         )
 
-        assertEquals(5, ergebnis.punkte.size)
+        assertTrue(ergebnis.punkte.size >= 5)
+        assertTrue(ergebnis.linien.isNotEmpty())
         assertTrue(ergebnis.punkte.any { it.x == -1.0 && it.y == 1.0 })
         assertTrue(ergebnis.punkte.any { it.x == 0.0 && it.y == 0.0 })
         assertTrue(ergebnis.hinweise.any { "Funktionsgraph" in it })
@@ -58,10 +102,11 @@ class MethodenVisualisierungTest {
         )
 
         val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
-            VisualisierungsSampler.sample(abbild, konfiguration(RaumDimension.R3, auflösung = 4, budget = 16)),
+            VisualisierungsSampler.sample(abbild, konfiguration(RaumDimension.R3, auflösung = 4, budget = 1_000)),
         )
 
-        assertEquals(16, ergebnis.punkte.size)
+        assertTrue(ergebnis.punkte.size >= 16)
+        assertTrue(ergebnis.dreiecke.isNotEmpty())
         assertTrue(ergebnis.punkte.all { it.x in 0.0..1.0 && it.y in -1.0..1.0 && it.z != null })
         assertTrue(ergebnis.punkte.any { it.x == 1.0 && it.y == -1.0 && it.z == 2.0 })
     }
@@ -84,8 +129,9 @@ class MethodenVisualisierungTest {
             ),
         )
 
-        assertEquals(listOf(0.0, 0.5, 1.0), ergebnis.punkte.map { it.x })
-        assertEquals(listOf(0.0, 0.25, 1.0), ergebnis.punkte.map { it.y })
+        assertTrue(ergebnis.punkte.any { it.x == 0.0 && it.y == 0.0 })
+        assertTrue(ergebnis.punkte.any { it.x == 1.0 && it.y == 1.0 })
+        assertTrue(ergebnis.linien.isNotEmpty())
     }
 
     @Test
@@ -101,16 +147,69 @@ class MethodenVisualisierungTest {
         )
         val domäne = KartesischesProdukt(listOf(ReelleZahlen, ReelleZahlen))
 
-        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
             VisualisierungsSampler.sample(
                 Abbild(domäne, methode),
                 konfiguration(RaumDimension.R3, auflösung = 6, budget = 25),
             ),
         )
 
-        assertEquals(25, ergebnis.punkte.size)
+        assertTrue(ergebnis.punkte.size <= 25)
+        assertTrue(ergebnis.dreiecke.isNotEmpty())
+        assertTrue(ergebnis.statistik.budgetErschöpft)
         assertTrue(ergebnis.punkte.all { it.z == it.x + it.y })
         assertTrue(ergebnis.hinweise.any { "ℝ wird auf den sichtbaren Achsenbereich begrenzt" in it })
+    }
+
+    @Test
+    fun `adaptive Kurve verfeinert den schnell durchlaufenen Bildbereich stärker`() {
+        val t = Variable("t")
+        val methode = Methode(
+            name = "kubisch",
+            parameter = listOf(t),
+            vorschrift = Potenz(t, RationaleZahl.von(3)),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(t.name to ReelleZahlen),
+        )
+        val c = konfiguration(RaumDimension.R2, auflösung = 16, budget = 1_000).copy(
+            bereiche = AchsenBereiche(
+                ZahlenBereich(0.0, 1.0),
+                ZahlenBereich(0.0, 1.0),
+                ZahlenBereich(-1.0, 1.0),
+            ),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+            VisualisierungsSampler.sample(
+                Abbild(ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.Eins, false), methode),
+                c,
+            ),
+        )
+
+        val langsam = ergebnis.linien.count { it.punkte.map(VisualisierungsPunkt::x).average() < 0.5 }
+        val schnell = ergebnis.linien.count { it.punkte.map(VisualisierungsPunkt::x).average() >= 0.5 }
+        assertTrue(schnell > langsam)
+    }
+
+    @Test
+    fun `adaptive Kurve verbindet keine Flaeche ueber eine Singularitaet`() {
+        val x = Variable("x")
+        val methode = Methode(
+            name = "kehrwert",
+            parameter = listOf(x),
+            vorschrift = Division(RationaleZahl.Eins, x),
+            zielMenge = ReelleZahlen,
+            werteVorräte = mapOf(x.name to ReelleZahlen),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
+            VisualisierungsSampler.sample(
+                Abbild(ReellesIntervall(RationaleZahl.von(-1), false, RationaleZahl.Eins, false), methode),
+                konfiguration(RaumDimension.R2, auflösung = 24, budget = 1_000),
+            ),
+        )
+
+        assertTrue(ergebnis.linien.none { linie -> linie.punkte.minOf { it.x } < 0.0 && linie.punkte.maxOf { it.x } > 0.0 })
     }
 
     @Test

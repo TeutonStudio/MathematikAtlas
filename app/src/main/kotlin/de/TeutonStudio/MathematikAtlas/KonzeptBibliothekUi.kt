@@ -179,7 +179,7 @@ private fun HauptkategorienEbene(
     )
     val passendeAnzahl = ergebnisse.sumOf(KonzeptHauptkategorieTreffer::anzahl)
 
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         Text("Fachgebiet wählen", style = MaterialTheme.typography.headlineSmall)
         Text(
             "Suche und Anschlussfilter grenzen bereits die Fachgebiete anhand ihrer enthaltenen Konzepte ein.",
@@ -210,9 +210,9 @@ private fun HauptkategorienEbene(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(spalten),
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                contentPadding = PaddingValues(bottom = LocalAtlasAbstände.current.standard),
             ) {
                 items(ergebnisse, key = { it.kategorie.id }) { treffer ->
                     HauptkategorieKachel(treffer.kategorie, treffer.anzahl, onKategorie)
@@ -237,7 +237,7 @@ private fun HauptkategorieKachel(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
-            Modifier.fillMaxSize().padding(12.dp),
+            Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.bereich),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -300,7 +300,7 @@ private fun UnterkategorienEbene(
         unterkategorie to treffer
     }.filter { (_, treffer) -> !filterAktiv || treffer.isNotEmpty() }
 
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         BibliotheksNavigation(
             titel = hauptkategorie.bezeichnung,
             untertitel = "Unterkategorie auswählen oder Konzepte über Wort- und Anschlussfilter eingrenzen.",
@@ -330,9 +330,9 @@ private fun UnterkategorienEbene(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(spalten),
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                contentPadding = PaddingValues(bottom = LocalAtlasAbstände.current.standard),
             ) {
                 items(ergebnisse, key = { it.first.id }) { (unterkategorie, treffer) ->
                     UnterkategorieKachel(
@@ -360,8 +360,8 @@ private fun UnterkategorieKachel(
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 Text(
                     kategorieSymbol(unterkategorie.id),
                     style = MaterialTheme.typography.headlineMedium,
@@ -421,7 +421,7 @@ private fun KonzepteEbene(
     val sichtbareEinträge = einträge.filter { it.passt(filter) }
     val titel = unterkategorie?.bezeichnung ?: hauptkategorie.bezeichnung
 
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         BibliotheksNavigation(
             titel = titel,
             untertitel = "Knotendarstellung antippen fügt ein. Ziehen legt den Knoten auf der Karte ab; Erklärung und Definition bleiben getrennt.",
@@ -451,9 +451,9 @@ private fun KonzepteEbene(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(spalten),
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                contentPadding = PaddingValues(bottom = LocalAtlasAbstände.current.standard),
             ) {
                 items(sichtbareEinträge, key = KonzeptBibliothekEintrag::id) { eintrag ->
                     KonzeptBibliothekKarte(
@@ -474,9 +474,9 @@ private fun BibliotheksNavigation(
     untertitel: String,
     onZurück: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich), verticalAlignment = Alignment.Top) {
         TextButton(onClick = onZurück) { Text("‹ Zurück") }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.haarlinie)) {
             Text(titel, style = MaterialTheme.typography.headlineSmall)
             Text(
                 untertitel,
@@ -498,7 +498,7 @@ private fun BibliotheksSucheUndFilter(
     onAusgangsArt: (AnschlussArtId?) -> Unit,
     onZurücksetzen: () -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         OutlinedTextField(
             value = suchtext,
             onValueChange = onSuchtext,
@@ -514,7 +514,7 @@ private fun BibliotheksSucheUndFilter(
         )
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             if (maxWidth < 620.dp) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                     AnschlussArtAuswahl(
                         beschriftung = "Hat Eingang",
                         wert = eingangsArt,
@@ -531,7 +531,7 @@ private fun BibliotheksSucheUndFilter(
                     )
                 }
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                     AnschlussArtAuswahl(
                         beschriftung = "Hat Eingang",
                         wert = eingangsArt,
@@ -571,7 +571,7 @@ private fun KonzeptBibliothekKarte(
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             if (vorlage != null) {
                 KnotenBibliothekVorschau(
                     zustand = zustand,
@@ -656,7 +656,7 @@ private fun KnotenBibliothekVorschau(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().padding(horizontal = 13.dp, vertical = 8.dp)) {
+            Box(Modifier.fillMaxSize().padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard)) {
                 renderer.Inhalt(knoten, ausgewählt = false, aktionen = VorschauAktionen)
             }
             AnschlussPunkte(eingänge, Modifier.align(Alignment.CenterStart))
@@ -700,7 +700,7 @@ private fun AnschlussPunkte(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxHeight().padding(vertical = 8.dp),
+        modifier = modifier.fillMaxHeight().padding(vertical = LocalAtlasAbstände.current.standard),
         verticalArrangement = Arrangement.SpaceEvenly,
     ) {
         anschlüsse.forEach { anschluss ->
@@ -756,7 +756,7 @@ private fun ColumnScope.LeererBibliothekszustand(
     onZurücksetzen: (() -> Unit)? = null,
 ) {
     Column(
-        Modifier.fillMaxWidth().weight(1f).padding(24.dp),
+        Modifier.fillMaxWidth().weight(1f).padding(LocalAtlasAbstände.current.weit),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

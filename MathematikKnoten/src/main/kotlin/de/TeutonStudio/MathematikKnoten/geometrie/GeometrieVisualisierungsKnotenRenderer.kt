@@ -1,7 +1,11 @@
 package de.TeutonStudio.MathematikKnoten
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateRotation
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,7 +14,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -90,18 +94,31 @@ private fun GeometrieCanvas(
     modifier: Modifier,
 ) {
     val render = remember(objekt) { renderDaten(objekt) }
+    val aktuelleKamera by rememberUpdatedState(kamera)
+    val aktuelleKameraÄndern by rememberUpdatedState(onKamera)
     val textMeasurer = rememberTextMeasurer()
     val beschriftungsFarbe = MaterialTheme.colorScheme.onSurfaceVariant
-    Canvas(modifier.pointerInput(objekt.raum.dimension, kamera) {
-        detectTransformGestures { _, pan, zoom, rotation ->
-            onKamera(
-                kamera.copy(
-                    rotationY = if (objekt.raum.dimension == 3) kamera.rotationY + rotation * 4.0 else kamera.rotationY,
-                    verschiebungX = kamera.verschiebungX + pan.x,
-                    verschiebungY = kamera.verschiebungY + pan.y,
-                    zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0),
-                ),
-            )
+    Canvas(modifier.pointerInput(objekt.raum.dimension) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            var gestenKamera = aktuelleKamera
+            do {
+                val ereignis = awaitPointerEvent()
+                val pan = ereignis.calculatePan()
+                val zoom = ereignis.calculateZoom()
+                val rotation = ereignis.calculateRotation()
+                if (pan != Offset.Zero || zoom != 1f || rotation != 0f) {
+                    gestenKamera = transformiereGeometrieKamera(
+                        gestenKamera,
+                        objekt.raum.dimension,
+                        pan,
+                        zoom,
+                        rotation,
+                    )
+                    aktuelleKameraÄndern(gestenKamera)
+                    ereignis.changes.forEach { if (it.positionChanged()) it.consume() }
+                }
+            } while (ereignis.changes.any { it.pressed })
         }
     }) {
         drawRect(hintergrund)
@@ -115,6 +132,19 @@ private fun GeometrieCanvas(
         drawRect(achsenFarbe, style = Stroke(1f))
     }
 }
+
+private fun transformiereGeometrieKamera(
+    kamera: GeometrieKamera,
+    dimension: Int,
+    pan: Offset,
+    zoomFaktor: Float,
+    rotation: Float,
+) = kamera.copy(
+    rotationY = if (dimension == 3) kamera.rotationY + rotation * 4.0 else kamera.rotationY,
+    verschiebungX = kamera.verschiebungX + pan.x,
+    verschiebungY = kamera.verschiebungY + pan.y,
+    zoom = (kamera.zoom * zoomFaktor).coerceIn(0.1, 20.0),
+)
 
 internal fun geometrieGanzzahlSchritt(pixelProEinheit: Double): Int {
     if (!pixelProEinheit.isFinite() || pixelProEinheit <= 0.0) return 1

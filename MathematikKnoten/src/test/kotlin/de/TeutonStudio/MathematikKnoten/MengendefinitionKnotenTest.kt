@@ -51,6 +51,51 @@ class MengendefinitionKnotenTest {
     }
 
     @Test
+    fun `Konstruktor persistiert konkrete und symbolische Matrixform`() {
+        val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
+        val konstruktor = konfiguriereMengenkonstruktor(
+            paar.konstruktor,
+            MathematikAnschlussArten.Matrix.id,
+            STRUKTURFORM_INSPEKTOR,
+            STRUKTURFORM_EINZELN,
+            "2,n",
+        )
+        val element = assertIs<TypisiertesElement>(werteAus(konstruktor).ausgaben.getValue("element").objekt)
+        assertEquals(listOf(RationaleZahl.von(2), Variable("n")), element.strukturForm)
+        assertEquals(STRUKTURFORM_INSPEKTOR, konstruktor.parameter[MENGENDEFINITION_FORMMODUS])
+    }
+
+    @Test
+    fun `Eingangsform erzeugt atomar Einzel- oder Tupelanschluesse`() {
+        val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
+        val einzeln = konfiguriereMengenkonstruktor(
+            paar.konstruktor,
+            MathematikAnschlussArten.Matrix.id,
+            STRUKTURFORM_EINGANG,
+            STRUKTURFORM_EINZELN,
+        )
+        assertEquals(listOf("dimension.1", "dimension.2", "element"), einzeln.anschlüsse.map { it.name })
+        val tupel = konfiguriereMengenkonstruktor(
+            einzeln,
+            MathematikAnschlussArten.Matrix.id,
+            STRUKTURFORM_EINGANG,
+            STRUKTURFORM_TUPEL,
+        )
+        assertEquals(listOf("dimensionen", "element"), tupel.anschlüsse.map { it.name })
+        assertTrue(einzeln.anschlüsse.filter { it.name.startsWith("dimension.") }.none { alt ->
+            tupel.anschlüsse.any { it.id == alt.id }
+        })
+    }
+
+    @Test
+    fun `Formparser lehnt Null negative und gebrochene Dimensionen ab`() {
+        assertFails { parseStrukturForm("0") }
+        assertFails { parseStrukturForm("-2") }
+        assertFails { parseStrukturForm("1/2") }
+        assertEquals(listOf(RationaleZahl.von(2), Variable("n")), parseStrukturForm("2,n"))
+    }
+
+    @Test
     fun `Definator erzeugt ohne Obermenge eine Prädikatsmenge`() {
         val paar = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
         val element = werteAus(paar.konstruktor).ausgaben.getValue("element")

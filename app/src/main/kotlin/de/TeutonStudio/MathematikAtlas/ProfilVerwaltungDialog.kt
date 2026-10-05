@@ -59,13 +59,15 @@ internal fun ProfilVerwaltungDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(.9f).fillMaxHeight(.9f).widthIn(max = 980.dp),
+            modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
+                .fillMaxWidth(.9f).fillMaxHeight(.9f).widthIn(max = 980.dp),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 6.dp,
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.inhalt),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
@@ -87,7 +89,7 @@ internal fun ProfilVerwaltungDialog(
                         )
                     }
                 }
-                Box(Modifier.weight(1f).fillMaxWidth().padding(20.dp)) {
+                Box(Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.dialog)) {
                     when (reiter) {
                         ProfilReiter.Profil -> ProfilInhalt(
                             profil = profil,
@@ -139,7 +141,7 @@ internal fun ProfilVerwaltungDialog(
                 meldung?.let { text ->
                     HorizontalDivider()
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.standard),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
@@ -208,7 +210,7 @@ internal fun ProfilVerwaltungDialog(
             onDismissRequest = { endgültigLöschen = null },
             title = { Text("Endgültig löschen?") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                     Text("„${eintrag.name}“ kann danach nicht wiederhergestellt werden.")
                     if (blockierend.isNotEmpty()) {
                         Text(
@@ -257,7 +259,7 @@ private fun ProfilInhalt(
 ) {
     Column(
         Modifier.fillMaxSize().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
     ) {
         Text("Lokale Identität", style = MaterialTheme.typography.titleLarge)
         Text(
@@ -298,8 +300,8 @@ private fun LöschverwaltungInhalt(
 ) {
     LazyColumn(
         Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        contentPadding = PaddingValues(bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+        contentPadding = PaddingValues(bottom = LocalAtlasAbstände.current.dialog),
     ) {
         item { Text("Sammlungen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
         if (ordnung.ordner.isEmpty()) {
@@ -348,10 +350,10 @@ private fun PapierkorbInhalt(
         }
         return
     }
-    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         items(einträge, key = PapierkorbEintrag::id) { eintrag ->
             Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                     Text(eintrag.name, style = MaterialTheme.typography.titleMedium)
                     Text(
                         buildString {
@@ -362,7 +364,7 @@ private fun PapierkorbInhalt(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                         OutlinedButton(onClick = { wiederherstellen(eintrag) }) { Text("Wiederherstellen") }
                         TextButton(
                             onClick = { endgültigLöschen(eintrag) },

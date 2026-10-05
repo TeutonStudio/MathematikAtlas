@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikKnoten.visualisierung.modell.DimensionsModus
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.RaumDimension
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration
 
@@ -25,6 +26,7 @@ internal enum class DialogWerkzeugId {
     KONZEPTBIBLIOTHEK,
     ZAHLENFORMEL,
     DIMENSIONSVISUALISIERUNG,
+    ABSTRAKTIONEN,
     LEGENDE,
 }
 
@@ -33,7 +35,7 @@ internal sealed interface WerkzeugVerfügbarkeit {
     data class Deaktiviert(val grund: String) : WerkzeugVerfügbarkeit
 }
 
-private enum class AktiverWerkzeugDialog { Formel, Dimension, Legende }
+private enum class AktiverWerkzeugDialog { Formel, Dimension, Abstraktionen, Legende }
 
 private data class Mengenausgang(
     val knoten: KnotenDaten,
@@ -67,13 +69,13 @@ internal fun DialogWerkzeugLeiste(
             WindowInsets.systemBars.only(WindowInsetsSides.Vertical)
         )) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(vertical = 6.dp).padding(end = 1.dp),
+                modifier = Modifier.fillMaxSize().padding(vertical = LocalAtlasAbstände.current.eng).padding(end = 1.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
                     modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
                 ) {
                     DialogWerkzeugKnopf(
                         id = DialogWerkzeugId.KONZEPTBIBLIOTHEK,
@@ -104,8 +106,17 @@ internal fun DialogWerkzeugLeiste(
                             aktiverDialog = AktiverWerkzeugDialog.Dimension
                         },
                     )
+                    DialogWerkzeugKnopf(
+                        id = DialogWerkzeugId.ABSTRAKTIONEN,
+                        name = "Graph vereinfachen",
+                        verfügbarkeit = WerkzeugVerfügbarkeit.Verfügbar,
+                        onClick = {
+                            zustand.schließeKnotenAuswahl()
+                            aktiverDialog = AktiverWerkzeugDialog.Abstraktionen
+                        },
+                    )
                 }
-                HorizontalDivider(Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                HorizontalDivider(Modifier.padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.haarlinie))
                 DialogWerkzeugKnopf(
                     id = DialogWerkzeugId.LEGENDE,
                     name = "Legende",
@@ -132,7 +143,6 @@ internal fun DialogWerkzeugLeiste(
                 val knoten = konfiguriereZahlenRechnerFormel(basis, latex)
                 zustand.editor.führeAus(KartenAktion.KnotenEinfügen(knoten))
                 zustand.editor.wähleKnoten(knoten.id)
-                zustand.aktualisiereAuswertung()
                 aktiverDialog = null
             },
         )
@@ -145,6 +155,11 @@ internal fun DialogWerkzeugLeiste(
                 fügeVisualisierungAtomarEin(zustand, quelle, dimension)
                 aktiverDialog = null
             },
+        )
+
+        AktiverWerkzeugDialog.Abstraktionen -> AbstraktionsWerkzeugDialog(
+            zustand = zustand,
+            schließen = { aktiverDialog = null },
         )
 
         AktiverWerkzeugDialog.Legende -> AnschlussLegendenDialog(
@@ -212,6 +227,14 @@ private fun WerkzeugGlyph(id: DialogWerkzeugId, modifier: Modifier = Modifier) {
                 drawLine(farbe, Offset(w * .2f, h * .8f), Offset(w * .2f, h * .2f), stroke, StrokeCap.Round)
                 drawLine(farbe, Offset(w * .2f, h * .8f), Offset(w * .68f, h * .35f), stroke, StrokeCap.Round)
             }
+            DialogWerkzeugId.ABSTRAKTIONEN -> {
+                listOf(.25f, .5f, .75f).forEach { y ->
+                    drawCircle(farbe, radius = stroke * .7f, center = Offset(w * .18f, h * y))
+                    drawLine(farbe, Offset(w * .26f, h * y), Offset(w * .52f, h * .5f), stroke * .7f, StrokeCap.Round)
+                }
+                drawLine(farbe, Offset(w * .52f, h * .5f), Offset(w * .78f, h * .5f), stroke, StrokeCap.Round)
+                drawCircle(farbe, radius = stroke, center = Offset(w * .84f, h * .5f))
+            }
             DialogWerkzeugId.LEGENDE -> {
                 listOf(.24f, .5f, .76f).forEach { y ->
                     drawCircle(farbe, radius = stroke * .7f, center = Offset(w * .22f, h * y))
@@ -247,7 +270,7 @@ private fun DimensionsWerkzeugDialog(
         onDismissRequest = schließen,
         title = { Text("Dimensionsvisualisierung") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
                 Text("Quelle")
                 quellen.forEach { kandidat ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -318,7 +341,10 @@ private fun fügeVisualisierungAtomarEin(
 ) {
     val position = zustand.dialogWerkzeugEinfügePosition()
     val visualisierung = MathematikKnotenVorlagen.Visualisierung.erzeuge(position).copy(
-        eigenschaften = VisualisierungsKonfiguration(dimension = dimension).zuEigenschaften(),
+        eigenschaften = VisualisierungsKonfiguration(
+            dimension = dimension,
+            dimensionsModus = DimensionsModus.Manuell,
+        ).zuEigenschaften(),
     )
     val eingang = visualisierung.anschlüsse.first { it.richtung == AnschlussRichtung.Eingang && it.name == "menge" }
     val ziel = AnschlussVerweis(visualisierung.id, eingang.id)
@@ -337,5 +363,4 @@ private fun fügeVisualisierungAtomarEin(
     zustand.editor.beendeVerbindungsVorschau()
     zustand.editor.beendeInteraktion()
     zustand.editor.wähleKnoten(visualisierung.id)
-    zustand.aktualisiereAuswertung()
 }

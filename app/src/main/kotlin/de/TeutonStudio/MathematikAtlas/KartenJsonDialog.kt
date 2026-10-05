@@ -77,6 +77,8 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
     ) {
         Surface(
             modifier = Modifier
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
                 .fillMaxWidth(.94f)
                 .fillMaxHeight(.9f)
                 .widthIn(max = 1240.dp),
@@ -132,7 +134,7 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
                 )
                 HorizontalDivider()
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -162,8 +164,8 @@ private fun JsonDialogKopf(
     allesAusklappen: () -> Unit,
 ) {
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -221,7 +223,7 @@ private fun JsonEditor(
     val nummernBreite = ((analyse.zeilenAnzahl.toString().length * 9) + 34).dp
 
     Surface(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+        modifier = modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
         shape = RoundedCornerShape(8.dp),
         color = farben.hintergrund,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -269,7 +271,7 @@ private fun JsonEditor(
                         onValueChange = onWertÄnderung,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard)
                             .onPreviewKeyEvent { ereignis ->
                                 if (ereignis.type != KeyEventType.KeyDown || !ereignis.isCtrlPressed) return@onPreviewKeyEvent false
                                 when {
@@ -309,7 +311,7 @@ private fun JsonZeilenRand(
         Modifier
             .width(breite)
             .background(farben.zeilenRand)
-            .padding(vertical = 8.dp),
+            .padding(vertical = LocalAtlasAbstände.current.standard),
     ) {
         sichtbareZeilen.forEachIndexed { index, zeile ->
             Row(
@@ -318,7 +320,7 @@ private fun JsonZeilenRand(
                     .height(zeilenHöhe)
                     .background(if (index == aktuelleSichtbareZeile) farben.aktuelleZeile else Color.Transparent)
                     .clickable(enabled = zeile.faltung != null) { zeile.faltung?.let(onFaltungUmschalten) }
-                    .padding(horizontal = 6.dp),
+                    .padding(horizontal = LocalAtlasAbstände.current.eng),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -358,9 +360,9 @@ private fun JsonStatusLeiste(
     val position = offsetZuZeileSpalte(wert.text, wert.selection.start)
     val fehler = speicherFehler ?: analyse.fehler?.meldung
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 7.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.eng),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
     ) {
         Text("Zeile ${position.zeile}, Spalte ${position.spalte}", style = MaterialTheme.typography.labelSmall)
         Text("${analyse.zeilenAnzahl} Zeilen", style = MaterialTheme.typography.labelSmall)

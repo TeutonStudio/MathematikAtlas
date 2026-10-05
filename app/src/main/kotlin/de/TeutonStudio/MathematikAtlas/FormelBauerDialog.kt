@@ -66,13 +66,16 @@ internal fun FormelBauerDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(.94f).fillMaxHeight(.92f).widthIn(max = 1180.dp),
+            modifier = Modifier
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
+                .fillMaxWidth(.94f).fillMaxHeight(.92f).widthIn(max = 1180.dp),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 8.dp,
         ) {
             Column(
-                Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -92,13 +95,13 @@ internal fun FormelBauerDialog(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt),
+                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     ) {
                         Text("Formelvorschau", style = MaterialTheme.typography.labelLarge)
                         Row(
                             Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             StrukturelleFormelVorschau(
@@ -136,7 +139,7 @@ internal fun FormelBauerDialog(
 
                 Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedButton(
@@ -165,7 +168,7 @@ internal fun FormelBauerDialog(
                     TextButton(onClick = { if (editor.loescheAuswahl()) geändert() }) { Text("Auswahl löschen") }
                 }
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                     OutlinedTextField(
                         value = zahlText,
                         onValueChange = { zahlText = it },
@@ -205,9 +208,9 @@ internal fun FormelBauerDialog(
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(104.dp),
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = LocalAtlasAbstände.current.winzig),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     items(
                         FormelTastatur.standard.filter { it.kategorie == kategorie },

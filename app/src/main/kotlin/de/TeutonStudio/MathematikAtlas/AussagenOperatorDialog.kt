@@ -54,7 +54,7 @@ internal fun AussagenOperatorDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(12.dp),
+                .padding(LocalAtlasAbstände.current.bereich),
             contentAlignment = Alignment.Center,
         ) {
             val gewünschteBreite = if (direkteArt != null) {
@@ -74,8 +74,8 @@ internal fun AussagenOperatorDialog(
             ) {
                 Column(Modifier.fillMaxWidth()) {
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
@@ -98,9 +98,9 @@ internal fun AussagenOperatorDialog(
 
                     HorizontalDivider()
                     FlowRow(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     ) {
                         Button(onClick = definitionÖffnen) { Text("Definition") }
                         OutlinedButton(
@@ -159,7 +159,7 @@ private fun WahrheitstabellenInhalt(
         TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
     val listenHöhe = (zeilenAufSeite.coerceIn(1, 10) * 42).dp
 
-    Column(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier.padding(LocalAtlasAbstände.current.dialog), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             LatexText(art.ergebnisLatex(eingänge.size), style = MaterialTheme.typography.titleMedium)
         }
@@ -171,7 +171,7 @@ private fun WahrheitstabellenInhalt(
         if (tabelle.zeilenAnzahl > WAHRHEITSTABELLEN_SEITENGRÖSSE) {
             Row(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = { seitenStart = BigInteger.ZERO }, enabled = seitenStart > BigInteger.ZERO) { Text("Erste") }
@@ -230,7 +230,7 @@ private fun WahrheitstabellenInhalt(
 @Composable
 private fun TabellenIndexZelle(index: BigInteger) {
     Box(
-        Modifier.width(ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = 8.dp, vertical = 8.dp),
+        Modifier.width(ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -244,7 +244,7 @@ private fun TabellenIndexZelle(index: BigInteger) {
 @Composable
 private fun TabellenKopfZelle(text: String, breite: Dp = EINGANGS_ZELLEN_BREITE) {
     Box(
-        Modifier.width(breite).padding(horizontal = 10.dp, vertical = 8.dp),
+        Modifier.width(breite).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, fontWeight = FontWeight.SemiBold)
@@ -254,7 +254,7 @@ private fun TabellenKopfZelle(text: String, breite: Dp = EINGANGS_ZELLEN_BREITE)
 @Composable
 private fun WahrheitswertZelle(wert: Boolean, breite: Dp = EINGANGS_ZELLEN_BREITE) {
     Box(
-        Modifier.width(breite).padding(horizontal = 8.dp, vertical = 8.dp),
+        Modifier.width(breite).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         LatexText(
@@ -287,12 +287,12 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
     }
 
     Column(
-        modifier.padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        modifier.padding(LocalAtlasAbstände.current.weit),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.dialog),
     ) {
         LatexText(formel, style = MaterialTheme.typography.headlineSmall)
         Text(erklärung, style = MaterialTheme.typography.bodyLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), verticalAlignment = Alignment.CenterVertically) {
             Text("Neutrales Element der leeren Indexmenge:")
             neutralesElement?.let {
                 LatexText(it.latex, style = MaterialTheme.typography.titleMedium)

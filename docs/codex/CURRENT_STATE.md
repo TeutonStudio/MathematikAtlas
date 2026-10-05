@@ -1,95 +1,104 @@
 # Aktueller verifizierter Projektzustand
 
-> Stand dieser Datei: Befunde aus Quellcode, Gradle-Konfiguration und den unten genannten Diagnosebefehlen. Nicht ausgeführte Builds oder Tests werden ausdrücklich nicht als erfolgreich behandelt.
+> Stand: 2026-10-05. Ältere Zustandsangaben zu `v2.1.9`, Gradle 8.13 oder Kartenformat 2 sind überholt. Der ausführliche Android-Bestandsaudit liegt unter `plans/completed/2026-09-30-android-bestandsabsicherung.md`.
 
 ## Metadaten
 
-- Zuletzt verifiziert: 2026-07-27
-- Verifiziert durch: Codex; Quellcodeprüfung sowie Gradle-Tests und Debug-Build mit dem vorhandenen JDK 17
-- Commit vor der Dokumentationsänderung: `334d797` (`v2.1.9`)
-- Arbeitsbaum vor der Dokumentationsänderung: sauber
-- Verifikationsgrenze: Android-App wurde nicht auf einem Emulator oder Gerät gestartet. JVM-Tests und der Debug-Build wurden lokal ausgeführt.
+- Veröffentlichte Basis vor diesem Abschluss: `v2.34.0` auf Commit `f4be87a7`.
+- Releaseabschluss: `samai/v3.0.0-releaseabschluss`; App-Version 3.0.0 (`versionCode` 3000000).
+- Zielplattform dieser Prüfung: Android; gemeinsame Kotlin-Module wurden über ihre Android-Verwendung geprüft.
+- Der Arbeitsbaum enthielt bereits lokale Änderungen an Android-Gradle-Plugin, Gradle-Wrapper und Android-Studio-Dateien. Diese Änderungen wurden erhalten und beim Build mitgeprüft.
+- Aktueller Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`.
 
-## Start und Prüfung
+## Verifizierte Prüfungen
 
-| Zweck | Verifizierter Befehl oder Einstieg | Ergebnis oder Hinweis |
-|---|---|---|
-| Abhängigkeiten auflösen | Gradle Wrapper (`gradle/wrapper/gradle-wrapper.properties`, Gradle 8.13) | Kein separater Paketinstallationsbefehl. Gradle löst Abhängigkeiten beim ersten passenden Task auf. Nicht ausgeführt. |
-| Anwendung starten | `MainActivity` setzt `MathematikAtlasApp` als Compose-Inhalt | Start auf Emulator/Gerät nicht verifiziert. Android Studio kann das Gradle-Projekt öffnen. |
-| Architektur- und Strukturprüfung | `python3 scripts/pruefe_repository.py` | Erfolgreich: XML, Wrapper und Architekturprüfung bestanden. |
-| Zusätzliche Kernprüfung | `python3 scripts/pruefe_kern.py` | Nicht ausführbar: `kotlinc` fehlt in der lokalen Umgebung. |
-| JVM-Tests | `JAVA_HOME=/home/alex/.gradle/jdks/eclipse_adoptium-17-amd64-linux.2 ./gradlew test` | Erfolgreich am 2026-07-27; Kern-, Graph-, Adapter-, Knoten- und App-Persistenztests bestanden. |
-| Produktions-Build | `JAVA_HOME=/home/alex/.gradle/jdks/eclipse_adoptium-17-amd64-linux.2 ./gradlew :app:assembleDebug` | Erfolgreich am 2026-07-27. |
-| Lint | Projektweite Konfiguration durchsucht | Keine dedizierte ktlint-, detekt- oder Android-Lint-Task-Konfiguration in den Buildskripten gefunden. |
+| Prüfung | Ergebnis |
+|---|---|
+| `python3 scripts/pruefe_repository.py` | erfolgreich; Architektur, XML, Wrapper und Desktop-Shadowmodule geprüft |
+| `python3 scripts/pruefe_releaseplan.py` | erwartungsgemäß noch nicht erfolgreich; die reservierte 2.34.0 ist bis zur Releaseintegration aktiv |
+| `python3 scripts/pruefe_versionsfolge.py` | erfolgreich |
+| `python3 scripts/pruefe_standardkarten.py` | erfolgreich; 15 Karten geprüft |
+| `python3 scripts/pruefe_methodenmodell.py` | erfolgreich |
+| `python3 scripts/pruefe_kern.py` | nicht ausführbar; das Skript fand in seiner Umgebung `kotlinc` nicht |
+| `./gradlew test :app:assembleDebug` | erfolgreich mit den bereits lokal geänderten AGP-/Gradle-Versionen; vollständige JVM-Tests und Debug-APK gebaut |
+| Katalog-zu-Auswerter-Regressionstest | erfolgreich; jede sichtbare mathematische Knotenart besitzt einen registrierten oder zentral behandelten Auswertungspfad |
+| Android-Emulator | nicht ausführbar; der vorhandene AVD `Medium_Tablet` endete vor abgeschlossenem Boot mit Exitcode 139, ein erneuter ADB-Start ist in der Sandbox durch Socket-/Netlink-Rechte gesperrt |
 
-## Repository-Struktur
+## Bestätigter Aufbau
 
-- Build: Android-Gradle-Multimodulprojekt mit Kotlin-DSL; Root in `settings.gradle.kts`.
-- Module: `app`, `KnotenKartenVerwalter`, `MathematikRechenSystem`, `MathematikKartenAdapter`, `MathematikKnoten`.
-- Anwendungseinstieg: `app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/MainActivity.kt`; die Compose-Wurzel ist `MathematikAtlasApp`.
-- Graph-/Canvas-Modul: `KnotenKartenVerwalter`; Compose-Editor in `schnittstelle/KnotenKartenEditor.kt` und Editorzustand in `zustand/KartenEditorZustand.kt`.
-- Nodes und Handles: persistierbare Modelle `KnotenDaten`, `AnschlussDaten` und `VerbindungDaten` in `KnotenKartenVerwalter/.../daten/`; mathematische Vorlagen in `MathematikKnoten/.../MathematikKnotenVorlagen.kt`.
-- Edges und Validierung: `GraphPrüfung` im neutralen Kartenmodul; sie prüft Richtung, Typ-Hierarchie, belegte Eingänge und Zyklen.
-- Inspector: Eigenschaftenbearbeitung ist als Compose-Bereich in `app/.../MathematikAtlasApp.kt` umgesetzt und schreibt über `KartenAktion` in `KartenEditorZustand`.
-- mathematisches Modell: `MathematikRechenSystem/.../kern/`; Wurzeltyp ist `MathematischesObjekt` mit `Ausdruck`, `ZahlAusdruck` und `MengenAusdruck`.
-- Auswertung: `MathematikKartenAdapter`; topologischer `KartenAuswerter` mit Cache und `MathematikAuswerterRegister`.
-- Persistenz: `app/.../speicher/KartenJson.kt` und `KartenSpeicher.kt`; Format 2 liest Format-1-Karten mit leerer Eigenschaftsmap rückwärtskompatibel und speichert rekursiv typisierte Eigenschaften. Speicherort ist der App-interne Dateienbereich `MathematikAtlas/karten/<karten-id>/v<version>.json`.
-- Tests: JVM-Unit-Tests in den vier Bibliotheksmodulen sowie im App-Modul unter `src/test/kotlin` (dort derzeit Persistenztests); Android-Instrumentierungstests wurden nicht gefunden.
+- Android-Anwendung: `app`; Einstieg über `MainActivity` und `MathematikAtlasApp`.
+- Fachneutraler Graph und Editor: `KnotenKartenVerwalter`.
+- Mathematischer Rechenkern: `MathematikRechenSystem`.
+- Graph-/Rechenkernadapter: `MathematikKartenAdapter`.
+- Knotenvorlagen, Auswerter, Renderer und mathematische Kartenmigration: `MathematikKnoten`.
+- Der Android-Speicher liegt unter dem app-internen Pfad `MathematikAtlas/karten/<karten-id>/v<version>.json`; vorhandene Dateien werden vor dem Überschreiben zusätzlich unter `MathematikAtlas/sicherungen/` gesichert.
+- Es gibt 244 Kotlin-Testdateien in den untersuchten Android- und gemeinsamen Modulen. Android-Instrumentierungstestquellen fehlen trotz vorhandener Testabhängigkeiten.
 
-## Vorhandene Node-Typen
+## Bestätigte Stärken
 
-`MathematikKnotenVorlagen.alle` ist die statische Katalogquelle. Sie enthält Vorlagen für Zahlen und Terme, Aussagen und Prädikate, Mengen, iterative Operatoren, Abbildungen, Vektoren, Matrizen sowie Karten-Ein-/Ausgänge und Fallunterscheidungen. Die Vorlagen erzeugen pro Instanz neue Anschluss-IDs; ihre fachlichen Typen stammen aus `MathematikAnschlussArten`.
+- Repository-, Architektur- und Versionsfolgeprüfungen bestehen; der Releaseplan bleibt bis zum Abschluss der reservierten 2.34.0 absichtlich aktiv.
+- Der vollständige JVM-Testlauf und der Android-Debug-Build bestehen.
+- Die 15 ausgelieferten Standardkarten werden strukturell geprüft und durch den echten Auswerter ohne gemeldete Fehler ausgewertet.
+- Repräsentative Tests decken Zahlenrechnung, Mengen, Aussagenlogik, Methoden/Analysis, Vektoren und Matrizen einschließlich fachlicher Randfälle ab.
+- Editor-Unit-Tests decken Verbindungskompatibilität, belegte Eingänge, dynamische Anschlüsse, Kopieren, Löschen, Mehrfachaktionen sowie Undo/Redo ab.
+- Der neue Querschnittstest verhindert sichtbare mathematische Knotenarten ohne Auswertungspfad.
 
-| Node-Familie | Fachlicher Zweck | Eingänge / Ausgänge | Registry- oder Typ-Schlüssel | zentrale Dateien |
-|---|---|---|---|---|
-| Rechnen, Algebra und Analysis | Zahl, Variable, Addition, Multiplikation, Division, Potenz, Gleichung lösen, Auswerten, Ableiten, Integrieren, Wurzel, Logarithmus | überwiegend Zahl oder allgemeines Objekt | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
-| Zahlen, Mengen und Aussagen | Tupel, komplexe Zahlen, Mengenoperationen, Zahlbereiche, Vergleiche, Mengenprädikate und Aussagenlogik | Zahl, Menge, Objekt oder Aussage | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
-| Operatoren und Abbildungen | Iterierte Summe/Produkt/Mengenoperationen, Abbild, Term-zu-Methode, Komposition, Iteration und Analysis von Methoden | typisierte Funktions-, Mengen- und Zahlanschlüsse | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt` |
-| Vektoren und Matrizen | orientierte Zeilen-/Spaltenvektoren, Vektor-zu-Polynom, Matrixbildung aus skalaren Einträgen oder zweistelliger Zahlmethode, Produkte, Transposition und Inversion | Zahl, Vektor, Zahlfunktion oder Matrix | `mathematik.*` | `MathematikKnotenVorlagen.kt`, `MathematikAuswerter.kt`, `MatrixKonfiguration.kt` |
-| Wiederverwendbare Karten | öffentliche Karten-Ein-/Ausgänge und dynamisch erzeugte Gruppenknoten | ein typisierter Anschluss `wert` je Schnittstellenknoten; Gruppenknoten je Richtung eindeutig nach öffentlichem Namen | statisch `mathematik.kartenEingang` / `mathematik.kartenAusgang`; dynamisch `gruppe.<karten-id>` | `MathematikKnotenVorlagen.kt`, `AtlasZustand.kt`, `KartenAuswerter.kt` |
+## Mengenvisualisierung und Orbitmengen in Abschlussprüfung
 
-## Zentrale Architekturpfade
+- Die Mengenvisualisierung trennt exakte R1-Algebra, rationale Zellnachweise und
+  numerische Punktvorschau. Enthaltene, gemischte und unbekannte Bereiche besitzen
+  getrennte Status; unbekannte Bereiche bleiben in R1, R2, R3 und C sichtbar.
+- Exakte rationale Grenzen und offene Endpunkte werden erst nach dem
+  Fensterbeschnitt in Zeichenkoordinaten umgewandelt. N beginnt bei 1;
+  Zeichentoleranzen verändern weder Ganzzahligkeit noch Mengentopologie.
+- Feste Schnitte binden nicht dargestellte Variablen ausdrücklich. Eine optionale
+  Farbdimension kann mehrere Werte pro Bildpunkt erhalten und markiert diese Fälle.
+- Der Sampler arbeitet auf `Dispatchers.Default`, prüft den Coroutine-Abbruch und
+  begrenzt Raster, Zertifikate und Orbits über persistierte Budgets.
+- `OrbitFamilie` und `OrbitBeschraenktheitsMenge` liegen im Compose-freien Kern.
+  Allgemeine endliche Nichtflucht bleibt unbestimmt; exakte Zyklen beweisen
+  Beschränktheit. Für die erkannte Familie `z²+c` mit Nullstart kommen sichere
+  Kardioiden-, Periode-2- und Fluchtnachweise hinzu.
+- Die neue Mandelbrot-Beispielkarte besteht aus regulären Variablen-, Potenz-,
+  Additions-, Methoden-, Orbit-, Mengen- und Visualisierungsknoten. Historische
+  Standardkartenmigrationen bleiben auf die bisherigen fünf Beispielkarten
+  begrenzt; die neue Karte wird als Standardkarten-Asset im Ordner
+  `Standardkarten/Dynamische Systeme/01 Iterationsmengen` installiert.
+- Die 28 konkreten Zahltypen und 42 konkreten Mengentypen sind mit ihrem aktuellen
+  Visualisierungsstatus in `plans/active/2026-10-01-cas-abdeckungsmatrix.md`
+  dokumentiert. Nicht räumliche und nicht entscheidbare Fälle werden nicht als
+  leere Mengen ausgegeben.
+- Gezielte Kern-, Knoten-, Katalog-, Visualisierungs-, Beispielkarten- und
+  JSON-Roundtriptests sowie der vollständige JVM-Testlauf und Debug-Build bestehen.
+  Die unabhängige Knotenverifikation und Releaseintegration sind noch nicht abgeschlossen.
+- Ein Gerät ist nicht verbunden. Touch, Inspectorbedienung und Lebenszyklus bleiben
+  daher eine ausdrückliche Laufzeitprüfgrenze.
 
-- Node-Erzeugung: `KnotenVorlage.erzeuge` erzeugt `KnotenDaten`; `AtlasZustand.fügeKnotenEin` fügt sie über `KartenAktion.KnotenEinfügen` in den Editorzustand ein.
-- Vorlagenkatalog: `MathematikKnotenVorlagen.alle`; `AtlasZustand` ergänzt daraus abgeleitete Gruppenvorlagen. Es gibt damit keinen einzelnen, universellen Registry-Typ für Darstellung, Vorlagen und Auswertung.
-- Auswerter-Registry: `MathematikAuswerterRegister`, befüllt von `StandardMathematikAuswerter.erzeugeRegister` anhand stabiler `mathematik.*`-Schlüssel.
-- Graphzustand: `KartenEditorZustand.karte` hält eine immutable `KartenDaten`-Instanz; Undo/Redo-Historien liegen im Editorzustand. `AtlasZustand` koordiniert Auswahl, Auswertung, Kartenliste und Speicherung.
-- Handle-Vertrag: `AnschlussDaten` enthält stabile Instanz-ID, Richtung, Kante, `AnschlussArtId`, Reihenfolge sowie Kennzeichen für dynamische Eingänge.
-- Verbindungsvalidierung: `GraphPrüfung.prüfe`; Typkompatibilität wird über die Elternhierarchie von `AnschlussArtRegister.istUnterart` bestimmt.
-- Ausdrucksauswertung: `KartenAuswerter.auswerten` verarbeitet den Graph topologisch, sammelt Eingänge über Anschlüsse und ruft registrierte `MathematikKnotenAuswerter` auf.
-- Formeldarstellung: jedes `MathematischesObjekt` liefert `zuLatex()`; `LatexText` rendert einen unterstützten Teilumfang nativ als Compose-Text. Es gibt keine gefundene KaTeX- oder WebView-Abhängigkeit.
-- Serialisierung und Laden: `KartenJson` schreibt `formatVersion` 2 und alle Karten-, Knoten-, Anschluss-, Verbindungs- und rekursiven Eigenschaftsdaten; fehlende Eigenschaften aus Format 1 werden als leer gelesen.
+## Offene, priorisierte Android-Befunde
 
-## Bestätigte Einschränkungen
+1. **Mittel – Start, Auswertung und der persistierende Anteil von Import und Speichern führen weiterhin umfangreiche Arbeit auf dem UI-Thread aus.** Dateistream-I/O für Import und Export läuft inzwischen auf `Dispatchers.IO`; die tatsächliche Verzögerung auf einem Gerät ist mangels erfolgreichem Emulatorlauf noch nicht gemessen.
+2. **Mittel – Activity-Neuerstellung stellt die zuletzt aktive Karte und Navigation nicht vollständig wieder her.** Der Kartenstand wird bei `ON_STOP` gesichert, `AtlasZustand` wird aber weiterhin mit `remember` aufgebaut.
+3. **Prüfgrenze – Touch-Gesten und Lebenszyklusabläufe besitzen keine Android-Instrumentierungstests.** Der konfigurierte AVD konnte in dieser Umgebung nicht vollständig booten.
 
-- Das Projekt verwendet Kotlin, Jetpack Compose und Gradle, nicht Vite, React, React Flow, shadcn/ui oder KaTeX.
-- `MathematikRechenSystem` ist ein Kotlin/JVM-Modul ohne Android- oder Compose-Abhängigkeit; die Architekturprüfung bestätigt zudem, dass der neutrale Karteneditor und der Adapter keine verbotenen Modulimporte enthalten.
-- Verbindungen sind azyklisch und für explizite Eingänge auf genau eine eingehende Verbindung beschränkt. Neutrale Anschlüsse sind vom allgemeinen Modell unterstützt.
-- Persistenzdaten sind eigene Datenklassen und JSON-Werte; Compose-Laufzeitobjekte werden nicht serialisiert.
-- `KartenJson` akzeptiert fehlende Eigenschaften aus Format 1 und schreibt Format 2. Die vorhandene UI-Migration in `AtlasZustand.aktualisiereAssoziativeKnoten` ergänzt zusätzlich bekannte Anschlüsse und normalisiert assoziative Knoten beim Öffnen.
-- Der Kartenladepfad `KartenSpeicher.lade` ruft `KartenJson.lese` direkt auf; in diesem Pfad wurde keine nachträgliche `GraphPrüfung` gefunden.
+## Abstraktionswerkzeug und Speicherstabilisierung
 
-## Bekannte Blocker und technische Schulden
+- Der fachneutrale Kartenkern besitzt eine gemeinsame Teilgraphanalyse sowie eine
+  snapshot-validierte, atomare `TeilgraphErsetzen`-Aktion mit Undo/Redo.
+- Das neue Abstraktionsregister erkennt beweisbar polynomiale Termgraphen und
+  ersetzt sichere Kandidaten durch die vorhandenen Tupel- und Polynomknoten.
+  Extern verwendete Zwischenknoten werden nicht gelöscht; nachgeschaltete
+  `TermZuMethode`-Schnittstellen bleiben erhalten.
+- Der App-Dialog sortiert positive Einsparungen deterministisch, kann Kandidaten
+  im Graph markieren und analysiert nach jeder semantischen Kartenänderung neu.
+- `.matlas` kann nun mit Größen-, Pfad-, Manifest- und Prüfsummenvalidierung
+  importiert werden. Importfehler werden sichtbar behandelt; beschädigte neueste
+  Kartenversionen fallen beim Listen und Laden auf die jüngste lesbare Version
+  zurück.
+- Ein Kartenwechsel und `ON_STOP` brechen nur die flüchtige Verbindungsvorschau
+  ab und sichern danach den aktuellen Kartenstand.
 
-| Befund | Evidenz | Auswirkung | betroffene Dateien | Blockiert diese Dokumentationsaufgabe? |
-|---|---|---|---|---|
-| Zusätzliche Kernprüfung lokal nicht möglich | `scripts/pruefe_kern.py` beendet sich mit Code 2, weil `kotlinc` fehlt | Die eigenständige Compiler-/Kernprüfung ist nicht bestätigt | lokale Laufzeitumgebung | Nein |
+## Dokumentationszustand
 
-## Neuere verifizierte Änderungen
-
-| Datum | Änderung | ExecPlan | Prüfstatus |
-|---|---|---|---|
-| 2026-07-29 | v2.3.10 ergänzt neun Knoten für Primzahlen, gaußsche Zahlen und Primzahlen, Potenz- und Abbildungsmengen, Vektor-, Matrix- und Tensorräume sowie `ℤ/nℤ`. | `plans/completed/2026-07-29-v2.3.10-mengenraeume.md` | GitHub Actions: Architekturprüfung, vollständige Gradle-Tests und `:app:assembleDebug` erfolgreich. |
-
-## Zuletzt abgeschlossene größere Änderungen
-
-| Datum | Änderung | ExecPlan oder ADR | Prüfstatus |
-|---|---|---|---|
-| 2026-07-27 | `mathematik.abbild` auf einen allgemeinen Funktionseingang erweitert; ein neuer allgemeiner Parameter erzeugt Methoden über beliebige mathematische Objekte, während numerische Methodenoperationen spezialisiert bleiben. | `plans/completed/2026-07-27-allgemeine-abbildungen.md`, `decisions/2026-07-27-allgemeine-funktionsparameter.md` | vollständige JVM-Tests, Debug-Build und Repository-Prüfung erfolgreich |
-| 2026-07-27 | `mathematik.termZuMethode` auf einen allgemeinen Termeingang und einen allgemeinen Methodenausgang umgestellt; freie verbundene Variablen liefern automatisch geordnete Argumente und Inspector-Grundmengen. | `plans/completed/2026-07-27-term-zu-methode.md`, `decisions/2026-07-27-term-zu-methode-allgemeiner-vertrag.md` | vollständige JVM-Tests, Debug-Build und Repository-Prüfung erfolgreich |
-| 2026-07-27 | Die Zielmenge von `mathematik.termZuMethode` wird für Zahlterme als kleinste gemeinsame Obermenge der Inspector-Grundmenge und des konservativ abgeleiteten Wertebereichs bestimmt; nichtnumerische Terme behalten die Inspector-Grundmenge. | `plans/completed/2026-07-27-term-zu-methode-zielmenge.md`, `decisions/2026-07-27-term-zu-methode-zielmengeninferenz.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung erfolgreich |
-| 2026-07-27 | `mathematik.termZuMethode` leitet seine Zielmenge ausschließlich aus Term und Parameter-Wertebereichen ab; allgemeine Parameter speichern dafür rekursive typisierte Bereiche. | `plans/completed/2026-07-27-term-zu-methode-typisierte-zielmenge.md`, `decisions/2026-07-27-term-zu-methode-typisierte-zielmenge.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung erfolgreich |
-| 2026-07-27 | Neuer Knoten `mathematik.vektorZuPolynom`: orientierter Koeffizientenvektor mit aufsteigender Eingabereihenfolge wird zu einem Zahlterm; beide Vektororientierungen sind zulässig. | `plans/completed/2026-07-27-vektor-zu-polynom.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
-| 2026-07-27 | Neuer Knoten `mathematik.reellesIntervall` für geschlossene reelle Intervalle mit zwei Zahleneingängen, exakter Rationalfall-Normalisierung und JSON-Roundtrip | `plans/completed/2026-07-27-reelles-intervall.md` | vollständige JVM-Tests, Debug-Build, Repository- und Diff-Prüfung sowie unabhängige Abschlussverifikation erfolgreich |
-| 2026-07-27 | Gemeinsamer Extremwert-Knoten mit getrennten Maximum-/Minimum-Vorlagen, dynamischen Eingängen und konservativer Reellheitsprüfung | `plans/completed/2026-07-27-extremwert.md` | vollständige JVM-Tests, Debug-Build, Repository-Prüfung und unabhängige Diff-Abnahme erfolgreich |
-| 2026-07-27 | Istzustand und Projektkontext erstmals gegen den vorhandenen Android-/Kotlin-Code abgeglichen | keiner | Repository- und Architekturprüfung erfolgreich; vollständige Gradle-/Kernprüfung lokal nicht ausführbar |
+- Die Dateien unter `docs/codex/plans/active/` sind keine verlässliche Liste laufender Arbeiten: Mehrere Einträge bezeichnen bereits veröffentlichte Versionen oder nennen sich selbst abgeschlossen.
+- Architektur- und Releaseentscheidungen müssen weiterhin gegen Code, `release/roadmap.toml` und Git geprüft werden.
+- Der abgeschlossene Audit enthält umsetzungsreife Reparaturpakete und klare Abnahmekriterien; er verändert noch kein Produktionsverhalten und keine Persistenzversion.

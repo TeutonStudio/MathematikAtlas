@@ -28,7 +28,7 @@ internal object MatrixdiagonaleInspektor : KnotenInspektor {
         Text("Diagonale", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             FilterChip(
                 selected = aktuell == MatrixDiagonalArt.HAUPTDIAGONALE,

@@ -92,6 +92,8 @@ object MathematischeTypen {
 
 /** Typ eines Elements, das aus dieser Menge gewählt wird. Die Inferenz bleibt konservativ. */
 fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
+    is EndlicheIndexMenge -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
+    is StrukturErgebnisMenge -> strukturErgebnisTyp()
     NatürlicheZahlen -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
     GanzeZahlen -> TypAusdruck.Atom(MathematischeTypen.Ganz)
     RationaleZahlen -> TypAusdruck.Atom(MathematischeTypen.Rational)
@@ -133,6 +135,29 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
         FundamentalerZahlbereich.QUATERNION -> TypAusdruck.Atom(MathematischeTypen.Quaternion)
     }
     else -> TypAusdruck.Unbekannt
+}
+
+private fun StrukturErgebnisMenge.strukturErgebnisTyp(): TypAusdruck = when (anschlussArt) {
+    "mathematik.zahl" -> TypAusdruck.Atom(MathematischeTypen.Zahl)
+    "mathematik.tupel" -> TypAusdruck.Atom(MathematischeTypen.Tupel)
+    "mathematik.vektor.spalte" -> TypAusdruck.Parameterisiert(
+        MathematischeTypen.SpaltenVektor,
+        listOf(TypAusdruck.Atom(MathematischeTypen.Zahl), TypAusdruck.Literal(form?.singleOrNull()?.zuLatex() ?: "?")),
+    )
+    "mathematik.vektor.zeile" -> TypAusdruck.Parameterisiert(
+        MathematischeTypen.ZeilenVektor,
+        listOf(TypAusdruck.Atom(MathematischeTypen.Zahl), TypAusdruck.Literal(form?.singleOrNull()?.zuLatex() ?: "?")),
+    )
+    "mathematik.matrix" -> TypAusdruck.Parameterisiert(
+        MathematischeTypen.Matrix,
+        listOf(TypAusdruck.Atom(MathematischeTypen.Zahl)) +
+            List(2) { index -> TypAusdruck.Literal(form?.getOrNull(index)?.zuLatex() ?: "?") },
+    )
+    "mathematik.tensor" -> TypAusdruck.Parameterisiert(
+        MathematischeTypen.Tensor,
+        listOf(TypAusdruck.Atom(MathematischeTypen.Zahl)) + form.orEmpty().map { TypAusdruck.Literal(it.zuLatex()) },
+    )
+    else -> TypAusdruck.Atom(MathematischeTypen.Objekt)
 }
 
 fun MethodenSignatur.typAusdruck(): TypAusdruck {

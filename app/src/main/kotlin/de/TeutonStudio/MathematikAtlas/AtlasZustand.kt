@@ -6,17 +6,23 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.VerbindungsDragZielHinweis
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.MathematikAtlas.speicher.AktiveKarteSpeicher
 import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
 import de.TeutonStudio.MathematikAtlas.speicher.KartenSpeicher
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikKnoten.abstraktion.AbstraktionsKontext
+import de.TeutonStudio.MathematikKnoten.abstraktion.AbstraktionsRegister
+import de.TeutonStudio.MathematikKnoten.abstraktion.AbstraktionsVorschlag
 import de.TeutonStudio.MathematikKnoten.katalog.OperatorKnotenSuchindex
 import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenRenderer
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
+import java.io.File
 
 @Stable
 class AtlasZustand(context: Context) {
     val speicher = KartenSpeicher(context)
+    private val aktiveKarteSpeicher = AktiveKarteSpeicher(File(context.filesDir, "MathematikAtlas"))
     private val laufzeit = MathematikKartenLaufzeit(
         kartenQuelle = KartenQuelle(speicher::lade),
         nichtAuswertbareKnotenArten = KartenWerkzeugVorlagen.nichtAuswertbareArten,
@@ -43,7 +49,11 @@ class AtlasZustand(context: Context) {
     init {
         installiereStandardkarten(context, speicher)
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
-        val start = karten.firstOrNull() ?: KartenDaten(name = "Neue Karte")
+        val start = aktiveKarteSpeicher.lade()
+            ?.let { id -> karten.firstOrNull { it.id == id } }
+            ?: karten.firstOrNull()
+            ?: KartenDaten(name = "Neue Karte")
+        if (start.id !in karten.map(KartenDaten::id).toSet()) aktiveKarteSpeicher.löschen()
         editor = KartenEditorZustand(start, graphPrüfung)
         letzterGespeicherterStand = start
         brotkrumen = if (karten.any { it.id == start.id }) {
@@ -64,9 +74,34 @@ class AtlasZustand(context: Context) {
 
     fun aktualisiereAuswertung() { werteAus() }
 
+    fun analysiereAbstraktionen(): List<AbstraktionsVorschlag> = AbstraktionsRegister().analysiere(
+        AbstraktionsKontext(
+            karte = editor.karte,
+            auswertung = auswertung,
+            graphPrüfung = graphPrüfung,
+            auswerten = laufzeit::auswerten,
+        ),
+    )
+
+    fun zeigeAbstraktion(vorschlag: AbstraktionsVorschlag) {
+        editor.stelleAuswahlWiederHer(vorschlag.vorherKnoten, vorschlag.wurzelKnoten)
+    }
+
+    /** Validiert einen möglicherweise veralteten Dialogvorschlag unmittelbar vor der atomaren Anwendung. */
+    fun ersetzeDurchAbstraktion(vorschlag: AbstraktionsVorschlag): String? {
+        val vorschau = editor.karte.vorschauTeilgraphErsetzen(vorschlag.ersetzungsPlan, graphPrüfung)
+        if (!vorschau.istGültig) return vorschau.fehler.joinToString(" ")
+        editor.führeAus(KartenAktion.TeilgraphErsetzen(vorschlag.ersetzungsPlan))
+        werteAus()
+        return null
+    }
+
     /** Lädt den sichtbaren Kartenbestand aus dem Speicher, ohne die aktuell geöffnete Karte zu wechseln. */
     fun ladeKartenNeu() {
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
+        if (aktuelleKarte.id !in karten.map(KartenDaten::id).toSet()) {
+            karten.firstOrNull()?.let(::öffne) ?: aktiveKarteSpeicher.löschen()
+        }
     }
 
     fun berechneKnotenCacheNeu(knotenId: KnotenId) {
@@ -75,9 +110,13 @@ class AtlasZustand(context: Context) {
     }
 
     fun öffne(karte: KartenDaten, alsUnterkarte: Boolean = false) {
+        if (karte.id != editor.karte.id) {
+            sichereAktuellVorUnterbrechung()
+        }
         val aktualisiert = aktualisiereAssoziativeKnoten(karte)
         editor.ersetzeKarte(aktualisiert)
         letzterGespeicherterStand = aktualisiert
+        aktiveKarteSpeicher.speichere(aktualisiert.id)
         brotkrumen = if (alsUnterkarte) brotkrumen + KartenVerweis(aktualisiert.id, aktualisiert.version) else listOf(KartenVerweis(aktualisiert.id, aktualisiert.version))
         werteAus()
     }
@@ -106,6 +145,12 @@ class AtlasZustand(context: Context) {
         }
         letzterGespeicherterStand = gespeichert
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
+    }
+
+    /** Verwirft ausschließlich die flüchtige Verbindungsvorschau und sichert danach den Kartenstand. */
+    fun sichereAktuellVorUnterbrechung() {
+        editor.brecheVerbindungsVorschauAb()
+        speichereAktuell()
     }
 
     fun öffneBearbeitbareKopie(vorlage: KartenDaten) {
@@ -192,6 +237,11 @@ class AtlasZustand(context: Context) {
         öffne(karte)
     }
 
+    fun importiere(container: ByteArray) {
+        val karte = MatlasKartenContainer.lese(container)
+        importiere(MathematikKartenCodec.schreibe(karte))
+    }
+
     /** Übernimmt bearbeitetes Karten-JSON. Referenzierte Versionen werden vom Speicher automatisch fortgeschrieben. */
     fun übernehmeJson(text: String): String? {
         val gelesen = runCatching { KartenJson.lese(text) }.getOrElse { fehler ->
@@ -209,7 +259,7 @@ class AtlasZustand(context: Context) {
     fun archiviereAktuell() {
         speicher.archiviere(editor.karte)
         karten = speicher.liste().map(::aktualisiereAssoziativeKnoten)
-        karten.firstOrNull()?.let { öffne(it) }
+        karten.firstOrNull()?.let(::öffne) ?: aktiveKarteSpeicher.löschen()
     }
 
     fun renderer() = MathematikKnotenRenderer(
@@ -354,7 +404,7 @@ class AtlasZustand(context: Context) {
         val ersteAuswertung = laufzeit.auswerten(editor.karte)
         val mitRestriktionsAnschlüssen = synchronisiereRestriktionsAnschlüsse(editor.karte, ersteAuswertung)
         val mitBildmengenAnschlüssen = synchronisiereBildmengenAnschlüsse(mitRestriktionsAnschlüssen, ersteAuswertung)
-        val mitAuflösern = synchronisiereTupelAuflöser(mitBildmengenAnschlüssen, ersteAuswertung, graphPrüfung)
+        val mitAuflösern = synchronisiereStrukturZerleger(mitBildmengenAnschlüssen, ersteAuswertung, graphPrüfung)
         val synchronisiert = synchronisiereMethodenAufrufe(mitAuflösern, ersteAuswertung, graphPrüfung)
         if (synchronisiert == editor.karte) {
             auswertung = ersteAuswertung

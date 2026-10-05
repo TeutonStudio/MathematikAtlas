@@ -11,12 +11,18 @@ enum class KonzeptReiterRolle { Definition, Spezialfall, Beispiel, Äquivalenz }
 
 enum class KomplexDarstellung { Kartesisch, Polar }
 
+enum class KonzeptReiterDarstellung { Karte, FalkSchema }
+
+internal const val MATRIXPRODUKT_FALK_REITER_ID =
+    "mathematik.matrixProdukt|Matrixprodukt|.4c459827.falksches-schema"
+
 data class KonzeptReiter(
     val id: String,
     val titel: String,
     val rolle: KonzeptReiterRolle,
     val karte: KartenDaten,
     val darstellungsVarianten: Map<KomplexDarstellung, KartenDaten> = emptyMap(),
+    val darstellung: KonzeptReiterDarstellung = KonzeptReiterDarstellung.Karte,
 ) {
     fun karteFür(darstellung: KomplexDarstellung): KartenDaten =
         darstellungsVarianten[darstellung] ?: karte

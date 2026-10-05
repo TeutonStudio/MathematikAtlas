@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import org.json.JSONObject
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -11,6 +12,7 @@ import java.nio.file.StandardOpenOption
 import java.security.MessageDigest
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /**
@@ -30,6 +32,7 @@ object MatlasKartenContainer {
     const val KARTEN_DATEI = "karte.json"
 
     private const val ZIP_ZEITSTEMPEL_1980 = 315_532_800_000L
+    private const val MAXIMALE_CONTAINER_BYTES = 16 * 1024 * 1024
 
     /** Erzeugt einen vollständigen `.matlas`-Container im Speicher. */
     fun schreibe(
@@ -62,6 +65,49 @@ object MatlasKartenContainer {
             }
             ziel.toByteArray()
         }
+    }
+
+    /** Liest und validiert einen nicht ausführbaren Container vollständig im Speicher. */
+    fun lese(container: ByteArray): KartenDaten {
+        require(container.size <= MAXIMALE_CONTAINER_BYTES) { "Der .matlas-Container ist zu groß." }
+        val dateien = linkedMapOf<String, ByteArray>()
+        ZipInputStream(ByteArrayInputStream(container), StandardCharsets.UTF_8).use { zip ->
+            var eintrag = zip.nextEntry
+            while (eintrag != null) {
+                val pfad = eintrag.name
+                require(!eintrag.isDirectory && !pfad.startsWith('/') && ".." !in pfad.split('/')) {
+                    "Der .matlas-Container enthält einen unsicheren Pfad."
+                }
+                require(pfad in setOf(MANIFEST_DATEI, KARTEN_DATEI)) { "Unbekannter .matlas-Eintrag: $pfad" }
+                require(pfad !in dateien) { "Doppelter .matlas-Eintrag: $pfad" }
+                val inhalt = zip.leseBegrenzt(MAXIMALE_CONTAINER_BYTES)
+                dateien[pfad] = inhalt
+                zip.closeEntry()
+                eintrag = zip.nextEntry
+            }
+        }
+        require(dateien.keys == setOf(MANIFEST_DATEI, KARTEN_DATEI)) {
+            "Der .matlas-Container ist unvollständig."
+        }
+        val manifest = JSONObject(dateien.getValue(MANIFEST_DATEI).toString(StandardCharsets.UTF_8))
+        require(manifest.getString("format") == FORMAT_ID) { "Unbekanntes .matlas-Format." }
+        require(manifest.getInt("formatVersion") == FORMAT_VERSION) { "Nicht unterstützte .matlas-Version." }
+        val kartenJson = dateien.getValue(KARTEN_DATEI)
+        val beschreibung = manifest.getJSONArray("dateien").let { dateienArray ->
+            require(dateienArray.length() == 1) { "Das .matlas-Manifest besitzt unerwartete Dateien." }
+            dateienArray.getJSONObject(0)
+        }
+        require(beschreibung.getString("pfad") == KARTEN_DATEI && beschreibung.getString("rolle") == "karte") {
+            "Das .matlas-Manifest referenziert keine Karte."
+        }
+        require(beschreibung.getInt("bytes") == kartenJson.size) { "Die .matlas-Dateigröße stimmt nicht." }
+        require(beschreibung.getString("sha256") == sha256(kartenJson)) { "Die .matlas-Prüfsumme stimmt nicht." }
+        val karte = MathematikKartenCodec.importiere(kartenJson.toString(StandardCharsets.UTF_8))
+        val manifestKarte = manifest.getJSONObject("karte")
+        require(manifestKarte.getString("id") == karte.id.wert && manifestKarte.getInt("version") == karte.version) {
+            "Manifest und Kartendaten widersprechen sich."
+        }
+        return karte
     }
 
     /**
@@ -135,5 +181,19 @@ object MatlasKartenContainer {
                 append(hex[wert and 0x0f])
             }
         }
+    }
+
+    private fun ZipInputStream.leseBegrenzt(maximaleBytes: Int): ByteArray {
+        val ziel = ByteArrayOutputStream(minOf(maximaleBytes, 64 * 1024))
+        val puffer = ByteArray(8 * 1024)
+        var gesamt = 0
+        while (true) {
+            val gelesen = read(puffer)
+            if (gelesen < 0) break
+            gesamt += gelesen
+            require(gesamt <= maximaleBytes) { "Ein .matlas-Eintrag ist zu groß." }
+            ziel.write(puffer, 0, gelesen)
+        }
+        return ziel.toByteArray()
     }
 }

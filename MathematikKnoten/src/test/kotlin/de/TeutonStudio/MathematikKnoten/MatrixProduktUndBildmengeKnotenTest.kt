@@ -78,10 +78,12 @@ class MatrixProduktUndBildmengeKnotenTest {
         )
         val bild = assertIs<Abbild>(ergebnis.ausgaben.getValue("menge").objekt)
 
-        val visualisiert = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+        val visualisiert = assertIs<VisualisierungsErgebnis.Teilweise>(
             VisualisierungsSampler.sample(bild, visualisierungsKonfiguration()),
         )
-        assertEquals(25, visualisiert.punkte.size)
+        assertTrue(visualisiert.punkte.size <= 25)
+        assertTrue(visualisiert.dreiecke.isNotEmpty())
+        assertTrue(visualisiert.statistik.budgetErschöpft)
         assertTrue(visualisiert.punkte.all { punkt -> punkt.z == punkt.x * punkt.x + punkt.y * punkt.y })
     }
 

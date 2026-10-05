@@ -20,6 +20,7 @@ const val AUSSAGESATZ_FORMEL_ID = "aussage.formel"
 const val VEKTOR_FORMEL_ID = "vektor.formel"
 const val MATRIX_FORMEL_ID = "matrix.formel"
 const val TENSOR_FORMEL_ID = "tensor.formel"
+const val MATRIX_ZERLEGEN_RICHTUNG = "matrixZerlegen.richtung"
 
 data class StrukturRechnerEingang(
     val name: String,
@@ -131,6 +132,7 @@ object StrukturRechnerOperatoren {
         d("matrix.nebendiagonale", "Nebendiagonale", "\\operatorname{antidiag}A", FormelTyp.TUPEL, "(a_{1n},a_{2,n-1},\\ldots)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.charakteristischesPolynom", "Charakteristisches Polynom", "\\chi_A", FormelTyp.METHODE, "\\chi_A(\\lambda)=\\det(A-\\lambda I)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.minimalpolynom", "Minimalpolynom", "m_A", FormelTyp.METHODE, "m_A(A)=0,\\quad m_A\\mid\\chi_A", e("matrix", FormelTyp.MATRIX)),
+        d("matrix.zerlegen", "Zerlegen", "A\\mapsto(A_i)", FormelTyp.METHODE, "i\\mapsto\\operatorname{Zeile}_i(A)\\;\\text{oder}\\;j\\mapsto\\operatorname{Spalte}_j(A)", e("matrix", FormelTyp.MATRIX)),
     )
 
     private val tensor = listOf(
@@ -211,7 +213,12 @@ fun konfiguriereStrukturRechner(
     val operator = StrukturRechnerOperatoren.finde(familie, operatorId)
     val anschlüsse = operator.eingänge.mapIndexed { index, eingang ->
         erhalteOderErzeugeEingang(knoten, eingang.name, eingang.typ, index)
-    } + erhalteOderErzeugeAusgang(knoten, operator.ergebnisTyp)
+    } + if (operator.id == MatrixRechnerOperator.ZERLEGEN.stabileId) {
+        val vorhanden = knoten.anschlüsse.firstOrNull {
+            it.richtung == AnschlussRichtung.Ausgang && it.name == "methode"
+        }
+        listOf((vorhanden ?: neuerAusgang(FormelTyp.METHODE)).copy(name = "methode"))
+    } else listOf(erhalteOderErzeugeAusgang(knoten, operator.ergebnisTyp))
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
             anschlüsse = anschlüsse,
@@ -382,6 +389,9 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
     familie: StrukturRechnerKnotenFamilie,
     operatorId: String?,
 ): KnotenAuswertungsErgebnis = runCatching {
+    if (familie == StrukturRechnerKnotenFamilie.MATRIX && operatorId == MatrixRechnerOperator.ZERLEGEN.stabileId) {
+        return werteMatrixZerlegenAus(this)
+    }
     val wert = if (operatorId == familie.formelOperatorId) {
         werteStrukturFormelAus(this)
     } else {
@@ -397,6 +407,65 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
         eingänge = eingänge,
         fehler = ursache.message ?: "Der Strukturrechner konnte nicht ausgewertet werden.",
     )
+}
+
+private fun werteMatrixZerlegenAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis = runCatching {
+    val matrix = kontext.eingänge["matrix"]?.objekt ?: error("Zerlegen benötigt eine Matrix.")
+    val richtung = runCatching {
+        MatrixZerlegeRichtung.valueOf(kontext.knoten.parameter[MATRIX_ZERLEGEN_RICHTUNG] ?: MatrixZerlegeRichtung.ZEILEN.name)
+    }.getOrDefault(MatrixZerlegeRichtung.ZEILEN)
+    val form = when (matrix) {
+        is Matrix -> listOf(RationaleZahl.von(matrix.zeilenAnzahl.toLong()), RationaleZahl.von(matrix.spaltenAnzahl.toLong()))
+        is TypisiertesElement -> matrix.strukturForm
+        else -> error("Zerlegen akzeptiert ausschließlich Matrizen.")
+    }
+    require(form == null || form.size == 2) { "Eine Matrixform benötigt genau zwei Achsen." }
+    val relevanteAchse = if (richtung == MatrixZerlegeRichtung.ZEILEN) 0 else 1
+    val laenge = form?.get(relevanteAchse)
+    val konkret = laenge?.positiveStrukturDimensionOderNull()
+    val ausgaben = if (konkret != null) {
+        List(konkret) { index ->
+            val name = if (richtung == MatrixZerlegeRichtung.ZEILEN) "zeile${index + 1}" else "spalte${index + 1}"
+            name to BedingterWert(matrixStrukturSchnitt(matrix, richtung, index), kontext.annahmenFuerStrukturFormel())
+        }.toMap()
+    } else {
+        mapOf("methode" to BedingterWert(matrixZerlegeMethode(matrix, richtung), kontext.annahmenFuerStrukturFormel()))
+    }
+    KnotenAuswertungsErgebnis(ausgaben = ausgaben, eingänge = kontext.eingänge)
+}.getOrElse { fehler ->
+    KnotenAuswertungsErgebnis(ausgaben = emptyMap(), eingänge = kontext.eingänge, fehler = fehler.message)
+}
+
+fun matrixZerlegeMethode(matrix: MathematischesObjekt, richtung: MatrixZerlegeRichtung): MathematischeMethode {
+    val index = Variable(if (richtung == MatrixZerlegeRichtung.ZEILEN) "i" else "j")
+    val achse = if (richtung == MatrixZerlegeRichtung.ZEILEN) 0 else 1
+    val form = (matrix as? TypisiertesElement)?.strukturForm
+    val ergebnisForm = form?.getOrNull(1 - achse)?.let(::listOf)
+    val art = if (richtung == MatrixZerlegeRichtung.ZEILEN) StrukturZugriffsArt.Zeile else StrukturZugriffsArt.Spalte
+    val anschlussArt = if (richtung == MatrixZerlegeRichtung.ZEILEN) "mathematik.vektor.zeile" else "mathematik.vektor.spalte"
+    return MathematischeMethode(
+        name = "zerlegen",
+        parameter = listOf(index),
+        vorschrift = strukturSchnitt(matrix, index, art, achse, anschlussArt, ergebnisForm),
+        zielMenge = StrukturErgebnisMenge(anschlussArt, ergebnisForm, "\\operatorname{${if (richtung == MatrixZerlegeRichtung.ZEILEN) "Zeilen" else "Spalten"}}(A)"),
+        werteVorräte = mapOf(index.name to EndlicheIndexMenge(strukturAchsenLaenge(matrix, achse))),
+    )
+}
+
+private fun matrixStrukturSchnitt(
+    matrix: MathematischesObjekt,
+    richtung: MatrixZerlegeRichtung,
+    index: Int,
+): MathematischesObjekt = strukturSchnitt(
+    matrix,
+    RationaleZahl.von((index + 1).toLong()),
+    if (richtung == MatrixZerlegeRichtung.ZEILEN) StrukturZugriffsArt.Zeile else StrukturZugriffsArt.Spalte,
+    if (richtung == MatrixZerlegeRichtung.ZEILEN) 0 else 1,
+    if (richtung == MatrixZerlegeRichtung.ZEILEN) "mathematik.vektor.zeile" else "mathematik.vektor.spalte",
+)
+
+private fun ZahlAusdruck.positiveStrukturDimensionOderNull(): Int? = (this as? RationaleZahl)?.let { zahl ->
+    if (zahl.nenner == java.math.BigInteger.ONE && zahl.zähler.signum() > 0 && zahl.zähler.bitLength() < 31) zahl.zähler.toInt() else null
 }
 
 private fun werteStrukturFormelAus(kontext: KnotenAuswertungsKontext): MathematischesObjekt {

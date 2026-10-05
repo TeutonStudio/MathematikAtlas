@@ -23,6 +23,7 @@ import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
 import de.TeutonStudio.MathematikKnoten.MATRIX_SPALTEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_ZEILEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.konfiguriereMengenkonstruktor
 import de.TeutonStudio.MathematikKnoten.RESTRIKTIONS_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.TUPEL_EINZEL_EINGABEN
 import de.TeutonStudio.MathematikKnoten.TUPEL_METHODE
@@ -65,13 +66,13 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(LocalAtlasAbstände.current.inhalt),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     ) {
                         Text("Inspektor", modifier = Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
                         TextButton(onClick = InspektorSichtbarkeit::schließen) { Text("Schließen") }
@@ -79,7 +80,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     ) {
                         Text(knoten.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
                         TextButton(onClick = { knotenUmbenennenGeöffnet = true }) { Text("Umbenennen") }
@@ -145,7 +146,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             },
                         )
                         Spacer(Modifier.height(4.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                             OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
                             Button(
                                 onClick = zustand::löscheAuswahlMitMengendefinition,
@@ -186,7 +187,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                         ) {
                             Text("Anzeige: Namen", modifier = Modifier.weight(1f))
                             Switch(
@@ -229,7 +230,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         )
                     }
                     Spacer(Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                         OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
                         Button(
                             onClick = zustand::löscheAuswahlMitMengendefinition,
@@ -343,22 +344,75 @@ private fun MengenkonstruktorEditor(knoten: KnotenDaten, zustand: AtlasZustand) 
                     text = { Text(art.name) },
                     onClick = {
                         geöffnet = false
-                        val elementAusgang = knoten.anschlüsse.firstOrNull {
-                            it.richtung == AnschlussRichtung.Ausgang && it.name == "element"
-                        } ?: return@DropdownMenuItem
+                        val konfiguriert = konfiguriereMengenkonstruktor(knoten, art.id)
                         zustand.editor.führeAus(
                             KartenAktion.KnotenKonfigurationErsetzen(
                                 id = knoten.id,
-                                parameter = (knoten.parameter - MENGENDEFINITION_ELEMENTMENGE) +
-                                    (MENGENDEFINITION_ELEMENTART to art.id.wert),
-                                anschlüsse = knoten.anschlüsse,
+                                parameter = konfiguriert.parameter,
+                                anschlüsse = konfiguriert.anschlüsse,
                             ),
                         )
-                        zustand.editor.ändereAnschlussArt(
-                            AnschlussVerweis(knoten.id, elementAusgang.id),
-                            art.id,
-                        )
                     },
+                )
+            }
+        }
+    }
+    val istStruktur = aktuelleArtId in setOf(
+        MathematikAnschlussArten.Tupel.id,
+        MathematikAnschlussArten.SpaltenVektor.id,
+        MathematikAnschlussArten.ZeilenVektor.id,
+        MathematikAnschlussArten.Matrix.id,
+        MathematikAnschlussArten.Tensor.id,
+    )
+    if (istStruktur) {
+        val modus = knoten.parameter[MENGENDEFINITION_FORMMODUS] ?: STRUKTURFORM_UNBEKANNT
+        val eingabe = knoten.parameter[MENGENDEFINITION_FORMEINGABE] ?: STRUKTURFORM_EINZELN
+        val form = knoten.parameter[MENGENDEFINITION_FORM].orEmpty()
+
+        fun aktualisiere(neuerModus: String = modus, neueEingabe: String = eingabe, neueForm: String = form) {
+            val neu = konfiguriereMengenkonstruktor(knoten, aktuelleArtId, neuerModus, neueEingabe, neueForm)
+            zustand.editor.führeAus(
+                KartenAktion.KnotenKonfigurationErsetzen(knoten.id, neu.parameter, neu.anschlüsse),
+            )
+        }
+
+        Text("Strukturform", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
+            listOf(
+                STRUKTURFORM_UNBEKANNT to "Unbekannt",
+                STRUKTURFORM_INSPEKTOR to "Inspector",
+                STRUKTURFORM_EINGANG to "Eingang",
+            ).forEach { (wert, titel) ->
+                FilterChip(selected = modus == wert, onClick = { aktualisiere(neuerModus = wert) }, label = { Text(titel) })
+            }
+        }
+        if (modus == STRUKTURFORM_INSPEKTOR || aktuelleArtId == MathematikAnschlussArten.Tensor.id) {
+            OutlinedTextField(
+                value = form,
+                onValueChange = { aktualisiere(neueForm = it) },
+                label = { Text(if (modus == STRUKTURFORM_INSPEKTOR) "Form" else "Achsen/Rang") },
+                supportingText = {
+                    Text(
+                        if (modus == STRUKTURFORM_INSPEKTOR) "Positive Ganzzahlen oder Variablen, kommagetrennt"
+                        else "Bestimmt im Einzelmodus die Anzahl der Dimensionsanschlüsse",
+                    )
+                },
+                isError = modus == STRUKTURFORM_INSPEKTOR && runCatching { parseStrukturForm(form) }.isFailure,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+        }
+        if (modus == STRUKTURFORM_EINGANG) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                FilterChip(
+                    selected = eingabe == STRUKTURFORM_EINZELN,
+                    onClick = { aktualisiere(neueEingabe = STRUKTURFORM_EINZELN) },
+                    label = { Text("Einzeln") },
+                )
+                FilterChip(
+                    selected = eingabe == STRUKTURFORM_TUPEL,
+                    onClick = { aktualisiere(neueEingabe = STRUKTURFORM_TUPEL) },
+                    label = { Text("Zahlentupel") },
                 )
             }
         }
@@ -452,7 +506,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
 
         Text("Argumente", style = MaterialTheme.typography.labelMedium)
         val argumentProjektion = knoten.methodenAusgangArgumentprojektion(ausgang.name)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
             FilterChip(
                 selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
                 onClick = {
@@ -497,7 +551,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
             )
         } else {
             val ergebnisProjektion = knoten.methodenAusgangErgebnisprojektion(ausgang.name)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
                 FilterChip(
                     selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_DIREKT,
                     onClick = {
@@ -585,7 +639,7 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         OutlinedTextField(
             value = höheText,
             onValueChange = { text ->

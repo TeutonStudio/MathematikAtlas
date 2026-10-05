@@ -4,9 +4,12 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.zip.ZipInputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readBytes
 import kotlin.test.Test
@@ -14,6 +17,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 class MatlasKartenContainerTest {
     @Test
@@ -67,6 +71,28 @@ class MatlasKartenContainerTest {
         } finally {
             ordner.toFile().deleteRecursively()
         }
+    }
+
+    @Test
+    fun `container kann validiert und verlustfrei gelesen werden`() {
+        val karte = KartenDaten(id = KartenId("lesbar"), name = "Lesbar", version = 3, erstelltAm = 42L)
+        assertEquals(karte, MatlasKartenContainer.lese(MatlasKartenContainer.schreibe(karte, "test")))
+    }
+
+    @Test
+    fun `manipulierte container werden wegen pruefsumme abgelehnt`() {
+        val karte = KartenDaten(id = KartenId("manipuliert"), name = "Original")
+        val dateien = zipDateien(MatlasKartenContainer.schreibe(karte, "test")).toMutableMap()
+        dateien[MatlasKartenContainer.KARTEN_DATEI] = "{}".toByteArray()
+        val manipuliert = ByteArrayOutputStream().use { ziel ->
+            ZipOutputStream(ziel).use { zip ->
+                dateien.forEach { (name, bytes) ->
+                    zip.putNextEntry(ZipEntry(name)); zip.write(bytes); zip.closeEntry()
+                }
+            }
+            ziel.toByteArray()
+        }
+        assertFailsWith<IllegalArgumentException> { MatlasKartenContainer.lese(manipuliert) }
     }
 
     private fun zipDateien(container: ByteArray): Map<String, ByteArray> {
