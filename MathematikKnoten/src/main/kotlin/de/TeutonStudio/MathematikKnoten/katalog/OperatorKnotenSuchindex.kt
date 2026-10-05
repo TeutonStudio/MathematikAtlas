@@ -4,7 +4,6 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.*
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.RechnerFamilienKatalog
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /**
@@ -29,32 +28,36 @@ object OperatorKnotenSuchindex {
     }
 
     private fun eintraege(basisVorlagen: List<KnotenVorlage>): List<Eintrag> = buildList {
-        UniversellerZahlenOperator.entries.forEach { operator ->
-            val vorlage = ZahlenRechnerKnotenVorlagen.alle.firstOrNull {
-                it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
-            } ?: return@forEach
-            add(
-                Eintrag(
-                    begriffe = setOf(operator.titel, operator.name, operator.stabileId) + zahlenAliase(operator),
-                    vorlage = vorlage.copy(
-                        name = "Zahlenrechner · ${operator.titel}",
-                        kategorie = "Operatoren: Zahlenrechner",
-                    ),
-                ),
+        RechnerOperatorRegistry.alle.filterNot { it.operatorId.endsWith(".formel") }.forEach { vertrag ->
+            val basis = when (vertrag.familie) {
+                RechnerFamilie.ZAHL -> ZahlenRechnerKnotenVorlagen.standard
+                RechnerFamilie.VEKTOR -> vektorRechnerVorlage(VektorRechnerOperator.ADDITION)
+                RechnerFamilie.MATRIX -> StrukturFormelRechnerVorlagen.Matrix
+                RechnerFamilie.TENSOR -> basisVorlagen.firstOrNull { it.art == TensorRechner.KNOTEN_ART }
+                    ?: return@forEach
+            }
+            val konfiguriert = RechnerOperatorRegistry.konfiguriere(
+                basis.erzeuge(GraphPunkt.Zero),
+                vertrag.operatorId,
             )
-        }
-
-        RechnerFamilienKatalog.tensorOperatoren.forEach { eintrag ->
-            val basis = basisVorlagen.firstOrNull { it.art == TensorRechner.KNOTEN_ART } ?: return@forEach
-            val definition = StandardTensorOperationen.registry.definition(eintrag.stabileId) ?: return@forEach
-            val konfiguriert = konfiguriereTensorOperation(basis.erzeuge(GraphPunkt.Zero), definition)
             add(
                 Eintrag(
-                    begriffe = setOf(eintrag.titel, eintrag.stabileId) + tensorAliase(eintrag.stabileId),
+                    begriffe = setOf(vertrag.titel, vertrag.operatorId, vertrag.familie.name) + when (vertrag.familie) {
+                        RechnerFamilie.ZAHL -> UniversellerZahlenOperator.entries
+                            .firstOrNull { it.stabileId == vertrag.operatorId }
+                            ?.let { setOf(it.name) + zahlenAliase(it) }
+                            .orEmpty()
+                        RechnerFamilie.VEKTOR -> VektorRechnerOperator.entries
+                            .firstOrNull { it.stabileId == vertrag.operatorId }
+                            ?.let { setOf(it.name) + vektorAliase(it) }
+                            .orEmpty()
+                        RechnerFamilie.MATRIX -> emptySet()
+                        RechnerFamilie.TENSOR -> tensorAliase(vertrag.operatorId)
+                    },
                     vorlage = konfiguriert.alsSuchVorlage(
-                        name = "Tensorrechner · ${eintrag.titel}",
-                        kategorie = "Operatoren: Tensorrechner",
-                        beschreibung = "Vorkonfigurierter Tensoroperator ${eintrag.titel}.",
+                        name = "${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner · ${vertrag.titel}",
+                        kategorie = "Operatoren: ${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner",
+                        beschreibung = "Vorkonfigurierter Operator ${vertrag.titel}.",
                     ),
                 ),
             )
@@ -73,15 +76,6 @@ object OperatorKnotenSuchindex {
                         kategorie = "Operatoren: Mengenrechner",
                         beschreibung = operator.definitionLatex(),
                     ),
-                ),
-            )
-        }
-
-        VektorRechnerOperator.entries.forEach { operator ->
-            add(
-                Eintrag(
-                    begriffe = setOf(operator.titel, operator.name, operator.stabileId) + vektorAliase(operator),
-                    vorlage = vektorRechnerVorlage(operator),
                 ),
             )
         }

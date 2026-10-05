@@ -97,6 +97,20 @@
 - Ein Kartenwechsel und `ON_STOP` brechen nur die flüchtige Verbindungsvorschau
   ab und sichern danach den aktuellen Kartenstand.
 
+## Kartenherkunft und Rechneroperatoren in v3.0.1
+
+- Die Kartenbibliothek löst Herkunft mit der Priorität Standardprovenienz,
+  Freigabequelle und app-lokaler Fremdimport auf und filtert eigene,
+  vordefinierte und Fremdnutzerkarten samt ihren relevanten Ordnern.
+- Datei- und HTTPS-Import verwenden denselben JSON-/Freigabepaket-/`.matlas`-
+  Erkennungspfad. HTTPS bleibt auf sichere Weiterleitungen, Zeitlimits und
+  höchstens 16 MiB begrenzt; ein Importjournal stellt gemeinsam veränderte
+  Bibliotheksdateien nach Fehler oder Prozessabbruch wieder her.
+- `RechnerOperatorRegistry` beschreibt Zahlen-, Vektor-, Matrix- und
+  Tensoroperatoren mit Signaturen, Ports, Parametern, Fähigkeiten und Status.
+  Der Operator-Suchindex und die abschließenden Familien-Dispatcher verwenden
+  diese Registry; unbekannte persistierte IDs werden nicht umgeschrieben.
+
 ## Dokumentationszustand
 
 - Die Dateien unter `docs/codex/plans/active/` sind keine verlässliche Liste laufender Arbeiten: Mehrere Einträge bezeichnen bereits veröffentlichte Versionen oder nennen sich selbst abgeschlossen.

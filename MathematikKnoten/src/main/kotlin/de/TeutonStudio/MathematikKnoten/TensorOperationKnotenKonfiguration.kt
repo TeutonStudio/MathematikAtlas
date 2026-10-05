@@ -204,7 +204,7 @@ private fun stabileAchsenIds(knoten: KnotenDaten, anzahl: Int): List<TensorAchse
     }
 }
 
-private fun tensorOperationAnschluesse(
+internal fun tensorOperationAnschluesse(
     definition: TensorOperationDefinition,
     achsenModus: AchsenEingabeModus,
     dynamischeAchsenAnzahl: Int,

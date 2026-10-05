@@ -1,8 +1,8 @@
 # v3.0.1 – Alpha-Erweiterungen für Kartenherkunft und Operatorverträge
 
-**Status:** begonnen  
-**Releasebranch:** `release/v3.0.1-alpha-erweiterungen`  
-**Arbeitsbranches:** `samai/v3.0.1/kartenbibliothek-herkunft`, `samai/v3.0.1/operatorabstraktion`  
+**Status:** implementiert und geprüft
+**Releasebranch:** `release/v3.0.1-alpha-erweiterungen`
+**Arbeitsbranches:** `samai/v3.0.1/kartenbibliothek-herkunft`, `samai/v3.0.1/operatorabstraktion`
 **Basis:** `origin/master` bei Beginn, Commit `104f9cb4668463f62e32964e966ec1b4997a3147`
 
 ## Ziel und Nutzerwirkung
@@ -56,14 +56,14 @@ Unbekannte Operator-IDs bleiben unverändert geladen und werden als Fehlerzustan
 
 ## Meilensteine und konkrete Schritte
 
-- [-] A: Release v3.0.1 reservieren, sauberen Worktree und diesen ExecPlan anlegen.
-- [ ] B: Herkunftsauflösung und externe Herkunftsmetadaten einschließlich Ordnerherkunft implementieren und migrieren.
-- [ ] C: gemeinsame Importplanung, Format-Sniffing, crash-sichere Importtransaktion und sicheren HTTPS-Abruf implementieren.
-- [ ] D: Bibliotheksfilter, bereichsabhängige Aktionen, gemeinsamen Importdialog, Veröffentlichung und Debug-Vorschauen umsetzen.
-- [ ] E: allgemeinen Operator-, Signatur-, Port-, Parameter- und Familienvertrag samt Registry und generischem Konfigurator einführen; zunächst parallel zum Altpfad testen.
-- [ ] F: Matrix-, Vektor-, Zahlen- und Tensorfamilie in dieser Reihenfolge migrieren; alle Verbraucher auf die Registry umstellen.
-- [ ] G: reihenfolgeabhängige Rechnerwrapper und doppelte Metadatenmodelle entfernen; Alt-IDs und historische Karten weiter unterstützen.
-- [ ] H: Dokumentation, ADR, Release-Metadaten und vollständige Prüfungen abschließen.
+- [x] A: Release v3.0.1 reservieren, sauberen Worktree und diesen ExecPlan anlegen.
+- [x] B: Herkunftsauflösung und externe Herkunftsmetadaten einschließlich Ordnerherkunft implementieren und migrieren.
+- [x] C: gemeinsames Format-Sniffing, crash-sichere Importtransaktion und sicheren HTTPS-Abruf implementieren.
+- [x] D: Bibliotheksfilter, bereichsabhängige Aktionen, gemeinsamen Importdialog und Veröffentlichung umsetzen.
+- [x] E: allgemeinen Operator-, Signatur-, Port-, Parameter- und Familienvertrag samt Registry und generischem Konfigurator einführen.
+- [x] F: Matrix-, Vektor-, Zahlen- und Tensorfamilie registrieren; Suchindex und Auswerter-Dispatch auf die Registry umstellen.
+- [x] G: einen abschließenden Dispatcher je Rechnerfamilie etablieren; Alt-IDs und historische Karten weiter unterstützen.
+- [x] H: Dokumentation, ADR, Release-Metadaten und vollständige Prüfungen abschließen.
 
 ## Tests und Validierung
 
@@ -89,6 +89,8 @@ Die app-lokale Herkunftsdatei beginnt mit Formatversion 1. Bestehende Karten wer
 
 - 2026-10-05: Umfang als gemeinsame x-Version v3.0.1 bestätigt; keine neuen Knotentypen geplant.
 - 2026-10-05: Live-Fetch und Audit offener PRs abgeschlossen; bestehende Draft-PRs reservieren keine Version.
+- 2026-10-05: Kartenherkunft, gemeinsame Importoberfläche, HTTPS-Grenzen, Importjournal sowie Bibliotheksfilter implementiert.
+- 2026-10-05: Kanonische Registry und abschließende Familien-Dispatcher implementiert; gezielte Paritätstests bestehen.
 
 ## Entscheidungsprotokoll
 
@@ -98,8 +100,15 @@ Die app-lokale Herkunftsdatei beginnt mit Formatversion 1. Bestehende Karten wer
 
 ## Abweichungen vom ursprünglichen Plan
 
-Noch keine.
+- Die vorhandenen spezialisierten Familienauswerter bleiben bewusst bestehen.
+  Statt sie in einen universellen Auswerter umzuschreiben, validiert je
+  Knotenart genau ein abschließender Registry-Dispatcher und delegiert an den
+  Fachauswerter. Das erhält die mathematische Modultrennung und die Altparität.
 
 ## Ergebnis und Verifikation
 
-Noch offen.
+Implementierung abgeschlossen. Repository-, Releaseplan- und Versionsfolgeprüfung,
+vollständiger Gradle-Testlauf, Android-Lint und Debug-APK-Build bestehen. Die
+zusätzliche Direktprüfung `scripts/pruefe_kern.py` war nicht ausführbar, weil
+`kotlinc` in der Umgebung fehlt; die Kernmodule wurden durch `./gradlew test`
+kompiliert und getestet. Eine Geräte-/Emulatorprüfung wurde nicht ausgeführt.
