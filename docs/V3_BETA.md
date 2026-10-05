@@ -70,11 +70,138 @@ implementierten Funktionen.
 - Kein verstecktes AGP-Downgrade und keine nicht unterstützte
   Kotlin-/AGP-Kombination verwenden.
 
-### 8. Beta-Abnahme
+### 8. Formelbauer: Foto- und Stifterkennung
+
+Der Formelbauer erhält neben Tastatur und direkter strukturierter Bearbeitung
+zwei zusätzliche Eingabewege: fotografierte Formeln und handschriftliche
+Stifteingabe. Beide Wege dürfen keine zweite mathematische Wahrheitsschicht
+einführen. Persistiert wird weiterhin nur die vom Atlas validierte strukturierte
+Formel.
+
+- Eine gemeinsame Erkennungspipeline einführen:
+
+  ```text
+  Foto / Stift
+      -> FormelErkennungsDienst
+      -> FormelErkennungsErgebnis
+      -> LaTeX-/Token-Normalisierung
+      -> kontrollierter Formelimport
+      -> FormelAusdruck
+      -> FormelAusdruckPruefer
+      -> Formelbauer
+  ```
+
+- Den Erkennungsanbieter hinter einem austauschbaren Vertrag kapseln. Ein erster
+  Remote-Adapter darf beispielsweise Mathpix verwenden; Provider-API,
+  Netzwerkzugriff und Authentifizierung bleiben Implementierungsdetails der
+  Infrastruktur und dürfen nicht in `FormelBauerDialog` oder den mathematischen
+  Rechenkern einsickern.
+- Keine dauerhaften Provider-Geheimnisse in APK oder Desktop-Binary hinterlegen.
+  Falls ein externer Dienst verwendet wird, nur kurzlebige Zugriffstokens oder
+  einen vergleichbaren serverseitig abgesicherten Mechanismus verwenden.
+- Erkanntes LaTeX nie ungeprüft in einen Knoten schreiben. Externe Ausgabe vor
+  dem Import auf die unterstützte Atlas-Syntax normalisieren und unbekannte
+  Konstrukte als sichtbaren Fehler bzw. Warnzustand behandeln.
+- Den derzeit auf Zahlenformeln zugeschnittenen kontrollierten LaTeX-Import zu
+  einer typgeprüften Importgrenze erweitern, damit erkannte Formeln auch in
+  Strukturformeln für Zahl, Menge, Aussage, Tupel, Vektor, Matrix, Tensor,
+  Methode und allgemeines Objekt übernommen werden können.
+- Einen Importkontext mit erwartetem `FormelTyp` und zulässigen Operatoren
+  verwenden. Ein erkanntes Matrix-, Vektor- oder Aussageobjekt darf nicht nur
+  deshalb als Zahlenformel behandelt werden, weil die Erkennung LaTeX liefert.
+- Neben dem Ersetzen der gesamten Formel einen Import in die aktuell ausgewählte
+  Teilformel bzw. einen offenen Platzhalter ermöglichen.
+
+#### Stifteingabe
+
+- Ein eigenes kurzlebiges Ink-Modell aus Dokument, Strichen und Rohpunkten
+  einführen. Rohpunkte für die Erkennung beibehalten; visuelle Glättung darf die
+  gespeicherten Erkennungsdaten nicht verfälschen.
+- `PointerType.Stylus` und `PointerType.Eraser` direkt unterstützen. Zusätzlich
+  einen sichtbaren Radierer-Modus für Geräte ohne Hardware-Radierer anbieten.
+- In der ersten Ausbaustufe beim Radieren vollständige betroffene Striche
+  entfernen; Teilstrich-Radierung kann später ergänzt werden.
+- Für das Eingabefeld lokales Undo/Redo getrennt vom Undo/Redo des strukturierten
+  Formelbaums führen.
+- Die Erkennung nach `Pen-Up` mit kurzem Debounce auslösen statt für jeden
+  Pointer-Move eine Anfrage zu senden.
+- Jede Anfrage mit einer lokalen Generation bzw. Revision versehen und
+  verspätete Ergebnisse älterer Revisionen verwerfen, damit alte Antworten
+  neuere Handschrift niemals überschreiben.
+
+#### Fotoeingabe
+
+- Auf Android zunächst Systemkamera und Bildauswahl verwenden und anschließend
+  einen Zuschneide-/Rotationsschritt anbieten.
+- Die Erkennung auf den ausgewählten Formelausschnitt anwenden und das
+  Originalbild nicht als Teil des Knotens persistieren.
+- Eine Photomath-artige Live-Kamera mit automatischer Formelerkennung erst als
+  späteres Inkrement auf derselben Pipeline aufbauen; sie ist keine
+  Voraussetzung für den ersten produktiven Fotoimport.
+
+#### Eingabe- und Interpretationsfeld
+
+- Eingabe und Interpretation sichtbar trennen. Handschrift oder Foto bleiben im
+  Eingabefeld, während das Interpretationsfeld die erkannte und vom Atlas
+  parsebare Formel rendert.
+- Eine Erkennung verändert den eigentlichen `FormelEditorZustand` nicht
+  automatisch. Der Nutzer übernimmt die Interpretation ausdrücklich.
+- Mindestens die Aktionen `An Auswahl einsetzen` und `Gesamte Formel ersetzen`
+  anbieten, wenn der erkannte Ausdruck typkompatibel ist.
+- Konfidenz, Parserfehler, nicht unterstützte Syntax, Netzwerkfehler und leere
+  Erkennung als unterschiedliche Zustände anzeigen. Niedrige Konfidenz darf
+  keine stille Übernahme auslösen.
+
+#### Plattform- und Persistenzgrenze
+
+- Plattformneutral halten: Ink-Datenmodell, Erkennungsanfrage,
+  Erkennungsergebnis, Normalisierung und strukturierter Import.
+- Android-spezifisch halten: Kamera, Photo Picker, Stylus-/Eraser-Anbindung und
+  gegebenenfalls Tokenbeschaffung.
+- Desktop später über dieselben Verträge mit Bilddatei, Maus/Grafiktablett und
+  optional Webcam anbinden, ohne einen zweiten Formelimport zu entwickeln.
+- Rohbilder, Ink-Dokumente, Netzwerkantworten und Konfidenzen standardmäßig nur
+  als kurzlebigen UI-Zustand behandeln. Persistiert wird nach Bestätigung nur
+  der strukturierte `FormelAusdruck` bzw. dessen bestehende kanonische
+  Repräsentation.
+
+#### Umsetzungsreihenfolge und Abnahme
+
+1. gemeinsamen typisierten Formelimport und Normalisierung vervollständigen,
+2. provider-neutralen `FormelErkennungsDienst` und Fake-Implementierung für Tests
+   einführen,
+3. Stiftfeld mit Stylus, Touch, Radierer und lokalem Undo/Redo umsetzen,
+4. inkrementelle Handschrifterkennung mit Debounce und Revisionsschutz anbinden,
+5. Fotoaufnahme/-auswahl, Zuschnitt und Rotation ergänzen,
+6. Interpretationsfeld und ausdrückliche Übernahme in Auswahl oder Gesamtformel
+   integrieren,
+7. Strukturformeln jenseits reiner Zahlenformeln abdecken,
+8. Datenschutz-, Authentifizierungs-, Offline- und Fehlerpfade härten,
+9. gemeinsame Verträge für spätere Desktop-Eingabe erhalten.
+
+Die Funktion gilt für die Beta als abgenommen, wenn mindestens:
+
+- eine fotografierte gedruckte oder handschriftliche Formel erkannt,
+  interpretiert und kontrolliert übernommen werden kann,
+- eine Formel mit Stylus oder Finger geschrieben und mit Hardware- oder
+  UI-Radierer korrigiert werden kann,
+- das Interpretationsfeld automatisch nach Schreibpausen aktualisiert wird,
+- verspätete Erkennungsantworten keine neuere Eingabe überschreiben,
+- erkannte Formeln immer den Atlas-Parser und `FormelAusdruckPruefer`
+  durchlaufen,
+- ungültige oder nicht unterstützte Erkennung die bestehende Formel nicht
+  verändert,
+- Teilformel- und Gesamtersatz unterstützt werden,
+- Bild- und Stifteingabe denselben Erkennungsvertrag verwenden,
+- keine Provider-Geheimnisse im Client ausgeliefert werden,
+- keine neuen Knotentypen oder Anschluss-IDs allein für die Erkennung
+  eingeführt werden.
+
+### 9. Beta-Abnahme
 
 - vollständige Repository-, Release-, Migrations-, JVM-, Desktop-, Lint- und
   APK-Prüfungen ausführen,
 - Android-Instrumentierungs- und Geräteprüfungen für Touch, Lebenszyklus,
-  Import und Abstraktionsdialog ergänzen,
+  Import, Stifteingabe, Radierer, Fotoerkennung und Abstraktionsdialog ergänzen,
 - verbleibende Deprecation-Warnungen nach Risiko priorisieren,
 - erst danach einen formellen v3-Release im Releaseplan reservieren.
