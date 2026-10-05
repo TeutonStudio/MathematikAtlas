@@ -3,6 +3,7 @@ package de.TeutonStudio.KnotenKartenVerwalter
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
+import de.TeutonStudio.KnotenKartenVerwalter.zustand.VerbindungsAblageErgebnis
 import kotlin.test.*
 
 class GraphPrüfungTest {
@@ -93,11 +94,24 @@ class GraphPrüfungTest {
         )
 
         zustand.beginneVerbindung(ref(ziel), GraphPunkt.Zero)
-        zustand.beendeVerbindungsVorschau()
+        val ablage = zustand.beendeVerbindungsVorschau()
 
+        assertEquals(VerbindungsAblageErgebnis.BestehendeVerbindungGelöst, ablage)
         assertTrue(zustand.karte.verbindungen.isEmpty())
         zustand.rückgängig()
         assertEquals(listOf(bestehend), zustand.karte.verbindungen)
+    }
+
+    @Test fun neuerDragAufHintergrundWirdVomAbziehenUnterschieden() {
+        val quelle = knoten("q", AnschlussRichtung.Ausgang, zahl.id)
+        val zustand = KartenEditorZustand(KartenDaten(name = "Test", knoten = listOf(quelle)), prüfung)
+
+        zustand.beginneVerbindung(ref(quelle), GraphPunkt.Zero)
+
+        assertEquals(
+            VerbindungsAblageErgebnis.NeueVerbindungAufHintergrund,
+            zustand.beendeVerbindungsVorschau(),
+        )
     }
 
     @Test fun abgebrochenerDragVomBelegtenEingangBehältDieVerbindung() {

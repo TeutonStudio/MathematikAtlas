@@ -15,7 +15,7 @@ internal fun KartenTabellenKopf(
     schließen: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -38,8 +38,8 @@ internal fun KartenTabellenAktionen(
     schließen: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
     ) {
         Button(onClick = {
             zustand.öffne(quelle.verweis)

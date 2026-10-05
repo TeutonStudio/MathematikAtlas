@@ -33,6 +33,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungsId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.neueKartenId
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
+import de.TeutonStudio.KnotenKartenVerwalter.logik.analysiereTeilgraph
 import de.TeutonStudio.KnotenKartenVerwalter.logik.findeAnschluss
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import java.util.UUID
@@ -96,38 +97,35 @@ internal fun KartenDaten.vorschauFürNeueKarte(
     }.toMutableList()
     val ausgewählteIds = ausgewählteKnoten.mapTo(mutableSetOf(), KnotenDaten::id)
     val prüfung = GraphPrüfung(anschlussArten)
-    val innereVerbindungen = mutableListOf<VerbindungDaten>()
+    val grenzen = analysiereTeilgraph(ausgewählteIds)
     val eingänge = mutableListOf<KartenGrenzAnschlussVorschlag>()
     val ausgänge = mutableListOf<KartenGrenzAnschlussVorschlag>()
 
-    verbindungen.forEach { verbindung ->
-        val vonInnen = verbindung.von.knotenId in ausgewählteIds
-        val zuInnen = verbindung.zu.knotenId in ausgewählteIds
-        when {
-            vonInnen && zuInnen -> innereVerbindungen += verbindung
-            !vonInnen && zuInnen -> grenzVorschlag(
-                verbindung = verbindung,
-                innererAnschluss = verbindung.zu,
-                äußererAnschluss = verbindung.von,
+    grenzen.eingänge.forEach { grenze ->
+        grenzVorschlag(
+                verbindung = grenze.verbindung,
+                innererAnschluss = grenze.innererAnschluss,
+                äußererAnschluss = grenze.äußererAnschluss,
                 prüfung = prüfung,
                 eingang = true,
                 vorhandeneNamen = eingänge.mapTo(mutableSetOf(), KartenGrenzAnschlussVorschlag::vorgeschlagenerName),
-            )?.let(eingänge::add) ?: konflikte.add("Eine eingehende Grenzverbindung verweist auf einen fehlenden Anschluss.")
-            vonInnen && !zuInnen -> grenzVorschlag(
-                verbindung = verbindung,
-                innererAnschluss = verbindung.von,
-                äußererAnschluss = verbindung.zu,
+        )?.let(eingänge::add) ?: konflikte.add("Eine eingehende Grenzverbindung verweist auf einen fehlenden Anschluss.")
+    }
+    grenzen.ausgänge.forEach { grenze ->
+        grenzVorschlag(
+                verbindung = grenze.verbindung,
+                innererAnschluss = grenze.innererAnschluss,
+                äußererAnschluss = grenze.äußererAnschluss,
                 prüfung = prüfung,
                 eingang = false,
                 vorhandeneNamen = ausgänge.mapTo(mutableSetOf(), KartenGrenzAnschlussVorschlag::vorgeschlagenerName),
-            )?.let(ausgänge::add) ?: konflikte.add("Eine ausgehende Grenzverbindung verweist auf einen fehlenden Anschluss.")
-        }
+        )?.let(ausgänge::add) ?: konflikte.add("Eine ausgehende Grenzverbindung verweist auf einen fehlenden Anschluss.")
     }
 
     return AuswahlKartenVorschau(
         quelle = this,
         ausgewählteKnoten = ausgewählteKnoten,
-        innereVerbindungen = innereVerbindungen,
+        innereVerbindungen = grenzen.innereVerbindungen,
         eingänge = eingänge,
         ausgänge = ausgänge,
         konflikte = konflikte,
@@ -302,7 +300,7 @@ internal fun AuswahlZuKarteDialog(
                     .fillMaxWidth()
                     .heightIn(max = 620.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
             ) {
                 Text(
                     "${vorschau.ausgewählteKnoten.size} Knoten und ${vorschau.innereVerbindungen.size} innere Verbindungen werden kopiert. Der Ursprungsgraph bleibt unverändert.",

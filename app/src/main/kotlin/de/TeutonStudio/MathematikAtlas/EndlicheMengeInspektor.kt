@@ -72,9 +72,9 @@ internal object EndlicheMengeInspektor : KnotenInspektor {
         if (konfiguration.einträge.isEmpty()) {
             OutlinedCard(Modifier.fillMaxWidth()) {
                 Column(
-                    Modifier.fillMaxWidth().padding(12.dp),
+                    Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     Text("∅", style = MaterialTheme.typography.headlineMedium)
                     Text("Diese Menge enthält keine Elemente.", style = MaterialTheme.typography.bodySmall)
@@ -86,7 +86,7 @@ internal object EndlicheMengeInspektor : KnotenInspektor {
         } else {
             Column(
                 Modifier.fillMaxWidth().heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 konfiguration.einträge.forEachIndexed { index, eintrag ->
                     ElementKarte(
@@ -153,13 +153,13 @@ internal object EndlicheMengeInspektor : KnotenInspektor {
 
         OutlinedCard(Modifier.fillMaxWidth()) {
             Column(
-                Modifier.fillMaxWidth().padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.standard),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 Row(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
                 ) {
                     Box(
                         Modifier.size(40.dp).pointerInput(eintrag.id, index, anzahl) {
@@ -268,7 +268,7 @@ internal object EndlicheMengeInspektor : KnotenInspektor {
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             Text("Dimension", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
             IconButton(

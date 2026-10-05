@@ -108,6 +108,114 @@ class MehrfachAuswahlTest {
         assertEquals(setOf(b.id), aktualisiert.knotenIds)
     }
 
+    @Test fun `Gruppen nehmen nur bei mehr als halber Flächenüberdeckung automatisch auf`() {
+        fun probe(x: Float) = KnotenDaten(
+            art = "test",
+            name = "P$x",
+            position = GraphPunkt(x, 42f),
+            größe = GraphGröße(100f, 100f),
+        )
+        val neunundvierzig = probe(151f)
+        val fünfzig = probe(150f)
+        val einundfünfzig = probe(149f)
+        val gruppe = VisuelleKnotenGruppeDaten(
+            position = GraphPunkt.Zero,
+            größe = GraphGröße(200f, 142f),
+        )
+
+        val karte = KartenDaten(
+            name = "Schwellen",
+            knoten = listOf(neunundvierzig, fünfzig, einundfünfzig),
+            visuelleGruppen = listOf(gruppe),
+        ).mitAutomatischenVisuellenGruppenMitgliedschaften()
+
+        assertEquals(setOf(einundfünfzig.id), karte.visuelleGruppen.single().knotenIds)
+    }
+
+    @Test fun `Größte Überdeckung gewinnt und Gleichstand erhält bisherige Gruppe`() {
+        val knoten = KnotenDaten(
+            art = "test",
+            name = "K",
+            position = GraphPunkt(50f, 42f),
+            größe = GraphGröße(100f, 100f),
+        )
+        val links = VisuelleKnotenGruppeDaten(
+            knotenIds = setOf(knoten.id),
+            position = GraphPunkt.Zero,
+            größe = GraphGröße(125f, 142f),
+        )
+        val rechts = VisuelleKnotenGruppeDaten(
+            position = GraphPunkt(75f, 0f),
+            größe = GraphGröße(125f, 142f),
+        )
+
+        val gleichstand = KartenDaten(name = "Gleich", knoten = listOf(knoten), visuelleGruppen = listOf(rechts, links))
+            .mitAutomatischenVisuellenGruppenMitgliedschaften()
+        assertEquals(setOf(knoten.id), gleichstand.visuelleGruppen.single { it.id == links.id }.knotenIds)
+
+        val größer = gleichstand.copy(
+            visuelleGruppen = gleichstand.visuelleGruppen.map {
+                if (it.id == rechts.id) it.copy(position = GraphPunkt(40f, 0f)) else it
+            },
+        ).mitAutomatischenVisuellenGruppenMitgliedschaften()
+        assertEquals(setOf(knoten.id), größer.visuelleGruppen.single { it.id == rechts.id }.knotenIds)
+    }
+
+    @Test fun `Mitgliedschaft wechselt erst am Interaktionsende und gemeinsam mit Undo`() {
+        val knoten = KnotenDaten(
+            art = "test",
+            name = "K",
+            position = GraphPunkt(300f, 42f),
+            größe = GraphGröße(100f, 100f),
+        )
+        val gruppe = VisuelleKnotenGruppeDaten(position = GraphPunkt.Zero, größe = GraphGröße(200f, 142f))
+        val zustand = KartenEditorZustand(KartenDaten(name = "Drag", knoten = listOf(knoten), visuelleGruppen = listOf(gruppe)), prüfung)
+
+        zustand.beginneInteraktion()
+        zustand.führeAus(KartenAktion.KnotenVerschieben(knoten.id, GraphPunkt(40f, 42f)), mitHistorie = false)
+        assertTrue(zustand.karte.visuelleGruppen.single().knotenIds.isEmpty())
+        zustand.beendeInteraktion()
+        assertEquals(setOf(knoten.id), zustand.karte.visuelleGruppen.single().knotenIds)
+
+        zustand.rückgängig()
+        assertEquals(GraphPunkt(300f, 42f), zustand.karte.knoten.single().position)
+        assertTrue(zustand.karte.visuelleGruppen.single().knotenIds.isEmpty())
+    }
+
+    @Test fun `Gruppenbewegung und Skalierung lösen die automatische Aufnahme aus`() {
+        val knoten = KnotenDaten(
+            art = "test",
+            name = "K",
+            position = GraphPunkt(300f, 42f),
+            größe = GraphGröße(100f, 100f),
+        )
+        val gruppe = VisuelleKnotenGruppeDaten(position = GraphPunkt.Zero, größe = GraphGröße(200f, 142f))
+        val durchBewegung = KartenEditorZustand(
+            KartenDaten(name = "Gruppenbewegung", knoten = listOf(knoten), visuelleGruppen = listOf(gruppe)),
+            prüfung,
+        )
+
+        durchBewegung.beginneInteraktion()
+        durchBewegung.führeAus(
+            KartenAktion.VisuelleGruppeVerschieben(gruppe.id, GraphPunkt(200f, 0f)),
+            mitHistorie = false,
+        )
+        durchBewegung.beendeInteraktion()
+        assertEquals(setOf(knoten.id), durchBewegung.karte.visuelleGruppen.single().knotenIds)
+
+        val durchSkalierung = KartenEditorZustand(
+            KartenDaten(name = "Gruppenskalierung", knoten = listOf(knoten), visuelleGruppen = listOf(gruppe)),
+            prüfung,
+        )
+        durchSkalierung.beginneInteraktion()
+        durchSkalierung.führeAus(
+            KartenAktion.VisuelleGruppeGrößeÄndern(gruppe.id, GraphGröße(380f, 142f)),
+            mitHistorie = false,
+        )
+        durchSkalierung.beendeInteraktion()
+        assertEquals(setOf(knoten.id), durchSkalierung.karte.visuelleGruppen.single().knotenIds)
+    }
+
     @Test fun `Löschen einer visuellen Gruppe lässt Knoten und Verbindungen unverändert`() {
         val aus = AnschlussDaten(
             name = "aus",

@@ -3,19 +3,23 @@ package de.TeutonStudio.MathematikKnoten.visualisierung.ui
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInteraktionsModus
@@ -47,29 +51,49 @@ class VisualisierungsKnotenRenderer(
             konfiguration = neu
             aktionen.eigenschaftenErsetzen(neu.zuEigenschaften())
         }
-        val ergebnis by produceState<VisualisierungsErgebnis?>(null, mengenWert, konfiguration.samplingSignatur()) {
+        val wirksameKonfiguration = konfiguration.mitWirksamerDimension(menge)
+        val ergebnis by produceState<VisualisierungsErgebnis?>(null, mengenWert, wirksameKonfiguration.samplingSignatur()) {
             value = if (menge == null) VisualisierungsErgebnis.NichtDarstellbar("Verbinde eine Menge mit dem Eingang.") else {
                 delay(140)
                 withContext(Dispatchers.Default) {
-                    VisualisierungsSampler.sample(menge, konfiguration) { coroutineContext.ensureActive() }
+                    VisualisierungsSampler.sample(menge, wirksameKonfiguration) { coroutineContext.ensureActive() }
                 }
             }
         }
         Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Row(Modifier.fillMaxWidth().height(34.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Visualisierung", style = MaterialTheme.typography.titleMedium)
-                Text(raumName(konfiguration.dimension), style = MaterialTheme.typography.titleMedium)
+                Text(raumName(wirksameKonfiguration.dimension), style = MaterialTheme.typography.titleMedium)
             }
             Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Plot(
                     ergebnis = ergebnis,
-                    konfiguration = konfiguration,
+                    konfiguration = wirksameKonfiguration,
                     onKamera = { ändern(konfiguration.copy(kamera = it)) },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
-                Steuerung(konfiguration, ::ändern, Modifier.width(128.dp).fillMaxHeight())
+                Steuerung(wirksameKonfiguration, { neu -> ändern(konfiguration.copy(kamera = neu.kamera)) }, Modifier.width(128.dp).fillMaxHeight())
             }
-            LatexText(legende(konfiguration), style = MaterialTheme.typography.bodySmall)
+            LatexText(legende(wirksameKonfiguration), style = MaterialTheme.typography.bodySmall)
+            val statistik = when (val wert = ergebnis) {
+                is VisualisierungsErgebnis.Erfolgreich -> wert.statistik
+                is VisualisierungsErgebnis.Teilweise -> wert.statistik
+                else -> null
+            }
+            if (statistik != null && statistik.auswertungen > 0) {
+                Text(
+                    buildString {
+                        append("Auswertungen ${statistik.auswertungen}/${wirksameKonfiguration.sampling.maximalesRasterBudget}")
+                        append(" · ${statistik.stützpunkte} Stützpunkte")
+                        if (statistik.linien > 0) append(" · ${statistik.linien} Segmente")
+                        if (statistik.dreiecke > 0) append(" · ${statistik.dreiecke} Dreiecke")
+                        if (statistik.zellen > 0) append(" · ${statistik.zellen} Zellen")
+                        if (statistik.budgetErschöpft) append(" · Budget ausgeschöpft")
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (statistik.budgetErschöpft) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             val annahmen = mengenWert?.annahmen.orEmpty()
             if (annahmen.isNotEmpty()) {
                 LatexText(
@@ -84,7 +108,7 @@ class VisualisierungsKnotenRenderer(
             }
             if (hatZellen) {
                 Text(
-                    "Zellen: Blau = bewiesen enthalten, Orange = gemischt, Grau schraffiert beziehungsweise als Drahtzelle = unbestimmt.",
+                    "Zellen: Blau = bewiesen enthalten, Hellblau = numerisch enthalten, Orange = gemischt, Grau schraffiert beziehungsweise als Drahtzelle = unbestimmt.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -114,7 +138,14 @@ class VisualisierungsKnotenRenderer(
 }
 
 @Composable private fun Plot(ergebnis: VisualisierungsErgebnis?, konfiguration: VisualisierungsKonfiguration, onKamera: (KameraZustand) -> Unit, modifier: Modifier) {
-    val kamera = konfiguration.kamera
+    var kamera by remember { mutableStateOf(konfiguration.kamera) }
+    var gesteAktiv by remember { mutableStateOf(false) }
+    val persistierteKamera by rememberUpdatedState(konfiguration.kamera)
+    val aktuelleKameraÜbernehmen by rememberUpdatedState(onKamera)
+    LaunchedEffect(konfiguration.kamera, gesteAktiv) {
+        if (!gesteAktiv) kamera = konfiguration.kamera
+    }
+    val darstellungsKonfiguration = konfiguration.copy(kamera = kamera)
     val hintergrund = MaterialTheme.colorScheme.surfaceVariant
     val raster = MaterialTheme.colorScheme.outlineVariant
     val rahmen = MaterialTheme.colorScheme.outline
@@ -122,46 +153,73 @@ class VisualisierungsKnotenRenderer(
     val xAchse = MaterialTheme.colorScheme.primary
     val yAchse = MaterialTheme.colorScheme.secondary
     val zAchse = MaterialTheme.colorScheme.tertiary
-    Canvas(modifier.pointerInput(konfiguration.dimension, kamera) {
-        detectTransformGestures { _, pan, zoom, _ ->
-            val neu = when (konfiguration.dimension) {
-                RaumDimension.R3 -> kamera.copy(rotationY = kamera.rotationY + pan.x * 0.5, rotationX = kamera.rotationX + pan.y * 0.5, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
-                RaumDimension.R2, RaumDimension.C -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, translationY = kamera.translationY + pan.y / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
-                RaumDimension.R1 -> kamera.copy(translationX = kamera.translationX - pan.x / 20.0, zoom = (kamera.zoom * zoom).coerceIn(0.1, 20.0))
-            }
-            onKamera(neu)
+    Canvas(modifier.pointerInput(konfiguration.dimension) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            gesteAktiv = true
+            var gestenKamera = persistierteKamera
+            do {
+                val ereignis = awaitPointerEvent()
+                val pan = ereignis.calculatePan()
+                val zoom = ereignis.calculateZoom()
+                if (pan != Offset.Zero || zoom != 1f) {
+                    gestenKamera = transformiereVisualisierungsKamera(gestenKamera, konfiguration.dimension, pan, zoom)
+                    kamera = gestenKamera
+                    ereignis.changes.forEach { if (it.positionChanged()) it.consume() }
+                }
+            } while (ereignis.changes.any { it.pressed })
+            gesteAktiv = false
+            aktuelleKameraÜbernehmen(gestenKamera)
         }
     }) {
         drawRect(hintergrund)
-        when (konfiguration.dimension) {
-            RaumDimension.R1 -> zeichneZahlengerade(konfiguration, raster, beschriftung)
+        when (darstellungsKonfiguration.dimension) {
+            RaumDimension.R1 -> zeichneZahlengerade(darstellungsKonfiguration, raster, beschriftung)
             RaumDimension.R2, RaumDimension.C -> {
                 val center = Offset(size.width / 2f, size.height / 2f)
                 drawLine(raster, Offset(0f, center.y), Offset(size.width, center.y), 1f)
                 drawLine(raster, Offset(center.x, 0f), Offset(center.x, size.height), 1f)
-                zeichne2DAchsenBeschriftungen(konfiguration, beschriftung)
+                zeichne2DAchsenBeschriftungen(darstellungsKonfiguration, beschriftung)
             }
-            RaumDimension.R3 -> zeichne3DAchsen(konfiguration, xAchse, yAchse, zAchse)
+            RaumDimension.R3 -> zeichne3DAchsen(darstellungsKonfiguration, xAchse, yAchse, zAchse)
         }
         val zellen = when (ergebnis) {
             is VisualisierungsErgebnis.Erfolgreich -> ergebnis.zellen
             is VisualisierungsErgebnis.Teilweise -> ergebnis.zellen
             else -> emptyList()
         }
-        zellen.forEach { zeichneZelle(it, konfiguration) }
+        zellen.forEach { zeichneZelle(it, darstellungsKonfiguration) }
         val punkte = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.punkte; is VisualisierungsErgebnis.Teilweise -> ergebnis.punkte; else -> emptyList() }
+        val linien = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.linien; is VisualisierungsErgebnis.Teilweise -> ergebnis.linien; else -> emptyList() }
+        val dreiecke = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.dreiecke; is VisualisierungsErgebnis.Teilweise -> ergebnis.dreiecke; else -> emptyList() }
         val intervalle = when (ergebnis) { is VisualisierungsErgebnis.Erfolgreich -> ergebnis.intervalle; is VisualisierungsErgebnis.Teilweise -> ergebnis.intervalle; else -> emptyList() }
-        if (konfiguration.dimension == RaumDimension.R1) {
-            intervalle.forEach { zeichneIntervall(it, konfiguration, farbeFür(null, konfiguration)) }
+        if (darstellungsKonfiguration.dimension == RaumDimension.R1) {
+            intervalle.forEach { zeichneIntervall(it, darstellungsKonfiguration, farbeFür(null, darstellungsKonfiguration)) }
         }
-        punkte.forEach { punkt ->
-            val projektion = projekt(punkt, konfiguration, size.width, size.height)
-            val radius = when (konfiguration.dimension) {
+        dreiecke
+            .sortedBy { dreieckTiefe(it, darstellungsKonfiguration) }
+            .forEach { zeichneDreieck(it, darstellungsKonfiguration) }
+        linien.forEach { linie ->
+            linie.punkte.zipWithNext().forEach { (a, b) ->
+                drawLine(
+                    farbeFür(a.farbwert ?: b.farbwert, darstellungsKonfiguration),
+                    projekt(a, darstellungsKonfiguration, size.width, size.height),
+                    projekt(b, darstellungsKonfiguration, size.width, size.height),
+                    2.2f,
+                )
+            }
+        }
+        val geometriePunkte = (dreiecke.flatMap { listOf(it.a, it.b, it.c) } + linien.flatMap { it.punkte })
+            .map { Triple(it.x, it.y, it.z) }
+            .toHashSet()
+        punkte.filterNot { Triple(it.x, it.y, it.z) in geometriePunkte }.forEach { punkt ->
+            val projektion = projekt(punkt, darstellungsKonfiguration, size.width, size.height)
+            val radius = when (darstellungsKonfiguration.dimension) {
                 RaumDimension.R1 -> 5.0f
                 RaumDimension.R2, RaumDimension.C -> 2.2f
                 RaumDimension.R3 -> 2.8f
             }
-            drawCircle(farbeFür(punkt.farbwert, konfiguration), radius, projektion)
+            drawCircle(farbeFür(punkt.farbwert, darstellungsKonfiguration), radius, projektion)
             if (punkt.weitereFarbwerte.isNotEmpty()) {
                 drawCircle(Color.Magenta.copy(alpha = 0.85f), radius + 2.5f, projektion, style = Stroke(1.5f))
             }
@@ -170,10 +228,33 @@ class VisualisierungsKnotenRenderer(
     }
 }
 
+internal fun transformiereVisualisierungsKamera(
+    kamera: KameraZustand,
+    dimension: RaumDimension,
+    pan: Offset,
+    zoomFaktor: Float,
+): KameraZustand = when (dimension) {
+    RaumDimension.R3 -> kamera.copy(
+        rotationY = kamera.rotationY + pan.x * 0.5,
+        rotationX = kamera.rotationX + pan.y * 0.5,
+        zoom = (kamera.zoom * zoomFaktor).coerceIn(0.1, 20.0),
+    )
+    RaumDimension.R2, RaumDimension.C -> kamera.copy(
+        translationX = kamera.translationX - pan.x / 20.0,
+        translationY = kamera.translationY + pan.y / 20.0,
+        zoom = (kamera.zoom * zoomFaktor).coerceIn(0.1, 20.0),
+    )
+    RaumDimension.R1 -> kamera.copy(
+        translationX = kamera.translationX - pan.x / 20.0,
+        zoom = (kamera.zoom * zoomFaktor).coerceIn(0.1, 20.0),
+    )
+}
+
 private fun DrawScope.zeichneZelle(zelle: VisualisierungsZelle, c: VisualisierungsKonfiguration) {
     if (zelle.status == ZellenStatus.Ausgeschlossen || zelle.minimum.size != c.dimension.raumDimension) return
     val farbe = when (zelle.status) {
         ZellenStatus.Enthalten -> Color(0xFF2563EB)
+        ZellenStatus.NumerischEnthalten -> Color(0xFF38BDF8)
         ZellenStatus.Gemischt -> Color(0xFFF59E0B)
         ZellenStatus.Unbekannt -> Color(0xFF6B7280)
         ZellenStatus.Ausgeschlossen -> return
@@ -186,19 +267,41 @@ private fun DrawScope.zeichneZelle(zelle: VisualisierungsZelle, c: Visualisierun
                 if (maske and 2 == 0) zelle.minimum[1] else zelle.maximum[1],
                 if (maske and 4 == 0) zelle.minimum[2] else zelle.maximum[2],
             )
-        }.map { projekt(it, c, size.width, size.height) }
+        }
+        if (zelle.status == ZellenStatus.Enthalten || zelle.status == ZellenStatus.NumerischEnthalten) {
+            val flächen = listOf(
+                intArrayOf(0, 2, 6, 4), intArrayOf(1, 5, 7, 3),
+                intArrayOf(0, 4, 5, 1), intArrayOf(2, 3, 7, 6),
+                intArrayOf(0, 1, 3, 2), intArrayOf(4, 6, 7, 5),
+            )
+            flächen
+                .sortedBy { fläche -> fläche.map { kameraKoordinate(ecken[it], c).third }.average() }
+                .forEach { fläche ->
+                    val pfad = Path().apply {
+                        val erster = projekt(ecken[fläche[0]], c, size.width, size.height)
+                        moveTo(erster.x, erster.y)
+                        fläche.drop(1).forEach { index ->
+                            val punkt = projekt(ecken[index], c, size.width, size.height)
+                            lineTo(punkt.x, punkt.y)
+                        }
+                        close()
+                    }
+                    drawPath(pfad, farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.08f else 0.045f))
+                }
+        }
+        val projizierteEcken = ecken.map { projekt(it, c, size.width, size.height) }
         repeat(8) { maske ->
             repeat(3) { achse ->
                 val bit = 1 shl achse
                 if (maske and bit == 0) {
-                    drawLine(farbe.copy(alpha = 0.55f), ecken[maske], ecken[maske or bit], 1f)
+                    drawLine(farbe.copy(alpha = 0.38f), projizierteEcken[maske], projizierteEcken[maske or bit], 1f)
                 }
             }
         }
         val punkt = VisualisierungsPunkt(mitte[0], mitte[1], mitte[2])
         drawCircle(
-            farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.45f else 0.7f),
-            if (zelle.status == ZellenStatus.Enthalten) 2.5f else 3.5f,
+            farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten || zelle.status == ZellenStatus.NumerischEnthalten) 0.35f else 0.7f),
+            if (zelle.status == ZellenStatus.Enthalten || zelle.status == ZellenStatus.NumerischEnthalten) 2.0f else 3.5f,
             projekt(punkt, c, size.width, size.height),
         )
         return
@@ -210,12 +313,12 @@ private fun DrawScope.zeichneZelle(zelle: VisualisierungsZelle, c: Visualisierun
         val rechts = max(von, bis)
         val y = size.height / 2f
         drawLine(
-            farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.55f else 0.4f),
+            farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten || zelle.status == ZellenStatus.NumerischEnthalten) 0.55f else 0.4f),
             Offset(links, y),
             Offset(rechts, y),
             7.dp.toPx(),
         )
-        if (zelle.status != ZellenStatus.Enthalten) {
+        if (zelle.status != ZellenStatus.Enthalten && zelle.status != ZellenStatus.NumerischEnthalten) {
             var x = links
             val halbeHöhe = 6.dp.toPx()
             val abstand = 8.dp.toPx()
@@ -233,8 +336,13 @@ private fun DrawScope.zeichneZelle(zelle: VisualisierungsZelle, c: Visualisierun
     val oben = min(a.y, b.y)
     val unten = max(a.y, b.y)
     if (rechts <= links || unten <= oben) return
-    drawRect(farbe.copy(alpha = if (zelle.status == ZellenStatus.Enthalten) 0.18f else 0.1f), Offset(links, oben), androidx.compose.ui.geometry.Size(rechts - links, unten - oben))
-    if (zelle.status != ZellenStatus.Enthalten) {
+    val deckkraft = when (zelle.status) {
+        ZellenStatus.Enthalten -> 0.22f
+        ZellenStatus.NumerischEnthalten -> 0.14f
+        else -> 0.1f
+    }
+    drawRect(farbe.copy(alpha = deckkraft), Offset(links, oben), androidx.compose.ui.geometry.Size(rechts - links, unten - oben))
+    if (zelle.status != ZellenStatus.Enthalten && zelle.status != ZellenStatus.NumerischEnthalten) {
         clipRect(links, oben, rechts, unten) {
             var x = links - (unten - oben)
             val abstand = 8.dp.toPx()
@@ -323,15 +431,49 @@ private fun DrawScope.zeichneAchsenText(text: String, position: Offset, paint: P
     drawContext.canvas.nativeCanvas.drawText(text, x, y, paint)
 }
 
-private fun projekt(p: VisualisierungsPunkt, c: VisualisierungsKonfiguration, breite: Float, höhe: Float): Offset {
-    var x = p.x + c.kamera.translationX
-    if (c.dimension == RaumDimension.R1) {
-        val bereich = c.bereiche.x
-        return Offset(
-            ((x - bereich.minimum) / (bereich.maximum - bereich.minimum) * breite * c.kamera.zoom).toFloat(),
-            höhe / 2f,
-        )
+private fun DrawScope.zeichneDreieck(dreieck: VisualisierungsDreieck, c: VisualisierungsKonfiguration) {
+    if (c.farbe.modus == FarbModus.Keine) return
+    val pa = projekt(dreieck.a, c, size.width, size.height)
+    val pb = projekt(dreieck.b, c, size.width, size.height)
+    val pc = projekt(dreieck.c, c, size.width, size.height)
+    val pfad = Path().apply {
+        moveTo(pa.x, pa.y)
+        lineTo(pb.x, pb.y)
+        lineTo(pc.x, pc.y)
+        close()
     }
+    val a = kameraKoordinate(dreieck.a, c)
+    val b = kameraKoordinate(dreieck.b, c)
+    val d = kameraKoordinate(dreieck.c, c)
+    val ux = b.first - a.first; val uy = b.second - a.second; val uz = b.third - a.third
+    val vx = d.first - a.first; val vy = d.second - a.second; val vz = d.third - a.third
+    val nx = uy * vz - uz * vy; val ny = uz * vx - ux * vz; val nz = ux * vy - uy * vx
+    val länge = sqrt(nx * nx + ny * ny + nz * nz)
+    val licht = if (länge <= 1e-12) 0.7 else (0.35 + 0.65 * abs((nx * 0.35 - ny * 0.45 + nz * 0.82) / länge)).coerceIn(0.28, 1.0)
+    val farbwert = listOfNotNull(dreieck.a.farbwert, dreieck.b.farbwert, dreieck.c.farbwert).takeIf { it.isNotEmpty() }?.average()
+    val basis = farbeFür(farbwert, c)
+    val alpha = when (dreieck.nachweis) {
+        DarstellungsNachweis.Exakt -> 0.92f
+        DarstellungsNachweis.Bewiesen -> 0.84f
+        DarstellungsNachweis.Numerisch -> 0.68f
+        DarstellungsNachweis.Gemischt -> 0.46f
+        DarstellungsNachweis.Unbekannt -> 0.28f
+    }
+    val schattiert = Color(
+        red = (basis.red * licht.toFloat()).coerceIn(0f, 1f),
+        green = (basis.green * licht.toFloat()).coerceIn(0f, 1f),
+        blue = (basis.blue * licht.toFloat()).coerceIn(0f, 1f),
+        alpha = alpha,
+    )
+    drawPath(pfad, schattiert)
+    drawPath(pfad, schattiert.copy(alpha = min(0.72f, alpha + 0.1f)), style = Stroke(0.65f))
+}
+
+private fun dreieckTiefe(dreieck: VisualisierungsDreieck, c: VisualisierungsKonfiguration): Double =
+    listOf(dreieck.a, dreieck.b, dreieck.c).map { kameraKoordinate(it, c).third }.average()
+
+private fun kameraKoordinate(p: VisualisierungsPunkt, c: VisualisierungsKonfiguration): Triple<Double, Double, Double> {
+    var x = p.x + c.kamera.translationX
     var y = p.y + c.kamera.translationY
     var z = (p.z ?: 0.0) + c.kamera.translationZ
     if (c.dimension == RaumDimension.R3) {
@@ -354,6 +496,20 @@ private fun projekt(p: VisualisierungsPunkt, c: VisualisierungsKonfiguration, br
         x = xNachZ
         y = yNachZ
     }
+    return Triple(x, y, z)
+}
+
+private fun projekt(p: VisualisierungsPunkt, c: VisualisierungsKonfiguration, breite: Float, höhe: Float): Offset {
+    val kameraPunkt = kameraKoordinate(p, c)
+    val x = kameraPunkt.first
+    if (c.dimension == RaumDimension.R1) {
+        val bereich = c.bereiche.x
+        return Offset(
+            ((x - bereich.minimum) / (bereich.maximum - bereich.minimum) * breite * c.kamera.zoom).toFloat(),
+            höhe / 2f,
+        )
+    }
+    val y = kameraPunkt.second
     val bx = c.bereiche.x
     val by = c.bereiche.y
     return Offset(

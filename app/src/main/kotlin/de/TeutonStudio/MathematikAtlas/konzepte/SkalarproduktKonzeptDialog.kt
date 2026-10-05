@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -92,14 +95,16 @@ internal fun SkalarproduktKonzeptDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(.92f).fillMaxHeight(.9f),
+            modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
+                .fillMaxWidth(.92f).fillMaxHeight(.9f),
             shape = MaterialTheme.shapes.large,
             tonalElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
@@ -133,8 +138,8 @@ internal fun SkalarproduktKonzeptDialog(
                 }
                 HorizontalDivider()
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     Button(
                         onClick = {
@@ -221,8 +226,8 @@ private fun de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt.kom
 @Composable
 private fun SkalarproduktDefinitionInhalt(daten: SkalarproduktDialogDaten) {
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.weit),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
     ) {
         Text("Definition", style = MaterialTheme.typography.titleMedium)
         LatexText(
@@ -254,7 +259,7 @@ private fun SkalarproduktDefinitionInhalt(daten: SkalarproduktDialogDaten) {
             ) {
                 Text(
                     "Der Rechner verwendet derzeit eine zertifizierte eigene Methode. Das Falk-Schema zeigt weiterhin die kanonische Standarddefinition zum Vergleich.",
-                    modifier = Modifier.padding(14.dp),
+                    modifier = Modifier.padding(LocalAtlasAbstände.current.bereich),
                 )
             }
         }
@@ -270,18 +275,18 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
     val sichererIndex = index.coerceIn(0, daten.ablauf.dimension - 1)
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.dialog),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Index", style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
             ) {
                 repeat(daten.ablauf.dimension) { kandidat ->
                     FilterChip(
@@ -295,7 +300,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
 
         Column(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             FalkZeile("u", daten.ablauf.linkeKomponenten, sichererIndex) { index = it }
             FalkZeile("v", daten.ablauf.rechteKomponenten, sichererIndex) { index = it }
@@ -305,7 +310,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             color = MaterialTheme.colorScheme.primaryContainer,
             shape = MaterialTheme.shapes.medium,
         ) {
-            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 Text("Aktueller Summand p$sichererIndex", style = MaterialTheme.typography.labelLarge)
                 LatexText(
                     latex = "p_{$sichererIndex}=${daten.ablauf.produktLatex(sichererIndex)}",
@@ -323,7 +328,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             ) {
                 LatexText(
                     latex = "s_{$teilsummenIndex}=${daten.ablauf.teilsummeLatex(teilsummenIndex)}",
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -358,7 +363,7 @@ private fun FalkZeile(
     ausgewählterIndex: Int,
     auswählen: (Int) -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.width(42.dp), contentAlignment = Alignment.Center) {
             LatexText(latex = name, style = MaterialTheme.typography.titleMedium)
         }
@@ -374,7 +379,7 @@ private fun FalkZeile(
                     color = if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 ),
             ) {
-                Box(Modifier.fillMaxSize().padding(8.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.standard), contentAlignment = Alignment.Center) {
                     LatexText(latex = "${name}_{$index}=$komponente")
                 }
             }
@@ -390,8 +395,8 @@ private fun SkalarproduktZertifikatInhalt(
 ) {
     val aussage = auswertung?.ausgaben?.get("aussage")?.objekt as? BegriffsAussage
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.weit),
+        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
     ) {
         Text("Zertifikatsstatus", style = MaterialTheme.typography.titleMedium)
         ZertifikatZeile("Definition", if (daten.standardDefinition) "Standardskalarprodukt" else "Eigene zertifizierte Methode")
@@ -423,7 +428,7 @@ private fun SkalarproduktZertifikatInhalt(
                     },
                     shape = MaterialTheme.shapes.small,
                 ) {
-                    Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich)) {
                         Text(pruefung.name, style = MaterialTheme.typography.labelLarge)
                         Text(pruefung.begruendung, style = MaterialTheme.typography.bodySmall)
                     }
@@ -449,7 +454,7 @@ private fun SkalarproduktZertifikatInhalt(
 
 @Composable
 private fun ZertifikatZeile(bezeichnung: String, wert: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         Text(bezeichnung, modifier = Modifier.width(170.dp), style = MaterialTheme.typography.labelLarge)
         Text(wert, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
     }

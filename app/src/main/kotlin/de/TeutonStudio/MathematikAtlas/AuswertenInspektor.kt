@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
@@ -83,15 +86,17 @@ private fun AuswertungsDetailsDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-  modifier = Modifier.fillMaxWidth(0.96f).fillMaxHeight(0.92f),
+  modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+      .padding(LocalAtlasAbstände.current.bereich)
+      .fillMaxWidth(0.96f).fillMaxHeight(0.92f),
   shape = MaterialTheme.shapes.extraLarge,
   tonalElevation = 6.dp,
         ) {
   Column(Modifier.fillMaxSize()) {
       Row(
-          modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+          modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
           verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(12.dp),
+          horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
       ) {
           Text(
               "${knoten.name}: Termauswertung",
@@ -106,9 +111,9 @@ private fun AuswertungsDetailsDialog(
           }
       }
       when (tab) {
-          0 -> ErgebnisAnsicht(ergebnis, Modifier.fillMaxSize().padding(20.dp))
-          1 -> UmformungsAnsicht(ergebnis.schritte, Modifier.fillMaxSize().padding(20.dp))
-          else -> BedingungenAnsicht(ergebnis, Modifier.fillMaxSize().padding(20.dp))
+          0 -> ErgebnisAnsicht(ergebnis, Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog))
+          1 -> UmformungsAnsicht(ergebnis.schritte, Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog))
+          else -> BedingungenAnsicht(ergebnis, Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog))
       }
   }
         }
@@ -117,7 +122,7 @@ private fun AuswertungsDetailsDialog(
 
 @Composable
 private fun ErgebnisAnsicht(ergebnis: KnotenAuswertungsErgebnis, modifier: Modifier = Modifier) {
-    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         ergebnis.ausgaben.forEach { (name, wert) ->
   item(key = "ausgabe.$name") {
       Text(name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -144,14 +149,14 @@ private fun UmformungsAnsicht(schritte: List<UmformungsSchritt>, modifier: Modif
         }
         return
     }
-    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
         itemsIndexed(schritte, key = { index, schritt -> "$index.${schritt.regelId}" }) { index, schritt ->
   Surface(
       modifier = Modifier.fillMaxWidth(),
       shape = MaterialTheme.shapes.medium,
       color = MaterialTheme.colorScheme.surfaceContainerLow,
   ) {
-      Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      Column(Modifier.padding(LocalAtlasAbstände.current.bereich), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
           Text("${index + 1}. ${schritt.titel}", fontWeight = FontWeight.SemiBold)
           LatexText(schritt.vorher.zuLatex(), style = MaterialTheme.typography.bodyMedium)
           Text("↓", style = MaterialTheme.typography.titleMedium)
@@ -175,9 +180,9 @@ private fun BedingungenAnsicht(ergebnis: KnotenAuswertungsErgebnis, modifier: Mo
         }
         return
     }
-    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         itemsIndexed(bedingungen) { index, bedingung ->
-  Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+  Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), verticalAlignment = Alignment.Top) {
       Text("${index + 1}.", color = MaterialTheme.colorScheme.onSurfaceVariant)
       LatexText(bedingung.zuLatex(), style = MaterialTheme.typography.bodyLarge)
   }

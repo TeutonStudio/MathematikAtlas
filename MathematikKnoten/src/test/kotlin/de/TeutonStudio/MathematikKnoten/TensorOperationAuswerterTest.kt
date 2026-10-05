@@ -184,4 +184,38 @@ class TensorOperationAuswerterTest {
         assertTrue(ergebnis.ausgaben.isEmpty())
         assertTrue(ergebnis.fehler.orEmpty().contains("bestätige"))
     }
+
+    @Test
+    fun `Tensor zerlegen reduziert Ordnung drei zu geordneten Matrizen`() {
+        val basis = konfiguriereTensorOperation(basisKnoten(), definition("tensor.zerlegen"))
+        val knoten = basis.copy(parameter = basis.parameter + (TENSOR_ACHSEN_SPEZIFIKATION to "2"))
+        val tensor = Tensor(listOf(2, 3, 2), (1L..12L).map(RationaleZahl::von))
+
+        val ergebnis = register.finde(TensorRechner.KNOTEN_ART)!!.auswerten(
+            kontext(knoten, mapOf("tensor" to BedingterWert(tensor))),
+        )
+
+        assertEquals(listOf("schnitt1", "schnitt2", "schnitt3"), ergebnis.ausgaben.keys.toList())
+        assertTrue(ergebnis.ausgaben.values.all { it.objekt is Matrix })
+    }
+
+    @Test
+    fun `symbolische Tensorachse liefert genau eine endliche Schnittmethode`() {
+        val basis = konfiguriereTensorOperation(basisKnoten(), definition("tensor.zerlegen"))
+        val knoten = basis.copy(parameter = basis.parameter + (TENSOR_ACHSEN_SPEZIFIKATION to "1"))
+        val tensor = TypisiertesElement(
+            "T",
+            "mathematik.tensor",
+            strukturForm = listOf(Variable("n"), RationaleZahl.von(2), RationaleZahl.von(3)),
+        )
+
+        val ergebnis = register.finde(TensorRechner.KNOTEN_ART)!!.auswerten(
+            kontext(knoten, mapOf("tensor" to BedingterWert(tensor))),
+        )
+
+        assertEquals(setOf("methode"), ergebnis.ausgaben.keys)
+        val methode = assertIs<MathematischeMethode>(ergebnis.ausgaben.getValue("methode").objekt)
+        assertEquals(EndlicheIndexMenge(Variable("n")), methode.werteVorräte.getValue("i"))
+        assertEquals("mathematik.matrix", assertIs<StrukturErgebnisMenge>(methode.zielMenge).anschlussArt)
+    }
 }

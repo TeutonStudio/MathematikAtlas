@@ -26,6 +26,8 @@ sealed interface KartenAktion {
     ) : KartenAktion
     /** Ersetzt einen vollständigen Knoten atomar und entfernt nur Verbindungen zu entfallenen Anschlüssen. */
     data class KnotenErsetzen(val knoten: KnotenDaten) : KartenAktion
+    /** Wendet einen zuvor mit [vorschauTeilgraphErsetzen] validierten Plan als eine Historienaktion an. */
+    data class TeilgraphErsetzen(val plan: TeilgraphErsetzungsPlan) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
     data class KnotenMehrfachLöschen(val ids: Set<KnotenId>) : KartenAktion
     data class VisuelleGruppeErstellen(
@@ -97,6 +99,17 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
             verbindungen = verbindungen.filterNot { verbindung ->
                 (verbindung.von.knotenId == aktion.knoten.id && verbindung.von.anschlussId !in gültigeAnschlüsse) ||
                     (verbindung.zu.knotenId == aktion.knoten.id && verbindung.zu.anschlussId !in gültigeAnschlüsse)
+            },
+        )
+    }
+    is KartenAktion.TeilgraphErsetzen -> {
+        val entfernteKnoten = aktion.plan.entfernteKnoten
+        val entfernteVerbindungen = aktion.plan.entfernteVerbindungen
+        copy(
+            knoten = knoten.filterNot { it.id in entfernteKnoten } + aktion.plan.neueKnoten,
+            verbindungen = verbindungen.filterNot { it.id in entfernteVerbindungen } + aktion.plan.neueVerbindungen,
+            visuelleGruppen = visuelleGruppen.map { gruppe ->
+                gruppe.copy(knotenIds = gruppe.knotenIds - entfernteKnoten)
             },
         )
     }

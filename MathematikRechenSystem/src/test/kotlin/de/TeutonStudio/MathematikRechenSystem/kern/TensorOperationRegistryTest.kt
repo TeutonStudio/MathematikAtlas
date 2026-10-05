@@ -92,7 +92,7 @@ class TensorOperationRegistryTest {
     fun `Signaturfamilien koennen gemeinsam gefiltert werden`() {
         val zerlegungen = StandardTensorOperationen.registry.familie(TensorSignaturFamilie.ZERLEGUNG)
         assertEquals(
-            setOf("matrix.jordan", "matrix.qr", "matrix.spektral", "matrix.svd"),
+            setOf("matrix.jordan", "matrix.qr", "matrix.spektral", "matrix.svd", "tensor.zerlegen"),
             zerlegungen.map { it.id.wert }.toSet(),
         )
     }

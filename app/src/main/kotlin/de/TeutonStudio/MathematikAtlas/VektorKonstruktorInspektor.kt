@@ -18,7 +18,7 @@ internal object VektorKonstruktorInspektor : KnotenInspektor {
     ) {
         val config = vektorKonstruktorKonfiguration(knoten)
         Text("Erzeugungsart", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             FilterChip(
                 selected = config.erzeugungsArt == VEKTOR_EINZEL_EINGABEN,
                 onClick = {
@@ -39,7 +39,7 @@ internal object VektorKonstruktorInspektor : KnotenInspektor {
             )
         }
         Text("Orientierung", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             FilterChip(
                 selected = config.orientierung == VEKTOR_ORIENTIERUNG_SPALTE,
                 onClick = {
@@ -82,7 +82,7 @@ internal object MultinomVektorInspektor : KnotenInspektor {
         val form = knoten.parameter[MULTINOM_AUSGABEFORM_PARAMETER] ?: MULTINOM_AUSGABE_VEKTOR
         val orient = knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: VEKTOR_ORIENTIERUNG_SPALTE
         Text("Ausgabeform", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             FilterChip(
                 selected = form == MULTINOM_AUSGABE_VEKTOR,
                 onClick = { aktionen.knoten(konfiguriereMultinomVektor(knoten, ausgabeForm = MULTINOM_AUSGABE_VEKTOR)) },
@@ -96,7 +96,7 @@ internal object MultinomVektorInspektor : KnotenInspektor {
         }
         if (form == MULTINOM_AUSGABE_VEKTOR) {
             Text("Orientierung", style = MaterialTheme.typography.titleSmall)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 FilterChip(
                     selected = orient == VEKTOR_ORIENTIERUNG_SPALTE,
                     onClick = { aktionen.knoten(konfiguriereMultinomVektor(knoten, orientierung = VEKTOR_ORIENTIERUNG_SPALTE)) },

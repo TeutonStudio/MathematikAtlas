@@ -83,7 +83,7 @@ internal fun KartenTabelle(
 @Composable
 private fun KartenTabellenIndexZelle(index: BigInteger) {
     Box(
-        Modifier.width(KARTEN_ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = 8.dp, vertical = 8.dp),
+        Modifier.width(KARTEN_ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -97,7 +97,7 @@ private fun KartenTabellenIndexZelle(index: BigInteger) {
 @Composable
 private fun KartenTabellenKopfZelle(text: String, breite: Dp) {
     Box(
-        Modifier.width(breite).padding(horizontal = 8.dp, vertical = 8.dp),
+        Modifier.width(breite).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, fontWeight = FontWeight.SemiBold)
@@ -107,7 +107,7 @@ private fun KartenTabellenKopfZelle(text: String, breite: Dp) {
 @Composable
 internal fun KartenAussageZelle(wert: Wahrheitswert?) {
     Box(
-        Modifier.width(KARTEN_EINGANGS_ZELLEN_BREITE).padding(horizontal = 8.dp, vertical = 8.dp),
+        Modifier.width(KARTEN_EINGANGS_ZELLEN_BREITE).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         if (wert == null) Text("Nicht entscheidbar", style = MaterialTheme.typography.bodySmall)
@@ -118,7 +118,7 @@ internal fun KartenAussageZelle(wert: Wahrheitswert?) {
 @Composable
 private fun KartenErgebnisZelle(zelle: KartenTabellenZelle) {
     Box(
-        Modifier.width(KARTEN_ERGEBNIS_ZELLEN_BREITE).padding(horizontal = 8.dp, vertical = 8.dp),
+        Modifier.width(KARTEN_ERGEBNIS_ZELLEN_BREITE).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         contentAlignment = Alignment.Center,
     ) {
         when (zelle) {

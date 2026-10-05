@@ -165,7 +165,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
-                Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                     Text("Gespeicherte Formel", style = MaterialTheme.typography.labelLarge)
                     LatexText(latex, style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -189,7 +189,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             Text("Divisionsseite", style = MaterialTheme.typography.titleSmall)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 FilterChip(
                     selected = seite == DivisionsSeite.RECHTS && !divisionsSeiteIstHistorischOffen(knoten),
@@ -235,7 +235,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 FilterChip(
                     selected = ergebnisArt == ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
@@ -268,7 +268,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 Text("Differentiation", style = MaterialTheme.typography.titleSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     FilterChip(
                         selected = differentialOperator == DifferentialOperator.Total,
@@ -322,7 +322,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 Text("Differentialbegriff", style = MaterialTheme.typography.titleSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     FilterChip(
                         selected = begriff == DifferentialBegriff.REELL_FRECHET,
@@ -364,7 +364,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 OutlinedButton(
                     onClick = {
@@ -403,7 +403,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             Text("Komplexe Eingabe", style = MaterialTheme.typography.titleSmall)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 FilterChip(
                     selected = modus == ZAHLENRECHNER_KOMPLEX_SEPARIERT,
@@ -440,7 +440,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
             ) {
                 Text("Gradwinkel", modifier = Modifier.weight(1f))
                 Switch(
@@ -452,7 +452,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     Text("Als x·π÷180 auswerten", modifier = Modifier.weight(1f))
                     Switch(

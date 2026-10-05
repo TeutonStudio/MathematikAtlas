@@ -187,6 +187,7 @@ enum class TensorRechnerOperator(val stabileId: String) {
     ACHSENSCHNITT("tensor.achsenschnitt"),
     INDEXAUSWERTUNG("tensor.indexauswertung"),
     NORM("tensor.norm"),
+    ZERLEGEN("tensor.zerlegen"),
 }
 
 data class TensorRechnerEingabe(val rollenId: String, val objekt: MathematischesObjekt)
@@ -234,6 +235,10 @@ object TensorRechner {
             TensorRechnerOperator.ACHSENSCHNITT -> achsenSchnitt(eingaben, konfiguration.achsen, konfiguration.indizes)
             TensorRechnerOperator.KONTRAKTION -> kontrahiere(eingaben, konfiguration.achsen)
             TensorRechnerOperator.NORM -> norm(eingaben)
+            TensorRechnerOperator.ZERLEGEN -> ungueltig(
+                "dynamische_signatur",
+                "Tensor-Zerlegen wird über den formabhängigen Knotenvertrag ausgewertet.",
+            )
         }
     }
 

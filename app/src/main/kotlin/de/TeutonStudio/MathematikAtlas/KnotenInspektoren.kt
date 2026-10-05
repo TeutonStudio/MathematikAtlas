@@ -108,7 +108,7 @@ private object BildmengeInspektor : KnotenInspektor {
         val methode = ergebnis?.eingänge?.get("methode")?.objekt as? Methode
 
         Text("Argumentbereich", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             FilterChip(
                 selected = modus == BILDMENGE_MODUS_PRODUKT,
                 onClick = { aktionen.parameter(BILDMENGE_ARGUMENT_MODUS, BILDMENGE_MODUS_PRODUKT) },
@@ -158,7 +158,7 @@ private object OrdnungsrelationInspektor : KnotenInspektor {
     ) {
         val aktuell = knoten.parameter["relation"] ?: "kleiner"
         Text("Relation", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
             relationen.forEach { (schlüssel, zeichen, standardName) ->
                 FilterChip(
                     selected = aktuell == schlüssel,
@@ -229,7 +229,7 @@ private object TermZuMethodeInspektor : KnotenInspektor {
         Text("Argumentreihenfolge", style = MaterialTheme.typography.titleSmall)
         if (parameter.isEmpty()) Text("Keine freien Variablen erkannt.", style = MaterialTheme.typography.bodySmall)
         parameter.forEachIndexed { index, variable ->
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 Text("${index + 1}. ${variable.name}", modifier = Modifier.weight(1f))
                 OutlinedButton(onClick = {
                     val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index - 1) }
@@ -269,7 +269,7 @@ private object OrbitInspektor : KnotenInspektor {
                     color = MaterialTheme.colorScheme.error,
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
                 parameter.forEach { argument ->
                     FilterChip(
                         selected = argument.name == gewählt,
@@ -471,10 +471,10 @@ private fun TensorPermutationEditor(
         "Zeile" to WertebereichKonfiguration.Vektor(orientierung = VektorOrientierung.Zeile),
         "Matrix" to WertebereichKonfiguration.Matrix(),
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
         arten.take(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class, { ändern(wert) }, label = { Text(name) }) }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
         arten.drop(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class && (bereich !is WertebereichKonfiguration.Vektor || wert !is WertebereichKonfiguration.Vektor || bereich.orientierung == wert.orientierung), { ändern(wert) }, label = { Text(name) }) }
     }
     when (bereich) {
@@ -518,7 +518,7 @@ private fun TensorPermutationEditor(
 
 @Composable private fun GrundmengenAuswahl(label: String, aktuell: String, ändern: (String) -> Unit) {
     Text(label, style = MaterialTheme.typography.titleSmall)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
         listOf("N", "Z", "Q", "R", "C").forEach { menge ->
             FilterChip(aktuell == menge, { ändern(menge) }, label = { Text(menge) })
         }
@@ -585,12 +585,21 @@ private object VisualisierungsInspektor : KnotenInspektor {
             ?.mapNotNull { wert -> (wert.objekt as? Abbild)?.methode }
             ?.firstOrNull()
         Text("Raum", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(config.dimension == RaumDimension.R1, { ändern(config.copy(dimension = RaumDimension.R1)) }, label = { Text("R¹") })
-            FilterChip(config.dimension == RaumDimension.R2, { ändern(config.copy(dimension = RaumDimension.R2)) }, label = { Text("R²") })
-            FilterChip(config.dimension == RaumDimension.R3, { ändern(config.copy(dimension = RaumDimension.R3)) }, label = { Text("R³") })
-            FilterChip(config.dimension == RaumDimension.C, {
-                ändern(config.copy(dimension = RaumDimension.C, achsen = AchsenZuordnung("re", "im", null)))
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            FilterChip(config.dimensionsModus == DimensionsModus.Automatisch, {
+                ändern(config.copy(dimensionsModus = DimensionsModus.Automatisch))
+            }, label = { Text("Auto") })
+            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.R1, {
+                ändern(config.copy(dimension = RaumDimension.R1, dimensionsModus = DimensionsModus.Manuell))
+            }, label = { Text("R¹") })
+            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.R2, {
+                ändern(config.copy(dimension = RaumDimension.R2, dimensionsModus = DimensionsModus.Manuell))
+            }, label = { Text("R²") })
+            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.R3, {
+                ändern(config.copy(dimension = RaumDimension.R3, dimensionsModus = DimensionsModus.Manuell))
+            }, label = { Text("R³") })
+            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.C, {
+                ändern(config.copy(dimension = RaumDimension.C, achsen = AchsenZuordnung("re", "im", null), dimensionsModus = DimensionsModus.Manuell))
             }, label = { Text("ℂ") })
         }
         Text("Methodenvisualisierung", style = MaterialTheme.typography.titleSmall)
@@ -608,7 +617,7 @@ private object VisualisierungsInspektor : KnotenInspektor {
                 )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
             listOf(
                 MethodenDarstellungsModus.Automatisch to "Auto",
                 MethodenDarstellungsModus.Bild to "Bild",
@@ -630,18 +639,19 @@ private object VisualisierungsInspektor : KnotenInspektor {
         if (config.dimension != RaumDimension.R1) BereichFeld("${methode?.parameter?.getOrNull(1)?.name ?: "Y"}-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
         if (config.dimension == RaumDimension.R3) BereichFeld("${methode?.parameter?.getOrNull(2)?.name ?: "Z"}-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
         Text("Sampling", style = MaterialTheme.typography.titleSmall)
-        if (config.dimension == RaumDimension.R1) ParameterFeld("R¹-Auflösung", config.sampling.auflösung1D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung1D = n.coerceIn(16, 2_000)))) } }
-        if (config.dimension == RaumDimension.R2 || config.dimension == RaumDimension.C) ParameterFeld("Flächenauflösung", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
-        if (config.dimension == RaumDimension.R3) ParameterFeld("R³-Auflösung", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
-        ParameterFeld("Gesamtbudget", config.sampling.maximalesRasterBudget.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximalesRasterBudget = n.coerceIn(1_000, 2_000_000)))) } }
-        ParameterFeld("Orbit-Schritte", config.sampling.maximaleOrbitSchritte.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximaleOrbitSchritte = n.coerceIn(1, 100_000)))) } }
-        ParameterFeld("Toleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
+        ParameterFeld("Zielauflösung Kurven", config.sampling.auflösung1D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung1D = n.coerceIn(16, 2_000)))) } }
+        if (config.dimension != RaumDimension.R1) ParameterFeld("Zielauflösung Flächen (pro Parameterachse)", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
+        if (config.dimension == RaumDimension.R3) ParameterFeld("Zielauflösung Volumen (pro Achse)", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
+        ParameterFeld("Maximale Auswertungen", config.sampling.maximalesRasterBudget.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximalesRasterBudget = n.coerceIn(1_000, 2_000_000)))) } }
+        ParameterFeld("Orbit-Schritte je Prüfpunkt", config.sampling.maximaleOrbitSchritte.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximaleOrbitSchritte = n.coerceIn(1, 100_000)))) } }
+        ParameterFeld("Numerische Grenztoleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
+        Text("Die Zielauflösung verteilt Stützpunkte adaptiv im Bildraum; das Auswertungsbudget bleibt die harte Obergrenze.", style = MaterialTheme.typography.bodySmall)
         Text("Farbe", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
         if (config.farbe.modus == FarbModus.Spektrum) {
             ParameterFeld("Farbvariable", config.farbe.variable.orEmpty()) { ändern(config.copy(farbe = config.farbe.copy(variable = it.ifBlank { null }))) }
             Text("Palette", style = MaterialTheme.typography.labelMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { listOf("Ozean", "Sonnenuntergang", "Wald").forEach { palette -> FilterChip(config.farbe.palette == palette, { ändern(config.copy(farbe = config.farbe.copy(palette = palette))) }, label = { Text(palette) }) } }
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) { listOf("Ozean", "Sonnenuntergang", "Wald").forEach { palette -> FilterChip(config.farbe.palette == palette, { ändern(config.copy(farbe = config.farbe.copy(palette = palette))) }, label = { Text(palette) }) } }
             BereichFeld("Farbwertbereich", config.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)) { ändern(config.copy(farbe = config.farbe.copy(bereich = it))) }
         }
         Text("Feste Schnitte", style = MaterialTheme.typography.titleSmall)

@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -89,6 +92,8 @@ internal fun StrukturFormelBauerDialog(
     ) {
         Surface(
             modifier = Modifier
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
                 .fillMaxWidth(.95f)
                 .fillMaxHeight(.92f)
                 .widthIn(max = 1180.dp),
@@ -96,8 +101,8 @@ internal fun StrukturFormelBauerDialog(
             tonalElevation = 8.dp,
         ) {
             Column(
-                Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog),
+                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -117,8 +122,8 @@ internal fun StrukturFormelBauerDialog(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt),
+                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
                     ) {
                         Text("Formelvorschau", style = MaterialTheme.typography.labelLarge)
                         LatexText(vorschau, style = MaterialTheme.typography.headlineSmall)
@@ -141,7 +146,7 @@ internal fun StrukturFormelBauerDialog(
 
                 Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedButton(
@@ -167,7 +172,7 @@ internal fun StrukturFormelBauerDialog(
 
                 Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedTextField(
@@ -202,7 +207,7 @@ internal fun StrukturFormelBauerDialog(
                 if (FormelTyp.ZAHL in familie.erlaubteVariablenTypen) {
                     Row(
                         Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         OutlinedTextField(
@@ -241,9 +246,9 @@ internal fun StrukturFormelBauerDialog(
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(116.dp),
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = LocalAtlasAbstände.current.winzig),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     items(tasten.filter { it.kategorie == kategorie }, key = { it.id }) { taste ->
                         OutlinedButton(

@@ -118,6 +118,7 @@ fun vektorRechnerAnschluesse(operator: VektorRechnerOperator): List<AnschlussDat
         )
         VektorRechnerOperator.ZERLEGEN -> listOf(
             eingang("struktur", MathematikAnschlussArten.Objekt.id, vektorZulaessigeArten, 0),
+            ausgang(MathematikAnschlussArten.Methode.id, name = "methode"),
         )
         VektorRechnerOperator.ZUSAMMENFUEHREN -> listOf(
             eingang("element.1", MathematikAnschlussArten.Objekt.id, zusammenfuehrenZulaessigeArten, 0),
@@ -200,20 +201,31 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
         if (operator == VektorRechnerOperator.ZERLEGEN) {
             val struktur = kontext.eingänge["struktur"]?.objekt
                 ?: error("Zerlegen benötigt einen Vektor oder ein Tupel.")
-            val elemente = when (struktur) {
+            val elemente: List<MathematischesObjekt>? = when (struktur) {
                 is Tupel -> struktur.elemente
                 is OrientierterVektor -> struktur.werte
-                else -> error("Zerlegen akzeptiert nur Tupel und Vektoren.")
-            }
-            val ausgänge = kontext.knoten.anschlüsse
-                .filter { it.richtung == AnschlussRichtung.Ausgang }
-                .sortedBy { it.reihenfolge }
-                .mapIndexedNotNull { index, anschluss ->
-                    elemente.getOrNull(index)?.let { element ->
-                        anschluss.name to BedingterWert(element, annahmen)
+                is TypisiertesElement -> struktur.strukturForm?.firstOrNull()?.let { dimension ->
+                    dimension.positiveDimensionOderNull()?.let { anzahl ->
+                        List(anzahl) { index ->
+                            strukturKomponente(struktur, RationaleZahl.von((index + 1).toLong()), numerisch = true)
+                        }
                     }
                 }
-                .toMap()
+                else -> error("Zerlegen akzeptiert nur Tupel und Vektoren.")
+            }
+            val ausgänge = if (elemente == null) {
+                mapOf("methode" to BedingterWert(vektorZerlegeMethode(struktur), annahmen))
+            } else {
+                kontext.knoten.anschlüsse
+                    .filter { it.richtung == AnschlussRichtung.Ausgang }
+                    .sortedBy { it.reihenfolge }
+                    .mapIndexedNotNull { index, anschluss ->
+                        elemente.getOrNull(index)?.let { element ->
+                            anschluss.name to BedingterWert(element, annahmen)
+                        }
+                    }
+                    .toMap()
+            }
             return@registriere KnotenAuswertungsErgebnis(
                 ausgaben = ausgänge,
                 eingänge = kontext.eingänge,
@@ -293,6 +305,26 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
             )
         }
     }
+}
+
+fun vektorZerlegeMethode(struktur: MathematischesObjekt): MathematischeMethode {
+    val index = Variable("i")
+    val laenge = strukturAchsenLaenge(struktur, 0)
+    return MathematischeMethode(
+        name = "zerlegen",
+        parameter = listOf(index),
+        vorschrift = strukturKomponente(struktur, index, numerisch = true),
+        zielMenge = KomplexeZahlen,
+        werteVorräte = mapOf(index.name to EndlicheIndexMenge(laenge)),
+    )
+}
+
+private fun ZahlAusdruck.positiveDimensionOderNull(): Int? = (this as? RationaleZahl)?.let { zahl ->
+    if (
+        zahl.nenner == java.math.BigInteger.ONE &&
+        zahl.zähler.signum() > 0 &&
+        zahl.zähler.bitLength() < 31
+    ) zahl.zähler.toInt() else null
 }
 
 fun KartenDaten.migriereVektorRechnerKonfiguration(): KartenDaten = copy(

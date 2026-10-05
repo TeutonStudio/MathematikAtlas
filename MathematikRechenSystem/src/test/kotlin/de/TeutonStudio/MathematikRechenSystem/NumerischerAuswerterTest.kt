@@ -11,6 +11,22 @@ import kotlin.test.assertTrue
 
 class NumerischerAuswerterTest {
     @Test
+    fun `domaenenauswerter berechnet komplexe Exponentialfunktion`() {
+        val iPhi = multiplikation(
+            KomplexeZahl(RationaleZahl.Null, RationaleZahl.Eins),
+            Pi,
+        )
+
+        val wert = assertIs<DomaenenErgebnis.Wert>(
+            DomaenenAuswerter.wert(Exponentialfunktion(iPhi)),
+        ).wert
+        val komplex = assertIs<DomaenenWert.Komplex>(wert)
+
+        assertEquals(-1.0, komplex.reell.toDouble(), 1e-12)
+        assertEquals(0.0, komplex.imaginaer.toDouble(), 1e-12)
+    }
+
+    @Test
     fun `skalare Terme verwenden eine gemeinsame Umgebung`() {
         val x = Variable("x")
         val term = addition(

@@ -47,6 +47,54 @@ class ZertifizierteMengenVisualisierungTest {
         assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.Enthalten })
         assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.Unbekannt })
         assertTrue(ergebnis.punkte.isNotEmpty())
+        assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.NumerischEnthalten })
+    }
+
+    @Test fun `dreidimensionale Kugel erhaelt Randflaeche und Volumenzellen`() {
+        val kugel = DefinierteMenge(
+            listOf(
+                GebundeneMengenVariable(x, ReelleZahlen),
+                GebundeneMengenVariable(y, ReelleZahlen),
+                GebundeneMengenVariable(z, ReelleZahlen),
+            ),
+            Vergleich(
+                addition(Potenz(x, q(2)), Potenz(y, q(2)), Potenz(z, q(2))),
+                VergleichsArt.KleinerGleich,
+                q(1),
+            ),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
+            VisualisierungsSampler.sample(
+                kugel,
+                config(RaumDimension.R3, AchsenZuordnung("x", "y", "z")),
+            ),
+        )
+
+        assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.NumerischEnthalten })
+        assertTrue(ergebnis.dreiecke.isNotEmpty())
+        assertEquals(ergebnis.dreiecke.size, ergebnis.statistik.dreiecke)
+    }
+
+    @Test fun `dreidimensionale Gleichung wird als Isoflaeche statt Volumen gefuellt`() {
+        val kugelRand = DefinierteMenge(
+            listOf(
+                GebundeneMengenVariable(x, ReelleZahlen),
+                GebundeneMengenVariable(y, ReelleZahlen),
+                GebundeneMengenVariable(z, ReelleZahlen),
+            ),
+            Gleichheit(addition(Potenz(x, q(2)), Potenz(y, q(2)), Potenz(z, q(2))), q(1)),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
+            VisualisierungsSampler.sample(
+                kugelRand,
+                config(RaumDimension.R3, AchsenZuordnung("x", "y", "z")),
+            ),
+        )
+
+        assertTrue(ergebnis.dreiecke.isNotEmpty())
+        assertTrue(ergebnis.zellen.none { it.status == ZellenStatus.NumerischEnthalten })
     }
 
     @Test fun `Unstetigkeit erzeugt aus Vorzeichenwechsel keine Nullstelle`() {

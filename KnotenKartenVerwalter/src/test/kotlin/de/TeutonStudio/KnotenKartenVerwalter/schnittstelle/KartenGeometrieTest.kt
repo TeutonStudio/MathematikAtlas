@@ -15,6 +15,16 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class KartenGeometrieTest {
+    @Test
+    fun `Bildschirmposition wird bei Zoom und Dichte exakt in die Welt zurückgerechnet`() {
+        val ansicht = AnsichtsFenster(GraphPunkt(40f, -20f), 2f)
+
+        assertEquals(
+            GraphPunkt(15f, 20f),
+            bildschirmZuWelt(Offset(100f, 60f), ansicht, dichte = 2f),
+        )
+    }
+
     @Test fun sichtbereichWirdAusPixelkameraInWeltKoordinatenZurückgerechnet() {
         val bereich = sichtbarerWeltBereich(
             ansicht = AnsichtsFenster(verschiebung = GraphPunkt(-100f, 50f), zoom = 2f),

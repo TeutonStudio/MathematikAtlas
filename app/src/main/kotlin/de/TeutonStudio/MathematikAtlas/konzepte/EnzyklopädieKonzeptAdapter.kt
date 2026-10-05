@@ -66,6 +66,11 @@ internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDate
             rolle = asset.rolle.zuAppRolle(),
             karte = geladene.getValue(asset),
             darstellungsVarianten = varianten,
+            darstellung = if (asset.id == MATRIXPRODUKT_FALK_REITER_ID) {
+                KonzeptReiterDarstellung.FalkSchema
+            } else {
+                KonzeptReiterDarstellung.Karte
+            },
         )
     }
     if (basis.count { it.rolle == KonzeptReiterRolle.Definition } != 1) return null

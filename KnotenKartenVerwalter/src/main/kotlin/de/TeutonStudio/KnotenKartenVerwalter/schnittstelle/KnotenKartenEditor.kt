@@ -25,6 +25,9 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -69,6 +72,7 @@ fun KnotenKartenEditor(
     val aktuelleAnsicht by rememberUpdatedState(ansicht)
     val aktuelleDichte by rememberUpdatedState(dichte.density)
     var anzeigeGröße by remember { mutableStateOf(IntSize.Zero) }
+    var editorUrsprungImRoot by remember { mutableStateOf(Offset.Zero) }
     var magnetischesZiel by remember(karte.id) { mutableStateOf<AnschlussVerweis?>(null) }
     var auswahlRechteckBildschirm by remember(karte.id) { mutableStateOf<Rect?>(null) }
     var aktuelleAuswahlÄnderung by remember { mutableStateOf(AuswahlÄnderung.Ersetzen) }
@@ -79,17 +83,21 @@ fun KnotenKartenEditor(
         if (zustand.verbindungsStart == null) magnetischesZiel = null
     }
     val sichtbarerWeltBereich = sichtbarerWeltBereich(ansicht, anzeigeGröße, dichte.density)
-    val sichtbareKnoten = sichtbarerWeltBereich?.let { bereich ->
-        karte.knoten.filter { it.istImBereich(bereich, KNOTEN_VIEWPORT_PUFFER) }
-    } ?: karte.knoten
-    val sichtbareVerbindungen = sichtbarerWeltBereich?.let { bereich ->
-        karte.verbindungen.filter { it.istImBereich(karte, bereich, VERBINDUNG_VIEWPORT_PUFFER) }
-    } ?: karte.verbindungen
+    var renderAuswahl by remember(karte.id, karte.knoten, karte.verbindungen, anzeigeGröße, dichte.density) {
+        mutableStateOf<RenderAuswahl?>(null)
+    }
+    val neueRenderAuswahl = sichtbarerWeltBereich?.let { bereich ->
+        renderAuswahl?.takeIf { it.deckt(bereich) } ?: renderAuswahlFür(karte, bereich)
+    } ?: RenderAuswahl.alle(karte)
+    if (neueRenderAuswahl != renderAuswahl) renderAuswahl = neueRenderAuswahl
+    val sichtbareKnoten = neueRenderAuswahl.knoten
+    val sichtbareVerbindungen = neueRenderAuswahl.verbindungen
 
     Box(
         modifier.background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .clipToBounds()
             .onSizeChanged { anzeigeGröße = it }
+            .onGloballyPositioned { editorUrsprungImRoot = it.positionInRoot() }
             .onPreviewKeyEvent { event ->
                 umschaltGedrückt = event.isShiftPressed
                 primärModifierGedrückt = event.isCtrlPressed || event.isMetaPressed
@@ -271,6 +279,7 @@ fun KnotenKartenEditor(
                         auswahlÄnderung = aktuelleAuswahlÄnderung,
                         zeigeKnotenInspektor = zeigeKnotenInspektor,
                         beiInspektorÖffnen = { beiKnotenInspektor(knoten) },
+                        editorUrsprungImRoot = editorUrsprungImRoot,
                     )
                 }
             }
@@ -338,7 +347,7 @@ private fun MiniMap(
     beiZentrieren: (GraphPunkt) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val inhalt = karte.inhaltsGrenzen(puffer = 80f)
+    val inhalt = remember(karte.knoten) { karte.inhaltsGrenzen(puffer = 80f) }
     val grenzen = when {
         sichtbarerWeltBereich != null && inhalt != null -> inhalt.vereinigtMit(sichtbarerWeltBereich)
         sichtbarerWeltBereich != null -> sichtbarerWeltBereich
@@ -409,6 +418,40 @@ private fun MiniMap(
         }
     }
 }
+
+/**
+ * Eine Auswahl bleibt über kleine Kamerabewegungen stabil. Erst außerhalb der
+ * Sicherheitszone wird sie anhand eines größeren Weltfensters neu berechnet.
+ */
+internal data class RenderAuswahl(
+    val fenster: Rect?,
+    val sicherheitsZone: Rect?,
+    val knoten: List<KnotenDaten>,
+    val verbindungen: List<VerbindungDaten>,
+) {
+    fun deckt(bereich: Rect): Boolean = sicherheitsZone?.enthält(bereich) == true
+
+    companion object {
+        fun alle(karte: KartenDaten) = RenderAuswahl(null, null, karte.knoten, karte.verbindungen)
+    }
+}
+
+internal fun renderAuswahlFür(karte: KartenDaten, sichtbar: Rect): RenderAuswahl {
+    val fenster = sichtbar.erweitert(RENDER_OVERSCAN)
+    val sicherheitsZone = sichtbar.erweitert(RENDER_HYSTERESE)
+    return RenderAuswahl(
+        fenster = fenster,
+        sicherheitsZone = sicherheitsZone,
+        knoten = karte.knoten.filter { it.istImBereich(fenster, KNOTEN_VIEWPORT_PUFFER) },
+        verbindungen = karte.verbindungen.filter { it.istImBereich(karte, fenster, VERBINDUNG_VIEWPORT_PUFFER) },
+    )
+}
+
+private fun Rect.enthält(anderer: Rect): Boolean =
+    anderer.left >= left && anderer.top >= top && anderer.right <= right && anderer.bottom <= bottom
+
+private const val RENDER_OVERSCAN = 540f
+private const val RENDER_HYSTERESE = 270f
 
 internal data class MiniMapProjektion(val grenzen: Rect, val größe: Size) {
     private val puffer = 10f
@@ -728,6 +771,7 @@ private fun KnotenDarstellung(
     auswahlÄnderung: AuswahlÄnderung,
     zeigeKnotenInspektor: Boolean,
     beiInspektorÖffnen: () -> Unit,
+    editorUrsprungImRoot: Offset,
 ) {
     val zoom = zustand.karte.ansicht.zoom
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
@@ -861,6 +905,7 @@ private fun KnotenDarstellung(
                     beiMagnetischemZiel = beiMagnetischemZiel,
                     beiAnschlussKontext = beiAnschlussKontext,
                     beiVerbindungAufHintergrund = beiVerbindungAufHintergrund,
+                    editorUrsprungImRoot = editorUrsprungImRoot,
                 )
             }
         }
@@ -919,7 +964,7 @@ private fun KnotenInspektorSchaltfläche(
     }
 }
 
-private fun bildschirmZuWelt(position: Offset, ansicht: AnsichtsFenster, dichte: Float): GraphPunkt = GraphPunkt(
+internal fun bildschirmZuWelt(position: Offset, ansicht: AnsichtsFenster, dichte: Float): GraphPunkt = GraphPunkt(
     (position.x - ansicht.verschiebung.x) / ansicht.zoom / dichte.coerceAtLeast(.0001f),
     (position.y - ansicht.verschiebung.y) / ansicht.zoom / dichte.coerceAtLeast(.0001f),
 )
@@ -989,6 +1034,7 @@ private fun BoxScope.AnschlussGriff(
     beiMagnetischemZiel: (AnschlussVerweis?) -> Unit,
     beiAnschlussKontext: (AnschlussVerweis) -> Unit,
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
+    editorUrsprungImRoot: Offset,
 ) {
     val anteil = (index + 1f) / (anzahl + 1f)
     val zoom = zustand.karte.ansicht.zoom.coerceAtLeast(.0001f)
@@ -1010,6 +1056,7 @@ private fun BoxScope.AnschlussGriff(
     val kompatibel = zustand.kompatibelMitStart(ref)
     val eingerastet = magnetischesZiel == ref
     val aktuellesZielSetzen by rememberUpdatedState(beiMagnetischemZiel)
+    var griffKoordinaten by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var zugPosition by remember(knoten.id, anschluss.id) { mutableStateOf<GraphPunkt?>(null) }
     var zugZiel by remember(knoten.id, anschluss.id) { mutableStateOf<AnschlussVerweis?>(null) }
     val startWelt = anschlussPositionWelt(knoten, anschluss)
@@ -1029,6 +1076,7 @@ private fun BoxScope.AnschlussGriff(
 
     Box(
         Modifier.align(ausrichtung).offset(x, y).size(interaktionsGröße.dp)
+            .onGloballyPositioned { griffKoordinaten = it }
             .pointerHoverIcon(PointerIcon.Crosshair)
             .semantics {
                 contentDescription = "${knoten.name}, Anschluss ${anschluss.name}, ${anschluss.richtung}, zulässige Typen $typenText"
@@ -1047,7 +1095,7 @@ private fun BoxScope.AnschlussGriff(
                     beiAnschlussKontext(ref)
                 },
             )
-            .pointerInput(ref, kompatibel, zoom) {
+            .pointerInput(ref, kompatibel, zoom, editorUrsprungImRoot) {
                 if (!kompatibel) return@pointerInput
                 detectDragGestures(
                     onDragStart = {
@@ -1058,12 +1106,12 @@ private fun BoxScope.AnschlussGriff(
                     },
                     onDrag = { änderung, _ ->
                         änderung.consume()
-                        val zeigerWelt = interaktionsObenLinks + GraphPunkt(
-                            // Absolute lokale Pointerposition statt Delta-Akkumulation:
-                            // dadurch werden Touch-Slop und Overslop nicht doppelt addiert.
+                        val zeigerWelt = griffKoordinaten?.localToRoot(änderung.position)?.let { imRoot ->
+                            bildschirmZuWelt(imRoot - editorUrsprungImRoot, zustand.karte.ansicht, density)
+                        } ?: (interaktionsObenLinks + GraphPunkt(
                             änderung.position.x / density,
                             änderung.position.y / density,
-                        )
+                        ))
                         zugPosition = zeigerWelt
                         val ziel = nächsterKompatiblerAnschluss(
                             zustand = zustand,
@@ -1084,8 +1132,10 @@ private fun BoxScope.AnschlussGriff(
                         if (ziel != null) {
                             zustand.anschlussAngeklickt(ziel)
                         } else {
-                            zustand.beendeVerbindungsVorschau(startBeibehalten = false)
-                            beiVerbindungAufHintergrund(ref, ende)
+                            val ablage = zustand.beendeVerbindungsVorschau(startBeibehalten = false)
+                            if (ablage == VerbindungsAblageErgebnis.NeueVerbindungAufHintergrund) {
+                                beiVerbindungAufHintergrund(ref, ende)
+                            }
                         }
                         zugPosition = null
                     },

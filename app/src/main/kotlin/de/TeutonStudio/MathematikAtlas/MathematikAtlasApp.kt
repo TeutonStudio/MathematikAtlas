@@ -33,7 +33,10 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
 import de.TeutonStudio.MathematikKnoten.MatlasKartenContainer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private sealed interface GraphKontext {
     data class Knoten(val id: KnotenId) : GraphKontext
@@ -48,33 +51,57 @@ private enum class KartenWerkzeug { Auswahl, Verschieben }
 fun MathematikAtlasApp(zustand: AtlasZustand) {
     val context = LocalContext.current
     val dichte = LocalDensity.current
-    var exportFehler by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    var dateiFehler by remember { mutableStateOf<String?>(null) }
     val jsonExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(KartenExportFormat.JSON.mimeType)) { uri ->
         uri?.let {
-            runCatching {
-                context.contentResolver.openOutputStream(it)?.bufferedWriter()?.use { w ->
-                    w.write(zustand.speicher.exportiere(zustand.editor.karte))
-                } ?: error("Die Zieldatei konnte nicht geöffnet werden.")
-            }.onFailure { fehler ->
-                exportFehler = fehler.message ?: "JSON-Export fehlgeschlagen."
+            val karte = zustand.editor.karte
+            coroutineScope.launch {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        context.contentResolver.openOutputStream(it)?.bufferedWriter()?.use { w ->
+                            w.write(zustand.speicher.exportiere(karte))
+                        } ?: error("Die Zieldatei konnte nicht geöffnet werden.")
+                    }
+                }.onFailure { fehler ->
+                    dateiFehler = fehler.message ?: "JSON-Export fehlgeschlagen."
+                }
             }
         }
     }
     val matlasExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(KartenExportFormat.MATLAS.mimeType)) { uri ->
         uri?.let {
-            runCatching {
-                val inhalt = MatlasKartenContainer.schreibe(zustand.editor.karte, BuildConfig.VERSION_NAME)
-                context.contentResolver.openOutputStream(it)?.use { ausgabe ->
-                    ausgabe.write(inhalt)
-                    ausgabe.flush()
-                } ?: error("Die Zieldatei konnte nicht geöffnet werden.")
-            }.onFailure { fehler ->
-                exportFehler = fehler.message ?: ".matlas-Export fehlgeschlagen."
+            val karte = zustand.editor.karte
+            coroutineScope.launch {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        val inhalt = MatlasKartenContainer.schreibe(karte, BuildConfig.VERSION_NAME)
+                        context.contentResolver.openOutputStream(it)?.use { ausgabe ->
+                            ausgabe.write(inhalt)
+                            ausgabe.flush()
+                        } ?: error("Die Zieldatei konnte nicht geöffnet werden.")
+                    }
+                }.onFailure { fehler ->
+                    dateiFehler = fehler.message ?: ".matlas-Export fehlgeschlagen."
+                }
             }
         }
     }
     val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { context.contentResolver.openInputStream(it)?.bufferedReader()?.use { r -> zustand.importiere(r.readText()) } }
+        uri?.let {
+            coroutineScope.launch {
+                runCatching {
+                    val inhalt = withContext(Dispatchers.IO) {
+                        context.contentResolver.openInputStream(it)?.use { eingabe -> eingabe.readBytes() }
+                            ?: error("Die Quelldatei konnte nicht geöffnet werden.")
+                    }
+                    val istZip = inhalt.size >= 4 && inhalt[0] == 'P'.code.toByte() && inhalt[1] == 'K'.code.toByte()
+                    if (istZip) zustand.importiere(inhalt) else zustand.importiere(inhalt.toString(Charsets.UTF_8))
+                }.onFailure { fehler ->
+                    dateiFehler = fehler.message ?: "Import fehlgeschlagen."
+                }
+            }
+        }
     }
     var exportDialogOffen by remember { mutableStateOf(false) }
     var graphKontext by remember { mutableStateOf<GraphKontext?>(null) }
@@ -105,11 +132,13 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     }
     val tastatur = remember(befehle) { AtlasTastaturAusführer(befehle, ::befehlsKontext) }
     fun ausführen(befehl: AtlasBefehl) {
-        if (befehle.führeAus(befehl, befehlsKontext())) zustand.aktualisiereAuswertung()
+        befehle.führeAus(befehl, befehlsKontext())
     }
 
-    LaunchedEffect(zustand.editor.karte) {
+    LaunchedEffect(zustand.editor.auswertungsRevision) {
         zustand.aktualisiereAuswertung()
+    }
+    LaunchedEffect(zustand.editor.karte) {
         delay(650)
         zustand.speichereAktuell()
     }
@@ -126,12 +155,12 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             },
         )
     }
-    exportFehler?.let { meldung ->
+    dateiFehler?.let { meldung ->
         AlertDialog(
-            onDismissRequest = { exportFehler = null },
-            title = { Text("Export fehlgeschlagen") },
+            onDismissRequest = { dateiFehler = null },
+            title = { Text("Dateivorgang fehlgeschlagen") },
             text = { Text(meldung) },
-            confirmButton = { TextButton(onClick = { exportFehler = null }) { Text("OK") } },
+            confirmButton = { TextButton(onClick = { dateiFehler = null }) { Text("OK") } },
         )
     }
 
@@ -144,7 +173,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     ausführen(AtlasBefehl.Speichern); true
                 } else false
             }
-            .onKeyEvent { tastatur.verarbeite(it).also { verarbeitet -> if (verarbeitet) zustand.aktualisiereAuswertung() } },
+            .onKeyEvent(tastatur::verarbeite),
     ) {
         VerwaltungsFenster(
             zustand,
@@ -154,7 +183,9 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         Column(Modifier.weight(1f).fillMaxHeight()) {
             WerkzeugLeiste(
                 zustand,
-                onImport = { import.launch(arrayOf("application/json", "text/plain")) },
+                onImport = {
+                    import.launch(arrayOf("application/json", "text/plain", KartenExportFormat.MATLAS.mimeType))
+                },
                 onExport = { exportDialogOffen = true },
                 onSpeichern = { ausführen(AtlasBefehl.Speichern) },
             )
@@ -218,10 +249,15 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     )
                 }
 
-                VisuelleGruppenEbene(zustand.editor)
+                VisuelleGruppenEbene(
+                    editor = zustand.editor,
+                    auswertungsDauerFür = { knotenId ->
+                        zustand.auswertung.knoten[knotenId]?.auswertungsDauerNanos
+                    },
+                )
                 Row(
-                    Modifier.align(Alignment.BottomEnd).padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.align(Alignment.BottomEnd).padding(LocalAtlasAbstände.current.inhalt),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                     verticalAlignment = Alignment.Bottom,
                 ) {
                     KartenWerkzeuge(
@@ -281,7 +317,7 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
         onDismissRequest = schließen,
         title = { Text(titel, style = MaterialTheme.typography.titleMedium) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 when (kontext) {
                     is GraphKontext.Knoten -> Text("Der Knoten existiert nicht mehr.")
                     is GraphKontext.Knotengruppe -> {
@@ -385,9 +421,9 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
     var umbenennenGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     var jsonGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     Row(
-        Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 12.dp),
+        Modifier.fillMaxWidth().height(58.dp).padding(horizontal = LocalAtlasAbstände.current.bereich),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
     ) {
         zustand.brotkrumen.forEachIndexed { index, ref ->
             val name = zustand.speicher.lade(ref)?.name ?: ref.kartenId.wert.take(8)
@@ -477,16 +513,16 @@ private fun KartenWerkzeuge(
 ) {
     Surface(modifier, shape = MaterialTheme.shapes.medium, tonalElevation = 3.dp) {
         Column(
-            Modifier.fillMaxSize().padding(6.dp),
+            Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.eng),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
                 KartenWerkzeugKnopf("↶", "Rückgängig", editor.kannRückgängig(), onClick = onRückgängig)
                 KartenWerkzeugKnopf("↷", "Wiederholen", editor.kannWiederholen(), onClick = onWiederholen)
             }
             Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
                 val gruppenmodus = editor.auswahlModus == AuswahlModus.Gruppe
                 KartenWerkzeugKnopf(
                     symbol = if (gruppenmodus) "▦" else "1",

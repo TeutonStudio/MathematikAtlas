@@ -47,6 +47,9 @@ private fun werteTensorOperationAus(
         return fehlerErgebnis(kontext, achsenErgebnis.nachricht)
     }
     val achsen = (achsenErgebnis as AchsenErgebnis.Wert).spezifikation
+    if (definition.id.wert == TensorRechnerOperator.ZERLEGEN.stabileId) {
+        return werteTensorZerlegenAus(kontext, operanden.values.single(), achsen)
+    }
     val legacyOperator = definition.alsBestehenderTensorOperatorOderNull()
     if (legacyOperator == null) {
         return symbolischesTensorErgebnis(kontext, definition, operanden, achsen)
@@ -294,10 +297,84 @@ private fun ausgangsName(
 }
 
 private fun tensorStufe(objekte: Collection<MathematischesObjekt>): Int? = objekte.firstNotNullOfOrNull { objekt ->
+    if (objekt is TypisiertesElement) return@firstNotNullOfOrNull objekt.strukturForm?.size
     when (val ansicht = objekt.tensorielleAnsicht()) {
         is StrukturPruefung.Gueltig -> ansicht.wert.stufe
         else -> null
     }
+}
+
+private fun werteTensorZerlegenAus(
+    kontext: KnotenAuswertungsKontext,
+    tensor: MathematischesObjekt,
+    achsen: TensorAchsenSpezifikation?,
+): KnotenAuswertungsErgebnis {
+    val sichtbar = achsen.sichtbareIndizes()
+    if (sichtbar.size != 1) return fehlerErgebnis(kontext, "Tensor-Zerlegen benötigt genau eine Achse.")
+    val form = when (tensor) {
+        is Tensorartig -> tensor.tensorForm.map { RationaleZahl.von(it.toLong()) }
+        is TypisiertesElement -> tensor.strukturForm
+        else -> return fehlerErgebnis(kontext, "Tensor-Zerlegen akzeptiert ausschließlich tensorartige Objekte.")
+    }
+    val achse = sichtbar.single() - 1
+    if (achse < 0 || form != null && achse !in form.indices) {
+        return fehlerErgebnis(kontext, "Achse ${sichtbar.single()} liegt außerhalb der Tensorordnung${form?.size?.let { " $it" }.orEmpty()}.")
+    }
+    val relevanteLaenge = form?.getOrNull(achse)
+    val konkret = relevanteLaenge?.tensorDimensionOderNull()
+    val restForm = form?.filterIndexed { index, _ -> index != achse }
+    val ausgaben = if (konkret != null) {
+        List(konkret) { index ->
+            "schnitt${index + 1}" to BedingterWert(
+                tensorSchnittWert(tensor, achse, index, restForm),
+                kontext.annahmen(),
+            )
+        }.toMap()
+    } else {
+        mapOf("methode" to BedingterWert(tensorZerlegeMethode(tensor, achse, restForm), kontext.annahmen()))
+    }
+    return KnotenAuswertungsErgebnis(ausgaben = ausgaben, eingänge = kontext.eingänge)
+}
+
+fun tensorZerlegeMethode(
+    tensor: MathematischesObjekt,
+    achse: Int,
+    restForm: List<ZahlAusdruck>? = (tensor as? TypisiertesElement)?.strukturForm
+        ?.filterIndexed { index, _ -> index != achse },
+): MathematischeMethode {
+    val index = Variable("i")
+    val art = tensorSchnittAnschlussArt(restForm?.size)
+    return MathematischeMethode(
+        name = "zerlegen_${achse + 1}",
+        parameter = listOf(index),
+        vorschrift = strukturSchnitt(tensor, index, StrukturZugriffsArt.Schnitt, achse, art, restForm),
+        zielMenge = StrukturErgebnisMenge(art, restForm, "\\operatorname{Schnitte}_{${achse + 1}}(T)"),
+        werteVorräte = mapOf(index.name to EndlicheIndexMenge(strukturAchsenLaenge(tensor, achse))),
+    )
+}
+
+private fun tensorSchnittWert(
+    tensor: MathematischesObjekt,
+    achse: Int,
+    index: Int,
+    restForm: List<ZahlAusdruck>?,
+): MathematischesObjekt = strukturSchnitt(
+    tensor,
+    RationaleZahl.von((index + 1).toLong()),
+    StrukturZugriffsArt.Schnitt,
+    achse,
+    tensorSchnittAnschlussArt(restForm?.size),
+    restForm,
+)
+
+private fun tensorSchnittAnschlussArt(restRang: Int?): String = when (restRang) {
+    0 -> "mathematik.zahl"
+    2 -> "mathematik.matrix"
+    else -> "mathematik.tensor"
+}
+
+private fun ZahlAusdruck.tensorDimensionOderNull(): Int? = (this as? RationaleZahl)?.let { zahl ->
+    if (zahl.nenner == BigInteger.ONE && zahl.zähler.signum() > 0 && zahl.zähler.bitLength() < 31) zahl.zähler.toInt() else null
 }
 
 private fun TensorAchsenSpezifikation?.sichtbareIndizes(): List<Int> = when (this) {

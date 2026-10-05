@@ -14,6 +14,25 @@ import kotlin.test.assertTrue
 
 class KanonischerMathematikKnotenKatalogTest {
     @Test
+    fun `jede sichtbare mathematische Knotenart besitzt einen Auswertungspfad`() {
+        val register = GesamterMathematikAuswerter.erzeugeRegister()
+        val direktImKartenAuswerterBehandelt = setOf(
+            "mathematik.darstellungsoptimierung",
+            "mathematik.multiplikation",
+            "mathematik.konjugierte",
+        )
+        val fehlendeArten = KanonischerMathematikKnotenKatalog.alle()
+            .map { it.art }
+            .distinct()
+            .filter { art -> register.finde(art) == null && art !in direktImKartenAuswerterBehandelt }
+
+        assertTrue(
+            fehlendeArten.isEmpty(),
+            "Sichtbare Knotenarten ohne Auswertungspfad: ${fehlendeArten.joinToString()}",
+        )
+    }
+
+    @Test
     fun `sichtbarer Katalog besitzt keine identischen Vorlagen doppelt`() {
         val vorlagen = KanonischerMathematikKnotenKatalog.alle()
         val signaturen = vorlagen.map { vorlage ->

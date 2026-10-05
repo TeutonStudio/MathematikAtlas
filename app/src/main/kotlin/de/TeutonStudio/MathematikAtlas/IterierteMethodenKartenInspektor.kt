@@ -94,7 +94,7 @@ internal fun IterierteMethodenKartenInspektor(knoten: KnotenDaten, zustand: Atla
     }
 
     if (ausgewählt != null) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             OutlinedButton(
                 onClick = { zustand.öffne(ausgewählt) },
                 enabled = ausgewählteKarte != null,

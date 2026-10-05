@@ -102,7 +102,7 @@ internal fun synchronisiereMethodenAufrufe(
         )
         prüfung.prüfe(ohneAktuelle, verbindung.von, verbindung.zu) is VerbindungsPrüfung.Erlaubt
     }
-    return synchronisiereTupelAuflöser(
+    return synchronisiereStrukturZerleger(
         ergebnis.copy(verbindungen = gültigeVerbindungen),
         auswertung,
         prüfung,

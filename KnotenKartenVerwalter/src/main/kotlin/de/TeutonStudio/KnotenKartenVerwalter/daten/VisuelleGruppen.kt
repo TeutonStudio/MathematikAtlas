@@ -37,13 +37,55 @@ fun VisuelleKnotenGruppeDaten.enthältVollständig(knoten: KnotenDaten): Boolean
 fun KartenDaten.vollständigEnthalteneKnoten(gruppe: VisuelleKnotenGruppeDaten): Set<KnotenId> =
     knoten.asSequence().filter(gruppe::enthältVollständig).map { it.id }.toSet()
 
+/** Anteil der Knotenfläche im Inhaltsbereich der Gruppe unterhalb der Kopfzeile. */
+fun VisuelleKnotenGruppeDaten.überdeckungsAnteil(knoten: KnotenDaten): Float {
+    val knotenLinks = knoten.position.x
+    val knotenOben = knoten.position.y
+    val knotenRechts = knotenLinks + knoten.größe.breite
+    val knotenUnten = knotenOben + knoten.größe.höhe
+    val gruppenLinks = position.x
+    val gruppenOben = position.y + VISUELLE_GRUPPE_KOPFZEILE_HÖHE
+    val gruppenRechts = position.x + größe.breite
+    val gruppenUnten = position.y + größe.höhe
+    val breite = (minOf(knotenRechts, gruppenRechts) - maxOf(knotenLinks, gruppenLinks)).coerceAtLeast(0f)
+    val höhe = (minOf(knotenUnten, gruppenUnten) - maxOf(knotenOben, gruppenOben)).coerceAtLeast(0f)
+    val fläche = knoten.größe.breite * knoten.größe.höhe
+    return if (fläche <= 0f) 0f else (breite * höhe / fläche).coerceIn(0f, 1f)
+}
+
+/**
+ * Ordnet jeden Knoten höchstens einer Gruppe zu. Mehr als die Hälfte der Knotenfläche
+ * muss im Inhaltsbereich liegen; bei gleichem Anteil bleibt die bisherige Gruppe stabil.
+ */
+fun KartenDaten.mitAutomatischenVisuellenGruppenMitgliedschaften(): KartenDaten {
+    if (visuelleGruppen.isEmpty()) return this
+    val vorherigeGruppe = buildMap<KnotenId, VisuelleGruppenId> {
+        visuelleGruppen.forEach { gruppe -> gruppe.knotenIds.forEach { putIfAbsent(it, gruppe.id) } }
+    }
+    val zuordnung = knoten.mapNotNull { knoten ->
+        val kandidaten = visuelleGruppen.mapIndexedNotNull { index, gruppe ->
+            val anteil = gruppe.überdeckungsAnteil(knoten)
+            if (anteil > 0.5f) Triple(gruppe, anteil, index) else null
+        }
+        val maximum = kandidaten.maxOfOrNull { it.second } ?: return@mapNotNull null
+        val gleichBeste = kandidaten.filter { kotlin.math.abs(it.second - maximum) <= 1e-6f }
+        val bisher = vorherigeGruppe[knoten.id]
+        val ziel = gleichBeste.firstOrNull { it.first.id == bisher } ?: gleichBeste.minBy { it.third }
+        knoten.id to ziel.first.id
+    }.toMap()
+    val neu = visuelleGruppen.map { gruppe ->
+        gruppe.copy(knotenIds = knoten.asSequence().filter { zuordnung[it.id] == gruppe.id }.map { it.id }.toCollection(linkedSetOf()))
+    }
+    return if (neu == visuelleGruppen) this else copy(visuelleGruppen = neu)
+}
+
 fun GraphGröße.alsGültigeVisuelleGruppenGröße() = GraphGröße(
     breite = breite.coerceAtLeast(VISUELLE_GRUPPE_MINDEST_BREITE),
     höhe = höhe.coerceAtLeast(VISUELLE_GRUPPE_MINDEST_HÖHE),
 )
 
 /**
- * Entfernt verwaiste, geometrisch ausgetretene und mehrdeutige Gruppenmitgliedschaften.
+ * Entfernt verwaiste und mehrdeutige Gruppenmitgliedschaften.
  * Die Gruppe selbst bleibt unabhängig von der Kinderzahl bestehen; ein Knoten gehört höchstens
  * einer visuellen Gruppe an. Bei Altgruppen ohne Geometrie wird einmalig der Kinderrahmen abgeleitet.
  */
@@ -68,7 +110,6 @@ fun KartenDaten.bereinigteVisuelleGruppen(): KartenDaten {
         )
         val gültigeIds = vorhandeneIds.asSequence()
             .filter { id -> id !in bereitsVerwendet }
-            .filter { id -> normalisiert.enthältVollständig(vorhandeneKnoten.getValue(id)) }
             .onEach { id -> bereitsVerwendet += id }
             .toCollection(linkedSetOf())
         normalisiert.copy(knotenIds = gültigeIds)

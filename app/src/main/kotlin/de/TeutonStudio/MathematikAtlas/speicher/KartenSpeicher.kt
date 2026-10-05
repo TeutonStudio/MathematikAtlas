@@ -31,8 +31,8 @@ class KartenSpeicher(private val context: Context) {
             .filter { it.isDirectory }
             .mapNotNull { ordner ->
                 ordner.listFiles { f -> f.name.matches(Regex("v\\d+\\.json")) }.orEmpty()
-                    .maxByOrNull { versionAusDatei(it) }
-                    ?.let(::leseDatei)
+                    .sortedByDescending(::versionAusDatei)
+                    .firstNotNullOfOrNull(::leseDatei)
             }
             .filter { archivierteEinschließen || (!it.archiviert && it.id !in papierkorbIds) }
             .sortedBy { it.name.lowercase() }
@@ -45,8 +45,8 @@ class KartenSpeicher(private val context: Context) {
     fun ladeAktuell(id: KartenId): KartenDaten? = File(kartenOrdner, id.wert)
         .listFiles { f -> f.name.matches(Regex("v\\d+\\.json")) }
         .orEmpty()
-        .maxByOrNull(::versionAusDatei)
-        ?.let(::leseDatei)
+        .sortedByDescending(::versionAusDatei)
+        .firstNotNullOfOrNull(::leseDatei)
 
     fun speichere(karte: KartenDaten): KartenDaten {
         val normalisiert = MathematikKartenMigrationen.vorSpeichern(karte)

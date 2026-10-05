@@ -163,6 +163,7 @@ internal fun MathematikAtlasTheme(
     MaterialTheme(colorScheme = farbschema) {
         androidx.compose.runtime.CompositionLocalProvider(
             LocalDarstellungsSteuerung provides DarstellungsSteuerung(modus, onModusÄndern),
+            LocalAtlasAbstände provides AtlasAbstände.Kompakt,
         ) {
             Systemleisten(dunkel)
             inhalt()

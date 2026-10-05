@@ -290,6 +290,7 @@ private fun tensorTitel(operator: TensorRechnerOperator): String = when (operato
     TensorRechnerOperator.ACHSENSCHNITT -> "Achsenschnitt"
     TensorRechnerOperator.INDEXAUSWERTUNG -> "Indexauswertung"
     TensorRechnerOperator.NORM -> "Tensornorm"
+    TensorRechnerOperator.ZERLEGEN -> "Tensor zerlegen"
 }
 
 private fun tensorKategorie(operator: TensorRechnerOperator): String = when (operator) {
@@ -308,6 +309,7 @@ private fun tensorKategorie(operator: TensorRechnerOperator): String = when (ope
     -> "Tensorindizes"
 
     TensorRechnerOperator.NORM -> "Tensoranalyse"
+    TensorRechnerOperator.ZERLEGEN -> "Zerlegungen"
 }
 
 private fun tensorSignatur(operator: TensorRechnerOperator): RechnerOperatorSignatur = when (operator) {

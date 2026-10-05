@@ -55,6 +55,8 @@ internal fun FarbAuswahlDialog(
     ) {
         Surface(
             modifier = Modifier
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
                 .fillMaxWidth(.92f)
                 .fillMaxHeight(.9f)
                 .widthIn(max = 760.dp),
@@ -69,8 +71,8 @@ internal fun FarbAuswahlDialog(
                         .weight(1f)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                        .padding(LocalAtlasAbstände.current.weit),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
                 ) {
                     FarbVorschau(entwurf.kanonisch)
                     FarbModusAuswahl(entwurf.modus) { entwurf = entwurf.mitModus(it) }
@@ -112,7 +114,7 @@ internal fun FarbAuswahlDialog(
 @Composable
 private fun DialogKopf(titel: String, farbe: RgbFarbe) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.inhalt),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(titel, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
@@ -129,8 +131,8 @@ private fun DialogFuss(
 ) {
     HorizontalDivider()
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.bereich),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         OutlinedButton(onClick = zurücksetzen) { Text("Zurücksetzen") }
@@ -160,7 +162,7 @@ private fun FarbModusAuswahl(
 ) {
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
     ) {
         FarbEingabeModus.entries.forEach { eintrag ->
             val titel = when (eintrag) {
@@ -236,7 +238,7 @@ private fun FarbtonRegler(
     entwurf: FarbEntwurf,
     ändern: (FarbEntwurf) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) {
         Text("Farbton: ${entwurf.hsb.farbton.roundToInt()}°", style = MaterialTheme.typography.labelLarge)
         Box(
             Modifier
@@ -334,7 +336,7 @@ private fun FarbKanalEingabe(
     textÄndern: (String) -> Unit,
     sliderÄndern: (Float) -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         OutlinedTextField(
             value = text,
             onValueChange = { textÄndern(bereinigeKanalEingabe(it, ganzzahlig, vorzeichen)) },

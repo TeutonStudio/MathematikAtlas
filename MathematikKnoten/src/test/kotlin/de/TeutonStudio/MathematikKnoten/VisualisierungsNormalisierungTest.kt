@@ -70,6 +70,23 @@ class VisualisierungsNormalisierungTest {
     }
 
     @Test
+    fun `eins mal n und n mal eins Matrizen werden als n dimensionale Punkte dargestellt`() {
+        val menge = EndlicheMenge(
+            setOf(
+                Matrix(listOf(listOf(RationaleZahl.Eins, RationaleZahl.von(2)))),
+                Matrix(listOf(listOf(RationaleZahl.von(3)), listOf(RationaleZahl.von(4)))),
+            ),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
+            VisualisierungsSampler.sample(menge, konfiguration()),
+        )
+
+        assertEquals(setOf(1.0 to 2.0, 3.0 to 4.0), ergebnis.punkte.map { it.x to it.y }.toSet())
+        assertFalse(ergebnis.istApproximation)
+    }
+
+    @Test
     fun `endliche Menge schluesselt verworfene Elemente nach Ursache auf`() {
         val menge = EndlicheMenge(
             setOf(

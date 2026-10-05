@@ -112,20 +112,23 @@ private fun KonzeptDialog(
     }
     val aktiverReiter = konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
     val aktiveKarte = aktiverReiter?.karteFür(komplexDarstellung)
+    val zeigtFalkSchema = aktiverReiter?.darstellung == KonzeptReiterDarstellung.FalkSchema
 
     Dialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            Modifier.fillMaxWidth(.94f).fillMaxHeight(.92f),
+            Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(LocalAtlasAbstände.current.bereich)
+                .fillMaxWidth(.94f).fillMaxHeight(.92f),
             shape = MaterialTheme.shapes.large,
             tonalElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(konzept?.name ?: ursprungsKnoten?.name.orEmpty(), style = MaterialTheme.typography.titleLarge)
@@ -140,7 +143,7 @@ private fun KonzeptDialog(
                 HorizontalDivider()
 
                 if (konzept == null) {
-                    Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp)) {
+                    Box(Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.weit)) {
                         Text(
                             "Fehlende Definition für ${ursprungsKnoten?.art.orEmpty()}",
                             color = MaterialTheme.colorScheme.error,
@@ -165,8 +168,8 @@ private fun KonzeptDialog(
                     }
                     if (konzept.reiter.any(KonzeptReiter::besitztDarstellungsVarianten)) {
                         Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
+                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                         ) {
                             FilterChip(
                                 selected = komplexDarstellung == KomplexDarstellung.Kartesisch,
@@ -180,21 +183,28 @@ private fun KonzeptDialog(
                             )
                         }
                     }
-                    aktiveKarte?.let { karte ->
-                        UnveränderlicheKonzeptKarte(
-                            zustand = zustand,
-                            karte = karte,
+                    if (zeigtFalkSchema) {
+                        MatrixproduktFalkSchemaInhalt(
+                            auswertung = ursprungsKnoten?.let { zustand.auswertung.knoten[it.id] },
                             modifier = Modifier.weight(1f).fillMaxWidth(),
                         )
+                    } else {
+                        aktiveKarte?.let { karte ->
+                            UnveränderlicheKonzeptKarte(
+                                zustand = zustand,
+                                karte = karte,
+                                modifier = Modifier.weight(1f).fillMaxWidth(),
+                            )
+                        }
                     }
                 }
 
                 HorizontalDivider()
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
+                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
-                    aktiveKarte?.let { karte ->
+                    aktiveKarte?.takeUnless { zeigtFalkSchema }?.let { karte ->
                         Button(
                             onClick = {
                                 zustand.öffneBearbeitbareKopie(karte)
@@ -315,8 +325,8 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         Column(
-            Modifier.fillMaxSize().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.bereich),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
         ) {
             when (knoten.art) {
                 KonzeptKnotenArten.REGEL -> {

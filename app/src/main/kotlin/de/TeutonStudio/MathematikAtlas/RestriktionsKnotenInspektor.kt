@@ -121,12 +121,12 @@ private fun BereichsanpassungsInhalt(
             if (ergänzungsPaare.isNotEmpty()) {
                 HorizontalDivider()
                 Text("Geordnete Ergänzungen · erste passende Methode gewinnt", style = MaterialTheme.typography.titleSmall)
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
                     ergänzungsPaare.forEachIndexed { index, (anschluss, methode) ->
                         val fachErgebnis = diagnose.ergänzungen.getOrNull(index)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
                         ) {
                             Text(
                                 buildString {
@@ -149,7 +149,7 @@ private fun BereichsanpassungsInhalt(
                                         ),
                                     )
                                 },
-                                contentPadding = PaddingValues(horizontal = 8.dp),
+                                contentPadding = PaddingValues(horizontal = LocalAtlasAbstände.current.standard),
                             ) { Text("↑") }
                             OutlinedButton(
                                 enabled = index < ergänzungsPaare.lastIndex,
@@ -162,7 +162,7 @@ private fun BereichsanpassungsInhalt(
                                         ),
                                     )
                                 },
-                                contentPadding = PaddingValues(horizontal = 8.dp),
+                                contentPadding = PaddingValues(horizontal = LocalAtlasAbstände.current.standard),
                             ) { Text("↓") }
                         }
                     }

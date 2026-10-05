@@ -160,6 +160,18 @@ data class MathematischeMethode(
         require(fehlend.isEmpty()) {
             "Für die Methode '$name' fehlen die Argumente ${fehlend.joinToString()}."
         }
+        parameter.forEach { parameter ->
+            val indexMenge = werteVorräte[parameter.name] as? EndlicheIndexMenge ?: return@forEach
+            val argument = argumente.getValue(parameter.name) as? RationaleZahl
+                ?: error("Der Index '${parameter.name}' muss eine positive ganze Zahl sein.")
+            require(argument.nenner == java.math.BigInteger.ONE && argument.zähler.signum() > 0) {
+                "Der Index '${parameter.name}' muss eine positive ganze Zahl sein."
+            }
+            val grenze = indexMenge.obergrenze as? RationaleZahl
+            if (grenze != null) require(argument <= grenze) {
+                "Index ${argument.zuLatex()} liegt außerhalb von ${indexMenge.zuLatex()}."
+            }
+        }
         return vereinfacheObjekt(ersetze(vorschrift, argumente))
     }
 
@@ -387,6 +399,15 @@ fun ersetze(aussage: Aussage, bindungen: Map<String, MathematischesObjekt>): Aus
 /** Rekursive, typübergreifende Substitution für Methodenausgaben und Zielmengen. */
 fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesObjekt>): MathematischesObjekt = when (objekt) {
     is MethodenParameter -> bindungen[objekt.name] ?: objekt
+    is StrukturAchsenLaenge -> strukturAchsenLaenge(ersetze(objekt.quelle, bindungen), objekt.achse)
+    is SymbolischeZahlKomponente -> strukturKomponente(
+        ersetze(objekt.quelle, bindungen),
+        ersetze(objekt.index, bindungen),
+        numerisch = true,
+    )
+    is SymbolischerStrukturZugriff -> strukturSchnittOderKomponente(objekt, bindungen)
+    is EndlicheIndexMenge -> EndlicheIndexMenge(ersetze(objekt.obergrenze, bindungen))
+    is StrukturErgebnisMenge -> objekt.copy(form = objekt.form?.map { ersetze(it, bindungen) })
     is Addition -> addition(objekt.summanden.map { ersetze(it, bindungen) })
     is Multiplikation -> multiplikation(objekt.faktoren.map { ersetze(it, bindungen) })
     is Maximum -> maximum(objekt.operanden.map { ersetze(it, bindungen) })
@@ -514,6 +535,11 @@ private fun vereinfacheObjekt(
 /** Rekursive Analyse aller bindbaren Methodenparameter. */
 fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> = when (this) {
     is MethodenParameter -> setOf(this)
+    is StrukturAchsenLaenge -> quelle.enthalteneMethodenParameter()
+    is SymbolischeZahlKomponente -> setOf(quelle, index).enthalteneMethodenParameter()
+    is SymbolischerStrukturZugriff -> (listOf(quelle, index) + ergebnisForm.orEmpty()).enthalteneMethodenParameter()
+    is EndlicheIndexMenge -> obergrenze.enthalteneMethodenParameter()
+    is StrukturErgebnisMenge -> form.orEmpty().enthalteneMethodenParameter()
     is Addition -> summanden.enthalteneMethodenParameter()
     is Multiplikation -> faktoren.enthalteneMethodenParameter()
     is Division -> listOf(dividend, divisor).enthalteneMethodenParameter()
@@ -604,3 +630,23 @@ fun MathematischesObjekt.freieMethodenParameter(): Set<MethodenParameter> = enth
 
 private fun Iterable<MathematischesObjekt>.enthalteneMethodenParameter(): Set<MethodenParameter> =
     flatMap { it.enthalteneMethodenParameter() }.toSet()
+
+private fun strukturSchnittOderKomponente(
+    zugriff: SymbolischerStrukturZugriff,
+    bindungen: Map<String, MathematischesObjekt>,
+): MathematischesObjekt {
+    val quelle = ersetze(zugriff.quelle, bindungen)
+    val index = ersetze(zugriff.index, bindungen)
+    return if (zugriff.art == StrukturZugriffsArt.Komponente) {
+        strukturKomponente(quelle, index, numerisch = false)
+    } else {
+        strukturSchnitt(
+            quelle = quelle,
+            index = index,
+            art = zugriff.art,
+            achse = zugriff.achse,
+            ergebnisAnschlussArt = zugriff.ergebnisAnschlussArt,
+            ergebnisForm = zugriff.ergebnisForm?.map { ersetze(it, bindungen) },
+        )
+    }
+}

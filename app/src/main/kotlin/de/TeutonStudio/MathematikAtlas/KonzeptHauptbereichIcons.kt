@@ -107,7 +107,7 @@ private fun DrawScope.zeichneVektor(
 private fun LineareAlgebraIconVorschau() {
     MaterialTheme {
         Surface {
-            Box(Modifier.padding(16.dp)) {
+            Box(Modifier.padding(LocalAtlasAbstände.current.inhalt)) {
                 LineareAlgebraIcon(Modifier.size(64.dp))
             }
         }

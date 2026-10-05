@@ -130,7 +130,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
             ) {
                 Text(
                     "Die Operator-ID $operatorId ist nicht registriert. Wähle im Dialog einen gültigen Ersatz.",
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -244,8 +244,8 @@ private fun VertragsKarte(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
         ) {
             Text("Signaturvertrag", style = MaterialTheme.typography.labelLarge)
             Text("Familie: ${definition.familie.name}", style = MaterialTheme.typography.bodySmall)
@@ -289,7 +289,7 @@ private fun AchsenKonfiguration(
     Text("Achseneingabe", style = MaterialTheme.typography.titleSmall)
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
     ) {
         FilterChip(
             selected = modus == AchsenEingabeModus.TUPEL,
@@ -342,7 +342,7 @@ private fun AchsenKonfiguration(
     if (modus == AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES && definition.maximaleAchsenAnzahl == null) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             OutlinedButton(
                 onClick = {

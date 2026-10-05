@@ -107,6 +107,14 @@ object KoordinatenAdapter {
         val ausdruecke = when (objekt) {
             is ZahlAusdruck -> listOf(objekt)
 
+            is Matrix -> when {
+                objekt.zeilenAnzahl == 1 -> objekt.zeilen.single()
+                objekt.spaltenAnzahl == 1 -> objekt.zeilen.map(List<ZahlAusdruck>::single)
+                else -> return KoordinatenErgebnis.NichtDarstellbar(
+                    "Eine ${objekt.zeilenAnzahl}×${objekt.spaltenAnzahl}-Matrix ist kein Zeilen- oder Spaltenvektor und benötigt eine ausdrückliche Projektion.",
+                )
+            }
+
             is Tupel, is ZeilenVektor, is SpaltenVektor -> when (
                 val ansicht = runCatching {
                     objekt.numerischeKomponentenAnsicht(werteVorraete = werteVorraete)
@@ -126,7 +134,7 @@ object KoordinatenAdapter {
             }
 
             else -> return KoordinatenErgebnis.NichtDarstellbar(
-                "Element ist weder Tupel noch Zeilen- oder Spaltenvektor und keine Zahl.",
+                "Element ist weder Tupel, vektorförmige Matrix, Zeilen- oder Spaltenvektor noch eine Zahl.",
             )
         }
 

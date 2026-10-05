@@ -24,7 +24,7 @@ internal fun ProfilFarbAuswahl(
     var dialogOffen by remember { mutableStateOf(false) }
     val rgb = remember(startFarbe) { RgbFarbe.aus(startFarbe) }
 
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         Text("Profilfarbe", style = MaterialTheme.typography.titleMedium)
         Text(
             "Die Farbe wird im Dialog bearbeitet. Erst „Übernehmen“ ändert den Profilentwurf; dauerhaft gespeichert wird weiterhin mit „Profil speichern“.",
@@ -40,7 +40,7 @@ internal fun ProfilFarbAuswahl(
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         ) {}
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
             Text(
                 rgb.rgbHex,
                 modifier = Modifier.weight(1f),

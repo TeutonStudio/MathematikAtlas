@@ -1,7 +1,8 @@
 package de.TeutonStudio.MathematikAtlas
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,12 +21,16 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.formatiereAuswertungsDauerNanos
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import kotlin.math.roundToInt
 
 /** Interaktive Ebene für persistierte visuelle Gruppen und Auswahlmarkierungen. */
 @Composable
-internal fun VisuelleGruppenEbene(editor: KartenEditorZustand) {
+internal fun VisuelleGruppenEbene(
+    editor: KartenEditorZustand,
+    auswertungsDauerFür: (KnotenId) -> Long?,
+) {
     var bearbeiteteGruppenId by remember(editor.karte.id) { mutableStateOf<VisuelleGruppenId?>(null) }
     val aktuelleGruppe = bearbeiteteGruppenId?.let { id ->
         editor.karte.visuelleGruppen.firstOrNull { it.id == id }
@@ -37,6 +42,10 @@ internal fun VisuelleGruppenEbene(editor: KartenEditorZustand) {
                 VisuelleGruppeDarstellung(
                     editor = editor,
                     gruppe = gruppe,
+                    kollektiveAuswertungsDauerNanos = kollektiveAuswertungsDauerNanos(
+                        gruppe.knotenIds,
+                        auswertungsDauerFür,
+                    ),
                     bearbeiten = { bearbeiteteGruppenId = gruppe.id },
                 )
             }
@@ -52,9 +61,6 @@ internal fun VisuelleGruppenEbene(editor: KartenEditorZustand) {
                 editor.führeAus(KartenAktion.VisuelleGruppeTitelÄndern(gruppe.id, titel))
                 bearbeiteteGruppenId = null
             },
-            kinderZuordnen = {
-                editor.führeAus(KartenAktion.VisuelleGruppenKinderZuordnen(gruppe.id))
-            },
             gruppeLöschen = {
                 editor.führeAus(KartenAktion.VisuelleGruppeLöschen(gruppe.id))
                 bearbeiteteGruppenId = null
@@ -67,6 +73,7 @@ internal fun VisuelleGruppenEbene(editor: KartenEditorZustand) {
 private fun BoxScope.VisuelleGruppeDarstellung(
     editor: KartenEditorZustand,
     gruppe: VisuelleKnotenGruppeDaten,
+    kollektiveAuswertungsDauerNanos: Long?,
     bearbeiten: () -> Unit,
 ) {
     val dichte = LocalDensity.current
@@ -112,25 +119,14 @@ private fun BoxScope.VisuelleGruppeDarstellung(
                 .fillMaxWidth()
                 .height(kopfHöhe.dp)
                 .semantics { contentDescription = "Visuelle Gruppe ${gruppe.titel} verschieben" }
-                .pointerInput(gruppe.id, ansicht.zoom, dichte.density) {
-                    detectDragGestures(
-                        onDragStart = { editor.beginneInteraktion() },
-                        onDragCancel = { editor.beendeInteraktion() },
-                        onDragEnd = { editor.beendeInteraktion() },
-                        onDrag = { änderung, verschiebung ->
-                            änderung.consume()
-                            val weltFaktor = (dichte.density * ansicht.zoom).coerceAtLeast(0.0001f)
-                            editor.führeAus(
-                                KartenAktion.VisuelleGruppeVerschieben(
-                                    id = gruppe.id,
-                                    delta = GraphPunkt(
-                                        verschiebung.x / weltFaktor,
-                                        verschiebung.y / weltFaktor,
-                                    ),
-                                ),
-                                mitHistorie = false,
-                            )
-                        },
+                .einfingerGruppenDrag(gruppe.id, ansicht.zoom, dichte.density, editor) { verschiebung ->
+                    val weltFaktor = (dichte.density * ansicht.zoom).coerceAtLeast(0.0001f)
+                    editor.führeAus(
+                        KartenAktion.VisuelleGruppeVerschieben(
+                            id = gruppe.id,
+                            delta = GraphPunkt(verschiebung.x / weltFaktor, verschiebung.y / weltFaktor),
+                        ),
+                        mitHistorie = false,
                     )
                 },
         ) {
@@ -145,6 +141,20 @@ private fun BoxScope.VisuelleGruppeDarstellung(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
+                kollektiveAuswertungsDauerNanos?.let { dauer ->
+                    val formatiert = formatiereAuswertungsDauerNanos(dauer)
+                    Text(
+                        text = "Δzeit  $formatiert",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .padding(horizontal = LocalAtlasAbstände.current.eng)
+                            .semantics {
+                                contentDescription = "Kollektive letzte Auswertungsdauer $formatiert"
+                            },
+                    )
+                }
                 TextButton(
                     onClick = bearbeiten,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
@@ -162,26 +172,18 @@ private fun BoxScope.VisuelleGruppeDarstellung(
                 .align(Alignment.BottomEnd)
                 .size(22.dp)
                 .semantics { contentDescription = "Visuelle Gruppe ${gruppe.titel} skalieren" }
-                .pointerInput(gruppe.id, ansicht.zoom, dichte.density) {
-                    detectDragGestures(
-                        onDragStart = { editor.beginneInteraktion() },
-                        onDragCancel = { editor.beendeInteraktion() },
-                        onDragEnd = { editor.beendeInteraktion() },
-                        onDrag = { änderung, verschiebung ->
-                            änderung.consume()
-                            val weltFaktor = (dichte.density * ansicht.zoom).coerceAtLeast(0.0001f)
-                            val aktuell = aktuelleGruppe
-                            editor.führeAus(
-                                KartenAktion.VisuelleGruppeGrößeÄndern(
-                                    id = aktuell.id,
-                                    größe = GraphGröße(
-                                        breite = aktuell.größe.breite + verschiebung.x / weltFaktor,
-                                        höhe = aktuell.größe.höhe + verschiebung.y / weltFaktor,
-                                    ),
-                                ),
-                                mitHistorie = false,
-                            )
-                        },
+                .einfingerGruppenDrag(gruppe.id, ansicht.zoom, dichte.density, editor) { verschiebung ->
+                    val weltFaktor = (dichte.density * ansicht.zoom).coerceAtLeast(0.0001f)
+                    val aktuell = aktuelleGruppe
+                    editor.führeAus(
+                        KartenAktion.VisuelleGruppeGrößeÄndern(
+                            id = aktuell.id,
+                            größe = GraphGröße(
+                                breite = aktuell.größe.breite + verschiebung.x / weltFaktor,
+                                höhe = aktuell.größe.höhe + verschiebung.y / weltFaktor,
+                            ),
+                        ),
+                        mitHistorie = false,
                     )
                 },
         ) {
@@ -190,6 +192,54 @@ private fun BoxScope.VisuelleGruppeDarstellung(
             }
         }
     }
+}
+
+/** Gruppenrahmen dürfen eine Karten-Zweifingergeste niemals als Verschieben oder Skalieren übernehmen. */
+private fun Modifier.einfingerGruppenDrag(
+    gruppeId: VisuelleGruppenId,
+    zoom: Float,
+    dichte: Float,
+    editor: KartenEditorZustand,
+    beiVerschiebung: (Offset) -> Unit,
+): Modifier = pointerInput(gruppeId, zoom, dichte) {
+    awaitEachGesture {
+        val ersterFinger = awaitFirstDown(requireUnconsumed = false)
+        var gruppenDragAktiv = false
+        var mehrfinger = false
+        do {
+            val ereignis = awaitPointerEvent()
+            if (ereignis.changes.count { it.pressed } > 1) {
+                if (gruppenDragAktiv) editor.verwerfeLaufendeInteraktion()
+                mehrfinger = true
+            }
+            val änderung = ereignis.changes.firstOrNull { it.id == ersterFinger.id } ?: break
+            if (!mehrfinger && änderung.pressed && änderung.position != änderung.previousPosition) {
+                if (!gruppenDragAktiv) {
+                    editor.beginneInteraktion()
+                    gruppenDragAktiv = true
+                }
+                beiVerschiebung(änderung.position - änderung.previousPosition)
+                änderung.consume()
+            }
+        } while (ereignis.changes.any { it.pressed })
+        if (gruppenDragAktiv && !mehrfinger) editor.beendeInteraktion()
+    }
+}
+
+internal fun kollektiveAuswertungsDauerNanos(
+    knotenIds: Set<KnotenId>,
+    dauerFür: (KnotenId) -> Long?,
+): Long? {
+    var summe = 0L
+    var dauerVorhanden = false
+    knotenIds.forEach { id ->
+        dauerFür(id)?.let { dauer ->
+            dauerVorhanden = true
+            val nichtNegativ = dauer.coerceAtLeast(0L)
+            summe = if (Long.MAX_VALUE - summe < nichtNegativ) Long.MAX_VALUE else summe + nichtNegativ
+        }
+    }
+    return summe.takeIf { dauerVorhanden }
 }
 
 @Composable
@@ -224,7 +274,6 @@ private fun VisuelleGruppeDialog(
     gruppe: VisuelleKnotenGruppeDaten,
     schließen: () -> Unit,
     titelÜbernehmen: (String) -> Unit,
-    kinderZuordnen: () -> Unit,
     gruppeLöschen: () -> Unit,
 ) {
     var titel by remember(gruppe.id, gruppe.titel) { mutableStateOf(gruppe.titel) }
@@ -233,7 +282,7 @@ private fun VisuelleGruppeDialog(
         onDismissRequest = schließen,
         title = { Text("Visuelle Gruppe") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 OutlinedTextField(
                     value = titel,
                     onValueChange = { titel = it },
@@ -246,10 +295,6 @@ private fun VisuelleGruppeDialog(
                     "${gruppe.knotenIds.size} zugeordnete Knoten",
                     style = MaterialTheme.typography.bodySmall,
                 )
-                OutlinedButton(
-                    onClick = kinderZuordnen,
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Vollständig enthaltene Knoten zuordnen") }
                 Button(
                     onClick = gruppeLöschen,
                     modifier = Modifier.fillMaxWidth(),

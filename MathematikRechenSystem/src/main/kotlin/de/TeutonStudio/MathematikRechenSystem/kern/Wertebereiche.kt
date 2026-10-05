@@ -11,6 +11,11 @@ fun inferiereZielmenge(
     werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     annahmen: Set<Aussage> = emptySet(),
 ): MengenAusdruck = when (ausdruck) {
+    is SymbolischerStrukturZugriff -> StrukturErgebnisMenge(
+        ausdruck.ergebnisAnschlussArt,
+        ausdruck.ergebnisForm,
+        "\\operatorname{Strukturwerte}",
+    )
     is ZahlAusdruck -> inferiereZahlenWertevorrat(ausdruck, werteVorräte, annahmen)
     is AllgemeinerParameter -> werteVorräte[ausdruck.name]
         ?: error("Für den allgemeinen Parameter '${ausdruck.name}' fehlt ein Wertevorrat.")
@@ -99,6 +104,8 @@ private fun inferiereElementMenge(
     werteVorräte: Map<String, MengenAusdruck>,
     annahmen: Set<Aussage>,
 ): MengenAusdruck = when (menge) {
+    is EndlicheIndexMenge -> NatürlicheZahlen
+    is StrukturErgebnisMenge -> menge
     NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen,
     Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen, is BenannteMenge -> menge
     LeereMenge -> LeereMenge

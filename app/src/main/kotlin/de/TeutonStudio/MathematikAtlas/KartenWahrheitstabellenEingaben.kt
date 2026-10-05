@@ -64,7 +64,7 @@ private fun VerbundenerKartenTabellenEingang(
     text: (String, String) -> String,
     speichereText: (String, String) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
         Text("${feld.name}: verbunden und festgesetzt", style = MaterialTheme.typography.labelLarge)
         when (val objekt = wert.objekt) {
             is Aussage -> KartenAussageZelle(objekt.entscheide().wahrheitswert)
@@ -117,7 +117,7 @@ private fun FreieKartenTabellenPrädikatKonfiguration(
     val mengenSchlüssel = kartenTabellenPrädikatMengenSchlüssel(feld)
     val mengenText = text(mengenSchlüssel, "R")
     val mengen = parseKartenTabellenMengenListe(mengenText)
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
         LatexText(
             "${kartenTabellenLatexName(feld.name)}:" +
                 mengen.joinToString("\\times") { it.zuLatex() },

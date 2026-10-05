@@ -33,9 +33,12 @@ import de.TeutonStudio.MathematikKnoten.konfiguriereStrukturRechner
 import de.TeutonStudio.MathematikKnoten.konfiguriereStrukturRechnerFormel
 import de.TeutonStudio.MathematikKnoten.ladeStrukturRechnerFormel
 import de.TeutonStudio.MathematikKnoten.strukturOperatorAlsFormel
+import de.TeutonStudio.MathematikKnoten.MATRIX_ZERLEGEN_RICHTUNG
 import de.TeutonStudio.MathematikRechenSystem.kern.AussagenSatzOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechner
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorRechnerOperator
+import de.TeutonStudio.MathematikRechenSystem.kern.MatrixRechnerOperator
+import de.TeutonStudio.MathematikRechenSystem.kern.MatrixZerlegeRichtung
 
 internal object StrukturRechnerInspektor : KnotenInspektor {
     @Composable
@@ -141,8 +144,8 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     Text("Gespeicherte Strukturformel", style = MaterialTheme.typography.labelLarge)
                     LatexText(latex, style = MaterialTheme.typography.titleMedium)
@@ -168,8 +171,8 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                 color = MaterialTheme.colorScheme.errorContainer,
             ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
                 ) {
                     Text("Unbekannter gespeicherter Operator", style = MaterialTheme.typography.labelLarge)
                     Text(
@@ -186,8 +189,8 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
                 ) {
                     Text("Dynamische Definition", style = MaterialTheme.typography.labelLarge)
                     LatexText(operator.definitionsLatex, style = MaterialTheme.typography.titleMedium)
@@ -202,6 +205,26 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
 
         if (familie == StrukturRechnerKnotenFamilie.AUSSAGESATZ) {
             AussagenParameter(knoten, operator, aktionen)
+        }
+        if (
+            familie == StrukturRechnerKnotenFamilie.MATRIX &&
+            operatorId == MatrixRechnerOperator.ZERLEGEN.stabileId
+        ) {
+            val richtung = runCatching {
+                MatrixZerlegeRichtung.valueOf(
+                    knoten.parameter[MATRIX_ZERLEGEN_RICHTUNG] ?: MatrixZerlegeRichtung.ZEILEN.name,
+                )
+            }.getOrDefault(MatrixZerlegeRichtung.ZEILEN)
+            Text("Zerlegung", style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                MatrixZerlegeRichtung.entries.forEach { wert ->
+                    androidx.compose.material3.FilterChip(
+                        selected = richtung == wert,
+                        onClick = { aktionen.parameter(MATRIX_ZERLEGEN_RICHTUNG, wert.name) },
+                        label = { Text(if (wert == MatrixZerlegeRichtung.ZEILEN) "Zeilen" else "Spalten") },
+                    )
+                }
+            }
         }
         if (familie == StrukturRechnerKnotenFamilie.TENSOR) {
             TensorParameter(knoten, operatorId, aktionen)
@@ -304,7 +327,7 @@ private fun AussagenParameter(
     if (!quantor && knoten.parameter[RECHNER_OPERATOR_PARAMETER] != AUSSAGESATZ_FORMEL_ID) return
 
     Text("Variablenbindung", style = MaterialTheme.typography.titleSmall)
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         OutlinedTextField(
             value = knoten.parameter["variablenName"].orEmpty().ifBlank { "x" },
             onValueChange = { aktionen.parameter("variablenName", it.trim().ifBlank { "x" }) },

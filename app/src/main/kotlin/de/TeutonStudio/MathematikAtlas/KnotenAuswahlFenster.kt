@@ -29,7 +29,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
         KnotenWählerModus.Standard -> AlertDialog(
             onDismissRequest = zustand::schließeKnotenAuswahl,
             title = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) {
                     Text("Knoten einfügen")
                     Text(
                         modus.beschreibung,
@@ -40,8 +40,9 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
             },
             text = {
                 Column(
-                    Modifier.fillMaxWidth().heightIn(max = 700.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.fillMaxWidth().heightIn(max = 700.dp)
+                        .padding(horizontal = LocalAtlasAbstände.current.standard),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     KnotenWählerModusAuswahl(modus = modus, onModus = setzeModus)
                     HorizontalDivider()
@@ -68,7 +69,7 @@ internal fun KnotenWählerModusAuswahl(
     onModus: (KnotenWählerModus) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         KnotenWählerModus.entries.forEach { eintrag ->
             FilterChip(
                 selected = modus == eintrag,
@@ -81,7 +82,7 @@ internal fun KnotenWählerModusAuswahl(
 
 @Composable
 private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPunkt) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         OutlinedTextField(
             value = zustand.suchText,
             onValueChange = zustand::setzeSuchText,
@@ -142,7 +143,10 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
         val aktiverTab = tabs.firstOrNull { it.name == ausgewählterTab && it.anzahl > 0 }
             ?: tabs.firstOrNull { it.anzahl > 0 }
             ?: tabs.first()
-        PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(aktiverTab), edgePadding = 0.dp) {
+        PrimaryScrollableTabRow(
+            selectedTabIndex = tabs.indexOf(aktiverTab),
+            edgePadding = LocalAtlasAbstände.current.standard,
+        ) {
             tabs.forEach { tab ->
                 Tab(
                     selected = aktiverTab == tab,
@@ -154,14 +158,15 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
         }
         LazyColumn(
             Modifier.fillMaxWidth().heightIn(max = 450.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = LocalAtlasAbstände.current.liste,
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
         ) {
             if (aktiverTab.name in setOf("Alle", "Rechnen") && zeigeFaltung) {
                 item {
                     Text(
                         "Iterierte Operatoren",
                         style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                        modifier = Modifier.padding(top = LocalAtlasAbstände.current.standard, start = LocalAtlasAbstände.current.winzig),
                     )
                 }
                 item {
@@ -178,7 +183,7 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
                     Text(
                         "Mengendefinition",
                         style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                        modifier = Modifier.padding(top = LocalAtlasAbstände.current.standard, start = LocalAtlasAbstände.current.winzig),
                     )
                 }
                 item {
@@ -195,7 +200,7 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
                     Text(
                         "Vektor aus Tupel",
                         style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                        modifier = Modifier.padding(top = LocalAtlasAbstände.current.standard, start = LocalAtlasAbstände.current.winzig),
                     )
                 }
                 item {
@@ -232,7 +237,7 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
                         Text(
                             gruppe,
                             style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                            modifier = Modifier.padding(top = LocalAtlasAbstände.current.standard, start = LocalAtlasAbstände.current.winzig),
                         )
                     }
                     items(einträge.sortedBy { it.name }) { vorlage ->
@@ -260,7 +265,7 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
                     Text(
                         "Keine passenden Knoten",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(LocalAtlasAbstände.current.inhalt),
                     )
                 }
             }

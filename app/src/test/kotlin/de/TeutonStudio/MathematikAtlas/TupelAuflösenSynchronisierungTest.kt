@@ -8,9 +8,11 @@ import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.TupelOperationKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -120,11 +122,76 @@ class TupelAuflösenSynchronisierungTest {
         assertEquals(vorher, danach.knoten.single().ausgänge().map { it.id to it.art })
     }
 
+    @Test
+    fun `Matrixzerleger erzeugt stabile Zeilen IDs und orientierte Arten`() {
+        val basis = StrukturFormelRechnerVorlagen.Matrix.erzeuge(GraphPunkt.Zero)
+        val zerleger = konfiguriereStrukturRechner(
+            basis,
+            StrukturRechnerKnotenFamilie.MATRIX,
+            MatrixRechnerOperator.ZERLEGEN.stabileId,
+        )
+        val matrix = Matrix(List(2) { List(3) { RationaleZahl.Eins } })
+        val karte = KartenDaten(name = "Matrix", knoten = listOf(zerleger))
+        val einmal = synchronisiereStrukturZerleger(
+            karte,
+            strukturAuswertung(zerleger, "matrix", matrix),
+            prüfung,
+        )
+        val zweimal = synchronisiereStrukturZerleger(
+            einmal,
+            strukturAuswertung(einmal.knoten.single(), "matrix", matrix),
+            prüfung,
+        )
+        assertEquals(listOf("zeile1", "zeile2"), einmal.knoten.single().ausgänge().map { it.name })
+        assertTrue(einmal.knoten.single().ausgänge().all { it.art == MathematikAnschlussArten.ZeilenVektor.id })
+        assertEquals(
+            einmal.knoten.single().ausgänge().map { it.id },
+            zweimal.knoten.single().ausgänge().map { it.id },
+        )
+    }
+
+    @Test
+    fun `symbolischer Vektorvertrag synchronisiert genau den Methodenausgang`() {
+        val zerleger = vektorRechnerVorlage(VektorRechnerOperator.ZERLEGEN).erzeuge(GraphPunkt.Zero)
+        val quelle = TypisiertesElement(
+            "v",
+            MathematikAnschlussArten.SpaltenVektor.id.wert,
+            strukturForm = listOf(Variable("n")),
+        )
+        val ergebnis = synchronisiereStrukturZerleger(
+            KartenDaten(name = "Vektor", knoten = listOf(zerleger)),
+            strukturAuswertung(zerleger, "struktur", quelle),
+            prüfung,
+        )
+        assertEquals(listOf("methode"), ergebnis.knoten.single().ausgänge().map { it.name })
+        assertEquals(MathematikAnschlussArten.Methode.id, ergebnis.knoten.single().ausgänge().single().art)
+        val erneut = synchronisiereStrukturZerleger(
+            ergebnis,
+            strukturAuswertung(ergebnis.knoten.single(), "struktur", quelle),
+            prüfung,
+        )
+        assertEquals(ergebnis.knoten.single().ausgänge().single().id, erneut.knoten.single().ausgänge().single().id)
+    }
+
     private fun auswertung(knoten: KnotenDaten, tupel: Tupel) = KartenAuswertungsErgebnis(
         mapOf(
             knoten.id to KnotenAuswertungsErgebnis(
                 ausgaben = emptyMap(),
                 eingänge = mapOf("tupel" to BedingterWert(tupel)),
+            ),
+        ),
+        emptyList(),
+    )
+
+    private fun strukturAuswertung(
+        knoten: KnotenDaten,
+        eingang: String,
+        objekt: MathematischesObjekt,
+    ) = KartenAuswertungsErgebnis(
+        mapOf(
+            knoten.id to KnotenAuswertungsErgebnis(
+                ausgaben = emptyMap(),
+                eingänge = mapOf(eingang to BedingterWert(objekt)),
             ),
         ),
         emptyList(),

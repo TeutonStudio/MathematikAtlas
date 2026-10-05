@@ -8,14 +8,26 @@ data class TypisiertesElement(
     override val name: String,
     val anschlussArt: String,
     val latex: String = name,
+    /** Geordnete Achsenlängen; `null` bedeutet unbekannte Form einschließlich Rang. */
+    val strukturForm: List<ZahlAusdruck>? = null,
 ) : MethodenParameter {
     init {
         require(name.isNotBlank()) { "Der Name eines gebundenen Elements darf nicht leer sein." }
         require(anschlussArt.isNotBlank()) { "Ein gebundenes Element benötigt eine Anschlussart." }
+        strukturForm?.forEach { dimension ->
+            require(dimension is Variable || dimension.positiveGanzeZahlOderNull() != null) {
+                "Strukturachsen müssen positive ganze Zahlen oder einzelne Variablen sein."
+            }
+        }
     }
 
     override fun zuLatex(): String = latex
 }
+
+internal fun ZahlAusdruck.positiveGanzeZahlOderNull(): Int? =
+    (this as? RationaleZahl)?.takeIf {
+        it.nenner == java.math.BigInteger.ONE && it.zähler.signum() > 0 && it.zähler.bitLength() < 31
+    }?.zähler?.toInt()
 
 /** Symbolische Aussagevariable, die selbst als Prädikat verwendet werden kann. */
 data class AussagenParameter(

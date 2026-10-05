@@ -44,7 +44,7 @@ internal fun KartenExportFormatDialog(
         onDismissRequest = schließen,
         title = { Text("Karte exportieren") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 KartenExportFormat.entries.forEach { kandidat ->
                     Surface(
                         onClick = { format = kandidat },
@@ -52,8 +52,8 @@ internal fun KartenExportFormatDialog(
                         tonalElevation = if (format == kandidat) 3.dp else 0.dp,
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.standard),
+                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                         ) {
                             RadioButton(
                                 selected = format == kandidat,

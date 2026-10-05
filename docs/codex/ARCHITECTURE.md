@@ -195,7 +195,7 @@ Die Desktopmodule `KnotenKartenVerwalterDesktop`, `MathematikKartenAdapterDeskto
 
 Die aktuelle Übergangsschuld ist in GitHub-Issue #395 vollständig beschrieben. `scripts/pruefe_desktop_shadowmodule.py` erlaubt exakt die derzeit vorhandenen relativen Produktionsquellen und verbietet jede Erweiterung dieser Whitelist. Bis #395 umgesetzt wird, darf die technische Schuld damit nur gleich bleiben oder kleiner werden.
 
-Eine Ablösung soll über eine offiziell unterstützte gemeinsame Android-/Desktop-Toolchain erfolgen. Mit Kotlin 2.3.21 liegt der unterstützte KMP-AGP-Bereich unter der aktuell verwendeten AGP-Version 9.3.1. Deshalb wird weder AGP beiläufig herabgestuft noch eine nicht unterstützte KMP-Kombination als Teil eines Fachrefactors eingeführt. Fachliche Quellen wie Knotenkatalog, Auswerterregistrierung, Kartenmigration und Kartenlaufzeit sind unabhängig davon bereits plattformneutral zentralisiert.
+Eine Ablösung soll über eine offiziell unterstützte gemeinsame Android-/Desktop-Toolchain erfolgen. Mit Kotlin 2.3.21 liegt der unterstützte KMP-AGP-Bereich unter der aktuell verwendeten AGP-Version 9.4.0. Deshalb wird weder AGP beiläufig herabgestuft noch eine nicht unterstützte KMP-Kombination als Teil eines Fachrefactors eingeführt. Fachliche Quellen wie Knotenkatalog, Auswerterregistrierung, Kartenmigration und Kartenlaufzeit sind unabhängig davon bereits plattformneutral zentralisiert.
 
 ## Fehlerzustände
 

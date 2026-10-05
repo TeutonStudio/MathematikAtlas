@@ -142,7 +142,7 @@ internal fun StrukturelleFormelVorschau(
                 val neu = koordinaten.boundsInRoot()
                 if (bereiche[id] != neu) bereiche[id] = neu
             },
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
         )
         if (cursorLokal != null) {
             val cursorFarbe = MaterialTheme.colorScheme.primary
@@ -169,7 +169,7 @@ internal fun FormelCursorTasten(
         CursorTaste("↑", "Cursor nach oben", kannBewegen(FormelCursorRichtung.Oben)) {
             bewegen(FormelCursorRichtung.Oben)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) {
             CursorTaste("←", "Cursor nach links", kannBewegen(FormelCursorRichtung.Links)) {
                 bewegen(FormelCursorRichtung.Links)
             }
@@ -274,7 +274,7 @@ private fun FormelOperation(
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
             ) {
                 argumente.forEachIndexed { index, argument ->
                     if (index > 0) Text(symbol, style = style)
@@ -290,7 +290,7 @@ private fun FormelOperation(
                     registriere,
                     modifier = Modifier
                         .border(1.dp, MaterialTheme.colorScheme.onSurface)
-                        .padding(horizontal = 4.dp),
+                        .padding(horizontal = LocalAtlasAbstände.current.winzig),
                     style = style,
                 )
             }
@@ -302,7 +302,7 @@ private fun FormelOperation(
         }
         else -> Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
         ) {
             Text(formelFunktionsName(name), style = style)
             Text("(", style = style)

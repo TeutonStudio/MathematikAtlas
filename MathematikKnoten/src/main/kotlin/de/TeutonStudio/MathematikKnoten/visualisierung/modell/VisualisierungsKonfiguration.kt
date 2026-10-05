@@ -7,6 +7,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.objekt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.text
 
 enum class RaumDimension { R1, R2, R3, C }
+enum class DimensionsModus { Automatisch, Manuell }
 data class AchsenZuordnung(val x: String, val y: String, val z: String?)
 data class ZahlenBereich(val minimum: Double, val maximum: Double) {
     init {
@@ -57,11 +58,13 @@ data class VisualisierungsKonfiguration(
     val kamera: KameraZustand = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0),
     val methodenModus: MethodenDarstellungsModus = MethodenDarstellungsModus.Automatisch,
     val festeSchnitte: Map<String, Double> = emptyMap(),
+    val dimensionsModus: DimensionsModus = DimensionsModus.Automatisch,
 ) {
     fun samplingSignatur(): List<Any?> =
         listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling, methodenModus, festeSchnitte)
     fun zuEigenschaften(): Map<String, KnotenEigenschaft> = mapOf(
         "dimension" to KnotenEigenschaft.Text(dimension.name),
+        "dimensionsModus" to KnotenEigenschaft.Text(dimensionsModus.name),
         "achsen" to achsen.zuEigenschaft(),
         "bereiche" to bereiche.zuEigenschaft(),
         "farbe" to farbe.zuEigenschaft(),
@@ -83,6 +86,14 @@ data class VisualisierungsKonfiguration(
         fun aus(eigenschaften: Map<String, KnotenEigenschaft>): VisualisierungsKonfiguration {
             val standard = VisualisierungsKonfiguration()
             val dimension = runCatching { RaumDimension.valueOf(eigenschaften.text("dimension", standard.dimension.name)) }.getOrDefault(standard.dimension)
+            val dimensionsModus = runCatching {
+                DimensionsModus.valueOf(
+                    eigenschaften.text(
+                        "dimensionsModus",
+                        if ("dimension" in eigenschaften) DimensionsModus.Manuell.name else standard.dimensionsModus.name,
+                    ),
+                )
+            }.getOrDefault(if ("dimension" in eigenschaften) DimensionsModus.Manuell else standard.dimensionsModus)
             val achsen = eigenschaften.objekt("achsen").zuAchsen(standard.achsen)
             val bereiche = eigenschaften.objekt("bereiche").zuBereiche(standard.bereiche)
             val farbe = eigenschaften.objekt("farbe").zuFarbe(standard.farbe)
@@ -105,7 +116,7 @@ data class VisualisierungsKonfiguration(
                 val zahl = (wert as? KnotenEigenschaft.Dezimalzahl)?.wert
                 if (name.isBlank() || zahl == null || !zahl.isFinite()) null else name to zahl
             }.toMap()
-            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte)
+            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte, dimensionsModus)
         }
     }
 }

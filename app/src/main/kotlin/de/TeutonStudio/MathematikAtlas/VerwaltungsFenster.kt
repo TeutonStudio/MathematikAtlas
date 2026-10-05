@@ -31,7 +31,7 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier) {
         Column {
             Text(
                 "Mathematik Atlas",
-                Modifier.padding(18.dp),
+                Modifier.padding(LocalAtlasAbstände.current.inhalt),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -86,9 +86,9 @@ private fun ProfilLeiste(profil: LokalesProfil, onClick: () -> Unit) {
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
         ) {
             Box(
                 Modifier.size(40.dp).clip(CircleShape)
@@ -152,20 +152,20 @@ private fun KartenListe(zustand: AtlasZustand) {
     }
     Column(Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard),
+            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             Button(onClick = zustand::neueKarte, modifier = Modifier.weight(1f)) { Text("Neue Karte") }
             OutlinedButton(onClick = { dialog = KartenOrdnerDialog.OrdnerAnlegen }, modifier = Modifier.weight(1f)) { Text("Ordner +") }
         }
         OutlinedButton(
             onClick = zustand::archiviereAktuell,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich),
         ) { Text("Aktuelle Karte archivieren") }
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(LocalAtlasAbstände.current.standard),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
         ) {
             items(einträge, key = KartenListenEintrag::schlüssel) { eintrag ->
                 when (eintrag) {
@@ -277,7 +277,7 @@ private fun KartenListe(zustand: AtlasZustand) {
                 }
             }
             if (einträge.isEmpty()) item {
-                Text("Keine Karten vorhanden.", Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Keine Karten vorhanden.", Modifier.padding(LocalAtlasAbstände.current.bereich), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -344,7 +344,7 @@ private fun OrdnerPfadDialog(
         onDismissRequest = schließen,
         title = { Text(titel) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it; fehler = null },
@@ -412,18 +412,18 @@ private fun KonzeptListe(zustand: AtlasZustand) {
             label = { Text("Konzepte durchsuchen") },
             placeholder = { Text("Name, Kategorie oder Knotenart") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
         )
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.winzig),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
         ) {
             if (konzepte.isEmpty()) {
                 item {
                     Text(
                         "Keine Definitionskarte passt zur Suche.",
-                        Modifier.padding(12.dp),
+                        Modifier.padding(LocalAtlasAbstände.current.bereich),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -432,7 +432,7 @@ private fun KonzeptListe(zustand: AtlasZustand) {
                 item(key = "konzept-pfad:$pfad") {
                     Text(
                         pfad,
-                        modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp),
+                        modifier = Modifier.padding(start = LocalAtlasAbstände.current.standard, top = LocalAtlasAbstände.current.bereich, bottom = LocalAtlasAbstände.current.winzig),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -468,14 +468,14 @@ private fun KonzeptListe(zustand: AtlasZustand) {
 
 @Composable private fun VariablenListe(zustand: AtlasZustand) {
     val variablen = zustand.auswertung.knoten.values.flatMap { it.ausgaben.values }.mapNotNull { it.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.Variable }.distinctBy { it.name }
-    LazyColumn(contentPadding = PaddingValues(12.dp)) {
+    LazyColumn(contentPadding = PaddingValues(LocalAtlasAbstände.current.bereich)) {
         if (variablen.isEmpty()) item { Text("Keine freien Variablen in der aktuellen Karte.") }
         items(variablen) { ListItem(headlineContent = { Text(it.name) }) }
     }
 }
 
 @Composable private fun AuswertungsListe(zustand: AtlasZustand) {
-    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(contentPadding = PaddingValues(LocalAtlasAbstände.current.bereich), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
         items(zustand.editor.karte.knoten) { knoten ->
             val e = zustand.auswertung.knoten[knoten.id]
             ListItem(
@@ -491,7 +491,7 @@ private fun KonzeptListe(zustand: AtlasZustand) {
 }
 
 @Composable private fun FehlerListe(zustand: AtlasZustand) {
-    LazyColumn(contentPadding = PaddingValues(12.dp)) {
+    LazyColumn(contentPadding = PaddingValues(LocalAtlasAbstände.current.bereich)) {
         if (zustand.auswertung.fehler.isEmpty()) item { Text("Keine Auswertungsfehler.") }
         items(zustand.auswertung.fehler) { fehler -> ListItem(headlineContent = { Text(fehler, color = MaterialTheme.colorScheme.error) }) }
     }

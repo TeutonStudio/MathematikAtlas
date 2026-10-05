@@ -18,12 +18,13 @@ class VektorRechnerKnotenKonfigurationTest {
     }
 
     @Test
-    fun `Zerlegen erfindet vor bekannter Struktur keine Ausgaenge`() {
+    fun `Zerlegen bietet vor bekannter Struktur die endliche Indexmethode an`() {
         val anschluesse = vektorRechnerAnschluesse(VektorRechnerOperator.ZERLEGEN)
 
-        assertEquals(1, anschluesse.size)
-        assertEquals(AnschlussRichtung.Eingang, anschluesse.single().richtung)
-        assertEquals("struktur", anschluesse.single().name)
+        assertEquals(2, anschluesse.size)
+        assertEquals("struktur", anschluesse.single { it.richtung == AnschlussRichtung.Eingang }.name)
+        assertEquals("methode", anschluesse.single { it.richtung == AnschlussRichtung.Ausgang }.name)
+        assertEquals(MathematikAnschlussArten.Methode.id, anschluesse.single { it.richtung == AnschlussRichtung.Ausgang }.art)
     }
 
     @Test
