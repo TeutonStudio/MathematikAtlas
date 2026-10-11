@@ -186,3 +186,20 @@ Berichte knapp und überprüfbar:
 5. verwendeter Branch und Commit-SHA,
 6. Autor- und Committeridentität oder ausdrücklich die Connector-Einschränkung,
 7. bei Releases Version, Klassifikation, Basis und Release-Guard-Status.
+
+## Aufgabenspezifische Entwicklungs-Skills
+
+Wähle nur die zur Änderung passenden Skills. `AGENTS.md` und die betroffenen echten Codepfade sind immer Grundlage. Skills ergänzen bestehende Rollen; sie ersetzen weder Architekturverträge noch Release-Regeln.
+
+- Neue **oder bestehende** mathematische Knoten und Operatoren: `knoten-entwickeln`; bei neuen separat registrierten Typen zusätzlich `neuer-knoten`.
+- Veränderte mathematische Semantik, Typen oder numerische Aussagen: `mathematik-validieren`, unabhängig davon, ob ein Knotentyp neu ist.
+- Karteninteraktion, Graph, Zoom, Drag, Gruppierung, Undo/Redo: `karteneditor-entwickeln`.
+- Compose, Inspector, Dialoge, Layout, native Formeldarstellung: `ui-entwickeln`.
+- Lags, Recomposition, Rendering, Auswertung und Caches: `performance-optimieren`.
+- JSON-Format, Anschlussreferenzen und Altbestand: `persistenz-migrieren`.
+- Version, Branch, PR und Veröffentlichung: weiterhin `release-verwalten`.
+- Mehrsprachige README: weiterhin `readme-lokalisieren`.
+
+**Aufwandsstufen:** Lokaler Fix = Reproduktion, kleinster Diff und Regressionstest; bestehender Vertrag = kompakte Bestandsanalyse und gezieltes Review; neuer Typ/Schema/mehrere Module = ExecPlan und unabhängige Verifikation. Alle verpflichtenden Ausnahmen aus `docs/codex/PLANS.md` gelten weiterhin. Lade nicht sämtliche Referenzen auf Verdacht. Wiederhole keine bereits belegten Untersuchungen.
+
+Bei mehreren betroffenen Bereichen koordiniere einen schreibenden Implementierer und nach Bedarf mehrere lesende Fachprüfungen. Ein grüner JVM-Test ist kein nachgewiesener Android-Gestentest.
