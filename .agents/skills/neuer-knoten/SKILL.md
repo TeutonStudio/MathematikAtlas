@@ -5,6 +5,8 @@ description: Plant, implementiert und verifiziert neue Knotentypen einschließli
 
 # Neuen Knoten entwickeln
 
+Für bestehende Typen und Operatorvarianten stattdessen primär den Skill `knoten-entwickeln` nutzen. Dieser Skill bleibt die vollständige zusätzliche Freigabekette für neue separat registrierte Typ-Schlüssel. Bei nichttrivialer mathematischer Semantik gilt ergänzend `mathematik-validieren`; bei persistierten Formatänderungen `persistenz-migrieren`.
+
 Verwende diesen Skill für jeden Auftrag, der mindestens einen neuen Knotentyp oder eine neue Knotenfamilie plant, implementiert oder prüft. Lies zuerst `AGENTS.md`, `docs/codex/NEW_NODE_WORKFLOW.md`, `docs/codex/NODE_CONTRACT.md` und die relevanten Architekturdateien.
 
 ## Versionswirkung
