@@ -23,6 +23,8 @@ class DesktopAtlasZustand(
     )
     var auswertung by mutableStateOf(laufzeit.auswerten(editor.karte))
         private set
+    var konfigurationsPlan by mutableStateOf<KonfigurationsPlan?>(null)
+        private set
     var meldung by mutableStateOf<String?>(null)
         private set
 
@@ -81,6 +83,21 @@ class DesktopAtlasZustand(
             ergebnisFür = { auswertung.knoten[it.id] },
             beiKnotenKlick = { editor.wähleKnoten(it.id) },
         ).mitAuswertungszeit { auswertung.knoten[it.id] }
+
+    fun beantrageKonfiguration(kandidat: KnotenDaten) {
+        runCatching { planeKonfiguration(editor.karte, kandidat, laufzeit.graphPrüfung, laufzeit::auswerten) }
+            .onFailure { meldung = it.message }
+            .onSuccess { plan ->
+                if (plan.auswirkung.entfallendeVerbindungen.isEmpty()) übernehmeKonfigurationsPlan(plan)
+                else konfigurationsPlan = plan
+            }
+    }
+    fun bestätigeKonfiguration() { konfigurationsPlan?.let(::übernehmeKonfigurationsPlan) }
+    fun verwerfeKonfiguration() { konfigurationsPlan = null }
+    private fun übernehmeKonfigurationsPlan(plan: KonfigurationsPlan) {
+        editor.führeAus(KartenAktion.KartenInhaltErsetzen(plan.karte))
+        konfigurationsPlan = null; aktualisiereAuswertung()
+    }
 
     fun schließeMeldung() { meldung = null }
 }

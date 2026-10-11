@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
+import de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelCodec
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -446,6 +448,13 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         if (formelDialog) {
             FormelBauerDialog(
                 startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" },
+                startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT],
+                startAusdruck = ladeFormelAst(knoten),
+                übernehmenMitZeichnung = { ast, latex, zeichnung ->
+                    val neu = konfiguriereZahlenRechnerFormel(knoten, latex)
+                    formelKandidat = neu.copy(eigenschaften = neu.eigenschaften + (FORMEL_ZEICHNUNG_EIGENSCHAFT to zeichnung) + (FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ast))))
+                    formelDialog = false; operatorDialog = true
+                },
                 schließen = { formelDialog = false },
                 übernehmen = { latex ->
                     formelKandidat = konfiguriereZahlenRechnerFormel(knoten, latex)

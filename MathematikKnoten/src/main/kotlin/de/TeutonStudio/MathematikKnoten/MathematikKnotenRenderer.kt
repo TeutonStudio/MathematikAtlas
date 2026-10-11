@@ -59,6 +59,7 @@ class MathematikKnotenRenderer(
             ) {
                 Text(knoten.name, style = MaterialTheme.typography.titleSmall, maxLines = 2)
                 Text(when (knoten.art) {
+                    ÜBERSETZER_ART -> "Wert → ${übersetzerZiel(knoten)}"
                     "mathematik.tupelZuSpalte" -> if (orientierungFürOrientierungsKnoten(knoten) == VEKTOR_ORIENTIERUNG_ZEILE) "Tupel → Zeile" else "Tupel → Spalte"
                     "mathematik.tupelZuZeile" -> "Tupel → Zeile"
                     "mathematik.spalteZuTupel" -> "Spalte → Tupel"

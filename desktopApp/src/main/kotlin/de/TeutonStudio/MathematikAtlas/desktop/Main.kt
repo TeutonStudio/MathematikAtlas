@@ -19,7 +19,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.*
-import de.TeutonStudio.MathematikKnoten.MatlasKartenContainer
+import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
@@ -27,7 +28,7 @@ import java.nio.file.Paths
 import java.util.prefs.Preferences
 import javax.swing.JOptionPane
 
-private const val DESKTOP_APP_VERSION = "3.0.1"
+private const val DESKTOP_APP_VERSION = "3.1.0"
 
 private sealed interface DesktopKontext {
     val position: GraphPunkt
@@ -88,6 +89,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
     var editorGröße by remember { mutableStateOf(IntSize.Zero) }
     var suchtext by remember { mutableStateOf("") }
     var kontext by remember { mutableStateOf<DesktopKontext?>(null) }
+    var neuerFormelDialog by remember { mutableStateOf(false) }
     var umbenennenOffen by remember { mutableStateOf(false) }
     var fehler by remember { mutableStateOf<String?>(null) }
     val dichte = LocalDensity.current
@@ -155,6 +157,20 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
         }
     }
 
+    if (neuerFormelDialog) GemeinsamerFormelBauerDialog(startLatex = "", schließen = { neuerFormelDialog = false },
+        übernehmen = {}, übernehmenMitZeichnung = { ast, latex, zeichnung ->
+            val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(letzterZeiger)
+            val neu = konfiguriereZahlenRechnerFormel(basis, latex)
+            val knoten = neu.copy(eigenschaften = neu.eigenschaften + (FORMEL_ZEICHNUNG_EIGENSCHAFT to zeichnung) + (FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ast))))
+            atlas.editor.führeAus(KartenAktion.KnotenEinfügen(knoten)); atlas.editor.wähleKnoten(knoten.id)
+            atlas.aktualisiereAuswertung(); neuerFormelDialog = false
+        })
+    atlas.konfigurationsPlan?.let { plan ->
+        AlertDialog(onDismissRequest = atlas::verwerfeKonfiguration, title = { Text("Verbindungsverlust bestätigen") },
+            text = { Text("${plan.auswirkung.entfallendeVerbindungen.size} Verbindungen entfallen. Die gesamte Änderung kann gemeinsam rückgängig gemacht werden.") },
+            confirmButton = { TextButton(onClick = atlas::bestätigeKonfiguration) { Text("Übernehmen") } },
+            dismissButton = { TextButton(onClick = atlas::verwerfeKonfiguration) { Text("Abbrechen") } })
+    }
     MenuBar {
         Menu("Datei") {
             Item("Neue Karte", onClick = atlas::neueKarte)
@@ -207,7 +223,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
             )
             VerticalDivider()
             Column(Modifier.weight(1f).fillMaxHeight()) {
-                DesktopWerkzeugleiste(::ausführen, befehle, befehlsKontext(AtlasFokusBereich.Karte))
+                DesktopWerkzeugleiste(::ausführen, befehle, befehlsKontext(AtlasFokusBereich.Karte), { neuerFormelDialog = true })
                 HorizontalDivider()
                 Box(
                     Modifier.weight(1f).fillMaxWidth()
@@ -311,6 +327,7 @@ private fun DesktopWerkzeugleiste(
     ausführen: (AtlasBefehl) -> Unit,
     befehle: AtlasBefehlsAusführer,
     kontext: BefehlsKontext,
+    formelÖffnen: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf(
@@ -333,6 +350,7 @@ private fun DesktopWerkzeugleiste(
                 ) { Text(symbol) }
             }
         }
+        OutlinedButton(onClick = formelÖffnen) { Text("Formeleditor") }
         Spacer(Modifier.weight(1f))
         Text("F6: Bereich wechseln", Modifier.align(Alignment.CenterVertically), style = MaterialTheme.typography.labelMedium)
     }
@@ -341,6 +359,14 @@ private fun DesktopWerkzeugleiste(
 @Composable
 private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, modifier: Modifier = Modifier) {
     val knoten = atlas.editor.karte.knoten.firstOrNull { it.id == atlas.editor.ausgewählterKnoten }
+    var falkOffen by remember(knoten?.id) { mutableStateOf(false) }
+    if (falkOffen && knoten != null) androidx.compose.ui.window.Dialog(onDismissRequest = { falkOffen=false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxWidth(.95f).widthIn(max = 1180.dp).fillMaxHeight(.9f)) {
+            Column { TextButton(onClick={ falkOffen=false }) { Text("Schließen") }; MatrixproduktFalkSchemaInhalt(atlas.auswertung.knoten[knoten.id],Modifier.weight(1f)) }
+        }
+    }
+    var formelOffen by remember(knoten?.id) { mutableStateOf(false) }
+    if (formelOffen && knoten != null) DesktopFormelEditor(knoten, atlas) { formelOffen = false }
     var name by remember(knoten?.id, knoten?.name) { mutableStateOf(knoten?.name.orEmpty()) }
     Column(modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Inspector", style = MaterialTheme.typography.titleLarge)
@@ -356,6 +382,16 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             )
             Button(onClick = { atlas.benenneAuswahlUm(name) }, enabled = name.isNotBlank() && name != knoten.name) { Text("Übernehmen") }
             HorizontalDivider()
+            if (knoten.art == ÜBERSETZER_ART) {
+                Text("Übersetzungsziel")
+                ÜBERSETZER_ZIELE.forEach { ziel -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereÜbersetzer(knoten, ziel)) }) {
+                    Text(if (ziel == übersetzerZiel(knoten)) "✓ $ziel" else ziel)
+                } }
+            }
+            if (knoten.art == ZAHLENRECHNER_ART || de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) != null)
+                OutlinedButton(onClick = { formelOffen = true }) { Text("Formel / Zeichnung bearbeiten") }
+            if (istMatrixProduktKnoten(knoten))
+                OutlinedButton(onClick={ falkOffen=true }) { Text("Falk-Schema") }
             Text("Art", style = MaterialTheme.typography.labelLarge)
             Text(knoten.art)
             Text("Position: ${knoten.position.x.toInt()}, ${knoten.position.y.toInt()}")
@@ -469,5 +505,24 @@ private data class FensterEinstellungen(val x: Int, val y: Int, val breite: Int,
             prefs.putInt("x", bounds.x); prefs.putInt("y", bounds.y)
             prefs.putInt("breite", bounds.width); prefs.putInt("höhe", bounds.height)
         }
+    }
+}
+
+@Composable
+private fun DesktopFormelEditor(knoten: KnotenDaten, atlas: DesktopAtlasZustand, schließen: () -> Unit) {
+    fun übernehme(kandidat: KnotenDaten, zeichnung: KnotenEigenschaft) {
+        atlas.beantrageKonfiguration(kandidat.copy(eigenschaften = kandidat.eigenschaften + (FORMEL_ZEICHNUNG_EIGENSCHAFT to zeichnung)))
+        schließen()
+    }
+    if (knoten.art == ZAHLENRECHNER_ART) {
+        GemeinsamerFormelBauerDialog(startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" }, startAusdruck = ladeFormelAst(knoten),
+            startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT], schließen = schließen, übernehmen = {},
+            übernehmenMitZeichnung = { ast, latex, zeichnung -> konfiguriereZahlenRechnerFormel(knoten, latex).let { kandidat -> übernehme(kandidat.copy(eigenschaften = kandidat.eigenschaften + (FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ast)))), zeichnung) } })
+    } else {
+        val familie = de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) ?: return
+        val start = ladeStrukturRechnerFormel(knoten) ?: de.TeutonStudio.MathematikKnoten.StrukturRechnerOperatoren.fuer(familie).firstOrNull()?.let(::strukturOperatorAlsFormel)
+        GemeinsamerStrukturFormelBauerDialog(familie = familie.formelFamilie, start = start, quantorVariable = knoten.parameter["variablenName"] ?: "x",
+            startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT], schließen = schließen, übernehmen = {},
+            übernehmenMitZeichnung = { wurzel, zeichnung -> übernehme(konfiguriereStrukturRechnerFormel(knoten, familie, wurzel), zeichnung) })
     }
 }

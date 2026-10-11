@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
+
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
@@ -86,8 +88,17 @@ fun konfiguriereStrukturRechner(
     val gewünschte = if (familie == StrukturRechnerKnotenFamilie.MATRIX) {
         rechnerAnschlüsse(RechnerFamilie.MATRIX, operator.id)
     } else operator.eingänge.mapIndexed { index, eingang -> neuerEingang(eingang.name, eingang.typ, index) } + neuerAusgang(operator.ergebnisTyp)
+    val produkt = familie == StrukturRechnerKnotenFamilie.MATRIX && operatorId == MatrixRechnerOperator.MATRIXPRODUKT.stabileId
+    val produktEingänge = if (produkt) {
+        val feste = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
+        val vorhanden = if (knoten.parameter[RECHNER_OPERATOR_PARAMETER] == operatorId) knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.dynamischErzeugt }.maxOfOrNull { it.reihenfolge + 1 } ?: 0 else 0
+        val basis = gewünschte.filter { it.richtung == AnschlussRichtung.Eingang }
+        List(maxOf(feste, vorhanden)) { index -> basis[minOf(index, basis.lastIndex)].copy(
+            name = if (index < 2) basis[index].name else "input${index + 1}", reihenfolge = index,
+            dynamischErzeugt = index >= feste, kannSichErweitern = true) } + gewünschte.filter { it.richtung == AnschlussRichtung.Ausgang }
+    } else gewünschte
     val anschlüsse = if (familie == StrukturRechnerKnotenFamilie.MATRIX)
-        erhalteRechnerAnschlussIds(knoten.anschlüsse, gewünschte, RechnerFamilie.MATRIX, operator.id)
+        erhalteRechnerAnschlussIds(knoten.anschlüsse, produktEingänge, RechnerFamilie.MATRIX, operator.id)
     else erhalteRechnerAnschlussIds(knoten.anschlüsse, gewünschte)
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
@@ -117,6 +128,9 @@ fun konfiguriereStrukturRechnerFormel(
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
             anschlüsse = anschlüsse,
+            eigenschaften = knoten.eigenschaften + mapOf(
+                FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(wurzel)),
+                FORMEL_INTERPRETATION_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelDarstellung.latex(wurzel, quantorVariable))),
             parameter = knoten.parameter + mapOf(
                 RECHNER_OPERATOR_PARAMETER to familie.formelOperatorId,
                 STRUKTUR_RECHNER_FORMEL_AUSDRUCK to StrukturFormelCodec.kodieren(wurzel),
@@ -428,7 +442,7 @@ private fun werteMatrixFormelAus(
     val operator = MatrixRechnerOperator.entries.firstOrNull { it.stabileId == operatorId }
         ?: error("Unbekannter Matrixoperator $operatorId.")
     val matrizen = argumente.mapNotNull { (rolle, objekt) ->
-        (objekt as? Matrix)?.let { MatrixOperand(rolle, it, FundamentalerZahlbereich.REELL) }
+        (if (operator == MatrixRechnerOperator.MATRIXPRODUKT) objekt.alsMatrixFaktor() else objekt as? Matrix)?.let { MatrixOperand(rolle, it, FundamentalerZahlbereich.REELL) }
     }
     val skalare = argumente.values.filterIsInstance<ZahlAusdruck>()
     val vektoren = argumente.values.mapNotNull(::orientierterVektorOderNull)
@@ -453,7 +467,9 @@ private fun werteStrukturOperatorAus(
     familie: StrukturRechnerKnotenFamilie,
     definition: StrukturRechnerOperatorDefinition,
 ): AtlasWert {
-    val argumente = definition.eingänge.associate { eingang ->
+    val produkt = definition.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId
+    val argumente = if (produkt) matrixProduktFaktorWerte(kontext)
+    else definition.eingänge.associate { eingang ->
         eingang.name to (
             kontext.eingänge[eingang.name]?.mathematischesObjekt("Strukturoperator-Eingang '${eingang.name}'")
                 ?: error("Eingang '${eingang.name}' fehlt.")

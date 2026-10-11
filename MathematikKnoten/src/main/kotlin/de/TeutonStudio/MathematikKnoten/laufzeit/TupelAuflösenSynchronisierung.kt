@@ -1,4 +1,4 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
@@ -27,8 +27,8 @@ import de.TeutonStudio.MathematikRechenSystem.kern.TypisiertesElement
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import java.math.BigInteger
 
-internal const val TUPEL_AUFLÖSEN_ANZAHL = "tupelAuflösen.anzahl"
-internal const val VEKTOR_ZERLEGEN_ANZAHL = "vektorZerlegen.anzahl"
+const val TUPEL_AUFLÖSEN_ANZAHL = "tupelAuflösen.anzahl"
+const val VEKTOR_ZERLEGEN_ANZAHL = "vektorZerlegen.anzahl"
 
 /**
  * Synchronisiert den letzten erfolgreich bekannten Strukturvertrag mit den
@@ -36,7 +36,7 @@ internal const val VEKTOR_ZERLEGEN_ANZAHL = "vektorZerlegen.anzahl"
  * Vertrag unverändert; dadurch flackert die Graphstruktur nicht zwischen zwei
  * Auswertungszuständen.
  */
-internal fun synchronisiereStrukturZerleger(
+fun synchronisiereStrukturZerleger(
     karte: KartenDaten,
     auswertung: KartenAuswertungsErgebnis,
     prüfung: GraphPrüfung,
@@ -174,7 +174,7 @@ internal fun synchronisiereStrukturZerleger(
 }
 
 /** Quellkompatibler Name für bestehende Aufrufer und historische Tests. */
-internal fun synchronisiereTupelAuflöser(
+fun synchronisiereTupelAuflöser(
     karte: KartenDaten,
     auswertung: KartenAuswertungsErgebnis,
     prüfung: GraphPrüfung,

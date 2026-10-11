@@ -1,4 +1,5 @@
 [
+  "atlas.uebersetzer",
   "grafik.svg.knoten",
   "grafik.svg.stil",
   "karte.notiz",
@@ -120,6 +121,7 @@
   "mathematik.topologischerRaum",
   "mathematik.transponieren",
   "mathematik.tupel",
+  "mathematik.tupelAbflachen",
   "mathematik.tupelAuflösen",
   "mathematik.tupelErgänzen",
   "mathematik.tupelZuSpalte",

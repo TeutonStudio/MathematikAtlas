@@ -241,6 +241,9 @@ fun konfiguriereZahlenRechnerFormel(knoten: KnotenDaten, latex: String): KnotenD
     )
     return knoten.copy(
         name = "Formel",
+        eigenschaften = knoten.eigenschaften + mapOf(
+            FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ausdruck)),
+            FORMEL_INTERPRETATION_EIGENSCHAFT to KnotenEigenschaft.Text(kanonisch)),
         anschlüsse = eingänge + ausgang,
         parameter = knoten.parameter + mapOf(
             ZAHLENRECHNER_OPERATOR to ZAHLENRECHNER_FORMEL_ID,

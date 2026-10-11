@@ -1,14 +1,14 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.synchronisiereRestriktionsAnschlüsse
 
-internal data class KonfigurationsPlan(val karte: KartenDaten, val auswirkung: KnotenErsetzungsAuswirkung)
+data class KonfigurationsPlan(val karte: KartenDaten, val auswirkung: KnotenErsetzungsAuswirkung)
 
 /** Reine Vorschau inklusive aller durch Signatur-/Formänderung abhängigen Anschlüsse. */
-internal fun planeKonfiguration(
+fun planeKonfiguration(
     bisher: KartenDaten,
     kandidat: KnotenDaten,
     prüfung: GraphPrüfung,

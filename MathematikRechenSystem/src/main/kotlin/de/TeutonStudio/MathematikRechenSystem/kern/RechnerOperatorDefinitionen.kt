@@ -48,7 +48,9 @@ object RechnerOperatorDefinitionen {
     private val matrix = StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).map { d ->
         val zerlegen = d.id == MatrixRechnerOperator.ZERLEGEN.stabileId
         RechnerOperatorDefinition(OperatorFamilie.MATRIX, d.id, d.titel, d.symbolLatex, d.definitionsLatex,
-            listOf(signatur(d.eingänge.map { rolle(it.name, it.typ, methodenfähig = true) },
+            listOf(signatur(d.eingänge.map { rolle(it.name, it.typ, variadisch = d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId, methodenfähig = true,
+                aliases = if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) when (it.name) { "links" -> setOf("a"); "rechts" -> setOf("b"); else -> emptySet() } else emptySet())
+                .let { r -> if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) r.copy(zulässigeTypen = setOf(FormelTyp.MATRIX, FormelTyp.VEKTOR)) else r } },
                 if (zerlegen) FormelTyp.METHODE else d.ergebnisTyp, if (zerlegen) "methode" else "wert")),
             d.eingänge, d.ergebnisTyp, formelFamilie = OperatorFamilie.MATRIX)
     }

@@ -13,6 +13,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungsId
+import de.TeutonStudio.MathematikKnoten.istMatrixProduktKnoten
 import de.TeutonStudio.MathematikKnoten.RechnerFamilie
 import de.TeutonStudio.MathematikKnoten.RechnerOperatorRegistry
 import de.TeutonStudio.MathematikKnoten.RechnerOperatorAuflösung
@@ -172,6 +173,13 @@ internal fun kanonischesRechnerKonzept(knoten: KnotenDaten): KonzeptDefinition? 
         tags = vertrag.aliases + setOf(vertrag.titel, id), knotenArten = setOf(knoten.art),
         knotenParameter = mapOf(familie.operatorParameter to id), reiter = listOf(KonzeptReiter(
             "definition", vertrag.definitionsLatex, KonzeptReiterRolle.Definition,
-            strukturRechnerDefinitionsKarte(knoten, familie.name, knoten.art, vertrag.titel, vertrag.definitionsLatex, beschreibung))),
+            strukturRechnerDefinitionsKarte(knoten, familie.name, knoten.art, vertrag.titel, vertrag.definitionsLatex, beschreibung))) +
+            if (istMatrixProduktKnoten(knoten)) listOf(KonzeptReiter(
+                id = MATRIXPRODUKT_FALK_REITER_ID,
+                titel = "Zusammenhängendes Falk-Schema",
+                rolle = KonzeptReiterRolle.Äquivalenz,
+                karte = KartenDaten(id = KartenId("falk-${knoten.id.wert}"), name = "Falk-Schema"),
+                darstellung = KonzeptReiterDarstellung.FalkSchema,
+            )) else emptyList(),
     )
 }

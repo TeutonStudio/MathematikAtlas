@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.*
+
 import de.TeutonStudio.MathematikRechenSystem.kern.mathematischeMethodenSignatur
 import de.TeutonStudio.MathematikRechenSystem.kern.zielMenge
 
@@ -180,7 +182,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     }
                     if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
                     if (knoten.art == "mathematik.tupel") TupelInspektor(knoten, zustand)
-                    if (knoten.art in setOf("mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
+                    if (knoten.art in setOf("mathematik.matrixProdukt", "mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
                         knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN
                     ) {
                         val mindestAnzahl = if (knoten.art == "mathematik.tupel") 0 else 2

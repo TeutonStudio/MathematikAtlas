@@ -45,6 +45,25 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
         }
     }
     val typ = when {
+        knoten.art == ÜBERSETZER_ART && anschluss.richtung == AnschlussRichtung.Ausgang -> {
+            val ziel = übersetzerZiel(knoten)
+            val eingang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == "wert" }
+            val quelle = eingang?.let { p -> karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, p.id) }?.von }
+            val quellPort = quelle?.let { effektiverMathematikAnschluss(karte, it) ?: karte.knoten.firstOrNull { q -> q.id == it.knotenId }?.anschlüsse?.firstOrNull { p -> p.id == it.anschlussId } }
+            val quellTyp = quellPort?.vertrag?.typ as? TypAusdruck.Parameterisiert
+            val dimension = when (quellTyp?.konstruktor) {
+                MathematischeTypen.Tupel -> TypAusdruck.Literal(quellTyp.argumente.size.toString())
+                MathematischeTypen.SpaltenVektor, MathematischeTypen.ZeilenVektor -> quellTyp.argumente.getOrNull(1) ?: TypAusdruck.Unbekannt
+                else -> TypAusdruck.Unbekannt
+            }
+            when (ziel) {
+                "zeile" -> formTyp(MathematikAnschlussArten.ZeilenVektor.id, listOf(dimension))
+                "spalte" -> formTyp(MathematikAnschlussArten.SpaltenVektor.id, listOf(dimension))
+                "tupel" -> formTyp(MathematikAnschlussArten.Tupel.id, listOf(dimension))
+                else -> TypAusdruck.Unbekannt
+            }
+        }
+        knoten.art == TUPEL_ABFLACHEN_ART -> TypAusdruck.Unbekannt
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.variable" ->
             WertebereichKonfiguration.Zahl(knoten.parameter["werteVorrat"] ?: "R").zuMenge().elementTypAusdruck()
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.allgemeinerParameter" -> {

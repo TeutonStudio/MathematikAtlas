@@ -1,4 +1,4 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -22,20 +22,20 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
-internal enum class FalkDatenQuelle { Knotendaten, Standardbeispiel }
+enum class FalkDatenQuelle { Knotendaten, Standardbeispiel }
 
-internal data class MatrixproduktFalkDaten(
+data class MatrixproduktFalkDaten(
     val links: Matrix,
     val rechts: Matrix,
     val quelle: FalkDatenQuelle,
 )
 
-internal sealed interface FalkAchsenElement {
+sealed interface FalkAchsenElement {
     data class Index(val wert: Int) : FalkAchsenElement
     data object Auslassung : FalkAchsenElement
 }
 
-internal fun matrixproduktFalkDaten(
+fun matrixproduktFalkDaten(
     auswertung: KnotenAuswertungsErgebnis?,
 ): MatrixproduktFalkDaten {
     val links = auswertung?.eingänge?.get("a")?.objekt?.alsMatrixFaktorOderNull()
@@ -50,7 +50,7 @@ internal fun matrixproduktFalkDaten(
 private fun de.TeutonStudio.MathematikRechenSystem.kern.AtlasWert.alsMatrixFaktorOderNull(): Matrix? =
     (this as? MathematischesObjekt)?.let { runCatching { it.alsMatrixFaktor() }.getOrNull() }
 
-internal fun standardFalkDaten(): MatrixproduktFalkDaten {
+fun standardFalkDaten(): MatrixproduktFalkDaten {
     fun z(wert: Long) = RationaleZahl.von(wert)
     return MatrixproduktFalkDaten(
         links = Matrix(
@@ -70,7 +70,7 @@ internal fun standardFalkDaten(): MatrixproduktFalkDaten {
     )
 }
 
-internal fun projiziereFalkAchse(
+fun projiziereFalkAchse(
     anzahl: Int,
     ausgewählt: Int,
     maximalSichtbar: Int = 8,
@@ -107,7 +107,7 @@ internal fun projiziereFalkAchse(
     }
 }
 
-internal fun gekürzteFalkSummeLatex(
+fun gekürzteFalkSummeLatex(
     modell: DetailliertesFalkSchemaModell,
     maximalSichtbar: Int = 8,
 ): String {
@@ -122,107 +122,69 @@ internal fun gekürzteFalkSummeLatex(
     }.joinToString(" + ")
 }
 
+fun matrixproduktFalkFaktoren(auswertung: KnotenAuswertungsErgebnis?): List<Matrix> {
+    require(auswertung?.fehler == null) { auswertung?.fehler.orEmpty() }
+    return auswertung?.eingänge.orEmpty().entries.sortedBy { (name, _) -> when (name) {
+        "a", "links" -> 0
+        "b", "rechts" -> 1
+        else -> (name.removePrefix("input").removePrefix("faktor.").toIntOrNull() ?: Int.MAX_VALUE) - 1
+    } }.map { requireNotNull(it.value.objekt.alsMatrixFaktorOderNull()) { "Faktor ${it.key} ist keine Matrix, Zeile oder Spalte." } }
+}
+
 @Composable
-internal fun MatrixproduktFalkSchemaInhalt(
+fun MatrixproduktFalkSchemaInhalt(
     auswertung: KnotenAuswertungsErgebnis?,
     modifier: Modifier = Modifier,
 ) {
-    val abstände = LocalAtlasAbstände.current
-    val daten = remember(auswertung) { matrixproduktFalkDaten(auswertung) }
-    var zeile by remember(daten) { mutableIntStateOf(0) }
-    var spalte by remember(daten) { mutableIntStateOf(0) }
-    val schema = remember(daten, zeile, spalte) {
-        detailliertesFalkSchema(daten.links, daten.rechts, zeile, spalte)
+    val faktorenPrüfung = remember(auswertung) { runCatching {
+        require(auswertung?.fehler == null) { auswertung?.fehler.orEmpty() }
+        matrixproduktFalkFaktoren(auswertung)
+    } }
+    if (faktorenPrüfung.isFailure) {
+        Text(faktorenPrüfung.exceptionOrNull()?.message ?: "Faktoren nicht auswertbar.",modifier.padding(16.dp),color=MaterialTheme.colorScheme.error)
+        return
     }
-
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(abstände.dialogInnen),
-        verticalArrangement = Arrangement.spacedBy(abstände.bereich),
-    ) {
-        Text("Falksches Schema", style = MaterialTheme.typography.titleMedium)
-        Text(
-            if (daten.quelle == FalkDatenQuelle.Knotendaten) {
-                "Die Matrizen stammen aus den aktuell ausgewerteten Eingängen a und b."
-            } else {
-                "Standardbeispiel, da am geöffneten Knoten keine zwei auswertbaren Faktoren vorliegen."
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        when (schema) {
-            is DetailliertesFalkSchemaErgebnis.Inkompatibel -> {
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Text(
-                        schema.meldung,
-                        modifier = Modifier.padding(abstände.bereichInnen),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                    )
-                }
-            }
-            is DetailliertesFalkSchemaErgebnis.Gültig -> {
-                val modell = schema.modell
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    FalkMatrix(
-                        name = "A",
-                        matrix = modell.linkerFaktor,
-                        ausgewählteZeile = zeile,
-                        ausgewählteSpalte = null,
-                        onZelle = { z, _ -> zeile = z },
-                    )
-                    Text(
-                        "·",
-                        modifier = Modifier.padding(horizontal = abstände.standard, vertical = 34.dp),
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(abstände.standard),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        FalkMatrix(
-                            name = "B",
-                            matrix = modell.rechterFaktor,
-                            ausgewählteZeile = null,
-                            ausgewählteSpalte = spalte,
-                            onZelle = { _, s -> spalte = s },
-                        )
-                        HorizontalDivider()
-                        FalkMatrix(
-                            name = "C = A·B",
-                            matrix = modell.ergebnis,
-                            ausgewählteZeile = zeile,
-                            ausgewählteSpalte = spalte,
-                            ergebnisZelleHervorheben = true,
-                            onZelle = { z, s -> zeile = z; spalte = s },
-                        )
+    val faktoren = faktorenPrüfung.getOrThrow()
+    if (faktoren.size < 2) {
+        Text("Für das Falk-Schema müssen mindestens zwei Faktoren verbunden und auswertbar sein.", modifier.padding(16.dp))
+        return
+    }
+    val berechnung = remember(faktoren) { runCatching { matrixProduktKette(faktoren) } }
+    val kette = berechnung.getOrNull()
+    if (kette == null) {
+        Text(berechnung.exceptionOrNull()?.message ?: "Matrixprodukt nicht definiert.", modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
+        return
+    }
+    Column(modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Zusammenhängendes Falk-Schema", style = MaterialTheme.typography.titleMedium)
+        Text("${kette.faktoren.size} verbundene Faktoren; streng linksassoziativ, alle Zwischenprodukte.", style = MaterialTheme.typography.bodySmall)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val breit = maxWidth >= 840.dp
+            @Composable fun schritt(index: Int) {
+                val links = if (index == 0) kette.faktoren.first() else kette.zwischenprodukte[index - 1]
+                val rechts = kette.faktoren[index + 1]
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("P${index + 1} = ${if (index == 0) "A1" else "P$index"} · A${index + 2}", style = MaterialTheme.typography.titleSmall)
+                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        FalkMatrix(if (index == 0) "A1" else "P$index", links, null, null, onZelle = { _, _ -> })
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FalkMatrix("A${index + 2}", rechts, null, null, onZelle = { _, _ -> })
+                            HorizontalDivider()
+                            FalkMatrix("P${index + 1}", kette.zwischenprodukte[index], null, null, onZelle = { _, _ -> })
+                        }
                     }
                 }
-
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(abstände.bereichInnen),
-                        verticalArrangement = Arrangement.spacedBy(abstände.eng),
-                    ) {
-                        Text(
-                            "Zeile ${zeile + 1} × Spalte ${spalte + 1}",
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                        LatexText(
-                            latex = "c_{${zeile + 1},${spalte + 1}}=${gekürzteFalkSummeLatex(modell)}=${modell.ergebnisEintrag.zuLatex()}",
-                            style = MaterialTheme.typography.titleMedium,
-                        )
+            }
+            Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 2.dp) {
+                if (breit) Row(Modifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
+                    kette.zwischenprodukte.indices.forEach { index ->
+                        if (index > 0) Text("→", style = MaterialTheme.typography.headlineLarge)
+                        schritt(index)
+                    }
+                } else Column(Modifier.horizontalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
+                    kette.zwischenprodukte.indices.forEach { index ->
+                        if (index > 0) Text("↓", style = MaterialTheme.typography.headlineLarge)
+                        schritt(index)
                     }
                 }
             }
@@ -239,7 +201,7 @@ private fun FalkMatrix(
     ergebnisZelleHervorheben: Boolean = false,
     onZelle: (Int, Int) -> Unit,
 ) {
-    val abstände = LocalAtlasAbstände.current
+    val abstände = LocalFormelEditorAbstände.current
     val zeilen = projiziereFalkAchse(matrix.zeilenAnzahl, ausgewählteZeile ?: 0)
     val spalten = projiziereFalkAchse(matrix.spaltenAnzahl, ausgewählteSpalte ?: 0)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -300,7 +262,7 @@ private fun FalkZelle(
         shape = MaterialTheme.shapes.extraSmall,
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = LocalAtlasAbstände.current.standard),
+            modifier = Modifier.padding(horizontal = LocalFormelEditorAbstände.current.standard),
             contentAlignment = Alignment.Center,
         ) {
             LatexText(latex = latex, style = MaterialTheme.typography.bodyMedium)

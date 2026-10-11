@@ -1,30 +1,37 @@
 # Aktueller verifizierter Projektzustand
 
-> Stand: 2026-10-11, laufende Alpha-Konsolidierung. Nachweise gelten für den jeweiligen geprüften Arbeitsstand, nicht als Release-Abnahme. Vollständige Anforderungsmatrix: [V3_ALPHA_ABNAHME.md](../V3_ALPHA_ABNAHME.md).
+> Stand: 2026-10-12, verifizierter Alpha-Releaseumfang. Nachweise gelten für den jeweiligen geprüften Arbeitsstand, nicht als Release-Abnahme. Vollständige Anforderungsmatrix: [V3_ALPHA_ABNAHME.md](../V3_ALPHA_ABNAHME.md).
 
 ## Metadaten
 
-- Veröffentlichte Produktbasis: `v3.0.0`, Commit `df4f25dc6c41a31cb77c7627ef9897b827a056bb`; GitHub-master beim Live-Abgleich `6ac2b2b4`.
-- Isolierter Integrationsbranch: `samai/v3.0.1/alpha-konsolidierung`; Android-Metadaten 3.0.1 / 3000001 und Desktop 3.0.1 für den Release vorbereitet. Keine neue Veröffentlichung erfolgt.
-- Originalarbeitsbaum einschließlich IDE-Dateien vollständig gesichert und unverändert erhalten. Produktintegration im isolierten Arbeitsbaum.
-- Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`.
-- Tatsächlicher statischer Erstellenkatalog: 136 Typen einschließlich Geometrie, Mengenräumen, Notizen und Kartengruppen; Baseline aus unverändertem v3.0.0 durch App-JVM-Test exportiert.
+- Veröffentlichter Vorgänger: `v3.0.1`, GitHub-master-Commit `2842a03e18797d9689ebaf5fc3e389e1bb60ffc9`, PR#444; sämtliche PR- und Master-Push-Prüfungen grün.
+- Produktstand dieses Releaseumfangs: `3.1.0`, Android-Code `3001000`, Desktop `3.1.0`; Branch `samai/v3.1.0/alpha-erweiterungen`, Releasebranch `release/v3.1.0-alpha-erweiterungen`. Versionsachse `y`, exakt zwei neue Typen.
+- Originalarbeitsbaum einschließlich IDE-Dateien gesichert; Produktintegration im isolierten Arbeitsbaum. Persönliche IDE-Dateien gehören nicht zum Release.
+- Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`; neue Knoten benötigen keine Formaterhöhung.
+- Statischer Erstellenkatalog: 138 Typen; unveränderte veröffentlichte3.0.0-Baseline136 plus `atlas.uebersetzer` und `mathematik.tupelAbflachen`.
 
 ## Verifizierte Prüfungen
 
 | Prüfung | Ergebnis |
 |---|---|
-| Repository, Architektur, Methodenmodell, Desktop-Shadowmodule | erfolgreich nach Registrymigration und Lint am 11.10.; finale Änderungen erneut prüfen |
-| Releaseplan, Versionsfolge | erfolgreich für vorbereitete 3.0.1-Metadaten; finaler PR-/Pushereignisnachweis offen |
-| Standardkartenprüfung | erfolgreich; 15 Karten |
-| Release-Guardregressionen | 14 Tests erfolgreich, einschließlich echter Git-Events und unveränderlicher Vorgängerhistorie |
-| Core-/Graph-/Adapter-/Knotentests | 429 / 93 / 49 / 552 grün nach Registrymigration; TypSystem zusätzlich 10 Tests grün |
-| App-JVM-Tests und Android-Debug-Build | 253 Tests grün einschließlich Abbruch nach allen fünf Importzielen; assembleDebug und lintDebug (0 Fehler, 9 Warnungen) erfolgreich |
-| Desktop-Katalogtest | vollständige Desktop-Tests erfolgreich (3 Tests); CLI-Persistenz-Smoke in zwei Prozessen schreibt/liest Version1 und2; lokale Paketierung/GUI-Abnahme offen |
-| Android-Emulator API36 | isolierter AVD mit Hostrenderer bootet; JSON-SAF-Import, aktive Karte nach Prozessneustart, starke Kapselkontur, Aussagenstandard mit Undo/Redo und Persistenz geprüft |
-| Importabbruch im Emulator | fehlendes/leeres Journal sichtbar gemeldet; unterbrochene Wiederherstellung wiederholt und alle 18 Bestandsdateien byteidentisch; Phasenregressionen grün |
-| Schmale Androidansicht | Bibliothek zunächst geschlossen, als Overlay öffnungsfähig; Canvas nutzt verfügbare Breite; Eigenfilter enthält keine leeren Standardordner |
-| Vollständige finale Plattformabnahme | Kernskript, 1389 JVM-/Desktoptests, lintDebug und APK grün; bestätigter Operatorwechsel/Undo/Redo, Kapseltouch und Hintergrundwechsel grün; Unterkartennavigation geprüft; Releaseintegration offen |
+| Repository, Architektur, Methodenmodell, Desktop-Shadowmodule, Standardkarten15 | erfolgreich im finalen3.1.0-Stand |
+| Releaseplan, Versionsfolge, 14 Guardregressionen | erfolgreich; PR-Ereignis gegen exakte3.0.1-Masterbasis geprüft; neue Typen exakt abgeglichen |
+| Vollständige JVM-/Desktoptests | 1419 ohne Fehler oder Überspringen: TypSystem10, Kern433, Graph93, Adapter49, Knoten573, App258, Desktop3 |
+| Android-Debug-Build und Lint | assembleDebug/lintDebug erfolgreich mit3.1.0-Metadaten; bestehende Lintwarnungen bleiben dokumentiert |
+| Unabhängige Knotenverifikation | finale Codefreigabe ohne blockierende Befunde; mathematische Quellen-/Tupel-/Matrixverträge geprüft |
+| Android API36 | SAF-JSON/.matlas für neue Knoten, Abflachenergebnis, Übersetzerzielwechsel mit Undo/Redo und Prozessneustart geprüft |
+| Gemeinsamer Formeleditor | Desktop Tastatur/Stift/Foto-Modi; Footer bei1440×840 erreichbar. Android Zeichnen/Radieren, atomare Formelübernahme/Undo/Redo und gespeicherte Originalgesten geprüft;1,5facheSchrift/dunklesTheme |
+| Persistenz und Import | beide neuen verbundenen Knoten über echte JSON/.matlas-Codecs mit erwarteter Auswertung geprüft; Zeichnungs-/AST-/Kontext-/Copy-/Undo-/Fehlerregressionen grün |
+| 3.0.1-Laufzeitnachweise | Importjournalwiederherstellung aller18Dateien byteidentisch; Operatorverlustbestätigung/Undo/Redo; Kapseltouch, Navigation, aktive Unterkarte und Prozessneustart |
+
+Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timing und lokale Desktop-Installationspakete sind durch diese Tests nicht abgedeckt. Emulatorgesten und echte Desktop-Compose-Oberfläche ersetzen keine Hardwaremessung.
+
+## Alpha-Erweiterungen in3.1.0
+
+- Übersetzer mit gespeichertem Ziel, stabilen Anschlüssen und stark gerundeter Kapsel; historische Spezialknoten bleiben ladbar. Definitionen folgen dem gespeicherten Ziel.
+- Heterogene Tupel, rekursives Abflachen und Term→Methode mit expliziter Quellenbindung, erhaltenen Außenquellen/Annahmen und kanonischem Tupelvertrag.
+- Gemeinsame streng linksassoziative Matrixkette für beide Produktpfade; feste/innere Faktorverluste diagnostiziert, nur unverbundene Schlussreserve ausgelassen. Zusammenhängendes Falk-Schema auf Android/Desktop.
+- Gemeinsamer Compose-Formeleditor und Konfigurationsplan; versionierte Originalzeichen-/Radiergesten bleiben vom AST getrennt. Automatische Handschrift-/Fotoerkennung ist sichtbar Beta; keine Fotopersistenz in Alpha.
 
 ## Bestätigter Aufbau
 
@@ -38,7 +45,7 @@
 
 ## Bestätigte Stärken
 
-- Repository-, Architektur- und Versionsfolgeprüfungen bestehen; 3.0.1 verwendet die vorhandene Reservierung. 3.1.0 wird erst nach Abschluss des Vorgängers reserviert.
+- Repository-, Architektur- und Versionsfolgeprüfungen bestehen; 3.0.1 verwendet die vorhandene Reservierung. 3.1.0 wurde erst nach Veröffentlichung und grüner Master-CI des Vorgängers reserviert.
 - Android-Debug-Build, Lint und vollständiger JVM-/Desktoplauf bestehen nach Registrykonsolidierung. Weitere Korrekturen müssen gezielt erneut geprüft werden.
 - Die 15 ausgelieferten Standardkarten werden strukturell geprüft und durch den echten Auswerter ohne gemeldete Fehler ausgewertet.
 - Repräsentative Tests decken Zahlenrechnung, Mengen, Aussagenlogik, Methoden/Analysis, Vektoren und Matrizen einschließlich fachlicher Randfälle ab.
@@ -72,15 +79,15 @@
   leere Mengen ausgegeben.
 - Gezielte Kern-, Knoten-, Katalog-, Visualisierungs-, Beispielkarten- und
   JSON-Roundtriptests sowie der vollständige JVM-Testlauf und Debug-Build bestehen.
-  Die unabhängige Knotenverifikation und Releaseintegration sind noch nicht abgeschlossen.
-- Ein isolierter API36-Emulator ist verfügbar. Erste Touch-/Inspector- und Lebenszyklusnachweise liegen vor; die vollständige finale Bedienungsabnahme bleibt offen.
+  Die unabhängige Knotenverifikation ist abgeschlossen; Veröffentlichung wird zusätzlich über die Release-PRs geprüft.
+- Ein isolierter API36-Emulator ist verfügbar. Erste Touch-/Inspector- und Lebenszyklusnachweise liegen vor; die hier dokumentierten Laufzeitnachweise ersetzen keine physische Geräteabnahme.
 
 ## Offene, priorisierte Android-Befunde
 
 1. **Mittel – Start und Speichern können weiterhin umfangreiche Arbeit auf dem UI-Thread ausführen.** Importvalidierung, Transaktion und Listenaktualisierung laufen inzwischen auf Dispatchers.IO; automatische Speicherung wird während des Imports zurückgehalten. Verzögerungen sind noch nicht vollständig vermessen.
 2. **Prüfgrenze – Navigation und alle Lebenszyklusübergänge.** Die aktive Karte wird aus gespeichertem Verweis wiederhergestellt und überlebt im Emulator einen Prozessneustart. Bibliothekswechsel, Unterkarte per Doppel-Tap, Brotkrumenrückkehr, Hintergrundwechsel und Neustart der aktiven Unterkarte sind im Emulator geprüft. Automatisierte Instrumentierungsabdeckung besteht weiterhin nicht.
 3. **Prüfgrenze – Touch-Gesten.** Manuelle Emulatornachweise bestehen, Android-Instrumentierungstests fehlen weiterhin.
-4. **Releaseintegration offen.** Operatordefinitionen, Signaturaliase, gemeinsamer Konfigurator, Verbrauchervereinheitlichung und explizite Fachauswerterkomposition sind implementiert und unabhängig ohne weitere Blocker geprüft. Finale Veröffentlichung und der nachfolgende 3.1.0-Umfang stehen noch aus.
+4. **Releaseintegration.** Operatordefinitionen, Signaturaliase, gemeinsamer Konfigurator, Verbrauchervereinheitlichung und explizite Fachauswerterkomposition sind implementiert und unabhängig ohne weitere Blocker geprüft. Der3.1.0-Umfang ist implementiert und unabhängig geprüft. Release-PRs und abschließender Git-Gleichstand bilden den Veröffentlichungsnachweis.
 
 ## Abstraktionswerkzeug und Speicherstabilisierung
 

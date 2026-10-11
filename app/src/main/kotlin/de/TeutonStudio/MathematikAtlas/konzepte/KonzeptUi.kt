@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -73,7 +74,7 @@ internal fun KnotenKonzeptDialog(
     }
 
     val context = LocalContext.current
-    val konzept = remember(knoten.art, knoten.parameter, knoten.kartenVerweis, context) {
+    val konzept = remember(knoten.art, knoten.parameter, knoten.eigenschaften, knoten.kartenVerweis, context) {
         if (knoten.art == "mathematik.multinomVektor") {
             multinomVektorKonzept(knoten)
         } else {
@@ -103,7 +104,7 @@ internal fun KonzeptKatalogDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun KonzeptDialog(
     zustand: AtlasZustand,
@@ -232,9 +233,10 @@ private fun KonzeptDialog(
                 }
 
                 HorizontalDivider()
-                Row(
+                FlowRow(
                     Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
                     horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
                 ) {
                     aktiveKarte?.takeUnless { zeigtFalkSchema }?.let { karte ->
                         Button(
@@ -259,7 +261,6 @@ private fun KonzeptDialog(
                                 schließen()
                             },
                         ) { Text("Knoten isolieren") }
-                        Spacer(Modifier.weight(1f))
                         Button(
                             onClick = {
                                 zustand.editor.wähleKnoten(knoten.id)
@@ -268,7 +269,7 @@ private fun KonzeptDialog(
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         ) { Text("Knoten löschen") }
-                    } ?: Spacer(Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -358,7 +359,7 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         Column(
             Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.bereich),
-            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
         ) {
             when (knoten.art) {
                 KonzeptKnotenArten.REGEL -> {

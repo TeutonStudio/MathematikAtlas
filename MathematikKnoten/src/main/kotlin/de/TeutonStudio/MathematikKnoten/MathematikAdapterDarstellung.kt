@@ -4,6 +4,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 
 /** Explizite fachliche Klassifikation; abweichende Anschlussarten allein genügen nicht. */
 val MATHEMATISCHE_ADAPTER_ARTEN: Set<String> = setOf(
+    ÜBERSETZER_ART,
     "mathematik.termZuMethode", "mathematik.tupelZuSpalte", "mathematik.tupelZuZeile",
     "mathematik.spalteZuTupel", "mathematik.zeileZuTupel", "mathematik.geometrie.zuTrägermenge",
 )

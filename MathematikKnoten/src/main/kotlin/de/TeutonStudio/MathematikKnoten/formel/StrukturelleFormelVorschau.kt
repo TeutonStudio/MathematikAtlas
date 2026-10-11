@@ -1,4 +1,4 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
@@ -142,7 +142,7 @@ internal fun StrukturelleFormelVorschau(
                 val neu = koordinaten.boundsInRoot()
                 if (bereiche[id] != neu) bereiche[id] = neu
             },
-            modifier = Modifier.padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
+            modifier = Modifier.padding(horizontal = LocalFormelEditorAbstände.current.standard, vertical = LocalFormelEditorAbstände.current.standard),
         )
         if (cursorLokal != null) {
             val cursorFarbe = MaterialTheme.colorScheme.primary
@@ -169,7 +169,7 @@ internal fun FormelCursorTasten(
         CursorTaste("↑", "Cursor nach oben", kannBewegen(FormelCursorRichtung.Oben)) {
             bewegen(FormelCursorRichtung.Oben)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalFormelEditorAbstände.current.winzig)) {
             CursorTaste("←", "Cursor nach links", kannBewegen(FormelCursorRichtung.Links)) {
                 bewegen(FormelCursorRichtung.Links)
             }
@@ -274,7 +274,7 @@ private fun FormelOperation(
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+                horizontalArrangement = Arrangement.spacedBy(LocalFormelEditorAbstände.current.eng),
             ) {
                 argumente.forEachIndexed { index, argument ->
                     if (index > 0) Text(symbol, style = style)
@@ -290,7 +290,7 @@ private fun FormelOperation(
                     registriere,
                     modifier = Modifier
                         .border(1.dp, MaterialTheme.colorScheme.onSurface)
-                        .padding(horizontal = LocalAtlasAbstände.current.winzig),
+                        .padding(horizontal = LocalFormelEditorAbstände.current.winzig),
                     style = style,
                 )
             }
@@ -302,7 +302,7 @@ private fun FormelOperation(
         }
         else -> Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
+            horizontalArrangement = Arrangement.spacedBy(LocalFormelEditorAbstände.current.winzig),
         ) {
             Text(formelFunktionsName(name), style = style)
             Text("(", style = style)

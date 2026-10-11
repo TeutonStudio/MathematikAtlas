@@ -126,15 +126,17 @@ class HistorienTest(unittest.TestCase):
         import copy
         x = copy.deepcopy(plan.lade_plan())
         x["releases"][-1]["status"] = "blocked"
-        x["current_version"] = "3.1.0"
-        x["releases"].append({"version": "3.1.0", "status": "released", "title": "Test", "roadmap": "Test", "previous_release": "3.0.0"})
+        next_version = ".".join(map(str, (*plan.versionsteile(x["current_version"])[:2], plan.versionsteile(x["current_version"])[2] + 1)))
+        x["current_version"] = next_version
+        x["releases"].append({"version": next_version, "status": "released", "title": "Test", "roadmap": "Test", "previous_release": "3.0.0"})
         with self.assertRaises(SystemExit): plan.prüfe_plan(x)
 
 class ZusätzlicheHistorieTest(unittest.TestCase):
     def test_keine_veroeffentlichung_oberhalb_current(self):
         import copy
         x = copy.deepcopy(plan.lade_plan())
-        x['releases'].append({'version': '3.1.0', 'status': 'released', 'title': 'Erfunden', 'roadmap': 'Erfunden', 'previous_release': x['current_version']})
+        next_version = '.'.join(map(str, (*plan.versionsteile(x['current_version'])[:2], plan.versionsteile(x['current_version'])[2] + 1)))
+        x['releases'].append({'version': next_version, 'status': 'released', 'title': 'Erfunden', 'roadmap': 'Erfunden', 'previous_release': x['current_version']})
         with self.assertRaises(SystemExit): plan.prüfe_plan(x)
 
     def test_nur_zielversion_darf_neu_veroeffentlicht_werden(self):
