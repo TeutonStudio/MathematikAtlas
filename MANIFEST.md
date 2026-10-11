@@ -5,6 +5,12 @@ Dieses Manifest beschreibt die versionierten Codex-, Agenten- und Releaseverwalt
 ## Agenten und Skills
 
 - `.agents/skills/neuer-knoten/SKILL.md`
+- `.agents/skills/knoten-entwickeln/SKILL.md`
+- `.agents/skills/mathematik-validieren/SKILL.md`
+- `.agents/skills/karteneditor-entwickeln/SKILL.md`
+- `.agents/skills/ui-entwickeln/SKILL.md`
+- `.agents/skills/performance-optimieren/SKILL.md`
+- `.agents/skills/persistenz-migrieren/SKILL.md`
 - `.agents/skills/release-verwalten/SKILL.md`
 - `.codex/agents/master-verwalter.toml`
 - `.codex/agents/math-reviewer.toml`
