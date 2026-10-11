@@ -20,7 +20,13 @@ Diese Dateien bilden das versionierte Projektgedächtnis und den Arbeitsablauf f
 | `/.codex/agents/` | Codex-Subagenten einschließlich `master_verwalter` |
 | `/.codex/agents/issue-verwalter.toml` | klärt Anforderungen, erstellt Issues und pflegt den kanonischen technischen Lösungsplan |
 | `/.codex/agents/readme-lokalisierer.toml` | erstellt und synchronisiert die mehrsprachige öffentliche README-Struktur |
-| `/.agents/skills/neuer-knoten/SKILL.md` | wiederverwendbarer Ablauf für neue Knoten |
+| `/.agents/skills/neuer-knoten/SKILL.md` | vollständiger Workflow für neue Typ-Schlüssel |
+| `/.agents/skills/knoten-entwickeln/SKILL.md` | bestehende und neue Knoten gezielt ändern |
+| `/.agents/skills/mathematik-validieren/SKILL.md` | mathematische Vertrags- und Gegenbeispielprüfung |
+| `/.agents/skills/karteneditor-entwickeln/SKILL.md` | Graph- und Gesteninteraktionen |
+| `/.agents/skills/ui-entwickeln/SKILL.md` | Compose, Inspektoren und Renderer |
+| `/.agents/skills/performance-optimieren/SKILL.md` | messen, Ursache finden und Regressionen prüfen |
+| `/.agents/skills/persistenz-migrieren/SKILL.md` | Altkarten und Schemaänderungen |
 | `/.agents/skills/release-verwalten/SKILL.md` | verbindlicher Ablauf für Versionen, Branches und `master`-Integration |
 | `/.agents/skills/readme-lokalisieren/SKILL.md` | wiederverwendbarer Ablauf für README-Sprachverzeichnis und synchronisierte Übersetzungen |
 | `/release/roadmap.toml` | maschinenlesbarer Versions- und Releasezustand |
