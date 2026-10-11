@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikRechenSystem.kern.parameter
+import de.TeutonStudio.MathematikRechenSystem.kern.ausgabeNamen
+import de.TeutonStudio.MathematikRechenSystem.kern.werteVorräte
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,6 +45,8 @@ interface KnotenInspektorAktionen {
     fun eigenschaften(eigenschaften: Map<String, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft>)
     fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId)
     fun knoten(knoten: KnotenDaten)
+    /** Nur nach einer expliziten Verlustbestätigung durch den gemeinsamen Auswahl-/Modusdialog. */
+    fun knotenNachVerlustbestätigung(knoten: KnotenDaten) = knoten(knoten)
     fun vorschauKnotenErsetzen(knoten: KnotenDaten): KnotenErsetzungsAuswirkung =
         KnotenErsetzungsAuswirkung(
             erhalteneAnschlüsse = knoten.anschlüsse,
@@ -645,7 +651,7 @@ private object VisualisierungsInspektor : KnotenInspektor {
         ParameterFeld("Maximale Auswertungen", config.sampling.maximalesRasterBudget.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximalesRasterBudget = n.coerceIn(1_000, 2_000_000)))) } }
         ParameterFeld("Orbit-Schritte je Prüfpunkt", config.sampling.maximaleOrbitSchritte.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximaleOrbitSchritte = n.coerceIn(1, 100_000)))) } }
         ParameterFeld("Numerische Grenztoleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
-        Text("Die Zielauflösung verteilt Stützpunkte adaptiv im Bildraum; das Auswertungsbudget bleibt die harte Obergrenze.", style = MaterialTheme.typography.bodySmall)
+        Text("Die Zielauflösung verteilt Stützpunkte adaptiv im Bildraum. Im Knoten läuft eine begrenzte Vorschau; die eingestellte Detailqualität wird nach dem Halten der Grafik erst im Reiter „Hohe Auflösung“ berechnet.", style = MaterialTheme.typography.bodySmall)
         Text("Farbe", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
         if (config.farbe.modus == FarbModus.Spektrum) {

@@ -58,8 +58,8 @@ class RestriktionsKnotenTest {
         )
 
         val restriktion = ergebnis.ausgaben.getValue("methode").objekt as Methode
-        assertEquals(m, restriktion.methodenSignatur().werteVorrat)
-        assertEquals(ziel, restriktion.methodenSignatur().zielMenge)
+        assertEquals(Tupelraum(listOf(m)), restriktion.mathematischeMethodenSignatur().definitionsRaum)
+        assertEquals(ziel, restriktion.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
         assertEquals("f\\vert_{${m.zuLatex()}}", ergebnis.ausgaben.getValue("methode").latexDarstellung)
     }
 

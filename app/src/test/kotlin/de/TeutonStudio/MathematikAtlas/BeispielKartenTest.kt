@@ -4,6 +4,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikKartenLaufzeit
+import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration
 import de.TeutonStudio.MathematikRechenSystem.kern.OrbitBeschraenktheitsMenge
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,6 +51,11 @@ class BeispielKartenTest {
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         val mengenKnoten = karte.knoten.single { it.art == MathematikKnotenVorlagen.OrbitBeschraenktheit.art }
+        val visualisierungsKnoten = karte.knoten.single { it.art == MathematikKnotenVorlagen.Visualisierung.art }
+        assertEquals(
+            4_000,
+            VisualisierungsKonfiguration.aus(visualisierungsKnoten.eigenschaften).sampling.maximalesRasterBudget,
+        )
         assertIs<OrbitBeschraenktheitsMenge>(
             ergebnis.knoten.getValue(mengenKnoten.id).ausgaben.getValue("menge").objekt,
         )

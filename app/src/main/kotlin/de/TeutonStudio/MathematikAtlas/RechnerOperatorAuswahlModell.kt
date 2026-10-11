@@ -101,3 +101,25 @@ private fun normalisiereOperatorSuche(text: String): String = Normalizer
     .normalize(text.trim().lowercase(Locale.GERMAN), Normalizer.Form.NFD)
     .replace("ß", "ss")
     .replace(Regex("\\p{Mn}+"), "")
+
+/** Auswahl, Suche und Informationsfelder projizieren denselben deklarativen Vertrag. */
+internal fun rechnerOperatorEinträge(knoten: KnotenDaten, familie: de.TeutonStudio.MathematikKnoten.RechnerFamilie): List<RechnerOperatorAuswahlEintrag> {
+    val registry = de.TeutonStudio.MathematikKnoten.RechnerOperatorRegistry
+    val gespeichert = knoten.parameter[familie.operatorParameter]
+    return buildList {
+        if (gespeichert != null && registry.finde(familie, gespeichert) is de.TeutonStudio.MathematikKnoten.RechnerOperatorAuflösung.Unbekannt) add(
+            RechnerOperatorAuswahlEintrag(gespeichert, "Unbekannter gespeicherter Operator", "?", "Nicht verfügbar",
+                "Die gespeicherte Operator-ID bleibt erhalten.", art = RechnerOperatorAuswahlArt.UNBEKANNT))
+        registry.fürFamilie(familie).filterNot { it.operatorId == "zahl.komplexerRadius" }.forEach { d ->
+            val formel = d.operatorId.endsWith(".formel")
+            val kandidat = if (formel) null else if (d.operatorId == "zahl.differential") {
+                de.TeutonStudio.MathematikKnoten.konfiguriereZahlenRechnerDifferential(knoten,
+                    de.TeutonStudio.MathematikKnoten.ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION)
+            } else registry.konfiguriere(knoten, d.operatorId)
+            add(RechnerOperatorAuswahlEintrag(d.operatorId, if (d.operatorId == "zahl.betrag") "0-Distanz" else d.titel,
+                d.symbolLatex, d.kategorie, d.definitionsLatex, d.aliases,
+                status = d.unterstützung.name, kandidat = kandidat,
+                art = if (formel) RechnerOperatorAuswahlArt.FORMEL else RechnerOperatorAuswahlArt.OPERATOR))
+        }
+    }
+}

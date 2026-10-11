@@ -36,8 +36,8 @@ android {
         applicationId = "de.TeutonStudio.MathematikAtlas"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3000000
-        versionName = "3.0.0"
+        versionCode = 3000001
+        versionName = "3.0.1"
         buildConfigField("String", "GIT_COMMIT_SHA", "\"$gitCommitSha\"")
     }
 
@@ -67,6 +67,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    // Kontrollierte DNS-Auflösung für HTTPS-Import ohne Rebinding/Hostheader-Sonderwege.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation(kotlin("test-junit"))
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20250517")

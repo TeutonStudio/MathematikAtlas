@@ -92,6 +92,10 @@ private fun vereinfacheAussage(
     kontext: RechenKontext,
 ): Aussage {
     val strukturell = when (aussage) {
+        is Selbigkeit -> Selbigkeit(
+            vereinfacheTerm(aussage.links, kontext).objekt,
+            vereinfacheTerm(aussage.rechts, kontext).objekt,
+        )
         is Gleichheit -> Gleichheit(
             vereinfacheTerm(aussage.links, kontext).objekt,
             vereinfacheTerm(aussage.rechts, kontext).objekt,
@@ -220,11 +224,20 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.allgemeinerParameter") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
-            val wertevorrat = WertebereichKonfiguration.vonEigenschaft(
+            val bereich = WertebereichKonfiguration.vonEigenschaft(
                 k.knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT],
-            ).zuMenge()
+            )
+            val wertevorrat = bereich.zuMenge()
+            val objekt: MathematischesObjekt = when (bereich) {
+                is WertebereichKonfiguration.Vektor -> TypisiertesElement(name,
+                    if (bereich.orientierung == VektorOrientierung.Spalte) "mathematik.vektor.spalte" else "mathematik.vektor.zeile",
+                    strukturForm = listOf(RationaleZahl.von(bereich.dimension.toLong())))
+                is WertebereichKonfiguration.Matrix -> TypisiertesElement(name, "mathematik.matrix",
+                    strukturForm = listOf(RationaleZahl.von(bereich.zeilen.toLong()), RationaleZahl.von(bereich.spalten.toLong())))
+                else -> AllgemeinerParameter(name)
+            }
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
-                AllgemeinerParameter(name),
+                objekt,
                 werteVorrat = wertevorrat,
                 variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat)),
             )))
@@ -260,8 +273,8 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(wert, k)))
         }
         registriere("mathematik.gleichheit") { k ->
-            val links = k.eingänge["links"]?.objekt ?: error("Linke Seite fehlt.")
-            val rechts = k.eingänge["rechts"]?.objekt ?: error("Rechte Seite fehlt.")
+            val links = k.objekt("links")
+            val rechts = k.objekt("rechts")
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Gleichheit(links, rechts), annahmen(k))))
         }
         registriere("mathematik.wahr") { KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(WahrheitsKonstante(true)))) }
@@ -305,7 +318,10 @@ object StandardMathematikAuswerter {
             val eingang = k.eingänge["term"]
                 ?: k.eingänge["objekt"]
                 ?: error("Term fehlt.")
-            val vereinfachung = vereinfacheTerm(eingang.objekt, k.rechenKontext)
+            val vereinfachung = vereinfacheTerm(
+                eingang.mathematischesObjekt("Auszuwertender Term"),
+                k.rechenKontext,
+            )
             val ausgangsName = k.knoten.anschlüsse.firstOrNull {
                 it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
             }?.name ?: "term"
@@ -363,7 +379,7 @@ object StandardMathematikAuswerter {
         registriere("mathematik.einzelmenge") { k ->
             val element = k.eingänge["element"] ?: error("Element fehlt.")
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
-                objekt = EndlicheMenge(setOf(element.objekt)),
+                objekt = EndlicheMenge(setOf(element.mathematischesObjekt("Element der Einzelmenge"))),
                 annahmen = element.annahmen,
                 reelleVariablen = element.reelleVariablen,
                 variablenQuellen = element.variablenQuellen,
@@ -416,7 +432,7 @@ object StandardMathematikAuswerter {
         registriere("mathematik.orbit") { k ->
             val verbundenerSchritt = k.eingänge["schritt"]?.objekt as? Methode
                 ?: error("Für eine Orbitfamilie muss eine Iterationsmethode verbunden sein.")
-            val start = k.eingänge["start"]?.objekt
+            val start = k.eingänge["start"]?.mathematischesObjekt("Orbitstart")
                 ?: error("Für eine Orbitfamilie muss ein Startwert oder eine Startmethode verbunden sein.")
             val mathematisch = verbundenerSchritt.alsMathematischeMethode("eine Orbititeration")
             require(mathematisch.parameter.size == 2) {
@@ -437,14 +453,14 @@ object StandardMathematikAuswerter {
                 parameter = reihenfolge.map(mathematisch.parameter::get),
                 effektiverWerteVorrat = effektiverWerteVorrat,
             )
-            val schrittSignatur = schritt.methodenSignatur()
+            val schrittSignatur = schritt.mathematischeMethodenSignatur()
             val zustandsRaum = schrittSignatur.argumente.first().werteVorrat
-            require(prüfeTeilmenge(schrittSignatur.zielMenge, zustandsRaum).wahrheitswert != Wahrheitswert.Lüge) {
+            require(prüfeTeilmenge(schrittSignatur.ergebnisse.single().zielMenge, zustandsRaum).wahrheitswert != Wahrheitswert.Lüge) {
                 "Die Zielmenge der Iterationsmethode ist mit dem Wertevorrat des Zustandsarguments unvereinbar."
             }
             when (start) {
                 is Methode -> require(
-                    prüfeTeilmenge(start.methodenSignatur().zielMenge, zustandsRaum).wahrheitswert != Wahrheitswert.Lüge,
+                    prüfeTeilmenge(start.mathematischeMethodenSignatur().ergebnisse.single().zielMenge, zustandsRaum).wahrheitswert != Wahrheitswert.Lüge,
                 ) {
                     "Die Zielmenge der Startmethode ist mit dem Wertevorrat des Zustandsarguments unvereinbar."
                 }
@@ -467,13 +483,13 @@ object StandardMathematikAuswerter {
                 ?: error("Für die Beschränktheitsmenge muss eine Orbitfamilie verbunden sein.")
             val parameterRaum = k.eingänge["parameterraum"]?.objekt as? MengenAusdruck
                 ?: error("Für die Beschränktheitsmenge muss ein Parameterraum verbunden sein.")
-            val schrittSignatur = orbit.schritt.methodenSignatur()
+            val schrittSignatur = orbit.schritt.mathematischeMethodenSignatur()
             val parameterWerteVorrat = schrittSignatur.argumente[1].werteVorrat
             require(prüfeTeilmenge(parameterRaum, parameterWerteVorrat).wahrheitswert != Wahrheitswert.Lüge) {
                 "Der Parameterraum ist nicht mit dem Wertevorrat des Parameterarguments vereinbar."
             }
-            (orbit.start as? Methode)?.methodenSignatur()?.let { startSignatur ->
-                val startBereich = startSignatur.effektiverWerteVorrat
+            (orbit.start as? Methode)?.mathematischeMethodenSignatur()?.let { startSignatur ->
+                val startBereich = startSignatur.effektiverDefinitionsRaum
                     ?: startSignatur.argumente.single().werteVorrat
                 require(prüfeTeilmenge(parameterRaum, startBereich).wahrheitswert != Wahrheitswert.Lüge) {
                     "Der Parameterraum ist nicht mit dem Wertevorrat der Startmethode vereinbar."
@@ -575,7 +591,7 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.termZuMethode") { k ->
             val termWert = k.eingänge["term"] ?: error("Term fehlt.")
-            val term = termWert.objekt
+            val term = termWert.mathematischesObjekt("Term der Methodenbildung")
             val freieParameter = term.freieMethodenParameter().associateBy { it.name }
             val quellenNachName = termWert.variablenQuellen
                 .filter { it.name in freieParameter }
@@ -708,8 +724,8 @@ object StandardMathematikAuswerter {
         registriere("mathematik.transponiereSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.spalte("vektor").transponiert(), annahmen(k)))) }
         registriere("mathematik.transponiereZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.zeile("vektor").transponiert(), annahmen(k)))) }
         registriere("mathematik.matrixProdukt") { k ->
-            val links = k.eingänge["a"]?.objekt ?: error("Linker Matrixfaktor fehlt.")
-            val rechts = k.eingänge["b"]?.objekt ?: error("Rechter Matrixfaktor fehlt.")
+            val links = k.mathematischerEingang("a", "Linker Matrixfaktor")
+            val rechts = k.mathematischerEingang("b", "Rechter Matrixfaktor")
             KnotenAuswertungsErgebnis(
                 mapOf("matrix" to BedingterWert(matrixProdukt(links, rechts), annahmen(k))),
             )
@@ -756,7 +772,13 @@ object StandardMathematikAuswerter {
             val basis = when (aussage.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> wahr
                 Wahrheitswert.Lüge -> lüge
-                null -> BedingterWert(FallAusdruck(wahr.objekt, aussage, lüge.objekt))
+                null -> BedingterWert(
+                    FallAusdruck(
+                        wahr.mathematischesObjekt("Wahr-Zweig der Fallunterscheidung"),
+                        aussage,
+                        lüge.mathematischesObjekt("Lüge-Zweig der Fallunterscheidung"),
+                    ),
+                )
             }
             KnotenAuswertungsErgebnis(mapOf(
                 "wert" to basis.copy(
@@ -775,7 +797,8 @@ object StandardMathematikAuswerter {
     }
 
     private fun KnotenAuswertungsKontext.zahl(name: String) = eingänge[name]?.objekt as? ZahlAusdruck ?: error("Zahleingang $name fehlt.")
-    private fun KnotenAuswertungsKontext.objekt(name: String) = eingänge[name]?.objekt ?: error("Eingang $name fehlt.")
+    private fun KnotenAuswertungsKontext.objekt(name: String) =
+        eingänge[name]?.mathematischesObjekt("Eingang '$name'") ?: error("Eingang $name fehlt.")
     private fun KnotenAuswertungsKontext.menge(name: String) = eingänge[name]?.objekt as? MengenAusdruck ?: error("Mengeneingang $name fehlt.")
     private fun KnotenAuswertungsKontext.komplex(name: String) = eingänge[name]?.objekt as? KomplexeZahl ?: error("Komplexe Zahl $name fehlt.")
     private fun KnotenAuswertungsKontext.spalte(name: String) = eingänge[name]?.objekt as? SpaltenVektor ?: error("Spaltenvektor $name fehlt.")

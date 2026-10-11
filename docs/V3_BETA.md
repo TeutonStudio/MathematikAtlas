@@ -1,5 +1,7 @@
 # Mathematik Atlas – v3 Beta
 
+Der gemeinsame, fortlaufende Implementierungs- und Nachweisstand steht in [V3_ALPHA_ABNAHME.md](V3_ALPHA_ABNAHME.md).
+
 ## Zweck
 
 v3 Beta baut auf dem Alpha-Stand auf und schließt die noch offenen
@@ -7,9 +9,11 @@ Semantik-, Plattform- und Laufzeitverträge vor einer stabilen v3-Version. Diese
 Datei beschreibt die geplante Reihenfolge; sie behauptet keine bereits
 implementierten Funktionen.
 
+Die Abschnitte1–3 wurden in die Alpha-Abnahme vorgezogen; ihre Implementierung und Nachweise werden in der gemeinsamen Matrix geführt. Beta baut auf deren abgeschlossenem Stand auf. Reine Übersetzer verwenden nach Nutzerentscheidung vom11.10.2026 eine kompakte Kapsel mit stark gerundeten Ecken.
+
 ## Geplante Änderungsschritte
 
-### 1. Inhaltsgleichheit und Selbigkeit
+### 1. Inhaltsgleichheit und Selbigkeit – bereits Alpha-Abnahme
 
 - V3-004 aus `V3_AENDERUNGEN.md` als zentralen Vergleichsdienst umsetzen.
 - Inhaltsgleichheit typübergreifend nur für ausdrücklich definierte Familien
@@ -18,14 +22,14 @@ implementierten Funktionen.
 - Gleichheit, Ungleichheit, endliche Mengen und Definitionskarten gemeinsam
   migrieren und das Gesetz `selbig(a, b) => gleich(a, b)` testen.
 
-### 2. Aussage-Standardwerte
+### 2. Aussage-Standardwerte – bereits Alpha-Abnahme
 
 - V3-005 mit persistierten Wahr/Falsch-Standardwerten für unverbundene
   Aussageeingänge umsetzen.
 - Priorität Verbindung vor Standardwert vor sicherem Fallback gewährleisten.
 - Inspector, dynamische Anschlüsse, Kopieren, Migration und Undo/Redo abdecken.
 
-### 3. Einheitliche Adaptergeometrie
+### 3. Einheitliche Adaptergeometrie – bereits Alpha-Abnahme
 
 - V3-006 für Typ-, Orientierungs- und Repräsentationsadapter abschließen.
 - Die fachneutrale Formklassifikation im Karteneditor halten und mathematische

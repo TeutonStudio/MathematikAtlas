@@ -22,119 +22,8 @@ private val zusammenfuehrenZulaessigeArten = vektorZulaessigeArten + setOf(
     MathematikAnschlussArten.Objekt.id,
 )
 
-fun vektorRechnerAnschluesse(operator: VektorRechnerOperator): List<AnschlussDaten> {
-    fun eingang(
-        name: String,
-        art: AnschlussArtId = MathematikAnschlussArten.Objekt.id,
-        zulaessig: Set<AnschlussArtId> = emptySet(),
-        reihe: Int,
-        erweiterbar: Boolean = false,
-    ) = AnschlussDaten(
-        name = name,
-        richtung = AnschlussRichtung.Eingang,
-        kante = AnschlussKante.Links,
-        art = art,
-        zulässigeArten = zulaessig,
-        reihenfolge = reihe,
-        kannSichErweitern = erweiterbar,
-    )
-
-    fun vektor(name: String, reihe: Int, erweiterbar: Boolean = false) =
-        eingang(name, MathematikAnschlussArten.Objekt.id, vektorZulaessigeArten, reihe, erweiterbar)
-
-    fun ausgang(
-        art: AnschlussArtId,
-        zulaessig: Set<AnschlussArtId> = emptySet(),
-        name: String = VEKTOR_RECHNER_ERGEBNIS,
-    ) = AnschlussDaten(
-        name = name,
-        richtung = AnschlussRichtung.Ausgang,
-        kante = AnschlussKante.Rechts,
-        art = art,
-        zulässigeArten = zulaessig,
-    )
-
-    return when (operator) {
-        VektorRechnerOperator.ADDITION -> listOf(
-            vektor("vektor.1", 0),
-            vektor("vektor.2", 1, erweiterbar = true),
-            ausgang(MathematikAnschlussArten.Vektor.id, name = "vektor"),
-        )
-        VektorRechnerOperator.SUBTRAKTION,
-        VektorRechnerOperator.KREUZPRODUKT,
-        VektorRechnerOperator.HADAMARD_PRODUKT,
-        VektorRechnerOperator.PROJEKTION,
-        -> listOf(
-            vektor("links", 0),
-            vektor("rechts", 1),
-            ausgang(MathematikAnschlussArten.Vektor.id, name = "vektor"),
-        )
-        VektorRechnerOperator.SKALARPRODUKT -> listOf(
-            vektor("links", 0),
-            vektor("rechts", 1),
-            ausgang(MathematikAnschlussArten.Zahl.id, name = "skalar"),
-        )
-        VektorRechnerOperator.WINKEL -> listOf(
-            vektor("links", 0),
-            vektor("rechts", 1),
-            ausgang(MathematikAnschlussArten.Zahl.id, name = "winkel"),
-        )
-        VektorRechnerOperator.DISTANZ -> listOf(
-            vektor("links", 0),
-            vektor("rechts", 1),
-            ausgang(MathematikAnschlussArten.Zahl.id, name = "distanz"),
-        )
-        VektorRechnerOperator.SKALARMULTIPLIKATION -> listOf(
-            vektor("vektor", 0),
-            eingang("skalar", MathematikAnschlussArten.Zahl.id, reihe = 1),
-            ausgang(MathematikAnschlussArten.Vektor.id, name = "vektor"),
-        )
-        VektorRechnerOperator.NEGATION,
-        VektorRechnerOperator.NORMALISIERUNG,
-        -> listOf(
-            vektor("vektor", 0),
-            ausgang(MathematikAnschlussArten.Vektor.id, name = "vektor"),
-        )
-        VektorRechnerOperator.NORM -> listOf(
-            vektor("vektor", 0),
-            ausgang(MathematikAnschlussArten.Zahl.id, name = "norm"),
-        )
-        VektorRechnerOperator.WINKEL_ZU_ACHSE -> listOf(
-            vektor("vektor", 0),
-            ausgang(MathematikAnschlussArten.Zahl.id, name = "winkel"),
-        )
-        VektorRechnerOperator.VEKTORFELD_INTEGRIEREN -> listOf(
-            eingang("vektorfeld", MathematikAnschlussArten.Methode.id, reihe = 0),
-            eingang("menge", MathematikAnschlussArten.Menge.id, reihe = 1),
-            ausgang(
-                MathematikAnschlussArten.Objekt.id,
-                setOf(
-                    MathematikAnschlussArten.Tupel.id,
-                    MathematikAnschlussArten.SpaltenVektor.id,
-                    MathematikAnschlussArten.ZeilenVektor.id,
-                ),
-                name = "vektor",
-            ),
-        )
-        VektorRechnerOperator.ZERLEGEN -> listOf(
-            eingang("struktur", MathematikAnschlussArten.Objekt.id, vektorZulaessigeArten, 0),
-            ausgang(MathematikAnschlussArten.Methode.id, name = "methode"),
-        )
-        VektorRechnerOperator.ZUSAMMENFUEHREN -> listOf(
-            eingang("element.1", MathematikAnschlussArten.Objekt.id, zusammenfuehrenZulaessigeArten, 0),
-            eingang("element.2", MathematikAnschlussArten.Objekt.id, zusammenfuehrenZulaessigeArten, 1, erweiterbar = true),
-            ausgang(
-                MathematikAnschlussArten.Objekt.id,
-                setOf(
-                    MathematikAnschlussArten.Tupel.id,
-                    MathematikAnschlussArten.SpaltenVektor.id,
-                    MathematikAnschlussArten.ZeilenVektor.id,
-                ),
-                name = "struktur",
-            ),
-        )
-    }
-}
+fun vektorRechnerAnschluesse(operator: VektorRechnerOperator): List<AnschlussDaten> =
+    rechnerAnschlüsse(RechnerFamilie.VEKTOR, operator.stabileId)
 
 fun konfiguriereVektorRechner(
     knoten: KnotenDaten,
@@ -142,13 +31,17 @@ fun konfiguriereVektorRechner(
 ): KnotenDaten {
     require(knoten.art == VektorRechner.KNOTEN_ART)
     val gewuenscht = vektorRechnerAnschluesse(operator)
-    val signatur = if (
+    val signatur = if (operator.stabileId == knoten.parameter[VEKTOR_RECHNER_OPERATOR] && operator in setOf(VektorRechnerOperator.ADDITION, VektorRechnerOperator.ZUSAMMENFUEHREN)) {
+        val präfix = if (operator == VektorRechnerOperator.ADDITION) "vektor." else "element."
+        gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith(präfix) &&
+            it.name.substringAfterLast('.').toIntOrNull()?.let { n -> n > 2 } == true }
+    } else if (
         operator == VektorRechnerOperator.ZERLEGEN &&
         knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.ZERLEGEN.stabileId
     ) {
-        gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
+        gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang && it.name.startsWith("element") }
     } else gewuenscht
-    val neu = erhalteVektorRechnerAnschlussIds(knoten.anschlüsse, signatur)
+    val neu = erhalteRechnerAnschlussIds(knoten.anschlüsse, signatur, RechnerFamilie.VEKTOR, operator.stabileId)
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
             name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) {
@@ -192,8 +85,7 @@ fun vektorRechnerVorlage(operator: VektorRechnerOperator): KnotenVorlage = metho
     ),
 )
 
-internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen() {
-    registriere(VektorRechner.KNOTEN_ART) { kontext ->
+internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val operator = VektorRechnerOperator.vonIdOderNull(kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR])
             ?: VektorRechnerOperator.SKALARPRODUKT
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
@@ -226,7 +118,7 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                     }
                     .toMap()
             }
-            return@registriere KnotenAuswertungsErgebnis(
+            return@MathematikKnotenAuswerter KnotenAuswertungsErgebnis(
                 ausgaben = ausgänge,
                 eingänge = kontext.eingänge,
             )
@@ -251,7 +143,9 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
             else -> emptyList()
         }
         val quellen = vektorNamen.mapNotNull { name ->
-            kontext.eingänge[name]?.objekt?.let(::vektorQuelleErweitert)
+            kontext.eingänge[name]
+                ?.mathematischesObjekt("Vektoroperand '$name'")
+                ?.let(::vektorQuelleErweitert)
         }
         val skalare = listOfNotNull(kontext.eingänge["skalar"]?.objekt as? ZahlAusdruck)
         val objekte = when (operator) {
@@ -259,7 +153,7 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                 .filterKeys { it.startsWith("element.") }
                 .toList()
                 .sortedBy { (name, _) -> name.substringAfterLast('.').toIntOrNull() ?: Int.MAX_VALUE }
-                .map { it.second.objekt }
+                .map { (name, wert) -> wert.mathematischesObjekt("Vektorelement '$name'") }
             else -> emptyList()
         }
         val integrationsMenge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
@@ -304,8 +198,10 @@ internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen()
                 eingänge = kontext.eingänge,
             )
         }
-    }
 }
+
+internal fun MathematikAuswerterRegister.registriereVektorRechnerErweiterungen() { registriere(VektorRechner.KNOTEN_ART, vektorFachauswerter) }
+
 
 fun vektorZerlegeMethode(struktur: MathematischesObjekt): MathematischeMethode {
     val index = Variable("i")
@@ -330,9 +226,10 @@ private fun ZahlAusdruck.positiveDimensionOderNull(): Int? = (this as? Rationale
 fun KartenDaten.migriereVektorRechnerKonfiguration(): KartenDaten = copy(
     knoten = knoten.map { knoten ->
         if (knoten.art != VektorRechner.KNOTEN_ART) return@map knoten
-        val operator = VektorRechnerOperator.vonIdOderNull(knoten.parameter[VEKTOR_RECHNER_OPERATOR])
-            ?: VektorRechnerOperator.SKALARPRODUKT
-        konfiguriereVektorRechner(knoten, operator)
+        val gespeichert = knoten.parameter[VEKTOR_RECHNER_OPERATOR]
+        val operator = VektorRechnerOperator.vonIdOderNull(gespeichert)
+        if (operator == null && gespeichert != null) knoten
+        else konfiguriereVektorRechner(knoten, operator ?: VektorRechnerOperator.SKALARPRODUKT)
     },
 )
 
@@ -359,26 +256,6 @@ private fun vektorIntegralKomponenten(menge: MengenAusdruck): List<MengenAusdruc
     is KartesischesProdukt -> menge.mengen
     is Tupelraum -> menge.komponenten
     else -> listOf(menge)
-}
-
-private fun erhalteVektorRechnerAnschlussIds(
-    bisher: List<AnschlussDaten>,
-    gewuenscht: List<AnschlussDaten>,
-): List<AnschlussDaten> {
-    val verbraucht = mutableSetOf<AnschlussId>()
-    return gewuenscht.map { soll ->
-        val kandidat = bisher.firstOrNull {
-            it.id !in verbraucht && it.richtung == soll.richtung && it.name == soll.name
-        } ?: bisher.firstOrNull {
-            it.id !in verbraucht &&
-                it.richtung == soll.richtung &&
-                it.reihenfolge == soll.reihenfolge
-        }
-        if (kandidat == null) soll else {
-            verbraucht += kandidat.id
-            soll.copy(id = kandidat.id)
-        }
-    }
 }
 
 private fun vektorQuelleErweitert(objekt: MathematischesObjekt): VektorQuelle {

@@ -37,7 +37,7 @@ class MethodenZielmengeProjektionTest {
     }
 
     @Test
-    fun `tupelige Zielmenge wird nicht doppelt verpackt`() {
+    fun `einzelne tupelige Zielkomponente behält das äussere Signaturtupel`() {
         val ziel = Tupelraum(listOf(ReelleZahlen, GanzeZahlen))
         val tupelMethode = Methode(
             name = "g",
@@ -62,6 +62,6 @@ class MethodenZielmengeProjektionTest {
             ),
         )
 
-        assertEquals(ziel, ergebnis.ausgaben.getValue("menge").objekt)
+        assertEquals(Tupelraum(listOf(ziel)), ergebnis.ausgaben.getValue("menge").objekt)
     }
 }

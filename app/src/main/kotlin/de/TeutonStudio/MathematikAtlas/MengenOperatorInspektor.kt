@@ -85,7 +85,7 @@ internal object MengenRechnerInspektor : KnotenInspektor {
                 auswirkungFür = { eintrag -> eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen) },
                 schließen = { dialogOffen = false },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     dialogOffen = false
                 },
                 formelÖffnen = {},
@@ -219,7 +219,7 @@ internal object PraedikatInspektor : KnotenInspektor {
                 auswirkungFür = { eintrag -> eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen) },
                 schließen = { dialogOffen = false },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     dialogOffen = false
                 },
                 formelÖffnen = {},
@@ -266,7 +266,7 @@ internal object VektorRechnerErweiterterInspektor : KnotenInspektor {
                 auswirkungFür = { eintrag -> eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen) },
                 schließen = { dialogOffen = false },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     dialogOffen = false
                 },
                 formelÖffnen = {},

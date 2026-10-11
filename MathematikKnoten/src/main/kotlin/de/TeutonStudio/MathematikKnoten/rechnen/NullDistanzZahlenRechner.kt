@@ -8,9 +8,8 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
  * Konsolidiert Betrag und historischen komplexen Radius auf den Begriff Abstand zu 0.
  * Die historische Operator-ID bleibt ausführbar; neue Auswahl verwendet `zahl.betrag` als kanonischen Persistenzzustand.
  */
-fun MathematikAuswerterRegister.registriereNullDistanz() {
-    val basis = requireNotNull(finde(ZAHLENRECHNER_ART))
-    registriere(ZAHLENRECHNER_ART) { kontext ->
+internal fun mitNullDistanz(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter =
+    de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val operatorId = kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR]
         if (
             operatorId == UniversellerZahlenOperator.BETRAG.stabileId &&
@@ -28,5 +27,6 @@ fun MathematikAuswerterRegister.registriereNullDistanz() {
         } else {
             basis.auswerten(kontext)
         }
-    }
 }
+
+internal fun MathematikAuswerterRegister.registriereNullDistanz() { registriere(ZAHLENRECHNER_ART, mitNullDistanz(requireNotNull(finde(ZAHLENRECHNER_ART)))) }

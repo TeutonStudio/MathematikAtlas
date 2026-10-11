@@ -63,8 +63,8 @@ class FolgenSignaturUndMengenEigenschaftenTest {
 
         assertEquals(AussageStatus.BEWIESEN, einzeln.aussageStatus)
         assertEquals(AussageStatus.BEWIESEN, tupel.aussageStatus)
-        assertTrue(einzeln.diagnose!!.nachricht.contains("argument.0.x"))
-        assertTrue(tupel.diagnose!!.nachricht.contains("argument.1.y"))
+        assertTrue(einzeln.diagnose!!.nachricht.contains("argument-0"))
+        assertTrue(tupel.diagnose!!.nachricht.contains("argument-1"))
     }
 
     @Test
@@ -159,7 +159,7 @@ class FolgenSignaturUndMengenEigenschaftenTest {
     private fun aussage(
         knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten,
         eingang: String,
-        objekt: MathematischesObjekt,
+        objekt: de.TeutonStudio.MathematikRechenSystem.kern.AtlasWert,
     ): EigenschaftsAussage = assertIs(
         register.finde(knoten.art)!!.auswerten(
             KnotenAuswertungsKontext(

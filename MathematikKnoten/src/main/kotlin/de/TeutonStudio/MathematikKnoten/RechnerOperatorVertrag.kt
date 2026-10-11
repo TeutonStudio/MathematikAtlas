@@ -2,7 +2,8 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
-import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
@@ -33,9 +34,20 @@ data class RechnerParameterVertrag(
     val standardwert: String? = null,
 )
 
+/** Deklarative Projektion ohne instanzbezogene IDs. */
+data class RechnerPortVertrag(
+    val name: String,
+    val richtung: AnschlussRichtung,
+    val art: AnschlussArtId,
+    val zulässigeArten: Set<AnschlussArtId> = emptySet(),
+    val reihenfolge: Int = 0,
+    val variadisch: Boolean = false,
+    val aliases: Set<String> = emptySet(),
+)
+
 data class RechnerSignaturVertrag(
     val id: String,
-    val anschlüsse: List<AnschlussDaten>,
+    val anschlüsse: List<RechnerPortVertrag>,
 ) {
     val eingänge get() = anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }
     val ausgänge get() = anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
@@ -49,6 +61,10 @@ data class RechnerOperatorVertrag(
     val parameter: List<RechnerParameterVertrag> = emptyList(),
     val fähigkeiten: Set<RechnerFähigkeit> = emptySet(),
     val unterstützung: RechnerUnterstützung = RechnerUnterstützung.KONKRET,
+    val symbolLatex: String = titel,
+    val definitionsLatex: String = symbolLatex,
+    val aliases: Set<String> = emptySet(),
+    val kategorie: String = familie.name.lowercase(),
 )
 
 sealed interface RechnerOperatorAuflösung {
@@ -57,136 +73,24 @@ sealed interface RechnerOperatorAuflösung {
 }
 
 object RechnerOperatorRegistry {
-    val alle: List<RechnerOperatorVertrag> = buildList {
-        ZahlenRechnerKnotenVorlagen.alle.forEach { vorlage ->
-            val operator = UniversellerZahlenOperator.vonId(vorlage.standardParameter[ZAHLENRECHNER_OPERATOR])
-            val fähigkeiten = buildSet {
-                if (istVariadischerZahlenOperator(operator)) add(RechnerFähigkeit.VARIADISCHE_EINGÄNGE)
-                if (istKomplexKonstruktor(operator) || operator == UniversellerZahlenOperator.DIVISION) {
-                    add(RechnerFähigkeit.ALTERNATIVE_SIGNATUREN)
-                }
-                if (operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE) add(RechnerFähigkeit.METHODENHEBUNG)
-            }
-            add(
-                RechnerOperatorVertrag(
-                    RechnerFamilie.ZAHL,
-                    operator.stabileId,
-                    operator.titel,
-                    listOf(RechnerSignaturVertrag("standard", vorlage.anschlüsse)),
-                    fähigkeiten = fähigkeiten,
-                ),
-            )
-        }
-        ErweiterterZahlenOperator.entries.forEach { operator ->
-            val knoten = konfiguriereErweitertenZahlenRechner(
-                ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero),
-                operator,
-            )
-            add(
-                RechnerOperatorVertrag(
-                    RechnerFamilie.ZAHL,
-                    operator.stabileId,
-                    operator.titel,
-                    listOf(RechnerSignaturVertrag("standard", knoten.anschlüsse)),
-                ),
-            )
-        }
-        add(
-            RechnerOperatorVertrag(
-                RechnerFamilie.ZAHL,
-                ZAHLENRECHNER_FORMEL_ID,
-                "Eigene Formel",
-                listOf(RechnerSignaturVertrag("formel", ZahlenRechnerKnotenVorlagen.standard.anschlüsse)),
-                unterstützung = RechnerUnterstützung.SYMBOLISCH,
-            ),
-        )
-        VektorRechnerOperator.entries.forEach { operator ->
-            add(
-                RechnerOperatorVertrag(
-                    RechnerFamilie.VEKTOR,
-                    operator.stabileId,
-                    operator.titel,
-                    listOf(RechnerSignaturVertrag("standard", vektorRechnerAnschluesse(operator))),
-                    fähigkeiten = setOf(RechnerFähigkeit.METHODENHEBUNG),
-                ),
-            )
-        }
-        add(
-            RechnerOperatorVertrag(
-                RechnerFamilie.VEKTOR,
-                VEKTOR_FORMEL_ID,
-                "Eigene Formel",
-                listOf(RechnerSignaturVertrag("formel", vektorRechnerAnschluesse(VektorRechnerOperator.ADDITION))),
-                unterstützung = RechnerUnterstützung.SYMBOLISCH,
-            ),
-        )
-        StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).forEach { definition ->
-            add(
-                RechnerOperatorVertrag(
-                    RechnerFamilie.MATRIX,
-                    definition.id,
-                    definition.titel,
-                    listOf(
-                        RechnerSignaturVertrag(
-                            "standard",
-                            definition.eingänge.mapIndexed { index, eingang ->
-                                registryEingang(eingang.name, eingang.typ, index)
-                            } + registryAusgang(definition.ergebnisTyp),
-                        ),
-                    ),
-                    fähigkeiten = setOf(RechnerFähigkeit.METHODENHEBUNG),
-                ),
-            )
-        }
-        add(
-            RechnerOperatorVertrag(
-                RechnerFamilie.MATRIX,
-                MATRIX_FORMEL_ID,
-                "Eigene Formel",
-                listOf(RechnerSignaturVertrag("formel", StrukturFormelRechnerVorlagen.Matrix.anschlüsse)),
-                unterstützung = RechnerUnterstützung.SYMBOLISCH,
-            ),
-        )
-        StandardTensorOperationen.registry.alle().forEach { definition ->
-            val status = when (definition.unterstuetzungsStatus) {
-                TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT -> RechnerUnterstützung.KONKRET
-                TensorUnterstuetzungsStatus.SYMBOLISCH_IMPLEMENTIERT -> RechnerUnterstützung.SYMBOLISCH
-                TensorUnterstuetzungsStatus.REGISTRIERT -> RechnerUnterstützung.REGISTRIERT
-            }
-            add(
-                RechnerOperatorVertrag(
-                    RechnerFamilie.TENSOR,
-                    definition.id.wert,
-                    definition.titel,
-                    listOf(
-                        RechnerSignaturVertrag(
-                            "standard",
-                            tensorOperationAnschluesse(
-                                definition,
-                                AchsenEingabeModus.TUPEL,
-                                definition.minimaleAchsenAnzahl.coerceAtLeast(1),
-                            ),
-                        ),
-                    ),
-                    parameter = definition.parameter.map { RechnerParameterVertrag(it.id, it.erforderlich, it.standardWert) },
-                    fähigkeiten = buildSet {
-                        if (definition.maximaleAchsenAnzahl == null || definition.minimaleAchsenAnzahl > 0) {
-                            add(RechnerFähigkeit.DYNAMISCHE_ACHSEN)
-                        }
-                        if (definition.ausgangsRollen.size > 1) add(RechnerFähigkeit.MEHRFACHAUSGÄNGE)
-                    },
-                    unterstützung = status,
-                ),
-            )
-        }
-        add(
-            RechnerOperatorVertrag(
-                RechnerFamilie.TENSOR,
-                TENSOR_FORMEL_ID,
-                "Eigene Formel",
-                listOf(RechnerSignaturVertrag("formel", StrukturFormelRechnerVorlagen.Tensor.anschlüsse)),
-                unterstützung = RechnerUnterstützung.SYMBOLISCH,
-            ),
+    val alle: List<RechnerOperatorVertrag> = RechnerOperatorDefinitionen.alle.map { definition ->
+        RechnerOperatorVertrag(
+            familie = RechnerFamilie.valueOf(definition.familie.name), operatorId = definition.id, titel = definition.titel,
+            signaturen = definition.signaturen.map { signatur ->
+                RechnerSignaturVertrag(signatur.id,
+                    signatur.eingänge.mapIndexed { i, r -> r.alsPort(AnschlussRichtung.Eingang, i) } +
+                        signatur.ausgänge.mapIndexed { i, r -> r.alsPort(AnschlussRichtung.Ausgang, i) })
+            },
+            parameter = definition.parameter.map { RechnerParameterVertrag(it.id, it.erforderlich, it.standardwert) },
+            fähigkeiten = buildSet {
+                if (definition.signaturen.any { it.eingänge.any(OperatorRolle::variadisch) }) add(RechnerFähigkeit.VARIADISCHE_EINGÄNGE)
+                if (definition.signaturen.size > 1) add(RechnerFähigkeit.ALTERNATIVE_SIGNATUREN)
+                if (definition.signaturen.any { it.eingänge.any(OperatorRolle::methodenfähig) }) add(RechnerFähigkeit.METHODENHEBUNG)
+                if (definition.familie == OperatorFamilie.TENSOR && definition.signaturen.size > 1) add(RechnerFähigkeit.DYNAMISCHE_ACHSEN)
+                if (definition.signaturen.any { it.ausgänge.size > 1 }) add(RechnerFähigkeit.MEHRFACHAUSGÄNGE)
+            },
+            unterstützung = RechnerUnterstützung.valueOf(definition.unterstützung.name),
+            symbolLatex = definition.symbolLatex, definitionsLatex = definition.definitionsLatex, aliases = definition.aliases, kategorie = definition.kategorie,
         )
     }.sortedWith(compareBy({ it.familie.ordinal }, RechnerOperatorVertrag::operatorId))
 
@@ -235,20 +139,15 @@ object RechnerOperatorRegistry {
     }
 }
 
-private fun registryEingang(name: String, typ: FormelTyp, reihenfolge: Int): AnschlussDaten = AnschlussDaten(
-    name = name,
-    richtung = AnschlussRichtung.Eingang,
-    kante = de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante.Links,
-    art = typ.anschlussArt(),
-    reihenfolge = reihenfolge,
-)
-
-private fun registryAusgang(typ: FormelTyp): AnschlussDaten = AnschlussDaten(
-    name = if (typ == FormelTyp.METHODE) "methode" else "wert",
-    richtung = AnschlussRichtung.Ausgang,
-    kante = de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante.Rechts,
-    art = typ.anschlussArt(),
-)
+private fun OperatorRolle.alsPort(richtung: AnschlussRichtung, index: Int): RechnerPortVertrag {
+    val erlaubt = zulässigeTypen.flatMap { typ -> if (typ == FormelTyp.VEKTOR) listOf(
+        MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.ZeilenVektor.id,
+    ) else listOf(typ.anschlussArt()) }.toSet()
+    return RechnerPortVertrag(name, richtung,
+        if (methodenfähig) MathematikAnschlussArten.AtlasWert.id else if (erlaubt.isNotEmpty()) MathematikAnschlussArten.Objekt.id else typ.anschlussArt(),
+        if (methodenfähig) erlaubt.ifEmpty { setOf(typ.anschlussArt()) } + MathematikAnschlussArten.Methode.id else erlaubt,
+        index, variadisch, aliases)
+}
 
 private fun FormelTyp.anschlussArt() = when (this) {
     FormelTyp.ZAHL -> MathematikAnschlussArten.Zahl.id
@@ -260,4 +159,17 @@ private fun FormelTyp.anschlussArt() = when (this) {
     FormelTyp.TENSOR -> MathematikAnschlussArten.Tensor.id
     FormelTyp.METHODE -> MathematikAnschlussArten.Methode.id
     FormelTyp.OBJEKT -> MathematikAnschlussArten.Objekt.id
+}
+
+/** Instanz-IDs entstehen erst an dieser expliziten Graphgrenze. */
+internal fun rechnerAnschlüsse(familie: RechnerFamilie, id: String, signaturId: String = "standard"): List<AnschlussDaten> {
+    val vertrag = (RechnerOperatorRegistry.finde(familie, id) as? RechnerOperatorAuflösung.Bekannt)?.vertrag
+        ?: error("Unbekannter Operator $id")
+    val signatur = vertrag.signaturen.single { it.id == signaturId }
+    return signatur.anschlüsse.map { port -> AnschlussDaten(
+        name = port.name, richtung = port.richtung,
+        kante = if (port.richtung == AnschlussRichtung.Eingang) AnschlussKante.Links else AnschlussKante.Rechts,
+        art = port.art, zulässigeArten = port.zulässigeArten, reihenfolge = port.reihenfolge,
+        kannSichErweitern = port.variadisch,
+    ) }
 }

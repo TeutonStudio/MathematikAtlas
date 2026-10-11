@@ -20,6 +20,9 @@ internal data class AdaptiveMethodenErgebnis(
     val statistik: VisualisierungsStatistik,
 )
 
+internal fun gleichmäßigeFlächenAuflösung(gewünschteAuflösung: Int, budget: Int): Int =
+    minOf(gewünschteAuflösung.coerceAtLeast(2), sqrt(budget.toDouble()).toInt().coerceAtLeast(2))
+
 /**
  * Adaptiver, bildraumbezogener Mesher für kontinuierliche ein- und zweiparametrige
  * Methoden. Die Kamera ist absichtlich kein Eingang: Genauigkeit bezieht sich auf
@@ -33,7 +36,9 @@ internal object AdaptiveMethodenGeometrie {
         abbruchPrüfen: () -> Unit,
     ): AdaptiveMethodenErgebnis = when (parameterBereiche.size) {
         1 -> kurve(parameterBereiche.single(), konfiguration, auswerten, abbruchPrüfen)
-        2 -> fläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerten, abbruchPrüfen)
+        2 -> if (konfiguration.sampling.vorschau) {
+            vorschauFläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerten, abbruchPrüfen)
+        } else fläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerten, abbruchPrüfen)
         else -> AdaptiveMethodenErgebnis(emptyList(), emptyList(), emptyList(), emptyList(), VisualisierungsStatistik())
     }
 
@@ -131,9 +136,26 @@ internal object AdaptiveMethodenGeometrie {
             val d = wert(u0, v1)
             val e = wert(u1, v1)
             val m = wert(um, vm)
+            // Reserve all four child cells before descending: refinement of the first
+            // child must never consume the samples needed to cover its siblings.
+            fun kinderVorbereiten(): Boolean {
+                val stellen = listOf(
+                    Schlüssel(um, v0), Schlüssel(um, v1), Schlüssel(u0, vm), Schlüssel(u1, vm),
+                    Schlüssel((u0 + um) / 2, (v0 + vm) / 2),
+                    Schlüssel((um + u1) / 2, (v0 + vm) / 2),
+                    Schlüssel((u0 + um) / 2, (vm + v1) / 2),
+                    Schlüssel((um + u1) / 2, (vm + v1) / 2),
+                )
+                if (cache.size + stellen.count { it !in cache } > c.sampling.maximalesRasterBudget) {
+                    budgetErschöpft = true
+                    return false
+                }
+                stellen.forEach { wert(it.u, it.v) }
+                return true
+            }
             val gültig = listOf(a, b, d, e, m).all { it.punkt != null }
             if (!gültig) {
-                if (!budgetErschöpft && tiefe < maximaleTiefe) {
+                if (!budgetErschöpft && tiefe < maximaleTiefe && kinderVorbereiten()) {
                     teile(u0, um, v0, vm, tiefe + 1)
                     teile(um, u1, v0, vm, tiefe + 1)
                     teile(u0, um, vm, v1, tiefe + 1)
@@ -148,7 +170,7 @@ internal object AdaptiveMethodenGeometrie {
             )
             val bilinear = mittelpunkt(mittelpunkt(pa, pe), mittelpunkt(pb, pd))
             val krümmung = normierterAbstand(pm, bilinear, c)
-            if (!budgetErschöpft && tiefe < maximaleTiefe && (kantenFehler > ziel || krümmung > ziel * 0.35)) {
+            if (!budgetErschöpft && tiefe < maximaleTiefe && (kantenFehler > ziel || krümmung > ziel * 0.35) && kinderVorbereiten()) {
                 teile(u0, um, v0, vm, tiefe + 1)
                 teile(um, u1, v0, vm, tiefe + 1)
                 teile(u0, um, vm, v1, tiefe + 1)
@@ -169,6 +191,47 @@ internal object AdaptiveMethodenGeometrie {
             dreiecke,
             diagnosen.toList(),
             VisualisierungsStatistik(cache.size, punkte.size, 0, dreiecke.size, 0, erreichteTiefe, budgetErschöpft),
+        )
+    }
+
+    private fun vorschauFläche(
+        uBereich: ZahlenBereich,
+        vBereich: ZahlenBereich,
+        c: VisualisierungsKonfiguration,
+        auswerten: (List<Double>) -> AdaptivePunktAuswertung,
+        abbruchPrüfen: () -> Unit,
+    ): AdaptiveMethodenErgebnis {
+        val gewünschteAuflösung = c.sampling.auflösung2D.coerceAtLeast(2)
+        val auflösung = gleichmäßigeFlächenAuflösung(
+            gewünschteAuflösung,
+            c.sampling.maximalesRasterBudget,
+        )
+        val diagnosen = linkedSetOf<String>()
+        val dreiecke = mutableListOf<VisualisierungsDreieck>()
+        val raster = List(auflösung) { uIndex ->
+            List(auflösung) { vIndex ->
+                abbruchPrüfen()
+                val u = uBereich.minimum + (uBereich.maximum - uBereich.minimum) * uIndex / (auflösung - 1)
+                val v = vBereich.minimum + (vBereich.maximum - vBereich.minimum) * vIndex / (auflösung - 1)
+                auswerten(listOf(u, v)).also { it.diagnose?.let(diagnosen::add) }
+            }
+        }
+        // Eine grobe Vorschau darf unerkannte Definitionslücken nicht mit Flächen überbrücken.
+        val punkte = raster.flatten().mapNotNull { it.punkt }.distinct()
+        return AdaptiveMethodenErgebnis(
+            punkte,
+            emptyList(),
+            dreiecke,
+            diagnosen.toList(),
+            VisualisierungsStatistik(
+                auswertungen = auflösung * auflösung,
+                stützpunkte = punkte.size,
+                linien = 0,
+                dreiecke = dreiecke.size,
+                zellen = 0,
+                maximaleTiefe = 0,
+                budgetErschöpft = auflösung < gewünschteAuflösung,
+            ),
         )
     }
 

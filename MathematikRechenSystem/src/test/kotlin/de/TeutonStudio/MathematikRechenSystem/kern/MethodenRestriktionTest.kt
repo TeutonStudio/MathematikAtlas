@@ -42,8 +42,8 @@ class MethodenRestriktionTest {
         val ergebnis = restriktiereMethode(basis, m)
 
         val restriktion = assertNotNull(ergebnis.methode)
-        assertEquals(m, restriktion.methodenSignatur().werteVorrat)
-        assertEquals(ReelleZahlen, restriktion.methodenSignatur().zielMenge)
+        assertEquals(Tupelraum(listOf(m)), restriktion.mathematischeMethodenSignatur().definitionsRaum)
+        assertEquals(ReelleZahlen, restriktion.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
         assertEquals("f\\vert_{${m.zuLatex()}}", restriktion.zuLatex())
         assertEquals(RationaleZahl.von(2), restriktion.wendeAn(listOf(RationaleZahl.von(2))))
         assertNull(restriktion.bereichsanpassung)
@@ -58,7 +58,7 @@ class MethodenRestriktionTest {
 
         assertNotNull(ergebnis.methode)
         assertEquals(Wahrheitswert.Wahr, ergebnis.teilmengenPrüfung.wahrheitswert)
-        assertEquals(domain, ergebnis.methode?.methodenSignatur()?.werteVorrat)
+        assertEquals(Tupelraum(listOf(domain)), ergebnis.methode?.mathematischeMethodenSignatur()?.definitionsRaum)
     }
 
     @Test
@@ -79,8 +79,8 @@ class MethodenRestriktionTest {
         val ergebnis = restriktiereMethode(basis, LeereMenge)
 
         val restriktion = assertNotNull(ergebnis.methode)
-        assertEquals(LeereMenge, restriktion.methodenSignatur().werteVorrat)
-        assertEquals(endlicheZahlen(0), restriktion.methodenSignatur().zielMenge)
+        assertEquals(Tupelraum(listOf(LeereMenge)), restriktion.mathematischeMethodenSignatur().definitionsRaum)
+        assertEquals(endlicheZahlen(0), restriktion.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
     }
 
     @Test
@@ -104,7 +104,7 @@ class MethodenRestriktionTest {
         val ergebnis = restriktiereMethode(basis, diagonale)
 
         val restriktion = assertNotNull(ergebnis.methode)
-        assertEquals(diagonale, restriktion.methodenSignatur().werteVorrat)
+        assertEquals(diagonale, restriktion.mathematischeMethodenSignatur().definitionsRaum)
         assertEquals(
             RationaleZahl.von(2),
             restriktion.wendeAn(listOf(RationaleZahl.Eins, RationaleZahl.Eins)),
@@ -123,8 +123,8 @@ class MethodenRestriktionTest {
         val anpassung = assertNotNull(ergebnis.methode)
         assertSame(basis, anpassung.basis)
         assertTrue(anpassung.ergänzungen.isEmpty())
-        assertEquals(domain, anpassung.methodenSignatur().werteVorrat)
-        assertEquals(ziel, anpassung.methodenSignatur().zielMenge)
+        assertEquals(Tupelraum(listOf(domain)), anpassung.mathematischeMethodenSignatur().definitionsRaum)
+        assertEquals(ziel, anpassung.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
         assertTrue(anpassung.zuLatex().contains("Bereichsanpassung"))
         assertTrue(!anpassung.zuLatex().contains("\\vert_"))
     }
@@ -212,6 +212,6 @@ class MethodenRestriktionTest {
 
         assertEquals(Wahrheitswert.Wahr, ergebnis.ergänzungen.single().zielPrüfung.wahrheitswert)
         val methode = assertNotNull(ergebnis.methode)
-        assertEquals(ziel, methode.methodenSignatur().zielMenge)
+        assertEquals(ziel, methode.mathematischeMethodenSignatur().ergebnisse.single().zielMenge)
     }
 }

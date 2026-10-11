@@ -96,10 +96,15 @@ object StandardMathematikAuswerterPakete {
 }
 
 private fun installiereKanonischeRechnerDispatcher(register: MathematikAuswerterRegister) {
+    // Explizite Komposition: spätere Paketregistrierungen können keinen Fachkern auswählen.
+    val fachauswerterNachFamilie = mapOf(
+        RechnerFamilie.ZAHL to mitNullDistanz(mitZahlenDifferential(mitStrukturierterDivision(mitZahlenErweiterungen(universellerZahlenFachauswerter)))),
+        RechnerFamilie.VEKTOR to mitRechnerMethodenHebung(mitVektorAusgangKompatibilität(strukturFormelFachauswerter(StrukturRechnerKnotenFamilie.VEKTOR, mitSkalarprodukt(vektorFachauswerter)))),
+        RechnerFamilie.MATRIX to mitRechnerMethodenHebung(strukturFormelFachauswerter(StrukturRechnerKnotenFamilie.MATRIX)),
+        RechnerFamilie.TENSOR to mitRechnerMethodenHebung(strukturFormelFachauswerter(StrukturRechnerKnotenFamilie.TENSOR, tensorFachauswerter)),
+    )
     RechnerFamilie.entries.forEach { familie ->
-        val fachauswerter = requireNotNull(register.finde(familie.knotenArt)) {
-            "Für ${familie.name} fehlt der spezialisierte Fachauswerter."
-        }
+        val fachauswerter = fachauswerterNachFamilie.getValue(familie)
         register.registriere(familie.knotenArt, MathematikKnotenAuswerter { kontext ->
             val standardId = when (familie) {
                 RechnerFamilie.ZAHL -> de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator.ADDITION.stabileId

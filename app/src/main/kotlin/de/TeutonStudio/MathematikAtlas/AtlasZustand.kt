@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikRechenSystem.kern.effektiverWerteVorrat
+import de.TeutonStudio.MathematikRechenSystem.kern.werteVorräte
+import de.TeutonStudio.MathematikRechenSystem.kern.zielMenge
+
 import android.content.Context
 import androidx.compose.runtime.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
@@ -18,6 +22,8 @@ import de.TeutonStudio.MathematikKnoten.katalog.OperatorKnotenSuchindex
 import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenRenderer
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Stable
 class AtlasZustand(context: Context) {
@@ -27,6 +33,42 @@ class AtlasZustand(context: Context) {
         kartenQuelle = KartenQuelle(speicher::lade),
         nichtAuswertbareKnotenArten = KartenWerkzeugVorlagen.nichtAuswertbareArten,
     )
+    var ausstehendeKonfiguration by mutableStateOf<KnotenDaten?>(null)
+        private set
+
+    fun vorschauKonfiguration(kandidat: KnotenDaten): KnotenErsetzungsAuswirkung =
+        planeKonfiguration(editor.karte, kandidat, graphPrüfung, laufzeit::auswerten).auswirkung
+
+    fun beantrageKonfiguration(kandidat: KnotenDaten) {
+        if (vorschauKonfiguration(kandidat).trenntVerbindungen) ausstehendeKonfiguration = kandidat
+        else übernehmeKonfiguration(kandidat)
+    }
+
+    fun bestätigeKonfiguration() {
+        ausstehendeKonfiguration?.let(::übernehmeKonfiguration)
+        ausstehendeKonfiguration = null
+    }
+
+    fun verwerfeKonfiguration() { ausstehendeKonfiguration = null }
+
+    internal fun übernehmeKonfiguration(kandidat: KnotenDaten) {
+        val plan = planeKonfiguration(editor.karte, kandidat, graphPrüfung, laufzeit::auswerten)
+        editor.führeAus(KartenAktion.KartenInhaltErsetzen(plan.karte))
+    }
+
+    /** Kandidaten werden zuerst rein berechnet; Übernahme und Kantentrennung sind ein Undo-Schritt. */
+    fun konfiguriereKnoten(aktion: KartenAktion) {
+        val kandidat = editor.karte.wendeAn(aktion)
+        kandidat.knoten.firstOrNull { neu -> editor.karte.knoten.any { it.id == neu.id && it != neu } }
+            ?.let(::beantrageKonfiguration)
+    }
+
+    fun konfiguriereFesteEingänge(id: KnotenId, anzahl: Int) {
+        val probe = KartenEditorZustand(editor.karte, graphPrüfung)
+        probe.setzeFesteEingangAnzahl(id, anzahl)
+        probe.karte.knoten.firstOrNull { it.id == id }?.let(::beantrageKonfiguration)
+    }
+
     val anschlussArten = laufzeit.anschlussArten
     private val graphPrüfung = laufzeit.graphPrüfung
 
@@ -136,7 +178,10 @@ class AtlasZustand(context: Context) {
         }
     }
 
+    private var importLäuft = false
+
     fun speichereAktuell() {
+        if (importLäuft) return
         if (editor.verbindungsStart != null || editor.karte == letzterGespeicherterStand) return
         val gespeichert = speicher.speichere(editor.karte)
         if (gespeichert.version != editor.karte.version) {
@@ -243,6 +288,23 @@ class AtlasZustand(context: Context) {
         öffne(karte)
     }
 
+    /** Validierung und Dateitransaktion laufen außerhalb des Compose-Threads. */
+    suspend fun importiereImHintergrund(container: ByteArray) {
+        check(!importLäuft) { "Ein Import läuft bereits." }
+        sichereAktuellVorUnterbrechung()
+        importLäuft = true
+        val ergebnis = try {
+            withContext(Dispatchers.IO) {
+                val wurzel = speicher.importiere(container)
+                wurzel to speicher.liste().map(::aktualisiereAssoziativeKnoten)
+            }
+        } finally {
+            importLäuft = false
+        }
+        karten = ergebnis.second
+        öffne(ergebnis.first)
+    }
+
     /** Übernimmt bearbeitetes Karten-JSON. Referenzierte Versionen werden vom Speicher automatisch fortgeschrieben. */
     fun übernehmeJson(text: String): String? {
         val gelesen = runCatching { KartenJson.lese(text) }.getOrElse { fehler ->
@@ -311,11 +373,7 @@ class AtlasZustand(context: Context) {
     }
 
     private fun alleKnotenVorlagen(): List<KnotenVorlage> =
-        laufzeit.vorlagen +
-            MengenraumKnotenVorlagen.alle +
-            GeometrieKnotenVorlagen.alle +
-            KartenWerkzeugVorlagen.alle +
-            gruppenVorlagen()
+        statischeKnotenVorlagen() + gruppenVorlagen()
 
     private fun gruppenVorlagen(): List<KnotenVorlage> = karten.asSequence()
         .filter { it.id != editor.karte.id && !it.archiviert && !referenziertKarte(it, editor.karte.id, mutableSetOf()) }

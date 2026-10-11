@@ -52,11 +52,11 @@ class EnzyklopädieRegisterTest {
     fun `Rechnerkatalog deckt sämtliche Zahlen- und Tensoroperatoren ab`() {
         assertEquals(emptyList(), RechnerFamilienKatalog.validierungsFehler())
         assertEquals(
-            UniversellerZahlenOperator.entries.map { it.stabileId }.toSet(),
+            de.TeutonStudio.MathematikRechenSystem.kern.RechnerOperatorDefinitionen.fürFamilie(de.TeutonStudio.MathematikRechenSystem.kern.OperatorFamilie.ZAHL).filterNot { it.id.endsWith(".formel") }.map { it.id }.toSet(),
             RechnerFamilienKatalog.zahlenOperatoren.map { it.stabileId }.toSet(),
         )
         assertEquals(
-            TensorRechnerOperator.entries.map { it.stabileId }.toSet(),
+            de.TeutonStudio.MathematikRechenSystem.kern.RechnerOperatorDefinitionen.fürFamilie(de.TeutonStudio.MathematikRechenSystem.kern.OperatorFamilie.TENSOR).filterNot { it.id.endsWith(".formel") }.map { it.id }.toSet(),
             RechnerFamilienKatalog.tensorOperatoren.map { it.stabileId }.toSet(),
         )
         assertEquals(null, RechnerFamilienKatalog.fürOperatorId("zahl.nicht-registriert"))

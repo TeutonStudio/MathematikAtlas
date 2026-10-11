@@ -42,18 +42,7 @@ object OperatorKnotenSuchindex {
             )
             add(
                 Eintrag(
-                    begriffe = setOf(vertrag.titel, vertrag.operatorId, vertrag.familie.name) + when (vertrag.familie) {
-                        RechnerFamilie.ZAHL -> UniversellerZahlenOperator.entries
-                            .firstOrNull { it.stabileId == vertrag.operatorId }
-                            ?.let { setOf(it.name) + zahlenAliase(it) }
-                            .orEmpty()
-                        RechnerFamilie.VEKTOR -> VektorRechnerOperator.entries
-                            .firstOrNull { it.stabileId == vertrag.operatorId }
-                            ?.let { setOf(it.name) + vektorAliase(it) }
-                            .orEmpty()
-                        RechnerFamilie.MATRIX -> emptySet()
-                        RechnerFamilie.TENSOR -> tensorAliase(vertrag.operatorId)
-                    },
+                    begriffe = setOf(vertrag.titel, vertrag.operatorId, vertrag.familie.name, vertrag.symbolLatex) + vertrag.aliases,
                     vorlage = konfiguriert.alsSuchVorlage(
                         name = "${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner · ${vertrag.titel}",
                         kategorie = "Operatoren: ${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner",
@@ -131,21 +120,6 @@ object OperatorKnotenSuchindex {
         .replace("ß", "ss")
         .trim()
 
-    private fun zahlenAliase(operator: UniversellerZahlenOperator): Set<String> = when (operator) {
-        UniversellerZahlenOperator.SINUS -> setOf("sin")
-        UniversellerZahlenOperator.COSINUS -> setOf("cos")
-        UniversellerZahlenOperator.INTEGRAL -> setOf("integrieren", "integration")
-        UniversellerZahlenOperator.DIFFERENTIAL -> setOf("ableiten", "differenzieren")
-        UniversellerZahlenOperator.QUADRATWURZEL -> setOf("sqrt", "wurzel")
-        else -> emptySet()
-    }
-
-    private fun tensorAliase(id: String): Set<String> = when (id) {
-        TensorRechnerOperator.TENSORPRODUKT.stabileId -> setOf("tensor produkt", "⊗")
-        TensorRechnerOperator.KONTRAKTION.stabileId -> setOf("kontrahieren")
-        else -> emptySet()
-    }
-
     private fun mengenAliase(operator: MengenRechnerOperator): Set<String> = when (operator) {
         MengenRechnerOperator.VEREINIGUNG -> setOf("union", "vereinen")
         MengenRechnerOperator.SCHNITT -> setOf("intersection", "durchschnitt")
@@ -153,11 +127,4 @@ object OperatorKnotenSuchindex {
         else -> emptySet()
     }
 
-    private fun vektorAliase(operator: VektorRechnerOperator): Set<String> = when (operator) {
-        VektorRechnerOperator.SKALARPRODUKT -> setOf("dot product", "inneres produkt")
-        VektorRechnerOperator.KREUZPRODUKT -> setOf("cross product")
-        VektorRechnerOperator.DISTANZ -> setOf("abstand", "metrik")
-        VektorRechnerOperator.VEKTORFELD_INTEGRIEREN -> setOf("vektorfeld integral", "feld integrieren")
-        else -> emptySet()
-    }
 }

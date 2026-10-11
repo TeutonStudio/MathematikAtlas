@@ -98,5 +98,6 @@ internal class KartenHerkunftAuflösung(context: Context) {
         return if (id in externe.lade().fremdeKarten) KartenHerkunft.FREMD else KartenHerkunft.EIGEN
     }
 
-    fun fremdVerwalteteOrdner(): Set<List<String>> = externe.lade().fremdeOrdner
+    fun fremdVerwalteteOrdner(): Set<List<String>> = externe.lade().fremdeOrdner +
+        standard.liste().flatMap { eintrag -> (1..eintrag.ordner.size).map(eintrag.ordner::take) }.toSet()
 }

@@ -40,10 +40,13 @@ internal fun kartenListenEinträge(
             (1..pfad.size).map(pfad::take)
         }
         .toSet()
+    val verwaltetePräfixe = karten.filter { herkunft[it.id] != KartenHerkunft.EIGEN }
+        .flatMap { karte -> ordnung.ordnerFür(karte.id).let { pfad -> (1..pfad.size).map(pfad::take) } }
+        .toSet() + fremdVerwalteteOrdner
     val sichtbareOrdner = when (filter) {
         KartenHerkunft.EIGEN -> ordnung.ordner.filterNot { ordner ->
-            fremdVerwalteteOrdner.any { fremd -> ordner == fremd || ordner.take(fremd.size) == fremd }
-        }.toSet()
+            verwaltetePräfixe.any { verwaltet -> ordner.take(verwaltet.size) == verwaltet }
+        }.toSet() + benötigteOrdner + ordnung.eigeneOrdner.flatMap { pfad -> (1..pfad.size).map(pfad::take) }
         KartenHerkunft.VORDEFINIERT,
         KartenHerkunft.FREMD,
         -> benötigteOrdner

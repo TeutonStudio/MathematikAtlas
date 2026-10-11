@@ -274,12 +274,12 @@ object MathematikKnotenVorlagen {
         "mathematik.termZuMethode", "Term zu Methode", "Methoden", "Erzeugt aus einem allgemeinen Term eine Methode mit automatisch abgeleiteten Variablen und Zielmenge.", GraphGröße(265f, 135f),
         listOf(eingang("term", MathematikAnschlussArten.Objekt.id, 0), ausgang("methode", MathematikAnschlussArten.Methode.id)),
         mapOf("name" to "f", "argumentReihenfolge" to ""),
-    )
+    ).alsAdapterVorlage()
     val AussageZuMethode = KnotenVorlage(
         "mathematik.termZuMethode", "Aussage zu Methode", "Methoden", "Erzeugt aus einer Aussage eine typisierte Aussagenmethode.", GraphGröße(265f, 135f),
         listOf(eingang("term", MathematikAnschlussArten.Aussage.id, 0), ausgang("methode", MathematikAnschlussArten.AussageMethode.id)),
         mapOf("name" to "P", "argumentReihenfolge" to ""),
-    )
+    ).alsAdapterVorlage()
     val Komposition = KnotenVorlage(
         "mathematik.komposition",
         "Komposition",
@@ -309,8 +309,8 @@ object MathematikKnotenVorlagen {
         "mathematik.vektorZuPolynom", "Vektor zu Polynom", "Vektoren", "Liest einen Vektor als Koeffizienten c₀, …, cₙ eines Polynoms.", GraphGröße(240f, 110f),
         listOf(eingang("vektor", MathematikAnschlussArten.Vektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("variable" to "x"),
     )
-    val TupelZuSpalte = KnotenVorlage("mathematik.tupelZuSpalte", "Tupel zu Spalte", "Vektoren", "Erzeugt aus einem Zahlentupel einen Spaltenvektor.", GraphGröße(225f, 105f), listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)))
-    val TupelZuZeile = KnotenVorlage("mathematik.tupelZuZeile", "Tupel zu Zeile", "Vektoren", "Erzeugt aus einem Zahlentupel einen Zeilenvektor.", GraphGröße(225f, 105f), listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)))
+    val TupelZuSpalte = KnotenVorlage("mathematik.tupelZuSpalte", "Tupel zu Spalte", "Vektoren", "Erzeugt aus einem Zahlentupel einen Spaltenvektor.", GraphGröße(225f, 105f), listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id))).alsAdapterVorlage()
+    val TupelZuZeile = KnotenVorlage("mathematik.tupelZuZeile", "Tupel zu Zeile", "Vektoren", "Erzeugt aus einem Zahlentupel einen Zeilenvektor.", GraphGröße(225f, 105f), listOf(eingang("tupel", MathematikAnschlussArten.Tupel.id), ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id))).alsAdapterVorlage()
     val EinheitsSpalte = KnotenVorlage("mathematik.einheitsSpalte", "Einheitsvektor (Spalte)", "Vektoren", "Standardbasisvektor eᵢ als Spalte.", GraphGröße(225f, 105f), listOf(ausgang("vektor", MathematikAnschlussArten.SpaltenVektor.id)), mapOf("dimension" to "3", "index" to "1"))
     val EinheitsZeile = KnotenVorlage("mathematik.einheitsZeile", "Einheitsvektor (Zeile)", "Vektoren", "Standardbasisvektor eᵢ als Zeile.", GraphGröße(225f, 105f), listOf(ausgang("vektor", MathematikAnschlussArten.ZeilenVektor.id)), mapOf("dimension" to "3", "index" to "1"))
     val VektorRadiusSpalte = KnotenVorlage("mathematik.vektorRadiusSpalte", "Radius (Spalte)", "Vektoren", "Euklidische Norm eines Spaltenvektors.", GraphGröße(220f, 105f), listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("wert", MathematikAnschlussArten.Zahl.id)))

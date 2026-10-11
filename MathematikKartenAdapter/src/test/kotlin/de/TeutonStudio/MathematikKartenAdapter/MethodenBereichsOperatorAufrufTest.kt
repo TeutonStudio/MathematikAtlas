@@ -43,7 +43,7 @@ class MethodenBereichsOperatorAufrufTest {
         assertEquals(RationaleZahl.Eins, wert)
     }
 
-    private fun rufeAuf(methode: Methode, argument: MathematischesObjekt): MathematischesObjekt {
+    private fun rufeAuf(methode: Methode, argument: MathematischesObjekt): AtlasWert {
         val knoten = KnotenDaten(
             art = METHODEN_AUFRUF_ART,
             name = "Methode aufrufen",

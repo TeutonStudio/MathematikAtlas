@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenKartenEditor
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
@@ -23,6 +24,10 @@ import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.normalisiereLatexQuelltext
+import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsDetailansicht
+
+internal fun besitztHochauflösendenVisualisierungsReiter(knoten: KnotenDaten?): Boolean =
+    knoten?.art == MathematikKnotenVorlagen.Visualisierung.art
 
 @Composable
 internal fun KnotenKonzeptDialog(
@@ -110,7 +115,10 @@ private fun KonzeptDialog(
     var komplexDarstellung by remember(konzept?.id, ursprungsKnoten?.id) {
         mutableStateOf(KomplexDarstellung.Kartesisch)
     }
-    val aktiverReiter = konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
+    val besitztVisualisierungsReiter = besitztHochauflösendenVisualisierungsReiter(ursprungsKnoten)
+    val visualisierungsReiterIndex = konzept?.reiter?.size ?: 0
+    val zeigtVisualisierung = besitztVisualisierungsReiter && reiterIndex == visualisierungsReiterIndex
+    val aktiverReiter = if (zeigtVisualisierung) null else konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
     val aktiveKarte = aktiverReiter?.karteFür(komplexDarstellung)
     val zeigtFalkSchema = aktiverReiter?.darstellung == KonzeptReiterDarstellung.FalkSchema
 
@@ -133,7 +141,11 @@ private fun KonzeptDialog(
                     Column(Modifier.weight(1f)) {
                         Text(konzept?.name ?: ursprungsKnoten?.name.orEmpty(), style = MaterialTheme.typography.titleLarge)
                         Text(
-                            konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert.",
+                            if (zeigtVisualisierung) {
+                                "Die hochauflösende Darstellung wird nur in diesem Reiter berechnet und anschließend gecacht."
+                            } else {
+                                konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert."
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -142,7 +154,43 @@ private fun KonzeptDialog(
                 }
                 HorizontalDivider()
 
-                if (konzept == null) {
+                if (besitztVisualisierungsReiter || (konzept?.reiter?.size ?: 0) > 1) {
+                    PrimaryTabRow(selectedTabIndex = reiterIndex) {
+                        konzept?.reiter.orEmpty().forEachIndexed { index, reiter ->
+                            Tab(
+                                selected = reiterIndex == index,
+                                onClick = { reiterIndex = index },
+                                text = {
+                                    LatexText(
+                                        latex = normalisiereKonzeptReiterTitel(reiter.titel),
+                                        style = MaterialTheme.typography.labelLarge,
+                                    )
+                                },
+                            )
+                        }
+                        if (besitztVisualisierungsReiter) {
+                            Tab(
+                                selected = reiterIndex == visualisierungsReiterIndex,
+                                onClick = { reiterIndex = visualisierungsReiterIndex },
+                                text = { Text("Hohe Auflösung") },
+                            )
+                        }
+                    }
+                }
+
+                if (zeigtVisualisierung) {
+                    val visualisierungsKnoten = checkNotNull(ursprungsKnoten)
+                    VisualisierungsDetailansicht(
+                        knoten = visualisierungsKnoten,
+                        auswertung = zustand.auswertung.knoten[visualisierungsKnoten.id],
+                        eigenschaftenErsetzen = { eigenschaften ->
+                            zustand.editor.führeAus(
+                                KartenAktion.KnotenEigenschaftenErsetzen(visualisierungsKnoten.id, eigenschaften),
+                            )
+                        },
+                        modifier = Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.dialog),
+                    )
+                } else if (konzept == null) {
                     Box(Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.weit)) {
                         Text(
                             "Fehlende Definition für ${ursprungsKnoten?.art.orEmpty()}",
@@ -150,22 +198,6 @@ private fun KonzeptDialog(
                         )
                     }
                 } else {
-                    if (konzept.reiter.size > 1) {
-                        PrimaryTabRow(selectedTabIndex = reiterIndex) {
-                            konzept.reiter.forEachIndexed { index, reiter ->
-                                Tab(
-                                    selected = reiterIndex == index,
-                                    onClick = { reiterIndex = index },
-                                    text = {
-                                        LatexText(
-                                            latex = normalisiereKonzeptReiterTitel(reiter.titel),
-                                            style = MaterialTheme.typography.labelLarge,
-                                        )
-                                    },
-                                )
-                            }
-                        }
-                    }
                     if (konzept.reiter.any(KonzeptReiter::besitztDarstellungsVarianten)) {
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),

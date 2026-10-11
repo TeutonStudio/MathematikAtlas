@@ -90,18 +90,28 @@ class StandardTypSystem(
         val varianzen = List(quelle.argumente.size) { index ->
             definition?.varianzen?.getOrNull(index) ?: definition?.standardVarianz ?: TypVarianz.Invariant
         }
+        var unbestimmt: TypPrüfung.Unbestimmt? = null
         quelle.argumente.indices.forEach { index ->
             val q = quelle.argumente[index]
             val z = ziel.argumente[index]
             val ergebnis = when (varianzen[index]) {
                 TypVarianz.Kovariant -> prüfeNormalisiert(normalisiere(q), normalisiere(z))
                 TypVarianz.Kontravariant -> prüfeNormalisiert(normalisiere(z), normalisiere(q))
-                TypVarianz.Invariant -> if (normalisiere(q) == normalisiere(z)) TypPrüfung.Kompatibel
-                    else TypPrüfung.Inkompatibel("Der invariante Typparameter $index unterscheidet sich.")
+                TypVarianz.Invariant -> when {
+                    normalisiere(q) == normalisiere(z) -> TypPrüfung.Kompatibel
+                    q == TypAusdruck.Unbekannt || z == TypAusdruck.Unbekannt ||
+                        q is TypAusdruck.Variable || z is TypAusdruck.Variable ->
+                        TypPrüfung.Unbestimmt("Der invariante Typparameter $index ist noch unbekannt.")
+                    else -> TypPrüfung.Inkompatibel("Der invariante Typparameter $index unterscheidet sich.")
+                }
             }
-            if (ergebnis !is TypPrüfung.Kompatibel) return ergebnis
+            when (ergebnis) {
+                is TypPrüfung.Inkompatibel -> return ergebnis
+                is TypPrüfung.Unbestimmt -> if (unbestimmt == null) unbestimmt = ergebnis
+                TypPrüfung.Kompatibel -> Unit
+            }
         }
-        return TypPrüfung.Kompatibel
+        return unbestimmt ?: TypPrüfung.Kompatibel
     }
 
     override fun gemeinsameOberart(typen: List<TypAusdruck>): TypAusdruck? {

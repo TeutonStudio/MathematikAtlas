@@ -162,6 +162,39 @@ class MethodenVisualisierungTest {
     }
 
     @Test
+    fun `knappes Flaechenbudget behaelt die vollstaendige grobe Abdeckung`() {
+        val u = Variable("u")
+        val v = Variable("v")
+        val methode = Methode(
+            name = "flaeche",
+            parameter = listOf(u, v),
+            vorschrift = SpaltenVektor(listOf(u, v, addition(u, v))),
+            zielMenge = Vektorraum(VektorOrientierung.Spalte, 3, ReelleZahlen),
+            werteVorräte = mapOf(u.name to ReelleZahlen, v.name to ReelleZahlen),
+        )
+        val bereich = ReellesIntervall(RationaleZahl.von(-1), false, RationaleZahl.Eins, false)
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
+            VisualisierungsSampler.sample(
+                Abbild(KartesischesProdukt(listOf(bereich, bereich)), methode),
+                konfiguration(RaumDimension.R3, auflösung = 32, budget = 25),
+            ),
+        )
+
+        val ecken = ergebnis.punkte.map { Triple(it.x, it.y, it.z) }.toSet()
+        assertTrue(Triple(-1.0, -1.0, -2.0) in ecken)
+        assertTrue(Triple(1.0, -1.0, 0.0) in ecken)
+        assertTrue(Triple(-1.0, 1.0, 0.0) in ecken)
+        assertTrue(Triple(1.0, 1.0, 2.0) in ecken)
+        assertTrue(ergebnis.statistik.auswertungen in 1..25)
+        val fläche = ergebnis.dreiecke.sumOf { d ->
+            kotlin.math.abs((d.b.x - d.a.x) * (d.c.y - d.a.y) - (d.c.x - d.a.x) * (d.b.y - d.a.y)) / 2
+        }
+        assertEquals(4.0, fläche, 1e-9)
+        assertTrue(ergebnis.statistik.budgetErschöpft)
+        assertTrue(ergebnis.hinweise.any { "adaptive Bildraumabtastung" in it })
+    }
+
+    @Test
     fun `adaptive Kurve verfeinert den schnell durchlaufenen Bildbereich stärker`() {
         val t = Variable("t")
         val methode = Methode(

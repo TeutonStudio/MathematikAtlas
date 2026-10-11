@@ -113,7 +113,7 @@ class ZahlenRechnerKonfigurationTest {
         val addition = rechner(UniversellerZahlenOperator.ADDITION)
         val a = addition.anschlüsse.single { it.name == "a" }
         val ausgang = addition.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
-        assertEquals(MathematikAnschlussArten.Objekt.id, a.art)
+        assertEquals(MathematikAnschlussArten.AtlasWert.id, a.art)
         assertEquals(
             setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
             a.zulässigeArten,

@@ -49,6 +49,7 @@ class StandardKartenTest {
                     lokaleKartenId = KartenId("lokal-a"),
                     installierterHash = "inhalt-a",
                     status = StandardKartenStatus.AKTIV,
+                    ordner = listOf("Standardkarten", "Analysis"),
                 ),
                 InstallierteStandardKarte(
                     sourceId = "standard.b",
@@ -65,6 +66,7 @@ class StandardKartenTest {
                     lokaleKartenId = KartenId("lokal-c"),
                     installierterHash = "inhalt-c",
                     status = StandardKartenStatus.GELÖSCHT,
+                    ordner = listOf("Standardkarten", "Historisch"),
                 ),
             )
 

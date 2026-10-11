@@ -178,10 +178,10 @@ private fun MathematischesObjekt.alsGaußRational(): GaußRational? = when (this
 private fun OrbitFamilie.istQuadratischeNullstartFamilie(): Boolean {
     if (start != RationaleZahl.Null) return false
     val methode = runCatching { schritt.alsMathematischeMethode("Quadratik-Erkennung") }.getOrNull() ?: return false
-    val signatur = methode.methodenSignatur()
-    if (signatur.effektiverWerteVorrat != null ||
+    val signatur = methode.mathematischeMethodenSignatur()
+    if (signatur.effektiverDefinitionsRaum != null ||
         signatur.argumente.map { it.werteVorrat } != listOf(KomplexeZahlen, KomplexeZahlen) ||
-        signatur.zielMenge != KomplexeZahlen
+        signatur.ergebnisse.singleOrNull()?.zielMenge != KomplexeZahlen
     ) return false
     val zustand = methode.parameter.getOrNull(0) as? Variable ?: return false
     val parameter = methode.parameter.getOrNull(1) as? Variable ?: return false
@@ -257,7 +257,7 @@ private fun prüfeMethodenArgumente(
     argumente: List<MathematischesObjekt>,
     rolle: String,
 ): String? {
-    val signatur = runCatching { methode.methodenSignatur() }.getOrNull()
+    val signatur = runCatching { methode.mathematischeMethodenSignatur() }.getOrNull()
         ?: return "$rolle besitzt keine prüfbare Methodensignatur."
     if (signatur.argumente.size != argumente.size) return "$rolle besitzt eine unpassende Stelligkeit."
     signatur.argumente.zip(argumente).forEach { (argument, wert) ->
@@ -267,7 +267,7 @@ private fun prüfeMethodenArgumente(
             Wahrheitswert.Wahr -> Unit
         }
     }
-    signatur.effektiverWerteVorrat?.let { bereich ->
+    signatur.effektiverDefinitionsRaum?.let { bereich ->
         val argumentObjekt = if (argumente.size == 1) argumente.single() else Tupel(argumente)
         when (ElementBeziehung(argumentObjekt, bereich).entscheide().wahrheitswert) {
             Wahrheitswert.Lüge -> return "$rolle liegt außerhalb des effektiven Methodenbereichs."
@@ -282,7 +282,7 @@ private fun prüfeMethodenAusgabe(
     methode: Methode,
     ausgabe: MathematischesObjekt,
     rolle: String,
-): String? = when (ElementBeziehung(ausgabe, methode.methodenSignatur().zielMenge).entscheide().wahrheitswert) {
+): String? = when (ElementBeziehung(ausgabe, methode.mathematischeMethodenSignatur().ergebnisse.single().zielMenge).entscheide().wahrheitswert) {
     Wahrheitswert.Lüge -> "$rolle liefert einen Wert außerhalb der deklarierten Zielmenge."
     null -> "$rolle kann nicht als Wert der deklarierten Zielmenge bewiesen werden."
     Wahrheitswert.Wahr -> null

@@ -426,20 +426,22 @@ data class MetrikVertrag(
  * explizite Bedingungen erhalten, solange der CAS sie nicht beweisen kann.
  */
 fun pruefeMetrik(traeger: MengenAusdruck, metrik: Methode): StrukturPruefung<MetrikVertrag> {
-    val signatur = runCatching { metrik.methodenSignatur() }.getOrElse {
+    val signatur = runCatching { metrik.mathematischeMethodenSignatur() }.getOrElse {
         return StrukturPruefung.Ungueltig(
-            it.message ?: "Die Metrik besitzt keine vollständige Methodensignatur.",
+            it.message ?: "Die Metrik besitzt keine mathematische Raum-/Mengensignatur.",
         )
     }
     if (signatur.argumente.size != 2) {
         return StrukturPruefung.Ungueltig("Eine Metrik benötigt genau zwei Argumente aus demselben Träger.")
     }
-    if (signatur.argumente.any { it.werteVorrat != traeger }) {
+    if (signatur.argumente.any { it.definitionsMenge != traeger }) {
         return StrukturPruefung.Ungueltig(
-            "Beide Metrikargumente müssen den Träger ${traeger.zuLatex()} als Wertevorrat besitzen.",
+            "Beide Metrikargumente müssen den Träger ${traeger.zuLatex()} als Definitionsmenge besitzen.",
         )
     }
-    if (!signatur.zielMenge.istReellerWertebereich()) {
+    val zielMenge = signatur.ergebnisse.singleOrNull()?.zielMenge
+        ?: return StrukturPruefung.Ungueltig("Eine Metrik benötigt genau eine Ergebniskomponente.")
+    if (!zielMenge.istReellerWertebereich()) {
         return StrukturPruefung.Ungueltig(
             "Eine Metrik muss Werte in einem reellen Wertebereich liefern; Nichtnegativität wird als Metrikaxiom geprüft.",
         )

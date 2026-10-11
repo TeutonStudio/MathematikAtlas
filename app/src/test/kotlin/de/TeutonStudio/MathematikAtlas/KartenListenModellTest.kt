@@ -93,4 +93,60 @@ class KartenListenModellTest {
         assertTrue(einträge.none { it is KartenListenEintrag.Ordner })
         assertTrue(einträge.any { it is KartenListenEintrag.Karte && it.karte.id == wurzel.id })
     }
+    @Test fun `Standardordner bleiben im Eigenfilter verborgen`() {
+        val liste = kartenListenEinträge(listOf(algebra), ordnung,
+            herkunft = mapOf(algebra.id to KartenHerkunft.VORDEFINIERT))
+        assertFalse(liste.any { it is KartenListenEintrag.Ordner && it.pfad.first() == "Algebra" })
+    }
+
+    @Test fun `eigene Karte bleibt in fremd verwaltetem Ordner erreichbar`() {
+        val liste = kartenListenEinträge(listOf(matrizen), ordnung,
+            fremdVerwalteteOrdner = setOf(listOf("Algebra")))
+        assertTrue(liste.any { it is KartenListenEintrag.Karte && it.karte.id == matrizen.id })
+        assertEquals(setOf(listOf("Algebra"), listOf("Algebra", "Lineare Algebra")),
+            liste.filterIsInstance<KartenListenEintrag.Ordner>().filter { it.pfad.first() == "Algebra" }.map { it.pfad }.toSet())
+    }
+
+    @Test fun `gemeinsamer Ordner trennt Karten nach Herkunft und bewahrt leere eigene Ordner`() {
+        val gemeinsam = KartenOrdnung().mitKarteInOrdner(algebra.id, listOf("Gemeinsam"))
+            .mitKarteInOrdner(matrizen.id, listOf("Gemeinsam")).mitOrdner(listOf("Leer"))
+        val herkunft = mapOf(algebra.id to KartenHerkunft.VORDEFINIERT, matrizen.id to KartenHerkunft.EIGEN)
+        val eigene = kartenListenEinträge(listOf(algebra, matrizen), gemeinsam, herkunft = herkunft)
+        assertEquals(listOf(matrizen.id), eigene.filterIsInstance<KartenListenEintrag.Karte>().map { it.karte.id })
+        assertTrue(eigene.any { it is KartenListenEintrag.Ordner && it.pfad == listOf("Leer") })
+        val standard = kartenListenEinträge(listOf(algebra, matrizen), gemeinsam, herkunft = herkunft, filter = KartenHerkunft.VORDEFINIERT)
+        assertEquals(listOf(algebra.id), standard.filterIsInstance<KartenListenEintrag.Karte>().map { it.karte.id })
+        assertFalse(standard.any { it is KartenListenEintrag.Ordner && it.pfad == listOf("Leer") })
+    }
+
+    @Test fun `Ordnernamen allein bestimmen keine Herkunft`() {
+        val liste = kartenListenEinträge(listOf(wurzel), KartenOrdnung().mitOrdner(listOf("Standardkarten")))
+        assertTrue(liste.any { it is KartenListenEintrag.Ordner && it.pfad == listOf("Standardkarten") })
+    }
+
+    @Test fun `explizit eigener leerer Unterordner bleibt im verwalteten Baum sichtbar und persistent`() {
+        val temp = java.nio.file.Files.createTempDirectory("eigene-ordner").toFile()
+        try {
+            val pfad = listOf("Freigaben", "Meine Notizen")
+            val speicher = de.TeutonStudio.MathematikAtlas.speicher.KartenOrdnungSpeicher(java.io.File(temp, "ordnung.json"))
+            speicher.speichere(KartenOrdnung().mitEigenemOrdner(pfad))
+            val geladen = speicher.lade()
+            assertEquals(setOf(pfad), geladen.eigeneOrdner)
+            val liste = kartenListenEinträge(emptyList(), geladen, fremdVerwalteteOrdner = setOf(listOf("Freigaben")))
+            assertTrue(liste.any { it is KartenListenEintrag.Ordner && it.pfad == pfad })
+            val verschoben = geladen.verschiebeOrdner(pfad, listOf("Privat", "Notizen"))
+            assertEquals(setOf(listOf("Privat", "Notizen")), verschoben.eigeneOrdner)
+            assertTrue(verschoben.ohneOrdnerBaum(listOf("Privat")).eigeneOrdner.isEmpty())
+        } finally { temp.deleteRecursively() }
+    }
+
+    @Test fun `verschobener leerer Legacyordner wird explizit eigener Unterordner`() {
+        val ziel = listOf("Freigaben", "Meine Notizen")
+        val legacy = KartenOrdnung().mitOrdner(listOf("Notizen"))
+        val verschoben = legacy.verschiebeOrdner(listOf("Notizen"), ziel).mitEigenemOrdner(ziel)
+        val liste = kartenListenEinträge(emptyList(), verschoben,
+            fremdVerwalteteOrdner = setOf(listOf("Freigaben")))
+        assertTrue(liste.any { it is KartenListenEintrag.Ordner && it.pfad == ziel })
+    }
+
 }

@@ -24,6 +24,8 @@ class KartenSpeicher(private val context: Context) {
     private val herkunftAuflösung = KartenHerkunftAuflösung(context)
     private val importTransaktionen = KartenImportTransaktionen(basis)
 
+    val importWiederherstellungsFehler: List<String> get() = importTransaktionen.wiederherstellungsFehler.toList()
+
     init {
         kartenOrdner.mkdirs()
         sicherungsOrdner.mkdirs()
@@ -46,7 +48,7 @@ class KartenSpeicher(private val context: Context) {
         dateiFür(verweis.kartenId, verweis.version),
     )
 
-    fun ladeAktuell(id: KartenId): KartenDaten? = File(kartenOrdner, id.wert)
+    fun ladeAktuell(id: KartenId): KartenDaten? = kartenOrdnerFür(id)
         .listFiles { f -> f.name.matches(Regex("v\\d+\\.json")) }
         .orEmpty()
         .sortedByDescending(::versionAusDatei)
@@ -69,8 +71,10 @@ class KartenSpeicher(private val context: Context) {
     }
 
     fun importiere(text: String): KartenDaten {
+        require(text.toByteArray(Charsets.UTF_8).size <= SichererKartenAbruf.MAXIMALE_GRÖSSE) { "Die Importdatei ist größer als 16 MiB." }
         val paket = if (KartenFreigabePaket.istFreigabePaket(text)) KartenFreigabePaket.lese(text) else null
         val karte = if (paket == null) MathematikKartenCodec.importiere(text) else null
+        karte?.let(::prüfeImportKarte)
         return importTransaktionen.ausführen {
             if (paket != null) {
                 importierePaket(paket)
@@ -89,6 +93,7 @@ class KartenSpeicher(private val context: Context) {
         val istZip = inhalt.size >= 4 && inhalt[0] == 'P'.code.toByte() && inhalt[1] == 'K'.code.toByte()
         if (!istZip) return importiere(inhalt.toString(Charsets.UTF_8))
         val karte = MatlasKartenContainer.lese(inhalt)
+        prüfeImportKarte(karte)
         return importTransaktionen.ausführen {
             val version = maxOf(karte.version, höchsteVersion(karte.id) + 1)
             val gespeichert = speichere(karte.copy(version = version, erstelltAm = System.currentTimeMillis()))
@@ -148,7 +153,7 @@ class KartenSpeicher(private val context: Context) {
         val blockierend = blockierendeVerwendungen(kartenIds)
         if (blockierend.isNotEmpty()) return blockierend
         kartenIds.forEach { id ->
-            File(kartenOrdner, id.wert).deleteRecursively()
+            kartenOrdnerFür(id).deleteRecursively()
             sicherungsOrdner.listFiles().orEmpty()
                 .filter { it.name.startsWith("${id.wert}-") }
                 .forEach(File::delete)
@@ -289,14 +294,19 @@ class KartenSpeicher(private val context: Context) {
         .filter { it.isFile && it.name.matches(Regex("v\\d+\\.json")) }
         .mapNotNull(::leseDatei)
 
-    private fun höchsteVersion(id: KartenId): Int = File(kartenOrdner, id.wert)
+    private fun höchsteVersion(id: KartenId): Int = kartenOrdnerFür(id)
         .listFiles()
         .orEmpty()
         .maxOfOrNull(::versionAusDatei)
         ?: 0
 
+    private fun kartenOrdnerFür(id: KartenId): File {
+        prüfeKartenId(id)
+        return File(kartenOrdner, id.wert)
+    }
+
     private fun dateiFür(id: KartenId, version: Int) = File(
-        File(kartenOrdner, id.wert),
+        kartenOrdnerFür(id),
         "v$version.json",
     )
 

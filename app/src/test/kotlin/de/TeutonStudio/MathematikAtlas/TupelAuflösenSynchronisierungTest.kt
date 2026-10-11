@@ -9,6 +9,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.TupelOperationKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie
 import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
 import de.TeutonStudio.MathematikRechenSystem.kern.WahrheitsKonstante

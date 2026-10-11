@@ -360,7 +360,7 @@ class UniversellerZahlenRechnerKnotenTest {
         )
         val kehrwert = assertIs<Methode>(ergebnis.ausgaben.getValue("wert").objekt)
         assertEquals(Division(RationaleZahl.Eins, x), kehrwert.vorschrift)
-        assertTrue(kehrwert.methodenSignatur().werteVorrat.zuLatex().contains("\\neq 0"))
+        assertTrue(kehrwert.mathematischeMethodenSignatur().definitionsRaum.zuLatex().contains("\\neq 0"))
         assertTrue(ergebnis.warnungen.any { it.startsWith("Definitionsbedingung:") })
     }
 

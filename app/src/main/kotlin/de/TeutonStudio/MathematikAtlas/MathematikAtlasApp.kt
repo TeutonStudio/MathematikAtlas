@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -95,6 +96,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     var letzterZeiger by remember { mutableStateOf(GraphPunkt(240f, 180f)) }
     var graphFokussiert by remember { mutableStateOf(true) }
     val graphFokus = remember { FocusRequester() }
+    var bibliothekAnfordern by remember { mutableStateOf(false) }
     val aktuelleAnsicht by rememberUpdatedState(zustand.editor.karte.ansicht)
     fun befehlsKontext() = BefehlsKontext(
         fokus = if (graphFokussiert) AtlasFokusBereich.Karte else AtlasFokusBereich.Anwendung,
@@ -112,7 +114,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             speichern = zustand::speichereAktuell,
             knotenAuswahlÖffnen = zustand::öffneKnotenAuswahl,
             umbenennen = { zustand.ausgewählterKnoten?.let { InspektorSichtbarkeit.öffnen() } },
-            sucheÖffnen = { zustand.linkerBereich = VerwaltungsBereich.Konzepte },
+            sucheÖffnen = { zustand.linkerBereich = VerwaltungsBereich.Konzepte; bibliothekAnfordern = true },
         )
     }
     val tastatur = remember(befehle) { AtlasTastaturAusführer(befehle, ::befehlsKontext) }
@@ -152,6 +154,29 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         )
     }
 
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val schmal = maxWidth < 840.dp
+        val bibliothekBreite = minOf(320.dp, (maxWidth - 32.dp).coerceAtLeast(0.dp))
+        val drawer = rememberDrawerState(DrawerValue.Closed)
+        LaunchedEffect(bibliothekAnfordern, schmal) {
+            if (bibliothekAnfordern && schmal) drawer.open()
+            bibliothekAnfordern = false
+        }
+        LaunchedEffect(zustand.editor.karte.id) { drawer.close() }
+        ModalNavigationDrawer(
+            drawerState = drawer,
+            gesturesEnabled = schmal,
+            drawerContent = {
+                if (schmal) ModalDrawerSheet(Modifier.width(bibliothekBreite)) {
+                    VerwaltungsFenster(
+                        zustand,
+                        Modifier.fillMaxSize(),
+                        importAnfordern = { importDialogOffen = true },
+                        karteGeöffnet = { coroutineScope.launch { drawer.close() } },
+                    )
+                }
+            },
+        ) {
     Row(
         Modifier.fillMaxSize()
             .navigationBarsPadding()
@@ -163,12 +188,14 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             }
             .onKeyEvent(tastatur::verarbeite),
     ) {
-        VerwaltungsFenster(
-            zustand,
-            Modifier.width(280.dp).fillMaxHeight().zIndex(1f),
-            importAnfordern = { importDialogOffen = true },
-        )
-        VerticalDivider()
+        if (!schmal) {
+            VerwaltungsFenster(
+                zustand,
+                Modifier.width(280.dp).fillMaxHeight().zIndex(1f),
+                importAnfordern = { importDialogOffen = true },
+            )
+            VerticalDivider()
+        }
         Column(Modifier.weight(1f).fillMaxHeight()) {
             WerkzeugLeiste(
                 zustand,
@@ -177,6 +204,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                 },
                 onExport = { exportDialogOffen = true },
                 onSpeichern = { ausführen(AtlasBefehl.Speichern) },
+                onBibliothek = if (schmal) ({ bibliothekAnfordern = true }) else null,
             )
             HorizontalDivider()
             Box(
@@ -262,7 +290,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                         onWiederholen = { ausführen(AtlasBefehl.Wiederholen) },
                         modifier = Modifier.width(152.dp).height(120.dp),
                     )
-                    Spacer(Modifier.width(180.dp).height(120.dp))
+                    if (!schmal) Spacer(Modifier.width(180.dp).height(120.dp))
                 }
                 zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
                 graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
@@ -273,6 +301,8 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             zustand,
             Modifier.width(310.dp).fillMaxHeight().zIndex(1f),
         )
+    }
+        }
     }
 }
 
@@ -406,11 +436,36 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
 }
 
 @Composable
-private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport: () -> Unit, onSpeichern: () -> Unit) {
+private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport: () -> Unit, onSpeichern: () -> Unit, onBibliothek: (() -> Unit)? = null) {
     var umbenennenGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
     var jsonGeöffnet by remember(zustand.editor.karte.id) { mutableStateOf(false) }
+    Surface(color = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        if (maxWidth < 720.dp || onBibliothek != null) {
+            var menüOffen by remember { mutableStateOf(false) }
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 58.dp).padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (onBibliothek != null) IconButton(onClick = onBibliothek, modifier = Modifier.semantics { contentDescription = "Bibliothek öffnen" }) { Text("☰") }
+                Text(zustand.editor.karte.name, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Box {
+                    IconButton(onClick = { menüOffen = true }, modifier = Modifier.semantics { contentDescription = "Kartenaktionen öffnen" }) { Text("⋮") }
+                    DropdownMenu(expanded = menüOffen, onDismissRequest = { menüOffen = false }) {
+                        zustand.brotkrumen.dropLast(1).forEachIndexed { index, ref ->
+                            DropdownMenuItem(text = { Text("Zurück: ${zustand.speicher.lade(ref)?.name ?: ref.kartenId.wert}") }, onClick = { menüOffen = false; zustand.geheZuBrotkrume(index) })
+                        }
+                        DropdownMenuItem(text = { Text("Karte umbenennen") }, onClick = { menüOffen = false; umbenennenGeöffnet = true })
+                        DropdownMenuItem(text = { Text("JSON anzeigen") }, onClick = { menüOffen = false; jsonGeöffnet = true })
+                        DropdownMenuItem(text = { Text("Import") }, onClick = { menüOffen = false; onImport() })
+                        DropdownMenuItem(text = { Text("Export") }, onClick = { menüOffen = false; onExport() })
+                        DropdownMenuItem(text = { Text("Speichern") }, onClick = { menüOffen = false; onSpeichern() })
+                    }
+                }
+            }
+        } else {
     Row(
-        Modifier.fillMaxWidth().height(58.dp).padding(horizontal = LocalAtlasAbstände.current.bereich),
+        Modifier.fillMaxWidth().heightIn(min = 58.dp).padding(horizontal = LocalAtlasAbstände.current.bereich),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
     ) {
@@ -426,6 +481,9 @@ private fun WerkzeugLeiste(zustand: AtlasZustand, onImport: () -> Unit, onExport
         TextButton(onClick = onImport) { Text("Import") }
         TextButton(onClick = onExport) { Text("Export") }
         Button(onClick = onSpeichern) { Text("Speichern") }
+    }
+        }
+    }
     }
     if (umbenennenGeöffnet) {
         NameÄndernDialog(

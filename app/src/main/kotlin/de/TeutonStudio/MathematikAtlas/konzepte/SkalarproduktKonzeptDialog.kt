@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -212,13 +213,13 @@ private fun skalarproduktDialogDaten(
             SKALARPRODUKT_DEFINITION_ZERTIFIZIERT,
         konkreteKomponenten = linkeAnsicht != null && rechteAnsicht != null &&
             linkeAnsicht.laenge == rechteAnsicht.laenge,
-        ergebnisLatex = auswertung?.ausgaben?.get(VEKTOR_RECHNER_AUSGANG)?.objekt?.zuLatex(),
+        ergebnisLatex = auswertung?.ausgaben?.get(VEKTOR_RECHNER_AUSGANG)?.anzeigeLatex(),
         fehler = auswertung?.fehler,
     )
 }
 
-private fun de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt.komponentenAnsichtOderNull(): NumerischeKomponentenAnsicht? =
-    when (val ansicht = numerischeKomponentenAnsicht()) {
+private fun de.TeutonStudio.MathematikRechenSystem.kern.AtlasWert.komponentenAnsichtOderNull(): NumerischeKomponentenAnsicht? =
+    when (val ansicht = (this as? de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt)?.numerischeKomponentenAnsicht()) {
         is StrukturPruefung.Gueltig -> ansicht.wert
         else -> null
     }

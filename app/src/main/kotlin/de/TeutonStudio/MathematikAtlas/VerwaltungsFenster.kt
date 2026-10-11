@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +21,7 @@ import de.TeutonStudio.MathematikAtlas.speicher.*
 import de.TeutonStudio.MathematikKnoten.LatexText
 
 @Composable
-internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier, importAnfordern: () -> Unit = {}) {
+internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier, importAnfordern: () -> Unit = {}, karteGeöffnet: () -> Unit = {}) {
     val context = LocalContext.current
     val profilSpeicher = remember(context) { LokalesProfilSpeicher(context) }
     var profil by remember { mutableStateOf(profilSpeicher.lade()) }
@@ -46,7 +47,7 @@ internal fun VerwaltungsFenster(zustand: AtlasZustand, modifier: Modifier, impor
             }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (zustand.linkerBereich) {
-                    VerwaltungsBereich.Karten -> KartenListe(zustand, importAnfordern)
+                    VerwaltungsBereich.Karten -> KartenListe(zustand, importAnfordern, karteGeöffnet)
                     VerwaltungsBereich.Konzepte -> KonzeptListe(zustand)
                     VerwaltungsBereich.Variablen -> VariablenListe(zustand)
                     VerwaltungsBereich.Auswertung -> AuswertungsListe(zustand)
@@ -116,7 +117,7 @@ private fun ProfilLeiste(profil: LokalesProfil, onClick: () -> Unit) {
 }
 
 @Composable
-private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
+private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, karteGeöffnet: () -> Unit) {
     val context = LocalContext.current
     val ordnungsSpeicher = remember(context) { KartenOrdnungSpeicher(context) }
     var ordnung by remember(ordnungsSpeicher) { mutableStateOf(ordnungsSpeicher.lade()) }
@@ -125,6 +126,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
     var ordnerMenü by remember { mutableStateOf<List<String>?>(null) }
     var kartenMenü by remember { mutableStateOf<KartenId?>(null) }
     var freigabeFehler by remember { mutableStateOf<String?>(null) }
+    var veröffentlichenOffen by remember { mutableStateOf(false) }
     var herkunftFilter by remember { mutableStateOf(KartenHerkunft.EIGEN) }
     var filterMenü by remember { mutableStateOf(false) }
     val kartenAenderungsVersion = KartenAenderungsSignal.version
@@ -183,8 +185,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
             }
             OutlinedButton(
                 onClick = zustand::archiviereAktuell,
-                enabled = herkunftFilter == KartenHerkunft.EIGEN &&
-                    zustand.speicher.herkunftFür(zustand.editor.karte.id) == KartenHerkunft.EIGEN,
+                enabled = true,
                 modifier = Modifier.weight(1f),
             ) { Text("Archivieren") }
         }
@@ -205,7 +206,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
                     onClick = {
                         val karte = zustand.editor.karte
                         freigeben(karte.name) {
-                            zustand.speicher.erstelleFreigabePaket(karte.name, FreigabeArt.Karte, listOf(karte), ordnung)
+                            KartenVeröffentlichungsDienst(zustand.speicher).karte(karte, ordnung)
                         }
                     },
                     enabled = zustand.speicher.herkunftFür(zustand.editor.karte.id) == KartenHerkunft.EIGEN,
@@ -213,10 +214,13 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
                 ) { Text("Veröffentlichen") }
             }
         } else if (herkunftFilter == KartenHerkunft.FREMD) {
-            OutlinedButton(
-                onClick = importAnfordern,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich),
-            ) { Text("Importieren") }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.bereich),
+                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+            ) {
+                OutlinedButton(onClick = importAnfordern, modifier = Modifier.weight(1f)) { Text("Karten importieren") }
+                OutlinedButton(onClick = { veröffentlichenOffen = true }, modifier = Modifier.weight(1f)) { Text("Eigene veröffentlichen") }
+            }
         }
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -250,18 +254,15 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
                                         )
                                         val enthalteneKarten = ordnung.kartenUnter(eintrag.pfad)
                                             .mapNotNull(zustand.speicher::ladeAktuell)
+                                            .filter { zustand.speicher.herkunftFür(it.id) == KartenHerkunft.EIGEN }
                                         DropdownMenuItem(
                                             text = { Text("Sammlung freigeben") },
                                             enabled = enthalteneKarten.isNotEmpty(),
                                             onClick = {
                                                 ordnerMenü = null
                                                 freigeben(eintrag.pfad.last()) {
-                                                    zustand.speicher.erstelleFreigabePaket(
-                                                        name = eintrag.pfad.last(),
-                                                        art = FreigabeArt.Sammlung,
-                                                        wurzelKarten = enthalteneKarten,
-                                                        ordnung = ordnung,
-                                                        sammlungsPfad = eintrag.pfad,
+                                                    KartenVeröffentlichungsDienst(zustand.speicher).sammlung(
+                                                        eintrag.pfad, enthalteneKarten, ordnung,
                                                     )
                                                 }
                                             },
@@ -309,12 +310,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
                                         onClick = {
                                             kartenMenü = null
                                             freigeben(eintrag.karte.name) {
-                                                zustand.speicher.erstelleFreigabePaket(
-                                                    name = eintrag.karte.name,
-                                                    art = FreigabeArt.Karte,
-                                                    wurzelKarten = listOf(eintrag.karte),
-                                                    ordnung = ordnung,
-                                                )
+                                                KartenVeröffentlichungsDienst(zustand.speicher).karte(eintrag.karte, ordnung)
                                             }
                                         },
                                     )
@@ -324,7 +320,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
                         modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                             .clip(MaterialTheme.shapes.medium)
                             .kartenDragQuelle(zustand, eintrag.karte)
-                            .clickable { zustand.öffne(eintrag.karte) }
+                            .clickable { zustand.öffne(eintrag.karte); karteGeöffnet() }
                             .background(
                                 if (eintrag.karte.id == zustand.editor.karte.id) MaterialTheme.colorScheme.secondaryContainer
                                 else MaterialTheme.colorScheme.surface,
@@ -338,6 +334,33 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
         }
     }
 
+    if (veröffentlichenOffen) {
+        AlertDialog(
+            onDismissRequest = { veröffentlichenOffen = false },
+            title = { Text("Eigene veröffentlichen") },
+            text = {
+                Column(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState())) {
+                    sichtbareKarten.filter { herkunft[it.id] == KartenHerkunft.EIGEN }.forEach { karte ->
+                        TextButton(onClick = {
+                            freigeben(karte.name) { KartenVeröffentlichungsDienst(zustand.speicher).karte(karte, ordnung) }
+                            veröffentlichenOffen = false
+                        }) { Text(karte.name) }
+                    }
+                    ordnung.ordner.forEach { pfad ->
+                        val eigene = sichtbareKarten.filter { karte ->
+                            herkunft[karte.id] == KartenHerkunft.EIGEN &&
+                                ordnung.ordnerFür(karte.id).take(pfad.size) == pfad
+                        }
+                        if (eigene.isNotEmpty()) TextButton(onClick = {
+                            freigeben(pfad.last()) { KartenVeröffentlichungsDienst(zustand.speicher).sammlung(pfad, eigene, ordnung) }
+                            veröffentlichenOffen = false
+                        }) { Text("Sammlung: ${pfad.joinToString(" / ")}") }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { veröffentlichenOffen = false }) { Text("Schließen") } },
+        )
+    }
     when (val aktuell = dialog) {
         KartenOrdnerDialog.OrdnerAnlegen -> OrdnerPfadDialog(
             titel = "Ordner anlegen",
@@ -345,7 +368,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
             stammErlaubt = false,
             schließen = { dialog = null },
             übernehmen = { pfad ->
-                speichere(ordnung.mitOrdner(pfad))
+                speichere(ordnung.mitEigenemOrdner(pfad))
                 null
             },
         )
@@ -365,7 +388,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit) {
             stammErlaubt = false,
             schließen = { dialog = null },
             übernehmen = { pfad ->
-                runCatching { ordnung.verschiebeOrdner(aktuell.pfad, pfad) }
+                runCatching { ordnung.verschiebeOrdner(aktuell.pfad, pfad).mitEigenemOrdner(pfad) }
                     .fold(
                         onSuccess = { neu -> speichere(neu); null },
                         onFailure = { it.message ?: "Der Ordnerpfad ist ungültig." },
@@ -537,7 +560,7 @@ private fun KonzeptListe(zustand: AtlasZustand) {
             ListItem(
                 headlineContent = { Text(knoten.name) },
                 supportingContent = {
-                    val latex = e?.ausgaben?.values?.joinToString { it.objekt.zuLatex() }
+                    val latex = e?.ausgaben?.values?.joinToString { it.anzeigeLatex() }
                     if (latex != null) LatexText(latex, style = MaterialTheme.typography.bodyMedium)
                     else Text(e?.fehler ?: "Noch kein Ergebnis")
                 },

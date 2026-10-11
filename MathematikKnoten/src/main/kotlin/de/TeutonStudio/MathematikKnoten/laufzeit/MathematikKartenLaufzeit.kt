@@ -20,7 +20,7 @@ class MathematikKartenLaufzeit(
 ) {
     val anschlussArten = AnschlussArtRegister(MathematikAnschlussArten.alle)
     val typSystem = erzeugeMathematikKartenTypSystem(anschlussArten)
-    val graphPrüfung = GraphPrüfung(anschlussArten, typSystem)
+    val graphPrüfung = GraphPrüfung(anschlussArten, typSystem, ::effektiverMathematikAnschluss)
     val vorlagen: List<KnotenVorlage> = KanonischerMathematikKnotenKatalog.alle()
 
     private val auswerter = KartenAuswerter(

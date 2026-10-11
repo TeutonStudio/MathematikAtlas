@@ -8,43 +8,7 @@ const val ZAHLENRECHNER_FORMEL_ID = "zahl.formel"
 const val ZAHLENRECHNER_FORMEL_LATEX = "formelLatex"
 const val ZAHLENRECHNER_FORMEL_VARIABLEN = "formelVariablen"
 
-/** Ergänzende stabile Operatorzustände des universellen Zahlenrechners. */
-enum class ErweiterterZahlenOperator(
-    val stabileId: String,
-    val titel: String,
-    val symbolLatex: String,
-) {
-    TANGENS("zahl.tan", "Tangens", "\\tan"),
-    COTANGENS("zahl.cot", "Cotangens", "\\cot"),
-    SEKANS("zahl.sec", "Sekans", "\\sec"),
-    KOSEKANS("zahl.csc", "Kosekans", "\\csc"),
-    ARCTANGENS("zahl.arctan", "Arcus Tangens", "\\arctan"),
-    SINUS_HYPERBOLICUS("zahl.sinh", "Sinus hyperbolicus", "\\sinh"),
-    COSINUS_HYPERBOLICUS("zahl.cosh", "Cosinus hyperbolicus", "\\cosh"),
-    TANGENS_HYPERBOLICUS("zahl.tanh", "Tangens hyperbolicus", "\\tanh"),
-    COTANGENS_HYPERBOLICUS("zahl.coth", "Cotangens hyperbolicus", "\\coth"),
-    SEKANS_HYPERBOLICUS("zahl.sech", "Sekans hyperbolicus", "\\operatorname{sech}"),
-    KOSEKANS_HYPERBOLICUS("zahl.csch", "Kosekans hyperbolicus", "\\operatorname{csch}"),
-    ARITHMETISCHES_MITTEL("zahl.arithmetischesMittel", "Arithmetisches Mittel", "\\operatorname{AM}"),
-    GEOMETRISCHES_MITTEL("zahl.geometrischesMittel", "Geometrisches Mittel", "\\operatorname{GM}"),
-    STAMMFUNKTION("zahl.stammfunktion", "Stammfunktion", "\\int"),
-    POLYNOM("zahl.polynom", "Polynom", "(c_k)_k\\cdot(x^k)_k"),
-    ;
-
-    companion object {
-        fun vonId(id: String?): ErweiterterZahlenOperator? = entries.firstOrNull { operator ->
-            id == operator.stabileId || id.equals(operator.name, ignoreCase = true)
-        }
-    }
-
-    val hebungsArt: ZahlenOperatorHebungsArt
-        get() = when (this) {
-            POLYNOM,
-            STAMMFUNKTION,
-            -> ZahlenOperatorHebungsArt.METHODENSPEZIFISCH
-            else -> ZahlenOperatorHebungsArt.PUNKTWEISE
-        }
-}
+typealias ErweiterterZahlenOperator = de.TeutonStudio.MathematikRechenSystem.kern.ZusätzlicherZahlenOperator
 
 fun istZahlenRechnerFormel(knoten: KnotenDaten): Boolean =
     knoten.art == ZAHLENRECHNER_ART && knoten.parameter[ZAHLENRECHNER_OPERATOR] == ZAHLENRECHNER_FORMEL_ID
@@ -71,7 +35,7 @@ fun konfiguriereErweitertenZahlenRechner(
     operator: ErweiterterZahlenOperator,
 ): KnotenDaten {
     require(knoten.art == ZAHLENRECHNER_ART)
-    return when (operator) {
+    val konfiguriert = when (operator) {
         ErweiterterZahlenOperator.POLYNOM -> konfigurierePolynomZahlenRechner(knoten)
         ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL,
         ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL,
@@ -79,6 +43,7 @@ fun konfiguriereErweitertenZahlenRechner(
         ErweiterterZahlenOperator.STAMMFUNKTION -> konfiguriereStammfunktionZahlenRechner(knoten)
         else -> konfiguriereUnaerenErweitertenZahlenRechner(knoten, operator)
     }
+    return konfiguriert.copy(anschlüsse = erhalteRechnerAnschlussIds(knoten.anschlüsse, konfiguriert.anschlüsse, RechnerFamilie.ZAHL, operator.stabileId))
 }
 
 private fun konfiguriereUnaerenErweitertenZahlenRechner(
@@ -98,7 +63,7 @@ private fun konfiguriereUnaerenErweitertenZahlenRechner(
         name = "a",
         richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links,
-        art = MathematikAnschlussArten.Objekt.id,
+        art = MathematikAnschlussArten.AtlasWert.id,
         reihenfolge = 0,
         kannSichErweitern = false,
         dynamischErzeugt = false,
@@ -125,12 +90,12 @@ private fun konfiguriereMittelZahlenRechner(
             name = name,
             richtung = AnschlussRichtung.Eingang,
             kante = AnschlussKante.Links,
-            art = MathematikAnschlussArten.Objekt.id,
+            art = MathematikAnschlussArten.AtlasWert.id,
         )).copy(
             name = name,
             richtung = AnschlussRichtung.Eingang,
             kante = AnschlussKante.Links,
-            art = MathematikAnschlussArten.Objekt.id,
+            art = MathematikAnschlussArten.AtlasWert.id,
             reihenfolge = index,
             kannSichErweitern = true,
             dynamischErzeugt = index >= 2,
@@ -227,10 +192,10 @@ private fun konfigurierePolynomZahlenRechner(knoten: KnotenDaten): KnotenDaten {
     )
     val argument = (bisherigesArgument ?: AnschlussDaten(
         name = "argument", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
-        art = MathematikAnschlussArten.Objekt.id,
+        art = MathematikAnschlussArten.AtlasWert.id,
     )).copy(
         name = "argument", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
-        art = MathematikAnschlussArten.Objekt.id, reihenfolge = 1, kannSichErweitern = false,
+        art = MathematikAnschlussArten.AtlasWert.id, reihenfolge = 1, kannSichErweitern = false,
         dynamischErzeugt = false,
         zulässigeArten = setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
     )
@@ -285,9 +250,8 @@ fun konfiguriereZahlenRechnerFormel(knoten: KnotenDaten, latex: String): KnotenD
     )
 }
 
-fun MathematikAuswerterRegister.registriereZahlenRechnerErweiterungen() {
-    val basis = requireNotNull(finde(ZAHLENRECHNER_ART))
-    registriere(ZAHLENRECHNER_ART) { kontext ->
+internal fun mitZahlenErweiterungen(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter =
+    de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val operatorId = kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR]
         when {
             operatorId == ZAHLENRECHNER_FORMEL_ID -> werteFormelAus(kontext)
@@ -295,8 +259,9 @@ fun MathematikAuswerterRegister.registriereZahlenRechnerErweiterungen() {
                 werteErweitertenOperatorAus(kontext, requireNotNull(ErweiterterZahlenOperator.vonId(operatorId)))
             else -> basis.auswerten(kontext)
         }
-    }
 }
+
+internal fun MathematikAuswerterRegister.registriereZahlenRechnerErweiterungen() { registriere(ZAHLENRECHNER_ART, mitZahlenErweiterungen(requireNotNull(finde(ZAHLENRECHNER_ART)))) }
 
 private fun werteErweitertenOperatorAus(
     kontext: KnotenAuswertungsKontext,
@@ -329,7 +294,7 @@ private fun werteUnaerenErweitertenOperatorAus(
     val latex = "${operator.symbolLatex}\\left($effektivLatex\\right)"
     val zahlObjekt = symbolischerZahlterm("${operator.stabileId}:$latex", latex)
     val bedingungen = erweiterteDefinitionsBedingungen(operator, argument)
-    val objekt: MathematischesObjekt = if (vorbereitung == null) {
+    val objekt: AtlasWert = if (vorbereitung == null) {
         zahlObjekt
     } else {
         val ziel = methode.zielMenge.fundamentalerZahlbereichOderNull()?.let { bereich ->
@@ -345,7 +310,7 @@ private fun werteUnaerenErweitertenOperatorAus(
             "wert" to BedingterWert(
                 objekt = objekt, annahmen = eingang.annahmen,
                 zielMenge = (objekt as? Methode)?.zielMenge,
-                werteVorrat = (objekt as? Methode)?.methodenSignatur()?.werteVorrat ?: eingang.werteVorrat,
+                werteVorrat = (objekt as? Methode)?.mathematischeMethodenSignatur()?.definitionsRaum ?: eingang.werteVorrat,
                 reelleVariablen = eingang.reelleVariablen, variablenQuellen = eingang.variablenQuellen,
                 latexDarstellung = if (objekt is Methode) null else latex,
             ),
@@ -354,7 +319,7 @@ private fun werteUnaerenErweitertenOperatorAus(
         warnungen = buildList {
             addAll(definitionsHinweise(operator))
             (objekt as? Methode)?.let { punktweise ->
-                add("Signatur: ${punktweise.methodenSignatur().werteVorrat.zuLatex()} → ${punktweise.zielMenge.zuLatex()}")
+                add("Signatur: ${punktweise.mathematischeMethodenSignatur().definitionsRaum.zuLatex()} → ${punktweise.zielMenge.zuLatex()}")
                 if (bedingungen.isNotEmpty()) add("Definitionsbedingung: ${bedingungen.joinToString(" \\land ") { it.zuLatex() }}")
             }
         },
@@ -392,7 +357,7 @@ private fun werteMittelAus(
             UnentscheidbareAussage("${zahl.zuLatex()}\\ge 0", "reelles geometrisches Mittel")
         }
     } else emptyList()
-    val objekt: MathematischesObjekt = vorbereitung?.erzeugeMethode(
+    val objekt: AtlasWert = vorbereitung?.erzeugeMethode(
         name = "${operator.symbolLatex}(${vorbereitung.methodenNamen.values.joinToString(",")})",
         vorschrift = ausdruck,
         zielMenge = inferiereZahlenWertevorrat(ausdruck),
@@ -405,7 +370,7 @@ private fun werteMittelAus(
                 objekt = objekt,
                 annahmen = eingangsWerte.flatMap { it.annahmen }.toSet() + bedingungen,
                 zielMenge = (objekt as? Methode)?.zielMenge,
-                werteVorrat = (objekt as? Methode)?.methodenSignatur()?.werteVorrat ?: inferiereZahlenWertevorrat(ausdruck),
+                werteVorrat = (objekt as? Methode)?.mathematischeMethodenSignatur()?.definitionsRaum ?: inferiereZahlenWertevorrat(ausdruck),
                 reelleVariablen = reelleVariablen(eingangsWerte),
                 variablenQuellen = eingangsWerte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
             ),
@@ -430,7 +395,7 @@ private fun werteStammfunktionAus(kontext: KnotenAuswertungsKontext): KnotenAusw
         kurz = false,
         mass = IntegralMass.StandardReell,
     )
-    val argumentMenge = schneide(listOf(integrand.methodenSignatur().argumente.single().werteVorrat, ReelleZahlen))
+    val argumentMenge = schneide(listOf(integrand.mathematischeMethodenSignatur().argumente.single().definitionsMenge, ReelleZahlen))
     val stammfunktion = Methode(
         name = "F",
         parameter = listOf(x),
@@ -446,7 +411,7 @@ private fun werteStammfunktionAus(kontext: KnotenAuswertungsKontext): KnotenAusw
                 objekt = stammfunktion,
                 annahmen = annahmen,
                 zielMenge = stammfunktion.zielMenge,
-                werteVorrat = stammfunktion.methodenSignatur().werteVorrat,
+                werteVorrat = stammfunktion.mathematischeMethodenSignatur().definitionsRaum,
                 reelleVariablen = reelleVariablen(kontext.eingänge.values),
                 variablenQuellen = kontext.eingänge.values.flatMap { it.variablenQuellen }.geordnetEindeutig(),
             ),
@@ -474,7 +439,7 @@ private fun wertePolynomAus(kontext: KnotenAuswertungsKontext): KnotenAuswertung
     val argument = vorbereitung?.operanden?.getValue("argument")
         ?: (argumentWert.objekt as? ZahlAusdruck ?: error("Das Polynomargument ist weder Zahl noch Zahlenfunktion."))
     val ausdruck = polynomAusKoeffizienten(koeffizienten, argument)
-    val objekt: MathematischesObjekt = vorbereitung?.erzeugeMethode(
+    val objekt: AtlasWert = vorbereitung?.erzeugeMethode(
         name = "p(${argumentMethode?.name})",
         vorschrift = ausdruck,
         zielMenge = inferiereZahlenWertevorrat(ausdruck),
@@ -486,7 +451,7 @@ private fun wertePolynomAus(kontext: KnotenAuswertungsKontext): KnotenAuswertung
                 objekt = objekt,
                 annahmen = werte.flatMap { it.annahmen }.toSet(),
                 zielMenge = (objekt as? Methode)?.zielMenge,
-                werteVorrat = (objekt as? Methode)?.methodenSignatur()?.werteVorrat ?: inferiereZahlenWertevorrat(ausdruck),
+                werteVorrat = (objekt as? Methode)?.mathematischeMethodenSignatur()?.definitionsRaum ?: inferiereZahlenWertevorrat(ausdruck),
                 reelleVariablen = reelleVariablen(werte),
                 variablenQuellen = werte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
             ),

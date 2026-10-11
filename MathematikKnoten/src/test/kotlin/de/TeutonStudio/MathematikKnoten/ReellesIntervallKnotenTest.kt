@@ -149,7 +149,7 @@ class ReellesIntervallKnotenTest {
         }
     }
 
-    private fun auswerten(eingänge: Map<String, BedingterWert>): MathematischesObjekt {
+    private fun auswerten(eingänge: Map<String, BedingterWert>): de.TeutonStudio.MathematikRechenSystem.kern.AtlasWert {
         val knoten = MathematikKnotenVorlagen.ReellesIntervall.erzeuge(GraphPunkt.Zero)
         return register.finde(knoten.art)!!
             .auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext()))

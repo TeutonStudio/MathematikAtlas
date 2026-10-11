@@ -51,7 +51,13 @@ object BeispielKarten {
                 ZahlenBereich(-1.5, 1.5),
                 null,
             ),
-            sampling = SamplingKonfiguration(96, 22, 0.02, maximaleOrbitSchritte = 256),
+            sampling = SamplingKonfiguration(
+                auflösung2D = 96,
+                auflösung3D = 22,
+                toleranz = 0.02,
+                maximalesRasterBudget = 4_000,
+                maximaleOrbitSchritte = 256,
+            ),
         )
         val visualisierung = MathematikKnotenVorlagen.Visualisierung.erzeuge(GraphPunkt(1920f, 170f)).copy(
             name = "Mandelbrot-Menge",

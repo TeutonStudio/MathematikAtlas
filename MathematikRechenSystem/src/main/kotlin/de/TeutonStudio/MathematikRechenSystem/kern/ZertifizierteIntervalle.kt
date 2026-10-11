@@ -130,6 +130,11 @@ object ZertifizierterIntervallAuswerter {
                 if (a.wahrheitswert != null && b.wahrheitswert != null) entschieden(a.wahrheitswert == b.wahrheitswert)
                 else unbekannt("Äquivalenz ist nicht auf der ganzen Zelle entschieden.")
             }
+            is Selbigkeit -> when (aussage.entscheide().wahrheitswert) {
+                Wahrheitswert.Wahr -> entschieden(true)
+                Wahrheitswert.Lüge -> entschieden(false)
+                null -> unbekannt("Typisierte Selbigkeit ist auf der Zelle nicht exakt nachgewiesen.")
+            }
             is Ungleichheit -> negiere(eval(Gleichheit(aussage.links, aussage.rechts)))
             is Gleichheit, is Vergleich -> {
                 val links = (if (aussage is Gleichheit) aussage.links else (aussage as Vergleich).links) as? ZahlAusdruck

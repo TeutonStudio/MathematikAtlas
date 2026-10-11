@@ -49,18 +49,18 @@ class RelationPraedikatDefinitionsKartenTest {
     }
 
     @Test
-    fun `Gleichheitskarte zeigt Mengenmitgliedschaftsdefinition und Paarmengenabhaengigkeit`() {
-        val definition = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.gleichheit"))
+    fun `Selbigkeitskarte zeigt Mengenmitgliedschaftsdefinition und Paarmengenabhaengigkeit`() {
+        val definition = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.selbigkeit"))
         val knoten = PraedikatKnotenVorlagen.vorlage(definition).erzeuge(GraphPunkt.Zero)
         val konzept = assertNotNull(relationPraedikatKonzept(knoten))
         val regel = konzept.reiter.single().karte.knoten.single { it.art == KonzeptKnotenArten.REGEL }
 
         assertEquals(
-            "a=b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
+            "a\\stackrel{?}{=}b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
             regel.parameter["regel"],
         )
         assertEquals("axiom.zf.paarmenge", regel.parameter["vorausgesetzteAxiome"])
-        assertTrue(checkNotNull(regel.parameter["definitionsHinweis"]).contains("Typbedingung"))
+        assertTrue(checkNotNull(regel.parameter["definitionsHinweis"]).contains("Elementidentität"))
     }
 
     @Test

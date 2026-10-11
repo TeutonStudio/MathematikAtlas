@@ -162,6 +162,11 @@ private fun aussageIntern(
     optionen: NumerischeOptionen,
 ): NumerischesErgebnis<Boolean> = when (aussage) {
     is WahrheitsKonstante -> NumerischesErgebnis.Wert(aussage.wert)
+    is Selbigkeit -> when (aussage.entscheide().wahrheitswert) {
+        Wahrheitswert.Wahr -> NumerischesErgebnis.Wert(true)
+        Wahrheitswert.Lüge -> NumerischesErgebnis.Wert(false)
+        null -> NumerischesErgebnis.NichtUnterstützt("Typisierte Selbigkeit benötigt einen exakten Nachweis; numerische Toleranz genügt nicht.")
+    }
     is Gleichheit -> numerischerVergleich(aussage.links, aussage.rechts, umgebung, optionen) { links, rechts ->
         abs(links - rechts) <= optionen.toleranz
     }

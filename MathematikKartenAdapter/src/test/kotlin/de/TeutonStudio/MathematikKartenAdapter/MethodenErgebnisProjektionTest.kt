@@ -48,4 +48,28 @@ class MethodenErgebnisProjektionTest {
         assertEquals(wert, projiziert)
         assertEquals(GanzeZahlen, ziel)
     }
+
+    @Test
+    fun `kanonisches tupelwertiges Einzelergebnis behält die äussere Komponente`() {
+        val inneresTupel = Tupel(listOf(RationaleZahl.Eins, RationaleZahl.von(2)))
+        val ergebnis = Tupel(listOf(inneresTupel))
+        val innererRaum = Tupelraum(listOf(ReelleZahlen, ReelleZahlen))
+        val ziel = Tupelraum(listOf(innererRaum))
+
+        assertEquals(ergebnis to ziel, projiziereMethodenErgebnis(
+            ergebnis, ziel, METHODEN_ERGEBNISPROJEKTION_TUPEL, kanonisch = true,
+        ))
+        assertEquals(inneresTupel to innererRaum, projiziereMethodenErgebnis(
+            ergebnis, ziel, METHODEN_ERGEBNISPROJEKTION_DIREKT, kanonisch = true,
+        ))
+    }
+
+    @Test
+    fun `nullwertiges kanonisches Ergebnis bleibt auch direkt ein leeres Tupel`() {
+        val ergebnis = Tupel(emptyList())
+        val ziel = Tupelraum(emptyList())
+        assertEquals(ergebnis to ziel, projiziereMethodenErgebnis(
+            ergebnis, ziel, METHODEN_ERGEBNISPROJEKTION_DIREKT, kanonisch = true,
+        ))
+    }
 }

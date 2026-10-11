@@ -118,7 +118,7 @@ internal object SvgKnotenInspektor : KnotenInspektor {
                 auswirkungFür = { eintrag -> eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen) },
                 schließen = { operatorDialog = false },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     operatorDialog = false
                 },
                 formelÖffnen = { _ -> },

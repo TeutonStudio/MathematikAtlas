@@ -109,7 +109,7 @@ object VektorOrientierungsV2300Vorlagen {
         standardGröße = GraphGröße(235f, 110f),
         anschlüsse = listOf(input("tupel", MathematikAnschlussArten.Tupel.id), output("vektor", MathematikAnschlussArten.SpaltenVektor.id)),
         standardParameter = mapOf(VEKTOR_ORIENTIERUNG_PARAMETER to VEKTOR_ORIENTIERUNG_SPALTE),
-    )
+    ).alsAdapterVorlage()
 
     val EinheitsVektor = KnotenVorlage(
         art = "mathematik.einheitsSpalte",

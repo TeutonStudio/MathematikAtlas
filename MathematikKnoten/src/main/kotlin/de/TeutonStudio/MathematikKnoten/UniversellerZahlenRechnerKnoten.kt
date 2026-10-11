@@ -34,7 +34,7 @@ private fun zahlenOderMethodenEingang(
     name = name,
     richtung = AnschlussRichtung.Eingang,
     kante = AnschlussKante.Links,
-    art = MathematikAnschlussArten.Objekt.id,
+    art = MathematikAnschlussArten.AtlasWert.id,
     reihenfolge = reihenfolge,
     kannSichErweitern = erweiterbar,
     zulässigeArten = setOf(
@@ -117,11 +117,6 @@ private fun standardAnschluesse(operator: UniversellerZahlenOperator): List<Ansc
     }
 }
 
-/**
- * Der Erstellen-Dialog darf mehrere vorkonfigurierte Varianten zeigen. Alle
- * Varianten erzeugen dieselbe stabile Knotenart und unterscheiden sich nur im
- * persistierten Operatorzustand.
- */
 object ZahlenRechnerKnotenVorlagen {
     val alle: List<KnotenVorlage> = UniversellerZahlenOperator.entries.map { operator ->
         KnotenVorlage(
@@ -156,7 +151,6 @@ object ZahlenRechnerKnotenVorlagen {
     }
 }
 
-/** Nur diese historischen Zahl-zu-Zahl-Knoten verschwinden aus dem Katalog. */
 val historischeZahlenRechnerArten: Set<String> = setOf(
     "mathematik.addition",
     "mathematik.subtraktion",
@@ -247,10 +241,6 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
     else -> null
 }
 
-/**
- * Idempotente Lade-Migration. Knoten- und Anschluss-IDs bleiben erhalten, damit
- * bestehende Edges exakt auf denselben semantischen Argumenten landen.
- */
 fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
     knoten = knoten.map { alt ->
         if (alt.art == ZAHLENRECHNER_ART) {
@@ -369,8 +359,7 @@ private fun kanonischerEingangsName(
     else -> ('a'.code + index).toChar().toString()
 }
 
-internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() {
-    registriere(ZAHLENRECHNER_ART) { kontext ->
+internal val universellerZahlenFachauswerter = de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val operator = UniversellerZahlenOperator.vonId(
             kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR],
         )
@@ -385,7 +374,7 @@ internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() 
                     objekt = ausgabe.objekt,
                     annahmen = annahmen,
                     zielMenge = methode?.zielMenge,
-                    werteVorrat = methode?.methodenSignatur()?.werteVorrat ?: ausgabe.bereich.alsMenge(),
+                    werteVorrat = methode?.mathematischeMethodenSignatur()?.definitionsRaum ?: ausgabe.bereich.alsMenge(),
                     reelleVariablen = reelle,
                     variablenQuellen = kontext.eingänge.values
                         .flatMap { it.variablenQuellen }
@@ -397,11 +386,13 @@ internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() 
             eingänge = kontext.eingänge,
             warnungen = (definition.regeln + ausgabe.hinweise).distinct(),
         )
-    }
 }
 
+internal fun MathematikAuswerterRegister.registriereUniversellenZahlenRechner() { registriere(ZAHLENRECHNER_ART, universellerZahlenFachauswerter) }
+
+
 private data class UniverselleZahlenAusgabe(
-    val objekt: MathematischesObjekt,
+    val objekt: AtlasWert,
     val bereich: ZahlenRechnerBereich,
     val latex: String? = null,
     val schritte: List<UmformungsSchritt> = emptyList(),
@@ -458,8 +449,8 @@ private fun universellAuswerten(
         objekt = methode,
         latex = null,
         hinweise = buildList {
-            add("Signatur: ${methode.methodenSignatur().werteVorrat.zuLatex()} → ${methode.zielMenge.zuLatex()}")
-            add("Gemeinsamer Wertevorrat: ${methode.methodenSignatur().werteVorrat.zuLatex()}")
+            add("Signatur: ${methode.mathematischeMethodenSignatur().definitionsRaum.zuLatex()} → ${methode.zielMenge.zuLatex()}")
+            add("Gemeinsamer Wertevorrat: ${methode.mathematischeMethodenSignatur().definitionsRaum.zuLatex()}")
             if (bedingungen.isNotEmpty()) {
                 add("Definitionsbedingung: ${bedingungen.joinToString(" \\land ") { it.zuLatex() }}")
             }
@@ -851,11 +842,12 @@ private fun punktweiseDefinitionsBedingungen(
 
 private fun punktweiserMethodenName(
     operator: UniversellerZahlenOperator,
-    operanden: Map<String, MathematischesObjekt>,
+    operanden: Map<String, AtlasWert>,
 ): String {
-    fun anzeige(objekt: MathematischesObjekt): String = when (objekt) {
+    fun anzeige(objekt: AtlasWert): String = when (objekt) {
         is Methode -> objekt.name
-        else -> objekt.zuLatex()
+        is MathematischesObjekt -> objekt.zuLatex()
+        else -> error("Punktweise Zahlenoperatoren akzeptieren nur Zahlen oder Methoden.")
     }
     val werte = operanden.values.map(::anzeige)
     return when (operator) {

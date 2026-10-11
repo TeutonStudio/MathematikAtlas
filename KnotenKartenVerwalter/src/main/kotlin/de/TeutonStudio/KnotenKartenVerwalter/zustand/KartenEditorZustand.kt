@@ -546,7 +546,7 @@ class KartenEditorZustand(
                 }) return@forEach
             val neuerAnschluss = vorlage.copy(
                 id = neueAnschlussId(),
-                name = if (vorlage.name.matches(Regex("[A-Za-zÄÖÜäöü]+\\d+"))) {
+                name = if (vorlage.name.matches(Regex("[A-Za-zÄÖÜäöü]+[.]?\\d+"))) {
                     val präfix = vorlage.name.dropLastWhile(Char::isDigit)
                     "$präfix${knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith(präfix) } + 1}"
                 } else "input${knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang } + 1}",
@@ -591,7 +591,8 @@ class KartenEditorZustand(
         val verbundeneEingänge = verbindungen.map { it.zu }.toSet()
         return copy(knoten = knoten.map { knoten ->
             knoten.copy(anschlüsse = knoten.anschlüsse.filterNot {
-                it.dynamischErzeugt && AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge
+                it.richtung == AnschlussRichtung.Eingang && it.dynamischErzeugt &&
+                    AnschlussVerweis(knoten.id, it.id) !in verbundeneEingänge
             })
         })
     }

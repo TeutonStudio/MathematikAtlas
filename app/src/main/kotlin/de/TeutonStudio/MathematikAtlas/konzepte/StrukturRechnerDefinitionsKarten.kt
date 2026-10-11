@@ -13,6 +13,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.VerbindungsId
+import de.TeutonStudio.MathematikKnoten.RechnerFamilie
+import de.TeutonStudio.MathematikKnoten.RechnerOperatorRegistry
+import de.TeutonStudio.MathematikKnoten.RechnerOperatorAuflösung
 import de.TeutonStudio.MathematikKnoten.RECHNER_OPERATOR_PARAMETER
 import de.TeutonStudio.MathematikKnoten.STRUKTUR_RECHNER_FORMEL_LATEX
 import de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie
@@ -25,11 +28,14 @@ internal fun strukturRechnerKonzept(
     val operatorId = knoten.parameter[RECHNER_OPERATOR_PARAMETER]
     val formel = operatorId == familie.formelOperatorId
     val operator = StrukturRechnerOperatoren.finde(familie, operatorId)
-    val titel = if (formel) "Formel" else operator.titel
+    val vertrag = RechnerFamilie.entries.firstOrNull { it.knotenArt == knoten.art }?.let { f ->
+        (RechnerOperatorRegistry.finde(f, operatorId) as? RechnerOperatorAuflösung.Bekannt)?.vertrag
+    }
+    val titel = if (formel) "Formel" else vertrag?.titel ?: operator.titel
     val latex = if (formel) {
         knoten.parameter[STRUKTUR_RECHNER_FORMEL_LATEX].orEmpty().ifBlank { "f(\\ldots)" }
     } else {
-        operator.definitionsLatex
+        vertrag?.definitionsLatex ?: operator.definitionsLatex
     }
     val beschreibung = if (formel) {
         "Die Definitionskarte wird direkt aus dem gespeicherten typisierten CAS-Ausdruck und seinen aktuellen Anschlüssen erzeugt."
@@ -49,7 +55,7 @@ internal fun strukturRechnerKonzept(
                 id = "definition",
                 titel = if (formel) "Formel: $latex" else "Definition: $latex",
                 rolle = KonzeptReiterRolle.Definition,
-                karte = strukturRechnerDefinitionsKarte(knoten, familie, titel, latex, beschreibung),
+                karte = strukturRechnerDefinitionsKarte(knoten, familie.titel, familie.knotenArt, titel, latex, beschreibung),
             ),
         ),
     )
@@ -57,12 +63,13 @@ internal fun strukturRechnerKonzept(
 
 private fun strukturRechnerDefinitionsKarte(
     knoten: KnotenDaten,
-    familie: StrukturRechnerKnotenFamilie,
+    familienTitel: String,
+    knotenArt: String,
     titel: String,
     latex: String,
     beschreibung: String,
 ): KartenDaten {
-    val prefix = "definition-${familie.name.lowercase()}-${knoten.id.wert}"
+    val prefix = "definition-${knotenArt.replace('.', '-')}-${knoten.id.wert}"
     val eingänge = knoten.anschlüsse
         .filter { it.richtung == AnschlussRichtung.Eingang }
         .sortedBy { it.reihenfolge }
@@ -83,7 +90,7 @@ private fun strukturRechnerDefinitionsKarte(
             "regel" to beschreibung,
             "definition" to latex,
             "operator" to knoten.parameter[RECHNER_OPERATOR_PARAMETER].orEmpty(),
-            "knotenArt" to familie.knotenArt,
+            "knotenArt" to knotenArt,
         ),
     )
     val eingangsKnoten = eingänge.mapIndexed { index, anschluss ->
@@ -116,7 +123,7 @@ private fun strukturRechnerDefinitionsKarte(
     }
     return KartenDaten(
         id = KartenId(prefix),
-        name = "${familie.titel}: $titel",
+        name = "$familienTitel: $titel",
         knoten = eingangsKnoten + regel + ausgangsKnoten,
         verbindungen = verbindungen,
     )
@@ -149,5 +156,22 @@ private fun strukturSchnittstelle(
             "typ" to anschluss.art.wert,
             "rolle" to anschluss.name,
         ),
+    )
+}
+
+/** Informationskarte für jeden kanonischen Operator, aus derselben Definition wie Inspector und Suche. */
+internal fun kanonischesRechnerKonzept(knoten: KnotenDaten): KonzeptDefinition? {
+    val familie = RechnerOperatorRegistry.familieFür(knoten.art) ?: return null
+    val id = knoten.parameter[familie.operatorParameter] ?: return null
+    val vertrag = (RechnerOperatorRegistry.finde(familie, id) as? RechnerOperatorAuflösung.Bekannt)?.vertrag ?: return null
+    if (id.endsWith(".formel")) return null
+    val beschreibung = "${vertrag.titel}. Unterstützungsstatus: ${vertrag.unterstützung.name.lowercase()}."
+    return KonzeptDefinition(
+        id = KonzeptId("operator-${id.replace('.', '-')}-${knoten.id.wert}"), name = vertrag.titel,
+        beschreibung = beschreibung, pfad = listOf("Operatoren", vertrag.kategorie),
+        tags = vertrag.aliases + setOf(vertrag.titel, id), knotenArten = setOf(knoten.art),
+        knotenParameter = mapOf(familie.operatorParameter to id), reiter = listOf(KonzeptReiter(
+            "definition", vertrag.definitionsLatex, KonzeptReiterRolle.Definition,
+            strukturRechnerDefinitionsKarte(knoten, familie.name, knoten.art, vertrag.titel, vertrag.definitionsLatex, beschreibung))),
     )
 }

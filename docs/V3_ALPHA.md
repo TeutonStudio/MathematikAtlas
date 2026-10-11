@@ -1,5 +1,7 @@
 # Mathematik Atlas – v3 Alpha
 
+Der gemeinsame, fortlaufende Implementierungs- und Nachweisstand steht in [V3_ALPHA_ABNAHME.md](V3_ALPHA_ABNAHME.md).
+
 ## Zweck
 
 v3 Alpha ist der erste integrierte Arbeitsstand des v3-Versionsraums. Er
@@ -528,7 +530,7 @@ eine weitere fast identische feste Knotenart einzuführen.
   Verlustfreiheit und Fehlerdiagnostik. Die allgemeine Knotenmechanik
   bleibt domänenneutral, die konkrete Umwandlung fachlich spezialisiert.
 - Der Knoten erhält die in `docs/V3_AENDERUNGEN.md` unter V3-006
-  beschriebene **einheitliche, kompakte Adaptergeometrie**. Der
+  beschriebene **einheitliche, kompakte Kapsel mit stark gerundeten Ecken** (Produktentscheidung vom 11.10.2026). Der
   Inspector-Modus und die Übersetzungsrichtung sind im Knoten erkennbar.
 
 #### Erste Übersetzungen

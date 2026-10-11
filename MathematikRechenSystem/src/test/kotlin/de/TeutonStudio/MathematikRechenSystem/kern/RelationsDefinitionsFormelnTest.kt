@@ -17,28 +17,20 @@ class RelationsDefinitionsFormelnTest {
     }
 
     @Test
-    fun `Gleichheit wird ueber ununterscheidbare Mengenmitgliedschaft definiert`() {
-        val definition = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.gleichheit"))
-        val formel = definition.definitionsFormel
-
-        assertEquals(
-            "a=b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
-            formel.latex,
-        )
-        assertEquals(setOf("axiom.zf.paarmenge"), formel.vorausgesetzteAxiomIds)
-        assertTrue("Typbedingung" in formel.hinweis)
+    fun `Selbigkeit verwendet Mitgliedschaft und Gleichheit verwendet Inhalte`() {
+        val gleich = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.gleichheit")).definitionsFormel
+        val selbig = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.selbigkeit")).definitionsFormel
+        assertTrue("Inhaltsgleich" in gleich.latex)
+        assertTrue("\\forall M" in selbig.latex)
+        assertEquals(setOf("axiom.zf.paarmenge"), selbig.vorausgesetzteAxiomIds)
+        assertTrue("Selbigkeit" in selbig.hinweis)
     }
 
     @Test
-    fun `Ungleichheit ist die existentielle Gegenform der Gleichheitsdefinition`() {
-        val definition = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.ungleichheit"))
-        val formel = definition.definitionsFormel
-
-        assertEquals(
-            "a\\neq b\\Longleftrightarrow\\exists M\\left(\\operatorname{Menge}(M)\\land\\neg\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
-            formel.latex,
-        )
-        assertEquals(setOf("axiom.zf.paarmenge"), formel.vorausgesetzteAxiomIds)
+    fun `Ungleichheit negiert Inhalte und nicht Mitgliedschaft`() {
+        val formel = checkNotNull(RelationsOperatoren.vonIdOderNull("relation.ungleichheit")).definitionsFormel
+        assertEquals("a\\neq b\\Longleftrightarrow\\neg(a=b)", formel.latex)
+        assertTrue(formel.vorausgesetzteAxiomIds.isEmpty())
     }
 
     @Test

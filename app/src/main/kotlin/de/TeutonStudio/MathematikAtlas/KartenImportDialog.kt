@@ -2,6 +2,8 @@ package de.TeutonStudio.MathematikAtlas
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +26,8 @@ internal fun KartenImportDialog(zustand: AtlasZustand, schließen: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var adresse by remember { mutableStateOf("") }
-    var fehler by remember { mutableStateOf<String?>(null) }
+    var fehler by remember { mutableStateOf<String?>(zustand.speicher.importWiederherstellungsFehler.takeIf { it.isNotEmpty() }?.joinToString("\n")) }
+    var jsonText by remember { mutableStateOf("") }
     var lädt by remember { mutableStateOf(false) }
 
     fun importiere(laden: suspend () -> ByteArray) {
@@ -32,7 +35,7 @@ internal fun KartenImportDialog(zustand: AtlasZustand, schließen: () -> Unit) {
             lädt = true
             fehler = null
             runCatching { laden() }
-                .mapCatching { inhalt -> zustand.importiere(inhalt) }
+                .mapCatching { inhalt -> zustand.importiereImHintergrund(inhalt) }
                 .onSuccess { schließen() }
                 .onFailure { fehler = it.message ?: "Import fehlgeschlagen." }
             lädt = false
@@ -55,9 +58,22 @@ internal fun KartenImportDialog(zustand: AtlasZustand, schließen: () -> Unit) {
         onDismissRequest = { if (!lädt) schließen() },
         title = { Text("Karte oder Sammlung importieren") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                OutlinedTextField(
+                    value = jsonText,
+                    onValueChange = { jsonText = it },
+                    label = { Text("Karten-JSON oder Freigabepaket") },
+                    enabled = !lädt,
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 5,
+                )
+                Button(
+                    onClick = { importiere { jsonText.toByteArray(Charsets.UTF_8) } },
+                    enabled = jsonText.isNotBlank() && !lädt,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("JSON importieren") }
                 OutlinedButton(
-                    onClick = { datei.launch(arrayOf("application/json", "text/plain", KartenExportFormat.MATLAS.mimeType, "application/zip")) },
+                    onClick = { datei.launch(arrayOf("application/json", "text/plain", KartenExportFormat.MATLAS.mimeType, "application/zip", "application/octet-stream")) },
                     enabled = !lädt,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Datei auswählen") }

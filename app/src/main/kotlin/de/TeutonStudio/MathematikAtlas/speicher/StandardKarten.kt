@@ -25,6 +25,7 @@ data class InstallierteStandardKarte(
     val lokaleKartenId: KartenId,
     val installierterHash: String,
     val status: StandardKartenStatus,
+    val ordner: List<String> = emptyList(),
 )
 
 data class StandardKartenInstallationsBericht(
@@ -66,6 +67,7 @@ internal class StandardKartenProvenienzSpeicher(
         List(karten.length()) { index ->
             val eintrag = karten.getJSONObject(index)
             InstallierteStandardKarte(
+                ordner = eintrag.optJSONArray("ordner")?.zuStringListe().orEmpty(),
                 sourceId = eintrag.getString("sourceId"),
                 sourceVersion = eintrag.optString("sourceVersion", ""),
                 sourceHash = eintrag.optString("sourceHash", ""),
@@ -86,6 +88,7 @@ internal class StandardKartenProvenienzSpeicher(
             put("karten", JSONArray().apply {
                 einträge.sortedBy(InstallierteStandardKarte::sourceId).forEach { eintrag ->
                     put(JSONObject().apply {
+                        put("ordner", JSONArray(eintrag.ordner))
                         put("sourceId", eintrag.sourceId)
                         put("sourceVersion", eintrag.sourceVersion)
                         put("sourceHash", eintrag.sourceHash)
@@ -115,7 +118,9 @@ internal class StandardKartenInstaller(
         migriereUnveränderteLegacyBeispiele()
 
         val paket = lesePaket()
-        var status = provenienz.liste().associateByTo(linkedMapOf()) { it.sourceId }
+        var status = provenienz.liste().map { alt ->
+            if (alt.ordner.isEmpty()) alt.copy(ordner = paket.entries.firstOrNull { it.sourceId == alt.sourceId }?.folder.orEmpty()) else alt
+        }.associateByTo(linkedMapOf()) { it.sourceId }
         var bericht = StandardKartenInstallationsBericht()
 
         // Fehlende lokale Karten werden zu Tombstones. Nutzeränderungen werden anhand
@@ -205,6 +210,7 @@ internal class StandardKartenInstaller(
                 lokaleKartenId = gespeichert.id,
                 installierterHash = standardKartenInhaltsHash(gespeichert),
                 status = StandardKartenStatus.AKTIV,
+                ordner = eintrag.folder,
             )
 
             if (alt == null) {

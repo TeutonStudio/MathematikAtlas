@@ -1,5 +1,7 @@
 # v3 – Änderungsdokumentation
 
+Der gemeinsame, fortlaufende Implementierungs- und Nachweisstand steht in [V3_ALPHA_ABNAHME.md](V3_ALPHA_ABNAHME.md).
+
 Diese Datei ist die fortlaufende Anforderungsliste für den Versionsraum **v3.y.x** des Mathematik Atlas. Sie konkretisiert die langfristige `ROADMAP.md`, ohne bereits eine bestimmte Unterversion oder einen Implementierungsbranch vorwegzunehmen.
 
 Neue für v3 beschlossene Änderungen werden hier ergänzt, bevor sie in konkrete Releases und Implementierungspläne zerlegt werden.
@@ -636,23 +638,12 @@ Die Einordnung erfolgt daher explizit über eine UI-/Knotenklassifikation und ni
 
 #### Geometrie
 
-Als gemeinsame Adapterform wird ein **horizontal ausgerichtetes, an beiden Seiten abgeschrägtes Rechteck** verwendet, visuell also ein flaches Hexagon:
+Als gemeinsame Adapterform wird eine **kompakte, horizontal ausgerichtete Kapsel mit deutlich stärker abgerundeten Ecken** verwendet. Diese Produktentscheidung vom 11.10.2026 ersetzt die zuvor geplante Hexagonform.
 
-```
-    ____________
-   /            \
---<              >--
-   \____________/
-```
-
-Die Form vermittelt einen gerichteten Übergang von links nach rechts:
-
-- Eingänge liegen weiterhin an der linken Seite,
-- Ausgänge weiterhin an der rechten Seite,
-- die abgeschrägten Seiten markieren den Übergangscharakter,
-- obere und untere Kante bleiben weitgehend horizontal, damit Text und Formelinhalt genügend Platz besitzen.
-
-Die Form darf nicht wie eine Raute wirken, da eine Raute üblicherweise eine Entscheidung oder Verzweigung signalisiert. Ebenso soll sie nicht als bloße Pillenform umgesetzt werden, weil dies weiterhin wie ein stärker abgerundeter normaler Knoten wirken würde.
+- Eingänge liegen an der linken, Ausgänge an der rechten Kapselkontur.
+- Der Eckenradius beträgt die Hälfte der kürzeren Knotenseite; gewöhnliche Fachknoten behalten ihre üblichen Material-Ecken.
+- Die reduzierte Inhaltsfläche und starke Rundung kennzeichnen einen weniger eingreifenden Übersetzungsschritt.
+- Darstellung, Anschlusspositionen und Trefferflächen verwenden dieselbe Kapselgeometrie.
 
 #### Kompaktere Darstellung
 
@@ -732,14 +723,14 @@ Die gewählte Knotenform muss konsequent auf alle sichtbaren Schichten angewende
 - Hover-/Fokusdarstellung,
 - gegebenenfalls Schatten und Clip.
 
-Es darf nicht lediglich ein Hexagon in ein weiterhin sichtbares abgerundetes Rechteck gezeichnet werden. Der ganze Knoten muss tatsächlich die neue Silhouette besitzen. Die Menschheit hat bereits genug UI-Elemente, bei denen drei verschiedene Rahmen übereinander so tun, als seien sie Absicht.
+Der ganze Knoten besitzt die Kapselsilhouette; Rahmen und Treffergeometrie folgen derselben Kontur.
 
 #### Interaktion und Trefferfläche
 
 Die visuelle Form darf die Bedienbarkeit nicht verschlechtern.
 
 - Handles bleiben an ihren semantischen linken beziehungsweise rechten Positionen.
-- Die abgeschrägten Seiten müssen ausreichend Platz für Handle-Trefferflächen lassen.
+- Die gerundeten Seiten müssen ausreichend Platz für Handle-Trefferflächen lassen.
 - Knotenverschiebung, Auswahl, Kontextmenü und Inspector bleiben unverändert erreichbar.
 - Eine rechteckige interne Pointer-Trefferbox ist als erste Implementierung zulässig, solange sie nicht sichtbar über die Form hinausragt und keine benachbarten Knoten störend überlappt.
 - Langfristig kann die exakte Shape auch für Hit-Testing verwendet werden, falls dies messbar oder UX-seitig erforderlich ist.

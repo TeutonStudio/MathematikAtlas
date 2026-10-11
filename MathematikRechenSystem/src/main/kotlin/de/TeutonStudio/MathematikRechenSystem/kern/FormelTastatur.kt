@@ -126,28 +126,6 @@ object FormelTastatur {
         else -> FormelTastenKategorie.FUNKTIONEN
     }
 
-    private fun UniversellerZahlenOperator.formelRollen(): List<String> = when (this) {
-        UniversellerZahlenOperator.ADDITION,
-        UniversellerZahlenOperator.SUBTRAKTION,
-        UniversellerZahlenOperator.MULTIPLIKATION,
-        UniversellerZahlenOperator.MINIMUM,
-        UniversellerZahlenOperator.MAXIMUM,
-        -> listOf("a", "b")
-
-        UniversellerZahlenOperator.DIVISION -> listOf("zaehler", "nenner")
-        UniversellerZahlenOperator.POTENZ -> listOf("basis", "exponent")
-        UniversellerZahlenOperator.WURZEL -> listOf("radikand")
-        UniversellerZahlenOperator.LOGARITHMUS -> listOf("basis", "argument")
-        UniversellerZahlenOperator.ITERIERTE_SUMME,
-        UniversellerZahlenOperator.ITERIERTES_PRODUKT,
-        -> listOf("methode", "indexmenge")
-
-        UniversellerZahlenOperator.KOMPLEX_AUS_POLAR -> listOf("radius", "winkel")
-        UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH -> listOf("realteil", "imaginaerteil")
-        UniversellerZahlenOperator.MODULO -> listOf("dividend", "modul")
-        else -> listOf("argument")
-    }
-
     private fun UniversellerZahlenOperator.tastenBeschriftung(): String = when (this) {
         UniversellerZahlenOperator.ADDITION -> "+"
         UniversellerZahlenOperator.SUBTRAKTION -> "−"

@@ -142,8 +142,8 @@ class MengendefinitionKnotenTest {
         )
         val element = werteAus(konstruktor).ausgaben.getValue("element")
         val aussage = Disjunktion(listOf(
-            ElementBeziehung(element.objekt, MengenParameter("A")),
-            ElementBeziehung(element.objekt, MengenParameter("B")),
+            ElementBeziehung(element.mathematischesObjekt("Testelement"), MengenParameter("A")),
+            ElementBeziehung(element.mathematischesObjekt("Testelement"), MengenParameter("B")),
         ))
 
         val menge = werteAus(
@@ -163,7 +163,7 @@ class MengendefinitionKnotenTest {
         val erstes = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
         val zweites = erzeugeMengendefinitionsPaar(GraphPunkt.Zero)
         val fremdesElement = werteAus(zweites.konstruktor).ausgaben.getValue("element")
-        val aussage = Gleichheit(fremdesElement.objekt, RationaleZahl.Null)
+        val aussage = Gleichheit(fremdesElement.mathematischesObjekt("Testelement"), RationaleZahl.Null)
 
         val fehler = assertFailsWith<IllegalArgumentException> {
             werteAus(erstes.definator, mapOf("aussage" to fremdesElement.copy(objekt = aussage)))

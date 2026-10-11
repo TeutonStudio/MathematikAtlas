@@ -722,4 +722,29 @@ class ZertifizierteMengenVisualisierungTest {
             ) { throw java.util.concurrent.CancellationException("Testabbruch") }
         }
     }
+
+    @Test fun `Mandelbrot Standardkonfiguration begrenzt sichtbare Renderzellen`() {
+        val standard = config(RaumDimension.C, AchsenZuordnung("re", "im", null)).copy(
+            bereiche = AchsenBereiche(
+                ZahlenBereich(-2.2, 0.8),
+                ZahlenBereich(-1.5, 1.5),
+                ZahlenBereich(-10.0, 10.0),
+            ),
+            sampling = SamplingKonfiguration(
+                auflösung2D = 96,
+                auflösung3D = 22,
+                toleranz = 0.02,
+                auflösung1D = 160,
+                maximalesRasterBudget = 8_000,
+                maximaleOrbitSchritte = 256,
+            ),
+        )
+
+        val ergebnis = assertIs<VisualisierungsErgebnis.Teilweise>(
+            VisualisierungsSampler.sample(mandelbrotMenge(), standard),
+        )
+
+        assertTrue(ergebnis.statistik.auswertungen <= 4_000)
+        assertTrue(ergebnis.zellen.size <= 8_000)
+    }
 }

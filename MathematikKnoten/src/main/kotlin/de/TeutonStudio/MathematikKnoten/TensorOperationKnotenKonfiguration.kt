@@ -56,18 +56,8 @@ fun konfiguriereTensorOperation(
         vorhandeneAchsenIds(knoten).size
     }
     val gewuenscht = tensorOperationAnschluesse(definition, achsenModus, achsenAnzahl)
-    val bestehend = knoten.anschlüsse.groupBy { it.richtung to it.name }
-    val anschluesse = gewuenscht.map { neu ->
-        val kandidaten = anschlussAliasNamen(neu.name, definition).flatMap { alias ->
-            bestehend[neu.richtung to alias].orEmpty()
-        }
-        val alt = kandidaten.firstOrNull { es ->
-            es.art == neu.art ||
-                es.art == MathematikAnschlussArten.Objekt.id ||
-                neu.art == MathematikAnschlussArten.Objekt.id
-        }
-        if (alt == null) neu else neu.copy(id = alt.id)
-    }
+    val anschluesse = erhalteRechnerAnschlussIds(knoten.anschlüsse, gewuenscht, RechnerFamilie.TENSOR, definition.id.wert,
+        if (achsenModus == AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES && definition.benoetigtAchsenEingabe()) "einzelachsen" else "standard")
     val achsenIds = stabileAchsenIds(knoten, achsenAnzahl)
     return knoten.copy(
         name = definition.titel,
@@ -126,6 +116,8 @@ fun KartenDaten.migriereTensorOperationKnoten(): KartenDaten = copy(
 )
 
 private fun migriereBestehendenTensorRechner(knoten: KnotenDaten): KnotenDaten {
+    val gespeichert = knoten.parameter[TENSOR_OPERATION_ID] ?: knoten.parameter[LEGACY_TENSOR_OPERATOR]
+    if (gespeichert != null && StandardTensorOperationen.registry.definition(gespeichert) == null) return knoten
     val definition = aktuelleTensorOperationDefinition(knoten)
     val (achsenSpezifikation, migrationsFehler) = migriereLegacyAchsen(knoten, definition)
     val operationParameter = knoten.parameter[TENSOR_OPERATION_PARAMETER]
@@ -208,58 +200,18 @@ internal fun tensorOperationAnschluesse(
     definition: TensorOperationDefinition,
     achsenModus: AchsenEingabeModus,
     dynamischeAchsenAnzahl: Int,
-): List<AnschlussDaten> = buildList {
-    definition.eingangsRollen.forEachIndexed { index, rolle ->
-        add(
-            AnschlussDaten(
-                name = rolle.wert,
-                richtung = AnschlussRichtung.Eingang,
-                kante = AnschlussKante.Links,
-                art = eingangsArt(rolle),
-                reihenfolge = index,
-            ),
-        )
-    }
-    if (definition.benoetigtAchsenEingabe()) {
-        when (achsenModus) {
-            AchsenEingabeModus.TUPEL -> add(
-                AnschlussDaten(
-                    name = "achsen",
-                    richtung = AnschlussRichtung.Eingang,
-                    kante = AnschlussKante.Links,
-                    art = MathematikAnschlussArten.Tupel.id,
-                    reihenfolge = size,
-                ),
-            )
-            AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES -> {
-                val anzahl = dynamischeAchsenAnzahl.coerceAtLeast(definition.minimaleAchsenAnzahl)
-                repeat(anzahl) { index ->
-                    add(
-                        AnschlussDaten(
-                            name = "achse.${index + 1}",
-                            richtung = AnschlussRichtung.Eingang,
-                            kante = AnschlussKante.Links,
-                            art = MathematikAnschlussArten.Zahl.id,
-                            reihenfolge = size,
-                            dynamischErzeugt = index >= definition.minimaleAchsenAnzahl,
-                            kannSichErweitern = definition.maximaleAchsenAnzahl == null,
-                        ),
-                    )
-                }
-            }
-        }
-    }
-    definition.ausgangsRollen.forEachIndexed { index, rolle ->
-        add(
-            AnschlussDaten(
-                name = rolle.wert,
-                richtung = AnschlussRichtung.Ausgang,
-                kante = AnschlussKante.Rechts,
-                art = ausgangsArt(rolle),
-                reihenfolge = index,
-            ),
-        )
-    }
+): List<AnschlussDaten> {
+    val variante = if (definition.benoetigtAchsenEingabe() && achsenModus == AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES) "einzelachsen" else "standard"
+    val basis = rechnerAnschlüsse(RechnerFamilie.TENSOR, definition.id.wert, variante)
+    if (variante == "standard") return basis
+    val ohneAchsen = basis.filterNot { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("achse.") }
+    val eingänge = ohneAchsen.filter { it.richtung == AnschlussRichtung.Eingang }
+    val achsen = List(dynamischeAchsenAnzahl.coerceAtLeast(definition.minimaleAchsenAnzahl)) { index -> AnschlussDaten(
+        name = "achse.${index + 1}", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Zahl.id, reihenfolge = eingänge.size + index,
+        dynamischErzeugt = index >= definition.minimaleAchsenAnzahl, kannSichErweitern = definition.maximaleAchsenAnzahl == null,
+    ) }
+    return eingänge + achsen + ohneAchsen.filter { it.richtung == AnschlussRichtung.Ausgang }
 }
 
 private fun eingangsArt(rolle: TensorHandleRolle): AnschlussArtId = when (rolle.wert) {
@@ -271,17 +223,4 @@ private fun ausgangsArt(rolle: TensorHandleRolle): AnschlussArtId = when (rolle.
     "wert", "rang" -> MathematikAnschlussArten.Zahl.id
     "methode" -> MathematikAnschlussArten.Methode.id
     else -> MathematikAnschlussArten.Objekt.id
-}
-
-private fun anschlussAliasNamen(
-    name: String,
-    definition: TensorOperationDefinition,
-): List<String> = when {
-    name == "ergebnis" -> listOf("ergebnis", "wert")
-    name == "skalar" && definition.id.wert == TensorRechnerOperator.SKALARMULTIPLIKATION.stabileId ->
-        listOf("skalar", "links")
-    name == "tensor" && definition.id.wert == TensorRechnerOperator.SKALARMULTIPLIKATION.stabileId ->
-        listOf("tensor", "rechts")
-    name == "tensor" -> listOf("tensor", "links")
-    else -> listOf(name)
 }

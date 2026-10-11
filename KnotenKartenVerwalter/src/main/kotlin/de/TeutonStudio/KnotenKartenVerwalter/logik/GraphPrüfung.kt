@@ -11,11 +11,13 @@ sealed interface VerbindungsPrüfung {
 class GraphPrüfung(
     private val arten: AnschlussArtRegister,
     private val typSystem: TypSystem = legacyTypSystem(arten),
+    /** Fachliche Konfiguration wird außerhalb des neutralen Editors abgeleitet. */
+    private val anschlussAuflösung: (KartenDaten, AnschlussVerweis) -> AnschlussDaten? = { _, _ -> null },
 ) {
     fun prüfe(karte: KartenDaten, erster: AnschlussVerweis, zweiter: AnschlussVerweis): VerbindungsPrüfung {
         if (erster == zweiter) return VerbindungsPrüfung.Abgelehnt("Ein Anschluss kann nicht mit sich selbst verbunden werden.")
-        val a = karte.findeAnschluss(erster) ?: return VerbindungsPrüfung.Abgelehnt("Erster Anschluss fehlt.")
-        val b = karte.findeAnschluss(zweiter) ?: return VerbindungsPrüfung.Abgelehnt("Zweiter Anschluss fehlt.")
+        val a = aufgelösterAnschluss(karte, erster) ?: return VerbindungsPrüfung.Abgelehnt("Erster Anschluss fehlt.")
+        val b = aufgelösterAnschluss(karte, zweiter) ?: return VerbindungsPrüfung.Abgelehnt("Zweiter Anschluss fehlt.")
         val (ausgang, eingang) = richte(a, erster, b, zweiter)
             ?: return VerbindungsPrüfung.Abgelehnt("Die Anschlussrichtungen sind nicht kompatibel.")
 
@@ -65,8 +67,8 @@ class GraphPrüfung(
     }
 
     fun normalisiere(karte: KartenDaten, erster: AnschlussVerweis, zweiter: AnschlussVerweis): Pair<AnschlussVerweis, AnschlussVerweis>? {
-        val a = karte.findeAnschluss(erster) ?: return null
-        val b = karte.findeAnschluss(zweiter) ?: return null
+        val a = aufgelösterAnschluss(karte, erster) ?: return null
+        val b = aufgelösterAnschluss(karte, zweiter) ?: return null
         return richte(a, erster, b, zweiter)?.let { it.first.second to it.second.second }
     }
 
@@ -80,7 +82,7 @@ class GraphPrüfung(
         besucht: MutableSet<AnschlussVerweis>,
     ): AnschlussArtId {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return AnschlussArtId("unbekannt")
-        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return AnschlussArtId("unbekannt")
+        val anschluss = aufgelösterAnschluss(karte, ref) ?: return AnschlussArtId("unbekannt")
 
         anschluss.artAbbildungVonEingang?.let { regel ->
             if (!besucht.add(ref)) return anschluss.art
@@ -147,7 +149,9 @@ class GraphPrüfung(
         besucht: MutableSet<AnschlussVerweis>,
     ): TypAusdruck {
         val knoten = karte.knoten.firstOrNull { it.id == ref.knotenId } ?: return TypAusdruck.Unbekannt
-        val anschluss = knoten.anschlüsse.firstOrNull { it.id == ref.anschlussId } ?: return TypAusdruck.Unbekannt
+        val fachlich = anschlussAuflösung(karte, ref)
+        if (fachlich?.vertrag?.typ == TypAusdruck.Unbekannt) return TypAusdruck.Unbekannt
+        val anschluss = aufgelösterAnschluss(karte, ref) ?: return TypAusdruck.Unbekannt
         if (!besucht.add(ref)) return deklarierterTyp(karte, ref, anschluss)
 
         val inferiert = anschluss.typInferenz?.let { regel ->
@@ -259,9 +263,16 @@ class GraphPrüfung(
         else -> null
     }
 
+    private fun aufgelösterAnschluss(karte: KartenDaten, ref: AnschlussVerweis): AnschlussDaten? =
+        anschlussAuflösung(karte, ref) ?: karte.findeAnschluss(ref)
+
+    /** Auch erhaltene IDs können nach einer Konfiguration unvereinbare Verträge haben. */
+    fun inkompatibleVerbindungen(karte: KartenDaten): List<VerbindungDaten> =
+        karte.verbindungen.filterNot { istTypkompatibel(karte, it) }
+
     private fun istTypkompatibel(karte: KartenDaten, verbindung: VerbindungDaten): Boolean {
-        val von = karte.findeAnschluss(verbindung.von) ?: return false
-        val zu = karte.findeAnschluss(verbindung.zu) ?: return false
+        val von = aufgelösterAnschluss(karte, verbindung.von) ?: return false
+        val zu = aufgelösterAnschluss(karte, verbindung.zu) ?: return false
         val (_, eingang) = richte(von, verbindung.von, zu, verbindung.zu) ?: return false
         val ausgangsArt = effektiveArt(karte, verbindung.von)
         if (eingang.first.zulässigeArten.isNotEmpty() && eingang.first.zulässigeArten.none { erlaubt -> arten.istUnterart(ausgangsArt, erlaubt) }) return false

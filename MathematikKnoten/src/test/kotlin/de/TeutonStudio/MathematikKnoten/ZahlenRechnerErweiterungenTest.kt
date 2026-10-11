@@ -50,7 +50,7 @@ class ZahlenRechnerErweiterungenTest {
 
         val ausgabe = ergebnis.ausgaben.getValue("wert")
         val sichtbaresLatex = ausgabe.latexDarstellung.orEmpty()
-        val eingesetztesLatex = ausgabe.objekt.zuStrukturLatex()
+        val eingesetztesLatex = ausgabe.mathematischesObjekt("Testausgabe").zuStrukturLatex()
 
         assertTrue("x" in sichtbaresLatex)
         assertTrue("y" in sichtbaresLatex)
@@ -99,7 +99,7 @@ class ZahlenRechnerErweiterungenTest {
 
         val punktweise = assertIs<Methode>(ergebnis.ausgaben.getValue("wert").objekt)
         assertEquals(listOf("x"), punktweise.parameter.map { it.name })
-        assertTrue(punktweise.methodenSignatur().werteVorrat.zuLatex().contains("\\cos"))
+        assertTrue(punktweise.mathematischeMethodenSignatur().definitionsRaum.zuLatex().contains("\\cos"))
         assertTrue(ergebnis.warnungen.any { it.startsWith("Signatur:") })
     }
 }

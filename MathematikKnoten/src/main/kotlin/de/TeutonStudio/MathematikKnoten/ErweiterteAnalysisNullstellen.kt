@@ -14,6 +14,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.ableiten
+import de.TeutonStudio.MathematikRechenSystem.kern.alsMathematischeMethode
 import de.TeutonStudio.MathematikRechenSystem.kern.löseLinear
 import de.TeutonStudio.MathematikRechenSystem.kern.vereinfache
 import java.math.BigInteger
@@ -39,7 +40,9 @@ private fun KnotenAuswertungsKontext.exaktePotenzStellen(): KnotenAuswertungsErg
         )
     ) return null
 
-    val methode = eingänge["methode"]?.objekt as? Methode ?: return null
+    val methode = (eingänge["methode"]?.objekt as? Methode)
+        ?.let { runCatching { it.alsMathematischeMethode("exakte Analysis-Nullstellen") }.getOrNull() }
+        ?: return null
     val variable = methode.parameter.singleOrNull() as? Variable ?: return null
     val vorschrift = methode.vorschrift as? ZahlAusdruck ?: return null
     val erste = runCatching { vereinfache(ableiten(vorschrift, variable).ergebnis) }.getOrNull() ?: return null

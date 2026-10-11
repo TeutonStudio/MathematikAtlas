@@ -145,11 +145,13 @@ class KartenAuswerter(
         return ergebnis
     }
 
-    private fun anschlussAkzeptiertMethode(art: AnschlussArtId, objekt: MathematischesObjekt): Boolean {
+    private fun anschlussAkzeptiertMethode(art: AnschlussArtId, objekt: AtlasWert): Boolean {
         val methode = objekt as? Methode ?: return false
-        val ausgabe = runCatching { methode.vorschrift }.getOrNull() ?: return false
+        if (art.wert == "mathematik.methode" || art.wert == "mathematik.funktion") return true
+        val symbolisch = methode as? SymbolischMathematischeMethode ?: return false
+        val ausgabeName = symbolisch.ausgabeNamen.singleOrNull() ?: return false
+        val ausgabe = symbolisch.vorschriftFür(ausgabeName)
         return when (art.wert) {
-            "mathematik.methode", "mathematik.funktion" -> true
             "mathematik.funktion.zahl" -> ausgabe is ZahlAusdruck
             "mathematik.funktion.aussage" -> methode.istPrädikat()
             "mathematik.funktion.menge" -> ausgabe is MengenAusdruck
@@ -256,33 +258,34 @@ class KartenAuswerter(
             internErgebnis.knoten[ausgang.id]?.ausgaben?.get("wert")?.let { name to it }
         }.toMap(LinkedHashMap())
         if (!alsMethode) return KnotenAuswertungsErgebnis(werte)
-        if (ausgänge.isEmpty()) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Eine Kartenmethode benötigt mindestens einen öffentlichen Ausgang.")
         if (werte.size != ausgänge.size) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Nicht alle öffentlichen Kartenausgänge liefern einen Wert.")
 
         val geordneteWerte = ausgangsNamen.map { name ->
             name to requireNotNull(werte[name]) { "Für den Methodenausgang '$name' fehlt ein Wert." }
         }
-        val vorschrift = if (geordneteWerte.size == 1) {
-            geordneteWerte.single().second.objekt
-        } else {
-            Tupel(geordneteWerte.map { it.second.objekt })
+        val mathematischeAusgaben = linkedMapOf<String, MathematischesObjekt>()
+        val zielMengen = linkedMapOf<String, MengenAusdruck>()
+        geordneteWerte.forEach { (name, wert) ->
+            val objekt = wert.objekt as? MathematischesObjekt
+                ?: return KnotenAuswertungsErgebnis(
+                    emptyMap(),
+                    fehler = "Die mathematische Kartenausgabe '$name' liefert keinen mathematischen Wert.",
+                )
+            val ziel = wert.zielMenge
+                ?: return KnotenAuswertungsErgebnis(
+                    emptyMap(),
+                    fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.",
+                )
+            mathematischeAusgaben[name] = objekt
+            zielMengen[name] = ziel
         }
-        val zielMenge = if (geordneteWerte.size == 1) {
-            geordneteWerte.single().second.zielMenge
-                ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '${geordneteWerte.single().first}' fehlt die Zielmenge.")
-        } else {
-            Tupelraum(geordneteWerte.map { (name, wert) ->
-                wert.zielMenge
-                    ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.")
-            })
-        }
-        val methode = Methode(
+        @Suppress("DEPRECATION")
+        val methode = MathematischeMethode(
             name = methodenName?.trim().orEmpty().ifBlank { intern.name },
             parameter = freie.distinctBy { it.name },
-            vorschrift = vorschrift,
-            zielMenge = zielMenge,
+            ausgaben = mathematischeAusgaben,
+            zielMengen = zielMengen,
             werteVorräte = werteVorräte,
-            ausgabeNamen = ausgangsNamen,
         )
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, latexDarstellung = methode.name)))
     }
@@ -296,17 +299,32 @@ class KartenAuswerter(
         karte: KartenDaten,
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
     ): Map<String, BedingterWert> = buildMap {
+        val gebundeneIds = verbindungen.map { it.zu.anschlussId }.toSet()
         verbindungen.forEach { verbindung ->
-            val zielAnschluss = knoten.anschlüsse.firstOrNull { it.id == verbindung.zu.anschlussId } ?: return@forEach
-            val quellKnoten = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId } ?: return@forEach
-            val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId } ?: return@forEach
-            ergebnisse[quellKnoten.id]?.ausgaben?.get(quellAnschluss.name)?.let { put(zielAnschluss.name, it) }
+            val zielAnschluss = knoten.anschlüsse.firstOrNull { it.id == verbindung.zu.anschlussId }
+                ?: error("Eine Verbindung verweist auf einen fehlenden Eingang.")
+            val quellKnoten = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId }
+                ?: error("Die Quelle für '${zielAnschluss.name}' fehlt.")
+            val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId }
+                ?: error("Der Quellanschluss für '${zielAnschluss.name}' fehlt.")
+            val quelle = ergebnisse[quellKnoten.id]
+            val wert = quelle?.ausgaben?.get(quellAnschluss.name)
+                ?: error("Verbundener Eingang '${zielAnschluss.name}': ${quelle?.fehler ?: "Die Quelle liefert keinen Wert."}")
+            put(zielAnschluss.name, wert)
+        }
+        knoten.anschlüsse.filter {
+            it.richtung == AnschlussRichtung.Eingang && it.art == AUSSAGE_ART && it.id !in gebundeneIds
+        }.forEach { anschluss ->
+            val text = knoten.parameter[standardwertSchlüssel(anschluss.name)]
+            val wert = text?.toBooleanStrictOrNull() ?: if (text == null) false else
+                error("Standardwert für '${anschluss.name}' muss true oder false sein.")
+            put(anschluss.name, BedingterWert(WahrheitsKonstante(wert)))
         }
         knoten.anschlüsse
             .filter {
                 it.richtung == AnschlussRichtung.Eingang &&
                     (it.art == ZAHL_ART || ZAHL_ART in it.zulässigeArten) &&
-                    it.name !in this
+                    it.name !in this && it.id !in gebundeneIds
             }
             .forEach { anschluss ->
                 val text = knoten.parameter[standardwertSchlüssel(anschluss.name)]?.trim().orEmpty()
@@ -438,5 +456,6 @@ class KartenAuswerter(
         const val KONJUGIERTE = "mathematik.konjugierte"
         const val STANDARDWERT_PREFIX = "standardwert."
         val ZAHL_ART = AnschlussArtId("mathematik.zahl")
+        val AUSSAGE_ART = AnschlussArtId("mathematik.aussage")
     }
 }
