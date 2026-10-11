@@ -97,20 +97,23 @@ internal fun MathematikAuswerterRegister.registriereSkalarproduktErweiterungen()
         )
     }
 
-    registriere(VektorRechner.KNOTEN_ART) { kontext ->
+    registriere(VektorRechner.KNOTEN_ART, mitSkalarprodukt(bisherigerVektorRechner))
+}
+
+internal fun mitSkalarprodukt(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter = de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val operator = VektorRechnerOperator.entries.firstOrNull {
             it.stabileId == kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR]
         } ?: VektorRechnerOperator.SKALARPRODUKT
         if (operator != VektorRechnerOperator.SKALARPRODUKT) {
-            return@registriere bisherigerVektorRechner.auswerten(kontext)
+            return@MathematikKnotenAuswerter basis.auswerten(kontext)
         }
         kontext.werteSkalarproduktAus()
-    }
 }
 
+
 private fun KnotenAuswertungsKontext.werteSkalarproduktAus(): KnotenAuswertungsErgebnis {
-    val links = eingänge["links"]?.objekt ?: error("Der linke Vektor fehlt.")
-    val rechts = eingänge["rechts"]?.objekt ?: error("Der rechte Vektor fehlt.")
+    val links = mathematischerEingang("links", "Linker Skalarproduktoperand")
+    val rechts = mathematischerEingang("rechts", "Rechter Skalarproduktoperand")
     val linkeAnsicht = when (val ergebnis = links.numerischeKomponentenAnsicht()) {
         is StrukturPruefung.Gueltig -> ergebnis.wert
         is StrukturPruefung.Bedingt -> error(ergebnis.bedingungen.joinToString())

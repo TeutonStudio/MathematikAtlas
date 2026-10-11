@@ -28,7 +28,7 @@ class ZahlenRechnerPolynomTest {
             setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.Vektor.id),
             eingänge[0].zulässigeArten,
         )
-        assertEquals(MathematikAnschlussArten.Objekt.id, eingänge[1].art)
+        assertEquals(MathematikAnschlussArten.AtlasWert.id, eingänge[1].art)
         assertEquals(
             setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
             eingänge[1].zulässigeArten,

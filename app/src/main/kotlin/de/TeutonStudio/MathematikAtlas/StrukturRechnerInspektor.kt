@@ -64,6 +64,9 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
             mutableStateOf(ladeStrukturRechnerFormel(knoten) ?: strukturOperatorAlsFormel(operator))
         }
         val operatorEinträge = remember(knoten, familie) {
+            if (familie == StrukturRechnerKnotenFamilie.MATRIX || familie == StrukturRechnerKnotenFamilie.VEKTOR) {
+                rechnerOperatorEinträge(knoten, de.TeutonStudio.MathematikKnoten.RechnerFamilie.valueOf(familie.name))
+            } else
             buildList {
                 if (!formelModus && bekannterOperator == null && !operatorId.isNullOrBlank()) {
                     add(
@@ -258,7 +261,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                     operatorDialog = false
                 },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     formelKandidat = null
                     operatorDialog = false
                 },

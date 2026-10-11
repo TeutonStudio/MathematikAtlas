@@ -38,94 +38,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
         var formelKandidat by remember(knoten.id, operatorId) { mutableStateOf<KnotenDaten?>(null) }
-        val operatorEinträge = remember(knoten) {
-            val katalogNachId = RechnerFamilienKatalog.zahlenOperatoren.associateBy { it.stabileId }
-            buildList {
-                if (!formelModus && standardOperator == null && erweiterterOperator == null && !operatorId.isNullOrBlank()) {
-                    add(
-                        RechnerOperatorAuswahlEintrag(
-                            id = operatorId,
-                            titel = "Unbekannter gespeicherter Operator",
-                            symbolLatex = "?",
-                            kategorie = "Nicht verfügbar",
-                            beschreibung = "Die gespeicherte Operator-ID $operatorId ist nicht registriert.",
-                            art = RechnerOperatorAuswahlArt.UNBEKANNT,
-                        ),
-                    )
-                }
-                UniversellerZahlenOperator.entries
-                    .filterNot { it == UniversellerZahlenOperator.KOMPLEXER_RADIUS }
-                    .forEach { operator ->
-                        val kandidat = if (operator == UniversellerZahlenOperator.DIFFERENTIAL) {
-                            konfiguriereZahlenRechnerDifferential(
-                                knoten,
-                                ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
-                            )
-                        } else {
-                            konfiguriereStandardZahlenRechner(knoten, operator)
-                        }
-                        val nullDistanz = operator == UniversellerZahlenOperator.BETRAG
-                        add(
-                            RechnerOperatorAuswahlEintrag(
-                                id = operator.stabileId,
-                                titel = if (nullDistanz) "0-Distanz" else operator.titel,
-                                symbolLatex = if (nullDistanz) "d(0,\\dots)" else operator.vorschauLatex,
-                                kategorie = katalogNachId[operator.stabileId]?.kategorie ?: "Weitere Funktionen",
-                                beschreibung = if (nullDistanz) {
-                                    "Abstand eines Zahlwerts vom Nullelement; umfasst Betrag, komplexen Radius und Quaternionenradius."
-                                } else {
-                                    katalogNachId[operator.stabileId]
-                                        ?.signaturen
-                                        ?.mapNotNull { it.beschreibung }
-                                        ?.joinToString(" ")
-                                        ?.ifBlank { null }
-                                        ?: "Konfiguriert den Zahlenrechner für ${operator.titel}."
-                                },
-                                suchbegriffe = if (nullDistanz) {
-                                    setOf(
-                                        operator.name,
-                                        "Betrag",
-                                        "Absolutbetrag",
-                                        "0-Distanz",
-                                        "Abstand zu 0",
-                                        "komplexer Radius",
-                                        "Quaternionenradius",
-                                        "Radius",
-                                        "Modulus",
-                                    )
-                                } else {
-                                    setOf(operator.name)
-                                },
-                                kandidat = kandidat,
-                            ),
-                        )
-                    }
-                ErweiterterZahlenOperator.entries.forEach { operator ->
-                    add(
-                        RechnerOperatorAuswahlEintrag(
-                            id = operator.stabileId,
-                            titel = operator.titel,
-                            symbolLatex = operator.vorschauLatex,
-                            kategorie = erweiterteZahlenKategorie(operator),
-                            beschreibung = "Erweiterter Zahlenoperator ${operator.titel}.",
-                            suchbegriffe = setOf(operator.name),
-                            kandidat = konfiguriereErweitertenZahlenRechner(knoten, operator),
-                        ),
-                    )
-                }
-                add(
-                    RechnerOperatorAuswahlEintrag(
-                        id = ZAHLENRECHNER_FORMEL_ID,
-                        titel = "Eigene Formel",
-                        symbolLatex = "f(x)",
-                        kategorie = "Eigene Formeln",
-                        beschreibung = "Erstellt oder bearbeitet einen eigenen Zahlenausdruck im CAS-Formelbauer.",
-                        suchbegriffe = setOf("CAS", "Formelbauer"),
-                        art = RechnerOperatorAuswahlArt.FORMEL,
-                    ),
-                )
-            }
-        }
+        val operatorEinträge = remember(knoten) { rechnerOperatorEinträge(knoten, RechnerFamilie.ZAHL) }
         val dialogEinträge = operatorEinträge.map { eintrag ->
             if (eintrag.id == ZAHLENRECHNER_FORMEL_ID) {
                 eintrag.copy(kandidat = formelKandidat)
@@ -520,7 +433,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                     operatorDialog = false
                 },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     formelKandidat = null
                     operatorDialog = false
                 },

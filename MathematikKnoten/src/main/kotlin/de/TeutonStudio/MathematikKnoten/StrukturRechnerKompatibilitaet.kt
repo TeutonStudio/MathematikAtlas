@@ -7,12 +7,8 @@ import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner
  * Hält den historischen Vektorrechner-Ausgang `skalar` kompatibel, während
  * Strukturformeln den einheitlichen Ausgang `wert` verwenden.
  */
-internal fun MathematikAuswerterRegister.registriereStrukturRechnerKompatibilitaet() {
-    val basis = requireNotNull(finde(VektorRechner.KNOTEN_ART)) {
-        "Der Vektorrechner muss vor seiner Kompatibilitätsschicht registriert sein."
-    }
-
-    registriere(VektorRechner.KNOTEN_ART) { kontext ->
+internal fun mitVektorAusgangKompatibilität(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter =
+    de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val ergebnis = basis.auswerten(kontext)
         val wert = ergebnis.ausgaben["wert"]
             ?: ergebnis.ausgaben[VEKTOR_RECHNER_AUSGANG]
@@ -28,5 +24,6 @@ internal fun MathematikAuswerterRegister.registriereStrukturRechnerKompatibilita
                 ),
             )
         }
-    }
 }
+
+internal fun MathematikAuswerterRegister.registriereStrukturRechnerKompatibilitaet() { registriere(VektorRechner.KNOTEN_ART, mitVektorAusgangKompatibilität(requireNotNull(finde(VektorRechner.KNOTEN_ART)))) }

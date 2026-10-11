@@ -109,46 +109,19 @@ fun konfiguriereZahlenRechner(
     )
     return knoten.copy(
         name = zahlenRechnerNameFürWechsel(knoten, operator.titel),
-        anschlüsse = eingänge + ausgang,
+        anschlüsse = erhalteRechnerAnschlussIds(knoten.anschlüsse, eingänge + ausgang, RechnerFamilie.ZAHL, operator.stabileId,
+            if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"),
         parameter = parameter,
     )
 }
 
-private fun gewünschteZahlenRechnerEingänge(
-    operator: UniversellerZahlenOperator,
-    komplexEingabe: String,
-    festeEingänge: Int,
-): List<AnschlussDaten> = when {
-    operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL -> listOf(
-        eingang("tupel", MathematikAnschlussArten.Tupel.id),
-    )
-    operator in komplexKonstruktoren -> listOf(
-        zahlenOderMethodenEingang("a"),
-        zahlenOderMethodenEingang("b"),
-    )
-    operator == UniversellerZahlenOperator.ITERIERTE_SUMME ||
-        operator == UniversellerZahlenOperator.ITERIERTES_PRODUKT -> listOf(
-        eingang("methode", MathematikAnschlussArten.ZahlMethode.id),
-        eingang("indexmenge", MathematikAnschlussArten.Menge.id),
-    )
-    operator == UniversellerZahlenOperator.DIVISION -> listOf(
-        zahlenOderMethodenEingang("a"),
-        zahlenOderMethodenEingang("b"),
-        eingang("c", MathematikAnschlussArten.Zahl.id),
-    )
-    operator in variadischeZahlenOperatoren -> List(festeEingänge) { index ->
-        zahlenOderMethodenEingang(
-            name = ('a'.code + index).toChar().toString(),
-            erweiterbar = true,
-        )
-    }
-    operator in binaereZahlenOperatoren -> listOf(
-        zahlenOderMethodenEingang("a"),
-        zahlenOderMethodenEingang("b"),
-    )
-    operator.hebungsArt == ZahlenOperatorHebungsArt.PUNKTWEISE ->
-        listOf(zahlenOderMethodenEingang("a"))
-    else -> listOf(eingang("a", MathematikAnschlussArten.Zahl.id))
+private fun gewünschteZahlenRechnerEingänge(operator: UniversellerZahlenOperator, komplexEingabe: String, festeEingänge: Int): List<AnschlussDaten> {
+    val variant = if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"
+    val basis = rechnerAnschlüsse(RechnerFamilie.ZAHL, operator.stabileId, variant).filter { it.richtung == AnschlussRichtung.Eingang }
+    if (operator !in variadischeZahlenOperatoren) return basis
+    return List(festeEingänge) { index -> basis[minOf(index, basis.lastIndex)].copy(
+        id = neueAnschlussId(), name = ('a'.code + index).toChar().toString(), reihenfolge = index, dynamischErzeugt = index >= 2,
+    ) }
 }
 
 private fun zahlenOderMethodenEingang(
@@ -156,7 +129,7 @@ private fun zahlenOderMethodenEingang(
     erweiterbar: Boolean = false,
 ): AnschlussDaten = eingang(
     name = name,
-    art = MathematikAnschlussArten.Objekt.id,
+    art = MathematikAnschlussArten.AtlasWert.id,
     erweiterbar = erweiterbar,
     zulässigeArten = setOf(
         MathematikAnschlussArten.Zahl.id,

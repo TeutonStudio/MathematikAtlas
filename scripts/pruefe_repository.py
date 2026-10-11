@@ -19,6 +19,10 @@ if fehlt:
     print("Fehlende Dateien:", ", ".join(fehlt)); sys.exit(1)
 
 for xml in wurzel.rglob("*.xml"):
+    # Android-Lint legt auch binäre/fragmentarische Cachedateien mit .xml-Endung ab.
+    # Geprüft werden Repositoryquellen, keine erzeugten Build- oder Git-Artefakte.
+    if any(teil in {"build", ".gradle", ".git"} for teil in xml.relative_to(wurzel).parts):
+        continue
     ET.parse(xml)
 
 with zipfile.ZipFile(wurzel / "gradle/wrapper/gradle-wrapper.jar") as jar:

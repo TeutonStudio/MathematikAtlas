@@ -1,6 +1,8 @@
 package de.TeutonStudio.MathematikKnoten.katalog
 
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
+import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter
 import de.TeutonStudio.MathematikKartenAdapter.registriereMethodenArgumente
 import de.TeutonStudio.MathematikKnoten.*
 
@@ -89,5 +91,37 @@ object StandardMathematikAuswerterPakete {
 
     fun installiereIn(register: MathematikAuswerterRegister) {
         alle.forEach { paket -> paket.installiereIn(register) }
+        installiereKanonischeRechnerDispatcher(register)
+    }
+}
+
+private fun installiereKanonischeRechnerDispatcher(register: MathematikAuswerterRegister) {
+    // Explizite Komposition: spätere Paketregistrierungen können keinen Fachkern auswählen.
+    val fachauswerterNachFamilie = mapOf(
+        RechnerFamilie.ZAHL to mitNullDistanz(mitZahlenDifferential(mitStrukturierterDivision(mitZahlenErweiterungen(universellerZahlenFachauswerter)))),
+        RechnerFamilie.VEKTOR to mitRechnerMethodenHebung(mitVektorAusgangKompatibilität(strukturFormelFachauswerter(StrukturRechnerKnotenFamilie.VEKTOR, mitSkalarprodukt(vektorFachauswerter)))),
+        RechnerFamilie.MATRIX to mitRechnerMethodenHebung(strukturFormelFachauswerter(StrukturRechnerKnotenFamilie.MATRIX)),
+        RechnerFamilie.TENSOR to mitRechnerMethodenHebung(strukturFormelFachauswerter(StrukturRechnerKnotenFamilie.TENSOR, tensorFachauswerter)),
+    )
+    RechnerFamilie.entries.forEach { familie ->
+        val fachauswerter = fachauswerterNachFamilie.getValue(familie)
+        register.registriere(familie.knotenArt, MathematikKnotenAuswerter { kontext ->
+            val standardId = when (familie) {
+                RechnerFamilie.ZAHL -> de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator.ADDITION.stabileId
+                RechnerFamilie.VEKTOR -> de.TeutonStudio.MathematikRechenSystem.kern.VektorRechnerOperator.ADDITION.stabileId
+                RechnerFamilie.MATRIX -> StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).first().id
+                RechnerFamilie.TENSOR -> de.TeutonStudio.MathematikRechenSystem.kern.TensorRechnerOperator.TENSORPRODUKT.stabileId
+            }
+            val gespeichert = kontext.knoten.parameter[familie.operatorParameter]
+                ?: (if (familie == RechnerFamilie.TENSOR) kontext.knoten.parameter["operator"] else null)
+            val operatorId = gespeichert ?: standardId
+            when (RechnerOperatorRegistry.finde(familie, operatorId)) {
+                is RechnerOperatorAuflösung.Bekannt -> fachauswerter.auswerten(kontext)
+                is RechnerOperatorAuflösung.Unbekannt -> KnotenAuswertungsErgebnis(
+                    ausgaben = emptyMap(),
+                    fehler = "Unbekannter ${familie.name.lowercase()}-Operator '$operatorId'. Die gespeicherte ID bleibt erhalten.",
+                )
+            }
+        })
     }
 }

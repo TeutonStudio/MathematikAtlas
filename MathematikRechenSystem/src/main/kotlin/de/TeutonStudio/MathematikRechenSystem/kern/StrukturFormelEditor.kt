@@ -88,86 +88,14 @@ object StrukturFormelTastatur {
             argument("links", FormelTyp.AUSSAGE), argument("rechts", FormelTyp.AUSSAGE)),
     )
 
-    private val vektor = listOf(
-        taste("vektor-plus", "+", StrukturFormelKategorie.VEKTOR, "vektor.addition", FormelTyp.VEKTOR,
-            argument("a", FormelTyp.VEKTOR), argument("b", FormelTyp.VEKTOR)),
-        taste("vektor-minus", "−", StrukturFormelKategorie.VEKTOR, "vektor.subtraktion", FormelTyp.VEKTOR,
-            argument("links", FormelTyp.VEKTOR), argument("rechts", FormelTyp.VEKTOR)),
-        taste("vektor-skalar", "s·v", StrukturFormelKategorie.VEKTOR, "vektor.skalarmultiplikation", FormelTyp.VEKTOR,
-            argument("skalar", FormelTyp.ZAHL), argument("vektor", FormelTyp.VEKTOR)),
-        taste("vektor-negation", "−v", StrukturFormelKategorie.VEKTOR, "vektor.negation", FormelTyp.VEKTOR,
-            argument("vektor", FormelTyp.VEKTOR)),
-        taste("vektor-skalarprodukt", "⟨u,v⟩", StrukturFormelKategorie.VEKTOR, "vektor.skalarprodukt", FormelTyp.ZAHL,
-            argument("links", FormelTyp.VEKTOR), argument("rechts", FormelTyp.VEKTOR)),
-        taste("vektor-kreuzprodukt", "u×v", StrukturFormelKategorie.VEKTOR, "vektor.kreuzprodukt", FormelTyp.VEKTOR,
-            argument("links", FormelTyp.VEKTOR), argument("rechts", FormelTyp.VEKTOR)),
-        taste("vektor-norm", "‖v‖", StrukturFormelKategorie.VEKTOR, "vektor.norm", FormelTyp.ZAHL,
-            argument("vektor", FormelTyp.VEKTOR)),
-        taste("vektor-normalisierung", "v/‖v‖", StrukturFormelKategorie.VEKTOR, "vektor.normalisierung", FormelTyp.VEKTOR,
-            argument("vektor", FormelTyp.VEKTOR)),
-        taste("vektor-hadamard", "u∘v", StrukturFormelKategorie.VEKTOR, "vektor.hadamard", FormelTyp.VEKTOR,
-            argument("links", FormelTyp.VEKTOR), argument("rechts", FormelTyp.VEKTOR)),
-        taste("vektor-projektion", "proj", StrukturFormelKategorie.VEKTOR, "vektor.projektion", FormelTyp.VEKTOR,
-            argument("vektor", FormelTyp.VEKTOR), argument("ziel", FormelTyp.VEKTOR)),
-        taste("vektor-winkel", "∠", StrukturFormelKategorie.VEKTOR, "vektor.winkel", FormelTyp.ZAHL,
-            argument("links", FormelTyp.VEKTOR), argument("rechts", FormelTyp.VEKTOR)),
-    )
-
-    private val matrix = listOf(
-        taste("matrix-plus", "+", StrukturFormelKategorie.MATRIX, "matrix.addition", FormelTyp.MATRIX,
-            argument("a", FormelTyp.MATRIX), argument("b", FormelTyp.MATRIX)),
-        taste("matrix-minus", "−", StrukturFormelKategorie.MATRIX, "matrix.subtraktion", FormelTyp.MATRIX,
-            argument("links", FormelTyp.MATRIX), argument("rechts", FormelTyp.MATRIX)),
-        taste("matrix-skalar", "s·A", StrukturFormelKategorie.MATRIX, "matrix.skalarmultiplikation", FormelTyp.MATRIX,
-            argument("skalar", FormelTyp.ZAHL), argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-produkt", "AB", StrukturFormelKategorie.MATRIX, "matrix.produkt", FormelTyp.MATRIX,
-            argument("links", FormelTyp.MATRIX), argument("rechts", FormelTyp.MATRIX)),
-        taste("matrix-hadamard", "A∘B", StrukturFormelKategorie.MATRIX, "matrix.hadamard", FormelTyp.MATRIX,
-            argument("links", FormelTyp.MATRIX), argument("rechts", FormelTyp.MATRIX)),
-        taste("matrix-vektor", "Av", StrukturFormelKategorie.MATRIX, "matrix.vektorProdukt", FormelTyp.VEKTOR,
-            argument("matrix", FormelTyp.MATRIX), argument("vektor", FormelTyp.VEKTOR)),
-        taste("matrix-transponieren", "Aᵀ", StrukturFormelKategorie.MATRIX, "matrix.transponieren", FormelTyp.MATRIX,
-            argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-inverse", "A⁻¹", StrukturFormelKategorie.MATRIX, "matrix.inverse", FormelTyp.MATRIX,
-            argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-potenz", "Aⁿ", StrukturFormelKategorie.MATRIX, "matrix.potenz", FormelTyp.MATRIX,
-            argument("matrix", FormelTyp.MATRIX), argument("exponent", FormelTyp.ZAHL)),
-        taste("matrix-determinante", "det", StrukturFormelKategorie.MATRIX, "matrix.determinante", FormelTyp.ZAHL,
-            argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-spur", "tr", StrukturFormelKategorie.MATRIX, "matrix.spur", FormelTyp.ZAHL,
-            argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-rang", "rang", StrukturFormelKategorie.MATRIX, "matrix.rang", FormelTyp.ZAHL,
-            argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-hauptdiagonale", "diag", StrukturFormelKategorie.MATRIX, "matrix.hauptdiagonale", FormelTyp.TUPEL,
-            argument("matrix", FormelTyp.MATRIX)),
-        taste("matrix-nebendiagonale", "anti-diag", StrukturFormelKategorie.MATRIX, "matrix.nebendiagonale", FormelTyp.TUPEL,
-            argument("matrix", FormelTyp.MATRIX)),
-    )
-
-    private val tensor = listOf(
-        taste("tensor-plus", "+", StrukturFormelKategorie.TENSOR, "tensor.addition", FormelTyp.TENSOR,
-            argument("a", FormelTyp.TENSOR), argument("b", FormelTyp.TENSOR)),
-        taste("tensor-minus", "−", StrukturFormelKategorie.TENSOR, "tensor.subtraktion", FormelTyp.TENSOR,
-            argument("links", FormelTyp.TENSOR), argument("rechts", FormelTyp.TENSOR)),
-        taste("tensor-skalar", "s·T", StrukturFormelKategorie.TENSOR, "tensor.skalarmultiplikation", FormelTyp.TENSOR,
-            argument("skalar", FormelTyp.ZAHL), argument("tensor", FormelTyp.TENSOR)),
-        taste("tensor-hadamard", "A∘B", StrukturFormelKategorie.TENSOR, "tensor.hadamard", FormelTyp.TENSOR,
-            argument("links", FormelTyp.TENSOR), argument("rechts", FormelTyp.TENSOR)),
-        taste("tensor-produkt", "A⊗B", StrukturFormelKategorie.TENSOR, "tensor.tensorprodukt", FormelTyp.TENSOR,
-            argument("links", FormelTyp.TENSOR), argument("rechts", FormelTyp.TENSOR)),
-        taste("tensor-kontraktion", "kontr", StrukturFormelKategorie.TENSOR, "tensor.kontraktion", FormelTyp.TENSOR,
-            argument("tensor", FormelTyp.TENSOR)),
-        taste("tensor-permutation", "perm", StrukturFormelKategorie.TENSOR, "tensor.achsenpermutation", FormelTyp.TENSOR,
-            argument("tensor", FormelTyp.TENSOR)),
-        taste("tensor-transponieren", "Tᵀ", StrukturFormelKategorie.TENSOR, "tensor.transponieren", FormelTyp.TENSOR,
-            argument("tensor", FormelTyp.TENSOR)),
-        taste("tensor-schnitt", "Achse", StrukturFormelKategorie.TENSOR, "tensor.achsenschnitt", FormelTyp.TENSOR,
-            argument("tensor", FormelTyp.TENSOR)),
-        taste("tensor-index", "Tᵢ", StrukturFormelKategorie.TENSOR, "tensor.indexauswertung", FormelTyp.ZAHL,
-            argument("tensor", FormelTyp.TENSOR)),
-        taste("tensor-norm", "‖T‖", StrukturFormelKategorie.TENSOR, "tensor.norm", FormelTyp.ZAHL,
-            argument("tensor", FormelTyp.TENSOR)),
-    )
+    private fun ausQuelle(familie: OperatorFamilie, kategorie: StrukturFormelKategorie) =
+        RechnerOperatorDefinitionen.fürFamilie(familie).filter { it.formelFamilie == familie && it.formelArgumente.isNotEmpty() }.map { d ->
+            StrukturFormelTaste(d.id, d.symbolLatex, kategorie, d.id, d.formelErgebnisTyp,
+                d.formelArgumente.map { StrukturFormelArgumentTyp(it.name, it.typ) })
+        }
+    private val vektor = ausQuelle(OperatorFamilie.VEKTOR, StrukturFormelKategorie.VEKTOR)
+    private val matrix = ausQuelle(OperatorFamilie.MATRIX, StrukturFormelKategorie.MATRIX)
+    private val tensor = ausQuelle(OperatorFamilie.TENSOR, StrukturFormelKategorie.TENSOR)
 
     fun fuer(familie: StrukturFormelFamilie): List<StrukturFormelTaste> = when (familie) {
         StrukturFormelFamilie.AUSSAGESATZ -> aussage

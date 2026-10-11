@@ -17,7 +17,7 @@ data class KnotenErsetzungsAuswirkung(
         get() = entfallendeVerbindungen.isNotEmpty()
 }
 
-fun KartenDaten.vorschauKnotenErsetzen(neuerKnoten: KnotenDaten): KnotenErsetzungsAuswirkung {
+fun KartenDaten.vorschauKnotenErsetzen(neuerKnoten: KnotenDaten, prüfung: GraphPrüfung? = null): KnotenErsetzungsAuswirkung {
     val bisherigerKnoten = knoten.firstOrNull { it.id == neuerKnoten.id }
         ?: return KnotenErsetzungsAuswirkung(
             erhalteneAnschlüsse = emptyList(),
@@ -29,13 +29,18 @@ fun KartenDaten.vorschauKnotenErsetzen(neuerKnoten: KnotenDaten): KnotenErsetzun
     val neueIds = neuerKnoten.anschlüsse.mapTo(linkedSetOf(), AnschlussDaten::id)
     val entfallendeIds = bisherigeIds - neueIds
 
+    val entfernte = verbindungen.filter { it.verweistAuf(neuerKnoten, entfallendeIds) }
+    val kandidat = copy(
+        knoten = knoten.map { if (it.id == neuerKnoten.id) neuerKnoten else it },
+        verbindungen = verbindungen - entfernte.toSet(),
+    )
+    val vorherUngültig = prüfung?.inkompatibleVerbindungen(this)?.map { it.id }.orEmpty().toSet()
+    val neuUngültig = prüfung?.inkompatibleVerbindungen(kandidat).orEmpty().filter { it.id !in vorherUngültig }
     return KnotenErsetzungsAuswirkung(
         erhalteneAnschlüsse = neuerKnoten.anschlüsse.filter { it.id in bisherigeIds },
         hinzugefügteAnschlüsse = neuerKnoten.anschlüsse.filter { it.id !in bisherigeIds },
         entfallendeAnschlüsse = bisherigerKnoten.anschlüsse.filter { it.id !in neueIds },
-        entfallendeVerbindungen = verbindungen.filter { verbindung ->
-            verbindung.verweistAuf(neuerKnoten, entfallendeIds)
-        },
+        entfallendeVerbindungen = (entfernte + neuUngültig).distinctBy { it.id },
     )
 }
 

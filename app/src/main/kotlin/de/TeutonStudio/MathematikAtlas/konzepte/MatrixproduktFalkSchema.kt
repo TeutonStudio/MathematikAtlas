@@ -47,8 +47,8 @@ internal fun matrixproduktFalkDaten(
     }
 }
 
-private fun MathematischesObjekt.alsMatrixFaktorOderNull(): Matrix? =
-    runCatching { alsMatrixFaktor() }.getOrNull()
+private fun de.TeutonStudio.MathematikRechenSystem.kern.AtlasWert.alsMatrixFaktorOderNull(): Matrix? =
+    (this as? MathematischesObjekt)?.let { runCatching { it.alsMatrixFaktor() }.getOrNull() }
 
 internal fun standardFalkDaten(): MatrixproduktFalkDaten {
     fun z(wert: Long) = RationaleZahl.von(wert)

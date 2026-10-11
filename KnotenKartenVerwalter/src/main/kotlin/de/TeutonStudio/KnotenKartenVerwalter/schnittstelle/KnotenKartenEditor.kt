@@ -11,6 +11,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -774,7 +775,12 @@ private fun KnotenDarstellung(
     editorUrsprungImRoot: Offset,
 ) {
     val zoom = zustand.karte.ansicht.zoom
+    val fußzeilenHöhe = with(LocalDensity.current) { MaterialTheme.typography.labelSmall.lineHeight.toDp() }
+        .plus(8.dp).coerceAtLeast(18.dp)
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
+    val knotenForm = if (knoten.darstellungsForm == KnotenDarstellungsForm.Adapter)
+        RoundedCornerShape(adapterEckenRadius(knoten.größe.breite, knoten.größe.höhe).dp)
+    else MaterialTheme.shapes.medium
     val bildschirmPosition = weltZuBildschirm(knoten.position, dichte, ansicht)
     Box(
         Modifier.offset { IntOffset(bildschirmPosition.x.roundToInt(), bildschirmPosition.y.roundToInt()) }
@@ -787,7 +793,7 @@ private fun KnotenDarstellung(
     ) {
         Card(
             Modifier.fillMaxSize()
-                .border(if (ausgewählt) 3.dp else 1.dp, if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                .border(if (ausgewählt) 3.dp else 1.dp, if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, knotenForm)
                 .pointerHoverIcon(PointerIcon.Hand)
                 .semantics {
                     contentDescription = "Knoten ${knoten.name}, ${knoten.anschlüsse.size} Anschlüsse"
@@ -809,7 +815,7 @@ private fun KnotenDarstellung(
                 .pointerInput(knoten.id, zoom) {
                     detectDragGestures(
                         onDragStart = { start ->
-                            ziehbar = renderer.interaktionsModus == KnotenInteraktionsModus.GanzeFlächeZiehbar || start.y <= KOPFZEILE_HÖHE_DP * density
+                            ziehbar = knoten.enthältRelativenPunkt(GraphPunkt(start.x / density, start.y / density)) && (renderer.interaktionsModus == KnotenInteraktionsModus.GanzeFlächeZiehbar || start.y <= KOPFZEILE_HÖHE_DP * density)
                             if (ziehbar) {
                                 if (knoten.id !in zustand.ausgewählteKnoten) zustand.wähleKnoten(knoten.id, auswahlÄnderung)
                                 zustand.beginneInteraktion()
@@ -847,6 +853,7 @@ private fun KnotenDarstellung(
                         onDoubleTap = { beiDoppelklick() },
                     )
                 },
+            shape = knotenForm,
             elevation = CardDefaults.cardElevation(if (ausgewählt) 8.dp else 2.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
@@ -860,9 +867,9 @@ private fun KnotenDarstellung(
         Box(
             Modifier
                 .align(Alignment.BottomStart)
-                .offset(y = 22.dp)
+                .offset(y = fußzeilenHöhe + 4.dp)
                 .fillMaxWidth()
-                .height(18.dp)
+                .height(fußzeilenHöhe)
                 .then(
                     if (ausgewählt) {
                         Modifier.border(3.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
@@ -1042,16 +1049,9 @@ private fun BoxScope.AnschlussGriff(
     val sichtbareGröße = ANSCHLUSS_SICHTBAR_GRÖSSE_DP / zoom
     val interaktionsHalbe = interaktionsGröße / 2f
     val ausrichtung = Alignment.TopStart
-    val x = when (anschluss.kante) {
-        AnschlussKante.Links -> (-interaktionsHalbe).dp
-        AnschlussKante.Rechts -> (knoten.größe.breite - interaktionsHalbe).dp
-        AnschlussKante.Oben, AnschlussKante.Unten -> (knoten.größe.breite * anteil - interaktionsHalbe).dp
-    }
-    val y = when (anschluss.kante) {
-        AnschlussKante.Oben -> (-interaktionsHalbe).dp
-        AnschlussKante.Unten -> (knoten.größe.höhe - interaktionsHalbe).dp
-        AnschlussKante.Links, AnschlussKante.Rechts -> (knoten.größe.höhe * anteil - interaktionsHalbe).dp
-    }
+    val relativ = knoten.anschlussPositionRelativ(anschluss)
+    val x = (relativ.x - interaktionsHalbe).dp
+    val y = (relativ.y - interaktionsHalbe).dp
     val ref = AnschlussVerweis(knoten.id, anschluss.id)
     val kompatibel = zustand.kompatibelMitStart(ref)
     val eingerastet = magnetischesZiel == ref
@@ -1220,31 +1220,17 @@ private fun MehrfarbenAnschluss(
     }
 }
 
-private fun anschlussPositionWelt(knoten: KnotenDaten, anschluss: AnschlussDaten): GraphPunkt {
-    val aufKante = knoten.anschlüsse.filter { it.kante == anschluss.kante }.sortedBy { it.reihenfolge }
-    val index = aufKante.indexOfFirst { it.id == anschluss.id }.coerceAtLeast(0)
-    val anteil = (index + 1f) / (aufKante.size + 1f)
-    val x = when (anschluss.kante) {
-        AnschlussKante.Links -> knoten.position.x
-        AnschlussKante.Rechts -> knoten.position.x + knoten.größe.breite
-        AnschlussKante.Oben, AnschlussKante.Unten -> knoten.position.x + knoten.größe.breite * anteil
-    }
-    val y = when (anschluss.kante) {
-        AnschlussKante.Oben -> knoten.position.y
-        AnschlussKante.Unten -> knoten.position.y + knoten.größe.höhe
-        AnschlussKante.Links, AnschlussKante.Rechts -> knoten.position.y + knoten.größe.höhe * anteil
-    }
-    return GraphPunkt(x, y)
-}
+private fun anschlussPositionWelt(knoten: KnotenDaten, anschluss: AnschlussDaten): GraphPunkt =
+    knoten.position + knoten.anschlussPositionRelativ(anschluss)
 
 private fun trifftKnoten(position: Offset, karte: KartenDaten, ansicht: AnsichtsFenster, dichte: Float): Boolean {
-    val rand = 18f * dichte
+    val faktor = (dichte * ansicht.zoom).coerceAtLeast(.0001f)
     return karte.knoten.any { knoten ->
-        val links = ansicht.verschiebung.x + knoten.position.x * dichte * ansicht.zoom - rand
-        val oben = ansicht.verschiebung.y + knoten.position.y * dichte * ansicht.zoom - rand
-        val rechts = links + knoten.größe.breite * dichte * ansicht.zoom + 2 * rand
-        val unten = oben + knoten.größe.höhe * dichte * ansicht.zoom + 2 * rand
-        position.x in links..rechts && position.y in oben..unten
+        val relativ = GraphPunkt(
+            (position.x - ansicht.verschiebung.x) / faktor - knoten.position.x,
+            (position.y - ansicht.verschiebung.y) / faktor - knoten.position.y,
+        )
+        knoten.enthältRelativenPunkt(relativ, 18f * dichte / faktor)
     }
 }
 

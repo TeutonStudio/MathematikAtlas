@@ -40,14 +40,17 @@ object RelationsDefinitionsFormeln {
 
     private val nachId: Map<String, RelationsDefinitionsFormel> = mapOf(
         "relation.gleichheit" to formel(
-            "a=b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
+            "a=b\\Longleftrightarrow\\operatorname{Inhaltsgleich}(a,b)",
+            hinweis = "Rekursive Inhaltsgleichheit: Tupel, Zeile und Spalte teilen eine geordnete Inhaltsfamilie; Mengen vergleichen Inhalte ungeordnet. Matrixformen bleiben erhalten.",
+        ),
+        "relation.selbigkeit" to formel(
+            "a\\stackrel{?}{=}b\\Longleftrightarrow\\forall M\\left(\\operatorname{Menge}(M)\\Rightarrow\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
             "axiom.zf.paarmenge",
-            hinweis = "Menge(M) ist die Typbedingung, dass M eine Menge ist. Die Rückrichtung benutzt die durch das Paarmengenaxiom verfügbare Einzelmenge {a}.",
+            hinweis = "Typisierte rekursive Elementidentität. Die Rückrichtung verwendet die Einzelmenge {a}; endliche Mitgliedschaft vergleicht über Selbigkeit.",
         ),
         "relation.ungleichheit" to formel(
-            "a\\neq b\\Longleftrightarrow\\exists M\\left(\\operatorname{Menge}(M)\\land\\neg\\left(a\\in M\\Leftrightarrow b\\in M\\right)\\right)",
-            "axiom.zf.paarmenge",
-            hinweis = "Die Ungleichheit ist die Negation der Gleichheit; äquivalent existiert eine Menge, die genau eines der beiden Objekte enthält.",
+            "a\\neq b\\Longleftrightarrow\\neg(a=b)",
+            hinweis = "Negation der Inhaltsgleichheit, unabhängig von typisierter Elementidentität.",
         ),
         "relation.kleiner" to formel(
             latex = "a<b\\Longleftrightarrow\\exists c\\in\\mathbb{R}\\setminus\\{0\\}:\\;a+c^2=b",

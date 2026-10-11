@@ -72,13 +72,8 @@ fun KartenDaten.migriereStrukturierteDivision(): KartenDaten = copy(
  * dessen Divisionszweig. Alle anderen Operatoren, einschließlich später ergänzter
  * Zustände, bleiben beim vorhandenen Auswerter.
  */
-internal fun MathematikAuswerterRegister.registriereStrukturierteDivision() {
-    val basis = requireNotNull(finde(ZAHLENRECHNER_ART)) {
-        "Der universelle Zahlenrechner muss vor der strukturierten Division registriert sein."
-    }
-    registriere(
-        ZAHLENRECHNER_ART,
-        MathematikKnotenAuswerter { kontext ->
+internal fun mitStrukturierterDivision(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter =
+    de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
             val operator = UniversellerZahlenOperator.vonIdOderNull(
                 kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR],
             )
@@ -87,9 +82,10 @@ internal fun MathematikAuswerterRegister.registriereStrukturierteDivision() {
             } else {
                 basis.auswerten(kontext)
             }
-        },
-    )
 }
+
+internal fun MathematikAuswerterRegister.registriereStrukturierteDivision() { registriere(ZAHLENRECHNER_ART, mitStrukturierterDivision(requireNotNull(finde(ZAHLENRECHNER_ART)))) }
+
 
 private fun werteStrukturierteDivisionAus(
     basis: MathematikKnotenAuswerter,

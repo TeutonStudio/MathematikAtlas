@@ -4,6 +4,7 @@ import android.content.Context
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MathematikKartenCodec
 import de.TeutonStudio.MathematikKnoten.MathematikKartenMigrationen
+import de.TeutonStudio.MathematikKnoten.MatlasKartenContainer
 import org.json.JSONObject
 import java.io.File
 
@@ -19,6 +20,11 @@ class KartenSpeicher(private val context: Context) {
     private val papierkorbSpeicher = PapierkorbSpeicher(context)
     private val ordnungsSpeicher = KartenOrdnungSpeicher(context)
     private val freigabeQuellenSpeicher = FreigabeQuellenSpeicher(context)
+    private val herkunftSpeicher = KartenHerkunftSpeicher(context)
+    private val herkunftAuflösung = KartenHerkunftAuflösung(context)
+    private val importTransaktionen = KartenImportTransaktionen(basis)
+
+    val importWiederherstellungsFehler: List<String> get() = importTransaktionen.wiederherstellungsFehler.toList()
 
     init {
         kartenOrdner.mkdirs()
@@ -42,7 +48,7 @@ class KartenSpeicher(private val context: Context) {
         dateiFür(verweis.kartenId, verweis.version),
     )
 
-    fun ladeAktuell(id: KartenId): KartenDaten? = File(kartenOrdner, id.wert)
+    fun ladeAktuell(id: KartenId): KartenDaten? = kartenOrdnerFür(id)
         .listFiles { f -> f.name.matches(Regex("v\\d+\\.json")) }
         .orEmpty()
         .sortedByDescending(::versionAusDatei)
@@ -64,13 +70,41 @@ class KartenSpeicher(private val context: Context) {
         return zuSpeichern
     }
 
-    fun importiere(text: String): KartenDaten = if (KartenFreigabePaket.istFreigabePaket(text)) {
-        importierePaket(text)
-    } else {
-        val gelesen = MathematikKartenCodec.importiere(text)
-        val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
-        speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
+    fun importiere(text: String): KartenDaten {
+        require(text.toByteArray(Charsets.UTF_8).size <= SichererKartenAbruf.MAXIMALE_GRÖSSE) { "Die Importdatei ist größer als 16 MiB." }
+        val paket = if (KartenFreigabePaket.istFreigabePaket(text)) KartenFreigabePaket.lese(text) else null
+        val karte = if (paket == null) MathematikKartenCodec.importiere(text) else null
+        karte?.let(::prüfeImportKarte)
+        return importTransaktionen.ausführen {
+            if (paket != null) {
+                importierePaket(paket)
+            } else {
+                val gelesen = requireNotNull(karte)
+                val version = maxOf(gelesen.version, höchsteVersion(gelesen.id) + 1)
+                val gespeichert = speichere(gelesen.copy(version = version, erstelltAm = System.currentTimeMillis()))
+                herkunftSpeicher.markiereFremd(setOf(gespeichert.id))
+                gespeichert
+            }
+        }
     }
+
+    fun importiere(inhalt: ByteArray): KartenDaten {
+        require(inhalt.size <= SichererKartenAbruf.MAXIMALE_GRÖSSE) { "Die Importdatei ist größer als 16 MiB." }
+        val istZip = inhalt.size >= 4 && inhalt[0] == 'P'.code.toByte() && inhalt[1] == 'K'.code.toByte()
+        if (!istZip) return importiere(inhalt.toString(Charsets.UTF_8))
+        val karte = MatlasKartenContainer.lese(inhalt)
+        prüfeImportKarte(karte)
+        return importTransaktionen.ausführen {
+            val version = maxOf(karte.version, höchsteVersion(karte.id) + 1)
+            val gespeichert = speichere(karte.copy(version = version, erstelltAm = System.currentTimeMillis()))
+            herkunftSpeicher.markiereFremd(setOf(gespeichert.id))
+            gespeichert
+        }
+    }
+
+    fun herkunftFür(id: KartenId): KartenHerkunft = herkunftAuflösung.fürKarte(id)
+
+    fun fremdVerwalteteOrdner(): Set<List<String>> = herkunftAuflösung.fremdVerwalteteOrdner()
 
     fun exportiere(karte: KartenDaten) = KartenJson.schreibe(karte)
 
@@ -119,13 +153,14 @@ class KartenSpeicher(private val context: Context) {
         val blockierend = blockierendeVerwendungen(kartenIds)
         if (blockierend.isNotEmpty()) return blockierend
         kartenIds.forEach { id ->
-            File(kartenOrdner, id.wert).deleteRecursively()
+            kartenOrdnerFür(id).deleteRecursively()
             sicherungsOrdner.listFiles().orEmpty()
                 .filter { it.name.startsWith("${id.wert}-") }
                 .forEach(File::delete)
         }
         papierkorbSpeicher.entferneKarten(kartenIds)
         freigabeQuellenSpeicher.entferne(kartenIds)
+        herkunftSpeicher.entferne(kartenIds)
         return emptyList()
     }
 
@@ -137,8 +172,7 @@ class KartenSpeicher(private val context: Context) {
         .filter { karte -> karte.knoten.any { verweis in it.alleKartenVerweise() } }
         .toList()
 
-    private fun importierePaket(text: String): KartenDaten {
-        val paket = KartenFreigabePaket.lese(text)
+    private fun importierePaket(paket: GelesenesFreigabePaket): KartenDaten {
         val vorhandeneQuellen = freigabeQuellenSpeicher.liste().filter {
             it.quelle.herausgeberId == paket.quelle.herausgeberId &&
                 it.quelle.ressourcenId == paket.quelle.ressourcenId
@@ -203,6 +237,15 @@ class KartenSpeicher(private val context: Context) {
             )
         }
         freigabeQuellenSpeicher.speichere(quellenEinträge)
+        if (paket.quelle.herausgeberId != LokalesProfilSpeicher(context).lade().id) {
+            herkunftSpeicher.markiereFremd(
+                kartenIds = idAbbildung.values.toSet(),
+                ordner = buildSet {
+                    add(importStamm)
+                    addAll(ordner)
+                },
+            )
+        }
 
         val wurzel = paket.wurzeln.first()
         val lokaleWurzelId = idAbbildung.getValue(wurzel.kartenId)
@@ -251,14 +294,19 @@ class KartenSpeicher(private val context: Context) {
         .filter { it.isFile && it.name.matches(Regex("v\\d+\\.json")) }
         .mapNotNull(::leseDatei)
 
-    private fun höchsteVersion(id: KartenId): Int = File(kartenOrdner, id.wert)
+    private fun höchsteVersion(id: KartenId): Int = kartenOrdnerFür(id)
         .listFiles()
         .orEmpty()
         .maxOfOrNull(::versionAusDatei)
         ?: 0
 
+    private fun kartenOrdnerFür(id: KartenId): File {
+        prüfeKartenId(id)
+        return File(kartenOrdner, id.wert)
+    }
+
     private fun dateiFür(id: KartenId, version: Int) = File(
-        File(kartenOrdner, id.wert),
+        kartenOrdnerFür(id),
         "v$version.json",
     )
 

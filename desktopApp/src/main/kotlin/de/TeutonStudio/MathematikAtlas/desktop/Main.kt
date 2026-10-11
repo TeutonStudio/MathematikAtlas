@@ -27,7 +27,7 @@ import java.nio.file.Paths
 import java.util.prefs.Preferences
 import javax.swing.JOptionPane
 
-private const val DESKTOP_APP_VERSION = "2.32.2"
+private const val DESKTOP_APP_VERSION = "3.0.1"
 
 private sealed interface DesktopKontext {
     val position: GraphPunkt

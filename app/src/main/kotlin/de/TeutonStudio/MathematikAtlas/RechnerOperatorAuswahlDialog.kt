@@ -317,7 +317,7 @@ private fun OperatorKachel(
         colors = CardDefaults.outlinedCardColors(containerColor = farbe),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.bereich),
             verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {

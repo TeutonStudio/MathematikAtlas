@@ -25,9 +25,29 @@ data class SamplingKonfiguration(
     val auflösung3D: Int,
     val toleranz: Double,
     val auflösung1D: Int = 160,
-    val maximalesRasterBudget: Int = 250_000,
+    val maximalesRasterBudget: Int = 6_000,
     val fensterBegrenztePrädikatsMengen: Boolean = false,
     val maximaleOrbitSchritte: Int = 256,
+    /** Nur Laufzeitdarstellung, wird nicht persistiert. */
+    val vorschau: Boolean = false,
+)
+
+const val MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET = 8_000
+internal const val VISUALISIERUNGS_VORSCHAU_BUDGET = 192
+
+/**
+ * Leichtgewichtige Knoten-Vorschau. Die persistierte Qualitätskonfiguration bleibt
+ * unverändert und wird erst in der explizit geöffneten Detailansicht verwendet.
+ */
+internal fun VisualisierungsKonfiguration.alsVorschau(): VisualisierungsKonfiguration = copy(
+    sampling = sampling.copy(
+        vorschau = true,
+        auflösung1D = minOf(sampling.auflösung1D, 48),
+        auflösung2D = minOf(sampling.auflösung2D, 14),
+        auflösung3D = minOf(sampling.auflösung3D, 5),
+        maximalesRasterBudget = minOf(sampling.maximalesRasterBudget, VISUALISIERUNGS_VORSCHAU_BUDGET),
+        maximaleOrbitSchritte = minOf(sampling.maximaleOrbitSchritte, 32),
+    ),
 )
 data class KameraZustand(
     val rotationX: Double,
@@ -106,7 +126,8 @@ data class VisualisierungsKonfiguration(
                 samplingObjekt.ganzzahl("auflösung3D", standard.sampling.auflösung3D).coerceIn(8, 64),
                 samplingObjekt.dezimalzahl("toleranz", standard.sampling.toleranz).coerceIn(1e-5, 2.0),
                 samplingObjekt.ganzzahl("auflösung1D", standard.sampling.auflösung1D).coerceIn(16, 2_000),
-                samplingObjekt.ganzzahl("maximalesRasterBudget", standard.sampling.maximalesRasterBudget).coerceIn(1_000, 2_000_000),
+                samplingObjekt.ganzzahl("maximalesRasterBudget", standard.sampling.maximalesRasterBudget)
+                    .coerceIn(1_000, 2_000_000),
                 samplingObjekt.text("fensterBegrenztePrädikatsMengen", standard.sampling.fensterBegrenztePrädikatsMengen.toString()).toBooleanStrictOrNull()
                     ?: standard.sampling.fensterBegrenztePrädikatsMengen,
                 samplingObjekt.ganzzahl("maximaleOrbitSchritte", standard.sampling.maximaleOrbitSchritte).coerceIn(1, 100_000),

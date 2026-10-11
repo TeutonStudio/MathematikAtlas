@@ -113,5 +113,59 @@ class StrukturFormelRechnerTest {
         assertEquals(VektorRechner.KNOTEN_ART, konfiguriert.art)
     }
 
+
+    @Test
+    fun `angebotene Vektorformeln sind mit ihren deklarierten Rollen auswertbar`() {
+        val tasten = de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelTastatur.fuer(
+            de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelFamilie.VEKTOR)
+            .filter { it.operatorId.startsWith("vektor.") }
+        assertTrue(tasten.isNotEmpty())
+        tasten.forEach { taste ->
+            val formel = FormelAusdruck.Operation("probe", taste.operatorId,
+                taste.argumente.mapIndexed { index, argument ->
+                    FormelArgument(argument.rolle, index,
+                        FormelAusdruck.Variable(argument.rolle, argument.rolle, argument.rolle, argument.typ))
+                }, taste.ergebnisTyp)
+            val knoten = konfiguriereStrukturRechnerFormel(
+                StrukturFormelRechnerVorlagen.Vektor.erzeuge(GraphPunkt.Zero),
+                StrukturRechnerKnotenFamilie.VEKTOR, formel)
+            val eingänge = taste.argumente.associate { argument -> argument.rolle to BedingterWert(
+                if (argument.typ == FormelTyp.ZAHL) zahl(2)
+                else de.TeutonStudio.MathematikRechenSystem.kern.SpaltenVektor(listOf(zahl(1), zahl(2), zahl(3)))) }
+            val ergebnis = register.finde(VektorRechner.KNOTEN_ART)!!.auswerten(
+                KnotenAuswertungsKontext(knoten, eingänge, RechenKontext()))
+            assertEquals(null, ergebnis.fehler, taste.operatorId)
+            val wert = ergebnis.ausgaben.getValue("wert").objekt
+            assertTrue(if (taste.ergebnisTyp == FormelTyp.ZAHL) wert is de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
+                else wert is de.TeutonStudio.MathematikRechenSystem.kern.OrientierterVektor, taste.operatorId)
+        }
+    }
+
+
+    @Test
+    fun `angebotene Tensorformeln erreichen ihren Fachauswerter mit deklarierten Rollen`() {
+        val tasten = de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelTastatur.fuer(
+            de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelFamilie.TENSOR)
+            .filter { it.operatorId.startsWith("tensor.") }
+        tasten.forEach { taste ->
+            val formel = FormelAusdruck.Operation("probe", taste.operatorId,
+                taste.argumente.mapIndexed { index, argument -> FormelArgument(argument.rolle, index,
+                    FormelAusdruck.Variable(argument.rolle, argument.rolle, argument.rolle, argument.typ)) }, taste.ergebnisTyp)
+            val basis = konfiguriereStrukturRechnerFormel(StrukturFormelRechnerVorlagen.Tensor.erzeuge(GraphPunkt.Zero),
+                StrukturRechnerKnotenFamilie.TENSOR, formel)
+            val knoten = basis.copy(parameter = basis.parameter + mapOf(
+                "achsen" to if (taste.operatorId == "tensor.achsenschnitt") "0" else "0,1",
+                "indizes" to if (taste.operatorId == "tensor.achsenschnitt") "0" else "0,0",
+                "permutation" to "1,0"))
+            val eingänge = taste.argumente.associate { argument -> argument.rolle to BedingterWert(
+                if (argument.typ == FormelTyp.ZAHL) zahl(2)
+                else de.TeutonStudio.MathematikRechenSystem.kern.Tensor(listOf(2, 2), listOf(zahl(1), zahl(2), zahl(3), zahl(4)))) }
+            val ergebnis = register.finde(de.TeutonStudio.MathematikRechenSystem.kern.TensorRechner.KNOTEN_ART)!!.auswerten(
+                KnotenAuswertungsKontext(knoten, eingänge, RechenKontext()))
+            assertEquals(null, ergebnis.fehler, taste.operatorId)
+            assertTrue(ergebnis.ausgaben.containsKey("wert"), taste.operatorId)
+        }
+    }
+
     private fun zahl(wert: Long) = RationaleZahl.von(wert)
 }

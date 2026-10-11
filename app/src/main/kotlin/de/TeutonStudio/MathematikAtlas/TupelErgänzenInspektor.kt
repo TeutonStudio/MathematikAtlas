@@ -87,7 +87,7 @@ internal object TupelErgänzenInspektor : KnotenInspektor {
                 },
                 confirmButton = {
                     Button(onClick = {
-                        aktionen.knoten(neu)
+                        aktionen.knotenNachVerlustbestätigung(neu)
                         ausstehend = null
                     }) { Text("Wechseln") }
                 },

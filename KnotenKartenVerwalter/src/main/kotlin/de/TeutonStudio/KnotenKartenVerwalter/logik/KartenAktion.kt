@@ -25,7 +25,7 @@ sealed interface KartenAktion {
         val anschlüsse: List<AnschlussDaten>,
     ) : KartenAktion
     /** Ersetzt einen vollständigen Knoten atomar und entfernt nur Verbindungen zu entfallenen Anschlüssen. */
-    data class KnotenErsetzen(val knoten: KnotenDaten) : KartenAktion
+    data class KnotenErsetzen(val knoten: KnotenDaten, val entfallendeVerbindungen: Set<VerbindungsId> = emptySet()) : KartenAktion
     /** Wendet einen zuvor mit [vorschauTeilgraphErsetzen] validierten Plan als eine Historienaktion an. */
     data class TeilgraphErsetzen(val plan: TeilgraphErsetzungsPlan) : KartenAktion
     data class KnotenLöschen(val id: KnotenId) : KartenAktion
@@ -47,10 +47,16 @@ sealed interface KartenAktion {
     /** Verschiebt eine vorhandene Verbindung atomar auf einen neuen Zielanschluss. */
     data class VerbindungNeuVerbinden(val alteVerbindung: VerbindungsId, val verbindung: VerbindungDaten) : KartenAktion
     data class VerbindungLöschen(val id: VerbindungsId) : KartenAktion
+    /** Übernimmt einen vorab geprüften abhängigen Graphstand gemeinsam als einen Undo-Schritt. */
+    data class KartenInhaltErsetzen(val karte: KartenDaten) : KartenAktion
     data class AnsichtÄndern(val ansicht: AnsichtsFenster) : KartenAktion
 }
 
 fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
+    is KartenAktion.KartenInhaltErsetzen -> {
+        require(aktion.karte.id == id) { "Die geprüfte Konfiguration gehört zu einer anderen Karte." }
+        copy(knoten = aktion.karte.knoten, verbindungen = aktion.karte.verbindungen, visuelleGruppen = aktion.karte.visuelleGruppen)
+    }
     is KartenAktion.KnotenEinfügen -> copy(knoten = knoten + aktion.knoten)
     is KartenAktion.KnotenVerschieben -> copy(knoten = knoten.map { if (it.id == aktion.id) it.copy(position = aktion.position) else it })
     is KartenAktion.KnotenMehrfachVerschieben -> copy(knoten = knoten.map {
@@ -97,7 +103,8 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
         copy(
             knoten = knoten.map { if (it.id == aktion.knoten.id) aktion.knoten else it },
             verbindungen = verbindungen.filterNot { verbindung ->
-                (verbindung.von.knotenId == aktion.knoten.id && verbindung.von.anschlussId !in gültigeAnschlüsse) ||
+                verbindung.id in aktion.entfallendeVerbindungen ||
+                    (verbindung.von.knotenId == aktion.knoten.id && verbindung.von.anschlussId !in gültigeAnschlüsse) ||
                     (verbindung.zu.knotenId == aktion.knoten.id && verbindung.zu.anschlussId !in gültigeAnschlüsse)
             },
         )

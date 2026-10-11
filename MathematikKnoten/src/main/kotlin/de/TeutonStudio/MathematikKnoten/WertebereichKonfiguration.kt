@@ -19,7 +19,7 @@ sealed interface WertebereichKonfiguration {
     fun zuMenge(): MengenAusdruck = when (this) {
         is Zahl -> zahlGrundmenge(grundmenge)
         Aussage -> Wahrheitsmenge
-        is Menge -> elementBereich.zuMenge()
+        is Menge -> Potenzmenge(elementBereich.zuMenge())
         is Tupel -> Tupelraum(komponenten.map { it.zuMenge() })
         is Vektor -> Vektorraum(orientierung, dimension.takeIf { it > 0 } ?: error("Die Vektordimension muss positiv sein."), zahlGrundmenge(skalarMenge))
         is Matrix -> Matrizenraum(

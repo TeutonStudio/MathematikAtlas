@@ -130,6 +130,7 @@ object KartenFreigabePaket {
         val kartenJson = json.getJSONArray("karten")
         require(kartenJson.length() in 1..MAXIMALE_KARTEN) { "Das Freigabepaket enthält eine ungültige Kartenanzahl." }
         val karten = List(kartenJson.length()) { index -> KartenJson.lese(kartenJson.getJSONObject(index).toString()) }
+        prüfeImportPaket(karten)
         val vorhandeneVerweise = karten.mapTo(mutableSetOf()) { KartenVerweis(it.id, it.version) }
         val wurzelJson = json.getJSONArray("wurzeln")
         val wurzeln = List(wurzelJson.length()) { index -> wurzelJson.getJSONObject(index).zuVerweis() }

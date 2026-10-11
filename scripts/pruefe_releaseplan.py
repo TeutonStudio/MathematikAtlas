@@ -91,13 +91,30 @@ def prüfe_plan(plan: dict) -> tuple[str, dict[str, dict]]:
     aktive = [
         version
         for version, eintrag in nach_version.items()
-        if eintrag.get("status") in {"reserved", "implementing", "review", "ready"}
+        if eintrag.get("status") in {"reserved", "implementing", "review", "ready", "blocked"}
     ]
+    if len(aktive) > 1:
+        fehler("Es darf höchstens eine aktive Releaseversion geben.")
     if aktive:
-        fehler(f"Der veröffentlichte Plan enthält noch aktive Versionen: {', '.join(sorted(aktive))}.")
+        kandidat = nach_version[aktive[0]]
+        if kandidat.get("previous_release") != aktuelle_version:
+            fehler("Die aktive Version muss auf current_version folgen.")
+        major, minor, patch = versionsteile(aktuelle_version)
+        achse = kandidat.get("version_axis")
+        erwartet = {"x": (major, minor, patch + 1), "y": (major, minor + 1, 0), "M": (major + 1, 0, 0)}
+        if versionsteile(aktive[0]) != erwartet.get(achse):
+            fehler("Die aktive Version passt nicht zur nächsten zulässigen Versionsachse.")
+        if achse == "y" and not kandidat.get("new_node_types"):
+            fehler("Eine aktive y-Version benötigt angekündigte neue Knotentypen.")
+
+    for version, eintrag in nach_version.items():
+        if eintrag["status"] not in {"released", "superseded", "skipped"} and versionsteile(version) <= versionsteile(aktuelle_version):
+            fehler(f"Offene Vorgängerversion {version} verhindert die Veröffentlichung von {aktuelle_version}.")
 
     for version, eintrag in nach_version.items():
         status = eintrag["status"]
+        if status == "released" and versionsteile(version) > versionsteile(aktuelle_version):
+            fehler(f"Veröffentlichte Version {version} liegt oberhalb von current_version.")
         if status == "superseded":
             ziel = str(eintrag.get("superseded_by", ""))
             if ziel not in nach_version or nach_version[ziel].get("status") != "released":
@@ -133,6 +150,30 @@ def prüfe_plan(plan: dict) -> tuple[str, dict[str, dict]]:
         )
 
     return aktuelle_version, nach_version
+
+
+def prüfe_historie(vorher: dict, aktuell: dict) -> None:
+    """Veröffentlichte Geschichte bleibt erhalten; offene Reservierungen werden nicht übersprungen."""
+    neue = {str(e["version"]): e for e in aktuell.get("releases", [])}
+    ziel = versionsteile(str(aktuell["current_version"]))
+    alte = {str(e["version"]): e for e in vorher.get("releases", [])}
+    veröffentlicht = [v for v, e in neue.items() if e["status"] == "released" and alte.get(v, {}).get("status") != "released"]
+    erwartet = [] if vorher["current_version"] == aktuell["current_version"] else [str(aktuell["current_version"])]
+    if sorted(veröffentlicht) != erwartet:
+        fehler("Genau die aktuelle Zielversion darf neu veröffentlicht werden.")
+    for version, eintrag in neue.items():
+        if version not in alte and eintrag["status"] in {"released", "superseded", "skipped"} and version not in erwartet:
+            fehler(f"Zusätzlicher historischer Releaseeintrag {version} ist unzulässig.")
+    for alt in vorher.get("releases", []):
+        version = str(alt["version"])
+        neu = neue.get(version)
+        if alt["status"] in {"released", "superseded", "skipped"}:
+            if neu != alt:
+                fehler(f"Historischer Releaseeintrag {version} darf nicht nachträglich verändert oder entfernt werden.")
+        elif neu is None:
+            fehler(f"Offene Vorgängerversion {version} darf nicht entfernt werden.")
+        elif versionsteile(version) < ziel:
+            fehler(f"Offene Basisversion {version} muss vor einer höheren Veröffentlichung abgeschlossen werden.")
 
 
 def prüfe_android_version(aktuelle_version: str) -> None:

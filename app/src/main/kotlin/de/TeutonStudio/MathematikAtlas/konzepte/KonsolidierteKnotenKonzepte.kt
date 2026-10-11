@@ -25,7 +25,7 @@ internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenD
         )
     }
     if (knoten.art == ZAHLENRECHNER_ART) {
-        when (UniversellerZahlenOperator.vonId(knoten.parameter[ZAHLENRECHNER_OPERATOR])) {
+        when (UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR])) {
             UniversellerZahlenOperator.QUADRAT -> return iterierteMultiplikationsDefinition(knoten, 2)
             UniversellerZahlenOperator.KUBIK -> return iterierteMultiplikationsDefinition(knoten, 3)
             else -> Unit
@@ -36,7 +36,7 @@ internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenD
     if (familie != null && knoten.parameter[RECHNER_OPERATOR_PARAMETER] == familie.formelOperatorId) {
         return strukturRechnerKonzept(knoten, familie)
     }
-    return null
+    return kanonischesRechnerKonzept(knoten)
 }
 
 /**

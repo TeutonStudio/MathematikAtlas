@@ -9,6 +9,7 @@ import java.io.File
 data class KartenOrdnung(
     val ordner: Set<List<String>> = emptySet(),
     val kartenOrdner: Map<KartenId, List<String>> = emptyMap(),
+    val eigeneOrdner: Set<List<String>> = emptySet(),
 ) {
     fun ordnerFür(kartenId: KartenId): List<String> = kartenOrdner[kartenId].orEmpty()
 
@@ -26,6 +27,13 @@ data class KartenOrdnung(
         val normalisiert = normalisierePfad(pfad)
         if (normalisiert.isEmpty()) return this
         return copy(ordner = ordner + normalisiert.präfixe()).normalisiert()
+    }
+
+    /** Explizite Nutzeranlage, unabhängig von Herkunft anderer Karten im selben Baum. */
+    fun mitEigenemOrdner(pfad: List<String>): KartenOrdnung {
+        val normalisiert = normalisierePfad(pfad)
+        if (normalisiert.isEmpty()) return this
+        return mitOrdner(normalisiert).copy(eigeneOrdner = eigeneOrdner + listOf(normalisiert)).normalisiert()
     }
 
     fun mitOrdnern(pfade: Iterable<List<String>>): KartenOrdnung =
@@ -53,6 +61,7 @@ data class KartenOrdnung(
 
         return KartenOrdnung(
             ordner = ordner.map(::ersetze).toSet() + ziel.präfixe(),
+            eigeneOrdner = eigeneOrdner.map(::ersetze).toSet(),
             kartenOrdner = kartenOrdner.mapValues { (_, pfad) -> ersetze(pfad) },
         ).normalisiert()
     }
@@ -68,7 +77,7 @@ data class KartenOrdnung(
     fun ohneOrdner(pfad: List<String>): KartenOrdnung {
         val normalisiert = normalisierePfad(pfad)
         if (!kannOrdnerLöschen(normalisiert)) return this
-        return copy(ordner = ordner.filterNot { it == normalisiert }.toSet()).normalisiert()
+        return copy(ordner = ordner.filterNot { it == normalisiert }.toSet(), eigeneOrdner = eigeneOrdner - listOf(normalisiert)).normalisiert()
     }
 
     fun ohneKarten(kartenIds: Set<KartenId>): KartenOrdnung =
@@ -80,6 +89,7 @@ data class KartenOrdnung(
         val kartenIds = kartenUnter(normalisiert)
         return KartenOrdnung(
             ordner = ordner.filterNot { it.beginntMit(normalisiert) }.toSet(),
+            eigeneOrdner = eigeneOrdner.filterNot { it.beginntMit(normalisiert) }.toSet(),
             kartenOrdner = kartenOrdner.filterKeys { it !in kartenIds },
         ).normalisiert()
     }
@@ -88,12 +98,13 @@ data class KartenOrdnung(
         val saubereZuordnung = kartenOrdner.mapValues { (_, pfad) -> normalisierePfad(pfad) }.filterValues { it.isNotEmpty() }
         val saubereOrdner = (ordner.map(::normalisierePfad).filter { it.isNotEmpty() } +
             saubereZuordnung.values).flatMap { it.präfixe() }.toSet()
-        return KartenOrdnung(saubereOrdner, saubereZuordnung)
+        val eigene = eigeneOrdner.map(::normalisierePfad).filter { it.isNotEmpty() }.toSet()
+        return KartenOrdnung(saubereOrdner + eigene.flatMap { it.präfixe() }, saubereZuordnung, eigene)
     }
 }
 
-class KartenOrdnungSpeicher(context: Context) {
-    private val datei = File(File(context.filesDir, "MathematikAtlas"), "karten-ordnung.json")
+class KartenOrdnungSpeicher internal constructor(private val datei: File) {
+    constructor(context: Context) : this(File(File(context.filesDir, "MathematikAtlas"), "karten-ordnung.json"))
 
     fun lade(): KartenOrdnung = runCatching {
         if (!datei.exists()) return@runCatching KartenOrdnung()
@@ -103,7 +114,7 @@ class KartenOrdnungSpeicher(context: Context) {
         val karten = kartenJson.keys().asSequence().associate { id ->
             KartenId(id) to (kartenJson.optJSONArray(id)?.zuPfad().orEmpty())
         }
-        KartenOrdnung(ordner, karten).normalisiert()
+        KartenOrdnung(ordner, karten, json.optJSONArray("eigeneOrdner").zuPfade().toSet()).normalisiert()
     }.getOrDefault(KartenOrdnung())
 
     fun speichere(ordnung: KartenOrdnung) {
@@ -113,6 +124,7 @@ class KartenOrdnungSpeicher(context: Context) {
             put("ordner", JSONArray().apply {
                 normalisiert.ordner.sortedMitPfad().forEach { put(it.zuJson()) }
             })
+            put("eigeneOrdner", JSONArray().apply { normalisiert.eigeneOrdner.sortedMitPfad().forEach { put(it.zuJson()) } })
             put("karten", JSONObject().apply {
                 normalisiert.kartenOrdner.entries.sortedBy { it.key.wert }.forEach { (id, pfad) -> put(id.wert, pfad.zuJson()) }
             })

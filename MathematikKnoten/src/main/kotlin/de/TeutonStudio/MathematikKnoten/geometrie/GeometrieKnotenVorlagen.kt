@@ -281,7 +281,7 @@ object GeometrieKnotenVorlagen {
         "Erzeugt ausdrücklich die intrinsische Punktmenge eines geometrischen Objekts.",
         GraphGröße(270f, 110f),
         listOf(eingang("objekt", GeometrieAnschlussArten.Objekt.id), ausgang("menge", MathematikAnschlussArten.Menge.id)),
-    )
+    ).alsAdapterVorlage()
 
     val KoordinatenBild = KnotenVorlage(
         "mathematik.geometrie.koordinatenBild",
@@ -303,7 +303,7 @@ object GeometrieKnotenVorlagen {
         "Legt die Spaltenorientierung ausdrücklich ab und erzeugt ein Zahlentupel.",
         GraphGröße(225f, 105f),
         listOf(eingang("vektor", MathematikAnschlussArten.SpaltenVektor.id), ausgang("tupel", GeometrieAnschlussArten.KoordinatenTupel.id)),
-    )
+    ).alsAdapterVorlage()
 
     val ZeileZuTupel = KnotenVorlage(
         "mathematik.zeileZuTupel",
@@ -312,7 +312,7 @@ object GeometrieKnotenVorlagen {
         "Legt die Zeilenorientierung ausdrücklich ab und erzeugt ein Zahlentupel.",
         GraphGröße(225f, 105f),
         listOf(eingang("vektor", MathematikAnschlussArten.ZeilenVektor.id), ausgang("tupel", GeometrieAnschlussArten.KoordinatenTupel.id)),
-    )
+    ).alsAdapterVorlage()
 
     val LinearePunkttransformation = KnotenVorlage(
         "mathematik.geometrie.punktTransformationLinear",

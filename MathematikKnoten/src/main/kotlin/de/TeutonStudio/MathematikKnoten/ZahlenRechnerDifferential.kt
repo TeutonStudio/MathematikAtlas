@@ -139,13 +139,8 @@ fun konfiguriereZahlenRechnerDifferential(
  * Finaler Wrapper um den Zahlenrechner. Historische `zahl.differential`-Zustände
  * ohne Ergebnisart werden bewusst an den bisherigen skalaren Auswerter delegiert.
  */
-internal fun MathematikAuswerterRegister.registriereZahlenRechnerDifferential() {
-    val basis = requireNotNull(finde(ZAHLENRECHNER_ART)) {
-        "Der universelle Zahlenrechner muss vor dem Differentialadapter registriert sein."
-    }
-    registriere(
-        ZAHLENRECHNER_ART,
-        MathematikKnotenAuswerter { kontext ->
+internal fun mitZahlenDifferential(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter =
+    de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
             val operator = UniversellerZahlenOperator.vonIdOderNull(
                 kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR],
             )
@@ -155,9 +150,10 @@ internal fun MathematikAuswerterRegister.registriereZahlenRechnerDifferential() 
             } else {
                 basis.auswerten(kontext)
             }
-        },
-    )
 }
+
+internal fun MathematikAuswerterRegister.registriereZahlenRechnerDifferential() { registriere(ZAHLENRECHNER_ART, mitZahlenDifferential(requireNotNull(finde(ZAHLENRECHNER_ART)))) }
+
 
 private fun werteZahlenRechnerDifferentialAus(
     kontext: KnotenAuswertungsKontext,
@@ -186,7 +182,7 @@ private fun werteZahlenRechnerDifferentialAus(
     }
 
     val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet() + ergebnis.voraussetzungen
-    val objekt: MathematischesObjekt
+    val objekt: AtlasWert
     val latex: String?
     val definition: String
     when (ergebnisArt) {

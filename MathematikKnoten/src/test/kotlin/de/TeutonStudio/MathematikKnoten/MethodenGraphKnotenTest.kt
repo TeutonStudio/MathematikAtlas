@@ -60,7 +60,7 @@ class MethodenGraphKnotenTest {
         val graph = assertIs<MethodenGraphMenge>(ergebnis.ausgaben.getValue("graph").objekt)
         assertEquals(methode, graph.methode)
         assertEquals(
-            KartesischesProdukt(listOf(Tupelraum(listOf(ReelleZahlen)), ReelleZahlen)),
+            Tupelraum(listOf(Tupelraum(listOf(ReelleZahlen)), Tupelraum(listOf(ReelleZahlen)))),
             graph.methode.graphRaum(),
         )
         assertEquals("\\operatorname{Graph}\\left(f\\right)", ergebnis.ausgaben.getValue("graph").latexDarstellung)
@@ -90,7 +90,7 @@ class MethodenGraphKnotenTest {
         }
 
         assertTrue(fehler.message.orEmpty().contains("Graph von 'f'"))
-        assertTrue(fehler.message.orEmpty().contains("Wertevorrat"))
+        assertTrue(fehler.message.orEmpty().contains("Definitionsmenge"))
     }
 
     @Test

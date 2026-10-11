@@ -120,4 +120,13 @@ class StandardTypSystemTest {
         assertEquals("R → C", visual.kurzLabel)
         assertEquals(TypVisualMuster.Zusammengesetzt, visual.muster)
     }
+    @Test fun `unbekannte invariante Achsen bleiben unbestimmt und verdecken keinen Widerspruch`() {
+        fun struktur(vararg argumente: TypAusdruck) = TypAusdruck.Parameterisiert(TypId("struktur"), argumente.toList())
+        val zwei = TypAusdruck.Literal("2")
+        val drei = TypAusdruck.Literal("3")
+        assertIs<TypPrüfung.Unbestimmt>(system.prüfe(struktur(TypAusdruck.Atom(zahl), TypAusdruck.Unbekannt), struktur(TypAusdruck.Atom(zahl), zwei)))
+        assertIs<TypPrüfung.Unbestimmt>(system.prüfe(struktur(TypAusdruck.Atom(zahl), zwei, TypAusdruck.Variable(TypVariablenId("n"))), struktur(TypAusdruck.Atom(zahl), zwei, drei)))
+        assertIs<TypPrüfung.Inkompatibel>(system.prüfe(struktur(TypAusdruck.Unbekannt, zwei), struktur(TypAusdruck.Atom(zahl), drei)))
+    }
+
 }

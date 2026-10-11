@@ -1,11 +1,16 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikRechenSystem.kern.mathematischeMethodenSignatur
+import de.TeutonStudio.MathematikRechenSystem.kern.zielMenge
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
@@ -23,6 +28,8 @@ import de.TeutonStudio.MathematikKnoten.MATRIX_METHODE
 import de.TeutonStudio.MathematikKnoten.MATRIX_SPALTEN
 import de.TeutonStudio.MathematikKnoten.MATRIX_ZEILEN
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
+import de.TeutonStudio.MathematikKnoten.konfiguriereMatrix
+import de.TeutonStudio.MathematikKnoten.konfiguriereTupel
 import de.TeutonStudio.MathematikKnoten.konfiguriereMengenkonstruktor
 import de.TeutonStudio.MathematikKnoten.RESTRIKTIONS_KNOTEN_ART
 import de.TeutonStudio.MathematikKnoten.TUPEL_EINZEL_EINGABEN
@@ -50,6 +57,17 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
         if (knoten == null) InspektorSichtbarkeit.schließen()
     }
     if (!InspektorSichtbarkeit.offen || knoten == null) return
+
+    zustand.ausstehendeKonfiguration?.let { kandidat ->
+        val auswirkung = zustand.vorschauKonfiguration(kandidat)
+        AlertDialog(
+            onDismissRequest = zustand::verwerfeKonfiguration,
+            title = { Text("Verbindungen entfernen?") },
+            text = { Text("Diese Konfiguration entfernt ${auswirkung.entfallendeVerbindungen.size} Verbindung(en), deren Anschlüsse oder Verträge nicht mehr passen. Rückgängig stellt Konfiguration und Verbindungen gemeinsam wieder her.") },
+            confirmButton = { TextButton(onClick = zustand::bestätigeKonfiguration) { Text("Übernehmen") } },
+            dismissButton = { TextButton(onClick = zustand::verwerfeKonfiguration) { Text("Abbrechen") } },
+        )
+    }
 
     Layout(
         modifier = Modifier.fillMaxHeight().zIndex(2f),
@@ -121,7 +139,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             zustand.auswertung.knoten[knoten.id],
                             object : KnotenInspektorAktionen {
                                 override fun parameter(schlüssel: String, wert: String) {
-                                    zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
+                                    zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
                                 }
                                 override fun name(wert: String) {
                                     zustand.ersetzeKarteMitAuswahl(
@@ -133,16 +151,21 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                                     )
                                 }
                                 override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) {
-                                    zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+                                    zustand.konfiguriereKnoten(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
                                 }
                                 override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
-                                    zustand.editor.ändereAnschlussArt(verweis, art)
+                                    zustand.beantrageKonfiguration(knoten.copy(anschlüsse = knoten.anschlüsse.map {
+                                        if (it.id == verweis.anschlussId) it.copy(art = art) else it
+                                    }))
                                 }
                                 override fun knoten(knoten: KnotenDaten) {
-                                    zustand.editor.führeAus(KartenAktion.KnotenErsetzen(knoten))
+                                    zustand.konfiguriereKnoten(KartenAktion.KnotenErsetzen(knoten))
+                                }
+                                override fun knotenNachVerlustbestätigung(knoten: KnotenDaten) {
+                                    zustand.übernehmeKonfiguration(knoten)
                                 }
                                 override fun vorschauKnotenErsetzen(knoten: KnotenDaten) =
-                                    zustand.editor.karte.vorschauKnotenErsetzen(knoten)
+                                    zustand.vorschauKonfiguration(knoten)
                             },
                         )
                         Spacer(Modifier.height(4.dp))
@@ -171,9 +194,9 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                                     ?.takeIf { anzahl -> anzahl >= mindestAnzahl }
                                     ?.let { anzahl ->
                                         if (knoten.art == "mathematik.tupel") {
-                                            zustand.editor.setzeTupelEingangAnzahl(knoten.id, anzahl)
+                                            zustand.beantrageKonfiguration(konfiguriereTupel(knoten.copy(parameter = knoten.parameter + ("festeEingänge" to anzahl.toString())), TUPEL_EINZEL_EINGABEN))
                                         } else {
-                                            zustand.editor.setzeFesteEingangAnzahl(knoten.id, anzahl)
+                                            zustand.konfiguriereFesteEingänge(knoten.id, anzahl)
                                         }
                                     }
                             },
@@ -193,7 +216,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             Switch(
                                 checked = zeigeWerte,
                                 onCheckedChange = { werte ->
-                                    zustand.editor.führeAus(
+                                    zustand.konfiguriereKnoten(
                                         KartenAktion.KnotenParameterÄndern(
                                             knoten.id,
                                             "operatorAnzeige",
@@ -223,7 +246,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                             value = text,
                             onValueChange = {
                                 text = it
-                                zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+                                zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
                             },
                             label = { Text(schlüssel) },
                             modifier = Modifier.fillMaxWidth(),
@@ -288,7 +311,7 @@ private fun TupelInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
                     onClick = {
                         menüGeöffnet = false
                         if (art != konfiguration.erzeugungsArt) {
-                            zustand.editor.setzeTupelKonfiguration(knoten.id, art)
+                            zustand.beantrageKonfiguration(konfiguriereTupel(knoten, art))
                         }
                     },
                 )
@@ -345,7 +368,7 @@ private fun MengenkonstruktorEditor(knoten: KnotenDaten, zustand: AtlasZustand) 
                     onClick = {
                         geöffnet = false
                         val konfiguriert = konfiguriereMengenkonstruktor(knoten, art.id)
-                        zustand.editor.führeAus(
+                        zustand.konfiguriereKnoten(
                             KartenAktion.KnotenKonfigurationErsetzen(
                                 id = knoten.id,
                                 parameter = konfiguriert.parameter,
@@ -371,7 +394,7 @@ private fun MengenkonstruktorEditor(knoten: KnotenDaten, zustand: AtlasZustand) 
 
         fun aktualisiere(neuerModus: String = modus, neueEingabe: String = eingabe, neueForm: String = form) {
             val neu = konfiguriereMengenkonstruktor(knoten, aktuelleArtId, neuerModus, neueEingabe, neueForm)
-            zustand.editor.führeAus(
+            zustand.konfiguriereKnoten(
                 KartenAktion.KnotenKonfigurationErsetzen(knoten.id, neu.parameter, neu.anschlüsse),
             )
         }
@@ -443,7 +466,7 @@ private fun ParameterTextFeld(
         value = text,
         onValueChange = {
             text = it
-            zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+            zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
         },
         label = { Text(label) },
         singleLine = true,
@@ -458,15 +481,34 @@ private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
             it.art == MathematikAnschlussArten.Zahl.id &&
             !it.dynamischErzeugt
     }
-    if (zahlEingänge.isEmpty()) return
+    val aussageEingänge = knoten.anschlüsse.filter {
+        it.richtung == AnschlussRichtung.Eingang && it.art == MathematikAnschlussArten.Aussage.id
+    }
+    if (zahlEingänge.isEmpty() && aussageEingänge.isEmpty()) return
 
     HorizontalDivider()
     Text("Standardwerte", style = MaterialTheme.typography.titleSmall)
     Text(
-        "Ein Standardwert wird nur verwendet, solange der zugehörige Zahl-Eingang nicht verbunden ist.",
+        "Ein Standardwert wird nur verwendet, solange der zugehörige Eingang nicht verbunden ist. Aussagen sind standardmäßig Falsch.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+    aussageEingänge.forEach { anschluss ->
+        val schlüssel = "$STANDARDWERT_PREFIX${anschluss.name}"
+        val verbunden = zustand.editor.karte.verbindungen.any {
+            it.zu.knotenId == knoten.id && it.zu.anschlussId == anschluss.id
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("${anschluss.name}: ${if (knoten.parameter[schlüssel] == "true") "Wahr" else "Falsch"}", Modifier.weight(1f))
+            Switch(
+                modifier = Modifier.semantics { contentDescription = "${anschluss.name}: Standardwert" },
+                checked = knoten.parameter[schlüssel] == "true",
+                enabled = !verbunden,
+                onCheckedChange = { zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it.toString())) },
+            )
+        }
+        if (verbunden) Text("Verbindung bestimmt den Wert.", style = MaterialTheme.typography.bodySmall)
+    }
     zahlEingänge.forEach { anschluss ->
         val schlüssel = "$STANDARDWERT_PREFIX${anschluss.name}"
         val wert = knoten.parameter[schlüssel].orEmpty()
@@ -475,7 +517,7 @@ private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
             value = text,
             onValueChange = {
                 text = it
-                zustand.editor.führeAus(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+                zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
             },
             label = { Text("Standardwert: ${anschluss.name}") },
             supportingText = { Text("Ganze Zahl oder Bruch, beispielsweise -1 oder 1/2.") },
@@ -510,7 +552,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
             FilterChip(
                 selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
                 onClick = {
-                    zustand.editor.führeAus(
+                    zustand.konfiguriereKnoten(
                         KartenAktion.KnotenParameterÄndern(
                             knoten.id,
                             methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
@@ -523,7 +565,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
             FilterChip(
                 selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL,
                 onClick = {
-                    zustand.editor.führeAus(
+                    zustand.konfiguriereKnoten(
                         KartenAktion.KnotenParameterÄndern(
                             knoten.id,
                             methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
@@ -540,7 +582,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
             ?.get(ausgang.name)
             ?.objekt as? Methode
         val zielIstTupel = methode?.let {
-            runCatching { it.methodenSignatur().zielMenge is Tupelraum }.getOrDefault(false)
+            runCatching { it.mathematischeMethodenSignatur().ergebnisse.singleOrNull()?.zielMenge is Tupelraum }.getOrDefault(false)
         } == true
         Text("Ergebnis", style = MaterialTheme.typography.labelMedium)
         if (zielIstTupel) {
@@ -555,7 +597,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
                 FilterChip(
                     selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_DIREKT,
                     onClick = {
-                        zustand.editor.führeAus(
+                        zustand.konfiguriereKnoten(
                             KartenAktion.KnotenParameterÄndern(
                                 knoten.id,
                                 methodenAusgangErgebnisprojektionSchlüssel(ausgang.name),
@@ -568,7 +610,7 @@ private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZ
                 FilterChip(
                     selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL,
                     onClick = {
-                        zustand.editor.führeAus(
+                        zustand.konfiguriereKnoten(
                             KartenAktion.KnotenParameterÄndern(
                                 knoten.id,
                                 methodenAusgangErgebnisprojektionSchlüssel(ausgang.name),
@@ -622,12 +664,7 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
                     onClick = {
                         artMenüGeöffnet = false
                         if (art != konfiguration.erzeugungsArt) {
-                            zustand.editor.setzeMatrixKonfiguration(
-                                knoten.id,
-                                art,
-                                konfiguration.höhe,
-                                konfiguration.breite,
-                            )
+                            zustand.beantrageKonfiguration(konfiguriereMatrix(knoten, art, konfiguration.höhe, konfiguration.breite))
                         }
                     },
                 )
@@ -645,7 +682,7 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
             onValueChange = { text ->
                 höheText = text
                 text.toIntOrNull()?.takeIf { it > 0 }?.let { höhe ->
-                    zustand.editor.setzeMatrixKonfiguration(knoten.id, konfiguration.erzeugungsArt, höhe, konfiguration.breite)
+                    zustand.beantrageKonfiguration(konfiguriereMatrix(knoten, konfiguration.erzeugungsArt, höhe, konfiguration.breite))
                 }
             },
             label = { Text("Höhe") },
@@ -657,7 +694,7 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
             onValueChange = { text ->
                 breiteText = text
                 text.toIntOrNull()?.takeIf { it > 0 }?.let { breite ->
-                    zustand.editor.setzeMatrixKonfiguration(knoten.id, konfiguration.erzeugungsArt, konfiguration.höhe, breite)
+                    zustand.beantrageKonfiguration(konfiguriereMatrix(knoten, konfiguration.erzeugungsArt, konfiguration.höhe, breite))
                 }
             },
             label = { Text("Breite") },

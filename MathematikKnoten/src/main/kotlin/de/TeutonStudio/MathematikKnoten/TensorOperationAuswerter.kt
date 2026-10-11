@@ -14,14 +14,9 @@ import java.math.BigInteger
  * Konkret vorhandene Operationen verwenden weiterhin den bestehenden Rechenkern;
  * übrige gültige Operationen bleiben strukturierte symbolische Ergebnisse.
  */
+internal val tensorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter(::werteTensorOperationAus)
 internal fun MathematikAuswerterRegister.registriereTensorOperationRegistry() {
-    requireNotNull(finde(TensorRechner.KNOTEN_ART)) {
-        "Der bestehende Tensorrechner muss vor der Registry-Brücke registriert sein."
-    }
-    registriere(
-        TensorRechner.KNOTEN_ART,
-        MathematikKnotenAuswerter(::werteTensorOperationAus),
-    )
+    registriere(TensorRechner.KNOTEN_ART, tensorFachauswerter)
 }
 
 private fun werteTensorOperationAus(
@@ -32,7 +27,7 @@ private fun werteTensorOperationAus(
     }
     val definition = aktuelleTensorOperationDefinition(kontext.knoten)
     val operanden = definition.eingangsRollen.mapNotNull { rolle ->
-        tensorEingang(kontext, definition, rolle)?.objekt?.let { rolle to it }
+        tensorEingang(kontext, definition, rolle)?.mathematischesObjekt("Tensoroperand ${rolle.wert}")?.let { rolle to it }
     }.toMap(linkedMapOf())
     val fehlendeRollen = definition.eingangsRollen.filterNot(operanden::containsKey)
     if (fehlendeRollen.isNotEmpty()) {
@@ -417,7 +412,7 @@ private fun parseGanzzahlTupel(tupel: Tupel): GanzzahlListenErgebnis {
     }
 }
 
-private fun ganzzahlOderNull(objekt: MathematischesObjekt): Int? = (objekt as? RationaleZahl)
+private fun ganzzahlOderNull(objekt: AtlasWert): Int? = (objekt as? RationaleZahl)
     ?.takeIf { it.nenner == BigInteger.ONE && it.zähler.bitLength() < 31 }
     ?.zähler
     ?.toInt()

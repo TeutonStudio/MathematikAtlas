@@ -7,6 +7,8 @@ import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.FaltungsKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikRechenSystem.kern.*
+import de.TeutonStudio.TypSystem.AnschlussVertrag
+import de.TeutonStudio.TypSystem.TypAusdruck
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -85,6 +87,7 @@ class MethodenAufrufSynchronisierungTest {
             anschlüsse = listOf(
                 AnschlussDaten(
                     id = AnschlussId("quelle-wert"),
+                    vertrag = AnschlussVertrag(TypAusdruck.Atom(MathematischeTypen.Reell)),
                     name = "wert",
                     richtung = AnschlussRichtung.Ausgang,
                     kante = AnschlussKante.Rechts,
@@ -208,7 +211,8 @@ class MethodenAufrufSynchronisierungTest {
 
         assertEquals(MathematikAnschlussArten.Tupel.id, ergebnisKnoten.wertAusgang().art)
         assertEquals(ziel.zuLatex(), ergebnisKnoten.parameter[METHODEN_AUFRUF_ZIELMENGE])
-        assertEquals(METHODEN_ERGEBNISPROJEKTION_TUPEL, ergebnisKnoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION])
+        // Die einzelne Tupelkomponente wird direkt projiziert; sie bleibt dabei ein Tupel.
+        assertEquals(METHODEN_ERGEBNISPROJEKTION_DIREKT, ergebnisKnoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION])
     }
 
     @Test
@@ -241,7 +245,7 @@ class MethodenAufrufSynchronisierungTest {
 
         assertEquals(listOf("x", "y", "dimension"), ausgänge.map { it.name })
         assertEquals(
-            listOf(MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Zahl.id),
+            listOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Zahl.id),
             ausgänge.map { it.art },
         )
         assertEquals(METHODEN_ARGUMENTPROJEKTION_SEPARIERT, synchronisiert.parameter[METHODEN_ARGUMENTE_PROJEKTION])

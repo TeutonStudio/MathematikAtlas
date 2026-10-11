@@ -57,4 +57,27 @@ class StrukturFormelEditorTest {
         assertEquals(FormelTyp.VEKTOR, matrixVektor.ergebnisTyp)
         assertEquals(listOf(FormelTyp.MATRIX, FormelTyp.VEKTOR), matrixVektor.argumente.map { it.typ })
     }
+    @Test
+    fun `Strukturpaletten enthalten nur deklarierte auswertbare Formelsignaturen`() {
+        val paare = listOf(
+            OperatorFamilie.VEKTOR to StrukturFormelFamilie.VEKTOR,
+            OperatorFamilie.MATRIX to StrukturFormelFamilie.MATRIX,
+            OperatorFamilie.TENSOR to StrukturFormelFamilie.TENSOR,
+        )
+        paare.forEach { (familie, palette) ->
+            StrukturFormelTastatur.fuer(palette).filter { it.operatorId.startsWith(familie.name.lowercase() + ".") }.forEach { taste ->
+                val definition = RechnerOperatorDefinitionen.finde(familie, taste.operatorId)!!
+                assertEquals(familie, definition.formelFamilie)
+                assertEquals(definition.formelErgebnisTyp, taste.ergebnisTyp)
+                assertEquals(definition.formelArgumente.map { it.name to it.typ }, taste.argumente.map { it.rolle to it.typ })
+            }
+        }
+        val vektorIds = StrukturFormelTastatur.fuer(StrukturFormelFamilie.VEKTOR).map { it.operatorId }
+        assertFalse("vektor.zusammenfuehren" in vektorIds)
+        assertFalse("vektor.zerlegen" in vektorIds)
+        assertFalse(VektorRechnerOperator.VEKTORFELD_INTEGRIEREN.stabileId in vektorIds)
+        val tensorIds = StrukturFormelTastatur.fuer(StrukturFormelFamilie.TENSOR).map { it.operatorId }
+        assertTrue(tensorIds.filter { it.startsWith("tensor.") }.all { id -> TensorRechnerOperator.entries.any { it.stabileId == id } })
+    }
+
 }

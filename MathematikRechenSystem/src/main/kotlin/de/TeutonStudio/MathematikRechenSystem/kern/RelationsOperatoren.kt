@@ -154,6 +154,16 @@ object RelationsOperatoren {
             relationsStruktur = gleichheitsStruktur,
         ) { werte -> Gleichheit(werte[0], werte[1]) },
         RelationsOperatorDefinition(
+            stabileId = "relation.selbigkeit",
+            titel = "Selbigkeit",
+            kategorie = "Allgemein",
+            symbolLatex = "a\\stackrel{?}{=}b",
+            argumente = listOf(a("links", RelationsArgumentArt.OBJEKT), a("rechts", RelationsArgumentArt.OBJEKT)),
+            relationsStruktur = gleichheitsStruktur,
+            suchbegriffe = setOf("selbig", "dasselbe", "gleicher Typ und Inhalt", "\\stackrel{?}{=}"),
+            auswerter = { Selbigkeit(it[0], it[1]) },
+        ),
+        RelationsOperatorDefinition(
             stabileId = "relation.ungleichheit",
             titel = "Ungleichheit",
             kategorie = "Allgemein",

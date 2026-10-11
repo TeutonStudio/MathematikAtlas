@@ -189,7 +189,7 @@ private fun KnotenAuswertungsKontext.werteHyperWertAus(): KnotenAuswertungsErgeb
 }
 
 private fun KnotenAuswertungsKontext.werteHyperErweiterungAus(): KnotenAuswertungsErgebnis {
-    val grundobjekt = eingänge["grundobjekt"]?.objekt
+    val grundobjekt = eingänge["grundobjekt"]?.mathematischesObjekt("Grundobjekt der Hypererweiterung")
         ?: return fehlerErgebnis("Das Grundobjekt der Hypererweiterung fehlt.")
     val art = HyperErweiterungsArt.entries.firstOrNull {
         it.name == knoten.parameter[HYPER_ERWEITERUNGSART_PARAMETER]
@@ -209,7 +209,7 @@ private fun KnotenAuswertungsKontext.werteHyperErweiterungAus(): KnotenAuswertun
 }
 
 private fun KnotenAuswertungsKontext.werteHyperPraedikatAus(): KnotenAuswertungsErgebnis {
-    val argument = eingänge["argument"]?.objekt
+    val argument = eingänge["argument"]?.mathematischesObjekt("Argument des externen Hyperprädikats")
         ?: return fehlerErgebnis("Das Argument des externen Hyperprädikats fehlt.")
     val art = ExternesHyperPraedikat.entries.firstOrNull {
         it.name == knoten.parameter[HYPER_PRAEDIKAT_PARAMETER]
@@ -263,14 +263,16 @@ private fun KnotenAuswertungsKontext.werteTransferAus(): KnotenAuswertungsErgebn
 }
 
 private fun KnotenAuswertungsKontext.werteHyperendlicheStrukturAus(): KnotenAuswertungsErgebnis {
-    val struktur = eingänge["struktur"]?.objekt
+    val struktur = eingänge["struktur"]?.mathematischesObjekt("Grundstruktur der hyperendlichen Struktur")
         ?: return fehlerErgebnis("Die zu erweiternde Struktur fehlt.")
     val hyperIndex = eingänge["hyperIndex"]?.objekt as? ZahlAusdruck
         ?: return fehlerErgebnis("Der Hyperindex muss ein Zahlterm sein.")
-    val sichtfenster = when (val objekt = eingänge["sichtfenster"]?.objekt) {
+    val sichtfenster: List<MathematischesObjekt> = when (val wert = eingänge["sichtfenster"]) {
         null -> emptyList()
-        is Tupel -> objekt.elemente
-        else -> listOf(objekt)
+        else -> when (val objekt = wert.objekt) {
+            is Tupel -> objekt.elemente
+            else -> listOf(wert.mathematischesObjekt("Sichtfenster der hyperendlichen Struktur"))
+        }
     }
     val ausgabe = SymbolischeHyperendlicheStruktur(
         grundstruktur = struktur,

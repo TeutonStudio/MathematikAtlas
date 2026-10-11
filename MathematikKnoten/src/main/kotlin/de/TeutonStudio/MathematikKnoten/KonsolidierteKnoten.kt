@@ -204,7 +204,9 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
             it.stabileId == kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR]
         } ?: VektorRechnerOperator.SKALARPRODUKT
         val quellen = listOf("links", "rechts").mapNotNull { name ->
-            kontext.eingänge[name]?.objekt?.let(::vektorQuelle)
+            kontext.eingänge[name]?.let { wert ->
+                vektorQuelle(wert.mathematischesObjekt("Vektorrechner-Eingang '$name'"))
+            }
         }
         val ergebnis = VektorRechner.erzeuge(VektorRechnerAnfrage(operator = operator, vektoren = quellen))
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()

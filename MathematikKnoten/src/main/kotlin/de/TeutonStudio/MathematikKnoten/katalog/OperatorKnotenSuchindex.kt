@@ -4,7 +4,6 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.MathematikKnoten.*
-import de.TeutonStudio.MathematikKnoten.enzyklopädie.RechnerFamilienKatalog
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /**
@@ -29,32 +28,25 @@ object OperatorKnotenSuchindex {
     }
 
     private fun eintraege(basisVorlagen: List<KnotenVorlage>): List<Eintrag> = buildList {
-        UniversellerZahlenOperator.entries.forEach { operator ->
-            val vorlage = ZahlenRechnerKnotenVorlagen.alle.firstOrNull {
-                it.standardParameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId
-            } ?: return@forEach
-            add(
-                Eintrag(
-                    begriffe = setOf(operator.titel, operator.name, operator.stabileId) + zahlenAliase(operator),
-                    vorlage = vorlage.copy(
-                        name = "Zahlenrechner · ${operator.titel}",
-                        kategorie = "Operatoren: Zahlenrechner",
-                    ),
-                ),
+        RechnerOperatorRegistry.alle.filterNot { it.operatorId.endsWith(".formel") }.forEach { vertrag ->
+            val basis = when (vertrag.familie) {
+                RechnerFamilie.ZAHL -> ZahlenRechnerKnotenVorlagen.standard
+                RechnerFamilie.VEKTOR -> vektorRechnerVorlage(VektorRechnerOperator.ADDITION)
+                RechnerFamilie.MATRIX -> StrukturFormelRechnerVorlagen.Matrix
+                RechnerFamilie.TENSOR -> basisVorlagen.firstOrNull { it.art == TensorRechner.KNOTEN_ART }
+                    ?: return@forEach
+            }
+            val konfiguriert = RechnerOperatorRegistry.konfiguriere(
+                basis.erzeuge(GraphPunkt.Zero),
+                vertrag.operatorId,
             )
-        }
-
-        RechnerFamilienKatalog.tensorOperatoren.forEach { eintrag ->
-            val basis = basisVorlagen.firstOrNull { it.art == TensorRechner.KNOTEN_ART } ?: return@forEach
-            val definition = StandardTensorOperationen.registry.definition(eintrag.stabileId) ?: return@forEach
-            val konfiguriert = konfiguriereTensorOperation(basis.erzeuge(GraphPunkt.Zero), definition)
             add(
                 Eintrag(
-                    begriffe = setOf(eintrag.titel, eintrag.stabileId) + tensorAliase(eintrag.stabileId),
+                    begriffe = setOf(vertrag.titel, vertrag.operatorId, vertrag.familie.name, vertrag.symbolLatex) + vertrag.aliases,
                     vorlage = konfiguriert.alsSuchVorlage(
-                        name = "Tensorrechner · ${eintrag.titel}",
-                        kategorie = "Operatoren: Tensorrechner",
-                        beschreibung = "Vorkonfigurierter Tensoroperator ${eintrag.titel}.",
+                        name = "${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner · ${vertrag.titel}",
+                        kategorie = "Operatoren: ${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner",
+                        beschreibung = "Vorkonfigurierter Operator ${vertrag.titel}.",
                     ),
                 ),
             )
@@ -73,15 +65,6 @@ object OperatorKnotenSuchindex {
                         kategorie = "Operatoren: Mengenrechner",
                         beschreibung = operator.definitionLatex(),
                     ),
-                ),
-            )
-        }
-
-        VektorRechnerOperator.entries.forEach { operator ->
-            add(
-                Eintrag(
-                    begriffe = setOf(operator.titel, operator.name, operator.stabileId) + vektorAliase(operator),
-                    vorlage = vektorRechnerVorlage(operator),
                 ),
             )
         }
@@ -137,21 +120,6 @@ object OperatorKnotenSuchindex {
         .replace("ß", "ss")
         .trim()
 
-    private fun zahlenAliase(operator: UniversellerZahlenOperator): Set<String> = when (operator) {
-        UniversellerZahlenOperator.SINUS -> setOf("sin")
-        UniversellerZahlenOperator.COSINUS -> setOf("cos")
-        UniversellerZahlenOperator.INTEGRAL -> setOf("integrieren", "integration")
-        UniversellerZahlenOperator.DIFFERENTIAL -> setOf("ableiten", "differenzieren")
-        UniversellerZahlenOperator.QUADRATWURZEL -> setOf("sqrt", "wurzel")
-        else -> emptySet()
-    }
-
-    private fun tensorAliase(id: String): Set<String> = when (id) {
-        TensorRechnerOperator.TENSORPRODUKT.stabileId -> setOf("tensor produkt", "⊗")
-        TensorRechnerOperator.KONTRAKTION.stabileId -> setOf("kontrahieren")
-        else -> emptySet()
-    }
-
     private fun mengenAliase(operator: MengenRechnerOperator): Set<String> = when (operator) {
         MengenRechnerOperator.VEREINIGUNG -> setOf("union", "vereinen")
         MengenRechnerOperator.SCHNITT -> setOf("intersection", "durchschnitt")
@@ -159,11 +127,4 @@ object OperatorKnotenSuchindex {
         else -> emptySet()
     }
 
-    private fun vektorAliase(operator: VektorRechnerOperator): Set<String> = when (operator) {
-        VektorRechnerOperator.SKALARPRODUKT -> setOf("dot product", "inneres produkt")
-        VektorRechnerOperator.KREUZPRODUKT -> setOf("cross product")
-        VektorRechnerOperator.DISTANZ -> setOf("abstand", "metrik")
-        VektorRechnerOperator.VEKTORFELD_INTEGRIEREN -> setOf("vektorfeld integral", "feld integrieren")
-        else -> emptySet()
-    }
 }

@@ -64,36 +64,13 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                         ),
                     )
                 }
-                StandardTensorOperationen.registry.alle().forEach { auswählbar ->
-                    add(RechnerOperatorAuswahlEintrag(
-                    id = auswählbar.id.wert,
-                    titel = auswählbar.titel,
-                    symbolLatex = "\\operatorname{${auswählbar.titel}}",
-                    kategorie = tensorOperatorKategorie(auswählbar),
-                    beschreibung = buildString {
-                        append("Tensoroperation der Signaturfamilie ${auswählbar.familie.name.lowercase()}.")
-                        if (auswählbar.parameter.isNotEmpty()) {
-                            append(" Zusatzparameter: ")
-                            append(auswählbar.parameter.joinToString { it.id })
-                            append('.')
-                        }
-                    },
-                    suchbegriffe = buildSet {
-                        add(auswählbar.familie.name)
-                        add(auswählbar.unterstuetzungsStatus.name)
-                        addAll(auswählbar.eingangsRollen.map { it.wert })
-                        addAll(auswählbar.ausgangsRollen.map { it.wert })
-                        addAll(auswählbar.parameter.map { it.id })
-                    },
-                    status = tensorStatusTitel(auswählbar),
-                    kandidat = konfiguriereTensorOperation(
-                        knoten = knoten,
-                        definition = auswählbar,
-                        achsenModus = aktuellerAchsenEingabeModus(knoten),
-                        dynamischeAchsenAnzahl = dynamischeAchsenAnzahl(knoten, auswählbar),
-                    ),
-                    ))
-                }
+                rechnerOperatorEinträge(knoten, de.TeutonStudio.MathematikKnoten.RechnerFamilie.TENSOR)
+                    .filter { it.art == RechnerOperatorAuswahlArt.OPERATOR }.forEach { eintrag ->
+                        val auswählbar = requireNotNull(StandardTensorOperationen.registry.definition(eintrag.id))
+                        add(eintrag.copy(kandidat = konfiguriereTensorOperation(knoten, auswählbar,
+                            aktuellerAchsenEingabeModus(knoten), dynamischeAchsenAnzahl(knoten, auswählbar))))
+                    }
+
             }
         }
 
@@ -181,7 +158,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                 },
                 schließen = { operatorDialog = false },
                 operatorÜbernehmen = { eintrag ->
-                    eintrag.kandidat?.let(aktionen::knoten)
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
                     operatorDialog = false
                 },
                 formelÖffnen = {},
@@ -202,7 +179,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            aktionen.knoten(ziel)
+                            aktionen.knotenNachVerlustbestätigung(ziel)
                             ausstehenderKnoten = null
                         },
                     ) { Text("Wechseln und Verbindungen trennen") }

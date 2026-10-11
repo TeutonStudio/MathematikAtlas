@@ -70,7 +70,7 @@ class EnzyklopädieRegister private constructor(
     companion object {
         fun ausVorlagen(vorlagen: List<KnotenVorlage>): EnzyklopädieRegister {
             val konzepte = KonzeptKnotenRegister.erstelle(vorlagen)
-            val operatoren = RechnerFamilienKatalog.alle.map(::operatorWissensEintrag)
+            val operatoren = RechnerFamilienKatalog.alle.map { operatorWissensEintrag(it, konzepte) }
             val register = EnzyklopädieRegister(
                 (konzepte + operatoren)
                     .sortedWith(compareBy<WissensEintrag> { it.fachPfade.minOf { pfad -> pfad.stabileId } }
@@ -92,11 +92,11 @@ object MathematikEnzyklopädie {
     }
 }
 
-private fun operatorWissensEintrag(operator: RechnerOperatorEintrag): WissensEintrag {
+private fun operatorWissensEintrag(operator: RechnerOperatorEintrag, konzepte: List<WissensEintrag>): WissensEintrag {
     val familienWissen = when (operator.familie) {
         RechnerFamilienKatalog.Zahlenrechner -> WissensId("konzept.zahlenrechner")
         RechnerFamilienKatalog.Tensorrechner -> WissensId("konzept.tensorrechner")
-        else -> error("Unbekannte Rechnerfamilie ${operator.familie}")
+        else -> konzepte.first { operator.knotenArt in it.knotenArten }.id
     }
     val fachPfad = when (operator.familie) {
         RechnerFamilienKatalog.Zahlenrechner -> if (operator.kategorie == "Analysis") {

@@ -1,0 +1,34 @@
+package de.TeutonStudio.MathematikAtlas
+
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.*
+import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKnoten.synchronisiereRestriktionsAnschlüsse
+
+internal data class KonfigurationsPlan(val karte: KartenDaten, val auswirkung: KnotenErsetzungsAuswirkung)
+
+/** Reine Vorschau inklusive aller durch Signatur-/Formänderung abhängigen Anschlüsse. */
+internal fun planeKonfiguration(
+    bisher: KartenDaten,
+    kandidat: KnotenDaten,
+    prüfung: GraphPrüfung,
+    auswerten: (KartenDaten) -> KartenAuswertungsErgebnis,
+): KonfigurationsPlan {
+    val direkte = bisher.vorschauKnotenErsetzen(kandidat, prüfung)
+    var neu = bisher.wendeAn(KartenAktion.KnotenErsetzen(kandidat, direkte.entfallendeVerbindungen.map { it.id }.toSet()))
+    // Signaturen können weitere Signaturen bestimmen. Jede Runde wird aus dem
+    // tatsächlich vorgeschlagenen Stand ausgewertet, nie aus dem sichtbaren Altstand.
+    repeat(bisher.knoten.size + 1) {
+        val ergebnis = auswerten(neu)
+        val restriktion = synchronisiereRestriktionsAnschlüsse(neu, ergebnis)
+        val bildmenge = synchronisiereBildmengenAnschlüsse(restriktion, ergebnis)
+        val zerleger = synchronisiereStrukturZerleger(bildmenge, ergebnis, prüfung)
+        val synchronisiert = synchronisiereMethodenAufrufe(zerleger, ergebnis, prüfung)
+        if (synchronisiert == neu) {
+            val neueIds = neu.verbindungen.map { it.id }.toSet()
+            return KonfigurationsPlan(neu, direkte.copy(entfallendeVerbindungen = bisher.verbindungen.filter { it.id !in neueIds }))
+        }
+        neu = synchronisiert
+    }
+    error("Die abhängigen Anschlussverträge stabilisieren sich nicht; die Konfiguration wurde nicht übernommen.")
+}

@@ -271,8 +271,12 @@ object VisualisierungsSampler {
         konfiguration: VisualisierungsKonfiguration,
         abbruchPrüfen: () -> Unit = {},
     ): VisualisierungsErgebnis {
-        if (menge is Abbild) return sampleAbbild(menge, konfiguration, abbruchPrüfen)
-        return materialisiere(normalisiere(menge, konfiguration, abbruchPrüfen), konfiguration, abbruchPrüfen)
+        val laufzeit = konfiguration.copy(sampling = konfiguration.sampling.copy(
+            maximalesRasterBudget = minOf(konfiguration.sampling.maximalesRasterBudget,
+                de.TeutonStudio.MathematikKnoten.visualisierung.modell.MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET),
+        ))
+        if (menge is Abbild) return sampleAbbild(menge, laufzeit, abbruchPrüfen)
+        return materialisiere(normalisiere(menge, laufzeit, abbruchPrüfen), laufzeit, abbruchPrüfen)
     }
 
     private fun materialisiere(
@@ -1332,8 +1336,9 @@ object VisualisierungsSampler {
                 },
                 abbruchPrüfen = abbruchPrüfen,
             )
+            val abtastung = if (parameter.size == 2 && konfiguration.sampling.vorschau) "gleichmäßige Punktvorschau" else "adaptive Bildraumabtastung"
             val hinweise = domänen.flatMap { it.hinweise }.distinct() +
-                "Methodenmodus: ${modus.name}; adaptive Bildraumabtastung mit ${adaptiv.statistik.auswertungen} Auswertungen."
+                "Methodenmodus: ${modus.name}; $abtastung mit ${adaptiv.statistik.auswertungen} Auswertungen."
             val budgetHinweis = if (adaptiv.statistik.budgetErschöpft) {
                 listOf("Das Auswertungsbudget wurde vor Erreichen der Zielauflösung ausgeschöpft.")
             } else emptyList()

@@ -16,7 +16,7 @@ class DesktopAtlasZustand(
     private val laufzeit = MathematikKartenLaufzeit(
         kartenQuelle = KartenQuelle(speicher::lade),
     )
-    val vorlagen: List<KnotenVorlage> = laufzeit.vorlagen
+    val vorlagen: List<KnotenVorlage> = desktopKnotenVorlagen()
     val editor = KartenEditorZustand(
         speicher.ladeAktuell() ?: KartenDaten(name = "Neue Desktop-Karte"),
         laufzeit.graphPrüfung,

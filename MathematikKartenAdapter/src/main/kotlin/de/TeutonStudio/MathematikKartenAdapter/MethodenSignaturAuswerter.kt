@@ -1,12 +1,6 @@
 package de.TeutonStudio.MathematikKartenAdapter
 
-import de.TeutonStudio.MathematikRechenSystem.kern.Methode
-import de.TeutonStudio.MathematikRechenSystem.kern.MethodenArgument
-import de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl
-import de.TeutonStudio.MathematikRechenSystem.kern.Tupel
-import de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum
-import de.TeutonStudio.MathematikRechenSystem.kern.argumentAnzahl
-import de.TeutonStudio.MathematikRechenSystem.kern.methodenSignatur
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 const val METHODEN_WERTEVORRAT_ART = "mathematik.methodenWertevorrat"
 const val METHODEN_WERTEGRUNDRAUM_ART = "mathematik.methodenWertegrundraum"
@@ -15,8 +9,9 @@ const val METHODEN_ARGUMENTE_ART = "mathematik.methodenArgumente"
 const val METHODEN_ARGUMENTE_PROJEKTION = "methodenArgumente.projektion"
 const val METHODEN_ZIELMENGE_ERGEBNISPROJEKTION = "methodenZielmenge.ergebnisprojektion"
 
-fun methodenArgumentAusgangName(argument: MethodenArgument, index: Int): String {
-    val name = argument.parameter.name.trim().ifBlank { "argument-${index + 1}" }
+/** Sichtbarer Komponentenname ohne Rückgriff auf mathematische Parameterobjekte. */
+fun methodenArgumentAusgangName(argument: MethodenKomponente, index: Int): String {
+    val name = argument.name.trim().ifBlank { "argument-${index + 1}" }
     return if (name == "dimension") "argument-${index + 1}" else name
 }
 
@@ -25,15 +20,21 @@ fun MathematikAuswerterRegister.registriereMethodenArgumente() {
     registriere(METHODEN_WERTEGRUNDRAUM_ART, MethodenWertegrundraumAuswerter)
 }
 
+/**
+ * Historischer Knotenname. Fachlich liefert der Knoten nun den tatsächlichen
+ * mathematischen Definitionsraum und damit bei 0/1/n Argumenten immer die kanonische
+ * Tupelraum-Semantik aus #431.
+ */
 internal object MethodenWertevorratAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
-        val methode = methodenWert.objekt as? Methode ?: error("Eine konkrete Methode fehlt.")
-        val werteVorrat = methode.methodenSignatur().werteVorrat
+        val methode = methodenWert.objekt as? MathematischeSignaturtragendeMethode
+            ?: error("Der Methoden-Wertevorrat benötigt eine mathematische Raum-/Mengensignatur.")
+        val definitionsRaum = methode.mathematischeSignatur.definitionsRaum
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "menge" to BedingterWert(
-                    objekt = werteVorrat,
+                    objekt = definitionsRaum,
                     variablenQuellen = methodenWert.variablenQuellen,
                 ),
             ),
@@ -44,13 +45,14 @@ internal object MethodenWertevorratAuswerter : MathematikKnotenAuswerter {
 internal object MethodenWertegrundraumAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
-        val methode = methodenWert.objekt as? Methode ?: error("Eine konkrete Methode fehlt.")
-        val argumente = methode.methodenSignatur().argumente
+        val methode = methodenWert.objekt as? MathematischeSignaturtragendeMethode
+            ?: error("Der Methoden-Wertegrundraum benötigt eine mathematische Raum-/Mengensignatur.")
+        val argumente = methode.mathematischeSignatur.argumente
         check(argumente.isNotEmpty()) {
-            "Eine nullstellige Methode besitzt keinen Wertegrundraum."
+            "Eine nullstellige Methode besitzt keinen Komponenten-Wertegrundraum."
         }
-        val grundraum = argumente.first().werteVorrat
-        check(argumente.all { it.werteVorrat == grundraum }) {
+        val grundraum = argumente.first().definitionsMenge
+        check(argumente.all { it.definitionsMenge == grundraum }) {
             "Die Methodenargumente besitzen keinen gemeinsamen Wertegrundraum."
         }
         return KnotenAuswertungsErgebnis(
@@ -68,12 +70,12 @@ internal object MethodenWertegrundraumAuswerter : MathematikKnotenAuswerter {
 internal object MethodenArgumentanzahlAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
-        val methode = methodenWert.objekt as? Methode
-            ?: error("Die Methodensignatur ist noch unbekannt.")
+        val methode = methodenWert.objekt as? SignaturtragendeMethode
+            ?: error("Die neutrale Methodensignatur ist noch unbekannt.")
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "anzahl" to BedingterWert(
-                    objekt = RationaleZahl.von(methode.argumentAnzahl.toLong()),
+                    objekt = RationaleZahl.von(methode.signatur.argumente.size.toLong()),
                     variablenQuellen = methodenWert.variablenQuellen,
                 ),
             ),
@@ -81,22 +83,27 @@ internal object MethodenArgumentanzahlAuswerter : MathematikKnotenAuswerter {
     }
 }
 
+/**
+ * Gibt konkrete symbolische Argumentobjekte aus und ist deshalb eine mathematische
+ * Introspektion. Die UI-Anschlussprojektion selbst arbeitet dagegen nur mit der
+ * neutralen [MethodenSignatur].
+ */
 internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
-        val methode = methodenWert.objekt as? Methode
-            ?: error("Die Methodensignatur ist noch unbekannt.")
-        val argumente = methode.methodenSignatur().argumente
+        val methode = methodenWert.objekt as? MathematischeSignaturtragendeMethode
+            ?: error("Konkrete Methodenargumente benötigen eine mathematische Raum-/Mengensignatur.")
+        val argumente = methode.mathematischeSignatur.argumente
         val werte = argumente.map { argument ->
             val quelle = VariablenQuelle(
                 kontext.knoten.id,
-                argument.parameter.name,
-                argument.werteVorrat,
+                argument.name,
+                argument.definitionsMenge,
                 alsMethodenParameter = true,
             )
             BedingterWert(
                 objekt = argument.parameter,
-                werteVorrat = argument.werteVorrat,
+                werteVorrat = argument.definitionsMenge,
                 variablenQuellen = methodenWert.variablenQuellen + quelle,
             )
         }
@@ -105,7 +112,7 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
 
         val ausgaben = when (projektion) {
             METHODEN_ARGUMENTPROJEKTION_SEPARIERT -> buildMap {
-                argumente.forEachIndexed { index, argument ->
+                methode.signatur.argumente.forEachIndexed { index, argument ->
                     put(methodenArgumentAusgangName(argument, index), werte[index])
                 }
                 put(
@@ -118,7 +125,7 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
             }
             else -> mapOf(
                 "argumente" to BedingterWert(
-                    objekt = Tupel(werte.map(BedingterWert::objekt)),
+                    objekt = Tupel(werte.map { it.objekt as MathematischesObjekt }),
                     variablenQuellen = werte.flatMap(BedingterWert::variablenQuellen).distinct(),
                 ),
             )
@@ -128,23 +135,21 @@ internal object MethodenArgumenteAuswerter : MathematikKnotenAuswerter {
 }
 
 /**
- * Liefert die Zielmenge derselben Ergebnisprojektion, die auch ein nachfolgender
- * Methodenaufruf verwendet. Ein bereits tupeliger Zielraum wird dabei niemals
- * nochmals als Einertupelraum verschachtelt.
+ * Liefert die mathematische Zielmenge bzw. den kanonischen Zielraum derselben
+ * Ergebnisprojektion, die auch ein nachfolgender Methodenaufruf verwendet.
  */
 internal object MethodenZielmengeSignaturAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
-        val methode = methodenWert.objekt as? Methode ?: error("Eine konkrete Methode fehlt.")
-        val roheZielMenge = methode.methodenSignatur().zielMenge
+        val methode = methodenWert.objekt as? MathematischeSignaturtragendeMethode
+            ?: error("Die Zielmenge benötigt eine mathematische Raum-/Mengensignatur.")
+        val signatur = methode.mathematischeSignatur
         val projektion = kontext.knoten.parameter[METHODEN_ZIELMENGE_ERGEBNISPROJEKTION]
             ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
-        val zielMenge = if (
-            projektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && roheZielMenge !is Tupelraum
-        ) {
-            Tupelraum(listOf(roheZielMenge))
-        } else {
-            roheZielMenge
+        val zielMenge = when {
+            projektion == METHODEN_ERGEBNISPROJEKTION_TUPEL -> signatur.zielRaum
+            signatur.ergebnisse.size == 1 -> signatur.ergebnisse.single().zielMenge
+            else -> signatur.zielRaum
         }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(

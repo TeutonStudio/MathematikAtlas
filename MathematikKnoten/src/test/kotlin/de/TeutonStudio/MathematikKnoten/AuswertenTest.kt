@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.MathematikRechenSystem.kern.einzigeZielMenge
 import de.TeutonStudio.KnotenKartenVerwalter.daten.GraphPunkt
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
@@ -240,7 +241,7 @@ class AuswertenTest {
         val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
         val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
-        assertEquals(bereich.elementBereich.zuMenge(), funktion.einzigeZielMenge)
+        assertEquals(bereich.zuMenge(), funktion.einzigeZielMenge)
         assertEquals(bereich.zuMenge(), funktion.werteVorräte.getValue("a"))
     }
 

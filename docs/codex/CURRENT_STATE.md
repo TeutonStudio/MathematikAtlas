@@ -1,28 +1,30 @@
 # Aktueller verifizierter Projektzustand
 
-> Stand: 2026-10-05. Ältere Zustandsangaben zu `v2.1.9`, Gradle 8.13 oder Kartenformat 2 sind überholt. Der ausführliche Android-Bestandsaudit liegt unter `plans/completed/2026-09-30-android-bestandsabsicherung.md`.
+> Stand: 2026-10-11, laufende Alpha-Konsolidierung. Nachweise gelten für den jeweiligen geprüften Arbeitsstand, nicht als Release-Abnahme. Vollständige Anforderungsmatrix: [V3_ALPHA_ABNAHME.md](../V3_ALPHA_ABNAHME.md).
 
 ## Metadaten
 
-- Veröffentlichte Basis vor diesem Abschluss: `v2.34.0` auf Commit `f4be87a7`.
-- Releaseabschluss: `samai/v3.0.0-releaseabschluss`; App-Version 3.0.0 (`versionCode` 3000000).
-- Zielplattform dieser Prüfung: Android; gemeinsame Kotlin-Module wurden über ihre Android-Verwendung geprüft.
-- Der Arbeitsbaum enthielt bereits lokale Änderungen an Android-Gradle-Plugin, Gradle-Wrapper und Android-Studio-Dateien. Diese Änderungen wurden erhalten und beim Build mitgeprüft.
-- Aktueller Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`.
+- Veröffentlichte Produktbasis: `v3.0.0`, Commit `df4f25dc6c41a31cb77c7627ef9897b827a056bb`; GitHub-master beim Live-Abgleich `6ac2b2b4`.
+- Isolierter Integrationsbranch: `samai/v3.0.1/alpha-konsolidierung`; Android-Metadaten 3.0.1 / 3000001 und Desktop 3.0.1 für den Release vorbereitet. Keine neue Veröffentlichung erfolgt.
+- Originalarbeitsbaum einschließlich IDE-Dateien vollständig gesichert und unverändert erhalten. Produktintegration im isolierten Arbeitsbaum.
+- Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`.
+- Tatsächlicher statischer Erstellenkatalog: 136 Typen einschließlich Geometrie, Mengenräumen, Notizen und Kartengruppen; Baseline aus unverändertem v3.0.0 durch App-JVM-Test exportiert.
 
 ## Verifizierte Prüfungen
 
 | Prüfung | Ergebnis |
 |---|---|
-| `python3 scripts/pruefe_repository.py` | erfolgreich; Architektur, XML, Wrapper und Desktop-Shadowmodule geprüft |
-| `python3 scripts/pruefe_releaseplan.py` | erwartungsgemäß noch nicht erfolgreich; die reservierte 2.34.0 ist bis zur Releaseintegration aktiv |
-| `python3 scripts/pruefe_versionsfolge.py` | erfolgreich |
-| `python3 scripts/pruefe_standardkarten.py` | erfolgreich; 15 Karten geprüft |
-| `python3 scripts/pruefe_methodenmodell.py` | erfolgreich |
-| `python3 scripts/pruefe_kern.py` | nicht ausführbar; das Skript fand in seiner Umgebung `kotlinc` nicht |
-| `./gradlew test :app:assembleDebug` | erfolgreich mit den bereits lokal geänderten AGP-/Gradle-Versionen; vollständige JVM-Tests und Debug-APK gebaut |
-| Katalog-zu-Auswerter-Regressionstest | erfolgreich; jede sichtbare mathematische Knotenart besitzt einen registrierten oder zentral behandelten Auswertungspfad |
-| Android-Emulator | nicht ausführbar; der vorhandene AVD `Medium_Tablet` endete vor abgeschlossenem Boot mit Exitcode 139, ein erneuter ADB-Start ist in der Sandbox durch Socket-/Netlink-Rechte gesperrt |
+| Repository, Architektur, Methodenmodell, Desktop-Shadowmodule | erfolgreich nach Registrymigration und Lint am 11.10.; finale Änderungen erneut prüfen |
+| Releaseplan, Versionsfolge | erfolgreich für vorbereitete 3.0.1-Metadaten; finaler PR-/Pushereignisnachweis offen |
+| Standardkartenprüfung | erfolgreich; 15 Karten |
+| Release-Guardregressionen | 14 Tests erfolgreich, einschließlich echter Git-Events und unveränderlicher Vorgängerhistorie |
+| Core-/Graph-/Adapter-/Knotentests | 429 / 93 / 49 / 552 grün nach Registrymigration; TypSystem zusätzlich 10 Tests grün |
+| App-JVM-Tests und Android-Debug-Build | 253 Tests grün einschließlich Abbruch nach allen fünf Importzielen; assembleDebug und lintDebug (0 Fehler, 9 Warnungen) erfolgreich |
+| Desktop-Katalogtest | vollständige Desktop-Tests erfolgreich (3 Tests); CLI-Persistenz-Smoke in zwei Prozessen schreibt/liest Version1 und2; lokale Paketierung/GUI-Abnahme offen |
+| Android-Emulator API36 | isolierter AVD mit Hostrenderer bootet; JSON-SAF-Import, aktive Karte nach Prozessneustart, starke Kapselkontur, Aussagenstandard mit Undo/Redo und Persistenz geprüft |
+| Importabbruch im Emulator | fehlendes/leeres Journal sichtbar gemeldet; unterbrochene Wiederherstellung wiederholt und alle 18 Bestandsdateien byteidentisch; Phasenregressionen grün |
+| Schmale Androidansicht | Bibliothek zunächst geschlossen, als Overlay öffnungsfähig; Canvas nutzt verfügbare Breite; Eigenfilter enthält keine leeren Standardordner |
+| Vollständige finale Plattformabnahme | Kernskript, 1389 JVM-/Desktoptests, lintDebug und APK grün; bestätigter Operatorwechsel/Undo/Redo, Kapseltouch und Hintergrundwechsel grün; Unterkartennavigation geprüft; Releaseintegration offen |
 
 ## Bestätigter Aufbau
 
@@ -32,12 +34,12 @@
 - Graph-/Rechenkernadapter: `MathematikKartenAdapter`.
 - Knotenvorlagen, Auswerter, Renderer und mathematische Kartenmigration: `MathematikKnoten`.
 - Der Android-Speicher liegt unter dem app-internen Pfad `MathematikAtlas/karten/<karten-id>/v<version>.json`; vorhandene Dateien werden vor dem Überschreiben zusätzlich unter `MathematikAtlas/sicherungen/` gesichert.
-- Es gibt 244 Kotlin-Testdateien in den untersuchten Android- und gemeinsamen Modulen. Android-Instrumentierungstestquellen fehlen trotz vorhandener Testabhängigkeiten.
+- Kotlin-JVM-Tests sind vorhanden. Android-Instrumentierungstestquellen fehlen trotz vorhandener Testabhängigkeiten; manuelle Emulatornachweise ersetzen keine automatisierte Gestenabdeckung.
 
 ## Bestätigte Stärken
 
-- Repository-, Architektur- und Versionsfolgeprüfungen bestehen; der Releaseplan bleibt bis zum Abschluss der reservierten 2.34.0 absichtlich aktiv.
-- Der vollständige JVM-Testlauf und der Android-Debug-Build bestehen.
+- Repository-, Architektur- und Versionsfolgeprüfungen bestehen; 3.0.1 verwendet die vorhandene Reservierung. 3.1.0 wird erst nach Abschluss des Vorgängers reserviert.
+- Android-Debug-Build, Lint und vollständiger JVM-/Desktoplauf bestehen nach Registrykonsolidierung. Weitere Korrekturen müssen gezielt erneut geprüft werden.
 - Die 15 ausgelieferten Standardkarten werden strukturell geprüft und durch den echten Auswerter ohne gemeldete Fehler ausgewertet.
 - Repräsentative Tests decken Zahlenrechnung, Mengen, Aussagenlogik, Methoden/Analysis, Vektoren und Matrizen einschließlich fachlicher Randfälle ab.
 - Editor-Unit-Tests decken Verbindungskompatibilität, belegte Eingänge, dynamische Anschlüsse, Kopieren, Löschen, Mehrfachaktionen sowie Undo/Redo ab.
@@ -54,7 +56,7 @@
 - Feste Schnitte binden nicht dargestellte Variablen ausdrücklich. Eine optionale
   Farbdimension kann mehrere Werte pro Bildpunkt erhalten und markiert diese Fälle.
 - Der Sampler arbeitet auf `Dispatchers.Default`, prüft den Coroutine-Abbruch und
-  begrenzt Raster, Zertifikate und Orbits über persistierte Budgets.
+  begrenzt Raster, Zertifikate und Orbits über separate Laufzeitbudgets. Gespeicherte Qualitätswerte bleiben beim Laden erhalten.
 - `OrbitFamilie` und `OrbitBeschraenktheitsMenge` liegen im Compose-freien Kern.
   Allgemeine endliche Nichtflucht bleibt unbestimmt; exakte Zyklen beweisen
   Beschränktheit. Für die erkannte Familie `z²+c` mit Nullstart kommen sichere
@@ -71,14 +73,14 @@
 - Gezielte Kern-, Knoten-, Katalog-, Visualisierungs-, Beispielkarten- und
   JSON-Roundtriptests sowie der vollständige JVM-Testlauf und Debug-Build bestehen.
   Die unabhängige Knotenverifikation und Releaseintegration sind noch nicht abgeschlossen.
-- Ein Gerät ist nicht verbunden. Touch, Inspectorbedienung und Lebenszyklus bleiben
-  daher eine ausdrückliche Laufzeitprüfgrenze.
+- Ein isolierter API36-Emulator ist verfügbar. Erste Touch-/Inspector- und Lebenszyklusnachweise liegen vor; die vollständige finale Bedienungsabnahme bleibt offen.
 
 ## Offene, priorisierte Android-Befunde
 
-1. **Mittel – Start, Auswertung und der persistierende Anteil von Import und Speichern führen weiterhin umfangreiche Arbeit auf dem UI-Thread aus.** Dateistream-I/O für Import und Export läuft inzwischen auf `Dispatchers.IO`; die tatsächliche Verzögerung auf einem Gerät ist mangels erfolgreichem Emulatorlauf noch nicht gemessen.
-2. **Mittel – Activity-Neuerstellung stellt die zuletzt aktive Karte und Navigation nicht vollständig wieder her.** Der Kartenstand wird bei `ON_STOP` gesichert, `AtlasZustand` wird aber weiterhin mit `remember` aufgebaut.
-3. **Prüfgrenze – Touch-Gesten und Lebenszyklusabläufe besitzen keine Android-Instrumentierungstests.** Der konfigurierte AVD konnte in dieser Umgebung nicht vollständig booten.
+1. **Mittel – Start und Speichern können weiterhin umfangreiche Arbeit auf dem UI-Thread ausführen.** Importvalidierung, Transaktion und Listenaktualisierung laufen inzwischen auf Dispatchers.IO; automatische Speicherung wird während des Imports zurückgehalten. Verzögerungen sind noch nicht vollständig vermessen.
+2. **Prüfgrenze – Navigation und alle Lebenszyklusübergänge.** Die aktive Karte wird aus gespeichertem Verweis wiederhergestellt und überlebt im Emulator einen Prozessneustart. Bibliothekswechsel, Unterkarte per Doppel-Tap, Brotkrumenrückkehr, Hintergrundwechsel und Neustart der aktiven Unterkarte sind im Emulator geprüft. Automatisierte Instrumentierungsabdeckung besteht weiterhin nicht.
+3. **Prüfgrenze – Touch-Gesten.** Manuelle Emulatornachweise bestehen, Android-Instrumentierungstests fehlen weiterhin.
+4. **Releaseintegration offen.** Operatordefinitionen, Signaturaliase, gemeinsamer Konfigurator, Verbrauchervereinheitlichung und explizite Fachauswerterkomposition sind implementiert und unabhängig ohne weitere Blocker geprüft. Finale Veröffentlichung und der nachfolgende 3.1.0-Umfang stehen noch aus.
 
 ## Abstraktionswerkzeug und Speicherstabilisierung
 
@@ -96,6 +98,20 @@
   zurück.
 - Ein Kartenwechsel und `ON_STOP` brechen nur die flüchtige Verbindungsvorschau
   ab und sichern danach den aktuellen Kartenstand.
+
+## Kartenherkunft und Rechneroperatoren in v3.0.1
+
+- Die Kartenbibliothek löst Herkunft mit der Priorität Standardprovenienz,
+  Freigabequelle und app-lokaler Fremdimport auf und filtert eigene,
+  vordefinierte und Fremdnutzerkarten samt ihren relevanten Ordnern.
+- Datei- und HTTPS-Import verwenden denselben JSON-/Freigabepaket-/`.matlas`-
+  Erkennungspfad. HTTPS bleibt auf sichere Weiterleitungen, Zeitlimits und
+  höchstens 16 MiB begrenzt; ein Importjournal stellt gemeinsam veränderte
+  Bibliotheksdateien nach Fehler oder Prozessabbruch wieder her.
+- `RechnerOperatorRegistry` beschreibt Zahlen-, Vektor-, Matrix- und
+  Tensoroperatoren mit Signaturen, Ports, Parametern, Fähigkeiten und Status.
+  Der Operator-Suchindex und die abschließenden Familien-Dispatcher verwenden
+  diese Registry; unbekannte persistierte IDs werden nicht umgeschrieben.
 
 ## Dokumentationszustand
 
