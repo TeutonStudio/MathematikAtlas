@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikRechenSystem.kern.*
@@ -97,4 +98,9 @@ class MatrixproduktFalkSchemaTest {
         ausgaben = emptyMap(),
         eingänge = mapOf("a" to BedingterWert(links), "b" to BedingterWert(rechts)),
     )
+    @Test fun `Falk verschweigt weder Quellfehler noch ungueltige Faktoren`() {
+        kotlin.test.assertFails { matrixproduktFalkFaktoren(KnotenAuswertungsErgebnis(emptyMap(),fehler="Faktor 2 fehlt")) }
+        kotlin.test.assertFails { matrixproduktFalkFaktoren(KnotenAuswertungsErgebnis(emptyMap(),eingänge=mapOf("a" to BedingterWert(RationaleZahl.von(2))))) }
+    }
+
 }

@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.FORMEL_ZEICHNUNG_EIGENSCHAFT
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +59,15 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         val formelModus = operatorId == familie.formelOperatorId
         val bekannterOperator = StrukturRechnerOperatoren.fuer(familie).firstOrNull { it.id == operatorId }
         val operator = bekannterOperator ?: StrukturRechnerOperatoren.fuer(familie).first()
+        if (familie == StrukturRechnerKnotenFamilie.MATRIX && operatorId == "matrix.produkt") {
+            var feste by remember(knoten.id, knoten.parameter["festeEingänge"]) { mutableStateOf(knoten.parameter["festeEingänge"] ?: "2") }
+            OutlinedTextField(value = feste, onValueChange = { text ->
+                feste = text
+                text.toIntOrNull()?.takeIf { it >= 2 }?.let { n ->
+                    aktionen.knoten(konfiguriereStrukturRechner(knoten.copy(parameter = knoten.parameter + ("festeEingänge" to n.toString())), familie, operatorId))
+                }
+            }, label = { Text("Feste Faktoren (mindestens 2)") })
+        }
         var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
         var formelKandidat by remember(knoten.id, operatorId) { mutableStateOf<KnotenDaten?>(null) }
@@ -276,6 +287,13 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
             StrukturFormelBauerDialog(
                 familie = familie.formelFamilie,
                 start = formelStart,
+                startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT],
+                übernehmenMitZeichnung = { wurzel, zeichnung ->
+                    val neu = konfiguriereStrukturRechnerFormel(knoten, familie, wurzel,
+                        knoten.parameter["variablenName"].orEmpty().ifBlank { "x" })
+                    formelKandidat = neu.copy(eigenschaften = neu.eigenschaften + (FORMEL_ZEICHNUNG_EIGENSCHAFT to zeichnung))
+                    formelDialog = false; operatorDialog = true
+                },
                 quantorVariable = knoten.parameter["variablenName"].orEmpty().ifBlank { "x" },
                 schließen = { formelDialog = false },
                 übernehmen = { wurzel ->

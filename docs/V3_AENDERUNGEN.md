@@ -16,7 +16,7 @@ Zusätzlich werden hier notwendige produktweite Änderungen festgehalten, die f�
 
 ### V3-001 – Geöffnete Karte über den App-Lebenszyklus erhalten
 
-**Status:** geplant
+**Status:** in3.0.1 implementiert und im Emulator geprüft; Nachweise in V3_ALPHA_ABNAHME.md
 
 Die aktuell geöffnete Karte muss Teil des dauerhaft wiederherstellbaren App-Zustands sein. Ein Wechsel des Android-Lebenszyklus darf den Nutzer nicht aus der Karte werfen oder stillschweigend eine andere Karte öffnen.
 
@@ -219,7 +219,7 @@ Dabei werden bereits korrekt gepolsterte Komponenten nicht nur deshalb veränder
 
 ### V3-004 – Gleichheit und Selbigkeit als getrennte Relationen
 
-**Status:** analysiert, Umsetzung geplant
+**Status:** Alpha-Umfang in3.0.1 implementiert und geprüft; verbindliche Kapselgeometrie und Nachweise siehe V3_ALPHA_ABNAHME.md
 
 Der Mathematik Atlas trennt künftig zwei bislang vermischte Begriffe:
 
@@ -439,7 +439,7 @@ Bei der Umsetzung müssen mindestens folgende Stellen geprüft und bewusst auf G
 
 ### V3-005 – Wahr/Falsch-Schalter an unverbundenen Aussage-Eingängen
 
-**Status:** analysiert, Umsetzung geplant
+**Status:** Alpha-Umfang in3.0.1 implementiert und geprüft; verbindliche Kapselgeometrie und Nachweise siehe V3_ALPHA_ABNAHME.md
 
 Jeder konkrete Eingang vom mathematischen Typ **Aussage** erhält direkt am Knoten einen binären Standardwert-Schalter, solange dieser Eingang nicht durch eine Edge belegt ist.
 
@@ -593,7 +593,7 @@ Falls ein Aussage-Standardwert im Inspektor angeboten wird, verwendet er ebenfal
 
 ### V3-006 – Einheitliche Geometrie für Typ- und Repräsentationsadapter
 
-**Status:** analysiert, Umsetzung geplant
+**Status:** Alpha-Umfang in3.0.1 implementiert und geprüft; verbindliche Kapselgeometrie und Nachweise siehe V3_ALPHA_ABNAHME.md
 
 Knoten, deren primäre Aufgabe darin besteht, einen vorhandenen mathematischen Inhalt in einen anderen Typ, Vertrag oder eine andere Repräsentationshülle zu überführen, sollen sich geometrisch klar von normalen Rechen- und Fachknoten unterscheiden.
 

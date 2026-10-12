@@ -323,7 +323,7 @@ class KartenAuswerter(
         knoten.anschlüsse
             .filter {
                 it.richtung == AnschlussRichtung.Eingang &&
-                    (it.art == ZAHL_ART || ZAHL_ART in it.zulässigeArten) &&
+                    (it.art == ZAHL_ART || ZAHL_ART in it.zulässigeArten || knoten.art == "mathematik.tupel" && it.art.wert == "mathematik.objekt") &&
                     it.name !in this && it.id !in gebundeneIds
             }
             .forEach { anschluss ->
@@ -346,11 +346,12 @@ class KartenAuswerter(
         eingänge: Map<String, BedingterWert>,
         art: KnotenArtId,
     ): KnotenAuswertungsErgebnis {
-        if (art == "mathematik.termZuMethode") return this
         val quellen = eingänge.values.flatMap { it.variablenQuellen }
         if (quellen.isEmpty()) return this
         return copy(ausgaben = ausgaben.mapValues { (_, ausgabe) ->
-            ausgabe.copy(variablenQuellen = (ausgabe.variablenQuellen + quellen)
+            val gebundeneNamen = if (art == "mathematik.termZuMethode" || art == "atlas.uebersetzer")
+                (ausgabe.objekt as? Methode)?.parameter?.map { it.name }?.toSet().orEmpty() else emptySet()
+            ausgabe.copy(variablenQuellen = (ausgabe.variablenQuellen + quellen.filterNot { it.alsMethodenParameter && it.name in gebundeneNamen })
                 .distinctBy { quelle -> Pair(Triple(quelle.knotenId, quelle.name, quelle.werteVorrat), quelle.alsMethodenParameter) })
         })
     }

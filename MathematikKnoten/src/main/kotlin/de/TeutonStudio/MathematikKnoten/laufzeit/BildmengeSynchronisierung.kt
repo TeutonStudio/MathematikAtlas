@@ -1,4 +1,4 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.MathematikRechenSystem.kern.parameter
 
@@ -12,7 +12,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.Methode
  * Methodensignatur. Der Produktmodus besitzt genau einen Mengeneingang, der
  * Einzelmengenmodus genau einen Mengeneingang je Methodenargument.
  */
-internal fun synchronisiereBildmengenAnschlüsse(
+fun synchronisiereBildmengenAnschlüsse(
     karte: KartenDaten,
     auswertung: KartenAuswertungsErgebnis,
 ): KartenDaten {

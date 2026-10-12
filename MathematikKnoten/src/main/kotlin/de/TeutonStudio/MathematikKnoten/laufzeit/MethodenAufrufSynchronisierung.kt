@@ -1,4 +1,4 @@
-package de.TeutonStudio.MathematikAtlas
+package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
@@ -9,24 +9,24 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import de.TeutonStudio.TypSystem.AnschlussVertrag
 import de.TeutonStudio.TypSystem.TypAusdruck
 
-internal const val METHODEN_AUFRUF_STELLIGKEIT = "methodenAufruf.stelligkeit"
-internal const val METHODEN_AUFRUF_ZIELMENGE = "methodenAufruf.zielMenge"
-internal const val METHODEN_AUFRUF_VERTRAGSFEHLER = "methodenAufruf.vertragsfehler"
-internal const val METHODEN_AUFRUF_PARAMETER_PREFIX = "methodenAufruf.parameter."
-internal const val METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX = "methodenAusgang."
+const val METHODEN_AUFRUF_STELLIGKEIT = "methodenAufruf.stelligkeit"
+const val METHODEN_AUFRUF_ZIELMENGE = "methodenAufruf.zielMenge"
+const val METHODEN_AUFRUF_VERTRAGSFEHLER = "methodenAufruf.vertragsfehler"
+const val METHODEN_AUFRUF_PARAMETER_PREFIX = "methodenAufruf.parameter."
+const val METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX = "methodenAusgang."
 
-internal fun methodenAusgangArgumentprojektionSchlüssel(anschlussName: String): String =
+fun methodenAusgangArgumentprojektionSchlüssel(anschlussName: String): String =
     "$METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX$anschlussName.argumentprojektion"
 
-internal fun methodenAusgangErgebnisprojektionSchlüssel(anschlussName: String): String =
+fun methodenAusgangErgebnisprojektionSchlüssel(anschlussName: String): String =
     "$METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX$anschlussName.ergebnisprojektion"
 
-internal fun KnotenDaten.methodenAusgangArgumentprojektion(anschlussName: String): String =
+fun KnotenDaten.methodenAusgangArgumentprojektion(anschlussName: String): String =
     parameter[methodenAusgangArgumentprojektionSchlüssel(anschlussName)]
         ?.takeIf { it == METHODEN_ARGUMENTPROJEKTION_TUPEL }
         ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT
 
-internal fun KnotenDaten.methodenAusgangErgebnisprojektion(anschlussName: String): String =
+fun KnotenDaten.methodenAusgangErgebnisprojektion(anschlussName: String): String =
     parameter[methodenAusgangErgebnisprojektionSchlüssel(anschlussName)]
         ?.takeIf { it == METHODEN_ERGEBNISPROJEKTION_TUPEL }
         ?: METHODEN_ERGEBNISPROJEKTION_DIREKT
@@ -36,7 +36,7 @@ internal fun KnotenDaten.methodenAusgangErgebnisprojektion(anschlussName: String
  * Mathematische Mengen werden nur als optionale Zusatzmetadaten angehängt und bestimmen
  * weder Anzahl noch Typ der allgemeinen Handles.
  */
-internal fun synchronisiereMethodenAufrufe(
+fun synchronisiereMethodenAufrufe(
     karte: KartenDaten,
     auswertung: KartenAuswertungsErgebnis,
     prüfung: GraphPrüfung,

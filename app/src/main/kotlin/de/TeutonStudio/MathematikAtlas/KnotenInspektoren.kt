@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.*
+
 import de.TeutonStudio.MathematikRechenSystem.kern.parameter
 import de.TeutonStudio.MathematikRechenSystem.kern.ausgabeNamen
 import de.TeutonStudio.MathematikRechenSystem.kern.werteVorräte
@@ -57,6 +59,7 @@ interface KnotenInspektorAktionen {
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
+        de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART to ÜbersetzerInspektor,
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
         "mathematik.abbild" to BildmengeInspektor,
         "mathematik.visualisierung" to VisualisierungsInspektor,

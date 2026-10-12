@@ -137,14 +137,12 @@ object MatrixRechner {
                 )
             }
             MatrixRechnerOperator.MATRIXPRODUKT -> {
-                if (anfrage.matrizen.size != 2) return anzahlFehler("Matrixprodukt", "genau zwei Matrizen")
-                val links = anfrage.matrizen[0]
-                val rechts = anfrage.matrizen[1]
-                if (links.form.spalten != rechts.form.zeilen) return MatrixRechnerErgebnis.Ungueltig(
-                    "innere_dimension",
-                    "Matrixprodukt ${links.form}·${rechts.form} ist nicht definiert; ${links.form.spalten} ≠ ${rechts.form.zeilen}.",
-                )
-                MatrixRechnerErgebnis.MatrixWert(links.matrix * rechts.matrix, bereich)
+                if (anfrage.matrizen.size < 2) return anzahlFehler("Matrixprodukt", "mindestens zwei Matrizen")
+                try {
+                    MatrixRechnerErgebnis.MatrixWert(matrixProdukt(anfrage.matrizen.map { it.matrix }), bereich)
+                } catch (fehler: IllegalArgumentException) {
+                    MatrixRechnerErgebnis.Ungueltig("innere_dimension", fehler.message ?: "Inkompatible Matrixfaktoren.")
+                }
             }
             MatrixRechnerOperator.HADAMARD_PRODUKT -> {
                 if (anfrage.matrizen.size != 2) return anzahlFehler("Hadamard-Produkt", "genau zwei Matrizen")

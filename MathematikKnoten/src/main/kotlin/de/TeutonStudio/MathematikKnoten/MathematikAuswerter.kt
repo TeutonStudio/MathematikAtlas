@@ -359,7 +359,7 @@ object StandardMathematikAuswerter {
                 }
                 else -> {
                     val werte = k.operatorEingänge { _, index -> Variable("tupel_$index") }
-                        .map { it.objekt as? ZahlAusdruck ?: error("Tupel benötigt Zahlen.") }
+                        .map { it.mathematischesObjekt("Tupelelement") }
                     Tupel(werte)
                 }
             }
@@ -590,40 +590,8 @@ object StandardMathematikAuswerter {
             )
         }
         registriere("mathematik.termZuMethode") { k ->
-            val termWert = k.eingänge["term"] ?: error("Term fehlt.")
-            val term = termWert.mathematischesObjekt("Term der Methodenbildung")
-            val freieParameter = term.freieMethodenParameter().associateBy { it.name }
-            val quellenNachName = termWert.variablenQuellen
-                .filter { it.name in freieParameter }
-                .groupBy { it.name }
-            val fehlende = freieParameter.keys.filterNot { it in quellenNachName }
-            require(fehlende.isEmpty()) { "Für die Parameter ${fehlende.joinToString(", ")} fehlt ein verbundener Parameter- oder Karten-Eingang." }
-            val werteVorräteNachName = quellenNachName.mapValues { (name, quellen) ->
-                val mengen = quellen.map { it.werteVorrat }.distinct()
-                require(mengen.size == 1) { "Die Variable '$name' besitzt widersprüchliche Wertevorräte." }
-                mengen.single()
-            }
-            val methodenQuellen = quellenNachName.filterValues { quellen -> quellen.any { it.alsMethodenParameter } }
-            val automatisch = methodenQuellen.entries.sortedWith(
-                compareBy<Map.Entry<String, List<VariablenQuelle>>> { entry ->
-                    entry.value.minOf { quelle -> k.topologischeReihenfolge[quelle.knotenId] ?: Int.MAX_VALUE }
-                }.thenBy { entry -> entry.value.minOf { quelle -> quelle.knotenId.wert } }
-                    .thenBy { entry -> entry.value.minOf { quelle -> quelle.reihenfolge } },
-            ).map { it.key }
-            val gespeichert = k.knoten.parameter["argumentReihenfolge"].orEmpty()
-                .split(',').map(String::trim).filter { it.isNotBlank() && it in methodenQuellen }.distinct()
-            val namen = gespeichert + automatisch.filterNot { it in gespeichert }
-            val parameter = namen.map { freieParameter.getValue(it) }
-            val werteVorräte = namen.associateWith { werteVorräteNachName.getValue(it) }
-            val zielmenge = inferiereZielmenge(term, werteVorräteNachName, termWert.annahmen)
-            val methode = Methode(
-                name = k.knoten.parameter["name"] ?: "f",
-                parameter = parameter,
-                vorschrift = term,
-                zielMenge = zielmenge,
-                werteVorräte = werteVorräte,
-            )
-            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, annahmen(k))))
+            val term = k.eingänge["term"] ?: error("Term fehlt.")
+            KnotenAuswertungsErgebnis(mapOf("methode" to termAlsMethode(k, term)))
         }
         registriere("mathematik.komposition") { k ->
             val anschlüsse = k.knoten.anschlüsse
@@ -724,11 +692,8 @@ object StandardMathematikAuswerter {
         registriere("mathematik.transponiereSpalte") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.spalte("vektor").transponiert(), annahmen(k)))) }
         registriere("mathematik.transponiereZeile") { k -> KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(k.zeile("vektor").transponiert(), annahmen(k)))) }
         registriere("mathematik.matrixProdukt") { k ->
-            val links = k.mathematischerEingang("a", "Linker Matrixfaktor")
-            val rechts = k.mathematischerEingang("b", "Rechter Matrixfaktor")
-            KnotenAuswertungsErgebnis(
-                mapOf("matrix" to BedingterWert(matrixProdukt(links, rechts), annahmen(k))),
-            )
+            val faktoren = matrixProduktFaktorWerte(k).values.toList()
+            KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(matrixProdukt(faktoren), annahmen(k))))
         }
         registriere("mathematik.transponiereMatrix") { k -> KnotenAuswertungsErgebnis(mapOf("matrix" to BedingterWert(k.matrix("matrix").transponiert(), annahmen(k)))) }
         registriere("mathematik.matrixInvertieren") { k ->

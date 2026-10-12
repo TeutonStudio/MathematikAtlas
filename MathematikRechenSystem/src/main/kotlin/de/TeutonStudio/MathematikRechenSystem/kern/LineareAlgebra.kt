@@ -135,7 +135,7 @@ fun MathematischesObjekt.alsMatrixFaktor(): Matrix = when (this) {
 
 /** Multipliziert Matrizen und orientierte Vektoren über ihre kanonische Matrixansicht. */
 fun matrixProdukt(links: MathematischesObjekt, rechts: MathematischesObjekt): Matrix =
-    links.alsMatrixFaktor() * rechts.alsMatrixFaktor()
+    matrixProdukt(listOf(links, rechts))
 
 /** Formatiert Zeilen als LaTeX-`pmatrix`; `\\` trennt die Zeilen, `&` die Spalten. */
 private fun List<List<ZahlAusdruck>>.zuPmatrixLatex(): String = joinToString(
@@ -143,3 +143,29 @@ private fun List<List<ZahlAusdruck>>.zuPmatrixLatex(): String = joinToString(
     separator = " \\\\ ",
     postfix = "\\end{pmatrix}",
 ) { zeile -> zeile.joinToString(" & ") { it.zuLatex() } }
+
+/** Geordnete, streng linksgefaltete Kette; Zwischenprodukte sind Teil des Fachmodells. */
+data class MatrixProduktKette(val faktoren: List<Matrix>, val zwischenprodukte: List<Matrix>) {
+    val ergebnis: Matrix get() = zwischenprodukte.last()
+}
+
+fun matrixProduktKette(faktoren: List<MathematischesObjekt>): MatrixProduktKette {
+    require(faktoren.size >= 2) { "Ein Matrixprodukt benötigt mindestens zwei Faktoren." }
+    val matrizen = faktoren.mapIndexed { index, faktor ->
+        runCatching { faktor.alsMatrixFaktor() }.getOrElse {
+            error("Faktor ${index + 1}: ${it.message}")
+        }
+    }
+    var akk = matrizen.first()
+    val zwischen = mutableListOf<Matrix>()
+    matrizen.drop(1).forEachIndexed { index, rechts ->
+        require(akk.spaltenAnzahl == rechts.zeilenAnzahl) {
+            "Faktor ${index + 2}: Zwischenprodukt ${akk.zeilenAnzahl}×${akk.spaltenAnzahl} und Faktor ${rechts.zeilenAnzahl}×${rechts.spaltenAnzahl} sind inkompatibel; ${akk.spaltenAnzahl} ≠ ${rechts.zeilenAnzahl}."
+        }
+        akk = akk * rechts
+        zwischen += akk
+    }
+    return MatrixProduktKette(matrizen, zwischen)
+}
+
+fun matrixProdukt(faktoren: List<MathematischesObjekt>): Matrix = matrixProduktKette(faktoren).ergebnis

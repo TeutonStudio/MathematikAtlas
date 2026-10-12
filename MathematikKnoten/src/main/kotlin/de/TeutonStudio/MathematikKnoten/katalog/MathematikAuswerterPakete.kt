@@ -26,6 +26,7 @@ data class MathematikAuswerterPaket(
 object StandardMathematikAuswerterPakete {
     /** Additive fachliche Registrierungen ohne beabsichtigte finale Wrapperrolle. */
     val basis: List<MathematikAuswerterPaket> = listOf(
+        MathematikAuswerterPaket("übersetzungen") { registriereÜbersetzungsKnoten() },
         MathematikAuswerterPaket("zahlenrechner") { registriereUniversellenZahlenRechner() },
         MathematikAuswerterPaket("zahlenrechner-erweiterungen") { registriereZahlenRechnerErweiterungen() },
         MathematikAuswerterPaket("matrixdiagonale") { registriereMatrixdiagonale() },

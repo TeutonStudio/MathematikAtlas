@@ -63,6 +63,7 @@ object KanonischerMathematikKnotenKatalog {
                 RandKnotenVorlagen.alle +
                 TangentialKnotenVorlagen.alle +
                 TopologischeStrukturKnotenVorlagen.alle +
+                ÜbersetzungsKnotenVorlagen.alle +
                 SvgKnotenVorlagen.alle
             )
             .map(::topologieFaehigeEigenschaftsVorlage)

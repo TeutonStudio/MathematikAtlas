@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelCodec
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -136,6 +137,13 @@ internal fun DialogWerkzeugLeiste(
     when (aktiverDialog) {
         AktiverWerkzeugDialog.Formel -> FormelBauerDialog(
             startLatex = "",
+            übernehmenMitZeichnung = { ast, latex, zeichnung ->
+                val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(zustand.dialogWerkzeugEinfügePosition())
+                val neu = konfiguriereZahlenRechnerFormel(basis, latex)
+                val knoten = neu.copy(eigenschaften = neu.eigenschaften + (FORMEL_ZEICHNUNG_EIGENSCHAFT to zeichnung) + (FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ast))))
+                zustand.editor.führeAus(KartenAktion.KnotenEinfügen(knoten))
+                zustand.editor.wähleKnoten(knoten.id); aktiverDialog = null
+            },
             schließen = { aktiverDialog = null },
             übernehmen = { latex ->
                 val position = zustand.dialogWerkzeugEinfügePosition()

@@ -38,7 +38,7 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
                     1 -> "b"
                     else -> "input${index + 1}"
                 }
-                tupelEingang(vorhandene[name], name, MathematikAnschlussArten.Zahl.id, index, erweiterbar = true)
+                tupelEingang(vorhandene[name], name, MathematikAnschlussArten.Objekt.id, index, erweiterbar = true)
             }
         }
     }

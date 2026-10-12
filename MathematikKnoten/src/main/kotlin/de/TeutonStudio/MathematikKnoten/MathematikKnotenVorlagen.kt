@@ -130,7 +130,7 @@ object MathematikKnotenVorlagen {
     )
     val Tupel = KnotenVorlage(
         "mathematik.tupel", "Tupel", "Zahlen", "Geordnetes Tupel aus einzelnen Zahlen oder einer Indexmethode.", GraphGröße(220f, 115f),
-        listOf(eingang("a", MathematikAnschlussArten.Zahl.id, 0, true), eingang("b", MathematikAnschlussArten.Zahl.id, 1, true), ausgang("tupel", MathematikAnschlussArten.Tupel.id)),
+        listOf(eingang("a", MathematikAnschlussArten.Objekt.id, 0, true), eingang("b", MathematikAnschlussArten.Objekt.id, 1, true), ausgang("tupel", MathematikAnschlussArten.Tupel.id)),
         mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert", "erzeugungsArt" to TUPEL_EINZEL_EINGABEN),
     )
     val KomplexAusTupel = KnotenVorlage(
@@ -384,6 +384,7 @@ object MathematikKnotenVorlagen {
                 kante = AnschlussKante.Links,
                 art = MathematikAnschlussArten.Objekt.id,
                 reihenfolge = 0,
+                kannSichErweitern = true,
                 zulässigeArten = setOf(
                     MathematikAnschlussArten.Matrix.id,
                     MathematikAnschlussArten.SpaltenVektor.id,
@@ -396,6 +397,7 @@ object MathematikKnotenVorlagen {
                 kante = AnschlussKante.Links,
                 art = MathematikAnschlussArten.Objekt.id,
                 reihenfolge = 1,
+                kannSichErweitern = true,
                 zulässigeArten = setOf(
                     MathematikAnschlussArten.Matrix.id,
                     MathematikAnschlussArten.SpaltenVektor.id,
@@ -404,6 +406,7 @@ object MathematikKnotenVorlagen {
             ),
             ausgang("matrix", MathematikAnschlussArten.Matrix.id),
         ),
+        mapOf("festeEingänge" to "2", "operatorAnzeige" to "wert"),
     )
     val TransponiereMatrix = KnotenVorlage("mathematik.transponiereMatrix", "Transponiere Matrix", "Rechnen", "Transponiert eine Matrix.", GraphGröße(230f, 105f), listOf(eingang("matrix", MathematikAnschlussArten.Matrix.id), ausgang("matrix", MathematikAnschlussArten.Matrix.id)))
     val MatrixInvertieren = KnotenVorlage(

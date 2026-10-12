@@ -4,7 +4,15 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
-internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? {
+internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? =
+    dynamischesKonzeptFürKnoten(knoten) { zustand.speicher.lade(it) }
+
+/** Derselbe Resolver wie im Definitionsdialog, mit gekapselter Kartenquelle. */
+internal fun dynamischesKonzeptFürKnoten(
+    knoten: KnotenDaten,
+    ladeKarte: (KartenVerweis) -> KartenDaten? = { null },
+): KonzeptDefinition? {
+    alphaStrukturKonzeptFürKnoten(knoten)?.let { return it }
     axiomPraedikatKonzept(knoten)?.let { return it }
     relationPraedikatKonzept(knoten)?.let { return it }
     topologieKonzeptFürKnoten(knoten)?.let { return it }
@@ -12,7 +20,7 @@ internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenD
     if (knoten.art == "mathematik.endlicheMenge") return endlicheMengeKonzept(knoten)
     if (knoten.art == MENGEN_KNOTEN_ART) {
         val verweis = knoten.kartenVerweis ?: return null
-        val karte = zustand.speicher.lade(verweis)
+        val karte = ladeKarte(verweis)
             ?: return fehlendesKartenKonzept(knoten, "Die referenzierte Kartenversion ${verweis.version} ist nicht mehr vorhanden.")
         return KonzeptDefinition(
             id = KonzeptId("menge-karte-${verweis.kartenId.wert}-${verweis.version}"),

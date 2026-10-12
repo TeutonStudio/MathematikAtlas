@@ -1,6 +1,5 @@
 package de.TeutonStudio.MathematikKnoten
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -99,7 +99,7 @@ private fun EchterLatexText(
     modifier: Modifier = Modifier,
     style: TextStyle,
 ) {
-    val dunklesSchema = isSystemInDarkTheme()
+    val dunklesSchema = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val fontSize = style.fontSize.value
         .takeIf { it.isFinite() && it > 0f }
         ?.sp

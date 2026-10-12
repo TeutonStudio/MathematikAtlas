@@ -88,13 +88,15 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         } else {
             anwendungsLatex
         }
+        val annahmenBindungen = mathematischeMethode?.parameter?.mapIndexed { i, p -> p.name to mathematischeArgumente[i] }?.toMap().orEmpty()
+        val angewandteAnnahmen = methodenWert.annahmen.map { ersetze(it, annahmenBindungen) as Aussage }.toSet() + argumentWerte.flatMap { it.annahmen }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
                     objekt = wert,
-                    annahmen = (listOf(methodenWert) + argumentWerte).flatMap { it.annahmen }.toSet(),
+                    annahmen = angewandteAnnahmen,
                     zielMenge = zielMenge,
-                    reelleVariablen = reelleVariablen(argumentWerte),
+                    reelleVariablen = methodenWert.reelleVariablen.filterKeys { it !in annahmenBindungen } + reelleVariablen(argumentWerte),
                     variablenQuellen = (listOf(methodenWert) + argumentWerte).flatMap { it.variablenQuellen },
                     latexDarstellung = projiziertesLatex,
                 ),
