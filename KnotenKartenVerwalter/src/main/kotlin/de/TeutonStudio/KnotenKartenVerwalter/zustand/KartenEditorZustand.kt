@@ -137,7 +137,9 @@ class KartenEditorZustand(
     fun beendeInteraktion() {
         val start = interaktionsStart ?: return
         interaktionsStart = null
-        karte = karte.bereinigteVisuelleGruppen().mitAutomatischenVisuellenGruppenMitgliedschaften()
+        karte = karte.bereinigteVisuelleGruppen().let { stand ->
+            if (geöffneteGruppe == null) stand.mitAutomatischenVisuellenGruppenMitgliedschaften() else stand
+        }
         if (start == karte) return
         merkeFürRückgängig(start)
     }
@@ -210,7 +212,7 @@ class KartenEditorZustand(
         val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
         var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
-        if (interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (geöffneteGruppe == null && interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (neu == karte) return
         val historienRelevant = mitHistorie && wirksameAktion !is KartenAktion.AnsichtÄndern
         if (historienRelevant) merkeFürRückgängig(standVorAktion)
