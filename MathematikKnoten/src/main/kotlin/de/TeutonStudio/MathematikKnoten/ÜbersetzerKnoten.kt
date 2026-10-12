@@ -7,13 +7,15 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 const val ÜBERSETZER_ART = "atlas.uebersetzer"
 const val TUPEL_ABFLACHEN_ART = "mathematik.tupelAbflachen"
 const val ÜBERSETZER_ZIEL = "uebersetzer.ziel"
-val ÜBERSETZER_ZIELE = listOf("tupel", "zeile", "spalte", "methode")
+val ÜBERSETZER_ZIELE = listOf("tupel", "zeile", "spalte", "methode", "polar", "kartesisch")
 
 fun übersetzerZielTitel(ziel: String): String = when (ziel) {
     "tupel" -> "Tupel"
     "zeile" -> "Zeilenvektor"
     "spalte" -> "Spaltenvektor"
     "methode" -> "Term → Methode"
+    "polar" -> "Kartesisch → Polar"
+    "kartesisch" -> "Polar → Kartesisch"
     else -> ziel
 }
 
@@ -26,6 +28,7 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
         "tupel" -> MathematikAnschlussArten.Tupel.id
         "zeile" -> MathematikAnschlussArten.ZeilenVektor.id
         "spalte" -> MathematikAnschlussArten.SpaltenVektor.id
+        "polar", "kartesisch" -> MathematikAnschlussArten.Tupel.id
         else -> MathematikAnschlussArten.Methode.id
     }
     return knoten.copy(eigenschaften = knoten.eigenschaften + (ÜBERSETZER_ZIEL to KnotenEigenschaft.Text(ziel)),
@@ -36,6 +39,8 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
                     "tupel" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
                     "zeile" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
                     "spalte" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
+                    "polar" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
+                    "kartesisch" -> setOf(MathematikAnschlussArten.Tupel.id)
                     else -> emptySet()
                 }, kannSichErweitern = false, dynamischErzeugt = false) })
 }
@@ -60,7 +65,7 @@ val RichtungWinkelVorlage = KnotenVorlage(
 
 object ÜbersetzungsKnotenVorlagen {
     val Übersetzer = KnotenVorlage(ÜBERSETZER_ART, "Übersetzer", "Strukturen",
-        "Übersetzt Tupel, Zeilen, Spalten oder einen Term in eine Methode.", GraphGröße(220f, 96f),
+        "Übersetzt kartesische Koordinaten in Polarkoordinaten und zurück; zusätzlich Tupel, Vektoren und Methoden.", GraphGröße(220f, 96f),
         listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, zulässigeArten = setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)),
             AnschlussDaten(name = "ergebnis", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.SpaltenVektor.id)),
         standardEigenschaften = mapOf(ÜBERSETZER_ZIEL to KnotenEigenschaft.Text("spalte"))).alsAdapterVorlage()
@@ -130,8 +135,25 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
         val wert = k.eingänge["wert"] ?: error("Der zu übersetzende Wert fehlt.")
         val ziel = übersetzerZiel(k.knoten)
         require(ziel in ÜBERSETZER_ZIELE) { "Unbekanntes Übersetzungsziel '$ziel'." }
-        val ergebnis = if (ziel == "methode") termAlsMethode(k, wert)
-            else übersetzterWert(wert, übersetzeStruktur(wert.mathematischesObjekt("Übersetzer"), ziel))
+        val ergebnis = if (ziel == "methode") termAlsMethode(k, wert) else {
+            val objekt = wert.mathematischesObjekt("Übersetzer")
+            val umgewandelt = when (ziel) {
+                "polar" -> {
+                    val tupel = when (objekt) {
+                        is Tupel -> objekt
+                        is OrientierterVektor -> Tupel(objekt.werte)
+                        else -> error("Kartesisch → Polar benötigt ein Tupel oder einen Vektor.")
+                    }
+                    Polarkoordinaten.polar(tupel)
+                }
+                "kartesisch" -> Polarkoordinaten.kartesisch(
+                    objekt as? Tupel ?: error("Polar → Kartesisch benötigt ein Polartupel."),
+                    eindimensional = (objekt.elemente.getOrNull(1) is ZahlAusdruck),
+                )
+                else -> übersetzeStruktur(objekt, ziel)
+            }
+            übersetzterWert(wert, umgewandelt)
+        }
         KnotenAuswertungsErgebnis(mapOf("ergebnis" to ergebnis))
     }
     registriere(TUPEL_ABFLACHEN_ART) { k ->
