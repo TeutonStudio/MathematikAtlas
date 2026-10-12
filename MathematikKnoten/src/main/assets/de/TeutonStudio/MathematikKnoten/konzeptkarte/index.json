@@ -3030,6 +3030,18 @@
       "datei": "karte-9cce144e4c968f2af230-v7.json",
       "formatVersion": 7,
       "sha256": "a45adf80eb22a4e294104e25e451439ee2c98c5f5e57a2eeb28439e879016558"
+    },
+    {
+      "id": "mathematik.halbesIntervall|Halbes Intervall|richtung=aufwaerts.untergrenze.definition",
+      "datei": "karte-halbes-intervall-untergrenze-v7.json",
+      "formatVersion": 7,
+      "sha256": "78c6c69fa17613913ef0072dd6e47cb88a052b0bf116e7cc106b64cd53cfe914"
+    },
+    {
+      "id": "mathematik.halbesIntervall|Halbes Intervall|richtung=abwaerts.obergrenze.definition",
+      "datei": "karte-halbes-intervall-obergrenze-v7.json",
+      "formatVersion": 7,
+      "sha256": "81670001ab753467f37f964dc8d0df5df42d1c514e8a6a62835fc2350fdfe067"
     }
   ]
 }

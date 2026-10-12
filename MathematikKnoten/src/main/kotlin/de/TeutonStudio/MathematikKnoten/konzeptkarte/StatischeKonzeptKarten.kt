@@ -5,6 +5,24 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.*
 object StatischeKonzeptKarten {
     val alle: List<WissensKartenReferenz.Asset> = listOf(
         WissensKartenReferenz.Asset(
+            id = "mathematik.halbesIntervall|Halbes Intervall|richtung=aufwaerts.untergrenze.definition",
+            datei = "karte-halbes-intervall-untergrenze-v7.json",
+            formatVersion = 7,
+            rolle = WissensKartenRolle.Definition,
+            primär = true,
+            titel = "Definition",
+            varianten = setOf(VariantenId("mathematik.halbesIntervall|richtung=aufwaerts|Halbes Intervall (Untergrenze)")),
+        ),
+        WissensKartenReferenz.Asset(
+            id = "mathematik.halbesIntervall|Halbes Intervall|richtung=abwaerts.obergrenze.definition",
+            datei = "karte-halbes-intervall-obergrenze-v7.json",
+            formatVersion = 7,
+            rolle = WissensKartenRolle.Definition,
+            primär = true,
+            titel = "Definition",
+            varianten = setOf(VariantenId("mathematik.halbesIntervall|richtung=abwaerts|Halbes Intervall (Obergrenze)")),
+        ),
+        WissensKartenReferenz.Asset(
             id = "mathematik.abbild|Abbild|.da631bb3.definition",
             datei = "karte-fafa3200b486525ac49c-v7.json",
             formatVersion = 7,
