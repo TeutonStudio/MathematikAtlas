@@ -17,7 +17,9 @@ fun variablenStruktur(k: KnotenDaten): String =
 
 fun variablenDimension(k: KnotenDaten): Int =
     (k.parameter[VARIABLE_DIMENSION]?.toIntOrNull() ?: 2).also {
-        require(it in 1..64) { "Die Komponentenanzahl muss zwischen 1 und 64 liegen." }
+        require(it in 0..64 && (variablenStruktur(k) == VARIABLE_STRUKTUR_WINKEL || it > 0)) {
+            "Winkeltupel erlauben 0 bis 64 Winkel; andere Strukturen benötigen 1 bis 64 Komponenten."
+        }
     }
 
 fun konfiguriereVariablenStruktur(k: KnotenDaten, art: String): KnotenDaten {
@@ -35,14 +37,17 @@ fun konfiguriereVariablenStruktur(k: KnotenDaten, art: String): KnotenDaten {
 internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck): BedingterWert {
     val name = k.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
     val art = variablenStruktur(k)
-    val basis = variablenWertevorrat(k, grundmenge)
+    val basis = if (art == VARIABLE_STRUKTUR_WINKEL) grundmenge else variablenWertevorrat(k, grundmenge)
     if (art == "zahl") return BedingterWert(Variable(name), werteVorrat = basis,
         variablenQuellen = listOf(VariablenQuelle(k.id, name, basis, lösungsRolle = LösungsQuellenRolle.Variable)))
     val n = variablenDimension(k)
-    val variablen = List(n) { i -> Variable("${name}_${i+1}", "${name}_{${i+1}}") }
-    val bereiche = List(n) { i ->
-        if (art != "winkeltupel") basis
-        else ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(if (i == 0) 360 else 180), i == 0)
+    // n ist die Anzahl der Winkel; das Vorzeichen ist eine zusätzliche Komponente.
+    val anzahl = if (art == VARIABLE_STRUKTUR_WINKEL) n + 1 else n
+    val variablen = List(anzahl) { i -> Variable("${name}_${i+1}", "${name}_{${i+1}}") }
+    val bereiche = List(anzahl) { i ->
+        if (art != VARIABLE_STRUKTUR_WINKEL) basis
+        else if (i == 0) EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins))
+        else ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), true)
     }
     val objekt: MathematischesObjekt = when (art) {
         "zeile" -> ZeilenVektor(variablen)

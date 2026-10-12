@@ -206,13 +206,21 @@ private object VariablenInspektor : KnotenInspektor {
             }
         }
         if (variablenStruktur(knoten) != "zahl") {
-            ParameterFeld("Komponenten", knoten.parameter[VARIABLE_DIMENSION] ?: "2") { raw ->
-                raw.toIntOrNull()?.takeIf { it in 1..64 }?.let { aktionen.parameter(VARIABLE_DIMENSION, it.toString()) }
+            val winkel = variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL
+            ParameterFeld(if (winkel) "Anzahl Winkel n (Rⁿ⁺¹)" else "Komponenten",
+                knoten.parameter[VARIABLE_DIMENSION] ?: "2") { raw ->
+                raw.toIntOrNull()?.takeIf { it in (if (winkel) 0..64 else 1..64) }?.let {
+                    aktionen.parameter(VARIABLE_DIMENSION, it.toString())
+                }
             }
-            if (variablenStruktur(knoten) == "winkeltupel")
-                Text("Azimut [0°,360°), weitere Polarwinkel [0°,180°].", style = MaterialTheme.typography.bodySmall)
+            if (winkel)
+                Text("Richtung: {−1,+1} × [0°,180°)ⁿ. Erste Komponente ist das Vorzeichen, danach folgen n Halbkreiswinkel.",
+                    style = MaterialTheme.typography.bodySmall)
         }
+        val struktur = variablenStruktur(knoten)
         val intervall = knoten.parameter[VARIABLE_BEREICH_MODUS] == VARIABLE_BEREICH_INTERVALL
+        // Winkelstruktur hat fest definierte Komponentenbereiche; fremde Intervalloptionen sind unzulässig.
+        if (struktur != VARIABLE_STRUKTUR_WINKEL) {
         Text("Variablenbereich", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
             FilterChip(!intervall, { aktionen.parameter(VARIABLE_BEREICH_MODUS, VARIABLE_BEREICH_GRUNDMENGE) },
@@ -224,7 +232,8 @@ private object VariablenInspektor : KnotenInspektor {
             }, label = { Text("Reelles Intervall") })
         }
         if (!intervall) {
-            GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+            GrundmengenAuswahl(if (struktur == VARIABLE_STRUKTUR_ZAHL) "Wertevorrat" else "Komponenten-Wertevorrat",
+                knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
         } else {
             Text("Winkelbereiche in Grad (reelle Repräsentanten)", style = MaterialTheme.typography.labelMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
@@ -262,6 +271,7 @@ private object VariablenInspektor : KnotenInspektor {
             }
             Text("Die Gradgrenzen beschreiben reelle Zahlenwerte. Die Winkelmenge G bleibt ein eigener Datentyp.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }

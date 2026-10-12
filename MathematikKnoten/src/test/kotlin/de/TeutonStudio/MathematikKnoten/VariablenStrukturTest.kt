@@ -12,11 +12,21 @@ class VariablenStrukturTest {
             .let { it.copy(parameter = it.parameter + (VARIABLE_DIMENSION to "2")) }
         val wert = variablenStrukturWert(k, ReelleZahlen)
         assertEquals(MathematikAnschlussArten.Tupel.id, k.anschlüsse.single().art)
-        assertEquals(2, (wert.objekt as Tupel).elemente.size)
+        assertEquals(3, (wert.objekt as Tupel).elemente.size)
         assertEquals(listOf(
-            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(360), true),
-            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), false),
+            EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins)),
+            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), true),
+            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), true),
         ), wert.variablenQuellen.map { it.werteVorrat })
+    }
+
+    @Test fun `Winkeltupel mit n null hat nur Vorzeichen`() {
+        val k = konfiguriereVariablenStruktur(basis(), VARIABLE_STRUKTUR_WINKEL)
+            .let { it.copy(parameter = it.parameter + (VARIABLE_DIMENSION to "0")) }
+        val wert = variablenStrukturWert(k, ReelleZahlen)
+        assertEquals(1, (wert.objekt as Tupel).elemente.size)
+        assertEquals(EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins)),
+            wert.variablenQuellen.single().werteVorrat)
     }
 
     @Test fun `Ausgangs IDs bleiben beim Strukturwechsel erhalten`() {
