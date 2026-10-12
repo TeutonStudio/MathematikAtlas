@@ -876,7 +876,6 @@ private fun KnotenDarstellung(
     ) {
         Card(
             Modifier.fillMaxSize()
-                .border(if (ausgewählt) 3.dp else 1.dp, if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, knotenForm)
                 .pointerHoverIcon(PointerIcon.Hand)
                 .semantics {
                     contentDescription = "Knoten ${knoten.name}, ${knoten.anschlüsse.size} Anschlüsse"
@@ -944,6 +943,7 @@ private fun KnotenDarstellung(
                     )
                 },
             shape = knotenForm,
+            border = BorderStroke(if (ausgewählt) 3.dp else 1.dp, if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
             elevation = CardDefaults.cardElevation(if (ausgewählt) 8.dp else 2.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
@@ -976,7 +976,11 @@ private fun KnotenDarstellung(
                     zustand.wähleKnoten(knoten.id)
                     beiInspektorÖffnen()
                 },
-                modifier = Modifier.align(Alignment.TopEnd),
+                modifier = Modifier.align(Alignment.TopEnd).then(
+                    if (knoten.darstellungsForm == KnotenDarstellungsForm.Adapter)
+                        Modifier.offset(x = (-12).dp, y = 8.dp)
+                    else Modifier
+                ),
             )
         }
 
