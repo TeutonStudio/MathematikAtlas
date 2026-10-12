@@ -1,7 +1,7 @@
 # V3 Alpha konsolidieren
 
 ## Status und Ziel
-Begonnen 2026-10-11. Genehmigter Gesamtumfang: erst 3.0.1 ohne neue Knoten, nach Veröffentlichung 3.1.0 mit atlas.uebersetzer und mathematik.tupelAbflachen. Ziel ist vollständige Alpha-Abnahme und identisches lokales/GitHub-master.
+Abgeschlossen 2026-10-12; begonnen 2026-10-11. Genehmigter Gesamtumfang: erst 3.0.1 ohne neue Knoten, nach Veröffentlichung 3.1.0 mit atlas.uebersetzer und mathematik.tupelAbflachen. Ziel ist vollständige Alpha-Abnahme und identisches lokales/GitHub-master.
 
 ## Nicht-Ziele
 Automatische Handschrift-/Fotoerkennung, SVG-/TeX-Ausbau, Beweisatlas und große Beta-Performanceausbaustufen.
@@ -32,7 +32,7 @@ TypSystem, Rechenkern, Kartenadapter/-editor, MathematikKnoten, Android/Desktop,
 - [x] Danach3.1.0 reserviert; beide neuen Typen und heterogene Tupel implementiert, mathematisch und unabhängig geprüft.
 - [x] Variadisches linksfaltendes Matrixprodukt und gemeinsames Falk-Schema; Faktorverlust-/Nichtkommutativitäts-/Resolverregressionen grün.
 - [x] Gemeinsamer scrollbarer Formeleditor, getrennte AST-/Originalgestenpersistenz; Android-/Desktoplaufzeitnachweise und Codec-/Undo-/Radierregressionen grün.
-- [ ] 3.1.0 prüfen/veröffentlichen, lokalen master vorwärts synchronisieren.
+- [x] 3.1.0 geprüft/veröffentlicht; lokales master per Fast-forward auf dieselbe Release-SHA synchronisiert.
 
 ## Umsetzungsschritte
 Je Meilenstein bestehende Pfade vergleichen, kleinsten kohärenten Diff implementieren, gezielte Tests und unabhängige Verifikation durchführen. Nur ein schreibender Implementierer gleichzeitig. Releaseverwaltung durch master_verwalter. Produktänderungen aus dem Originalarbeitsbaum sind kopiert, IDE-Dateien ausgeschlossen.
@@ -73,7 +73,7 @@ PR435 basiert auf altem master und ist nicht mergebar; nur seinen tatsächlichen
 2026-10-11: Nutzer ersetzt die Hexagonvorgabe für reine Übersetzungsknoten ausdrücklich durch eine kompakte Kapsel mit stark gerundeten Ecken. Neutrale Geometrie, Ports, Trefferflächen und Dokumentation werden gemeinsam angepasst. Persönliche IDE-Dateien verbleiben bewusst im unveränderten Originalarbeitsbaum.
 
 ## Ergebnis und Verifikation
-Offen; keine neue Veröffentlichung erfolgt. Abschluss nur mit nachgewiesenen Anforderungen, grünen Pflichtprüfungen und gleicher master-SHA.
+Abgeschlossen: beide geordneten Releases veröffentlicht, Pflichtprüfungen grün und lokales/GitHub-master auf gleicher3.1.0-SHA. Die folgenden datierten Zwischenstände dokumentieren den Weg; der endgültige Veröffentlichungs- und Synchronisierungsnachweis steht am Ende.
 
 
 2026-10-11: Registrykonsolidierung: Core-Metadaten enthalten ID-freie Rollen/Signaturen, Parameter und expliziten Formelsupport; Matrix, Vektor, Zahlen und Tensor verwenden den gemeinsamen Konfigurator. Inspector/Operatorauswahl/Suche/Enzyklopädie/Formeltastatur projizieren diese Quelle. Fachdispatcher komponieren ihre Auswerter/Wrapper ausdrücklich. Unabhängige Prüfung fand unzulässige Formelangebote; diese sind über deklarierte Unterstützung und Familienrouting korrigiert, sämtliche angebotenen Vektor-/Tensorformeln werden tatsächlich ausgewertet. Variadikreserve, Zerlegeridempotenz und Erhalt unbekannter Lade-IDs besitzen Regressionen. Abschließende unabhängige Nachprüfung läuft.
@@ -95,3 +95,8 @@ Zwischenstand vor Veröffentlichung von3.0.1: `./gradlew test :desktopApp:test :
 2026-10-11: Finale Android-Navigation mit aktuellem APK geprüft: Bibliothekswechsel zu „Restriktion von x² auf [−1,1]“, Doppel-Tap öffnet „Quadratische Funktion x²“, Brotkrume kehrt zur Elternkarte zurück. Erneutes Öffnen plus echter Prozessstopp/-neustart erhält die aktive Unterkarte. Nachweise `/tmp/alpha-lifecycle-return-parent.xml`, `/tmp/alpha-lifecycle-child-restart.xml`. Das weitere Veröffentlichungs-Gate betrifft PR-/CI-/Pushprüfung; der3.1.0-Umfang bleibt offen.
 
 2026-10-12: 3.1.0-Codeumfang durch Planner/Mathematikprüfer/schreibenden Implementierer und unabhängigen Verifizierer abgeschlossen. Neue Knoten über echte JSON/.matlas-Rundläufe mit erwarteten Werten geprüft (Skalarprodukt5, Abflachen((1,2),())=(1,2)). Emulator: gespeichertes Übersetzerzielwechsel/Undo/Redo/Prozessneustart; SAF-.matlas-Abflachen; echte Zeichen-/Radiergesten zusammen mit AST und Interpretation gespeichert, atomarer Karten-Undo/Redo und persistierte Originalgesten nach Neustart. Gemeinsamer Desktop-Editor mit Tastatur/Stift/Foto-Beta und sichtbarem Footer bei1440×840; Android1,5facheSchrift/dunklesTheme. Falk-Zugangslücken beider Plattformen im tatsächlichen Resolver geschlossen; Dreifaktorenkette ergibt6I mit allen Zwischenprodukten. Finale Versionsdaten3.1.0/3001000, y/exakt2neueTypen. Physischer Stift, Frame-Timing und fehlende automatische Instrumentierung bleiben ausdrücklich Prüfgrenzen, keine Beta-Erkennung wird behauptet. Veröffentlichungsnachweis über Release-PR und abschließenden Git-Gleichstand.
+
+
+2026-10-12: Abgeschlossen. [PR#444](https://github.com/TeutonStudio/MathematikAtlas/pull/444) veröffentlichte `v3.0.1` als `2842a03e18797d9689ebaf5fc3e389e1bb60ffc9`; danach veröffentlichte [PR#445](https://github.com/TeutonStudio/MathematikAtlas/pull/445) `v3.1.0` als `811955f8c0bdd5f2bd59292cd9dea5ba634f1c51`. Je Release existiert genau ein finaler Versionscommit auf master. Sämtliche PR- und Master-Push-Prüfungen beider Releases sind erfolgreich. Für3.1.0: Android38186386146, Linux38186386113, Mathematikkern38186386161 und Release-Guard38186386173. Lokales master und GitHub-master wurden per Fast-forward auf dieselbe3.1.0-SHA gebracht; der Produktarbeitsbaum ist sauber. Zehn persönliche IDE-Dateien sind bytegleich erhalten. Der lokale Nachweis samt dauerhafter Sicherung liegt unter `Original/.gradle/alpha-konsolidierung/backup-20261011-094918/final-master-sync.json`. Dieser Markdown-Abschluss verwendet die ausdrückliche Dokumentationsausnahme ohne Versionssprung; Produkt- und Release-Metadaten bleiben unverändert.
+
+[PR#436 wurde auf der veröffentlichten3.1.0-Basis erneut geprüft](https://github.com/TeutonStudio/MathematikAtlas/pull/436#issuecomment-6115383718): Der isolierte Zwei-Dateien-Patch lässt sich konfliktfrei anwenden. Die ursprünglichen fünf Tests kompilieren wegen des Kotlin-Schlüsselworts `null` als Variablenname nicht; nach ausschließlich temporärer Umbenennung in `nullWert` bestehen alle fünf. Die Einbindung von `EndlicheInverseMethode` in den aktuellen Methodenaufruf bleibt gesondert zu implementieren und zu prüfen. Die alte PR-Historie wurde nicht umgeschrieben; Umkehrmethoden bleiben außerhalb der Alpha. Physischer Stift, Frame-Timing und automatische Android-Instrumentierung bleiben dokumentierte Prüfgrenzen.

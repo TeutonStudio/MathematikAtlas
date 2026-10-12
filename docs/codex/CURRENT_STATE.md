@@ -1,12 +1,13 @@
 # Aktueller verifizierter Projektzustand
 
-> Stand: 2026-10-12, verifizierter Alpha-Releaseumfang. Nachweise gelten für den jeweiligen geprüften Arbeitsstand, nicht als Release-Abnahme. Vollständige Anforderungsmatrix: [V3_ALPHA_ABNAHME.md](../V3_ALPHA_ABNAHME.md).
+> Stand: 2026-10-12, veröffentlichte V3 Alpha. Beide Releases und ihre PR-/Master-Push-Prüfungen sind abgeschlossen; lokales und GitHub-master wurden auf den veröffentlichten3.1.0-Commit synchronisiert. Vollständige Anforderungsmatrix: [V3_ALPHA_ABNAHME.md](../V3_ALPHA_ABNAHME.md).
 
 ## Metadaten
 
 - Veröffentlichter Vorgänger: `v3.0.1`, GitHub-master-Commit `2842a03e18797d9689ebaf5fc3e389e1bb60ffc9`, PR#444; sämtliche PR- und Master-Push-Prüfungen grün.
-- Produktstand dieses Releaseumfangs: `3.1.0`, Android-Code `3001000`, Desktop `3.1.0`; Branch `samai/v3.1.0/alpha-erweiterungen`, Releasebranch `release/v3.1.0-alpha-erweiterungen`. Versionsachse `y`, exakt zwei neue Typen.
-- Originalarbeitsbaum einschließlich IDE-Dateien gesichert; Produktintegration im isolierten Arbeitsbaum. Persönliche IDE-Dateien gehören nicht zum Release.
+- Veröffentlichte Alpha: `v3.1.0`, GitHub-master-Commit `811955f8c0bdd5f2bd59292cd9dea5ba634f1c51`, [PR#445](https://github.com/TeutonStudio/MathematikAtlas/pull/445); sämtliche PR- und Master-Push-Prüfungen grün.
+- Produktstand: `3.1.0`, Android-Code `3001000`, Desktop `3.1.0`; Branch `samai/v3.1.0/alpha-erweiterungen`, Releasebranch `release/v3.1.0-alpha-erweiterungen`. Versionsachse `y`, exakt zwei neue Typen.
+- Originalmaster per Fast-forward auf `811955f8c0bdd5f2bd59292cd9dea5ba634f1c51` synchronisiert; Produktarbeitsbaum sauber. Zehn persönliche IDE-Dateien bytegleich erhalten. Dauerhafter lokaler Nachweis: `Original/.gradle/alpha-konsolidierung/backup-20261011-094918/final-master-sync.json`. Persönliche IDE-Dateien gehören nicht zum Release.
 - Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`; neue Knoten benötigen keine Formaterhöhung.
 - Statischer Erstellenkatalog: 138 Typen; unveränderte veröffentlichte3.0.0-Baseline136 plus `atlas.uebersetzer` und `mathematik.tupelAbflachen`.
 
@@ -22,6 +23,7 @@
 | Android API36 | SAF-JSON/.matlas für neue Knoten, Abflachenergebnis, Übersetzerzielwechsel mit Undo/Redo und Prozessneustart geprüft |
 | Gemeinsamer Formeleditor | Desktop Tastatur/Stift/Foto-Modi; Footer bei1440×840 erreichbar. Android Zeichnen/Radieren, atomare Formelübernahme/Undo/Redo und gespeicherte Originalgesten geprüft;1,5facheSchrift/dunklesTheme |
 | Persistenz und Import | beide neuen verbundenen Knoten über echte JSON/.matlas-Codecs mit erwarteter Auswertung geprüft; Zeichnungs-/AST-/Kontext-/Copy-/Undo-/Fehlerregressionen grün |
+| Veröffentlichung3.1.0 | PR#445 und Master-Push-CI erfolgreich: Android38186386146, Linux38186386113, Mathematikkern38186386161, Release-Guard38186386173 |
 | 3.0.1-Laufzeitnachweise | Importjournalwiederherstellung aller18Dateien byteidentisch; Operatorverlustbestätigung/Undo/Redo; Kapseltouch, Navigation, aktive Unterkarte und Prozessneustart |
 
 Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timing und lokale Desktop-Installationspakete sind durch diese Tests nicht abgedeckt. Emulatorgesten und echte Desktop-Compose-Oberfläche ersetzen keine Hardwaremessung.
@@ -79,7 +81,7 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
   leere Mengen ausgegeben.
 - Gezielte Kern-, Knoten-, Katalog-, Visualisierungs-, Beispielkarten- und
   JSON-Roundtriptests sowie der vollständige JVM-Testlauf und Debug-Build bestehen.
-  Die unabhängige Knotenverifikation ist abgeschlossen; Veröffentlichung wird zusätzlich über die Release-PRs geprüft.
+  Die unabhängige Knotenverifikation ist abgeschlossen; Veröffentlichung und grüne PR-/Master-Prüfungen sind durch PR#444 und PR#445 nachgewiesen.
 - Ein isolierter API36-Emulator ist verfügbar. Erste Touch-/Inspector- und Lebenszyklusnachweise liegen vor; die hier dokumentierten Laufzeitnachweise ersetzen keine physische Geräteabnahme.
 
 ## Offene, priorisierte Android-Befunde
@@ -87,7 +89,7 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
 1. **Mittel – Start und Speichern können weiterhin umfangreiche Arbeit auf dem UI-Thread ausführen.** Importvalidierung, Transaktion und Listenaktualisierung laufen inzwischen auf Dispatchers.IO; automatische Speicherung wird während des Imports zurückgehalten. Verzögerungen sind noch nicht vollständig vermessen.
 2. **Prüfgrenze – Navigation und alle Lebenszyklusübergänge.** Die aktive Karte wird aus gespeichertem Verweis wiederhergestellt und überlebt im Emulator einen Prozessneustart. Bibliothekswechsel, Unterkarte per Doppel-Tap, Brotkrumenrückkehr, Hintergrundwechsel und Neustart der aktiven Unterkarte sind im Emulator geprüft. Automatisierte Instrumentierungsabdeckung besteht weiterhin nicht.
 3. **Prüfgrenze – Touch-Gesten.** Manuelle Emulatornachweise bestehen, Android-Instrumentierungstests fehlen weiterhin.
-4. **Releaseintegration.** Operatordefinitionen, Signaturaliase, gemeinsamer Konfigurator, Verbrauchervereinheitlichung und explizite Fachauswerterkomposition sind implementiert und unabhängig ohne weitere Blocker geprüft. Der3.1.0-Umfang ist implementiert und unabhängig geprüft. Release-PRs und abschließender Git-Gleichstand bilden den Veröffentlichungsnachweis.
+4. **Releaseintegration.** Operatordefinitionen, Signaturaliase, gemeinsamer Konfigurator, Verbrauchervereinheitlichung und explizite Fachauswerterkomposition sind implementiert und unabhängig ohne weitere Blocker geprüft. Der3.1.0-Umfang ist implementiert, unabhängig geprüft und als PR#445 veröffentlicht. Die grünen Release-PRs und der dokumentierte Git-Gleichstand schließen die Alpha-Konsolidierung ab.
 
 ## Abstraktionswerkzeug und Speicherstabilisierung
 
@@ -125,3 +127,7 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
 - Die Dateien unter `docs/codex/plans/active/` sind keine verlässliche Liste laufender Arbeiten: Mehrere Einträge bezeichnen bereits veröffentlichte Versionen oder nennen sich selbst abgeschlossen.
 - Architektur- und Releaseentscheidungen müssen weiterhin gegen Code, `release/roadmap.toml` und Git geprüft werden.
 - Der abgeschlossene Audit enthält umsetzungsreife Reparaturpakete und klare Abnahmekriterien; er verändert noch kein Produktionsverhalten und keine Persistenzversion.
+
+## Nachprüfung des separaten Umkehrmethoden-PR
+
+[PR#436: Review auf3.1.0](https://github.com/TeutonStudio/MathematikAtlas/pull/436#issuecomment-6115383718). Der isolierte Zwei-Dateien-Patch ist konfliktfrei anwendbar. Die ursprünglichen fünf Tests scheitern am Variablennamen `null`; nach temporärer Umbenennung in `nullWert` sind sie grün. Die Einbindung des neuen Inversetyps in den aktuellen Methodenaufruf benötigt gesonderte Arbeit. Keine Umschreibung des alten Branches und keine Übernahme der Umkehrmethoden in Alpha.
