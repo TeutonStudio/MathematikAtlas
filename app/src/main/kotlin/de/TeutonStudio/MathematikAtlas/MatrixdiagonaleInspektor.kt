@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
-import de.TeutonStudio.MathematikKnoten.MATRIXDIAGONALE_ART_PARAMETER
+import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.MatrixDiagonalArt
 
 internal object MatrixdiagonaleInspektor : KnotenInspektor {
@@ -25,6 +25,24 @@ internal object MatrixdiagonaleInspektor : KnotenInspektor {
         val aktuell = MatrixDiagonalArt.vonParameter(gespeichert)
         val unbekannt = gespeichert != null && MatrixDiagonalArt.ausParameterOderNull(gespeichert) == null
 
+        Text("Operation", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            listOf(MATRIXDIAGONALE_ERZEUGEN to "Erzeugen", MATRIXDIAGONALE_AUSLESEN to "Auslesen").forEach { (modus, titel) ->
+                FilterChip(selected = matrixdiagonaleModus(knoten) == modus,
+                    onClick = { aktionen.knoten(konfiguriereMatrixdiagonale(knoten, modus = modus)) },
+                    label = { Text(titel) })
+            }
+        }
+        if (matrixdiagonaleModus(knoten) == MATRIXDIAGONALE_AUSLESEN) {
+            Text("Ausgabeformat", style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+                listOf("tupel" to "Tupel", "zeile" to "Zeile", "spalte" to "Spalte").forEach { (form, titel) ->
+                    FilterChip(selected = matrixdiagonaleAusgabe(knoten) == form,
+                        onClick = { aktionen.knoten(konfiguriereMatrixdiagonale(knoten, ausgabe = form)) },
+                        label = { Text(titel) })
+                }
+            }
+        }
         Text("Diagonale", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -52,7 +70,9 @@ internal object MatrixdiagonaleInspektor : KnotenInspektor {
             )
         }
         Text(
-            "Bei rechteckigen Matrizen beginnt die Nebendiagonale rechts oben und besitzt die Länge min(Zeilen, Spalten).",
+            if (matrixdiagonaleModus(knoten) == MATRIXDIAGONALE_ERZEUGEN)
+                "Aus Tupel oder Vektor entsteht eine quadratische Nullmatrix mit den Werten auf der gewählten Diagonale."
+            else "Bei rechteckigen Matrizen beginnt die Nebendiagonale rechts oben und besitzt die Länge min(Zeilen, Spalten).",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

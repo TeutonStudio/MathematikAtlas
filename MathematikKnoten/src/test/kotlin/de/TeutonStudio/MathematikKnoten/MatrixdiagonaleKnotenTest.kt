@@ -10,6 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class MatrixdiagonaleKnotenTest {
     private val auswerter = GesamterMathematikAuswerter.erzeugeRegister().finde(MATRIXDIAGONALE_ART)!!
@@ -90,6 +91,34 @@ class MatrixdiagonaleKnotenTest {
 
         assertEquals(listOf(zahl(1), zahl(4)), assertIs<Tupel>(ergebnis.ausgaben.getValue("diagonale").objekt).elemente)
         assertNotNull(ergebnis.warnungen.singleOrNull())
+    }
+
+    @Test
+    fun `Erzeugen und Auslesen behalten Vektorwerte und Anschlusssignaturen`() {
+        val basis = MatrixdiagonaleKnotenVorlagen.Matrixdiagonale.erzeuge(GraphPunkt.Zero)
+        val erzeugen = konfiguriereMatrixdiagonale(basis, MATRIXDIAGONALE_ERZEUGEN)
+        assertEquals(listOf("werte", "matrix"), erzeugen.anschlüsse.map { it.name })
+        assertEquals(basis.anschlüsse.map { it.id }, erzeugen.anschlüsse.map { it.id })
+        assertEquals(MathematikAnschlussArten.Matrix.id, erzeugen.anschlüsse.last().art)
+        val werte = SpaltenVektor(listOf(zahl(3), zahl(2)))
+        val matrix = auswerter.auswerten(
+            KnotenAuswertungsKontext(erzeugen, mapOf("werte" to BedingterWert(werte)), RechenKontext())
+        ).ausgaben.getValue("matrix").objekt as Matrix
+        assertEquals(Matrix(listOf(listOf(zahl(3), zahl(0)), listOf(zahl(0), zahl(2)))), matrix)
+        val auslesen = konfiguriereMatrixdiagonale(erzeugen, MATRIXDIAGONALE_AUSLESEN, "spalte")
+        assertEquals(basis.anschlüsse.map { it.id }, auslesen.anschlüsse.map { it.id })
+        assertEquals(werte, auswerter.auswerten(
+            KnotenAuswertungsKontext(auslesen, mapOf("matrix" to BedingterWert(matrix)), RechenKontext())
+        ).ausgaben.getValue("diagonale").objekt)
+    }
+
+    @Test
+    fun `Nichtdiagonale Matrix meldet Informationsverlust`() {
+        val k = MatrixdiagonaleKnotenVorlagen.Matrixdiagonale.erzeuge(GraphPunkt.Zero)
+        val matrix = Matrix(listOf(listOf(zahl(1), zahl(7)), listOf(zahl(8), zahl(2))))
+        val result = auswerter.auswerten(KnotenAuswertungsKontext(k,
+            mapOf("matrix" to BedingterWert(matrix)), RechenKontext()))
+        assertTrue(result.warnungen.any { it.contains("umkehrbar") })
     }
 
     private fun zahl(wert: Long): RationaleZahl = RationaleZahl.von(wert)
