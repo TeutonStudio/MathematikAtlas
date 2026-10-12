@@ -78,6 +78,48 @@ object Polarkoordinaten {
         return Tupel(x.map(::zahl))
     }
 
+
+    /** Parametrisierung für Methoden mit freien reellen Winkelvariablen in Grad. */
+    fun kartesischSymbolisch(polar: Tupel): Tupel {
+        require(polar.elemente.size == 2) { "Polar benötigt Radius und Winkel-Tupel." }
+        val radius = polar.elemente[0] as? ZahlAusdruck
+            ?: error("Der Radius muss ein Zahlausdruck sein.")
+        val richtung = polar.elemente[1] as? Tupel
+            ?: error("Die Richtung muss ein Winkel-Tupel sein.")
+        require(richtung.elemente.isNotEmpty()) { "Mindestens ein Winkel ist erforderlich." }
+        val winkelRad = richtung.elemente.map { winkel ->
+            when (winkel) {
+                is ZahlAusdruck -> gradZuBogenmass(winkel)
+                is WinkelAusdruck -> winkelBogenmass(winkel)
+                else -> error("Alle Winkel müssen Grad-Zahlausdrücke oder Gradwinkel sein.")
+            }
+        }
+        val komponenten = MutableList<ZahlAusdruck>(winkelRad.size + 1) { RationaleZahl.Null }
+        var teilRadius = radius
+        for (i in winkelRad.lastIndex downTo 1) {
+            komponenten[i + 1] = multiplikation(teilRadius, Cosinus(winkelRad[i]))
+            teilRadius = multiplikation(teilRadius, Sinus(winkelRad[i]))
+        }
+        komponenten[0] = multiplikation(teilRadius, Cosinus(winkelRad[0]))
+        komponenten[1] = multiplikation(teilRadius, Sinus(winkelRad[0]))
+        return Tupel(komponenten)
+    }
+
+    /** Nur bei nicht numerisch entscheidbaren Größen wird die symbolische Form benutzt. */
+    fun kartesischMitVariablen(polar: Tupel): Tupel {
+        val richtung = polar.elemente.getOrNull(1) as? Tupel
+        fun symbolisch(objekt: MathematischesObjekt): Boolean = when (objekt) {
+            is GradWinkel -> DomaenenAuswerter.wert(objekt.grad) !is DomaenenErgebnis.Wert
+            is ZahlAusdruck -> DomaenenAuswerter.wert(objekt) !is DomaenenErgebnis.Wert
+            is WinkelAusdruck -> true
+            else -> false
+        }
+        return if (richtung != null && (
+            polar.elemente.firstOrNull()?.let(::symbolisch) == true ||
+            richtung.elemente.any(::symbolisch)
+        )) kartesischSymbolisch(polar) else kartesisch(polar)
+    }
+
     private fun sinGrad(w: Double) = when (w) {
         0.0, 180.0 -> 0.0
         90.0 -> 1.0

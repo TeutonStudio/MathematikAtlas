@@ -89,4 +89,14 @@ class PolarkoordinatenTest {
         val symbolisch = anfrage.copy(objekte = listOf(Tupel(listOf(Variable("x")))))
         assertIs<VektorRechnerErgebnis.Ungueltig>(VektorRechner.erzeuge(symbolisch))
     }
+    @Test fun `Polarumrechnung erlaubt freie Gradvariablen zur Ellipsenparametrisierung`() {
+        val phi = Variable("phi")
+        val polar = Tupel(listOf(RationaleZahl.Eins, Tupel(listOf(phi))))
+        val kartesisch = Polarkoordinaten.kartesischMitVariablen(polar)
+        assertEquals(2, kartesisch.elemente.size)
+        assertTrue(kartesisch.zuLatex().contains("\\cos"))
+        assertTrue(kartesisch.zuLatex().contains("\\sin"))
+    }
+
+
 }

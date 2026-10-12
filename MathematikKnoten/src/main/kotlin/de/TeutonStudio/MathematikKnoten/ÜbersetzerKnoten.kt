@@ -185,7 +185,7 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
                     }
                     Polarkoordinaten.polar(tupel)
                 }
-                "kartesisch" -> Polarkoordinaten.kartesisch(
+                "kartesisch" -> Polarkoordinaten.kartesischMitVariablen(
                     objekt as? Tupel ?: error("Polar → Kartesisch benötigt ein Zweiertupel aus Radius und Winkeltupel."),
                 )
                 else -> übersetzeStruktur(objekt, ziel)
