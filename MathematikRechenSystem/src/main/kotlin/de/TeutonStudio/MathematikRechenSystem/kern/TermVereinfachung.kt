@@ -161,6 +161,8 @@ private fun vereinfacheZahlMitDetails(objekt: ZahlAusdruck, kontext: RechenKonte
         is Multiplikation -> multiplikation(objekt.faktoren.map(::teil))
         is Division -> Division(teil(objekt.dividend), teil(objekt.divisor))
         is Potenz -> Potenz(teil(objekt.basis), teil(objekt.exponent))
+        is WinkelBogenmass -> winkelBogenmass(objekt.winkel, objekt.vertreter)
+        is SinusGrad -> objekt
         is Sinus -> Sinus(teil(objekt.argument))
         is Cosinus -> Cosinus(teil(objekt.argument))
         else -> objekt

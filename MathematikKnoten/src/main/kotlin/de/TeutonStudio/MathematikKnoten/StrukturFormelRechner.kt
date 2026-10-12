@@ -285,8 +285,8 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
     )
 }
 
-private fun werteMatrixZerlegenAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis = runCatching {
-    val matrix = kontext.mathematischerEingang("matrix", "Zerlegen")
+internal fun werteMatrixZerlegenAus(kontext: KnotenAuswertungsKontext, eingangsName: String = "matrix"): KnotenAuswertungsErgebnis = runCatching {
+    val matrix = kontext.mathematischerEingang(eingangsName, "Zerlegen")
     val richtung = runCatching {
         MatrixZerlegeRichtung.valueOf(kontext.knoten.parameter[MATRIX_ZERLEGEN_RICHTUNG] ?: MatrixZerlegeRichtung.ZEILEN.name)
     }.getOrDefault(MatrixZerlegeRichtung.ZEILEN)
@@ -302,23 +302,28 @@ private fun werteMatrixZerlegenAus(kontext: KnotenAuswertungsKontext): KnotenAus
     val ausgaben = if (konkret != null) {
         List(konkret) { index ->
             val name = if (richtung == MatrixZerlegeRichtung.ZEILEN) "zeile${index + 1}" else "spalte${index + 1}"
-            name to BedingterWert(matrixStrukturSchnitt(matrix, richtung, index), kontext.annahmenFuerStrukturFormel())
+            name to BedingterWert(matrixStrukturSchnitt(matrix, richtung, index, kontext.knoten.parameter["matrixZerlegen.ausgabe"] == "tupel"), kontext.annahmenFuerStrukturFormel())
         }.toMap()
     } else {
-        mapOf("methode" to BedingterWert(matrixZerlegeMethode(matrix, richtung), kontext.annahmenFuerStrukturFormel()))
+        mapOf("methode" to BedingterWert(matrixZerlegeMethode(matrix, richtung, kontext.knoten.parameter["matrixZerlegen.ausgabe"] == "tupel"), kontext.annahmenFuerStrukturFormel()))
     }
     KnotenAuswertungsErgebnis(ausgaben = ausgaben, eingänge = kontext.eingänge)
 }.getOrElse { fehler ->
     KnotenAuswertungsErgebnis(ausgaben = emptyMap(), eingänge = kontext.eingänge, fehler = fehler.message)
 }
 
-fun matrixZerlegeMethode(matrix: MathematischesObjekt, richtung: MatrixZerlegeRichtung): MathematischeMethode {
-    val index = Variable(if (richtung == MatrixZerlegeRichtung.ZEILEN) "i" else "j")
+fun matrixZerlegeMethode(matrix: MathematischesObjekt, richtung: MatrixZerlegeRichtung, alsTupel: Boolean = false): MathematischeMethode {
+    val basis = if (richtung == MatrixZerlegeRichtung.ZEILEN) "i" else "j"
+    val belegt=matrix.enthalteneMethodenParameter().map { it.name }.toSet()
+    var name=basis
+    var suffix=0
+    while(name in belegt) name="${basis}_${++suffix}"
+    val index = Variable(name)
     val achse = if (richtung == MatrixZerlegeRichtung.ZEILEN) 0 else 1
     val form = (matrix as? TypisiertesElement)?.strukturForm
     val ergebnisForm = form?.getOrNull(1 - achse)?.let(::listOf)
     val art = if (richtung == MatrixZerlegeRichtung.ZEILEN) StrukturZugriffsArt.Zeile else StrukturZugriffsArt.Spalte
-    val anschlussArt = if (richtung == MatrixZerlegeRichtung.ZEILEN) "mathematik.vektor.zeile" else "mathematik.vektor.spalte"
+    val anschlussArt = if (alsTupel) "mathematik.tupel" else if (richtung == MatrixZerlegeRichtung.ZEILEN) "mathematik.vektor.zeile" else "mathematik.vektor.spalte"
     return MathematischeMethode(
         name = "zerlegen",
         parameter = listOf(index),
@@ -332,12 +337,13 @@ private fun matrixStrukturSchnitt(
     matrix: MathematischesObjekt,
     richtung: MatrixZerlegeRichtung,
     index: Int,
+    alsTupel: Boolean = false,
 ): MathematischesObjekt = strukturSchnitt(
     matrix,
     RationaleZahl.von((index + 1).toLong()),
     if (richtung == MatrixZerlegeRichtung.ZEILEN) StrukturZugriffsArt.Zeile else StrukturZugriffsArt.Spalte,
     if (richtung == MatrixZerlegeRichtung.ZEILEN) 0 else 1,
-    if (richtung == MatrixZerlegeRichtung.ZEILEN) "mathematik.vektor.zeile" else "mathematik.vektor.spalte",
+    if (alsTupel) "mathematik.tupel" else if (richtung == MatrixZerlegeRichtung.ZEILEN) "mathematik.vektor.zeile" else "mathematik.vektor.spalte",
 )
 
 private fun ZahlAusdruck.positiveStrukturDimensionOderNull(): Int? = (this as? RationaleZahl)?.let { zahl ->
@@ -433,7 +439,16 @@ private fun werteVektorFormelAus(
         ?: error("Unbekannter Vektoroperator $operatorId.")
     val quellen = argumente.values.mapNotNull(::vektorQuelleOderNull)
     val skalare = argumente.values.filterIsInstance<ZahlAusdruck>()
-    return when (val ergebnis = VektorRechner.erzeuge(VektorRechnerAnfrage(operator, quellen, skalare))) {
+    val anfrage = when (operator) {
+        VektorRechnerOperator.POTENZ -> VektorRechnerAnfrage(operator, quellen, exponent = argumente["p"] as? ZahlAusdruck ?: RationaleZahl.von(2))
+        VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL -> VektorRechnerAnfrage(operator,
+            objekte = listOf(argumente["kartesisch"] ?: error("Kartesisches Tupel fehlt.")))
+        VektorRechnerOperator.KARTESISCH -> VektorRechnerAnfrage(operator,
+            skalare = listOf(argumente["radius"] as? ZahlAusdruck ?: error("Radius fehlt.")),
+            objekte = listOf(argumente["winkel"] ?: error("Winkeltupel oder Vorzeichen fehlt.")))
+        else -> VektorRechnerAnfrage(operator, quellen, skalare)
+    }
+    return when (val ergebnis = VektorRechner.erzeuge(anfrage)) {
         is VektorRechnerErgebnis.VektorWert -> ergebnis.wert
         is VektorRechnerErgebnis.ZahlWert -> ergebnis.wert
         is VektorRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)
@@ -443,11 +458,12 @@ private fun werteVektorFormelAus(
 private fun werteMatrixFormelAus(
     operatorId: String,
     argumente: Map<String, MathematischesObjekt>,
+    variablenVorräte: Map<String, MengenAusdruck> = emptyMap(),
 ): AtlasWert {
     val operator = MatrixRechnerOperator.entries.firstOrNull { it.stabileId == operatorId }
         ?: error("Unbekannter Matrixoperator $operatorId.")
     val matrizen = argumente.mapNotNull { (rolle, objekt) ->
-        (if (operator == MatrixRechnerOperator.MATRIXPRODUKT) objekt.alsMatrixFaktor() else objekt as? Matrix)?.let { MatrixOperand(rolle, it, FundamentalerZahlbereich.REELL) }
+        (if (operator == MatrixRechnerOperator.MATRIXPRODUKT) objekt.alsMatrixFaktor() else objekt as? Matrix)?.let { MatrixOperand(rolle, it, if(operator in setOf(MatrixRechnerOperator.INVERSE,MatrixRechnerOperator.DETERMINANTE)) maximaleZahlenGrundmenge(it.zeilen.flatten().map { q -> inferiereZahlenWertevorrat(q,variablenVorräte) }).fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL else if(operator in setOf(MatrixRechnerOperator.CHARAKTERISTISCHES_POLYNOM,MatrixRechnerOperator.MINIMALPOLYNOM)) it.tensorZahlBereich.fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL else FundamentalerZahlbereich.REELL) }
     }
     val skalare = argumente.values.filterIsInstance<ZahlAusdruck>()
     val vektoren = argumente.values.mapNotNull(::orientierterVektorOderNull)
@@ -484,7 +500,7 @@ private fun werteStrukturOperatorAus(
     return when (familie) {
         StrukturRechnerKnotenFamilie.AUSSAGESATZ -> werteAussagenFormelAus(definition.id, argumente, kontext.knoten)
         StrukturRechnerKnotenFamilie.VEKTOR -> werteVektorFormelAus(definition.id, argumente)
-        StrukturRechnerKnotenFamilie.MATRIX -> werteMatrixFormelAus(definition.id, argumente)
+        StrukturRechnerKnotenFamilie.MATRIX -> werteMatrixFormelAus(definition.id, argumente,kontext.eingänge.values.flatMap { it.variablenQuellen }.associate { it.name to it.werteVorrat })
         StrukturRechnerKnotenFamilie.TENSOR -> werteTensorFormelAus(definition.id, argumente, kontext.knoten)
     }
 }

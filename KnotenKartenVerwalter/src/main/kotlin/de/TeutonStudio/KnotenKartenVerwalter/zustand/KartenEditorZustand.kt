@@ -67,7 +67,7 @@ class KartenEditorZustand(
             bereinigeAuswahl()
         }
     }
-    val projektion: GruppenProjektion
+    private val basisProjektion: GruppenProjektion
         get() {
             if (!hatAktuelleProjektion()) {
                 if (projektionImHintergrund && karte.knoten.size >= 500) {
@@ -80,6 +80,42 @@ class KartenEditorZustand(
             }
             return projektionsCache!!
         }
+    private var inhaltsMinima by mutableStateOf<Map<KnotenId, GraphGröße>>(emptyMap())
+    private var gruppenKopfMinima by mutableStateOf<Map<VisuelleGruppenId, GraphGröße>>(emptyMap())
+    private var geometrieGruppenMinima: Map<VisuelleGruppenId, GraphGröße>? = null
+    private var geometrieBasis: GruppenProjektion? = null
+    private var geometrieMinima: Map<KnotenId, GraphGröße>? = null
+    private var geometrieProjektion: GruppenProjektion? = null
+
+    /** Meldung in unskalierten dp, unabhängig von Zoom und gespeicherter Benutzergröße. */
+    fun meldeInhaltsminimum(id: KnotenId, minimum: GraphGröße) {
+        if (!minimum.breite.isFinite() || !minimum.höhe.isFinite() || minimum.breite <= 0f || minimum.höhe <= 0f) return
+        if (inhaltsMinima[id] != minimum) inhaltsMinima = inhaltsMinima + (id to minimum)
+    }
+
+    fun meldeGruppenKopfminimum(id: VisuelleGruppenId, minimum: GraphGröße) {
+        if (gruppenKopfMinima[id] != minimum) gruppenKopfMinima = gruppenKopfMinima + (id to minimum)
+    }
+    fun gruppenKopfHöhe(id: VisuelleGruppenId): Float = maxOf(VISUELLE_GRUPPE_KOPFZEILE_HÖHE, gruppenKopfMinima[id]?.höhe ?: 0f)
+
+    val projektion: GruppenProjektion
+        get() {
+            val basis = basisProjektion
+            if (geometrieBasis !== basis || geometrieMinima !== inhaltsMinima || geometrieGruppenMinima !== gruppenKopfMinima) {
+                val vollständig = karte.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima)
+                val gruppen = vollständig.visuelleGruppen.associateBy { it.id }
+                val sichtbar = basis.karte.copy(
+                    knoten = basis.karte.knoten.map { it.mitInhaltsminimum(inhaltsMinima[it.id]) },
+                    visuelleGruppen = basis.karte.visuelleGruppen.map { gruppen[it.id] ?: it },
+                )
+                geometrieProjektion = basis.copy(karte = sichtbar)
+                geometrieBasis = basis
+                geometrieMinima = inhaltsMinima
+                geometrieGruppenMinima = gruppenKopfMinima
+            }
+            return geometrieProjektion!!
+        }
+
     val darstellungsKarte: KartenDaten
         get() = projektion.karte.copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
 
@@ -110,6 +146,7 @@ class KartenEditorZustand(
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
         val vorher = karte
         if (neu.id != karte.id) öffneGruppe(null)
+        if (neu.id != karte.id) { inhaltsMinima = emptyMap(); gruppenKopfMinima = emptyMap() }
         karte = neu.bereinigteVisuelleGruppen()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         ausgewählteKnoten = emptySet()
@@ -151,6 +188,11 @@ class KartenEditorZustand(
             else if (karte.ansicht != aktion.ansicht) karte = karte.copy(ansicht = aktion.ansicht)
             return
         }
+        val begrenzteAktion = if (aktion is KartenAktion.KnotenGrößeÄndern) {
+            val minimum = inhaltsMinima[aktion.id]
+            if (minimum == null) aktion else aktion.copy(größe = GraphGröße(
+                maxOf(aktion.größe.breite, minimum.breite), maxOf(aktion.größe.höhe, minimum.höhe)))
+        } else aktion
         val wirksameAktion = if (
             aktion is KartenAktion.KnotenVerschieben &&
             ausgewählteKnoten.size > 1 &&
@@ -159,7 +201,7 @@ class KartenEditorZustand(
             val aktuell = karte.knoten.firstOrNull { it.id == aktion.id }
             val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero
             KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
-        } else aktion
+        } else begrenzteAktion
         var angewendet = karte.wendeAn(wirksameAktion)
         val neuEingefügt = when (wirksameAktion) {
             is KartenAktion.KnotenEinfügen -> listOf(wirksameAktion.knoten)
@@ -198,6 +240,7 @@ class KartenEditorZustand(
         val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
         var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
+        if (wirksameAktion is KartenAktion.VisuelleGruppeGrößeÄndern) neu = neu.copy(visuelleGruppen = neu.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima).visuelleGruppen)
         if (interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (neu == karte) return
         val historienRelevant = mitHistorie && wirksameAktion !is KartenAktion.AnsichtÄndern

@@ -107,6 +107,7 @@ private fun elementAusdruck(
     "mathematik.zahl" -> Variable(name)
     "mathematik.aussage" -> AussagenParameter(name)
     "mathematik.menge" -> MengenParameter(name)
+    "mathematik.winkel" -> WinkelParameter(name)
     else -> TypisiertesElement(name, art.wert, strukturForm = strukturForm)
 }
 

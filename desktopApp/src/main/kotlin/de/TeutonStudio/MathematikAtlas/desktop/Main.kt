@@ -101,7 +101,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
     var rechenwegKnoten by remember { mutableStateOf<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId?>(null) }
     rechenwegKnoten?.let { id ->
         atlas.editor.karte.knoten.firstOrNull { it.id == id }?.let { knoten ->
-            PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[id]) { rechenwegKnoten = null }
+            PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[id], { config -> atlas.beantrageKonfiguration(konfigurierePolynomNumerik(knoten, config)) }) { rechenwegKnoten = null }
         }
     }
     var neuerFormelDialog by remember { mutableStateOf(false) }
@@ -381,14 +381,14 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
     var rechenwegOffen by remember(knoten?.id) { mutableStateOf(false) }
     if (knoten != null && besitztPrädikatsRechenweg(knoten.art)) {
         Button(onClick = { rechenwegOffen = true }) { Text("Rechenweg öffnen") }
-        if (rechenwegOffen) PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[knoten.id]) { rechenwegOffen = false }
+        if (rechenwegOffen) PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[knoten.id], { config -> atlas.beantrageKonfiguration(konfigurierePolynomNumerik(knoten, config)) }) { rechenwegOffen = false }
     }
     if (falkOffen && knoten != null) AtlasDialog(onDismissRequest = { falkOffen = false }) {
         Column(Modifier.fillMaxSize()) {
-            AtlasDialogKopf(titel = { Text("Falk-Schema") }, aktionen = {
+            AtlasDialogKopf(titel = { Text("Auswertungsschema") }, aktionen = {
                 TextButton(onClick = { falkOffen = false }) { Text("Schließen") }
             })
-            MatrixproduktFalkSchemaInhalt(atlas.auswertung.knoten[knoten.id], Modifier.weight(1f).padding(AtlasDialogAbstände.inhalt))
+            RechnerAuswertungsschemaInhalt(knoten, atlas.auswertung.knoten[knoten.id], Modifier.weight(1f).padding(AtlasDialogAbstände.inhalt))
         }
     }
     var formelOffen by remember(knoten?.id) { mutableStateOf(false) }
@@ -408,16 +408,56 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             )
             Button(onClick = { atlas.benenneAuswahlUm(name) }, enabled = name.isNotBlank() && name != knoten.name) { Text("Übernehmen") }
             HorizontalDivider()
+            if (knoten.art == "mathematik.variable") {
+                MatrixVariableFelder(knoten) { atlas.beantrageKonfiguration(it) }
+            }
             if (knoten.art == ÜBERSETZER_ART) {
                 Text("Übersetzungsziel")
                 ÜBERSETZER_ZIELE.forEach { ziel -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereÜbersetzer(knoten, ziel)) }) {
-                    Text(if (ziel == übersetzerZiel(knoten)) "✓ $ziel" else ziel)
+                    Text(if (ziel == übersetzerZiel(knoten)) "✓ ${übersetzerZielTitel(ziel)}" else übersetzerZielTitel(ziel))
                 } }
+                if (übersetzerZiel(knoten) == "koordinatenmenge") listOf("keiner" to "Koordinaten erhalten", "punkt" to "Objektpunkt wählen", "mittelpunkt" to "Mittelpunkt").forEach { (id, titel) ->
+                    TextButton(onClick = { atlas.beantrageKonfiguration(knoten.copy(parameter = knoten.parameter + ("geometrie.anker" to id))) }) { Text(titel) }
+                }
+                if (übersetzerZiel(knoten) in setOf("polar", "kartesisch")) Text(Polarkoordinaten.KONVENTION)
+                if (übersetzerZiel(knoten) == "bogenmass") WinkelVertreter.entries.forEach { vertreter ->
+                    TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereÜbersetzerVertreter(knoten, vertreter)) }) {
+                        if (übersetzerVertreter(knoten) == vertreter) Text("✓ ")
+                        LatexText(vertreter.menge.zuLatex())
+                    }
+                }
+                if (übersetzerZiel(knoten) == "kartesisch") Row {
+                    Checkbox(checked = übersetzerEindimensional(knoten), onCheckedChange = {
+                        atlas.beantrageKonfiguration(konfiguriereÜbersetzerEindimensional(knoten, it))
+                    })
+                    Text("R¹: (Radius, Vorzeichen)")
+                }
             }
+            if (knoten.art == ZAHLENRECHNER_ART && UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.SINUS) Row {
+                Checkbox(checked = knoten.parameter[SINUS_WINKELRAUM] == "grad", onCheckedChange = {
+                    atlas.beantrageKonfiguration(konfiguriereSinusWinkelraum(knoten, it))
+                })
+                Text("Sinus auf der Gradmenge")
+            }
+            if (knoten.art == de.TeutonStudio.MathematikRechenSystem.kern.VektorRechner.KNOTEN_ART) {
+                if (knoten.parameter[VEKTOR_RECHNER_OPERATOR] in setOf(VektorRechnerOperator.POTENZ.stabileId,VektorRechnerOperator.SKALARPRODUKT.stabileId)) {
+                    Text("Skalarproduktdefinition")
+                    TextButton(onClick={atlas.beantrageKonfiguration(konfiguriereSkalarproduktDefinition(knoten,null))}) { Text("Standardskalarprodukt") }
+                    atlas.speicher.gespeicherteKarten().filter { k -> k.knoten.none { it.art=="mathematik.kartenEingang" } && k.knoten.any { it.art==BEGRIFF_SKALARPRODUKT_KNOTEN_ART } }.forEach { karte ->
+                        TextButton(onClick={atlas.beantrageKonfiguration(konfiguriereSkalarproduktDefinition(knoten,KartenVerweis(karte.id,karte.version)))}) { Text("${karte.name} · v${karte.version} (Axiome werden geprüft)") }
+                    }
+                    SkalarproduktLinearitaet.entries.forEach { seite -> TextButton(onClick={atlas.beantrageKonfiguration(knoten.copy(parameter=knoten.parameter+(SKALARPRODUKT_LINEARITAET_PARAMETER to seite.name)))}) { Text(seite.name) } }
+                }
+                VektorRechnerOperator.entries.forEach { op -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereVektorRechner(knoten, op)) }) { Text(op.titel) } }
+                if (knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.POTENZ.stabileId) OutlinedTextField(
+                    value = knoten.parameter[VEKTOR_POTENZ_EXPONENT] ?: "2", label = { Text("Exponent") },
+                    onValueChange = { text -> if (text.toIntOrNull()?.let { it >= 0 } == true) atlas.beantrageKonfiguration(knoten.copy(parameter = knoten.parameter + (VEKTOR_POTENZ_EXPONENT to text))) })
+            }
+            if (knoten.art == MengenRechner.KNOTEN_ART) sichtbareMengenRechnerOperatoren().forEach { op -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereMengenRechner(knoten, op)) }) { Text(op.titel()) } }
             if (knoten.art == ZAHLENRECHNER_ART || de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) != null)
                 OutlinedButton(onClick = { formelOffen = true }) { Text("Formel / Zeichnung bearbeiten") }
-            if (istMatrixProduktKnoten(knoten))
-                OutlinedButton(onClick={ falkOffen=true }) { Text("Falk-Schema") }
+            if (besitztRechnerSchema(knoten))
+                OutlinedButton(onClick={ falkOffen=true }) { Text("Auswertungsschema") }
             Text("Art", style = MaterialTheme.typography.labelLarge)
             Text(knoten.art)
             knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }

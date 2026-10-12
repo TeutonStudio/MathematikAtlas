@@ -10,7 +10,7 @@ class MengenKonstantenTest {
     private fun mitglied(wert: MathematischesObjekt, menge: MengenKonstante) = ElementBeziehung(wert, menge.menge).entscheide().wahrheitswert
 
     @Test fun `alle Quellen haben stabile nullstellige Signaturen`() {
-        assertEquals(setOf("leer", "N", "N0", "Z", "Q", "R", "C", "P", "Zi", "PZi"), RechnerOperatorDefinitionen.mengenQuellen.map { it.stabileId }.toSet())
+        assertEquals(setOf("leer", "N", "N0", "Z", "Q", "R", "C", "P", "Zi", "PZi", "Grad"), RechnerOperatorDefinitionen.mengenQuellen.map { it.stabileId }.toSet())
         MengenKonstante.entries.forEach {
             assertTrue(it.signatur.eingänge.isEmpty())
             assertEquals(FormelTyp.MENGE, it.signatur.ausgänge.single().typ)
@@ -27,8 +27,8 @@ class MengenKonstantenTest {
             "0000011000", "0000001000", "0111111110", "0000001010", "0000001011",
         )
         val zeugen = listOf(z(0), z(1), z(-1), z(2), z(3), RationaleZahl.von(1, 2), c(0, 1), c(1, 1), MathematischeKonstante("pi", "\\pi"))
-        MengenKonstante.entries.forEachIndexed { i, a ->
-            MengenKonstante.entries.forEachIndexed { j, b ->
+        MengenKonstante.entries.filter { it != MengenKonstante.GRAD }.forEachIndexed { i, a ->
+            MengenKonstante.entries.filter { it != MengenKonstante.GRAD }.forEachIndexed { j, b ->
                 val erwartet = matrix[i][j] == '1'
                 assertEquals(if (erwartet) Wahrheitswert.Wahr else Wahrheitswert.Lüge, TeilmengenBeziehung(a.menge, b.menge).entscheide().wahrheitswert, "${a.stabileId} ⊆ ${b.stabileId}")
                 assertEquals(if (i == j) Wahrheitswert.Wahr else Wahrheitswert.Lüge, Gleichheit(a.menge, b.menge).entscheide().wahrheitswert)

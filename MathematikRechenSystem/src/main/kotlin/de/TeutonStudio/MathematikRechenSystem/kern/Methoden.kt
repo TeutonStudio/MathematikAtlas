@@ -569,12 +569,16 @@ fun ersetze(aussage: Aussage, bindungen: Map<String, MathematischesObjekt>): Aus
 /** Rekursive, typübergreifende Substitution für Methodenausgaben und Zielmengen. */
 fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesObjekt>): MathematischesObjekt = when (objekt) {
     is MethodenParameter -> bindungen[objekt.name] ?: objekt
+    is IndexKomponente -> indexKomponente(ersetze(objekt.quelle, bindungen), objekt.indizes.map { ersetze(it, bindungen) })
     is StrukturAchsenLaenge -> strukturAchsenLaenge(ersetze(objekt.quelle, bindungen), objekt.achse)
-    is SymbolischeZahlKomponente -> strukturKomponente(
-        ersetze(objekt.quelle, bindungen),
-        ersetze(objekt.index, bindungen),
-        numerisch = true,
-    )
+    is SymbolischeZahlKomponente -> if (objekt.weitereIndizes.isEmpty() && objekt.quelle !is Tensorartig) strukturKomponente(
+        ersetze(objekt.quelle, bindungen), ersetze(objekt.index, bindungen), numerisch = true,
+    ) else {
+        val quelle = ersetze(objekt.quelle, bindungen)
+        val indizes = (listOf(objekt.index) + objekt.weitereIndizes).map { ersetze(it, bindungen) }
+        val wert = indexKomponente(quelle, indizes)
+        if (wert is IndexKomponente) SymbolischeZahlKomponente(quelle, indizes.first(), indizes.drop(1)) else wert
+    }
     is SymbolischerStrukturZugriff -> strukturSchnittOderKomponente(objekt, bindungen)
     is EndlicheIndexMenge -> EndlicheIndexMenge(ersetze(objekt.obergrenze, bindungen))
     is StrukturErgebnisMenge -> objekt.copy(form = objekt.form?.map { ersetze(it, bindungen) })
@@ -589,7 +593,13 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     )
     is InversesElement -> InversesElement(ersetze(objekt.argument, bindungen))
     is Potenz -> Potenz(ersetze(objekt.basis, bindungen), ersetze(objekt.exponent, bindungen))
+    is Konjugierte -> konjugiereFormal(ersetze(objekt.argument, bindungen))
     is Betrag -> Betrag(ersetze(objekt.argument, bindungen))
+    is GradWinkel -> GradWinkel(ersetze(objekt.grad, bindungen))
+    is WinkelParameter -> bindungen[objekt.name] ?: objekt
+    is WinkelAusBogenmass -> winkelAusBogenmass(ersetze(objekt.argument, bindungen))
+    is WinkelBogenmass -> winkelBogenmass(ersetze(objekt.winkel, bindungen) as WinkelAusdruck, objekt.vertreter)
+    is SinusGrad -> SinusGrad(ersetze(objekt.winkel, bindungen) as WinkelAusdruck)
     is Sinus -> Sinus(ersetze(objekt.argument, bindungen))
     is Cosinus -> Cosinus(ersetze(objekt.argument, bindungen))
     is ArcSinus -> ArcSinus(ersetze(objekt.argument, bindungen))
@@ -610,6 +620,8 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Vereinigung -> vereinige(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Schnitt -> schneide(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck }, objekt.grundMenge?.let { ersetze(it, bindungen) as MengenAusdruck })
     is MengenDifferenz -> mengenDifferenz(ersetze(objekt.links, bindungen) as MengenAusdruck, ersetze(objekt.rechts, bindungen) as MengenAusdruck)
+    is VerschobeneKoordinatenMenge -> objekt.copy(original = ersetze(objekt.original, bindungen) as MengenAusdruck, verschiebung = objekt.verschiebung.map { ersetze(it, bindungen) as ZahlAusdruck })
+    is UnterraumMenge -> objekt.copy(richtungen = objekt.richtungen.map { row -> row.map { ersetze(it, bindungen) as ZahlAusdruck } }, stuetzpunkt = objekt.stuetzpunkt?.map { ersetze(it, bindungen) as ZahlAusdruck })
     is KartesischesProdukt -> kartesischesProdukt(objekt.mengen.map { ersetze(it, bindungen) as MengenAusdruck })
     is Tupelraum -> Tupelraum(objekt.komponenten.map { ersetze(it, bindungen) as MengenAusdruck })
     is Folgenraum -> Folgenraum(ersetze(objekt.elementMenge, bindungen) as MengenAusdruck)
@@ -711,8 +723,9 @@ private fun vereinfacheObjekt(
 /** Rekursive Analyse aller bindbaren Methodenparameter. */
 fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> = when (this) {
     is MethodenParameter -> setOf(this)
+    is IndexKomponente -> (listOf(quelle) + indizes).enthalteneMethodenParameter()
     is StrukturAchsenLaenge -> quelle.enthalteneMethodenParameter()
-    is SymbolischeZahlKomponente -> setOf(quelle, index).enthalteneMethodenParameter()
+    is SymbolischeZahlKomponente -> (listOf(quelle, index) + weitereIndizes).enthalteneMethodenParameter()
     is SymbolischerStrukturZugriff -> (listOf(quelle, index) + ergebnisForm.orEmpty()).enthalteneMethodenParameter()
     is EndlicheIndexMenge -> obergrenze.enthalteneMethodenParameter()
     is StrukturErgebnisMenge -> form.orEmpty().enthalteneMethodenParameter()
@@ -720,7 +733,13 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is Multiplikation -> faktoren.enthalteneMethodenParameter()
     is Division -> listOf(dividend, divisor).enthalteneMethodenParameter()
     is Potenz -> listOf(basis, exponent).enthalteneMethodenParameter()
+    is Konjugierte -> argument.enthalteneMethodenParameter()
     is Betrag -> argument.enthalteneMethodenParameter()
+    is GradWinkel -> grad.enthalteneMethodenParameter()
+    is WinkelParameter -> setOf(this)
+    is WinkelAusBogenmass -> argument.enthalteneMethodenParameter()
+    is WinkelBogenmass -> winkel.enthalteneMethodenParameter()
+    is SinusGrad -> winkel.enthalteneMethodenParameter()
     is Sinus -> argument.enthalteneMethodenParameter()
     is Cosinus -> argument.enthalteneMethodenParameter()
     is ArcSinus -> argument.enthalteneMethodenParameter()
@@ -736,6 +755,8 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is Vereinigung -> mengen.enthalteneMethodenParameter()
     is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneMethodenParameter()
     is MengenDifferenz -> listOf(links, rechts).enthalteneMethodenParameter()
+    is VerschobeneKoordinatenMenge -> listOf(original).enthalteneMethodenParameter() + verschiebung.enthalteneMethodenParameter()
+    is UnterraumMenge -> (richtungen.flatten() + stuetzpunkt.orEmpty()).enthalteneMethodenParameter()
     is KartesischesProdukt -> mengen.enthalteneMethodenParameter()
     is PrädikatsMenge -> bedingung.enthalteneMethodenParameter().filterNot { it.name == element.name }.toSet()
     is BeschraenkteZahlmenge -> listOfNotNull(untereGrenze, obereGrenze).enthalteneMethodenParameter()

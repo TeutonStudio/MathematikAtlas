@@ -40,6 +40,7 @@ object MathematikKartenCodec {
 
 object MathematikKartenMigrationen {
     fun vorSpeichern(karte: KartenDaten): KartenDaten = karte
+        .migriereMatrixZerlegenZumÜbersetzer()
         .klassifiziereAdapter()
         .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
@@ -52,6 +53,7 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
+        .migriereMatrixZerlegenZumÜbersetzer()
         .klassifiziereAdapter()
         .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
@@ -64,6 +66,7 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
+        .migriereMatrixZerlegenZumÜbersetzer()
         .klassifiziereAdapter()
         .migriereRechnerEinzeloperationen()
         .migriereTensorraumDimensionen()

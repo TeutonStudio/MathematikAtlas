@@ -2,7 +2,7 @@ package de.TeutonStudio.KnotenKartenVerwalter.daten
 
 const val VISUELLE_GRUPPE_STANDARD_TITEL = "Gruppe"
 const val VISUELLE_GRUPPE_KOPFZEILE_HÖHE = 42f
-const val VISUELLE_GRUPPE_INHALT_ABSTAND = 18f
+const val VISUELLE_GRUPPE_INHALT_ABSTAND = 24f
 const val VISUELLE_GRUPPE_MINDEST_BREITE = 180f
 const val VISUELLE_GRUPPE_MINDEST_HÖHE = 110f
 

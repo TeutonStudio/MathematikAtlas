@@ -26,6 +26,12 @@ private fun werteTensorOperationAus(
         return fehlerErgebnis(kontext, "$fehler Öffne den Inspector und bestätige die sichtbaren Achsen.")
     }
     val definition = aktuelleTensorOperationDefinition(kontext.knoten)
+    if (definition.id.wert == "tensor.konstruktion" && kontext.knoten.parameter["erzeugungsArt"] == "indexmethode") {
+        val methode = kontext.eingänge["methode"]?.objekt as? MathematischeMethode ?: error("Komponentenabbildung fehlt.")
+        val vorbild = kontext.eingänge["vorbild"]?.objekt as? MathematischesObjekt
+        val wert = strukturAusIndexMethode(methode, kontext.knoten.parameter["indexmethode.ausgabe"] ?: "tensor", vorbild)
+        return KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(wert, kontext.annahmen(),variablenQuellen=kontext.eingänge.values.flatMap { it.variablenQuellen }.distinct())), eingänge = kontext.eingänge)
+    }
     if (istAssoziativerRechnerOperator(definition.id.wert)) {
         val werte = runCatching { geordneteOperationsWerte(kontext).values.toList() }.getOrElse {
             return fehlerErgebnis(kontext, it.message ?: "Ungültige Operandenliste.")
@@ -67,6 +73,25 @@ private fun werteTensorOperationAus(
         )
     }
 
+    if(definition.id.wert in setOf("tensor.reshape","tensor.konstruktion")) {
+        val form=kontext.knoten.parameter[TENSOR_OPERATION_PARAMETER].orEmpty().split(',').map { it.trim().toIntOrNull() ?: error("Die Zielform muss ganze Achsenlängen enthalten.") }
+        val methode=umgeformteStrukturIndexMethode(operanden.values.single(),form,kontext.eingänge.values.flatMap { it.variablenQuellen }.associate { it.name to it.werteVorrat },kontext.annahmen())
+        val tensor=strukturAusIndexMethode(methode,"tensor")
+        return KnotenAuswertungsErgebnis(mapOf(ausgangsName(kontext,definition,definition.ausgangsRollen.single()) to BedingterWert(tensor,kontext.annahmen())),eingänge=kontext.eingänge)
+    }
+    if(definition.id.wert in setOf("matrix.rang","matrix.determinante","matrix.inverse")) {
+        val matrix=matrixAusZweiachsigerStruktur(operanden.values.single())
+        val operator=MatrixRechnerOperator.entries.single { it.stabileId==definition.id.wert }
+        val vorräte=kontext.eingänge.values.flatMap { it.variablenQuellen }.associate { it.name to it.werteVorrat }
+        val bereich=maximaleZahlenGrundmenge(matrix.zeilen.flatten().map { inferiereZahlenWertevorrat(it,vorräte,kontext.annahmen()) }).fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL
+        return when(val ergebnis=MatrixRechner.erzeuge(MatrixRechnerAnfrage(operator,listOf(MatrixOperand("matrix",matrix,bereich))))) {
+            is MatrixRechnerErgebnis.ZahlWert -> KnotenAuswertungsErgebnis(mapOf(ausgangsName(kontext,definition,definition.ausgangsRollen.single()) to BedingterWert(ergebnis.wert,kontext.annahmen())),eingänge=kontext.eingänge)
+            is MatrixRechnerErgebnis.MatrixWert -> KnotenAuswertungsErgebnis(mapOf(ausgangsName(kontext,definition,definition.ausgangsRollen.single()) to BedingterWert(Tensor(ergebnis.wert.tensorForm,ergebnis.wert.zeilen.flatten()),kontext.annahmen())),eingänge=kontext.eingänge)
+            is MatrixRechnerErgebnis.Bedingt -> symbolischesTensorErgebnis(kontext,definition,operanden,null).let { it.copy(warnungen=it.warnungen+ergebnis.bedingungen) }
+            is MatrixRechnerErgebnis.Ungueltig -> fehlerErgebnis(kontext,ergebnis.nachricht)
+            else -> error("Der Matrixrang liefert keinen Zahlwert.")
+        }
+    }
     val achsenErgebnis = ermittleAchsen(kontext, definition, operanden)
     if (achsenErgebnis is AchsenErgebnis.Fehler) {
         return fehlerErgebnis(kontext, achsenErgebnis.nachricht)
@@ -146,7 +171,7 @@ private fun werteTensorOperationAus(
                 ausgaben = mapOf(
                     ausgangsName to BedingterWert(
                         objekt = rechenErgebnis.objekt,
-                        annahmen = kontext.annahmen(),
+                        annahmen = kontext.annahmen() + rechenErgebnis.bedingungen,
                         latexDarstellung = rechenErgebnis.objekt.zuLatex(),
                     ),
                 ),

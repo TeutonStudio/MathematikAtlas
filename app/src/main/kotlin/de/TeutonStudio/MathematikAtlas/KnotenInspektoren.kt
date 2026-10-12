@@ -195,6 +195,7 @@ private object VariablenInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
         GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        de.TeutonStudio.MathematikKnoten.MatrixVariableFelder(knoten) { aktionen.knoten(it) }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }
@@ -240,7 +241,7 @@ private object TermZuMethodeInspektor : KnotenInspektor {
         if (parameter.isEmpty()) Text("Keine freien Variablen erkannt.", style = MaterialTheme.typography.bodySmall)
         parameter.forEachIndexed { index, variable ->
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-                Text("${index + 1}. ${variable.name}", modifier = Modifier.weight(1f))
+                LatexText("${index + 1}.\\; ${variable.zuLatex()}", modifier = Modifier.weight(1f))
                 OutlinedButton(onClick = {
                     val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index - 1) }
                     aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
@@ -487,7 +488,9 @@ private fun TensorPermutationEditor(
     Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
         arten.drop(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class && (bereich !is WertebereichKonfiguration.Vektor || wert !is WertebereichKonfiguration.Vektor || bereich.orientierung == wert.orientierung), { ändern(wert) }, label = { Text(name) }) }
     }
+    TextButton(onClick = { ändern(WertebereichKonfiguration.Winkel) }) { Text(if (bereich == WertebereichKonfiguration.Winkel) "✓ Winkel (Gradmenge)" else "Winkel (Gradmenge)") }
     when (bereich) {
+        WertebereichKonfiguration.Winkel -> LatexText(de.TeutonStudio.MathematikRechenSystem.kern.Gradmenge.zuLatex())
         is WertebereichKonfiguration.Zahl -> GrundmengenAuswahl("Zahlgrundmenge", bereich.grundmenge) { ändern(bereich.copy(grundmenge = it)) }
         WertebereichKonfiguration.Aussage -> Text("{⊤, ⊥}", style = MaterialTheme.typography.bodySmall)
         is WertebereichKonfiguration.Menge -> {
@@ -616,15 +619,9 @@ private object VisualisierungsInspektor : KnotenInspektor {
         if (methode == null) {
             Text("Noch keine Methodensignatur erkannt.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            Text(
-                "${methode.name}(${methode.parameter.joinToString { it.name }}) → ${methode.ausgabeNamen.joinToString()}",
-                style = MaterialTheme.typography.bodySmall,
-            )
+            LatexText("${methode.name}\\left(${methode.parameter.joinToString { it.zuLatex() }}\\right) \\to ${methode.ausgabeNamen.joinToString()}")
             methode.parameter.forEachIndexed { index, parameter ->
-                Text(
-                    "${index + 1}. ${parameter.name} ∈ ${methode.werteVorräte[parameter.name]?.zuLatex() ?: "nicht angegeben"}",
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                LatexText("${index + 1}.\\; ${parameter.zuLatex()} \\in ${methode.werteVorräte[parameter.name]?.zuLatex() ?: "?"}")
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {

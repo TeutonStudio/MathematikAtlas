@@ -33,10 +33,19 @@ object StandardMathematikAuswerter {
         registriere("mathematik.variable") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
             val wertevorrat = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            val dimension = k.knoten.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
+            require(dimension in 0..8) { "Matrixdimension muss zwischen 1 und 8 liegen (0: Skalar)." }
+            val variablen = if (dimension == 0) listOf(Variable(name)) else List(dimension*dimension) {
+                Variable("${name}_${it/dimension+1}_${it%dimension+1}")
+            }
+            val objekt: MathematischesObjekt = if (dimension == 0) variablen.single()
+                else Matrix(List(dimension) { i -> List(dimension) { j -> variablen[i*dimension+j] } })
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
-                Variable(name),
-                werteVorrat = wertevorrat,
-                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat, lösungsRolle = LösungsQuellenRolle.Variable)),
+                objekt,
+                werteVorrat = if (dimension == 0) wertevorrat else null,
+                variablenQuellen = variablen.map { v -> VariablenQuelle(k.knoten.id, v.name, wertevorrat,
+                    bindungsId = if (dimension == 0) null else "${k.knoten.id.wert}:${v.name}",
+                    lösungsRolle = LösungsQuellenRolle.Variable) },
             )))
         }
         registriere("mathematik.allgemeinerParameter") { k ->
@@ -46,6 +55,7 @@ object StandardMathematikAuswerter {
             )
             val wertevorrat = bereich.zuMenge()
             val objekt: MathematischesObjekt = when (bereich) {
+                WertebereichKonfiguration.Winkel -> WinkelParameter(name)
                 is WertebereichKonfiguration.Zahl -> Variable(name)
                 is WertebereichKonfiguration.Vektor -> TypisiertesElement(name,
                     if (bereich.orientierung == VektorOrientierung.Spalte) "mathematik.vektor.spalte" else "mathematik.vektor.zeile",
@@ -134,6 +144,8 @@ object StandardMathematikAuswerter {
                 schritte = auflösung.schritte,
                 warnungen = auflösung.warnungen + if (eingang.variablenQuellen.isEmpty() && variablen.isNotEmpty())
                     listOf("Historische Eingabe ohne Quellenmetadaten: gespeicherte Variable verwendet.") else emptyList(),
+                polynomProblem = polynomGleichungsProblem(relation, variablen)?.copy(bedingungen = (eingang.annahmen + k.rechenKontext.annahmen + definitionsBedingungen(relation)).toList()),
+                polynomKonfiguration = polynomNumerikKonfiguration(k.knoten.parameter),
                 lösungsVariablen = variablen,
                 lösungsParameter = eingang.variablenQuellen.filter { it.lösungsRolle == LösungsQuellenRolle.Parameter },
             )
@@ -157,6 +169,8 @@ object StandardMathematikAuswerter {
                         latexDarstellung = null,
                     ),
                 ),
+                polynomProblem = (vereinfachung.objekt as? Matrix)?.let(::eigenwertAnfrage),
+                polynomKonfiguration = polynomNumerikKonfiguration(k.knoten.parameter),
                 schritte = vereinfachung.schritte,
                 fehler = vereinfachung.entscheidung?.takeIf { it.status == EntscheidungsStatus.NichtAuswertbar }?.begründung,
                 entscheidung = vereinfachung.entscheidung ?: (vereinfachung.objekt as? Aussage)?.let { aussage ->
@@ -198,7 +212,13 @@ object StandardMathematikAuswerter {
                     Tupel(werte)
                 }
             }
-            KnotenAuswertungsErgebnis(mapOf("tupel" to BedingterWert(tupel, annahmen(k))))
+            val komponentenRaum = if (tupelKonfiguration(k.knoten).erzeugungsArt == TUPEL_METHODE) Tupelraum(List(tupel.elemente.size) { (k.eingänge["methode"]?.objekt as Methode).einzigeZielMenge }) else {
+                val werte = k.operatorEingänge { _, index -> Variable("tupel_$index") }
+                Tupelraum(werte.map { wert -> wert.zielMenge ?: wert.werteVorrat ?: runCatching {
+                    inferiereZielmenge(wert.mathematischesObjekt("Tupelelement"), wert.variablenQuellen.associate { it.name to it.werteVorrat }, wert.annahmen)
+                }.getOrElse { FehlendeObermenge("mathematik.objekt") } })
+            }
+            KnotenAuswertungsErgebnis(mapOf("tupel" to BedingterWert(tupel, annahmen(k), zielMenge = komponentenRaum, komponentenMengen = (komponentenRaum as? Tupelraum)?.komponenten)))
         }
         registriere("mathematik.komplexAusTupel") { k ->
             val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Zahlentupel fehlt.")
@@ -580,11 +600,12 @@ object StandardMathematikAuswerter {
                     ),
                 )
             }
+            val selektiv=k.knoten.parameter["fall.annahmenNurGewaehlterZweig"]=="true" && basis.objekt !is FallAusdruck
             KnotenAuswertungsErgebnis(mapOf(
                 "wert" to basis.copy(
-                    annahmen = gemeinsameAnnahmen,
+                    annahmen = if(selektiv) basis.annahmen+aussageWert.annahmen else gemeinsameAnnahmen,
                     reelleVariablen = gemeinsameReelleVariablen,
-                    variablenQuellen = gemeinsameQuellen,
+                    variablenQuellen = if(selektiv) (basis.variablenQuellen+aussageWert.variablenQuellen).distinct() else gemeinsameQuellen,
                 ),
             ))
         }

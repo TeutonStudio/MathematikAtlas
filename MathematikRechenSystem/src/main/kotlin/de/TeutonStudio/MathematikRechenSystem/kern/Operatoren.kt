@@ -190,7 +190,10 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
             else -> Potenz(basis, exponent)
         }
     }
-    is Betrag -> Betrag(vereinfache(ausdruck.argument, kontext))
+    is Konjugierte -> konjugiereFormal(vereinfache(ausdruck.argument, kontext))
+    is Betrag -> vereinfache(ausdruck.argument, kontext).let { if (it is RationaleZahl) RationaleZahl.von(it.zähler.abs(), it.nenner) else Betrag(it) }
+    is WinkelBogenmass -> winkelBogenmass(ausdruck.winkel, ausdruck.vertreter)
+    is SinusGrad -> ausdruck
     is Sinus -> Sinus(vereinfache(ausdruck.argument, kontext))
     is Cosinus -> Cosinus(vereinfache(ausdruck.argument, kontext))
     is ArcSinus -> vereinfacheArcSinus(vereinfache(ausdruck.argument, kontext))
@@ -236,7 +239,9 @@ fun istNachweisbarReell(
         (ausdruck.exponent as? RationaleZahl)?.let { exponent ->
             exponent.nenner == BigInteger.ONE && (exponent.zähler.signum() >= 0 || ausdruck.basis.istNachweisbarNichtNull(annahmen))
         } == true
+    is Konjugierte -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is Betrag -> true
+    is SinusGrad, is WinkelBogenmass -> true
     is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is ArcSinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
@@ -287,6 +292,8 @@ fun inferiereZahlenWertevorrat(
     werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     annahmen: Set<Aussage> = emptySet(),
 ): MengenAusdruck = when (ausdruck) {
+    is SinusGrad -> ReellesIntervall(RationaleZahl.von(-1), false, RationaleZahl.Eins, false)
+    is WinkelBogenmass -> ausdruck.vertreter.menge
     is RationaleZahl -> when {
         ausdruck.nenner != BigInteger.ONE -> RationaleZahlen
         ausdruck.zähler.signum() < 0 -> GanzeZahlen
@@ -327,6 +334,7 @@ fun inferiereZahlenWertevorrat(
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
+    is Konjugierte -> inferiereZahlenWertevorrat(ausdruck.argument, werteVorräte, annahmen)
     is Betrag, is Argument, is ArcSinus, is ArcCosinus -> ReelleZahlen
     is Sinus, is Cosinus, is Exponentialfunktion -> if (istNachweisbarReell(
         ausdruck,
@@ -343,7 +351,17 @@ fun inferiereZahlenWertevorrat(
         "${ausdruck::class.simpleName} lebt außerhalb der klassischen N-Z-Q-R-C-Wertevorratsinferenz.",
     )
     is StrukturAchsenLaenge -> NatürlicheZahlen
-    is SymbolischeZahlKomponente -> KomplexeZahlen
+    is SymbolischeZahlKomponente -> when(val quelle=ausdruck.quelle) {
+        is MethodenParameter -> when(val raum=werteVorräte[quelle.name]) {
+            is Matrizenraum -> raum.skalarMenge
+            is Vektorraum -> raum.skalarMenge
+            else -> KomplexeZahlen
+        }
+        is Matrix -> maximaleZahlenGrundmenge(quelle.zeilen.flatten().map { inferiereZahlenWertevorrat(it,werteVorräte,annahmen) })
+        is OrientierterVektor -> maximaleZahlenGrundmenge(quelle.werte.map { inferiereZahlenWertevorrat(it,werteVorräte,annahmen) })
+        is Tensorartig -> quelle.tensorZahlBereich
+        else -> KomplexeZahlen
+    }
 }
 
 private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
@@ -354,6 +372,7 @@ private fun zahlenGrundmengenRang(menge: MengenAusdruck): Int = when (menge) {
     RationaleZahlen -> 2
     ReelleZahlen -> 3
     KomplexeZahlen -> 4
+    FundamentalerZahlbereich.QUATERNION.alsMenge() -> 5
     else -> error("'$menge' ist keine unterstützte Zahlgrundmenge.")
 }
 

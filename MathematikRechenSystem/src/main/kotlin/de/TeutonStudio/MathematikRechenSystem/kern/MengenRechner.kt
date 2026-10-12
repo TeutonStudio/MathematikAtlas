@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 enum class MengenRechnerOperator(val stabileId: String) {
+    UNTERRAUM("menge.unterraum"),
     VEREINIGUNG("menge.vereinigung"),
     SCHNITT("menge.schnitt"),
     DIFFERENZ("menge.differenz"),
@@ -69,6 +70,7 @@ object MengenRechner {
         val inkompatibel = universen.size > 1
 
         return when (operator) {
+            MengenRechnerOperator.UNTERRAUM -> MengenRechnerErgebnis.Ungueltig("vektorvertrag", "Unterraum benötigt Richtungsvektoren statt Mengen.")
             MengenRechnerOperator.VEREINIGUNG -> {
                 if (eingaben.size < 2) ungueltigeAnzahl(operator, 2)
                 else if (inkompatibel) bedingt(operator, eingaben, universen)

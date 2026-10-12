@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -250,7 +251,9 @@ fun KnotenKartenEditor(
             }
             .pointerInput(karte.id, ansicht) {
                 detectTapGestures(
-                    onTap = { zustand.wähleKnoten(null) },
+                    onTap = { punkt ->
+                        if (!trifftKnoten(punkt, aktuelleKarte, aktuelleAnsicht, aktuelleDichte)) zustand.wähleKnoten(null)
+                    },
                     onDoubleTap = { pos -> beiHintergrundDoppelklick(bildschirmZuWelt(pos, aktuelleAnsicht, aktuelleDichte)) },
                     onLongPress = { pos ->
                         zustand.wähleKnoten(null)
@@ -264,7 +267,6 @@ fun KnotenKartenEditor(
             }
     ) {
         Raster(ansicht)
-        GruppenRahmen(zustand, auswertungsDauerFür)
         GruppenÜbergangsRahmen(gruppenÜbergang, zustand.projektion, ansicht)
         GruppenNavigation(zustand)
         GruppenInspektor(zustand)
@@ -286,6 +288,7 @@ fun KnotenKartenEditor(
                     gruppenÜbergang = gruppenÜbergang,
                 )
             }
+            GruppenRahmen(zustand, auswertungsDauerFür)
             GruppenÜbergangsInhalt(gruppenÜbergang, karte, sichtbarerWeltBereich, rendererFür)
             for (neueEbene in listOf(false,true)) {
                 val inhalt = sichtbareKnoten.filter {
@@ -851,6 +854,8 @@ private fun KnotenDarstellung(
     val zoom = zustand.darstellungsKarte.ansicht.zoom
     val fußzeilenHöhe = with(LocalDensity.current) { MaterialTheme.typography.labelSmall.lineHeight.toDp() }
         .plus(8.dp).coerceAtLeast(18.dp)
+    var fußMaß by remember(knoten.id, LocalDensity.current) { mutableStateOf(IntSize.Zero) }
+    var viewportMinimum by remember(knoten.id) { mutableStateOf(GraphGröße(0f, 0f)) }
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
     val knotenForm = if (knoten.darstellungsForm == KnotenDarstellungsForm.Adapter)
         RoundedCornerShape(adapterEckenRadius(knoten.größe.breite, knoten.größe.höhe).dp)
@@ -872,7 +877,8 @@ private fun KnotenDarstellung(
                 scaleY = ansicht.zoom
                 transformOrigin = TransformOrigin(0f, 0f)
             }
-            .size(knoten.größe.breite.dp, knoten.größe.höhe.dp)
+            .wrapContentSize(Alignment.TopStart, unbounded = true)
+            .requiredSize(knoten.größe.breite.dp, knoten.größe.höhe.dp)
     ) {
         Card(
             Modifier.fillMaxSize()
@@ -895,7 +901,7 @@ private fun KnotenDarstellung(
                     }
                 }
                 .focusable()
-                .pointerInput(knoten.id, zoom) {
+                .pointerInput(knoten.id, zoom, knoten.größe) {
                     detectDragGestures(
                         onDragStart = { start ->
                             ziehbar = knoten.enthältRelativenPunkt(GraphPunkt(start.x / density, start.y / density)) && (renderer.interaktionsModus == KnotenInteraktionsModus.GanzeFlächeZiehbar || start.y <= KOPFZEILE_HÖHE_DP * density)
@@ -932,9 +938,12 @@ private fun KnotenDarstellung(
                     val gruppe = zustand.projektion.blöcke[knoten.id]
                     if (gruppe != null) zustand.wähleGruppe(gruppe, true) else if (knoten.id !in zustand.projektion.portale) beiKnotenKontext(knoten)
                 }
-                .pointerInput(knoten.id) {
+                .pointerInput(knoten.id, knoten.größe) {
                     detectTapGestures(
-                        onTap = { zustand.wähleKnoten(knoten.id, auswahlÄnderung) },
+                        onTap = { punkt ->
+                            if (knoten.enthältRelativenPunkt(GraphPunkt(punkt.x / density, punkt.y / density)))
+                                zustand.wähleKnoten(knoten.id, auswahlÄnderung)
+                        },
                         onLongPress = {
                             zustand.wähleKnoten(knoten.id)
                             val gruppe = zustand.projektion.blöcke[knoten.id]
@@ -947,23 +956,63 @@ private fun KnotenDarstellung(
             elevation = CardDefaults.cardElevation(if (ausgewählt) 8.dp else 2.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
-            renderer.Inhalt(knoten, ausgewählt, object : KnotenRendererAktionen {
-                override fun eigenschaftenErsetzen(eigenschaften: Map<String, KnotenEigenschaft>) {
-                    zustand.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+            val minimum = renderer.Mindestgröße(knoten)
+            val kantenMinimum = GraphGröße(
+                maxOf(minimum.breite, 48f + 30f * knoten.anschlüsse.count { it.kante == AnschlussKante.Oben },
+                    48f + 30f * knoten.anschlüsse.count { it.kante == AnschlussKante.Unten }),
+                maxOf(minimum.höhe, 48f + 30f * knoten.anschlüsse.count { it.kante == AnschlussKante.Links },
+                    48f + 30f * knoten.anschlüsse.count { it.kante == AnschlussKante.Rechts }),
+            )
+            val lokaleDichte = LocalDensity.current
+            val kapsel = knoten.darstellungsForm == KnotenDarstellungsForm.Adapter
+            var gemessen by remember(knoten.id, lokaleDichte) { mutableStateOf(IntSize.Zero) }
+            val breite = if (renderer.misstNatürlichenInhalt) gemessen.width / lokaleDichte.density else minimum.breite
+            val höhe = if (renderer.misstNatürlichenInhalt) gemessen.height / lokaleDichte.density else minimum.höhe
+            SideEffect {
+                zustand.meldeInhaltsminimum(knoten.id, GraphGröße(
+                    ceil(maxOf(kantenMinimum.breite, viewportMinimum.breite,
+                        maxOf(breite, fußMaß.width / lokaleDichte.density) + if (kapsel) maxOf(höhe, kantenMinimum.höhe) + fußzeilenHöhe.value else 0f)),
+                    ceil(maxOf(kantenMinimum.höhe, höhe, viewportMinimum.höhe) + fußzeilenHöhe.value),
+                ))
+            }
+            Layout(content = {
+                Box(Modifier.onSizeChanged { gemessen = it }) {
+                    renderer.Inhalt(knoten, ausgewählt, object : KnotenRendererAktionen {
+                        override fun eigenschaftenErsetzen(eigenschaften: Map<String, KnotenEigenschaft>) {
+                            zustand.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+                        }
+                        override fun inhaltsminimumMelden(minimum: GraphGröße) {
+                            if (minimum.breite.isFinite() && minimum.höhe.isFinite() && minimum.breite > 0f && minimum.höhe > 0f)
+                                viewportMinimum = minimum
+                        }
+                    })
                 }
-            })
+            }, modifier = Modifier.fillMaxSize().padding(bottom = fußzeilenHöhe)) { messbare, constraints ->
+                val messConstraints = if (renderer.misstNatürlichenInhalt) Constraints() else Constraints(
+                    maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight,
+                )
+                val inhalt = messbare.single().measure(messConstraints)
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    inhalt.placeRelative(if (kapsel) ((constraints.maxWidth - inhalt.width) / 2).coerceAtLeast(0) else 0,
+                        if (kapsel) ((constraints.maxHeight - inhalt.height) / 2).coerceAtLeast(0) else 0)
+                }
+            }
         }
 
         Box(
             Modifier
                 .align(Alignment.BottomStart)
-                .offset(y = fußzeilenHöhe)
                 .padding(start = fußzeilenEinzüge.first, end = fußzeilenEinzüge.second)
                 .fillMaxWidth()
                 .height(fußzeilenHöhe),
             contentAlignment = Alignment.CenterStart,
         ) {
-            renderer.Fußzeile(knoten, ausgewählt)
+            Layout(content = {
+                Box(Modifier.onSizeChanged { fußMaß = it }) { renderer.Fußzeile(knoten, ausgewählt) }
+            }) { messbare, constraints ->
+                val inhalt = messbare.single().measure(Constraints())
+                layout(constraints.maxWidth, constraints.maxHeight) { inhalt.placeRelative(0, 0) }
+            }
         }
 
         if (zeigeKnotenInspektor) {

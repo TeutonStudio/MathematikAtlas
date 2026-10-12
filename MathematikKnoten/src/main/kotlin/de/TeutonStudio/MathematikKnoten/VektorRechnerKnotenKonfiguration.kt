@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
+const val VEKTOR_POTENZ_EXPONENT = "vektor.exponent"
 const val VEKTOR_RECHNER_METRIK = "metrik"
 const val VEKTOR_RECHNER_ACHSE = "achse"
 const val VEKTOR_RECHNER_STRUKTUR_AUSGABE = "strukturAusgabe"
@@ -30,7 +31,7 @@ fun konfiguriereVektorRechner(
     operator: VektorRechnerOperator,
 ): KnotenDaten {
     require(knoten.art == VektorRechner.KNOTEN_ART)
-    val gewuenscht = vektorRechnerAnschluesse(operator)
+    val gewuenscht = vektorRechnerAnschluesse(operator) + if (operator in setOf(VektorRechnerOperator.POTENZ, VektorRechnerOperator.SKALARPRODUKT)) knoten.anschlüsse.filter { it.name == SKALARPRODUKT_DEFINITION_EINGANG } else emptyList()
     val signatur = if (operator.stabileId == knoten.parameter[VEKTOR_RECHNER_OPERATOR] && operator in setOf(VektorRechnerOperator.ADDITION, VektorRechnerOperator.ZUSAMMENFUEHREN)) {
         val präfix = if (operator == VektorRechnerOperator.ADDITION) "vektor." else "element."
         gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith(präfix) &&
@@ -126,7 +127,9 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
         }
 
         val vektorNamen = when (operator) {
+            VektorRechnerOperator.POTENZ -> listOf("a")
             VektorRechnerOperator.ADDITION, VektorRechnerOperator.HADAMARD_PRODUKT -> geordneteOperationsWerte(kontext).keys.toList()
+            VektorRechnerOperator.HADAMARD_DIVISION,
             VektorRechnerOperator.SUBTRAKTION,
             VektorRechnerOperator.SKALARPRODUKT,
             VektorRechnerOperator.KREUZPRODUKT,
@@ -147,8 +150,10 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
                 ?.mathematischesObjekt("Vektoroperand '$name'")
                 ?.let(::vektorQuelleErweitert)
         }
-        val skalare = listOfNotNull(kontext.eingänge["skalar"]?.objekt as? ZahlAusdruck)
+        val skalare = listOfNotNull(kontext.eingänge[if (operator == VektorRechnerOperator.KARTESISCH) "radius" else "skalar"]?.mathematischesObjekt("Skalar") as? ZahlAusdruck)
         val objekte = when (operator) {
+            VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL -> listOfNotNull(kontext.eingänge["kartesisch"]?.mathematischesObjekt("Kartesisches Tupel"))
+            VektorRechnerOperator.KARTESISCH -> listOfNotNull(kontext.eingänge["winkel"]?.mathematischesObjekt("Winkeltupel / Vorzeichen"))
             VektorRechnerOperator.ZUSAMMENFUEHREN -> kontext.knoten.anschlüsse
                 .filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("element.") }
                 .sortedBy { it.reihenfolge }
@@ -159,6 +164,7 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
         val ergebnis = VektorRechner.erzeuge(
             VektorRechnerAnfrage(
                 operator = operator,
+                exponent = if (operator == VektorRechnerOperator.POTENZ) (kontext.eingänge["p"]?.objekt as? ZahlAusdruck ?: kontext.knoten.parameter[VEKTOR_POTENZ_EXPONENT]?.toLongOrNull()?.let(RationaleZahl::von) ?: RationaleZahl.von(2)) else RationaleZahl.von(2),
                 vektoren = quellen,
                 skalare = skalare,
                 objekte = objekte,

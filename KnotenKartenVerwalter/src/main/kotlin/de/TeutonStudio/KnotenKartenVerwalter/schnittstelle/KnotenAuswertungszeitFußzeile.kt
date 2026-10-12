@@ -24,10 +24,9 @@ import java.util.Locale
 /**
  * Blender-artige Laufzeitanzeige in einem eigenen unteren Rahmen.
  *
- * Der Editor positioniert diese Diagnose weiterhin außerhalb des logischen
- * Knotenrechtecks. Dadurch bleiben Knotengröße, Handles, Edges, Trefferfläche und
- * MiniMap unverändert, während die Zeitangabe nicht mehr direkt auf dem
- * Graphhintergrund liegt.
+ * Der Editor reserviert Platz innerhalb des effektiven Knotenrechtecks.
+ * Die natürliche Textgröße geht in das Inhaltsminimum ein; Anschlüsse und
+ * Trefferflächen folgen derselben effektiven Geometrie.
  */
 @Composable
 fun KnotenAuswertungszeitFußzeile(dauerNanos: Long?, ausgewählt: Boolean = false) {

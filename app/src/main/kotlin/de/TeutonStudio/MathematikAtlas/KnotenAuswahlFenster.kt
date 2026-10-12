@@ -5,6 +5,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogListenEint
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -244,7 +246,7 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
                         AtlasDialogListenEintrag(
                             headlineContent = { Text(vorlage.name) },
                             supportingContent = { Text(vorlage.beschreibung) },
-                            modifier = Modifier.clip(MaterialTheme.shapes.small)
+                            modifier = Modifier.standardKnotenEintragFläche()
                                 .clickable { zustand.fügeKnotenEin(vorlage, position) },
                         )
                     }
@@ -255,7 +257,7 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
                     AtlasDialogListenEintrag(
                         headlineContent = { Text(vorlage.name) },
                         supportingContent = { Text(vorlage.beschreibung) },
-                        modifier = Modifier.clip(MaterialTheme.shapes.small)
+                        modifier = Modifier.standardKnotenEintragFläche()
                             .clickable { zustand.fügeKnotenEin(vorlage, position) },
                     )
                 }
@@ -273,6 +275,13 @@ private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPu
     }
 }
 
+/** Gleiche erkennbare Fläche für reguläre Knoten und zusammengesetzte Erstellaktionen. */
+@Composable
+private fun Modifier.standardKnotenEintragFläche(): Modifier =
+    clip(MaterialTheme.shapes.small)
+        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.small)
+
 @Composable
 private fun ZusammengesetzterEintrag(
     name: String,
@@ -283,7 +292,7 @@ private fun ZusammengesetzterEintrag(
     AtlasDialogListenEintrag(
         headlineContent = { Text(name) },
         supportingContent = { Text(beschreibung) },
-        modifier = Modifier.clip(MaterialTheme.shapes.small)
+        modifier = Modifier.standardKnotenEintragFläche()
             .clickable(enabled = enabled, onClick = onClick),
     )
 }

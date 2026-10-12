@@ -124,7 +124,24 @@ object DomaenenAuswerter {
                 is Multiplikation -> reduziere(ausdruck.faktoren, tiefe, ::multipliziere)
                 is Division -> binaer(ausdruck.dividend, ausdruck.divisor, tiefe, ::dividiere)
                 is Potenz -> potenz(ausdruck, tiefe)
+                is Konjugierte -> unaer(ausdruck.argument, tiefe) { wert -> DomaenenErgebnis.Wert(when (wert) {
+                    is DomaenenWert.Reell -> wert
+                    is DomaenenWert.Komplex -> wert.copy(imaginaer = wert.imaginaer.negate())
+                    is DomaenenWert.Quaternion -> wert.copy(i = wert.i.negate(), j = wert.j.negate(), k = wert.k.negate())
+                }) }
                 is Betrag -> unaer(ausdruck.argument, tiefe, ::betrag)
+                is SinusGrad -> reelleFunktion(winkelBogenmassUnnormiert(ausdruck.winkel), tiefe, "sinGrad", ::sin)
+                is WinkelBogenmass -> when (val w = ausdruck.winkel) {
+                    is GradWinkel -> unaer(w.grad, tiefe) { wert ->
+                        if (wert is DomaenenWert.Reell) reell(hauptwertNumerisch(wert.wert.toDouble() / 180 * Math.PI, ausdruck.vertreter))
+                        else nichtUnterstuetzt("Gradrepräsentanten müssen reell sein.")
+                    }
+                    is WinkelAusBogenmass -> unaer(w.argument, tiefe) { wert ->
+                        if (wert is DomaenenWert.Reell) reell(hauptwertNumerisch(wert.wert.toDouble(), ausdruck.vertreter))
+                        else nichtUnterstuetzt("Bogenmaß muss reell sein.")
+                    }
+                    else -> DomaenenErgebnis.Unentscheidbar(StrukturierterAuswertungsGrund("winkel_unbelegt", "Der Winkel ist nicht belegt."))
+                }
                 is Sinus -> reelleFunktion(ausdruck.argument, tiefe, "sin", ::sin)
                 is Cosinus -> reelleFunktion(ausdruck.argument, tiefe, "cos", ::cos)
                 is ArcSinus -> reelleFunktionMitBereich(ausdruck.argument, tiefe, "arcsin", -1.0, 1.0, ::asin)

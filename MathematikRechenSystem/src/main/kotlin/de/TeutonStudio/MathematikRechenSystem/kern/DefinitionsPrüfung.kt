@@ -17,13 +17,19 @@ fun definitionsBedingungen(objekt: MathematischesObjekt): List<Aussage> {
         is Addition -> objekt.summanden.flatMap(::definitionsBedingungen)
         is Multiplikation -> objekt.faktoren.flatMap(::definitionsBedingungen)
         is Division -> kinder(objekt.dividend, objekt.divisor) + nz(objekt.divisor)
+        is StrukturierteDivision -> kinder(objekt.dividend, objekt.divisor) + nz(objekt.divisor)
         is Potenz -> kinder(objekt.basis, objekt.exponent) + when (val n = objekt.exponent) {
             is RationaleZahl -> if (n.nenner == java.math.BigInteger.ONE) {
                 if (n.zähler.signum() <= 0) listOf(nz(objekt.basis)) else emptyList()
             } else listOf(OffeneDefinitionsBedingung(objekt))
             else -> listOf(OffeneDefinitionsBedingung(objekt))
         }
+        is Konjugierte -> kinder(objekt.argument)
         is Betrag -> kinder(objekt.argument)
+        is GradWinkel -> kinder(objekt.grad)
+        is WinkelAusBogenmass -> kinder(objekt.argument)
+        is WinkelBogenmass -> kinder(objekt.winkel)
+        is SinusGrad -> kinder(objekt.winkel)
         is Sinus -> kinder(objekt.argument)
         is Cosinus -> kinder(objekt.argument)
         is Exponentialfunktion -> kinder(objekt.argument)
@@ -48,6 +54,8 @@ fun definitionsBedingungen(objekt: MathematischesObjekt): List<Aussage> {
         is Matrix -> objekt.zeilen.flatten().flatMap(::definitionsBedingungen)
         is SpaltenVektor -> objekt.werte.flatMap(::definitionsBedingungen)
         is ZeilenVektor -> objekt.werte.flatMap(::definitionsBedingungen)
+        is UnterraumMenge -> (objekt.richtungen.flatten() + objekt.stuetzpunkt.orEmpty()).flatMap(::definitionsBedingungen) + (objekt.richtungen.flatten() + objekt.stuetzpunkt.orEmpty()).map { ElementBeziehung(it, ReelleZahlen) }
+        is VerschobeneKoordinatenMenge -> definitionsBedingungen(objekt.original) + objekt.verschiebung.flatMap(::definitionsBedingungen)
         is Tupel -> objekt.elemente.flatMap(::definitionsBedingungen)
         is EndlicheMenge -> objekt.elemente.flatMap(::definitionsBedingungen)
         is OffeneDefinitionsBedingung -> emptyList()

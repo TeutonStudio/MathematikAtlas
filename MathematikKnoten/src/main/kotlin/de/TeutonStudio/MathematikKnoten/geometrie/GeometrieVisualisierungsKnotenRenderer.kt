@@ -43,26 +43,27 @@ class GeometrieVisualisierungsKnotenRenderer(
         val achse = MaterialTheme.colorScheme.outlineVariant
         val hintergrund = MaterialTheme.colorScheme.surfaceVariant
 
-        Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        KnotenViewportInhalt(
+            aktionen = aktionen,
+            kopf = { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Geometrievisualisierung", style = MaterialTheme.typography.titleMedium)
                 Text(dimension?.let { "R$it" } ?: "–", style = MaterialTheme.typography.titleMedium)
-            }
-            when {
-                objekt == null -> Hinweis("Verbinde ein geometrisches Objekt.")
-                dimension !in 1..3 -> Hinweis("R$dimension ist erst nach einer expliziten Projektion in R1, R2 oder R3 darstellbar.")
-                else -> {
-                    GeometrieCanvas(
-                        objekt, kamera, { kamera = it }, linie, punkt, achse, hintergrund,
-                        Modifier.fillMaxWidth().weight(1f),
-                    )
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            } },
+            ansicht = { modifier -> when {
+                objekt == null || dimension !in 1..3 -> Box(modifier)
+                else -> GeometrieCanvas(objekt, kamera, { kamera = it }, linie, punkt, achse, hintergrund, modifier)
+            } },
+            fuß = {
+                Column {
+                    if (objekt == null) Hinweis("Verbinde ein geometrisches Objekt.")
+                    else if (dimension !in 1..3) Hinweis("R$dimension ist erst nach einer expliziten Projektion in R1, R2 oder R3 darstellbar.")
+                    if (objekt != null) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("${objekt::class.simpleName} · ${objekt.raum.id}", style = MaterialTheme.typography.labelSmall)
                         TextButton(onClick = { kamera = GeometrieKamera() }, enabled = kamera != GeometrieKamera()) { Text("Standardansicht") }
                     }
                 }
-            }
-        }
+            },
+        )
     }
 }
 

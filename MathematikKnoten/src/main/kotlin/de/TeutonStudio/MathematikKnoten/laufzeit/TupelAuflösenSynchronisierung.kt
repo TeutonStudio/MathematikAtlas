@@ -4,6 +4,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
 import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART
+import de.TeutonStudio.MathematikKnoten.übersetzerZiel
 import de.TeutonStudio.MathematikKnoten.TUPEL_AUFLÖSEN_ART
 import de.TeutonStudio.MathematikKnoten.VEKTOR_RECHNER_OPERATOR
 import de.TeutonStudio.MathematikKnoten.RECHNER_OPERATOR_PARAMETER
@@ -43,6 +45,7 @@ fun synchronisiereStrukturZerleger(
 ): KartenDaten {
     fun istDynamischerAuflöser(knoten: KnotenDaten): Boolean =
         knoten.art == TUPEL_AUFLÖSEN_ART ||
+            (knoten.art == ÜBERSETZER_ART && übersetzerZiel(knoten) == "matrixzerlegen") ||
             (
                 knoten.art == VektorRechner.KNOTEN_ART &&
                     VektorRechnerOperator.vonIdOderNull(knoten.parameter[VEKTOR_RECHNER_OPERATOR]) ==
@@ -103,23 +106,25 @@ fun synchronisiereStrukturZerleger(
                 }
                 synchronisiereAuflöserKnoten(knoten, elemente, "struktur", VEKTOR_ZERLEGEN_ANZAHL)
             }
-            knoten.art == MatrixRechner.KNOTEN_ART &&
-                knoten.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId -> {
-                val matrix = auswertung.knoten[knoten.id]?.eingänge?.get("matrix")?.objekt ?: return@map knoten
+            (knoten.art == MatrixRechner.KNOTEN_ART &&
+                knoten.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId) ||
+                (knoten.art == ÜBERSETZER_ART && übersetzerZiel(knoten) == "matrixzerlegen") -> {
+                val eingangsName = if (knoten.art == ÜBERSETZER_ART) "wert" else "matrix"
+                val matrix = auswertung.knoten[knoten.id]?.eingänge?.get(eingangsName)?.objekt ?: return@map knoten
                 val form = when (matrix) {
                     is Matrix -> listOf(matrix.zeilenAnzahl, matrix.spaltenAnzahl)
                     is TypisiertesElement -> matrix.konkreteFormOderNull()
                     else -> return@map knoten
-                } ?: return@map synchronisiereMethodenAusgang(knoten, "matrix")
+                } ?: return@map synchronisiereMethodenAusgang(knoten, eingangsName)
                 val richtung = runCatching {
                     MatrixZerlegeRichtung.valueOf(knoten.parameter[MATRIX_ZERLEGEN_RICHTUNG] ?: MatrixZerlegeRichtung.ZEILEN.name)
                 }.getOrDefault(MatrixZerlegeRichtung.ZEILEN)
                 val anzahl = form[if (richtung == MatrixZerlegeRichtung.ZEILEN) 0 else 1]
                 val prefix = if (richtung == MatrixZerlegeRichtung.ZEILEN) "zeile" else "spalte"
-                val art = if (richtung == MatrixZerlegeRichtung.ZEILEN) {
+                val art = if (knoten.parameter["matrixZerlegen.ausgabe"] == "tupel") MathematikAnschlussArten.Tupel.id else if (richtung == MatrixZerlegeRichtung.ZEILEN) {
                     MathematikAnschlussArten.ZeilenVektor.id
                 } else MathematikAnschlussArten.SpaltenVektor.id
-                synchronisiereStrukturAusgaenge(knoten, "matrix", anzahl, prefix, art, "matrixZerlegen.anzahl")
+                synchronisiereStrukturAusgaenge(knoten, eingangsName, anzahl, prefix, art, "matrixZerlegen.anzahl")
             }
             knoten.art == TensorRechner.KNOTEN_ART &&
                 (knoten.parameter[TENSOR_OPERATION_ID] ?: knoten.parameter[RECHNER_OPERATOR_PARAMETER]) ==
@@ -286,7 +291,7 @@ private fun elementId(knotenId: KnotenId, index: Int, knotenArt: String) =
 
 private fun dynamischerAusgangId(knoten: KnotenDaten, index: Int, name: String? = null): AnschlussId = when {
     name == "methode" -> AnschlussId("${knoten.id.wert}:strukturZerlegen:methode")
-    knoten.art == MatrixRechner.KNOTEN_ART -> AnschlussId("${knoten.id.wert}:matrixZerlegen:${index + 1}")
+    knoten.art == MatrixRechner.KNOTEN_ART || (knoten.art == ÜBERSETZER_ART && übersetzerZiel(knoten) == "matrixzerlegen") -> AnschlussId("${knoten.id.wert}:matrixZerlegen:${index + 1}")
     knoten.art == TensorRechner.KNOTEN_ART -> AnschlussId("${knoten.id.wert}:tensorZerlegen:${index + 1}")
     else -> elementId(knoten.id, index, knoten.art)
 }

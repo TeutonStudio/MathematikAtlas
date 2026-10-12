@@ -8,6 +8,7 @@ enum class MatrixRechnerOperator(val stabileId: String) {
     SKALARMULTIPLIKATION("matrix.skalarmultiplikation"),
     MATRIXPRODUKT("matrix.produkt"),
     HADAMARD_PRODUKT("matrix.hadamard"),
+    HADAMARD_DIVISION("matrix.hadamardDivision"),
     MATRIX_VEKTOR_PRODUKT("matrix.vektorProdukt"),
     TRANSPONIEREN("matrix.transponieren"),
     INVERSE("matrix.inverse"),
@@ -124,7 +125,7 @@ object MatrixRechner {
                             }
                         },
                     ),
-                    bereich,
+                    maxOf(bereich, FundamentalerZahlbereich.GANZ),
                 )
             }
             MatrixRechnerOperator.SKALARMULTIPLIKATION -> {
@@ -133,7 +134,7 @@ object MatrixRechner {
                 }
                 MatrixRechnerErgebnis.MatrixWert(
                     anfrage.matrizen.single().matrix.mapEintraege { multiplikation(anfrage.skalare.single(), it) },
-                    bereich,
+                    maxOf(bereich, inferiereZahlenWertevorrat(anfrage.skalare.single()).fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL),
                 )
             }
             MatrixRechnerOperator.MATRIXPRODUKT -> {
@@ -158,6 +159,13 @@ object MatrixRechner {
                     bereich,
                 )
             }
+            MatrixRechnerOperator.HADAMARD_DIVISION -> {
+                if(anfrage.matrizen.size!=2) return anzahlFehler("Komponentenweise Division","zwei Matrizen")
+                gleicheForm(anfrage.matrizen)?.let { return it }
+                val a=anfrage.matrizen[0].matrix; val b=anfrage.matrizen[1].matrix
+                if(b.zeilen.flatten().any { vereinfache(it)==RationaleZahl.Null }) return MatrixRechnerErgebnis.Ungueltig("nullkomponente","Eine Divisorkomponente ist null.")
+                MatrixRechnerErgebnis.MatrixWert(Matrix(a.zeilen.mapIndexed { i,row -> row.mapIndexed { j,v -> Division(v,b.zeilen[i][j]) } }),FundamentalerZahlbereich.entries[maxOf(bereich.ordinal,FundamentalerZahlbereich.RATIONAL.ordinal)], b.zeilen.flatten().map { Ungleichheit(it,RationaleZahl.Null) })
+            }
             MatrixRechnerOperator.MATRIX_VEKTOR_PRODUKT -> {
                 if (anfrage.matrizen.size != 1 || anfrage.vektoren.size != 1) {
                     return anzahlFehler("Matrix-Vektor-Produkt", "eine Matrix und einen Vektor")
@@ -175,19 +183,37 @@ object MatrixRechner {
             }
             MatrixRechnerOperator.INVERSE -> einMatrix(anfrage) { operand ->
                 if (!operand.form.quadratisch) return@einMatrix quadratFehler("Inverse", operand.form)
+                if (operand.zahlbereich == FundamentalerZahlbereich.QUATERNION || operand.matrix.zeilen.flatten().any { inferiereZahlenWertevorrat(it).fundamentalerZahlbereichOderNull() == FundamentalerZahlbereich.QUATERNION })
+                    return@einMatrix MatrixRechnerErgebnis.Ungueltig("inverse_nichtkommutativ", "Die Kofaktorinverse benötigt einen kommutativen Zahlbereich.")
                 val determinant = determinant(operand.matrix)
                 if (determinant == RationaleZahl.Null) return@einMatrix MatrixRechnerErgebnis.Ungueltig(
                     "singulaer",
                     "Eine Matrix mit Determinante 0 ist nicht invertierbar.",
                 )
                 val rational = operand.matrix.zeilen.flatten().all { vereinfache(it) is RationaleZahl }
-                if (!rational) MatrixRechnerErgebnis.Bedingt(
+                if (!rational && operand.matrix.zeilenAnzahl <= 6) {
+                    val matrix = operand.matrix
+                    val det = permutationsDeterminante(matrix)
+                    val inverse = Matrix(List(matrix.zeilenAnzahl) { i ->
+                        List(matrix.spaltenAnzahl) { j ->
+                            val minor = if (matrix.zeilenAnzahl == 1) RationaleZahl.Eins
+                                else permutationsDeterminante(matrixMinor(matrix, j, i))
+                            val kofaktor = if ((i + j) % 2 == 0) minor else negation(minor)
+                            vereinfache(Division(kofaktor, det))
+                        }
+                    })
+                    MatrixRechnerErgebnis.MatrixWert(
+                        inverse,
+                        maxOf(operand.zahlbereich, FundamentalerZahlbereich.RATIONAL),
+                        listOf(Ungleichheit(det, RationaleZahl.Null)),
+                    )
+                } else if (!rational) MatrixRechnerErgebnis.Bedingt(
                     "${operand.matrix.zuLatex()}^{-1}",
                     FormelTyp.MATRIX,
-                    listOf("Determinante muss ungleich null sein; symbolische Inversion bleibt unausgewertet."),
+                    listOf("Die symbolische Kofaktorform wird bis Dimension 6 materialisiert; die Determinante muss ungleich null sein."),
                 ) else runCatching { operand.matrix.inverseRational() }
                     .fold(
-                        onSuccess = { MatrixRechnerErgebnis.MatrixWert(it, operand.zahlbereich, listOf(Ungleichheit(determinant, RationaleZahl.Null))) },
+                        onSuccess = { MatrixRechnerErgebnis.MatrixWert(it, maxOf(operand.zahlbereich, FundamentalerZahlbereich.RATIONAL), listOf(Ungleichheit(determinant, RationaleZahl.Null))) },
                         onFailure = { MatrixRechnerErgebnis.Ungueltig("inverse_nicht_berechenbar", it.message ?: "Inverse konnte nicht berechnet werden.") },
                     )
             }
@@ -204,8 +230,10 @@ object MatrixRechner {
                 matrixPotenz(operand, exponent.zähler.toInt())
             }
             MatrixRechnerOperator.DETERMINANTE -> einMatrix(anfrage) { operand ->
+                if (operand.zahlbereich == FundamentalerZahlbereich.QUATERNION || operand.matrix.zeilen.flatten().any { inferiereZahlenWertevorrat(it).fundamentalerZahlbereichOderNull() == FundamentalerZahlbereich.QUATERNION })
+                    return@einMatrix MatrixRechnerErgebnis.Ungueltig("determinante_nichtkommutativ", "Die Permutationsdeterminante benötigt einen kommutativen Zahlbereich.")
                 if (!operand.form.quadratisch) quadratFehler("Determinante", operand.form)
-                else MatrixRechnerErgebnis.ZahlWert(determinant(operand.matrix), operand.zahlbereich)
+                else MatrixRechnerErgebnis.ZahlWert(determinant(operand.matrix), maxOf(operand.zahlbereich, FundamentalerZahlbereich.GANZ))
             }
             MatrixRechnerOperator.SPUR -> einMatrix(anfrage) { operand ->
                 if (!operand.form.quadratisch) quadratFehler("Spur", operand.form)
@@ -293,7 +321,7 @@ object MatrixRechner {
         }
         return runCatching { berechnen(operand.matrix) }.fold(
             onSuccess = { polynom ->
-                val träger = operand.zahlbereich.alsMenge()
+                val träger = RationaleZahlen
                 val methode = Methode(
                     name = name,
                     parameter = listOf(polynom.variable),
@@ -301,7 +329,7 @@ object MatrixRechner {
                     zielMenge = träger,
                     werteVorräte = mapOf(polynom.variable.name to träger),
                 )
-                MatrixRechnerErgebnis.MethodeWert(methode, operand.zahlbereich)
+                MatrixRechnerErgebnis.MethodeWert(methode, FundamentalerZahlbereich.RATIONAL)
             },
             onFailure = { fehler ->
                 MatrixRechnerErgebnis.Ungueltig(
@@ -318,7 +346,7 @@ object MatrixRechner {
             val inverse = runCatching { operand.matrix.inverseRational() }.getOrElse {
                 return MatrixRechnerErgebnis.Ungueltig("negative_potenz", "Negative Matrixpotenz benötigt eine invertierbare rationale Matrix.")
             }
-            return matrixPotenz(operand.copy(matrix = inverse), -exponent)
+            return matrixPotenz(operand.copy(matrix = inverse,zahlbereich=maxOf(operand.zahlbereich,FundamentalerZahlbereich.RATIONAL)), -exponent)
         }
         var ergebnis = einheitsMatrix(operand.form.zeilen)
         repeat(exponent) { ergebnis *= operand.matrix }

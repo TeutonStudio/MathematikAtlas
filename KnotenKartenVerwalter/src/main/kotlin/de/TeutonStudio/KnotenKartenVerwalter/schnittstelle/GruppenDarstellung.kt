@@ -1,6 +1,7 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
@@ -14,12 +15,16 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -42,10 +47,19 @@ internal fun BoxScope.GruppenRahmen(editor: KartenEditorZustand, dauerFür: (Kno
     val ansicht = karte.ansicht
     val dichte = LocalDensity.current.density
     val farbe = MaterialTheme.colorScheme.tertiary
+    val textMesser = rememberTextMeasurer()
     val größe = remember { mutableStateOf(IntSize.Zero) }
     val index = remember(karte.visuelleGruppen) { GruppenIndex(editor.karte) }
     Box(Modifier.fillMaxSize().onSizeChanged { größe.value = it }) {
         karte.visuelleGruppen.sortedBy { index.vorfahren(it.id).size }.forEach { g ->
+            val dauer = index.knotenIn(g.id).mapNotNull(dauerFür).fold<Long,Long?>(null) { summe, wert ->
+                val a = summe ?: 0L; val b = wert.coerceAtLeast(0L)
+                if (Long.MAX_VALUE-a < b) Long.MAX_VALUE else a+b
+            }
+            val titelMaß = textMesser.measure(AnnotatedString(g.titel), style = MaterialTheme.typography.bodyLarge).size
+            val zeitBreite = dauer?.let { textMesser.measure(AnnotatedString("Δzeit ${formatiereAuswertungsDauerNanos(it)}"), style = MaterialTheme.typography.labelSmall).size.width / dichte } ?: 0f
+            SideEffect { editor.meldeGruppenKopfminimum(g.id, GraphGröße(titelMaß.width / dichte + zeitBreite + 80f,
+                maxOf(VISUELLE_GRUPPE_KOPFZEILE_HÖHE, titelMaß.height / dichte + 16f))) }
             val faktor = dichte * ansicht.zoom
             val x = ansicht.verschiebung.x + g.position.x * faktor
             val y = ansicht.verschiebung.y + g.position.y * faktor
@@ -54,20 +68,23 @@ internal fun BoxScope.GruppenRahmen(editor: KartenEditorZustand, dauerFür: (Kno
             if (x + breite < 0 || y + höhe < 0 || x > größe.value.width || y > größe.value.height) return@forEach
             key(g.id) {
                 Box(Modifier.offset { IntOffset(x.roundToInt(), y.roundToInt()) }
-                    .size((breite / dichte).dp, (höhe / dichte).dp)) {
+                    .graphicsLayer { scaleX = ansicht.zoom; scaleY = ansicht.zoom; transformOrigin = TransformOrigin(0f, 0f) }
+                    .wrapContentSize(Alignment.TopStart, unbounded = true)
+                    .requiredSize(g.größe.breite.dp, g.größe.höhe.dp)) {
                     Canvas(Modifier.fillMaxSize()) {
                         drawRoundRect(farbe.copy(alpha = .07f), cornerRadius = CornerRadius(14.dp.toPx()))
-                        drawRoundRect(farbe.copy(alpha = .8f), cornerRadius = CornerRadius(14.dp.toPx()), style = Stroke(2.dp.toPx()))
+                        drawRoundRect(if (editor.ausgewählteGruppe == g.id) farbe else farbe.copy(alpha = .8f), cornerRadius = CornerRadius(14.dp.toPx()), style = Stroke((if (editor.ausgewählteGruppe == g.id) 3.dp else 2.dp).toPx()))
                     }
                     Surface(color = farbe.copy(alpha = .18f), modifier = Modifier.fillMaxWidth()
-                        .height((VISUELLE_GRUPPE_KOPFZEILE_HÖHE * ansicht.zoom).dp)
-                        .gruppenDrag(g.id, editor) { delta -> editor.führeAus(KartenAktion.VisuelleGruppeVerschieben(g.id, GraphPunkt(delta.x / faktor, delta.y / faktor)), false) }) {
+                        .height(editor.gruppenKopfHöhe(g.id).dp)
+                        .semantics { contentDescription = "Gruppe ${g.titel} auswählen" }
+                        .pointerInput(g.id) { detectTapGestures(
+                            onTap = { editor.wähleGruppe(g.id) },
+                            onDoubleTap = { editor.öffneGruppe(g.id) },
+                        ) }
+                        .gruppenDrag(g.id, editor) { delta -> editor.führeAus(KartenAktion.VisuelleGruppeVerschieben(g.id, GraphPunkt(delta.x / dichte, delta.y / dichte)), false) }) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(g.titel, Modifier.weight(1f).padding(start = 8.dp), maxLines = 1)
-                            val dauer = index.knotenIn(g.id).mapNotNull(dauerFür).fold<Long,Long?>(null) { summe, wert ->
-                                val a = summe ?: 0L; val b = wert.coerceAtLeast(0L)
-                                if (Long.MAX_VALUE-a < b) Long.MAX_VALUE else a+b
-                            }
                             dauer?.let { Text("Δzeit ${formatiereAuswertungsDauerNanos(it)}",style=MaterialTheme.typography.labelSmall) }
                             TextButton(onClick = { editor.wähleGruppe(g.id, true) }) { Text("⋯") }
                         }
@@ -77,7 +94,7 @@ internal fun BoxScope.GruppenRahmen(editor: KartenEditorZustand, dauerFür: (Kno
                         .gruppenDrag(g.id, editor) { delta ->
                             val aktuell = editor.karte.visuelleGruppen.firstOrNull { it.id == g.id } ?: return@gruppenDrag
                             editor.führeAus(KartenAktion.VisuelleGruppeGrößeÄndern(g.id,
-                                GraphGröße(aktuell.größe.breite + delta.x / faktor, aktuell.größe.höhe + delta.y / faktor)), false)
+                                GraphGröße(aktuell.größe.breite + delta.x / dichte, aktuell.größe.höhe + delta.y / dichte)), false)
                         }) { Text("⌟") }
                 }
             }
@@ -161,6 +178,7 @@ private fun Modifier.gruppenDrag(id: VisuelleGruppenId, editor: KartenEditorZust
         awaitEachGesture {
             val erster = awaitFirstDown(requireUnconsumed = false)
             var aktiv = false
+            var bewegung = Offset.Zero
             var mehrfinger = false
             do {
                 val event = awaitPointerEvent()
@@ -170,8 +188,11 @@ private fun Modifier.gruppenDrag(id: VisuelleGruppenId, editor: KartenEditorZust
                 }
                 val change = event.changes.firstOrNull { it.id == erster.id } ?: break
                 if (!mehrfinger && change.pressed && change.position != change.previousPosition) {
-                    if (!aktiv) { editor.beginneInteraktion(); aktiv = true }
-                    beiDelta(change.position - change.previousPosition)
+                    bewegung += change.position - change.previousPosition
+                    if (!aktiv && bewegung.getDistance() <= viewConfiguration.touchSlop) continue
+                    val delta = if (aktiv) change.position - change.previousPosition else bewegung
+                    if (!aktiv) { editor.wähleGruppe(id); editor.beginneInteraktion(); aktiv = true }
+                    beiDelta(delta)
                     change.consume()
                 }
             } while (event.changes.any { it.pressed })

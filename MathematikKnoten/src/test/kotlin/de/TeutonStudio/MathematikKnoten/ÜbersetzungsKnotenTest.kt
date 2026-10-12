@@ -20,7 +20,7 @@ class ÜbersetzungsKnotenTest {
         assertEquals(listOf("wert", "ergebnis"), k.anschlüsse.map { it.name })
         ÜBERSETZER_ZIELE.forEach { ziel ->
             val neu = konfiguriereÜbersetzer(k, ziel)
-            assertEquals(k.anschlüsse.map { it.id }, neu.anschlüsse.map { it.id })
+            assertEquals(k.anschlüsse.map { it.id }, neu.anschlüsse.filter { it.name in setOf("wert", "ergebnis") }.map { it.id })
             assertTrue(neu.anschlüsse.none { it.kannSichErweitern })
         }
     }
@@ -108,12 +108,12 @@ class ÜbersetzungsKnotenTest {
         assertFails { übersetzeStruktur(ZeilenVektor(listOf(z(1))),"zeile") }
     }
 
-    @Test fun `Strukturwechsel inferiert neue Zielmetadaten statt alte Raeume zu kopieren`() {
+    @Test fun `Strukturwechsel erhaelt gelieferte Obermengen und passt ihre Struktur an`() {
         val tupel=Tupel(listOf(z(1),z(2)))
         val k=ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero)
         val quelle=BedingterWert(tupel,zielMenge=Tupelraum(listOf(ReelleZahlen,ReelleZahlen)),werteVorrat=ReelleZahlen)
         val spalte=auswerten(k,quelle).ausgaben.getValue("ergebnis")
-        assertEquals(inferiereZielmenge(SpaltenVektor(listOf(z(1),z(2)))),spalte.zielMenge)
+        assertEquals(Vektorraum(VektorOrientierung.Spalte, 2, ReelleZahlen),spalte.zielMenge)
         assertNull(spalte.werteVorrat)
         val zeile=auswerten(k,BedingterWert(ZeilenVektor(listOf(z(1),z(2))),zielMenge=quelle.zielMenge,werteVorrat=ReelleZahlen)).ausgaben.getValue("ergebnis")
         assertEquals(spalte.zielMenge,zeile.zielMenge)

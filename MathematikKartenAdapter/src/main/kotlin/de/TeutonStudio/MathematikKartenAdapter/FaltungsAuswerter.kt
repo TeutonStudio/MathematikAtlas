@@ -26,8 +26,13 @@ internal object FaltungskonstruktorAuswerter : MathematikKnotenAuswerter {
         val neutral = kontext.eingänge["neutral"] ?: error("Das neutrale Element fehlt.")
         val neutralesObjekt = neutral.objekt as? MathematischesObjekt
             ?: error("Eine mathematische Faltung benötigt ein mathematisches neutrales Element.")
-        val indexName = kontext.knoten.parameter[FALTUNG_INDEXNAME]?.trim().orEmpty().ifBlank { "i" }
-        val akkumulatorName = kontext.knoten.parameter[FALTUNG_AKKUMULATORNAME]?.trim().orEmpty().ifBlank { "a" }
+        var indexName = kontext.knoten.parameter[FALTUNG_INDEXNAME]?.trim().orEmpty().ifBlank { "i" }
+        var akkumulatorName = kontext.knoten.parameter[FALTUNG_AKKUMULATORNAME]?.trim().orEmpty().ifBlank { "a" }
+        if(kontext.knoten.parameter["faltung.frischeNamen"]=="true") {
+            val belegt=kontext.eingänge.values.flatMap { (it.objekt as? MathematischesObjekt)?.enthalteneMethodenParameter().orEmpty().map { p -> p.name } + it.variablenQuellen.map { q -> q.name } }.toMutableSet()
+            fun frisch(basis:String):String { var name=basis;while(!belegt.add(name)) name+="_";return name }
+            indexName=frisch("__faltungsIndex");akkumulatorName=frisch("__faltungsAkkumulator")
+        }
         val akkumulatorArt = kontext.knoten.anschlüsse.firstOrNull { it.name == "akkumulator" }
             ?.art ?: AnschlussArtId("mathematik.objekt")
         val akkumulator = gebundenerParameter(akkumulatorName, akkumulatorArt)

@@ -44,6 +44,8 @@ data class BedingterWert(
     val elementArt: AnschlussArtId? = null,
     /** Kennzeichnet einen unbekannten Methodenparameter einer Karte, nicht eine konkrete Methode. */
     val symbolischeMethode: Boolean = false,
+    /** Präzise Komponentenobermengen über Strukturübersetzungen hinweg; nicht persistiert. */
+    val komponentenMengen: List<MengenAusdruck>? = null,
 )
 
 /**
@@ -146,6 +148,9 @@ data class KnotenAuswertungsErgebnis(
     val entscheidung: AussageErgebnis? = null,
     val lösungsVariablen: List<GebundeneMengenVariable> = emptyList(),
     val lösungsParameter: List<VariablenQuelle> = emptyList(),
+    /** Flüchtiges, exakt aus dem aktuellen Eingang abgeleitetes Numerikproblem. */
+    val polynomProblem: PolynomGleichungsProblem? = null,
+    val polynomKonfiguration: PolynomNumerikKonfiguration = PolynomNumerikKonfiguration(),
 )
 
 data class KartenAuswertungsErgebnis(

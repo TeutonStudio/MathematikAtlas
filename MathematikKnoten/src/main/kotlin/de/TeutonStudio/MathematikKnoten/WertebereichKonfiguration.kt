@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 /** Persistierbare, rekursive Beschreibung eines Wertebereichs allgemeiner Parameter. */
 sealed interface WertebereichKonfiguration {
     data class Zahl(val grundmenge: String = "R") : WertebereichKonfiguration
+    data object Winkel : WertebereichKonfiguration
     data object Aussage : WertebereichKonfiguration
     data class Menge(val elementBereich: WertebereichKonfiguration = Zahl()) : WertebereichKonfiguration
     data class Tupel(val komponenten: List<WertebereichKonfiguration> = listOf(Zahl(), Zahl())) : WertebereichKonfiguration
@@ -18,6 +19,7 @@ sealed interface WertebereichKonfiguration {
 
     fun zuMenge(): MengenAusdruck = when (this) {
         is Zahl -> zahlGrundmenge(grundmenge)
+        Winkel -> Gradmenge
         Aussage -> Wahrheitsmenge
         is Menge -> Potenzmenge(elementBereich.zuMenge())
         is Tupel -> Tupelraum(komponenten.map { it.zuMenge() })
@@ -31,6 +33,7 @@ sealed interface WertebereichKonfiguration {
 
     fun zuEigenschaft(): KnotenEigenschaft.Objekt = when (this) {
         is Zahl -> objekt("zahl", "grundmenge" to KnotenEigenschaft.Text(grundmenge))
+        Winkel -> objekt("winkel")
         Aussage -> objekt("aussage")
         is Menge -> objekt("menge", "elementBereich" to elementBereich.zuEigenschaft())
         is Tupel -> objekt("tupel", "komponenten" to KnotenEigenschaft.Liste(komponenten.map { it.zuEigenschaft() }))
@@ -49,6 +52,7 @@ sealed interface WertebereichKonfiguration {
             val art = (felder["art"] as? KnotenEigenschaft.Text)?.wert
             return when (art) {
                 "zahl" -> Zahl(text(felder, "grundmenge", "R"))
+                "winkel" -> Winkel
                 "aussage" -> Aussage
                 "menge" -> Menge(liesObjekt(felder["elementBereich"] as? KnotenEigenschaft.Objekt))
                 "tupel" -> Tupel((felder["komponenten"] as? KnotenEigenschaft.Liste)?.werte
