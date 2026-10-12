@@ -104,7 +104,8 @@ internal fun MathematikAuswerterRegister.registriereMatrixdiagonale() {
         val ergebnis: MathematischesObjekt
         val ausgang: String
         if (matrixdiagonaleModus(kontext.knoten) == MATRIXDIAGONALE_ERZEUGEN) {
-            val objekt = kontext.eingänge["werte"]?.objekt ?: error("Tupel oder Vektor zum Erzeugen fehlt.")
+            val objekt = kontext.eingänge["werte"]?.mathematischesObjekt("Diagonalmatrix-Eingang")
+                ?: error("Tupel oder Vektor zum Erzeugen fehlt.")
             val matrix = diagonalmatrixErzeugen(objekt)
             ergebnis = if (art == MatrixDiagonalArt.HAUPTDIAGONALE) matrix else
                 Matrix(matrix.zeilen.map { it.reversed() })
