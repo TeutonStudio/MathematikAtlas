@@ -60,6 +60,7 @@ interface KnotenInspektorAktionen {
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
         de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART to ÜbersetzerInspektor,
+        de.TeutonStudio.MathematikKnoten.RICHTUNG_WINKEL_ART to RichtungsWinkelInspektor,
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
         "mathematik.abbild" to BildmengeInspektor,
         "mathematik.visualisierung" to VisualisierungsInspektor,
