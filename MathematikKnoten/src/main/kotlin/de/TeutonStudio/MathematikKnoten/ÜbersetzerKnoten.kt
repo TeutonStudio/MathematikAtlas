@@ -44,15 +44,18 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
 const val RICHTUNG_WINKEL_ART = "mathematik.richtungWinkel"
 const val RICHTUNG_WINKEL_VORZEICHEN = "richtung.vorzeichen"
 const val RICHTUNG_WINKEL_LISTE = "richtung.winkelGrad"
+const val RICHTUNG_WINKEL_ANZAHL = "richtung.n"
 
-/** Eine Richtung in R^n; n = Anzahl der Halbkreiswinkel + 1. */
+/** n natürliche Halbkreiswinkel definieren eine Richtung in R^(n+1). */
 val RichtungWinkelVorlage = KnotenVorlage(
     RICHTUNG_WINKEL_ART, "Richtung (n-dimensional)", "Vektoren",
-    "R¹: ±1; jede zusätzliche Dimension fügt einen Halbkreiswinkel von 0° bis unter 180° hinzu.",
+    "n ∈ ℕ₀ legt n Halbkreiswinkel und damit eine Richtung in Rⁿ⁺¹ fest.",
     GraphGröße(250f, 120f),
-    listOf(AnschlussDaten(name = "richtung", richtung = AnschlussRichtung.Ausgang,
+    listOf(AnschlussDaten(name = "n", richtung = AnschlussRichtung.Eingang,
+        kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
+        AnschlussDaten(name = "richtung", richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.SpaltenVektor.id)),
-    standardParameter = mapOf(RICHTUNG_WINKEL_VORZEICHEN to "1", RICHTUNG_WINKEL_LISTE to ""),
+    standardParameter = mapOf(RICHTUNG_WINKEL_VORZEICHEN to "1", RICHTUNG_WINKEL_LISTE to "", RICHTUNG_WINKEL_ANZAHL to "0"),
 )
 
 object ÜbersetzungsKnotenVorlagen {
@@ -106,7 +109,22 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
         val winkel = if (roh.isBlank()) emptyList() else roh.split(';').map { eintrag ->
             eintrag.trim().toDoubleOrNull() ?: error("Ungültiger Halbkreiswinkel: '$eintrag'.")
         }
-        KnotenAuswertungsErgebnis(mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, winkel))))
+        val n = k.eingänge["n"]?.let { quelle ->
+            val zahl = quelle.objekt as? RationaleZahl
+                ?: error("n muss eine konkrete natürliche Zahl sein.")
+            require(zahl.nenner == java.math.BigInteger.ONE && zahl.zähler.signum() >= 0) {
+                "n muss eine natürliche ganze Zahl einschließlich 0 sein."
+            }
+            try { zahl.zähler.intValueExact() } catch (_: ArithmeticException) {
+                error("n überschreitet den unterstützten Dimensionsbereich.")
+            }
+        } ?: k.knoten.parameter[RICHTUNG_WINKEL_ANZAHL]?.toIntOrNull()
+            ?: error("n muss eine natürliche ganze Zahl sein.")
+        require(n in 0..31) { "n muss zwischen 0 und 31 liegen (Dimension 1 bis 32)." }
+        require(winkel.size <= n) { "Für n = $n sind höchstens $n Halbkreiswinkel zulässig." }
+        // Nicht angegebene Winkel entsprechen einer Rotation um 0 Grad.
+        val vollständig = winkel + List(n - winkel.size) { 0.0 }
+        KnotenAuswertungsErgebnis(mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, vollständig))))
     }
     registriere(ÜBERSETZER_ART) { k ->
         val wert = k.eingänge["wert"] ?: error("Der zu übersetzende Wert fehlt.")
