@@ -12,6 +12,7 @@ fun tupelAbflachen(tupel: Tupel): Tupel {
 
 fun übersetzeStruktur(wert: MathematischesObjekt, ziel: String): MathematischesObjekt = when (ziel) {
     "tupel" -> when (wert) {
+        is Tupel -> wert
         is OrientierterVektor -> Tupel(wert.werte)
         else -> error("Nach Tupel können nur Zeilen- oder Spaltenvektoren übersetzt werden.")
     }
@@ -22,14 +23,8 @@ fun übersetzeStruktur(wert: MathematischesObjekt, ziel: String): Mathematisches
                 wert.elemente.mapIndexed { index, element -> element as? ZahlAusdruck
                     ?: error("Komponente ${index + 1} ist keine Zahl; verschachtelte Tupel, Mengen und Aussagen sind unzulässig.") }
             }
-            is SpaltenVektor -> {
-                require(ziel == "zeile") { "Die Quelle ist bereits eine Spalte." }
-                wert.werte
-            }
-            is ZeilenVektor -> {
-                require(ziel == "spalte") { "Die Quelle ist bereits eine Zeile." }
-                wert.werte
-            }
+            is SpaltenVektor -> wert.werte
+            is ZeilenVektor -> wert.werte
             else -> error("Nach $ziel können nur Tupel oder Vektoren der anderen Orientierung übersetzt werden.")
         }
         if (ziel == "spalte") SpaltenVektor(komponenten) else ZeilenVektor(komponenten)

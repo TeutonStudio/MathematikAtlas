@@ -13,7 +13,7 @@ object ÜbersetzerInspektor : KnotenInspektor {
         Column {
             ÜBERSETZER_ZIELE.forEach { ziel ->
                 TextButton(onClick = { aktionen.knoten(konfiguriereÜbersetzer(knoten, ziel)) }) {
-                    Text(if (ziel == übersetzerZiel(knoten)) "✓ $ziel" else ziel)
+                    Text(if (ziel == übersetzerZiel(knoten)) "✓ ${übersetzerZielTitel(ziel)}" else übersetzerZielTitel(ziel))
                 }
             }
         }

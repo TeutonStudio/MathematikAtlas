@@ -9,6 +9,14 @@ const val TUPEL_ABFLACHEN_ART = "mathematik.tupelAbflachen"
 const val ÜBERSETZER_ZIEL = "uebersetzer.ziel"
 val ÜBERSETZER_ZIELE = listOf("tupel", "zeile", "spalte", "methode")
 
+fun übersetzerZielTitel(ziel: String): String = when (ziel) {
+    "tupel" -> "Tupel"
+    "zeile" -> "Zeilenvektor"
+    "spalte" -> "Spaltenvektor"
+    "methode" -> "Term → Methode"
+    else -> ziel
+}
+
 fun übersetzerZiel(knoten: KnotenDaten): String =
     (knoten.eigenschaften[ÜBERSETZER_ZIEL] as? KnotenEigenschaft.Text)?.wert ?: "spalte"
 
@@ -25,9 +33,9 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
             p.copy(art = ausgangArt, kannSichErweitern = false, dynamischErzeugt = false)
             else p.copy(art = MathematikAnschlussArten.Objekt.id,
                 zulässigeArten = when (ziel) {
-                    "tupel" -> setOf(MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
-                    "zeile" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.SpaltenVektor.id)
-                    "spalte" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id)
+                    "tupel" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
+                    "zeile" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
+                    "spalte" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
                     else -> emptySet()
                 }, kannSichErweitern = false, dynamischErzeugt = false) })
 }
@@ -35,7 +43,7 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
 object ÜbersetzungsKnotenVorlagen {
     val Übersetzer = KnotenVorlage(ÜBERSETZER_ART, "Übersetzer", "Strukturen",
         "Übersetzt Tupel, Zeilen, Spalten oder einen Term in eine Methode.", GraphGröße(220f, 96f),
-        listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, zulässigeArten = setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id)),
+        listOf(AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id, zulässigeArten = setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)),
             AnschlussDaten(name = "ergebnis", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.SpaltenVektor.id)),
         standardEigenschaften = mapOf(ÜBERSETZER_ZIEL to KnotenEigenschaft.Text("spalte"))).alsAdapterVorlage()
     val Abflachen = KnotenVorlage(TUPEL_ABFLACHEN_ART, "Tupel abflachen", "Strukturen",
