@@ -134,11 +134,29 @@ class KartenEditorZustand(
         if (interaktionsStart == null) interaktionsStart = karte
     }
 
+    /** Passt die geöffnete Gruppe an ihre unveränderten Mitglieder an, ohne sie neu zuzuordnen. */
+    private fun KartenDaten.passeGeöffneteGruppeAnInhaltAn(): KartenDaten {
+        val gruppeId = geöffneteGruppe ?: return this
+        val index = GruppenIndex(this)
+        val zuAktualisieren = listOf(gruppeId) + index.vorfahren(gruppeId)
+        var stand = this
+        zuAktualisieren.forEach { id ->
+            val ids = GruppenIndex(stand).knotenIn(id)
+            val geometrie = stand.visuelleGruppenGeometrieFür(ids) ?: return@forEach
+            stand = stand.copy(visuelleGruppen = stand.visuelleGruppen.map { gruppe ->
+                if (gruppe.id == id) gruppe.copy(position = geometrie.first, größe = geometrie.second)
+                else gruppe
+            })
+        }
+        return stand
+    }
+
     fun beendeInteraktion() {
         val start = interaktionsStart ?: return
         interaktionsStart = null
         karte = karte.bereinigteVisuelleGruppen().let { stand ->
-            if (geöffneteGruppe == null) stand.mitAutomatischenVisuellenGruppenMitgliedschaften() else stand
+            if (geöffneteGruppe == null) stand.mitAutomatischenVisuellenGruppenMitgliedschaften()
+            else stand.passeGeöffneteGruppeAnInhaltAn()
         }
         if (start == karte) return
         merkeFürRückgängig(start)
@@ -212,7 +230,10 @@ class KartenEditorZustand(
         val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
         var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
-        if (geöffneteGruppe == null && interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) {
+            neu = if (geöffneteGruppe == null) neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+            else neu.passeGeöffneteGruppeAnInhaltAn()
+        }
         if (neu == karte) return
         val historienRelevant = mitHistorie && wirksameAktion !is KartenAktion.AnsichtÄndern
         if (historienRelevant) merkeFürRückgängig(standVorAktion)
