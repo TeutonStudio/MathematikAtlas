@@ -128,6 +128,8 @@ fun matrixproduktFalkFaktoren(auswertung: KnotenAuswertungsErgebnis?): List<Matr
     return auswertung?.eingänge.orEmpty().entries.map { requireNotNull(it.value.objekt.alsMatrixFaktorOderNull()) { "Faktor ${it.key} ist keine Matrix, Zeile oder Spalte." } }
 }
 
+data class FalkAuswahl(val schritt: Int = 0, val zeile: Int = 0, val spalte: Int = 0)
+
 @Composable
 fun MatrixproduktFalkSchemaInhalt(
     auswertung: KnotenAuswertungsErgebnis?,
@@ -152,6 +154,15 @@ fun MatrixproduktFalkSchemaInhalt(
         Text(berechnung.exceptionOrNull()?.message ?: "Matrixprodukt nicht definiert.", modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
         return
     }
+    var auswahl by remember(auswertung) { mutableStateOf(FalkAuswahl()) }
+    val aktiverSchritt = auswahl.schritt.coerceIn(kette.zwischenprodukte.indices)
+    val aktivesLinks = if (aktiverSchritt == 0) kette.faktoren.first() else kette.zwischenprodukte[aktiverSchritt - 1]
+    val aktivesRechts = kette.faktoren[aktiverSchritt + 1]
+    val aktiveZeile = auswahl.zeile.coerceIn(0, aktivesLinks.zeilenAnzahl - 1)
+    val aktiveSpalte = auswahl.spalte.coerceIn(0, aktivesRechts.spaltenAnzahl - 1)
+    val details = remember(aktivesLinks, aktivesRechts, aktiveZeile, aktiveSpalte) {
+        detailliertesFalkSchema(aktivesLinks, aktivesRechts, aktiveZeile, aktiveSpalte)
+    }
     Column(modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Zusammenhängendes Falk-Schema", style = MaterialTheme.typography.titleMedium)
         Text("${kette.faktoren.size} verbundene Faktoren; streng linksassoziativ, alle Zwischenprodukte.", style = MaterialTheme.typography.bodySmall)
@@ -160,14 +171,15 @@ fun MatrixproduktFalkSchemaInhalt(
             @Composable fun schritt(index: Int) {
                 val links = if (index == 0) kette.faktoren.first() else kette.zwischenprodukte[index - 1]
                 val rechts = kette.faktoren[index + 1]
+                val aktiv = aktiverSchritt == index
                 Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("P${index + 1} = ${if (index == 0) "A1" else "P$index"} · A${index + 2}", style = MaterialTheme.typography.titleSmall)
                     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FalkMatrix(if (index == 0) "A1" else "P$index", links, null, null, onZelle = { _, _ -> })
+                        FalkMatrix(if (index == 0) "A1" else "P$index", links, if (aktiv) aktiveZeile else null, null, onZelle = { z, _ -> auswahl = FalkAuswahl(index, z, aktiveSpalte) })
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FalkMatrix("A${index + 2}", rechts, null, null, onZelle = { _, _ -> })
+                            FalkMatrix("A${index + 2}", rechts, null, if (aktiv) aktiveSpalte else null, onZelle = { _, sp -> auswahl = FalkAuswahl(index, aktiveZeile, sp) })
                             HorizontalDivider()
-                            FalkMatrix("P${index + 1}", kette.zwischenprodukte[index], null, null, onZelle = { _, _ -> })
+                            FalkMatrix("P${index + 1}", kette.zwischenprodukte[index], if (aktiv) aktiveZeile else null, if (aktiv) aktiveSpalte else null, ergebnisZelleHervorheben = aktiv, onZelle = { z, sp -> auswahl = FalkAuswahl(index, z, sp) })
                         }
                     }
                 }
@@ -185,6 +197,11 @@ fun MatrixproduktFalkSchemaInhalt(
                     }
                 }
             }
+        }
+        if (details is DetailliertesFalkSchemaErgebnis.Gültig) {
+            val modell = details.modell
+            Text("P${aktiverSchritt + 1} · Zeile ${aktiveZeile + 1}, Spalte ${aktiveSpalte + 1}", style = MaterialTheme.typography.titleSmall)
+            LatexText("${gekürzteFalkSummeLatex(modell)} = ${modell.ergebnisEintrag.zuLatex()}")
         }
     }
 }
