@@ -146,13 +146,9 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
                     }
                     Polarkoordinaten.polar(tupel)
                 }
-                "kartesisch" -> {
-                    val polar = objekt as? Tupel
-                        ?: error("Polar → Kartesisch benötigt ein Polartupel.")
-                    Polarkoordinaten.kartesisch(
-                        polar, eindimensional = polar.elemente.getOrNull(1) is ZahlAusdruck,
-                    )
-                }
+                "kartesisch" -> Polarkoordinaten.kartesisch(
+                    objekt as? Tupel ?: error("Polar → Kartesisch benötigt ein Zweiertupel aus Radius und Winkeltupel."),
+                )
                 else -> übersetzeStruktur(objekt, ziel)
             }
             übersetzterWert(wert, umgewandelt)

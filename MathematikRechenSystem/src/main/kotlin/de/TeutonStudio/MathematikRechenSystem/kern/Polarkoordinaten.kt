@@ -3,17 +3,18 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 import kotlin.math.*
 
 /** Numerische Hypersphärenkoordinaten in Grad: (r, (φ, θ₁, …)), Azimut zuerst.
- * R¹ verwendet (|x|, sign(x)). Die Ergebnisse sind Gleitkommanäherungen.
+ * R¹ verwendet (|x|, (sign(x))). Alle Ausgaben sind Zweiertupel (Radius, Richtungs-Tupel).
+ * Die Ergebnisse sind Gleitkommanäherungen.
  */
 object Polarkoordinaten {
     const val KONVENTION = "Grad: Azimut φ in [0°,360°), Polarwinkel θ₁,… in [0°,180°]. " +
         "θ₁ wird zur x₃-Achse gemessen, θ₂ zur x₄-Achse usw. " +
-        "R¹ verwendet ein skalares Vorzeichen −1, 0 oder +1 statt eines Winkeltupels."
+        "R¹ verwendet ein einelementiges Richtungstupel mit Vorzeichen −1, 0 oder +1."
 
     fun polar(kartesisch: Tupel): Tupel {
         val x = komponenten(kartesisch)
         require(x.isNotEmpty()) { "Polarkoordinaten benötigen mindestens eine Dimension." }
-        if (x.size == 1) return Tupel(listOf(zahl(abs(x.single())), zahl(sign(x.single()))))
+        if (x.size == 1) return Tupel(listOf(zahl(abs(x.single())), Tupel(listOf(zahl(sign(x.single())))))
         val winkel = mutableListOf<Double>()
         val azimut = if (x[0] == 0.0 && x[1] == 0.0) 0.0 else Math.toDegrees(atan2(x[1], x[0]))
         // Eine Addition von 360 kann einen sehr kleinen negativen Winkel auf 360 runden.
@@ -34,15 +35,16 @@ object Polarkoordinaten {
     }
 
     fun kartesisch(polar: Tupel, eindimensional: Boolean = false): Tupel {
-        require(polar.elemente.size >= 2) { "Polartupel benötigt Radius und Winkel bzw. Vorzeichen." }
+        require(polar.elemente.size == 2) { "Polar besteht aus genau (Radius, Richtungstupel)." }
         val r = polar.elemente.first() as? ZahlAusdruck ?: error("Der Radius muss eine reelle Zahl sein.")
-        if (eindimensional) {
-            require(polar.elemente.size == 2) { "R¹ benötigt genau (Radius, Vorzeichen)." }
-            return kartesisch(r, polar.elemente[1])
+        val richtung = polar.elemente[1]
+        if (eindimensional || richtung is Tupel && richtung.elemente.size == 1 &&
+            richtung.elemente.single() is ZahlAusdruck &&
+            runCatching { reell(richtung.elemente.single() as ZahlAusdruck) }.getOrNull() in setOf(-1.0, 0.0, 1.0)) {
+            return kartesisch(r, if (richtung is Tupel) richtung.elemente.single() else richtung)
         }
-        val winkel = if (polar.elemente.size == 2 && polar.elemente[1] is Tupel)
-            polar.elemente[1] else Tupel(polar.elemente.drop(1))
-        return kartesisch(r, winkel)
+        // Historische Polartupel (r, Gradwert) bleiben für R² lesbar.
+        return kartesisch(r, if (richtung is Tupel) richtung else Tupel(listOf(richtung)))
     }
 
     fun kartesisch(radius: ZahlAusdruck, winkelOderVorzeichen: MathematischesObjekt): Tupel {

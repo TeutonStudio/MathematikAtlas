@@ -36,7 +36,10 @@ class PolarkoordinatenTest {
         for (x in listOf(-3.0, 0.0, 3.0)) {
             val p = Polarkoordinaten.polar(t(x))
             val s = Polarkoordinaten.winkelOderVorzeichen(t(x))
-            assertIs<ZahlAusdruck>(s)
+            assertEquals(1, assertIs<Tupel>(s).elemente.size)
+            assertIs<ZahlAusdruck>(s.elemente.single())
+            assertEquals(2, p.elemente.size)
+            nahe(listOf(x), Polarkoordinaten.kartesisch(p), 0.0)
             nahe(listOf(x), Polarkoordinaten.kartesisch(p, eindimensional = true), 0.0)
             nahe(listOf(x), Polarkoordinaten.kartesisch(Polarkoordinaten.radius(t(x)), s), 0.0)
         }
