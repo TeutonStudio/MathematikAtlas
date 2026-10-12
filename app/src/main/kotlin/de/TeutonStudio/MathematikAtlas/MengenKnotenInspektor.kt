@@ -320,6 +320,7 @@ internal object VektorRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche(knoten, ergebnis)
         val operator = VektorRechnerOperator.entries.firstOrNull {
             it.stabileId == knoten.parameter[VEKTOR_RECHNER_OPERATOR]
         } ?: VektorRechnerOperator.SKALARPRODUKT

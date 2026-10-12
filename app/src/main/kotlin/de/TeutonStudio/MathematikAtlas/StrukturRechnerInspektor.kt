@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche
+
 import de.TeutonStudio.MathematikKnoten.FORMEL_ZEICHNUNG_EIGENSCHAFT
 
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +51,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        RechnerSchemaSchaltfläche(knoten, ergebnis)
         if (knoten.art == TensorRechner.KNOTEN_ART) {
             TensorOperationRechnerInspektor.Inhalt(knoten, ergebnis, aktionen)
             return

@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche
+
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
 
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +46,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        RechnerSchemaSchaltfläche(knoten, ergebnis)
         val definition = aktuelleTensorOperationDefinition(knoten)
         val operatorId = knoten.parameter[de.TeutonStudio.MathematikKnoten.RECHNER_OPERATOR_PARAMETER]
             ?: knoten.parameter[de.TeutonStudio.MathematikKnoten.TENSOR_OPERATION_ID]

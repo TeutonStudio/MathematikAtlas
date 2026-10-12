@@ -24,6 +24,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        RechnerSchemaSchaltfläche(knoten, ergebnis)
         val operatorId = knoten.parameter[ZAHLENRECHNER_OPERATOR]
         val gespeicherterStandardOperator = UniversellerZahlenOperator.entries.firstOrNull { operator ->
             operatorId == operator.stabileId || operatorId.equals(operator.name, ignoreCase = true)
