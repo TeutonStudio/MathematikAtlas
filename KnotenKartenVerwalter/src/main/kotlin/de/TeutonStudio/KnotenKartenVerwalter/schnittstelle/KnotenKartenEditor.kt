@@ -954,12 +954,16 @@ private fun KnotenDarstellung(
             })
         }
 
+        // Die beiden unteren Tangentenpunkte der Hauptkarte definieren die
+        // oberen Ecken der Zeit-Fußzeile. Absolute Maße vermeiden, dass die
+        // Kombination aus Padding und fillMaxWidth die Kontur verschiebt.
+        val fußzeilenBreite = (knoten.größe.breite.dp -
+            fußzeilenEinzüge.first - fußzeilenEinzüge.second).coerceAtLeast(0.dp)
         Box(
             Modifier
                 .align(Alignment.BottomStart)
-                .offset(y = fußzeilenHöhe)
-                .padding(start = fußzeilenEinzüge.first, end = fußzeilenEinzüge.second)
-                .fillMaxWidth()
+                .offset(x = fußzeilenEinzüge.first, y = fußzeilenHöhe)
+                .width(fußzeilenBreite)
                 .height(fußzeilenHöhe),
             contentAlignment = Alignment.CenterStart,
         ) {
