@@ -195,7 +195,57 @@ private object OrdnungsrelationInspektor : KnotenInspektor {
 private object VariablenInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
-        GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        val intervall = knoten.parameter[VARIABLE_BEREICH_MODUS] == VARIABLE_BEREICH_INTERVALL
+        Text("Variablenbereich", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+            FilterChip(!intervall, { aktionen.parameter(VARIABLE_BEREICH_MODUS, VARIABLE_BEREICH_GRUNDMENGE) },
+                label = { Text("Grundmenge") })
+            FilterChip(intervall, {
+                aktionen.knoten(knoten.copy(parameter = knoten.parameter + mapOf(
+                    VARIABLE_BEREICH_MODUS to VARIABLE_BEREICH_INTERVALL, "werteVorrat" to "R",
+                )))
+            }, label = { Text("Reelles Intervall") })
+        }
+        if (!intervall) {
+            GrundmengenAuswahl("Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        } else {
+            Text("Winkelbereiche in Grad (reelle Repräsentanten)", style = MaterialTheme.typography.labelMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+                listOf(Triple("Azimut", "360", true), Triple("Polar", "180", false)).forEach { (name, rechts, offen) ->
+                    FilterChip(
+                        knoten.parameter[VARIABLE_INTERVALL_LINKS].orEmpty() == "0" &&
+                            (knoten.parameter[VARIABLE_INTERVALL_RECHTS] ?: "360") == rechts &&
+                            (knoten.parameter[VARIABLE_INTERVALL_RECHTS_OFFEN] != "false") == offen,
+                        {
+                            aktionen.knoten(knoten.copy(parameter = knoten.parameter + mapOf(
+                                VARIABLE_INTERVALL_LINKS to "0", VARIABLE_INTERVALL_RECHTS to rechts,
+                                VARIABLE_INTERVALL_LINKS_OFFEN to "false",
+                                VARIABLE_INTERVALL_RECHTS_OFFEN to offen.toString(),
+                            )))
+                        },
+                        label = { Text(if (offen) "$name [0°, 360°)" else "$name [0°, 180°]") },
+                    )
+                }
+            }
+            ParameterFeld("Untere Grenze", knoten.parameter[VARIABLE_INTERVALL_LINKS] ?: "0") {
+                aktionen.parameter(VARIABLE_INTERVALL_LINKS, it)
+            }
+            ParameterFeld("Obere Grenze", knoten.parameter[VARIABLE_INTERVALL_RECHTS] ?: "360") {
+                aktionen.parameter(VARIABLE_INTERVALL_RECHTS, it)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                FilterChip(knoten.parameter[VARIABLE_INTERVALL_LINKS_OFFEN] == "true", {
+                    aktionen.parameter(VARIABLE_INTERVALL_LINKS_OFFEN,
+                        (knoten.parameter[VARIABLE_INTERVALL_LINKS_OFFEN] != "true").toString())
+                }, label = { Text("Links offen") })
+                FilterChip(knoten.parameter[VARIABLE_INTERVALL_RECHTS_OFFEN] != "false", {
+                    aktionen.parameter(VARIABLE_INTERVALL_RECHTS_OFFEN,
+                        (knoten.parameter[VARIABLE_INTERVALL_RECHTS_OFFEN] == "false").toString())
+                }, label = { Text("Rechts offen") })
+            }
+            Text("Die Gradgrenzen beschreiben reelle Zahlenwerte. Die Winkelmenge G bleibt ein eigener Datentyp.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }

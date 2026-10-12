@@ -32,7 +32,7 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.variable") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
-            val wertevorrat = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            val wertevorrat = variablenWertevorrat(k.knoten, grundmenge(k.knoten.parameter["werteVorrat"] ?: "R"))
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
                 Variable(name),
                 werteVorrat = wertevorrat,
