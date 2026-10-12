@@ -42,7 +42,7 @@ internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck): 
     val variablen = List(n) { i -> Variable("${name}_${i+1}", "${name}_{${i+1}}") }
     val bereiche = List(n) { i ->
         if (art != "winkeltupel") basis
-        else ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(if (i == 0) 360 else 180), i != 0)
+        else ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(if (i == 0) 360 else 180), i == 0)
     }
     val objekt: MathematischesObjekt = when (art) {
         "zeile" -> ZeilenVektor(variablen)
