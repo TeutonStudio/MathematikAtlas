@@ -7,6 +7,14 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 const val ÜBERSETZER_ART = "atlas.uebersetzer"
 const val TUPEL_ABFLACHEN_ART = "mathematik.tupelAbflachen"
 const val ÜBERSETZER_ZIEL = "uebersetzer.ziel"
+const val ÜBERSETZER_POLAR_GETRENNT = "uebersetzer.polarGetrennt"
+fun übersetzerPolarGetrennt(knoten: KnotenDaten) = (knoten.eigenschaften[ÜBERSETZER_POLAR_GETRENNT] as? KnotenEigenschaft.Text)?.wert == "true"
+
+fun konfiguriereÜbersetzerPolarAnschlüsse(knoten: KnotenDaten, getrennt: Boolean): KnotenDaten {
+    require(knoten.art == ÜBERSETZER_ART) { "Nur Übersetzer unterstützen die Polaraufteilung." }
+    val aktualisiert = knoten.copy(eigenschaften = knoten.eigenschaften + (ÜBERSETZER_POLAR_GETRENNT to KnotenEigenschaft.Text(getrennt.toString())))
+    return konfiguriereÜbersetzer(aktualisiert, übersetzerZiel(aktualisiert))
+}
 val ÜBERSETZER_ZIELE = listOf("tupel", "zeile", "spalte", "methode", "polar", "kartesisch")
 
 fun übersetzerZielTitel(ziel: String): String = when (ziel) {
@@ -31,8 +39,28 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
         "polar", "kartesisch" -> MathematikAnschlussArten.Tupel.id
         else -> MathematikAnschlussArten.Methode.id
     }
+    val getrennt = übersetzerPolarGetrennt(knoten)
+    val spezial = when {
+        ziel == "kartesisch" && getrennt -> listOf(
+            AnschlussDaten(name = "radius", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
+            AnschlussDaten(name = "winkel", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Tupel.id),
+            knoten.anschlüsse.firstOrNull { it.name == "ergebnis" }?.copy(art = MathematikAnschlussArten.Tupel.id)
+                ?: AnschlussDaten(name = "ergebnis", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Tupel.id),
+        )
+        ziel == "polar" && getrennt -> listOf(
+            knoten.anschlüsse.firstOrNull { it.name == "wert" }?.copy(art = MathematikAnschlussArten.Objekt.id)
+                ?: AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id),
+            AnschlussDaten(name = "radius", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Zahl.id),
+            AnschlussDaten(name = "winkel", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Tupel.id),
+        )
+        else -> null
+    }
+    val grund = if (spezial != null) spezial else listOf(
+        knoten.anschlüsse.firstOrNull { it.name == "wert" } ?: AnschlussDaten(name = "wert", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Objekt.id),
+        knoten.anschlüsse.firstOrNull { it.name == "ergebnis" } ?: AnschlussDaten(name = "ergebnis", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = ausgangArt),
+    )
     return knoten.copy(eigenschaften = knoten.eigenschaften + (ÜBERSETZER_ZIEL to KnotenEigenschaft.Text(ziel)),
-        anschlüsse = knoten.anschlüsse.map { p -> if (p.richtung == AnschlussRichtung.Ausgang)
+        anschlüsse = grund.map { p -> if (p.richtung == AnschlussRichtung.Ausgang)
             p.copy(art = ausgangArt, kannSichErweitern = false, dynamischErzeugt = false)
             else p.copy(art = MathematikAnschlussArten.Objekt.id,
                 zulässigeArten = when (ziel) {
@@ -132,8 +160,17 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
         KnotenAuswertungsErgebnis(mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, vollständig))))
     }
     registriere(ÜBERSETZER_ART) { k ->
-        val wert = k.eingänge["wert"] ?: error("Der zu übersetzende Wert fehlt.")
         val ziel = übersetzerZiel(k.knoten)
+        val getrennt = übersetzerPolarGetrennt(k.knoten)
+        val wert = if (ziel == "kartesisch" && getrennt) {
+            val radius = k.eingänge["radius"] ?: error("Radius fehlt.")
+            val winkel = k.eingänge["winkel"] ?: error("Winkeltupel fehlt.")
+            val tupel = winkel.mathematischesObjekt("Polarwinkel") as? Tupel ?: error("Richtung muss ein Winkeltupel sein.")
+            übersetzterWert(radius, Tupel(listOf(radius.mathematischesObjekt("Radius"), tupel))).copy(
+                annahmen = radius.annahmen + winkel.annahmen,
+                variablenQuellen = radius.variablenQuellen + winkel.variablenQuellen,
+            )
+        } else k.eingänge["wert"] ?: error("Der zu übersetzende Wert fehlt.")
         require(ziel in ÜBERSETZER_ZIELE) { "Unbekanntes Übersetzungsziel '$ziel'." }
         val ergebnis = if (ziel == "methode") termAlsMethode(k, wert) else {
             val objekt = wert.mathematischesObjekt("Übersetzer")
@@ -153,7 +190,13 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
             }
             übersetzterWert(wert, umgewandelt)
         }
-        KnotenAuswertungsErgebnis(mapOf("ergebnis" to ergebnis))
+        if (ziel == "polar" && getrennt) {
+            val polar = ergebnis.objekt as? Tupel ?: error("Polar muss ein Zweiertupel sein.")
+            KnotenAuswertungsErgebnis(mapOf(
+                "radius" to übersetzterWert(ergebnis, polar.elemente[0]),
+                "winkel" to übersetzterWert(ergebnis, polar.elemente[1]),
+            ))
+        } else KnotenAuswertungsErgebnis(mapOf("ergebnis" to ergebnis))
     }
     registriere(TUPEL_ABFLACHEN_ART) { k ->
         val wert = k.eingänge["tupel"] ?: error("Tupel fehlt.")

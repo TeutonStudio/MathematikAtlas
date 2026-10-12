@@ -410,6 +410,9 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             HorizontalDivider()
             if (knoten.art == ÜBERSETZER_ART) {
                 Text("Übersetzungsziel")
+                if (übersetzerZiel(knoten) in setOf("polar", "kartesisch")) {
+                    Row { Text("Radius und Winkel getrennt"); Switch(checked = übersetzerPolarGetrennt(knoten), onCheckedChange = { atlas.beantrageKonfiguration(konfiguriereÜbersetzerPolarAnschlüsse(knoten, it)) }) }
+                }
                 ÜBERSETZER_ZIELE.forEach { ziel -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereÜbersetzer(knoten, ziel)) }) {
                     Text(if (ziel == übersetzerZiel(knoten)) "✓ $ziel" else ziel)
                 } }

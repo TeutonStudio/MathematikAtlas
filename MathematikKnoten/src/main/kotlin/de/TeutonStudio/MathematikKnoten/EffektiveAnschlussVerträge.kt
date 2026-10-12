@@ -49,7 +49,7 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
             val ziel = übersetzerZiel(knoten)
             val eingang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == "wert" }
             val quelle = eingang?.let { p -> karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, p.id) }?.von }
-            val quellPort = quelle?.let { effektiverMathematikAnschluss(karte, it) ?: karte.knoten.firstOrNull { q -> q.id == it.knotenId }?.anschlüsse?.firstOrNull { p -> p.id == it.anschlussId } }
+            val quellPort = quelle?.let { q -> karte.knoten.firstOrNull { it.id == q.knotenId }?.anschlüsse?.firstOrNull { it.id == q.anschlussId } }
             val quellTyp = quellPort?.vertrag?.typ as? TypAusdruck.Parameterisiert
             val dimension = when (quellTyp?.konstruktor) {
                 MathematischeTypen.Tupel -> TypAusdruck.Literal(quellTyp.argumente.size.toString())
