@@ -60,7 +60,9 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
         knoten.anschlüsse.firstOrNull { it.name == "ergebnis" } ?: AnschlussDaten(name = "ergebnis", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = ausgangArt),
     )
     return knoten.copy(eigenschaften = knoten.eigenschaften + (ÜBERSETZER_ZIEL to KnotenEigenschaft.Text(ziel)),
-        anschlüsse = grund.map { p -> if (p.richtung == AnschlussRichtung.Ausgang)
+        anschlüsse = grund.map { p -> if (spezial != null) {
+            p.copy(kannSichErweitern = false, dynamischErzeugt = false)
+        } else if (p.richtung == AnschlussRichtung.Ausgang)
             p.copy(art = ausgangArt, kannSichErweitern = false, dynamischErzeugt = false)
             else p.copy(art = MathematikAnschlussArten.Objekt.id,
                 zulässigeArten = when (ziel) {
