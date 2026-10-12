@@ -80,8 +80,15 @@ class KartenEditorZustand(
             }
             return projektionsCache!!
         }
+    private var inhaltsMinima by mutableStateOf<Map<KnotenId, GraphGröße>>(emptyMap())
+
+    fun meldeInhaltsminimum(id: KnotenId, minimum: GraphGröße) {
+        if (!minimum.breite.isFinite() || !minimum.höhe.isFinite() || minimum.breite <= 0f || minimum.höhe <= 0f) return
+        if (inhaltsMinima[id] != minimum) inhaltsMinima = inhaltsMinima + (id to minimum)
+    }
+
     val darstellungsKarte: KartenDaten
-        get() = projektion.karte.copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
+        get() = projektion.karte.mitInhaltsminima(inhaltsMinima).copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
 
     fun öffneGruppe(id: VisuelleGruppenId?) {
         if (id != null && karte.visuelleGruppen.none { it.id == id }) return
@@ -109,7 +116,7 @@ class KartenEditorZustand(
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
         val vorher = karte
-        if (neu.id != karte.id) öffneGruppe(null)
+        if (neu.id != karte.id) { öffneGruppe(null); inhaltsMinima = emptyMap() }
         karte = neu.bereinigteVisuelleGruppen()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         ausgewählteKnoten = emptySet()
@@ -151,6 +158,11 @@ class KartenEditorZustand(
             else if (karte.ansicht != aktion.ansicht) karte = karte.copy(ansicht = aktion.ansicht)
             return
         }
+        val begrenzteAktion = if (aktion is KartenAktion.KnotenGrößeÄndern) {
+            val minimum = inhaltsMinima[aktion.id]
+            if (minimum == null) aktion else aktion.copy(größe = GraphGröße(
+                maxOf(aktion.größe.breite, minimum.breite), maxOf(aktion.größe.höhe, minimum.höhe)))
+        } else aktion
         val wirksameAktion = if (
             aktion is KartenAktion.KnotenVerschieben &&
             ausgewählteKnoten.size > 1 &&
@@ -159,7 +171,7 @@ class KartenEditorZustand(
             val aktuell = karte.knoten.firstOrNull { it.id == aktion.id }
             val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero
             KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
-        } else aktion
+        } else begrenzteAktion
         var angewendet = karte.wendeAn(wirksameAktion)
         val neuEingefügt = when (wirksameAktion) {
             is KartenAktion.KnotenEinfügen -> listOf(wirksameAktion.knoten)
