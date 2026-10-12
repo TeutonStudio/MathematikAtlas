@@ -9,6 +9,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -535,7 +536,11 @@ private fun KonzeptListe(zustand: AtlasZustand) {
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
-                items(einträge, key = { it.id.wert }) { konzept ->
+                // Ein Konzept kann unter mehreren Fachpfaden vorkommen.
+                // Compose benötigt über die gesamte LazyColumn eindeutige Schlüssel.
+                itemsIndexed(einträge, key = { index, konzept ->
+                    "konzept:${pfad}:${konzept.id.wert}:$index"
+                }) { _, konzept ->
                     ListItem(
                         headlineContent = { Text(konzept.name) },
                         supportingContent = { Text(konzept.beschreibung) },
