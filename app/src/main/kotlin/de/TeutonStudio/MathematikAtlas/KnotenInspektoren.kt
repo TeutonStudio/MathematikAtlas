@@ -195,6 +195,23 @@ private object OrdnungsrelationInspektor : KnotenInspektor {
 private object VariablenInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
+        Text("Struktur", style = MaterialTheme.typography.titleSmall)
+        listOf(listOf("zahl" to "Zahl", "tupel" to "Tupel", "winkeltupel" to "Winkeltupel"),
+            listOf("zeile" to "Zeile", "spalte" to "Spalte")).forEach { zeile ->
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+                zeile.forEach { (id, titel) ->
+                    FilterChip(variablenStruktur(knoten) == id,
+                        { aktionen.knoten(konfiguriereVariablenStruktur(knoten, id)) }, label = { Text(titel) })
+                }
+            }
+        }
+        if (variablenStruktur(knoten) != "zahl") {
+            ParameterFeld("Komponenten", knoten.parameter[VARIABLE_DIMENSION] ?: "2") { raw ->
+                raw.toIntOrNull()?.takeIf { it in 1..64 }?.let { aktionen.parameter(VARIABLE_DIMENSION, it.toString()) }
+            }
+            if (variablenStruktur(knoten) == "winkeltupel")
+                Text("Azimut [0°,360°), weitere Polarwinkel [0°,180°].", style = MaterialTheme.typography.bodySmall)
+        }
         val intervall = knoten.parameter[VARIABLE_BEREICH_MODUS] == VARIABLE_BEREICH_INTERVALL
         Text("Variablenbereich", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {

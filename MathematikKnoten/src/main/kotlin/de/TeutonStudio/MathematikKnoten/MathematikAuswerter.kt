@@ -31,13 +31,8 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(RationaleZahl.parse(k.knoten.parameter["wert"] ?: "0"))))
         }
         registriere("mathematik.variable") { k ->
-            val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
-            val wertevorrat = variablenWertevorrat(k.knoten, grundmenge(k.knoten.parameter["werteVorrat"] ?: "R"))
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
-                Variable(name),
-                werteVorrat = wertevorrat,
-                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat, lösungsRolle = LösungsQuellenRolle.Variable)),
-            )))
+            val grund = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            KnotenAuswertungsErgebnis(mapOf("wert" to variablenStrukturWert(k.knoten, grund)))
         }
         registriere("mathematik.allgemeinerParameter") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
