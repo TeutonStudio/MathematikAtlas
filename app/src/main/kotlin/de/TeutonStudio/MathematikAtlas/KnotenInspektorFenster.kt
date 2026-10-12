@@ -124,6 +124,12 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         )
                     }
                     Text(knoten.art, style = MaterialTheme.typography.labelMedium)
+                    knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    if (istDynamischeOperation(knoten)) {
+                        de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.DynamischeOperandenListe(
+                            zustand.editor.karte, knoten, belegteOperationsEingänge(knoten),
+                        ) { aktion -> zustand.konfiguriereKnoten(aktion) }
+                    }
                     StandardwerteEditor(knoten, zustand)
                     MethodenAusgangProjektionEditor(knoten, zustand)
                     if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)

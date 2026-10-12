@@ -83,7 +83,7 @@ class KartenAuswerter(
         }.getOrElse {
             return fehler(it.message ?: it::class.simpleName.orEmpty())
         }
-        val eingänge = knoten.eingangsKartenVerweise.entries.fold(verbundeneEingänge) { aktuell, (name, verweis) ->
+        val ungeordneteEingänge = knoten.eingangsKartenVerweise.entries.fold(verbundeneEingänge) { aktuell, (name, verweis) ->
             if (name in aktuell) return@fold aktuell
             val anschluss = knoten.anschlüsse.firstOrNull {
                 it.richtung == AnschlussRichtung.Eingang && it.name == name
@@ -99,11 +99,14 @@ class KartenAuswerter(
             }
             val wert = fallback.ausgaben["methode"]
                 ?: return fehler("Der Karten-Fallback für '$name' liefert keine Methode.")
-            if (!anschlussAkzeptiertMethode(anschluss.art, wert.objekt)) {
+            if (!(setOf(anschluss.art) + anschluss.zulässigeArten).any { anschlussAkzeptiertMethode(it, wert.objekt) }) {
                 return fehler("Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
             }
             aktuell + (name to wert)
         }
+        val portReihenfolge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.associate { it.name to it.reihenfolge }
+        val eingänge = ungeordneteEingänge.entries.sortedBy { portReihenfolge[it.key] ?: Int.MAX_VALUE }
+            .associateTo(linkedMapOf()) { it.key to it.value }
         val annahmen = eingänge.values.flatMap { it.annahmen }.toSet()
         val signatur = 31 * knoten.hashCode() + eingänge.hashCode()
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
@@ -313,9 +316,10 @@ class KartenAuswerter(
             put(zielAnschluss.name, wert)
         }
         knoten.anschlüsse.filter {
-            it.richtung == AnschlussRichtung.Eingang && it.art == AUSSAGE_ART && it.id !in gebundeneIds
+            it.richtung == AnschlussRichtung.Eingang && (it.art == AUSSAGE_ART || AUSSAGE_ART in it.zulässigeArten) && it.id !in gebundeneIds
         }.forEach { anschluss ->
             val text = knoten.parameter[standardwertSchlüssel(anschluss.name)]
+            if (text == null && (anschluss.dynamischErzeugt || anschluss.name in knoten.eingangsKartenVerweise)) return@forEach
             val wert = text?.toBooleanStrictOrNull() ?: if (text == null) false else
                 error("Standardwert für '${anschluss.name}' muss true oder false sein.")
             put(anschluss.name, BedingterWert(WahrheitsKonstante(wert)))

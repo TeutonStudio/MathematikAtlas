@@ -38,8 +38,9 @@ sealed interface FalkAchsenElement {
 fun matrixproduktFalkDaten(
     auswertung: KnotenAuswertungsErgebnis?,
 ): MatrixproduktFalkDaten {
-    val links = auswertung?.eingänge?.get("a")?.objekt?.alsMatrixFaktorOderNull()
-    val rechts = auswertung?.eingänge?.get("b")?.objekt?.alsMatrixFaktorOderNull()
+    val faktoren = auswertung?.eingänge.orEmpty().values.toList()
+    val links = faktoren.getOrNull(0)?.objekt?.alsMatrixFaktorOderNull()
+    val rechts = faktoren.getOrNull(1)?.objekt?.alsMatrixFaktorOderNull()
     return if (links != null && rechts != null) {
         MatrixproduktFalkDaten(links, rechts, FalkDatenQuelle.Knotendaten)
     } else {
@@ -124,11 +125,7 @@ fun gekürzteFalkSummeLatex(
 
 fun matrixproduktFalkFaktoren(auswertung: KnotenAuswertungsErgebnis?): List<Matrix> {
     require(auswertung?.fehler == null) { auswertung?.fehler.orEmpty() }
-    return auswertung?.eingänge.orEmpty().entries.sortedBy { (name, _) -> when (name) {
-        "a", "links" -> 0
-        "b", "rechts" -> 1
-        else -> (name.removePrefix("input").removePrefix("faktor.").toIntOrNull() ?: Int.MAX_VALUE) - 1
-    } }.map { requireNotNull(it.value.objekt.alsMatrixFaktorOderNull()) { "Faktor ${it.key} ist keine Matrix, Zeile oder Spalte." } }
+    return auswertung?.eingänge.orEmpty().entries.map { requireNotNull(it.value.objekt.alsMatrixFaktorOderNull()) { "Faktor ${it.key} ist keine Matrix, Zeile oder Spalte." } }
 }
 
 @Composable

@@ -4,6 +4,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 data class StrukturRechnerEingang(
     val name: String,
     val typ: FormelTyp,
+    val variadisch: Boolean = false,
 )
 
 data class StrukturRechnerOperatorDefinition(
@@ -13,7 +14,9 @@ data class StrukturRechnerOperatorDefinition(
     val eingänge: List<StrukturRechnerEingang>,
     val ergebnisTyp: FormelTyp,
     val definitionsLatex: String,
-)
+) {
+    val assoziativ: Boolean get() = istAssoziativerRechnerOperator(id)
+}
 
 enum class StrukturRechnerKnotenFamilie(
     val knotenArt: String,
@@ -66,7 +69,8 @@ object StrukturRechnerOperatoren {
         ergebnis: FormelTyp,
         definition: String,
         vararg eingänge: StrukturRechnerEingang,
-    ) = StrukturRechnerOperatorDefinition(id, titel, symbol, eingänge.toList(), ergebnis, definition)
+    ) = StrukturRechnerOperatorDefinition(id, titel, symbol,
+        eingänge.map { it.copy(variadisch = istAssoziativerRechnerOperator(id)) }, ergebnis, definition)
 
     private val aussage = listOf(
         d("aussage.negation", "Negation", "\\neg A", FormelTyp.AUSSAGE, "\\neg A", e("aussage", FormelTyp.AUSSAGE)),

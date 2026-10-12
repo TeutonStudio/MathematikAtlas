@@ -109,8 +109,11 @@ fun konfiguriereZahlenRechner(
     )
     return knoten.copy(
         name = zahlenRechnerNameFürWechsel(knoten, operator.titel),
-        anschlüsse = erhalteRechnerAnschlussIds(knoten.anschlüsse, eingänge + ausgang, RechnerFamilie.ZAHL, operator.stabileId,
-            if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"),
+        anschlüsse = erhalteDynamischeOperanden(knoten,
+            erhalteRechnerAnschlussIds(knoten.anschlüsse, eingänge + ausgang, RechnerFamilie.ZAHL, operator.stabileId,
+                if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"),
+            knoten.parameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId &&
+                (knoten.parameter["festeEingänge"]?.toIntOrNull() ?: 2) == festeEingänge),
         parameter = parameter,
     )
 }

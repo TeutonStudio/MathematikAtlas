@@ -145,14 +145,14 @@ object MatrixRechner {
                 }
             }
             MatrixRechnerOperator.HADAMARD_PRODUKT -> {
-                if (anfrage.matrizen.size != 2) return anzahlFehler("Hadamard-Produkt", "genau zwei Matrizen")
+                if (anfrage.matrizen.size < 2) return anzahlFehler("Hadamard-Produkt", "mindestens zwei Matrizen")
                 gleicheForm(anfrage.matrizen)?.let { return it }
                 val links = anfrage.matrizen[0].matrix
                 val rechts = anfrage.matrizen[1].matrix
                 MatrixRechnerErgebnis.MatrixWert(
                     Matrix(
                         List(links.zeilenAnzahl) { z ->
-                            List(links.spaltenAnzahl) { s -> multiplikation(links.zeilen[z][s], rechts.zeilen[z][s]) }
+                            List(links.spaltenAnzahl) { s -> anfrage.matrizen.map { it.matrix.zeilen[z][s] }.reduce { a, b -> multiplikation(a, b) } }
                         },
                     ),
                     bereich,

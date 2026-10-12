@@ -13,7 +13,7 @@ fun matrixProduktFaktorWerte(kontext: KnotenAuswertungsKontext): LinkedHashMap<S
         ports.forEachIndexed { index,port ->
             val wert=kontext.eingänge[port.name]
             if (wert==null) {
-                require(index>=feste && index>letzterBelegt && port.kannSichErweitern) { "Matrixfaktor ${index+1} ('${port.name}') fehlt oder ist nicht auswertbar." }
+                require(index>=feste && index>letzterBelegt && port.kannSichErweitern && port.dynamischErzeugt) { "Matrixfaktor ${index+1} ('${port.name}') fehlt oder ist nicht auswertbar." }
             } else put(port.name,wert.mathematischesObjekt("Matrixfaktor ${index+1} ('${port.name}')"))
         }
         require(size>=2) { "Matrixprodukt benötigt mindestens zwei Faktoren." }

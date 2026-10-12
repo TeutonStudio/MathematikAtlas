@@ -821,6 +821,7 @@ internal fun KnotenAuswertungsKontext.operatorEingänge(
 ): List<BedingterWert> = knoten.anschlüsse
     .filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }
     .sortedBy { it.reihenfolge }
+    .dropLastWhile { it.dynamischErzeugt && it.name !in eingänge }
     .mapIndexed { index, anschluss -> eingänge[anschluss.name] ?: BedingterWert(unbekannt(anschluss, index + 1)) }
 
 private fun KnotenAuswertungsKontext.mengenOperatorEingänge(): List<MengenAusdruck> = operatorEingänge { anschluss, index ->

@@ -19,6 +19,8 @@ enum class MengenRechnerOperator(val stabileId: String) {
     URBILD("menge.urbild"),
     ;
 
+    val assoziativ: Boolean get() = istAssoziativerRechnerOperator(stabileId)
+
     companion object {
         fun vonIdOderNull(id: String?): MengenRechnerOperator? = entries.firstOrNull { operator ->
             id == operator.stabileId || id.equals(operator.name, ignoreCase = true)
@@ -93,18 +95,14 @@ object MengenRechner {
                     universumsBedingungen(links, rechts),
                 )
             }
-            MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ -> binaer(eingaben, "links", "rechts") { links, rechts ->
-                val wert = vereinige(
-                    listOf(
-                        mengenDifferenz(links.menge, rechts.menge),
-                        mengenDifferenz(rechts.menge, links.menge),
-                    ),
-                )
-                MengenRechnerErgebnis.Wert(
-                    wert,
-                    links.elementUniversum ?: rechts.elementUniversum,
-                    operator,
-                    universumsBedingungen(links, rechts),
+            MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ -> {
+                if (eingaben.size < 2) ungueltigeAnzahl(operator, 2)
+                else MengenRechnerErgebnis.Wert(
+                    eingaben.map { it.menge }.reduce { links, rechts ->
+                        vereinige(listOf(mengenDifferenz(links, rechts), mengenDifferenz(rechts, links)))
+                    },
+                    eingaben.firstNotNullOfOrNull { it.elementUniversum }, operator,
+                    eingaben.zipWithNext().flatMap { (links, rechts) -> universumsBedingungen(links, rechts) },
                 )
             }
             MengenRechnerOperator.KOMPLEMENT -> binaer(eingaben, "menge", "universum") { menge, universum ->

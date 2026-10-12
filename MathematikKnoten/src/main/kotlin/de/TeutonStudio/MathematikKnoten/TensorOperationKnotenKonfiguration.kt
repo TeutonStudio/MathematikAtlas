@@ -61,7 +61,8 @@ fun konfiguriereTensorOperation(
     val achsenIds = stabileAchsenIds(knoten, achsenAnzahl)
     return knoten.copy(
         name = definition.titel,
-        anschlüsse = anschluesse,
+        anschlüsse = erhalteDynamischeOperanden(knoten, anschluesse,
+            (knoten.parameter[TENSOR_OPERATION_ID] ?: knoten.parameter[LEGACY_TENSOR_OPERATOR]) == definition.id.wert),
         parameter = knoten.parameter - LEGACY_TENSOR_OPERATOR - TENSOR_ACHSEN_MIGRATIONSFEHLER + mapOf(
             TENSOR_OPERATION_ID to definition.id.wert,
             TENSOR_SIGNATUR_FAMILIE to definition.familie.name,
@@ -97,7 +98,7 @@ fun KartenDaten.migriereTensorOperationKnoten(): KartenDaten = copy(
     knoten = knoten.map { knoten ->
         when (knoten.art) {
             TensorRechner.KNOTEN_ART -> migriereBestehendenTensorRechner(knoten)
-            TENSORPRODUKT_ART -> knoten.copy(
+            TENSORPRODUKT_ART -> konfiguriereTensorOperation(knoten.copy(
                 art = TensorRechner.KNOTEN_ART,
                 name = "Tensorprodukt",
                 parameter = knoten.parameter + mapOf(
@@ -109,7 +110,7 @@ fun KartenDaten.migriereTensorOperationKnoten(): KartenDaten = copy(
                     TENSOR_DYNAMISCHE_ACHSEN_ANZAHL to "0",
                     TENSOR_OPERATION_PARAMETER to "",
                 ),
-            )
+            ), requireNotNull(StandardTensorOperationen.registry.definition(TensorRechnerOperator.TENSORPRODUKT.stabileId))).copy(name = knoten.name)
             else -> knoten
         }
     },

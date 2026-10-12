@@ -52,8 +52,9 @@ class AtlasZustand(context: Context) {
     fun verwerfeKonfiguration() { ausstehendeKonfiguration = null }
 
     internal fun übernehmeKonfiguration(kandidat: KnotenDaten) {
+        val umordnung = editor.karte.istReineAnschlussUmordnung(editor.karte.wendeAn(KartenAktion.KnotenErsetzen(kandidat)))
         val plan = planeKonfiguration(editor.karte, kandidat, graphPrüfung, laufzeit::auswerten)
-        editor.führeAus(KartenAktion.KartenInhaltErsetzen(plan.karte))
+        editor.führeAus(KartenAktion.KartenInhaltErsetzen(plan.karte), dynamischeEingängeErhalten = umordnung)
     }
 
     /** Kandidaten werden zuerst rein berechnet; Übernahme und Kantentrennung sind ein Undo-Schritt. */

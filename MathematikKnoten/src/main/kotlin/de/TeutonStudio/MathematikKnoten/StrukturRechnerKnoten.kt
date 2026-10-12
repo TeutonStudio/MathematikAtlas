@@ -239,7 +239,12 @@ internal fun MathematikAuswerterRegister.registriereStrukturRechnerKnoten() {
 
     registriere(AussagenSatzRechner.KNOTEN_ART) { kontext ->
         val operator = aussagenOperator(kontext.knoten.parameter[RECHNER_OPERATOR_PARAMETER])
-        val aussagen = kontext.operatorEingänge { _, index ->
+        val aussageRollen = StrukturRechnerOperatoren.finde(StrukturRechnerKnotenFamilie.AUSSAGESATZ, operator.stabileId)
+            .eingänge.filter { it.typ == FormelTyp.AUSSAGE }.map { it.name }.toSet()
+        val aussageKontext = kontext.copy(knoten = kontext.knoten.copy(anschlüsse = kontext.knoten.anschlüsse.filter {
+            it.richtung != AnschlussRichtung.Eingang || it.name in aussageRollen || it.kannSichErweitern
+        }))
+        val aussagen = aussageKontext.operatorEingänge { _, index ->
             UnentscheidbareAussage("A_$index", "unverbunden")
         }.map { eingang ->
             LogischesAtom(eingang.objekt as? Aussage ?: error("Aussageneingang ist ungültig."))

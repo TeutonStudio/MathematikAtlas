@@ -78,7 +78,7 @@ class KartenEditorZustand(
         return true
     }
 
-    fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true) {
+    fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true, dynamischeEingängeErhalten: Boolean = false) {
         if (aktion is KartenAktion.AnsichtÄndern) {
             if (karte.ansicht != aktion.ansicht) karte = karte.copy(ansicht = aktion.ansicht)
             return
@@ -92,9 +92,10 @@ class KartenEditorZustand(
             val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero
             KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
         } else aktion
-        val standVorAktion = karte.ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
-        var neu = karte.wendeAn(wirksameAktion)
-            .ohneUnverbundeneDynamischeEingänge()
+        val angewendet = karte.wendeAn(wirksameAktion)
+        val reineUmordnung = dynamischeEingängeErhalten || karte.istReineAnschlussUmordnung(angewendet)
+        val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
+        var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
         if (interaktionsStart == null) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (neu == karte) return
@@ -568,11 +569,12 @@ class KartenEditorZustand(
 
     /** Bricht Auswahl oder Prüfung ab, ohne eine nur vorgemerkte alte Verbindung zu löschen. */
     private fun verwerfeVerbindungsInteraktion(meldungBeibehalten: Boolean = false) {
+        val warAktiv = verbindungsStart != null || verbindungsVorschau != null || neuZuVerdrahtendeVerbindung != null
         verbindungsStart = null
         verbindungsVorschau = null
         neuZuVerdrahtendeVerbindung = null
         if (!meldungBeibehalten) letzteMeldung = null
-        entferneUnverbundeneDynamischeEingänge()
+        if (warAktiv) entferneUnverbundeneDynamischeEingänge()
     }
 
     private fun entferneUnverbundeneDynamischeEingänge() {

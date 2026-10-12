@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.desktop
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -368,7 +370,7 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
     var formelOffen by remember(knoten?.id) { mutableStateOf(false) }
     if (formelOffen && knoten != null) DesktopFormelEditor(knoten, atlas) { formelOffen = false }
     var name by remember(knoten?.id, knoten?.name) { mutableStateOf(knoten?.name.orEmpty()) }
-    Column(modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier.padding(14.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Inspector", style = MaterialTheme.typography.titleLarge)
         if (knoten == null) {
             Text("Wähle einen Knoten aus.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -394,9 +396,16 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
                 OutlinedButton(onClick={ falkOffen=true }) { Text("Falk-Schema") }
             Text("Art", style = MaterialTheme.typography.labelLarge)
             Text(knoten.art)
+            knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             Text("Position: ${knoten.position.x.toInt()}, ${knoten.position.y.toInt()}")
             Text("Größe: ${knoten.größe.breite.toInt()} × ${knoten.größe.höhe.toInt()}")
             Text("Anschlüsse: ${knoten.anschlüsse.size}")
+            if (istDynamischeOperation(knoten)) {
+                de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.DynamischeOperandenListe(atlas.editor.karte, knoten, belegteOperationsEingänge(knoten)) { aktion ->
+                    atlas.editor.führeAus(aktion)
+                    atlas.aktualisiereAuswertung()
+                }
+            }
             HorizontalDivider()
             Text("Auswertung", style = MaterialTheme.typography.labelLarge)
             val dauer = atlas.auswertung.knoten[knoten.id]?.auswertungsDauerNanos

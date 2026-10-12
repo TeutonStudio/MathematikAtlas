@@ -122,6 +122,13 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
   Der Operator-Suchindex und die abschließenden Familien-Dispatcher verwenden
   diese Registry; unbekannte persistierte IDs werden nicht umgeschrieben.
 
+## Operandenreihenfolge im Arbeitsstand (2026-10-12)
+
+- Redundante Matrix- und Aussagenoperationen werden beim Laden/Import über den gemeinsamen mathematischen Codec in vorhandene Rechner überführt; bisherige Zahlen-, Mengen-, Vektor- und Tensormigrationen bleiben eingebunden.
+- Assoziative Operatoren beschreiben variadische Rollen ausdrücklich. Gespeicherte Anschlussreihenfolge steuert Auswertung, Formel und Falk-Schema.
+- Android und Desktop verwenden dieselbe vertikale Operandenliste mit Ziehgriff und Auf-/Ab-Schaltflächen. Umordnung bewahrt IDs, Verbindungen und freie Schlussreserve und bildet einen Undo-Schritt.
+- Keine neue Knotenart, Produktionsabhängigkeit, JSON-Formatversion oder veröffentlichte Produktversion. Siehe ADR 0044 und den ExecPlan vom 2026-10-12.
+
 ## Dokumentationszustand
 
 - Die Dateien unter `docs/codex/plans/active/` sind keine verlässliche Liste laufender Arbeiten: Mehrere Einträge bezeichnen bereits veröffentlichte Versionen oder nennen sich selbst abgeschlossen.

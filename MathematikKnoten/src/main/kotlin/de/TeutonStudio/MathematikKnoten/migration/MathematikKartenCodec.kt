@@ -49,19 +49,23 @@ object MathematikKartenMigrationen {
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
         .migriereRechnerMethodenAnschluesse()
+        .normalisiereDynamischeRechnerOperanden()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
         .klassifiziereAdapter()
         .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
+        .migriereRechnerEinzeloperationen()
         .let(::migriereTranspositionsKnoten)
         .migriereTensorOperationKnoten()
         .migriereHyperAnalysisKnoten()
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
+        .normalisiereDynamischeRechnerOperanden()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
         .klassifiziereAdapter()
+        .migriereRechnerEinzeloperationen()
         .migriereTensorraumDimensionen()
         .migrierePraedikatStandardname()
         .migriereMethodenAnschlüsse()
@@ -71,4 +75,5 @@ object MathematikKartenMigrationen {
         .migriereVektorRechnerKonfiguration()
         .migriereStrukturierteDivision()
         .migriereRechnerMethodenAnschluesse()
+        .normalisiereDynamischeRechnerOperanden()
 }

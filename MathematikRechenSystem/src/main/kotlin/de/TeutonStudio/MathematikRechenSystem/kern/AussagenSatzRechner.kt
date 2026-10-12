@@ -79,9 +79,8 @@ data class LogischeVerknuepfung(
         require(operator !in quantoren)
         when (operator) {
             AussagenSatzOperator.NEGATION -> require(argumente.size == 1)
-            AussagenSatzOperator.IMPLIKATION,
-            AussagenSatzOperator.AEQUIVALENZ,
-            -> require(argumente.size == 2)
+            AussagenSatzOperator.IMPLIKATION -> require(argumente.size == 2)
+            AussagenSatzOperator.AEQUIVALENZ -> require(argumente.size >= 2)
             AussagenSatzOperator.KONJUNKTION,
             AussagenSatzOperator.DISJUNKTION,
             AussagenSatzOperator.ADJUNKTION,
@@ -103,7 +102,7 @@ data class LogischeVerknuepfung(
             AussagenSatzOperator.DISJUNKTION -> Disjunktion(aussagen)
             AussagenSatzOperator.ADJUNKTION -> adjunktion(aussagen)
             AussagenSatzOperator.IMPLIKATION -> Implikation(aussagen[0], aussagen[1])
-            AussagenSatzOperator.AEQUIVALENZ -> Äquivalenz(aussagen[0], aussagen[1])
+            AussagenSatzOperator.AEQUIVALENZ -> aussagen.reduce { links, rechts -> Äquivalenz(links, rechts) }
             else -> error("Quantoren benötigen einen Bindungskontext.")
         }
     }
