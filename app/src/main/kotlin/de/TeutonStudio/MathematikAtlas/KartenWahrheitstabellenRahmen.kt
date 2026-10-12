@@ -1,4 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -14,20 +17,14 @@ internal fun KartenTabellenKopf(
     quelle: KartenWahrheitstabellenQuelle,
     schließen: () -> Unit,
 ) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(knoten.name, style = MaterialTheme.typography.titleLarge)
-            Text(
+    AtlasDialogKopf(
+                    titel = { Text(knoten.name) },
+                    untertitel = { Text(
                 "Wahrheitstabelle · feste Kartenversion ${quelle.verweis.version}",
-                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        TextButton(onClick = schließen) { Text("Schließen") }
-    }
+            ) },
+                    aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+                )
 }
 
 @Composable
@@ -37,10 +34,7 @@ internal fun KartenTabellenAktionen(
     quelle: KartenWahrheitstabellenQuelle,
     schließen: () -> Unit,
 ) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-    ) {
+    AtlasDialogAktionen {
         Button(onClick = {
             zustand.öffne(quelle.verweis)
             schließen()
@@ -55,7 +49,6 @@ internal fun KartenTabellenAktionen(
             zustand.editor.isoliereAusgewähltenKnoten()
             schließen()
         }) { Text("Knoten isolieren") }
-        Spacer(Modifier.weight(1f))
         Button(
             onClick = {
                 zustand.editor.wähleKnoten(knoten.id)

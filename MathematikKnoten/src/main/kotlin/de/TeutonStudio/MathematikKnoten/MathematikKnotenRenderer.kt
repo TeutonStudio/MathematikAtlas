@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -162,7 +164,7 @@ class MathematikKnotenRenderer(
 
     @Composable
     override fun Fußzeile(knoten: KnotenDaten, ausgewählt: Boolean) {
-        KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos)
+        KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos, ausgewählt)
     }
 
     private fun operatorFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, zeichen: String): String = knoten.anschlüsse
@@ -293,7 +295,7 @@ private fun AdjektivDefinitionsDialog(
     adjektiv: AutomatischesAdjektiv,
     schließen: () -> Unit,
 ) {
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
         title = { Text("${adjektiv.text} · Pseudokarte") },
         text = {

@@ -29,6 +29,10 @@ data class VisuelleKnotenGruppeDaten(
     val position: GraphPunkt = GraphPunkt.Zero,
     /** Eine nichtpositive Größe kennzeichnet ausschließlich importierte Altgruppen ohne gespeicherte Geometrie. */
     val größe: GraphGröße = GraphGröße(0f, 0f),
+    val eingeklappt: Boolean = false,
+    val elternGruppenId: VisuelleGruppenId? = null,
+    val ansichtInitialisiert: Boolean = false,
+    val ansicht: AnsichtsFenster = AnsichtsFenster.Standard,
 )
 
 data class KartenDaten(

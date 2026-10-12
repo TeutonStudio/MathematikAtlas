@@ -42,6 +42,9 @@ data class RechnerOperatorDefinition(
 }
 
 object RechnerOperatorDefinitionen {
+    /** Mengenquellen teilen den Signaturvertrag, aber keinen numerischen Dispatcher. */
+    val mengenQuellen: List<MengenKonstante> = MengenKonstante.entries
+
     private fun rolle(name: String, typ: FormelTyp, variadisch: Boolean = false, methodenfähig: Boolean = false, aliases: Set<String> = emptySet()) =
         OperatorRolle(name, typ, aliases, methodenfähig = methodenfähig, variadisch = variadisch)
     private fun ausgang(typ: FormelTyp, name: String = "wert") = rolle(name, typ)

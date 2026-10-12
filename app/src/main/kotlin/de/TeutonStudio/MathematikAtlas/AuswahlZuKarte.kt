@@ -1,12 +1,15 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -291,7 +294,8 @@ internal fun AuswahlZuKarteDialog(
     var speicherFehler by remember(vorschau) { mutableStateOf<String?>(null) }
     val fehler = vorschau.validierungsFehler(kartenName, eingangsNamen, ausgangsNamen)
 
-    AlertDialog(
+    AtlasBestätigungsDialog(
+        inhaltScrolltSelbst = true,
         onDismissRequest = schließen,
         title = { Text("Auswahl als neue Karte") },
         text = {
@@ -300,7 +304,7 @@ internal fun AuswahlZuKarteDialog(
                     .fillMaxWidth()
                     .heightIn(max = 620.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+                verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
             ) {
                 Text(
                     "${vorschau.ausgewählteKnoten.size} Knoten und ${vorschau.innereVerbindungen.size} innere Verbindungen werden kopiert. Der Ursprungsgraph bleibt unverändert.",

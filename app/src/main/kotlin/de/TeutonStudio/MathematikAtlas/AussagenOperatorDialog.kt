@@ -1,5 +1,11 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
@@ -46,88 +51,64 @@ internal fun AussagenOperatorDialog(
         EINGANGS_ZELLEN_BREITE * anzahlEingänge.toFloat() +
         TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        BoxWithConstraints(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            val gewünschteBreite = if (direkteArt != null) {
-                (tabellenBreite + 40.dp).coerceAtLeast(520.dp)
-            } else {
-                680.dp
-            }
-            val dialogBreite = gewünschteBreite.coerceAtMost(maxWidth * .92f)
 
-            Surface(
-                Modifier
-                    .width(dialogBreite)
-                    .heightIn(max = maxHeight * .88f)
-                    .wrapContentHeight(),
-                shape = MaterialTheme.shapes.large,
-                tonalElevation = 8.dp,
-            ) {
-                Column(Modifier.fillMaxWidth()) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(knoten.name, style = MaterialTheme.typography.titleLarge)
-                            Text(
-                                if (istIteration) "Iterationsregel" else "Wahrheitstabelle",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        TextButton(onClick = schließen) { Text("Schließen") }
-                    }
-                    HorizontalDivider()
+            Column(Modifier.fillMaxSize()) {
+                AtlasDialogKopf(
+                    titel = { Text(knoten.name) },
+                    untertitel = { Text(
+                            if (istIteration) "Iterationsregel" else "Wahrheitstabelle",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ) },
+                    aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+                )
+                HorizontalDivider()
 
-                    if (direkteArt != null) {
-                        WahrheitstabellenInhalt(knoten, direkteArt, Modifier.fillMaxWidth())
-                    } else {
-                        IterationsInhalt(knoten, Modifier.fillMaxWidth())
-                    }
+                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                if (direkteArt != null) {
+                    WahrheitstabellenInhalt(knoten, direkteArt, Modifier.fillMaxWidth())
+                } else {
+                    IterationsInhalt(knoten, Modifier.fillMaxWidth())
+                }
 
-                    HorizontalDivider()
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                    ) {
-                        Button(onClick = definitionÖffnen) { Text("Definition") }
-                        OutlinedButton(
-                            onClick = {
-                                zustand.editor.wähleKnoten(knoten.id)
-                                zustand.editor.dupliziereAuswahl()
-                                schließen()
-                            },
-                        ) { Text("Knoten duplizieren") }
-                        OutlinedButton(
-                            onClick = {
-                                zustand.editor.wähleKnoten(knoten.id)
-                                zustand.editor.isoliereAusgewähltenKnoten()
-                                schließen()
-                            },
-                        ) { Text("Knoten isolieren") }
-                        Button(
-                            onClick = {
-                                zustand.editor.wähleKnoten(knoten.id)
-                                zustand.editor.löscheAuswahl()
-                                schließen()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        ) { Text("Knoten löschen") }
-                    }
+                }
+
+                HorizontalDivider()
+                AtlasDialogAktionen {
+                    Button(onClick = definitionÖffnen) { Text("Definition") }
+                    OutlinedButton(
+                        onClick = {
+                            zustand.editor.wähleKnoten(knoten.id)
+                            zustand.editor.dupliziereAuswahl()
+                            schließen()
+                        },
+                    ) { Text("Knoten duplizieren") }
+                    OutlinedButton(
+                        onClick = {
+                            zustand.editor.wähleKnoten(knoten.id)
+                            zustand.editor.isoliereAusgewähltenKnoten()
+                            schließen()
+                        },
+                    ) { Text("Knoten isolieren") }
+                    Button(
+                        onClick = {
+                            zustand.editor.wähleKnoten(knoten.id)
+                            zustand.editor.löscheAuswahl()
+                            schließen()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    ) { Text("Knoten löschen") }
                 }
             }
+
         }
     }
 }
@@ -159,7 +140,7 @@ private fun WahrheitstabellenInhalt(
         TABELLEN_TRENNER_BREITE + ERGEBNIS_ZELLEN_BREITE
     val listenHöhe = (zeilenAufSeite.coerceIn(1, 10) * 42).dp
 
-    Column(modifier.padding(LocalAtlasAbstände.current.dialog), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
+    Column(modifier.padding(AtlasDialogAbstände.inhalt), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             LatexText(art.ergebnisLatex(eingänge.size), style = MaterialTheme.typography.titleMedium)
         }
@@ -171,7 +152,7 @@ private fun WahrheitstabellenInhalt(
         if (tabelle.zeilenAnzahl > WAHRHEITSTABELLEN_SEITENGRÖSSE) {
             Row(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = { seitenStart = BigInteger.ZERO }, enabled = seitenStart > BigInteger.ZERO) { Text("Erste") }
@@ -230,7 +211,7 @@ private fun WahrheitstabellenInhalt(
 @Composable
 private fun TabellenIndexZelle(index: BigInteger) {
     Box(
-        Modifier.width(ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
+        Modifier.width(ZEILENINDEX_ZELLEN_BREITE).padding(horizontal = AtlasDialogAbstände.beschreibung, vertical = AtlasDialogAbstände.beschreibung),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -244,7 +225,7 @@ private fun TabellenIndexZelle(index: BigInteger) {
 @Composable
 private fun TabellenKopfZelle(text: String, breite: Dp = EINGANGS_ZELLEN_BREITE) {
     Box(
-        Modifier.width(breite).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
+        Modifier.width(breite).padding(horizontal = AtlasDialogAbstände.beschreibung, vertical = AtlasDialogAbstände.beschreibung),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, fontWeight = FontWeight.SemiBold)
@@ -254,7 +235,7 @@ private fun TabellenKopfZelle(text: String, breite: Dp = EINGANGS_ZELLEN_BREITE)
 @Composable
 private fun WahrheitswertZelle(wert: Boolean, breite: Dp = EINGANGS_ZELLEN_BREITE) {
     Box(
-        Modifier.width(breite).padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.standard),
+        Modifier.width(breite).padding(horizontal = AtlasDialogAbstände.beschreibung, vertical = AtlasDialogAbstände.beschreibung),
         contentAlignment = Alignment.Center,
     ) {
         LatexText(
@@ -287,12 +268,12 @@ private fun IterationsInhalt(knoten: KnotenDaten, modifier: Modifier) {
     }
 
     Column(
-        modifier.padding(LocalAtlasAbstände.current.weit),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.dialog),
+        modifier.padding(AtlasDialogAbstände.abschnitt),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.horizontal),
     ) {
         LatexText(formel, style = MaterialTheme.typography.headlineSmall)
         Text(erklärung, style = MaterialTheme.typography.bodyLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung), verticalAlignment = Alignment.CenterVertically) {
             Text("Neutrales Element der leeren Indexmenge:")
             neutralesElement?.let {
                 LatexText(it.latex, style = MaterialTheme.typography.titleMedium)

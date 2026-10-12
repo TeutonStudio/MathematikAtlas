@@ -58,7 +58,8 @@ internal object MengenRechnerInspektor : KnotenInspektor {
                             MengenRechnerOperator.ITERIERTER_SCHNITT,
                         )
                     ) "Iterierte Mengenoperatoren" else "Mengenoperatoren",
-                    beschreibung = kandidatOperator.definitionLatex(),
+                    beschreibung = kandidatOperator.titel(),
+                    definitionLatex = kandidatOperator.definitionLatex(),
                     suchbegriffe = setOf(kandidatOperator.name, kandidatOperator.stabileId),
                     kandidat = konfiguriereMengenRechner(knoten, kandidatOperator),
                 )

@@ -23,7 +23,7 @@ fun KnotenRenderer.mitAuswertungszeit(
 
         @Composable
         override fun Fußzeile(knoten: KnotenDaten, ausgewählt: Boolean) {
-            KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos)
+            KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos, ausgewählt)
         }
     }
 }

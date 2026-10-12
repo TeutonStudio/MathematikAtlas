@@ -1,5 +1,13 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogListenEintrag
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogEintrag
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbschnitt
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,95 +39,85 @@ internal fun EinstellungenDialogV2291(
     }
     var kompakteSeite by remember { mutableStateOf<EinstellungsSeiteId?>(null) }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Box(
             Modifier.fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich),
+
+                ,
             contentAlignment = Alignment.Center,
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(0.96f)
-                    .fillMaxHeight(0.94f)
-                    .widthIn(max = 1180.dp),
-                shape = MaterialTheme.shapes.extraLarge,
-                tonalElevation = 6.dp,
-            ) {
                 BoxWithConstraints(Modifier.fillMaxSize()) {
                     val breit = maxWidth >= 720.dp
-                    Column(Modifier.fillMaxSize()) {
-                        EinstellungenKopf(
-                            kompakt = !breit,
-                            kannZurück = !breit && (kompakteSeite != null || kompakterOrdnerStapel.isNotEmpty()),
-                            zurück = {
-                                if (kompakteSeite != null) {
-                                    kompakteSeite = null
-                                } else if (kompakterOrdnerStapel.isNotEmpty()) {
-                                    kompakterOrdnerStapel = kompakterOrdnerStapel.dropLast(1)
+            Column(Modifier.fillMaxSize()) {
+                EinstellungenKopf(
+                    kompakt = !breit,
+                    kannZurück = !breit && (kompakteSeite != null || kompakterOrdnerStapel.isNotEmpty()),
+                    zurück = {
+                        if (kompakteSeite != null) {
+                            kompakteSeite = null
+                        } else if (kompakterOrdnerStapel.isNotEmpty()) {
+                            kompakterOrdnerStapel = kompakterOrdnerStapel.dropLast(1)
+                        }
+                    },
+                    schließen = schließen,
+                )
+                HorizontalDivider()
+
+                if (breit) {
+                    Row(Modifier.weight(1f).fillMaxWidth()) {
+                        EinstellungenNavigationBreit(
+                            navigation = navigation,
+                            ausgewählteSeite = ausgewählteSeite,
+                            ausgeklappteOrdner = ausgeklappteOrdner,
+                            seiteWählen = { ausgewählteSeite = it },
+                            ordnerUmschalten = { pfad ->
+                                ausgeklappteOrdner = ausgeklappteOrdner.toMutableSet().apply {
+                                    if (!remove(pfad)) add(pfad)
                                 }
                             },
-                            schließen = schließen,
+                            modifier = Modifier.widthIn(min = 230.dp, max = 320.dp).fillMaxHeight(),
                         )
-                        HorizontalDivider()
-
-                        if (breit) {
-                            Row(Modifier.weight(1f).fillMaxWidth()) {
-                                EinstellungenNavigationBreit(
-                                    navigation = navigation,
-                                    ausgewählteSeite = ausgewählteSeite,
-                                    ausgeklappteOrdner = ausgeklappteOrdner,
-                                    seiteWählen = { ausgewählteSeite = it },
-                                    ordnerUmschalten = { pfad ->
-                                        ausgeklappteOrdner = ausgeklappteOrdner.toMutableSet().apply {
-                                            if (!remove(pfad)) add(pfad)
-                                        }
-                                    },
-                                    modifier = Modifier.widthIn(min = 230.dp, max = 320.dp).fillMaxHeight(),
-                                )
-                                VerticalDivider()
-                                EinstellungsSeiteInhalt(
-                                    seite = ausgewählteSeite,
-                                    zustand = zustand,
-                                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                                )
-                            }
-                        } else {
-                            val aktuelleEbene = kompakterOrdnerStapel.lastOrNull()?.inhalt ?: navigation
-                            if (kompakteSeite != null) {
-                                EinstellungsSeiteInhalt(
-                                    seite = requireNotNull(kompakteSeite),
-                                    zustand = zustand,
-                                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                                )
-                            } else {
-                                EinstellungenNavigationKompakt(
-                                    ebene = aktuelleEbene,
-                                    ordnerTitel = kompakterOrdnerStapel.lastOrNull()?.titel,
-                                    seiteWählen = { seite ->
-                                        ausgewählteSeite = seite
-                                        kompakteSeite = seite
-                                    },
-                                    ordnerÖffnen = { ordner ->
-                                        kompakterOrdnerStapel = kompakterOrdnerStapel + ordner
-                                    },
-                                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                                )
-                            }
-                        }
-
-                        HorizontalDivider()
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            TextButton(onClick = schließen) { Text("Fertig") }
-                        }
+                        VerticalDivider()
+                        EinstellungsSeiteInhalt(
+                            seite = ausgewählteSeite,
+                            zustand = zustand,
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        )
+                    }
+                } else {
+                    val aktuelleEbene = kompakterOrdnerStapel.lastOrNull()?.inhalt ?: navigation
+                    if (kompakteSeite != null) {
+                        EinstellungsSeiteInhalt(
+                            seite = requireNotNull(kompakteSeite),
+                            zustand = zustand,
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                        )
+                    } else {
+                        EinstellungenNavigationKompakt(
+                            ebene = aktuelleEbene,
+                            ordnerTitel = kompakterOrdnerStapel.lastOrNull()?.titel,
+                            seiteWählen = { seite ->
+                                ausgewählteSeite = seite
+                                kompakteSeite = seite
+                            },
+                            ordnerÖffnen = { ordner ->
+                                kompakterOrdnerStapel = kompakterOrdnerStapel + ordner
+                            },
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                        )
                     }
                 }
+
+                HorizontalDivider()
+                AtlasDialogAktionen {
+                    TextButton(onClick = schließen) { Text("Fertig") }
+                }
             }
+                }
+
         }
     }
 }
@@ -132,26 +129,14 @@ private fun EinstellungenKopf(
     zurück: () -> Unit,
     schließen: () -> Unit,
 ) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-    ) {
-        if (kompakt && kannZurück) {
-            TextButton(onClick = zurück) { Text("‹ Zurück") }
-        }
-        Column(Modifier.weight(1f)) {
-            Text("Einstellungen", style = MaterialTheme.typography.headlineSmall)
-            if (!kompakt) {
-                Text(
-                    "Darstellung, Karten und Anwendungsinformationen",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        TextButton(onClick = schließen) { Text("Schließen") }
-    }
+    AtlasDialogKopf(
+        titel = { Text("Einstellungen") },
+        untertitel = { Text("Darstellung, Karten und Anwendungsinformationen") },
+        aktionen = {
+            if (kompakt && kannZurück) TextButton(onClick = zurück) { Text("‹ Zurück") }
+            TextButton(onClick = schließen) { Text("Schließen") }
+        },
+    )
 }
 
 @Composable
@@ -164,8 +149,8 @@ private fun EinstellungenNavigationBreit(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.bereich),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
+        modifier.verticalScroll(rememberScrollState()).padding(AtlasDialogAbstände.felder),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         EinstellungenNavigationEbeneBreit(
             ebene = navigation,
@@ -191,7 +176,7 @@ private fun EinstellungenNavigationEbeneBreit(
         when (element) {
             is EinstellungsNavigationsElement.Seite -> {
                 val ausgewählt = element.definition.id == ausgewählteSeite
-                ListItem(
+                AtlasDialogListenEintrag(
                     headlineContent = { Text(element.definition.titel) },
                     modifier = Modifier.padding(start = (tiefe * 12).dp)
                         .clip(MaterialTheme.shapes.medium)
@@ -204,7 +189,7 @@ private fun EinstellungenNavigationEbeneBreit(
             }
             is EinstellungsNavigationsElement.Ordner -> {
                 val geöffnet = element.pfad in ausgeklappteOrdner
-                ListItem(
+                AtlasDialogListenEintrag(
                     headlineContent = { Text("${if (geöffnet) "▾" else "▸"} ${element.titel}") },
                     modifier = Modifier.padding(start = (tiefe * 12).dp)
                         .clip(MaterialTheme.shapes.medium)
@@ -234,8 +219,8 @@ private fun EinstellungenNavigationKompakt(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.inhalt),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+        modifier.verticalScroll(rememberScrollState()).padding(AtlasDialogAbstände.eintragHorizontal),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen),
     ) {
         if (ordnerTitel != null) {
             Text(ordnerTitel, style = MaterialTheme.typography.titleLarge)
@@ -243,14 +228,14 @@ private fun EinstellungenNavigationKompakt(
         }
         ebene.elemente.forEach { element ->
             when (element) {
-                is EinstellungsNavigationsElement.Seite -> ListItem(
+                is EinstellungsNavigationsElement.Seite -> AtlasDialogListenEintrag(
                     headlineContent = { Text(element.definition.titel) },
                     trailingContent = { Text("›", style = MaterialTheme.typography.titleLarge) },
                     modifier = Modifier.fillMaxWidth()
                         .clip(MaterialTheme.shapes.medium)
                         .clickable { seiteWählen(element.definition.id) },
                 )
-                is EinstellungsNavigationsElement.Ordner -> ListItem(
+                is EinstellungsNavigationsElement.Ordner -> AtlasDialogListenEintrag(
                     headlineContent = { Text(element.titel) },
                     supportingContent = { Text("Kategorie") },
                     trailingContent = { Text("›", style = MaterialTheme.typography.titleLarge) },
@@ -270,8 +255,8 @@ private fun EinstellungsSeiteInhalt(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.weit),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+        modifier.verticalScroll(rememberScrollState()).padding(AtlasDialogAbstände.inhalt),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
     ) {
         when (seite) {
             EinstellungsSeiteId.Darstellung -> DarstellungEinstellungsSeite()
@@ -284,7 +269,7 @@ private fun EinstellungsSeiteInhalt(
 @Composable
 private fun DarstellungEinstellungsSeite() {
     val darstellung = LocalDarstellungsSteuerung.current
-    Text("Darstellung", style = MaterialTheme.typography.headlineSmall)
+    AtlasDialogAbschnitt(titel = "Darstellung") {
     Text(
         "Wähle, ob die App dem System folgt oder dauerhaft hell beziehungsweise dunkel dargestellt wird.",
         style = MaterialTheme.typography.bodyMedium,
@@ -301,14 +286,14 @@ private fun DarstellungEinstellungsSeite() {
             color = if (ausgewählt) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
         ) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.standard, vertical = LocalAtlasAbstände.current.winzig),
+                Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.beschreibung, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 RadioButton(
                     selected = ausgewählt,
                     onClick = { darstellung.ändereModus(modus) },
                 )
-                Column(Modifier.padding(vertical = LocalAtlasAbstände.current.standard)) {
+                AtlasDialogEintrag(Modifier.weight(1f)) {
                     Text(modus.anzeigeName, style = MaterialTheme.typography.bodyLarge)
                     Text(
                         modus.einstellungsBeschreibung(),
@@ -318,6 +303,7 @@ private fun DarstellungEinstellungsSeite() {
                 }
             }
         }
+    }
     }
 }
 
@@ -331,7 +317,7 @@ private fun BeispielkartenEinstellungsSeite(zustand: AtlasZustand) {
     var läuft by remember { mutableStateOf(false) }
     var meldung by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
 
-    Text("Beispielkarten", style = MaterialTheme.typography.headlineSmall)
+    AtlasDialogAbschnitt(titel = "Beispielkarten") {
     Text(
         "Erstellt einen neuen Satz der mitgelieferten Beispielkarten. Vorhandene Karten und frühere Beispielsätze bleiben unverändert.",
         style = MaterialTheme.typography.bodyMedium,
@@ -343,7 +329,7 @@ private fun BeispielkartenEinstellungsSeite(zustand: AtlasZustand) {
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Column(Modifier.padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+        Column(Modifier.padding(AtlasDialogAbstände.eintragHorizontal), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
             Text(
                 "Neue Sätze werden unter „Beispiel Karten“, „Beispiel Karten 2“, … gespeichert.",
                 style = MaterialTheme.typography.bodySmall,
@@ -388,12 +374,13 @@ private fun BeispielkartenEinstellungsSeite(zustand: AtlasZustand) {
             style = MaterialTheme.typography.bodyMedium,
         )
     }
+    }
 }
 
 @Composable
 private fun UeberEinstellungsSeite() {
     val buildInformation = remember { aktuelleAppBuildInformation() }
-    Text("Über", style = MaterialTheme.typography.headlineSmall)
+    AtlasDialogAbschnitt(titel = "Über") {
     Text(
         "Informationen zur installierten Anwendung und zum zugrunde liegenden Build.",
         style = MaterialTheme.typography.bodyMedium,
@@ -406,6 +393,7 @@ private fun UeberEinstellungsSeite() {
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+    }
 }
 
 private fun DarstellungsModus.einstellungsBeschreibung(): String = when (this) {

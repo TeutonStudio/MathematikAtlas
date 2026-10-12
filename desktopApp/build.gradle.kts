@@ -9,7 +9,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-kotlin { jvmToolchain(17) }
+// The existing native LaTeX renderer ships Java 21 class files.
+kotlin { jvmToolchain(21) }
 
 fun systemdBenutzerUmgebung(): Map<String, String> {
     if (!System.getProperty("os.name").startsWith("Linux", ignoreCase = true)) return emptyMap()
@@ -45,15 +46,18 @@ dependencies {
     implementation(compose.material3)
     implementation("org.json:json:20250517")
     testImplementation(kotlin("test-junit"))
+    testImplementation(compose.desktop.uiTestJUnit4)
 }
 
 compose.desktop {
     application {
         mainClass = "de.TeutonStudio.MathematikAtlas.desktop.MainKt"
+        javaHome = javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) }
+            .get().metadata.installationPath.asFile.absolutePath
         nativeDistributions {
             targetFormats(TargetFormat.Rpm, TargetFormat.Deb)
             packageName = "mathematik-atlas"
-            packageVersion = "3.1.0"
+            packageVersion = "3.1.1"
             description = "Mathematische Prozesse als interaktive Knotenkarten"
             vendor = "TeutonStudio"
             linux {

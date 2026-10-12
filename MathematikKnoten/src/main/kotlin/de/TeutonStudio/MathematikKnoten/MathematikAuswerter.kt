@@ -4,208 +4,25 @@ import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 
-private data class TermVereinfachung(
-    val objekt: MathematischesObjekt,
-    val schritte: List<UmformungsSchritt> = emptyList(),
-)
-
-private data class RelationsAuflösung(
-    val menge: MengenAusdruck,
-    val schritte: List<UmformungsSchritt> = emptyList(),
-    val warnungen: List<String> = emptyList(),
-)
-
-private fun vereinfacheTerm(
-    objekt: MathematischesObjekt,
-    kontext: RechenKontext,
-): TermVereinfachung {
-    if (objekt is ZahlAusdruck) {
-        val ergebnis = vereinfacheMitSchritten(objekt, kontext)
-        return TermVereinfachung(ergebnis.ergebnis, ergebnis.schritte)
-    }
-
-    val vereinfacht: MathematischesObjekt = when (objekt) {
-        is Aussage -> vereinfacheAussage(objekt, kontext)
-        is Matrix -> Matrix(objekt.zeilen.map { zeile ->
-            zeile.map { wert -> vereinfache(wert, kontext) }
-        })
-        is SpaltenVektor -> SpaltenVektor(objekt.werte.map { wert -> vereinfache(wert, kontext) })
-        is ZeilenVektor -> ZeilenVektor(objekt.werte.map { wert -> vereinfache(wert, kontext) })
-        is Tupel -> Tupel(objekt.elemente.map { element -> vereinfacheTerm(element, kontext).objekt })
-        is EndlicheMenge -> {
-            val elemente = objekt.elemente.mapTo(linkedSetOf()) { element ->
-                vereinfacheTerm(element, kontext).objekt
-            }
-            if (elemente.isEmpty()) LeereMenge else EndlicheMenge(elemente)
-        }
-        is ReellesIntervall -> reellesIntervall(
-            vereinfache(objekt.links, kontext),
-            objekt.linksOffen,
-            vereinfache(objekt.rechts, kontext),
-            objekt.rechtsOffen,
-            kontext,
-        )
-        is Vereinigung -> vereinige(objekt.mengen.map { menge ->
-            vereinfacheTerm(menge, kontext).objekt as MengenAusdruck
-        })
-        is Schnitt -> schneide(
-            objekt.mengen.map { menge -> vereinfacheTerm(menge, kontext).objekt as MengenAusdruck },
-            objekt.grundMenge?.let { grundMenge ->
-                vereinfacheTerm(grundMenge, kontext).objekt as MengenAusdruck
-            },
-        )
-        is MengenDifferenz -> mengenDifferenz(
-            vereinfacheTerm(objekt.links, kontext).objekt as MengenAusdruck,
-            vereinfacheTerm(objekt.rechts, kontext).objekt as MengenAusdruck,
-        )
-        is DefinierteMenge -> {
-            val variablen = objekt.variablen.map { gebunden ->
-                gebunden.copy(
-                    grundMenge = vereinfacheTerm(gebunden.grundMenge, kontext).objekt as MengenAusdruck,
-                )
-            }
-            when (val bedingung = vereinfacheAussage(objekt.bedingung, kontext)) {
-                is WahrheitsKonstante -> if (bedingung.wert) variablenRaum(variablen) else LeereMenge
-                else -> DefinierteMenge(variablen, bedingung)
-            }
-        }
-        else -> objekt
-    }
-
-    if (vereinfacht == objekt) return TermVereinfachung(objekt)
-    return TermVereinfachung(
-        objekt = vereinfacht,
-        schritte = listOf(
-            UmformungsSchritt(
-                vorher = objekt,
-                nachher = vereinfacht,
-                regelId = "standard.term-vereinfachen",
-                titel = "Term vereinfachen",
-                erklärung = "Unterterme wurden mit den für ihren Typ registrierten Regeln vereinfacht.",
-            ),
-        ),
-    )
-}
-
-private fun vereinfacheAussage(
-    aussage: Aussage,
-    kontext: RechenKontext,
-): Aussage {
-    val strukturell = when (aussage) {
-        is Selbigkeit -> Selbigkeit(
-            vereinfacheTerm(aussage.links, kontext).objekt,
-            vereinfacheTerm(aussage.rechts, kontext).objekt,
-        )
-        is Gleichheit -> Gleichheit(
-            vereinfacheTerm(aussage.links, kontext).objekt,
-            vereinfacheTerm(aussage.rechts, kontext).objekt,
-        )
-        is Ungleichheit -> Ungleichheit(
-            vereinfacheTerm(aussage.links, kontext).objekt,
-            vereinfacheTerm(aussage.rechts, kontext).objekt,
-        )
-        is Vergleich -> Vergleich(
-            vereinfache(aussage.links, kontext),
-            aussage.art,
-            vereinfache(aussage.rechts, kontext),
-        )
-        is Negation -> Negation(vereinfacheAussage(aussage.aussage, kontext))
-        is Konjunktion -> Konjunktion(aussage.aussagen.map { teil -> vereinfacheAussage(teil, kontext) })
-        is Disjunktion -> Disjunktion(aussage.aussagen.map { teil -> vereinfacheAussage(teil, kontext) })
-        is Implikation -> Implikation(
-            vereinfacheAussage(aussage.voraussetzung, kontext),
-            vereinfacheAussage(aussage.folgerung, kontext),
-        )
-        is Äquivalenz -> Äquivalenz(
-            vereinfacheAussage(aussage.links, kontext),
-            vereinfacheAussage(aussage.rechts, kontext),
-        )
-        is Adjunktion -> Adjunktion(
-            vereinfacheAussage(aussage.links, kontext),
-            vereinfacheAussage(aussage.rechts, kontext),
-        )
-        else -> aussage
-    }
-    return when (strukturell.entscheide(kontext).wahrheitswert) {
-        Wahrheitswert.Wahr -> WahrheitsKonstante(true)
-        Wahrheitswert.Lüge -> WahrheitsKonstante(false)
-        null -> strukturell
-    }
-}
-
 private fun relationsVariablen(
     eingang: BedingterWert,
     relation: Aussage,
     kontext: KnotenAuswertungsKontext,
 ): List<GebundeneMengenVariable> {
-    val ausMetadaten = eingang.variablenQuellen
-        .geordnetEindeutig()
-        .filter { quelle -> quelle.argumentArt == ArgumentQuellenArt.Wert }
-        .map { quelle -> GebundeneMengenVariable(Variable(quelle.name), quelle.werteVorrat) }
-        .filter { gebunden -> relation.enthältVariable(gebunden.variable) }
-        .distinctBy { gebunden -> gebunden.variable.name }
-    if (ausMetadaten.isNotEmpty()) return ausMetadaten
-
+    val quellen = eingang.variablenQuellen.geordnetEindeutig()
+    val relevant = quellen.filter { quelle -> relation.freieMethodenParameter().any { it.name == quelle.name } }
+    require(relevant.groupBy { it.name }.values.none { gruppe ->
+        gruppe.map { it.identität }.distinct().size > 1 || gruppe.map { it.lösungsRolle to it.werteVorrat }.distinct().size > 1
+    }) { "Gleichnamige Symbolquellen sind mehrdeutig; bitte unterschiedliche Namen verwenden." }
+    if (quellen.isNotEmpty()) return relevant.filter { quelle ->
+        quelle.argumentArt == ArgumentQuellenArt.Wert &&
+            (quelle.lösungsRolle == LösungsQuellenRolle.Variable ||
+                quelle.lösungsRolle == LösungsQuellenRolle.Unbekannt && relation.enthältVariable(Variable(quelle.name)))
+    }.map { GebundeneMengenVariable(Variable(it.name), it.werteVorrat) }
     val name = kontext.knoten.parameter["variable"].orEmpty().trim().ifBlank { "x" }
     val variable = Variable(name)
-    if (!relation.enthältVariable(variable)) return emptyList()
-    val grundMenge = eingang.reelleVariablen[name] ?: eingang.werteVorrat ?: ReelleZahlen
-    return listOf(GebundeneMengenVariable(variable, grundMenge))
-}
-
-private fun variablenRaum(variablen: List<GebundeneMengenVariable>): MengenAusdruck {
-    require(variablen.isNotEmpty()) { "Ein Lösungsraum benötigt mindestens eine Variable." }
-    return if (variablen.size == 1) {
-        variablen.single().grundMenge
-    } else {
-        KartesischesProdukt(variablen.map { gebunden -> gebunden.grundMenge })
-    }
-}
-
-private fun löseRelation(
-    eingang: BedingterWert,
-    kontext: KnotenAuswertungsKontext,
-): RelationsAuflösung {
-    val relation = eingang.objekt as? Aussage
-        ?: error("Auflösen benötigt eine Relation beziehungsweise Aussage.")
-    val rechenKontext = kontext.rechenKontext.copy(
-        annahmen = kontext.rechenKontext.annahmen + eingang.annahmen,
-    )
-    val variablen = relationsVariablen(eingang, relation, kontext)
-    val entscheidung = relation.entscheide(rechenKontext)
-
-    if (entscheidung.wahrheitswert == Wahrheitswert.Lüge) {
-        return RelationsAuflösung(LeereMenge)
-    }
-    if (variablen.isEmpty()) {
-        if (entscheidung.wahrheitswert == Wahrheitswert.Wahr) {
-            error("Die Relation ist wahr, enthält aber keine freie Variable und definiert daher keinen Variablenraum.")
-        }
-        error("Die Relation enthält keine erkennbare freie Variable.")
-    }
-    if (entscheidung.wahrheitswert == Wahrheitswert.Wahr) {
-        return RelationsAuflösung(variablenRaum(variablen))
-    }
-
-    if (relation is Gleichheit && variablen.size == 1) {
-        val variable = variablen.single().variable
-        val linear = runCatching { löseLinear(relation, variable) }.getOrNull()
-        if (linear != null) {
-            val menge = if (linear.lösungen.isEmpty()) {
-                LeereMenge
-            } else {
-                EndlicheMenge(linear.lösungen.toSet())
-            }
-            return RelationsAuflösung(menge, linear.schritte)
-        }
-    }
-
-    return RelationsAuflösung(
-        menge = DefinierteMenge(variablen, vereinfacheAussage(relation, rechenKontext)),
-        warnungen = listOf(
-            "Die Relation konnte nicht weiter algorithmisch aufgelöst werden; die Lösungsmenge bleibt exakt in Mengenschreibweise definiert.",
-        ),
-    )
+    return if (relation.enthältVariable(variable)) listOf(GebundeneMengenVariable(variable,
+        eingang.reelleVariablen[name] ?: eingang.werteVorrat ?: ReelleZahlen)) else emptyList()
 }
 
 object StandardMathematikAuswerter {
@@ -219,7 +36,7 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
                 Variable(name),
                 werteVorrat = wertevorrat,
-                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat)),
+                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat, lösungsRolle = LösungsQuellenRolle.Variable)),
             )))
         }
         registriere("mathematik.allgemeinerParameter") { k ->
@@ -229,6 +46,7 @@ object StandardMathematikAuswerter {
             )
             val wertevorrat = bereich.zuMenge()
             val objekt: MathematischesObjekt = when (bereich) {
+                is WertebereichKonfiguration.Zahl -> Variable(name)
                 is WertebereichKonfiguration.Vektor -> TypisiertesElement(name,
                     if (bereich.orientierung == VektorOrientierung.Spalte) "mathematik.vektor.spalte" else "mathematik.vektor.zeile",
                     strukturForm = listOf(RationaleZahl.von(bereich.dimension.toLong())))
@@ -239,7 +57,7 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
                 objekt,
                 werteVorrat = wertevorrat,
-                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat)),
+                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat, lösungsRolle = LösungsQuellenRolle.Parameter)),
             )))
         }
         registriere("mathematik.addition") { k ->
@@ -299,7 +117,10 @@ object StandardMathematikAuswerter {
             val eingang = k.eingänge["relation"]
                 ?: k.eingänge["gleichung"]
                 ?: error("Relation fehlt.")
-            val auflösung = löseRelation(eingang, k)
+            val relation = eingang.objekt as? Aussage ?: error("Auflösen benötigt ein Prädikat.")
+            val variablen = relationsVariablen(eingang, relation, k)
+            val auflösung = lösePrädikat(relation, variablen, k.rechenKontext.copy(
+                annahmen = k.rechenKontext.annahmen + eingang.annahmen))
             val ausgangsName = k.knoten.anschlüsse.firstOrNull {
                 it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
             }?.name ?: "lösungsmenge"
@@ -311,7 +132,10 @@ object StandardMathematikAuswerter {
                     ),
                 ),
                 schritte = auflösung.schritte,
-                warnungen = auflösung.warnungen,
+                warnungen = auflösung.warnungen + if (eingang.variablenQuellen.isEmpty() && variablen.isNotEmpty())
+                    listOf("Historische Eingabe ohne Quellenmetadaten: gespeicherte Variable verwendet.") else emptyList(),
+                lösungsVariablen = variablen,
+                lösungsParameter = eingang.variablenQuellen.filter { it.lösungsRolle == LösungsQuellenRolle.Parameter },
             )
         }
         registriere("mathematik.auswerten") { k ->
@@ -320,7 +144,7 @@ object StandardMathematikAuswerter {
                 ?: error("Term fehlt.")
             val vereinfachung = vereinfacheTerm(
                 eingang.mathematischesObjekt("Auszuwertender Term"),
-                k.rechenKontext,
+                k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + eingang.annahmen),
             )
             val ausgangsName = k.knoten.anschlüsse.firstOrNull {
                 it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang
@@ -334,6 +158,17 @@ object StandardMathematikAuswerter {
                     ),
                 ),
                 schritte = vereinfachung.schritte,
+                fehler = vereinfachung.entscheidung?.takeIf { it.status == EntscheidungsStatus.NichtAuswertbar }?.begründung,
+                entscheidung = vereinfachung.entscheidung ?: (vereinfachung.objekt as? Aussage)?.let { aussage ->
+                    val e = aussage.entscheide(k.rechenKontext.copy(annahmen = k.rechenKontext.annahmen + eingang.annahmen))
+                    e.copy(begründung = e.begründung.ifBlank {
+                        when {
+                            e.wahrheitswert != null -> "Prädikat durch exakte Vereinfachung entschieden."
+                            aussage.freieMethodenParameter().isNotEmpty() -> "Vereinfachtes Prädikat mit freien Symbolen."
+                            else -> "Mit den verfügbaren Verfahren nicht entscheidbar."
+                        }
+                    })
+                },
             )
         }
         registriere("mathematik.ableiten") { k ->

@@ -23,6 +23,7 @@ fun kardinalitaetsVertrag(menge: MengenAusdruck): KardinalitaetsVertrag = when (
     is ModuloZahlenraum -> endlichAbzaehlbar("Ein Restklassenring modulo n besitzt genau n Klassen.")
 
     NatürlicheZahlen,
+    NichtnegativeGanzeZahlenSemantik.menge,
     GanzeZahlen,
     RationaleZahlen,
     Primzahlen,
@@ -468,14 +469,13 @@ private fun MengenAusdruck.istReellerWertebereich(): Boolean = when (this) {
 }
 
 /** Konservative Teilmengenprüfung für die derzeit strukturell bekannten Fälle. */
-fun teilMengenStatus(teil: MengenAusdruck, ganz: MengenAusdruck): AussageStatus = when {
-    teil == LeereMenge || teil == ganz -> AussageStatus.BEWIESEN
-    ganz is EndlicheMenge && teil is EndlicheMenge ->
-        if (teil.elemente.all { it in ganz.elemente }) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
-    ganz == ReelleZahlen && teil.istReellerWertebereich() -> AussageStatus.BEWIESEN
-    ganz == ReelleZahlen && teil is EndlicheMenge && teil.elemente.all { it is RationaleZahl } ->
-        AussageStatus.BEWIESEN
-    else -> AussageStatus.UNENTSCHEIDBAR
+fun teilMengenStatus(teil: MengenAusdruck, ganz: MengenAusdruck): AussageStatus {
+    return when (prüfeTeilmenge(teil, ganz).wahrheitswert) {
+        Wahrheitswert.Wahr -> AussageStatus.BEWIESEN
+        Wahrheitswert.Lüge -> AussageStatus.WIDERLEGT
+        else -> if (ganz == ReelleZahlen && teil.istReellerWertebereich()) AussageStatus.BEWIESEN
+            else AussageStatus.UNENTSCHEIDBAR
+    }
 }
 
 fun TopologischerRaum.offenheitsStatus(menge: MengenAusdruck): AussageStatus =
@@ -513,6 +513,7 @@ private fun standardTopologischeEigenschaft(
     if (topologie.kennung != StandardTopologieKennung.REELL || topologie.traeger != ReelleZahlen) {
         return AussageStatus.UNENTSCHEIDBAR
     }
+    konstanteReelleMengeneigenschaft(menge, if (offen) "offen" else "abgeschlossen")?.let { return it }
     return if (offen) {
         when (menge) {
             is ReellesIntervall ->

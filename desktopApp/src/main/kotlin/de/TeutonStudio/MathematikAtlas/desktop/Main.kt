@@ -1,5 +1,10 @@
 package de.TeutonStudio.MathematikAtlas.desktop
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.*
@@ -69,6 +74,8 @@ private fun desktopAnwendung() = application {
     )
     var awtFenster by remember { mutableStateOf<java.awt.Window?>(null) }
     val atlas = remember { DesktopAtlasZustand() }
+    DisposableEffect(atlas) { onDispose { atlas.beendeBerechnungen() } }
+    LaunchedEffect(atlas.editor.auswertungsRevision) { atlas.aktualisiereAuswertung() }
     Window(
         title = "Mathematik Atlas",
         state = fensterZustand,
@@ -91,6 +98,12 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
     var editorGröße by remember { mutableStateOf(IntSize.Zero) }
     var suchtext by remember { mutableStateOf("") }
     var kontext by remember { mutableStateOf<DesktopKontext?>(null) }
+    var rechenwegKnoten by remember { mutableStateOf<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId?>(null) }
+    rechenwegKnoten?.let { id ->
+        atlas.editor.karte.knoten.firstOrNull { it.id == id }?.let { knoten ->
+            PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[id]) { rechenwegKnoten = null }
+        }
+    }
     var neuerFormelDialog by remember { mutableStateOf(false) }
     var umbenennenOffen by remember { mutableStateOf(false) }
     var fehler by remember { mutableStateOf<String?>(null) }
@@ -168,7 +181,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
             atlas.aktualisiereAuswertung(); neuerFormelDialog = false
         })
     atlas.konfigurationsPlan?.let { plan ->
-        AlertDialog(onDismissRequest = atlas::verwerfeKonfiguration, title = { Text("Verbindungsverlust bestätigen") },
+        AtlasBestätigungsDialog(onDismissRequest = atlas::verwerfeKonfiguration, title = { Text("Verbindungsverlust bestätigen") },
             text = { Text("${plan.auswirkung.entfallendeVerbindungen.size} Verbindungen entfallen. Die gesamte Änderung kann gemeinsam rückgängig gemacht werden.") },
             confirmButton = { TextButton(onClick = atlas::bestätigeKonfiguration) { Text("Übernehmen") } },
             dismissButton = { TextButton(onClick = atlas::verwerfeKonfiguration) { Text("Abbrechen") } })
@@ -245,11 +258,14 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
                         zustand = atlas.editor,
                         modifier = Modifier.fillMaxSize(),
                         rendererFür = atlas::rendererFür,
+                        auswertungsDauerFür = { atlas.auswertung.knoten[it]?.auswertungsDauerNanos },
                         farbeFürAnschluss = { anschlussFarbe(it.art.wert) },
                         beiZeigerPosition = { letzterZeiger = it },
                         beiHintergrundKontext = { kontext = DesktopKontext.Hintergrund(it) },
                         beiHintergrundDoppelklick = { katalogFokus.requestFocus() },
-                        beiKnotenKontext = { kontext = DesktopKontext.Knoten(it) },
+                        beiKnotenKontext = {
+                            if (besitztPrädikatsRechenweg(it.art)) rechenwegKnoten = it.id else kontext = DesktopKontext.Knoten(it)
+                        },
                         beiVerbindungKontext = { kontext = DesktopKontext.Verbindung(it, letzterZeiger) },
                         beiAnschlussKontext = { kontext = DesktopKontext.Anschluss(it, letzterZeiger) },
                         beiVerbindungAufHintergrund = { _, position -> kontext = DesktopKontext.Hintergrund(position) },
@@ -275,7 +291,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
             UmbenennenDialog(atlas, schließen = { umbenennenOffen = false })
         }
         (fehler ?: atlas.meldung)?.let { text ->
-            AlertDialog(
+            AtlasBestätigungsDialog(
                 onDismissRequest = { fehler = null; atlas.schließeMeldung() },
                 confirmButton = { TextButton(onClick = { fehler = null; atlas.schließeMeldung() }) { Text("OK") } },
                 title = { Text("Mathematik Atlas") },
@@ -362,9 +378,17 @@ private fun DesktopWerkzeugleiste(
 private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, modifier: Modifier = Modifier) {
     val knoten = atlas.editor.karte.knoten.firstOrNull { it.id == atlas.editor.ausgewählterKnoten }
     var falkOffen by remember(knoten?.id) { mutableStateOf(false) }
-    if (falkOffen && knoten != null) androidx.compose.ui.window.Dialog(onDismissRequest = { falkOffen=false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxWidth(.95f).widthIn(max = 1180.dp).fillMaxHeight(.9f)) {
-            Column { TextButton(onClick={ falkOffen=false }) { Text("Schließen") }; MatrixproduktFalkSchemaInhalt(atlas.auswertung.knoten[knoten.id],Modifier.weight(1f)) }
+    var rechenwegOffen by remember(knoten?.id) { mutableStateOf(false) }
+    if (knoten != null && besitztPrädikatsRechenweg(knoten.art)) {
+        Button(onClick = { rechenwegOffen = true }) { Text("Rechenweg öffnen") }
+        if (rechenwegOffen) PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[knoten.id]) { rechenwegOffen = false }
+    }
+    if (falkOffen && knoten != null) AtlasDialog(onDismissRequest = { falkOffen = false }) {
+        Column(Modifier.fillMaxSize()) {
+            AtlasDialogKopf(titel = { Text("Falk-Schema") }, aktionen = {
+                TextButton(onClick = { falkOffen = false }) { Text("Schließen") }
+            })
+            MatrixproduktFalkSchemaInhalt(atlas.auswertung.knoten[knoten.id], Modifier.weight(1f).padding(AtlasDialogAbstände.inhalt))
         }
     }
     var formelOffen by remember(knoten?.id) { mutableStateOf(false) }
@@ -477,7 +501,7 @@ private fun DesktopKontextMenü(
 private fun UmbenennenDialog(atlas: DesktopAtlasZustand, schließen: () -> Unit) {
     val knoten = atlas.editor.karte.knoten.firstOrNull { it.id == atlas.editor.ausgewählterKnoten } ?: return
     var name by remember(knoten.id) { mutableStateOf(knoten.name) }
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
         confirmButton = { Button(onClick = { atlas.benenneAuswahlUm(name); schließen() }, enabled = name.isNotBlank()) { Text("Übernehmen") } },
         dismissButton = { TextButton(onClick = schließen) { Text("Abbrechen") } },

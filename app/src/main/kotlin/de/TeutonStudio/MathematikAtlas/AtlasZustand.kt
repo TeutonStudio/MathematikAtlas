@@ -22,11 +22,15 @@ import de.TeutonStudio.MathematikKnoten.katalog.OperatorKnotenSuchindex
 import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenRenderer
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import java.io.File
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 @Stable
 class AtlasZustand(context: Context) {
+    private val rechenScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var rechenAuftrag: Job? = null
+    private var rechenGeneration = 0L
+    private var rechenMomentaufnahme: KartenDaten? = null
+
     val speicher = KartenSpeicher(context)
     private val aktiveKarteSpeicher = AktiveKarteSpeicher(File(context.filesDir, "MathematikAtlas"))
     private val laufzeit = MathematikKartenLaufzeit(
@@ -98,6 +102,7 @@ class AtlasZustand(context: Context) {
             ?: KartenDaten(name = "Neue Karte")
         if (start.id !in karten.map(KartenDaten::id).toSet()) aktiveKarteSpeicher.löschen()
         editor = KartenEditorZustand(start, graphPrüfung)
+        editor.öffneGruppe(aktiveKarteSpeicher.ladeGruppe())
         letzterGespeicherterStand = start
         brotkrumen = if (karten.any { it.id == start.id }) {
             listOf(KartenVerweis(start.id, start.version))
@@ -183,6 +188,7 @@ class AtlasZustand(context: Context) {
 
     fun speichereAktuell() {
         if (importLäuft) return
+        aktiveKarteSpeicher.speichere(editor.karte.id, editor.geöffneteGruppe)
         if (editor.verbindungsStart != null || editor.karte == letzterGespeicherterStand) return
         val gespeichert = speicher.speichere(editor.karte)
         if (gespeichert.version != editor.karte.version) {
@@ -455,7 +461,40 @@ class AtlasZustand(context: Context) {
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten =
         migriereAssoziativeKnoten(migriereAussagenOperatoren(karte)).migriereKonsolidierteKnoten()
 
+    fun beendeBerechnungen() { rechenScope.cancel() }
+
+    private fun synchronisierteKarte(karte: KartenDaten, ergebnis: KartenAuswertungsErgebnis): KartenDaten {
+        val restriktion = synchronisiereRestriktionsAnschlüsse(karte, ergebnis)
+        val bild = synchronisiereBildmengenAnschlüsse(restriktion, ergebnis)
+        val zerlegt = synchronisiereStrukturZerleger(bild, ergebnis, graphPrüfung)
+        return synchronisiereMethodenAufrufe(zerlegt, ergebnis, graphPrüfung)
+    }
+
     private fun werteAus() {
+        val moment = editor.karte
+        if (moment == rechenMomentaufnahme && rechenAuftrag?.isActive == true) return
+        val generation = ++rechenGeneration
+        rechenAuftrag?.cancel()
+        rechenMomentaufnahme = moment
+        if (moment.knoten.any { besitztPrädikatsRechenweg(it.art) || it.kartenVerweis != null } && moment.knoten.none { it.art.startsWith("konzept.") }) {
+            auswertung = KartenAuswertungsErgebnis(emptyMap(), emptyList())
+            rechenAuftrag = rechenScope.launch {
+                val berechnet = withContext(Dispatchers.Default) {
+                    MathematikKartenLaufzeit(kartenQuelle = KartenQuelle(speicher::lade),
+                        nichtAuswertbareKnotenArten = KartenWerkzeugVorlagen.nichtAuswertbareArten).auswerten(moment)
+                }
+                if (generation != rechenGeneration || editor.karte != moment) return@launch
+                val synchronisiert = synchronisierteKarte(moment, berechnet)
+                if (synchronisiert == moment) auswertung = berechnet else {
+                    val auswahl = editor.ausgewählteKnoten
+                    val aktiv = editor.ausgewählterKnoten
+                    editor.ersetzeKarte(synchronisiert, historieLeeren = false)
+                    editor.stelleAuswahlWiederHer(auswahl, aktiv)
+                    werteAus()
+                }
+            }
+            return
+        }
         if (editor.karte.knoten.any { it.art.startsWith("konzept.") }) {
             auswertung = KartenAuswertungsErgebnis(emptyMap(), emptyList())
             return

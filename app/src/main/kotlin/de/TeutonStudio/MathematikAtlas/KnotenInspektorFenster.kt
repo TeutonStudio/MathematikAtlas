@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import de.TeutonStudio.MathematikKnoten.*
 
 import de.TeutonStudio.MathematikRechenSystem.kern.mathematischeMethodenSignatur
@@ -62,7 +64,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
 
     zustand.ausstehendeKonfiguration?.let { kandidat ->
         val auswirkung = zustand.vorschauKonfiguration(kandidat)
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = zustand::verwerfeKonfiguration,
             title = { Text("Verbindungen entfernen?") },
             text = { Text("Diese Konfiguration entfernt ${auswirkung.entfallendeVerbindungen.size} Verbindung(en), deren Anschlüsse oder Verträge nicht mehr passen. Rückgängig stellt Konfiguration und Verbindungen gemeinsam wieder her.") },

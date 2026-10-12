@@ -61,6 +61,7 @@ data class MengenDifferenz(val links: MengenAusdruck, val rechts: MengenAusdruck
 fun mengenDifferenz(links: MengenAusdruck, rechts: MengenAusdruck): MengenAusdruck = when {
     links == LeereMenge -> LeereMenge
     rechts == LeereMenge -> links
+    prüfeTeilmenge(links, rechts).wahrheitswert == Wahrheitswert.Wahr -> LeereMenge
     links is EndlicheMenge && rechts is EndlicheMenge -> {
         val entscheidungen = links.elemente.associateWith { ElementBeziehung(it, rechts).entscheide().wahrheitswert }
         if (entscheidungen.values.any { it == null }) MengenDifferenz(links, rechts)
@@ -232,7 +233,9 @@ fun mächtigkeit(menge: MengenAusdruck): Mächtigkeit = when (menge) {
     is EndlicheMenge -> EndlicheMächtigkeit(RationaleZahl.von(
         (eindeutigeEndlicheElemente(menge) ?: error("Die Mächtigkeit dieser Menge ist noch nicht entscheidbar.")).size.toLong(),
     ))
-    NatürlicheZahlen, GanzeZahlen, RationaleZahlen -> AbzählbarUnendlich
+    LeereMenge -> EndlicheMächtigkeit(RationaleZahl.Null)
+    NatürlicheZahlen, NichtnegativeGanzeZahlenSemantik.menge, GanzeZahlen, RationaleZahlen,
+    Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen -> AbzählbarUnendlich
     ReelleZahlen, KomplexeZahlen -> Überabzählbar
     else -> error("Die Mächtigkeit dieser Menge ist noch nicht entscheidbar.")
 }
@@ -242,7 +245,7 @@ fun vereinige(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
     val flach = mengen.flatMap { if (it is Vereinigung) it.mengen else listOf(it) }.filterNot { it == LeereMenge }
     if (flach.isEmpty()) return LeereMenge
     if (flach.all { it is EndlicheMenge }) return EndlicheMenge(flach.filterIsInstance<EndlicheMenge>().flatMap { it.elemente }.toSet())
-    val eindeutig = flach.distinct().sortedBy(::strukturellerSchlüssel)
+    val eindeutig = absorbierteMengen(flach, vereinigung = true)
     return if (eindeutig.size == 1) eindeutig.single() else Vereinigung(eindeutig)
 }
 
@@ -260,7 +263,7 @@ fun schneide(mengen: Iterable<MengenAusdruck>, grundMenge: MengenAusdruck? = nul
             return EndlicheMenge(entscheidungen.filterValues { it == Wahrheitswert.Wahr }.keys)
         }
     }
-    val eindeutig = flach.distinct().sortedBy(::strukturellerSchlüssel)
+    val eindeutig = absorbierteMengen(flach, vereinigung = false)
     return if (eindeutig.size == 1) eindeutig.single() else Schnitt(eindeutig, grundMenge)
 }
 
@@ -285,7 +288,18 @@ fun kartesischesProdukt(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
 internal fun strukturellerSchlüssel(objekt: MathematischesObjekt): String = "${objekt::class.qualifiedName}:${objekt.zuLatex()}"
 
 data class ElementBeziehung(val element: MathematischesObjekt, val menge: MengenAusdruck) : Aussage {
-    override fun entscheide(kontext: RechenKontext): AussageErgebnis = when (menge) {
+    override fun entscheide(kontext: RechenKontext): AussageErgebnis = konstanteMitgliedschaft(element, menge, kontext) ?: when (menge) {
+        is DefinierteMenge -> entscheidePrädikatsMitgliedschaft(element, menge, kontext)
+        is BeschraenkteZahlmenge -> entscheideBeschränkteMitgliedschaft(element, menge, kontext)
+        is PrädikatsMenge -> {
+            val bedingung = ersetze(menge.bedingung, mapOf(menge.element.name to element))
+            val lage = prüfeDefinitionslage(bedingung, kontext)
+            when (lage.wahrheitswert) {
+                Wahrheitswert.Wahr -> bedingung.entscheide(kontext)
+                Wahrheitswert.Lüge -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+                null -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+            }
+        }
         is EndlicheMenge -> Disjunktion(menge.elemente.map { Selbigkeit(element, it) }).entscheide(kontext)
         is KartesischesProdukt -> entscheideTupelMitgliedschaft(element, menge.mengen, kontext)
         is Tupelraum -> entscheideTupelMitgliedschaft(element, menge.komponenten, kontext)
@@ -390,15 +404,7 @@ fun prüfeTeilmenge(
             else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
         }
     }
-    zahlenmengenRang(teilMenge) != null && zahlenmengenRang(grundMenge) != null -> {
-        val enthalten = zahlenmengenRang(teilMenge)!! <= zahlenmengenRang(grundMenge)!!
-        AussageErgebnis(
-            if (enthalten) Wahrheitswert.Wahr else Wahrheitswert.Lüge,
-            if (enthalten) EntscheidungsStatus.Bewiesen else EntscheidungsStatus.Widerlegt,
-            if (enthalten) "Die kanonische Zahlenmengeninklusion ist erfüllt."
-            else "Die kanonische Zahlenmengeninklusion ist widerlegt.",
-        )
-    }
+    konstanteTeilmenge(teilMenge, grundMenge) != null -> mengenWahrheit(konstanteTeilmenge(teilMenge, grundMenge)!!)
     teilMenge is EndlicheMenge -> {
         val elementErgebnisse = teilMenge.elemente.map { ElementBeziehung(it, grundMenge).entscheide(kontext) }
         when {
@@ -430,15 +436,6 @@ private fun entscheideTupelMitgliedschaft(
     ).entscheide(kontext)
 }
 
-private fun zahlenmengenRang(menge: MengenAusdruck): Int? = when (menge) {
-    NatürlicheZahlen -> 0
-    GanzeZahlen -> 1
-    RationaleZahlen -> 2
-    ReelleZahlen -> 3
-    KomplexeZahlen -> 4
-    else -> null
-}
-
 data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis {
         return Konjunktion(listOf(TeilmengenBeziehung(links, rechts), Negation(TeilmengenBeziehung(rechts, links)))).entscheide(kontext)
@@ -458,6 +455,8 @@ data class Disjunktheit(val links: MengenAusdruck, val rechts: MengenAusdruck) :
             return Konjunktion(links.elemente.map { Negation(ElementBeziehung(it, rechts)) }).entscheide(kontext)
         }
         if (links == LeereMenge || rechts == LeereMenge) return AussageErgebnis(Wahrheitswert.Wahr, EntscheidungsStatus.Bewiesen)
+        // Jede nichtleere vordefinierte Menge enthält 3, auch die gaußschen Primzahlen.
+        if (MengenKonstante.vonMenge(links) != null && MengenKonstante.vonMenge(rechts) != null) return mengenWahrheit(false)
         return AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
     }
     override fun zuLatex() = "${links.zuLatex()} \\cap ${rechts.zuLatex()} = \\varnothing"
@@ -479,4 +478,17 @@ internal fun eindeutigeEndlicheElemente(menge: EndlicheMenge): List<Mathematisch
         eindeutig += element
     }
     return eindeutig
+}
+
+private fun absorbierteMengen(mengen: List<MengenAusdruck>, vereinigung: Boolean): List<MengenAusdruck> {
+    val sortiert = mengen.distinct().sortedBy(::strukturellerSchlüssel)
+    return sortiert.filterIndexed { index, menge ->
+        sortiert.withIndex().none { (anderePosition, andere) ->
+            if (index == anderePosition) false else {
+                val hin = if (vereinigung) prüfeTeilmenge(menge, andere) else prüfeTeilmenge(andere, menge)
+                val zurück = if (vereinigung) prüfeTeilmenge(andere, menge) else prüfeTeilmenge(menge, andere)
+                hin.wahrheitswert == Wahrheitswert.Wahr && (zurück.wahrheitswert != Wahrheitswert.Wahr || anderePosition < index)
+            }
+        }
+    }
 }

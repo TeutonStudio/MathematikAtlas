@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -122,6 +126,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, kart
     val ordnungsSpeicher = remember(context) { KartenOrdnungSpeicher(context) }
     var ordnung by remember(ordnungsSpeicher) { mutableStateOf(ordnungsSpeicher.lade()) }
     var eingeklappteOrdner by remember { mutableStateOf<Set<List<String>>>(emptySet()) }
+    var eingeklappteGruppen by remember { mutableStateOf<Set<String>>(emptySet()) }
     var dialog by remember { mutableStateOf<KartenOrdnerDialog?>(null) }
     var ordnerMenü by remember { mutableStateOf<List<String>?>(null) }
     var kartenMenü by remember { mutableStateOf<KartenId?>(null) }
@@ -155,14 +160,15 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, kart
         sichtbareKarten.associate { it.id to zustand.speicher.herkunftFür(it.id) }
     }
     val fremdVerwalteteOrdner = remember(kartenAenderungsVersion) { zustand.speicher.fremdVerwalteteOrdner() }
-    val einträge = remember(sichtbareKarten, ordnung, eingeklappteOrdner, herkunft, herkunftFilter, fremdVerwalteteOrdner) {
+    val einträge = remember(sichtbareKarten, zustand.editor.karte, ordnung, eingeklappteOrdner, herkunft, herkunftFilter, fremdVerwalteteOrdner, eingeklappteGruppen) {
         kartenListenEinträge(
-            sichtbareKarten,
+            sichtbareKarten.map { if (it.id == zustand.editor.karte.id) zustand.editor.karte else it },
             ordnung,
             eingeklappteOrdner,
             herkunft,
             herkunftFilter,
             fremdVerwalteteOrdner,
+            eingeklappteGruppen,
         )
     }
     Column(Modifier.fillMaxSize()) {
@@ -288,6 +294,18 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, kart
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .45f)),
                         )
                     }
+                    is KartenListenEintrag.Gruppe -> ListItem(
+                        headlineContent = { Text(eintrag.gruppe.titel) },
+                        supportingContent = { Text("Visuelle Gruppe") },
+                        leadingContent = { TextButton(onClick = {
+                            eingeklappteGruppen = if (eintrag.schlüssel in eingeklappteGruppen) eingeklappteGruppen - eintrag.schlüssel else eingeklappteGruppen + eintrag.schlüssel
+                        }) { Text(if (eintrag.schlüssel in eingeklappteGruppen) "▸" else "▾") } },
+                        modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp).clickable {
+                            if (zustand.editor.karte.id != eintrag.karte.id) zustand.öffne(eintrag.karte)
+                            zustand.editor.öffneGruppe(eintrag.gruppe.id)
+                            karteGeöffnet()
+                        },
+                    )
                     is KartenListenEintrag.Karte -> ListItem(
                         headlineContent = { Text(eintrag.karte.name) },
                         supportingContent = { Text("Version ${eintrag.karte.version}") },
@@ -320,7 +338,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, kart
                         modifier = Modifier.padding(start = (eintrag.tiefe * 12).dp)
                             .clip(MaterialTheme.shapes.medium)
                             .kartenDragQuelle(zustand, eintrag.karte)
-                            .clickable { zustand.öffne(eintrag.karte); karteGeöffnet() }
+                            .clickable { zustand.öffne(eintrag.karte); zustand.editor.öffneGruppe(null); karteGeöffnet() }
                             .background(
                                 if (eintrag.karte.id == zustand.editor.karte.id) MaterialTheme.colorScheme.secondaryContainer
                                 else MaterialTheme.colorScheme.surface,
@@ -335,7 +353,8 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, kart
     }
 
     if (veröffentlichenOffen) {
-        AlertDialog(
+        AtlasBestätigungsDialog(
+            inhaltScrolltSelbst = true,
             onDismissRequest = { veröffentlichenOffen = false },
             title = { Text("Eigene veröffentlichen") },
             text = {
@@ -399,7 +418,7 @@ private fun KartenListe(zustand: AtlasZustand, importAnfordern: () -> Unit, kart
     }
 
     freigabeFehler?.let { fehler ->
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = { freigabeFehler = null },
             title = { Text("Freigabe fehlgeschlagen") },
             text = { Text(fehler) },
@@ -419,11 +438,11 @@ private fun OrdnerPfadDialog(
     var text by remember(aktuellerPfad) { mutableStateOf(formatiereOrdnerPfad(aktuellerPfad)) }
     var fehler by remember { mutableStateOf<String?>(null) }
     val pfad = parseOrdnerPfad(text)
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
         title = { Text(titel) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it; fehler = null },

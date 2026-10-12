@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 /** Reiner JSON-Codec für [KartenDaten], ohne App-, Datei- oder Migrationszuständigkeit. */
 object KartenDatenJson {
-    const val FORMAT_VERSION = 8
+    const val FORMAT_VERSION = 9
 
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
         put("formatVersion", FORMAT_VERSION)
@@ -50,7 +50,9 @@ object KartenDatenJson {
                 ansicht?.optDouble("zoom", 1.0)?.toFloat() ?: 1f,
             ),
             archiviert = json.optBoolean("archiviert", false),
-        ).bereinigteVisuelleGruppen()
+        ).also { it.prüfeGruppenHierarchie() }.bereinigteVisuelleGruppen().let {
+            if (json.optInt("formatVersion", 1) < 9) it.mitAutomatischenVisuellenGruppenMitgliedschaften() else it
+        }
     }
 
     fun formatVersion(text: String): Int = JSONObject(text).optInt("formatVersion", 1)
@@ -329,6 +331,10 @@ object KartenDatenJson {
     private fun visuelleGruppeZuJson(gruppe: VisuelleKnotenGruppeDaten) = JSONObject().apply {
         put("id", gruppe.id.wert)
         put("titel", gruppe.titel)
+        put("eingeklappt", gruppe.eingeklappt)
+        put("ansichtInitialisiert", gruppe.ansichtInitialisiert)
+        gruppe.elternGruppenId?.let { put("elternGruppenId", it.wert) }
+        put("ansicht", JSONObject().put("x", gruppe.ansicht.verschiebung.x).put("y", gruppe.ansicht.verschiebung.y).put("zoom", gruppe.ansicht.zoom))
         put("position", JSONObject().put("x", gruppe.position.x).put("y", gruppe.position.y))
         put("größe", JSONObject().put("breite", gruppe.größe.breite).put("höhe", gruppe.größe.höhe))
         put("knotenIds", JSONArray().apply { gruppe.knotenIds.map { it.wert }.sorted().forEach(::put) })
@@ -343,6 +349,10 @@ object KartenDatenJson {
                 List(ids.length()) { index -> KnotenId(ids.getString(index)) }.toSet()
             } ?: emptySet(),
             titel = json.optString("titel", VISUELLE_GRUPPE_STANDARD_TITEL),
+            eingeklappt = json.optBoolean("eingeklappt", false),
+            ansichtInitialisiert = json.optBoolean("ansichtInitialisiert", json.has("ansicht")),
+            elternGruppenId = json.optString("elternGruppenId").takeIf { it.isNotBlank() }?.let(::VisuelleGruppenId),
+            ansicht = json.optJSONObject("ansicht")?.let { AnsichtsFenster(GraphPunkt(it.optDouble("x", 0.0).toFloat(), it.optDouble("y", 0.0).toFloat()), it.optDouble("zoom", 1.0).toFloat()) } ?: AnsichtsFenster.Standard,
             position = GraphPunkt(
                 position?.optDouble("x", 0.0)?.toFloat() ?: 0f,
                 position?.optDouble("y", 0.0)?.toFloat() ?: 0f,

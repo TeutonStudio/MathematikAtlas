@@ -8,7 +8,7 @@
 - Veröffentlichte Alpha: `v3.1.0`, GitHub-master-Commit `811955f8c0bdd5f2bd59292cd9dea5ba634f1c51`, [PR#445](https://github.com/TeutonStudio/MathematikAtlas/pull/445); sämtliche PR- und Master-Push-Prüfungen grün.
 - Produktstand: `3.1.0`, Android-Code `3001000`, Desktop `3.1.0`; Branch `samai/v3.1.0/alpha-erweiterungen`, Releasebranch `release/v3.1.0-alpha-erweiterungen`. Versionsachse `y`, exakt zwei neue Typen.
 - Originalmaster per Fast-forward auf `811955f8c0bdd5f2bd59292cd9dea5ba634f1c51` synchronisiert; Produktarbeitsbaum sauber. Zehn persönliche IDE-Dateien bytegleich erhalten. Dauerhafter lokaler Nachweis: `Original/.gradle/alpha-konsolidierung/backup-20261011-094918/final-master-sync.json`. Persönliche IDE-Dateien gehören nicht zum Release.
-- Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 8`; neue Knoten benötigen keine Formaterhöhung.
+- Karten-JSON-Writer: `KartenDatenJson.FORMAT_VERSION = 9`; neue Knoten benötigen keine Formaterhöhung.
 - Statischer Erstellenkatalog: 138 Typen; unveränderte veröffentlichte3.0.0-Baseline136 plus `atlas.uebersetzer` und `mathematik.tupelAbflachen`.
 
 ## Verifizierte Prüfungen
@@ -138,3 +138,59 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
 ## Nachprüfung des separaten Umkehrmethoden-PR
 
 [PR#436: Review auf3.1.0](https://github.com/TeutonStudio/MathematikAtlas/pull/436#issuecomment-6115383718). Der isolierte Zwei-Dateien-Patch ist konfliktfrei anwendbar. Die ursprünglichen fünf Tests scheitern am Variablennamen `null`; nach temporärer Umbenennung in `nullWert` sind sie grün. Die Einbindung des neuen Inversetyps in den aktuellen Methodenaufruf benötigt gesonderte Arbeit. Keine Umschreibung des alten Branches und keine Übernahme der Umkehrmethoden in Alpha.
+
+
+## Mengenoperatorgrundlage – lokaler Arbeitsstand 2026-10-12
+
+- Die zehn bestehenden Mengenquellen besitzen `MengenKonstante`-Definitionen im
+  Kern mit stabilen Auswahlkennungen und nullstelligen `OperatorSignatur`-Verträgen.
+  Mengenknoten und Mengenrechner nutzen dieselbe App-Dialogvorlage; mathematische
+  Definitionen werden im Dialog mit `LatexText` angezeigt. Eigene versionsfeste
+  Mengenkarten bleiben erhalten; unbekannte Quellen liefern keinen Ersatzwert.
+- Mitgliedschaft, Inklusion, Gleichheit, Disjunktheit und sichere Mengenalgebra
+  berücksichtigen N0, Primzahlen und gaußsche Mengen. Exakte Primzahltests haben
+  eine Grenze von 10000 ungeraden Divisorkandidaten; danach bleibt die Aussage
+  unbekannt. Kardinalitäts- und explizite Topologiepfade nutzen dieselbe Grundlage.
+- Vollständiger Gradle-Testlauf, Android-Debug-Build, Desktop-Kompilierung sowie
+  Repository-/Releaseplan-/Versionsfolgeprüfungen erfolgreich. Aktuelle Berichte:
+  1447 Tests ohne Fehler/Überspringungen. Unabhängige statische Abnahme ohne Blocker.
+- Keine neue Veröffentlichung; Änderungen uncommittet auf dem bestehenden
+  Arbeitsbranch. Keine Dialog-Laufzeitprüfung mangels verbundenem Android-Gerät
+  oder eingerichtetem AVD. Eigenständige Kern-Skriptprüfung benötigt fehlendes
+  `kotlinc`; Gradle-Kernprüfung erfolgreich. Der DesktopInspektor besitzt weiterhin
+  keinen Mengen-Auswahldialog. Details im abgeschlossenen
+  [ExecPlan](plans/completed/2026-10-12-mengenoperatorgrundlage.md).
+
+
+## Visuelle Gruppen – lokaler Implementierungsstand 2026-10-12
+
+- Gemeinsamer Android-/Desktopeditor unterstützt verschachtelte Gruppen, Inspector-Faltung, abgeleitete Grenzanschlüsse und separat navigierbare Gruppenansichten auf demselben kanonischen Graphen. Auflösen erhält Inhalte; Ausschneiden entfernt den gewählten Teilbaum atomar. Undo/Redo, Kopieren, JSON/.matlas und eigene Gruppenkameras sind berücksichtigt.
+- JSON-Format 9 ergänzt Faltzustand, Elternreferenz und Gruppenkamera; alte flache Gruppen werden beim Laden räumlich migriert. Keine neue registrierte Knotenart oder Produktionsabhängigkeit.
+- Projektion wird zwischengespeichert, bei großen Karten im Hintergrund berechnet und bei überholtem Zustand verworfen. Eingeklappte Inhalte werden nach dem Übergang nicht weiter komponiert; Anschlüsse und Verbindungen verwenden Viewport-Culling.
+- Desktop-Smoke-Test bestätigte Gruppenbaum, Inspector, Faltung, Gruppenansicht und Auswahl des Originalknotens über einen abgeleiteten Ausgang. JVM-Skalierungstest deckt 100/500/1000 Knoten und bis knapp 2000 Verbindungen ab. Android-Framezeiten sind mangels angeschlossenem Gerät/Emulator noch nicht gemessen.
+- Architekturentscheidung: [ADR 0046](decisions/0046-visuelle-gruppenprojektion.md). Prüfdetails und Grenzen: [ExecPlan](plans/active/2026-10-12-visuelle-gruppen-faltung.md). Lokaler Arbeitsstand, kein Release oder neuer Commit.
+
+
+## Einheitliches Dialogsystem im Arbeitsstand (nicht veröffentlicht)
+
+- Gemeinsamer fachneutraler Compose-Dialograhmen mit festen Abständen für Kopf,
+  Untertitel, Inhalt, Abschnitte, Einträge und umbrechende Aktionen. Android,
+  Desktop und gemeinsame Formeleditoren verwenden dieselben Bausteine.
+- Alle gefundenen direkten Compose-Dialogaufrufe liegen jetzt im gemeinsamen
+  Rahmen; native Dateidialoge bleiben unverändert. Titel und Aktionen konkurrieren
+  nicht um die Textbreite. Kopf und Fuß sind bei Überlänge begrenzt scrollbar.
+- Gesamtprüfung aus JVM-Tests, Android-Debug-Build/Lint und Desktop-Kompilierung
+  erfolgreich. Grafischer Desktoptest prüft zwölf Größen-/Schrift-/Themevarianten,
+  Scrollen bis zum letzten Eintrag und aktiviertes/deaktiviertes Außenklickverhalten.
+- Keine Android-Laufzeitabnahme: ADB meldet kein Gerät und es ist keine AVD installiert.
+  Einzelheiten und Abnahmegrenzen stehen im
+  [ExecPlan](plans/active/2026-10-12-einheitliches-dialogsystem.md) und in ADR 0047.
+
+
+## Releasekandidat v3.1.1 – Abschlussprüfung 2026-10-12
+
+- Der vollständige Releaseumfang umfasst Rechnerkonsolidierung und Operandenreihenfolge, Mengenoperatorgrundlage und Prädikatsauswertung, Gruppenprojektion mit Kartenformat 9 sowie gemeinsame Dialoge. Der Erstellenkatalog reduziert sich von 138 auf 128 Typen; es entsteht kein neuer Knotentyp (Versionsachse x).
+- Android-Metadaten sind 3.1.1/3001001; Desktop-Paketmetadaten und Workflow-Artefaktname stimmen überein. Bestätigte GitHub-master-Basis ist e8f1c9d6 nach dem finalen v3.1.0-Commit 811955f8.
+- Der Rechenweg-Desktoptest verwendet Compose-Semantik statt nativer AWT-Window-/Robotannahmen und prüft Öffnen, Zurück sowie das Verwerfen veralteter Details nach Ergebniswechsel. Der gezielte Test und der anschließende vollständige Gradle-Testlauf samt Android-Debug-Build sind erfolgreich. Die zusätzliche Compose-Testabhängigkeit ist auf den Desktop-Testclasspath beschränkt.
+- Repository-, Architektur-, Methodenmodell-, Releaseplan-, Versionsfolgeprüfung und 14 Guard-Regressionen erfolgreich. Android-Release-Build erfolgreich, bisher ohne konfigurierte Produktionssignatur. Keine Android-Geräte-/Emulatorabnahme. Die separate RPM-Paketierung scheitert lokal an jpackage (unsupported type rpm); sie ist kein APK-Artefakt.
+- Dies ist ein vorbereiteter Release-PR-Stand. Veröffentlichung und finale Commit-SHA sind ausschließlich anhand von GitHub-master und GitHub Release zu bestimmen.

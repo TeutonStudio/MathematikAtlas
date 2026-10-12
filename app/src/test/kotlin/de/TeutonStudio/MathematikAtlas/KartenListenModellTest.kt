@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.VisuelleKnotenGruppeDaten
 import de.TeutonStudio.MathematikAtlas.speicher.KartenOrdnung
 import de.TeutonStudio.MathematikAtlas.speicher.KartenHerkunft
 import kotlin.test.Test
@@ -149,4 +150,16 @@ class KartenListenModellTest {
         assertTrue(liste.any { it is KartenListenEintrag.Ordner && it.pfad == ziel })
     }
 
+
+    @Test fun `Gruppen erscheinen unter Karten hierarchisch und einzeln zuklappbar`() {
+        val eltern=VisuelleKnotenGruppeDaten(titel="Eltern")
+        val kind=VisuelleKnotenGruppeDaten(titel="Kind",elternGruppenId=eltern.id)
+        val karte=wurzel.copy(visuelleGruppen=listOf(kind,eltern))
+        val offen=kartenListenEinträge(listOf(karte),KartenOrdnung())
+        val gruppen=offen.filterIsInstance<KartenListenEintrag.Gruppe>()
+        assertEquals(listOf(eltern.id,kind.id),gruppen.map{it.gruppe.id})
+        assertEquals(listOf(1,2),gruppen.map{it.tiefe})
+        val zu=kartenListenEinträge(listOf(karte),KartenOrdnung(),eingeklappteGruppen=setOf(gruppen.first().schlüssel))
+        assertEquals(listOf(eltern.id),zu.filterIsInstance<KartenListenEintrag.Gruppe>().map{it.gruppe.id})
+    }
 }

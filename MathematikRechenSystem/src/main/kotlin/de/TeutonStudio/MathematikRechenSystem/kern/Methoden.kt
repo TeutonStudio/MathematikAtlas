@@ -615,6 +615,10 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Folgenraum -> Folgenraum(ersetze(objekt.elementMenge, bindungen) as MengenAusdruck)
     is Vektorraum -> objekt.copy(skalarMenge = ersetze(objekt.skalarMenge, bindungen) as MengenAusdruck)
     is Matrizenraum -> objekt.copy(skalarMenge = ersetze(objekt.skalarMenge, bindungen) as MengenAusdruck)
+    is PrädikatsMenge -> objekt.copy(bedingung = ersetze(objekt.bedingung, bindungen - objekt.element.name))
+    is BeschraenkteZahlmenge -> objekt.copy(
+        untereGrenze = objekt.untereGrenze?.let { ersetze(it, bindungen) },
+        obereGrenze = objekt.obereGrenze?.let { ersetze(it, bindungen) })
     is DefinierteMenge -> {
         val gebundeneNamen = objekt.variablen.map { it.variable.name }.toSet()
         val freieBindungen = bindungen - gebundeneNamen
@@ -632,6 +636,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
         aussage = ersetze(objekt.aussage, bindungen),
         lüge = ersetze(objekt.lüge, bindungen),
     )
+    is OffeneDefinitionsBedingung -> OffeneDefinitionsBedingung(ersetze(objekt.objekt, bindungen))
     is Selbigkeit -> Selbigkeit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Gleichheit -> Gleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
     is Ungleichheit -> Ungleichheit(ersetze(objekt.links, bindungen), ersetze(objekt.rechts, bindungen))
@@ -732,6 +737,8 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is Schnitt -> (mengen + listOfNotNull(grundMenge)).enthalteneMethodenParameter()
     is MengenDifferenz -> listOf(links, rechts).enthalteneMethodenParameter()
     is KartesischesProdukt -> mengen.enthalteneMethodenParameter()
+    is PrädikatsMenge -> bedingung.enthalteneMethodenParameter().filterNot { it.name == element.name }.toSet()
+    is BeschraenkteZahlmenge -> listOfNotNull(untereGrenze, obereGrenze).enthalteneMethodenParameter()
     is DefinierteMenge -> {
         val gebundeneNamen = variablen.map { it.variable.name }.toSet()
         variablen.map { it.grundMenge }.enthalteneMethodenParameter() +
@@ -743,6 +750,7 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is ZeilenVektor -> werte.enthalteneMethodenParameter()
     is Matrix -> zeilen.flatten().enthalteneMethodenParameter()
     is FallAusdruck -> listOf(wahr, aussage, lüge).enthalteneMethodenParameter()
+    is OffeneDefinitionsBedingung -> objekt.enthalteneMethodenParameter()
     is Selbigkeit -> listOf(links, rechts).enthalteneMethodenParameter()
     is Gleichheit -> listOf(links, rechts).enthalteneMethodenParameter()
     is Ungleichheit -> listOf(links, rechts).enthalteneMethodenParameter()

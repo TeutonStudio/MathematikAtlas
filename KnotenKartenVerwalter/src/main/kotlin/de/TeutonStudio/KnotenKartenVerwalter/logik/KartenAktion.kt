@@ -34,6 +34,8 @@ sealed interface KartenAktion {
         val knotenIds: Set<KnotenId>,
         val titel: String = VISUELLE_GRUPPE_STANDARD_TITEL,
     ) : KartenAktion
+    data class VisuelleGruppeFaltungÄndern(val id: VisuelleGruppenId, val eingeklappt: Boolean) : KartenAktion
+    data class VisuelleGruppeAnsichtÄndern(val id: VisuelleGruppenId, val ansicht: AnsichtsFenster) : KartenAktion
     data class VisuelleGruppeVerschieben(val id: VisuelleGruppenId, val delta: GraphPunkt) : KartenAktion
     data class VisuelleGruppeGrößeÄndern(val id: VisuelleGruppenId, val größe: GraphGröße) : KartenAktion
     data class VisuelleGruppeTitelÄndern(val id: VisuelleGruppenId, val titel: String) : KartenAktion
@@ -145,15 +147,19 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
             )
         }
     }
+    is KartenAktion.VisuelleGruppeFaltungÄndern -> copy(visuelleGruppen = visuelleGruppen.map {
+        if (it.id == aktion.id) it.copy(eingeklappt = aktion.eingeklappt) else it
+    })
+    is KartenAktion.VisuelleGruppeAnsichtÄndern -> copy(visuelleGruppen = visuelleGruppen.map {
+        if (it.id == aktion.id) it.copy(ansicht = aktion.ansicht, ansichtInitialisiert = true) else it
+    })
     is KartenAktion.VisuelleGruppeVerschieben -> {
-        val gruppe = visuelleGruppen.firstOrNull { it.id == aktion.id }
-        if (gruppe == null || aktion.delta == GraphPunkt.Zero) this else copy(
-            knoten = knoten.map { knoten ->
-                if (knoten.id in gruppe.knotenIds) knoten.copy(position = knoten.position + aktion.delta) else knoten
-            },
-            visuelleGruppen = visuelleGruppen.map {
-                if (it.id == aktion.id) it.copy(position = it.position + aktion.delta) else it
-            },
+        val index = GruppenIndex(this)
+        val ids = index.nachfahren(aktion.id)
+        val mitglieder = index.knotenIn(aktion.id)
+        copy(
+            knoten = knoten.map { if (it.id in mitglieder) it.copy(position = it.position + aktion.delta) else it },
+            visuelleGruppen = visuelleGruppen.map { if (it.id in ids) it.copy(position = it.position + aktion.delta) else it },
         )
     }
     is KartenAktion.VisuelleGruppeGrößeÄndern -> copy(
@@ -179,7 +185,14 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
         }
     }
     is KartenAktion.VisuelleGruppeLöschen -> copy(
-        visuelleGruppen = visuelleGruppen.filterNot { it.id == aktion.id },
+        visuelleGruppen = visuelleGruppen.filterNot { it.id == aktion.id }.map { g ->
+            val entfernt = visuelleGruppen.firstOrNull { it.id == aktion.id }
+            when {
+                g.id == entfernt?.elternGruppenId -> g.copy(knotenIds = g.knotenIds + entfernt.knotenIds)
+                g.elternGruppenId == aktion.id -> g.copy(elternGruppenId = entfernt?.elternGruppenId)
+                else -> g
+            }
+        },
     )
     is KartenAktion.VisuelleGruppierungAufheben -> copy(
         visuelleGruppen = visuelleGruppen.map { gruppe ->

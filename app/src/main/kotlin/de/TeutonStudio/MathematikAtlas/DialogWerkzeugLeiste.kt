@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelCodec
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -274,11 +278,11 @@ private fun DimensionsWerkzeugDialog(
         }
     } == true
 
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
         title = { Text("Dimensionsvisualisierung") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
                 Text("Quelle")
                 quellen.forEach { kandidat ->
                     Row(verticalAlignment = Alignment.CenterVertically) {

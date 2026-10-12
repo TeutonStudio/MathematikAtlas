@@ -210,13 +210,26 @@ private fun alsSkalarproduktZertifikatsKarte(karte: KartenDaten): SkalarproduktZ
     return kandidat(true)
 }
 
-private data class MengenAuswahlEintrag(
+internal data class MengenAuswahlEintrag(
     val schlüssel: String,
     val titel: String,
     val beschreibung: String,
     val eingebaut: MengenKnotenAuswahl? = null,
     val eigeneKarte: EigeneMengenKarte? = null,
 )
+
+internal fun konfiguriereMengenQuelle(knoten: KnotenDaten, eintrag: MengenAuswahlEintrag): KnotenDaten {
+    val ausgangsName = eintrag.eigeneKarte?.ausgangsName ?: "menge"
+    return knoten.copy(
+        parameter = knoten.parameter + (MENGEN_KNOTEN_AUSWAHL to (eintrag.eingebaut?.stabileId ?: eintrag.schlüssel)),
+        kartenVerweis = eintrag.eigeneKarte?.verweis,
+        anschlüsse = knoten.anschlüsse.map { anschluss ->
+            if (anschluss.richtung == AnschlussRichtung.Ausgang) anschluss.copy(
+                name = ausgangsName, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Menge.id,
+            ) else anschluss
+        },
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal object MengenKnotenInspektor : KnotenInspektor {
@@ -243,75 +256,49 @@ internal object MengenKnotenInspektor : KnotenInspektor {
             )
         }
         val einträge = eingebaute + eigene
-        val aktuell = knoten.kartenVerweis?.let { ref ->
-            eigene.firstOrNull { it.eigeneKarte?.verweis == ref }
-        } ?: eingebaute.firstOrNull {
-            it.eingebaut == MengenKnotenAuswahl.vonId(knoten.parameter[MENGEN_KNOTEN_AUSWAHL])
-        } ?: eingebaute.first()
-        var geöffnet by remember(knoten.id, knoten.kartenVerweis, knoten.parameter[MENGEN_KNOTEN_AUSWAHL]) {
-            mutableStateOf(false)
-        }
-
-        Text("Menge", style = MaterialTheme.typography.titleSmall)
-        ExposedDropdownMenuBox(expanded = geöffnet, onExpandedChange = { geöffnet = it }) {
-            OutlinedTextField(
-                value = aktuell.titel,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Ausgewählte Menge") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = geöffnet) },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
+        val aktuelleId = knoten.kartenVerweis?.let { ref ->
+            "karte:${ref.kartenId.wert}:${ref.version}"
+        } ?: "intern:${knoten.parameter[MENGEN_KNOTEN_AUSWAHL] ?: "R"}"
+        val aktuell = einträge.firstOrNull { it.schlüssel == aktuelleId }
+        var geöffnet by remember(knoten.id, aktuelleId) { mutableStateOf(false) }
+        val operatorEinträge = einträge.map { eintrag ->
+            val kandidat = konfiguriereMengenQuelle(knoten, eintrag)
+            RechnerOperatorAuswahlEintrag(
+                id = eintrag.schlüssel,
+                titel = eintrag.titel,
+                symbolLatex = eintrag.eingebaut?.operator?.symbolLatex ?: "\\operatorname{Menge}",
+                kategorie = if (eintrag.eingebaut != null) "Vordefinierte Mengen" else "Eigene Mengenkarten",
+                beschreibung = if (eintrag.eingebaut != null) "Konstante Mengenquelle ohne Argumente." else eintrag.beschreibung,
+                definitionLatex = eintrag.eingebaut?.operator?.definitionLatex,
+                suchbegriffe = setOfNotNull(eintrag.eingebaut?.stabileId, eintrag.eingebaut?.name),
+                kandidat = kandidat,
             )
-            ExposedDropdownMenu(expanded = geöffnet, onDismissRequest = { geöffnet = false }) {
-                einträge.forEach { eintrag ->
-                    DropdownMenuItem(
-                        text = { Text(eintrag.titel, modifier = Modifier.padding(vertical = LocalAtlasAbstände.current.haarlinie)) },
-                        onClick = {
-                            geöffnet = false
-                            eintrag.eingebaut?.let { auswahl ->
-                                aktionen.knoten(
-                                    knoten.copy(
-                                        parameter = knoten.parameter + (MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId),
-                                        kartenVerweis = null,
-                                        anschlüsse = knoten.anschlüsse.map { anschluss ->
-                                            if (anschluss.richtung == AnschlussRichtung.Ausgang) {
-                                                anschluss.copy(
-                                                    name = "menge",
-                                                    kante = AnschlussKante.Rechts,
-                                                    art = MathematikAnschlussArten.Menge.id,
-                                                )
-                                            } else anschluss
-                                        },
-                                    ),
-                                )
-                            }
-                            eintrag.eigeneKarte?.let { karte ->
-                                aktionen.knoten(
-                                    knoten.copy(
-                                        parameter = knoten.parameter + (MENGEN_KNOTEN_AUSWAHL to eintrag.schlüssel),
-                                        kartenVerweis = karte.verweis,
-                                        anschlüsse = knoten.anschlüsse.map { anschluss ->
-                                            if (anschluss.richtung == AnschlussRichtung.Ausgang) {
-                                                anschluss.copy(
-                                                    name = karte.ausgangsName,
-                                                    kante = AnschlussKante.Rechts,
-                                                    art = MathematikAnschlussArten.Menge.id,
-                                                )
-                                            } else anschluss
-                                        },
-                                    ),
-                                )
-                            }
-                        },
-                    )
-                }
-            }
+        } + if (aktuell == null) listOf(
+            RechnerOperatorAuswahlEintrag(
+                id = aktuelleId, titel = "Unbekannte Mengenquelle", symbolLatex = "?",
+                kategorie = "Unbekannt", beschreibung = "Die gespeicherte Mengenquelle $aktuelleId ist nicht verfügbar.",
+                art = RechnerOperatorAuswahlArt.UNBEKANNT,
+            ),
+        ) else emptyList()
+        Text("Menge", style = MaterialTheme.typography.titleSmall)
+        androidx.compose.material3.OutlinedButton(onClick = { geöffnet = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(aktuell?.titel ?: "Unbekannte Mengenquelle: $aktuelleId")
         }
-        Text(
-            aktuell.beschreibung,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        aktuell?.eingebaut?.let { de.TeutonStudio.MathematikKnoten.LatexText(it.operator.definitionLatex) }
+        if (geöffnet) {
+            RechnerOperatorAuswahlDialog(
+                familienTitel = "Menge",
+                einträge = operatorEinträge,
+                aktuelleId = aktuelleId,
+                auswirkungFür = { eintrag -> eintrag.kandidat?.let(aktionen::vorschauKnotenErsetzen) },
+                schließen = { geöffnet = false },
+                operatorÜbernehmen = { eintrag ->
+                    eintrag.kandidat?.let(aktionen::knotenNachVerlustbestätigung)
+                    geöffnet = false
+                },
+                formelÖffnen = {},
+            )
+        }
         if (eigene.isEmpty()) {
             Text(
                 "Eigene Karten erscheinen hier, sobald sie keine öffentlichen Eingänge und genau einen öffentlichen Mengenausgang besitzen.",

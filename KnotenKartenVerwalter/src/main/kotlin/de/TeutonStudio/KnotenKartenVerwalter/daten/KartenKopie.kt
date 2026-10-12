@@ -40,9 +40,11 @@ fun KartenDaten.alsNeueKarte(neuerName: String = "$name – Kopie"): KartenDaten
             zu = verbindung.zu.neu(),
         )
     }
+    val gruppenIds = visuelleGruppen.associate { it.id to neueVisuelleGruppenId() }
     val kopierteGruppen = visuelleGruppen.map { gruppe ->
         gruppe.copy(
-            id = neueVisuelleGruppenId(),
+            id = gruppenIds.getValue(gruppe.id),
+            elternGruppenId = gruppenIds[gruppe.elternGruppenId],
             knotenIds = gruppe.knotenIds.mapTo(linkedSetOf()) { neueKnotenIds.getValue(it) },
         )
     }

@@ -20,6 +20,8 @@ fun symmetrischeDifferenz(
     links == rechts -> LeereMenge
     links == LeereMenge -> rechts
     rechts == LeereMenge -> links
+    prüfeTeilmenge(links, rechts).wahrheitswert == Wahrheitswert.Wahr -> mengenDifferenz(rechts, links)
+    prüfeTeilmenge(rechts, links).wahrheitswert == Wahrheitswert.Wahr -> mengenDifferenz(links, rechts)
     links is EndlicheMenge && rechts is EndlicheMenge -> {
         val a = mengenDifferenz(links, rechts)
         val b = mengenDifferenz(rechts, links)

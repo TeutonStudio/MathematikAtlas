@@ -1,6 +1,8 @@
 package de.TeutonStudio.KnotenKartenVerwalter.zustand
 
 import androidx.compose.runtime.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 
@@ -14,7 +16,7 @@ class KartenEditorZustand(
     private val prüfung: GraphPrüfung,
 ) {
     var karte by mutableStateOf(
-        startKarte.bereinigteVisuelleGruppen().mitAutomatischenVisuellenGruppenMitgliedschaften(),
+        startKarte.bereinigteVisuelleGruppen(),
     )
         private set
     var auswertungsRevision by mutableStateOf(0L)
@@ -34,6 +36,69 @@ class KartenEditorZustand(
     var verbindungsVorschau by mutableStateOf<GraphPunkt?>(null)
         private set
 
+    var geöffneteGruppe by mutableStateOf<VisuelleGruppenId?>(null)
+        private set
+    var ausgewählteGruppe by mutableStateOf<VisuelleGruppenId?>(null)
+        private set
+    private var gruppenÜbergangsToken: Any? = null
+    fun beginneGruppenÜbergang(token: Any) { gruppenÜbergangsToken = token; gruppenÜbergangAktiv = true }
+    fun beendeGruppenÜbergang(token: Any) { if (gruppenÜbergangsToken === token) { gruppenÜbergangsToken = null; gruppenÜbergangAktiv = false } }
+    var gruppenÜbergangAktiv by mutableStateOf(false)
+    var gruppenInspektorOffen by mutableStateOf(false)
+    private var projektionsQuelle: KartenDaten? = null
+    private var projektionsGruppe: VisuelleGruppenId? = null
+    private var projektionsCache by mutableStateOf<GruppenProjektion?>(null)
+    var projektionImHintergrund = false
+    private fun hatAktuelleProjektion(): Boolean {
+        val alt = projektionsQuelle ?: return false
+        return alt.id == karte.id && alt.knoten == karte.knoten && alt.verbindungen == karte.verbindungen &&
+            alt.visuelleGruppen.hatGleicheGruppenProjektionWie(karte.visuelleGruppen) && projektionsGruppe == geöffneteGruppe
+    }
+    val projektionWirdBerechnet: Boolean get() = projektionImHintergrund && karte.knoten.size >= 500 && !hatAktuelleProjektion()
+    suspend fun berechneProjektionImHintergrund() {
+        val quelle = karte
+        val gruppe = geöffneteGruppe
+        val ergebnis = withContext(Dispatchers.Default) { quelle.gruppenProjektion(gruppe, kotlin.coroutines.coroutineContext) }
+        if (quelle.id == karte.id && quelle.knoten == karte.knoten && quelle.verbindungen == karte.verbindungen &&
+            quelle.visuelleGruppen.hatGleicheGruppenProjektionWie(karte.visuelleGruppen) && gruppe == geöffneteGruppe) {
+            projektionsQuelle = quelle
+            projektionsGruppe = gruppe
+            projektionsCache = ergebnis
+            bereinigeAuswahl()
+        }
+    }
+    val projektion: GruppenProjektion
+        get() {
+            if (!hatAktuelleProjektion()) {
+                if (projektionImHintergrund && karte.knoten.size >= 500) {
+                    return projektionsCache?.takeIf { projektionsQuelle?.id == karte.id && projektionsGruppe == geöffneteGruppe }
+                        ?: GruppenProjektion(karte.copy(knoten = emptyList(), verbindungen = emptyList(), visuelleGruppen = emptyList()), emptyMap(), emptyMap(), emptyMap(), emptySet())
+                }
+                projektionsCache = karte.gruppenProjektion(geöffneteGruppe)
+                projektionsQuelle = karte
+                projektionsGruppe = geöffneteGruppe
+            }
+            return projektionsCache!!
+        }
+    val darstellungsKarte: KartenDaten
+        get() = projektion.karte.copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
+
+    fun öffneGruppe(id: VisuelleGruppenId?) {
+        if (id != null && karte.visuelleGruppen.none { it.id == id }) return
+        brecheVerbindungsVorschauAb()
+        geöffneteGruppe = id
+        wähleKnoten(null)
+        ausgewählteGruppe = null
+        gruppenInspektorOffen = false
+    }
+
+    fun wähleGruppe(id: VisuelleGruppenId?, inspektor: Boolean = false) {
+        wähleKnoten(null)
+        ausgewählteGruppe = id
+        ausgewählteKnoten = id?.let { GruppenIndex(karte).knotenIn(it) } ?: emptySet()
+        gruppenInspektorOffen = inspektor && id != null
+    }
+
     private val rückgängig = ArrayDeque<KartenDaten>()
     private val wiederholen = ArrayDeque<KartenDaten>()
     private var rückgängigVerfügbar by mutableStateOf(false)
@@ -44,7 +109,8 @@ class KartenEditorZustand(
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
         val vorher = karte
-        karte = neu.bereinigteVisuelleGruppen().mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (neu.id != karte.id) öffneGruppe(null)
+        karte = neu.bereinigteVisuelleGruppen()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         ausgewählteKnoten = emptySet()
         ausgewählterKnoten = null
@@ -80,7 +146,9 @@ class KartenEditorZustand(
 
     fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true, dynamischeEingängeErhalten: Boolean = false) {
         if (aktion is KartenAktion.AnsichtÄndern) {
-            if (karte.ansicht != aktion.ansicht) karte = karte.copy(ansicht = aktion.ansicht)
+            val gruppe = geöffneteGruppe
+            if (gruppe != null) karte = karte.wendeAn(KartenAktion.VisuelleGruppeAnsichtÄndern(gruppe, aktion.ansicht))
+            else if (karte.ansicht != aktion.ansicht) karte = karte.copy(ansicht = aktion.ansicht)
             return
         }
         val wirksameAktion = if (
@@ -92,21 +160,62 @@ class KartenEditorZustand(
             val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero
             KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
         } else aktion
-        val angewendet = karte.wendeAn(wirksameAktion)
-        val reineUmordnung = dynamischeEingängeErhalten || karte.istReineAnschlussUmordnung(angewendet)
+        var angewendet = karte.wendeAn(wirksameAktion)
+        val neuEingefügt = when (wirksameAktion) {
+            is KartenAktion.KnotenEinfügen -> listOf(wirksameAktion.knoten)
+            is KartenAktion.KnotenMehrfachEinfügen -> wirksameAktion.knoten
+            else -> emptyList()
+        }
+        geöffneteGruppe?.let { gid ->
+            if (neuEingefügt.isNotEmpty()) {
+                val index = GruppenIndex(angewendet)
+                val ids = index.knotenIn(gid) + neuEingefügt.map { it.id }
+                val geometrie = angewendet.visuelleGruppenGeometrieFür(ids)
+                angewendet = angewendet.copy(visuelleGruppen = angewendet.visuelleGruppen.map { g ->
+                    if (g.id == gid) g.copy(knotenIds = g.knotenIds + neuEingefügt.map { it.id },
+                        position = geometrie?.let { GraphPunkt(minOf(g.position.x,it.first.x),minOf(g.position.y,it.first.y)) } ?: g.position,
+                        größe = geometrie?.let {
+                            GraphGröße(maxOf(g.position.x+g.größe.breite,it.first.x+it.second.breite)-minOf(g.position.x,it.first.x),
+                                maxOf(g.position.y+g.größe.höhe,it.first.y+it.second.höhe)-minOf(g.position.y,it.first.y))
+                        } ?: g.größe) else g
+                })
+                var kind = angewendet.visuelleGruppen.first { it.id == gid }
+                index.vorfahren(gid).forEach { elternId ->
+                    angewendet = angewendet.copy(visuelleGruppen = angewendet.visuelleGruppen.map { eltern ->
+                        if (eltern.id != elternId) eltern else {
+                            val x = minOf(eltern.position.x,kind.position.x)
+                            val y = minOf(eltern.position.y,kind.position.y - VISUELLE_GRUPPE_KOPFZEILE_HÖHE)
+                            eltern.copy(position = GraphPunkt(x,y), größe = GraphGröße(
+                                maxOf(eltern.position.x + eltern.größe.breite,kind.position.x + kind.größe.breite)-x,
+                                maxOf(eltern.position.y + eltern.größe.höhe,kind.position.y + kind.größe.höhe)-y))
+                        }
+                    })
+                    kind = angewendet.visuelleGruppen.first { it.id == elternId }
+                }
+            }
+        }
+        val reineUmordnung = !wirksameAktion.istAuswertungsRelevant() || dynamischeEingängeErhalten || karte.istReineAnschlussUmordnung(angewendet)
         val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
         var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
-        if (interaktionsStart == null) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        if (interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) neu = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (neu == karte) return
         val historienRelevant = mitHistorie && wirksameAktion !is KartenAktion.AnsichtÄndern
         if (historienRelevant) merkeFürRückgängig(standVorAktion)
         karte = neu
+        if (geöffneteGruppe != null && karte.visuelleGruppen.none { it.id == geöffneteGruppe }) öffneGruppe(null)
         if (wirksameAktion.istAuswertungsRelevant()) auswertungsRevision += 1
         bereinigeAuswahl()
     }
 
     fun wähleKnoten(id: KnotenId?, änderung: AuswahlÄnderung = AuswahlÄnderung.Ersetzen) {
+        projektion.blöcke[id]?.let { wähleGruppe(it); return }
+        if (id in projektion.portale) {
+            val ziel = projektion.originalAnschlüsse.entries.firstOrNull { it.key.knotenId == id }?.value?.knotenId
+            if (ziel != null) wähleKnoten(ziel, änderung)
+            return
+        }
+        ausgewählteGruppe = null
         if (id == null) {
             ausgewählteKnoten = emptySet()
             ausgewählterKnoten = null
@@ -128,13 +237,13 @@ class KartenEditorZustand(
     }
 
     fun wähleAlleKnoten() {
-        ausgewählteKnoten = karte.knoten.mapTo(linkedSetOf()) { it.id }
+        ausgewählteKnoten = darstellungsKarte.knoten.filter { it.id !in projektion.blöcke && it.id !in projektion.portale }.mapTo(linkedSetOf()) { it.id }
         ausgewählterKnoten = ausgewählteKnoten.lastOrNull()
         ausgewählteVerbindung = null
     }
 
     fun wähleKnotenImBereich(bereich: androidx.compose.ui.geometry.Rect, änderung: AuswahlÄnderung) {
-        val treffer = karte.knoten.asSequence().filter { knoten ->
+        val treffer = darstellungsKarte.knoten.asSequence().filter { it.id !in projektion.blöcke && it.id !in projektion.portale }.filter { knoten ->
             val links = knoten.position.x
             val oben = knoten.position.y
             val rechts = links + knoten.größe.breite
@@ -151,14 +260,16 @@ class KartenEditorZustand(
     }
 
     fun verschiebeAuswahl(delta: GraphPunkt, mitHistorie: Boolean = true) {
+        ausgewählteGruppe?.let { führeAus(KartenAktion.VisuelleGruppeVerschieben(it,delta),mitHistorie); return }
         if (ausgewählteKnoten.isEmpty() || delta == GraphPunkt.Zero) return
         führeAus(KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta), mitHistorie)
     }
 
     fun wähleRäumlichNächsten(richtung: GraphPunkt): Boolean {
-        val aktuell = karte.knoten.firstOrNull { it.id == ausgewählterKnoten } ?: karte.knoten.firstOrNull() ?: return false
+        val sichtbareKnoten = darstellungsKarte.knoten.filter { it.id !in projektion.portale }
+        val aktuell = sichtbareKnoten.firstOrNull { it.id == ausgewählterKnoten || projektion.blöcke[it.id] == ausgewählteGruppe && ausgewählteGruppe != null } ?: sichtbareKnoten.firstOrNull() ?: return false
         val mitte = GraphPunkt(aktuell.position.x + aktuell.größe.breite / 2f, aktuell.position.y + aktuell.größe.höhe / 2f)
-        val kandidat = karte.knoten.asSequence().filter { it.id != aktuell.id }.mapNotNull { knoten ->
+        val kandidat = sichtbareKnoten.asSequence().filter { it.id != aktuell.id }.mapNotNull { knoten ->
             val delta = GraphPunkt(
                 knoten.position.x + knoten.größe.breite / 2f - mitte.x,
                 knoten.position.y + knoten.größe.höhe / 2f - mitte.y,
@@ -209,7 +320,9 @@ class KartenEditorZustand(
      * Beginnt eine neue Verbindung. Wird ein bereits belegter Eingang gegriffen,
      * bleibt der bisherige Ausgang verankert und das Eingangsende wird neu gezogen.
      */
-    fun beginneVerbindung(ref: AnschlussVerweis, position: GraphPunkt? = null) {
+    fun beginneVerbindung(darstellungsRef: AnschlussVerweis, position: GraphPunkt? = null) {
+        val ref = projektion.original(darstellungsRef)
+        if (gruppenÜbergangAktiv || darstellungsRef.knotenId in projektion.portale) return
         val anschluss = karte.findeAnschluss(ref)
         val bestehend = if (anschluss?.richtung == AnschlussRichtung.Eingang) {
             karte.verbindungen.firstOrNull { it.zu == ref }
@@ -259,7 +372,9 @@ class KartenEditorZustand(
         verwerfeVerbindungsInteraktion()
     }
 
-    fun anschlussAngeklickt(ref: AnschlussVerweis) {
+    fun anschlussAngeklickt(darstellungsRef: AnschlussVerweis) {
+        if (gruppenÜbergangAktiv) return
+        val ref = projektion.original(darstellungsRef)
         val start = verbindungsStart
         if (start == null) {
             beginneVerbindung(ref)
@@ -316,7 +431,9 @@ class KartenEditorZustand(
         }
     }
 
-    fun kompatibelMitStart(ref: AnschlussVerweis): Boolean {
+    fun kompatibelMitStart(darstellungsRef: AnschlussVerweis): Boolean {
+        if (gruppenÜbergangAktiv || darstellungsRef.knotenId in projektion.portale) return false
+        val ref = projektion.original(darstellungsRef)
         val start = verbindungsStart ?: return true
         // Der aktive Start bleibt anklickbar, damit der Zwei-Klick-Modus durch einen
         // zweiten Klick auf denselben Anschluss zuverlässig abgebrochen werden kann.
@@ -329,6 +446,11 @@ class KartenEditorZustand(
     }
 
     fun löscheAuswahl() {
+        ausgewählteGruppe?.let {
+            führeAus(KartenAktion.VisuelleGruppeLöschen(it))
+            wähleGruppe(null)
+            return
+        }
         val knotenIds = ausgewählteKnoten.ifEmpty { setOfNotNull(ausgewählterKnoten) }
         when {
             knotenIds.isNotEmpty() -> führeAus(KartenAktion.KnotenMehrfachLöschen(knotenIds))
@@ -339,7 +461,31 @@ class KartenEditorZustand(
         ausgewählteVerbindung = null
     }
 
+    fun schneideAuswahlAus() {
+        val gruppe = ausgewählteGruppe
+        if (gruppe == null) { löscheAuswahl(); return }
+        val index = GruppenIndex(karte)
+        val gruppenIds = index.nachfahren(gruppe)
+        val knotenIds = index.knotenIn(gruppe)
+        führeAus(KartenAktion.KartenInhaltErsetzen(karte.copy(
+            knoten = karte.knoten.filterNot { it.id in knotenIds },
+            verbindungen = karte.verbindungen.filterNot { it.von.knotenId in knotenIds || it.zu.knotenId in knotenIds },
+            visuelleGruppen = karte.visuelleGruppen.filterNot { it.id in gruppenIds },
+        )))
+        wähleGruppe(null)
+    }
+
     fun dupliziereAuswahl() {
+        ausgewählteGruppe?.let { gid ->
+            val zwischenablage = AtlasZwischenablage()
+            if (zwischenablage.kopiere(karte, GruppenIndex(karte).knotenIn(gid))) {
+                val g = karte.visuelleGruppen.first { it.id == gid }
+                zwischenablage.erzeugeEinfügung(g.position + GraphPunkt(28f,70f))?.let { a ->
+                    führeAus(KartenAktion.KnotenMehrfachEinfügen(a.knoten,a.verbindungen,a.gruppen))
+                }
+            }
+            return
+        }
         val ids = ausgewählteKnoten.ifEmpty { setOfNotNull(ausgewählterKnoten) }
         val originale = karte.knoten.filter { it.id in ids }
         if (originale.isEmpty()) return
@@ -429,7 +575,7 @@ class KartenEditorZustand(
         }).ohneUnverbundeneDynamischeEingänge().bereinigteVisuelleGruppen()
         if (neu == vorher) return
         merkeFürRückgängig(vorher)
-        karte = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        karte = neu
         auswertungsRevision += 1
     }
 
@@ -460,7 +606,7 @@ class KartenEditorZustand(
             .bereinigteVisuelleGruppen()
         if (neu == vorher) return
         merkeFürRückgängig(vorher)
-        karte = neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
+        karte = neu
         auswertungsRevision += 1
     }
 
@@ -473,10 +619,9 @@ class KartenEditorZustand(
         verwerfeVerbindungsInteraktion()
         wiederholen.fügeBegrenztHinzu(karte)
         val vorher = karte
-        karte = rückgängig.removeLast()
+        karte = rückgängig.removeLast().mitGruppenAnsichtenAus(vorher)
             .copy(ansicht = aktuelleAnsicht)
             .bereinigteVisuelleGruppen()
-            .mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         aktualisiereHistorienStatus()
         bereinigeAuswahl()
@@ -488,10 +633,9 @@ class KartenEditorZustand(
         verwerfeVerbindungsInteraktion()
         rückgängig.fügeBegrenztHinzu(karte)
         val vorher = karte
-        karte = wiederholen.removeLast()
+        karte = wiederholen.removeLast().mitGruppenAnsichtenAus(vorher)
             .copy(ansicht = aktuelleAnsicht)
             .bereinigteVisuelleGruppen()
-            .mitAutomatischenVisuellenGruppenMitgliedschaften()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         aktualisiereHistorienStatus()
         bereinigeAuswahl()
@@ -582,7 +726,14 @@ class KartenEditorZustand(
     }
 
     private fun bereinigeAuswahl() {
-        val gültigeKnoten = karte.knoten.mapTo(mutableSetOf()) { it.id }
+        if (geöffneteGruppe != null && karte.visuelleGruppen.none { it.id == geöffneteGruppe }) öffneGruppe(null)
+        if (ausgewählteGruppe != null && karte.visuelleGruppen.none { it.id == ausgewählteGruppe }) ausgewählteGruppe = null
+        if (ausgewählteGruppe != null) {
+            ausgewählteKnoten = GruppenIndex(karte).knotenIn(ausgewählteGruppe!!)
+            ausgewählterKnoten = null
+            return
+        }
+        val gültigeKnoten = darstellungsKarte.knoten.filter { it.id !in projektion.blöcke && it.id !in projektion.portale }.mapTo(mutableSetOf()) { it.id }
         ausgewählteKnoten = ausgewählteKnoten.intersect(gültigeKnoten)
         ausgewählterKnoten = ausgewählterKnoten?.takeIf { it in gültigeKnoten }
             ?: ausgewählteKnoten.lastOrNull()
@@ -605,6 +756,8 @@ private fun KartenAktion.istAuswertungsRelevant(): Boolean = when (this) {
     is KartenAktion.KnotenVerschieben,
     is KartenAktion.KnotenMehrfachVerschieben,
     is KartenAktion.KnotenGrößeÄndern,
+    is KartenAktion.VisuelleGruppeFaltungÄndern,
+    is KartenAktion.VisuelleGruppeAnsichtÄndern,
     is KartenAktion.VisuelleGruppeErstellen,
     is KartenAktion.VisuelleGruppeVerschieben,
     is KartenAktion.VisuelleGruppeGrößeÄndern,
@@ -623,3 +776,22 @@ private fun KartenDaten.hatGleichenAuswertungsinhaltWie(anderer: KartenDaten): B
 @Composable
 fun merkeKartenEditorZustand(startKarte: KartenDaten, prüfung: GraphPrüfung): KartenEditorZustand =
     remember(startKarte.id, prüfung) { KartenEditorZustand(startKarte, prüfung) }
+
+private fun KartenAktion.ändertGruppenGeometrie(): Boolean = when (this) {
+    is KartenAktion.KnotenEinfügen, is KartenAktion.KnotenMehrfachEinfügen,
+    is KartenAktion.KnotenVerschieben, is KartenAktion.KnotenMehrfachVerschieben,
+    is KartenAktion.KnotenGrößeÄndern, is KartenAktion.VisuelleGruppeErstellen,
+    is KartenAktion.VisuelleGruppeVerschieben, is KartenAktion.VisuelleGruppeGrößeÄndern,
+    is KartenAktion.VisuelleGruppenKinderZuordnen -> true
+    else -> false
+}
+
+private fun List<VisuelleKnotenGruppeDaten>.hatGleicheGruppenProjektionWie(anderer: List<VisuelleKnotenGruppeDaten>): Boolean =
+    this === anderer || size == anderer.size && indices.all { i -> this[i] == anderer[i] || this[i].copy(ansicht = anderer[i].ansicht, ansichtInitialisiert = anderer[i].ansichtInitialisiert) == anderer[i] }
+
+private fun KartenDaten.mitGruppenAnsichtenAus(aktuell: KartenDaten): KartenDaten {
+    val ansichten = aktuell.visuelleGruppen.associateBy { it.id }
+    return copy(visuelleGruppen = visuelleGruppen.map { g ->
+        ansichten[g.id]?.let { g.copy(ansicht = it.ansicht, ansichtInitialisiert = it.ansichtInitialisiert) } ?: g
+    })
+}

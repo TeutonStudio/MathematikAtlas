@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -110,89 +112,76 @@ internal fun KartenWahrheitstabellenDialog(
         (if (freieLogischeEingänge.isNotEmpty()) KARTEN_TABELLEN_TRENNER_BREITE else 0.dp) +
         KARTEN_ERGEBNIS_ZELLEN_BREITE * ausgänge.size.toFloat()
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        BoxWithConstraints(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            val gewünschteBreite = (tabellenBreite + 48.dp)
-                .coerceAtLeast(420.dp)
-                .coerceAtMost(980.dp)
-            val maximaleInhaltsHöhe = maxHeight * .72f
-            Surface(
-                Modifier
-                    .width(gewünschteBreite.coerceAtMost(maxWidth * .94f))
-                    .heightIn(max = maxHeight * .9f),
-                shape = MaterialTheme.shapes.large,
-                tonalElevation = 8.dp,
-            ) {
-                Column(Modifier.fillMaxWidth()) {
-                    KartenTabellenKopf(knoten, quelle, schließen)
-                    HorizontalDivider()
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = maximaleInhaltsHöhe)
-                            .verticalScroll(rememberScrollState())
-                            .padding(LocalAtlasAbstände.current.dialog),
-                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-                    ) {
-                        KartenTabellenEingabeKonfiguration(
-                            zustand = zustand,
-                            quelle = quelle,
-                            verbundeneFelder = verbundeneFelder,
-                            verbundeneWerte = verbundeneWerte,
-                            text = ::text,
-                            speichereText = ::speichereText,
-                        )
-                        if (quelle.weitereAusgänge.isNotEmpty()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Weitere Ausgänge anzeigen", Modifier.weight(1f))
-                                Switch(
-                                    checked = weitereAnzeigen,
-                                    onCheckedChange = { neu ->
-                                        weitereAnzeigen = neu
-                                        zustand.editor.führeAus(
-                                            KartenAktion.KnotenEigenschaftÄndern(
-                                                knoten.id,
-                                                "$KARTEN_TABELLEN_PREFIX.weitereAusgänge",
-                                                KnotenEigenschaft.Wahrheitswert(neu),
-                                            ),
-                                        )
-                                    },
-                                )
-                            }
+            Column(Modifier.fillMaxSize()) {
+                KartenTabellenKopf(knoten, quelle, schließen)
+                HorizontalDivider()
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(AtlasDialogAbstände.inhalt),
+                    verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
+                ) {
+                    KartenTabellenEingabeKonfiguration(
+                        zustand = zustand,
+                        quelle = quelle,
+                        verbundeneFelder = verbundeneFelder,
+                        verbundeneWerte = verbundeneWerte,
+                        text = ::text,
+                        speichereText = ::speichereText,
+                    )
+                    if (quelle.weitereAusgänge.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Weitere Ausgänge anzeigen", Modifier.weight(1f))
+                            Switch(
+                                checked = weitereAnzeigen,
+                                onCheckedChange = { neu ->
+                                    weitereAnzeigen = neu
+                                    zustand.editor.führeAus(
+                                        KartenAktion.KnotenEigenschaftÄndern(
+                                            knoten.id,
+                                            "$KARTEN_TABELLEN_PREFIX.weitereAusgänge",
+                                            KnotenEigenschaft.Wahrheitswert(neu),
+                                        ),
+                                    )
+                                },
+                            )
                         }
-                        Text(
-                            "Zeilen ${seitenStart + BigInteger.ONE}–" +
-                                "${seitenStart + BigInteger.valueOf(zeilenAufSeite.toLong())} von $zeilenAnzahl",
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                        if (zeilenAnzahl > KARTEN_TABELLEN_SEITENGRÖSSE) {
-                            KartenTabellenSeitenNavigation(seitenStart, letzterStart) {
-                                seitenStart = it
-                            }
-                        }
-                        KartenTabelle(
-                            eingänge = freieLogischeEingänge,
-                            freiePrädikate = freiePrädikate.toSet(),
-                            ausgänge = ausgänge,
-                            zeilen = zeilen,
-                            text = ::text,
-                            breite = tabellenBreite,
-                        )
                     }
-                    HorizontalDivider()
-                    KartenTabellenAktionen(zustand, knoten, quelle, schließen)
+                    Text(
+                        "Zeilen ${seitenStart + BigInteger.ONE}–" +
+                            "${seitenStart + BigInteger.valueOf(zeilenAufSeite.toLong())} von $zeilenAnzahl",
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    if (zeilenAnzahl > KARTEN_TABELLEN_SEITENGRÖSSE) {
+                        KartenTabellenSeitenNavigation(seitenStart, letzterStart) {
+                            seitenStart = it
+                        }
+                    }
+                    KartenTabelle(
+                        eingänge = freieLogischeEingänge,
+                        freiePrädikate = freiePrädikate.toSet(),
+                        ausgänge = ausgänge,
+                        zeilen = zeilen,
+                        text = ::text,
+                        breite = tabellenBreite,
+                    )
                 }
+                HorizontalDivider()
+                KartenTabellenAktionen(zustand, knoten, quelle, schließen)
             }
+
         }
     }
 }

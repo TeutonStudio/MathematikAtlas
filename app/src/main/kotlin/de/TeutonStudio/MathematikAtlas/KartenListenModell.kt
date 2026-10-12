@@ -2,6 +2,8 @@ package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.VisuelleKnotenGruppeDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.VisuelleGruppenId
 import de.TeutonStudio.MathematikAtlas.speicher.KartenOrdnung
 import de.TeutonStudio.MathematikAtlas.speicher.KartenHerkunft
 import de.TeutonStudio.MathematikAtlas.speicher.formatiereOrdnerPfad
@@ -15,6 +17,10 @@ internal sealed interface KartenListenEintrag {
         override val tiefe: Int,
     ) : KartenListenEintrag {
         override val schlüssel: String = "ordner:${formatiereOrdnerPfad(pfad)}"
+    }
+
+    data class Gruppe(val karte: KartenDaten, val gruppe: VisuelleKnotenGruppeDaten, override val tiefe: Int) : KartenListenEintrag {
+        override val schlüssel = "gruppe:${karte.id.wert}:${gruppe.id.wert}"
     }
 
     data class Karte(
@@ -32,6 +38,7 @@ internal fun kartenListenEinträge(
     herkunft: Map<KartenId, KartenHerkunft> = karten.associate { it.id to KartenHerkunft.EIGEN },
     filter: KartenHerkunft = KartenHerkunft.EIGEN,
     fremdVerwalteteOrdner: Set<List<String>> = emptySet(),
+    eingeklappteGruppen: Set<String> = emptySet(),
 ): List<KartenListenEintrag> = buildList {
     val gefilterteKarten = karten.filter { herkunft[it.id] == filter }
     val benötigteOrdner = gefilterteKarten
@@ -66,7 +73,21 @@ internal fun kartenListenEinträge(
         gefilterteKarten.asSequence()
             .filter { ordnung.ordnerFür(it.id) == eltern }
             .sortedBy { it.name.lowercase() }
-            .forEach { add(KartenListenEintrag.Karte(it, tiefe)) }
+            .forEach { karte ->
+                add(KartenListenEintrag.Karte(karte, tiefe))
+                val kinder = karte.visuelleGruppen.groupBy { it.elternGruppenId }
+                val besucht = mutableSetOf<VisuelleGruppenId>()
+                fun gruppen(eltern: VisuelleGruppenId?, ebene: Int) {
+                    kinder[eltern].orEmpty().sortedWith(compareBy({ it.titel.lowercase() }, { it.id.wert })).forEach { g ->
+                        if (besucht.add(g.id)) {
+                            val eintrag = KartenListenEintrag.Gruppe(karte, g, ebene)
+                            add(eintrag)
+                            if (eintrag.schlüssel !in eingeklappteGruppen) gruppen(g.id, ebene + 1)
+                        }
+                    }
+                }
+                gruppen(null, tiefe + 1)
+            }
     }
 
     fügeEbeneHinzu(emptyList(), 0)

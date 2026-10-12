@@ -31,7 +31,10 @@ class MainActivity : ComponentActivity() {
                     if (ereignis == Lifecycle.Event.ON_STOP) zustand.sichereAktuellVorUnterbrechung()
                 }
                 lifecycle.addObserver(beobachter)
-                onDispose { lifecycle.removeObserver(beobachter) }
+                onDispose {
+                    zustand.beendeBerechnungen()
+                    lifecycle.removeObserver(beobachter)
+                }
             }
 
             MathematikAtlasTheme(

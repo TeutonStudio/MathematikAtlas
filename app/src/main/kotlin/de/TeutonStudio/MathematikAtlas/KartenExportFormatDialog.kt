@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,11 +43,11 @@ internal fun KartenExportFormatDialog(
     exportieren: (KartenExportFormat) -> Unit,
 ) {
     var format by remember { mutableStateOf(KartenExportFormat.JSON) }
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
         title = { Text("Karte exportieren") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                 KartenExportFormat.entries.forEach { kandidat ->
                     Surface(
                         onClick = { format = kandidat },
@@ -52,8 +55,8 @@ internal fun KartenExportFormatDialog(
                         tonalElevation = if (format == kandidat) 3.dp else 0.dp,
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.standard),
-                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                            Modifier.fillMaxWidth().padding(AtlasDialogAbstände.beschreibung),
+                            horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
                         ) {
                             RadioButton(
                                 selected = format == kandidat,

@@ -1,5 +1,10 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,7 +27,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.MathematikAtlas.speicher.*
 import java.util.Locale
@@ -49,77 +53,64 @@ internal fun FarbAuswahlDialog(
         mutableStateOf(initialerEntwurf ?: FarbEntwurf.von(ausgangsFarbe, startModus))
     }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = onAbbrechen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
-                .fillMaxWidth(.92f)
-                .fillMaxHeight(.9f)
-                .widthIn(max = 760.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 8.dp,
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                DialogKopf(titel, entwurf.kanonisch)
-                HorizontalDivider()
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(LocalAtlasAbstände.current.weit),
-                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
-                ) {
-                    FarbVorschau(entwurf.kanonisch)
-                    FarbModusAuswahl(entwurf.modus) { entwurf = entwurf.mitModus(it) }
-                    Text(
-                        "Allgemeine Farbauswahl (HSB)",
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                    SättigungHelligkeitFeld(entwurf) { entwurf = it }
-                    FarbtonRegler(entwurf) { entwurf = it }
-                    FarbModusEingabe(entwurf) { entwurf = it }
-                    OutlinedTextField(
-                        value = entwurf.hexText,
-                        onValueChange = { entwurf = entwurf.mitHex(it) },
-                        label = { Text("Hex #RRGGBB") },
-                        singleLine = true,
-                        isError = entwurf.fehler == FarbEingabeFehler.HexUngueltig,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    entwurf.fehlerText?.let { fehler ->
-                        Text(
-                            fehler,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.semantics { contentDescription = "Fehler: $fehler" },
-                        )
-                    }
-                }
-                DialogFuss(
-                    gültig = entwurf.istGueltig,
-                    zurücksetzen = { entwurf = entwurf.zuruecksetzen(standardFarbe) },
-                    abbrechen = onAbbrechen,
-                    übernehmen = { onBestaetigen(entwurf.kanonisch) },
+        Column(Modifier.fillMaxSize()) {
+            DialogKopf(titel, entwurf.kanonisch)
+            HorizontalDivider()
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(AtlasDialogAbstände.abschnitt),
+                verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.eintragHorizontal),
+            ) {
+                FarbVorschau(entwurf.kanonisch)
+                FarbModusAuswahl(entwurf.modus) { entwurf = entwurf.mitModus(it) }
+                Text(
+                    "Allgemeine Farbauswahl (HSB)",
+                    style = MaterialTheme.typography.titleSmall,
                 )
+                SättigungHelligkeitFeld(entwurf) { entwurf = it }
+                FarbtonRegler(entwurf) { entwurf = it }
+                FarbModusEingabe(entwurf) { entwurf = it }
+                OutlinedTextField(
+                    value = entwurf.hexText,
+                    onValueChange = { entwurf = entwurf.mitHex(it) },
+                    label = { Text("Hex #RRGGBB") },
+                    singleLine = true,
+                    isError = entwurf.fehler == FarbEingabeFehler.HexUngueltig,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                entwurf.fehlerText?.let { fehler ->
+                    Text(
+                        fehler,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.semantics { contentDescription = "Fehler: $fehler" },
+                    )
+                }
             }
+            DialogFuss(
+                gültig = entwurf.istGueltig,
+                zurücksetzen = { entwurf = entwurf.zuruecksetzen(standardFarbe) },
+                abbrechen = onAbbrechen,
+                übernehmen = { onBestaetigen(entwurf.kanonisch) },
+            )
         }
+
     }
 }
 
 @Composable
 private fun DialogKopf(titel: String, farbe: RgbFarbe) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.inhalt),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(titel, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-        Text(farbe.rgbHex, style = MaterialTheme.typography.labelLarge)
-    }
+    AtlasDialogKopf(
+        titel = { Text(titel) },
+        untertitel = { Text(farbe.rgbHex) },
+    )
 }
 
 @Composable
@@ -130,13 +121,8 @@ private fun DialogFuss(
     übernehmen: () -> Unit,
 ) {
     HorizontalDivider()
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.bereich),
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    AtlasDialogAktionen {
         OutlinedButton(onClick = zurücksetzen) { Text("Zurücksetzen") }
-        Spacer(Modifier.weight(1f))
         TextButton(onClick = abbrechen) { Text("Abbrechen") }
         Button(onClick = übernehmen, enabled = gültig) { Text("Übernehmen") }
     }
@@ -162,7 +148,7 @@ private fun FarbModusAuswahl(
 ) {
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+        horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
     ) {
         FarbEingabeModus.entries.forEach { eintrag ->
             val titel = when (eintrag) {
@@ -238,7 +224,7 @@ private fun FarbtonRegler(
     entwurf: FarbEntwurf,
     ändern: (FarbEntwurf) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("Farbton: ${entwurf.hsb.farbton.roundToInt()}°", style = MaterialTheme.typography.labelLarge)
         Box(
             Modifier
@@ -336,7 +322,7 @@ private fun FarbKanalEingabe(
     textÄndern: (String) -> Unit,
     sliderÄndern: (Float) -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
         OutlinedTextField(
             value = text,
             onValueChange = { textÄndern(bereinigeKanalEingabe(it, ganzzahlig, vorzeichen)) },

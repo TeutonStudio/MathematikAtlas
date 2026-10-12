@@ -9,6 +9,8 @@ internal fun prüfeKartenId(id: KartenId) {
 
 /** Vollständige strukturelle Prüfung vor Journal/Dateimutationen; unbekannte Fachtypen bleiben ladbar. */
 internal fun prüfeImportKarte(karte: KartenDaten) {
+    karte.prüfeGruppenHierarchie()
+    require(karte.visuelleGruppen.all { it.ansicht.zoom.isFinite() && it.ansicht.zoom > 0 && it.ansicht.verschiebung.x.isFinite() && it.ansicht.verschiebung.y.isFinite() }) { "Ungültige Gruppenansicht." }
     prüfeKartenId(karte.id)
     require(karte.version >= 1 && karte.name.isNotBlank()) { "Karte benötigt einen Namen und eine positive Version." }
     require(karte.ansicht.zoom.isFinite() && karte.ansicht.zoom > 0 && karte.ansicht.verschiebung.x.isFinite() && karte.ansicht.verschiebung.y.isFinite()) { "Ungültige Kartenansicht." }
