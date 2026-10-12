@@ -6,7 +6,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -457,7 +457,9 @@ private fun KonzepteEbene(
                 verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
                 contentPadding = PaddingValues(bottom = AtlasDialogAbstände.beschreibung),
             ) {
-                items(sichtbareEinträge, key = KonzeptBibliothekEintrag::id) { eintrag ->
+                // Verschiedene Katalogeinträge können dieselbe Vorlagen-ID besitzen.
+                // Der Listenindex disambiguiert sie für Compose zuverlässig.
+                itemsIndexed(sichtbareEinträge, key = { index, eintrag -> "${eintrag.id}#$index" }) { _, eintrag ->
                     KonzeptBibliothekKarte(
                         zustand = zustand,
                         eintrag = eintrag,
