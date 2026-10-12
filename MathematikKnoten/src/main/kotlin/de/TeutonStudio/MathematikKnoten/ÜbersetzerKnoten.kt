@@ -40,6 +40,21 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
                 }, kannSichErweitern = false, dynamischErzeugt = false) })
 }
 
+
+const val RICHTUNG_WINKEL_ART = "mathematik.richtungWinkel"
+const val RICHTUNG_WINKEL_VORZEICHEN = "richtung.vorzeichen"
+const val RICHTUNG_WINKEL_LISTE = "richtung.winkelGrad"
+
+/** Eine Richtung in R^n; n = Anzahl der Halbkreiswinkel + 1. */
+val RichtungWinkelVorlage = KnotenVorlage(
+    RICHTUNG_WINKEL_ART, "Richtung (n-dimensional)", "Vektoren",
+    "R¹: ±1; jede zusätzliche Dimension fügt einen Halbkreiswinkel von 0° bis unter 180° hinzu.",
+    GraphGröße(250f, 120f),
+    listOf(AnschlussDaten(name = "richtung", richtung = AnschlussRichtung.Ausgang,
+        kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.SpaltenVektor.id)),
+    standardParameter = mapOf(RICHTUNG_WINKEL_VORZEICHEN to "1", RICHTUNG_WINKEL_LISTE to ""),
+)
+
 object ÜbersetzungsKnotenVorlagen {
     val Übersetzer = KnotenVorlage(ÜBERSETZER_ART, "Übersetzer", "Strukturen",
         "Übersetzt Tupel, Zeilen, Spalten oder einen Term in eine Methode.", GraphGröße(220f, 96f),
@@ -50,7 +65,7 @@ object ÜbersetzungsKnotenVorlagen {
         "Öffnet verschachtelte Tupel rekursiv von links nach rechts; andere Elemente bleiben erhalten.", GraphGröße(240f, 110f),
         listOf(AnschlussDaten(name = "tupel", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Tupel.id),
             AnschlussDaten(name = "tupel", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Tupel.id)))
-    val alle = listOf(Übersetzer, Abflachen)
+    val alle = listOf(Übersetzer, Abflachen, RichtungWinkelVorlage)
 }
 
 /** Gemeinsame Methodenbildung für den historischen Adapter und den Übersetzer. */
@@ -84,6 +99,15 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
 }
 
 fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
+    registriere(RICHTUNG_WINKEL_ART) { k ->
+        val vorzeichen = k.knoten.parameter[RICHTUNG_WINKEL_VORZEICHEN]?.toIntOrNull()
+            ?: error("Richtungsvorzeichen muss -1 oder +1 sein.")
+        val roh = k.knoten.parameter[RICHTUNG_WINKEL_LISTE].orEmpty()
+        val winkel = if (roh.isBlank()) emptyList() else roh.split(';').map { eintrag ->
+            eintrag.trim().toDoubleOrNull() ?: error("Ungültiger Halbkreiswinkel: '$eintrag'.")
+        }
+        KnotenAuswertungsErgebnis(mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, winkel))))
+    }
     registriere(ÜBERSETZER_ART) { k ->
         val wert = k.eingänge["wert"] ?: error("Der zu übersetzende Wert fehlt.")
         val ziel = übersetzerZiel(k.knoten)
