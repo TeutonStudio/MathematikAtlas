@@ -14,7 +14,7 @@ object Polarkoordinaten {
     fun polar(kartesisch: Tupel): Tupel {
         val x = komponenten(kartesisch)
         require(x.isNotEmpty()) { "Polarkoordinaten benötigen mindestens eine Dimension." }
-        if (x.size == 1) return Tupel(listOf(zahl(abs(x.single())), Tupel(listOf(zahl(sign(x.single())))))
+        if (x.size == 1) return Tupel(listOf(zahl(abs(x.single())), Tupel(listOf(zahl(sign(x.single()))))))
         val winkel = mutableListOf<Double>()
         val azimut = if (x[0] == 0.0 && x[1] == 0.0) 0.0 else Math.toDegrees(atan2(x[1], x[0]))
         // Eine Addition von 360 kann einen sehr kleinen negativen Winkel auf 360 runden.
