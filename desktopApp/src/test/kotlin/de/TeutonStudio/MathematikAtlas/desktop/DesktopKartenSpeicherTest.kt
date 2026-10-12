@@ -24,4 +24,15 @@ class DesktopKartenSpeicherTest {
         assertFails { speicher.importiere("kein json") }
         assertEquals(karte, speicher.ladeAktuell())
     }
+
+    @Test fun `geöffnete Gruppe und eigene Kamera überleben Desktop Neustart`() {
+        val basis=Files.createTempDirectory("atlas-desktop-gruppe")
+        val speicher=DesktopKartenSpeicher(basis)
+        val g=VisuelleKnotenGruppeDaten(titel="Test",eingeklappt=true,ansichtInitialisiert=true,ansicht=AnsichtsFenster(GraphPunkt(120f,160f),.6f),größe=GraphGröße(400f,300f))
+        speicher.speichere(KartenDaten(name="Gruppe",visuelleGruppen=listOf(g)))
+        speicher.speichereAktiveGruppe(g.id)
+        val neu=DesktopAtlasZustand(DesktopKartenSpeicher(basis))
+        assertEquals(g.id,neu.editor.geöffneteGruppe)
+        assertEquals(g.ansicht,neu.editor.darstellungsKarte.ansicht)
+    }
 }

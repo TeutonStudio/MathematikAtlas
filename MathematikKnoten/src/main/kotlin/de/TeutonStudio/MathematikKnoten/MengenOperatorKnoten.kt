@@ -159,7 +159,9 @@ fun konfiguriereMengenRechner(
 ): KnotenDaten {
     require(knoten.art == MengenRechner.KNOTEN_ART)
     val gewuenscht = mengenRechnerAnschluesse(operator, festeEingänge)
-    val anschluesse = erhalteAnschlussIds(knoten.anschlüsse, gewuenscht)
+    val anschluesse = erhalteDynamischeOperanden(knoten, erhalteAnschlussIds(knoten.anschlüsse, gewuenscht),
+        knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER] == operator.stabileId &&
+                (knoten.parameter["festeEingänge"]?.toIntOrNull() ?: 2) == festeEingänge)
     val bisherigerTitel = MengenRechnerOperator.vonIdOderNull(knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER])?.titel()
     val automatischerName = bisherigerTitel != null && knoten.name == bisherigerTitel ||
         sichtbareMengenRechnerOperatoren.any { it.titel() == knoten.name }
@@ -395,9 +397,12 @@ private fun mengenRechnerAnschluesse(
         )
     } + ausgang("menge", MathematikAnschlussArten.Menge.id)
 
-    MengenRechnerOperator.DIFFERENZ,
-    MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ,
-    -> listOf(
+    MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ -> List(festeEingänge.coerceAtLeast(2)) { index ->
+        eingang(if (index == 0) "links" else if (index == 1) "rechts" else "input${index + 1}",
+            MathematikAnschlussArten.Menge.id, index, erweiterbar = true)
+    } + ausgang("menge", MathematikAnschlussArten.Menge.id)
+
+    MengenRechnerOperator.DIFFERENZ -> listOf(
         eingang("links", MathematikAnschlussArten.Menge.id, 0),
         eingang("rechts", MathematikAnschlussArten.Menge.id, 1),
         ausgang("menge", MathematikAnschlussArten.Menge.id),

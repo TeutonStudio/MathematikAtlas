@@ -76,6 +76,7 @@ object KnotenInspektorRegister {
         "mathematik.transponieren" to TransponierenInspektor,
         "mathematik.matrixdiagonale" to MatrixdiagonaleInspektor,
         "mathematik.auswerten" to AuswertenInspektor,
+        "mathematik.gleichungLösen" to AuswertenInspektor,
         "mathematik.vektor" to VektorKonstruktorInspektor,
         "mathematik.zeilenVektor" to VektorKonstruktorInspektor,
         "mathematik.multinomVektor" to MultinomVektorInspektor,

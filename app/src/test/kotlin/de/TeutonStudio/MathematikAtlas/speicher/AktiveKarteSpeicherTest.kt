@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.speicher
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.VisuelleGruppenId
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,5 +26,15 @@ class AktiveKarteSpeicherTest {
         assertNull(speicher.lade())
         speicher.löschen()
         assertNull(speicher.lade())
+    }
+
+    @Test fun `aktive Gruppenansicht überlebt Neustart und alte Kartenreferenzen bleiben lesbar`() {
+        val ordner=Files.createTempDirectory("aktive-gruppe").toFile()
+        val speicher=AktiveKarteSpeicher(ordner)
+        val gruppe=VisuelleGruppenId("gruppe")
+        speicher.speichere(KartenId("karte"),gruppe)
+        assertEquals(gruppe,AktiveKarteSpeicher(ordner).ladeGruppe())
+        speicher.speichere(KartenId("karte"))
+        assertNull(AktiveKarteSpeicher(ordner).ladeGruppe())
     }
 }

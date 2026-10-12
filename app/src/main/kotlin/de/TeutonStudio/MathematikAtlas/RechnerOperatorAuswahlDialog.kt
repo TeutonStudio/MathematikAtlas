@@ -1,5 +1,10 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +24,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KnotenErsetzungsAuswirkung
 import de.TeutonStudio.MathematikKnoten.LatexText
@@ -59,15 +63,15 @@ internal fun RechnerOperatorAuswahlDialog(
         }
     }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
+
+
                 .onPreviewKeyEvent { ereignis ->
                     when {
                         ereignis.type != KeyEventType.KeyDown -> false
@@ -89,81 +93,74 @@ internal fun RechnerOperatorAuswahlDialog(
             contentAlignment = Alignment.Center,
         ) {
             val breit = maxWidth >= 980.dp
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth(.96f)
-                    .fillMaxHeight(.94f)
-                    .widthIn(max = 1440.dp),
-                shape = MaterialTheme.shapes.extraLarge,
-                tonalElevation = 8.dp,
-            ) {
-                Column(Modifier.fillMaxSize()) {
-                    DialogKopf(familienTitel, schließen)
-                    HorizontalDivider()
 
-                    if (breit) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().weight(1f).padding(LocalAtlasAbstände.current.dialog),
-                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
-                        ) {
-                            KategorienSpalte(kategorien, kategorie, { kategorie = it }, Modifier.width(210.dp))
-                            AuswahlBereich(
-                                suchtext = suchtext,
-                                suchtextÄndern = { suchtext = it },
-                                sucheFokus = sucheFokus,
-                                einträge = sichtbar,
-                                auswahlId = auswahlId,
-                                auswählen = { auswahlId = it.id },
-                                leeren = {
-                                    suchtext = ""
-                                    kategorie = null
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
-                            OperatorDetails(
-                                eintrag = ausgewählt,
-                                auswirkung = auswirkung,
-                                modifier = Modifier.widthIn(min = 300.dp, max = 390.dp).fillMaxHeight(),
-                            )
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().weight(1f).padding(LocalAtlasAbstände.current.inhalt),
-                            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-                        ) {
-                            KategorienZeile(kategorien, kategorie, { kategorie = it })
-                            AuswahlBereich(
-                                suchtext = suchtext,
-                                suchtextÄndern = { suchtext = it },
-                                sucheFokus = sucheFokus,
-                                einträge = sichtbar,
-                                auswahlId = auswahlId,
-                                auswählen = { auswahlId = it.id },
-                                leeren = {
-                                    suchtext = ""
-                                    kategorie = null
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
-                            OperatorDetails(
-                                eintrag = ausgewählt,
-                                auswirkung = auswirkung,
-                                modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp),
-                            )
-                        }
+            Column(Modifier.fillMaxSize()) {
+                DialogKopf(familienTitel, schließen)
+                HorizontalDivider()
+
+                if (breit) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().weight(1f).padding(AtlasDialogAbstände.inhalt),
+                        horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.eintragHorizontal),
+                    ) {
+                        KategorienSpalte(kategorien, kategorie, { kategorie = it }, Modifier.width(210.dp))
+                        AuswahlBereich(
+                            suchtext = suchtext,
+                            suchtextÄndern = { suchtext = it },
+                            sucheFokus = sucheFokus,
+                            einträge = sichtbar,
+                            auswahlId = auswahlId,
+                            auswählen = { auswahlId = it.id },
+                            leeren = {
+                                suchtext = ""
+                                kategorie = null
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        OperatorDetails(
+                            eintrag = ausgewählt,
+                            auswirkung = auswirkung,
+                            modifier = Modifier.widthIn(min = 300.dp, max = 390.dp).fillMaxHeight(),
+                        )
                     }
-
-                    HorizontalDivider()
-                    DialogAktionen(
-                        eintrag = ausgewählt,
-                        aktuelleId = aktuelleId,
-                        auswirkung = auswirkung,
-                        kannBestätigen = kannBestätigen,
-                        abbrechen = schließen,
-                        bestätigen = ::bestätige,
-                    )
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().weight(1f).padding(AtlasDialogAbstände.eintragHorizontal),
+                        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
+                    ) {
+                        KategorienZeile(kategorien, kategorie, { kategorie = it })
+                        AuswahlBereich(
+                            suchtext = suchtext,
+                            suchtextÄndern = { suchtext = it },
+                            sucheFokus = sucheFokus,
+                            einträge = sichtbar,
+                            auswahlId = auswahlId,
+                            auswählen = { auswahlId = it.id },
+                            leeren = {
+                                suchtext = ""
+                                kategorie = null
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        OperatorDetails(
+                            eintrag = ausgewählt,
+                            auswirkung = auswirkung,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp),
+                        )
+                    }
                 }
+
+                HorizontalDivider()
+                DialogAktionen(
+                    eintrag = ausgewählt,
+                    aktuelleId = aktuelleId,
+                    auswirkung = auswirkung,
+                    kannBestätigen = kannBestätigen,
+                    abbrechen = schließen,
+                    bestätigen = ::bestätige,
+                )
             }
+
         }
     }
 
@@ -172,21 +169,14 @@ internal fun RechnerOperatorAuswahlDialog(
 
 @Composable
 private fun DialogKopf(familienTitel: String, schließen: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text("Operator auswählen", style = MaterialTheme.typography.headlineSmall)
-            Text(
+    AtlasDialogKopf(
+        titel = { Text("Operator auswählen") },
+        untertitel = { Text(
                 familienTitel,
-                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        TextButton(onClick = schließen) { Text("Schließen") }
-    }
+            ) },
+        aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+    )
 }
 
 @Composable
@@ -198,8 +188,8 @@ private fun KategorienSpalte(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = LocalAtlasAbstände.current.liste,
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+        contentPadding = PaddingValues(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.eintragVertikal),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen),
     ) {
         item {
             FilterChip(
@@ -227,8 +217,8 @@ private fun KategorienZeile(
     auswählen: (String?) -> Unit,
 ) {
     LazyRow(
-        contentPadding = LocalAtlasAbstände.current.liste,
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+        contentPadding = PaddingValues(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.eintragVertikal),
+        horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
     ) {
         item {
             FilterChip(
@@ -258,7 +248,7 @@ private fun AuswahlBereich(
     leeren: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
         OutlinedTextField(
             value = suchtext,
             onValueChange = suchtextÄndern,
@@ -280,9 +270,9 @@ private fun AuswahlBereich(
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(210.dp),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = LocalAtlasAbstände.current.liste,
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                contentPadding = PaddingValues(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.eintragVertikal),
+                horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
+                verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
             ) {
                 items(einträge, key = { it.id }) { eintrag ->
                     OperatorKachel(
@@ -317,8 +307,8 @@ private fun OperatorKachel(
         colors = CardDefaults.outlinedCardColors(containerColor = farbe),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.bereich),
-            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.felder),
+            verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -354,18 +344,19 @@ private fun OperatorDetails(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         if (eintrag == null) {
-            Box(Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.inhalt), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(AtlasDialogAbstände.eintragHorizontal), contentAlignment = Alignment.Center) {
                 Text("Wähle einen Operator für die Detailansicht.")
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.inhalt),
-                verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                modifier = Modifier.fillMaxSize().padding(AtlasDialogAbstände.eintragHorizontal),
+                verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
             ) {
                 item {
                     Text(eintrag.titel, style = MaterialTheme.typography.titleLarge)
                     LatexText(eintrag.symbolLatex, style = MaterialTheme.typography.titleMedium)
                     Text(eintrag.beschreibung, style = MaterialTheme.typography.bodyMedium)
+                    eintrag.definitionLatex?.let { LatexText(it, style = MaterialTheme.typography.bodyMedium) }
                 }
                 if (eintrag.art == RechnerOperatorAuswahlArt.FORMEL) {
                     item {
@@ -446,11 +437,7 @@ private fun DialogAktionen(
     abbrechen: () -> Unit,
     bestätigen: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard, Alignment.End),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    AtlasDialogAktionen {
         TextButton(onClick = abbrechen) { Text("Abbrechen") }
         Button(onClick = bestätigen, enabled = kannBestätigen) {
             Text(

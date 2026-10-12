@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.rememberScrollState
@@ -7,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -54,11 +56,12 @@ internal fun KartenImportDialog(zustand: AtlasZustand, schließen: () -> Unit) {
         }
     }
 
-    AlertDialog(
+    AtlasBestätigungsDialog(
+        inhaltScrolltSelbst = true,
         onDismissRequest = { if (!lädt) schließen() },
         title = { Text("Karte oder Sammlung importieren") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                 OutlinedTextField(
                     value = jsonText,
                     onValueChange = { jsonText = it },

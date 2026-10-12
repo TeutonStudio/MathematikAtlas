@@ -115,9 +115,9 @@ class AuswertenUndStandardwertDarstellungTest {
             löse(Gleichheit(x, addition(listOf(x, RationaleZahl.Eins)))),
         )
         assertEquals(ReelleZahlen, löse(Gleichheit(x, x)))
-        assertIs<DefinierteMenge>(
-            löse(Gleichheit(Potenz(x, RationaleZahl.von(2)), RationaleZahl.von(2))),
-        )
+        val quadratisch = löse(Gleichheit(Potenz(x, RationaleZahl.von(2)), RationaleZahl.von(2)))
+        assertTrue(quadratisch is EndlicheMenge || quadratisch is de.TeutonStudio.MathematikRechenSystem.kern.Schnitt)
+
     }
 
     @Test

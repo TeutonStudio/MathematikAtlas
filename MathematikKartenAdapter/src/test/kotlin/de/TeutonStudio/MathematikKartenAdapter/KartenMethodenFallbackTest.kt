@@ -114,6 +114,17 @@ class KartenMethodenFallbackTest {
         )
         assertEquals("Fallback-Methode", fallback.name)
 
+        // Rechner heben Eingänge auf AtlasWert mit zugelassenen Aussage-/Methodenarten an.
+        // Ohne expliziten Standardwert muss die Quelle vor dem impliziten false greifen.
+        val angehoben = iteration.copy(anschlüsse = listOf(methodenEingang.copy(
+            art = AnschlussArtId("mathematik.atlasWert"),
+            zulässigeArten = setOf(AnschlussArtId("mathematik.aussage"), AnschlussArtId("mathematik.methode")),
+        )))
+        val mitAtlasWert = auswerter.auswerten(KartenDaten(name = "Angehoben", knoten = listOf(angehoben)))
+        assertEquals("Fallback-Methode", assertIs<Methode>(mitAtlasWert.knoten.getValue(iteration.id)
+            .ausgaben.getValue("methode").objekt).name)
+
+
         val mitEdge = auswerter.auswerten(
             KartenDaten(
                 name = "Außen",

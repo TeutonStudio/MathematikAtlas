@@ -1,12 +1,13 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -167,7 +168,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
 
         ausstehenderKnoten?.let { ziel ->
             val auswirkung = aktionen.vorschauKnotenErsetzen(ziel)
-            AlertDialog(
+            AtlasBestätigungsDialog(
                 onDismissRequest = { ausstehenderKnoten = null },
                 title = { Text("Achseneingabe wirklich wechseln?") },
                 text = {

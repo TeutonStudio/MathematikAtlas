@@ -21,6 +21,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.KomplexeZahl
 import de.TeutonStudio.MathematikRechenSystem.kern.KomplexeZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenKonstante
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.OrientierterVektor
@@ -48,28 +49,25 @@ const val EINHEITSVEKTOR_POSITION = "position"
 const val EINHEITSVEKTOR_DIMENSION = "dimension"
 private const val STANDARDWERT_PREFIX = "standardwert."
 
-enum class MengenKnotenAuswahl(
-    val stabileId: String,
-    val titel: String,
-    val beschreibung: String,
-    private val erzeuger: () -> MengenAusdruck,
-) {
-    LEERE_MENGE("leer", "Leere Menge", "Die Menge ohne Elemente.", { LeereMenge }),
-    NATUERLICHE_ZAHLEN("N", "Natürliche Zahlen", "Die positiven natürlichen Zahlen.", { NatürlicheZahlen }),
-    NATUERLICHE_MIT_NULL("N0", "Natürliche Zahlen mit Null", "Die nichtnegativen ganzen Zahlen.", { BenannteMenge("N0", "\\mathbb N_0") }),
-    GANZE_ZAHLEN("Z", "Ganze Zahlen", "Die ganzen Zahlen.", { GanzeZahlen }),
-    RATIONALE_ZAHLEN("Q", "Rationale Zahlen", "Die rationalen Zahlen.", { RationaleZahlen }),
-    REELLE_ZAHLEN("R", "Reelle Zahlen", "Die reellen Zahlen.", { ReelleZahlen }),
-    KOMPLEXE_ZAHLEN("C", "Komplexe Zahlen", "Die komplexen Zahlen.", { KomplexeZahlen }),
-    PRIMZAHLEN("P", "Primzahlen", "Die positiven Primzahlen.", { Primzahlen }),
-    GAUSSSCHE_GANZE("Zi", "Gaußsche ganze Zahlen", "Der Ring der Zahlen a+bi mit a,b in Z.", { GaußscheGanzeZahlen }),
-    GAUSSSCHE_PRIMZAHLEN("PZi", "Gaußsche Primzahlen", "Die Primelemente der gaußschen ganzen Zahlen.", { GaußschePrimzahlen }),
-    ;
+enum class MengenKnotenAuswahl(val operator: MengenKonstante) {
+    LEERE_MENGE(MengenKonstante.LEER),
+    NATUERLICHE_ZAHLEN(MengenKonstante.N),
+    NATUERLICHE_MIT_NULL(MengenKonstante.N0),
+    GANZE_ZAHLEN(MengenKonstante.Z),
+    RATIONALE_ZAHLEN(MengenKonstante.Q),
+    REELLE_ZAHLEN(MengenKonstante.R),
+    KOMPLEXE_ZAHLEN(MengenKonstante.C),
+    PRIMZAHLEN(MengenKonstante.P),
+    GAUSSSCHE_GANZE(MengenKonstante.ZI),
+    GAUSSSCHE_PRIMZAHLEN(MengenKonstante.PZI);
 
-    fun menge(): MengenAusdruck = erzeuger()
-
+    val stabileId: String get() = operator.stabileId
+    val titel: String get() = operator.titel
+    val beschreibung: String get() = operator.definitionLatex
+    fun menge(): MengenAusdruck = operator.auswerten()
     companion object {
-        fun vonId(id: String?): MengenKnotenAuswahl = entries.firstOrNull { it.stabileId == id } ?: REELLE_ZAHLEN
+        fun vonIdOderNull(id: String?): MengenKnotenAuswahl? = entries.firstOrNull { it.stabileId == id }
+        fun vonId(id: String?): MengenKnotenAuswahl = vonIdOderNull(id) ?: REELLE_ZAHLEN
     }
 }
 
@@ -191,7 +189,9 @@ val historischeSkalarproduktArten: Set<String> = setOf(
 
 internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
     registriere(MENGEN_KNOTEN_ART) { kontext ->
-        val auswahl = MengenKnotenAuswahl.vonId(kontext.knoten.parameter[MENGEN_KNOTEN_AUSWAHL])
+        val id = kontext.knoten.parameter[MENGEN_KNOTEN_AUSWAHL]
+        val auswahl = if (id == null) MengenKnotenAuswahl.REELLE_ZAHLEN else MengenKnotenAuswahl.vonIdOderNull(id)
+        if (auswahl == null) return@registriere KnotenAuswertungsErgebnis(ausgaben = emptyMap(), fehler = "Unbekannter Mengenoperator: $id")
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf("menge" to BedingterWert(auswahl.menge())),
         )

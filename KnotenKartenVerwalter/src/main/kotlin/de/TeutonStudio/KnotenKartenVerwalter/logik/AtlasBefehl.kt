@@ -61,7 +61,7 @@ class AtlasZwischenablage {
             verbindungen = karte.verbindungen.filter { it.von.knotenId in ids && it.zu.knotenId in ids },
             gruppen = karte.visuelleGruppen.mapNotNull { gruppe ->
                 val enthalten = gruppe.knotenIds.intersect(ids)
-                gruppe.takeIf { enthalten.size >= 2 }?.copy(knotenIds = enthalten)
+                gruppe.takeIf { GruppenIndex(karte).knotenIn(gruppe.id).any { it in ids } }?.copy(knotenIds = enthalten)
             },
             ursprung = ursprung,
         )
@@ -99,6 +99,7 @@ class AtlasZwischenablage {
         val gruppen = quelle.gruppen.map { gruppe ->
             gruppe.copy(
                 id = gruppenIds.getValue(gruppe.id),
+                elternGruppenId = gruppenIds[gruppe.elternGruppenId],
                 knotenIds = gruppe.knotenIds.mapTo(linkedSetOf()) { knotenIds.getValue(it) },
                 position = gruppe.position + delta,
             )
@@ -195,7 +196,7 @@ class AtlasBefehlsAusführer(
             AtlasBefehl.AllesAuswählen -> editor.wähleAlleKnoten()
             AtlasBefehl.AuswahlKopieren -> zwischenablage.kopiere(editor.karte, editor.ausgewählteKnoten)
             AtlasBefehl.AuswahlAusschneiden -> {
-                if (zwischenablage.kopiere(editor.karte, editor.ausgewählteKnoten)) editor.löscheAuswahl()
+                if (zwischenablage.kopiere(editor.karte, editor.ausgewählteKnoten)) editor.schneideAuswahlAus()
             }
             is AtlasBefehl.AuswahlEinfügen -> {
                 val ziel = befehl.position ?: kontext.zeigerPosition ?: kontext.sichtbareMitte
@@ -208,14 +209,14 @@ class AtlasBefehlsAusführer(
             is AtlasBefehl.AuswahlVerschieben -> editor.verschiebeAuswahl(befehl.delta)
             AtlasBefehl.AuswahlGruppieren -> editor.gruppiereAuswahlVisuell()
             AtlasBefehl.GruppierungAufheben -> editor.hebeVisuelleGruppierungDerAuswahlAuf()
-            AtlasBefehl.InhaltEinpassen -> editor.karte.ansichtFürInhalt(
+            AtlasBefehl.InhaltEinpassen -> editor.darstellungsKarte.ansichtFürInhalt(
                 anzeigeBreiteDp = kontext.anzeigeBreiteDp,
                 anzeigeHöheDp = kontext.anzeigeHöheDp,
                 pufferDp = 40f,
             )?.let { editor.führeAus(KartenAktion.AnsichtÄndern(it), mitHistorie = false) }
             AtlasBefehl.AuswahlZentrieren -> zentriereAuswahl(kontext)
             is AtlasBefehl.ZoomSetzen -> setzeZoom(befehl.faktor, kontext.sichtbareMitte)
-            is AtlasBefehl.ZoomÄndern -> setzeZoom(editor.karte.ansicht.zoom * befehl.faktor, kontext.zeigerPosition ?: kontext.sichtbareMitte)
+            is AtlasBefehl.ZoomÄndern -> setzeZoom(editor.darstellungsKarte.ansicht.zoom * befehl.faktor, kontext.zeigerPosition ?: kontext.sichtbareMitte)
             AtlasBefehl.InteraktionAbbrechen -> editor.brecheInteraktionAb()
             AtlasBefehl.KnotenAuswahlÖffnen -> knotenAuswahlÖffnen(kontext.zeigerPosition ?: kontext.sichtbareMitte)
             AtlasBefehl.Umbenennen -> umbenennen()
@@ -231,7 +232,7 @@ class AtlasBefehlsAusführer(
             (auswahl.minOf { it.position.x } + auswahl.maxOf { it.position.x + it.größe.breite }) / 2f,
             (auswahl.minOf { it.position.y } + auswahl.maxOf { it.position.y + it.größe.höhe }) / 2f,
         )
-        val ansicht = editor.karte.ansicht
+        val ansicht = editor.darstellungsKarte.ansicht
         editor.führeAus(
             KartenAktion.AnsichtÄndern(ansicht.copy(verschiebung = GraphPunkt(
                 kontext.anzeigeBreiteDp / 2f - mitte.x * ansicht.zoom,

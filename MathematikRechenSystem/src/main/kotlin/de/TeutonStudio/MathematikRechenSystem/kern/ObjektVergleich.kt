@@ -25,6 +25,9 @@ private fun vergleicheObjekte(links: MathematischesObjekt, rechts: Mathematische
     // Strukturelle Identität beweist Reflexivität auch für symbolische Objekte;
     // fehlende strukturelle Identität beweist dagegen keine Ungleichheit.
     if (l == r) return vergleichsWert(true)
+    if (l is MengenAusdruck && r is MengenAusdruck &&
+        MengenKonstante.vonMenge(l) != null && MengenKonstante.vonMenge(r) != null
+    ) return vergleichsWert(false)
     fun paar(a: MathematischesObjekt, b: MathematischesObjekt) = vergleicheObjekte(a, b, kontext, selbig)
     fun alle(paare: List<Pair<MathematischesObjekt, MathematischesObjekt>>): AussageErgebnis {
         val ergebnisse = paare.map { (a, b) -> paar(a, b) }

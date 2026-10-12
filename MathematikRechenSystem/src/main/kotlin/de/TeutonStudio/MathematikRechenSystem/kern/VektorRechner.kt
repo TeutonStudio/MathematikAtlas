@@ -261,11 +261,11 @@ object VektorRechner {
                 )
             }
             VektorRechnerOperator.HADAMARD_PRODUKT -> {
-                if (vektoren.size != 2) return anzahlFehler("Hadamard-Produkt", "genau zwei Vektoren")
+                if (vektoren.size < 2) return anzahlFehler("Hadamard-Produkt", "mindestens zwei Vektoren")
                 vektorErgebnis(
                     orientiereWie(
                         vektoren.first(),
-                        vektoren[0].werte.zip(vektoren[1].werte) { links, rechts -> multiplikation(links, rechts) },
+                        vektoren.first().werte.indices.map { index -> vektoren.map { it.werte[index] }.reduce { a, b -> multiplikation(a, b) } },
                     ),
                     anfrage.vektoren.first().vertrag,
                 )

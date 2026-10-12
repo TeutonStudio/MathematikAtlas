@@ -14,6 +14,15 @@ class DesktopKartenSpeicher(
 
     init { kartenVerzeichnis.createDirectories() }
 
+    fun ladeAktiveGruppe(): VisuelleGruppenId? = runCatching {
+        basis.resolve("aktive-gruppe.txt").readText().trim().takeIf { it.isNotBlank() }?.let(::VisuelleGruppenId)
+    }.getOrNull()
+
+    fun speichereAktiveGruppe(id: VisuelleGruppenId?) {
+        val datei = basis.resolve("aktive-gruppe.txt")
+        if (id == null) datei.deleteIfExists() else atomarSchreiben(datei,id.wert)
+    }
+
     fun ladeAktuell(): KartenDaten? {
         val pfad = aktuellDatei.takeIf { it.exists() }?.readText()?.trim()?.takeIf(String::isNotBlank)?.let(basis::resolve)
         return pfad?.takeIf { it.isRegularFile() }?.let(::ladeDatei)

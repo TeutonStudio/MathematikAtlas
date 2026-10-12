@@ -293,6 +293,15 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                     zulässigeArten = standardEingang?.zulässigeArten.orEmpty(),
                 )
             }
+            val rollenUmbenennung = alteEingaenge.zip(umbenannt).associate { (alt, neu) -> alt.name to neu.name }
+            val standardwerte = alt.parameter.filterKeys { it.startsWith("standardwert.") }.map { (key, value) ->
+                val name = key.removePrefix("standardwert.")
+                "standardwert.${rollenUmbenennung[name] ?: name}" to value
+            }
+            val kartenQuellen = alt.eingangsKartenVerweise.map { (name, quelle) -> (rollenUmbenennung[name] ?: name) to quelle }
+            if (standardwerte.map { it.first }.distinct().size != standardwerte.size ||
+                kartenQuellen.map { it.first }.distinct().size != kartenQuellen.size) return@map alt.copy(
+                parameter = alt.parameter + (RECHNER_MIGRATION_DIAGNOSE to "${alt.art} bleibt erhalten: Mehrdeutige gespeicherte Eingangsquellen."))
             val vorhanden = umbenannt.mapTo(mutableSetOf()) { it.name }
             val ergaenzt = standard.filter {
                 it.richtung == AnschlussRichtung.Eingang && it.name !in vorhanden
@@ -317,7 +326,8 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
                 art = ZAHLENRECHNER_ART,
                 name = if (alt.name in alteStandardNamen) operator.titel else alt.name,
                 anschlüsse = umbenannt + ergaenzt + ausgang,
-                parameter = standardParameter(operator) + alt.parameter + mapOf(
+                eingangsKartenVerweise = kartenQuellen.toMap(),
+                parameter = standardParameter(operator) + alt.parameter.filterKeys { !it.startsWith("standardwert.") } + standardwerte.toMap() + mapOf(
                     ZAHLENRECHNER_OPERATOR to operator.stabileId,
                     ZAHLENRECHNER_KOMPLEX_EINGABE to if (alt.art == "mathematik.komplexAusTupel") {
                         ZAHLENRECHNER_KOMPLEX_TUPEL

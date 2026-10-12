@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
@@ -46,9 +49,10 @@ internal object AuswertenInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
-        Text("Termauswertung", style = MaterialTheme.typography.titleSmall)
+        Text(if (knoten.art == "mathematik.gleichungLösen") "Lösungsmenge" else "Termauswertung", style = MaterialTheme.typography.titleSmall)
         Text(
-  "Dieser Knoten vereinfacht mathematische Terme typ-erhaltend, darunter Zahlen, Aussagen, Matrizen, Vektoren, Tupel und Mengen. Relationen werden nicht hier gelöst, sondern im Knoten „Auflösen“.",
+  if (knoten.art == "mathematik.gleichungLösen") "Bestimmt die zulässigen Belegungen der angeschlossenen Variablen. Parameter bleiben symbolisch."
+  else "Vereinfacht Terme und entscheidet Prädikate soweit möglich. Freie Symbole und offene Bedingungen bleiben erhalten.",
   style = MaterialTheme.typography.bodySmall,
   color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -68,7 +72,7 @@ internal object AuswertenInspektor : KnotenInspektor {
   Text("Auswertungsdetails öffnen")
         }
         if (dialogGeöffnet && ergebnis != null) {
-  AuswertungsDetailsDialog(knoten, ergebnis) { dialogGeöffnet = false }
+  de.TeutonStudio.MathematikKnoten.PrädikatsRechenwegDialog(knoten.name, ergebnis) { dialogGeöffnet = false }
         }
     }
 }
@@ -81,42 +85,27 @@ private fun AuswertungsDetailsDialog(
 ) {
     var tab by remember(knoten.id) { mutableIntStateOf(0) }
     val tabs = listOf("Ergebnis", "Umformung", "Bedingungen")
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-  modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
-      .padding(LocalAtlasAbstände.current.bereich)
-      .fillMaxWidth(0.96f).fillMaxHeight(0.92f),
-  shape = MaterialTheme.shapes.extraLarge,
-  tonalElevation = 6.dp,
-        ) {
   Column(Modifier.fillMaxSize()) {
-      Row(
-          modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-      ) {
-          Text(
-              "${knoten.name}: Termauswertung",
-              style = MaterialTheme.typography.titleLarge,
-              modifier = Modifier.weight(1f),
-          )
-          TextButton(onClick = schließen) { Text("Schließen") }
-      }
+      AtlasDialogKopf(
+          titel = { Text("${knoten.name}: Termauswertung") },
+          aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+      )
       TabRow(selectedTabIndex = tab) {
           tabs.forEachIndexed { index, titel ->
               Tab(selected = tab == index, onClick = { tab = index }, text = { Text(titel) })
           }
       }
       when (tab) {
-          0 -> ErgebnisAnsicht(ergebnis, Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog))
-          1 -> UmformungsAnsicht(ergebnis.schritte, Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog))
-          else -> BedingungenAnsicht(ergebnis, Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.dialog))
+          0 -> ErgebnisAnsicht(ergebnis, Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.inhalt))
+          1 -> UmformungsAnsicht(ergebnis.schritte, Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.inhalt))
+          else -> BedingungenAnsicht(ergebnis, Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.inhalt))
       }
   }
-        }
+
     }
 }
 

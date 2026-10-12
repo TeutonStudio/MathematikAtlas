@@ -26,6 +26,36 @@ private fun werteTensorOperationAus(
         return fehlerErgebnis(kontext, "$fehler Öffne den Inspector und bestätige die sichtbaren Achsen.")
     }
     val definition = aktuelleTensorOperationDefinition(kontext.knoten)
+    if (istAssoziativerRechnerOperator(definition.id.wert)) {
+        val werte = runCatching { geordneteOperationsWerte(kontext).values.toList() }.getOrElse {
+            return fehlerErgebnis(kontext, it.message ?: "Ungültige Operandenliste.")
+        }
+        val operator = definition.alsBestehenderTensorOperatorOderNull()
+            ?: return fehlerErgebnis(kontext, "Unbekannter assoziativer Tensoroperator.")
+        var wert = werte.first()
+        var symbolisch = false
+        val bedingungen = mutableListOf<String>()
+        for (rechts in werte.drop(1)) {
+            wert = when (val ergebnis = TensorRechner.erzeuge(operator,
+                listOf(TensorRechnerEingabe("links", wert), TensorRechnerEingabe("rechts", rechts)))) {
+                is TensorRechnerErgebnis.Wert -> ergebnis.objekt
+                is TensorRechnerErgebnis.Ungueltig -> return fehlerErgebnis(kontext, ergebnis.nachricht)
+                is TensorRechnerErgebnis.Bedingt -> {
+                    symbolisch = true
+                    bedingungen += ergebnis.bedingungen
+                    TensorOperation(definition.id,
+                        linkedMapOf(TensorHandleRolle("links") to wert, TensorHandleRolle("rechts") to rechts),
+                        unterstuetzungsStatus = definition.unterstuetzungsStatus)
+                }
+            }
+        }
+        val rolle = definition.ausgangsRollen.single()
+        return KnotenAuswertungsErgebnis(
+            ausgaben = mapOf(ausgangsName(kontext, definition, rolle) to BedingterWert(wert, kontext.annahmen())),
+            warnungen = listOf("Operation: ${definition.titel}", if (symbolisch) "Status: symbolisch" else "Status: konkret implementiert") + bedingungen,
+            eingänge = kontext.eingänge,
+        )
+    }
     val operanden = definition.eingangsRollen.mapNotNull { rolle ->
         tensorEingang(kontext, definition, rolle)?.mathematischesObjekt("Tensoroperand ${rolle.wert}")?.let { rolle to it }
     }.toMap(linkedMapOf())

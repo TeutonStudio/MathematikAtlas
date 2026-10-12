@@ -96,7 +96,7 @@ class KartenDatenJsonTest {
         val gelesen = KartenDatenJson.lese(text)
 
         assertEquals(karte, gelesen)
-        assertEquals(8, KartenDatenJson.FORMAT_VERSION)
+        assertEquals(9, KartenDatenJson.FORMAT_VERSION)
         assertEquals(KartenDatenJson.FORMAT_VERSION, KartenDatenJson.formatVersion(text))
         assertTrue(text.contains("artAbbildungVonEingang"))
         assertTrue(text.contains("artPriorisiertEingänge"))

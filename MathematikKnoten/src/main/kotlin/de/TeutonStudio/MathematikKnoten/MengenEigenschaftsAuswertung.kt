@@ -4,6 +4,7 @@ import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
+import de.TeutonStudio.MathematikRechenSystem.kern.konstanteReelleMengeneigenschaft
 import de.TeutonStudio.MathematikRechenSystem.kern.AussageStatus
 import de.TeutonStudio.MathematikRechenSystem.kern.EigenschaftsAussage
 import de.TeutonStudio.MathematikRechenSystem.kern.EigenschaftsDiagnose
@@ -45,12 +46,14 @@ internal fun MathematikAuswerterRegister.registriereMengenEigenschaftsAuswertung
                 topologie = topologie,
                 istUmgebungsraum = istUmgebungsraum,
                 offen = true,
+                umgebungsraum = umgebungsraum,
             )
             MathematischeEigenschaftRegister.Abgeschlossen -> topologischeBewertung(
                 menge = menge,
                 topologie = topologie,
                 istUmgebungsraum = istUmgebungsraum,
                 offen = false,
+                umgebungsraum = umgebungsraum,
             )
             MathematischeEigenschaftRegister.KonvexeMenge -> konvexitätsBewertung(menge, affineStruktur)
             else -> MengenBewertung(
@@ -102,6 +105,7 @@ private fun topologischeBewertung(
     topologie: TopologieModus,
     istUmgebungsraum: Boolean,
     offen: Boolean,
+    umgebungsraum: String,
 ): MengenBewertung {
     val status = when (topologie) {
         TopologieModus.DISKRET -> AussageStatus.BEWIESEN
@@ -110,7 +114,9 @@ private fun topologischeBewertung(
         } else {
             AussageStatus.WIDERLEGT
         }
-        TopologieModus.KANONISCH_REELL -> if (offen) kanonischOffen(menge) else kanonischAbgeschlossen(menge)
+        TopologieModus.KANONISCH_REELL -> if (umgebungsraum in setOf("R", "reell", "\\mathbb{R}", "\\mathbb R")) {
+            if (offen) kanonischOffen(menge) else kanonischAbgeschlossen(menge)
+        } else AussageStatus.UNENTSCHEIDBAR
         TopologieModus.UNBEKANNT -> AussageStatus.UNENTSCHEIDBAR
     }
     val unterstuetzung = if (topologie == TopologieModus.UNBEKANNT) {
@@ -145,7 +151,7 @@ private fun konvexitätsBewertung(
             voraussetzungen = listOf("affine Struktur"),
         )
     }
-    val status = when (menge) {
+    val status = (if (affineStruktur.equals("reell", ignoreCase = true)) konstanteReelleMengeneigenschaft(menge, "konvex") else null) ?: when (menge) {
         LeereMenge, is ReellesIntervall -> AussageStatus.BEWIESEN
         is EndlicheMenge -> if (menge.elemente.size <= 1) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
         else -> AussageStatus.UNENTSCHEIDBAR
@@ -163,14 +169,14 @@ private fun konvexitätsBewertung(
     )
 }
 
-private fun kanonischOffen(menge: MengenAusdruck): AussageStatus = when (menge) {
+private fun kanonischOffen(menge: MengenAusdruck): AussageStatus = konstanteReelleMengeneigenschaft(menge, "offen") ?: when (menge) {
     LeereMenge -> AussageStatus.BEWIESEN
     is ReellesIntervall -> if (menge.linksOffen && menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
     is EndlicheMenge -> if (menge.elemente.isEmpty()) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
     else -> AussageStatus.UNENTSCHEIDBAR
 }
 
-private fun kanonischAbgeschlossen(menge: MengenAusdruck): AussageStatus = when (menge) {
+private fun kanonischAbgeschlossen(menge: MengenAusdruck): AussageStatus = konstanteReelleMengeneigenschaft(menge, "abgeschlossen") ?: when (menge) {
     LeereMenge -> AussageStatus.BEWIESEN
     is ReellesIntervall -> if (!menge.linksOffen && !menge.rechtsOffen) AussageStatus.BEWIESEN else AussageStatus.WIDERLEGT
     is EndlicheMenge -> AussageStatus.BEWIESEN

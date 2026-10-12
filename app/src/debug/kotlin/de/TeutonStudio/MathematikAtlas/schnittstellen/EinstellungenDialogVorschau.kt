@@ -31,3 +31,12 @@ private fun EinstellungenDialogKompaktVorschau() {
         EinstellungenDialogV2291(zustand = zustand, schließen = {})
     }
 }
+
+@Preview(name = "Einstellungen · große Schrift", widthDp = 390, heightDp = 800, fontScale = 2f, showBackground = true)
+@Composable
+private fun EinstellungenGrosseSchriftVorschau() {
+    val zustand = erinnereVorschauAtlasZustand()
+    MathematikAtlasVorschauRahmen {
+        EinstellungenDialogV2291(zustand = zustand, schließen = {})
+    }
+}

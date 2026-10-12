@@ -28,6 +28,7 @@ internal data class RechnerOperatorAuswahlEintrag(
     val status: String? = null,
     val kandidat: KnotenDaten? = null,
     val art: RechnerOperatorAuswahlArt = RechnerOperatorAuswahlArt.OPERATOR,
+    val definitionLatex: String? = null,
 ) {
     init {
         require(id.isNotBlank())
@@ -62,6 +63,7 @@ internal data class RechnerOperatorAuswahlEintrag(
         yield(symbolLatex)
         yield(kategorie)
         yield(beschreibung)
+        definitionLatex?.let { yield(it) }
         status?.let { yield(it) }
         yieldAll(suchbegriffe)
         eingänge.forEach { anschluss ->

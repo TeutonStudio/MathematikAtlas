@@ -59,24 +59,92 @@ fun VisuelleKnotenGruppeDaten.überdeckungsAnteil(knoten: KnotenDaten): Float {
  */
 fun KartenDaten.mitAutomatischenVisuellenGruppenMitgliedschaften(): KartenDaten {
     if (visuelleGruppen.isEmpty()) return this
-    val vorherigeGruppe = buildMap<KnotenId, VisuelleGruppenId> {
-        visuelleGruppen.forEach { gruppe -> gruppe.knotenIds.forEach { putIfAbsent(it, gruppe.id) } }
-    }
-    val zuordnung = knoten.mapNotNull { knoten ->
-        val kandidaten = visuelleGruppen.mapIndexedNotNull { index, gruppe ->
-            val anteil = gruppe.überdeckungsAnteil(knoten)
-            if (anteil > 0.5f) Triple(gruppe, anteil, index) else null
-        }
-        val maximum = kandidaten.maxOfOrNull { it.second } ?: return@mapNotNull null
-        val gleichBeste = kandidaten.filter { kotlin.math.abs(it.second - maximum) <= 1e-6f }
-        val bisher = vorherigeGruppe[knoten.id]
-        val ziel = gleichBeste.firstOrNull { it.first.id == bisher } ?: gleichBeste.minBy { it.third }
-        knoten.id to ziel.first.id
+    val hierarchie = mitRäumlicherGruppenHierarchie()
+    val index = GruppenIndex(hierarchie)
+    val vorher = hierarchie.visuelleGruppen.flatMap { g -> g.knotenIds.map { it to g.id } }.toMap()
+    val eingefroren = hierarchie.visuelleGruppen.filter { g ->
+        g.eingeklappt || index.vorfahren(g.id).any { index.gruppen[it]?.eingeklappt == true }
+    }.mapTo(mutableSetOf()) { it.id }
+    val zuordnung = knoten.mapNotNull { k ->
+        val bisher = vorher[k.id]
+        if (bisher in eingefroren) return@mapNotNull k.id to bisher!!
+        val kandidaten = hierarchie.visuelleGruppen.filter { it.id !in eingefroren }
+            .mapNotNull { g -> g.überdeckungsAnteil(k).takeIf { it > .5f }?.let { Triple(g, it, index.vorfahren(g.id).size) } }
+        val tiefe = kandidaten.maxOfOrNull { it.third } ?: return@mapNotNull null
+        val tiefste = kandidaten.filter { it.third == tiefe }
+        val maximum = tiefste.maxOf { it.second }
+        val beste = tiefste.filter { kotlin.math.abs(it.second - maximum) <= 1e-6f }
+        val ziel = beste.firstOrNull { it.first.id == bisher } ?: beste.minBy { it.first.id.wert }
+        k.id to ziel.first.id
     }.toMap()
-    val neu = visuelleGruppen.map { gruppe ->
-        gruppe.copy(knotenIds = knoten.asSequence().filter { zuordnung[it.id] == gruppe.id }.map { it.id }.toCollection(linkedSetOf()))
+    val mitglieder = zuordnung.entries.groupBy({ it.value }, { it.key })
+    val neu = hierarchie.visuelleGruppen.map { it.copy(knotenIds = mitglieder[it.id].orEmpty().toSet()) }
+    return if (neu == visuelleGruppen) this else copy(visuelleGruppen = neu)
+}
+
+/** Eltern werden nur aus echt größeren, vollständig umfassenden ausgeklappten Rahmen gewählt. */
+fun KartenDaten.mitRäumlicherGruppenHierarchie(): KartenDaten {
+    val index = GruppenIndex(this)
+    val neu = visuelleGruppen.map { kind ->
+        if (index.vorfahren(kind.id).any { index.gruppen[it]?.eingeklappt == true }) kind
+        else {
+            val kandidaten = visuelleGruppen.filter { eltern ->
+                !eltern.eingeklappt && index.vorfahren(eltern.id).none { index.gruppen[it]?.eingeklappt == true } && eltern.id != kind.id &&
+                    eltern.größe.breite * eltern.größe.höhe > kind.größe.breite * kind.größe.höhe &&
+                    kind.position.x >= eltern.position.x &&
+                    kind.position.y >= eltern.position.y + VISUELLE_GRUPPE_KOPFZEILE_HÖHE &&
+                    kind.position.x + kind.größe.breite <= eltern.position.x + eltern.größe.breite &&
+                    kind.position.y + kind.größe.höhe <= eltern.position.y + eltern.größe.höhe
+            }
+            val fläche = kandidaten.minOfOrNull { it.größe.breite * it.größe.höhe }
+            val beste = kandidaten.filter { it.größe.breite * it.größe.höhe == fläche }
+            val ziel = beste.firstOrNull { it.id == kind.elternGruppenId } ?: beste.minByOrNull { it.id.wert }
+            kind.copy(elternGruppenId = ziel?.id)
+        }
     }
     return if (neu == visuelleGruppen) this else copy(visuelleGruppen = neu)
+}
+
+/** Wiederverwendbarer Index; Traversierungen bleiben auch bei beschädigten Daten endlich. */
+class GruppenIndex(karte: KartenDaten) {
+    val gruppen = karte.visuelleGruppen.associateBy { it.id }
+    val kinder = karte.visuelleGruppen.groupBy { it.elternGruppenId }
+    fun vorfahren(id: VisuelleGruppenId): List<VisuelleGruppenId> {
+        val besucht = mutableSetOf(id)
+        val result = mutableListOf<VisuelleGruppenId>()
+        var aktuell = gruppen[id]?.elternGruppenId
+        while (aktuell != null && besucht.add(aktuell)) {
+            result += aktuell
+            aktuell = gruppen[aktuell]?.elternGruppenId
+        }
+        return result
+    }
+    fun nachfahren(id: VisuelleGruppenId): Set<VisuelleGruppenId> {
+        val result = linkedSetOf<VisuelleGruppenId>()
+        val offen = ArrayDeque<VisuelleGruppenId>()
+        offen.add(id)
+        while (offen.isNotEmpty()) {
+            val next = offen.removeFirst()
+            if (result.add(next)) kinder[next].orEmpty().forEach { offen.add(it.id) }
+        }
+        return result
+    }
+    fun knotenIn(id: VisuelleGruppenId): Set<KnotenId> =
+        nachfahren(id).flatMapTo(linkedSetOf()) { gruppen[it]?.knotenIds.orEmpty() }
+}
+
+fun KartenDaten.prüfeGruppenHierarchie() {
+    val index = GruppenIndex(this)
+    require(index.gruppen.size == visuelleGruppen.size) { "Doppelte Gruppen-ID." }
+    visuelleGruppen.forEach { g ->
+        require(g.elternGruppenId == null || g.elternGruppenId in index.gruppen) { "Unbekannte Elterngruppe." }
+        val besucht = mutableSetOf(g.id)
+        var eltern = g.elternGruppenId
+        while (eltern != null) {
+            require(besucht.add(eltern)) { "Zyklus in Gruppenhierarchie." }
+            eltern = index.gruppen[eltern]?.elternGruppenId
+        }
+    }
 }
 
 fun GraphGröße.alsGültigeVisuelleGruppenGröße() = GraphGröße(

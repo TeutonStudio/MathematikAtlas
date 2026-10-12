@@ -1,5 +1,12 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogListenEintrag
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogEintrag
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -15,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.MathematikAtlas.speicher.*
@@ -54,106 +60,93 @@ internal fun ProfilVerwaltungDialog(
         zustand.speicher.liste(archivierteEinschließen = true).filter { it.id !in papierkorbIds }
     }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
-                .fillMaxWidth(.9f).fillMaxHeight(.9f).widthIn(max = 980.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-        ) {
-            Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+            AtlasDialogKopf(
+                titel = { Text("Profil und Verwaltung") },
+                untertitel = { Text(
+                        "Lokale Identität, exakte Profilfarbe, Papierkorb und endgültige Löschung",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ) },
+                aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+            )
+            TabRow(selectedTabIndex = reiter.ordinal) {
+                ProfilReiter.entries.forEach { eintrag ->
+                    Tab(
+                        selected = reiter == eintrag,
+                        onClick = { reiter = eintrag },
+                        text = { Text(eintrag.titel) },
+                    )
+                }
+            }
+            Box(Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.inhalt)) {
+                when (reiter) {
+                    ProfilReiter.Profil -> ProfilInhalt(
+                        profil = profil,
+                        pseudonym = pseudonym,
+                        pseudonymÄndern = { pseudonym = it },
+                        lieblingsFarbe = lieblingsFarbe,
+                        lieblingsFarbeÄndern = { lieblingsFarbe = it },
+                        speichern = {
+                            profil = profilSpeicher.speichere(
+                                profil.copy(pseudonym = pseudonym.trim(), lieblingsFarbe = lieblingsFarbe),
+                            )
+                            pseudonym = profil.pseudonym
+                            lieblingsFarbe = profil.lieblingsFarbe
+                            profilGeändert(profil)
+                            meldung = "Pseudonym und Profilfarbe wurden gespeichert."
+                        },
+                        einstellungenÖffnen = einstellungenÖffnen,
+                    )
+                    ProfilReiter.Löschen -> LöschverwaltungInhalt(
+                        karten = alleKarten,
+                        ordnung = ordnung,
+                        karteInPapierkorb = { karte ->
+                            val pfad = ordnung.ordnerFür(karte.id)
+                            inPapierkorbVerschieben = PapierkorbEintrag(
+                                art = PapierkorbArt.Karte,
+                                name = karte.name,
+                                ursprünglicherPfad = pfad,
+                                kartenPfade = mapOf(karte.id to pfad),
+                            )
+                        },
+                        ordnerInPapierkorb = { pfad ->
+                            val kartenPfade = ordnung.kartenUnter(pfad).associateWith(ordnung::ordnerFür)
+                            inPapierkorbVerschieben = PapierkorbEintrag(
+                                art = PapierkorbArt.Ordner,
+                                name = pfad.lastOrNull() ?: "Sammlung",
+                                ursprünglicherPfad = pfad,
+                                kartenPfade = kartenPfade,
+                                ordnerPfade = ordnung.ordnerUnter(pfad),
+                            )
+                        },
+                    )
+                    ProfilReiter.Papierkorb -> PapierkorbInhalt(
+                        einträge = papierkorb,
+                        wiederherstellen = { wiederherstellen = it },
+                        endgültigLöschen = { endgültigLöschen = it },
+                    )
+                }
+            }
+            meldung?.let { text ->
+                HorizontalDivider()
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.inhalt),
+                    Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.abschnitt, vertical = AtlasDialogAbstände.beschreibung),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Profil und Verwaltung", style = MaterialTheme.typography.headlineSmall)
-                        Text(
-                            "Lokale Identität, exakte Profilfarbe, Papierkorb und endgültige Löschung",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    TextButton(onClick = schließen) { Text("Schließen") }
-                }
-                TabRow(selectedTabIndex = reiter.ordinal) {
-                    ProfilReiter.entries.forEach { eintrag ->
-                        Tab(
-                            selected = reiter == eintrag,
-                            onClick = { reiter = eintrag },
-                            text = { Text(eintrag.titel) },
-                        )
-                    }
-                }
-                Box(Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.dialog)) {
-                    when (reiter) {
-                        ProfilReiter.Profil -> ProfilInhalt(
-                            profil = profil,
-                            pseudonym = pseudonym,
-                            pseudonymÄndern = { pseudonym = it },
-                            lieblingsFarbe = lieblingsFarbe,
-                            lieblingsFarbeÄndern = { lieblingsFarbe = it },
-                            speichern = {
-                                profil = profilSpeicher.speichere(
-                                    profil.copy(pseudonym = pseudonym.trim(), lieblingsFarbe = lieblingsFarbe),
-                                )
-                                pseudonym = profil.pseudonym
-                                lieblingsFarbe = profil.lieblingsFarbe
-                                profilGeändert(profil)
-                                meldung = "Pseudonym und Profilfarbe wurden gespeichert."
-                            },
-                            einstellungenÖffnen = einstellungenÖffnen,
-                        )
-                        ProfilReiter.Löschen -> LöschverwaltungInhalt(
-                            karten = alleKarten,
-                            ordnung = ordnung,
-                            karteInPapierkorb = { karte ->
-                                val pfad = ordnung.ordnerFür(karte.id)
-                                inPapierkorbVerschieben = PapierkorbEintrag(
-                                    art = PapierkorbArt.Karte,
-                                    name = karte.name,
-                                    ursprünglicherPfad = pfad,
-                                    kartenPfade = mapOf(karte.id to pfad),
-                                )
-                            },
-                            ordnerInPapierkorb = { pfad ->
-                                val kartenPfade = ordnung.kartenUnter(pfad).associateWith(ordnung::ordnerFür)
-                                inPapierkorbVerschieben = PapierkorbEintrag(
-                                    art = PapierkorbArt.Ordner,
-                                    name = pfad.lastOrNull() ?: "Sammlung",
-                                    ursprünglicherPfad = pfad,
-                                    kartenPfade = kartenPfade,
-                                    ordnerPfade = ordnung.ordnerUnter(pfad),
-                                )
-                            },
-                        )
-                        ProfilReiter.Papierkorb -> PapierkorbInhalt(
-                            einträge = papierkorb,
-                            wiederherstellen = { wiederherstellen = it },
-                            endgültigLöschen = { endgültigLöschen = it },
-                        )
-                    }
-                }
-                meldung?.let { text ->
-                    HorizontalDivider()
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.weit, vertical = LocalAtlasAbstände.current.standard),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = { meldung = null }) { Text("Ausblenden") }
-                    }
+                    Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = { meldung = null }) { Text("Ausblenden") }
                 }
             }
         }
+
     }
 
     inPapierkorbVerschieben?.let { eintrag ->
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = { inPapierkorbVerschieben = null },
             title = { Text("In den Papierkorb verschieben?") },
             text = {
@@ -186,7 +179,7 @@ internal fun ProfilVerwaltungDialog(
     }
 
     wiederherstellen?.let { eintrag ->
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = { wiederherstellen = null },
             title = { Text("Wiederherstellen?") },
             text = { Text("„${eintrag.name}“ wird an seinem ursprünglichen Bibliothekspfad wiederhergestellt.") },
@@ -206,11 +199,11 @@ internal fun ProfilVerwaltungDialog(
 
     endgültigLöschen?.let { eintrag ->
         val blockierend = remember(eintrag) { zustand.speicher.blockierendeVerwendungen(eintrag.kartenIds) }
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = { endgültigLöschen = null },
             title = { Text("Endgültig löschen?") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                Column(verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                     Text("„${eintrag.name}“ kann danach nicht wiederhergestellt werden.")
                     if (blockierend.isNotEmpty()) {
                         Text(
@@ -259,7 +252,7 @@ private fun ProfilInhalt(
 ) {
     Column(
         Modifier.fillMaxSize().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.eintragHorizontal),
     ) {
         Text("Lokale Identität", style = MaterialTheme.typography.titleLarge)
         Text(
@@ -300,8 +293,8 @@ private fun LöschverwaltungInhalt(
 ) {
     LazyColumn(
         Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
-        contentPadding = PaddingValues(bottom = LocalAtlasAbstände.current.dialog),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen),
+        contentPadding = PaddingValues(bottom = AtlasDialogAbstände.horizontal),
     ) {
         item { Text("Sammlungen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
         if (ordnung.ordner.isEmpty()) {
@@ -311,7 +304,7 @@ private fun LöschverwaltungInhalt(
             ordnung.ordner.sortedWith(compareBy({ it.size }, { formatiereOrdnerPfad(it).lowercase() })),
             key = { formatiereOrdnerPfad(it) },
         ) { pfad ->
-            ListItem(
+            AtlasDialogListenEintrag(
                 headlineContent = { Text(formatiereOrdnerPfad(pfad)) },
                 supportingContent = { Text("${ordnung.kartenUnter(pfad).size} Karten einschließlich Unterordnern") },
                 trailingContent = { TextButton(onClick = { ordnerInPapierkorb(pfad) }) { Text("Löschen") } },
@@ -322,7 +315,7 @@ private fun LöschverwaltungInhalt(
             Text("Karten", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         }
         items(karten, key = { it.id.wert }) { karte ->
-            ListItem(
+            AtlasDialogListenEintrag(
                 headlineContent = { Text(karte.name) },
                 supportingContent = {
                     Text(buildString {
@@ -350,10 +343,10 @@ private fun PapierkorbInhalt(
         }
         return
     }
-    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
         items(einträge, key = PapierkorbEintrag::id) { eintrag ->
             Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                AtlasDialogEintrag {
                     Text(eintrag.name, style = MaterialTheme.typography.titleMedium)
                     Text(
                         buildString {
@@ -364,7 +357,7 @@ private fun PapierkorbInhalt(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                         OutlinedButton(onClick = { wiederherstellen(eintrag) }) { Text("Wiederherstellen") }
                         TextButton(
                             onClick = { endgültigLöschen(eintrag) },

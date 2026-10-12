@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogEintrag
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -95,17 +99,20 @@ internal fun AnschlussLegendenDialog(
         anschlussLegendenEinträge(zustand.editor.karte, zustand.anschlussArten)
     }
 
-    AlertDialog(
+    AtlasBestätigungsDialog(
+        inhaltScrolltSelbst = true,
         onDismissRequest = schließen,
         title = { Text("Legende") },
         text = {
             if (einträge.isEmpty()) {
                 Text("Die aktuelle Karte enthält keine Anschlüsse.")
             } else {
-                Column(
+                LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+                    verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
                 ) {
+                    item {
+
                     if (einträge.any { it.gestreift }) {
                         Text(
                             "Gestreifte Anschlüsse bedeuten ODER: Eine der dargestellten Anschlussarten ist zulässig.",
@@ -114,7 +121,7 @@ internal fun AnschlussLegendenDialog(
                         )
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.winzig),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -129,15 +136,13 @@ internal fun AnschlussLegendenDialog(
                         )
                     }
                     HorizontalDivider()
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
-                    ) {
+                    }
+
                         items(einträge, key = { it.schlüssel }) { eintrag ->
                             AnschlussLegendenZeile(eintrag)
                             HorizontalDivider()
                         }
-                    }
-                }
+                                    }
             }
         },
         confirmButton = {
@@ -149,7 +154,7 @@ internal fun AnschlussLegendenDialog(
 @Composable
 private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.winzig, vertical = LocalAtlasAbstände.current.standard),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = AtlasDialogAbstände.beschreibung),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -167,10 +172,7 @@ private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
                 farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
             )
         }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
-        ) {
+        AtlasDialogEintrag(Modifier.weight(1f)) {
             Text(eintrag.titel, style = MaterialTheme.typography.labelLarge)
             if (eintrag.gestreift) {
                 eintrag.arten.forEach { art ->

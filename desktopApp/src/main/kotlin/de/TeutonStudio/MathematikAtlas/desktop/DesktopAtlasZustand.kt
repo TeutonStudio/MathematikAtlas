@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.desktop
 
 import androidx.compose.runtime.*
+import kotlinx.coroutines.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.*
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
@@ -21,15 +22,38 @@ class DesktopAtlasZustand(
         speicher.ladeAktuell() ?: KartenDaten(name = "Neue Desktop-Karte"),
         laufzeit.graphPrüfung,
     )
-    var auswertung by mutableStateOf(laufzeit.auswerten(editor.karte))
+    init { editor.öffneGruppe(speicher.ladeAktiveGruppe()) }
+    private val rechenScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var rechenAuftrag: Job? = null
+    private var rechenGeneration = 0L
+    private var rechenMomentaufnahme: KartenDaten? = null
+    var auswertung by mutableStateOf(if (editor.karte.knoten.any { besitztPrädikatsRechenweg(it.art) || it.kartenVerweis != null })
+        KartenAuswertungsErgebnis(emptyMap(), emptyList()) else laufzeit.auswerten(editor.karte))
         private set
     var konfigurationsPlan by mutableStateOf<KonfigurationsPlan?>(null)
         private set
     var meldung by mutableStateOf<String?>(null)
         private set
 
+    fun beendeBerechnungen() { rechenScope.cancel() }
+
     fun aktualisiereAuswertung() {
-        auswertung = laufzeit.auswerten(editor.karte)
+        val moment = editor.karte
+        if (moment == rechenMomentaufnahme && rechenAuftrag?.isActive == true) return
+        val generation = ++rechenGeneration
+        rechenAuftrag?.cancel()
+        rechenMomentaufnahme = moment
+        if (moment.knoten.none { besitztPrädikatsRechenweg(it.art) || it.kartenVerweis != null }) {
+            auswertung = laufzeit.auswerten(moment)
+            return
+        }
+        auswertung = KartenAuswertungsErgebnis(emptyMap(), emptyList())
+        rechenAuftrag = rechenScope.launch {
+            val berechnet = withContext(Dispatchers.Default) {
+                MathematikKartenLaufzeit(kartenQuelle = KartenQuelle(speicher::lade)).auswerten(moment)
+            }
+            if (generation == rechenGeneration && editor.karte == moment) auswertung = berechnet
+        }
     }
 
     fun berechneKnotenCacheNeu(knotenId: KnotenId) {
@@ -45,7 +69,11 @@ class DesktopAtlasZustand(
     }
 
     fun speichere() {
-        val gespeichert = runCatching { speicher.speichere(editor.karte) }.getOrElse { fehler ->
+        val gespeichert = runCatching {
+            val gespeichert = speicher.speichere(editor.karte)
+            speicher.speichereAktiveGruppe(editor.geöffneteGruppe)
+            gespeichert
+        }.getOrElse { fehler ->
             meldung = "Speichern fehlgeschlagen: ${fehler.message}"
             return
         }

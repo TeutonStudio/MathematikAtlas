@@ -28,6 +28,9 @@ data class RechnerOperatorDefinition(
     val unterstützung: OperatorUnterstützung = OperatorUnterstützung.KONKRET,
     val kategorie: String = familie.name.lowercase().replaceFirstChar(Char::uppercase),
 ) {
+    /** Assoziativität ist unabhängig von Kommutativität und Anschlussidentität. */
+    val assoziativ: Boolean get() = istAssoziativerRechnerOperator(id)
+
     init {
         require(signaturen.isNotEmpty())
         signaturen.forEach { signatur ->
@@ -39,6 +42,9 @@ data class RechnerOperatorDefinition(
 }
 
 object RechnerOperatorDefinitionen {
+    /** Mengenquellen teilen den Signaturvertrag, aber keinen numerischen Dispatcher. */
+    val mengenQuellen: List<MengenKonstante> = MengenKonstante.entries
+
     private fun rolle(name: String, typ: FormelTyp, variadisch: Boolean = false, methodenfähig: Boolean = false, aliases: Set<String> = emptySet()) =
         OperatorRolle(name, typ, aliases, methodenfähig = methodenfähig, variadisch = variadisch)
     private fun ausgang(typ: FormelTyp, name: String = "wert") = rolle(name, typ)
@@ -48,7 +54,7 @@ object RechnerOperatorDefinitionen {
     private val matrix = StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).map { d ->
         val zerlegen = d.id == MatrixRechnerOperator.ZERLEGEN.stabileId
         RechnerOperatorDefinition(OperatorFamilie.MATRIX, d.id, d.titel, d.symbolLatex, d.definitionsLatex,
-            listOf(signatur(d.eingänge.map { rolle(it.name, it.typ, variadisch = d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId, methodenfähig = true,
+            listOf(signatur(d.eingänge.map { rolle(it.name, it.typ, variadisch = istAssoziativerRechnerOperator(d.id), methodenfähig = true,
                 aliases = if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) when (it.name) { "links" -> setOf("a"); "rechts" -> setOf("b"); else -> emptySet() } else emptySet())
                 .let { r -> if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) r.copy(zulässigeTypen = setOf(FormelTyp.MATRIX, FormelTyp.VEKTOR)) else r } },
                 if (zerlegen) FormelTyp.METHODE else d.ergebnisTyp, if (zerlegen) "methode" else "wert")),
@@ -64,7 +70,8 @@ object RechnerOperatorDefinitionen {
             }).copy(zulässigeTypen = setOf(FormelTyp.VEKTOR, FormelTyp.TUPEL))
         val eingänge = when (op) {
             VektorRechnerOperator.ADDITION -> listOf(v("vektor.1", true, aliases = setOf("links", "a")), v("vektor.2", true, setOf("rechts", "b")))
-            VektorRechnerOperator.SUBTRAKTION, VektorRechnerOperator.KREUZPRODUKT, VektorRechnerOperator.HADAMARD_PRODUKT,
+            VektorRechnerOperator.HADAMARD_PRODUKT -> listOf(v("links", true), v("rechts", true))
+            VektorRechnerOperator.SUBTRAKTION, VektorRechnerOperator.KREUZPRODUKT,
             VektorRechnerOperator.PROJEKTION, VektorRechnerOperator.SKALARPRODUKT, VektorRechnerOperator.WINKEL, VektorRechnerOperator.DISTANZ ->
                 listOf(v("links", aliases = setOf("a", "vektor.1")), v("rechts", aliases = setOf("b", "vektor.2")))
             VektorRechnerOperator.SKALARMULTIPLIKATION -> listOf(v("vektor"), rolle("skalar", FormelTyp.ZAHL, methodenfähig = true))
@@ -136,7 +143,7 @@ object RechnerOperatorDefinitionen {
     }
 
     private val tensor = StandardTensorOperationen.registry.alle().map { d ->
-        val eingänge = d.eingangsRollen.map { r -> rolle(r.wert, if (r.wert == "skalar") FormelTyp.ZAHL else FormelTyp.OBJEKT,
+        val eingänge = d.eingangsRollen.map { r -> rolle(r.wert, if (r.wert == "skalar") FormelTyp.ZAHL else FormelTyp.OBJEKT, variadisch = istAssoziativerRechnerOperator(d.id.wert),
             aliases = when {
                 r.wert == "skalar" && d.id.wert == TensorRechnerOperator.SKALARMULTIPLIKATION.stabileId -> setOf("links")
                 r.wert == "tensor" && d.id.wert == TensorRechnerOperator.SKALARMULTIPLIKATION.stabileId -> setOf("rechts")
@@ -196,3 +203,13 @@ fun UniversellerZahlenOperator.formelRollen(): List<String> = when (this) {
         UniversellerZahlenOperator.MODULO -> listOf("dividend", "modul")
         else -> listOf("argument")
     }
+
+/** Nur geschlossene, assoziative Operandenrollen; keine Skalarmultiplikation oder Achsenlisten. */
+fun istAssoziativerRechnerOperator(id: String): Boolean = id in setOf(
+    "zahl.addition", "zahl.multiplikation", "zahl.minimum", "zahl.maximum",
+    "matrix.addition", "matrix.produkt", "matrix.hadamard",
+    "vektor.addition", "vektor.hadamard",
+    "tensor.addition", "tensor.hadamard", "tensor.tensorprodukt",
+    "aussage.konjunktion", "aussage.disjunktion", "aussage.adjunktion", "aussage.aequivalenz",
+    "menge.vereinigung", "menge.schnitt", "menge.symmetrischeDifferenz",
+)

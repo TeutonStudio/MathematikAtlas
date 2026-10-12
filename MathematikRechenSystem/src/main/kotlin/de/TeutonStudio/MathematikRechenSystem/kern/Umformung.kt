@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+enum class SchrittBeziehung { Beschreibung, Äquivalenz, Folgerung, Zusatzrechnung }
+
 data class UmformungsSchritt(
     val vorher: MathematischesObjekt,
     val nachher: MathematischesObjekt,
@@ -8,6 +10,9 @@ data class UmformungsSchritt(
     val erklärung: String,
     val operationen: List<StrukturOperation> = emptyList(),
     val bedingungen: List<Aussage> = emptyList(),
+    val unterschritte: List<UmformungsSchritt> = emptyList(),
+    val tabelle: UmformungsTabelle? = null,
+    val beziehung: SchrittBeziehung = SchrittBeziehung.Beschreibung,
 ) {
     val strukturOperation: StrukturOperation? get() = operationen.singleOrNull()
 }
@@ -104,6 +109,7 @@ data class LösungsErgebnis(
     val lösungen: List<ZahlAusdruck>,
     val bedingungen: List<Aussage>,
     val schritte: List<UmformungsSchritt>,
+    val alleWerte: Boolean = false,
 )
 
 fun löseLinear(gleichung: Gleichheit, variable: Variable): LösungsErgebnis {
@@ -125,7 +131,10 @@ fun löseLinear(gleichung: Gleichheit, variable: Variable): LösungsErgebnis {
     val a = al - ar
     val b = br - bl
     if (a.istNull()) {
-        return if (b.istNull()) LösungsErgebnis(emptyList(), emptyList(), emptyList()) else LösungsErgebnis(emptyList(), emptyList(), emptyList())
+        val wahr = b.istNull()
+        return LösungsErgebnis(emptyList(), emptyList(), listOf(UmformungsSchritt(
+            gleichung, WahrheitsKonstante(wahr), "algebra.konstant", "Konstante Gleichung prüfen",
+            if (wahr) "Alle Werte sind Lösungen." else "Die Gleichung ist widersprüchlich.")), alleWerte = wahr)
     }
     val lösung = b / a
     val nachher = Gleichheit(variable, lösung)

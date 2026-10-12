@@ -65,6 +65,7 @@ data class RechnerOperatorVertrag(
     val definitionsLatex: String = symbolLatex,
     val aliases: Set<String> = emptySet(),
     val kategorie: String = familie.name.lowercase(),
+    val assoziativ: Boolean = istAssoziativerRechnerOperator(operatorId),
 )
 
 sealed interface RechnerOperatorAuflösung {
@@ -170,6 +171,6 @@ internal fun rechnerAnschlüsse(familie: RechnerFamilie, id: String, signaturId:
         name = port.name, richtung = port.richtung,
         kante = if (port.richtung == AnschlussRichtung.Eingang) AnschlussKante.Links else AnschlussKante.Rechts,
         art = port.art, zulässigeArten = port.zulässigeArten, reihenfolge = port.reihenfolge,
-        kannSichErweitern = port.variadisch,
+        kannSichErweitern = port.variadisch || (vertrag.assoziativ && port.richtung == AnschlussRichtung.Eingang),
     ) }
 }

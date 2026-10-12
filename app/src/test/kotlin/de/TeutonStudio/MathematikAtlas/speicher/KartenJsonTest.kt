@@ -12,7 +12,7 @@ class KartenJsonTest {
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 8"))
+        assertTrue(text.contains("\"formatVersion\": 9"))
         assertEquals(karte, KartenJson.lese(text))
     }
 

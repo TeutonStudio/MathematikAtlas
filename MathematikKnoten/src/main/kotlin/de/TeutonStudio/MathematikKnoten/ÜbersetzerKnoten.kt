@@ -65,7 +65,10 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
     val namen = gespeichert + (bindbare - gespeichert.toSet()).sorted()
     val ziel = inferiereZielmenge(term, vorräte, termWert.annahmen)
     val ausgabeNamen = if (term is Tupel) term.elemente.indices.map { "element${it + 1}" } else listOf("wert")
-    val methode = MathematischeMethode(name = k.knoten.parameter["name"] ?: "f", parameter = namen.map { freie.getValue(it) },
+    val methode = MathematischeMethode(name = k.knoten.parameter["name"] ?: "f", parameter = namen.map { name ->
+        if (quellen.getValue(name).first().lösungsRolle == LösungsQuellenRolle.Parameter)
+            AllgemeinerParameter(name) else freie.getValue(name)
+    },
         vorschrift = term, zielMenge = ziel, werteVorräte = namen.associateWith { vorräte.getValue(it) }, ausgabeNamen = ausgabeNamen)
     return termWert.copy(objekt = methode, zielMenge = null, werteVorrat = null, latexDarstellung = null,
         reelleVariablen = termWert.reelleVariablen.filterKeys { it !in namen },

@@ -76,12 +76,13 @@ class MatrixProduktMigrationTest {
 
         assertEquals(listOf(linksId, rechtsId), eingänge.map { it.id })
         eingänge.forEach { eingang ->
-            assertEquals(MathematikAnschlussArten.Objekt.id, eingang.art)
+            assertEquals(MathematikAnschlussArten.AtlasWert.id, eingang.art)
             assertEquals(
                 setOf(
                     MathematikAnschlussArten.Matrix.id,
                     MathematikAnschlussArten.SpaltenVektor.id,
                     MathematikAnschlussArten.ZeilenVektor.id,
+                    MathematikAnschlussArten.Methode.id,
                 ),
                 eingang.zulässigeArten,
             )

@@ -59,6 +59,8 @@ fun BedingterWert.anzeigeLatex(): String = when {
     else -> objekt.toString()
 }
 
+enum class LösungsQuellenRolle { Variable, Parameter, Unbekannt }
+
 data class VariablenQuelle(
     val knotenId: KnotenId,
     val name: String,
@@ -79,6 +81,7 @@ data class VariablenQuelle(
     val argumentArt: ArgumentQuellenArt = ArgumentQuellenArt.Wert,
     /** Vollständige symbolische Aussage eines Aussagearguments. */
     val aussage: Aussage? = null,
+    val lösungsRolle: LösungsQuellenRolle = LösungsQuellenRolle.Unbekannt,
 ) {
     val identität: ArgumentIdentität = ArgumentIdentität(
         quelle = bindungsId ?: knotenId.wert,
@@ -140,6 +143,9 @@ data class KnotenAuswertungsErgebnis(
     val warnungen: List<String> = emptyList(),
     /** Dauer der letzten tatsächlichen Berechnung dieses Knotens. Cache-Treffer verändern diesen Wert nicht. */
     val auswertungsDauerNanos: Long? = null,
+    val entscheidung: AussageErgebnis? = null,
+    val lösungsVariablen: List<GebundeneMengenVariable> = emptyList(),
+    val lösungsParameter: List<VariablenQuelle> = emptyList(),
 )
 
 data class KartenAuswertungsErgebnis(

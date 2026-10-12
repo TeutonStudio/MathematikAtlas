@@ -40,7 +40,9 @@ object KanonischerMathematikKnotenKatalog {
             .map(::topologieFaehigeEigenschaftsVorlage)
             .map(::methodenfaehigeRechnerVorlage)
         val bereinigt = basis.filterNot { vorlage ->
-            vorlage.art in historischeOrientierungsDuplikate ||
+            vorlage.art in RechnerEinzeloperationMigration.zuordnungen ||
+                vorlage.art == TENSORPRODUKT_ART ||
+                vorlage.art in historischeOrientierungsDuplikate ||
                 vorlage.art in historischeMengenEinzelknoten ||
                 vorlage.art in PraedikatKnotenMigration.alteKnotenArten ||
                 vorlage.art == MULTINOMVEKTOR_ART ||

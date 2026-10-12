@@ -1,5 +1,10 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import de.TeutonStudio.MathematikKnoten.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -123,156 +127,139 @@ private fun KonzeptDialog(
     val aktiveKarte = aktiverReiter?.karteFür(komplexDarstellung)
     val zeigtFalkSchema = aktiverReiter?.darstellung == KonzeptReiterDarstellung.FalkSchema
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
-                .fillMaxWidth(.94f).fillMaxHeight(.92f),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 8.dp,
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(konzept?.name ?: ursprungsKnoten?.name.orEmpty(), style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            if (zeigtVisualisierung) {
-                                "Die hochauflösende Darstellung wird nur in diesem Reiter berechnet und anschließend gecacht."
-                            } else {
-                                konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    TextButton(onClick = schließen) { Text("Schließen") }
-                }
-                HorizontalDivider()
-
-                if (besitztVisualisierungsReiter || (konzept?.reiter?.size ?: 0) > 1) {
-                    PrimaryTabRow(selectedTabIndex = reiterIndex) {
-                        konzept?.reiter.orEmpty().forEachIndexed { index, reiter ->
-                            Tab(
-                                selected = reiterIndex == index,
-                                onClick = { reiterIndex = index },
-                                text = {
-                                    LatexText(
-                                        latex = normalisiereKonzeptReiterTitel(reiter.titel),
-                                        style = MaterialTheme.typography.labelLarge,
-                                    )
-                                },
-                            )
-                        }
-                        if (besitztVisualisierungsReiter) {
-                            Tab(
-                                selected = reiterIndex == visualisierungsReiterIndex,
-                                onClick = { reiterIndex = visualisierungsReiterIndex },
-                                text = { Text("Hohe Auflösung") },
-                            )
-                        }
-                    }
-                }
-
-                if (zeigtVisualisierung) {
-                    val visualisierungsKnoten = checkNotNull(ursprungsKnoten)
-                    VisualisierungsDetailansicht(
-                        knoten = visualisierungsKnoten,
-                        auswertung = zustand.auswertung.knoten[visualisierungsKnoten.id],
-                        eigenschaftenErsetzen = { eigenschaften ->
-                            zustand.editor.führeAus(
-                                KartenAktion.KnotenEigenschaftenErsetzen(visualisierungsKnoten.id, eigenschaften),
-                            )
+        Column(Modifier.fillMaxSize()) {
+            AtlasDialogKopf(
+                titel = { Text(konzept?.name ?: ursprungsKnoten?.name.orEmpty(),) },
+                untertitel = { Text(
+                        if (zeigtVisualisierung) {
+                            "Die hochauflösende Darstellung wird nur in diesem Reiter berechnet und anschließend gecacht."
+                        } else {
+                            konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert."
                         },
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.dialog),
-                    )
-                } else if (konzept == null) {
-                    Box(Modifier.weight(1f).fillMaxWidth().padding(LocalAtlasAbstände.current.weit)) {
-                        Text(
-                            "Fehlende Definition für ${ursprungsKnoten?.art.orEmpty()}",
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                } else {
-                    if (konzept.reiter.any(KonzeptReiter::besitztDarstellungsVarianten)) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                        ) {
-                            FilterChip(
-                                selected = komplexDarstellung == KomplexDarstellung.Kartesisch,
-                                onClick = { komplexDarstellung = KomplexDarstellung.Kartesisch },
-                                label = { Text("Kartesisch") },
-                            )
-                            FilterChip(
-                                selected = komplexDarstellung == KomplexDarstellung.Polar,
-                                onClick = { komplexDarstellung = KomplexDarstellung.Polar },
-                                label = { Text("Polar") },
-                            )
-                        }
-                    }
-                    if (zeigtFalkSchema) {
-                        MatrixproduktFalkSchemaInhalt(
-                            auswertung = ursprungsKnoten?.let { zustand.auswertung.knoten[it.id] },
-                            modifier = Modifier.weight(1f).fillMaxWidth(),
-                        )
-                    } else {
-                        aktiveKarte?.let { karte ->
-                            UnveränderlicheKonzeptKarte(
-                                zustand = zustand,
-                                karte = karte,
-                                modifier = Modifier.weight(1f).fillMaxWidth(),
-                            )
-                        }
-                    }
-                }
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ) },
+                aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+            )
+            HorizontalDivider()
 
-                HorizontalDivider()
-                FlowRow(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                ) {
-                    aktiveKarte?.takeUnless { zeigtFalkSchema }?.let { karte ->
-                        Button(
-                            onClick = {
-                                zustand.öffneBearbeitbareKopie(karte)
-                                schließen()
+            if (besitztVisualisierungsReiter || (konzept?.reiter?.size ?: 0) > 1) {
+                PrimaryTabRow(selectedTabIndex = reiterIndex) {
+                    konzept?.reiter.orEmpty().forEachIndexed { index, reiter ->
+                        Tab(
+                            selected = reiterIndex == index,
+                            onClick = { reiterIndex = index },
+                            text = {
+                                LatexText(
+                                    latex = normalisiereKonzeptReiterTitel(reiter.titel),
+                                    style = MaterialTheme.typography.labelLarge,
+                                )
                             },
-                        ) { Text("Als bearbeitbare Karte kopieren") }
+                        )
                     }
-                    ursprungsKnoten?.let { knoten ->
-                        OutlinedButton(
-                            onClick = {
-                                zustand.editor.wähleKnoten(knoten.id)
-                                zustand.editor.dupliziereAuswahl()
-                                schließen()
-                            },
-                        ) { Text("Knoten duplizieren") }
-                        OutlinedButton(
-                            onClick = {
-                                zustand.editor.wähleKnoten(knoten.id)
-                                zustand.editor.isoliereAusgewähltenKnoten()
-                                schließen()
-                            },
-                        ) { Text("Knoten isolieren") }
-                        Button(
-                            onClick = {
-                                zustand.editor.wähleKnoten(knoten.id)
-                                zustand.editor.löscheAuswahl()
-                                schließen()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        ) { Text("Knoten löschen") }
+                    if (besitztVisualisierungsReiter) {
+                        Tab(
+                            selected = reiterIndex == visualisierungsReiterIndex,
+                            onClick = { reiterIndex = visualisierungsReiterIndex },
+                            text = { Text("Hohe Auflösung") },
+                        )
                     }
                 }
             }
+
+            if (zeigtVisualisierung) {
+                val visualisierungsKnoten = checkNotNull(ursprungsKnoten)
+                VisualisierungsDetailansicht(
+                    knoten = visualisierungsKnoten,
+                    auswertung = zustand.auswertung.knoten[visualisierungsKnoten.id],
+                    eigenschaftenErsetzen = { eigenschaften ->
+                        zustand.editor.führeAus(
+                            KartenAktion.KnotenEigenschaftenErsetzen(visualisierungsKnoten.id, eigenschaften),
+                        )
+                    },
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.inhalt),
+                )
+            } else if (konzept == null) {
+                Box(Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.abschnitt)) {
+                    Text(
+                        "Fehlende Definition für ${ursprungsKnoten?.art.orEmpty()}",
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            } else {
+                if (konzept.reiter.any(KonzeptReiter::besitztDarstellungsVarianten)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.horizontal, vertical = AtlasDialogAbstände.beschreibung),
+                        horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
+                    ) {
+                        FilterChip(
+                            selected = komplexDarstellung == KomplexDarstellung.Kartesisch,
+                            onClick = { komplexDarstellung = KomplexDarstellung.Kartesisch },
+                            label = { Text("Kartesisch") },
+                        )
+                        FilterChip(
+                            selected = komplexDarstellung == KomplexDarstellung.Polar,
+                            onClick = { komplexDarstellung = KomplexDarstellung.Polar },
+                            label = { Text("Polar") },
+                        )
+                    }
+                }
+                if (zeigtFalkSchema) {
+                    MatrixproduktFalkSchemaInhalt(
+                        auswertung = ursprungsKnoten?.let { zustand.auswertung.knoten[it.id] },
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                    )
+                } else {
+                    aktiveKarte?.let { karte ->
+                        UnveränderlicheKonzeptKarte(
+                            zustand = zustand,
+                            karte = karte,
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider()
+            AtlasDialogAktionen {
+                aktiveKarte?.takeUnless { zeigtFalkSchema }?.let { karte ->
+                    Button(
+                        onClick = {
+                            zustand.öffneBearbeitbareKopie(karte)
+                            schließen()
+                        },
+                    ) { Text("Als bearbeitbare Karte kopieren") }
+                }
+                ursprungsKnoten?.let { knoten ->
+                    OutlinedButton(
+                        onClick = {
+                            zustand.editor.wähleKnoten(knoten.id)
+                            zustand.editor.dupliziereAuswahl()
+                            schließen()
+                        },
+                    ) { Text("Knoten duplizieren") }
+                    OutlinedButton(
+                        onClick = {
+                            zustand.editor.wähleKnoten(knoten.id)
+                            zustand.editor.isoliereAusgewähltenKnoten()
+                            schließen()
+                        },
+                    ) { Text("Knoten isolieren") }
+                    Button(
+                        onClick = {
+                            zustand.editor.wähleKnoten(knoten.id)
+                            zustand.editor.löscheAuswahl()
+                            schließen()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    ) { Text("Knoten löschen") }
+                }
+            }
         }
+
     }
 }
 
@@ -358,8 +345,8 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         Column(
-            Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.bereich),
-            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+            Modifier.fillMaxSize().padding(AtlasDialogAbstände.felder),
+            verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
         ) {
             when (knoten.art) {
                 KonzeptKnotenArten.REGEL -> {

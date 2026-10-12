@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
@@ -37,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
@@ -91,75 +94,61 @@ internal fun SkalarproduktKonzeptDialog(
     }
     var reiter by remember(knoten.id) { mutableIntStateOf(0) }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = schließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
-                .fillMaxWidth(.92f).fillMaxHeight(.9f),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 8.dp,
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.bereich),
-                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Skalarprodukt", style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            if (knoten.art == BEGRIFF_SKALARPRODUKT_KNOTEN_ART) {
-                                "Begriffsnachweis für eine Methode V × V → K."
-                            } else {
-                                "Standarddefinition, komponentenweiser Falk-Ablauf und Zertifikatsstatus."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    TextButton(onClick = schließen) { Text("Schließen") }
-                }
-                HorizontalDivider()
-                PrimaryTabRow(selectedTabIndex = reiter) {
-                    SkalarproduktKonzeptReiter.entries.forEachIndexed { index, eintrag ->
-                        Tab(
-                            selected = reiter == index,
-                            onClick = { reiter = index },
-                            text = { Text(eintrag.titel) },
-                        )
-                    }
-                }
-                when (SkalarproduktKonzeptReiter.entries[reiter]) {
-                    SkalarproduktKonzeptReiter.DEFINITION -> SkalarproduktDefinitionInhalt(daten)
-                    SkalarproduktKonzeptReiter.FALK -> SkalarproduktFalkInhalt(daten)
-                    SkalarproduktKonzeptReiter.ZERTIFIKAT -> SkalarproduktZertifikatInhalt(knoten, auswertung, daten)
-                }
-                HorizontalDivider()
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                ) {
-                    Button(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.dupliziereAuswahl()
-                            schließen()
+        Column(Modifier.fillMaxSize()) {
+            AtlasDialogKopf(
+                titel = { Text("Skalarprodukt") },
+                untertitel = { Text(
+                        if (knoten.art == BEGRIFF_SKALARPRODUKT_KNOTEN_ART) {
+                            "Begriffsnachweis für eine Methode V × V → K."
+                        } else {
+                            "Standarddefinition, komponentenweiser Falk-Ablauf und Zertifikatsstatus."
                         },
-                    ) { Text("Knoten duplizieren") }
-                    Spacer(Modifier.weight(1f))
-                    TextButton(
-                        onClick = {
-                            zustand.editor.wähleKnoten(knoten.id)
-                            zustand.editor.löscheAuswahl()
-                            schließen()
-                        },
-                    ) { Text("Knoten löschen") }
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ) },
+                aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
+            )
+            HorizontalDivider()
+            PrimaryTabRow(selectedTabIndex = reiter) {
+                SkalarproduktKonzeptReiter.entries.forEachIndexed { index, eintrag ->
+                    Tab(
+                        selected = reiter == index,
+                        onClick = { reiter = index },
+                        text = { Text(eintrag.titel) },
+                    )
                 }
             }
+            when (SkalarproduktKonzeptReiter.entries[reiter]) {
+                SkalarproduktKonzeptReiter.DEFINITION -> SkalarproduktDefinitionInhalt(daten)
+                SkalarproduktKonzeptReiter.FALK -> SkalarproduktFalkInhalt(daten)
+                SkalarproduktKonzeptReiter.ZERTIFIKAT -> SkalarproduktZertifikatInhalt(knoten, auswertung, daten)
+            }
+            HorizontalDivider()
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.horizontal, vertical = AtlasDialogAbstände.beschreibung),
+                horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
+            ) {
+                Button(
+                    onClick = {
+                        zustand.editor.wähleKnoten(knoten.id)
+                        zustand.editor.dupliziereAuswahl()
+                        schließen()
+                    },
+                ) { Text("Knoten duplizieren") }
+                Spacer(Modifier.weight(1f))
+                TextButton(
+                    onClick = {
+                        zustand.editor.wähleKnoten(knoten.id)
+                        zustand.editor.löscheAuswahl()
+                        schließen()
+                    },
+                ) { Text("Knoten löschen") }
+            }
         }
+
     }
 }
 
@@ -227,8 +216,8 @@ private fun de.TeutonStudio.MathematikRechenSystem.kern.AtlasWert.komponentenAns
 @Composable
 private fun SkalarproduktDefinitionInhalt(daten: SkalarproduktDialogDaten) {
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.weit),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(AtlasDialogAbstände.abschnitt),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.eintragHorizontal),
     ) {
         Text("Definition", style = MaterialTheme.typography.titleMedium)
         LatexText(
@@ -260,7 +249,7 @@ private fun SkalarproduktDefinitionInhalt(daten: SkalarproduktDialogDaten) {
             ) {
                 Text(
                     "Der Rechner verwendet derzeit eine zertifizierte eigene Methode. Das Falk-Schema zeigt weiterhin die kanonische Standarddefinition zum Vergleich.",
-                    modifier = Modifier.padding(LocalAtlasAbstände.current.bereich),
+                    modifier = Modifier.padding(AtlasDialogAbstände.felder),
                 )
             }
         }
@@ -276,18 +265,18 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
     val sichererIndex = index.coerceIn(0, daten.ablauf.dimension - 1)
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.dialog),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(AtlasDialogAbstände.inhalt),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+            horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Index", style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+                horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen),
             ) {
                 repeat(daten.ablauf.dimension) { kandidat ->
                     FilterChip(
@@ -301,7 +290,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
 
         Column(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
+            verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
         ) {
             FalkZeile("u", daten.ablauf.linkeKomponenten, sichererIndex) { index = it }
             FalkZeile("v", daten.ablauf.rechteKomponenten, sichererIndex) { index = it }
@@ -311,7 +300,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             color = MaterialTheme.colorScheme.primaryContainer,
             shape = MaterialTheme.shapes.medium,
         ) {
-            Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.inhalt), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Column(Modifier.fillMaxWidth().padding(AtlasDialogAbstände.eintragHorizontal), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                 Text("Aktueller Summand p$sichererIndex", style = MaterialTheme.typography.labelLarge)
                 LatexText(
                     latex = "p_{$sichererIndex}=${daten.ablauf.produktLatex(sichererIndex)}",
@@ -329,7 +318,7 @@ private fun SkalarproduktFalkInhalt(daten: SkalarproduktDialogDaten) {
             ) {
                 LatexText(
                     latex = "s_{$teilsummenIndex}=${daten.ablauf.teilsummeLatex(teilsummenIndex)}",
-                    modifier = Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich),
+                    modifier = Modifier.fillMaxWidth().padding(AtlasDialogAbstände.felder),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -364,7 +353,7 @@ private fun FalkZeile(
     ausgewählterIndex: Int,
     auswählen: (Int) -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.width(42.dp), contentAlignment = Alignment.Center) {
             LatexText(latex = name, style = MaterialTheme.typography.titleMedium)
         }
@@ -380,7 +369,7 @@ private fun FalkZeile(
                     color = if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 ),
             ) {
-                Box(Modifier.fillMaxSize().padding(LocalAtlasAbstände.current.standard), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(AtlasDialogAbstände.beschreibung), contentAlignment = Alignment.Center) {
                     LatexText(latex = "${name}_{$index}=$komponente")
                 }
             }
@@ -396,8 +385,8 @@ private fun SkalarproduktZertifikatInhalt(
 ) {
     val aussage = auswertung?.ausgaben?.get("aussage")?.objekt as? BegriffsAussage
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LocalAtlasAbstände.current.weit),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(AtlasDialogAbstände.abschnitt),
+        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
     ) {
         Text("Zertifikatsstatus", style = MaterialTheme.typography.titleMedium)
         ZertifikatZeile("Definition", if (daten.standardDefinition) "Standardskalarprodukt" else "Eigene zertifizierte Methode")
@@ -429,7 +418,7 @@ private fun SkalarproduktZertifikatInhalt(
                     },
                     shape = MaterialTheme.shapes.small,
                 ) {
-                    Column(Modifier.fillMaxWidth().padding(LocalAtlasAbstände.current.bereich)) {
+                    Column(Modifier.fillMaxWidth().padding(AtlasDialogAbstände.felder)) {
                         Text(pruefung.name, style = MaterialTheme.typography.labelLarge)
                         Text(pruefung.begruendung, style = MaterialTheme.typography.bodySmall)
                     }
@@ -455,7 +444,7 @@ private fun SkalarproduktZertifikatInhalt(
 
 @Composable
 private fun ZertifikatZeile(bezeichnung: String, wert: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
         Text(bezeichnung, modifier = Modifier.width(170.dp), style = MaterialTheme.typography.labelLarge)
         Text(wert, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
     }

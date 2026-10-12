@@ -1,5 +1,11 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -30,7 +36,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
 import kotlinx.coroutines.delay
@@ -67,7 +72,7 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
         if (speicherFehler == null) schließen()
     }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = {},
         properties = DialogProperties(
             dismissOnBackPress = false,
@@ -75,78 +80,63 @@ internal fun KartenJsonDialog(zustand: AtlasZustand, schließen: () -> Unit) {
             usePlatformDefaultWidth = false,
         ),
     ) {
-        Surface(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
-                .fillMaxWidth(.94f)
-                .fillMaxHeight(.9f)
-                .widthIn(max = 1240.dp),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 6.dp,
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                JsonDialogKopf(
-                    kartenName = zustand.editor.karte.name,
-                    version = zustand.editor.karte.version,
-                    geändert = textWert.text != ausgangstext,
-                    kannFormatieren = analyse.fehler == null,
-                    hatFaltungen = analyse.faltungen.isNotEmpty(),
-                    hatEingeklappteBereiche = eingeklappt.isNotEmpty(),
-                    formatieren = ::formatieren,
-                    kopieren = { clipboard.setText(AnnotatedString(textWert.text)) },
-                    allesEinklappen = {
-                        val ersteInhaltsebene = analyse.faltungen.filter { it.tiefe == 1 }
-                        val kandidaten = ersteInhaltsebene.ifEmpty { analyse.faltungen.filter { it.tiefe == 0 } }
-                        eingeklappt = kandidaten.mapTo(mutableSetOf()) { it.startOffset }
-                    },
-                    allesAusklappen = { eingeklappt = emptySet() },
-                )
-                HorizontalDivider()
-                JsonEditor(
-                    wert = textWert,
-                    onWertÄnderung = {
-                        textWert = it
-                        speicherFehler = null
-                    },
-                    analyse = analyse,
-                    eingeklappt = eingeklappt,
-                    onFaltungUmschalten = { faltung ->
-                        val wirdEingeklappt = faltung.startOffset !in eingeklappt
-                        if (wirdEingeklappt && textWert.selection.start in (faltung.startOffset + 1) until faltung.endeOffset) {
-                            textWert = textWert.copy(selection = TextRange(faltung.startOffset + 1))
-                        }
-                        eingeklappt = if (wirdEingeklappt) {
-                            eingeklappt + faltung.startOffset
-                        } else {
-                            eingeklappt - faltung.startOffset
-                        }
-                    },
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    übernehmen = ::übernehmen,
-                    formatieren = ::formatieren,
-                )
-                HorizontalDivider()
-                JsonStatusLeiste(
-                    wert = textWert,
-                    analyse = analyse,
-                    speicherFehler = speicherFehler,
-                )
-                HorizontalDivider()
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = schließen) { Text("Verwerfen") }
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = ::übernehmen,
-                        enabled = analyse.fehler == null,
-                    ) { Text("Übernehmen") }
-                }
+        Column(Modifier.fillMaxSize()) {
+            JsonDialogKopf(
+                kartenName = zustand.editor.karte.name,
+                version = zustand.editor.karte.version,
+                geändert = textWert.text != ausgangstext,
+                kannFormatieren = analyse.fehler == null,
+                hatFaltungen = analyse.faltungen.isNotEmpty(),
+                hatEingeklappteBereiche = eingeklappt.isNotEmpty(),
+                formatieren = ::formatieren,
+                kopieren = { clipboard.setText(AnnotatedString(textWert.text)) },
+                allesEinklappen = {
+                    val ersteInhaltsebene = analyse.faltungen.filter { it.tiefe == 1 }
+                    val kandidaten = ersteInhaltsebene.ifEmpty { analyse.faltungen.filter { it.tiefe == 0 } }
+                    eingeklappt = kandidaten.mapTo(mutableSetOf()) { it.startOffset }
+                },
+                allesAusklappen = { eingeklappt = emptySet() },
+            )
+            HorizontalDivider()
+            JsonEditor(
+                wert = textWert,
+                onWertÄnderung = {
+                    textWert = it
+                    speicherFehler = null
+                },
+                analyse = analyse,
+                eingeklappt = eingeklappt,
+                onFaltungUmschalten = { faltung ->
+                    val wirdEingeklappt = faltung.startOffset !in eingeklappt
+                    if (wirdEingeklappt && textWert.selection.start in (faltung.startOffset + 1) until faltung.endeOffset) {
+                        textWert = textWert.copy(selection = TextRange(faltung.startOffset + 1))
+                    }
+                    eingeklappt = if (wirdEingeklappt) {
+                        eingeklappt + faltung.startOffset
+                    } else {
+                        eingeklappt - faltung.startOffset
+                    }
+                },
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                übernehmen = ::übernehmen,
+                formatieren = ::formatieren,
+            )
+            HorizontalDivider()
+            JsonStatusLeiste(
+                wert = textWert,
+                analyse = analyse,
+                speicherFehler = speicherFehler,
+            )
+            HorizontalDivider()
+            AtlasDialogAktionen {
+                TextButton(onClick = schließen) { Text("Verwerfen") }
+                Button(
+                    onClick = ::übernehmen,
+                    enabled = analyse.fehler == null,
+                ) { Text("Übernehmen") }
             }
         }
+
     }
 }
 
@@ -163,30 +153,19 @@ private fun JsonDialogKopf(
     allesEinklappen: () -> Unit,
     allesAusklappen: () -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.dialog, vertical = LocalAtlasAbstände.current.standard),
-        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig),
-    ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("JSON der aktuellen Karte", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    "$kartenName · Version $version · ${if (geändert) "Nicht übernommen" else "Unverändert"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (geändert) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.End,
-        ) {
+    AtlasDialogKopf(
+        titel = { Text("JSON der aktuellen Karte") },
+        untertitel = { Text(
+            "$kartenName · Version $version · ${if (geändert) "Nicht übernommen" else "Unverändert"}",
+            color = if (geändert) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+        ) },
+        aktionen = {
             TextButton(onClick = formatieren, enabled = kannFormatieren) { Text("Formatieren") }
             TextButton(onClick = kopieren) { Text("Kopieren") }
             TextButton(onClick = allesEinklappen, enabled = hatFaltungen) { Text("Einklappen") }
             TextButton(onClick = allesAusklappen, enabled = hatEingeklappteBereiche) { Text("Ausklappen") }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -223,7 +202,7 @@ private fun JsonEditor(
     val nummernBreite = ((analyse.zeilenAnzahl.toString().length * 9) + 34).dp
 
     Surface(
-        modifier = modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
+        modifier = modifier.padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.beschreibung),
         shape = RoundedCornerShape(8.dp),
         color = farben.hintergrund,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -271,7 +250,7 @@ private fun JsonEditor(
                         onValueChange = onWertÄnderung,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard)
+                            .padding(horizontal = AtlasDialogAbstände.felder, vertical = AtlasDialogAbstände.beschreibung)
                             .onPreviewKeyEvent { ereignis ->
                                 if (ereignis.type != KeyEventType.KeyDown || !ereignis.isCtrlPressed) return@onPreviewKeyEvent false
                                 when {
@@ -311,7 +290,7 @@ private fun JsonZeilenRand(
         Modifier
             .width(breite)
             .background(farben.zeilenRand)
-            .padding(vertical = LocalAtlasAbstände.current.standard),
+            .padding(vertical = AtlasDialogAbstände.beschreibung),
     ) {
         sichtbareZeilen.forEachIndexed { index, zeile ->
             Row(
@@ -320,7 +299,7 @@ private fun JsonZeilenRand(
                     .height(zeilenHöhe)
                     .background(if (index == aktuelleSichtbareZeile) farben.aktuelleZeile else Color.Transparent)
                     .clickable(enabled = zeile.faltung != null) { zeile.faltung?.let(onFaltungUmschalten) }
-                    .padding(horizontal = LocalAtlasAbstände.current.eng),
+                    .padding(horizontal = AtlasDialogAbstände.aktionen),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -360,9 +339,9 @@ private fun JsonStatusLeiste(
     val position = offsetZuZeileSpalte(wert.text, wert.selection.start)
     val fehler = speicherFehler ?: analyse.fehler?.meldung
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.eng),
+        Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.aktionen),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
+        horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.eintragHorizontal),
     ) {
         Text("Zeile ${position.zeile}, Spalte ${position.spalte}", style = MaterialTheme.typography.labelSmall)
         Text("${analyse.zeilenAnzahl} Zeilen", style = MaterialTheme.typography.labelSmall)

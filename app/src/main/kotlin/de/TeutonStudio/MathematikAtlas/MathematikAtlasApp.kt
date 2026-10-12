@@ -1,5 +1,11 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.PrädikatsRechenwegDialog
+import de.TeutonStudio.MathematikKnoten.besitztPrädikatsRechenweg
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -53,6 +59,12 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     val context = LocalContext.current
     val dichte = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
+    var rechenwegKnoten by remember { mutableStateOf<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId?>(null) }
+    rechenwegKnoten?.let { id ->
+        zustand.editor.karte.knoten.firstOrNull { it.id == id }?.let { knoten ->
+            PrädikatsRechenwegDialog(knoten.name, zustand.auswertung.knoten[id]) { rechenwegKnoten = null }
+        }
+    }
     var dateiFehler by remember { mutableStateOf<String?>(null) }
     val jsonExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(KartenExportFormat.JSON.mimeType)) { uri ->
         uri?.let {
@@ -97,7 +109,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     var graphFokussiert by remember { mutableStateOf(true) }
     val graphFokus = remember { FocusRequester() }
     var bibliothekAnfordern by remember { mutableStateOf(false) }
-    val aktuelleAnsicht by rememberUpdatedState(zustand.editor.karte.ansicht)
+    val aktuelleAnsicht by rememberUpdatedState(zustand.editor.darstellungsKarte.ansicht)
     fun befehlsKontext() = BefehlsKontext(
         fokus = if (graphFokussiert) AtlasFokusBereich.Karte else AtlasFokusBereich.Anwendung,
         zeigerPosition = letzterZeiger,
@@ -146,7 +158,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
         KartenImportDialog(zustand = zustand, schließen = { importDialogOffen = false })
     }
     dateiFehler?.let { meldung ->
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = { dateiFehler = null },
             title = { Text("Dateivorgang fehlgeschlagen") },
             text = { Text(meldung) },
@@ -229,7 +241,9 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
                     beiHintergrundKontext = { if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(it) },
                     beiKnotenKontext = { knoten ->
-                        if (werkzeug == KartenWerkzeug.Auswahl) {
+                        if (werkzeug == KartenWerkzeug.Auswahl && besitztPrädikatsRechenweg(knoten.art)) {
+                            rechenwegKnoten = knoten.id
+                        } else if (werkzeug == KartenWerkzeug.Auswahl) {
                             graphKontext = if (zustand.editor.auswahlModus == AuswahlModus.Gruppe) {
                                 GraphKontext.Knotengruppe(zustand.editor.ausgewählteKnoten + knoten.id)
                             } else GraphKontext.Knoten(knoten.id)
@@ -243,6 +257,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     beiKnotenDoppelklick = { if (werkzeug == KartenWerkzeug.Auswahl) it.kartenVerweis?.let(zustand::öffne) },
                     beiHintergrundDoppelklick = { if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(it) },
                     beiZeigerPosition = { letzterZeiger = it },
+                    auswertungsDauerFür = { zustand.auswertung.knoten[it]?.auswertungsDauerNanos },
                 )
 
                 if (werkzeug == KartenWerkzeug.Verschieben) {
@@ -332,11 +347,11 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
         is GraphKontext.Verbindung -> "ID: ${kontext.id.wert}"
         is GraphKontext.Anschluss -> "Anschluss: ${kontext.ref.anschlussId.wert}"
     }
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
-        title = { Text(titel, style = MaterialTheme.typography.titleMedium) },
+        title = { Text(titel) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                 when (kontext) {
                     is GraphKontext.Knoten -> Text("Der Knoten existiert nicht mehr.")
                     is GraphKontext.Knotengruppe -> {
@@ -672,7 +687,7 @@ internal fun NameÄndernDialog(
 ) {
     var text by remember(aktuellerName) { mutableStateOf(aktuellerName) }
     val bereinigterName = text.trim()
-    AlertDialog(
+    AtlasBestätigungsDialog(
         onDismissRequest = schließen,
         title = { Text(titel) },
         text = {

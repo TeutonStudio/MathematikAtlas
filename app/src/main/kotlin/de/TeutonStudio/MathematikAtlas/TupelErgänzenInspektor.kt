@@ -1,5 +1,9 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -66,11 +70,11 @@ internal object TupelErgänzenInspektor : KnotenInspektor {
 
         ausstehend?.let { neu ->
             val vorschau = aktionen.vorschauKnotenErsetzen(neu)
-            AlertDialog(
+            AtlasBestätigungsDialog(
                 onDismissRequest = { ausstehend = null },
                 title = { Text("Ergänzungsart wechseln?") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen)) {
                         Text("Der Moduswechsel entfernt ${vorschau.entfallendeVerbindungen.size} Verbindung(en).")
                         if (vorschau.entfallendeAnschlüsse.isNotEmpty()) {
                             Text(

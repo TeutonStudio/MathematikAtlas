@@ -47,7 +47,8 @@ fun konfiguriereVektorRechner(
             name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) {
                 "Vektorrechner"
             } else knoten.name,
-            anschlüsse = neu,
+            anschlüsse = erhalteDynamischeOperanden(knoten, neu,
+                knoten.parameter[VEKTOR_RECHNER_OPERATOR] == operator.stabileId),
             parameter = knoten.parameter + mapOf(
                 VEKTOR_RECHNER_OPERATOR to operator.stabileId,
                 VEKTOR_RECHNER_METRIK to (knoten.parameter[VEKTOR_RECHNER_METRIK] ?: VektorMetriken.standard.stabileId),
@@ -125,11 +126,10 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
         }
 
         val vektorNamen = when (operator) {
-            VektorRechnerOperator.ADDITION -> kontext.eingänge.keys.filter { it.startsWith("vektor.") }.sorted()
+            VektorRechnerOperator.ADDITION, VektorRechnerOperator.HADAMARD_PRODUKT -> geordneteOperationsWerte(kontext).keys.toList()
             VektorRechnerOperator.SUBTRAKTION,
             VektorRechnerOperator.SKALARPRODUKT,
             VektorRechnerOperator.KREUZPRODUKT,
-            VektorRechnerOperator.HADAMARD_PRODUKT,
             VektorRechnerOperator.PROJEKTION,
             VektorRechnerOperator.WINKEL,
             VektorRechnerOperator.DISTANZ,
@@ -149,11 +149,10 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
         }
         val skalare = listOfNotNull(kontext.eingänge["skalar"]?.objekt as? ZahlAusdruck)
         val objekte = when (operator) {
-            VektorRechnerOperator.ZUSAMMENFUEHREN -> kontext.eingänge
-                .filterKeys { it.startsWith("element.") }
-                .toList()
-                .sortedBy { (name, _) -> name.substringAfterLast('.').toIntOrNull() ?: Int.MAX_VALUE }
-                .map { (name, wert) -> wert.mathematischesObjekt("Vektorelement '$name'") }
+            VektorRechnerOperator.ZUSAMMENFUEHREN -> kontext.knoten.anschlüsse
+                .filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("element.") }
+                .sortedBy { it.reihenfolge }
+                .mapNotNull { port -> kontext.eingänge[port.name]?.mathematischesObjekt("Vektorelement '${port.name}'") }
             else -> emptyList()
         }
         val integrationsMenge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck

@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.speicher
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenId
+import de.TeutonStudio.KnotenKartenVerwalter.daten.VisuelleGruppenId
 import org.json.JSONObject
 import java.io.File
 
@@ -16,12 +17,17 @@ class AktiveKarteSpeicher(private val basis: File) {
         JSONObject(datei.readText()).optString("kartenId").trim().takeIf(String::isNotBlank)?.let(::KartenId)
     }.getOrNull()
 
-    fun speichere(id: KartenId) {
+    fun ladeGruppe(): VisuelleGruppenId? = runCatching {
+        JSONObject(datei.readText()).optString("gruppenId").takeIf { it.isNotBlank() }?.let(::VisuelleGruppenId)
+    }.getOrNull()
+
+    fun speichere(id: KartenId, gruppe: VisuelleGruppenId? = null) {
         datei.parentFile?.mkdirs()
         val temporär = File(datei.parentFile, "${datei.name}.tmp")
         temporär.writeText(JSONObject().apply {
             put("formatVersion", FORMAT_VERSION)
             put("kartenId", id.wert)
+            gruppe?.let { put("gruppenId", it.wert) }
         }.toString())
         if (!temporär.renameTo(datei)) {
             temporär.copyTo(datei, overwrite = true)

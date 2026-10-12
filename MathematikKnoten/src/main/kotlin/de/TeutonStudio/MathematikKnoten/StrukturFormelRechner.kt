@@ -45,7 +45,7 @@ object StrukturFormelRechnerVorlagen {
                 beschreibung = "Einheitlicher ${familie.titel} mit operatorabhängigen Anschlüssen und typisiertem CAS-Formelmodus.",
                 standardGröße = GraphGröße(300f, 145f),
                 anschlüsse = operator.eingänge.mapIndexed { index, eingang ->
-                    neuerEingang(eingang.name, eingang.typ, index)
+                    neuerEingang(eingang.name, eingang.typ, index).copy(kannSichErweitern = eingang.variadisch)
                 } + neuerAusgang(operator.ergebnisTyp),
                 standardParameter = mapOf(RECHNER_OPERATOR_PARAMETER to operator.id),
             ),
@@ -87,8 +87,10 @@ fun konfiguriereStrukturRechner(
     val operator = StrukturRechnerOperatoren.finde(familie, operatorId)
     val gewünschte = if (familie == StrukturRechnerKnotenFamilie.MATRIX) {
         rechnerAnschlüsse(RechnerFamilie.MATRIX, operator.id)
-    } else operator.eingänge.mapIndexed { index, eingang -> neuerEingang(eingang.name, eingang.typ, index) } + neuerAusgang(operator.ergebnisTyp)
-    val produkt = familie == StrukturRechnerKnotenFamilie.MATRIX && operatorId == MatrixRechnerOperator.MATRIXPRODUKT.stabileId
+    } else operator.eingänge.mapIndexed { index, eingang ->
+        neuerEingang(eingang.name, eingang.typ, index).copy(kannSichErweitern = eingang.variadisch)
+    } + neuerAusgang(operator.ergebnisTyp)
+    val produkt = familie == StrukturRechnerKnotenFamilie.MATRIX && istAssoziativerRechnerOperator(operatorId)
     val produktEingänge = if (produkt) {
         val feste = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
         val vorhanden = if (knoten.parameter[RECHNER_OPERATOR_PARAMETER] == operatorId) knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.dynamischErzeugt }.maxOfOrNull { it.reihenfolge + 1 } ?: 0 else 0
@@ -102,7 +104,8 @@ fun konfiguriereStrukturRechner(
     else erhalteRechnerAnschlussIds(knoten.anschlüsse, gewünschte)
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
-            anschlüsse = anschlüsse,
+            anschlüsse = erhalteDynamischeOperanden(knoten, anschlüsse,
+                knoten.parameter[RECHNER_OPERATOR_PARAMETER] == operatorId),
             parameter = knoten.parameter
                 .minus(STRUKTUR_RECHNER_FORMEL_AUSDRUCK)
                 .minus(STRUKTUR_RECHNER_FORMEL_LATEX)
@@ -270,12 +273,14 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
     }
     KnotenAuswertungsErgebnis(
         ausgaben = mapOf("wert" to BedingterWert(wert, annahmenFuerStrukturFormel())),
-        eingänge = eingänge,
+        eingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
+            .mapNotNull { port -> eingänge[port.name]?.let { port.name to it } }.toMap(),
     )
 }.getOrElse { ursache ->
     KnotenAuswertungsErgebnis(
         ausgaben = emptyMap(),
-        eingänge = eingänge,
+        eingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
+            .mapNotNull { port -> eingänge[port.name]?.let { port.name to it } }.toMap(),
         fehler = ursache.message ?: "Der Strukturrechner konnte nicht ausgewertet werden.",
     )
 }
@@ -469,6 +474,7 @@ private fun werteStrukturOperatorAus(
 ): AtlasWert {
     val produkt = definition.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId
     val argumente = if (produkt) matrixProduktFaktorWerte(kontext)
+    else if (istAssoziativerRechnerOperator(definition.id) && kontext.knoten.anschlüsse.any { it.kannSichErweitern }) geordneteOperationsWerte(kontext)
     else definition.eingänge.associate { eingang ->
         eingang.name to (
             kontext.eingänge[eingang.name]?.mathematischesObjekt("Strukturoperator-Eingang '${eingang.name}'")

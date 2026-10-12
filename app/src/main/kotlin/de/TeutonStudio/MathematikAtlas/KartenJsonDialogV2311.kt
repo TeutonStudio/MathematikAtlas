@@ -1,5 +1,11 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAktionen
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -25,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikAtlas.speicher.KartenJson
@@ -103,106 +108,88 @@ internal fun KartenJsonDialogV2311(zustand: AtlasZustand, schließen: () -> Unit
         if (übernahmeFehler == null) schließen()
     }
 
-    Dialog(
+    AtlasDialog(
         onDismissRequest = ::dialogSchließen,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
-            Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(LocalAtlasAbstände.current.bereich)
-                .fillMaxWidth(.96f).fillMaxHeight(.92f).widthIn(max = 1360.dp),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 8.dp,
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("JSON der aktuellen Karte", style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            "${zustand.editor.karte.name} · Version ${zustand.editor.karte.version} · ${if (wert.text == ausgangstext) "Unverändert" else "Nicht übernommen"} · ${analyseModus.anzeigeName}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (analyseModus != JsonAnalyseModus.Vollständig) {
-                        TextButton(
-                            onClick = {
-                                manuellAngeforderterText = wert.text
-                                manuellePrüfRevision++
-                            },
-                            enabled = !prüfungLäuft,
-                        ) { Text(if (prüfungLäuft) "Prüft …" else "Vollständig prüfen") }
-                    }
-                    TextButton(
-                        onClick = ::formatieren,
-                        enabled = prüfung.vollständig &&
-                            prüfung.analysierterText == wert.text &&
-                            prüfung.syntaxFehler == null,
-                    ) { Text("Formatieren") }
-                    TextButton(onClick = { clipboard.setText(AnnotatedString(wert.text)) }) { Text("Kopieren") }
-                }
-                HorizontalDivider()
-
-                if (prüfung.vollständig && prüfung.analysierterText == wert.text) {
-                    JsonStrukturWerkzeugeV2311(
-                        wert = wert,
-                        karte = zustand.editor.karte,
-                        prüfung = prüfung,
-                        onWert = { wert = it; übernahmeFehler = null },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    Text(
-                        "Strukturwerkzeuge stehen nach einer vollständigen Prüfung wieder bereit.",
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
-                        style = MaterialTheme.typography.labelSmall,
+        Column(Modifier.fillMaxSize()) {
+            AtlasDialogKopf(
+                titel = { Text("JSON der aktuellen Karte") },
+                untertitel = { Text(
+                        "${zustand.editor.karte.name} · Version ${zustand.editor.karte.version} · ${if (wert.text == ausgangstext) "Unverändert" else "Nicht übernommen"} · ${analyseModus.anzeigeName}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    ) },
+                aktionen = { if (analyseModus != JsonAnalyseModus.Vollständig) {
+                    TextButton(
+                        onClick = {
+                            manuellAngeforderterText = wert.text
+                            manuellePrüfRevision++
+                        },
+                        enabled = !prüfungLäuft,
+                    ) { Text(if (prüfungLäuft) "Prüft …" else "Vollständig prüfen") }
                 }
-                HorizontalDivider()
+                TextButton(
+                    onClick = ::formatieren,
+                    enabled = prüfung.vollständig &&
+                        prüfung.analysierterText == wert.text &&
+                        prüfung.syntaxFehler == null,
+                ) { Text("Formatieren") }
+                TextButton(onClick = { clipboard.setText(AnnotatedString(wert.text)) }) { Text("Kopieren") } },
+            )
+            HorizontalDivider()
 
-                JsonEditorV2311(
+            if (prüfung.vollständig && prüfung.analysierterText == wert.text) {
+                JsonStrukturWerkzeugeV2311(
                     wert = wert,
+                    karte = zustand.editor.karte,
+                    prüfung = prüfung,
                     onWert = { wert = it; übernahmeFehler = null },
-                    prüfung = prüfung,
-                    zeilenIndex = zeilenIndex,
-                    übernehmen = ::übernehmen,
-                    formatieren = ::formatieren,
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                HorizontalDivider()
+            } else {
+                Text(
+                    "Strukturwerkzeuge stehen nach einer vollständigen Prüfung wieder bereit.",
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.beschreibung),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            HorizontalDivider()
 
-                JsonStatusV2311(
-                    wert = wert,
-                    prüfung = prüfung,
-                    zeilenIndex = zeilenIndex,
-                    analyseModus = analyseModus,
-                    prüfungLäuft = prüfungLäuft,
-                    übernahmeFehler = übernahmeFehler,
-                )
-                HorizontalDivider()
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = ::dialogSchließen) { Text("Verwerfen") }
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = ::übernehmen,
-                        enabled = prüfung.analysierterText != wert.text || !prüfung.vollständig ||
-                            (prüfung.syntaxFehler == null && prüfung.schemaFehler == null),
-                    ) { Text("Übernehmen") }
-                }
+            JsonEditorV2311(
+                wert = wert,
+                onWert = { wert = it; übernahmeFehler = null },
+                prüfung = prüfung,
+                zeilenIndex = zeilenIndex,
+                übernehmen = ::übernehmen,
+                formatieren = ::formatieren,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+            )
+            HorizontalDivider()
+
+            JsonStatusV2311(
+                wert = wert,
+                prüfung = prüfung,
+                zeilenIndex = zeilenIndex,
+                analyseModus = analyseModus,
+                prüfungLäuft = prüfungLäuft,
+                übernahmeFehler = übernahmeFehler,
+            )
+            HorizontalDivider()
+            AtlasDialogAktionen {
+                TextButton(onClick = ::dialogSchließen) { Text("Verwerfen") }
+                Button(
+                    onClick = ::übernehmen,
+                    enabled = prüfung.analysierterText != wert.text || !prüfung.vollständig ||
+                        (prüfung.syntaxFehler == null && prüfung.schemaFehler == null),
+                ) { Text("Übernehmen") }
             }
         }
+
     }
 
     if (verwerfenBestätigen) {
-        AlertDialog(
+        AtlasBestätigungsDialog(
             onDismissRequest = { verwerfenBestätigen = false },
             title = { Text("Änderungen verwerfen?") },
             text = { Text("Die nicht übernommenen JSON-Änderungen gehen verloren.") },
@@ -249,7 +236,7 @@ private fun JsonEditorV2311(
     }
 
     Surface(
-        modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.standard),
+        modifier.padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.beschreibung),
         shape = RoundedCornerShape(8.dp),
         color = farben.hintergrund,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -276,7 +263,7 @@ private fun JsonEditorV2311(
                     onValueChange = onWert,
                     modifier = Modifier
                         .width((längsteZeile * 8 + 120).coerceIn(900, 6000).dp)
-                        .padding(horizontal = LocalAtlasAbstände.current.bereich, vertical = LocalAtlasAbstände.current.standard)
+                        .padding(horizontal = AtlasDialogAbstände.felder, vertical = AtlasDialogAbstände.beschreibung)
                         .onPreviewKeyEvent { ereignis ->
                             if (ereignis.type != KeyEventType.KeyDown || !ereignis.isCtrlPressed) return@onPreviewKeyEvent false
                             when {
@@ -333,7 +320,7 @@ private fun JsonZeilenRandV2311(
                         .fillMaxWidth()
                         .height(zeilenHöhe)
                         .absoluteOffset(y = zeilenHöhe * (zeile - 1).toFloat())
-                        .padding(end = LocalAtlasAbstände.current.standard),
+                        .padding(end = AtlasDialogAbstände.beschreibung),
                     color = if (zeile == cursorZeile) MaterialTheme.colorScheme.primary else farben.zeilennummer,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
@@ -357,11 +344,11 @@ private fun JsonStrukturWerkzeugeV2311(
         jsonIdKontextV2311(prüfung.idBereiche, wert.selection.start)
     }
     val listen = prüfung.listen.filter { it.schlüssel in unterstützteListenV2311 }
-    Column(modifier.padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.eng), verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+    Column(modifier.padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.aktionen), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen)) {
         if (idKontext != null) {
             val optionen = remember(idKontext, karte) { idOptionenV2311(idKontext, karte) }
             var offen by remember(idKontext) { mutableStateOf(false) }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
                 Text("${idKontext.schlüssel}:", style = MaterialTheme.typography.labelMedium)
                 ExposedDropdownMenuBox(
                     expanded = offen,
@@ -405,7 +392,7 @@ private fun JsonStrukturWerkzeugeV2311(
         if (listen.isNotEmpty()) {
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng),
+                horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.aktionen),
             ) {
                 listen.forEach { liste ->
                     AssistChip(
@@ -442,9 +429,9 @@ private fun JsonStatusV2311(
         else -> "Syntax und Kartenschema gültig"
     }
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt, vertical = LocalAtlasAbstände.current.eng),
+        Modifier.fillMaxWidth().padding(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.aktionen),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.inhalt),
+        horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.eintragHorizontal),
     ) {
         Text("Zeile ${position.zeile}, Spalte ${position.spalte}", style = MaterialTheme.typography.labelSmall)
         Text("${zeilenIndex.zeilenAnzahl} Zeilen", style = MaterialTheme.typography.labelSmall)
