@@ -107,7 +107,7 @@ private fun inferiereElementMenge(
     is EndlicheIndexMenge -> NatürlicheZahlen
     is StrukturErgebnisMenge -> menge
     NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen,
-    Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen, is BenannteMenge -> menge
+    Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen, Gradmenge, is BenannteMenge -> menge
     LeereMenge -> LeereMenge
     is EndlicheMenge -> if (menge.elemente.isEmpty()) LeereMenge else vereinige(menge.elemente.map {
         inferiereZielmenge(it, werteVorräte, annahmen)

@@ -237,6 +237,7 @@ fun istNachweisbarReell(
             exponent.nenner == BigInteger.ONE && (exponent.zähler.signum() >= 0 || ausdruck.basis.istNachweisbarNichtNull(annahmen))
         } == true
     is Betrag -> true
+    is SinusGrad, is WinkelBogenmass -> true
     is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is ArcSinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
@@ -327,7 +328,7 @@ fun inferiereZahlenWertevorrat(
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
-    is Betrag, is Argument, is ArcSinus, is ArcCosinus -> ReelleZahlen
+    is Betrag, is Argument, is ArcSinus, is ArcCosinus, is SinusGrad, is WinkelBogenmass -> ReelleZahlen
     is Sinus, is Cosinus, is Exponentialfunktion -> if (istNachweisbarReell(
         ausdruck,
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
