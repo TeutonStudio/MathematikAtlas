@@ -264,7 +264,6 @@ fun KnotenKartenEditor(
             }
     ) {
         Raster(ansicht)
-        GruppenRahmen(zustand, auswertungsDauerFür)
         GruppenÜbergangsRahmen(gruppenÜbergang, zustand.projektion, ansicht)
         GruppenNavigation(zustand)
         GruppenInspektor(zustand)
@@ -286,6 +285,7 @@ fun KnotenKartenEditor(
                     gruppenÜbergang = gruppenÜbergang,
                 )
             }
+            GruppenRahmen(zustand, auswertungsDauerFür)
             GruppenÜbergangsInhalt(gruppenÜbergang, karte, sichtbarerWeltBereich, rendererFür)
             for (neueEbene in listOf(false,true)) {
                 val inhalt = sichtbareKnoten.filter {
