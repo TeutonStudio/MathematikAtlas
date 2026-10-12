@@ -190,6 +190,7 @@ class MathematikAuswerterRegister {
     fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
         KARTEN_EINGANG_ART -> KartenEingangAuswerter
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
+        "mathematik.halbesIntervall" -> HalbesIntervallAuswerter
         MENGENKONSTRUKTOR_ART -> MengenkonstruktorAuswerter
         MENGENDEFINATOR_ART -> MengendefinatorAuswerter
         FALTUNGSKONSTRUKTOR_ART -> FaltungskonstruktorAuswerter

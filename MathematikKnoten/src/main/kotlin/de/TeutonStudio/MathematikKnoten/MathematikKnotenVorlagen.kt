@@ -155,6 +155,22 @@ object MathematikKnotenVorlagen {
         "mathematik.mengenfilter", "Mengenfilter", "Mengen", "Behält genau die Elemente einer Menge, für die eine einstellige Methode eine wahre Aussage liefert.", GraphGröße(270f, 120f),
         listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0), eingang("methode", MathematikAnschlussArten.Methode.id, 1), ausgang("menge", MathematikAnschlussArten.Menge.id)),
     )
+    val HalbesIntervallUntergrenze = KnotenVorlage(
+        "mathematik.halbesIntervall", "Halbes Intervall (Untergrenze)", "Mengen",
+        "Reeller Halbstrahl oberhalb einer Grenze.", GraphGröße(260f, 130f),
+        listOf(eingang("grenze", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("offen", MathematikAnschlussArten.Aussage.id, 1),
+            ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        mapOf("richtung" to "aufwaerts"),
+    )
+    val HalbesIntervallObergrenze = KnotenVorlage(
+        "mathematik.halbesIntervall", "Halbes Intervall (Obergrenze)", "Mengen",
+        "Reeller Halbstrahl unterhalb einer Grenze.", GraphGröße(260f, 130f),
+        listOf(eingang("grenze", MathematikAnschlussArten.Zahl.id, 0),
+            eingang("offen", MathematikAnschlussArten.Aussage.id, 1),
+            ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        mapOf("richtung" to "abwaerts"),
+    )
     val ReellesIntervall = KnotenVorlage(
         "mathematik.reellesIntervall", "Reelles Intervall", "Mengen", "Bildet ein reelles Intervall aus zwei nachweisbar reellen Grenzen und Aussagen über offene Randpunkte.", GraphGröße(280f, 165f),
         listOf(
@@ -442,7 +458,7 @@ object MathematikKnotenVorlagen {
     val Äquivalenz = KnotenVorlage("mathematik.äquivalenz", "Äquivalenz", "Aussage", "Bildet A ⇔ B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Adjunktion = KnotenVorlage("mathematik.adjunktion", "Adjunktion", "Aussage", "Bildet die klassische UND-Verknüpfung A & B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
 
-    val alle = listOf(Zahl, Variable, AllgemeinerParameter, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Kehrwert, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Ungleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Darstellungsoptimierung, Ableiten, Integrieren, EndlicheMenge, Einzelmenge, Mengenfilter, ReellesIntervall, Lösungsmenge, Visualisierung, Orbit, OrbitBeschraenktheit, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteKonjunktion, IterierteDisjunktion, IterierteAdjunktion, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, AussageZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, VektorZuPolynom, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, MatrixProdukt, Transponieren, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
+    val alle = listOf(Zahl, Variable, AllgemeinerParameter, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Kehrwert, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Ungleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Darstellungsoptimierung, Ableiten, Integrieren, EndlicheMenge, Einzelmenge, Mengenfilter, HalbesIntervallUntergrenze, HalbesIntervallObergrenze, ReellesIntervall, Lösungsmenge, Visualisierung, Orbit, OrbitBeschraenktheit, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteKonjunktion, IterierteDisjunktion, IterierteAdjunktion, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, AussageZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, VektorZuPolynom, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, MatrixProdukt, Transponieren, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
 
     private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId, kategorie: String = "Aussagen: Aussagenprädikate") = KnotenVorlage(
         art, name, kategorie, beschreibung, GraphGröße(220f, 110f),

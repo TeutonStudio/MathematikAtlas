@@ -86,6 +86,7 @@ internal object ExpliziteKonzeptKnoten {
         GroesserKonzeptDatei44D01B8F,
         KleinerOderGleichKonzeptDatei0B2CFA49,
         KleinerKonzeptDatei69B0A80F,
+        HalbesIntervallKonzeptDatei9A62E177,
         ReellesIntervallKonzeptDatei5B81E0DC,
         SchnittKonzeptDateiDFA2CDE6,
         SpaltenmethodeDifferentierenKonzeptDateiE0E646C8,
