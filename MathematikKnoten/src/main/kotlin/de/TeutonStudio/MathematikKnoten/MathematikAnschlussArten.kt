@@ -15,6 +15,8 @@ object MathematikAnschlussArten {
         elternArt = AtlasWert.id,
         beschreibung = "Beliebiges mathematisches Objekt.",
     )
+    val Winkel = AnschlussArt(id = AnschlussArtId("mathematik.winkel"), name = "Winkel", elternArt = Objekt.id,
+        beschreibung = "Winkel modulo 360 Grad; eigener Träger.")
     val Zahl = AnschlussArt(
         id = AnschlussArtId("mathematik.zahl"),
         name = "Zahl",
@@ -183,6 +185,7 @@ object MathematikAnschlussArten {
         AtlasWert,
         Objekt,
         Zahl,
+        Winkel,
         Aussage,
         Menge,
         Topologie,

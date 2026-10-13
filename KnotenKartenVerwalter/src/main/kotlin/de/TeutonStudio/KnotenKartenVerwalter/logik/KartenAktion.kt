@@ -166,7 +166,7 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
         visuelleGruppen = visuelleGruppen.map {
             if (it.id == aktion.id) it.copy(größe = aktion.größe.alsGültigeVisuelleGruppenGröße()) else it
         },
-    )
+    ).mitGruppenInhaltsminimum()
     is KartenAktion.VisuelleGruppeTitelÄndern -> copy(
         visuelleGruppen = visuelleGruppen.map {
             if (it.id == aktion.id) it.copy(titel = aktion.titel) else it

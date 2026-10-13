@@ -213,6 +213,7 @@ fun GeometriePunkt.dezimalKoordinaten(): List<Double>? = zahlKoordinaten()?.map 
 }
 
 fun GeometrischerAusdruck.objektDimension(): Int = when (this) {
+    is GeometrischeMengenRealisierung -> (menge as? UnterraumMenge)?.rangOderNull() ?: error("Die intrinsische Dimension ist nicht nachgewiesen.")
     is GeometriePunkt -> 0
     is GeometrieGerade, is GeometrieStrecke, is GeometrieStrahl, is GeometrieKreislinie -> 1
     is GeometrieEbene, is GeometriePolygon, is GeometrieDreieck -> 2

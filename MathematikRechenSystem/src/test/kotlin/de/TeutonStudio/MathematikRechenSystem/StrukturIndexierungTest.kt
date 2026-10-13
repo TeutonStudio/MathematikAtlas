@@ -5,9 +5,9 @@ import kotlin.test.*
 
 class StrukturIndexierungTest {
     @Test
-    fun `endliche symbolische Indexmenge akzeptiert Variable aber keine Null`() {
+    fun `endliche symbolische Indexmenge akzeptiert Variable und leeren Bereich`() {
         assertEquals("\\left\\{1,\\ldots,n\\right\\}", EndlicheIndexMenge(Variable("n")).zuLatex())
-        assertFailsWith<IllegalArgumentException> { EndlicheIndexMenge(RationaleZahl.Null) }
+        assertEquals(RationaleZahl.Null, EndlicheIndexMenge(RationaleZahl.Null).obergrenze)
         assertFailsWith<IllegalArgumentException> { EndlicheIndexMenge(RationaleZahl.von(-1)) }
         assertFailsWith<IllegalArgumentException> { EndlicheIndexMenge(RationaleZahl.von(3, 2)) }
     }

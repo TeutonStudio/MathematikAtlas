@@ -15,6 +15,8 @@ fun KnotenRenderer.mitAuswertungszeit(
     val basis = this
     return object : KnotenRenderer {
         override val interaktionsModus: KnotenInteraktionsModus get() = basis.interaktionsModus
+        override val misstNatürlichenInhalt: Boolean get() = basis.misstNatürlichenInhalt
+        @Composable override fun Mindestgröße(knoten: KnotenDaten) = basis.Mindestgröße(knoten)
 
         @Composable
         override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {

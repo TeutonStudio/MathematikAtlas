@@ -78,7 +78,7 @@ internal fun KnotenKonzeptDialog(
     }
 
     val context = LocalContext.current
-    val konzept = remember(knoten.art, knoten.parameter, knoten.eigenschaften, knoten.kartenVerweis, context) {
+    val konzept = remember(knoten.art, knoten.parameter, knoten.eigenschaften, knoten.kartenVerweis, zustand.auswertung.knoten[knoten.id]?.eingänge, context) {
         if (knoten.art == "mathematik.multinomVektor") {
             multinomVektorKonzept(knoten)
         } else {
@@ -125,7 +125,7 @@ private fun KonzeptDialog(
     val zeigtVisualisierung = besitztVisualisierungsReiter && reiterIndex == visualisierungsReiterIndex
     val aktiverReiter = if (zeigtVisualisierung) null else konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
     val aktiveKarte = aktiverReiter?.karteFür(komplexDarstellung)
-    val zeigtFalkSchema = aktiverReiter?.darstellung == KonzeptReiterDarstellung.FalkSchema
+    val zeigtFalkSchema = aktiverReiter?.darstellung in setOf(KonzeptReiterDarstellung.FalkSchema, KonzeptReiterDarstellung.Auswertungsschema)
 
     AtlasDialog(
         onDismissRequest = schließen,
@@ -208,10 +208,11 @@ private fun KonzeptDialog(
                     }
                 }
                 if (zeigtFalkSchema) {
-                    MatrixproduktFalkSchemaInhalt(
-                        auswertung = ursprungsKnoten?.let { zustand.auswertung.knoten[it.id] },
+                    if (ursprungsKnoten != null) RechnerAuswertungsschemaInhalt(
+                        knoten = ursprungsKnoten,
+                        auswertung = zustand.auswertung.knoten[ursprungsKnoten.id],
                         modifier = Modifier.weight(1f).fillMaxWidth(),
-                    )
+                    ) else MatrixproduktFalkSchemaInhalt(null, Modifier.weight(1f).fillMaxWidth())
                 } else {
                     aktiveKarte?.let { karte ->
                         UnveränderlicheKonzeptKarte(

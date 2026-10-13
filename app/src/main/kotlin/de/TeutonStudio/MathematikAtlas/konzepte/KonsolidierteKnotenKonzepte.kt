@@ -4,14 +4,44 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
-internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? =
-    dynamischesKonzeptFürKnoten(knoten) { zustand.speicher.lade(it) }
+internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? {
+    val eingaben = zustand.auswertung.knoten[knoten.id]?.eingänge.orEmpty()
+    val p = (eingaben["p"]?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl)?.takeIf { it.nenner == java.math.BigInteger.ONE && it.zähler.signum() >= 0 }?.zähler?.toString()
+    val konfiguriert = knoten.copy(parameter = knoten.parameter + buildMap {
+        if (p != null) put(VEKTOR_POTENZ_EXPONENT, p)
+        if (eingaben["a"]?.objekt is de.TeutonStudio.MathematikRechenSystem.kern.ZeilenVektor) put("definition.orientierung", "zeile")
+        if (knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER] == de.TeutonStudio.MathematikRechenSystem.kern.MengenRechnerOperator.UNTERRAUM.stabileId) {
+            put("definition.richtungsanzahl", eingaben.keys.count { it.startsWith("a.") }.toString())
+            val u = zustand.auswertung.knoten[knoten.id]?.ausgaben?.get("menge")?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.UnterraumMenge
+            if (u != null) put("unterraum.dimension", u.dimension.toString())
+        }
+        if (eingaben["c"] != null) put("unterraum.affin", "true")
+    })
+    return dynamischesKonzeptFürKnoten(konfiguriert) { zustand.speicher.lade(it) }
+}
 
 /** Derselbe Resolver wie im Definitionsdialog, mit gekapselter Kartenquelle. */
 internal fun dynamischesKonzeptFürKnoten(
     knoten: KnotenDaten,
     ladeKarte: (KartenVerweis) -> KartenDaten? = { null },
 ): KonzeptDefinition? {
+    val konzept = dynamischesKonzeptOhneSchema(knoten, ladeKarte) ?: return null
+    if (!besitztRechnerSchema(knoten) || konzept.reiter.any {
+        it.darstellung in setOf(KonzeptReiterDarstellung.FalkSchema, KonzeptReiterDarstellung.Auswertungsschema)
+    }) return konzept
+    return konzept.copy(reiter = konzept.reiter + KonzeptReiter(
+        id = "auswertungsschema-${knoten.id.wert}", titel = "Auswertungsschema",
+        rolle = KonzeptReiterRolle.Äquivalenz,
+        karte = KartenDaten(name = "Auswertungsschema"),
+        darstellung = KonzeptReiterDarstellung.Auswertungsschema))
+}
+
+private fun dynamischesKonzeptOhneSchema(
+    knoten: KnotenDaten,
+    ladeKarte: (KartenVerweis) -> KartenDaten? = { null },
+): KonzeptDefinition? {
+    vektorUnterraumKonzept(knoten)?.let { return it }
+    sinusGradKonzept(knoten)?.let { return it }
     alphaStrukturKonzeptFürKnoten(knoten)?.let { return it }
     axiomPraedikatKonzept(knoten)?.let { return it }
     relationPraedikatKonzept(knoten)?.let { return it }

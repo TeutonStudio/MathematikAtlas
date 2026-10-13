@@ -41,12 +41,22 @@ val SKALARPRODUKT_SPEZIFIKATION = BegriffsSpezifikation(
     ),
 )
 
+/** Ein aufgelöster Nachweis ist an den vollständigen Methodensnapshot gebunden. */
+data class SkalarproduktAxiomNachweis(
+    val methode: Methode,
+    val axiomId: String,
+    val zahlbereich: FundamentalerZahlbereich,
+    val linearitaet: SkalarproduktLinearitaet,
+    val status: NachweisStatus,
+)
+
 fun pruefeSkalarprodukt(
     methode: Methode,
     zahlbereich: FundamentalerZahlbereich,
     linearitaet: SkalarproduktLinearitaet,
     referenzen: SkalarproduktNachweisReferenzen,
     zertifikatVersion: Int = SKALARPRODUKT_ZERTIFIKAT_VERSION,
+    nachweisAufloesen: (String) -> SkalarproduktAxiomNachweis? = { null },
 ): BegriffsAussage {
     val diagnosen = mutableListOf<String>()
     val vertrag = methode.vertragOderNull()
@@ -68,9 +78,15 @@ fun pruefeSkalarprodukt(
         vertrag?.zielMenge?.skalarproduktZahlbereichOderNull() == zahlbereich
     val signaturPasst = vertrag != null &&
         vertrag.argumentMengen.size == 2 &&
+        vertrag.argumentMengen[0] == vertrag.argumentMengen[1] &&
         parameterPassen &&
         ausgabePasst
 
+    val standard1D = signaturPasst && zahlbereich == FundamentalerZahlbereich.REELL &&
+        vertrag!!.argumentMengen.all { it == ReelleZahlen } && methode.parameter.all { it is Variable } &&
+        methode.vorschrift == multiplikation(methode.parameter[0] as Variable, methode.parameter[1] as Variable)
+    val negativ1D = signaturPasst && vertrag!!.argumentMengen.all { it == ReelleZahlen } && methode.parameter.all { it is Variable } &&
+        methode.vorschrift == negation(multiplikation(methode.parameter[0] as Variable, methode.parameter[1] as Variable))
     val pruefungen = mutableListOf<BegriffsAxiomPruefung>()
     pruefungen += BegriffsAxiomPruefung(
         id = "signatur",
@@ -90,15 +106,15 @@ fun pruefeSkalarprodukt(
         beschreibung: String,
     ): BegriffsAxiomPruefung {
         val bereinigt = referenz.trim()
+        val beleg = bereinigt.takeIf(String::isNotBlank)?.let(nachweisAufloesen)
+        val passend = beleg != null && beleg.methode == methode && beleg.axiomId == id &&
+            beleg.zahlbereich == zahlbereich && beleg.linearitaet == linearitaet
         return BegriffsAxiomPruefung(
             id = id,
             name = name,
-            status = if (bereinigt.isBlank()) NachweisStatus.Unvollstaendig else NachweisStatus.Nachgewiesen,
-            begruendung = if (bereinigt.isBlank()) {
-                "Für $beschreibung fehlt eine explizite Nachweisreferenz."
-            } else {
-                "$beschreibung wird durch '$bereinigt' belegt."
-            },
+            status = if (standard1D) NachweisStatus.Nachgewiesen else if (negativ1D && id == "positiv") NachweisStatus.Widerlegt else if (passend) beleg!!.status else NachweisStatus.Unvollstaendig,
+            begruendung = if (standard1D) "$beschreibung gilt für das reelle eindimensionale Standardskalarprodukt." else if (negativ1D && id == "positiv") "Für v=1 ist das Selbstprodukt -1; positive Definitheit ist widerlegt." else if (passend) "$beschreibung: aufgelöster, methodengebundener Nachweis '$bereinigt'."
+                else "Für $beschreibung fehlt ein auflösbarer Nachweis für diese Methode; Referenztext allein ist kein Beweis.",
         )
     }
 
@@ -137,7 +153,7 @@ fun pruefeSkalarprodukt(
     when (status) {
         NachweisStatus.Nachgewiesen -> diagnosen += "Die Skalarproduktdefinition ist vollständig und versionsfest zertifiziert."
         NachweisStatus.Widerlegt -> diagnosen += "Die Methodensignatur ist nicht mit einem Skalarprodukt kompatibel."
-        else -> diagnosen += "Das Zertifikat ist unvollständig; die Definition darf noch nicht im Vektorrechner ausgeführt werden."
+        else -> diagnosen += "Das Zertifikat ist unvollständig; die Axiome dürfen nur als ausdrückliche Annahmen verwendet werden."
     }
 
     val vektorRaum = vertrag?.argumentMengen?.firstOrNull()
@@ -163,7 +179,7 @@ fun pruefeSkalarprodukt(
             status = status,
             diagnosen = diagnosen,
             zeugnis = zeugnis,
-            spezifikation = SKALARPRODUKT_SPEZIFIKATION,
+            spezifikation = if (linearitaet == SkalarproduktLinearitaet.RECHTSLINEAR) SKALARPRODUKT_SPEZIFIKATION else SKALARPRODUKT_SPEZIFIKATION.copy(axiome = SKALARPRODUKT_SPEZIFIKATION.axiome.map { if (it.id == "linearitaet") it.copy(beschreibungLatex = "\\langle au+bv,w\\rangle=a\\langle u,w\\rangle+b\\langle v,w\\rangle") else it }),
             kandidat = BegriffsKandidat(
                 spezifikationId = SKALARPRODUKT_BEGRIFF_ID,
                 belegung = mapOf("methode" to methode),
@@ -194,10 +210,10 @@ fun skalarproduktZertifikatFehler(
         return "Das Zertifikat gilt für ${zeugnis.zahlbereich.latex}, benötigt wird ${erwarteterZahlbereich.latex}."
     }
     if (
-        erwarteterZahlbereich == FundamentalerZahlbereich.QUATERNION &&
+        erwarteterZahlbereich in setOf(FundamentalerZahlbereich.QUATERNION, FundamentalerZahlbereich.KOMPLEX) &&
         zeugnis.linearitaet != erwarteteLinearitaet
     ) {
-        return "Die quaternionische Linearitätsseite des Zertifikats ist nicht kompatibel."
+        return "Die Linearitätsseite des Zertifikats ist nicht kompatibel."
     }
     return null
 }

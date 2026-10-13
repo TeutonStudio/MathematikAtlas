@@ -165,8 +165,9 @@ private fun werteStrukturierteDivisionAus(
 }
 
 private fun inferiereMethodenZielBereich(methode: Methode): ZahlenRechnerBereich {
-    val fundamental = methode.zielMenge.fundamentalerZahlbereichOderNull()
-        ?: (methode.zielMenge as? BeschraenkteZahlmenge)?.traeger
+    val ziel = methode.zielMengeFür(methode.ausgabeNamen.single())
+    val fundamental = ziel.fundamentalerZahlbereichOderNull()
+        ?: (ziel as? BeschraenkteZahlmenge)?.traeger
     return when (fundamental) {
         FundamentalerZahlbereich.NATUERLICH_POSITIV -> ZahlenRechnerBereich.NATUERLICH
         FundamentalerZahlbereich.NATUERLICH_MIT_NULL -> ZahlenRechnerBereich.NATUERLICH_MIT_NULL

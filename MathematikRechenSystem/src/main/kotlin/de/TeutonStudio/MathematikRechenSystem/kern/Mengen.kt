@@ -236,7 +236,7 @@ fun mächtigkeit(menge: MengenAusdruck): Mächtigkeit = when (menge) {
     LeereMenge -> EndlicheMächtigkeit(RationaleZahl.Null)
     NatürlicheZahlen, NichtnegativeGanzeZahlenSemantik.menge, GanzeZahlen, RationaleZahlen,
     Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen -> AbzählbarUnendlich
-    ReelleZahlen, KomplexeZahlen -> Überabzählbar
+    Gradmenge, ReelleZahlen, KomplexeZahlen -> Überabzählbar
     else -> error("Die Mächtigkeit dieser Menge ist noch nicht entscheidbar.")
 }
 
@@ -289,6 +289,14 @@ internal fun strukturellerSchlüssel(objekt: MathematischesObjekt): String = "${
 
 data class ElementBeziehung(val element: MathematischesObjekt, val menge: MengenAusdruck) : Aussage {
     override fun entscheide(kontext: RechenKontext): AussageErgebnis = konstanteMitgliedschaft(element, menge, kontext) ?: when (menge) {
+        is VerschobeneKoordinatenMenge -> {
+            val t = element as? Tupel
+            if (t == null || t.elemente.size != menge.verschiebung.size || t.elemente.any { it !is ZahlAusdruck }) AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+            else ElementBeziehung(Tupel(t.elemente.mapIndexed { i, x -> vereinfache(subtraktion(x as ZahlAusdruck, menge.verschiebung[i]), kontext) }), menge.original).entscheide(kontext)
+        }
+        is KoordinatenBild -> koordinatenMengenMitgliedschaft(element, menge, kontext)
+        is GeometrischeTrägermenge -> if (element is GeometriePunkt && element.raum == menge.objekt.raum) GeometrischeInzidenz(element, menge.objekt).entscheide(kontext) else AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+        is UnterraumMenge -> menge.mitgliedschaft(element, kontext)
         is DefinierteMenge -> entscheidePrädikatsMitgliedschaft(element, menge, kontext)
         is BeschraenkteZahlmenge -> entscheideBeschränkteMitgliedschaft(element, menge, kontext)
         is PrädikatsMenge -> {

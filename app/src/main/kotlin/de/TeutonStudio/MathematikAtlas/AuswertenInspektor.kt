@@ -72,7 +72,7 @@ internal object AuswertenInspektor : KnotenInspektor {
   Text("Auswertungsdetails öffnen")
         }
         if (dialogGeöffnet && ergebnis != null) {
-  de.TeutonStudio.MathematikKnoten.PrädikatsRechenwegDialog(knoten.name, ergebnis) { dialogGeöffnet = false }
+  de.TeutonStudio.MathematikKnoten.PrädikatsRechenwegDialog(knoten.name, ergebnis, { config -> aktionen.knoten(de.TeutonStudio.MathematikKnoten.konfigurierePolynomNumerik(knoten, config)) }) { dialogGeöffnet = false }
         }
     }
 }

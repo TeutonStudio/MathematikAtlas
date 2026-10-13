@@ -1217,6 +1217,11 @@ object VisualisierungsSampler {
         abbruchPrüfen: () -> Unit,
     ): VisualisierungsErgebnis {
         val methode = abbild.methode
+        if (methode.parameter.any { it !is Variable } || methode.parameter.size > 3 ||
+            konfiguration.ausgabeKoordinaten.isNotEmpty() ||
+            methode.parameter.size == 1 && (abbild.menge is Tupelraum || abbild.menge is KartesischesProdukt || abbild.menge is Vektorraum)) {
+            return sampleStrukturierteBildmenge(abbild, konfiguration, abbruchPrüfen)
+        }
         if (methode.parameter.isEmpty()) {
             return VisualisierungsErgebnis.NichtDarstellbar("Die darzustellende Methode benötigt mindestens einen numerischen Parameter.")
         }

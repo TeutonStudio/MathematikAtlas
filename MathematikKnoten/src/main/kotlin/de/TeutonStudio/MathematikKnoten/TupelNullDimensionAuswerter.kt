@@ -36,6 +36,8 @@ fun MathematikAuswerterRegister.registriereTupelNullDimension() {
             ausgaben = mapOf(
                 "tupel" to BedingterWert(
                     objekt = Tupel(emptyList()),
+                    zielMenge = de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum(emptyList()),
+                    komponentenMengen = emptyList(),
                     annahmen = annahmen,
                 ),
             ),

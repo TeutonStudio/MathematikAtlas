@@ -43,6 +43,7 @@ fun synchronisiereMethodenAufrufe(
 ): KartenDaten {
     val argumentIdErsetzungen = buildMap {
         karte.knoten.filter { it.art == METHODEN_AUFRUF_ART }.forEach { knoten ->
+            if (METHODEN_STRUKTUR_PACKUNG in knoten.eigenschaften || METHODEN_STRUKTUR_MIGRATIONSFEHLER in knoten.parameter) return@forEach
             knoten.argumentAnschlüsse().forEachIndexed { index, anschluss ->
                 val alt = AnschlussVerweis(knoten.id, anschluss.id)
                 val neu = AnschlussVerweis(knoten.id, argumentId(knoten.id, index))
@@ -145,6 +146,7 @@ private fun synchronisiereMethodenAufruf(
     argumentProjektion: String,
     ergebnisProjektion: String,
 ): KnotenDaten {
+    if (METHODEN_STRUKTUR_PACKUNG in knoten.eigenschaften || METHODEN_STRUKTUR_MIGRATIONSFEHLER in knoten.parameter) return knoten
     val methodenEingang = knoten.anschlüsse.firstOrNull {
         it.richtung == AnschlussRichtung.Eingang && it.name == "methode"
     } ?: return knoten

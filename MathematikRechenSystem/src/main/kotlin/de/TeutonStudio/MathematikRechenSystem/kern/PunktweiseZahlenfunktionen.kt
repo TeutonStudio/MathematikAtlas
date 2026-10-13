@@ -15,7 +15,9 @@ data class PunktweiseZahlenVorbereitung(
 
 fun bereitePunktweiseZahlenfunktionVor(
     operanden: Map<String, AtlasWert>,
+    benannteIndexAchsen: Boolean = false,
 ): PunktweiseZahlenVorbereitung {
+    if (benannteIndexAchsen) return bereiteBenannteIndexOperationVor(operanden)
     val methoden = operanden.values.filterIsInstance<Methode>()
     require(methoden.isNotEmpty()) { "Eine punktweise Hebung benötigt mindestens eine Zahlenfunktion." }
     methoden.forEach { methode ->
@@ -145,4 +147,26 @@ private fun benenneMethodenBereichUm(
         )
     }
     else -> ersetze(menge, bindungen) as MengenAusdruck
+}
+
+
+/** Gemeinsame benannte Indexachsen, mit strenger Formgleichheit auf geteilten Achsen. */
+private fun bereiteBenannteIndexOperationVor(operanden: Map<String, AtlasWert>): PunktweiseZahlenVorbereitung {
+    val methoden = operanden.values.filterIsInstance<MathematischeMethode>()
+    require(methoden.isNotEmpty()) { "Eine Indexoperation benötigt Komponentenmethoden." }
+    val bereiche = linkedMapOf<String, MengenAusdruck>()
+    methoden.forEach { methode ->
+        require(methode.vorschriftFür(methode.ausgabeNamen.single()) is ZahlAusdruck) { "Indexarithmetik benötigt Zahlkomponenten." }
+        methode.parameter.forEach { p ->
+            val menge = methode.werteVorräte[p.name] as? EndlicheIndexMenge ?: error("Indexarithmetik benötigt endliche Indexbereiche.")
+            val vorhanden = bereiche.putIfAbsent(p.name, menge)
+            require(vorhanden == null || vorhanden == menge) { "Die gemeinsame Indexachse '${p.name}' besitzt inkompatible Längen." }
+        }
+    }
+    return PunktweiseZahlenVorbereitung(bereiche.keys.map(::Variable), bereiche, Tupelraum(bereiche.values.toList()),
+        operanden.mapValues { (_, wert) -> when (wert) {
+            is MathematischeMethode -> wert.vorschriftFür(wert.ausgabeNamen.single()) as ZahlAusdruck
+            is ZahlAusdruck -> wert
+            else -> error("Indexarithmetik benötigt Zahlen oder Komponentenmethoden.")
+        } }, operanden.mapNotNull { (name, wert) -> (wert as? Methode)?.let { name to it.name } }.toMap())
 }

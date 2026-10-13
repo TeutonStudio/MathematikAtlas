@@ -12,6 +12,7 @@ const val MENGEN_MASS_SYMBOL_PARAMETER = "massSymbol"
 const val MENGEN_NORM_KNOTEN_ART = "mathematik.mengenNorm"
 
 private val sichtbareMengenRechnerOperatoren = listOf(
+    MengenRechnerOperator.UNTERRAUM,
     MengenRechnerOperator.SCHNITT,
     MengenRechnerOperator.VEREINIGUNG,
     MengenRechnerOperator.DIFFERENZ,
@@ -30,6 +31,7 @@ private val sichtbareMengenRechnerOperatoren = listOf(
 fun sichtbareMengenRechnerOperatoren(): List<MengenRechnerOperator> = sichtbareMengenRechnerOperatoren
 
 fun MengenRechnerOperator.titel(): String = when (this) {
+    MengenRechnerOperator.UNTERRAUM -> "Unterraum / affiner Spann"
     MengenRechnerOperator.SCHNITT -> "Schnitt"
     MengenRechnerOperator.VEREINIGUNG -> "Vereinigung"
     MengenRechnerOperator.DIFFERENZ -> "Differenz"
@@ -49,6 +51,7 @@ fun MengenRechnerOperator.titel(): String = when (this) {
 }
 
 fun MengenRechnerOperator.vorschauLatex(): String = when (this) {
+    MengenRechnerOperator.UNTERRAUM -> "\\{c+\\sum_k b_k a^k\\mid b\\in\\mathbb{R}^n\\}"
     MengenRechnerOperator.SCHNITT -> "A\\cap B"
     MengenRechnerOperator.VEREINIGUNG -> "A\\cup B"
     MengenRechnerOperator.DIFFERENZ -> "A\\setminus B"
@@ -250,7 +253,19 @@ private fun werteMengenRechnerAus(kontext: KnotenAuswertungsKontext): KnotenAusw
     val objekt: MengenAusdruck
     val warnungen = mutableListOf<String>()
 
-    if (operator == MengenRechnerOperator.KLASSIFIZIERTE_MENGE) {
+    if (operator == MengenRechnerOperator.UNTERRAUM) {
+        val ports = kontext.knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("a.") }.sortedBy { it.reihenfolge }
+        val letzteBelegte = ports.indexOfLast { it.name in kontext.eingänge }
+        val richtungen = ports.take(letzteBelegte + 1).map { port ->
+            val wert = kontext.eingänge[port.name] ?: error("Richtung ${port.name} fehlt innerhalb der geordneten Eingänge.")
+            unterraumKomponenten(wert.mathematischesObjekt("Richtung"))
+        }
+        val c = kontext.eingänge["c"]?.mathematischesObjekt("Stützpunkt")?.let(::unterraumKomponenten)
+        objekt = UnterraumMenge(richtungen, c, richtungen.firstOrNull()?.size ?: c?.size ?: kontext.knoten.parameter["unterraum.dimension"]?.toIntOrNull() ?: error("Umgebungsdimension fehlt."))
+        val reellheit = (richtungen.flatten() + c.orEmpty()).map { ElementBeziehung(it, ReelleZahlen) }
+        require(reellheit.none { it.entscheide().wahrheitswert == Wahrheitswert.Lüge }) { "Unterraum benötigt reelle Komponenten." }
+        return KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(objekt, annahmen + reellheit.filter { it.entscheide().wahrheitswert != Wahrheitswert.Wahr })), eingänge = kontext.eingänge)
+    } else if (operator == MengenRechnerOperator.KLASSIFIZIERTE_MENGE) {
         val menge = kontext.eingänge["menge"]?.objekt as? MengenAusdruck
             ?: error("Die klassifizierte Menge benötigt eine Grundmenge M.")
         val relation = kontext.eingänge["relation"]?.objekt as? Methode
@@ -385,6 +400,11 @@ private fun mengenRechnerAnschluesse(
     operator: MengenRechnerOperator,
     festeEingänge: Int,
 ): List<AnschlussDaten> = when (operator) {
+    MengenRechnerOperator.UNTERRAUM -> List(festeEingänge.coerceAtLeast(1)) { index ->
+        eingang("a.${index+1}", MathematikAnschlussArten.Objekt.id, index, erweiterbar = true).copy(
+            zulässigeArten = setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.ZeilenVektor.id))
+    } + eingang("c", MathematikAnschlussArten.Objekt.id, 10000).copy(zulässigeArten = setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.ZeilenVektor.id)) + ausgang("menge", MathematikAnschlussArten.Menge.id)
+
     MengenRechnerOperator.VEREINIGUNG,
     MengenRechnerOperator.SCHNITT,
     MengenRechnerOperator.KARTESISCHES_PRODUKT,

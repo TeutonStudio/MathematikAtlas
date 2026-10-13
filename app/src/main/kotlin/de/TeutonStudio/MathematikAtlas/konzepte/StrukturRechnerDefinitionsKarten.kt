@@ -70,6 +70,7 @@ private fun strukturRechnerDefinitionsKarte(
     latex: String,
     beschreibung: String,
 ): KartenDaten {
+    indexRechnerDefinitionsKarte(knoten)?.let { return it }
     val prefix = "definition-${knotenArt.replace('.', '-')}-${knoten.id.wert}"
     val eingänge = knoten.anschlüsse
         .filter { it.richtung == AnschlussRichtung.Eingang }
@@ -165,7 +166,6 @@ internal fun kanonischesRechnerKonzept(knoten: KnotenDaten): KonzeptDefinition? 
     val familie = RechnerOperatorRegistry.familieFür(knoten.art) ?: return null
     val id = knoten.parameter[familie.operatorParameter] ?: return null
     val vertrag = (RechnerOperatorRegistry.finde(familie, id) as? RechnerOperatorAuflösung.Bekannt)?.vertrag ?: return null
-    if (id.endsWith(".formel")) return null
     val beschreibung = "${vertrag.titel}. Unterstützungsstatus: ${vertrag.unterstützung.name.lowercase()}."
     return KonzeptDefinition(
         id = KonzeptId("operator-${id.replace('.', '-')}-${knoten.id.wert}"), name = vertrag.titel,
@@ -174,12 +174,12 @@ internal fun kanonischesRechnerKonzept(knoten: KnotenDaten): KonzeptDefinition? 
         knotenParameter = mapOf(familie.operatorParameter to id), reiter = listOf(KonzeptReiter(
             "definition", vertrag.definitionsLatex, KonzeptReiterRolle.Definition,
             strukturRechnerDefinitionsKarte(knoten, familie.name, knoten.art, vertrag.titel, vertrag.definitionsLatex, beschreibung))) +
-            if (istMatrixProduktKnoten(knoten)) listOf(KonzeptReiter(
+            if (de.TeutonStudio.MathematikKnoten.besitztRechnerSchema(knoten)) listOf(KonzeptReiter(
                 id = MATRIXPRODUKT_FALK_REITER_ID,
-                titel = "Zusammenhängendes Falk-Schema",
+                titel = "Auswertungsschema",
                 rolle = KonzeptReiterRolle.Äquivalenz,
                 karte = KartenDaten(id = KartenId("falk-${knoten.id.wert}"), name = "Falk-Schema"),
-                darstellung = KonzeptReiterDarstellung.FalkSchema,
+                darstellung = if (istMatrixProduktKnoten(knoten)) KonzeptReiterDarstellung.FalkSchema else KonzeptReiterDarstellung.Auswertungsschema,
             )) else emptyList(),
     )
 }

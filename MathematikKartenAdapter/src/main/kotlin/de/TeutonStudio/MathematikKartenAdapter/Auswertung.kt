@@ -44,6 +44,8 @@ data class BedingterWert(
     val elementArt: AnschlussArtId? = null,
     /** Kennzeichnet einen unbekannten Methodenparameter einer Karte, nicht eine konkrete Methode. */
     val symbolischeMethode: Boolean = false,
+    /** Präzise Komponentenobermengen über Strukturübersetzungen hinweg; nicht persistiert. */
+    val komponentenMengen: List<MengenAusdruck>? = null,
 )
 
 /**
@@ -60,6 +62,17 @@ fun BedingterWert.anzeigeLatex(): String = when {
 }
 
 enum class LösungsQuellenRolle { Variable, Parameter, Unbekannt }
+
+/** Laufzeit-Herkunft eines strukturierten Parameters; aus persistierter Quellenkonfiguration rekonstruiert. */
+data class StrukturQuellenBindung(
+    val id: String,
+    val parameterName: String,
+    val werteVorrat: MengenAusdruck,
+    /** Leerer Pfad bezeichnet das ganze Argument; Komponentenpfade beginnen bei 1. */
+    val komponentenPfad: List<Int> = emptyList(),
+) {
+    init { require(id.isNotBlank() && parameterName.isNotBlank() && komponentenPfad.all { it>0 }) }
+}
 
 data class VariablenQuelle(
     val knotenId: KnotenId,
@@ -82,6 +95,7 @@ data class VariablenQuelle(
     /** Vollständige symbolische Aussage eines Aussagearguments. */
     val aussage: Aussage? = null,
     val lösungsRolle: LösungsQuellenRolle = LösungsQuellenRolle.Unbekannt,
+    val strukturBindung: StrukturQuellenBindung? = null,
 ) {
     val identität: ArgumentIdentität = ArgumentIdentität(
         quelle = bindungsId ?: knotenId.wert,
@@ -146,6 +160,9 @@ data class KnotenAuswertungsErgebnis(
     val entscheidung: AussageErgebnis? = null,
     val lösungsVariablen: List<GebundeneMengenVariable> = emptyList(),
     val lösungsParameter: List<VariablenQuelle> = emptyList(),
+    /** Flüchtiges, exakt aus dem aktuellen Eingang abgeleitetes Numerikproblem. */
+    val polynomProblem: PolynomGleichungsProblem? = null,
+    val polynomKonfiguration: PolynomNumerikKonfiguration = PolynomNumerikKonfiguration(),
 )
 
 data class KartenAuswertungsErgebnis(

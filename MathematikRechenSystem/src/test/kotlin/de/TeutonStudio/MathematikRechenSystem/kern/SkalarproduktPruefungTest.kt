@@ -38,7 +38,7 @@ class SkalarproduktPruefungTest {
     @Test
     fun `fehlende Nachweisreferenzen erzeugen kein ausführbares Zeugnis`() {
         val aussage = pruefeSkalarprodukt(
-            methode = reelleMultiplikation(),
+            methode = reelleMultiplikation().let { it.copy(vorschrift = addition(it.vorschrift as ZahlAusdruck, RationaleZahl.Eins)) },
             zahlbereich = FundamentalerZahlbereich.REELL,
             linearitaet = SkalarproduktLinearitaet.RECHTSLINEAR,
             referenzen = SkalarproduktNachweisReferenzen(),

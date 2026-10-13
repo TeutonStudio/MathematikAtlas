@@ -79,10 +79,13 @@ data class VisualisierungsKonfiguration(
     val methodenModus: MethodenDarstellungsModus = MethodenDarstellungsModus.Automatisch,
     val festeSchnitte: Map<String, Double> = emptyMap(),
     val dimensionsModus: DimensionsModus = DimensionsModus.Automatisch,
+    /** 1-basierte reelle Ausgabekoordinaten; leer bedeutet keine Projektion. */
+    val ausgabeKoordinaten: List<Int> = emptyList(),
 ) {
     fun samplingSignatur(): List<Any?> =
-        listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling, methodenModus, festeSchnitte)
+        listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling, methodenModus, festeSchnitte, ausgabeKoordinaten)
     fun zuEigenschaften(): Map<String, KnotenEigenschaft> = mapOf(
+        "ausgabeKoordinaten" to KnotenEigenschaft.Liste(ausgabeKoordinaten.map { KnotenEigenschaft.Ganzzahl(it) }),
         "dimension" to KnotenEigenschaft.Text(dimension.name),
         "dimensionsModus" to KnotenEigenschaft.Text(dimensionsModus.name),
         "achsen" to achsen.zuEigenschaft(),
@@ -137,7 +140,11 @@ data class VisualisierungsKonfiguration(
                 val zahl = (wert as? KnotenEigenschaft.Dezimalzahl)?.wert
                 if (name.isBlank() || zahl == null || !zahl.isFinite()) null else name to zahl
             }.toMap()
-            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte, dimensionsModus)
+            val gespeicherteProjektion = (eigenschaften["ausgabeKoordinaten"] as? KnotenEigenschaft.Liste)?.werte.orEmpty()
+            val projektion = gespeicherteProjektion.takeIf { werte -> werte.all { it is KnotenEigenschaft.Ganzzahl } }
+                ?.map { (it as KnotenEigenschaft.Ganzzahl).wert }.orEmpty()
+                .takeIf { it.size in 2..3 && it.all { index -> index > 0 } && it.distinct().size == it.size }.orEmpty()
+            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte, dimensionsModus, projektion)
         }
     }
 }

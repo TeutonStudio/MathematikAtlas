@@ -8,6 +8,7 @@ object MathematischeTypen {
     val AtlasWert = TypId("atlas.wert")
 
     val Objekt = TypId("mathematik.objekt")
+    val Winkel = TypId("mathematik.winkel")
     val Zahl = TypId("mathematik.zahl")
     val Aussage = TypId("mathematik.aussage")
     val Menge = TypId("mathematik.menge")
@@ -60,6 +61,7 @@ object MathematischeTypen {
             Komplex to Quaternion,
             Quaternion to Zahl,
             Zahl to Objekt,
+            Winkel to Objekt,
             Aussage to Objekt,
             Menge to Objekt,
             Topologie to Objekt,
@@ -96,6 +98,7 @@ object MathematischeTypen {
 
 /** Typ eines Elements, das aus dieser mathematischen Menge gewählt wird. */
 fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
+    Gradmenge -> TypAusdruck.Atom(MathematischeTypen.Winkel)
     is Potenzmenge -> TypAusdruck.Parameterisiert(MathematischeTypen.Menge, listOf(grundMenge.elementTypAusdruck()))
     is EndlicheIndexMenge -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
     is StrukturErgebnisMenge -> strukturErgebnisTyp()

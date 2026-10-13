@@ -55,9 +55,11 @@ fun konfiguriereZahlenRechner(
         "Nur ein universeller Zahlenrechner kann so konfiguriert werden."
     }
     val vorhandene = knoten.anschlüsse.groupBy { it.richtung to it.name }
+    val signaturId = if (operator == UniversellerZahlenOperator.SINUS && knoten.parameter[SINUS_WINKELRAUM] == "grad") "grad"
+        else if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"
     val gewünschteEingänge = gewünschteZahlenRechnerEingänge(
         operator = operator,
-        komplexEingabe = komplexEingabe,
+        signaturId = signaturId,
         festeEingänge = festeEingänge,
     )
     val eingänge = gewünschteEingänge.mapIndexed { index, vorgabe ->
@@ -111,16 +113,15 @@ fun konfiguriereZahlenRechner(
         name = zahlenRechnerNameFürWechsel(knoten, operator.titel),
         anschlüsse = erhalteDynamischeOperanden(knoten,
             erhalteRechnerAnschlussIds(knoten.anschlüsse, eingänge + ausgang, RechnerFamilie.ZAHL, operator.stabileId,
-                if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"),
+                signaturId),
             knoten.parameter[ZAHLENRECHNER_OPERATOR] == operator.stabileId &&
                 (knoten.parameter["festeEingänge"]?.toIntOrNull() ?: 2) == festeEingänge),
         parameter = parameter,
     )
 }
 
-private fun gewünschteZahlenRechnerEingänge(operator: UniversellerZahlenOperator, komplexEingabe: String, festeEingänge: Int): List<AnschlussDaten> {
-    val variant = if (operator in komplexKonstruktoren && komplexEingabe == ZAHLENRECHNER_KOMPLEX_TUPEL) "tupel" else "standard"
-    val basis = rechnerAnschlüsse(RechnerFamilie.ZAHL, operator.stabileId, variant).filter { it.richtung == AnschlussRichtung.Eingang }
+private fun gewünschteZahlenRechnerEingänge(operator: UniversellerZahlenOperator, signaturId: String, festeEingänge: Int): List<AnschlussDaten> {
+    val basis = rechnerAnschlüsse(RechnerFamilie.ZAHL, operator.stabileId, signaturId).filter { it.richtung == AnschlussRichtung.Eingang }
     if (operator !in variadischeZahlenOperatoren) return basis
     return List(festeEingänge) { index -> basis[minOf(index, basis.lastIndex)].copy(
         id = neueAnschlussId(), name = ('a'.code + index).toChar().toString(), reihenfolge = index, dynamischErzeugt = index >= 2,
@@ -153,3 +154,7 @@ private fun eingang(
     kannSichErweitern = erweiterbar,
     zulässigeArten = zulässigeArten,
 )
+
+const val SINUS_WINKELRAUM = "sinus.winkelraum"
+fun konfiguriereSinusWinkelraum(knoten: KnotenDaten, grad: Boolean): KnotenDaten = konfiguriereZahlenRechner(
+    knoten.copy(parameter = knoten.parameter + (SINUS_WINKELRAUM to if (grad) "grad" else "reell")), UniversellerZahlenOperator.SINUS)

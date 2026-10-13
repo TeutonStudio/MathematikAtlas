@@ -59,7 +59,8 @@ enum class MengenKnotenAuswahl(val operator: MengenKonstante) {
     KOMPLEXE_ZAHLEN(MengenKonstante.C),
     PRIMZAHLEN(MengenKonstante.P),
     GAUSSSCHE_GANZE(MengenKonstante.ZI),
-    GAUSSSCHE_PRIMZAHLEN(MengenKonstante.PZI);
+    GAUSSSCHE_PRIMZAHLEN(MengenKonstante.PZI),
+    GRADMENGE(MengenKonstante.GRAD);
 
     val stabileId: String get() = operator.stabileId
     val titel: String get() = operator.titel

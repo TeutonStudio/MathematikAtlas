@@ -243,6 +243,7 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
 
 fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
     knoten = knoten.map { alt ->
+        if (alt.art == ZAHLENRECHNER_ART && alt.parameter.keys.any { it.startsWith("indexmethode.") }) return@map alt
         if (alt.art == ZAHLENRECHNER_ART) {
             val operator = UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR])
             konfiguriereZahlenRechner(
@@ -373,7 +374,10 @@ internal val universellerZahlenFachauswerter = de.TeutonStudio.MathematikKartenA
         val operator = UniversellerZahlenOperator.vonId(
             kontext.knoten.parameter[ZAHLENRECHNER_OPERATOR],
         )
-        val ausgabe = universellAuswerten(kontext, operator)
+        val istGradSinus = operator == UniversellerZahlenOperator.SINUS && kontext.knoten.parameter[SINUS_WINKELRAUM] == "grad"
+        val ausgabe = if (istGradSinus) UniverselleZahlenAusgabe(
+            SinusGrad(kontext.eingänge["a"]?.objekt as? WinkelAusdruck ?: error("Sinus auf Grad erwartet einen Winkel.")),
+            ZahlenRechnerBereich.REELL) else universellAuswerten(kontext, operator)
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
         val reelle = reelleVariablen(kontext.eingänge.values)
         val definition = ZahlenRechnerDefinition(operator, ausgabe.bereich)
@@ -383,7 +387,7 @@ internal val universellerZahlenFachauswerter = de.TeutonStudio.MathematikKartenA
                 "wert" to BedingterWert(
                     objekt = ausgabe.objekt,
                     annahmen = annahmen,
-                    zielMenge = methode?.zielMenge,
+                    zielMenge = if (istGradSinus) ReellesIntervall(RationaleZahl.von(-1), false, RationaleZahl.Eins, false) else methode?.zielMenge,
                     werteVorrat = methode?.mathematischeMethodenSignatur()?.definitionsRaum ?: ausgabe.bereich.alsMenge(),
                     reelleVariablen = reelle,
                     variablenQuellen = kontext.eingänge.values
@@ -413,6 +417,12 @@ private fun universellAuswerten(
     k: KnotenAuswertungsKontext,
     operator: UniversellerZahlenOperator,
 ): UniverselleZahlenAusgabe {
+    if (operator == UniversellerZahlenOperator.ITERIERTE_SUMME && k.knoten.parameter["indexmethode.summenParameter"] != null) {
+        val methode = k.eingänge["methode"]?.objekt as? MathematischeMethode ?: error("Indexmethode fehlt.")
+        val index = k.knoten.parameter.getValue("indexmethode.summenParameter")
+        val ergebnis = if (index == "*") methode.parameter.fold(methode as MathematischesObjekt) { rest, p -> summiereIndexParameter(rest as MathematischeMethode, p.name, k.knoten.parameter["indexmethode.reduktion"] ?: "summe") } else summiereIndexParameter(methode, if (index == "@letzte") methode.parameter.last().name else if(index.startsWith("@rolle:")) methode.parameter.singleOrNull { it.name.startsWith("__index") && it.name.substringAfter("::","")==index.substringAfter(':') }?.name ?: error("Die interne Indexrolle fehlt oder ist nicht eindeutig.") else index, k.knoten.parameter["indexmethode.reduktion"] ?: "summe")
+        return UniverselleZahlenAusgabe(ergebnis, ZahlenRechnerBereich.KOMPLEX)
+    }
     val punktweiseNamen = k.knoten.anschlüsse
         .filter {
             it.richtung == AnschlussRichtung.Eingang &&
@@ -434,7 +444,8 @@ private fun universellAuswerten(
         ) || k.knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] != ZAHLENRECHNER_KOMPLEX_TUPEL,
     ) { "Komplexkonstruktoren können nur im getrennten Eingabemodus punktweise gehoben werden." }
 
-    val vorbereitung = bereitePunktweiseZahlenfunktionVor(punktweiseOperanden)
+    val vorbereitung = bereitePunktweiseZahlenfunktionVor(punktweiseOperanden,
+        benannteIndexAchsen = k.knoten.parameter["indexmethode.parameterModus"] == "benannt")
     val skalarEingänge = k.eingänge.mapValues { (name, wert) ->
         vorbereitung.operanden[name]?.let { ausdruck ->
             wert.copy(
@@ -672,10 +683,7 @@ private fun universellSkalarAuswerten(
                     else -> if (gemeinsam.rang <= ZahlenRechnerBereich.REELL.rang) {
                         argument
                     } else {
-                        symbolischerZahlterm(
-                            "konjugiert-${argument.zuLatex()}",
-                            "\\overline{${argument.zuLatex()}}",
-                        )
+                        konjugiereFormal(argument)
                     }
                 },
                 gemeinsam,

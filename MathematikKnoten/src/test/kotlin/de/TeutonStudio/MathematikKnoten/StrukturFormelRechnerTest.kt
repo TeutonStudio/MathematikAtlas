@@ -130,14 +130,21 @@ class StrukturFormelRechnerTest {
                 StrukturFormelRechnerVorlagen.Vektor.erzeuge(GraphPunkt.Zero),
                 StrukturRechnerKnotenFamilie.VEKTOR, formel)
             val eingänge = taste.argumente.associate { argument -> argument.rolle to BedingterWert(
-                if (argument.typ == FormelTyp.ZAHL) zahl(2)
-                else de.TeutonStudio.MathematikRechenSystem.kern.SpaltenVektor(listOf(zahl(1), zahl(2), zahl(3)))) }
+                when (argument.typ) {
+                    FormelTyp.ZAHL -> zahl(2)
+                    FormelTyp.TUPEL -> de.TeutonStudio.MathematikRechenSystem.kern.Tupel(listOf(zahl(1), zahl(2), zahl(3)))
+                    FormelTyp.OBJEKT -> de.TeutonStudio.MathematikRechenSystem.kern.Tupel(listOf(zahl(0), zahl(90)))
+                    else -> de.TeutonStudio.MathematikRechenSystem.kern.SpaltenVektor(listOf(zahl(1), zahl(2), zahl(3)))
+                }) }
             val ergebnis = register.finde(VektorRechner.KNOTEN_ART)!!.auswerten(
                 KnotenAuswertungsKontext(knoten, eingänge, RechenKontext()))
             assertEquals(null, ergebnis.fehler, taste.operatorId)
             val wert = ergebnis.ausgaben.getValue("wert").objekt
-            assertTrue(if (taste.ergebnisTyp == FormelTyp.ZAHL) wert is de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
-                else wert is de.TeutonStudio.MathematikRechenSystem.kern.OrientierterVektor, taste.operatorId)
+            assertTrue(when (taste.ergebnisTyp) {
+                FormelTyp.ZAHL -> wert is de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
+                FormelTyp.TUPEL, FormelTyp.OBJEKT -> wert is de.TeutonStudio.MathematikRechenSystem.kern.Tupel
+                else -> wert is de.TeutonStudio.MathematikRechenSystem.kern.OrientierterVektor
+            }, taste.operatorId)
         }
     }
 

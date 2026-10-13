@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInteraktionsModus
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenViewportInhalt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
@@ -85,20 +86,19 @@ class VisualisierungsKnotenRenderer(
             qualität = VisualisierungsCacheQualität.Vorschau,
         )
         val ergebnis by erinnertesVisualisierungsErgebnis(vorschauSchlüssel, menge, vorschauKonfiguration, verzögerungMillis = 140)
-        Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Row(Modifier.fillMaxWidth().height(34.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        KnotenViewportInhalt(
+            aktionen = aktionen,
+            kopf = {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Visualisierung", style = MaterialTheme.typography.titleMedium)
                 Text(raumName(wirksameKonfiguration.dimension), style = MaterialTheme.typography.titleMedium)
             }
-            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Plot(
-                    ergebnis = ergebnis,
-                    konfiguration = vorschauKonfiguration,
-                    onKamera = { ändern(konfiguration.copy(kamera = it)) },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
-                Steuerung(wirksameKonfiguration, { neu -> ändern(konfiguration.copy(kamera = neu.kamera)) }, Modifier.width(128.dp).fillMaxHeight())
-            }
+            },
+            steuerung = { Steuerung(wirksameKonfiguration,
+                { neu -> ändern(konfiguration.copy(kamera = neu.kamera)) }, Modifier) },
+            ansicht = { modifier -> Plot(ergebnis, vorschauKonfiguration,
+                { ändern(konfiguration.copy(kamera = it)) }, modifier) },
+            fuß = { Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(
                 "Vorschau · Knoten halten für Details",
                 style = MaterialTheme.typography.labelSmall,
@@ -162,8 +162,8 @@ class VisualisierungsKnotenRenderer(
                     Text("Numerische Approximation", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 null -> Text("Berechne Darstellung …", style = MaterialTheme.typography.labelSmall)
-            }
-        }
+            }            } },
+        )
 
     }
 }

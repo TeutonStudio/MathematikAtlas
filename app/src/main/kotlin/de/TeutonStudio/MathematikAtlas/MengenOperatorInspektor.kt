@@ -329,6 +329,7 @@ internal object VektorRechnerErweiterterInspektor : KnotenInspektor {
 }
 
 private fun vektorOperatorKategorie(operator: VektorRechnerOperator): String = when (operator) {
+    VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL, VektorRechnerOperator.KARTESISCH -> "Koordinaten"
     VektorRechnerOperator.ZERLEGEN, VektorRechnerOperator.ZUSAMMENFUEHREN -> "Struktur"
     VektorRechnerOperator.VEKTORFELD_INTEGRIEREN -> "Analysis"
     VektorRechnerOperator.DISTANZ, VektorRechnerOperator.NORM, VektorRechnerOperator.NORMALISIERUNG -> "Metrik und Norm"
@@ -341,10 +342,15 @@ private fun vektorOperatorLatex(operator: VektorRechnerOperator): String = when 
     VektorRechnerOperator.SUBTRAKTION -> "u-v"
     VektorRechnerOperator.SKALARMULTIPLIKATION -> "\\lambda v"
     VektorRechnerOperator.NEGATION -> "-v"
+    VektorRechnerOperator.POTENZ -> "a^{[p]}"
     VektorRechnerOperator.SKALARPRODUKT -> "\\langle u,v\\rangle"
     VektorRechnerOperator.KREUZPRODUKT -> "u\\times v"
     VektorRechnerOperator.NORM -> "\\lVert v\\rVert"
+    VektorRechnerOperator.RADIUS -> "r=\\lVert x\\rVert_2"
+    VektorRechnerOperator.POLARWINKEL -> "\\operatorname{polarwinkel}(x)"
+    VektorRechnerOperator.KARTESISCH -> "\\operatorname{kartesisch}(r,w)"
     VektorRechnerOperator.NORMALISIERUNG -> "v/\\lVert v\\rVert"
+    VektorRechnerOperator.HADAMARD_DIVISION -> "u/v"
     VektorRechnerOperator.HADAMARD_PRODUKT -> "u\\odot v"
     VektorRechnerOperator.PROJEKTION -> "\\operatorname{proj}_v(u)"
     VektorRechnerOperator.WINKEL -> "\\angle(u,v)"
@@ -356,6 +362,8 @@ private fun vektorOperatorLatex(operator: VektorRechnerOperator): String = when 
 }
 
 private fun vektorOperatorBeschreibung(operator: VektorRechnerOperator): String = when (operator) {
+    VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL, VektorRechnerOperator.KARTESISCH ->
+        de.TeutonStudio.MathematikRechenSystem.kern.Polarkoordinaten.KONVENTION + " Numerische Näherung für endliche reelle Tupel."
     VektorRechnerOperator.DISTANZ -> "Berechnet die Distanz in der im Inspector gewählten Metrik."
     VektorRechnerOperator.WINKEL_ZU_ACHSE -> "Berechnet den Winkel zu einer 1-basiert gewählten Koordinatenachse."
     VektorRechnerOperator.VEKTORFELD_INTEGRIEREN -> "Integriert ein vektorwertiges Feld komponentenweise über Menge und explizites Maß."

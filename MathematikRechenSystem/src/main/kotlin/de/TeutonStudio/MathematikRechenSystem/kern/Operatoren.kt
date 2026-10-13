@@ -190,7 +190,10 @@ fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()
             else -> Potenz(basis, exponent)
         }
     }
-    is Betrag -> Betrag(vereinfache(ausdruck.argument, kontext))
+    is Konjugierte -> konjugiereFormal(vereinfache(ausdruck.argument, kontext))
+    is Betrag -> vereinfache(ausdruck.argument, kontext).let { if (it is RationaleZahl) RationaleZahl.von(it.zähler.abs(), it.nenner) else Betrag(it) }
+    is WinkelBogenmass -> winkelBogenmass(ausdruck.winkel, ausdruck.vertreter)
+    is SinusGrad -> ausdruck
     is Sinus -> Sinus(vereinfache(ausdruck.argument, kontext))
     is Cosinus -> Cosinus(vereinfache(ausdruck.argument, kontext))
     is ArcSinus -> vereinfacheArcSinus(vereinfache(ausdruck.argument, kontext))
@@ -236,6 +239,7 @@ fun istNachweisbarReell(
         (ausdruck.exponent as? RationaleZahl)?.let { exponent ->
             exponent.nenner == BigInteger.ONE && (exponent.zähler.signum() >= 0 || ausdruck.basis.istNachweisbarNichtNull(annahmen))
         } == true
+    is Konjugierte -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
     is Betrag -> true
     is SinusGrad, is WinkelBogenmass -> true
     is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
@@ -288,6 +292,8 @@ fun inferiereZahlenWertevorrat(
     werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     annahmen: Set<Aussage> = emptySet(),
 ): MengenAusdruck = when (ausdruck) {
+    is SinusGrad -> ReellesIntervall(RationaleZahl.von(-1), false, RationaleZahl.Eins, false)
+    is WinkelBogenmass -> ausdruck.vertreter.menge
     is RationaleZahl -> when {
         ausdruck.nenner != BigInteger.ONE -> RationaleZahlen
         ausdruck.zähler.signum() < 0 -> GanzeZahlen
@@ -323,13 +329,21 @@ fun inferiereZahlenWertevorrat(
         RationaleZahlen,
         inferiereZahlenWertevorrat(ausdruck.argument, werteVorräte, annahmen),
     ))
-    is Potenz, is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
+    is Potenz -> {
+        val exponent = vereinfache(ausdruck.exponent) as? RationaleZahl
+        if (exponent != null && exponent.nenner == BigInteger.ONE) {
+            val basis = inferiereZahlenWertevorrat(ausdruck.basis, werteVorräte, annahmen)
+            if (exponent.zähler.signum() >= 0) basis else maximaleZahlenGrundmenge(listOf(RationaleZahlen, basis))
+        } else if (istNachweisbarReell(ausdruck, { werteVorräte[it.name] in reelleZahlenGrundmengen }, annahmen)) ReelleZahlen else KomplexeZahlen
+    }
+    is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
         ausdruck,
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
+    is Konjugierte -> inferiereZahlenWertevorrat(ausdruck.argument, werteVorräte, annahmen)
     is Betrag, is Argument, is ArcSinus, is ArcCosinus, is SinusGrad, is WinkelBogenmass -> ReelleZahlen
-    is Sinus, is Cosinus, is Exponentialfunktion -> if (istNachweisbarReell(
+    is Sinus, is Cosinus, is Exponentialfunktion -> if (when(ausdruck) { is Sinus -> inferiereZahlenWertevorrat(ausdruck.argument,werteVorräte,annahmen) in reelleZahlenGrundmengen; is Cosinus -> inferiereZahlenWertevorrat(ausdruck.argument,werteVorräte,annahmen) in reelleZahlenGrundmengen; else -> false } || istNachweisbarReell(
         ausdruck,
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
         annahmen = annahmen,
@@ -344,7 +358,22 @@ fun inferiereZahlenWertevorrat(
         "${ausdruck::class.simpleName} lebt außerhalb der klassischen N-Z-Q-R-C-Wertevorratsinferenz.",
     )
     is StrukturAchsenLaenge -> NatürlicheZahlen
-    is SymbolischeZahlKomponente -> KomplexeZahlen
+    is SymbolischeZahlKomponente -> when(val quelle=ausdruck.quelle) {
+        is MethodenParameter -> when(val raum=werteVorräte[quelle.name]) {
+            is Matrizenraum -> raum.skalarMenge
+            is Vektorraum -> raum.skalarMenge
+            is Tupelraum -> {
+                val index=(ausdruck.index as? RationaleZahl)?.positiveGanzeZahlOderNull()
+                val mengen=if(index!=null) listOfNotNull(raum.komponenten.getOrNull(index-1)) else raum.komponenten
+                if(mengen.isEmpty()) KomplexeZahlen else maximaleZahlenGrundmenge(mengen.map(::numerischeDomainGrundmenge))
+            }
+            else -> KomplexeZahlen
+        }
+        is Matrix -> maximaleZahlenGrundmenge(quelle.zeilen.flatten().map { inferiereZahlenWertevorrat(it,werteVorräte,annahmen) })
+        is OrientierterVektor -> maximaleZahlenGrundmenge(quelle.werte.map { inferiereZahlenWertevorrat(it,werteVorräte,annahmen) })
+        is Tensorartig -> quelle.tensorZahlBereich
+        else -> KomplexeZahlen
+    }
 }
 
 private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
@@ -355,6 +384,7 @@ private fun zahlenGrundmengenRang(menge: MengenAusdruck): Int = when (menge) {
     RationaleZahlen -> 2
     ReelleZahlen -> 3
     KomplexeZahlen -> 4
+    FundamentalerZahlbereich.QUATERNION.alsMenge() -> 5
     else -> error("'$menge' ist keine unterstützte Zahlgrundmenge.")
 }
 
@@ -443,4 +473,10 @@ fun komplexAusPolar(tupel: Tupel): KomplexeZahl {
     require(tupel.elemente.size == 2 && tupel.elemente.all { it is ZahlAusdruck }) { "Eine komplexe Zahl benötigt ein Tupel aus Radius und Winkel." }
     val r = tupel.elemente[0] as ZahlAusdruck; val phi = tupel.elemente[1] as ZahlAusdruck
     return KomplexeZahl(multiplikation(r, Cosinus(phi)), multiplikation(r, Sinus(phi)))
+}
+
+private fun numerischeDomainGrundmenge(menge:MengenAusdruck):MengenAusdruck = when(menge) {
+    is ReellesIntervall -> ReelleZahlen
+    is EndlicheMenge -> if(menge.elemente.isEmpty()) KomplexeZahlen else maximaleZahlenGrundmenge(menge.elemente.map { inferiereZielmenge(it) })
+    else -> menge.fundamentalerZahlbereichOderNull()?.alsMenge() ?: KomplexeZahlen
 }

@@ -117,6 +117,7 @@ fun KartenDaten.migriereTensorOperationKnoten(): KartenDaten = copy(
 )
 
 private fun migriereBestehendenTensorRechner(knoten: KnotenDaten): KnotenDaten {
+    if (knoten.parameter[TENSOR_OPERATION_ID] == "tensor.konstruktion" && knoten.parameter["erzeugungsArt"] == "indexmethode") return knoten
     val gespeichert = knoten.parameter[TENSOR_OPERATION_ID] ?: knoten.parameter[LEGACY_TENSOR_OPERATOR]
     if (gespeichert != null && StandardTensorOperationen.registry.definition(gespeichert) == null) return knoten
     val definition = aktuelleTensorOperationDefinition(knoten)

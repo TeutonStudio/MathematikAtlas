@@ -65,7 +65,7 @@ class MethodenSignaturProjektionTest {
         )
 
         assertEquals(RationaleZahl.von(1, 2), ergebnis.ausgaben.getValue("wert").objekt)
-        assertEquals("f(2,4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals("f\\left(2,4\\right)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test

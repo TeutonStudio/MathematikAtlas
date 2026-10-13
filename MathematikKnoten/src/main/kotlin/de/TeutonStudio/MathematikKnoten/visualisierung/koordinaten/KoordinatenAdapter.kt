@@ -52,19 +52,20 @@ object KoordinatenAdapter {
         umgebung: Map<String, Double> = emptyMap(),
         werteVorraete: Map<String, MengenAusdruck> = emptyMap(),
         domänenUmgebung: Map<String, DomaenenWert> = emptyMap(),
+        ausgabeKoordinaten: List<Int> = emptyList(),
     ): KoordinatenErgebnis {
         require(erwarteteDimension > 0) { "Die erwartete Koordinatendimension muss positiv sein." }
 
         if (objekt is KoordinatenBild) {
             val systemDimension = objekt.koordinatensystem.raum.dimension
-            if (systemDimension > erwarteteDimension) {
+            if (ausgabeKoordinaten.isEmpty() && systemDimension > erwarteteDimension) {
                 return KoordinatenErgebnis.ProjektionErforderlich(
                     vorhandeneDimension = systemDimension,
                     erwarteteDimension = erwarteteDimension,
                     grund = "Das Koordinatensystem ${objekt.koordinatensystem.name} besitzt Dimension $systemDimension. Für R$erwarteteDimension ist eine ausdrückliche Projektion erforderlich.",
                 )
             }
-            if (systemDimension != erwarteteDimension) {
+            if (ausgabeKoordinaten.isEmpty() && systemDimension != erwarteteDimension) {
                 return KoordinatenErgebnis.NichtDarstellbar(
                     "Das Koordinatensystem ${objekt.koordinatensystem.name} besitzt Dimension $systemDimension statt $erwarteteDimension.",
                 )
@@ -83,6 +84,7 @@ object KoordinatenAdapter {
                 umgebung,
                 werteVorraete,
                 domänenUmgebung,
+                ausgabeKoordinaten,
             )
         }
 
@@ -97,6 +99,7 @@ object KoordinatenAdapter {
                     umgebung,
                     werteVorraete,
                     domänenUmgebung,
+                    ausgabeKoordinaten,
                 )
                 is NumerischesErgebnis.Fehler -> KoordinatenErgebnis.BedingtDarstellbar(
                     grund = "Fallbedingung nicht eindeutig auswertbar: ${bedingung.beschreibung}",
@@ -187,6 +190,19 @@ object KoordinatenAdapter {
                     "Koordinate ${quellIndex + 1} wird nicht unterstützt: ${ergebnis.grund.nachricht}",
                 )
             }
+        }
+
+        if (ausgabeKoordinaten.isNotEmpty()) {
+            if (ausgabeKoordinaten.size !in 2..3 || ausgabeKoordinaten.size != erwarteteDimension ||
+                ausgabeKoordinaten.distinct().size != ausgabeKoordinaten.size ||
+                ausgabeKoordinaten.any { it !in 1..komponenten.size }) {
+                return KoordinatenErgebnis.NichtDarstellbar(
+                    "Die Projektion benötigt zwei oder drei verschiedene vorhandene Ausgabekoordinaten passend zum Darstellungsraum.",
+                )
+            }
+            return KoordinatenErgebnis.Darstellbar(ausgabeKoordinaten.mapIndexed { index, quellIndex ->
+                komponenten[quellIndex - 1].copy(index = index)
+            })
         }
 
         if (komponenten.size > erwarteteDimension) {

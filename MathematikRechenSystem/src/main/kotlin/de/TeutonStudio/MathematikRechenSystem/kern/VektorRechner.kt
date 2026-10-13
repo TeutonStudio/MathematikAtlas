@@ -6,10 +6,15 @@ enum class VektorRechnerOperator(val stabileId: String, val titel: String) {
     SKALARMULTIPLIKATION("vektor.skalarmultiplikation", "Skalarmultiplikation"),
     NEGATION("vektor.negation", "Negation"),
     SKALARPRODUKT("vektor.skalarprodukt", "Skalarprodukt"),
+    POTENZ("vektor.potenz", "Vektorpotenz"),
     KREUZPRODUKT("vektor.kreuzprodukt", "Kreuzprodukt"),
     NORM("vektor.norm", "Norm"),
+    RADIUS("vektor.radius", "Radius"),
+    POLARWINKEL("vektor.polarwinkel", "Winkeltupel / Vorzeichen"),
+    KARTESISCH("vektor.kartesisch", "Kartesische Koordinaten"),
     NORMALISIERUNG("vektor.normalisierung", "Normalisierung"),
     HADAMARD_PRODUKT("vektor.hadamard", "Hadamard-Produkt"),
+    HADAMARD_DIVISION("vektor.hadamardDivision", "Komponentenweise Division"),
     PROJEKTION("vektor.projektion", "Projektion"),
     WINKEL("vektor.winkel", "Winkel"),
     DISTANZ("vektor.distanz", "Distanz"),
@@ -132,6 +137,8 @@ data class VektorRechnerAnfrage(
     val methode: Methode? = null,
     val menge: MengenAusdruck? = null,
     val mass: IntegralMass? = null,
+    val exponent: ZahlAusdruck = RationaleZahl.von(2),
+    val skalarprodukt: ((MathematischesObjekt, MathematischesObjekt) -> ZahlAusdruck)? = null,
     val metrik: VektorMetrikDefinition = VektorMetriken.standard,
     val achse: Int = 1,
     val strukturAusgabe: VektorStrukturAusgabe = VektorStrukturAusgabe.TUPEL,
@@ -171,6 +178,27 @@ object VektorRechner {
         if (anfrage.operator == VektorRechnerOperator.ZUSAMMENFUEHREN) return fuehreZusammen(anfrage)
         if (anfrage.operator == VektorRechnerOperator.VEKTORFELD_INTEGRIEREN) return integriereVektorfeld(anfrage)
 
+        if (anfrage.operator in setOf(VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL, VektorRechnerOperator.KARTESISCH)) {
+            return try {
+                val wert = if (anfrage.operator == VektorRechnerOperator.KARTESISCH) {
+                    require(anfrage.skalare.size == 1 && anfrage.objekte.size == 1) {
+                        "Kartesische Koordinaten benötigen Radius und Winkeltupel oder Vorzeichen."
+                    }
+                    Polarkoordinaten.kartesisch(anfrage.skalare.single(), anfrage.objekte.single())
+                } else {
+                    require(anfrage.objekte.size == 1) { "Die Operation benötigt genau ein reelles Koordinatentupel." }
+                    val tupel = anfrage.objekte.single() as? Tupel ?: error("Erwartet wird ein reelles Koordinatentupel.")
+                    if (anfrage.operator == VektorRechnerOperator.RADIUS) Polarkoordinaten.radius(tupel)
+                    else Polarkoordinaten.winkelOderVorzeichen(tupel)
+                }
+                if (wert is ZahlAusdruck) VektorRechnerErgebnis.ZahlWert(wert, FundamentalerZahlbereich.REELL)
+                else VektorRechnerErgebnis.VektorWert(wert)
+            } catch (e: IllegalArgumentException) {
+                VektorRechnerErgebnis.Ungueltig("polarkoordinaten", e.message ?: "Ungültige Koordinaten.")
+            } catch (e: IllegalStateException) {
+                VektorRechnerErgebnis.Ungueltig("polarkoordinaten_unbestimmt", e.message ?: "Koordinaten nicht bestimmbar.")
+            }
+        }
         val vektoren = anfrage.vektoren.mapIndexed { index, quelle ->
             when (val ergebnis = materialisiere(quelle)) {
                 is Materialisierung.Erfolg -> ergebnis.vektor
@@ -195,7 +223,7 @@ object VektorRechner {
                 if (vektoren.size != 2) return anzahlFehler("Subtraktion", "genau zwei Vektoren")
                 vektorErgebnis(
                     orientiereWie(vektoren.first(), vektoren[0].werte.zip(vektoren[1].werte, ::subtraktion)),
-                    anfrage.vektoren.first().vertrag,
+                    anfrage.vektoren.first().vertrag.copy(zahlbereich=maxOf(gemeinsamerBereich(anfrage.vektoren),FundamentalerZahlbereich.GANZ)),
                 )
             }
             VektorRechnerOperator.SKALARMULTIPLIKATION -> {
@@ -207,15 +235,38 @@ object VektorRechner {
                         vektoren.single(),
                         vektoren.single().werte.map { multiplikation(anfrage.skalare.single(), it) },
                     ),
-                    anfrage.vektoren.single().vertrag,
+                    anfrage.vektoren.single().vertrag.copy(zahlbereich=maxOf(gemeinsamerBereich(anfrage.vektoren),inferiereZahlenWertevorrat(anfrage.skalare.single()).fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL)),
                 )
             }
             VektorRechnerOperator.NEGATION -> {
                 if (vektoren.size != 1) return anzahlFehler("Negation", "genau einen Vektor")
                 vektorErgebnis(
                     orientiereWie(vektoren.single(), vektoren.single().werte.map(::negation)),
-                    anfrage.vektoren.single().vertrag,
+                    anfrage.vektoren.single().vertrag.copy(zahlbereich=maxOf(gemeinsamerBereich(anfrage.vektoren),FundamentalerZahlbereich.GANZ)),
                 )
+            }
+            VektorRechnerOperator.POTENZ -> {
+                if (vektoren.size != 1) return anzahlFehler("Vektorpotenz", "genau einen Vektor")
+                val p = vereinfache(anfrage.exponent) as? RationaleZahl
+                if (p == null || p.nenner != java.math.BigInteger.ONE || p.zähler.signum() < 0 || p.zähler.bitLength() > 31)
+                    return VektorRechnerErgebnis.Ungueltig("potenz_exponent", "Der Exponent muss eine nichtnegative ganze Zahl sein.")
+                val n = p.zähler.toInt()
+                val bereich = gemeinsamerBereich(anfrage.vektoren)
+                if (bereich == FundamentalerZahlbereich.QUATERNION)
+                    return VektorRechnerErgebnis.Ungueltig("potenz_zahlbereich", "Vektorpotenz unterstützt reelle und komplexe Vektoren.")
+                if (n == 0) return VektorRechnerErgebnis.ZahlWert(RationaleZahl.Eins, bereich)
+                if (n == 1) return vektorErgebnis(vektoren.single(), anfrage.vektoren.single().vertrag)
+                val a = vektoren.single()
+                val produkt = anfrage.skalarprodukt?.invoke(a, a) ?: when (val r = standardSkalarprodukt(a, a,
+                    SkalarproduktSpezifikation(konjugiert = bereich == FundamentalerZahlbereich.KOMPLEX))) {
+                    is StrukturPruefung.Gueltig -> r.wert
+                    is StrukturPruefung.Bedingt -> r.wert ?: return VektorRechnerErgebnis.Ungueltig("potenz_produkt", r.bedingungen.joinToString())
+                    is StrukturPruefung.Ungueltig -> return VektorRechnerErgebnis.Ungueltig("potenz_produkt", r.grund)
+                    is StrukturPruefung.Unentscheidbar -> return VektorRechnerErgebnis.Ungueltig("potenz_produkt", r.grund)
+                }
+                val faktor = vereinfache(Potenz(produkt, RationaleZahl.von((n / 2).toLong())))
+                if (n % 2 == 0) VektorRechnerErgebnis.ZahlWert(faktor, bereich)
+                else vektorErgebnis(orientiereWie(a, a.werte.map { vereinfache(multiplikation(faktor, it)) }), anfrage.vektoren.single().vertrag)
             }
             VektorRechnerOperator.SKALARPRODUKT -> {
                 if (vektoren.size != 2) return anzahlFehler("Skalarprodukt", "genau zwei Vektoren")
@@ -270,6 +321,13 @@ object VektorRechner {
                     anfrage.vektoren.first().vertrag,
                 )
             }
+            VektorRechnerOperator.HADAMARD_DIVISION -> {
+                if(vektoren.size!=2) return anzahlFehler("Komponentenweise Division","zwei Vektoren")
+                val a=vektoren[0]; val b=vektoren[1]
+                if(b.werte.any { vereinfache(it)==RationaleZahl.Null }) return VektorRechnerErgebnis.Ungueltig("nullkomponente","Eine Divisorkomponente ist null.")
+                vektorErgebnis(orientiereWie(a,a.werte.zip(b.werte) { x,y -> Division(x,y) }),anfrage.vektoren.first().vertrag.copy(zahlbereich=FundamentalerZahlbereich.entries[maxOf(gemeinsamerBereich(anfrage.vektoren).ordinal,FundamentalerZahlbereich.RATIONAL.ordinal)]),
+                    b.werte.map { Ungleichheit(it,RationaleZahl.Null) })
+            }
             VektorRechnerOperator.PROJEKTION -> {
                 if (vektoren.size != 2) return anzahlFehler("Projektion", "Vektor und Zielvektor")
                 val ziel = vektoren[1]
@@ -290,6 +348,9 @@ object VektorRechner {
             VektorRechnerOperator.WINKEL -> winkel(vektoren)
             VektorRechnerOperator.DISTANZ -> distanz(vektoren, anfrage.vektoren, anfrage.metrik)
             VektorRechnerOperator.WINKEL_ZU_ACHSE -> winkelZuAchse(vektoren, anfrage.achse)
+            VektorRechnerOperator.RADIUS,
+            VektorRechnerOperator.POLARWINKEL,
+            VektorRechnerOperator.KARTESISCH,
             VektorRechnerOperator.VEKTORFELD_INTEGRIEREN,
             VektorRechnerOperator.ZERLEGEN,
             VektorRechnerOperator.ZUSAMMENFUEHREN,
@@ -438,7 +499,7 @@ object VektorRechner {
             "integrationsmass_fehlt",
             "Für das Vektorfeldintegral muss das Integrationsmaß explizit verbunden werden.",
         )
-        val komponenten = when (val vorschrift = methode.vorschrift) {
+        val komponenten = when (val vorschrift = if (methode.ausgabeNamen.size == 1) methode.alsMathematischeMethode("Vektorfeldintegral").einzigeAusgabe().second else methode.vorschrift) {
             is OrientierterVektor -> vorschrift.werte
             is Tupel -> vorschrift.elemente.mapIndexed { index, objekt ->
                 objekt as? ZahlAusdruck ?: return VektorRechnerErgebnis.Ungueltig(

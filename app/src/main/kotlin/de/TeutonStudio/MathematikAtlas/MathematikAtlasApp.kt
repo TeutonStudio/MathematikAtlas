@@ -62,7 +62,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     var rechenwegKnoten by remember { mutableStateOf<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId?>(null) }
     rechenwegKnoten?.let { id ->
         zustand.editor.karte.knoten.firstOrNull { it.id == id }?.let { knoten ->
-            PrädikatsRechenwegDialog(knoten.name, zustand.auswertung.knoten[id]) { rechenwegKnoten = null }
+            PrädikatsRechenwegDialog(knoten.name, zustand.auswertung.knoten[id], { config -> zustand.beantrageKonfiguration(de.TeutonStudio.MathematikKnoten.konfigurierePolynomNumerik(knoten, config)) }) { rechenwegKnoten = null }
         }
     }
     var dateiFehler by remember { mutableStateOf<String?>(null) }

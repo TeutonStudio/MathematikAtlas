@@ -67,7 +67,7 @@ class KartenEditorZustand(
             bereinigeAuswahl()
         }
     }
-    val projektion: GruppenProjektion
+    private val basisProjektion: GruppenProjektion
         get() {
             if (!hatAktuelleProjektion()) {
                 if (projektionImHintergrund && karte.knoten.size >= 500) {
@@ -81,11 +81,40 @@ class KartenEditorZustand(
             return projektionsCache!!
         }
     private var inhaltsMinima by mutableStateOf<Map<KnotenId, GraphGröße>>(emptyMap())
+    private var gruppenKopfMinima by mutableStateOf<Map<VisuelleGruppenId, GraphGröße>>(emptyMap())
+    private var geometrieGruppenMinima: Map<VisuelleGruppenId, GraphGröße>? = null
+    private var geometrieBasis: GruppenProjektion? = null
+    private var geometrieMinima: Map<KnotenId, GraphGröße>? = null
+    private var geometrieProjektion: GruppenProjektion? = null
 
+    /** Meldung in unskalierten dp, unabhängig von Zoom und gespeicherter Benutzergröße. */
     fun meldeInhaltsminimum(id: KnotenId, minimum: GraphGröße) {
         if (!minimum.breite.isFinite() || !minimum.höhe.isFinite() || minimum.breite <= 0f || minimum.höhe <= 0f) return
         if (inhaltsMinima[id] != minimum) inhaltsMinima = inhaltsMinima + (id to minimum)
     }
+
+    fun meldeGruppenKopfminimum(id: VisuelleGruppenId, minimum: GraphGröße) {
+        if (gruppenKopfMinima[id] != minimum) gruppenKopfMinima = gruppenKopfMinima + (id to minimum)
+    }
+    fun gruppenKopfHöhe(id: VisuelleGruppenId): Float = maxOf(VISUELLE_GRUPPE_KOPFZEILE_HÖHE, gruppenKopfMinima[id]?.höhe ?: 0f)
+
+    val projektion: GruppenProjektion
+        get() {
+            val basis = basisProjektion
+            if (geometrieBasis !== basis || geometrieMinima !== inhaltsMinima || geometrieGruppenMinima !== gruppenKopfMinima) {
+                val vollständig = karte.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima)
+                val gruppen = vollständig.visuelleGruppen.associateBy { it.id }
+                val sichtbar = basis.karte.copy(
+                    knoten = basis.karte.knoten.map { it.mitInhaltsminimum(inhaltsMinima[it.id]) },
+                    visuelleGruppen = basis.karte.visuelleGruppen.map { gruppen[it.id] ?: it },
+                )
+                geometrieProjektion = basis.copy(karte = sichtbar)
+                geometrieBasis = basis
+                geometrieMinima = inhaltsMinima
+                geometrieGruppenMinima = gruppenKopfMinima
+            }
+            return geometrieProjektion!!
+        }
 
     val darstellungsKarte: KartenDaten
         get() = projektion.karte.mitInhaltsminima(inhaltsMinima).copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
@@ -116,7 +145,8 @@ class KartenEditorZustand(
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
         val vorher = karte
-        if (neu.id != karte.id) { öffneGruppe(null); inhaltsMinima = emptyMap() }
+        if (neu.id != karte.id) öffneGruppe(null)
+        if (neu.id != karte.id) { inhaltsMinima = emptyMap(); gruppenKopfMinima = emptyMap() }
         karte = neu.bereinigteVisuelleGruppen()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         ausgewählteKnoten = emptySet()
@@ -138,17 +168,13 @@ class KartenEditorZustand(
     private fun KartenDaten.passeGeöffneteGruppeAnInhaltAn(): KartenDaten {
         val gruppeId = geöffneteGruppe ?: return this
         val index = GruppenIndex(this)
-        val zuAktualisieren = listOf(gruppeId) + index.vorfahren(gruppeId)
-        var stand = this
-        zuAktualisieren.forEach { id ->
-            val ids = GruppenIndex(stand).knotenIn(id)
-            val geometrie = stand.visuelleGruppenGeometrieFür(ids) ?: return@forEach
-            stand = stand.copy(visuelleGruppen = stand.visuelleGruppen.map { gruppe ->
-                if (gruppe.id == id) gruppe.copy(position = geometrie.first, größe = geometrie.second)
-                else gruppe
-            })
-        }
-        return stand
+        val zuAktualisieren = (listOf(gruppeId) + index.vorfahren(gruppeId)).toSet()
+        // Nur erweitern: Benutzerrahmen und leere Untergruppen gehören ebenfalls zum Inhalt.
+        val erweitert = mitInhaltsminima(inhaltsMinima)
+            .mitGruppenInhaltsminimum(gruppenKopfMinima).visuelleGruppen.associateBy { it.id }
+        return copy(visuelleGruppen = visuelleGruppen.map { gruppe ->
+            if (gruppe.id in zuAktualisieren) erweitert.getValue(gruppe.id) else gruppe
+        })
     }
 
     fun beendeInteraktion() {
@@ -230,6 +256,7 @@ class KartenEditorZustand(
         val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
         var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
+        if (wirksameAktion is KartenAktion.VisuelleGruppeGrößeÄndern) neu = neu.copy(visuelleGruppen = neu.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima).visuelleGruppen)
         if (interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) {
             neu = if (geöffneteGruppe == null) neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
             else neu.passeGeöffneteGruppeAnInhaltAn()

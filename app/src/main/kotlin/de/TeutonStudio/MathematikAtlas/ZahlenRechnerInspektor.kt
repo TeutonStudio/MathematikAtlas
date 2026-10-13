@@ -24,7 +24,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
-        RechnerSchemaSchaltfläche(knoten, ergebnis)
+        de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche(knoten, ergebnis)
         val operatorId = knoten.parameter[ZAHLENRECHNER_OPERATOR]
         val gespeicherterStandardOperator = UniversellerZahlenOperator.entries.firstOrNull { operator ->
             operatorId == operator.stabileId || operatorId.equals(operator.name, ignoreCase = true)
@@ -348,9 +348,17 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             }
         }
 
+        if (standardOperator == UniversellerZahlenOperator.SINUS) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Sinus auf der Gradmenge", modifier = Modifier.weight(1f))
+                Switch(checked = knoten.parameter[SINUS_WINKELRAUM] == "grad", onCheckedChange = {
+                    aktionen.knoten(konfiguriereSinusWinkelraum(knoten, it))
+                })
+            }
+        }
         val verwendetGrad = standardOperator?.let(::verwendetGradWinkel) == true ||
             erweiterterOperator?.let(::verwendetGradWinkel) == true
-        if (verwendetGrad) {
+        if (verwendetGrad && knoten.parameter[SINUS_WINKELRAUM] != "grad") {
             val grad = knoten.parameter[ZAHLENRECHNER_GRADWINKEL].toBoolean()
             val auswerten = knoten.parameter[ZAHLENRECHNER_GRAD_AUSWERTEN] != "false"
             Row(

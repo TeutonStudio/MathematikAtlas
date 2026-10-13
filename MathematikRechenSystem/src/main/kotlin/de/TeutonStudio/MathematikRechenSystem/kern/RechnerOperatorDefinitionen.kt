@@ -11,6 +11,7 @@ data class OperatorRolle(
     val zulässigeTypen: Set<FormelTyp> = emptySet(),
     val methodenfähig: Boolean = false,
     val variadisch: Boolean = false,
+    val werteVorrat: MengenAusdruck? = null,
 )
 data class OperatorSignatur(val id: String, val eingänge: List<OperatorRolle>, val ausgänge: List<OperatorRolle>)
 data class RechnerOperatorDefinition(
@@ -71,30 +72,39 @@ object RechnerOperatorDefinitionen {
         val eingänge = when (op) {
             VektorRechnerOperator.ADDITION -> listOf(v("vektor.1", true, aliases = setOf("links", "a")), v("vektor.2", true, setOf("rechts", "b")))
             VektorRechnerOperator.HADAMARD_PRODUKT -> listOf(v("links", true), v("rechts", true))
-            VektorRechnerOperator.SUBTRAKTION, VektorRechnerOperator.KREUZPRODUKT,
+            VektorRechnerOperator.HADAMARD_DIVISION, VektorRechnerOperator.SUBTRAKTION, VektorRechnerOperator.KREUZPRODUKT,
             VektorRechnerOperator.PROJEKTION, VektorRechnerOperator.SKALARPRODUKT, VektorRechnerOperator.WINKEL, VektorRechnerOperator.DISTANZ ->
                 listOf(v("links", aliases = setOf("a", "vektor.1")), v("rechts", aliases = setOf("b", "vektor.2")))
+            VektorRechnerOperator.POTENZ -> listOf(v("a"), rolle("p", FormelTyp.ZAHL))
             VektorRechnerOperator.SKALARMULTIPLIKATION -> listOf(v("vektor"), rolle("skalar", FormelTyp.ZAHL, methodenfähig = true))
             VektorRechnerOperator.VEKTORFELD_INTEGRIEREN -> listOf(rolle("vektorfeld", FormelTyp.METHODE), rolle("menge", FormelTyp.MENGE))
+            VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL -> listOf(rolle("kartesisch", FormelTyp.TUPEL, methodenfähig = true))
+            VektorRechnerOperator.KARTESISCH -> listOf(rolle("radius", FormelTyp.ZAHL, methodenfähig = true),
+                rolle("winkel", FormelTyp.OBJEKT, methodenfähig = true).copy(zulässigeTypen = setOf(FormelTyp.ZAHL, FormelTyp.TUPEL, FormelTyp.OBJEKT)))
             VektorRechnerOperator.ZERLEGEN -> listOf(v("struktur"))
             VektorRechnerOperator.ZUSAMMENFUEHREN -> listOf("element.1", "element.2").mapIndexed { i, n ->
                 rolle(n, FormelTyp.OBJEKT, variadisch = true).copy(zulässigeTypen = setOf(FormelTyp.VEKTOR, FormelTyp.TUPEL, FormelTyp.ZAHL, FormelTyp.OBJEKT)) }
             else -> listOf(v("vektor"))
         }
         val (typ, name) = when (op) {
+            VektorRechnerOperator.POTENZ -> FormelTyp.OBJEKT to "ergebnis"
             VektorRechnerOperator.SKALARPRODUKT -> FormelTyp.ZAHL to "skalar"
             VektorRechnerOperator.WINKEL, VektorRechnerOperator.WINKEL_ZU_ACHSE -> FormelTyp.ZAHL to "winkel"
             VektorRechnerOperator.DISTANZ -> FormelTyp.ZAHL to "distanz"
             VektorRechnerOperator.NORM -> FormelTyp.ZAHL to "norm"
+            VektorRechnerOperator.RADIUS -> FormelTyp.ZAHL to "radius"
+            VektorRechnerOperator.POLARWINKEL -> FormelTyp.OBJEKT to "winkel"
+            VektorRechnerOperator.KARTESISCH -> FormelTyp.TUPEL to "kartesisch"
             VektorRechnerOperator.ZERLEGEN -> FormelTyp.METHODE to "methode"
             VektorRechnerOperator.ZUSAMMENFUEHREN -> FormelTyp.OBJEKT to "struktur"
             else -> FormelTyp.VEKTOR to "vektor"
         }
         val struktur = StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.VEKTOR).firstOrNull { it.id == op.stabileId }
         RechnerOperatorDefinition(OperatorFamilie.VEKTOR, op.stabileId, op.titel, struktur?.symbolLatex ?: op.titel,
-            struktur?.definitionsLatex ?: "\\operatorname{${op.titel}}", listOf(signatur(eingänge, typ, name)),
+            (if (op in setOf(VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL, VektorRechnerOperator.KARTESISCH))
+                Polarkoordinaten.KONVENTION else struktur?.definitionsLatex) ?: "\\operatorname{${op.titel}}", listOf(signatur(eingänge, typ, name)),
             struktur?.eingänge ?: eingänge.map { StrukturRechnerEingang(it.name, it.typ) }, struktur?.ergebnisTyp ?: typ,
-            formelFamilie = if (struktur != null) OperatorFamilie.VEKTOR else null,
+            formelFamilie = if (struktur != null || op in setOf(VektorRechnerOperator.RADIUS, VektorRechnerOperator.POLARWINKEL, VektorRechnerOperator.KARTESISCH)) OperatorFamilie.VEKTOR else null,
             aliases = setOf(op.name) + when (op) {
                 VektorRechnerOperator.SKALARPRODUKT -> setOf("dot product", "inneres produkt")
                 VektorRechnerOperator.KREUZPRODUKT -> setOf("cross product")
@@ -116,7 +126,7 @@ object RechnerOperatorDefinitionen {
             variadisch || komplex || binär -> listOf(zahl("a"), zahl("b"))
             else -> listOf(zahl("a"))
         }
-        val signaturen = listOf(signatur(rollen)) + if (op == UniversellerZahlenOperator.DIVISION) listOf(signatur(rollen.take(2), id = "ohneNullersatz")) else if (komplex) listOf(signatur(listOf(rolle("tupel", FormelTyp.TUPEL)), id = "tupel")) else emptyList()
+        val signaturen = listOf(signatur(rollen)) + (if (op == UniversellerZahlenOperator.SINUS) listOf(signatur(listOf(OperatorRolle("a", FormelTyp.OBJEKT, werteVorrat = Gradmenge)), id = "grad")) else emptyList()) + if (op == UniversellerZahlenOperator.DIVISION) listOf(signatur(rollen.take(2), id = "ohneNullersatz")) else if (komplex) listOf(signatur(listOf(rolle("tupel", FormelTyp.TUPEL)), id = "tupel")) else emptyList()
         RechnerOperatorDefinition(OperatorFamilie.ZAHL, op.stabileId, op.titel, op.symbolLatex, op.symbolLatex,
             signaturen, op.formelRollen().map { StrukturRechnerEingang(it, if (it == "methode") FormelTyp.METHODE else if (it == "indexmenge") FormelTyp.MENGE else FormelTyp.ZAHL) },
             FormelTyp.ZAHL, aliases = setOf(op.name) + when (op) {
@@ -126,7 +136,7 @@ object RechnerOperatorDefinitionen {
                 UniversellerZahlenOperator.DIFFERENTIAL -> setOf("ableiten", "differenzieren")
                 UniversellerZahlenOperator.QUADRATWURZEL -> setOf("sqrt", "wurzel")
                 else -> emptySet()
-            }, parameter = listOf(OperatorParameter("festeEingänge", standardwert = "2")))
+            }, parameter = listOf(OperatorParameter("festeEingänge", standardwert = "2")) + if (op == UniversellerZahlenOperator.SINUS) listOf(OperatorParameter("sinus.winkelraum", standardwert = "reell")) else emptyList())
     } + ZusätzlicherZahlenOperator.entries.map { op ->
         val eingänge = when (op) {
             ZusätzlicherZahlenOperator.POLYNOM -> listOf(rolle("koeffizienten", FormelTyp.OBJEKT).copy(zulässigeTypen = setOf(FormelTyp.TUPEL, FormelTyp.VEKTOR)), rolle("argument", FormelTyp.ZAHL, methodenfähig = true))

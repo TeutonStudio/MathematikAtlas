@@ -24,6 +24,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
@@ -46,10 +48,19 @@ internal fun BoxScope.GruppenRahmen(editor: KartenEditorZustand, dauerFür: (Kno
     val ansicht = karte.ansicht
     val dichte = LocalDensity.current.density
     val farbe = MaterialTheme.colorScheme.tertiary
+    val textMesser = rememberTextMeasurer()
     val größe = remember { mutableStateOf(IntSize.Zero) }
     val index = remember(karte.visuelleGruppen) { GruppenIndex(editor.karte) }
     Box(Modifier.fillMaxSize().onSizeChanged { größe.value = it }) {
         karte.visuelleGruppen.sortedBy { index.vorfahren(it.id).size }.forEach { g ->
+            val dauer = index.knotenIn(g.id).mapNotNull(dauerFür).fold<Long,Long?>(null) { summe, wert ->
+                val a = summe ?: 0L; val b = wert.coerceAtLeast(0L)
+                if (Long.MAX_VALUE-a < b) Long.MAX_VALUE else a+b
+            }
+            val titelMaß = textMesser.measure(AnnotatedString(g.titel), style = MaterialTheme.typography.bodyLarge).size
+            val zeitBreite = dauer?.let { textMesser.measure(AnnotatedString("Δzeit ${formatiereAuswertungsDauerNanos(it)}"), style = MaterialTheme.typography.labelSmall).size.width / dichte } ?: 0f
+            SideEffect { editor.meldeGruppenKopfminimum(g.id, GraphGröße(titelMaß.width / dichte + zeitBreite + 80f,
+                maxOf(VISUELLE_GRUPPE_KOPFZEILE_HÖHE, titelMaß.height / dichte + 16f))) }
             val faktor = dichte * ansicht.zoom
             val x = ansicht.verschiebung.x + g.position.x * faktor
             val y = ansicht.verschiebung.y + g.position.y * faktor
@@ -63,10 +74,10 @@ internal fun BoxScope.GruppenRahmen(editor: KartenEditorZustand, dauerFür: (Kno
                     .requiredSize(g.größe.breite.dp, g.größe.höhe.dp)) {
                     Canvas(Modifier.fillMaxSize()) {
                         drawRoundRect(farbe.copy(alpha = .07f), cornerRadius = CornerRadius(14.dp.toPx()))
-                        drawRoundRect(farbe.copy(alpha = .8f), cornerRadius = CornerRadius(14.dp.toPx()), style = Stroke(2.dp.toPx()))
+                        drawRoundRect(if (editor.ausgewählteGruppe == g.id) farbe else farbe.copy(alpha = .8f), cornerRadius = CornerRadius(14.dp.toPx()), style = Stroke((if (editor.ausgewählteGruppe == g.id) 3.dp else 2.dp).toPx()))
                     }
                     Surface(color = farbe.copy(alpha = .18f), modifier = Modifier.fillMaxWidth()
-                        .height(VISUELLE_GRUPPE_KOPFZEILE_HÖHE.dp)
+                        .height(editor.gruppenKopfHöhe(g.id).dp)
                         .semantics { contentDescription = "Gruppe ${g.titel} auswählen" }
                         .pointerInput(g.id) { detectTapGestures(
                             onTap = { editor.wähleGruppe(g.id) },
@@ -75,10 +86,6 @@ internal fun BoxScope.GruppenRahmen(editor: KartenEditorZustand, dauerFür: (Kno
                         .gruppenDrag(g.id, editor) { delta -> editor.führeAus(KartenAktion.VisuelleGruppeVerschieben(g.id, GraphPunkt(delta.x / dichte, delta.y / dichte)), false) }) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(g.titel, Modifier.weight(1f).padding(start = 8.dp), maxLines = 1)
-                            val dauer = index.knotenIn(g.id).mapNotNull(dauerFür).fold<Long,Long?>(null) { summe, wert ->
-                                val a = summe ?: 0L; val b = wert.coerceAtLeast(0L)
-                                if (Long.MAX_VALUE-a < b) Long.MAX_VALUE else a+b
-                            }
                             dauer?.let { Text("Δzeit ${formatiereAuswertungsDauerNanos(it)}",style=MaterialTheme.typography.labelSmall) }
                             TextButton(onClick = { editor.wähleGruppe(g.id, true) }) { Text("⋯") }
                         }

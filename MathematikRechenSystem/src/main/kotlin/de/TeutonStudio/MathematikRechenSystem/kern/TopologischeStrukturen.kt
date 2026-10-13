@@ -31,6 +31,7 @@ fun kardinalitaetsVertrag(menge: MengenAusdruck): KardinalitaetsVertrag = when (
     GaußschePrimzahlen,
     -> unendlichAbzaehlbar("Die Standardmenge besitzt einen registrierten abzählbar-unendlichen Kardinalitätsvertrag.")
 
+    Gradmenge,
     ReelleZahlen,
     KomplexeZahlen,
     -> unendlichUeberabzaehlbar("Die Standardmenge besitzt einen registrierten überabzählbaren Kardinalitätsvertrag.")

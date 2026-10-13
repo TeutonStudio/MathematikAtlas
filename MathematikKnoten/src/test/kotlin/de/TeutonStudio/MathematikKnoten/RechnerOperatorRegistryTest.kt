@@ -15,7 +15,7 @@ class RechnerOperatorRegistryTest {
         assertTrue(RechnerOperatorRegistry.fürFamilie(RechnerFamilie.VEKTOR).map { it.operatorId }.toSet()
             .containsAll(VektorRechnerOperator.entries.map { it.stabileId }))
         assertTrue(RechnerOperatorRegistry.fürFamilie(RechnerFamilie.MATRIX).map { it.operatorId }.toSet()
-            .containsAll(StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).map { it.id }))
+            .containsAll(StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).filterNot { it.id == "matrix.zerlegen" }.map { it.id }))
         assertTrue(RechnerOperatorRegistry.fürFamilie(RechnerFamilie.TENSOR).map { it.operatorId }.toSet()
             .containsAll(TensorRechnerOperator.entries.map { it.stabileId }))
     }

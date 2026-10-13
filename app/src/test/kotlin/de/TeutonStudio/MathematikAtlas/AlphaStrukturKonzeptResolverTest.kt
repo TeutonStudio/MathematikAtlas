@@ -20,7 +20,11 @@ class AlphaStrukturKonzeptResolverTest {
             if(ziel=="methode") {
                 assertTrue(text(konzept).contains("{()}"));assertTrue(text(konzept).contains("Außenquellen"))
                 assertTrue(text(konzept).contains("Annahmen"));assertTrue(text(konzept).contains("Einertupel"))
-            } else assertTrue(text(konzept).contains("symbolische"))
+            } else if (ziel in setOf("polar", "kartesisch")) {
+                assertTrue(text(konzept).contains("Grad"))
+                assertTrue(text(konzept).contains("R¹"))
+            } else if (ziel in setOf("grad", "bogenmass")) assertTrue(text(konzept).contains("Winkelraum"))
+            else assertTrue(text(konzept).contains("symbolische"))
         }
         assertEquals(ÜBERSETZER_ZIELE.size,ids.size)
         assertEquals(dynamischesKonzeptFürKnoten(konfiguriereÜbersetzer(basis,"spalte"))!!.id,dynamischesKonzeptFürKnoten(basis)!!.id)

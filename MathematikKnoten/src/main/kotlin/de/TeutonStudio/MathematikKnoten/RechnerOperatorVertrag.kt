@@ -74,7 +74,7 @@ sealed interface RechnerOperatorAuflösung {
 }
 
 object RechnerOperatorRegistry {
-    val alle: List<RechnerOperatorVertrag> = RechnerOperatorDefinitionen.alle.map { definition ->
+    private val einschließlichHistorischer: List<RechnerOperatorVertrag> = RechnerOperatorDefinitionen.alle.map { definition ->
         RechnerOperatorVertrag(
             familie = RechnerFamilie.valueOf(definition.familie.name), operatorId = definition.id, titel = definition.titel,
             signaturen = definition.signaturen.map { signatur ->
@@ -95,10 +95,12 @@ object RechnerOperatorRegistry {
         )
     }.sortedWith(compareBy({ it.familie.ordinal }, RechnerOperatorVertrag::operatorId))
 
-    private val nachSchlüssel = alle.associateBy { it.familie to it.operatorId }
+    val alle: List<RechnerOperatorVertrag> = einschließlichHistorischer.filterNot { it.operatorId == "matrix.zerlegen" }
+
+    private val nachSchlüssel = einschließlichHistorischer.associateBy { it.familie to it.operatorId }
 
     init {
-        require(nachSchlüssel.size == alle.size) { "Operator-IDs müssen innerhalb ihrer Rechnerfamilie eindeutig sein." }
+        require(nachSchlüssel.size == einschließlichHistorischer.size) { "Operator-IDs müssen innerhalb ihrer Rechnerfamilie eindeutig sein." }
     }
 
     fun familieFür(knotenArt: String): RechnerFamilie? = RechnerFamilie.entries.firstOrNull { it.knotenArt == knotenArt }
@@ -141,6 +143,7 @@ object RechnerOperatorRegistry {
 }
 
 private fun OperatorRolle.alsPort(richtung: AnschlussRichtung, index: Int): RechnerPortVertrag {
+    if (werteVorrat == de.TeutonStudio.MathematikRechenSystem.kern.Gradmenge) return RechnerPortVertrag(name, richtung, MathematikAnschlussArten.Winkel.id, emptySet(), index, variadisch, aliases)
     val erlaubt = zulässigeTypen.flatMap { typ -> if (typ == FormelTyp.VEKTOR) listOf(
         MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.ZeilenVektor.id,
     ) else listOf(typ.anschlussArt()) }.toSet()

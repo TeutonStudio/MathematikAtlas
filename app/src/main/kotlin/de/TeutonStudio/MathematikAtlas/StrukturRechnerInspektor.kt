@@ -57,6 +57,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
             return
         }
 
+        de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche(knoten, ergebnis)
         val familie = StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) ?: return
         val operatorId = knoten.parameter[RECHNER_OPERATOR_PARAMETER]
         val formelModus = operatorId == familie.formelOperatorId
@@ -94,7 +95,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
                         ),
                     )
                 }
-                StrukturRechnerOperatoren.fuer(familie).forEach { definition ->
+                StrukturRechnerOperatoren.fuer(familie).filterNot { it.id == "matrix.zerlegen" }.forEach { definition ->
                     add(
                         RechnerOperatorAuswahlEintrag(
                             id = definition.id,

@@ -1,6 +1,10 @@
 package de.TeutonStudio.MathematikKartenAdapter
 
 import de.TeutonStudio.MathematikRechenSystem.kern.*
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+
+const val METHODEN_STRUKTUR_PACKUNG = "methodenAufruf.strukturPackung"
+const val METHODEN_STRUKTUR_MIGRATIONSFEHLER = "methodenAufruf.strukturMigrationsfehler"
 
 const val METHODEN_AUFRUF_ARGUMENTPROJEKTION = "methodenAufruf.argumentprojektion"
 const val METHODEN_AUFRUF_ERGEBNISPROJEKTION = "methodenAufruf.ergebnisprojektion"
@@ -19,6 +23,7 @@ const val METHODEN_ERGEBNISPROJEKTION_TUPEL = "tupel"
  */
 internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+        kontext.knoten.parameter[METHODEN_STRUKTUR_MIGRATIONSFEHLER]?.let { error("Migrationsdiagnose: $it") }
         val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
         val methodenObjekt = methodenWert.objekt
         val methode = methodenObjekt as? Methode
@@ -46,7 +51,8 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
             }
 
         val argumentWerte = if (mathematischeMethode != null) {
-            when (argumentProjektion) {
+            if (METHODEN_STRUKTUR_PACKUNG in kontext.knoten.eigenschaften) strukturierteArgumente(mathematischeMethode, kontext)
+            else when (argumentProjektion) {
                 METHODEN_ARGUMENTPROJEKTION_TUPEL -> tupelArgumente(mathematischeMethode, argumentAnschlüsse, kontext)
                 else -> separierteArgumente(mathematischeMethode, argumentAnschlüsse, kontext)
             }
@@ -80,16 +86,17 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
             kanonisch = mathematischeMethode != null,
         )
         val methodenReferenz = methode?.name ?: methodenWert.anzeigeLatex()
-        val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
+        val anwendungsLatex = "$methodenReferenz\\left(${argumentWerte.joinToString(",") { it.anzeigeLatex() }}\\right)"
         val projiziertesLatex = if (
             ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL && roherWert !is Tupel
         ) {
-            "($anwendungsLatex)"
+            "\\left($anwendungsLatex\\right)"
         } else {
             anwendungsLatex
         }
         val annahmenBindungen = mathematischeMethode?.parameter?.mapIndexed { i, p -> p.name to mathematischeArgumente[i] }?.toMap().orEmpty()
         val angewandteAnnahmen = methodenWert.annahmen.map { ersetze(it, annahmenBindungen) as Aussage }.toSet() + argumentWerte.flatMap { it.annahmen }
+        require(angewandteAnnahmen.none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen eine Definitionsbedingung der Methode." }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
@@ -102,6 +109,37 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
                 ),
             ),
         )
+    }
+
+    private fun strukturierteArgumente(methode: MathematischeMethode, kontext: KnotenAuswertungsKontext): List<BedingterWert> {
+        val packung = kontext.knoten.eigenschaften.objekt(METHODEN_STRUKTUR_PACKUNG)?.felder ?: error("Die Argumentpackung fehlt.")
+        val einträge = (packung["komponenten"] as? KnotenEigenschaft.Liste)?.werte ?: error("Komponentenzuordnung fehlt.")
+        val parameter = methode.parameter.filter { istWinkelraum(methode.werteVorräte[it.name] ?: LeereMenge) }.singleOrNull()
+            ?: error("Die gespeicherte Packung benötigt genau einen eindeutig erkennbaren Winkelraumparameter.")
+        require((methode.werteVorräte[parameter.name] as Tupelraum).komponenten.size == einträge.size) { "Die historische Komponentenanzahl passt nicht mehr zum Winkelraum." }
+        val verwendet = mutableSetOf<String>()
+        val komponenten = einträge.map { eintrag ->
+            val felder = (eintrag as? KnotenEigenschaft.Objekt)?.felder ?: error("Ungültiger Komponentenverweis.")
+            val id = felder.text("id", ""); val name = felder.text("name", "")
+            val ports = kontext.knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name != "methode" }
+            val port = ports.singleOrNull { it.id.wert == id } ?: ports.singleOrNull { it.name == name }
+                ?: error("Ein historischer Komponentenanschluss fehlt.")
+            verwendet += port.name
+            kontext.eingänge[port.name] ?: error("Winkelkomponente '${port.name}' fehlt.")
+        }
+        val skalare = packung.objekt("skalare")?.felder.orEmpty()
+        val argumente = methode.parameter.map { p ->
+            if (p.name == parameter.name) BedingterWert(Tupel(komponenten.map { (it.objekt as? MathematischesObjekt ?: error("Eine Winkelkomponente muss ein mathematisches Objekt sein.")) }),
+                komponenten.flatMap { it.annahmen }.toSet(), variablenQuellen = komponenten.flatMap { it.variablenQuellen })
+            else {
+                val port = skalare.entries.singleOrNull { (it.value as? KnotenEigenschaft.Text)?.wert == p.name }?.key
+                    ?: error("Der unabhängige Parameter '${p.name}' besitzt keine eindeutige historische Anschlusszuordnung.")
+                verwendet += port
+                kontext.eingänge[port] ?: error("Argument '$port' fehlt.")
+            }
+        }
+        require(kontext.eingänge.keys.none { it != "methode" && it !in verwendet }) { "Überzähliger verbundener Anschluss außerhalb der gespeicherten Argumentpackung." }
+        return argumente
     }
 
     private fun freieProjektionsArgumente(

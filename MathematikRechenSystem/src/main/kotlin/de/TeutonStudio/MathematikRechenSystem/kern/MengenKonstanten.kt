@@ -18,6 +18,7 @@ enum class MengenKonstante(
     C("C", "Komplexe Zahlen", "\\mathbb C:=\\{a+bi\\mid a,b\\in\\mathbb R, i^2=-1\\}", KomplexeZahlen),
     P("P", "Primzahlen", "\\mathbb P:=\\{p\\in\\mathbb N\\mid p>1,\\ p\\text{ hat genau zwei positive Teiler}\\}", Primzahlen),
     ZI("Zi", "Gaußsche ganze Zahlen", "\\mathbb Z[i]:=\\{a+bi\\mid a,b\\in\\mathbb Z\\}", GaußscheGanzeZahlen),
+    GRAD("Grad", "Gradmenge", "\\mathbb G:=\\mathbb R/(360\\mathbb Z),\\quad 360^{\\circ}=0^{\\circ}", Gradmenge),
     PZI("PZi", "Gaußsche Primzahlen", "\\mathbb P_{\\mathbb Z[i]}:=\\{z\\in\\mathbb Z[i]\\mid z\\text{ ist ein Primelement}\\}", GaußschePrimzahlen);
 
     val signatur: OperatorSignatur get() = OperatorSignatur(
@@ -53,7 +54,7 @@ internal fun konstanteTeilmenge(teil: MengenAusdruck, grund: MengenAusdruck): Bo
         MengenKonstante.Q -> setOf(MengenKonstante.R, MengenKonstante.C)
         MengenKonstante.R, MengenKonstante.ZI -> setOf(MengenKonstante.C)
         MengenKonstante.PZI -> setOf(MengenKonstante.ZI, MengenKonstante.C)
-        MengenKonstante.C -> emptySet()
+        MengenKonstante.C, MengenKonstante.GRAD -> emptySet()
     }
     return b in obermengen
 }
@@ -76,6 +77,8 @@ private fun istPrim(n: BigInteger): Boolean? {
 internal fun konstanteMitgliedschaft(element: MathematischesObjekt, menge: MengenAusdruck, kontext: RechenKontext): AussageErgebnis? {
     val konstante = MengenKonstante.vonMenge(menge) ?: return null
     if (konstante == MengenKonstante.LEER) return mengenWahrheit(false)
+    if (konstante == MengenKonstante.GRAD) return mengenWahrheit(element is WinkelAusdruck || element is TypisiertesElement && element.anschlussArt == "mathematik.winkel")
+    if (element is WinkelAusdruck) return mengenWahrheit(false)
     val wert = (element as? ZahlAusdruck)?.let { vereinfache(it, kontext) } ?: element
     val real: RationaleZahl
     val imag: RationaleZahl
@@ -91,7 +94,7 @@ internal fun konstanteMitgliedschaft(element: MathematischesObjekt, menge: Menge
     val ganz = real.nenner == BigInteger.ONE
     val gaussGanz = ganz && imag.nenner == BigInteger.ONE
     val wahr = when (konstante) {
-        MengenKonstante.LEER -> false
+        MengenKonstante.LEER, MengenKonstante.GRAD -> false
         MengenKonstante.C -> true
         MengenKonstante.Q, MengenKonstante.R -> reell
         MengenKonstante.Z -> reell && ganz

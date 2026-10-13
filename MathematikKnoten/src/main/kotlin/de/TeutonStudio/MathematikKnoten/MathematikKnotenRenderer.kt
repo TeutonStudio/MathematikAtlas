@@ -2,6 +2,8 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
 
+import de.TeutonStudio.MathematikRechenSystem.kern.potenzLatex
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -40,7 +42,12 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
         "C", "ℂ" -> "\\mathbb{C}"
         else -> werteVorratKennung
     }
-    return if (variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL) "$name \\in \\mathrm{Grad}^{${variablenDimension(knoten)}}" else "$name \\in $werteVorrat"
+    val dimension = knoten.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
+    return when {
+        variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL -> "$name \\in \\mathrm{Grad}^{${variablenDimension(knoten)}}"
+        dimension > 0 -> "$name \\in {$werteVorrat}^{${dimension}\\times${dimension}}"
+        else -> "$name \\in $werteVorrat"
+    }
 }
 
 class MathematikKnotenRenderer(
@@ -111,11 +118,19 @@ class MathematikKnotenRenderer(
                     objekt.zuLatex(),
                     style = MaterialTheme.typography.bodyLarge,
                 )
+                objekt is de.TeutonStudio.MathematikRechenSystem.kern.Tupel && ausgabe?.zielMenge is de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum -> LatexFormel(
+                    "${objekt.zuLatex()} \\in ${(ausgabe.zielMenge as de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum).potenzLatex()}", style = MaterialTheme.typography.bodyLarge)
                 ausgabe != null -> LatexFormel(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)
                 knoten.parameter.isNotEmpty() -> LatexText(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
             }
 
+            if (knoten.art == ÜBERSETZER_ART && ergebnis != null) {
+                val quelle = ergebnis.eingänge["wert"]?.zielMenge ?: ergebnis.eingänge["wert"]?.werteVorrat
+                val ziel = ausgabe?.zielMenge
+                if (quelle != null && ziel != null) LatexFormel(
+                    "${if (quelle is Tupelraum) quelle.potenzLatex() else quelle.zuLatex()} \\longto ${if (ziel is Tupelraum) ziel.potenzLatex() else ziel.zuLatex()}", style = MaterialTheme.typography.bodySmall)
+            }
             val adjektive = objekt?.let(::automatischeAdjektive).orEmpty()
             if (adjektive.isNotEmpty()) {
                 Row(

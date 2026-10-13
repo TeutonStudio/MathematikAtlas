@@ -29,6 +29,8 @@ class DesktopKartenSpeicher(
             ?: alleDateien().maxByOrNull { it.getLastModifiedTime().toMillis() }?.let(::ladeDatei)
     }
 
+    fun gespeicherteKarten(): List<KartenDaten> = alleDateien().mapNotNull(::ladeDatei).distinctBy { it.id to it.version }
+
     fun lade(verweis: KartenVerweis): KartenDaten? = kartenVerzeichnis
         .resolve(verweis.kartenId.wert)
         .resolve("v${verweis.version}.json")

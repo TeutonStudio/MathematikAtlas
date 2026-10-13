@@ -17,8 +17,8 @@ fun variablenStruktur(k: KnotenDaten): String =
 
 fun variablenDimension(k: KnotenDaten): Int =
     (k.parameter[VARIABLE_DIMENSION]?.toIntOrNull() ?: 2).also {
-        require(it in 0..64 && (variablenStruktur(k) == VARIABLE_STRUKTUR_WINKEL || it > 0)) {
-            "Winkeltupel erlauben 0 bis 64 Winkel; andere Strukturen benötigen 1 bis 64 Komponenten."
+        require(if(variablenStruktur(k)==VARIABLE_STRUKTUR_WINKEL) it in 0..MAXIMALE_RICHTUNGS_WINKEL else it in 1..64) {
+            "Winkeltupel erlauben 0 bis $MAXIMALE_RICHTUNGS_WINKEL Winkel; andere Strukturen benötigen 1 bis 64 Komponenten."
         }
     }
 
@@ -38,9 +38,25 @@ internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck): 
     val name = k.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
     val art = variablenStruktur(k)
     val basis = if (art == VARIABLE_STRUKTUR_WINKEL) grundmenge else variablenWertevorrat(k, grundmenge)
+    val matrixDimension=k.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
+    require(matrixDimension in 0..8) { "Matrixdimension muss zwischen 1 und 8 liegen (0: Skalar)." }
+    if(art=="zahl" && matrixDimension>0) {
+        val komponenten=List(matrixDimension*matrixDimension) { i -> Variable("${name}_${i/matrixDimension+1}_${i%matrixDimension+1}") }
+        return BedingterWert(Matrix(List(matrixDimension) { i -> List(matrixDimension) { j -> komponenten[i*matrixDimension+j] } }),
+            variablenQuellen=komponenten.map { v -> VariablenQuelle(k.id,v.name,basis,bindungsId="${k.id.wert}:${v.name}",lösungsRolle=LösungsQuellenRolle.Variable) })
+    }
     if (art == "zahl") return BedingterWert(Variable(name), werteVorrat = basis,
         variablenQuellen = listOf(VariablenQuelle(k.id, name, basis, lösungsRolle = LösungsQuellenRolle.Variable)))
     val n = variablenDimension(k)
+    if(art==VARIABLE_STRUKTUR_WINKEL) {
+        val domain=winkelraum(n)
+        val intern="__winkelquelle:${k.id.wert}:$name"
+        val parameter=TypisiertesElement(intern,MathematikAnschlussArten.Tupel.id.wert,latex=name,strukturForm=listOf(RationaleZahl.von((n+1).toLong())))
+        val objekt=Tupel(List(n+1) { i -> SymbolischeZahlKomponente(parameter,RationaleZahl.von((i+1).toLong())) })
+        return BedingterWert(objekt,werteVorrat=domain,komponentenMengen=domain.komponenten,
+            variablenQuellen=listOf(VariablenQuelle(k.id,intern,domain,lösungsRolle=LösungsQuellenRolle.Variable,
+                strukturBindung=StrukturQuellenBindung("${k.id.wert}:winkelraum",name,domain))))
+    }
     // n ist die Anzahl der Winkel; das Vorzeichen ist eine zusätzliche Komponente.
     val anzahl = if (art == VARIABLE_STRUKTUR_WINKEL) n + 1 else n
     val variablen = List(anzahl) { i -> Variable("${name}_${i+1}", "${name}_{${i+1}}") }

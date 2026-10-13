@@ -39,18 +39,60 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
             MathematikAnschlussArten.Tensor.id -> if (form == null) TypAusdruck.Unbekannt else TypAusdruck.Parameterisiert(MathematischeTypen.Tensor, listOf(zahl) + form)
             MathematikAnschlussArten.Tupel.id -> {
                 val n = (form?.singleOrNull() as? TypAusdruck.Literal)?.wert?.toIntOrNull()
-                if (n == null) TypAusdruck.Unbekannt else TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(n) { TypAusdruck.Unbekannt })
+                if (n == null || n < 0) TypAusdruck.Unbekannt else TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(n) { TypAusdruck.Unbekannt })
             }
             else -> TypAusdruck.Atom(TypId(art.wert))
         }
     }
+    fun quellTyp(name: String): TypAusdruck? {
+        val eingang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == name } ?: return null
+        val quelle = karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, eingang.id) }?.von ?: return null
+        return effektiverMathematikAnschluss(karte, quelle)?.vertrag?.typ
+            ?: karte.knoten.firstOrNull { it.id == quelle.knotenId }?.anschlüsse?.firstOrNull { it.id == quelle.anschlussId }?.vertrag?.typ
+    }
     val typ = when {
+        knoten.art == VektorRechner.KNOTEN_ART && knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.POTENZ.stabileId && anschluss.richtung == AnschlussRichtung.Ausgang -> {
+            val pPort = knoten.anschlüsse.firstOrNull { it.name == "p" && it.richtung == AnschlussRichtung.Eingang }
+            val verbunden = pPort != null && karte.verbindungen.any { it.zu == AnschlussVerweis(knoten.id, pPort.id) }
+            val n = (dimension("p") as? TypAusdruck.Literal)?.wert?.toIntOrNull()
+                ?: if (!verbunden) knoten.parameter[VEKTOR_POTENZ_EXPONENT]?.toIntOrNull() ?: 2 else null
+            val q = quellTyp("a")
+            val vektor = if (q is TypAusdruck.Parameterisiert && q.konstruktor == MathematischeTypen.Tupel)
+                formTyp(MathematikAnschlussArten.SpaltenVektor.id, listOf(TypAusdruck.Literal(q.argumente.size.toString()))) else q
+            val zahl = TypAusdruck.Atom(MathematischeTypen.Zahl)
+            if (n != null && n >= 0) if (n % 2 == 0) zahl else vektor ?: formTyp(MathematikAnschlussArten.SpaltenVektor.id, null)
+            else TypAusdruck.Vereinigung(listOf(zahl, formTyp(MathematikAnschlussArten.SpaltenVektor.id, null), formTyp(MathematikAnschlussArten.ZeilenVektor.id, null)))
+        }
+
+        knoten.art == VektorRechner.KNOTEN_ART &&
+            knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.KARTESISCH.stabileId &&
+            anschluss.richtung == AnschlussRichtung.Ausgang -> {
+            val quelle = quellTyp("winkel")
+            val n = when {
+                quelle is TypAusdruck.Parameterisiert && quelle.konstruktor == MathematischeTypen.Tupel -> quelle.argumente.size + 1
+                quelle is TypAusdruck.Atom && quelle.id in setOf(MathematischeTypen.Zahl, MathematischeTypen.Reell,
+                    MathematischeTypen.Rational, MathematischeTypen.Ganz, MathematischeTypen.Natuerlich) -> 1
+                else -> null
+            }
+            if (n == null) TypAusdruck.Unbekannt
+            else formTyp(MathematikAnschlussArten.Tupel.id, listOf(TypAusdruck.Literal(n.toString())))
+        }
+        knoten.art == VektorRechner.KNOTEN_ART &&
+            knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.POLARWINKEL.stabileId &&
+            anschluss.richtung == AnschlussRichtung.Ausgang -> {
+            val quellTyp = quellTyp("kartesisch") as? TypAusdruck.Parameterisiert
+            if (quellTyp?.konstruktor == MathematischeTypen.Tupel && quellTyp.argumente.size == 1)
+                TypAusdruck.Atom(MathematischeTypen.Reell)
+            else if (quellTyp?.konstruktor == MathematischeTypen.Tupel && quellTyp.argumente.size >= 2)
+                TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(quellTyp.argumente.size - 1) { TypAusdruck.Atom(MathematischeTypen.Winkel) })
+            else TypAusdruck.Unbekannt
+        }
         knoten.art == ÜBERSETZER_ART && anschluss.richtung == AnschlussRichtung.Ausgang -> {
             val ziel = übersetzerZiel(knoten)
             val eingang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == "wert" }
             val quelle = eingang?.let { p -> karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, p.id) }?.von }
             val quellPort = quelle?.let { q -> karte.knoten.firstOrNull { it.id == q.knotenId }?.anschlüsse?.firstOrNull { it.id == q.anschlussId } }
-            val quellTyp = quellPort?.vertrag?.typ as? TypAusdruck.Parameterisiert
+            val quellTyp = quelle?.let { effektiverMathematikAnschluss(karte, it)?.vertrag?.typ } as? TypAusdruck.Parameterisiert
             val dimension = when (quellTyp?.konstruktor) {
                 MathematischeTypen.Tupel -> TypAusdruck.Literal(quellTyp.argumente.size.toString())
                 MathematischeTypen.SpaltenVektor, MathematischeTypen.ZeilenVektor -> quellTyp.argumente.getOrNull(1) ?: TypAusdruck.Unbekannt
@@ -60,6 +102,22 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
                 "zeile" -> formTyp(MathematikAnschlussArten.ZeilenVektor.id, listOf(dimension))
                 "spalte" -> formTyp(MathematikAnschlussArten.SpaltenVektor.id, listOf(dimension))
                 "tupel" -> formTyp(MathematikAnschlussArten.Tupel.id, listOf(dimension))
+                "polar" -> {
+                    val n = (dimension as? TypAusdruck.Literal)?.wert?.toIntOrNull()
+                    if (n == null || n <= 0) TypAusdruck.Unbekannt else TypAusdruck.Parameterisiert(MathematischeTypen.Tupel,
+                        listOf(TypAusdruck.Atom(MathematischeTypen.Reell),
+                            if (übersetzerPolarKonvention(knoten) == PolarKonvention.SIGNED) TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, listOf(TypAusdruck.Atom(MathematischeTypen.Reell)) + List(n - 1) { TypAusdruck.Atom(MathematischeTypen.Winkel) })
+                            else if (n == 1) TypAusdruck.Atom(MathematischeTypen.Reell)
+                            else TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(n - 1) { TypAusdruck.Atom(MathematischeTypen.Winkel) })))
+                }
+                "kartesisch" -> if (übersetzerEindimensional(knoten))
+                    formTyp(MathematikAnschlussArten.Tupel.id, listOf(TypAusdruck.Literal("1")))
+                else {
+                    val winkelTyp = quellTyp?.argumente?.getOrNull(1) as? TypAusdruck.Parameterisiert
+                    val n = if (quellTyp?.argumente?.size == 2 && winkelTyp?.konstruktor == MathematischeTypen.Tupel)
+                        TypAusdruck.Literal((winkelTyp.argumente.size + if (übersetzerPolarKonvention(knoten) == PolarKonvention.SIGNED) 0 else 1).toString()) else dimension
+                    formTyp(MathematikAnschlussArten.Tupel.id, listOf(n))
+                }
                 else -> TypAusdruck.Unbekannt
             }
         }
