@@ -84,3 +84,41 @@ fun partikulaereLineareLoesung(a: Matrix, b: SpaltenVektor): Tupel {
     }
     return Tupel(listOf(if (loesung == KeineLineareLoesung) WahrheitsKonstante(false) else WahrheitsKonstante(true), vektor))
 }
+
+fun konjugiertTransponierteProjektorKomponenten(p: Tensorartig): Tensor {
+    val form = p.tensorForm
+    require(form.size == 3 && form[1] == form[2]) { "Projektoren benötigen die Form (Anzahl, Zeilen, Spalten)." }
+    return Tensor(form, form.indizesFolge().map { (k, i, j) -> vereinfache(Konjugierte(p.tensorKomponente(listOf(k, j, i)))) })
+}
+fun orthogonaleProjektorBedingungen(p: Tensorartig): Aussage {
+    val form = p.tensorForm
+    require(form.size == 3 && form[1] == form[2] && form.max() <= 7) { "Die Projektorbedingungen materialisieren Familien bis Dimension 7." }
+    val bedingungen = mutableListOf<Aussage>()
+    for (k in 0 until form[0]) for (l in 0 until form[0]) for (i in 0 until form[1]) for (j in 0 until form[2]) {
+        val summe = addition((0 until form[1]).map { m -> multiplikation(p.tensorKomponente(listOf(k, i, m)), p.tensorKomponente(listOf(l, m, j))) })
+        bedingungen += Gleichheit(summe, if (k == l) p.tensorKomponente(listOf(k, i, j)) else RationaleZahl.Null)
+    }
+    return Konjunktion(bedingungen)
+}
+
+fun nichtverschwindendeSpaltenBedingungen(v: Matrix): Aussage = Konjunktion(List(v.spaltenAnzahl) { j ->
+    Ungleichheit(addition(List(v.zeilenAnzahl) { i -> multiplikation(Konjugierte(v.zeilen[i][j]), v.zeilen[i][j]) }), RationaleZahl.Null)
+})
+
+/** Indexfamilie skalarer Komponentenmethoden mit unveränderter öffentlicher Argumentbindung. */
+fun vektorfeldKomponentenMethoden(methode: Methode): MathematischeMethode {
+    val m = methode.alsMathematischeMethode("Komponenten eines Vektorfeldes")
+    val objekt = if (m.ausgabeNamen.size == 1) m.einzigeAusgabe().second else m.ergebnisTupel
+    val komponenten = when (objekt) {
+        is OrientierterVektor -> objekt.werte
+        is Tupel -> objekt.elemente.map { it as? ZahlAusdruck ?: error("Vektorfeldkomponenten müssen Zahlen sein.") }
+        else -> error("Das Vektorfeld muss einen Vektor oder ein Zahlentupel ausgeben.")
+    }
+    require(komponenten.isNotEmpty()) { "Ein Vektorfeld benötigt mindestens eine Komponente." }
+    var name = "komponente"; val belegt = (m as MathematischesObjekt).enthalteneMethodenParameter().map { it.name }.toSet()
+    while (name in belegt) name += "_"
+    val i = Variable(name)
+    val skalar = m.copy(name = "${m.name}_i", vorschrift = SymbolischeZahlKomponente(Tupel(komponenten), i), zielMenge = ReelleZahlen, ausgabeNamen = listOf("wert"))
+    return MathematischeMethode("Komponentenmethoden", listOf(i), skalar, BenannteMenge("Skalare Methoden"),
+        mapOf(i.name to EndlicheIndexMenge(RationaleZahl.von(komponenten.size.toLong()))))
+}

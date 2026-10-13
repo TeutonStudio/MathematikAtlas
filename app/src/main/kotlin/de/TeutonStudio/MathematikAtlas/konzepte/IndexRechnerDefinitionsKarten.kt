@@ -52,8 +52,54 @@ internal fun indexRechnerDefinitionsKarte(original: KnotenDaten): KartenDaten? {
         return b.summe(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION, listOf(produkte, zeichen)), "p", skalar = !minor)
     }
     fun matrixprodukt(a:IndexDefinitionsWert,c:IndexDefinitionsWert)=b.konstruiere(b.summe(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION,listOf(b.index(a,"i,k",matrix=true),b.index(c,"k,j",matrix=true))),"k"),"matrix")
+    if (operation in setOf("eigen", "jordan", "qr", "svd", "spektral")) {
+        val a = b.baustein(inputs.first().second, "alsMatrix")
+        val kandidaten = mutableListOf<IndexDefinitionsWert>()
+        fun kandidat(rolle: String) = b.baustein(a, "kandidat:$rolle").also { kandidaten += it }
+        fun hermitesch(x: IndexDefinitionsWert) = b.baustein(x, "konjugiertTransponiert")
+        fun orthonormal(x: IndexDefinitionsWert) = b.vergleich(matrixprodukt(hermitesch(x), x), b.baustein(x, "einheitSpalten"))
+        fun diagonal(x: IndexDefinitionsWert) = b.vergleich(b.baustein(x, "ausserdiagonal"), b.baustein(x, "nullMatrix"))
+        val bedingungen = when (operation) {
+            "qr" -> {
+                val q = kandidat("Q"); val r = kandidat("R")
+                listOf(b.vergleich(matrixprodukt(q, r), a), orthonormal(q),
+                    b.vergleich(b.baustein(r, "unteresDreieck"), b.baustein(r, "nullMatrix")))
+            }
+            "svd" -> {
+                val u = kandidat("U"); val sigma = kandidat("Sigma"); val v = kandidat("V")
+                listOf(b.vergleich(matrixprodukt(matrixprodukt(u, sigma), hermitesch(v)), a), orthonormal(u), orthonormal(v),
+                    diagonal(sigma), b.baustein(sigma, "nichtnegativeDiagonale"))
+            }
+            "eigen" -> {
+                val v = kandidat("V"); val lambda = kandidat("Lambda")
+                listOf(b.vergleich(matrixprodukt(a, v), matrixprodukt(v, lambda)), diagonal(lambda), b.baustein(v, "nichtnullSpalten"))
+            }
+            "jordan" -> {
+                val p = kandidat("P"); val j = kandidat("J")
+                listOf(b.vergleich(matrixprodukt(a, p), matrixprodukt(p, j)), b.baustein(j, "jordanBedingungen"),
+                    b.vergleich(determinant(p), b.konstante(0), ungleich = true))
+            }
+            else -> {
+                val lambda = kandidat("lambdas"); val projektoren = kandidat("Projektoren")
+                val summe = b.konstruiere(b.summe(b.index(projektoren, "k,i,j"), "k"), "matrix")
+                val gewichtet = b.konstruiere(b.summe(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION,
+                    listOf(b.index(lambda, "k"), b.index(projektoren, "k,i,j"))), "k"), "matrix")
+                listOf(b.vergleich(gewichtet, a), b.vergleich(summe, b.baustein(a, "einheitSpalten")),
+                    b.vergleich(projektoren, b.baustein(projektoren, "hermitescheProjektoren")), b.baustein(projektoren, "orthogonaleProjektoren"))
+            }
+        }
+        b.ausgang(b.methode(b.und(bedingungen), b.tupel(kandidaten)), "bedingungen")
+        return b.karte()
+    }
     var skalar = false
     val ergebnis = when (operation) {
+        "vektorfeldIntegral" -> {
+            skalar = true
+            val feld = inputs.firstOrNull { it.first.name == "methode" }?.second ?: inputs.first().second
+            val menge = inputs.firstOrNull { it.first.name == "menge" }?.second ?: return null
+            val mass = inputs.firstOrNull { it.first.name == "mass" }?.second
+            b.konstruiere(b.integralFamilie(b.baustein(feld, "vektorfeldKomponenten"), menge, mass), "tupel")
+        }
         "diagonalmatrixErzeugen" -> { skalar = true; b.konstruiere(b.baustein(inputs.first().second, "diagonalKomponenten"), "matrix") }
         "nebendiagonale" -> b.indexAchsen(inputs.first().second,"gegendiagonale","",null)
         "kreuzprodukt" -> {
@@ -92,6 +138,25 @@ internal fun indexRechnerDefinitionsKarte(original: KnotenDaten): KartenDaten? {
             b.übersetze(b.tupel(listOf(radius,winkel)),"kartesisch")
         }
         "potenz" -> {
+            if (familie == RechnerFamilie.VEKTOR) {
+                skalar = true
+                val a = b.baustein(inputs.first().second, "kommutativerVektor")
+                val p = inputs.firstOrNull { it.first.name in setOf("p", "exponent") }?.second ?: b.konstante(original.parameter[VEKTOR_POTENZ_EXPONENT]?.toLongOrNull() ?: 2L)
+                val quotient = b.baustein(p, "potenzQuotient")
+                val rest = b.baustein(p, "potenzRest")
+                val klein = b.kleiner(p, b.konstante(2))
+                val produkt = if (original.parameter[SKALARPRODUKT_DEFINITION_PARAMETER] == SKALARPRODUKT_DEFINITION_ZERTIFIZIERT) {
+                    val zertifikat = inputs.firstOrNull { it.first.name == SKALARPRODUKT_DEFINITION_EINGANG }?.second ?: return null
+                    b.aufruf(b.zeugnis(zertifikat, a, a, p), b.tupel(listOf(a, a)))
+                } else {
+                    val komponenten = b.index(a)
+                    b.summe(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION, listOf(b.zahl(UniversellerZahlenOperator.KONJUGIERTE, listOf(komponenten)), komponenten)), "*")
+                }
+                val basis = b.fall(klein, b.konstante(1), produkt)
+                val faktor = b.zahl(UniversellerZahlenOperator.POTENZ, listOf(basis, quotient))
+                val vektor = b.konstruiere(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION, listOf(faktor, b.index(a))), "vorbild", a)
+                b.fall(b.kleiner(b.konstante(0), rest), vektor, faktor)
+            } else {
             if(familie!=RechnerFamilie.MATRIX) return null
             skalar=true
             val a=inputs.first().second
@@ -110,6 +175,31 @@ internal fun indexRechnerDefinitionsKarte(original: KnotenDaten): KartenDaten? {
             val nächster=matrixprodukt(acc,b.konstruiere(mitIndex,"matrix"))
             val term=b.faltungsEnde(definator,nächster)
             b.aufruf(b.methode(term,symbolisch),b.tupel(listOf(a)))
+            }
+        }
+        "minimalpolynom" -> {
+            skalar = true
+            val a = b.baustein(inputs.first().second, "polynomQuelle")
+            val potenzen = mutableListOf(b.konstruiere(b.auswahl(a, "einheit"), "matrix"), a)
+            repeat(7) { potenzen += matrixprodukt(potenzen.last(), a) }
+            val lambda = b.variable("lambda")
+            var ergebnisMethode: IndexDefinitionsWert? = null
+            for (grad in 8 downTo 1) {
+                val spalten = b.baustein(b.tupel(potenzen.take(grad)), "spaltenSammeln")
+                val rhs = b.konstruiere(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION,
+                    listOf(b.konstante(-1), b.index(b.baustein(potenzen[grad], "vektorisieren")))), "spalte")
+                val loesung = b.baustein(spalten, "partikulaereLoesung", mapOf("rechts" to rhs))
+                val lösbar = b.aufruf(b.index(loesung), b.tupel(listOf(b.konstante(1))))
+                val koeffizienten = b.aufruf(b.index(loesung), b.tupel(listOf(b.konstante(2))))
+                val monome = b.baustein(koeffizienten, "monomIndex", mapOf("variable" to lambda))
+                val summe = b.summe(b.zahl(UniversellerZahlenOperator.MULTIPLIKATION,
+                    listOf(b.index(koeffizienten, "k"), monome)), "k", skalar = true)
+                val polynom = b.zahl(UniversellerZahlenOperator.ADDITION, listOf(summe,
+                    b.zahl(UniversellerZahlenOperator.POTENZ, listOf(lambda, b.konstante(grad.toLong())))))
+                val methode = b.übersetze(polynom, "methode")
+                ergebnisMethode = ergebnisMethode?.let { b.fall(lösbar, methode, it) } ?: methode
+            }
+            ergebnisMethode!!
         }
         "charakteristischesPolynom" -> {
             skalar=true
@@ -240,9 +330,17 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         kontext+=wert
         return wert
     }
+    fun integralFamilie(methode: IndexDefinitionsWert, menge: IndexDefinitionsWert, mass: IndexDefinitionsWert?): IndexDefinitionsWert {
+        val basis = IntegralKnotenVorlagen.Integral.erzeuge(GraphPunkt.Zero)
+        val ports = basis.anschlüsse.map { if (it.richtung == AnschlussRichtung.Ausgang) it.copy(art = MathematikAnschlussArten.Methode.id) else if (it.name == "methode") it.copy(zulässigeArten = it.zulässigeArten + MathematikAnschlussArten.AtlasWert.id) else it }
+        val node = add(basis.copy(name = "Komponentenweise skalare Integrale", anschlüsse = ports,
+            parameter = basis.parameter + original.parameter.filterKeys { it.startsWith("integral.") } +
+                mapOf("integral.indexFamilie" to "true", "integral.bereichAlsEinArgument" to "true")), "wert")
+        verbinde(methode, node, "methode"); verbinde(menge, node, "menge"); mass?.let { verbinde(it, node, "mass") }; return node
+    }
     fun baustein(quelle: IndexDefinitionsWert, modus: String, extra: Map<String, IndexDefinitionsWert> = emptyMap()): IndexDefinitionsWert {
         val basis = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "indexmethode")
-        val ports = basis.anschlüsse.map { it.copy(art = MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) } + extra.keys.mapIndexed { i, name ->
+        val ports = basis.anschlüsse.map { it.copy(art = if (it.richtung == AnschlussRichtung.Ausgang && modus == "vektorfeldKomponenten") MathematikAnschlussArten.Methode.id else MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) } + extra.keys.mapIndexed { i, name ->
             AnschlussDaten(name = name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.AtlasWert.id, reihenfolge = i + 1)
         }
         val node = add(basis.copy(name = "Komponenten: $modus", parameter = basis.parameter + ("indexmethode.baustein" to modus), anschlüsse = ports), "ergebnis")
@@ -255,13 +353,14 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
     }
     fun und(werte: List<IndexDefinitionsWert>): IndexDefinitionsWert = werte.reduce { a, c ->
         val basis = MathematikKnotenVorlagen.Konjunktion.erzeuge(GraphPunkt.Zero)
-        val ports = basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.take(2)
+        val ports = basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.take(2).map { it.copy(art = MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) }
         val node = add(basis.copy(anschlüsse = ports + basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }), "aussage")
         verbinde(a, node, ports[0].name); verbinde(c, node, ports[1].name); node
     }
     fun index(quelle: IndexDefinitionsWert, namen: String? = null, präfix: String? = null, matrix: Boolean = false): IndexDefinitionsWert {
         val param = buildMap { namen?.let { put("indexmethode.parameterNamen", it) }; präfix?.let { put("indexmethode.parameterPräfix", it) }; if (matrix) put("indexmethode.matrixFaktor", "true") }
-        val node = add(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "indexmethode").copy(parameter = param), "ergebnis")
+        val basis = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "indexmethode")
+        val node = add(basis.copy(parameter = basis.parameter + param), "ergebnis")
         verbinde(quelle, node, "wert")
         return node
     }
@@ -303,7 +402,7 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
     }
     fun fall(aussage:IndexDefinitionsWert,wahr:IndexDefinitionsWert,lüge:IndexDefinitionsWert):IndexDefinitionsWert {
         val basis=MathematikKnotenVorlagen.Fall.erzeuge(GraphPunkt.Zero)
-        val node=add(basis.copy(parameter=basis.parameter+("fall.annahmenNurGewaehlterZweig" to "true"),anschlüsse=basis.anschlüsse.map { if(it.name!="aussage") it.copy(art=MathematikAnschlussArten.AtlasWert.id,zulässigeArten=emptySet()) else it }),"wert")
+        val node=add(basis.copy(parameter=basis.parameter+("fall.annahmenNurGewaehlterZweig" to "true"),anschlüsse=basis.anschlüsse.map { it.copy(art=MathematikAnschlussArten.AtlasWert.id,zulässigeArten=emptySet()) }),"wert")
         verbinde(aussage,node,"aussage");verbinde(wahr,node,"wahr");verbinde(lüge,node,"lüge");return node
     }
     fun faltungsAnfang(menge:IndexDefinitionsWert,neutral:IndexDefinitionsWert,quelle:IndexDefinitionsWert):Pair<IndexDefinitionsWert,KnotenDaten> {
@@ -317,11 +416,11 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
     fun faltungsEnde(basis:KnotenDaten,nächster:IndexDefinitionsWert):IndexDefinitionsWert {
         val node=add(basis,"wert");verbinde(nächster,node,"nächsterAkkumulator");return node
     }
-    fun zeugnis(zertifikat:IndexDefinitionsWert,links:IndexDefinitionsWert,rechts:IndexDefinitionsWert):IndexDefinitionsWert {
+    fun zeugnis(zertifikat:IndexDefinitionsWert,links:IndexDefinitionsWert,rechts:IndexDefinitionsWert,exponent:IndexDefinitionsWert?=null):IndexDefinitionsWert {
         val basis=konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),"methode")
-        val ports=basis.anschlüsse.map { if(it.richtung==AnschlussRichtung.Eingang) it.copy(art=MathematikAnschlussArten.Methode.id,zulässigeArten=emptySet()) else it } + listOf("links","rechts").mapIndexed { i,name -> AnschlussDaten(name=name,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links,art=MathematikAnschlussArten.AtlasWert.id,reihenfolge=i+1) }
+        val ports=basis.anschlüsse.map { if(it.richtung==AnschlussRichtung.Eingang) it.copy(art=MathematikAnschlussArten.Methode.id,zulässigeArten=emptySet()) else it } + (listOf("links","rechts") + if(exponent==null) emptyList() else listOf("exponent")).mapIndexed { i,name -> AnschlussDaten(name=name,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links,art=MathematikAnschlussArten.AtlasWert.id,reihenfolge=i+1) }
         val node=add(basis.copy(anschlüsse=ports,parameter=basis.parameter+original.parameter.filterKeys { it.startsWith("skalarprodukt.") }+("uebersetzer.zeugnis" to "skalarprodukt")),"ergebnis")
-        verbinde(zertifikat,node,"wert");verbinde(links,node,"links");verbinde(rechts,node,"rechts");return node
+        verbinde(zertifikat,node,"wert");verbinde(links,node,"links");verbinde(rechts,node,"rechts");exponent?.let { verbinde(it,node,"exponent") };return node
     }
     fun abflachen(quelle:IndexDefinitionsWert):IndexDefinitionsWert {
         val basis=ÜbersetzungsKnotenVorlagen.Abflachen.erzeuge(GraphPunkt.Zero)
@@ -345,7 +444,7 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         val basis = konfiguriereZahlenRechner(ZahlenRechnerKnotenVorlagen.alle.first().erzeuge(GraphPunkt.Zero), op)
         val ports = basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }
         val eingänge = werte.indices.map { i -> ports[minOf(i, ports.lastIndex)].copy(name = if (i < ports.size) ports[i].name else "operand${i + 1}", reihenfolge = i,
-            kannSichErweitern = false, dynamischErzeugt = false) }
+            kannSichErweitern = false, dynamischErzeugt = false, zulässigeArten = ports[minOf(i, ports.lastIndex)].zulässigeArten + MathematikAnschlussArten.AtlasWert.id) }
         val node = add(basis.copy(anschlüsse = eingänge + basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang },
             parameter = basis.parameter + mapOf("indexmethode.parameterModus" to "benannt", "festeEingänge" to werte.size.toString())), "wert")
         werte.forEachIndexed { i, wert -> verbinde(wert, node, eingänge[i].name) }
@@ -373,5 +472,5 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         val node = add(MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero).copy(name = "Ergebnis", parameter = mapOf("name" to name,"rolle" to name), anschlüsse = MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero).anschlüsse.map { it.copy(art = MathematikAnschlussArten.AtlasWert.id) }), "")
         verbinde(quelle, node, node.knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }.name)
     }
-    fun karte() = KartenDaten(id = KartenId(prefix), name = "Indexdefinition: $operator", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).normalisiereDynamischeRechnerOperanden().normalisiereStrukturierteDivisionVorSpeichern()
+    fun karte() = KartenDaten(id = KartenId(prefix), name = "Indexdefinition: $operator", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).normalisiereDynamischeRechnerOperanden().normalisiereStrukturierteDivisionVorSpeichern().migrierePolarKonventionen().migriereWinkelraumAufrufe()
 }

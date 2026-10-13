@@ -329,7 +329,14 @@ fun inferiereZahlenWertevorrat(
         RationaleZahlen,
         inferiereZahlenWertevorrat(ausdruck.argument, werteVorräte, annahmen),
     ))
-    is Potenz, is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
+    is Potenz -> {
+        val exponent = vereinfache(ausdruck.exponent) as? RationaleZahl
+        if (exponent != null && exponent.nenner == BigInteger.ONE) {
+            val basis = inferiereZahlenWertevorrat(ausdruck.basis, werteVorräte, annahmen)
+            if (exponent.zähler.signum() >= 0) basis else maximaleZahlenGrundmenge(listOf(RationaleZahlen, basis))
+        } else if (istNachweisbarReell(ausdruck, { werteVorräte[it.name] in reelleZahlenGrundmengen }, annahmen)) ReelleZahlen else KomplexeZahlen
+    }
+    is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
         ausdruck,
         variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
         annahmen = annahmen,

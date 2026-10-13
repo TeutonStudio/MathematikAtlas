@@ -275,6 +275,11 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
             return@registriere KnotenAuswertungsErgebnis(mapOf("ergebnis" to BedingterWert(EndlicheMenge((1..n).map { RationaleZahl.von(it.toLong()) }.toSet()),wert.annahmen)),eingänge=k.eingänge)
         }
         val ergebnis = if (ziel == "methode" && k.knoten.parameter["uebersetzer.zeugnis"] == "skalarprodukt") {
+            val p = k.eingänge["exponent"]?.objekt as? MathematischesObjekt
+            if (p != null && nichtnegativerGanzzahlExponent(p) < 2) {
+                val dummy = MathematischeMethode("ungenutztesSkalarprodukt", listOf(AllgemeinerParameter("a"), AllgemeinerParameter("b")), RationaleZahl.Eins, RationaleZahlen)
+                return@registriere KnotenAuswertungsErgebnis(mapOf("ergebnis" to BedingterWert(dummy)), eingänge = k.eingänge)
+            }
             val zertifikat=wert.objekt as? Methode ?: error("Die Zertifikatskarte liefert keine Methode.")
             require(zertifikat.parameter.isEmpty()) { "Eine Skalarprodukt-Zertifikatskarte darf keine öffentlichen Eingänge besitzen." }
             val aussage=zertifikat.wendeAn(emptyList()) as? BegriffsAussage ?: error("Die Zertifikatskarte muss eine Skalarprodukt-Aussage ausgeben.")

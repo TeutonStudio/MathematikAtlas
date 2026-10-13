@@ -24,7 +24,7 @@ internal fun indexDefinitionsBaustein(k: KnotenAuswertungsKontext): KnotenAuswer
             require(werte.none { inferiereZahlenWertevorrat(it, vorräte, annahmen).fundamentalerZahlbereichOderNull() == FundamentalerZahlbereich.QUATERNION }) { "Vektorpotenz unterstützt reelle und komplexe Vektoren." }
             quelle
         }
-        modus.startsWith("schnitte:") -> tensorZerlegeMethode(quelle, modus.substringAfter(':').toInt()).let { m ->
+        modus.startsWith("schnitte:") -> tensorZerlegeMethode(quelle, modus.substringAfter(':').toInt(), (quelle as? Tensorartig)?.tensorForm?.filterIndexed { i, _ -> i != modus.substringAfter(':').toInt() }?.map { RationaleZahl.von(it.toLong()) } ?: (quelle as? TypisiertesElement)?.strukturForm?.filterIndexed { i, _ -> i != modus.substringAfter(':').toInt() }).let { m ->
             var name = "i"; val belegt = quelle.enthalteneMethodenParameter().map { it.name }.toSet()
             while (name in belegt) name += "_"
             m.benenneIndexParameter(listOf(name))
@@ -36,11 +36,25 @@ internal fun indexDefinitionsBaustein(k: KnotenAuswertungsKontext): KnotenAuswer
         modus == "spaltenSammeln" -> spaltenAusStrukturen(quelle as? Tupel ?: error("Die Spaltensammlung benötigt ein Tupel."))
         modus == "vektorisieren" -> SpaltenVektor(matrix().zeilen.flatten())
         modus == "partikulaereLoesung" -> partikulaereLineareLoesung(matrix(), k.eingänge["rechts"]?.objekt as? SpaltenVektor ?: error("Die rechte Seite fehlt."))
+        modus == "monomIndex" -> {
+            val v = quelle as? OrientierterVektor ?: error("Die Koeffizienten fehlen.")
+            val variable = k.eingänge["variable"]?.objekt as? ZahlAusdruck ?: error("Die Polynomvariable fehlt.")
+            val frei = k.eingänge.values.flatMap { (it.objekt as? MathematischesObjekt)?.enthalteneMethodenParameter().orEmpty() }.map { it.name }
+            var prefix = "__index"; while (frei.any { it.startsWith(prefix) }) prefix += "_"
+            val i = Variable("$prefix::k", "k")
+            MathematischeMethode("Monome", listOf(i), Potenz(variable, subtraktion(i, RationaleZahl.Eins)), RationaleZahlen,
+                mapOf(i.name to EndlicheIndexMenge(RationaleZahl.von(v.werte.size.toLong()))))
+        }
+        modus == "alsMatrix" -> matrix()
+        modus == "hermitescheProjektoren" -> konjugiertTransponierteProjektorKomponenten(quelle as? Tensorartig ?: error("Die Projektorfamilie fehlt."))
+        modus == "orthogonaleProjektoren" -> orthogonaleProjektorBedingungen(quelle as? Tensorartig ?: error("Die Projektorfamilie fehlt."))
         modus == "einheitSpalten" -> identitaetsMatrix(matrix().spaltenAnzahl)
         modus == "nullMatrix" -> nullKomponenten(matrix())
         modus == "konjugiertTransponiert" -> konjugiertTransponierteKomponenten(matrix())
         modus == "unteresDreieck" -> untereDreiecksKomponenten(matrix())
         modus == "ausserdiagonal" -> ausserdiagonaleKomponenten(matrix())
+        modus == "nichtnullSpalten" -> nichtverschwindendeSpaltenBedingungen(matrix())
+        modus == "vektorfeldKomponenten" -> vektorfeldKomponentenMethoden(quelle as? Methode ?: error("Das Vektorfeld muss eine Methode sein."))
         modus == "jordanBedingungen" -> jordanFormBedingungen(matrix())
         modus == "nichtnegativeDiagonale" -> nichtnegativeDiagonaleBedingungen(matrix())
         modus.startsWith("kandidat:") -> {

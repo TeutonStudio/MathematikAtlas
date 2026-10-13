@@ -23,3 +23,11 @@ Der fachneutrale Editor kennt weder Winkel noch Projektionen. Alle neuen Daten l
 ## Nachweis
 
 `WinkelraumMethodenTest` prüft Strukturbindung, Zusatzquellen, Namenskollisionen und Migration. `WinkelraumSamplingTest` prüft W₀, getrennte Halbkreise, alle Kugelachsen, DF und die Ellipsoidgleichung, Projektion, Halton bis Dimension 65, Variation aller inneren Achsen, JSON/Kopieren/Undo/Redo, vollständige Domänenprüfung und Abbruch. Bestehende skalare adaptive Visualisierungswege bleiben erhalten.
+
+## Ausführbare Definitionsrezepte und Kandidaten
+
+Definitionskarten benutzen das bestehende Knoten- und Auswerterregister. Zusätzliche reine Form-, Masken- und Komponentenprimitive werden über den vorhandenen Indexübersetzer aufgerufen. Skalaroperationen, Indexsummen, Matrixprodukte, Fallunterscheidungen und das vorhandene lineare Gleichungssystem bilden den ausführbaren Graphen; derselbe definierte Rechneroperator wird nicht rekursiv aufgerufen.
+
+Minimalpolynome werden über rationale Krylow-Spalten und das vorhandene Gleichungssystem bestimmt. Die materialisierte Definition begrenzt die Matrixdimension auf acht und meldet andere Quellen ausdrücklich; der direkte Rechner bleibt verfügbar. QR, SVD, Eigen-, Jordan- und Spektralzerlegung ohne vorhandenen numerischen Solver liefern eine Methode für die Bedingungen an symbolische Kandidaten. Diese Methoden prüfen Komponentenidentitäten und zusätzliche Bedingungen (unter anderem Orthogonalität, Dreiecksform und Jordanstruktur). Sie behaupten keine numerische Faktorisierung. Kandidaten und Projektorfamilien sind aus Platzgründen auf Dimension sieben begrenzt.
+
+Historische Winkel-Komponentenaufrufe erhalten nur bei eindeutigen gespeicherten Komponentennamen eine explizite Packungszuordnung. Diese enthält Anschluss-ID und Namen als Kopierfallback. Unklare Zuordnungen behalten sämtliche Anschlüsse und Verbindungen und tragen eine Migrationsdiagnose. Laufzeitmetadaten entscheiden anschließend nicht über die Polarkonvention.

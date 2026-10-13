@@ -92,7 +92,7 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
             val eingang = knoten.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == "wert" }
             val quelle = eingang?.let { p -> karte.verbindungen.firstOrNull { it.zu == AnschlussVerweis(knoten.id, p.id) }?.von }
             val quellPort = quelle?.let { q -> karte.knoten.firstOrNull { it.id == q.knotenId }?.anschlüsse?.firstOrNull { it.id == q.anschlussId } }
-            val quellTyp = quellPort?.vertrag?.typ as? TypAusdruck.Parameterisiert
+            val quellTyp = quelle?.let { effektiverMathematikAnschluss(karte, it)?.vertrag?.typ } as? TypAusdruck.Parameterisiert
             val dimension = when (quellTyp?.konstruktor) {
                 MathematischeTypen.Tupel -> TypAusdruck.Literal(quellTyp.argumente.size.toString())
                 MathematischeTypen.SpaltenVektor, MathematischeTypen.ZeilenVektor -> quellTyp.argumente.getOrNull(1) ?: TypAusdruck.Unbekannt
@@ -106,7 +106,8 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
                     val n = (dimension as? TypAusdruck.Literal)?.wert?.toIntOrNull()
                     if (n == null || n <= 0) TypAusdruck.Unbekannt else TypAusdruck.Parameterisiert(MathematischeTypen.Tupel,
                         listOf(TypAusdruck.Atom(MathematischeTypen.Reell),
-                            if (n == 1) TypAusdruck.Atom(MathematischeTypen.Reell)
+                            if (übersetzerPolarKonvention(knoten) == PolarKonvention.SIGNED) TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, listOf(TypAusdruck.Atom(MathematischeTypen.Reell)) + List(n - 1) { TypAusdruck.Atom(MathematischeTypen.Winkel) })
+                            else if (n == 1) TypAusdruck.Atom(MathematischeTypen.Reell)
                             else TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(n - 1) { TypAusdruck.Atom(MathematischeTypen.Winkel) })))
                 }
                 "kartesisch" -> if (übersetzerEindimensional(knoten))
@@ -114,7 +115,7 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
                 else {
                     val winkelTyp = quellTyp?.argumente?.getOrNull(1) as? TypAusdruck.Parameterisiert
                     val n = if (quellTyp?.argumente?.size == 2 && winkelTyp?.konstruktor == MathematischeTypen.Tupel)
-                        TypAusdruck.Literal((winkelTyp.argumente.size + 1).toString()) else dimension
+                        TypAusdruck.Literal((winkelTyp.argumente.size + if (übersetzerPolarKonvention(knoten) == PolarKonvention.SIGNED) 0 else 1).toString()) else dimension
                     formTyp(MathematikAnschlussArten.Tupel.id, listOf(n))
                 }
                 else -> TypAusdruck.Unbekannt

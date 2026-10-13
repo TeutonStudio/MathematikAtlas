@@ -77,7 +77,7 @@ class ÜbersetzungsKnotenTest {
         assertEquals(Tupelraum(emptyList()), konstante.definitionsRaum())
         val tuple = Tupel(listOf(z(1), z(2)))
         val methode = assertIs<MathematischeMethode>(auswerten(k, BedingterWert(tuple)).ausgaben.getValue("ergebnis").objekt)
-        assertEquals(tuple, methode.wendeMathematischAlsTupelAn(Tupel(emptyList())))
+        assertEquals(Tupel(listOf(tuple)), methode.wendeMathematischAlsTupelAn(Tupel(emptyList())))
     }
 
     @Test fun `JSON bewahrt neue Typen Konfiguration und Portreferenzen`() {
@@ -101,11 +101,11 @@ class ÜbersetzungsKnotenTest {
         val k = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "methode")
         listOf(Tupel(emptyList()),Tupel(listOf(z(1)))).forEach { tupel ->
             val methode = assertIs<MathematischeMethode>(auswerten(k,BedingterWert(tupel)).ausgaben.getValue("ergebnis").objekt)
-            assertEquals(tupel,methode.wendeMathematischAlsTupelAn(Tupel(emptyList())))
+            assertEquals(Tupel(listOf(tupel)),methode.wendeMathematischAlsTupelAn(Tupel(emptyList())))
         }
         assertEquals(Tupel(emptyList()),tupelAbflachen(Tupel(listOf(Tupel(emptyList()),Tupel(listOf(Tupel(emptyList())))))))
-        assertFails { übersetzeStruktur(SpaltenVektor(listOf(z(1))),"spalte") }
-        assertFails { übersetzeStruktur(ZeilenVektor(listOf(z(1))),"zeile") }
+        assertEquals(SpaltenVektor(listOf(z(1))), übersetzeStruktur(SpaltenVektor(listOf(z(1))),"spalte"))
+        assertEquals(ZeilenVektor(listOf(z(1))), übersetzeStruktur(ZeilenVektor(listOf(z(1))),"zeile"))
     }
 
     @Test fun `Strukturwechsel erhaelt gelieferte Obermengen und passt ihre Struktur an`() {

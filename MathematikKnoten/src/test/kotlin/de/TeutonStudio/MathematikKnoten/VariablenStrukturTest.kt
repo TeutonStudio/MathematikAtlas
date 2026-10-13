@@ -13,11 +13,8 @@ class VariablenStrukturTest {
         val wert = variablenStrukturWert(k, ReelleZahlen)
         assertEquals(MathematikAnschlussArten.Tupel.id, k.anschlüsse.single().art)
         assertEquals(3, (wert.objekt as Tupel).elemente.size)
-        assertEquals(listOf(
-            EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins)),
-            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), true),
-            ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), true),
-        ), wert.variablenQuellen.map { it.werteVorrat })
+        assertEquals(listOf(winkelraum(2)), wert.variablenQuellen.map { it.werteVorrat })
+        assertTrue((wert.objekt as Tupel).elemente.all { it is SymbolischeZahlKomponente })
     }
 
     @Test fun `Winkeltupel mit n null hat nur Vorzeichen`() {
@@ -25,7 +22,7 @@ class VariablenStrukturTest {
             .let { it.copy(parameter = it.parameter + (VARIABLE_DIMENSION to "0")) }
         val wert = variablenStrukturWert(k, ReelleZahlen)
         assertEquals(1, (wert.objekt as Tupel).elemente.size)
-        assertEquals(EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins)),
+        assertEquals(winkelraum(0),
             wert.variablenQuellen.single().werteVorrat)
     }
 

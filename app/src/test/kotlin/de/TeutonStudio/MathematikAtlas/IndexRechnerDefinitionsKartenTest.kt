@@ -277,12 +277,7 @@ class IndexRechnerDefinitionsKartenTest {
                 null
             }
         }.toSet()
-        // Zwischenstand des aktiven ExecPlans; bis zur Abnahme vollständig zu leeren.
-        val offeneRezepte=setOf(
-            "VEKTOR:vektor.potenz","VEKTOR:vektor.vektorfeldIntegral",
-            "MATRIX:matrix.minimalpolynom",
-            "TENSOR:matrix.eigen","TENSOR:matrix.jordan","TENSOR:matrix.qr","TENSOR:matrix.spektral","TENSOR:matrix.svd","TENSOR:tensor.zerlegen")
-        assertEquals(offeneRezepte,fehlend)
+        assertEquals(emptySet(), fehlend, "Jeder registrierte Strukturoperator benötigt ein ausführbares Rezept.")
     }
 
     @Test fun `Inverse lehnt nichtkommutative Quellmetadaten in Kernadapter und Definition ab`() {
@@ -311,6 +306,82 @@ class IndexRechnerDefinitionsKartenTest {
         assertFails { wert(op,mapOf("matrix" to Matrix(listOf(listOf(Variable("q")))),"exponent" to z(-1)),hquelle) }
         assertFails { wert(op,mapOf("matrix" to Matrix(listOf(listOf(Variable("x")))),"exponent" to z(-1))) }
         assertFails { wert(op,mapOf("matrix" to m(1,2,2,4),"exponent" to z(-1))) }
+    }
+
+    @Test fun `Vektorpotenzen null bis vier verwenden Paritaet und Komponenten`() {
+        for (p in 0L..4L) {
+            val op = konfiguriereVektorRechner(VektorRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero), VektorRechnerOperator.POTENZ)
+                .let { it.copy(parameter = it.parameter + (VEKTOR_POTENZ_EXPONENT to p.toString())) }
+            val inputs = op.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.associate {
+                it.name to if (it.name == "p") z(p) else SpaltenVektor(listOf(z(1), z(2)))
+            }
+            val w = wert(op, inputs)
+            if (p % 2 == 0L) assertEquals(z(if (p == 0L) 1 else if (p == 2L) 5 else 25), vereinfache(w as ZahlAusdruck))
+            else assertEquals(SpaltenVektor(if (p == 1L) listOf(z(1), z(2)) else listOf(z(5), z(10))), w)
+        }
+    }
+    @Test fun `Minimalpolynom waehlt den kleinsten loesbaren Grad`() {
+        val op = konfiguriereStrukturRechner(StrukturFormelRechnerVorlagen.Matrix.erzeuge(GraphPunkt.Zero), de.TeutonStudio.MathematikRechenSystem.kern.StrukturRechnerKnotenFamilie.MATRIX, "matrix.minimalpolynom")
+        for (a in listOf(m(1,0,0,1), m(1,1,0,1), m(0,0,0,0))) {
+            val result = wert(op, mapOf("matrix" to a, "a" to a)) as Methode
+            for (x in 0L..2L) {
+                val erwartet = if (a == m(1,1,0,1)) (x-1)*(x-1) else if (a == m(0,0,0,0)) x else x-1
+                assertEquals(z(erwartet), vereinfache(result.wendeAn(listOf(z(x))) as ZahlAusdruck))
+            }
+        }
+    }
+    @Test fun `Diagonalmatrixrezept akzeptiert Tupel Zeile und Spalte`() {
+        val op = konfiguriereStrukturRechner(StrukturFormelRechnerVorlagen.Matrix.erzeuge(GraphPunkt.Zero), de.TeutonStudio.MathematikRechenSystem.kern.StrukturRechnerKnotenFamilie.MATRIX, "matrix.diagonalmatrixErzeugen")
+        val xs = listOf(z(2), z(3), z(4))
+        for (quelle in listOf(Tupel(xs), ZeilenVektor(xs), SpaltenVektor(xs))) {
+            assertEquals(Matrix(listOf(listOf(z(2),z(0),z(0)),listOf(z(0),z(3),z(0)),listOf(z(0),z(0),z(4)))), wert(op, mapOf("werte" to quelle)))
+        }
+    }
+    @Test fun `Vektorfeldintegral verwendet bestehende skalare Integrale`() {
+        val x = Variable("x")
+        val feld = MathematischeMethode("F", listOf(x), Tupel(listOf(SpaltenVektor(listOf(z(1), z(2))))),
+            Tupelraum(listOf(Vektorraum(VektorOrientierung.Spalte, 2, ReelleZahlen))), mapOf("x" to ReelleZahlen))
+        val op = konfiguriereVektorRechner(VektorRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero), VektorRechnerOperator.VEKTORFELD_INTEGRIEREN)
+        val inputs = op.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.associate { it.name to when(it.name) {
+            "menge" -> ReellesIntervall(z(0), false, z(3), false)
+            "mass" -> IntegralMass.StandardReell
+            else -> feld
+        } }
+        assertEquals(Tupel(listOf(z(3), z(6))), wert(op, inputs))
+    }
+    private fun kandidaten(id: String, a: Matrix): MathematischeMethode {
+        val original = RechnerOperatorRegistry.konfiguriere(StrukturRechnerKnotenVorlagen.Tensorrechner.erzeuge(GraphPunkt.Zero), id)
+        val karte = assertNotNull(indexRechnerDefinitionsKarte(original))
+        assertTrue(karte.knoten.none { it.art == original.art && it.parameter[TENSOR_OPERATION_ID] == id })
+        val vorgaben = karte.knoten.filter { it.art == KonzeptKnotenArten.EINGANG }.associate { it.id to mapOf("wert" to BedingterWert(a)) }
+        val ergebnis = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswerten(karte, vorgaben)
+        assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.toString())
+        val ausgang = karte.knoten.single { it.art == "mathematik.kartenAusgang" }
+        assertEquals("bedingungen", ausgang.parameter["rolle"])
+        return ergebnis.knoten.getValue(ausgang.id).eingänge.values.single().objekt as MathematischeMethode
+    }
+    private fun pruefeKandidat(m: MathematischeMethode, parameter: Map<String, MathematischesObjekt>, wahr: Boolean) {
+        val aussage = m.wendeMathematischAn(parameter) as Aussage
+        assertEquals(if (wahr) Wahrheitswert.Wahr else Wahrheitswert.Lüge, aussage.entscheide().wahrheitswert, aussage.zuLatex())
+    }
+    @Test fun `QR SVD Eigen Jordan und Spektralgraphen pruefen richtige und falsche Kandidaten`() {
+        val i = m(1,0,0,1); val d = m(2,0,0,3)
+        val qr = kandidaten("matrix.qr", d)
+        pruefeKandidat(qr, mapOf("Q" to i, "R" to d), true)
+        pruefeKandidat(qr, mapOf("Q" to d, "R" to i), false)
+        val svd = kandidaten("matrix.svd", m(-2,0,0,1))
+        pruefeKandidat(svd, mapOf("U" to m(-1,0,0,1), "Sigma" to m(2,0,0,1), "V" to i), true)
+        pruefeKandidat(svd, mapOf("U" to i, "Sigma" to m(-2,0,0,1), "V" to i), false)
+        val eigen = kandidaten("matrix.eigen", m(1,1,0,1))
+        pruefeKandidat(eigen, mapOf("V" to m(1,1,0,0), "Lambda" to i), true)
+        pruefeKandidat(eigen, mapOf("V" to m(0,0,0,0), "Lambda" to i), false)
+        val jordan = kandidaten("matrix.jordan", m(1,1,0,1))
+        pruefeKandidat(jordan, mapOf("P" to i, "J" to m(1,1,0,1)), true)
+        pruefeKandidat(jordan, mapOf("P" to m(0,0,0,0), "J" to i), false)
+        val spektral = kandidaten("matrix.spektral", d)
+        val ps = Tensor(listOf(2,2,2), listOf(z(1),z(0),z(0),z(0),z(0),z(0),z(0),z(1)))
+        pruefeKandidat(spektral, mapOf("lambdas" to SpaltenVektor(listOf(z(2),z(3))), "Projektoren" to ps), true)
+        pruefeKandidat(spektral, mapOf("lambdas" to SpaltenVektor(listOf(z(3),z(2))), "Projektoren" to ps), false)
     }
 
 }

@@ -119,7 +119,7 @@ class FaltungsAuswerterTest {
         )
 
         assertEquals(RationaleZahl.von(5), ergebnis.ausgaben.getValue("wert").objekt)
-        assertEquals("f(4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals("f\\left(4\\right)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test
@@ -148,7 +148,7 @@ class FaltungsAuswerterTest {
         )
 
         assertEquals(RationaleZahl.von(1, 2), ergebnis.ausgaben.getValue("wert").objekt)
-        assertEquals("f(2,4)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals("f\\left(2,4\\right)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test
@@ -171,7 +171,7 @@ class FaltungsAuswerterTest {
         val tupel = assertIs<Tupel>(ergebnis.ausgaben.getValue("wert").objekt)
         val wert = assertIs<MengenParameter>(tupel.elemente.single())
         assertEquals("A(i)", wert.zuLatex())
-        assertEquals("(A(i))", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        assertEquals("\\left(A\\left(i\\right)\\right)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
     }
 
     @Test

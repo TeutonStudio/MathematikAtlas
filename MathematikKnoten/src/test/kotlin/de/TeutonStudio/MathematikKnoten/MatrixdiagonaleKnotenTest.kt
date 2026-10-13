@@ -51,7 +51,7 @@ class MatrixdiagonaleKnotenTest {
 
         assertEquals(listOf(zahl(1), zahl(5)), tupel.elemente)
         assertEquals(2, vertrag.laenge)
-        assertTrue(ergebnis.warnungen.isEmpty())
+        assertTrue(ergebnis.warnungen.any { it.contains("Nebendiagonaleinträge") })
     }
 
     @Test
@@ -90,7 +90,7 @@ class MatrixdiagonaleKnotenTest {
         )
 
         assertEquals(listOf(zahl(1), zahl(4)), assertIs<Tupel>(ergebnis.ausgaben.getValue("diagonale").objekt).elemente)
-        assertNotNull(ergebnis.warnungen.singleOrNull())
+        assertTrue(ergebnis.warnungen.any { it.contains("Unbekannte Diagonalart") })
     }
 
     @Test

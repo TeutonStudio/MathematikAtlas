@@ -33,7 +33,7 @@ class PolarkoordinatenKnotenTest {
 
     @Test fun `Uebersetzer bewahrt Metadaten und unterscheidet flache R1 Rueckrichtung`() {
         val basis = ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero)
-        val polar = konfiguriereÜbersetzer(basis, "polar")
+        val polar = konfiguriereÜbersetzer(basis.copy(parameter=basis.parameter+(ÜBERSETZER_POLAR_KONVENTION to PolarKonvention.CLASSIC.name)), "polar")
         assertEquals(Tupel(listOf(RationaleZahl.von(2), Tupel(listOf(GradWinkel(RationaleZahl.von(270)))))), auswerten(polar, "wert" to t(0, -2)).ausgaben.getValue("ergebnis").objekt)
         val rück = konfiguriereÜbersetzer(polar, "kartesisch")
         assertEquals(t(-2, 0), auswerten(rück, "wert" to t(2, 180)).ausgaben.getValue("ergebnis").objekt)
@@ -95,8 +95,8 @@ class PolarkoordinatenKnotenTest {
     @Test fun `Dimension bleibt durch Uebersetzer und Rueckrechner fuer Winkelverbraucher erhalten`() {
         val quelle = konfiguriereTupel(MathematikKnotenVorlagen.Tupel.erzeuge(GraphPunkt.Zero), TUPEL_EINZEL_EINGABEN)
         val basis = ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero)
-        val polar = konfiguriereÜbersetzer(basis, "polar")
-        val rück = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "kartesisch")
+        val polar = konfiguriereÜbersetzer(basis.copy(parameter=basis.parameter+(ÜBERSETZER_POLAR_KONVENTION to PolarKonvention.CLASSIC.name)), "polar")
+        val rück = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero).copy(parameter=mapOf(ÜBERSETZER_POLAR_KONVENTION to PolarKonvention.CLASSIC.name)), "kartesisch")
         val winkel = rechner(VektorRechnerOperator.POLARWINKEL)
         val radius = rechner(VektorRechnerOperator.RADIUS)
         val rechnerRück = rechner(VektorRechnerOperator.KARTESISCH)

@@ -65,13 +65,16 @@ fun konfiguriereIntegralKnoten(
     ausgabeform: IntegralAusgabeform,
 ): KnotenDaten {
     require(knoten.art == INTEGRAL_KNOTEN_ART)
-    val gewuenscht = integralAnschluesse(ausgabeform)
+    val indexFamilie = knoten.parameter["integral.indexFamilie"] == "true"
+    val gewuenscht = integralAnschluesse(ausgabeform).map {
+        if (indexFamilie && it.richtung == AnschlussRichtung.Ausgang) it.copy(art = MathematikAnschlussArten.Methode.id) else if (indexFamilie && it.name == "methode") it.copy(zulässigeArten = it.zulässigeArten + MathematikAnschlussArten.AtlasWert.id) else it
+    }
     val bestehend = knoten.anschlüsse.associateBy { it.richtung to it.name }
     val anschluesse = gewuenscht.map { neu ->
         bestehend[neu.richtung to neu.name]?.let { alt -> neu.copy(id = alt.id) } ?: neu
     }
     return knoten.copy(
-        name = when (ausgabeform) {
+        name = if (indexFamilie) "Komponentenweise skalare Integrale" else when (ausgabeform) {
             IntegralAusgabeform.METHODE -> "Integral einer Methode"
             IntegralAusgabeform.TERM -> "Integral eines Terms"
         },
@@ -103,9 +106,28 @@ internal fun MathematikAuswerterRegister.registriereIntegralKnoten() {
 
 private fun KnotenAuswertungsKontext.werteIntegralKnotenAus(): KnotenAuswertungsErgebnis {
     knoten.parameter[INTEGRAL_MIGRATIONSFEHLER_PARAMETER]?.let { return fehlerErgebnis(it) }
+    if (knoten.parameter["integral.indexFamilie"] == "true") {
+        val familie = eingänge["methode"]?.objekt as? MathematischeMethode ?: return fehlerErgebnis("Die Familie skalarer Methoden fehlt.")
+        require(familie.parameter.size == 1) { "Die Komponentenfamilie benötigt genau einen Index." }
+        val grenze = (familie.werteVorräte[familie.parameter.single().name] as? EndlicheIndexMenge)?.obergrenze as? RationaleZahl
+            ?: error("Die Komponentenanzahl muss endlich bekannt sein.")
+        require(grenze.zähler.signum() > 0 && grenze.zähler <= java.math.BigInteger.valueOf(100_000)) { "Die Komponentenfamilie überschreitet das Integral-Materialisierungsbudget." }
+        val ausgaben = (1..grenze.zähler.toInt()).map { i ->
+            val komponentenMethode = familie.wendeAn(listOf(RationaleZahl.von(i.toLong()))) as? Methode ?: error("Eine skalare Komponentenmethode fehlt.")
+            val kontext = copy(knoten = knoten.copy(parameter = knoten.parameter - "integral.indexFamilie"),
+                eingänge = eingänge + ("methode" to eingänge.getValue("methode").copy(objekt = komponentenMethode)))
+            val ergebnis = kontext.werteIntegralKnotenAus()
+            require(ergebnis.fehler == null) { ergebnis.fehler.orEmpty() }
+            ergebnis.ausgaben.getValue("wert")
+        }
+        val methode = strukturIndexMethode(Tupel(ausgaben.map { it.objekt as MathematischesObjekt }))
+        return KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(methode, ausgaben.flatMap { it.annahmen }.toSet(),
+            variablenQuellen = eingänge.values.flatMap { it.variablenQuellen })), eingänge = eingänge)
+    }
+
     val menge = eingänge["menge"]?.objekt as? MengenAusdruck
         ?: return fehlerErgebnis("Der Integrationsbereich 'menge' fehlt.")
-    val bereich = IntegralBereich(menge.integralKomponenten())
+    val bereich = IntegralBereich(if (knoten.parameter["integral.bereichAlsEinArgument"] == "true") listOf(menge) else menge.integralKomponenten())
     val mass = bestimmeIntegralMass(bereich) ?: return fehlerErgebnis(
         "Das Maß fehlt oder ist für den Integrationsbereich nicht eindeutig ableitbar.",
     )

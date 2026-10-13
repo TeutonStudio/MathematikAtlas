@@ -680,6 +680,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is SpaltenVektor -> SpaltenVektor(objekt.werte.map { ersetze(it, bindungen) })
     is ZeilenVektor -> ZeilenVektor(objekt.werte.map { ersetze(it, bindungen) })
     is Matrix -> Matrix(objekt.zeilen.map { zeile -> zeile.map { ersetze(it, bindungen) } })
+    is Tensor -> objekt.copy(werte = objekt.werte.map { ersetze(it, bindungen) })
     is MathematischeMethode -> {
         val freieBindungen = bindungen - objekt.parameter.map { it.name }.toSet()
         objekt.copy(
@@ -782,6 +783,7 @@ fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> =
     is SpaltenVektor -> werte.enthalteneMethodenParameter()
     is ZeilenVektor -> werte.enthalteneMethodenParameter()
     is Matrix -> zeilen.flatten().enthalteneMethodenParameter()
+    is Tensor -> werte.enthalteneMethodenParameter()
     is FallAusdruck -> listOf(wahr, aussage, lüge).enthalteneMethodenParameter()
     is OffeneDefinitionsBedingung -> objekt.enthalteneMethodenParameter()
     is Selbigkeit -> listOf(links, rechts).enthalteneMethodenParameter()

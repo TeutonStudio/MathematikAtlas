@@ -499,7 +499,7 @@ object VektorRechner {
             "integrationsmass_fehlt",
             "Für das Vektorfeldintegral muss das Integrationsmaß explizit verbunden werden.",
         )
-        val komponenten = when (val vorschrift = methode.vorschrift) {
+        val komponenten = when (val vorschrift = if (methode.ausgabeNamen.size == 1) methode.alsMathematischeMethode("Vektorfeldintegral").einzigeAusgabe().second else methode.vorschrift) {
             is OrientierterVektor -> vorschrift.werte
             is Tupel -> vorschrift.elemente.mapIndexed { index, objekt ->
                 objekt as? ZahlAusdruck ?: return VektorRechnerErgebnis.Ungueltig(
