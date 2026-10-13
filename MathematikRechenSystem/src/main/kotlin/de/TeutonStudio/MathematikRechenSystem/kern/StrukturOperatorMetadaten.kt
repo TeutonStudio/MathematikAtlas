@@ -111,7 +111,7 @@ object StrukturRechnerOperatoren {
         d("matrix.determinante", "Determinante", "\\det A", FormelTyp.ZAHL, "\\det(A)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.spur", "Spur", "\\operatorname{tr}A", FormelTyp.ZAHL, "\\operatorname{tr}(A)=\\sum_i a_{ii}", e("matrix", FormelTyp.MATRIX)),
         d("matrix.rang", "Rang", "\\operatorname{rang}A", FormelTyp.ZAHL, "\\operatorname{rang}(A)", e("matrix", FormelTyp.MATRIX)),
-        d("matrix.diagonalmatrixErzeugen", "Diagonalmatrix erzeugen", "\\operatorname{diag}(v)", FormelTyp.MATRIX, "D_{ij}=\\delta_{ij}v_i", e("werte", FormelTyp.TUPEL)),
+        d("matrix.diagonalmatrixErzeugen", "Diagonalmatrix erzeugen", "\\operatorname{diag}(v)", FormelTyp.MATRIX, "D_{ij}=\\delta_{ij}v_i", e("werte", FormelTyp.OBJEKT)),
         d("matrix.hauptdiagonale", "Hauptdiagonale", "\\operatorname{diag}A", FormelTyp.TUPEL, "(a_{11},a_{22},\\ldots)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.nebendiagonale", "Nebendiagonale", "\\operatorname{antidiag}A", FormelTyp.TUPEL, "(a_{1n},a_{2,n-1},\\ldots)", e("matrix", FormelTyp.MATRIX)),
         d("matrix.charakteristischesPolynom", "Charakteristisches Polynom", "\\chi_A", FormelTyp.METHODE, "\\chi_A(\\lambda)=\\det(A-\\lambda I)", e("matrix", FormelTyp.MATRIX)),
