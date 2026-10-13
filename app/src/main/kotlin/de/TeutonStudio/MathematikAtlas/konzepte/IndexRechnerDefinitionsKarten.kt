@@ -340,7 +340,7 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
     }
     fun baustein(quelle: IndexDefinitionsWert, modus: String, extra: Map<String, IndexDefinitionsWert> = emptyMap()): IndexDefinitionsWert {
         val basis = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "indexmethode")
-        val ports = basis.anschlüsse.map { it.copy(art = if (it.richtung == AnschlussRichtung.Ausgang && modus == "vektorfeldKomponenten") MathematikAnschlussArten.Methode.id else MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) } + extra.keys.mapIndexed { i, name ->
+        val ports = basis.anschlüsse.map { it.copy(art = if (it.richtung == AnschlussRichtung.Ausgang && (modus == "vektorfeldKomponenten" || modus.startsWith("schnitte:"))) MathematikAnschlussArten.Methode.id else MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) } + extra.keys.mapIndexed { i, name ->
             AnschlussDaten(name = name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.AtlasWert.id, reihenfolge = i + 1)
         }
         val node = add(basis.copy(name = "Komponenten: $modus", parameter = basis.parameter + ("indexmethode.baustein" to modus), anschlüsse = ports), "ergebnis")

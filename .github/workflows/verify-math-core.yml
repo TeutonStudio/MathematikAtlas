@@ -74,6 +74,8 @@ jobs:
         run: ./gradlew :app:assembleDebug --stacktrace
 
   android-runtime:
+    env:
+      ANDROID_AVD_HOME: ${{ github.workspace }}/.ci-avd
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -90,7 +92,9 @@ jobs:
         run: sudo chmod a+rw /dev/kvm
       - name: Isolierten Emulator starten
         run: |
-          echo no | avdmanager create avd --name atlas-ci --package 'system-images;android-35;google_apis;x86_64' --force
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | avdmanager create avd --name atlas-ci --path "$ANDROID_AVD_HOME/atlas-ci.avd" --package 'system-images;android-35;google_apis;x86_64' --force
+          printf 'avd.ini.encoding=UTF-8\npath=%s\n' "$ANDROID_AVD_HOME/atlas-ci.avd" > "$ANDROID_AVD_HOME/atlas-ci.ini"
           "$ANDROID_HOME/emulator/emulator" -avd atlas-ci -no-window -no-audio -no-snapshot -gpu swiftshader_indirect -no-boot-anim > /tmp/atlas-emulator.log 2>&1 &
           emulator_pid=$!
           for versuch in $(seq 1 90); do

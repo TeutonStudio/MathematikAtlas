@@ -384,4 +384,21 @@ class IndexRechnerDefinitionsKartenTest {
         pruefeKandidat(spektral, mapOf("lambdas" to SpaltenVektor(listOf(z(3),z(2))), "Projektoren" to ps), false)
     }
 
+
+    @Test fun `Tensorzerlegung indiziert jede Scheibe ohne Abflachung`() {
+        val t = Tensor(listOf(2,3,2), (1L..12L).map(::z))
+        for (achse in 1..3) {
+            val basis = konfiguriereTensorOperation(StrukturRechnerKnotenVorlagen.Tensorrechner.erzeuge(GraphPunkt.Zero), StandardTensorOperationen.registry.definition("tensor.zerlegen")!!)
+            val ausgang = basis.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+            val op = basis.copy(parameter=basis.parameter+(TENSOR_ACHSEN_SPEZIFIKATION to achse.toString()), anschlüsse=basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang } + List(t.dimensionen[achse-1]) { i -> ausgang.copy(id=AnschlussId("schnitt-$i"),name="schnitt${i+1}",reihenfolge=i,art=MathematikAnschlussArten.AtlasWert.id) })
+            val schnitte = wert(op, mapOf("tensor" to t, "achsen" to Tupel(listOf(z(achse.toLong()))))) as Tupel
+            assertEquals(t.dimensionen[achse-1],schnitte.elemente.size)
+            for (index in 1..t.dimensionen[achse-1]) {
+                val methode = tensorZerlegeMethode(t,achse-1,t.dimensionen.filterIndexed { i, _ -> i != achse-1 }.map { z(it.toLong()) })
+                assertEquals(methode.wendeAn(listOf(z(index.toLong()))),schnitte.elemente[index-1])
+                assertFails { methode.wendeAn(listOf(z(0))) }
+                assertFails { methode.wendeAn(listOf(z((t.dimensionen[achse-1]+1).toLong()))) }
+            }
+        }
+    }
 }
