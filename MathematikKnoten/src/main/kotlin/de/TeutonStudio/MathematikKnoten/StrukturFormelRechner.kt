@@ -446,6 +446,10 @@ private fun werteMatrixFormelAus(
 ): AtlasWert {
     val operator = MatrixRechnerOperator.entries.firstOrNull { it.stabileId == operatorId }
         ?: error("Unbekannter Matrixoperator $operatorId.")
+    if (operator == MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN) {
+        val werte = argumente["werte"] ?: error("Diagonalmatrix benötigt Tupel oder Vektor.")
+        return matrixErgebnisWert(MatrixRechner.erzeuge(MatrixRechnerAnfrage(operator, emptyList(), diagonalWerte = werte)))
+    }
     val matrizen = argumente.mapNotNull { (rolle, objekt) ->
         (if (operator == MatrixRechnerOperator.MATRIXPRODUKT) objekt.alsMatrixFaktor() else objekt as? Matrix)?.let { MatrixOperand(rolle, it, FundamentalerZahlbereich.REELL) }
     }

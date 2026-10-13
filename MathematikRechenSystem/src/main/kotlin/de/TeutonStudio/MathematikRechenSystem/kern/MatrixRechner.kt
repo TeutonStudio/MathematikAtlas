@@ -16,6 +16,7 @@ enum class MatrixRechnerOperator(val stabileId: String) {
     SPUR("matrix.spur"),
     RANG("matrix.rang"),
     HAUPTDIAGONALE("matrix.hauptdiagonale"),
+    DIAGONALMATRIX_ERZEUGEN("matrix.diagonalmatrixErzeugen"),
     NEBENDIAGONALE("matrix.nebendiagonale"),
     CHARAKTERISTISCHES_POLYNOM("matrix.charakteristischesPolynom"),
     MINIMALPOLYNOM("matrix.minimalpolynom"),
@@ -43,6 +44,7 @@ data class MatrixRechnerAnfrage(
     val matrizen: List<MatrixOperand>,
     val skalare: List<ZahlAusdruck> = emptyList(),
     val vektoren: List<OrientierterVektor> = emptyList(),
+    val diagonalWerte: MathematischesObjekt? = null,
     val zerlegeRichtung: MatrixZerlegeRichtung = MatrixZerlegeRichtung.ZEILEN,
 )
 
@@ -231,6 +233,10 @@ object MatrixRechner {
                         FundamentalerZahlbereich.NATUERLICH_MIT_NULL,
                     )
                 }
+            }
+            MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN -> {
+                val werte = anfrage.diagonalWerte ?: return MatrixRechnerErgebnis.Ungueltig("diagonal_werte", "Tupel oder Vektor fehlt.")
+                MatrixRechnerErgebnis.MatrixWert(diagonalmatrixErzeugen(werte), bereich)
             }
             MatrixRechnerOperator.HAUPTDIAGONALE -> einMatrix(anfrage) { operand ->
                 val n = minOf(operand.form.zeilen, operand.form.spalten)

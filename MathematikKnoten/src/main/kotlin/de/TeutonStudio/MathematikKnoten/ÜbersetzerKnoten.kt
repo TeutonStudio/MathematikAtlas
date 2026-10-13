@@ -43,7 +43,8 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
     val spezial = when {
         ziel == "kartesisch" && getrennt -> listOf(
             AnschlussDaten(name = "radius", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
-            AnschlussDaten(name = "winkel", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Tupel.id),
+            AnschlussDaten(name = "winkel", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Tupel.id,
+                vertrag = de.TeutonStudio.TypSystem.AnschlussVertrag(typ = de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Tupel))),
             knoten.anschlüsse.firstOrNull { it.name == "ergebnis" }?.copy(art = MathematikAnschlussArten.Tupel.id)
                 ?: AnschlussDaten(name = "ergebnis", richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Tupel.id),
         )
