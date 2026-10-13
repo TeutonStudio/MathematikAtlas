@@ -91,9 +91,11 @@ jobs:
       - name: Isolierten Emulator starten
         run: |
           echo no | avdmanager create avd --name atlas-ci --package 'system-images;android-35;google_apis;x86_64' --force
-          emulator -avd atlas-ci -no-window -no-audio -no-snapshot -gpu swiftshader_indirect -no-boot-anim > /tmp/atlas-emulator.log 2>&1 &
+          "$ANDROID_HOME/emulator/emulator" -avd atlas-ci -no-window -no-audio -no-snapshot -gpu swiftshader_indirect -no-boot-anim > /tmp/atlas-emulator.log 2>&1 &
+          emulator_pid=$!
           for versuch in $(seq 1 90); do
-            if adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -q '^1$'; then exit 0; fi
+            if ! kill -0 "$emulator_pid" 2>/dev/null; then cat /tmp/atlas-emulator.log; exit 1; fi
+            if timeout 5 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -q '^1$'; then exit 0; fi
             sleep 2
           done
           cat /tmp/atlas-emulator.log

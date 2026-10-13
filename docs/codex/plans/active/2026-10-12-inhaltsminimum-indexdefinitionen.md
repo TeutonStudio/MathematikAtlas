@@ -5,10 +5,10 @@ Status: aktiv, Integration v3.2.0, 2026-10-13
 Vollständig lesbare Knoten/Gruppen, zuverlässige Auswahl, Indexübersetzung und ausführbare Strukturdefinitionen; verschachtelte Polarkoordinaten und zentriertes Falk-Schema.
 
 ## Nicht-Ziele
-Keine neue registrierte Knotenart, keine Produktionsabhängigkeit, kein Release/Merge.
+Keine zusätzliche Knotenart über die bereits auf master vorhandenen Typen richtungWinkel und halbesIntervall hinaus. Keine neue Produktionsabhängigkeit. Der beauftragte Releaseabschluss erfolgt als v3.2.0 nach erfolgreicher Abnahme.
 
 ## Untersuchter Istzustand
-Vorhandener Übersetzer atlas.uebersetzer mit stabilen Ports und Zielen. Polarkoordinaten.polar erzeugt flache Tupel. StrukturRechnerDefinitionsKarten enthält Regelknoten. Editor verwendet gespeicherte Größe für sämtliche Geometrie. Umfangreicher uncommitteter Bestand wird erhalten.
+Die Ausgangslage und ältere Zwischenstände sind im Fortschrittsprotokoll festgehalten. Maßgeblicher integrierter Stand ist TODO 22b56645 mit master 7e11b711; Produktabschluss a97ce9f7, Release-PR #449. Persönlicher IDE-/Shelf-Bestand und separater Komplex-Worktree bleiben erhalten.
 
 ## Fachliche und mathematische Semantik
 Indexmethode indiziert Tupel/Vektor mit einem, Matrix mit zwei und Tensor mit rangvielen 1-basierten Indizes. Verschachtelte Tupel bleiben verschachtelt. Polar ab R²: (r,(φ,θ,…)); R¹: (r,Vorzeichen). Bestehende Operatorverträge gelten für Produktreihenfolge und Kontraktionen.
@@ -23,11 +23,13 @@ Mathematik im Kern, Graphauswertung im Adapter, Inhalte in MathematikKnoten, gen
 KnotenRenderer/KnotenKartenEditor/KartenEditorZustand/GruppenDarstellung; Methoden und Polarkoordinaten; ÜbersetzerKnoten; StrukturRechnerDefinitionsKarten; MatrixproduktFalkSchema.
 
 ## Meilensteine
-- [x] Versions-/Branchzuordnung: bestehende 3.1.2-x-Reservierung erweitert, Branch unverändert auf ff020f06. Releaseplan/Versionsfolge grün.
-- [ ] Indexmethode und ausführbare Definitionskarten
-- [x] Koordinatenkompatibilität und Absturzregression: Kern-/Knotenprüfungen einschließlich leerem Tupel und produktiver Inspector-Gerätetest erfolgreich.
-- [x] Inhaltsminimum, Auswahl und Falk-Dialog: drei Geometriemodelltests sowie fünf Editor- und zwei Falk-Compose-Tests erfolgreich. Reviewbefunde korrigiert; unabhängige UI-Prüfung ohne weitere konkrete Blocker.
-- [ ] Tests, ADR, unabhängige Abnahme
+- [x] Dreiseitige Integration und v3.2.0-y-Zuordnung; unveröffentlichte 3.1.2-Reservierung ersetzt, Komplexreservierung zurückgestellt.
+- [x] Inhaltsminimum, Gruppenwahl, Kapselkontur, Falk-Zentrierung und Matrixzerlegung als Übersetzer mit Vektor-/Tupelausgabe.
+- [x] Indexmethode, vollständiges ausführbares Rezeptinventar und Bedingungen für symbolische Kandidaten.
+- [x] Wn-Parameter, explizite Polarkonvention, historische Aufrufpackung, Produkt-Sampling und persistierte Projektion.
+- [x] Vollständige lokale Gradle-Tests, Builds, Lint, ADRs und unabhängiger Produktreview.
+- [ ] Android-Instrumentierung im isolierten CI-Emulator; physische Geräteprüfung separat nicht verfügbar.
+- [ ] Grüne abschließende PR-Prüfungen und Squash nach master mit Titel v3.2.0.
 
 ## Konkrete Umsetzungsschritte
 Bestehende Methoden-/Strukturzugriffe verwenden; Definitionsgraphen zerlegen; Polar-Ausgabe verschachteln und alte Eingaben lesen; zentrale effektive Geometrie herstellen; Gestenregression isolieren; Layout zentrieren.
@@ -41,7 +43,9 @@ Bestehende IDs und Verbindungen erhalten. Ziel als vorhandene Texteigenschaft sp
 ## Risiken und Rückfallstrategie
 Vorhandene Änderungen nicht überschreiben. Größenmessung muss unbeschränkt und stabil sein; keine Mess-/Resize-Schleifen. Definitionsgraphen dürfen keine rekursive Selbstdefinition erzeugen. Fehler bleiben fachliche Diagnosen.
 
-## Fortschritt
+## Historisches Fortschrittsprotokoll
+
+Die folgenden Einträge beschreiben den jeweiligen damaligen Zwischenstand. Aktuelle Abnahme und offene Punkte stehen in den Meilensteinen und im Abschlussabschnitt.
 Editorgrößen und Gruppengeometrie implementiert. Konkrete Auswahlregression reproduziert: Klick auf Gruppentitel ergibt null, weil Verbindungscanvas darüber liegt. Nach Ebenenkorrektur und Titel-Tap/DoubleTap grün. Freie Inhaltsmessung zentral in Projektion eingebunden, Benutzergrößen bleiben gespeichert; Größenaktionen begrenzen am Minimum. Kapsel-Ecken werden als Treffer abgewiesen. Falk-Zentrierung durch tatsächliche Compose-Bounds bestätigt.
 
 Prüfungen: JAVA_HOME=/home/alex/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2 ./gradlew :KnotenKartenVerwalter:testDebugUnitTest :desktopApp:test --tests '*EditorAuswahlRegressionTest' --tests '*RechnerSchemaDesktopTest' erfolgreich. Nach Erweiterung um Kapsel und Zentrierung Desktoptests erneut erfolgreich. Gradle benötigt Zugriff auf vorhandenen Benutzer-Cache außerhalb der Sandbox; genehmigte Eskalation verwendet.
