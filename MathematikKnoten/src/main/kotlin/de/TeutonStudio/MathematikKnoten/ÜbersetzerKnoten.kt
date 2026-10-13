@@ -185,9 +185,17 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
                     }
                     Polarkoordinaten.polar(tupel)
                 }
-                "kartesisch" -> Polarkoordinaten.kartesischMitVariablen(
-                    objekt as? Tupel ?: error("Polar → Kartesisch benötigt ein Zweiertupel aus Radius und Winkeltupel."),
-                )
+                "kartesisch" -> {
+                    val polar = objekt as? Tupel ?: error("Polar → Kartesisch benötigt Radius und Winkeltupel.")
+                    val winkelBereich = k.eingänge["winkel"]?.werteVorrat as? Tupelraum
+                    val vorzeichenBereich = EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins))
+                    if (getrennt && winkelBereich?.komponenten?.firstOrNull() == vorzeichenBereich) {
+                        Polarkoordinaten.kartesischAusRichtung(
+                            polar.elemente[0] as? ZahlAusdruck ?: error("Radius muss eine Zahl sein."),
+                            polar.elemente[1] as? Tupel ?: error("Winkeltupel fehlt."),
+                        )
+                    } else Polarkoordinaten.kartesischMitVariablen(polar)
+                }
                 else -> übersetzeStruktur(objekt, ziel)
             }
             übersetzterWert(wert, umgewandelt)

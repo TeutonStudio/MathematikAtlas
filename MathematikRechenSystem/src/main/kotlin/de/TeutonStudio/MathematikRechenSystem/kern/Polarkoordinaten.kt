@@ -79,6 +79,32 @@ object Polarkoordinaten {
     }
 
 
+
+    /** Richtungsmodell {-1,+1} × [0°,180°)^n, Ergebnis in R^(n+1). */
+    fun kartesischAusRichtung(radius: ZahlAusdruck, richtung: Tupel): Tupel {
+        require(richtung.elemente.isNotEmpty()) { "Das Winkeltupel benötigt ein Vorzeichen." }
+        val vorzeichen = richtung.elemente.first() as? ZahlAusdruck
+            ?: error("Das Richtungsvorzeichen muss eine Zahl sein.")
+        val winkel = richtung.elemente.drop(1).map {
+            when (it) {
+                is ZahlAusdruck -> gradZuBogenmass(it)
+                is WinkelAusdruck -> winkelBogenmass(it)
+                else -> error("Halbkreiswinkel müssen reelle Gradwerte sein.")
+            }
+        }
+        val konkret = DomaenenAuswerter.wert(vorzeichen) as? DomaenenErgebnis.Wert
+        if (konkret != null) {
+            val s = (konkret.wert as? DomaenenWert.Reell)?.wert?.toDouble()
+            require(s == -1.0 || s == 1.0) { "Vorzeichen muss -1 oder +1 sein." }
+        }
+        var koordinaten: List<ZahlAusdruck> = listOf(vorzeichen)
+        for (w in winkel) {
+            koordinaten = koordinaten.map { multiplikation(it, Cosinus(w)) } +
+                multiplikation(vorzeichen, Sinus(w))
+        }
+        return Tupel(koordinaten.map { multiplikation(radius, it) })
+    }
+
     /** Parametrisierung für Methoden mit freien reellen Winkelvariablen in Grad. */
     fun kartesischSymbolisch(polar: Tupel): Tupel {
         require(polar.elemente.size == 2) { "Polar benötigt Radius und Winkel-Tupel." }

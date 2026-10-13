@@ -40,7 +40,7 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
         "C", "ℂ" -> "\\mathbb{C}"
         else -> werteVorratKennung
     }
-    return "$name \\in $werteVorrat"
+    return if (variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL) "$name \\in \\mathrm{Grad}^{${variablenDimension(knoten)}}" else "$name \\in $werteVorrat"
 }
 
 class MathematikKnotenRenderer(

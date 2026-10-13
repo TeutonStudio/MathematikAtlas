@@ -99,4 +99,13 @@ class PolarkoordinatenTest {
     }
 
 
+    @Test fun `vorzeichen und halbkreiswinkel erzeugen symbolische dreidimensionale Richtung`() {
+        val polar = Polarkoordinaten.kartesischAusRichtung(RationaleZahl.von(2),
+            Tupel(listOf(Variable("s"), Variable("a"), Variable("b"))))
+        assertEquals(3, polar.elemente.size)
+        assertTrue(polar.zuLatex().contains("\\sin"))
+        assertTrue(polar.zuLatex().contains("\\cos"))
+    }
+
+
 }

@@ -71,7 +71,7 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
                 "zahl" -> WertebereichKonfiguration.Zahl(knoten.parameter["werteVorrat"] ?: "R").zuMenge().elementTypAusdruck()
                 "zeile" -> TypAusdruck.Parameterisiert(MathematischeTypen.ZeilenVektor, listOf(zahl, n))
                 "spalte" -> TypAusdruck.Parameterisiert(MathematischeTypen.SpaltenVektor, listOf(zahl, n))
-                else -> TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(variablenDimension(knoten)) { zahl })
+                else -> TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(variablenDimension(knoten) + if (variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL) 1 else 0) { zahl })
             }
         }
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.allgemeinerParameter" -> {
