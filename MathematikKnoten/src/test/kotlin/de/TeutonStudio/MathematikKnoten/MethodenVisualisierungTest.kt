@@ -298,7 +298,7 @@ class MethodenVisualisierungTest {
     }
 
     @Test
-    fun `mehr als drei Parameter liefern einen konkreten Projektionshinweis`() {
+    fun `mehr als drei oeffentliche Parameter sind bei passender Ausgabe darstellbar`() {
         val parameter = listOf("a", "b", "c", "d").map(::Variable)
         val methode = Methode(
             name = "vierdimensional",
@@ -309,11 +309,12 @@ class MethodenVisualisierungTest {
         )
         val domäne = KartesischesProdukt(List(4) { EndlicheMenge(setOf(RationaleZahl.Null)) })
 
-        val ergebnis = assertIs<VisualisierungsErgebnis.NichtDarstellbar>(
+        val ergebnis = assertIs<VisualisierungsErgebnis.Erfolgreich>(
             VisualisierungsSampler.sample(Abbild(domäne, methode), konfiguration(RaumDimension.R3)),
         )
-
-        assertTrue("Projektion" in ergebnis.grund)
+        assertEquals(listOf(VisualisierungsPunkt(0.0, 0.0, 0.0)), ergebnis.punkte)
+        assertEquals(1, ergebnis.statistik.auswertungen)
+        assertTrue(ergebnis.hinweise.any { "4 öffentliche Argumente" in it })
     }
 
     @Test

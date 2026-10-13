@@ -205,7 +205,7 @@ private fun alsSkalarproduktZertifikatsKarte(karte: KartenDaten): SkalarproduktZ
         SKALARPRODUKT_NACHWEIS_POSITIV,
     ).filter { begriff.parameter[it].isNullOrBlank() }
     if (fehlendeNachweise.isNotEmpty()) {
-        return kandidat(false, "Mindestens eine Nachweisreferenz fehlt.")
+        return kandidat(true, "Axiome unbewiesen; Ausführung unter ausdrücklicher Skalarproduktannahme.")
     }
     return kandidat(true)
 }
@@ -346,8 +346,13 @@ internal object VektorRechnerInspektor : KnotenInspektor {
             }
         }
 
-        if (operator == VektorRechnerOperator.SKALARPRODUKT) {
+        if (operator in setOf(VektorRechnerOperator.SKALARPRODUKT, VektorRechnerOperator.POTENZ)) {
             SkalarproduktDefinitionAuswahl(knoten, ergebnis, aktionen)
+            if (operator == VektorRechnerOperator.POTENZ) {
+                OutlinedTextField(value = knoten.parameter[de.TeutonStudio.MathematikKnoten.VEKTOR_POTENZ_EXPONENT] ?: "2",
+                    onValueChange = { text -> if (text.toIntOrNull()?.let { it >= 0 } == true) aktionen.parameter(de.TeutonStudio.MathematikKnoten.VEKTOR_POTENZ_EXPONENT, text) },
+                    label = { Text("Exponent (unverbundener Eingang p)") })
+            }
         }
 
         Text(

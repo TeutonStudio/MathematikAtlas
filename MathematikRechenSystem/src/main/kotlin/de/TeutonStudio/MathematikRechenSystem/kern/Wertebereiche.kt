@@ -11,11 +11,22 @@ fun inferiereZielmenge(
     werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     annahmen: Set<Aussage> = emptySet(),
 ): MengenAusdruck = when (ausdruck) {
+    is IndexKomponente -> {
+        val konkret = indexKomponente(ausdruck.quelle, ausdruck.indizes)
+        if (konkret !is IndexKomponente) inferiereZielmenge(konkret, werteVorräte, annahmen)
+        else when (val quelle = ausdruck.quelle) {
+            is Tupel -> vereinige(quelle.elemente.map { inferiereZielmenge(it, werteVorräte, annahmen) })
+            is OrientierterVektor -> maximaleZahlenGrundmenge(quelle.werte.map { inferiereZielmenge(it, werteVorräte, annahmen) })
+            is Tensorartig -> quelle.tensorZahlBereich
+            else -> error("Die Zielmenge des Indexzugriffs benötigt eine bekannte Struktur.")
+        }
+    }
     is SymbolischerStrukturZugriff -> StrukturErgebnisMenge(
         ausdruck.ergebnisAnschlussArt,
         ausdruck.ergebnisForm,
         "\\operatorname{Strukturwerte}",
     )
+    is WinkelAusdruck -> Gradmenge
     is ZahlAusdruck -> inferiereZahlenWertevorrat(ausdruck, werteVorräte, annahmen)
     is AllgemeinerParameter -> werteVorräte[ausdruck.name]
         ?: error("Für den allgemeinen Parameter '${ausdruck.name}' fehlt ein Wertevorrat.")
@@ -154,6 +165,8 @@ private fun inferiereElementMenge(
         ))
     }
     is GeometrischeTrägermenge -> BenannteMenge("punkte_${menge.objekt.raum.id}", "\\mathcal{P}(${menge.objekt.raum.id})")
+    is VerschobeneKoordinatenMenge -> inferiereElementMenge(menge.original, werteVorräte, annahmen)
+    is UnterraumMenge -> menge.grundMenge
     is KoordinatenBild -> Tupelraum(List(menge.objekt.raum.dimension) { ReelleZahlen })
     is DifferenzierbarkeitsBereich -> inferiereElementMenge(menge.ursprungsBereich, werteVorräte, annahmen)
     is AbleitungsZielraum -> menge

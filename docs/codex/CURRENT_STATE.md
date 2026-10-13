@@ -194,3 +194,49 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
 - Der Rechenweg-Desktoptest verwendet Compose-Semantik statt nativer AWT-Window-/Robotannahmen und prüft Öffnen, Zurück sowie das Verwerfen veralteter Details nach Ergebniswechsel. Der gezielte Test und der anschließende vollständige Gradle-Testlauf samt Android-Debug-Build sind erfolgreich. Die zusätzliche Compose-Testabhängigkeit ist auf den Desktop-Testclasspath beschränkt.
 - Repository-, Architektur-, Methodenmodell-, Releaseplan-, Versionsfolgeprüfung und 14 Guard-Regressionen erfolgreich. Android-Release-Build erfolgreich, bisher ohne konfigurierte Produktionssignatur. Keine Android-Geräte-/Emulatorabnahme. Die separate RPM-Paketierung scheitert lokal an jpackage (unsupported type rpm); sie ist kein APK-Artefakt.
 - Dies ist ein vorbereiteter Release-PR-Stand. Veröffentlichung und finale Commit-SHA sind ausschließlich anhand von GitHub-master und GitHub Release zu bestimmen.
+
+
+## Rechner-Auswertungsschemata im lokalen Arbeitsstand
+
+- Android-Rechnerinspektoren, dynamische Konzeptreiter und Desktop-Inspector öffnen gemeinsame Schema-Inhalte. Spezialdefinitionen von Formelmodi, Quadrat und Kubik bleiben erhalten.
+- Matrixketten zeigen jedes Zwischenprodukt einmal. Ergebniszellen wählen Zeile/Spalte; auswählbare geordnete Einzelprodukte markieren die zugehörigen Faktoren. Ergebniswechsel setzt die atomare Auswahl zurück.
+- Strukturwerte bieten achsenweise Komponentenauswahl und farblich zugeordnete Eingabe-/Ergebniskomponenten; Addition zeigt deren tatsächliche Summe. Methoden zeigen vorhandene Vorschriften, gemeinsame Parameter, Definitionsraum und Ergebnisannahmen. Methodenwertige Matrixprodukte verwenden den Methodenpfad.
+- Registry-Abdeckung, Unbekannt-Diagnose, Tensorindizes, Zahlenformelparameter und Methodenrouting sind durch Modelltests geprüft; Compose prüft Auswahlwechsel auf P2 und Ergebniswechsel. Vollständiger Gradle-Testlauf, Android-Debug-Build/Lint, Desktop-Kompilierung und Repositoryprüfung erfolgreich. Unabhängige Diffprüfung ohne verbleibende Blocker.
+- Keine Android-Laufzeitabnahme: ADB meldet keine Geräte. Keine visuelle Abnahme großer Schrift oder Themevarianten. Zusätzlicher direkter Kern-Smoke-Test mangels kotlinc/java im PATH nicht ausführbar; Gradle-Kerntests erfolgreich. Kein Release oder Commit. Details: [ExecPlan](plans/active/2026-10-12-rechner-auswertungsschemata.md), [ADR 0048](decisions/0048-rechner-auswertungsschemata.md).
+
+
+## Polarkoordinaten im Arbeitsstand (2026-10-12)
+
+- Bestehender Übersetzer unterstützt kartesisch↔polar für reelle Tupel; der Vektorrechner bietet Radius, Winkeltupel/Vorzeichen und kartesische Koordinaten aus Radius plus Winkeln.
+- Gradkonvention: Azimut zuerst in [0°,360°), weitere Polarwinkel zu x₃,…,xₙ in [0°,180°]. R¹ verwendet Betrag und skalares Vorzeichen; flache Übersetzertupel benötigen für die R¹-Rückrichtung den gespeicherten Schalter.
+- Numerische Umrechnung liegt gemeinsam im Rechenkern. Graphdimensionen, Formelpfad, stabile Übersetzeranschlüsse, JSON und Undo/Redo sind getestet; keine neue Knotenart, Produktionsabhängigkeit oder Formatversion.
+- Vollständiger Gradle-Testlauf, Android-Debug-Build, Desktopkompilierung und Repositoryprüfung erfolgreich; unabhängige Verifikation ohne Blocker. Keine manuelle Geräteabnahme: ADB meldet kein verbundenes Gerät. Zusätzliches Kernskript benötigt ein fehlendes separates kotlinc; Gradle-Kerntests bestehen.
+- Details und Prüfgrenzen: [ExecPlan Polarkoordinaten](plans/completed/2026-10-12-polarkoordinaten.md), ADR 0049. Keine Commits oder Veröffentlichung durch diese Aufgabe.
+
+
+## Gradmenge und Definitionskomposition – lokaler Arbeitsstand 2026-10-12
+
+- Die separate Gradmenge mit Winkeltyp identifiziert 360° und 0°. R↔Grad im bestehenden Übersetzer verwendet Bogenmaß und wählbare Hauptvertreter; der Inspector zeigt die bestehende Mengenintervallnotation. Allgemeine Parameter können explizit Winkel sein. Polarwinkel sind nun Winkelwerte, historische numerische Gradrepräsentanten bleiben rückwärtskompatibel.
+- Der bestehende Zahlenrechner besitzt eine Grad-Sinus-Signatur aus dem gemeinsamen Register. Die reelle Sinusdefinition ist der ausführbare Graph q→Grad-Sinus→Kartenausgang; die geometrische Grunddefinition vermeidet einen Definitionszyklus. Die bisherigen numerischen/komplexen Auswertungsmodi bleiben erhalten.
+- Tupel behalten gelieferte Komponentenobermengen und deren Vereinigung als gemeinsame Grundmenge. Strukturübersetzungen, Abflachen und leere Tupel berücksichtigen diese Metadaten; Tupel, Zeile und Spalte bleiben getrennte Strukturtypen.
+- [Definitionsanalyse](DEFINITIONSKARTEN_ANALYSE.md): 465 konfigurierte Einträge und 131 statische Definitionsassets, davon 113 mit Regelknoten und 18 ohne. Weitere Zerlegungen sind priorisierte Vorschläge, noch nicht umgesetzt.
+- 1525 Tests ohne Fehler/Überspringen, Android-Debug-Build und Desktopkompilierung erfolgreich. Repository-, Releaseplan- und Versionsfolgeprüfung erfolgreich. Unabhängige Produktcodefreigabe; keine manuelle Geräte-/UI-Abnahme. Separates Kernskript benötigt fehlende Werkzeuge, Gradle-Kerntests bestehen. Keine neue Version, Knotenart, Abhängigkeit oder JSON-Formatversion; kein Commit/Release.
+- Nachweise: [ExecPlan](plans/completed/2026-10-12-gradmenge-definitionen.md), [ADR 0050](decisions/0050-gradmenge-und-definitionskomposition.md).
+
+## Vektorpotenz, Unterraum und Geometrie – lokaler Arbeitsstand 2026-10-12
+
+- Bestehender Vektorrechner besitzt Vektorpotenz mit nichtnegativem ganzzahligen Exponenten, ausgewähltem Skalarprodukt und paritätsabhängigem Zahl-/Vektorergebnis. p=0/1 berechnen kein Selbstprodukt. Tupel werden ausdrücklich als Spalten interpretiert.
+- Bestehender Mengenrechner bildet linearen/affinen Spann als argumentabhängige Kernmenge. Rationale Rang-/Mitgliedschaftsprüfungen sind exakt; symbolische Pivots bleiben unbestimmt.
+- Bestehender Übersetzer bietet Geometriekoordinatenmengen, Objektpunkte, Mittelpunkte und erkannte geometrische Rückrichtungen. Reellheit, Raum-/Dimensionsverträglichkeit, Ankerzugehörigkeit und symbolische Grenzen werden berücksichtigt.
+- Skalarproduktprüfung akzeptiert bloße Referenztexte nicht mehr als Beweis. Nicht nachgewiesene eigene Produkte führen eine ausdrückliche Annahme weiter; widerlegte Produkte werden abgewiesen. Android und Desktop bieten Produktauswahl und Potenzvorgabe.
+- Vollständiger Gradle-Testlauf erfolgreich: 319 Testsuiten, 1536 Tests ohne Fehler. Android-Debug-APK und Desktopkompilierung sowie Android-Lint erfolgreich; unabhängige Prüfung ohne verbleibende Blocker. Separates Kernskript benötigt fehlendes kotlinc, Gradle-Kerntests bestehen. Keine Geräteabnahme, kein Commit oder Release. Reservierte x-Version 3.1.2, Produktversion unverändert 3.1.1. Details: [ExecPlan](plans/completed/2026-10-12-vektorpotenz-unterraum-geometrie.md), [ADR 0051](decisions/0051-vektorpotenz-unterraum-geometrie.md).
+
+
+## Zertifizierte Polynomlösungen im Arbeitsstand (2026-10-12)
+
+- Der gemeinsame Langdruckdialog bietet analytische und numerische Tabs für erkannte Polynomgleichungen und Eigenwertanfragen. n=0..100 bezeichnet die ersten Dezimalziffern ohne Rundung; Konfiguration wird über vorhandene Kartenaktionen gespeichert.
+- Reelle rationale Polynome verwenden Sturm-Isolation, komplex-rationale Polynome lokale Rouché-Scheiben mit unabhängig prüfbarer Einschließung. Existenz, Vollständigkeit, Dimension, Vielfachheit und Ziffernnachweis werden getrennt behandelt; fehlende Nachweise bleiben offen.
+- Vorhandene Variablenknoten können quadratische Matrixunbekannte als geordnete Eintragsvariablen erzeugen. Matrix-/Vektorgleichheiten werden gemeinsam komponentenweise gelöst. Lineare Systeme liefern exakte Familien samt numerisch auswählbaren Mitgliedern; nichtlineare Systeme liefern exakt geprüfte Mitglieder oder lokale Krawczyk-Nachweise.
+- Analytische Darstellungen bis Grad vier enthalten Zweigbedingungen. Eigenwerte rational-komplexer Matrizen bis Dimension 8 verwenden Faddeev–LeVerrier und denselben Wurzellöser. Verfahrensgrenzen und Architekturentscheidung: ADR 0052; vollständiger Nachweis im abgeschlossenen ExecPlan 2026-10-12-zertifizierte-polynomloesungen.
+- Finaler Gesamtprüflauf: 1557 Tests ohne Fehler oder Überspringen, Android-Debug-Build erfolgreich. Zwei neue Desktop-Compose-Laufzeittests prüfen Tabs, Genauigkeit und Familienparameter. Repository-/Architekturprüfung, Releaseplan und Versionsfolge erfolgreich; unabhängige Abschlussprüfung ohne offene Findings.
+- Prüfgrenzen: kein Android-Gerät/Emulator verbunden, daher keine Android-Gestenprüfung. Das zusätzliche Kernskript benötigt kotlinc, das im PATH fehlt; Kern-Gradletests bestehen. Keine neue Knotenart, Abhängigkeit oder Kartenformatversion; keine Veröffentlichung oder neuer Commit.

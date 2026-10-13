@@ -12,6 +12,7 @@ class MengenOperatorKnotenTest {
     fun `sichtbarer mengenrechner umfasst die kanonischen operatoren`() {
         assertEquals(
             setOf(
+                MengenRechnerOperator.UNTERRAUM,
                 MengenRechnerOperator.SCHNITT,
                 MengenRechnerOperator.VEREINIGUNG,
                 MengenRechnerOperator.DIFFERENZ,

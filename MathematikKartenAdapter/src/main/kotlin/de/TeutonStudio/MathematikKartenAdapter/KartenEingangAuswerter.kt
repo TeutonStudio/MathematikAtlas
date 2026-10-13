@@ -41,12 +41,14 @@ fun symbolischerEingangswert(
     }
 
     val objekt: MathematischesObjekt = when (art) {
+        AnschlussArtId("mathematik.winkel") -> WinkelParameter(parameterName)
         ZAHL_KARTEN_ART -> Variable(parameterName)
         AUSSAGE_KARTEN_ART -> aussagenVorschau ?: AussagenParameter(parameterName)
         MENGE_KARTEN_ART -> MengenParameter(parameterName)
         else -> TypisiertesElement(parameterName, art.wert)
     }
     val werteVorrat: MengenAusdruck = when (art) {
+        AnschlussArtId("mathematik.winkel") -> Gradmenge
         ZAHL_KARTEN_ART -> ReelleZahlen
         AUSSAGE_KARTEN_ART -> WahrheitsMenge
         MENGE_KARTEN_ART -> BenannteMenge("mengen_$parameterName", "\\mathcal{P}(\\mathcal{U})")

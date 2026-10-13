@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
+import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
@@ -128,7 +129,7 @@ fun matrixproduktFalkFaktoren(auswertung: KnotenAuswertungsErgebnis?): List<Matr
     return auswertung?.eingänge.orEmpty().entries.map { requireNotNull(it.value.objekt.alsMatrixFaktorOderNull()) { "Faktor ${it.key} ist keine Matrix, Zeile oder Spalte." } }
 }
 
-data class FalkAuswahl(val schritt: Int = 0, val zeile: Int = 0, val spalte: Int = 0)
+data class FalkAuswahl(val schritt: Int = 0, val zeile: Int = 0, val spalte: Int = 0, val summand: Int? = null)
 
 @Composable
 fun MatrixproduktFalkSchemaInhalt(
@@ -155,54 +156,44 @@ fun MatrixproduktFalkSchemaInhalt(
         return
     }
     var auswahl by remember(auswertung) { mutableStateOf(FalkAuswahl()) }
-    val aktiverSchritt = auswahl.schritt.coerceIn(kette.zwischenprodukte.indices)
-    val aktivesLinks = if (aktiverSchritt == 0) kette.faktoren.first() else kette.zwischenprodukte[aktiverSchritt - 1]
-    val aktivesRechts = kette.faktoren[aktiverSchritt + 1]
-    val aktiveZeile = auswahl.zeile.coerceIn(0, aktivesLinks.zeilenAnzahl - 1)
-    val aktiveSpalte = auswahl.spalte.coerceIn(0, aktivesRechts.spaltenAnzahl - 1)
-    val details = remember(aktivesLinks, aktivesRechts, aktiveZeile, aktiveSpalte) {
-        detailliertesFalkSchema(aktivesLinks, aktivesRechts, aktiveZeile, aktiveSpalte)
-    }
     Column(modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Zusammenhängendes Falk-Schema", style = MaterialTheme.typography.titleMedium)
         Text("${kette.faktoren.size} verbundene Faktoren; streng linksassoziativ, alle Zwischenprodukte.", style = MaterialTheme.typography.bodySmall)
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val breit = maxWidth >= 840.dp
-            @Composable fun schritt(index: Int) {
-                val links = if (index == 0) kette.faktoren.first() else kette.zwischenprodukte[index - 1]
-                val rechts = kette.faktoren[index + 1]
-                val aktiv = aktiverSchritt == index
-                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("P${index + 1} = ${if (index == 0) "A1" else "P$index"} · A${index + 2}", style = MaterialTheme.typography.titleSmall)
-                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FalkMatrix(if (index == 0) "A1" else "P$index", links, if (aktiv) aktiveZeile else null, null, onZelle = { z, _ -> auswahl = FalkAuswahl(index, z, aktiveSpalte) })
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FalkMatrix("A${index + 2}", rechts, null, if (aktiv) aktiveSpalte else null, onZelle = { _, sp -> auswahl = FalkAuswahl(index, aktiveZeile, sp) })
-                            HorizontalDivider()
-                            FalkMatrix("P${index + 1}", kette.zwischenprodukte[index], if (aktiv) aktiveZeile else null, if (aktiv) aktiveSpalte else null, ergebnisZelleHervorheben = aktiv, onZelle = { z, sp -> auswahl = FalkAuswahl(index, z, sp) })
-                        }
-                    }
-                }
-            }
-            Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 2.dp) {
-                if (breit) Row(Modifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
-                    kette.zwischenprodukte.indices.forEach { index ->
-                        if (index > 0) Text("→", style = MaterialTheme.typography.headlineLarge)
-                        schritt(index)
-                    }
-                } else Column(Modifier.horizontalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-                    kette.zwischenprodukte.indices.forEach { index ->
-                        if (index > 0) Text("↓", style = MaterialTheme.typography.headlineLarge)
-                        schritt(index)
-                    }
+        val (schritt, zeile, spalte, summand) = auswahl
+        // Jedes P steht einmal unter seinem rechten Faktor und ist zugleich der nächste linke Operand.
+        Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).semantics { contentDescription = "Falk-Schema Ausschnitt" }, contentAlignment = Alignment.Center) {
+        Row(Modifier.semantics { contentDescription = "Falk-Schema" }, verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FalkMatrix("A1", kette.faktoren.first(), if (schritt == 0) zeile else null,
+                if (schritt == 0) summand else null, onZelle = { z, _ -> auswahl = FalkAuswahl(zeile = z) })
+            kette.zwischenprodukte.indices.forEach { index ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("P${index + 1} = ${if (index == 0) "A1" else "P$index"} · A${index + 2}")
+                    FalkMatrix("A${index + 2}", kette.faktoren[index + 1],
+                        if (schritt == index) summand else null, if (schritt == index) spalte else null,
+                        onZelle = { _, s -> auswahl = FalkAuswahl(schritt = index, spalte = s) })
+                    HorizontalDivider()
+                    FalkMatrix("P${index + 1}", kette.zwischenprodukte[index],
+                        if (schritt == index || schritt == index + 1) zeile else null,
+                        if (schritt == index) spalte else if (schritt == index + 1) summand else null,
+                        ergebnisZelleHervorheben = schritt == index,
+                        onZelle = { z, s -> auswahl = FalkAuswahl(index, z, s) })
                 }
             }
         }
-        if (details is DetailliertesFalkSchemaErgebnis.Gültig) {
-            val modell = details.modell
-            Text("P${aktiverSchritt + 1} · Zeile ${aktiveZeile + 1}, Spalte ${aktiveSpalte + 1}", style = MaterialTheme.typography.titleSmall)
-            LatexText("${gekürzteFalkSummeLatex(modell)} = ${modell.ergebnisEintrag.zuLatex()}")
         }
+        val links = if (schritt == 0) kette.faktoren.first() else kette.zwischenprodukte[schritt - 1]
+        val detail = (detailliertesFalkSchema(links, kette.faktoren[schritt + 1], zeile, spalte)
+            as DetailliertesFalkSchemaErgebnis.Gültig).modell
+        Text("P${schritt + 1}, Zeile ${zeile + 1}, Spalte ${spalte + 1}", style = MaterialTheme.typography.titleSmall)
+        LatexText("${gekürzteFalkSummeLatex(detail)} = ${detail.ergebnisEintrag.zuLatex()}")
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            detail.summanden.forEachIndexed { index, produkt ->
+                FilterChip(selected = summand == index, onClick = { auswahl = auswahl.copy(summand = index) },
+                    label = { Column { Text("k = ${index + 1}:"); LatexText(produkt.zuLatex()) } })
+            }
+        }
+
     }
 }
 
@@ -244,6 +235,7 @@ private fun FalkMatrix(
                                         latex = matrix.zeilen[z][s].zuLatex(),
                                         hintergrund = when {
                                             istErgebnis -> MaterialTheme.colorScheme.tertiaryContainer
+                                            (istZeile && istSpalte) -> MaterialTheme.colorScheme.secondaryContainer
                                             istZeile || istSpalte -> MaterialTheme.colorScheme.primaryContainer
                                             else -> Color.Transparent
                                         },

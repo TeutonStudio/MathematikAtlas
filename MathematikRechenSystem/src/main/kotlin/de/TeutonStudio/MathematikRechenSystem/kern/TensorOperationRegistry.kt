@@ -239,6 +239,7 @@ object StandardTensorOperationen {
         d("tensor.subtraktion", "Subtraktion", TensorSignaturFamilie.BINAER, listOf(links, rechts), status = TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT),
         d("tensor.skalarmultiplikation", "Skalierung", TensorSignaturFamilie.BINAER, listOf(skalar, tensor), erlaubtSkalar = true, status = TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT),
         d("tensor.hadamard", "Hadamard-Produkt", TensorSignaturFamilie.BINAER, listOf(links, rechts), status = TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT),
+        d("tensor.hadamardDivision", "Komponentenweise Division", TensorSignaturFamilie.BINAER, listOf(links, rechts), status = TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT),
         d("tensor.tensorprodukt", "Tensorprodukt", TensorSignaturFamilie.BINAER, listOf(links, rechts), erlaubtSkalar = true, status = TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT),
         d("tensor.kontraktion", "Kontraktion", TensorSignaturFamilie.ACHSENABHAENGIG, listOf(tensor), minimaleAchsenAnzahl = 2, maximaleAchsenAnzahl = 2, status = TensorUnterstuetzungsStatus.KONKRET_IMPLEMENTIERT),
         d("tensor.spur", "Spur", TensorSignaturFamilie.ACHSENABHAENGIG, listOf(tensor), ausgang = listOf(TensorHandleRolle("wert")), minimaleAchsenAnzahl = 2, maximaleAchsenAnzahl = 2, status = TensorUnterstuetzungsStatus.SYMBOLISCH_IMPLEMENTIERT),

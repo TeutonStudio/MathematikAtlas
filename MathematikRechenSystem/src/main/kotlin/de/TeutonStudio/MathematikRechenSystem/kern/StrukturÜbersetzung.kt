@@ -31,3 +31,8 @@ fun übersetzeStruktur(wert: MathematischesObjekt, ziel: String): Mathematisches
     }
     else -> error("Unbekanntes Strukturübersetzungsziel '$ziel'.")
 }
+
+/** Öffnet genau eine Ebene von Tupeln und orientierten Vektoren. */
+fun strukturEineEbeneAbflachen(tupel: Tupel): Tupel = Tupel(tupel.elemente.flatMap {
+    when(it) { is Tupel -> it.elemente; is OrientierterVektor -> it.werte; else -> listOf(it) }
+})

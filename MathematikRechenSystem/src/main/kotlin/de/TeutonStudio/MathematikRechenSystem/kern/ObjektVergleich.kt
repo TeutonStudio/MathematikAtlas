@@ -51,6 +51,8 @@ private fun vergleicheObjekte(links: MathematischesObjekt, rechts: Mathematische
     val rk = komponenten(r)
     if (lk != null && rk != null) return folge(lk, rk)
     return when {
+        l is GradWinkel && r is GradWinkel -> paar(l.grad, r.grad)
+        l is WinkelAusdruck && r is ZahlAusdruck || r is WinkelAusdruck && l is ZahlAusdruck -> vergleichsWert(false)
         l is RationaleZahl && r is RationaleZahl -> vergleichsWert(l.compareTo(r) == 0)
         l is KomplexeZahl && r is KomplexeZahl -> alle(listOf(l.realteil to r.realteil, l.imaginärteil to r.imaginärteil))
         !selbig && l is KomplexeZahl && r is RationaleZahl -> alle(listOf(l.realteil to r, l.imaginärteil to RationaleZahl.Null))

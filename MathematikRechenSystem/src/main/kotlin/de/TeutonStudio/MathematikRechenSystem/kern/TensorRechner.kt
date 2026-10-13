@@ -7,10 +7,8 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 fun konjugiereFormal(argument: ZahlAusdruck): ZahlAusdruck = when (argument) {
     is RationaleZahl -> argument
     is KomplexeZahl -> KomplexeZahl(argument.realteil, negation(argument.imaginärteil))
-    else -> Variable(
-        name = "konjugiert_${argument.hashCode()}",
-        latex = "\\overline{${argument.zuLatex()}}",
-    )
+    is Konjugierte -> argument.argument
+    else -> Konjugierte(argument)
 }
 
 enum class SkalarproduktLinearitaet { RECHTSLINEAR, LINKSLINEAR }
@@ -180,6 +178,7 @@ enum class TensorRechnerOperator(val stabileId: String) {
     SUBTRAKTION("tensor.subtraktion"),
     SKALARMULTIPLIKATION("tensor.skalarmultiplikation"),
     HADAMARD_PRODUKT("tensor.hadamard"),
+    HADAMARD_DIVISION("tensor.hadamardDivision"),
     TENSORPRODUKT("tensor.tensorprodukt"),
     KONTRAKTION("tensor.kontraktion"),
     ACHSENPERMUTATION("tensor.achsenpermutation"),
@@ -206,6 +205,7 @@ sealed interface TensorRechnerErgebnis {
         val objekt: MathematischesObjekt,
         val form: List<Int>,
         val zahlBereich: MengenAusdruck,
+        val bedingungen: List<Aussage> = emptyList(),
     ) : TensorRechnerErgebnis
     data class Bedingt(val form: List<Int>?, val bedingungen: List<String>) : TensorRechnerErgebnis
     data class Ungueltig(val code: String, val nachricht: String) : TensorRechnerErgebnis
@@ -223,6 +223,12 @@ object TensorRechner {
             TensorRechnerOperator.ADDITION -> komponentenweise(eingaben, ::addition)
             TensorRechnerOperator.SUBTRAKTION -> komponentenweise(eingaben, ::subtraktion)
             TensorRechnerOperator.HADAMARD_PRODUKT -> komponentenweise(eingaben, ::multiplikation)
+            TensorRechnerOperator.HADAMARD_DIVISION -> {
+                if(eingaben.size!=2) ungueltig("anzahl","Komponentenweise Division benötigt zwei Tensoren.") else try {
+                    val wert=komponentenweise(eingaben) { a,b -> require(vereinfache(b)!=RationaleZahl.Null) { "Eine Divisorkomponente ist null." }; Division(a,b) }
+                    if(wert is TensorRechnerErgebnis.Wert) wert.copy(bedingungen=ansichtOderNull(eingaben[1].objekt)?.komponenten.orEmpty().map { Ungleichheit(it,RationaleZahl.Null) }) else wert
+                } catch(fehler:IllegalArgumentException) { ungueltig("nullkomponente",fehler.message ?: "Division nicht definiert.") }
+            }
             TensorRechnerOperator.SKALARMULTIPLIKATION -> skalarMultiplikation(eingaben)
             TensorRechnerOperator.TENSORPRODUKT -> tensorProdukt(eingaben, konfiguration.materialisierungsBudget)
             TensorRechnerOperator.ACHSENPERMUTATION -> permutiere(eingaben, konfiguration.permutation)
@@ -445,4 +451,9 @@ private fun materialisiereTensor(
         List(form[0]) { zeile -> List(form[1]) { spalte -> werte[zeile * form[1] + spalte] } },
     )
     else -> Tensor(form, werte)
+}
+
+/** Formaler Operator; Substitution bleibt bis zur Komponentenbindung erhalten. */
+data class Konjugierte(val argument: ZahlAusdruck) : ZahlAusdruck {
+    override fun zuLatex() = "\\overline{${argument.zuLatex()}}"
 }

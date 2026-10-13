@@ -209,7 +209,7 @@ private object VariablenInspektor : KnotenInspektor {
             val winkel = variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL
             ParameterFeld(if (winkel) "Anzahl Winkel n (Rⁿ⁺¹)" else "Komponenten",
                 knoten.parameter[VARIABLE_DIMENSION] ?: "2") { raw ->
-                raw.toIntOrNull()?.takeIf { it in (if (winkel) 0..64 else 1..64) }?.let {
+                raw.toIntOrNull()?.takeIf { it in (if (winkel) 0..de.TeutonStudio.MathematikRechenSystem.kern.MAXIMALE_RICHTUNGS_WINKEL else 1..64) }?.let {
                     aktionen.parameter(VARIABLE_DIMENSION, it.toString())
                 }
             }
@@ -273,6 +273,7 @@ private object VariablenInspektor : KnotenInspektor {
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         }
+        de.TeutonStudio.MathematikKnoten.MatrixVariableFelder(knoten) { aktionen.knoten(it) }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }
@@ -318,7 +319,7 @@ private object TermZuMethodeInspektor : KnotenInspektor {
         if (parameter.isEmpty()) Text("Keine freien Variablen erkannt.", style = MaterialTheme.typography.bodySmall)
         parameter.forEachIndexed { index, variable ->
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-                Text("${index + 1}. ${variable.name}", modifier = Modifier.weight(1f))
+                LatexText("${index + 1}.\\; ${variable.zuLatex()}", modifier = Modifier.weight(1f))
                 OutlinedButton(onClick = {
                     val neu = parameter.map { it.name }.toMutableList().also { namen -> java.util.Collections.swap(namen, index, index - 1) }
                     aktionen.parameter("argumentReihenfolge", neu.joinToString(","))
@@ -565,7 +566,9 @@ private fun TensorPermutationEditor(
     Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
         arten.drop(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class && (bereich !is WertebereichKonfiguration.Vektor || wert !is WertebereichKonfiguration.Vektor || bereich.orientierung == wert.orientierung), { ändern(wert) }, label = { Text(name) }) }
     }
+    TextButton(onClick = { ändern(WertebereichKonfiguration.Winkel) }) { Text(if (bereich == WertebereichKonfiguration.Winkel) "✓ Winkel (Gradmenge)" else "Winkel (Gradmenge)") }
     when (bereich) {
+        WertebereichKonfiguration.Winkel -> LatexText(de.TeutonStudio.MathematikRechenSystem.kern.Gradmenge.zuLatex())
         is WertebereichKonfiguration.Zahl -> GrundmengenAuswahl("Zahlgrundmenge", bereich.grundmenge) { ändern(bereich.copy(grundmenge = it)) }
         WertebereichKonfiguration.Aussage -> Text("{⊤, ⊥}", style = MaterialTheme.typography.bodySmall)
         is WertebereichKonfiguration.Menge -> {
@@ -694,15 +697,9 @@ private object VisualisierungsInspektor : KnotenInspektor {
         if (methode == null) {
             Text("Noch keine Methodensignatur erkannt.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            Text(
-                "${methode.name}(${methode.parameter.joinToString { it.name }}) → ${methode.ausgabeNamen.joinToString()}",
-                style = MaterialTheme.typography.bodySmall,
-            )
+            LatexText("${methode.name}\\left(${methode.parameter.joinToString { it.zuLatex() }}\\right) \\to ${methode.ausgabeNamen.joinToString()}")
             methode.parameter.forEachIndexed { index, parameter ->
-                Text(
-                    "${index + 1}. ${parameter.name} ∈ ${methode.werteVorräte[parameter.name]?.zuLatex() ?: "nicht angegeben"}",
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                LatexText("${index + 1}.\\; ${parameter.zuLatex()} \\in ${methode.werteVorräte[parameter.name]?.zuLatex() ?: "?"}")
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
@@ -719,6 +716,18 @@ private object VisualisierungsInspektor : KnotenInspektor {
             { ändern(config.copy(methodenModus = MethodenDarstellungsModus.Koordinatenausgabe)) },
             label = { Text("Koordinatenausgabe") },
         )
+        Text("Ausgabeprojektion", style = MaterialTheme.typography.titleSmall)
+        Text("Für Ergebnisse oberhalb R³ zwei oder drei Ausgabekoordinaten wählen. Alle Parameter werden weiterhin ausgewertet.", style = MaterialTheme.typography.bodySmall)
+        ParameterFeld("Ausgabekoordinaten (z. B. 1, 2, 4)", config.ausgabeKoordinaten.joinToString(", ")) { text ->
+            val teile = text.split(',').map(String::trim)
+            val indizes = teile.mapNotNull(String::toIntOrNull)
+            if (text.isBlank()) ändern(config.copy(ausgabeKoordinaten = emptyList()))
+            else if (indizes.size == teile.size && indizes.size in 2..3 && indizes.all { it > 0 } && indizes.distinct().size == indizes.size) {
+                ändern(config.copy(ausgabeKoordinaten = indizes,
+                    dimension = if (indizes.size == 2) RaumDimension.R2 else RaumDimension.R3,
+                    dimensionsModus = DimensionsModus.Manuell))
+            }
+        }
         Text("Achsen und Parameterfenster", style = MaterialTheme.typography.titleSmall)
         ParameterFeld("X-Achse / erste Ausgabe", config.achsen.x) { ändern(config.copy(achsen = config.achsen.copy(x = it.trim()))) }
         if (config.dimension != RaumDimension.R1) ParameterFeld("Y-Achse / zweite Ausgabe", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }

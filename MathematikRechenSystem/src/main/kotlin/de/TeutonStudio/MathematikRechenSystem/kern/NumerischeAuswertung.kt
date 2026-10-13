@@ -106,7 +106,14 @@ private fun wertIntern(
             }
         }
     }
+    is Konjugierte -> wertIntern(ausdruck.argument, umgebung, optionen)
     is Betrag -> wertIntern(ausdruck.argument, umgebung, optionen).map(::abs)
+    is SinusGrad -> wertIntern(winkelBogenmassUnnormiert(ausdruck.winkel), umgebung, optionen).map(::sin)
+    is WinkelBogenmass -> when (val w = ausdruck.winkel) {
+        is GradWinkel -> wertIntern(w.grad, umgebung, optionen).map { hauptwertNumerisch(it / 180 * Math.PI, ausdruck.vertreter) }
+        is WinkelAusBogenmass -> wertIntern(w.argument, umgebung, optionen).map { hauptwertNumerisch(it, ausdruck.vertreter) }
+        else -> NumerischesErgebnis.NichtUnterstützt("Der Winkel ist nicht belegt.")
+    }
     is Sinus -> wertIntern(ausdruck.argument, umgebung, optionen).map(::sin)
     is Cosinus -> wertIntern(ausdruck.argument, umgebung, optionen).map(::cos)
     is ArcSinus -> inverseTrigonometrischeAuswertung(ausdruck.argument, umgebung, optionen, "ArcSinus", ::asin)

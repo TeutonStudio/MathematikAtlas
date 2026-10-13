@@ -44,7 +44,7 @@ fun empfohleneRaumDimension(menge: MengenAusdruck): RaumDimension? = when (menge
 }
 
 fun VisualisierungsKonfiguration.mitWirksamerDimension(menge: MengenAusdruck?): VisualisierungsKonfiguration {
-    if (dimensionsModus == DimensionsModus.Manuell || menge == null) return this
+    if (dimensionsModus == DimensionsModus.Manuell || ausgabeKoordinaten.isNotEmpty() || menge == null) return this
     val abgeleitet = empfohleneRaumDimension(menge) ?: return this
     if (abgeleitet == dimension) return this
     val neueAchsen = when (abgeleitet) {

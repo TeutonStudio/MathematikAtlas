@@ -94,6 +94,7 @@ object StrukturRechnerOperatoren {
         d("vektor.norm", "Norm", "\\lVert v\\rVert", FormelTyp.ZAHL, "\\lVert v\\rVert=\\sqrt{\\sum_i v_i^2}", e("vektor", FormelTyp.VEKTOR)),
         d("vektor.normalisierung", "Normalisierung", "v/\\lVert v\\rVert", FormelTyp.VEKTOR, "\\widehat v=v/\\lVert v\\rVert", e("vektor", FormelTyp.VEKTOR)),
         d("vektor.hadamard", "Hadamard-Produkt", "u\\circ v", FormelTyp.VEKTOR, "(u_i)\\circ(v_i)=(u_iv_i)", e("links", FormelTyp.VEKTOR), e("rechts", FormelTyp.VEKTOR)),
+        d("vektor.hadamardDivision", "Komponentenweise Division", "A/B", FormelTyp.VEKTOR, "(A/B)_i=A_i/B_i", e("links", FormelTyp.VEKTOR), e("rechts", FormelTyp.VEKTOR)),
         d("vektor.projektion", "Projektion", "\\operatorname{proj}_v(u)", FormelTyp.VEKTOR, "\\operatorname{proj}_v(u)=\\frac{\\langle u,v\\rangle}{\\langle v,v\\rangle}v", e("vektor", FormelTyp.VEKTOR), e("ziel", FormelTyp.VEKTOR)),
         d("vektor.winkel", "Winkel", "\\angle(u,v)", FormelTyp.ZAHL, "\\angle(u,v)=\\arccos\\frac{\\langle u,v\\rangle}{\\lVert u\\rVert\\lVert v\\rVert}", e("links", FormelTyp.VEKTOR), e("rechts", FormelTyp.VEKTOR)),
     )
@@ -104,6 +105,7 @@ object StrukturRechnerOperatoren {
         d("matrix.skalarmultiplikation", "Skalarmultiplikation", "sA", FormelTyp.MATRIX, "(sA)_{ij}=sa_{ij}", e("skalar", FormelTyp.ZAHL), e("matrix", FormelTyp.MATRIX)),
         d("matrix.produkt", "Matrixprodukt", "AB", FormelTyp.MATRIX, "(AB)_{ij}=\\sum_k a_{ik}b_{kj}", e("links", FormelTyp.MATRIX), e("rechts", FormelTyp.MATRIX)),
         d("matrix.hadamard", "Hadamard-Produkt", "A\\circ B", FormelTyp.MATRIX, "(A\\circ B)_{ij}=a_{ij}b_{ij}", e("links", FormelTyp.MATRIX), e("rechts", FormelTyp.MATRIX)),
+        d("matrix.hadamardDivision", "Komponentenweise Division", "A/B", FormelTyp.MATRIX, "(A/B)_i=A_i/B_i", e("links", FormelTyp.MATRIX), e("rechts", FormelTyp.MATRIX)),
         d("matrix.vektorProdukt", "Matrix-Vektor-Produkt", "Av", FormelTyp.VEKTOR, "(Av)_i=\\sum_j a_{ij}v_j", e("matrix", FormelTyp.MATRIX), e("vektor", FormelTyp.VEKTOR)),
         d("matrix.transponieren", "Transponieren", "A^{\\mathsf T}", FormelTyp.MATRIX, "(A^{\\mathsf T})_{ij}=a_{ji}", e("matrix", FormelTyp.MATRIX)),
         d("matrix.inverse", "Inverse", "A^{-1}", FormelTyp.MATRIX, "AA^{-1}=A^{-1}A=I", e("matrix", FormelTyp.MATRIX)),
@@ -124,6 +126,7 @@ object StrukturRechnerOperatoren {
         d("tensor.subtraktion", "Subtraktion", "A-B", FormelTyp.TENSOR, "(A-B)_I=a_I-b_I", e("links", FormelTyp.TENSOR), e("rechts", FormelTyp.TENSOR)),
         d("tensor.skalarmultiplikation", "Skalarmultiplikation", "sA", FormelTyp.TENSOR, "(sA)_I=sa_I", e("skalar", FormelTyp.ZAHL), e("tensor", FormelTyp.TENSOR)),
         d("tensor.hadamard", "Hadamard-Produkt", "A\\circ B", FormelTyp.TENSOR, "(A\\circ B)_I=a_Ib_I", e("links", FormelTyp.TENSOR), e("rechts", FormelTyp.TENSOR)),
+        d("tensor.hadamardDivision", "Komponentenweise Division", "A/B", FormelTyp.TENSOR, "(A/B)_i=A_i/B_i", e("links", FormelTyp.TENSOR), e("rechts", FormelTyp.TENSOR)),
         d("tensor.tensorprodukt", "Tensorprodukt", "A\\otimes B", FormelTyp.TENSOR, "(A\\otimes B)_{IJ}=a_Ib_J", e("links", FormelTyp.TENSOR), e("rechts", FormelTyp.TENSOR)),
         d("tensor.kontraktion", "Kontraktion", "\\operatorname{kontr}A", FormelTyp.TENSOR, "\\operatorname{kontr}_{p,q}(A)", e("tensor", FormelTyp.TENSOR)),
         d("tensor.achsenpermutation", "Achsenpermutation", "\\operatorname{perm}A", FormelTyp.TENSOR, "(\\operatorname{perm}_\\sigma A)_{i_1\\ldots i_n}=a_{i_{\\sigma(1)}\\ldots i_{\\sigma(n)}}", e("tensor", FormelTyp.TENSOR)),

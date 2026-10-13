@@ -11,7 +11,7 @@ enum class KonzeptReiterRolle { Definition, Spezialfall, Beispiel, Äquivalenz }
 
 enum class KomplexDarstellung { Kartesisch, Polar }
 
-enum class KonzeptReiterDarstellung { Karte, FalkSchema }
+enum class KonzeptReiterDarstellung { Karte, FalkSchema, Auswertungsschema }
 
 internal const val MATRIXPRODUKT_FALK_REITER_ID =
     "mathematik.matrixProdukt|Matrixprodukt|.4c459827.falksches-schema"

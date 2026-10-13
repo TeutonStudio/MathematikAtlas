@@ -30,7 +30,8 @@ internal object MethodenWertevorratAuswerter : MathematikKnotenAuswerter {
         val methodenWert = kontext.eingänge["methode"] ?: error("Eine konkrete Methode fehlt.")
         val methode = methodenWert.objekt as? MathematischeSignaturtragendeMethode
             ?: error("Der Methoden-Wertevorrat benötigt eine mathematische Raum-/Mengensignatur.")
-        val definitionsRaum = methode.mathematischeSignatur.definitionsRaum
+        val signatur=methode.mathematischeSignatur
+        val definitionsRaum=if(signatur.argumente.size==1 && istWinkelraum(signatur.argumente.single().definitionsMenge) && signatur.definitionsRaum==signatur.kanonischerArgumentRaum) signatur.argumente.single().definitionsMenge else signatur.definitionsRaum
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "menge" to BedingterWert(

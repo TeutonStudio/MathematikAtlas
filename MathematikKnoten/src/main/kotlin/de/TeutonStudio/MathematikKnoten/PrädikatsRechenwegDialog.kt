@@ -16,15 +16,22 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 fun besitztPrädikatsRechenweg(art: String): Boolean = art in setOf("mathematik.auswerten", "mathematik.gleichungLösen")
 
-/** Both platforms and the inspector render the actual cached evaluation, never a second calculation. */
+/** Quellkompatibler Einstieg für bisherige Aufrufer. */
 @Composable
-fun PrädikatsRechenwegDialog(titel: String, ergebnis: KnotenAuswertungsErgebnis?, schließen: () -> Unit) {
+fun PrädikatsRechenwegDialog(titel: String, ergebnis: KnotenAuswertungsErgebnis?, schließen: () -> Unit) =
+    PrädikatsRechenwegDialog(titel, ergebnis, null, schließen)
+
+/** Beide Plattformen verwenden dieselbe Auswertung und denselben budgetierten Numerikdienst. */
+@Composable
+fun PrädikatsRechenwegDialog(titel: String, ergebnis: KnotenAuswertungsErgebnis?, konfigurationAendern: ((PolynomNumerikKonfiguration) -> Unit)?, schließen: () -> Unit) {
     AtlasDialog(onDismissRequest = schließen) {
         Column(Modifier.fillMaxWidth().heightIn(max = 840.dp)) {
             AtlasDialogKopf(titel = { Text("$titel · Rechenweg") }, aktionen = {
                 TextButton(onClick = schließen) { Text("Schließen") }
             })
-            PrädikatsRechenwegInhalt(ergebnis, Modifier.weight(1f, fill = false).fillMaxWidth())
+            if (ergebnis?.polynomProblem != null)
+                PolynomRechenwegInhalt(ergebnis, Modifier.weight(1f, fill = false).fillMaxWidth(), konfigurationAendern)
+            else PrädikatsRechenwegInhalt(ergebnis, Modifier.weight(1f, fill = false).fillMaxWidth())
         }
     }
 }
