@@ -42,6 +42,24 @@ internal object ErweiterterFormelRenderer {
     ) {
         val argumente = operation.argumente.sortedBy { it.position }.map { it.ausdruck }
         when (operation.operatorId) {
+            "methode.anwenden" -> {
+                schreibe(argumente[0], 40)
+                text.append("\\left(")
+                argumente.drop(1).forEachIndexed { i, a -> if (i > 0) text.append(","); schreibe(a, 0) }
+                text.append("\\right)")
+            }
+            "tupel.konstruktion" -> {
+                text.append("\\operatorname{Tupel}\\left(")
+                argumente.forEachIndexed { i, a -> if (i > 0) text.append(","); schreibe(a, 0) }
+                text.append("\\right)")
+            }
+            "tupel.projektion" -> {
+                val quelle = argumente[0]
+                text.append("\\operatorname{proj}_{")
+                schreibe(argumente[1], 0); text.append("}{")
+                schreibe(quelle, 0); text.append("}")
+            }
+
             "formel.gruppierung" -> {
                 text.append("\\left(")
                 schreibe(argumente.argumentOderPlatzhalter(0, operation.id, "inhalt"), 0)

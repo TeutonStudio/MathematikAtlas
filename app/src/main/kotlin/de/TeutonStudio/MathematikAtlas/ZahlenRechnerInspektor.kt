@@ -459,6 +459,11 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
                 startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" },
                 startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT],
                 startAusdruck = ladeFormelAst(knoten),
+                startKnoten = knoten,
+                übernehmenGebunden = { f, zeichnung ->
+                    formelKandidat = konfiguriereGebundeneKnotenFormel(knoten,f,zeichnung)
+                    formelDialog = false; operatorDialog = true
+                },
                 übernehmenMitZeichnung = { ast, latex, zeichnung ->
                     val neu = konfiguriereZahlenRechnerFormel(knoten, latex)
                     formelKandidat = neu.copy(eigenschaften = neu.eigenschaften + (FORMEL_ZEICHNUNG_EIGENSCHAFT to zeichnung) + (FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ast))))

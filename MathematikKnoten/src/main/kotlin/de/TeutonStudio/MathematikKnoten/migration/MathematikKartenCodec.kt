@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import org.json.JSONObject
+import de.TeutonStudio.MathematikKartenAdapter.normalisiereSchnittstellenReihenfolge
 
 /**
  * Kanonische Serialisierungs- und Migrationspipeline für mathematische Karten.
@@ -40,6 +41,9 @@ object MathematikKartenCodec {
 
 object MathematikKartenMigrationen {
     fun vorSpeichern(karte: KartenDaten): KartenDaten = karte
+        .normalisiereSchnittstellenReihenfolge()
+        .migriereGradmengenDimension()
+        .migriereVariablenGrundraum()
         .migrierePolarKonventionen()
         .migriereWinkelraumAufrufe()
         .migriereMatrixZerlegenZumÜbersetzer()
@@ -55,6 +59,9 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
+        .normalisiereSchnittstellenReihenfolge()
+        .migriereGradmengenDimension()
+        .migriereVariablenGrundraum()
         .migrierePolarKonventionen()
         .migriereWinkelraumAufrufe()
         .migriereMatrixZerlegenZumÜbersetzer()
@@ -70,6 +77,9 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
+        .normalisiereSchnittstellenReihenfolge()
+        .migriereGradmengenDimension()
+        .migriereVariablenGrundraum()
         .migrierePolarKonventionen()
         .migriereWinkelraumAufrufe()
         .migriereMatrixZerlegenZumÜbersetzer()

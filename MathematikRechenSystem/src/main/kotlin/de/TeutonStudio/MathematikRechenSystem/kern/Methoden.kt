@@ -24,8 +24,17 @@ data class MathematischeMethode(
     override val effektiverWerteVorrat: MengenAusdruck? = null,
     /** Strukturierte Herkunft einer Restriktion mit optionalen Ergänzungszweigen. */
     override val bereichsanpassung: MethodenBereichsanpassung? = null,
+    /** Gespeicherte Identitäten, unabhängig von der aktuellen Reihenfolge. */
+    val argumentIdentitäten: Map<String, String> = parameter.associate { it.name to (it.bindungsId ?: "argument:${it.name}") },
+    val ergebnisIdentitäten: Map<String, String> = ausgabeNamen.associateWith { "ergebnis:$it" },
+    val voraussetzungen: Set<Aussage> = emptySet(),
+    val übersetzungen: ÜbersetzungsMetadaten = ÜbersetzungsMetadaten(),
 ) : SymbolischMathematischeMethode {
     init {
+        require(parameter.all { it.name in argumentIdentitäten }) { "Argumentidentität fehlt." }
+        require(parameter.map { argumentIdentitäten.getValue(it.name) }.distinct().size == parameter.size) { "Argumentidentitäten müssen eindeutig sein." }
+        require(ausgabeNamen.all { it in ergebnisIdentitäten }) { "Ergebnisidentität fehlt." }
+        require(ausgabeNamen.map { ergebnisIdentitäten.getValue(it) }.distinct().size == ausgabeNamen.size) { "Ergebnisidentitäten müssen eindeutig sein." }
         require(parameter.map { it.name }.distinct().size == parameter.size) {
             "Methodenparameter müssen eindeutige Namen haben."
         }
@@ -87,12 +96,12 @@ data class MathematischeMethode(
         get() = MethodenSignatur(
             argumente = parameter.mapIndexed { index, parameter ->
                 MethodenKomponente(
-                    "argument-$index", parameter.name, index,
+                    argumentIdentitäten.getValue(parameter.name), parameter.name, index,
                     werteVorräte[parameter.name]?.elementTypAusdruck() ?: TypAusdruck.Unbekannt,
                 )
             },
             ergebnisse = ausgabeNamen.mapIndexed { index, name ->
-                MethodenKomponente("ergebnis-$index", name, index, ergebnisZielMengen[index].elementTypAusdruck())
+                MethodenKomponente(ergebnisIdentitäten.getValue(name), name, index, ergebnisZielMengen[index].elementTypAusdruck())
             },
         )
 
@@ -100,7 +109,7 @@ data class MathematischeMethode(
         get() = MathematischeMethodenSignatur(
             argumente = parameter.mapIndexed { index, parameter ->
                 MathematischeArgumentKomponente(
-                    id = "argument-$index",
+                    id = argumentIdentitäten.getValue(parameter.name),
                     name = parameter.name,
                     position = index,
                     parameter = parameter,
@@ -110,7 +119,7 @@ data class MathematischeMethode(
             },
             ergebnisse = ausgabeNamen.mapIndexed { index, ausgabe ->
                 MathematischeErgebnisKomponente(
-                    id = "ergebnis-$index",
+                    id = ergebnisIdentitäten.getValue(ausgabe),
                     name = ausgabe,
                     position = index,
                     zielMenge = ergebnisZielMengen[index],
@@ -225,19 +234,19 @@ data class MathematischeMethode(
         require(argumente.elemente.size == parameter.size) {
             "Die Methode '$name' erwartet ein ${parameter.size}-Tupel, erhielt aber ${argumente.elemente.size} Komponenten."
         }
-        val bindungen = parameter.map(MethodenParameter::name).zip(argumente.elemente).associate { (name,wert) ->
-            val domain=werteVorräte[name]
+        val bindungen = parameter.map { it.bindungsId ?: it.name }.zip(argumente.elemente).associate { (name,wert) ->
+            val domain=parameter.singleOrNull { (it.bindungsId ?: it.name) == name }?.let { werteVorräte[it.name] }
             name to if(domain!=null && istWinkelraum(domain)) normalisiereWinkelraumArgument(wert,domain) else wert
         }
         parameter.forEach { parameter ->
             val domain = werteVorräte[parameter.name]
             if (domain is BeschraenkteZahlmenge || domain is Schnitt && domain.mengen.any { it is BeschraenkteZahlmenge }) {
-                require(ElementBeziehung(bindungen.getValue(parameter.name), domain).entscheide().wahrheitswert != Wahrheitswert.Lüge) {
+                require(ElementBeziehung(bindungen.getValue(parameter.bindungsId ?: parameter.name), domain).entscheide().wahrheitswert != Wahrheitswert.Lüge) {
                     "Das Argument '${parameter.name}' liegt außerhalb seines beschränkten Definitionsbereichs."
                 }
             }
             val indexMenge = werteVorräte[parameter.name] as? EndlicheIndexMenge ?: return@forEach
-            val argument = bindungen.getValue(parameter.name) as? RationaleZahl
+            val argument = bindungen.getValue(parameter.bindungsId ?: parameter.name) as? RationaleZahl
                 ?: error("Der Index '${parameter.name}' muss eine positive ganze Zahl sein.")
             require(argument.nenner == java.math.BigInteger.ONE && argument.zähler.signum() > 0) {
                 "Der Index '${parameter.name}' muss eine positive ganze Zahl sein."
@@ -247,6 +256,8 @@ data class MathematischeMethode(
                 "Index ${argument.zuLatex()} liegt außerhalb von ${indexMenge.zuLatex()}."
             }
         }
+        val offene = prüfeDefinitionsBedingungen(argumente)
+        require(offene.none { it.entscheide().wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen den Definitionsraum der Methode '$name'." }
         val ausgewertet = ergebnisTupel.elemente.map { vereinfacheObjekt(ersetze(it, bindungen)) }
         return Tupel(ausgewertet)
     }
@@ -458,30 +469,23 @@ fun prüfeMathematischeKomposition(
 }
 
 fun komponiere(außen: Methode, innen: Methode): Methode {
-    val außenMathematisch = außen.alsMathematischeMethode("symbolische Komposition")
-    val innenMathematisch = innen.alsMathematischeMethode("symbolische Komposition")
-    val typPrüfung = prüfeMethodenTypKomposition(außenMathematisch, innenMathematisch).typPrüfung
-    require(typPrüfung !is TypPrüfung.Inkompatibel) {
-        "Die neutralen Tupelsignaturen der Methoden sind nicht kompatibel: ${typPrüfung.grund}"
-    }
-    val mengenPrüfung = prüfeMathematischeKomposition(außenMathematisch, innenMathematisch)
-    require(mengenPrüfung.kompatibilität.wahrheitswert == Wahrheitswert.Wahr) {
-        when (mengenPrüfung.kompatibilität.wahrheitswert) {
-            Wahrheitswert.Lüge -> "Die Bildmenge der inneren Methode liegt nicht im Definitionsbereich der äußeren Methode."
-            else -> "Die Totalität der Komposition ist nicht nachweisbar; erforderlich ist f[A] ⊆ C."
-        }
-    }
-    val (x, ausgabeAußen, termAußen) = außenMathematisch.einwertigeZahlMethode()
-    val (t, _, termInnen) = innenMathematisch.einwertigeZahlMethode()
-    val wertevorrat = innenMathematisch.werteVorräte[t.name]
-        ?: error("Die innere Methode benötigt eine Definitionsmenge.")
-    return Methode(
-        name = "${außen.name}\\circ${innen.name}",
-        parameter = listOf(t),
-        vorschrift = ersetze(termAußen, mapOf(x.name to termInnen)),
-        zielMenge = außenMathematisch.zielMengeFür(ausgabeAußen),
-        werteVorräte = mapOf(t.name to wertevorrat),
-        effektiverWerteVorrat = innenMathematisch.effektiverWerteVorrat,
+    val g = außen.alsMathematischeMethode("symbolische Komposition")
+    val f = innen.alsMathematischeMethode("symbolische Komposition")
+    val prüfung = prüfeMethodenTypKomposition(g, f).typPrüfung
+    require(prüfung !is TypPrüfung.Inkompatibel) { "Die Tupelsignaturen der Methoden sind inkompatibel: $prüfung" }
+    require(g.parameter.size == f.ergebnisTupel.anzahl) { "Ergebnis- und Argumenttupel haben verschiedene Stelligkeiten." }
+    val bindungen = g.parameter.mapIndexed { i, p -> (p.bindungsId ?: p.name) to f.ergebnisTupel.elemente[i] }.toMap()
+    val bedingungen = g.prüfeDefinitionsBedingungen(f.ergebnisTupel)
+    require(bedingungen.none { it.entscheide().wahrheitswert == Wahrheitswert.Lüge }) { "Die Komposition verletzt den äußeren Definitionsraum." }
+    return MathematischeMethode(
+        name = "${g.name}\\circ${f.name}", parameter = f.parameter,
+        vorschrift = ersetze(g.ergebnisTupel, bindungen),
+        zielMenge = ersetze(g.zielRaum, bindungen) as Tupelraum,
+        werteVorräte = f.werteVorräte, ausgabeNamen = g.ausgabeNamen,
+        effektiverWerteVorrat = f.effektiverWerteVorrat,
+        argumentIdentitäten = f.argumentIdentitäten, ergebnisIdentitäten = g.ergebnisIdentitäten,
+        voraussetzungen = f.voraussetzungen + bedingungen,
+        übersetzungen = ÜbersetzungsMetadaten(herkunft = (f.übersetzungen.alsHerkunft().herkunft + g.übersetzungen.alsHerkunft().herkunft).distinct()),
     )
 }
 
@@ -580,7 +584,14 @@ fun ersetze(aussage: Aussage, bindungen: Map<String, MathematischesObjekt>): Aus
 
 /** Rekursive, typübergreifende Substitution für Methodenausgaben und Zielmengen. */
 fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesObjekt>): MathematischesObjekt = when (objekt) {
-    is MethodenParameter -> bindungen[objekt.name] ?: objekt
+    is MethodenParameter -> bindungen[objekt.bindungsId ?: objekt.name] ?: objekt
+    is StrukturellerMethodenAufruf -> objekt.ersetzeAufruf(bindungen)
+    is MethodenZahlKomponente -> when (val aufruf = objekt.aufruf.ersetzeAufruf(bindungen)) {
+        is Tupel -> aufruf.wertAn(RationaleZahl.von(objekt.index.toLong())) as? ZahlAusdruck
+            ?: error("Die projizierte Methodenausgabe ist keine Zahl.")
+        is StrukturellerMethodenAufruf -> objekt.copy(aufruf = aufruf)
+        else -> error("Ungültiges Methodenaufrufergebnis.")
+    }
     is IndexKomponente -> indexKomponente(ersetze(objekt.quelle, bindungen), objekt.indizes.map { ersetze(it, bindungen) })
     is StrukturAchsenLaenge -> strukturAchsenLaenge(ersetze(objekt.quelle, bindungen), objekt.achse)
     is SymbolischeZahlKomponente -> if (objekt.weitereIndizes.isEmpty() && objekt.quelle !is Tensorartig) strukturKomponente(
@@ -644,7 +655,7 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
         untereGrenze = objekt.untereGrenze?.let { ersetze(it, bindungen) },
         obereGrenze = objekt.obereGrenze?.let { ersetze(it, bindungen) })
     is DefinierteMenge -> {
-        val gebundeneNamen = objekt.variablen.map { it.variable.name }.toSet()
+        val gebundeneNamen = objekt.variablen.map { it.variable.bindungsId ?: it.variable.name }.toSet()
         val freieBindungen = bindungen - gebundeneNamen
         objekt.copy(
             variablen = objekt.variablen.map { it.copy(grundMenge = ersetze(it.grundMenge, freieBindungen) as MengenAusdruck) },
@@ -682,13 +693,15 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Matrix -> Matrix(objekt.zeilen.map { zeile -> zeile.map { ersetze(it, bindungen) } })
     is Tensor -> objekt.copy(werte = objekt.werte.map { ersetze(it, bindungen) })
     is MathematischeMethode -> {
-        val freieBindungen = bindungen - objekt.parameter.map { it.name }.toSet()
+        val freieBindungen = bindungen - objekt.parameter.map { it.bindungsId ?: it.name }.toSet()
         objekt.copy(
             vorschrift = ersetze(objekt.vorschrift, freieBindungen),
             zielMenge = ersetze(objekt.zielMenge, freieBindungen) as MengenAusdruck,
             werteVorräte = objekt.werteVorräte.mapValues { ersetze(it.value, freieBindungen) as MengenAusdruck },
             effektiverWerteVorrat = objekt.effektiverWerteVorrat?.let { ersetze(it, freieBindungen) as MengenAusdruck },
             bereichsanpassung = objekt.bereichsanpassung?.ersetze(freieBindungen),
+            übersetzungen = objekt.übersetzungen.alsHerkunft(),
+            voraussetzungen = (objekt.voraussetzungen + objekt.aufgerufeneVoraussetzungen(freieBindungen, RechenKontext())).map { ersetze(it, freieBindungen) }.toSet(),
         )
     }
     is Abbild -> Abbild(ersetze(objekt.menge, bindungen) as MengenAusdruck, ersetze(objekt.methode, bindungen) as Methode)
@@ -735,6 +748,9 @@ private fun vereinfacheObjekt(
 
 /** Rekursive Analyse aller bindbaren Methodenparameter. */
 fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> = when (this) {
+    is StrukturellerMethodenAufruf -> methode.enthalteneMethodenParameter() + argumente.enthalteneMethodenParameter()
+    is MethodenZahlKomponente -> aufruf.enthalteneMethodenParameter()
+
     is MethodenParameter -> setOf(this)
     is IndexKomponente -> (listOf(quelle) + indizes).enthalteneMethodenParameter()
     is StrukturAchsenLaenge -> quelle.enthalteneMethodenParameter()

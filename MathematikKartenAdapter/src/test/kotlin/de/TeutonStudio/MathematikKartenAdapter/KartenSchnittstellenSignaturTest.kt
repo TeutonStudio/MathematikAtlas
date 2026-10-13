@@ -47,6 +47,16 @@ class KartenSchnittstellenSignaturTest {
         assertEquals(listOf(0, 1), nachher.map { it.position })
     }
 
+    @Test
+    fun `gespeicherte Reihenfolge bleibt nach Layoutaenderung stabil`() {
+        val a = grenze(KnotenId("a"), "mathematik.kartenEingang", "a", AnschlussRichtung.Ausgang, GraphPunkt(0f, 0f))
+        val b = grenze(KnotenId("b"), "mathematik.kartenEingang", "b", AnschlussRichtung.Ausgang, GraphPunkt(0f, 10f))
+        val karte = KartenDaten(name = "K", knoten = listOf(a, b)).normalisiereSchnittstellenReihenfolge()
+        val verschoben = karte.copy(knoten = karte.knoten.map { if (it.id == a.id) it.copy(position = GraphPunkt(0f, 30f)) else it })
+        assertEquals(listOf("a", "b"), verschoben.schnittstellenSignatur().eingang.map { it.id })
+        assertEquals(verschoben, verschoben.normalisiereSchnittstellenReihenfolge())
+    }
+
     private fun grenze(
         id: KnotenId,
         art: String,

@@ -11,7 +11,7 @@ class VariablenStrukturTest {
         val k = konfiguriereVariablenStruktur(basis(), "winkeltupel")
             .let { it.copy(parameter = it.parameter + (VARIABLE_DIMENSION to "2")) }
         val wert = variablenStrukturWert(k, ReelleZahlen)
-        assertEquals(MathematikAnschlussArten.Tupel.id, k.anschlüsse.single().art)
+        assertEquals(MathematikAnschlussArten.Tupel.id, k.anschlüsse.single { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang }.art)
         assertEquals(3, (wert.objekt as Tupel).elemente.size)
         assertEquals(listOf(winkelraum(2)), wert.variablenQuellen.map { it.werteVorrat })
         assertTrue((wert.objekt as Tupel).elemente.all { it is SymbolischeZahlKomponente })

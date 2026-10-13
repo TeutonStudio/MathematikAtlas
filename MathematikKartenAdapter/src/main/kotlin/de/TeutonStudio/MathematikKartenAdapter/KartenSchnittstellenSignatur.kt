@@ -55,7 +55,7 @@ data class KartenSchnittstellenSignatur(
 
 /** Leitet den Grenzvertrag reproduzierbar aus den öffentlichen Grenzknoten ab. */
 fun KartenDaten.schnittstellenSignatur(): KartenSchnittstellenSignatur {
-    val sortierung = compareBy<KnotenDaten>({ it.position.y }, { it.position.x }, { it.id.wert })
+    val sortierung = kartenGrenzSortierung()
 
     fun komponenten(art: String, interneRichtung: AnschlussRichtung): List<KartenSchnittstellenKomponente> =
         knoten.asSequence()
@@ -80,4 +80,23 @@ fun KartenDaten.schnittstellenSignatur(): KartenSchnittstellenSignatur {
         eingang = komponenten("mathematik.kartenEingang", AnschlussRichtung.Ausgang),
         ausgang = komponenten("mathematik.kartenAusgang", AnschlussRichtung.Eingang),
     )
+}
+
+const val KARTEN_SCHNITTSTELLEN_POSITION = "schnittstelle.position"
+
+/** Gespeicherte Reihenfolge hat Vorrang; Layout wird nur für historische Grenzen benutzt. */
+fun kartenGrenzSortierung(): Comparator<KnotenDaten> = compareBy<KnotenDaten>(
+    { it.parameter[KARTEN_SCHNITTSTELLEN_POSITION]?.toIntOrNull()?.takeIf { p -> p >= 0 } ?: Int.MAX_VALUE },
+    { it.position.y }, { it.position.x }, { it.id.wert },
+)
+
+/** Idempotente Migration: historische Layoutreihenfolge einmalig als Fachreihenfolge speichern. */
+fun KartenDaten.normalisiereSchnittstellenReihenfolge(): KartenDaten {
+    val positionen = listOf("mathematik.kartenEingang", "mathematik.kartenAusgang").flatMap { art ->
+        knoten.filter { it.art == art }.takeIf { it.size > 1 }.orEmpty().sortedWith(kartenGrenzSortierung()).mapIndexed { i, k -> k.id to i }
+    }.toMap()
+    if (knoten.all { k -> positionen[k.id]?.let { k.parameter[KARTEN_SCHNITTSTELLEN_POSITION] == it.toString() } ?: true }) return this
+    return copy(knoten = knoten.map { k -> positionen[k.id]?.let { i ->
+        k.copy(parameter = k.parameter + (KARTEN_SCHNITTSTELLEN_POSITION to i.toString()))
+    } ?: k })
 }

@@ -24,7 +24,7 @@ class PolynomNumerikIntegrationTest {
         val alt=MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero)
         val neu=konfiguriereMatrixVariable(alt.copy(parameter=alt.parameter+("name" to "X")),2)
         assertEquals(alt.anschlüsse.map { it.id },neu.anschlüsse.map { it.id })
-        assertEquals(MathematikAnschlussArten.Matrix.id,neu.anschlüsse.single().art)
+        assertEquals(MathematikAnschlussArten.Matrix.id,neu.anschlüsse.single { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang }.art)
         val karte=KartenDaten(name="Matrixvariable",knoten=listOf(neu))
         val geladen=MathematikKartenCodec.lese(MathematikKartenCodec.schreibe(karte))
         val r=MathematikKartenLaufzeit().auswerten(geladen).knoten.getValue(neu.id)

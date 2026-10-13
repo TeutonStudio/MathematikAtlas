@@ -46,6 +46,8 @@ data class BedingterWert(
     val symbolischeMethode: Boolean = false,
     /** Präzise Komponentenobermengen über Strukturübersetzungen hinweg; nicht persistiert. */
     val komponentenMengen: List<MengenAusdruck>? = null,
+    val übersetzungen: ÜbersetzungsMetadaten = ÜbersetzungsMetadaten(),
+    val gebundeneFormel: GebundeneFormel? = null,
 )
 
 /**
@@ -163,6 +165,9 @@ data class KnotenAuswertungsErgebnis(
     /** Flüchtiges, exakt aus dem aktuellen Eingang abgeleitetes Numerikproblem. */
     val polynomProblem: PolynomGleichungsProblem? = null,
     val polynomKonfiguration: PolynomNumerikKonfiguration = PolynomNumerikKonfiguration(),
+    val bezeugteAusgaben: Set<String> = emptySet(),
+    val formelAusgaben: Set<String> = emptySet(),
+    val übersetzungsDiagnose: ÜbersetzungsErgebnis.NichtDefiniert? = null,
 )
 
 data class KartenAuswertungsErgebnis(

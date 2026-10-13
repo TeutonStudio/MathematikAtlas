@@ -1,7 +1,11 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
+import de.TeutonStudio.TypSystem.TypAusdruck
+
 /** Semantische Herkunft einer Variablen; der sichtbare Name ist ausdrücklich keine Identität. */
 enum class FormelVariablenArt { FREI, GEBUNDEN, EXTERN }
+
+enum class FormelSymbolRolle { WERT, METHODE, MENGE, AUSSAGE, STRUKTUR, KONSTANTE }
 
 data class FormelVariablenQuelle(
     val id: String,
@@ -9,6 +13,15 @@ data class FormelVariablenQuelle(
     val art: FormelVariablenArt,
     val typ: FormelTyp,
     val werteVorrat: MengenAusdruck? = null,
+    val vollstaendigerTyp: TypAusdruck = werteVorrat?.elementTypAusdruck() ?: TypAusdruck.Unbekannt,
+    val rolle: FormelSymbolRolle = when (typ) {
+        FormelTyp.METHODE -> FormelSymbolRolle.METHODE
+        FormelTyp.MENGE -> FormelSymbolRolle.MENGE
+        FormelTyp.AUSSAGE -> FormelSymbolRolle.AUSSAGE
+        FormelTyp.TUPEL, FormelTyp.VEKTOR, FormelTyp.MATRIX, FormelTyp.TENSOR -> FormelSymbolRolle.STRUKTUR
+        else -> FormelSymbolRolle.WERT
+    },
+    val methodenSignatur: MethodenSignatur? = null,
 ) {
     init {
         require(id.isNotBlank())
@@ -60,6 +73,7 @@ data class GebundeneFormel(
     val variablenVorkommen: Map<String, String>,
     val quantoren: List<FormelQuantorBindung> = emptyList(),
     val praedikate: List<FormelPraedikatsVertrag> = emptyList(),
+    val annahmen: Set<Aussage> = emptySet(),
 )
 
 sealed interface FormelBindungsPruefung {
@@ -169,4 +183,15 @@ private fun FormelAusdruck.ausdrucksIds(): Set<String> = buildSet {
         }
     }
     besuche(this@ausdrucksIds)
+}
+
+/** Kontextdaten ohne zweite Kopie des Ausdrucks; gemeinsam für AST und Formelgraph. */
+data class FormelBindungsKontext(
+    val quellen: List<FormelVariablenQuelle>,
+    val variablenVorkommen: Map<String, String>,
+    val quantoren: List<FormelQuantorBindung> = emptyList(),
+    val praedikate: List<FormelPraedikatsVertrag> = emptyList(),
+    val annahmen: Set<Aussage> = emptySet(),
+) {
+    fun mitWurzel(wurzel: FormelAusdruck) = GebundeneFormel(wurzel, quellen, variablenVorkommen, quantoren, praedikate, annahmen)
 }

@@ -25,6 +25,8 @@ interface Grafik : DarstellungsWert
 /** Ein benannter, bei einer mathematischen [Methode] bindbarer Parameter. */
 sealed interface MethodenParameter : MathematischesObjekt {
     val name: String
+    /** Explizite semantische Identität; null ausschließlich für historische Namensbindung. */
+    val bindungsId: String? get() = null
 }
 
 sealed interface Ausdruck : MathematischesObjekt

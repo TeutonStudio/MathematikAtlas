@@ -15,7 +15,7 @@ class AlphaStrukturKonzeptResolverTest {
             ids+=konzept.id
             assertTrue(konzept.name.contains(ziel))
             assertEquals(1,konzept.reiter.count { it.rolle==KonzeptReiterRolle.Definition })
-            assertTrue(konzept.reiter.single().karte.knoten.isNotEmpty())
+            assertTrue(konzept.reiter.single { it.rolle==KonzeptReiterRolle.Definition }.karte.knoten.isNotEmpty())
             assertTrue(text(konzept).contains("ohne Konjugation"))
             if(ziel=="methode") {
                 assertTrue(text(konzept).contains("{()}"));assertTrue(text(konzept).contains("Außenquellen"))
@@ -35,6 +35,6 @@ class AlphaStrukturKonzeptResolverTest {
         assertEquals(setOf(TUPEL_ABFLACHEN_ART),konzept.knotenArten)
         val regeln=text(konzept)
         listOf("DFS","links nach rechts","F(())=()","kein Tupel","Mengen","Aussagen","weder sortiert noch dedupliziert","Annahmen","Variablenquellen").forEach { assertTrue(regeln.contains(it),it) }
-        assertEquals(konzept.reiter.single().karte,MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(konzept.reiter.single().karte)))
+        assertEquals(konzept.reiter.single { it.rolle==KonzeptReiterRolle.Definition }.karte,MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(konzept.reiter.single { it.rolle==KonzeptReiterRolle.Definition }.karte)))
     }
 }

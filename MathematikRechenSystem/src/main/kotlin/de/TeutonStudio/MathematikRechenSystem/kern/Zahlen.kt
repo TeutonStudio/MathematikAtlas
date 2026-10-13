@@ -55,13 +55,13 @@ class RationaleZahl private constructor(
     }
 }
 
-data class Variable(override val name: String, val latex: String = name) : ZahlAusdruck, MethodenParameter {
+data class Variable(override val name: String, val latex: String = name, override val bindungsId: String? = null) : ZahlAusdruck, MethodenParameter {
     init { require(name.isNotBlank()) }
     override fun zuLatex(): String = latex
 }
 
 /** Ein allgemeiner, nicht auf Zahlterme beschränkter Methodenparameter. */
-data class AllgemeinerParameter(override val name: String, val latex: String = name) : MethodenParameter {
+data class AllgemeinerParameter(override val name: String, val latex: String = name, override val bindungsId: String? = null) : MethodenParameter {
     init { require(name.isNotBlank()) }
     override fun zuLatex(): String = latex
 }

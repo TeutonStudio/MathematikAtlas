@@ -75,6 +75,8 @@ data class AnschlussDaten(
      * bis alle produktiven Knoten auf den G0.2-Typkern migriert sind.
      */
     val typInferenz: TypInferenzRegel? = null,
+    /** Stabile fachliche Komponentenidentität; unabhängig von Portinstanz und Anzeigename. */
+    val semantischeId: String? = null,
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)

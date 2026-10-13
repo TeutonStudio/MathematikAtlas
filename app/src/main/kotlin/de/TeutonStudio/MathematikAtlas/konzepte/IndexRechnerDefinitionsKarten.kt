@@ -472,5 +472,5 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         val node = add(MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero).copy(name = "Ergebnis", parameter = mapOf("name" to name,"rolle" to name), anschlüsse = MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero).anschlüsse.map { it.copy(art = MathematikAnschlussArten.AtlasWert.id) }), "")
         verbinde(quelle, node, node.knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }.name)
     }
-    fun karte() = KartenDaten(id = KartenId(prefix), name = "Indexdefinition: $operator", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).normalisiereDynamischeRechnerOperanden().normalisiereStrukturierteDivisionVorSpeichern().migrierePolarKonventionen().migriereWinkelraumAufrufe()
+    fun karte() = KartenDaten(id = KartenId(prefix), name = "Indexdefinition: $operator", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).normalisiereDynamischeRechnerOperanden().normalisiereStrukturierteDivisionVorSpeichern().migrierePolarKonventionen().migriereWinkelraumAufrufe().normalisiereSchnittstellenReihenfolge()
 }

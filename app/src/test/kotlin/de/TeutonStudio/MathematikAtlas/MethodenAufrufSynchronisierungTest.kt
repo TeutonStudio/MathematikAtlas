@@ -38,7 +38,8 @@ class MethodenAufrufSynchronisierungTest {
 
         assertEquals(1, argumente.size)
         assertEquals("argument-0", argumente.single().name)
-        assertEquals(AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"), argumente.single().id)
+        assertEquals(knoten.argumente().first().id, argumente.single().id)
+        assertEquals(methode.signatur.argumente.single().id, argumente.single().semantischeId)
         assertEquals(MathematikAnschlussArten.Zahl.id, argumente.single().art)
         assertEquals(MathematikAnschlussArten.Zahl.id, ergebnisKnoten.wertAusgang().art)
         assertEquals("1", ergebnisKnoten.parameter[METHODEN_AUFRUF_STELLIGKEIT])
@@ -65,21 +66,20 @@ class MethodenAufrufSynchronisierungTest {
         val einmal = synchronisiere(knoten, methode)
         val zweimal = synchronisiere(einmal.knoten.single(), methode)
         val argumente = zweimal.knoten.single().argumente()
-        val erwarteteIds = listOf(
-            AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"),
-            AnschlussId("${knoten.id.wert}:methodenAufruf:argument:1"),
-        )
+        val erwarteteIds = methode.signatur.argumente.mapIndexed {i,c ->
+            ursprünglicheIds.getOrNull(i) ?: AnschlussId("${knoten.id.wert}:methodenAufruf:komponente:${c.id}")
+        }
 
         assertEquals(listOf("argument-0", "argument-1"), argumente.map { it.name })
         assertEquals(listOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Menge.id), argumente.map { it.art })
-        assertNotEquals(ursprünglicheIds, argumente.map { it.id })
+        assertEquals(methode.signatur.argumente.map {it.id},argumente.map {it.semantischeId})
         assertEquals(erwarteteIds, argumente.map { it.id })
         assertEquals(einmal.knoten.single().anschlüsse.map { it.id }, zweimal.knoten.single().anschlüsse.map { it.id })
         assertEquals(MathematikAnschlussArten.Menge.id, zweimal.knoten.single().wertAusgang().art)
     }
 
     @Test
-    fun `bestehende Argumentkante wird auf deterministische Anschluss ID migriert`() {
+    fun `bestehende Argumentkante erhaelt ihre Anschluss ID bei semantischer Zuordnung`() {
         val knoten = FaltungsKnotenVorlagen.MethodeAufrufen.erzeuge(GraphPunkt.Zero)
         val altesArgument = knoten.argumente().first()
         val quelle = KnotenDaten(
@@ -123,7 +123,7 @@ class MethodenAufrufSynchronisierungTest {
 
         assertEquals(1, synchronisiert.verbindungen.size)
         assertEquals(
-            AnschlussId("${knoten.id.wert}:methodenAufruf:argument:0"),
+            altesArgument.id,
             synchronisiert.verbindungen.single().zu.anschlussId,
         )
     }

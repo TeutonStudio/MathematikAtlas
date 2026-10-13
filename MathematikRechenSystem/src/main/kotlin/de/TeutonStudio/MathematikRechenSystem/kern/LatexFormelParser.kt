@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import java.math.BigInteger
 
-internal class LatexFormelParser(quelle: String) {
+internal class LatexFormelParser(quelle: String, internal val quellen: List<FormelVariablenQuelle> = emptyList()) {
     internal val text = quelle
         .replace("\\left", "")
         .replace("\\right", "")
@@ -259,7 +259,7 @@ internal class LatexFormelParser(quelle: String) {
         name: String,
         latex: String,
         typ: FormelTyp = FormelTyp.ZAHL,
-    ): FormelAusdruck.Variable = FormelAusdruck.Variable(neueId("variable"), name, latex, typ)
+    ): FormelAusdruck.Variable = FormelAusdruck.Variable(neueId("variable"), name, latex, quellen.singleOrNull { it.anzeigeName == name }?.typ ?: typ)
 
     internal fun operation(
         operatorId: String,

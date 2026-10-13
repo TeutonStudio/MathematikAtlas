@@ -137,7 +137,10 @@ class KartenAuswerter(
             }
         }
 
-        val ergebnis = basis
+        val durchgereicht = if (knoten.art in setOf(DARSTELLUNGSOPTIMIERUNG, KARTEN_EINGANG_ART, "mathematik.kartenAusgang", "konzept.eingang"))
+            basis.copy(bezeugteAusgaben = basis.ausgaben.keys) else basis
+        val ergebnis = durchgereicht
+            .führeÜbersetzungsHerkunftFort(eingänge.values)
             .mitVariablenQuellenAusEingängen(eingänge, knoten.art)
             .mitLatexDarstellungen(knoten, eingänge)
             .copy(
@@ -227,7 +230,7 @@ class KartenAuswerter(
     ): KnotenAuswertungsErgebnis {
         if (verweis in kartenPfad) return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Zyklischer Kartenverweis erkannt.")
         val intern = kartenQuelle.lade(verweis) ?: return KnotenAuswertungsErgebnis(emptyMap(), fehler = "Referenzierte Karte fehlt.")
-        val sortierung = compareBy<KnotenDaten>({ it.position.y }, { it.position.x }, { it.id.wert })
+        val sortierung = kartenGrenzSortierung()
         val interneEingänge = intern.knoten.filter { it.art == "mathematik.kartenEingang" }.sortedWith(sortierung)
         val eingangsNamen = interneEingänge.map(::öffentlicherKartenName)
         if (eingangsNamen.distinct().size != eingangsNamen.size) {
@@ -290,7 +293,9 @@ class KartenAuswerter(
             zielMengen = zielMengen,
             werteVorräte = werteVorräte,
         )
-        return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, latexDarstellung = methode.name)))
+        val herkunft = ÜbersetzungsMetadaten(herkunft = geordneteWerte.flatMap { it.second.übersetzungen.alsHerkunft().herkunft }.distinct())
+        val übertragen = methode.copy(voraussetzungen = geordneteWerte.flatMap { it.second.annahmen }.toSet(), übersetzungen = herkunft)
+        return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(übertragen, latexDarstellung = methode.name, übersetzungen = herkunft)))
     }
 
     private fun öffentlicherKartenName(knoten: KnotenDaten): String =

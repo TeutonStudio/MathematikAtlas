@@ -63,8 +63,8 @@ class FolgenSignaturUndMengenEigenschaftenTest {
 
         assertEquals(AussageStatus.BEWIESEN, einzeln.aussageStatus)
         assertEquals(AussageStatus.BEWIESEN, tupel.aussageStatus)
-        assertTrue(einzeln.diagnose!!.nachricht.contains("argument-0"))
-        assertTrue(tupel.diagnose!!.nachricht.contains("argument-1"))
+        assertTrue(einzeln.diagnose!!.nachricht.contains(methode.signatur.argumente[0].id))
+        assertTrue(tupel.diagnose!!.nachricht.contains(methode.signatur.argumente[1].id))
     }
 
     @Test

@@ -93,6 +93,7 @@ object StandardMathematikAuswerterPakete {
     fun installiereIn(register: MathematikAuswerterRegister) {
         alle.forEach { paket -> paket.installiereIn(register) }
         installiereKanonischeRechnerDispatcher(register)
+        register.bezeugeHistorischeÜbersetzer()
     }
 }
 

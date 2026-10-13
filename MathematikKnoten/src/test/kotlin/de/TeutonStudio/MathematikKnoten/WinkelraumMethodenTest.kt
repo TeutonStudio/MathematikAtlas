@@ -35,7 +35,7 @@ class WinkelraumMethodenTest {
     @Test fun `Strukturbenennung faengt unabhaengige w und w1 weder im Term noch Zusatzparameter ein`() {
         val w=quelle(1)
         val basis=w.objekt as Tupel
-        val termWert=w.copy(objekt=Tupel(listOf(basis.elemente[0],Variable("w"),Variable("w_1"))),variablenQuellen=w.variablenQuellen+listOf(VariablenQuelle(KnotenId("scalarw"),"w",ReelleZahlen),VariablenQuelle(KnotenId("scalarw1"),"w_1",ReelleZahlen)))
+        val termWert=w.copy(zielMenge=null,werteVorrat=null,komponentenMengen=null,objekt=Tupel(listOf(basis.elemente[0],Variable("w"),Variable("w_1"))),variablenQuellen=w.variablenQuellen+listOf(VariablenQuelle(KnotenId("scalarw"),"w",ReelleZahlen),VariablenQuelle(KnotenId("scalarw1"),"w_1",ReelleZahlen)))
         val k=konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),"methode")
         val methode=assertIs<MathematischeMethode>(eval(k,mapOf("wert" to termWert)).ausgaben.getValue("ergebnis").objekt)
         assertEquals(setOf("w","w_1","w_2"),methode.parameter.map { it.name }.toSet())

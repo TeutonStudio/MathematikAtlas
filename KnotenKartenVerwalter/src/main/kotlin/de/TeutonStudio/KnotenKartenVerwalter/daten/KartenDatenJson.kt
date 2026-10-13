@@ -83,6 +83,7 @@ object KartenDatenJson {
                     put("art", anschluss.art.wert)
                     put("reihenfolge", anschluss.reihenfolge)
                     put("kannSichErweitern", anschluss.kannSichErweitern)
+                    anschluss.semantischeId?.let { put("semantischeId",it) }
                     put("dynamischErzeugt", anschluss.dynamischErzeugt)
                     anschluss.artFolgtEingang?.let { put("artFolgtEingang", it) }
                     if (anschluss.artVereinigtEingänge.isNotEmpty()) {
@@ -147,6 +148,7 @@ object KartenDatenJson {
                     kante = enumValueOf(anschluss.getString("kante")),
                     art = AnschlussArtId(anschluss.getString("art")),
                     reihenfolge = anschluss.optInt("reihenfolge", 0),
+                    semantischeId = anschluss.optString("semantischeId").takeIf(String::isNotBlank),
                     kannSichErweitern = anschluss.optBoolean("kannSichErweitern", false),
                     dynamischErzeugt = anschluss.optBoolean("dynamischErzeugt", false),
                     artFolgtEingang = anschluss.optString("artFolgtEingang").takeIf(String::isNotBlank),

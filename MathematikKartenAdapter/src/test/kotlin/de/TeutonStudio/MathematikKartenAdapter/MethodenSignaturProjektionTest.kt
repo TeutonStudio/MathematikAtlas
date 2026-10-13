@@ -12,6 +12,30 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
 class MethodenSignaturProjektionTest {
+    @Test fun `Historischer Ergebnisexport normalisiert auch operative Metadatenbedingungen`() {
+        val y=Variable("y")
+        val w=BedingterWert(y,setOf(Ungleichheit(y,RationaleZahl.Null)),variablenQuellen=listOf(VariablenQuelle(de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId("alt"),"y",ReelleZahlen,bindungsId="qy")))
+        val f=w.alsGebundeneErgebnisFormel()
+        val m=f.alsMethode("id")
+        val r=m.wendeMitIdentitätenAn(mapOf("qy" to RationaleZahl.von(2)))
+        assertEquals(Tupel(listOf(RationaleZahl.von(2))),r.ergebnis)
+        assertEquals(emptySet(),r.bedingungen)
+        kotlin.test.assertFails {m.wendeMitIdentitätenAn(mapOf("qy" to RationaleZahl.Null))}
+    }
+    @Test fun `Partielle Bindung verwendet Komponentenidentitaet trotz geaenderter Reihenfolge`() {
+        val x=Variable("x",bindungsId="qx");val y=Variable("y",bindungsId="qy")
+        val m=MathematischeMethode("d",listOf(x,y),Tupel(listOf(addition(x,multiplikation(RationaleZahl.von(-1),y)))),Tupelraum(listOf(ReelleZahlen)),mapOf("x" to ReelleZahlen,"y" to ReelleZahlen))
+        val ids=m.signatur.argumente.map {it.id}
+        val ports=listOf(AnschlussDaten(name="methode",richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links,art=AnschlussArtId("mathematik.methode")),
+            AnschlussDaten(name="zweiter",richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links,art=AnschlussArtId("mathematik.zahl"),reihenfolge=0,semantischeId=ids[1]),
+            AnschlussDaten(name="erster",richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links,art=AnschlussArtId("mathematik.zahl"),reihenfolge=1,semantischeId=ids[0]))
+        val k=KnotenDaten(art=METHODEN_AUFRUF_ART,name="partiell",anschlüsse=ports,parameter=mapOf(METHODEN_AUFRUF_PARTIELL to "true"))
+        val e=MethodenAufrufAuswerter.auswerten(KnotenAuswertungsKontext(k,mapOf("methode" to BedingterWert(m),"zweiter" to BedingterWert(RationaleZahl.von(2))),RechenKontext()))
+        val teil=e.ausgaben.getValue("wert").objekt as MathematischeMethode
+        assertEquals(listOf(ids[0]),teil.signatur.argumente.map {it.id})
+        assertEquals(Tupel(listOf(RationaleZahl.von(3))),teil.wendeMitIdentitätenAn(mapOf(ids[0] to RationaleZahl.von(5))).ergebnis)
+    }
+
     @Test
     fun `Signaturknoten trennen Wertevorrat Zielmenge und Argumentanzahl`() {
         val x = Variable("x")
@@ -143,6 +167,21 @@ class MethodenSignaturProjektionTest {
             )
         }
         assertIs<String>(fehler.message)
+    }
+
+    @Test
+    fun `ID basierte Zielraeume und Methodenwertannahmen werden substituiert`() {
+        val x = Variable("x", bindungsId = "quelle-x")
+        val ziel = ReellesIntervall(RationaleZahl.Null, false, x, false)
+        val methode = MathematischeMethode("f", listOf(x), x, ziel, mapOf("x" to ReelleZahlen))
+        fun aufruf(wert: RationaleZahl, annahmen: Set<Aussage> = emptySet()) = MethodenAufrufAuswerter.auswerten(
+            KnotenAuswertungsKontext(tupelAufrufKnoten(), mapOf(
+                "methode" to BedingterWert(methode, annahmen = annahmen),
+                "argument-0" to BedingterWert(Tupel(listOf(wert))),
+            ), RechenKontext()),
+        ).ausgaben.getValue("wert")
+        assertEquals(ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(2), false), aufruf(RationaleZahl.von(2)).zielMenge)
+        assertFailsWith<IllegalArgumentException> { aufruf(RationaleZahl.Null, setOf(Ungleichheit(x, RationaleZahl.Null))) }
     }
 
     private fun tupelAufrufKnoten() = KnotenDaten(

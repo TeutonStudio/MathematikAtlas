@@ -34,6 +34,8 @@ import de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie
 import de.TeutonStudio.MathematikKnoten.StrukturRechnerOperatorDefinition
 import de.TeutonStudio.MathematikKnoten.StrukturRechnerOperatoren
 import de.TeutonStudio.MathematikKnoten.konfiguriereStrukturRechner
+import de.TeutonStudio.MathematikKnoten.ladeGebundeneKnotenFormel
+import de.TeutonStudio.MathematikKnoten.konfiguriereGebundeneKnotenFormel
 import de.TeutonStudio.MathematikKnoten.konfiguriereStrukturRechnerFormel
 import de.TeutonStudio.MathematikKnoten.ladeStrukturRechnerFormel
 import de.TeutonStudio.MathematikKnoten.strukturOperatorAlsFormel
@@ -291,6 +293,11 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
             StrukturFormelBauerDialog(
                 familie = familie.formelFamilie,
                 start = formelStart,
+                startKnoten = knoten,
+                übernehmenGebunden = { f, zeichnung ->
+                    formelKandidat = konfiguriereGebundeneKnotenFormel(knoten,f,zeichnung)
+                    formelDialog = false; operatorDialog = true
+                },
                 startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT],
                 übernehmenMitZeichnung = { wurzel, zeichnung ->
                     val neu = konfiguriereStrukturRechnerFormel(knoten, familie, wurzel,

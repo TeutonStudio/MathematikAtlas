@@ -86,7 +86,7 @@ object MengenKnotenVorlagen {
         kategorie = "Mengen",
         beschreibung = "Ein einheitlicher Mengenknoten; die konkrete Menge oder eine versionsfeste eigene Karte wird im Inspector gewählt.",
         standardGröße = GraphGröße(230f, 105f),
-        anschlüsse = listOf(mengenAusgang()),
+        anschlüsse = (if (auswahl == MengenKnotenAuswahl.GRADMENGE) listOf(zahlEingang("dim", 0)) else emptyList()) + mengenAusgang(),
         standardParameter = mapOf(MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId),
     )
 
@@ -194,7 +194,15 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
         val auswahl = if (id == null) MengenKnotenAuswahl.REELLE_ZAHLEN else MengenKnotenAuswahl.vonIdOderNull(id)
         if (auswahl == null) return@registriere KnotenAuswertungsErgebnis(ausgaben = emptyMap(), fehler = "Unbekannter Mengenoperator: $id")
         KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("menge" to BedingterWert(auswahl.menge())),
+            ausgaben = mapOf("menge" to BedingterWert(
+                if (auswahl == MengenKnotenAuswahl.GRADMENGE && "dim" in kontext.eingänge) {
+                    val dimension = kontext.natuerlicheGanzzahl("dim", nullErlaubt = false)
+                    require(dimension <= 65) { "Die Dimension darf höchstens 65 sein." }
+                    de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(dimension - 1)
+                } else auswahl.menge(),
+                kontext.eingänge.values.flatMap { it.annahmen }.toSet(),
+            )),
+            eingänge = kontext.eingänge,
         )
     }
     EinheitsvektorKnotenVorlagen.alle.forEach { vorlage ->
@@ -383,4 +391,39 @@ private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
         ),
         parameter = alt.parameter + (VEKTOR_RECHNER_OPERATOR to VektorRechnerOperator.SKALARPRODUKT.stabileId),
     )
+}
+
+/** Ergänzt den optionalen Dimensionseingang, ohne vorhandene Referenzen zu ändern. */
+fun KnotenDaten.mitGradmengenDimension(): KnotenDaten {
+    if (art != MENGEN_KNOTEN_ART || kartenVerweis != null ||
+        parameter[MENGEN_KNOTEN_AUSWAHL] != MengenKnotenAuswahl.GRADMENGE.stabileId ||
+        anschlüsse.any { it.name == "dim" && it.richtung == AnschlussRichtung.Eingang }
+    ) return this
+    return copy(anschlüsse = listOf(zahlEingang("dim", 0).copy(id = AnschlussId("${id.wert}-grad-dim"))) + anschlüsse)
+}
+
+fun KartenDaten.migriereGradmengenDimension(): KartenDaten = copy(knoten = knoten.map { it.mitGradmengenDimension() })
+
+/** Packt ausschließlich nachgewiesene, endlich indizierte SIGNED-Richtungsprodukte. */
+internal fun kanonischerRichtungsraum(menge: MengenAusdruck): MengenAusdruck {
+    // Das Produkt über {0} wird vom Kern bereits als zwei Auswahlfunktionen materialisiert.
+    if (menge is de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge && menge.elemente.size == 2) {
+        val methoden = menge.elemente.map { it as? de.TeutonStudio.MathematikRechenSystem.kern.Methode ?: return menge }
+        val nullIndex = de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge(setOf(RationaleZahl.Null))
+        if (methoden.all { m -> m.parameter.size == 1 && m.werteVorräte[m.parameter.single().name] == nullIndex } &&
+            methoden.map { it.wendeAn(listOf(RationaleZahl.Null)) }.toSet() == setOf(RationaleZahl.von(-1), RationaleZahl.Eins)) {
+            return de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(0)
+        }
+        return menge
+    }
+    if (menge !is de.TeutonStudio.MathematikRechenSystem.kern.IteriertesKartesischesProdukt) return menge
+    val index = menge.indexMenge as? de.TeutonStudio.MathematikRechenSystem.kern.EndlicheMenge ?: return menge
+    if (index.elemente.size !in 1..65) return menge
+    val zahlen = index.elemente.map { it as? RationaleZahl ?: return menge }
+    if (zahlen.toSet() != List(zahlen.size) { RationaleZahl.von(it.toLong()) }.toSet()) return menge
+    val faktoren = List(zahlen.size) { i ->
+        menge.methode.wendeAn(listOf(RationaleZahl.von(i.toLong()))) as? MengenAusdruck ?: return menge
+    }
+    val erwartet = de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(faktoren.size - 1)
+    return if (faktoren == erwartet.komponenten) erwartet else menge
 }

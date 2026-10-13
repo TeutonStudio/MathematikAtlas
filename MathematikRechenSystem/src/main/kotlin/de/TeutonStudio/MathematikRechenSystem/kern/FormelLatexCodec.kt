@@ -30,8 +30,8 @@ object FormelLatexCodec {
         .ersetzeFunktionsOperator("zahl.sech", "\\operatorname{sech}")
         .ersetzeFunktionsOperator("zahl.csch", "\\operatorname{csch}")
 
-    fun importiere(latex: String): FormelLatexImportErgebnis = runCatching {
-        ErweiterterLatexFormelParser.parse(latex)
+    fun importiere(latex: String, quellen: List<FormelVariablenQuelle> = emptyList()): FormelLatexImportErgebnis = runCatching {
+        ErweiterterLatexFormelParser.parse(latex, quellen)
     }.fold(
         onSuccess = FormelLatexImportErgebnis::Erfolg,
         onFailure = { fehler ->

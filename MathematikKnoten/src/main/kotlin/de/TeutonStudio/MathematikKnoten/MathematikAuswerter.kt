@@ -31,8 +31,17 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(RationaleZahl.parse(k.knoten.parameter["wert"] ?: "0"))))
         }
         registriere("mathematik.variable") { k ->
-            val grund = grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
-            KnotenAuswertungsErgebnis(mapOf("wert" to variablenStrukturWert(k.knoten, grund)))
+            val eingang = k.eingänge["grundraum"]
+            val grund = eingang?.let {
+                val menge = it.objekt as? MengenAusdruck ?: error("Der Grundraum muss eine Menge sein.")
+                if (variablenStruktur(k.knoten) == VARIABLE_STRUKTUR_WINKEL) kanonischerRichtungsraum(menge) else menge
+            }
+                ?: grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
+            val variable = if (eingang == null) k.knoten else k.knoten.copy(
+                parameter = k.knoten.parameter - VARIABLE_BEREICH_MODUS,
+            )
+            val wert = variablenStrukturWert(variable, grund, grundraumVerbunden = eingang != null)
+            KnotenAuswertungsErgebnis(mapOf("wert" to wert.copy(annahmen = wert.annahmen + eingang?.annahmen.orEmpty())))
         }
         registriere("mathematik.allgemeinerParameter") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
@@ -427,7 +436,11 @@ object StandardMathematikAuswerter {
                 k.menge("menge")
             }
             KnotenAuswertungsErgebnis(
-                mapOf("menge" to BedingterWert(bildeAb(definitionsMenge, mathematisch), annahmen(k))),
+                mapOf("menge" to BedingterWert(bildeAb(
+                    if (mathematisch.parameter.size == 1 && mathematisch.werteVorräte[mathematisch.parameter.single().name]?.let(::istWinkelraum) == true)
+                        kanonischerRichtungsraum(definitionsMenge) else definitionsMenge,
+                    mathematisch,
+                ), annahmen(k))),
             )
         }
         registriere("mathematik.termZuMethode") { k ->

@@ -141,6 +141,10 @@ internal fun DialogWerkzeugLeiste(
     when (aktiverDialog) {
         AktiverWerkzeugDialog.Formel -> FormelBauerDialog(
             startLatex = "",
+            übernehmenGebunden = { f, zeichnung ->
+                val k=konfiguriereGebundeneKnotenFormel(ZahlenRechnerKnotenVorlagen.standard.erzeuge(zustand.dialogWerkzeugEinfügePosition()),f,zeichnung)
+                zustand.editor.führeAus(KartenAktion.KnotenEinfügen(k));zustand.editor.wähleKnoten(k.id);aktiverDialog=null
+            },
             übernehmenMitZeichnung = { ast, latex, zeichnung ->
                 val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(zustand.dialogWerkzeugEinfügePosition())
                 val neu = konfiguriereZahlenRechnerFormel(basis, latex)

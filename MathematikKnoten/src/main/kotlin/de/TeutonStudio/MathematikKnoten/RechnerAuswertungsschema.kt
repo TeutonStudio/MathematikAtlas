@@ -18,7 +18,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /** Gemeinsamer Zugang für registrierte Rechner und vorhandene Prädikatsnachweise. */
 fun besitztRechnerSchema(knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten): Boolean =
-    RechnerOperatorRegistry.familieFür(knoten.art) != null || besitztPrädikatsRechenweg(knoten.art)
+    RechnerOperatorRegistry.familieFür(knoten.art) != null || besitztPrädikatsRechenweg(knoten.art) || knoten.art in setOf(ÜBERSETZER_ART, TUPEL_ABFLACHEN_ART, "mathematik.termZuMethode", "mathematik.tupelZuSpalte", "mathematik.tupelZuZeile", "mathematik.spalteZuTupel", "mathematik.zeileZuTupel", "mathematik.geometrie.zuTrägermenge")
 
 data class RechnerSchemaModell(
     val titel: String,
@@ -42,7 +42,7 @@ fun rechnerSchemaModell(knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.Knot
         auswertung?.ausgaben.orEmpty().map { it.key to it.value.anzeigeLatex() },
         if (vertrag != null && auswertung != null && auswertung.fehler == null && auswertung.ausgaben.isNotEmpty())
             schemaEinsetzung(vertrag, auswertung) else null,
-        auswertung?.fehler ?: if (familie != null && vertrag == null) "Unbekannter Rechneroperator: ${knoten.parameter[familie.operatorParameter].orEmpty()}" else if (auswertung == null) "Noch kein Auswertungsergebnis vorhanden." else null)
+        auswertung?.fehler ?: if (familie != null && vertrag == null && FORMEL_KONTEXT_EIGENSCHAFT !in knoten.eigenschaften) "Unbekannter Rechneroperator: ${knoten.parameter[familie.operatorParameter].orEmpty()}" else if (auswertung == null) "Noch kein Auswertungsergebnis vorhanden." else null)
 }
 
 /** Komponenten werden ausschließlich aus dem bestehenden Tensorvertrag gelesen. */
@@ -94,6 +94,13 @@ fun RechnerAuswertungsschemaInhalt(
         modell.ausgänge.forEach { (name, latex) -> Text(name); LatexText(latex) }
         auswertung?.ausgaben?.values?.forEach { wert ->
             wert.annahmen.forEach { LatexText(it.zuLatex()) }
+            wert.übersetzungen.aktuell?.let { zeugnis ->
+                Text("Übersetzungszeugnis", style = MaterialTheme.typography.titleSmall)
+                zeugnis.hinweise().forEach { Text(it) }
+                zeugnis.zielTräger?.let { Text("Zielträger"); LatexText(it.zuLatex()) }
+                zeugnis.bildRaum?.let { Text("Exakter Bildraum"); LatexText(it.zuLatex()) }
+            }
+            if (wert.übersetzungen.herkunft.isNotEmpty()) Text("Herkunft: ${wert.übersetzungen.herkunft.size} frühere Übersetzungen; kein Nachweis für diese Berechnung.")
             (wert.objekt as? MathematischeSignaturtragendeMethode)?.let { methode ->
                 Text("Methodenvorschrift · gemeinsame Parameter", style = MaterialTheme.typography.titleSmall)
                 val signatur = methode.mathematischeMethodenSignatur()

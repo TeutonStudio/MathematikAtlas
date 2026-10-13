@@ -157,6 +157,26 @@ internal fun LatexFormelParser.parseNameOderKonstante(): FormelAusdruck {
     position++
     while (position < text.length && (text[position].isLetterOrDigit() || text[position] == '_')) position++
     val name = text.substring(start, position)
+    val dek = quellen.filter { it.anzeigeName == name }
+    if (dek.size > 1) fehler("Der Name '$name' ist im Importkontext mehrdeutig.")
+    val quelle = dek.singleOrNull()
+    if (quelle?.rolle == FormelSymbolRolle.METHODE) {
+        leerraum()
+        if (verbrauche('(')) {
+            val signatur = quelle.methodenSignatur ?: fehler("Methodensignatur für '$name' fehlt.")
+            val argumente = parseArgumentListe(')')
+            if (argumente.size != signatur.argumente.size) fehler("Falsche Argumentanzahl für '$name'.")
+            val ziel = variable(name, name, FormelTyp.METHODE)
+            val aufruf = FormelAusdruck.Operation(neueId("aufruf"), "methode.anwenden",
+                listOf(FormelArgument("methode", 0, ziel)) + argumente.mapIndexed { i, a -> FormelArgument(signatur.argumente[i].id, i + 1, a) }, FormelTyp.TUPEL)
+            return if (signatur.ergebnisse.size == 1) FormelAusdruck.Operation(neueId("projektion"), "tupel.projektion",
+                listOf(FormelArgument("tupel", 0, aufruf), FormelArgument("index", 1, literal(RationaleZahl.Eins))),
+                when (signatur.ergebnisse.single().typ) {
+                    ReelleZahlen.elementTypAusdruck(), RationaleZahlen.elementTypAusdruck() -> FormelTyp.ZAHL
+                    else -> FormelTyp.OBJEKT
+                }) else aufruf
+        }
+    }
     val funktionsId = funktionsNamen[name.lowercase()]
     if (funktionsId != null) {
         leerraum()

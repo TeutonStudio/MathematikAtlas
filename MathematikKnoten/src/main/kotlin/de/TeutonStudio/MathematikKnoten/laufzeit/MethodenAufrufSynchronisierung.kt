@@ -41,16 +41,6 @@ fun synchronisiereMethodenAufrufe(
     auswertung: KartenAuswertungsErgebnis,
     prüfung: GraphPrüfung,
 ): KartenDaten {
-    val argumentIdErsetzungen = buildMap {
-        karte.knoten.filter { it.art == METHODEN_AUFRUF_ART }.forEach { knoten ->
-            if (METHODEN_STRUKTUR_PACKUNG in knoten.eigenschaften || METHODEN_STRUKTUR_MIGRATIONSFEHLER in knoten.parameter) return@forEach
-            knoten.argumentAnschlüsse().forEachIndexed { index, anschluss ->
-                val alt = AnschlussVerweis(knoten.id, anschluss.id)
-                val neu = AnschlussVerweis(knoten.id, argumentId(knoten.id, index))
-                if (alt != neu) put(alt, neu)
-            }
-        }
-    }
 
     val synchronisierteKnoten = karte.knoten.map { knoten ->
         when (knoten.art) {
@@ -79,6 +69,18 @@ fun synchronisiereMethodenAufrufe(
                 )
             }
             else -> knoten
+        }
+    }
+
+    val argumentIdErsetzungen=buildMap {
+        for(alt in karte.knoten.filter {it.art==METHODEN_AUFRUF_ART}) {
+            if(METHODEN_STRUKTUR_PACKUNG in alt.eigenschaften) continue
+            val neu=synchronisierteKnoten.single {it.id==alt.id}
+            alt.argumentAnschlüsse().forEachIndexed {i,p ->
+                val id=p.semantischeId ?: alt.parameter["$METHODEN_AUFRUF_PARAMETER_PREFIX$i.id"]
+                val q=if(id!=null) neu.argumentAnschlüsse().singleOrNull {it.semantischeId==id} else neu.argumentAnschlüsse().getOrNull(i)
+                if(q!=null && p.id!=q.id) put(AnschlussVerweis(alt.id,p.id),AnschlussVerweis(neu.id,q.id))
+            }
         }
     }
 
@@ -194,7 +196,7 @@ private fun synchronisiereMethodenAufruf(
     } else {
         signatur.ergebnisse.single().typ
     }
-    val ergebnisArt = anschlussArtFürTyp(ergebnisTyp)
+    val ergebnisArt = if(knoten.parameter[METHODEN_AUFRUF_PARTIELL]=="true") MathematikAnschlussArten.Methode.id else anschlussArtFürTyp(ergebnisTyp)
 
     val argumente = if (argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
         if (signatur.argumente.isEmpty()) emptyList()
@@ -205,7 +207,7 @@ private fun synchronisiereMethodenAufruf(
         )
     } else {
         signatur.argumente.mapIndexed { index, komponent ->
-            val bisher = bisherigeArgumente.getOrNull(index)
+            val bisher = bisherigeArgumente.singleOrNull {it.semantischeId==komponent.id} ?: bisherigeArgumente.getOrNull(index)?.takeIf {it.semantischeId==null}
             (bisher ?: AnschlussDaten(
                 id = argumentId(knoten.id, index),
                 name = "argument-$index",
@@ -213,7 +215,8 @@ private fun synchronisiereMethodenAufruf(
                 kante = AnschlussKante.Links,
                 art = anschlussArtFürTyp(komponent.typ),
             )).copy(
-                id = argumentId(knoten.id, index),
+                id = bisher?.id ?: AnschlussId("${knoten.id.wert}:methodenAufruf:komponente:${komponent.id}"),
+                semantischeId = komponent.id,
                 name = "argument-$index",
                 art = anschlussArtFürTyp(komponent.typ),
                 reihenfolge = index + 1,
@@ -252,7 +255,7 @@ private fun synchronisiereMethodenAufruf(
         anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
             ausgang.copy(
                 art = ergebnisArt,
-                vertrag = AnschlussVertrag(ergebnisTyp),
+                vertrag = AnschlussVertrag(if(knoten.parameter[METHODEN_AUFRUF_PARTIELL]=="true") TypAusdruck.Atom(MathematischeTypen.Methode) else ergebnisTyp),
             ),
         parameter = knoten.parameter
             .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }

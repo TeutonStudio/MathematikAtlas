@@ -54,7 +54,7 @@ class WinkelTest {
         assertTrue(prüfeKompositionsKette(listOf(sin, q)).istGültig)
         val zusammengesetzt = komponiere(listOf(sin, q)) as MathematischeMethode
         assertEquals(setOf(x), zusammengesetzt.vorschrift.freieMethodenParameter())
-        assertEquals(1.0, wert(ersetze(zusammengesetzt.vorschrift, mapOf("x" to Division(Pi, z(2)))) as ZahlAusdruck), 1e-14)
+        assertEquals(1.0, wert(ersetze(zusammengesetzt.vorschriftFür(zusammengesetzt.ausgabeNamen.single()), mapOf("x" to Division(Pi, z(2)))) as ZahlAusdruck), 1e-14)
     }
     @Test fun `heterogene Komponentenobermengen bilden die Vereinigung und behalten Produktvertrag`() {
         val raum = Tupelraum(listOf(ReelleZahlen, WahrheitsMenge, Gradmenge))

@@ -46,7 +46,7 @@ class VektorUnterraumIntegrationTest {
         val r=auswerter.auswerten(KnotenAuswertungsKontext(k,mapOf("wert" to BedingterWert(strecke)),RechenKontext()))
         val menge=r.ausgaben.getValue("ergebnis").objekt as MengenAusdruck
         assertEquals(Wahrheitswert.Wahr,ElementBeziehung(Tupel(listOf(RationaleZahl.von(-1),RationaleZahl.Null)),menge).entscheide().wahrheitswert)
-        assertFails { auswerter.auswerten(KnotenAuswertungsKontext(k,mapOf("wert" to BedingterWert(strecke),"zielpunkt" to BedingterWert(Tupel(listOf(KomplexeZahl(RationaleZahl.Null,RationaleZahl.Eins),RationaleZahl.Null)))),RechenKontext())) }
+        assertNotNull(auswerter.auswerten(KnotenAuswertungsKontext(k,mapOf("wert" to BedingterWert(strecke),"zielpunkt" to BedingterWert(Tupel(listOf(KomplexeZahl(RationaleZahl.Null,RationaleZahl.Eins),RationaleZahl.Null)))),RechenKontext())).übersetzungsDiagnose)
         val ziel=punkt("z",4,0)
         val verschoben=auswerter.auswerten(KnotenAuswertungsKontext(k,mapOf("wert" to BedingterWert(strecke),"zielpunkt" to BedingterWert(ziel)),RechenKontext())).ausgaben.getValue("ergebnis").objekt as MengenAusdruck
         assertEquals(Wahrheitswert.Wahr,ElementBeziehung(Tupel(listOf(RationaleZahl.von(3),RationaleZahl.Null)),verschoben).entscheide().wahrheitswert)
