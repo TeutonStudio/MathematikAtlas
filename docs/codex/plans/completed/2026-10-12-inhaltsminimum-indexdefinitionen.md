@@ -1,5 +1,5 @@
 # Inhaltsminimum und Indexdefinitionen
-Status: aktiv, Integration v3.2.0, 2026-10-13
+Status: Produkt und Abnahme abgeschlossen, v3.2.0, 2026-10-13
 
 ## Ziel und Nutzerwirkung
 Vollständig lesbare Knoten/Gruppen, zuverlässige Auswahl, Indexübersetzung und ausführbare Strukturdefinitionen; verschachtelte Polarkoordinaten und zentriertes Falk-Schema.
@@ -28,8 +28,8 @@ KnotenRenderer/KnotenKartenEditor/KartenEditorZustand/GruppenDarstellung; Method
 - [x] Indexmethode, vollständiges ausführbares Rezeptinventar und Bedingungen für symbolische Kandidaten.
 - [x] Wn-Parameter, explizite Polarkonvention, historische Aufrufpackung, Produkt-Sampling und persistierte Projektion.
 - [x] Vollständige lokale Gradle-Tests, Builds, Lint, ADRs und unabhängiger Produktreview.
-- [ ] Android-Instrumentierung im isolierten CI-Emulator; physische Geräteprüfung separat nicht verfügbar.
-- [ ] Grüne abschließende PR-Prüfungen und Squash nach master mit Titel v3.2.0.
+- [x] Android-Instrumentierung im isolierten API35-CI-Emulator erfolgreich; physische Geräteprüfung separat nicht verfügbar (nicht blockierend: Emulator-Laufzeitabnahme vorhanden).
+- [x] PR-Abnahme #449 am Produkt-HEAD ae1669fc: sämtliche CI-Jobs grün, unabhängiger Produkt- und Releasecheck bestanden. Veröffentlichung erfolgt als freigegebener Squash mit Titel v3.2.0; maßgeblicher Veröffentlichungsstatus ist PR #449.
 
 ## Konkrete Umsetzungsschritte
 Bestehende Methoden-/Strukturzugriffe verwenden; Definitionsgraphen zerlegen; Polar-Ausgabe verschachteln und alte Eingaben lesen; zentrale effektive Geometrie herstellen; Gestenregression isolieren; Layout zentrieren.
@@ -175,3 +175,11 @@ Die frühere Offenliste der neun Definitionsrezepte ist geschlossen. Die histori
 Noch offener Abnahmepunkt: Android-Instrumentierung. Auch isolierte API35- und API37-Emulatoren beenden ihren nativen Prozess vor betriebsbereitem ADB. Es wurde kein Gerätetest als erfolgreich verbucht, keine Produkt-App deinstalliert und kein fremder AVD geändert. Ein eigener CI-Job startet einen isolierten Emulator und führt die vorhandenen Editor- und Inspector-Instrumentierungstests aus. Ein physisches Android-Gerät ist nicht verbunden. Direkter kotlinc-Smoke-Test lokal mangels CLI nicht ausführbar; Android-freie Gradle-Kernprüfung ist erfolgreich, zusätzliche direkte Prüfung läuft in bestehender CI.
 
 Zusätzlicher Tensorzerlegungsnachweis: 29 Definitionskartentests grün, alle Achsen eines 2×3×2-Tensors einschließlich jeder Scheibe und Indexgrenzen gegen direkte Auswertung geprüft. Dabei wurde der statische Methodenanschluss für die Schnittfamilie berichtigt. Die Emulator-CI benötigt neben absolutem SDK-Pfad auch eine ausdrücklich angelegte AVD-INI im isolierten AVD-Verzeichnis; beide Startverträge sind jetzt im Job festgelegt.
+
+## Endzustand und Abschlussnachweise
+
+Die Implementierung und Abnahme sind abgeschlossen. Nach dem letzten Schnittfamilienfix sind 1.640 lokale Tests, Android-Debug-Build, Lint und Desktop-Kompilierung erfolgreich (`/tmp/atlas-v320-final-after-slices.log`). 29 Definitionskartentests einschließlich jeder Scheibe aller Achsen und der Indexgrenzen eines 2×3×2-Tensors sind grün. Node-Verifier hat den abschließenden Produktdiff unabhängig freigegeben; master_verwalter bestätigt die echte PR-Kontextprüfung, Basis und Identität.
+
+PR #449, Produkt-HEAD ae1669fc7736d55434c050ec1b9d901562c7ad79: Release-Guard 38400143187, Linux-Desktop 38400142830, Android-Build 38400142891 sowie Mathematikkern/Android-Runtime 38400142819 sämtlich erfolgreich. Android-Laufzeitjob 115305356166 führte die vorhandenen Editor- und Inspector-Instrumentierungstests auf atlas-ci/API35 erfolgreich aus. Die direkte kotlinc-Kernprüfung ist ebenfalls in CI erfolgreich. Lokale Emulator-SIGSEGVs sind damit keine offene Abnahmeblockade; ein physisches Gerät bleibt nicht verfügbar und wird nicht als geprüft ausgegeben.
+
+Der abschließende Dokumentationscommit verändert keine Produktdateien. Release-Metadaten, ADR und Prüfbelege beschreiben denselben freigegebenen Stand. Persönliche IDE-/Shelf-Dateien und der separate Komplex-Worktree sind unverändert. Der finale Squash nach master wird ausschließlich nach erneut grünen Checks des tatsächlichen PR-HEAD durchgeführt.

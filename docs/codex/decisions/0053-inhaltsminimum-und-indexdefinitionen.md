@@ -31,4 +31,4 @@ Persistierte automatische Größen würden Undo und Speichern mit Layoutänderun
 Layoutmessung muss von Zoom und Benutzermaßen unabhängig und stabil bleiben. Renderer mit begrenzten Viewports können freie Messung deaktivieren. Größen-, Auswahl-, Methoden-, Definitionsgraph- und Kompatibilitätstests werden getrennt geführt. Es entstehen weder neue Produktionsabhängigkeiten noch neue registrierte Knotentypen.
 
 ## Nachweise
-Fortlaufender Nachweis: ../plans/active/2026-10-12-inhaltsminimum-indexdefinitionen.md. Finale Abnahme steht aus.
+Fortlaufender Nachweis: ../plans/completed/2026-10-12-inhaltsminimum-indexdefinitionen.md. Finale Produkt-, Compose- und Android-Emulator-Abnahme erfolgreich.
