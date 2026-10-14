@@ -11,7 +11,7 @@ class WinkelraumAufrufMigrationTest {
         val quelle = konfiguriereVariablenStruktur(MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero), VARIABLE_STRUKTUR_WINKEL).let { it.copy(parameter=it.parameter+mapOf("name" to "w", VARIABLE_DIMENSION to "1")) }
         val methode = port("methode",0)
         val aufruf = KnotenDaten(art=METHODEN_AUFRUF_ART, name="Historischer Aufruf", anschlüsse=listOf(methode,port("zweiter",2),port("erster",1)), parameter=if(benannt) mapOf("${METHODEN_AUFRUF_PARAMETER_PREFIX}0.name" to "w_1", "${METHODEN_AUFRUF_PARAMETER_PREFIX}1.name" to "w_2") else emptyMap())
-        return KartenDaten(name="Alt",knoten=listOf(quelle,aufruf),verbindungen=listOf(VerbindungDaten(von=AnschlussVerweis(quelle.id,quelle.anschlüsse.single().id),zu=AnschlussVerweis(aufruf.id,methode.id))))
+        return KartenDaten(name="Alt",knoten=listOf(quelle,aufruf),verbindungen=listOf(VerbindungDaten(von=AnschlussVerweis(quelle.id,quelle.anschlüsse.single { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang }.id),zu=AnschlussVerweis(aufruf.id,methode.id))))
     }
     @Test fun `benannte historische Komponenten werden ohne Anschlussaenderung gepackt`() {
         val alt=karte(true); val neu=alt.migriereWinkelraumAufrufe()

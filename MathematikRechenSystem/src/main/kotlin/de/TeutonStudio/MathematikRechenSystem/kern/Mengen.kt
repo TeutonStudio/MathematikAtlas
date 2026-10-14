@@ -310,6 +310,7 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         }
         is EndlicheMenge -> Disjunktion(menge.elemente.map { Selbigkeit(element, it) }).entscheide(kontext)
         is KartesischesProdukt -> entscheideTupelMitgliedschaft(element, menge.mengen, kontext)
+        is ÜbersetzungsBildraum -> menge.enthält(element, kontext)
         is Tupelraum -> entscheideTupelMitgliedschaft(element, menge.komponenten, kontext)
         is Vereinigung -> Disjunktion(menge.mengen.map { ElementBeziehung(element, it) }).entscheide(kontext)
         is Schnitt -> if (menge.mengen.isEmpty()) {

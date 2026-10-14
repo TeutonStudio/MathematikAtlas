@@ -51,6 +51,8 @@ fun definitionsBedingungen(objekt: MathematischesObjekt): List<Aussage> {
         is Äquivalenz -> kinder(objekt.links, objekt.rechts)
         is Adjunktion -> kinder(objekt.links, objekt.rechts)
         is ElementBeziehung -> kinder(objekt.element, objekt.menge)
+        is MethodenVariable -> emptyList()
+        is Tensor -> objekt.werte.flatMap(::definitionsBedingungen)
         is Matrix -> objekt.zeilen.flatten().flatMap(::definitionsBedingungen)
         is SpaltenVektor -> objekt.werte.flatMap(::definitionsBedingungen)
         is ZeilenVektor -> objekt.werte.flatMap(::definitionsBedingungen)

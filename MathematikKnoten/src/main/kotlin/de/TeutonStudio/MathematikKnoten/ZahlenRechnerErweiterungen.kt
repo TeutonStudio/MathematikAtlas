@@ -485,6 +485,7 @@ private fun erweiterteDefinitionsBedingungen(
 }
 
 private fun werteFormelAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+    if(FORMEL_KONTEXT_EIGENSCHAFT in kontext.knoten.eigenschaften) return werteGebundeneKnotenFormelAus(kontext)
     val latex = kontext.knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX] ?: error("Die gespeicherte Formel fehlt.")
     val import = FormelLatexCodec.importiere(latex)
     val ausdruck = (import as? FormelLatexImportErgebnis.Erfolg)?.ausdruck

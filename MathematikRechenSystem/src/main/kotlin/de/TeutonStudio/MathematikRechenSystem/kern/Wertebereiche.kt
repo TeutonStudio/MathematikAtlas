@@ -115,6 +115,7 @@ private fun inferiereElementMenge(
     werteVorräte: Map<String, MengenAusdruck>,
     annahmen: Set<Aussage>,
 ): MengenAusdruck = when (menge) {
+    is ÜbersetzungsBildraum -> menge
     is EndlicheIndexMenge -> NatürlicheZahlen
     is StrukturErgebnisMenge -> menge
     NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen,

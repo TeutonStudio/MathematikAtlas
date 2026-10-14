@@ -26,7 +26,7 @@ class EditorAuswahlRegressionTest {
   val result = mutableListOf<TextLayoutResult>()
   node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(result) }
   assertTrue(result.isNotEmpty())
-  assertTrue(result.none { it.didOverflowHeight || (0 until it.lineCount).any { zeile -> it.getLineRight(zeile) > it.size.width + 1f } }, result.joinToString { "${it.layoutInput.text.text}: size=${it.size}, constraints=${it.layoutInput.constraints}, overflowH=${it.didOverflowHeight}, overflowW=${it.didOverflowWidth}, paragraph=${it.multiParagraph.width}, right=${it.getLineRight(it.lineCount-1)}, last=${it.getLineBottom(it.lineCount-1)}" })
+  assertTrue(result.none { (0 until it.lineCount).any { zeile -> it.getLineTop(zeile) < -1f || it.getLineBottom(zeile) > it.size.height + 1f || it.getLineRight(zeile) > it.size.width + 1f } }, result.joinToString { "${it.layoutInput.text.text}: size=${it.size}, constraints=${it.layoutInput.constraints}, overflowH=${it.didOverflowHeight}, overflowW=${it.didOverflowWidth}, paragraph=${it.multiParagraph.width}, right=${it.getLineRight(it.lineCount-1)}, last=${it.getLineBottom(it.lineCount-1)}" })
  }
  @Test fun gruppenkopfSkaliertAlsGanzesUndLangeFusszeilePasstInKapsel() {
   val titel = "Eine Gruppe mit einem sehr langen vollständig lesbaren Titel"

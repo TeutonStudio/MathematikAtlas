@@ -172,7 +172,10 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
         }
     }
 
-    if (neuerFormelDialog) GemeinsamerFormelBauerDialog(startLatex = "", schließen = { neuerFormelDialog = false },
+    if (neuerFormelDialog) GemeinsamerFormelBauerDialog(übernehmenGebunden={ f,z ->
+        val k=konfiguriereGebundeneKnotenFormel(ZahlenRechnerKnotenVorlagen.standard.erzeuge(letzterZeiger),f,z)
+        atlas.editor.führeAus(KartenAktion.KnotenEinfügen(k));atlas.editor.wähleKnoten(k.id);atlas.aktualisiereAuswertung();neuerFormelDialog=false
+    },startLatex = "", schließen = { neuerFormelDialog = false },
         übernehmen = {}, übernehmenMitZeichnung = { ast, latex, zeichnung ->
             val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(letzterZeiger)
             val neu = konfiguriereZahlenRechnerFormel(basis, latex)
@@ -411,31 +414,7 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             if (knoten.art == "mathematik.variable") {
                 MatrixVariableFelder(knoten) { atlas.beantrageKonfiguration(it) }
             }
-            if (knoten.art == ÜBERSETZER_ART) {
-                Text("Übersetzungsziel")
-                if (übersetzerZiel(knoten) in setOf("polar", "kartesisch")) {
-                    Row { Text("Radius und Winkel getrennt"); Switch(checked = übersetzerPolarGetrennt(knoten), onCheckedChange = { atlas.beantrageKonfiguration(konfiguriereÜbersetzerPolarAnschlüsse(knoten, it)) }) }
-                }
-                ÜBERSETZER_ZIELE.forEach { ziel -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereÜbersetzer(knoten, ziel)) }) {
-                    Text(if (ziel == übersetzerZiel(knoten)) "✓ ${übersetzerZielTitel(ziel)}" else übersetzerZielTitel(ziel))
-                } }
-                if (übersetzerZiel(knoten) == "koordinatenmenge") listOf("keiner" to "Koordinaten erhalten", "punkt" to "Objektpunkt wählen", "mittelpunkt" to "Mittelpunkt").forEach { (id, titel) ->
-                    TextButton(onClick = { atlas.beantrageKonfiguration(knoten.copy(parameter = knoten.parameter + ("geometrie.anker" to id))) }) { Text(titel) }
-                }
-                if (übersetzerZiel(knoten) in setOf("polar", "kartesisch")) Text(Polarkoordinaten.KONVENTION)
-                if (übersetzerZiel(knoten) == "bogenmass") WinkelVertreter.entries.forEach { vertreter ->
-                    TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereÜbersetzerVertreter(knoten, vertreter)) }) {
-                        if (übersetzerVertreter(knoten) == vertreter) Text("✓ ")
-                        LatexText(vertreter.menge.zuLatex())
-                    }
-                }
-                if (übersetzerZiel(knoten) == "kartesisch") Row {
-                    Checkbox(checked = übersetzerEindimensional(knoten), onCheckedChange = {
-                        atlas.beantrageKonfiguration(konfiguriereÜbersetzerEindimensional(knoten, it))
-                    })
-                    Text("R¹: (Radius, Vorzeichen)")
-                }
-            }
+            if (knoten.art == ÜBERSETZER_ART) ÜbersetzerEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}
             if (knoten.art == ZAHLENRECHNER_ART && UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.SINUS) Row {
                 Checkbox(checked = knoten.parameter[SINUS_WINKELRAUM] == "grad", onCheckedChange = {
                     atlas.beantrageKonfiguration(konfiguriereSinusWinkelraum(knoten, it))
@@ -461,6 +440,10 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
                 OutlinedButton(onClick = { formelOffen = true }) { Text("Formel / Zeichnung bearbeiten") }
             if (besitztRechnerSchema(knoten))
                 OutlinedButton(onClick={ falkOffen=true }) { Text("Auswertungsschema") }
+            FormelKartenAktionen(atlas.editor.karte,knoten) {aktion -> atlas.editor.führeAus(aktion);atlas.aktualisiereAuswertung()}
+            ErgebnisVertragsInhalt(atlas.auswertung.knoten[knoten.id])
+            MethodenProjektionsEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}
+            VisualisierungsVertragsEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}
             Text("Art", style = MaterialTheme.typography.labelLarge)
             Text(knoten.art)
             knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -591,13 +574,13 @@ private fun DesktopFormelEditor(knoten: KnotenDaten, atlas: DesktopAtlasZustand,
         schließen()
     }
     if (knoten.art == ZAHLENRECHNER_ART) {
-        GemeinsamerFormelBauerDialog(startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" }, startAusdruck = ladeFormelAst(knoten),
+        GemeinsamerFormelBauerDialog(startKnoten=knoten,übernehmenGebunden={f,z -> übernehme(konfiguriereGebundeneKnotenFormel(knoten,f,z),z)}, startLatex = knoten.parameter[ZAHLENRECHNER_FORMEL_LATEX].orEmpty().ifBlank { "x" }, startAusdruck = ladeFormelAst(knoten),
             startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT], schließen = schließen, übernehmen = {},
             übernehmenMitZeichnung = { ast, latex, zeichnung -> konfiguriereZahlenRechnerFormel(knoten, latex).let { kandidat -> übernehme(kandidat.copy(eigenschaften = kandidat.eigenschaften + (FORMEL_AST_EIGENSCHAFT to KnotenEigenschaft.Text(StrukturFormelCodec.kodieren(ast)))), zeichnung) } })
     } else {
         val familie = de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) ?: return
         val start = ladeStrukturRechnerFormel(knoten) ?: de.TeutonStudio.MathematikKnoten.StrukturRechnerOperatoren.fuer(familie).firstOrNull()?.let(::strukturOperatorAlsFormel)
-        GemeinsamerStrukturFormelBauerDialog(familie = familie.formelFamilie, start = start, quantorVariable = knoten.parameter["variablenName"] ?: "x",
+        GemeinsamerStrukturFormelBauerDialog(startKnoten=knoten,übernehmenGebunden={f,z -> übernehme(konfiguriereGebundeneKnotenFormel(knoten,f,z),z)}, familie = familie.formelFamilie, start = start, quantorVariable = knoten.parameter["variablenName"] ?: "x",
             startZeichnung = knoten.eigenschaften[FORMEL_ZEICHNUNG_EIGENSCHAFT], schließen = schließen, übernehmen = {},
             übernehmenMitZeichnung = { wurzel, zeichnung -> übernehme(konfiguriereStrukturRechnerFormel(knoten, familie, wurzel), zeichnung) })
     }

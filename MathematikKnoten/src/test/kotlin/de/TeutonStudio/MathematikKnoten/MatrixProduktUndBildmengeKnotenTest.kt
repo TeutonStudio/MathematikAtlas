@@ -121,6 +121,18 @@ class MatrixProduktUndBildmengeKnotenTest {
         )
     }
 
+    @Test
+    fun `nullstellige Bildmenge funktioniert in Produkt und Einzelmengenmodus`() {
+        val methode = Methode("f", emptyList(), zahl(5), ReelleZahlen)
+        for (modus in listOf(BILDMENGE_MODUS_PRODUKT, BILDMENGE_MODUS_EINZELMENGEN)) {
+            val knoten = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero).copy(
+                parameter = mapOf(BILDMENGE_ARGUMENT_MODUS to modus))
+            val ergebnis = register.finde("mathematik.abbild")!!.auswerten(KnotenAuswertungsKontext(knoten,
+                mapOf("methode" to BedingterWert(methode), "menge" to BedingterWert(EndlicheMenge(setOf(Tupel(emptyList()))))), RechenKontext()))
+            assertEquals(EndlicheMenge(setOf(zahl(5))), ergebnis.ausgaben.getValue("menge").objekt)
+        }
+    }
+
     private fun visualisierungsKonfiguration() = VisualisierungsKonfiguration(
         dimension = RaumDimension.R3,
         achsen = AchsenZuordnung("x", "y", "z"),

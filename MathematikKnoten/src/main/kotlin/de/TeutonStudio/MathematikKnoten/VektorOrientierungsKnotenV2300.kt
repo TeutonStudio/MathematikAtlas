@@ -215,12 +215,13 @@ private fun tatsächlicheOrientierung(k: KnotenAuswertungsKontext, historisch: S
         ?: if (k.knoten.art in ZEILEN_ALIAS_ARTEN) VEKTOR_ORIENTIERUNG_ZEILE else historisch
 
 private fun tupelZuVektorErgebnis(k: KnotenAuswertungsKontext, historisch: String): KnotenAuswertungsErgebnis {
-    val tupel = k.eingänge["tupel"]?.objekt as? Tupel ?: error("Tupel fehlt.")
+    val quelle = k.eingänge["tupel"] ?: error("Tupel fehlt.")
+    val tupel = quelle.objekt as? Tupel ?: error("Tupel fehlt.")
     val zahlen = tupel.elemente.mapIndexed { index, element ->
         element as? ZahlAusdruck ?: error("Tupelkomponente ${index + 1} ist keine Zahl.")
     }
     val vektor: MathematischesObjekt = if (tatsächlicheOrientierung(k, historisch) == VEKTOR_ORIENTIERUNG_ZEILE) ZeilenVektor(zahlen) else SpaltenVektor(zahlen)
-    return KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(vektor, k.eingänge.values.flatMap { it.annahmen }.toSet())), eingänge = k.eingänge)
+    return KnotenAuswertungsErgebnis(mapOf("vektor" to übersetzterWert(quelle, vektor)), eingänge = k.eingänge)
 }
 
 private fun einheitsVektorErgebnisV2300(k: KnotenAuswertungsKontext, historisch: String): KnotenAuswertungsErgebnis {

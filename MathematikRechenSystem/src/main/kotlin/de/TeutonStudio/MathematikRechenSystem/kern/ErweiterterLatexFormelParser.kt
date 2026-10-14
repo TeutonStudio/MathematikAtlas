@@ -9,12 +9,12 @@ internal object ErweiterterLatexFormelParser {
     private const val MINUS_PLUS_MARKER = "__ATLAS_MP__"
     private const val IDENTITAETS_MARKER = "__ATLAS_ID__"
 
-    fun parse(quelle: String): FormelAusdruck {
+    fun parse(quelle: String, quellen: List<FormelVariablenQuelle> = emptyList()): FormelAusdruck {
         val vorbereitet = quelle
             .replace("\\operatorname{id}", IDENTITAETS_MARKER)
             .replace("\\pm", PLUS_MINUS_MARKER)
             .replace("\\mp", MINUS_PLUS_MARKER)
-        return transformiere(LatexFormelParser(vorbereitet).parse())
+        return transformiere(LatexFormelParser(vorbereitet, quellen).parse())
     }
 
     private fun transformiere(ausdruck: FormelAusdruck): FormelAusdruck = when (ausdruck) {

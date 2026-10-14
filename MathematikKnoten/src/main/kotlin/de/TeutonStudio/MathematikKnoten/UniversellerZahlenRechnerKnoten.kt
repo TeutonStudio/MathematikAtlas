@@ -243,6 +243,7 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
 
 fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
     knoten = knoten.map { alt ->
+        if (alt.parameter[ZAHLENRECHNER_OPERATOR]==ZAHLENRECHNER_FORMEL_ID || FORMEL_KONTEXT_EIGENSCHAFT in alt.eigenschaften) return@map alt
         if (alt.art == ZAHLENRECHNER_ART && alt.parameter.keys.any { it.startsWith("indexmethode.") }) return@map alt
         if (alt.art == ZAHLENRECHNER_ART) {
             val operator = UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR])

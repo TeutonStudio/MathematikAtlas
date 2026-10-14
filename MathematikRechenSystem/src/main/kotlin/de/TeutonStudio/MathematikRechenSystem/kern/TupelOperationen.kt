@@ -5,7 +5,6 @@ package de.TeutonStudio.MathematikRechenSystem.kern
  * direkte Tupel-Ebene aufgelöst; verschachtelte Tupel bleiben Elemente.
  */
 fun ergänzeTupel(tupel: List<Tupel>): Tupel {
-    require(tupel.size >= 2) { "Zum Ergänzen werden mindestens zwei Tupel benötigt." }
     return Tupel(tupel.flatMap { it.elemente })
 }
 
@@ -17,6 +16,5 @@ fun ergänzeTupelUmElemente(
     basis: Tupel,
     elemente: List<MathematischesObjekt>,
 ): Tupel {
-    require(elemente.isNotEmpty()) { "Zum Ergänzen wird mindestens ein Element benötigt." }
     return Tupel(basis.elemente + elemente)
 }

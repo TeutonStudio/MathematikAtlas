@@ -25,6 +25,7 @@ sealed interface FormelAusdruck {
         override val id: String,
         val wert: MathematischesObjekt,
         override val typ: FormelTyp,
+        val übersetzungen: ÜbersetzungsMetadaten = ÜbersetzungsMetadaten(),
     ) : FormelAusdruck
 
     data class Variable(
@@ -100,7 +101,7 @@ object FormelAusdruckPruefer {
             when (ausdruck) {
                 is FormelAusdruck.Platzhalter -> platzhalter += ausdruck.id
                 is FormelAusdruck.Operation -> {
-                    if (ausdruck.argumente.isEmpty()) {
+                    if (ausdruck.argumente.isEmpty() && ausdruck.operatorId != "tupel.konstruktion") {
                         gruende += "Operation ${ausdruck.operatorId} besitzt keine Argumente."
                     }
                     ausdruck.argumente.sortedBy { it.position }.forEach { besuche(it.ausdruck) }
@@ -163,6 +164,24 @@ object FormelRenderer {
     ) {
         val argumente = operation.argumente.sortedBy { it.position }.map { it.ausdruck }
         when (operation.operatorId.substringAfterLast('.')) {
+            "anwenden" -> {
+                schreibe(argumente[0], 40)
+                text.append("\\left(")
+                argumente.drop(1).forEachIndexed { i, a -> if (i > 0) text.append(","); schreibe(a, 0) }
+                text.append("\\right)")
+            }
+            "konstruktion" -> {
+                text.append("\\operatorname{Tupel}\\left(")
+                argumente.forEachIndexed { i, a -> if (i > 0) text.append(","); schreibe(a, 0) }
+                text.append("\\right)")
+            }
+            "projektion" -> {
+                val quelle = argumente[0]
+                text.append("\\operatorname{proj}_{")
+                schreibe(argumente[1], 0); text.append("}{")
+                schreibe(quelle, 0); text.append("}")
+            }
+
             "addition" -> argumente.forEachIndexed { index, argument ->
                 if (index > 0) text.append(" + ")
                 schreibe(argument, praezedenz)
@@ -255,6 +274,9 @@ data class FormelGraphKnoten(
     val art: String,
     val typ: FormelTyp,
     val parameter: Map<String, String> = emptyMap(),
+    val bedingungen: List<Aussage> = emptyList(),
+    val literal: MathematischesObjekt? = null,
+    val übersetzungen: ÜbersetzungsMetadaten = ÜbersetzungsMetadaten(),
 )
 
 data class FormelGraphKante(
@@ -269,10 +291,14 @@ data class FormelGraph(
     val wurzelKnotenId: String,
     val knoten: List<FormelGraphKnoten>,
     val kanten: List<FormelGraphKante>,
+    val bindungsKontext: FormelBindungsKontext? = null,
 )
 
 /** Ausdrucks-DAG zu neutralem Graphmodell; Layout bleibt bewusst außerhalb. */
 object FormelZuGraph {
+    fun konvertiere(formel: GebundeneFormel): FormelGraph = konvertiere(formel.wurzel).copy(
+        bindungsKontext = FormelBindungsKontext(formel.quellen, formel.variablenVorkommen, formel.quantoren, formel.praedikate, formel.annahmen),
+    )
     fun konvertiere(wurzel: FormelAusdruck): FormelGraph {
         val knoten = linkedMapOf<String, FormelGraphKnoten>()
         val kanten = linkedMapOf<String, FormelGraphKante>()
@@ -287,6 +313,8 @@ object FormelZuGraph {
                     "formel.literal",
                     ausdruck.typ,
                     mapOf("latex" to ausdruck.wert.zuLatex()),
+                    literal = ausdruck.wert,
+                    übersetzungen = ausdruck.übersetzungen,
                 )
                 is FormelAusdruck.Variable -> FormelGraphKnoten(
                     knotenId,
@@ -308,6 +336,7 @@ object FormelZuGraph {
                     ausdruck.operatorId,
                     ausdruck.typ,
                     mapOf("explizitGruppiert" to ausdruck.explizitGruppiert.toString()),
+                    bedingungen = ausdruck.bedingungen,
                 )
             }
             knoten[knotenId] = graphKnoten
@@ -333,14 +362,14 @@ object FormelZuGraph {
 }
 
 sealed interface GraphZuFormelErgebnis {
-    data class Erfolg(val wurzel: FormelAusdruck) : GraphZuFormelErgebnis
+    data class Erfolg(val wurzel: FormelAusdruck, val gebundeneFormel: GebundeneFormel? = null) : GraphZuFormelErgebnis
     data class Fehler(val gruende: List<String>) : GraphZuFormelErgebnis
 }
 
 object GraphZuFormel {
     fun konvertiere(
         graph: FormelGraph,
-        literale: Map<String, MathematischesObjekt>,
+        literale: Map<String, MathematischesObjekt> = emptyMap(),
     ): GraphZuFormelErgebnis {
         val knoten = graph.knoten.associateBy { it.id }
         val eingehend = graph.kanten.groupBy { it.zielKnotenId }
@@ -361,8 +390,8 @@ object GraphZuFormel {
                 return null
             }
             val ausdruck = when (graphKnoten.art) {
-                "formel.literal" -> literale[graphKnoten.ausdrucksId]?.let {
-                    FormelAusdruck.Literal(graphKnoten.ausdrucksId, it, graphKnoten.typ)
+                "formel.literal" -> (graphKnoten.literal ?: literale[graphKnoten.ausdrucksId])?.let {
+                    FormelAusdruck.Literal(graphKnoten.ausdrucksId, it, graphKnoten.typ, graphKnoten.übersetzungen)
                 } ?: run {
                     fehler += "Literal ${graphKnoten.ausdrucksId} fehlt im Literalregister."
                     null
@@ -388,6 +417,7 @@ object GraphZuFormel {
                         operatorId = graphKnoten.art,
                         argumente = argumente,
                         typ = graphKnoten.typ,
+                        bedingungen = graphKnoten.bedingungen,
                         explizitGruppiert = graphKnoten.parameter["explizitGruppiert"]?.toBooleanStrictOrNull() ?: false,
                     )
                 }
@@ -399,7 +429,7 @@ object GraphZuFormel {
 
         val wurzel = baue(graph.wurzelKnotenId)
         return if (wurzel == null || fehler.isNotEmpty()) GraphZuFormelErgebnis.Fehler(fehler.distinct())
-        else GraphZuFormelErgebnis.Erfolg(wurzel)
+        else GraphZuFormelErgebnis.Erfolg(wurzel, graph.bindungsKontext?.mitWurzel(wurzel))
     }
 }
 

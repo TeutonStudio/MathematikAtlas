@@ -6,9 +6,7 @@ internal fun LatexFormelParser.parsePrimaer(): FormelAusdruck {
     return when (text[position]) {
         '(' -> {
             position++
-            val innen = parseSumme()
-            erwarte(')')
-            gruppiere(innen)
+            parseKlammerInhalt()
         }
         '{' -> parseGruppe()
         '\\' -> parseBefehl()
@@ -22,6 +20,11 @@ internal fun LatexFormelParser.parseBefehl(): FormelAusdruck {
     val start = position
     position++
     val name = liesBefehlsName()
+    if (name in setOf("pi", "sin", "cos", "tan", "cot", "sec", "csc", "sinh", "cosh", "tanh", "coth", "sech", "csch",
+            "arcsin", "arccos", "arctan", "ln", "log", "exp", "min", "max") + griechischeBefehle &&
+        quellen.any { it.anzeigeName == name }) {
+        return parseSymbol(name, "\\$name")
+    }
     return when (name) {
         "frac" -> operation("zahl.division", parseGruppe(), parseGruppe(), "zaehler", "nenner")
         "sqrt" -> {
@@ -39,7 +42,7 @@ internal fun LatexFormelParser.parseBefehl(): FormelAusdruck {
         "mathrm" -> parseGruppeAlsName()
         "operatorname" -> parseOperatorname()
         in funktionsBefehle -> parseFunktion(funktionsBefehle.getValue(name))
-        in griechischeBefehle -> variable(name, "\\$name")
+        in griechischeBefehle -> parseSymbol(name, "\\$name")
         else -> throw LatexFormelParseFehler(start, "Nicht unterstützter LaTeX-Befehl \\$name.")
     }
 }
@@ -74,6 +77,7 @@ internal fun LatexFormelParser.parseLogarithmus(): FormelAusdruck {
 
 internal fun LatexFormelParser.parseOperatorname(): FormelAusdruck {
     val name = liesGruppenText().trim()
+    if (quellen.any { it.anzeigeName == name }) return parseSymbol(name, "\\operatorname{$name}")
     val operatorId = funktionsNamen[name.lowercase()]
         ?: name.takeIf { it.startsWith("zahl.") }
         ?: fehler("Unbekannte Funktion '$name'.")
@@ -124,7 +128,7 @@ internal fun LatexFormelParser.parseGruppe(): FormelAusdruck {
 internal fun LatexFormelParser.parseGruppeAlsName(): FormelAusdruck {
     val name = liesGruppenText().trim()
     if (name.isBlank()) fehler("Leerer Variablenname.")
-    return variable(name, "\\mathrm{$name}")
+    return parseSymbol(name, "\\mathrm{$name}")
 }
 
 internal fun LatexFormelParser.liesGruppenText(): String {
@@ -157,17 +161,62 @@ internal fun LatexFormelParser.parseNameOderKonstante(): FormelAusdruck {
     position++
     while (position < text.length && (text[position].isLetterOrDigit() || text[position] == '_')) position++
     val name = text.substring(start, position)
+    return parseSymbol(name, name)
+}
+
+/** Deklarationen haben Vorrang vor unqualifizierten Funktions- und Konstantennamen. */
+internal fun LatexFormelParser.parseSymbol(name: String, latex: String): FormelAusdruck {
+    val deklarationen = quellen.filter { it.anzeigeName == name }
+    if (deklarationen.size > 1) fehler("Der Name '$name' ist im Importkontext mehrdeutig.")
+    val quelle = deklarationen.singleOrNull()
+    if (quelle != null) {
+        val ziel = variable(name, latex, quelle.typ)
+        return if (quelle.rolle == FormelSymbolRolle.METHODE) {
+            parseMethodenFolge(ziel, quelle.methodenSignatur ?: fehler("Methodensignatur für '$name' fehlt."))
+        } else ziel
+    }
     val funktionsId = funktionsNamen[name.lowercase()]
-    if (funktionsId != null) {
-        leerraum()
-        if (position < text.length && (text[position] == '(' || text[position] == '{')) {
-            return parseFunktion(funktionsId)
-        }
+    leerraum()
+    if (funktionsId != null && position < text.length && text[position] in "({") return parseFunktion(funktionsId)
+    if (position < text.length && text[position] == '(') {
+        fehler("Mehrdeutiger Ausdruck '$name(...)': Methode oder Wert deklarieren oder Multiplikation ausdrücklich schreiben.")
     }
-    return when (name) {
-        "e" -> literal(EulerscheZahl)
-        else -> variable(name, name)
+    return if (name == "e") literal(EulerscheZahl) else variable(name, latex)
+}
+
+/** Ein einzelner Wert in Klammern gruppiert; Kommas und leere Klammern bilden Tupel. */
+internal fun LatexFormelParser.parseKlammerInhalt(): FormelAusdruck {
+    if (verbrauche(')')) return operation("tupel.konstruktion", emptyList(), FormelTyp.TUPEL)
+    val elemente = mutableListOf(parseSumme())
+    if (verbrauche(')')) return gruppiere(elemente.single())
+    erwarte(',')
+    while (!verbrauche(')')) {
+        elemente += parseSumme()
+        if (verbrauche(')')) break
+        erwarte(',')
     }
+    return operation("tupel.konstruktion", elemente.mapIndexed { i, e -> "element-$i" to e }, FormelTyp.TUPEL)
+}
+
+/** Auch ein methodenwertiges Ergebnis kann unmittelbar erneut aufgerufen werden. */
+internal fun LatexFormelParser.parseMethodenFolge(ziel: FormelAusdruck, signatur: MethodenSignatur): FormelAusdruck {
+    if (!verbrauche('(')) return ziel
+    val argumente = parseArgumentListe(')')
+    if (argumente.size != signatur.argumente.size) fehler("Falsche Argumentanzahl der Methode.")
+    val aufruf = FormelAusdruck.Operation(neueId("aufruf"), "methode.anwenden",
+        listOf(FormelArgument("methode", 0, ziel)) + argumente.mapIndexed { i, a ->
+            FormelArgument(signatur.argumente[i].id, i + 1, a)
+        }, FormelTyp.TUPEL)
+    val ergebnis = signatur.ergebnisse.singleOrNull() ?: return aufruf
+    val methodenSignatur = ergebnis.methodenSignatur
+    val typ = when {
+        methodenSignatur != null -> FormelTyp.METHODE
+        MathematischeTypen.typSystem.prüfe(ergebnis.typ,
+            de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Zahl)) == de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel -> FormelTyp.ZAHL
+        else -> FormelTyp.OBJEKT
+    }
+    val projektion = operation("tupel.projektion", listOf("tupel" to aufruf, "index" to literal(RationaleZahl.Eins)), typ)
+    return if (methodenSignatur != null) parseMethodenFolge(projektion, methodenSignatur) else projektion
 }
 
 internal val funktionsBefehle = mapOf(

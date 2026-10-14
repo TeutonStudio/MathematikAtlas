@@ -141,3 +141,54 @@ internal fun unterraumDefinitionsKarte(original: KnotenDaten): KartenDaten {
     val out=add(KnotenDaten(art="mathematik.kartenAusgang",name="{c+Σbₖaᵏ | b∈ℝⁿ}",anschlüsse=listOf(AnschlussDaten(name="wert",art=MathematikAnschlussArten.Menge.id,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links))),"ausgang");connect(bild,"menge",out,"wert")
     return KartenDaten(id=KartenId(prefix),name="Unterraum als Bild der Linearkombination",erstelltAm=0L,knoten=nodes,verbindungen=edges)
 }
+
+internal fun gradRichtungsKonzept(knoten: KnotenDaten): KonzeptDefinition? {
+    if (knoten.art != MENGEN_KNOTEN_ART || knoten.kartenVerweis != null ||
+        knoten.parameter[MENGEN_KNOTEN_AUSWAHL] != MengenKnotenAuswahl.GRADMENGE.stabileId) return null
+    val dimension = knoten.parameter["definition.dim"]?.toIntOrNull()?.takeIf { it in 1..65 } ?: 3
+    return KonzeptDefinition(
+        id = KonzeptId("grad-richtungsraum"), name = "Gradmenge und Richtungsraum",
+        beschreibung = "Ohne dim: Winkelgruppe G. Mit dim=d: ein Vorzeichen und d−1 Halbkreiswinkel. Die endliche Indexmenge ist {0,…,d−1}.",
+        pfad = listOf("Mengen", "Winkel"), tags = setOf("Grad", "Polar", "Vorzeichen"),
+        knotenArten = setOf(MENGEN_KNOTEN_ART),
+        knotenParameter = mapOf(MENGEN_KNOTEN_AUSWAHL to MengenKnotenAuswahl.GRADMENGE.stabileId),
+        reiter = listOf(KonzeptReiter("definition", "Definition · dim=$dimension", KonzeptReiterRolle.Definition, gradRichtungsDefinitionsKarte(dimension))),
+    )
+}
+
+/** Gruppenkonstruktion des Nutzers, mit diskretem Index und kanonischen Halbkreisvertretern. */
+internal fun gradRichtungsDefinitionsKarte(dimension: Int): KartenDaten {
+    require(dimension in 1..65)
+    val knoten = mutableListOf<KnotenDaten>()
+    val verbindungen = mutableListOf<VerbindungDaten>()
+    fun neu(v: KnotenVorlage, x: Float, y: Float, p: Map<String, String> = emptyMap()): KnotenDaten =
+        v.erzeuge(GraphPunkt(x, y)).let { it.copy(parameter = it.parameter + p) }.also { knoten += it }
+    fun verbinde(a: KnotenDaten, aus: String, b: KnotenDaten, ein: String) {
+        verbindungen += VerbindungDaten(von = AnschlussVerweis(a.id, a.anschlüsse.single { it.name == aus }.id),
+            zu = AnschlussVerweis(b.id, b.anschlüsse.single { it.name == ein }.id))
+    }
+    val plus = neu(MathematikKnotenVorlagen.Zahl, 0f, 300f, mapOf("wert" to "1"))
+    val minus = neu(MathematikKnotenVorlagen.Zahl, 0f, 450f, mapOf("wert" to "-1"))
+    val einzelPlus = neu(MathematikKnotenVorlagen.Einzelmenge, 300f, 300f)
+    val einzelMinus = neu(MathematikKnotenVorlagen.Einzelmenge, 300f, 450f)
+    verbinde(plus, "wert", einzelPlus, "element"); verbinde(minus, "wert", einzelMinus, "element")
+    val union = neu(MathematikKnotenVorlagen.Vereinigung, 600f, 380f)
+    verbinde(einzelPlus, "menge", union, "a"); verbinde(einzelMinus, "menge", union, "b")
+    val winkel = neu(MathematikKnotenVorlagen.ReellesIntervall, 600f, 0f,
+        mapOf("standardwert.links" to "0", "standardwert.rechts" to "180", "standardwert.linksOffen" to "false", "standardwert.rechtsOffen" to "true"))
+    val i = neu(MathematikKnotenVorlagen.Variable, 0f, -220f, mapOf("name" to "i"))
+    val nullwert = neu(MathematikKnotenVorlagen.Zahl, 0f, -50f, mapOf("wert" to "0"))
+    val ungleich = neu(MathematikKnotenVorlagen.Ungleichheit, 300f, -180f)
+    verbinde(i, "wert", ungleich, "links"); verbinde(nullwert, "wert", ungleich, "rechts")
+    val fall = neu(MathematikKnotenVorlagen.Fall, 950f, 100f)
+    verbinde(winkel, "menge", fall, "wahr"); verbinde(ungleich, "aussage", fall, "aussage"); verbinde(union, "menge", fall, "lüge")
+    val methode = neu(MathematikKnotenVorlagen.TermZuMethode, 1270f, 100f, mapOf("name" to "A"))
+    verbinde(fall, "wert", methode, "term")
+    val index = neu(MathematikKnotenVorlagen.EndlicheMenge, 1270f, 350f, mapOf(
+        ENDLICHE_MENGE_KONFIGURATION_PARAMETER to EndlicheMengeKonfiguration(einträge = List(dimension) { j ->
+            EndlicheMengeEintrag("index-$j", MathematikAnschlussArten.Zahl.id.wert, EndlicheMengeQuelle.ZahlLiteral(j.toString()))
+        }).zuParameter()))
+    val produkt = neu(MathematikKnotenVorlagen.IteriertesKartesischesProdukt, 1600f, 100f)
+    verbinde(methode, "methode", produkt, "methode"); verbinde(index, "menge", produkt, "indexmenge")
+    return KartenDaten(name = "Grad-Richtungsraum · dim=$dimension", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen)
+}

@@ -6,8 +6,10 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? {
     val eingaben = zustand.auswertung.knoten[knoten.id]?.eingänge.orEmpty()
+    val dim = (eingaben["dim"]?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl)?.takeIf { it.nenner == java.math.BigInteger.ONE }?.zähler?.toString()
     val p = (eingaben["p"]?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl)?.takeIf { it.nenner == java.math.BigInteger.ONE && it.zähler.signum() >= 0 }?.zähler?.toString()
     val konfiguriert = knoten.copy(parameter = knoten.parameter + buildMap {
+        if (dim != null) put("definition.dim", dim)
         if (p != null) put(VEKTOR_POTENZ_EXPONENT, p)
         if (eingaben["a"]?.objekt is de.TeutonStudio.MathematikRechenSystem.kern.ZeilenVektor) put("definition.orientierung", "zeile")
         if (knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER] == de.TeutonStudio.MathematikRechenSystem.kern.MengenRechnerOperator.UNTERRAUM.stabileId) {
@@ -40,6 +42,7 @@ private fun dynamischesKonzeptOhneSchema(
     knoten: KnotenDaten,
     ladeKarte: (KartenVerweis) -> KartenDaten? = { null },
 ): KonzeptDefinition? {
+    gradRichtungsKonzept(knoten)?.let { return it }
     vektorUnterraumKonzept(knoten)?.let { return it }
     sinusGradKonzept(knoten)?.let { return it }
     alphaStrukturKonzeptFürKnoten(knoten)?.let { return it }

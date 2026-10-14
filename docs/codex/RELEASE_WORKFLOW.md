@@ -133,8 +133,8 @@ Weicht der tatsächliche Diff ab, darf nicht unter der falschen Version veröffe
 
 - Squash-Merge verwenden.
 - Finalen Commit `v<version>` nennen.
-- Releaseeintrag auf `released` setzen.
-- Abgeschlossene Subbranches löschen oder schließen.
+- Der geprüfte Release-PR enthält bereits Zielversion, Android-Metadaten und den Roadmapstatus `released`, wie es der Release-Guard verlangt. Dieser Status im PR-Zielbaum beschreibt den beabsichtigten Releasezustand; v<version> gilt erst mit dem finalen Versionscommit auf `master` als veröffentlicht.
+- Nach erfolgreichem Squash gilt der Release als veröffentlicht; abgeschlossene Subbranches löschen oder schließen.
 
 Ein durch GitHub erzeugter Squash- oder Merge-Commit kann als Committer `web-flow` enthalten. Er ist technisch ein GitHub-Commit und wird nicht nachträglich als lokaler SamAI-Commit ausgegeben.
 

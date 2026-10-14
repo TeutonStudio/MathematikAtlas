@@ -255,9 +255,12 @@ fun MathematischeMethode.benenneIndexParameter(namen: List<String>, anzeigen: Li
     val aussen = vorschrift.enthalteneMethodenParameter().map { it.name }.toSet() - parameter.map { it.name }.toSet()
     require(namen.none { it in aussen }) { "Ein Indexname würde eine Außenvariable binden." }
     require(anzeigen.size==namen.size) { "Jeder Index benötigt einen Anzeigenamen." }
-    val neu = namen.mapIndexed { i,name -> Variable(name,latex=anzeigen[i]) }
-    val bindungen = parameter.map { it.name }.zip(neu).toMap()
+    val neu = namen.mapIndexed { i,name -> Variable(name,latex=anzeigen[i], bindungsId = parameter[i].bindungsId) }
+    val bindungen = parameter.map { it.bindungsId ?: it.name }.zip(neu).toMap()
     return copy(parameter = neu, vorschrift = ersetze(vorschrift, bindungen),
+        argumentIdentitäten = parameter.mapIndexed { i, p -> namen[i] to argumentIdentitäten.getValue(p.name) }.toMap(),
+        zielMenge = ersetze(zielMenge, bindungen) as MengenAusdruck,
+        voraussetzungen = voraussetzungen.map { ersetze(it, bindungen) }.toSet(),
         werteVorräte = parameter.mapIndexed { i, p -> namen[i] to (ersetze(werteVorräte.getValue(p.name), bindungen) as MengenAusdruck) }.toMap())
 }
 

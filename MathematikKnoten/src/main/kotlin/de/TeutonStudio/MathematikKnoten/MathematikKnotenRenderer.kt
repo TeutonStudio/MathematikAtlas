@@ -77,6 +77,9 @@ class MathematikKnotenRenderer(
                     "mathematik.geometrie.zuTrägermenge" -> "Geometrie → Trägermenge"
                     else -> if (knoten.anschlüsse.any { it.name == "term" && it.art == MathematikAnschlussArten.Aussage.id }) "Aussage → Methode" else "Term → Methode"
                 }, style = MaterialTheme.typography.labelSmall)
+                adapterErgebnis?.ausgaben?.values?.firstOrNull()?.übersetzungen?.aktuell?.hinweise()?.take(1)?.forEach { hinweis ->
+                    Text(hinweis, style = MaterialTheme.typography.labelSmall)
+                }
                 adapterErgebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2) }
             }
             return
@@ -131,6 +134,9 @@ class MathematikKnotenRenderer(
                 val ziel = ausgabe?.zielMenge
                 if (quelle != null && ziel != null) LatexFormel(
                     "${if (quelle is Tupelraum) quelle.potenzLatex() else quelle.zuLatex()} \\longto ${if (ziel is Tupelraum) ziel.potenzLatex() else ziel.zuLatex()}", style = MaterialTheme.typography.bodySmall)
+            }
+            ausgabe?.übersetzungen?.aktuell?.hinweise()?.take(1)?.forEach { hinweis ->
+                Text(hinweis, style = MaterialTheme.typography.labelSmall)
             }
             val adjektive = objekt?.let(::automatischeAdjektive).orEmpty()
             if (adjektive.isNotEmpty()) {

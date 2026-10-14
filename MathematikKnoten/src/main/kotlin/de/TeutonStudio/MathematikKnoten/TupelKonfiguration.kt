@@ -32,13 +32,16 @@ fun konfiguriereTupel(knoten: KnotenDaten, erzeugungsArt: String): KnotenDaten {
         )
         else -> {
             val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(0) ?: 2
+            val bisher = knoten.anschlüsse.filter {
+                it.richtung == AnschlussRichtung.Eingang && it.kannSichErweitern
+            }.sortedBy { it.reihenfolge }.take(anzahl)
+            val namen = bisher.map { it.name }.toMutableSet()
             List(anzahl) { index ->
-                val name = when (index) {
-                    0 -> "a"
-                    1 -> "b"
-                    else -> "input${index + 1}"
-                }
-                tupelEingang(vorhandene[name], name, MathematikAnschlussArten.Objekt.id, index, erweiterbar = true)
+                val port = bisher.getOrNull(index)
+                val name = port?.name ?: generateSequence(0) { it + 1 }.map {
+                    when (it) { 0 -> "a"; 1 -> "b"; else -> "input${it + 1}" }
+                }.first { it !in namen }.also { namen.add(it) }
+                tupelEingang(port, name, MathematikAnschlussArten.Objekt.id, index, erweiterbar = true)
             }
         }
     }

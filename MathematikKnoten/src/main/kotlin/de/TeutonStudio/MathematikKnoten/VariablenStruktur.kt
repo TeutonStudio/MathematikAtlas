@@ -34,7 +34,7 @@ fun konfiguriereVariablenStruktur(k: KnotenDaten, art: String): KnotenDaten {
         anschlüsse = k.anschlüsse.map { if (it.richtung == AnschlussRichtung.Ausgang) it.copy(art = anschlussArt) else it })
 }
 
-internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck): BedingterWert {
+internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck, grundraumVerbunden: Boolean = false): BedingterWert {
     val name = k.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
     val art = variablenStruktur(k)
     val basis = if (art == VARIABLE_STRUKTUR_WINKEL) grundmenge else variablenWertevorrat(k, grundmenge)
@@ -47,7 +47,10 @@ internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck): 
     }
     if (art == "zahl") return BedingterWert(Variable(name), werteVorrat = basis,
         variablenQuellen = listOf(VariablenQuelle(k.id, name, basis, lösungsRolle = LösungsQuellenRolle.Variable)))
-    val n = variablenDimension(k)
+    val n = if (art == VARIABLE_STRUKTUR_WINKEL && grundraumVerbunden) {
+        require(istWinkelraum(grundmenge)) { "Ein Winkeltupel benötigt einen Richtungsraum mit Vorzeichen und Halbkreiswinkeln; verwende Gradmenge mit dim oder die Definitionskarte." }
+        (grundmenge as Tupelraum).komponenten.size - 1
+    } else variablenDimension(k)
     if(art==VARIABLE_STRUKTUR_WINKEL) {
         val domain=winkelraum(n)
         val intern="__winkelquelle:${k.id.wert}:$name"
@@ -82,3 +85,13 @@ internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck): 
                 reihenfolge = i, lösungsRolle = LösungsQuellenRolle.Variable)
         })
 }
+
+/** Ergänzt den optionalen Grundraum, ohne bestehende Ausgangsreferenzen zu verändern. */
+fun KartenDaten.migriereVariablenGrundraum(): KartenDaten = copy(knoten = knoten.map { k ->
+    if (k.art != "mathematik.variable" || k.anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name == "grundraum" }) k
+    else k.copy(anschlüsse = k.anschlüsse + AnschlussDaten(
+        id = AnschlussId("${k.id.wert}:grundraum"), name = "grundraum",
+        richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,
+        art = MathematikAnschlussArten.Menge.id,
+    ))
+})

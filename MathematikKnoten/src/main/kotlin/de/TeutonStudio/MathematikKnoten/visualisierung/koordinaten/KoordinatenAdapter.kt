@@ -56,6 +56,12 @@ object KoordinatenAdapter {
     ): KoordinatenErgebnis {
         require(erwarteteDimension > 0) { "Die erwartete Koordinatendimension muss positiv sein." }
 
+        if(objekt is Tupel && objekt.elemente.any {it is Tupel}) {
+            val flach=tupelAbflachen(objekt)
+            if(ausgabeKoordinaten.isEmpty()) return KoordinatenErgebnis.ProjektionErforderlich(flach.anzahl,erwarteteDimension,
+                "Verschachtelte Tupel benötigen eine ausdrückliche Auswahl ihrer geordneten Blattkoordinaten.")
+            return extrahiere(flach,erwarteteDimension,umgebung,werteVorraete,domänenUmgebung,ausgabeKoordinaten)
+        }
         if (objekt is KoordinatenBild) {
             val systemDimension = objekt.koordinatensystem.raum.dimension
             if (ausgabeKoordinaten.isEmpty() && systemDimension > erwarteteDimension) {
@@ -127,7 +133,12 @@ object KoordinatenAdapter {
                     )
                 }
             ) {
-                is StrukturPruefung.Gueltig -> ansicht.wert.komponenten
+                is StrukturPruefung.Gueltig -> {
+                    if(objekt is Tupel && objekt.elemente.any {it !is ZahlAusdruck} && ausgabeKoordinaten.isEmpty())
+                        return KoordinatenErgebnis.ProjektionErforderlich(ansicht.wert.komponenten.size,erwarteteDimension,
+                            "Verschachtelte Tupel benötigen eine ausdrückliche Auswahl ihrer geordneten Blattkoordinaten.")
+                    ansicht.wert.komponenten
+                }
                 is StrukturPruefung.Bedingt -> return KoordinatenErgebnis.BedingtDarstellbar(
                     grund = "Die numerische Komponentenstruktur ist nur bedingt gültig.",
                     bedingungen = ansicht.bedingungen,

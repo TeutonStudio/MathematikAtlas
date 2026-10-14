@@ -22,7 +22,17 @@ fun GemeinsamerFormelBauerDialog(
     schließen: () -> Unit,
     übernehmen: (String) -> Unit,
     startAusdruck: FormelAusdruck? = null,
+    startKnoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten? = null,
+    startKontext: GebundeneFormel? = null,
+    übernehmenGebunden: ((GebundeneFormel, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft) -> Unit)? = null,
 ) {
+    if(übernehmenGebunden != null) {
+        val geladen=remember(startKnoten) {runCatching {startKnoten?.let(::ladeGebundeneKnotenFormel)}}
+        if(geladen.isFailure) {FormelKontextFehlerDialog(geladen.exceptionOrNull()?.message.orEmpty(),schließen);return}
+        val initial = remember(startKontext, startAusdruck,startLatex) { startKontext ?: geladen.getOrNull() ?: FormelBearbeitungsEntwurf.aus(startAusdruck ?: (FormelLatexCodec.importiere(startLatex) as? FormelLatexImportErgebnis.Erfolg)?.ausdruck ?: neuerFormelPlatzhalter("wurzel","Ausdruck")).formel }
+        GebundenerFormelBauerDialog(initial,startZeichnung,schließen,übernehmenGebunden)
+        return
+    }
     val zeichnung = remember(startZeichnung) { FormelZeichnungsEntwurf(startZeichnung) }
     val editor = remember(startLatex, startAusdruck) {
         (startAusdruck?.let(::FormelEditorZustand) ?: FormelEditorZustand()).also { zustand ->

@@ -127,13 +127,18 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     }
                     Text(knoten.art, style = MaterialTheme.typography.labelMedium)
                     knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    if (istDynamischeOperation(knoten)) {
+                    if (istDynamischeOperation(knoten) || knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN) {
                         de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.DynamischeOperandenListe(
                             zustand.editor.karte, knoten, belegteOperationsEingänge(knoten),
                         ) { aktion -> zustand.konfiguriereKnoten(aktion) }
                     }
+                    de.TeutonStudio.MathematikKnoten.FormelKartenAktionen(zustand.editor.karte,knoten) { aktion ->
+                        zustand.editor.führeAus(aktion);zustand.aktualisiereAuswertung()
+                    }
+                    de.TeutonStudio.MathematikKnoten.ErgebnisVertragsInhalt(zustand.auswertung.knoten[knoten.id])
                     StandardwerteEditor(knoten, zustand)
-                    MethodenAusgangProjektionEditor(knoten, zustand)
+                    de.TeutonStudio.MathematikKnoten.MethodenProjektionsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
+                    de.TeutonStudio.MathematikKnoten.VisualisierungsVertragsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
                     if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
                     IterierteMethodenKartenInspektor(knoten, zustand)
                     if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
@@ -332,7 +337,7 @@ private fun TupelInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
         if (konfiguration.erzeugungsArt == TUPEL_METHODE) {
             "Erzeugt für eine konkrete ganze Dimension n ≥ 0 das Tupel (f(1), …, f(n)); für n = 0 entsteht (). Die einstellige Methode darf beliebige mathematische Objekte liefern."
         } else {
-            "Erzeugt ein Zahlentupel aus den geordneten Eingängen; bei 0 Eingängen entsteht ()."
+            "Erzeugt ein Tupel aus den geordneten Eingängen; bei 0 Eingängen entsteht ()."
         },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -488,7 +493,7 @@ private fun ParameterTextFeld(
 private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
     val zahlEingänge = knoten.anschlüsse.filter {
         it.richtung == AnschlussRichtung.Eingang &&
-            it.art == MathematikAnschlussArten.Zahl.id &&
+            (it.art == MathematikAnschlussArten.Zahl.id || knoten.art == "mathematik.tupel" && it.art == MathematikAnschlussArten.Objekt.id) &&
             !it.dynamischErzeugt
     }
     val aussageEingänge = knoten.anschlüsse.filter {
@@ -519,7 +524,7 @@ private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
         }
         if (verbunden) Text("Verbindung bestimmt den Wert.", style = MaterialTheme.typography.bodySmall)
     }
-    zahlEingänge.forEach { anschluss ->
+    zahlEingänge.sortedBy { it.reihenfolge }.forEach { anschluss ->
         val schlüssel = "$STANDARDWERT_PREFIX${anschluss.name}"
         val wert = knoten.parameter[schlüssel].orEmpty()
         var text by remember(knoten.id, anschluss.id, wert) { mutableStateOf(wert) }

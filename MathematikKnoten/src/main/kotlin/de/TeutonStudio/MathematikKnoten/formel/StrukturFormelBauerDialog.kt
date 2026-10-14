@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.TeutonStudio.MathematikKnoten.LatexText
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import de.TeutonStudio.MathematikRechenSystem.kern.FormelAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.FormelAusdruckPruefer
 import de.TeutonStudio.MathematikRechenSystem.kern.FormelPruefung
@@ -63,7 +64,17 @@ fun GemeinsamerStrukturFormelBauerDialog(
     übernehmenMitZeichnung: ((FormelAusdruck, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft) -> Unit)? = null,
     schließen: () -> Unit,
     übernehmen: (FormelAusdruck) -> Unit,
+    startKnoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten? = null,
+    startKontext: GebundeneFormel? = null,
+    übernehmenGebunden: ((GebundeneFormel, de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft) -> Unit)? = null,
 ) {
+    if(übernehmenGebunden != null) {
+        val geladen=remember(startKnoten) {runCatching {startKnoten?.let(::ladeGebundeneKnotenFormel)}}
+        if(geladen.isFailure) {FormelKontextFehlerDialog(geladen.exceptionOrNull()?.message.orEmpty(),schließen);return}
+        val initial = remember(startKontext, start) { startKontext ?: geladen.getOrNull() ?: FormelBearbeitungsEntwurf.aus(start ?: strukturFormelPlatzhalter("wurzel", familie.wurzelErwartung, "Ausdruck")).formel }
+        GebundenerFormelBauerDialog(initial,startZeichnung,schließen,übernehmenGebunden)
+        return
+    }
     val zeichnung = remember(startZeichnung) { FormelZeichnungsEntwurf(startZeichnung) }
     val editor = remember(familie, start) {
         StrukturFormelEditorZustand(

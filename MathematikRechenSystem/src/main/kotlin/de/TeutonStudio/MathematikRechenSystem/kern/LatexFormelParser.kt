@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 import java.math.BigInteger
 
-internal class LatexFormelParser(quelle: String) {
+internal class LatexFormelParser(quelle: String, internal val quellen: List<FormelVariablenQuelle> = emptyList()) {
     internal val text = quelle
         .replace("\\left", "")
         .replace("\\right", "")
@@ -143,7 +143,7 @@ internal class LatexFormelParser(quelle: String) {
     }
 
     private fun importiereTeilAusdruck(quelle: String): FormelAusdruck =
-        vergibNeueIds(LatexFormelParser(quelle).parse())
+        vergibNeueIds(LatexFormelParser(quelle, quellen).parse())
 
     private fun vergibNeueIds(ausdruck: FormelAusdruck): FormelAusdruck = when (ausdruck) {
         is FormelAusdruck.Literal -> ausdruck.copy(id = neueId("literal"))
@@ -201,7 +201,40 @@ internal class LatexFormelParser(quelle: String) {
             )
         }
         if (verbrauche('+')) return parseUnaer()
-        return parsePrimaer()
+        val basis = parsePrimaer()
+        val signatur = methodenSignaturFuer(basis)
+        fun symbol(e: FormelAusdruck): FormelAusdruck.Variable? = when (e) {
+            is FormelAusdruck.Variable -> e
+            is FormelAusdruck.Operation -> if (e.operatorId == "formel.gruppierung")
+                e.argumente.singleOrNull()?.ausdruck?.let(::symbol) else null
+            else -> null
+        }
+        leerraum()
+        val unbekannt = symbol(basis)?.takeIf { v -> quellen.none { it.anzeigeName == v.name } }
+        if (signatur == null && unbekannt != null && position < text.length && text[position] == '(')
+            fehler("Mehrdeutiger Ausdruck '${unbekannt.name}(...)': Methode oder Wert deklarieren oder Multiplikation ausdrücklich schreiben.")
+        return if (signatur != null) parseMethodenFolge(basis, signatur) else basis
+    }
+
+    private fun methodenSignaturFuer(e: FormelAusdruck): MethodenSignatur? = when (e) {
+        is FormelAusdruck.Variable -> quellen.singleOrNull { it.anzeigeName == e.name }?.methodenSignatur
+        is FormelAusdruck.Literal -> (e.wert as? SignaturtragendeMethode)?.signatur
+        is FormelAusdruck.Operation -> {
+            val a = e.argumente.sortedBy { it.position }.map { it.ausdruck }
+            when (e.operatorId) {
+                "formel.gruppierung", "methode.einschraenkung" -> a.firstOrNull()?.let(::methodenSignaturFuer)
+                "tupel.projektion" -> {
+                    val aufruf = a.firstOrNull() as? FormelAusdruck.Operation
+                    val index = ((a.getOrNull(1) as? FormelAusdruck.Literal)?.wert as? RationaleZahl)
+                        ?.takeIf { it.nenner == BigInteger.ONE }?.zähler?.let { runCatching { it.intValueExact() - 1 }.getOrNull() }
+                    if (aufruf?.operatorId == "methode.anwenden" && index != null)
+                        aufruf.argumente.minByOrNull { it.position }?.ausdruck?.let(::methodenSignaturFuer)
+                            ?.ergebnisse?.getOrNull(index)?.methodenSignatur else null
+                }
+                else -> null
+            }
+        }
+        else -> null
     }
 
     internal fun beginntPrimaer(): Boolean {
@@ -259,7 +292,7 @@ internal class LatexFormelParser(quelle: String) {
         name: String,
         latex: String,
         typ: FormelTyp = FormelTyp.ZAHL,
-    ): FormelAusdruck.Variable = FormelAusdruck.Variable(neueId("variable"), name, latex, typ)
+    ): FormelAusdruck.Variable = FormelAusdruck.Variable(neueId("variable"), name, latex, quellen.singleOrNull { it.anzeigeName == name }?.typ ?: typ)
 
     internal fun operation(
         operatorId: String,

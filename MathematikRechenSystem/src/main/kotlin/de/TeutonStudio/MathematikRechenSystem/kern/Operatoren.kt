@@ -162,6 +162,7 @@ fun arcCosinus(argument: ZahlAusdruck, kontext: RechenKontext = RechenKontext())
     vereinfache(ArcCosinus(argument), kontext)
 
 fun vereinfache(ausdruck: ZahlAusdruck, kontext: RechenKontext = RechenKontext()): ZahlAusdruck = when (ausdruck) {
+    is MethodenZahlKomponente -> ausdruck
     is RationaleZahl, is Variable, is MathematischeKonstante -> ausdruck
     is Addition -> addition(ausdruck.summanden.map { vereinfache(it, kontext) })
     is Multiplikation -> multiplikation(ausdruck.faktoren.map { vereinfache(it, kontext) })
@@ -222,6 +223,7 @@ fun istNachweisbarReell(
     variableIstReell: (Variable) -> Boolean = { false },
     annahmen: Set<Aussage> = emptySet(),
 ): Boolean = when (ausdruck) {
+    is MethodenZahlKomponente -> false
     is RationaleZahl -> true
     is MathematischeKonstante -> ausdruck == Pi || ausdruck == EulerscheZahl
     is Variable -> variableIstReell(ausdruck)
@@ -292,6 +294,10 @@ fun inferiereZahlenWertevorrat(
     werteVorräte: Map<String, MengenAusdruck> = emptyMap(),
     annahmen: Set<Aussage> = emptySet(),
 ): MengenAusdruck = when (ausdruck) {
+    is MethodenZahlKomponente -> (ausdruck.aufruf.methode as? MathematischeMethode)?.mathematischeSignatur?.ergebnisse?.getOrNull(ausdruck.index - 1)?.zielMenge
+        ?: (ausdruck.aufruf.methode as? SignaturtragendeMethode)?.signatur?.ergebnisse?.getOrNull(ausdruck.index - 1)?.typ?.let { typ ->
+            FundamentalerZahlbereich.entries.firstOrNull { MathematischeTypen.typSystem.prüfe(typ, it.alsMenge().elementTypAusdruck()) == de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel }?.alsMenge()
+        } ?: FehlendeObermenge("Methodenausgabe")
     is SinusGrad -> ReellesIntervall(RationaleZahl.von(-1), false, RationaleZahl.Eins, false)
     is WinkelBogenmass -> ausdruck.vertreter.menge
     is RationaleZahl -> when {

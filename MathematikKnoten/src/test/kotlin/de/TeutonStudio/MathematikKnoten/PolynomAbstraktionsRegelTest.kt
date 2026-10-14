@@ -8,6 +8,10 @@ import de.TeutonStudio.MathematikKnoten.abstraktion.*
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.zerlegeAlsPolynom
+import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
+import de.TeutonStudio.MathematikRechenSystem.kern.MathematischeMethode
+import de.TeutonStudio.MathematikRechenSystem.kern.ÜbersetzungsMetadaten
+import de.TeutonStudio.MathematikRechenSystem.kern.wendeMitBedingungenAn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -100,7 +104,13 @@ class PolynomAbstraktionsRegelTest {
         val ersetzt = karte.vorschauTeilgraphErsetzen(vorschlag.ersetzungsPlan, laufzeit.graphPrüfung).karte
         assertNotNull(ersetzt)
         val nachher = laufzeit.auswerten(ersetzt).knoten.getValue(termZuMethode.id).ausgaben.getValue("methode")
-        assertEquals(vorher, nachher)
+        // Abstraktion kann zusätzliche Bereichsbelege liefern; die Methodensemantik bleibt gleich.
+        fun ohneZeugnis(w: BedingterWert) = w.copy(objekt=(w.objekt as MathematischeMethode).copy(voraussetzungen=emptySet(),übersetzungen=ÜbersetzungsMetadaten()),annahmen=emptySet(),werteVorrat=null,übersetzungen=ÜbersetzungsMetadaten())
+        assertEquals(ohneZeugnis(vorher),ohneZeugnis(nachher))
+        assertNotNull(nachher.übersetzungen.aktuell)
+        val a=vorher.objekt as MathematischeMethode;val b=nachher.objekt as MathematischeMethode
+        assertEquals(a.wendeMitBedingungenAn(de.TeutonStudio.MathematikRechenSystem.kern.Tupel(listOf(de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl.von(3)))).ergebnis,
+            b.wendeMitBedingungenAn(de.TeutonStudio.MathematikRechenSystem.kern.Tupel(listOf(de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl.von(3)))).ergebnis)
     }
 
     private fun kubischesPolynom(): KartenDaten {

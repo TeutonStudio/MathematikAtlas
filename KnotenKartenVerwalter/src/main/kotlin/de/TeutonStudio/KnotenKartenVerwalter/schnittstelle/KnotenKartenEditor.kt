@@ -857,7 +857,7 @@ private fun KnotenDarstellung(
 ) {
     val zoom = zustand.darstellungsKarte.ansicht.zoom
     val fußzeilenHöhe = with(LocalDensity.current) { MaterialTheme.typography.labelSmall.lineHeight.toDp() }
-        .plus(8.dp).coerceAtLeast(18.dp)
+        .plus(16.dp).coerceAtLeast(18.dp)
     var viewportMinimum by remember(knoten.id) { mutableStateOf(GraphGröße(0f, 0f)) }
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
     val hauptkörperHöhe = (knoten.größe.höhe.dp - fußzeilenHöhe).coerceAtLeast(0.dp)

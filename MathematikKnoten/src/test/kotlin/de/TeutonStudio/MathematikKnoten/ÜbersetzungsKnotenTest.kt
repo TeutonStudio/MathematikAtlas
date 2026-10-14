@@ -90,10 +90,10 @@ class ÜbersetzungsKnotenTest {
         val neu = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "methode")
         val alt = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero)
         listOf(neu to "wert", alt to "term").forEach { (k,port) ->
-            assertFails { auswerten(k,BedingterWert(Variable("x")),port) }
+            assertNotNull(auswerten(k,BedingterWert(Variable("x")),port).übersetzungsDiagnose)
             val quellen = listOf(VariablenQuelle(KnotenId("a"),"x",ReelleZahlen),
                 VariablenQuelle(KnotenId("b"),"x",GanzeZahlen))
-            assertFails { auswerten(k,BedingterWert(Variable("x"),variablenQuellen=quellen),port) }
+            assertNotNull(auswerten(k,BedingterWert(Variable("x"),variablenQuellen=quellen),port).übersetzungsDiagnose)
         }
     }
 
@@ -111,16 +111,17 @@ class ÜbersetzungsKnotenTest {
     @Test fun `Strukturwechsel erhaelt gelieferte Obermengen und passt ihre Struktur an`() {
         val tupel=Tupel(listOf(z(1),z(2)))
         val k=ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero)
-        val quelle=BedingterWert(tupel,zielMenge=Tupelraum(listOf(ReelleZahlen,ReelleZahlen)),werteVorrat=ReelleZahlen)
+        val raum=Tupelraum(listOf(ReelleZahlen,ReelleZahlen))
+        val quelle=BedingterWert(tupel,zielMenge=raum,werteVorrat=raum)
         val spalte=auswerten(k,quelle).ausgaben.getValue("ergebnis")
-        assertEquals(Vektorraum(VektorOrientierung.Spalte, 2, ReelleZahlen),spalte.zielMenge)
-        assertNull(spalte.werteVorrat)
-        val zeile=auswerten(k,BedingterWert(ZeilenVektor(listOf(z(1),z(2))),zielMenge=quelle.zielMenge,werteVorrat=ReelleZahlen)).ausgaben.getValue("ergebnis")
-        assertEquals(spalte.zielMenge,zeile.zielMenge)
+        assertEquals(Vektorraum(VektorOrientierung.Spalte,2,ReelleZahlen),spalte.zielMenge)
+        assertIs<ÜbersetzungsBildraum>(spalte.werteVorrat)
+        val zeile=auswerten(k,spalte).ausgaben.getValue("ergebnis")
+        assertEquals(spalte.objekt,zeile.objekt)
         val f=ÜbersetzungsKnotenVorlagen.Abflachen.erzeuge(GraphPunkt.Zero)
-        val flach=auswerten(f,quelle.copy(objekt=Tupel(listOf(tupel))),"tupel").ausgaben.getValue("tupel")
-        assertEquals(inferiereZielmenge(tupel),flach.zielMenge)
-        assertNull(flach.werteVorrat)
+        val flach=auswerten(f,quelle.copy(objekt=Tupel(listOf(tupel)),zielMenge=Tupelraum(listOf(raum)),werteVorrat=Tupelraum(listOf(raum))),"tupel").ausgaben.getValue("tupel")
+        assertEquals(raum,flach.zielMenge)
+        assertIs<ÜbersetzungsBildraum>(flach.werteVorrat)
     }
 
     @Test fun `heterogene Tupelports erhalten gespeicherte numerische Standardwerte vor und nach Laden`() {

@@ -246,3 +246,58 @@ Geräte mit physischem Stift, automatische Android-Instrumentierung, Frame-Timin
 TODO 22b56645 und master 7e11b711 sind im isolierten Arbeitsbereich dreiseitig integriert. Strukturierte Winkelparameter erhalten gemeinsame Herkunft, Wn-Domäne und öffentliche Argumentpackung bis zur Bildmenge. Polarkonvention wird explizit gespeichert und historisch migriert. Produktgitter beziehungsweise deterministische Halton-Abtastung berücksichtigen alle Winkelachsen und diskreten Vorzeichen; Ausgabekoordinaten werden erst nach vollständiger Auswertung projiziert. Das Indexdefinitionsinventar ist leer; symbolische Zerlegungsrezepte liefern ausführbare Kandidatenbedingungen mit ausgewiesenen Materialisierungsgrenzen.
 
 Vollständige lokale Gradle-Tests, Android-Debug-Build, Lint, Desktop-Kompilierung und acht gezielte Desktop-Compose-Regressionen erfolgreich. Android-Instrumentierung im isolierten API35-CI-Emulator erfolgreich (PR #449, Lauf 38400142819); sämtliche PR-Prüfungen am Produkt-HEAD ae1669fc grün. Lokale isolierte Emulatorstarts scheitern im nativen Emulatorprozess; kein physisches Gerät verbunden. Der Releaseabschluss erfolgt als geprüfter Squash v3.2.0.
+
+## Variablengrundraum und Tupelinspector (Arbeitsstand 2026-10-13)
+
+- Variablen besitzen einen optionalen Mengeneingang `grundraum`; verbunden ersetzt er den Inspectorbereich einschließlich Intervall. Ohne Verbindung gilt der bisherige Bereich. Strukturierte Variablen verwenden ihn als Komponentenbereich; Winkelstrukturen behalten ihren festen Winkelraumvertrag.
+- Der gemeinsame mathematische Codec ergänzt den Eingang beim Laden/Import und Schreiben idempotent, ohne Ausgangsreferenzen zu ändern.
+- Android bietet für Tupel rationale Standardwerte und die vorhandene Operandenliste mit Ziehgriff und Auf-/Ab-Schaltflächen. Umordnung und Längenänderung erhalten bestehende Anschlussidentitäten und Reihenfolge und sind rückgängig machbar.
+- Vollständiger Gradle-Testlauf und Android-Debug-Build erfolgreich; unabhängige Diffprüfung ohne verbliebene konkrete Findings. Keine lokale Geräteprüfung dieser Änderungen. v3.2.1 wird als Teilumfang auf dem SamAI-Branch vorbereitet; bis der finale Versionscommit auf `master` liegt, gilt sie nicht als veröffentlicht.
+
+## Grad-Richtungsraum und Bildmenge (Arbeitsstand 2026-10-13)
+
+- Gradmenge ohne `dim` bleibt die Winkelgruppe G. Mit `dim=d` (1–65) liefert sie den signierten Richtungsraum W_(d−1): ein Vorzeichen und d−1 Halbkreiswinkel. Diese Korrektur ersetzt die unveröffentlichte G^d-Erweiterung.
+- Ein verbundener kanonischer Richtungsraum bestimmt die Winkelvariablendimension. Nachgewiesene endliche Richtungsprodukte der Definitionskarte werden beim strukturierten Verbraucher gepackt; allgemeine Funktionsprodukte bleiben unverändert.
+- Die Grad-Definitionskarte verwendet die Fallunterscheidungsgruppe des Nutzers mit endlichen Indizes {0,…,d−1} und [0,180)-Winkelvertretern. Der Definitionsresolver übernimmt eine konkret angeschlossene Dimension.
+- Der historische Tupel-zu-Vektor-Adapter erhält Variablenquellen und Bereichsmetadaten; dadurch kann Term→Methode die strukturierte Winkelquelle nach einem Matrixprodukt binden.
+- Regressionen prüfen Dimensionen 1–4 sowie eine vollständige gespeicherte Definitions-/Diagonalmatrix-/Bildmengenkarte bis zum Sampler. Tensorstufe bleibt Tensorgrad; die Koordinatenanzahl muss ausdrücklich als Dimension verwendet werden.
+- Gesamtprüflauf `./gradlew test :app:assembleDebug` erfolgreich; damalige Gradle-XML-Berichte: 1664 Tests ohne Fehler oder Überspringungen. Repository-/Releaseplan-/Versionsfolgeprüfung erfolgreich; unabhängige Codeabnahme ohne Blocker. Keine Geräteprüfung. Anschließend in Branchcommit `8465f6c9` integriert; nicht auf `master` veröffentlicht. Details im abgeschlossenen Plan `2026-10-13-grad-bildmenge.md`.
+
+
+## Methoden-, Tupel- und Formelvertrag – implementierter Teilstand 2026-10-13
+
+- Neue kanonische Methodenaufrufe liefern Tupelergebnis plus offene Voraussetzungen. Explizite Bindungs-IDs, gespeicherte Komponentenidentitäten, reduzierte partielle Methoden und mehrdimensionale Tupelkomposition sind ergänzt. Aufrufbedingungen bleiben über verschachtelte Vorschriften, Voraussetzungen und Methodenkopien erhalten.
+- Formelgraph überträgt Bedingungen und optionalen Bindungskontext. Strukturcodec v3 verwendet typisierte Literale; Strukturformel-, Formelkontext-, Wert- und Wertpaketcodec akzeptieren ausschließlich ihre aktuelle Wire-Version und weisen ältere Payloads ab. Der Zwischenablagevertrag für übertragene Werte lautet `ATLAS-WERT-2`. Kontextcodec bewahrt Quellen, vollständige Typen, Methodensignaturen und Annahmen. Deklarierte Methodenvariablen lassen sich im Grundparser aufrufen. Nicht registrierte Wertvarianten werden ausdrücklich abgewiesen.
+- Tupelkonkatenation unterstützt null/einen Operanden und leere Ergänzung. Mehrkomponentige Kartengrenzen erhalten gespeicherte Reihenfolgen. Neue Kernoperatoren ergänzen rational-affine Inversion, partielle Ableitung, Polynomintegration und begrenzte numerische Jacobi-Matrizen, lokale Inversion und bestimmte Quadratur; numerische Ergebnisse sind Approximationen.
+- Finaler damaliger Gesamtprüflauf `./gradlew test :app:assembleDebug :app:lintDebug :desktopApp:compileKotlin` erfolgreich; 1689 Tests laut XML-Berichten ohne Fehler oder Überspringungen. Repository-, Releaseplan-, Versionsfolge- und Diffprüfung erfolgreich. Separates Kernskript wegen fehlendem standalone kotlinc nicht ausführbar. Keine UI-/Gerätelaufzeitabnahme. Anschließend in Branchcommit `8465f6c9` integriert; nicht auf `master` veröffentlicht.
+- **Der Gesamtvertrag ist nicht abgeschlossen.** Die gemeinsame UI-Integration ist nachfolgend dokumentiert; alle Wertvarianten, sämtliche Binder/Operatorfamilien und die vollständige Ablösung der Legacy-Pfade bleiben offen. Einzelmatrix und Nachweise: [aktiver ExecPlan](plans/active/2026-10-13-methoden-tupel-formelvertrag.md); Architekturentscheidung: [Bindungen und Codecs](decisions/2026-10-13-methodenbindungen-und-formelcodecs.md).
+
+## v3.2.1 Releasekandidat (Arbeitsstand 2026-10-14)
+
+- Reservierter Änderungsumfang auf Basis v3.2.0 (`dc072189`); es kommen keine neuen registrierten Knotentypen hinzu. Der Gesamtvertrag mit 77 Prüfpunkten bleibt Folgearbeit.
+- Formel-/Methoden-/Tupelteilumfang enthält deklarationsvorrangige Methodenaufrufe, verschachtelte methodenwertige Ergebnisse, nullstellige und mehrwertige Bildmengen sowie aktuelle-only Mathematikcodecs ohne Rückwärtskompatibilität.
+- Android-Metadaten und Roadmap auf 3.2.1/3002001 gestellt. Lokale Repositoryprüfungen und vollständiger Gradle-Lauf sind nach den letzten Änderungen erfolgreich; PR-CI, Android-Emulator-/Desktop-Abnahme und PR-Freigabe stehen noch aus.
+
+
+### Übersetzungszeugnisse (Arbeitsstand 13.10.2026)
+
+- Gemeinsamer Kernvertrag `ÜbersetzungsAnfrage`/`ÜbersetzungsErgebnis`/`ÜbersetzungsZeugnis`: unabhängige Abbildungseigenschaften, Informationserhaltung und Rechengenauigkeit; strukturierte Nichtdefiniertheit und konservative offene Spezialfälle.
+- Alle 14 bestehenden Übersetzerziele, Abflachen, frühe Index-/Definitionsbausteinrückgaben und historische Struktur-/Termübersetzer werden zentral bezeugt. Zielträger und symbolischer exakter Bildraum bleiben getrennt. Heterogene Komponentenrestriktionen und stabile Quellen bleiben erhalten; Abflachungspläne rekonstruieren auch leere Untertupel ausdrücklich.
+- Formel-Literale, Graphkonvertierung, mathematische Methoden und selbsttragende Exportwerte führen Zeugnisse/Quellen/Bedingungen mit. Nachfolgende Berechnungen unterscheiden aktuelle Zeugnisse von Herkunft. Unbekannte Regelversionen bleiben mit ungeprüften Behauptungen erhalten und gelten nicht als bestätigte Nachweise.
+- Gemeinsames Auswertungsschema zeigt die vollständigen Zeugnisdetails; Desktop-Compose-Prüfung umfasst schmale/niedrige Fenster, helle/dunkle Darstellung und 1x/2x Schrift. Android-Gerätetest ist ergänzt und kompiliert, aber mangels verbundenem Gerät und AVD noch nicht ausgeführt.
+- Gesamttests, Android-Debug-Build, Test-APK, Lint und Desktop-Kompilierung wurden erfolgreich ausgeführt. Repository-, Releaseplan- und Versionsfolgeprüfungen sind grün. Die zusätzliche Standalone-Kernprüfung ist wegen fehlendem `kotlinc` nicht ausführbar; Gradle-Kerntests sind grün.
+- Unabhängige statische Prüfung und gezielte Nachprüfung durch `node_verifier`: gefundene Rückführungs-, Bildraumpfad-, Literalbedingungs- und Quellenfehler korrigiert; keine weiteren Blocker in der gezielten Nachprüfung. Dies ist keine Freigabe sämtlicher 77 Punkte des übergeordneten Vertrags.
+- Nachweisübersicht: [ExecPlan Übersetzungszeugnisse](plans/active/2026-10-13-uebersetzungszeugnisse.md), [ADR](decisions/2026-10-13-uebersetzungszeugnisse.md). Kein neuer Knotentyp, keine Produktionsabhängigkeit oder Veröffentlichung.
+
+
+### Gemeinsame UI-Vertragsintegration (Arbeitsstand 13.10.2026)
+
+- Android und Desktop verwenden denselben gebundenen Formelbauer mit Symbolrollen, vollständigen Typen, Methodensignaturen, strukturierten Bereichen und Voraussetzungen. Noch nicht übernommene Symbol-/Komponentennamen und Typparameter sperren die globale Übernahme. Fehlerhafte Imports und beschädigte gespeicherte Kontexte überschreiben den Ausgangszustand nicht.
+- Stabile fachliche Anschlusszuordnungen überleben Kopieren, Laden, Umbenennen und Reihenfolgeänderungen. Formel↔Karte und Methodenbildung verwenden vorhandene Knoten und atomare Kartenaktionen. Partielle Methodenbindung verwendet Komponentenidentitäten. Eigene und angeschlossene freie Quellen einschließlich Annahmen bleiben im aktuellen Ergebnissnapshot erhalten.
+- Gemeinsame Ergebnisdetails zeigen Struktur, Signatur, Voraussetzungen, Bereiche, aktuelles Zeugnis und getrennte Herkunft. Selbsttragende Formel-/Wertpakete sind über Zwischenablage austauschbar; Wertcodec v2 ergänzt einen optionalen Formelkontext; alle Wertpaketversionen außer der aktuellen werden abgewiesen. Historische Werte mit nicht rekonstruierbaren Bindungen bleiben als Wert exportierbar, ihr Formeleditorimport wird diagnostiziert. Dateiwege verwenden weiterhin vollständige Karten.
+- Rückführung ist ein Modus des bestehenden Übersetzers; frühere Indexparameter beeinflussen andere aktive Übersetzerziele nicht. Visualisierung erlaubt explizite Koordinaten und feste Parameter; verschachtelte Tupel benötigen eine ausdrücklich gewählte Blattprojektion.
+- Q mit deklarierter Methodenquelle durchläuft Formel, Karte, Kartencodec, Methodenerzeugung und Anwendung: f(t)=t²,x=3,h=2 ergibt 8, h=0 wird zurückgewiesen. Eine allgemeine automatische symbolische Quotientenkürzung zu 2x+h ist keine neu implementierte Fähigkeit. Nicht unterstützte Binder und Graphknoten liefern Diagnosen.
+- Desktop-Compose-Bedienungstests bestehen. Entsprechende Android-Gerätetests sind ergänzt; Android-Gerät/AVD ist nicht verfügbar, daher keine Android-Laufzeitfreigabe. Unabhängige statische Prüfung durch node_verifier meldet nach Korrektur der belegten Identitäts-/Metadatenfehler keine weiteren konkreten Blocker. Keine Gesamtfreigabe aller 77 Vertragsprüfpunkte.
+- Nachweise und Grenzen: [UI-ExecPlan](plans/active/2026-10-13-ui-vertragsintegration.md), [ADR](decisions/2026-10-13-ui-formelkontext.md). Kein neuer Knotentyp, keine Produktionsabhängigkeit, kein Commit oder Release.
+
+- Finaler UI-Gesamtprüflauf: 1721 Tests ohne Fehler/Überspringungen; Android-Debug-APK, Test-APK, Lint und Desktop-Kompilierung erfolgreich. Repository-, Releaseplan-, Versionsfolge- und Diffprüfungen grün. Zusätzliche Standalone-Kernprüfung mangels kotlinc nicht ausführbar; Gradle-Kerntests grün.

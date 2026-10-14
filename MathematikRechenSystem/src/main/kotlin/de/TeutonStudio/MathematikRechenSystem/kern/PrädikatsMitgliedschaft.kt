@@ -10,7 +10,7 @@ internal fun entscheidePrädikatsMitgliedschaft(
         ?: return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Eine Tupelbelegung ist erforderlich.")
     if (werte.size != menge.variablen.size) return AussageErgebnis(Wahrheitswert.Lüge,
         EntscheidungsStatus.Widerlegt, "Die Tupeldimension stimmt nicht mit dem Lösungsraum überein.")
-    val bindungen = menge.variablen.mapIndexed { i, v -> v.variable.name to werte[i] }.toMap()
+    val bindungen = menge.variablen.mapIndexed { i, v -> (v.variable.bindungsId ?: v.variable.name) to werte[i] }.toMap()
     val bereich = Konjunktion(menge.variablen.mapIndexed { i, v -> ElementBeziehung(werte[i], v.grundMenge) }).entscheide(kontext)
     if (bereich.wahrheitswert == Wahrheitswert.Lüge) return bereich
     val bedingung = ersetze(menge.bedingung, bindungen)

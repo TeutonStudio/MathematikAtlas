@@ -26,8 +26,9 @@ class SmallIssuesBatchRegressionTest {
                 VARIABLE_DIMENSION to "3",
             ),
         )
-        assertEquals(MathematikAnschlussArten.Tupel.id, quelle.anschlüsse.single().art)
-        assertEquals("wert", quelle.anschlüsse.single().name)
+        val ausgang = quelle.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+        assertEquals(MathematikAnschlussArten.Tupel.id, ausgang.art)
+        assertEquals("wert", ausgang.name)
         val tupelWert = register.finde(quelle.art)!!.auswerten(
             KnotenAuswertungsKontext(quelle, emptyMap(), RechenKontext()),
         ).ausgaben.getValue("wert")

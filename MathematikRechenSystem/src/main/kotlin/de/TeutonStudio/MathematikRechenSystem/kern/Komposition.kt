@@ -38,88 +38,23 @@ fun prüfeKompositionsKette(
     }
 
     val fehler = methoden.zipWithNext().mapIndexedNotNull { index, (außen, innen) ->
-        val äußerePosition = index + 1
-        val innerePosition = index + 2
-        val außenSignatur = außen.methodenSignatur()
-        val innenSignatur = innen.methodenSignatur()
-
-        when {
-            außenSignatur.argumente.size != 1 -> KompositionsFehler(
-                äußerePosition,
-                innerePosition,
-                "Die äußere Methode '${außen.name}' benötigt genau eine Argumentkomponente, besitzt aber ${außenSignatur.argumente.size}.",
-            )
-
-            innenSignatur.ergebnisse.size != 1 -> KompositionsFehler(
-                äußerePosition,
-                innerePosition,
-                "Die innere Methode '${innen.name}' benötigt genau eine Ergebniskomponente, besitzt aber ${innenSignatur.ergebnisse.size}.",
-            )
-
-            else -> {
-                val typPrüfung = MathematischeTypen.typSystem.prüfe(
-                    innenSignatur.ergebnisTyp,
-                    außenSignatur.argumentTyp,
-                )
-                if (typPrüfung is TypPrüfung.Inkompatibel) {
-                    KompositionsFehler(
-                        äußerePosition,
-                        innerePosition,
-                        "Die Tupeltypen von '${innen.name}' und '${außen.name}' passen nicht zusammen: ${typPrüfung.grund}",
-                    )
-                } else {
-                    val außenMathematisch = außen as? MathematischeSignaturtragendeMethode
-                    val innenMathematisch = innen as? MathematischeSignaturtragendeMethode
-                    if (außenMathematisch == null || innenMathematisch == null) {
-                        null
-                    } else {
-                        val definitionsMenge = außenMathematisch.mathematischeSignatur.argumente.single().definitionsMenge
-                        val zielMenge = innenMathematisch.mathematischeSignatur.ergebnisse.single().zielMenge
-                        val teilmenge = prüfeTeilmenge(zielMenge, definitionsMenge, kontext)
-                        when (teilmenge.wahrheitswert) {
-                            Wahrheitswert.Lüge -> KompositionsFehler(
-                                äußerePosition,
-                                innerePosition,
-                                "Zielmenge ${zielMenge.zuLatex()} von '${innen.name}' passt nicht zum Wertevorrat ${definitionsMenge.zuLatex()} von '${außen.name}'.",
-                            )
-                            null -> KompositionsFehler(
-                                äußerePosition,
-                                innerePosition,
-                                "Für ${zielMenge.zuLatex()} ⊆ ${definitionsMenge.zuLatex()} ist die Totalität der Komposition noch nicht nachgewiesen.",
-                            )
-                            Wahrheitswert.Wahr -> null
-                        }
-                    }
-                }
+        val typ = MathematischeTypen.typSystem.prüfe(innen.methodenSignatur().ergebnisTyp, außen.methodenSignatur().argumentTyp)
+        if (typ is TypPrüfung.Inkompatibel) {
+            KompositionsFehler(index + 1, index + 2, "Die Tupeltypen passen nicht zusammen: ${typ.grund}")
+        } else if (außen is MathematischeMethode && innen is MathematischeMethode) {
+            runCatching { komponiere(außen, innen) }.exceptionOrNull()?.let {
+                KompositionsFehler(index + 1, index + 2, it.message ?: "Ungültige Komposition.")
             }
-        }
+        } else null
     }
     return KompositionsPrüfung(fehler)
 }
 
-/** Bildet eine beliebig lange, semantisch geprüfte Methodenkette. */
+/** Komponiert Tupelschnittstellen; offene Domänenbedingungen bleiben an der Methode. */
 fun komponiere(methoden: List<Methode>): Methode {
     val prüfung = prüfeKompositionsKette(methoden)
     require(prüfung.istGültig) { prüfung.fehler.joinToString("\n") }
-
-    val innerste = methoden.last().alsMathematischeMethode("symbolische Komposition")
-    var ausdruck = innerste.einzigeAusgabe().second
-
-    for (index in methoden.lastIndex - 1 downTo 0) {
-        val außen = methoden[index].alsMathematischeMethode("symbolische Komposition")
-        val parameter = außen.parameter.single()
-        val äußererAusdruck = außen.einzigeAusgabe().second
-        ausdruck = ersetze(äußererAusdruck, mapOf(parameter.name to ausdruck))
-    }
-
-    val äußerste = methoden.first().alsMathematischeMethode("symbolische Komposition")
-    val äußererAusgabeName = äußerste.ausgabeNamen.single()
-    return Methode(
-        name = methoden.joinToString("\\circ") { it.name },
-        parameter = innerste.parameter,
-        vorschrift = ausdruck,
-        zielMenge = äußerste.zielMengeFür(äußererAusgabeName),
-        werteVorräte = innerste.werteVorräte,
-        effektiverWerteVorrat = innerste.effektiverWerteVorrat,
-    )
+    var ergebnis = methoden.last()
+    for (i in methoden.lastIndex - 1 downTo 0) ergebnis = komponiere(methoden[i], ergebnis)
+    return ergebnis
 }

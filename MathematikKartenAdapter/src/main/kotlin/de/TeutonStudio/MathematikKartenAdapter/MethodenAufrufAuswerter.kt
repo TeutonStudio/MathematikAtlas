@@ -6,6 +6,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 const val METHODEN_STRUKTUR_PACKUNG = "methodenAufruf.strukturPackung"
 const val METHODEN_STRUKTUR_MIGRATIONSFEHLER = "methodenAufruf.strukturMigrationsfehler"
 
+const val METHODEN_AUFRUF_PARTIELL = "methodenAufruf.partiell"
 const val METHODEN_AUFRUF_ARGUMENTPROJEKTION = "methodenAufruf.argumentprojektion"
 const val METHODEN_AUFRUF_ERGEBNISPROJEKTION = "methodenAufruf.ergebnisprojektion"
 const val METHODEN_ARGUMENTPROJEKTION_SEPARIERT = "separiert"
@@ -50,6 +51,23 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
                 METHODEN_ERGEBNISPROJEKTION_TUPEL
             }
 
+        if(kontext.knoten.parameter[METHODEN_AUFRUF_PARTIELL]=="true") {
+            val m=mathematischeMethode ?: error("Partielle Bindung benötigt eine mathematische Methodensignatur.")
+            require(argumentProjektion==METHODEN_ARGUMENTPROJEKTION_SEPARIERT && METHODEN_STRUKTUR_PACKUNG !in kontext.knoten.eigenschaften) {"Partielle Bindung benötigt getrennte logische Argumentanschlüsse."}
+            val ids=m.signatur.argumente.map {it.id}
+            require(argumentAnschlüsse.mapIndexed {i,p -> p.semantischeId ?: ids.getOrNull(i)}.toSet()==ids.toSet()) {"Die Argumentidentitäten stimmen nicht mit der Signatur überein."}
+            require(argumentAnschlüsse.size==ids.size) {"Die Argumentanschlüsse stimmen nicht mit der Signatur überein."}
+            val bindungen=argumentAnschlüsse.mapIndexedNotNull {i,p -> kontext.eingänge[p.name]?.let { w ->
+                val id=p.semantischeId ?: ids[i]
+                require(id in ids) {"Unbekannte Argumentidentität."}
+                id to (w.objekt as? MathematischesObjekt ?: error("Nichtmathematisches Argument."))
+            }}.toMap()
+            val gebunden=m.bindeIdentitäten(bindungen)
+            val substitution=bindungen.mapKeys {(id,_) -> val p=m.parameter[m.signatur.argumente.indexOfFirst {it.id==id}];p.bindungsId ?: p.name}
+            val annahmen=gebunden.voraussetzungen+methodenWert.annahmen.map {ersetze(it,substitution)}+kontext.eingänge.filterKeys {it!="methode"}.values.flatMap {it.annahmen}
+            require(annahmen.none {it.entscheide(kontext.rechenKontext).wahrheitswert==Wahrheitswert.Lüge}) {"Die Bindung verletzt eine Definitionsbedingung."}
+            return KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(gebunden,annahmen,variablenQuellen=kontext.eingänge.values.flatMap {it.variablenQuellen}.distinct(),übersetzungen=gebunden.übersetzungen)),eingänge=kontext.eingänge)
+        }
         val argumentWerte = if (mathematischeMethode != null) {
             if (METHODEN_STRUKTUR_PACKUNG in kontext.knoten.eigenschaften) strukturierteArgumente(mathematischeMethode, kontext)
             else when (argumentProjektion) {
@@ -66,13 +84,14 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         }
         val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
             ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
+        val definitionsBedingungen = mutableSetOf<Aussage>()
         val (roherWert, roheZielMenge) = if (
             mathematischeMethode != null && auswertbareMethode != null
         ) {
             val bindungen = mathematischeMethode.parameter
-                .mapIndexed { index, parameter -> parameter.name to mathematischeArgumente[index] }
+                .mapIndexed { index, parameter -> (parameter.bindungsId ?: parameter.name) to mathematischeArgumente[index] }
                 .toMap()
-            mathematischeMethode.wendeMathematischAlsTupelAn(Tupel(mathematischeArgumente)) to
+            mathematischeMethode.wendeMitBedingungenAn(Tupel(mathematischeArgumente), kontext.rechenKontext).also { definitionsBedingungen += it.bedingungen }.ergebnis to
                 (ersetze(mathematischeMethode.zielRaum, bindungen) as MengenAusdruck)
         } else {
             val symbolischeMethode = methodenObjekt as? MathematischesObjekt
@@ -94,8 +113,8 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         } else {
             anwendungsLatex
         }
-        val annahmenBindungen = mathematischeMethode?.parameter?.mapIndexed { i, p -> p.name to mathematischeArgumente[i] }?.toMap().orEmpty()
-        val angewandteAnnahmen = methodenWert.annahmen.map { ersetze(it, annahmenBindungen) as Aussage }.toSet() + argumentWerte.flatMap { it.annahmen }
+        val annahmenBindungen = mathematischeMethode?.parameter?.mapIndexed { i, p -> (p.bindungsId ?: p.name) to mathematischeArgumente[i] }?.toMap().orEmpty()
+        val angewandteAnnahmen = methodenWert.annahmen.map { ersetze(it, annahmenBindungen) as Aussage }.toSet() + argumentWerte.flatMap { it.annahmen } + definitionsBedingungen
         require(angewandteAnnahmen.none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen eine Definitionsbedingung der Methode." }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(

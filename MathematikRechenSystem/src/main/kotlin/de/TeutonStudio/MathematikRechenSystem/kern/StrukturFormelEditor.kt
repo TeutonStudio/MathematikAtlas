@@ -309,7 +309,10 @@ fun strukturFormelVariablen(wurzel: FormelAusdruck): List<StrukturFormelVariable
 
 /** Stabile binäre Persistenz des Ausdrucksbaums, Base64-kodiert für Knotenparameter. */
 object StrukturFormelCodec {
-    private const val VERSION = 1
+    fun kodieren(formel: GebundeneFormel): String = FormelKontextCodec.kodieren(formel)
+    fun dekodierenGebunden(kodiert: String): GebundeneFormel = FormelKontextCodec.dekodieren(kodiert)
+
+    private const val VERSION = 3
 
     fun kodieren(wurzel: FormelAusdruck): String {
         val bytes = ByteArrayOutputStream().use { ausgabe ->
@@ -323,19 +326,23 @@ object StrukturFormelCodec {
     }
 
     fun dekodieren(kodiert: String): FormelAusdruck {
+        require(kodiert.length <= 32_000_000) { "Strukturformel überschreitet die Größenbegrenzung." }
         val bytes = Base64.getUrlDecoder().decode(kodiert)
         return DataInputStream(ByteArrayInputStream(bytes)).use { daten ->
-            require(daten.readInt() == VERSION) { "Nicht unterstützte Strukturformel-Version." }
-            lies(daten)
+            val version = daten.readInt()
+            require(version == VERSION) { "Nicht unterstützte Strukturformel-Version $version; erwartet wird Version $VERSION." }
+            lies(daten, version).also { require(daten.available() == 0) { "Unerwartete Strukturformel-Restdaten." } }
         }
     }
 
-    private fun schreibe(daten: DataOutputStream, ausdruck: FormelAusdruck) {
+    private fun schreibe(daten: DataOutputStream, ausdruck: FormelAusdruck, tiefe: Int = 0) {
+        require(tiefe <= 128) { "Strukturformel ist zu tief verschachtelt." }
         when (ausdruck) {
             is FormelAusdruck.Literal -> {
                 daten.writeByte(0)
                 kopf(daten, ausdruck)
-                daten.writeUTF(ausdruck.wert.zuLatex())
+                schreibeText(daten, MathematischerWertCodec.kodieren(ausdruck.wert))
+                ÜbersetzungsCodec.metadaten(daten, ausdruck.übersetzungen)
             }
             is FormelAusdruck.Variable -> {
                 daten.writeByte(1)
@@ -354,12 +361,14 @@ object StrukturFormelCodec {
                 kopf(daten, ausdruck)
                 daten.writeUTF(ausdruck.operatorId)
                 daten.writeBoolean(ausdruck.explizitGruppiert)
+                daten.writeInt(ausdruck.bedingungen.size)
+                ausdruck.bedingungen.forEach { schreibeText(daten, MathematischerWertCodec.kodieren(it)) }
                 val argumente = ausdruck.argumente.sortedBy { it.position }
                 daten.writeInt(argumente.size)
                 argumente.forEach { argument ->
                     daten.writeUTF(argument.rollenId)
                     daten.writeInt(argument.position)
-                    schreibe(daten, argument.ausdruck)
+                    schreibe(daten, argument.ausdruck, tiefe + 1)
                 }
             }
         }
@@ -370,29 +379,47 @@ object StrukturFormelCodec {
         daten.writeUTF(ausdruck.typ.name)
     }
 
-    private fun lies(daten: DataInputStream): FormelAusdruck {
+    private fun schreibeText(daten: DataOutputStream, text: String) {
+        val bytes = text.toByteArray(Charsets.UTF_8)
+        require(bytes.size <= 16_000_000)
+        daten.writeInt(bytes.size); daten.write(bytes)
+    }
+    private fun liesText(daten: DataInputStream): String {
+        val n = daten.readInt()
+        require(n in 0..16_000_000 && n <= daten.available()) { "Ungültige Strukturformel-Textlänge." }
+        return ByteArray(n).also(daten::readFully).toString(Charsets.UTF_8)
+    }
+
+    private fun anzahl(daten: DataInputStream): Int = daten.readInt().also {
+        require(it in 0..100_000) { "Ungültige Strukturformel-Komponentenanzahl." }
+    }
+
+    private fun lies(daten: DataInputStream, tiefe: Int = 0): FormelAusdruck {
+        require(tiefe <= 128) { "Strukturformel ist zu tief verschachtelt." }
         val art = daten.readByte().toInt()
         val id = daten.readUTF()
         val typ = FormelTyp.valueOf(daten.readUTF())
         return when (art) {
             0 -> {
-                val latex = daten.readUTF()
-                val import = FormelLatexCodec.importiere(latex)
-                val literal = (import as? FormelLatexImportErgebnis.Erfolg)?.ausdruck as? FormelAusdruck.Literal
-                    ?: error("Literal '$latex' kann nicht wiederhergestellt werden.")
-                literal.copy(id = id, typ = typ)
+                val wert = MathematischerWertCodec.dekodieren(liesText(daten))
+                val metadaten = ÜbersetzungsCodec.metadaten(daten)
+                require(metadaten.aktuell == null || metadaten.aktuell.ziel == ÜbersetzungsStruktur.von(wert)) { "Literal und Zeugnisstruktur widersprechen sich." }
+                FormelAusdruck.Literal(id, wert, typ, metadaten)
             }
             1 -> FormelAusdruck.Variable(id, daten.readUTF(), daten.readUTF(), typ)
             2 -> FormelAusdruck.Platzhalter(id, daten.readUTF(), daten.readUTF(), typ)
             3 -> {
                 val operatorId = daten.readUTF()
                 val gruppiert = daten.readBoolean()
-                val argumente = List(daten.readInt()) {
+                val bedingungen = List(anzahl(daten)) {
+                    MathematischerWertCodec.dekodieren(liesText(daten)) as Aussage
+                }
+                val argumente = List(anzahl(daten)) {
                     val rolle = daten.readUTF()
                     val position = daten.readInt()
-                    FormelArgument(rolle, position, lies(daten))
+                    FormelArgument(rolle, position, lies(daten, tiefe + 1))
                 }
-                FormelAusdruck.Operation(id, operatorId, argumente, typ, explizitGruppiert = gruppiert)
+                FormelAusdruck.Operation(id, operatorId, argumente, typ, bedingungen = bedingungen, explizitGruppiert = gruppiert)
             }
             else -> error("Unbekannte Ausdrucksart $art.")
         }

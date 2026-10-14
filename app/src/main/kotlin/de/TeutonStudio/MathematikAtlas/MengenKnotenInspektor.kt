@@ -1,5 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.mitGradmengenDimension
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -228,7 +230,7 @@ internal fun konfiguriereMengenQuelle(knoten: KnotenDaten, eintrag: MengenAuswah
                 name = ausgangsName, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Menge.id,
             ) else anschluss
         },
-    )
+    ).mitGradmengenDimension()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

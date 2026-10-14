@@ -263,6 +263,7 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
     familie: StrukturRechnerKnotenFamilie,
     operatorId: String?,
 ): KnotenAuswertungsErgebnis = runCatching {
+    if(operatorId == familie.formelOperatorId && FORMEL_KONTEXT_EIGENSCHAFT in knoten.eigenschaften) return werteGebundeneKnotenFormelAus(this)
     if (familie == StrukturRechnerKnotenFamilie.MATRIX && operatorId == MatrixRechnerOperator.ZERLEGEN.stabileId) {
         return werteMatrixZerlegenAus(this)
     }
@@ -273,7 +274,9 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
         werteStrukturOperatorAus(this, familie, StrukturRechnerOperatoren.finde(familie, operatorId), rechenBedingungen)
     }
     KnotenAuswertungsErgebnis(
+        bezeugteAusgaben = if (operatorId == familie.formelOperatorId && ladeStrukturRechnerFormel(knoten) is FormelAusdruck.Literal) setOf("wert") else emptySet(),
         ausgaben = mapOf("wert" to BedingterWert(wert, annahmenFuerStrukturFormel() + rechenBedingungen,
+            übersetzungen = ladeStrukturRechnerFormel(knoten)?.übersetzungsMetadaten() ?: ÜbersetzungsMetadaten(),
             reelleVariablen = de.TeutonStudio.MathematikKartenAdapter.reelleVariablen(eingänge.values),
             variablenQuellen = eingänge.values.flatMap { it.variablenQuellen }
                 .distinctBy { it.identität })),
@@ -372,10 +375,15 @@ private fun werteFormelAusdruckAus(
     knoten: KnotenDaten,
     bedingungen: MutableSet<Aussage>,
 ): AtlasWert = when (ausdruck) {
-    is FormelAusdruck.Literal -> ausdruck.wert
+    is FormelAusdruck.Literal -> {
+        val metadata = ausdruck.übersetzungsMetadaten()
+        bedingungen += (metadata.kontext?.annahmen.orEmpty() + metadata.aktuell?.voraussetzungen.orEmpty()).map { ersetze(it, variablen) }
+        ersetze(ausdruck.wert, variablen)
+    }
     is FormelAusdruck.Variable -> variablen[ausdruck.name] ?: error("Variable ${ausdruck.name} ist nicht belegt.")
     is FormelAusdruck.Platzhalter -> error("Die Formel enthält den offenen Platzhalter ${ausdruck.beschriftung}.")
     is FormelAusdruck.Operation -> {
+        bedingungen += ausdruck.bedingungen.map { ersetze(it, variablen) }
         val argumente = ausdruck.argumente.sortedBy { it.position }.associate { argument ->
             argument.rollenId to werteFormelAusdruckAus(argument.ausdruck, variablen, knoten, bedingungen)
         }
@@ -383,7 +391,7 @@ private fun werteFormelAusdruckAus(
     }
 }
 
-private fun werteFormelOperationAus(
+internal fun werteFormelOperationAus(
     operatorId: String,
     argumente: Map<String, AtlasWert>,
     knoten: KnotenDaten,
@@ -394,6 +402,16 @@ private fun werteFormelOperationAus(
     }
     val formelFamilie = RechnerOperatorDefinitionen.alle.firstOrNull { it.id == operatorId && it.formelFamilie != null }?.formelFamilie
     return when {
+        operatorId == "tupel.konstruktion" -> Tupel(mathematischeArgumente.values.toList())
+        operatorId == "tupel.projektion" -> (mathematischeArgumente.getValue("tupel") as? Tupel
+            ?: error("Tupelprojektion benötigt ein Tupel.")).wertAn(mathematischeArgumente.getValue("index"))
+        operatorId == "methode.anwenden" -> {
+            val methode = mathematischeArgumente.getValue("methode") as? MathematischeMethode
+                ?: error("Der Formelaufruf benötigt eine mathematisch auswertbare Methode.")
+            methode.wendeMitBedingungenAn(Tupel(mathematischeArgumente.filterKeys { it != "methode" }.values.toList())).also {
+                bedingungen += it.bedingungen
+            }.ergebnis
+        }
         operatorId.startsWith("zahl.") -> werteZahlFormelAus(operatorId, mathematischeArgumente.values.toList())
         operatorId.startsWith("aussage.") -> werteAussagenFormelAus(operatorId, mathematischeArgumente, knoten)
         formelFamilie == OperatorFamilie.VEKTOR -> werteVektorFormelAus(operatorId, mathematischeArgumente)

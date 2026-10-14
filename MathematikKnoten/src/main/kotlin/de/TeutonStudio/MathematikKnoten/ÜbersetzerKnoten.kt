@@ -20,8 +20,9 @@ fun übersetzerPolarKonvention(knoten:KnotenDaten):PolarKonvention =
     knoten.parameter[ÜBERSETZER_POLAR_KONVENTION]?.let { raw -> PolarKonvention.entries.firstOrNull { it.name==raw } ?: error("Unbekannte Polarkonvention '$raw'.") } ?: PolarKonvention.SIGNED
 
 const val ÜBERSETZER_R1 = "uebersetzer.r1"
-val ÜBERSETZER_ZIELE = listOf("tupel", "zeile", "spalte", "methode", "indexmethode", "matrixzerlegen", "polar", "kartesisch", "grad", "bogenmass", "koordinatenmenge", "mittelpunkt", "objektpunkt", "geometrie")
+val ÜBERSETZER_ZIELE = ÜbersetzungsZiel.knotenZiele
 fun übersetzerZielTitel(ziel: String): String = when (ziel) {
+    "rueckfuehrung" -> "Struktur zurückführen"
     "koordinatenmenge" -> "Geometrie → Koordinatenmenge"
     "mittelpunkt" -> "Geometrischer Mittelpunkt"
     "objektpunkt" -> "Ausgewählter Objektpunkt"
@@ -53,6 +54,7 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
     require(knoten.art == ÜBERSETZER_ART && ziel in ÜBERSETZER_ZIELE) { "Ungültiges Übersetzungsziel '$ziel'." }
     val parameter=knoten.parameter+(ÜBERSETZER_POLAR_KONVENTION to (knoten.parameter[ÜBERSETZER_POLAR_KONVENTION] ?: PolarKonvention.SIGNED.name))+("methode.tupelEinzelausgabe" to (knoten.parameter["methode.tupelEinzelausgabe"] ?: "true"))
     val ausgangArt = when (ziel) {
+        "rueckfuehrung" -> MathematikAnschlussArten.Objekt.id
         "koordinatenmenge" -> MathematikAnschlussArten.Menge.id
         "mittelpunkt", "objektpunkt" -> MathematikAnschlussArten.Tupel.id
         "geometrie" -> GeometrieAnschlussArten.Objekt.id
@@ -145,6 +147,12 @@ object ÜbersetzungsKnotenVorlagen {
 
 /** Gemeinsame Methodenbildung für den historischen Adapter und den Übersetzer. */
 internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert): BedingterWert {
+    termWert.gebundeneFormel?.let { f ->
+        val methode=f.alsMethode(k.knoten.parameter["name"] ?: "f")
+        val ids=f.quellen.filter { it.art==FormelVariablenArt.FREI }.map {it.id}.toSet()
+        return termWert.copy(objekt=methode,gebundeneFormel=null,annahmen=methode.voraussetzungen,zielMenge=null,werteVorrat=null,latexDarstellung=null,
+            variablenQuellen=termWert.variablenQuellen.filterNot {it.bindungsId in ids})
+    }
     var term = termWert.mathematischesObjekt("Term der Methodenbildung")
     require(term !is Methode) { "Eine Methode ist kein Term für die Methodenbildung." }
     val parameterQuelle=k.eingänge["parameterQuelle"]
@@ -197,7 +205,11 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
         if (quellen.getValue(name).first().lösungsRolle == LösungsQuellenRolle.Parameter)
             AllgemeinerParameter(name) else freie.getValue(name)
     },
-        vorschrift = if (einzelausgabe) Tupel(listOf(term)) else term, zielMenge = if (einzelausgabe) Tupelraum(listOf(ziel)) else ziel, werteVorräte = namen.associateWith { vorräte.getValue(it) }, ausgabeNamen = ausgabeNamen)
+        vorschrift = if (einzelausgabe) Tupel(listOf(term)) else term, zielMenge = if (einzelausgabe) Tupelraum(listOf(ziel)) else ziel, werteVorräte = namen.associateWith { vorräte.getValue(it) }, ausgabeNamen = ausgabeNamen,
+        argumentIdentitäten = namen.associateWith { name ->
+            val quelle = quellen.getValue(name).first()
+            quelle.strukturBindung?.id ?: quelle.bindungsId?.let { id -> id + (quelle.bindungsName?.let { "::$it" } ?: "") } ?: quelle.knotenId.wert
+        }, voraussetzungen = quellAnnahmen)
     return termWert.copy(objekt = methode, annahmen=quellAnnahmen, zielMenge = null, werteVorrat = null, latexDarstellung = null,
         reelleVariablen = termWert.reelleVariablen.filterKeys { it !in namen },
         variablenQuellen = quellenWerte.filterNot { it.name in namen && it.alsMethodenParameter })
@@ -229,8 +241,8 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
         KnotenAuswertungsErgebnis(mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, vollständig))))
     }
     registriere(ÜBERSETZER_ART) { k ->
-        indexDefinitionsBaustein(k)?.let { return@registriere it }
         val ziel = übersetzerZiel(k.knoten)
+        if(ziel=="indexmethode") indexDefinitionsBaustein(k)?.let { return@registriere it }
         val getrennt = übersetzerPolarGetrennt(k.knoten)
         val wert = if (ziel == "kartesisch" && getrennt) {
             val radius = k.eingänge["radius"] ?: error("Radius fehlt.")
@@ -243,6 +255,13 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
             )
         } else k.eingänge["wert"] ?: error("Der zu übersetzende Wert fehlt.")
         require(ziel in ÜBERSETZER_ZIELE) { "Unbekanntes Übersetzungsziel '$ziel'." }
+        if(ziel=="rueckfuehrung") {
+            val zeugnis=k.knoten.parameter[ÜBERSETZER_RÜCKFÜHRUNGSZEUGNIS]?.let(ÜbersetzungsCodec::dekodiereZeugnis) ?: wert.übersetzungen.aktuell ?: error("Kein aktuelles Übersetzungszeugnis vorhanden. Wählen Sie ein Herkunftszeugnis ausdrücklich aus.")
+            return@registriere when(val r=ÜbersetzungsDienst.rückübersetze(wert.mathematischesObjekt("Rückführung"),zeugnis)) {
+                is ÜbersetzungsErgebnis.NichtDefiniert -> KnotenAuswertungsErgebnis(emptyMap(),fehler=r.beschreibung,übersetzungsDiagnose=r,eingänge=k.eingänge)
+                is ÜbersetzungsErgebnis.Erfolg -> KnotenAuswertungsErgebnis(mapOf("ergebnis" to wert.copy(objekt=r.wert,gebundeneFormel=null,annahmen=wert.annahmen+r.kontext.annahmen,zielMenge=r.zeugnis.zielTräger,werteVorrat=r.kontext.werteBereich,komponentenMengen=r.kontext.komponentenRäume,übersetzungen=wert.übersetzungen.mit(r.zeugnis,r.kontext))),eingänge=k.eingänge,bezeugteAusgaben=setOf("ergebnis"))
+            }
+        }
         if (ziel == "matrixzerlegen") return@registriere werteMatrixZerlegenAus(k, "wert")
         if(ziel=="indexmethode" && k.knoten.parameter["indexmethode.auswahl"]=="nichtnullIndikator") {
             val methode=wert.objekt as? MathematischeMethode ?: error("Die Indikatorbildung benötigt eine skalare Indexmethode.")
@@ -456,15 +475,18 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
         val tupel = wert.objekt as? Tupel ?: error("Abflachen benötigt ein Tupel.")
         if(k.knoten.parameter["abflachen.ebenen"]=="1") {
             val ergebnis=strukturEineEbeneAbflachen(tupel)
-            require(ergebnis.elemente.isNotEmpty()) { "Eine leere Struktur kann nicht zusammengeführt werden." }
             return@registriere KnotenAuswertungsErgebnis(mapOf("tupel" to übersetzterWert(wert.copy(zielMenge=null,werteVorrat=null,komponentenMengen=null),ergebnis)))
         }
         val raum = tupelAbflachenRaum(tupel, wert.komponentenMengen?.let(::Tupelraum) ?: wert.zielMenge as? Tupelraum)
         KnotenAuswertungsErgebnis(mapOf("tupel" to übersetzterWert(wert.copy(zielMenge = raum, werteVorrat = null, komponentenMengen = raum.komponenten), tupelAbflachen(tupel))))
     }
+    bezeugeÜbersetzer(ÜBERSETZER_ART) { k ->
+        if (k.knoten.parameter["indexmethode.baustein"] != null) ÜbersetzungsZiel.INDEXMETHODE else ÜbersetzungsZiel.vonId(übersetzerZiel(k.knoten))
+    }
+    bezeugeÜbersetzer(TUPEL_ABFLACHEN_ART) { ÜbersetzungsZiel.ABFLACHEN }
 }
 
-private fun übersetzterWert(quelle: BedingterWert, ergebnis: MathematischesObjekt): BedingterWert = quelle.copy(
+internal fun übersetzterWert(quelle: BedingterWert, ergebnis: MathematischesObjekt): BedingterWert = quelle.copy(
     objekt = ergebnis, latexDarstellung = null, werteVorrat = null, elementArt = null,
     komponentenMengen = when (ergebnis) {
         is Tupel, is OrientierterVektor -> quelle.komponentenMengen ?: (quelle.zielMenge as? Tupelraum)?.komponenten
@@ -481,4 +503,11 @@ private fun indexMethodeFürBedingtenWert(wert:BedingterWert,matrixFaktor:Boolea
     return strukturIndexMethode(if(matrixFaktor && konkret) quelle.alsMatrixFaktor() else quelle,
         wert.variablenQuellen.associate { it.name to it.werteVorrat },wert.annahmen,
         if(matrixFaktor) vorbild?.alsMatrixFaktor() else vorbild)
+}
+
+const val ÜBERSETZER_RÜCKFÜHRUNGSZEUGNIS = "uebersetzer.rueckfuehrungsZeugnis"
+fun konfiguriereRückführungsZeugnis(k:KnotenDaten,z:ÜbersetzungsZeugnis?):KnotenDaten {
+    require(übersetzerZiel(k)=="rueckfuehrung")
+    z?.let { require(it.prüfeÜbertragung().rückführungsplan!=null) { "Kein Strukturplan vorhanden." } }
+    return k.copy(parameter=if(z==null) k.parameter-ÜBERSETZER_RÜCKFÜHRUNGSZEUGNIS else k.parameter+(ÜBERSETZER_RÜCKFÜHRUNGSZEUGNIS to ÜbersetzungsCodec.kodieren(z)))
 }

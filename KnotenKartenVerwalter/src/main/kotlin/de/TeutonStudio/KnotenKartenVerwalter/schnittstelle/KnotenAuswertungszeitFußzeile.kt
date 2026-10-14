@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 
@@ -76,6 +77,8 @@ fun KnotenAuswertungszeitFußzeile(dauerNanos: Long?, ausgewählt: Boolean = fal
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false,
             )
         }
     }
@@ -87,6 +90,7 @@ fun formatiereAuswertungsDauerNanos(dauerNanos: Long): String {
         dauer < 1_000L -> "<1 µs"
         dauer < 1_000_000L -> String.format(Locale.ROOT, "%.0f µs", dauer / 1_000.0).replace('.', ',')
         dauer < 1_000_000_000L -> String.format(Locale.ROOT, "%.1f ms", dauer / 1_000_000.0).replace('.', ',')
+        dauer >= 1_000_000_000_000_000L -> String.format(Locale.ROOT, "%.2e s", dauer / 1_000_000_000.0).replace('.', ',')
         else -> String.format(Locale.ROOT, "%.2f s", dauer / 1_000_000_000.0).replace('.', ',')
     }
 }
