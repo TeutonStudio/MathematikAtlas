@@ -1,12 +1,22 @@
 package de.TeutonStudio.MathematikRechenSystem
 
 import de.TeutonStudio.MathematikRechenSystem.kern.*
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.util.Base64
 import kotlin.test.*
 
 class ÜbersetzungsZeugnisTest {
     private fun z(n: Long) = RationaleZahl.von(n)
     private fun erfolg(w: MathematischesObjekt, ziel: ÜbersetzungsZiel, k: ÜbersetzungsKontext = ÜbersetzungsKontext(), p: Map<String,String> = emptyMap()) =
         assertIs<ÜbersetzungsErgebnis.Erfolg>(ÜbersetzungsDienst.übersetze(ÜbersetzungsAnfrage(w,ziel,k,p)))
+
+    @Test fun `alte Wertpaketversion wird abgelehnt`() {
+        val bytes = ByteArrayOutputStream()
+        DataOutputStream(bytes).use { d -> d.writeInt(1); d.writeUTF("wert") }
+        val alt = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes.toByteArray())
+        assertFailsWith<IllegalArgumentException> { ÜbersetzungsCodec.dekodiereWert(alt) }
+    }
 
     @Test fun `heterogene Komponenten bleiben im exakten Bild und nach Rueckfuehrung eingeschraenkt`() {
         val a=EndlicheMenge(setOf(z(1))); val b=EndlicheMenge(setOf(z(2)))

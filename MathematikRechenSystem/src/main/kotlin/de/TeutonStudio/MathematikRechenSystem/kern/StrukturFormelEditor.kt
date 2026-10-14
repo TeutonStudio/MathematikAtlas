@@ -330,7 +330,7 @@ object StrukturFormelCodec {
         val bytes = Base64.getUrlDecoder().decode(kodiert)
         return DataInputStream(ByteArrayInputStream(bytes)).use { daten ->
             val version = daten.readInt()
-            require(version in 1..VERSION) { "Nicht unterstützte Strukturformel-Version." }
+            require(version == VERSION) { "Nicht unterstützte Strukturformel-Version $version; erwartet wird Version $VERSION." }
             lies(daten, version).also { require(daten.available() == 0) { "Unerwartete Strukturformel-Restdaten." } }
         }
     }
@@ -394,37 +394,30 @@ object StrukturFormelCodec {
         require(it in 0..100_000) { "Ungültige Strukturformel-Komponentenanzahl." }
     }
 
-    private fun lies(daten: DataInputStream, version: Int, tiefe: Int = 0): FormelAusdruck {
+    private fun lies(daten: DataInputStream, tiefe: Int = 0): FormelAusdruck {
         require(tiefe <= 128) { "Strukturformel ist zu tief verschachtelt." }
         val art = daten.readByte().toInt()
         val id = daten.readUTF()
         val typ = FormelTyp.valueOf(daten.readUTF())
         return when (art) {
             0 -> {
-                val latex = if (version >= 2) liesText(daten) else daten.readUTF()
-                if (version >= 2) {
-                    val wert = MathematischerWertCodec.dekodieren(latex)
-                    val metadaten = if (version >= 3) ÜbersetzungsCodec.metadaten(daten) else ÜbersetzungsMetadaten()
-                    require(metadaten.aktuell == null || metadaten.aktuell.ziel == ÜbersetzungsStruktur.von(wert)) { "Literal und Zeugnisstruktur widersprechen sich." }
-                    return FormelAusdruck.Literal(id, wert, typ, metadaten)
-                }
-                val import = FormelLatexCodec.importiere(latex)
-                val literal = (import as? FormelLatexImportErgebnis.Erfolg)?.ausdruck as? FormelAusdruck.Literal
-                    ?: error("Literal '$latex' kann nicht wiederhergestellt werden.")
-                literal.copy(id = id, typ = typ)
+                val wert = MathematischerWertCodec.dekodieren(liesText(daten))
+                val metadaten = ÜbersetzungsCodec.metadaten(daten)
+                require(metadaten.aktuell == null || metadaten.aktuell.ziel == ÜbersetzungsStruktur.von(wert)) { "Literal und Zeugnisstruktur widersprechen sich." }
+                FormelAusdruck.Literal(id, wert, typ, metadaten)
             }
             1 -> FormelAusdruck.Variable(id, daten.readUTF(), daten.readUTF(), typ)
             2 -> FormelAusdruck.Platzhalter(id, daten.readUTF(), daten.readUTF(), typ)
             3 -> {
                 val operatorId = daten.readUTF()
                 val gruppiert = daten.readBoolean()
-                val bedingungen = if (version >= 2) List(anzahl(daten)) {
+                val bedingungen = List(anzahl(daten)) {
                     MathematischerWertCodec.dekodieren(liesText(daten)) as Aussage
-                } else emptyList()
+                }
                 val argumente = List(anzahl(daten)) {
                     val rolle = daten.readUTF()
                     val position = daten.readInt()
-                    FormelArgument(rolle, position, lies(daten, version, tiefe + 1))
+                    FormelArgument(rolle, position, lies(daten, tiefe + 1))
                 }
                 FormelAusdruck.Operation(id, operatorId, argumente, typ, bedingungen = bedingungen, explizitGruppiert = gruppiert)
             }

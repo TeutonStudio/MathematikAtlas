@@ -97,11 +97,15 @@ data class MathematischeMethode(
             argumente = parameter.mapIndexed { index, parameter ->
                 MethodenKomponente(
                     argumentIdentitäten.getValue(parameter.name), parameter.name, index,
-                    werteVorräte[parameter.name]?.elementTypAusdruck() ?: TypAusdruck.Unbekannt,
+                    (parameter as? SignaturtragendeMethode)?.signatur?.typAusdruck ?: werteVorräte[parameter.name]?.elementTypAusdruck() ?: TypAusdruck.Unbekannt,
+                    (parameter as? SignaturtragendeMethode)?.signatur,
                 )
             },
             ergebnisse = ausgabeNamen.mapIndexed { index, name ->
-                MethodenKomponente(ergebnisIdentitäten.getValue(name), name, index, ergebnisZielMengen[index].elementTypAusdruck())
+                MethodenKomponente(ergebnisIdentitäten.getValue(name), name, index,
+                    (ergebnisTupel.elemente[index] as? SignaturtragendeMethode)?.signatur?.typAusdruck ?: ergebnisZielMengen[index].elementTypAusdruck(),
+                    (ergebnisTupel.elemente[index] as? SignaturtragendeMethode)?.signatur
+                        ?: ergebnisZielMengen[index].elementTypAusdruck().alsMethodenSignaturOderNull(ergebnisIdentitäten.getValue(name)))
             },
         )
 
@@ -123,6 +127,7 @@ data class MathematischeMethode(
                     name = ausgabe,
                     position = index,
                     zielMenge = ergebnisZielMengen[index],
+                    methodenSignatur = (ergebnisTupel.elemente[index] as? SignaturtragendeMethode)?.signatur,
                 )
             },
             effektiverDefinitionsRaum = normalisiereLegacyDefinitionsRaum(
@@ -373,7 +378,12 @@ data class Abbild(val menge: MengenAusdruck, val methode: Methode) : MengenAusdr
 fun Methode.argumenteAusGesamtArgument(argument: MathematischesObjekt): List<MathematischesObjekt> {
     val mathematisch = alsMathematischeMethode("Auswertung eines Gesamtarguments")
     return when (mathematisch.parameter.size) {
-        0 -> emptyList()
+        0 -> {
+            require(argument is Tupel && argument.elemente.isEmpty()) {
+                "Die nullstellige Methode '${mathematisch.name}' benötigt das leere Gesamtargument ()."
+            }
+            emptyList()
+        }
         1 -> listOf(argument)
         else -> {
             val tupel = argument as? Tupel
@@ -549,12 +559,15 @@ fun integriereMethode(methode: Methode): Methode {
 
 fun bildeAb(menge: MengenAusdruck, methode: Methode): MengenAusdruck {
     val mathematisch = methode.alsMathematischeMethode("Bildmengenbildung")
-    require(mathematisch.parameter.isNotEmpty()) { "Die Bildmengenbildung benötigt mindestens ein Methodenargument." }
-    mathematisch.einzigeAusgabe()
     if (menge !is EndlicheMenge) return Abbild(menge, mathematisch)
-    return EndlicheMenge(menge.elemente.map { element ->
-        mathematisch.wendeAufGesamtArgumentAn(element)
-    }.toSet())
+    var offeneVoraussetzungen = false
+    val ergebnisse = menge.elemente.map { element ->
+        val anwendung = mathematisch.wendeMitBedingungenAn(Tupel(mathematisch.argumenteAusGesamtArgument(element)))
+        // Offene Voraussetzungen dürfen nicht durch eine vorzeitige endliche Auswertung verschwinden.
+        if (anwendung.bedingungen.isNotEmpty()) offeneVoraussetzungen = true
+        if (mathematisch.ausgabeNamen.size == 1) anwendung.ergebnis.elemente.single() else anwendung.ergebnis
+    }.toSet()
+    return if (offeneVoraussetzungen) Abbild(menge, mathematisch) else EndlicheMenge(ergebnisse)
 }
 
 data class GebundeneMethode(val methode: Methode, val bindungen: Map<String, MathematischesObjekt>) : MathematischesObjekt {
@@ -589,6 +602,13 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is MethodenZahlKomponente -> when (val aufruf = objekt.aufruf.ersetzeAufruf(bindungen)) {
         is Tupel -> aufruf.wertAn(RationaleZahl.von(objekt.index.toLong())) as? ZahlAusdruck
             ?: error("Die projizierte Methodenausgabe ist keine Zahl.")
+        is StrukturellerMethodenAufruf -> objekt.copy(aufruf = aufruf)
+        else -> error("Ungültiges Methodenaufrufergebnis.")
+    }
+    is MethodenWertKomponente -> when (val aufruf = objekt.aufruf.ersetzeAufruf(bindungen)) {
+        is Tupel -> aufruf.wertAn(RationaleZahl.von(objekt.index.toLong())).also {
+            require(it is SignaturtragendeMethode) { "Die projizierte Methodenausgabe ist keine Methode." }
+        }
         is StrukturellerMethodenAufruf -> objekt.copy(aufruf = aufruf)
         else -> error("Ungültiges Methodenaufrufergebnis.")
     }
@@ -749,6 +769,7 @@ private fun vereinfacheObjekt(
 /** Rekursive Analyse aller bindbaren Methodenparameter. */
 fun MathematischesObjekt.enthalteneMethodenParameter(): Set<MethodenParameter> = when (this) {
     is StrukturellerMethodenAufruf -> methode.enthalteneMethodenParameter() + argumente.enthalteneMethodenParameter()
+    is MethodenWertKomponente -> aufruf.enthalteneMethodenParameter()
     is MethodenZahlKomponente -> aufruf.enthalteneMethodenParameter()
 
     is MethodenParameter -> setOf(this)

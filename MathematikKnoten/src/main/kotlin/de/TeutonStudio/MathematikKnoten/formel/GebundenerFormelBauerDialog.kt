@@ -47,7 +47,7 @@ fun GebundenerFormelBauerDialog(start:GebundeneFormel,startZeichnung:KnotenEigen
             FlowRow {
                 TextButton(onClick={versuch { val paket=clipboard.getText()?.text ?: error("Die Zwischenablage ist leer.")
                     when {paket.startsWith("ATLAS-FORMEL-1\n") -> entwurf.übernehme(FormelKontextCodec.dekodieren(paket.substringAfter('\n')))
-                        paket.startsWith("ATLAS-WERT-1\n") -> {val w=ÜbersetzungsCodec.dekodiereWert(paket.substringAfter('\n'));require(w.formel!=null || (w.wert.freieMethodenParameter()+w.übersetzungen.kontext?.annahmen.orEmpty().flatMap {it.freieMethodenParameter()}).isEmpty()) {"Dieses historische Wertpaket besitzt freie Quellen ohne vollständigen Formelbindungsvertrag. Der bestehende Entwurf bleibt erhalten."};entwurf.übernehme(w.formel ?: GebundeneFormel(FormelAusdruck.Literal(id(),w.wert,formelTypFürWert(w.wert),w.übersetzungen),emptyList(),emptyMap(),annahmen=w.übersetzungen.kontext?.annahmen.orEmpty()))}
+                        paket.startsWith("ATLAS-WERT-2\n") -> {val w=ÜbersetzungsCodec.dekodiereWert(paket.substringAfter('\n'));require(w.formel!=null || (w.wert.freieMethodenParameter()+w.übersetzungen.kontext?.annahmen.orEmpty().flatMap {it.freieMethodenParameter()}).isEmpty()) {"Dieses Wertpaket benötigt für freie Quellen einen vollständigen Formelbindungsvertrag."};entwurf.übernehme(w.formel ?: GebundeneFormel(FormelAusdruck.Literal(id(),w.wert,formelTypFürWert(w.wert),w.übersetzungen),emptyList(),emptyMap(),annahmen=w.übersetzungen.kontext?.annahmen.orEmpty()))}
                         else -> error("Kein unterstütztes Formel- oder Wertpaket.") }
                     auswahl=entwurf.formel.wurzel.id
                 }}) {Text("Formel- oder Wertpaket einfügen")}

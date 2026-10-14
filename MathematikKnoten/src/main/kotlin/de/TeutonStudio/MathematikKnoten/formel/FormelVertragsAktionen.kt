@@ -59,7 +59,7 @@ fun ErgebnisVertragsInhalt(ergebnis:KnotenAuswertungsErgebnis?) {
                     val f=w.alsGebundeneErgebnisFormel()
                     clipboard.setText(AnnotatedString("ATLAS-FORMEL-1\n"+FormelKontextCodec.kodieren(f)))
                 }.onFailure {fehler=it.message}}) {Text("Formelpaket kopieren")}
-                TextButton(onClick={runCatching {clipboard.setText(AnnotatedString("ATLAS-WERT-1\n"+ÜbersetzungsCodec.kodieren(w.alsÜbertragenerMathematischerWert())))}.onFailure {fehler=it.message}}) {Text("Wertpaket kopieren")}
+                TextButton(onClick={runCatching {clipboard.setText(AnnotatedString("ATLAS-WERT-2\n"+ÜbersetzungsCodec.kodieren(w.alsÜbertragenerMathematischerWert())))}.onFailure {fehler=it.message}}) {Text("Wertpaket kopieren")}
                 TextButton(onClick={clipboard.setText(AnnotatedString(w.anzeigeLatex()))}) {Text("LaTeX als Darstellung kopieren")}
             }
             fehler?.let {Text(it,color=MaterialTheme.colorScheme.error)}

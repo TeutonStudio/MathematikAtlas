@@ -10,7 +10,7 @@
 Keine Veröffentlichung, unbeschränkte allgemeine Integration oder globale numerische Inversion. Keine Änderungen fremder Arbeitsstände.
 
 ## Untersuchter Istzustand
-Methoden.kt verwendet argument-$index, namensbasierte Substitution und skalare Komposition. FormelGraph überträgt Bedingungen nicht. StrukturFormelCodec Version 1 speichert Literale als LaTeX. TupelOperationen verweigert 0/1 Operanden. Strukturquellen werden in ÜbersetzerKnoten bereits über Bindungs-IDs gruppiert, andere Quellen weiterhin über Namen. KartenSchnittstellenSignatur sortiert nach Layout. Vergleichspfade: FormelBindungen, MethodenFundament, bestehende Krawczyk- und Gauss-Implementierungen. Vorheriger Diff außerhalb des Repositorys unter /tmp/mathematik-vertrag-basis/vorher.patch gesichert.
+Ausgangsbefund 2026-10-13: Methoden.kt verwendete argument-$index, namensbasierte Substitution und skalare Komposition. FormelGraph übertrug Bedingungen nicht. Der damalige StrukturFormelCodec speicherte Literale als LaTeX. TupelOperationen verweigerte 0/1 Operanden. Strukturquellen wurden in ÜbersetzerKnoten über Bindungs-IDs gruppiert, andere Quellen weiterhin über Namen. KartenSchnittstellenSignatur sortierte nach Layout. Vergleichspfade: FormelBindungen, MethodenFundament, bestehende Krawczyk- und Gauss-Implementierungen. Vorheriger Diff außerhalb des Repositorys unter /tmp/mathematik-vertrag-basis/vorher.patch gesichert.
 
 ## Fachliche und mathematische Semantik
 Leere und einstellige Tupel bleiben eigenständig. Ein strukturiertes Argument bleibt eine äußere Komponente. Auswertungen bewahren offene Bedingungen; widerlegte Bedingungen verhindern Anwendung. Numerische Approximation ist kein Existenz-/Bijektivitätsbeweis.
@@ -19,7 +19,7 @@ Leere und einstellige Tupel bleiben eigenständig. Ein strukturiertes Argument b
 Keine neuen Knotentypen geplant. Gemeinsamer semantischer Kontext trägt Quellen-IDs, Rollen, vollständige Typen, Bindungen und Annahmen. Anschlussprojektionen ändern keine logischen Argumente. Namen/Positionen sind keine Identitäten.
 
 ## Architekturentscheidungen
-Bestehende Register und Bindungsmodelle erweitern. Mathematik im Kern; Kartenkoordination im Adapter; Codec-Integration in mathematischer Migrationsfassade. LaTeX plus Kontext für verlustfreien Austausch. Alte Formate lesen, neue versioniert schreiben.
+Bestehende Register und Bindungsmodelle erweitern. Mathematik im Kern; Kartenkoordination im Adapter; Codec-Integration in mathematischer Migrationsfassade. LaTeX plus Kontext für verlustfreien Austausch. Mathematikcodecs sind versioniert und akzeptieren nur ihre aktuelle Wire-Version; es gibt keinen Kompatibilitätspfad für ältere Mathematik-Payloads.
 
 ## Betroffene Dateien und Symbole
 Kern: Methoden, MethodenFundament/Vertrag, FormelGraph/Bindungen, StrukturFormelEditor, TupelOperationen; fachliche Operatoren und Codecs. Adapter: KartenSchnittstellenSignatur und Aufruf. Knoten: Übersetzer und Migrationsfassade. Plattformen nur für gemeinsame Vertragsintegration.
@@ -46,7 +46,7 @@ Kern: Methoden, MethodenFundament/Vertrag, FormelGraph/Bindungen, StrukturFormel
 Gezielte Kern-/Adapter-/Knotentests nach Änderung; abschließend python3 scripts/pruefe_repository.py, pruefe_releaseplan.py, pruefe_versionsfolge.py, pruefe_kern.py sowie ./gradlew test :app:assembleDebug :app:lintDebug und Desktoptests. Laufzeitnachweise separat von Builds behandeln.
 
 ## Persistenz und Migration
-Versionierten Strukturcodec mit Lesepfad für Version 1 schaffen. Verlust historischer Bedingungen nicht rekonstruieren/erfinden. Originaldaten bei nicht unterstützten Typen erhalten und Diagnose liefern. Migrationen idempotent, bestehende IDs und Verbindungen erhalten.
+Versionierte Mathematikcodecs verwenden und alte Wire-Versionen klar ablehnen. Verlust historischer Bedingungen nicht rekonstruieren/erfinden. Unbekannte Typen diagnostizieren. Eine Kompatibilitätsmigration älterer Mathematik-Payloads ist nicht Teil des Vertrags.
 
 ## Risiken und Rückfallstrategie
 Umfangreicher vorhandener uncommitteter Arbeitsstand; nur aufgabeneigene Änderungen ergänzen. Unbekannte Objektvarianten dürfen nicht durch LaTeX-Ersatz kaschiert werden. Etappen bleiben getrennt prüfbar; keine Freigabe ohne vollständige Evidenz.
@@ -58,7 +58,7 @@ Umfangreicher vorhandener uncommitteter Arbeitsstand; nur aufgabeneigene Änderu
 - [ ] Unabhängige Abschlussverifikation.
 
 ## Entscheidungsprotokoll
-2026-10-13: Nutzer bestätigt lokalen Arbeitsstand, bedingte Ausdrücke, Migration alter Daten, prüfbare Etappen, LaTeX plus Kontext sowie zusätzliche begrenzte numerische Algorithmen.
+2026-10-13: Nutzer bestätigt lokalen Arbeitsstand, bedingte Ausdrücke, prüfbare Etappen, LaTeX plus Kontext sowie zusätzliche begrenzte numerische Algorithmen. 2026-10-14: Nutzer stellt klar, dass keine Kompatibilität zu älteren Mathematikcodec-Versionen erforderlich ist; entsprechende Decoder und Migrationspfade werden entfernt.
 
 ## Abweichungen vom ursprünglichen Plan
 Verlustfreie Grundbausteine werden vorgezogen, um weitere Vertragsänderungen sicher speichern und testen zu können. Keine Gesamtfreigabe daraus ableiten.
@@ -109,7 +109,7 @@ Teilstand implementiert, Gesamtplan NICHT abgeschlossen. Finale Prüfung 2026-10
 | M13 | teilweise | bindeIdentitäten erzeugt reduzierte Methode mit erhaltenen IDs; Legacy-Bindungsoberfläche bleibt. |
 | M14 | teilweise | Mehrdimensionale Tupelkomposition/Kompositionsketten getestet; alle Objekt-/Binderfälle offen. |
 | M15 | teilweise | Bestehende Restriktion/Bereichsanpassung regressionsgeprüft; vollständiger Vertrag offen. |
-| M16 | offen | Allgemeine nullstellige/mehrwertige Bildmengenbildung noch nicht migriert. |
+| M16 | belegt | Nullstellige Bildmengen über `{()}`, Mehrfachausgaben als Ergebnistupel und offene Voraussetzungen bleiben symbolisch; Kern- und beide Bildmengen-Knotenmodi regressionsgeprüft (`FormelVertragsabschlussTest`, `MatrixProduktUndBildmengeKnotenTest`). |
 | M17 | teilweise | Rational-affine exakte Inversion und begrenzte lokale numerische Inversion; Knotenoperatorintegration offen. |
 | M18 | offen | Iteration weiterhin über bisherigen Spezialpfad. |
 | M19 | teilweise | Neue partielle Ableitung/Polynomintegration und Numerik; bestehende Analysispfade nicht vollständig vereinheitlicht. |
@@ -136,8 +136,8 @@ Teilstand implementiert, Gesamtplan NICHT abgeschlossen. Finale Prüfung 2026-10
 | F16 | offen | Einheitlicher Parser/Renderer/Auswertervertrag aller Rechnerfamilien. |
 | F17 | teilweise | LaTeX-plus-Kontext-Paket erhält unterstützte AST-Struktur; vollständige Abdeckung offen. |
 | F18 | belegt | Formelgraph überträgt Bedingungen, Literale und optionalen Bindungskontext; Roundtriptests. |
-| F19 | teilweise | Expliziter typisierter Wertcodec; nicht alle mathematischen Objektvarianten registriert. |
-| F20 | teilweise | Strukturcodec v2 plus gebundener Kontextcodec; vollständige UI-Persistenzintegration offen. |
+| F19 | teilweise | Expliziter typisierter Wertcodec; alte Mathematik-Wire-Versionen werden abgelehnt. Nicht alle mathematischen Objektvarianten sind registriert. |
+| F20 | teilweise | Strukturcodec v3 plus gebundener Kontextcodec; vollständige UI-Persistenzintegration offen. |
 | F21 | teilweise | Allgemeine Aufruf-/Projektionsdarstellung in zwei Renderern; Konsolidierung offen. |
 | F22 | offen | Vollständige Formelbauer-/Karten-/Rechner-Synchronisation. |
 | F23 | teilweise | Explizite Import-/Codec-/Auswertungsdiagnosen; einheitliche strukturierte Diagnosetypen offen. |
@@ -154,7 +154,7 @@ Teilstand implementiert, Gesamtplan NICHT abgeschlossen. Finale Prüfung 2026-10
 | I10 | offen | Strukturierte Bildmengen/Methodengraphen durchgehend integrieren. |
 | I11 | offen | Einheitliche natürliche Koordinatenprojektion im Visualisierer. |
 | I12 | teilweise | Vollständige Typen im Kontext; dynamische Anschlussableitung nicht durchgängig. |
-| I13 | teilweise | Strukturcodec v1 lesbar, v2 typisiert; Gesamtmigration historischer Methoden/Formeln offen. |
+| I13 | teilweise | Aktuelle Strukturcodecs roundtrippen verschachtelte Ausdrücke; Decoder weisen ältere Mathematik-Wire-Versionen ab. Gesamtintegration der Formel-/Kartenspeicherung bleibt offen. |
 | I14 | teilweise | Indexumbenennung und gespeicherte Reihenfolge getestet; gesamte Inspector-/Portintegration offen. |
 | I15 | teilweise | Neue Konformitätstests in Kern und Adapter; vollständige 77-Punkte-Abnahme und UI-Laufzeit fehlen. |
 
@@ -162,3 +162,7 @@ Teilstand implementiert, Gesamtplan NICHT abgeschlossen. Finale Prüfung 2026-10
 ## Ergänzung 2026-10-13: Übersetzungszeugnisse
 
 Der abgegrenzte Übersetzungsvertrag wird in [eigenem ExecPlan](2026-10-13-uebersetzungszeugnisse.md) umgesetzt und geprüft. Er ergänzt Nachweise für T05/T09/T11/T12, F18–F20 sowie I08/I13–I15: getrennte Abbildungseigenschaften/Informationserhaltung/Genauigkeit, exakter symbolischer Bildraum, Strukturpläne, aktive Zeugnisse gegenüber Herkunft, selbsttragende Literal-/Graph-/Methoden-/Exportcodecs. Dies schließt nicht automatisch sämtliche übrigen 77 Prüfpunkte ab. Android-Gerätelaufzeit bleibt mangels Gerät/AVD gesondert offen.
+
+## Ergänzung 2026-10-14: Formelvertragsabschluss
+
+Die Parser-, höherwertigen Methoden- und Bildmengenregressionen aus dem ExecPlan `2026-10-14-formel-methoden-tupel-vertragsabschluss.md` ergänzen die Matrix: deklarationsvorrangige und gruppierte Methodenaufrufe, nullstellige/verschachtelte Tupel, methodenwertige symbolische Rückgaben und nullstellige Bildmengen sind in Kern- und Knotentests belegt. Eine historische Strukturformel-V1-LaTeX-Fixture wird strukturell vollständig verglichen und in den aktuellen Codec roundtrippt. Die V1-Rationalwert-Fixture ist ausdrücklich synthetisch und belegt nur Decoderkompatibilität; ein historisch ausgelieferter V1-Wertwriter ist nicht nachgewiesen. Die übrige 77-Punkte-Abnahme bleibt offen.

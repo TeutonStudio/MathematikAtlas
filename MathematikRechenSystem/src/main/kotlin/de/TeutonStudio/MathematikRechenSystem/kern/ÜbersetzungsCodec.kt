@@ -116,7 +116,8 @@ object ÜbersetzungsCodec {
         require(text.length <= 24_000_000)
         return DataInputStream(ByteArrayInputStream(Base64.getUrlDecoder().decode(text))).use {
             val version=it.readInt()
-            require(version in 1..2 && (version==1 || art=="wert") && text(it)==art) { "Unbekanntes Übersetzungsdatenformat." }
+            val erwartet = if (art == "wert") 2 else 1
+            require(version == erwartet && text(it) == art) { "Nicht unterstütztes Übersetzungsdatenformat $version für '$art'; erwartet wird Version $erwartet." }
             block(it,version).also { _ -> require(it.available()==0) { "Unerwartete Restdaten." } }
         }
     }
@@ -127,7 +128,8 @@ object ÜbersetzungsCodec {
     fun kodieren(w: ÜbertragenerMathematischerWert) = encode("wert") { wert(it,w.wert,0); metadaten(it,w.übersetzungen); it.writeBoolean(w.formel!=null);w.formel?.let { f -> text(it,FormelKontextCodec.kodieren(f)) } }
     fun dekodiereWert(text: String): ÜbertragenerMathematischerWert = decode(text,"wert") { d,version ->
         val w = wert(d,0); val m = metadaten(d)
-        val f=if(version>=2 && d.readBoolean()) FormelKontextCodec.dekodieren(text(d)) else null
+        require(version == 2)
+        val f=if(d.readBoolean()) FormelKontextCodec.dekodieren(text(d)) else null
         require(m.aktuell == null || m.aktuell.ziel == ÜbersetzungsStruktur.von(w)) { "Zeugnis und Ergebnisstruktur widersprechen sich." }
         ÜbertragenerMathematischerWert(w,m,f)
     }

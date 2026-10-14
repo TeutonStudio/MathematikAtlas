@@ -43,13 +43,13 @@ class VertragsRoundtripTest {
         assertEquals(ast, (GraphZuFormel.konvertiere(FormelZuGraph.konvertiere(ast)) as GraphZuFormelErgebnis.Erfolg).wurzel)
     }
 
-    @Test fun `historische Version eins bleibt lesbar`() {
-        val bytes = ByteArrayOutputStream()
-        DataOutputStream(bytes).use {
-            it.writeInt(1); it.writeByte(0); it.writeUTF("alt"); it.writeUTF("ZAHL"); it.writeUTF("42")
-        }
-        val ast = StrukturFormelCodec.dekodieren(Base64.getUrlEncoder().withoutPadding().encodeToString(bytes.toByteArray()))
-        assertEquals(FormelAusdruck.Literal("alt", RationaleZahl.von(42), FormelTyp.ZAHL), ast)
+    @Test fun `alte mathematische Wire-Versionen werden abgelehnt`() {
+        fun fixture(version: Int): String = Base64.getUrlEncoder().withoutPadding().encodeToString(
+            ByteArrayOutputStream().also { bytes -> DataOutputStream(bytes).use { it.writeInt(version) } }.toByteArray(),
+        )
+        assertFailsWith<IllegalArgumentException> { StrukturFormelCodec.dekodieren(fixture(1)) }
+        assertFailsWith<IllegalArgumentException> { MathematischerWertCodec.dekodieren(fixture(1)) }
+        assertFailsWith<IllegalArgumentException> { FormelKontextCodec.dekodieren(fixture(1)) }
     }
 
     @Test fun `nicht unterstuetzte Werte werden nicht als Latex gespeichert`() {

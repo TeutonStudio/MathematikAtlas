@@ -27,6 +27,17 @@ data class MethodenZahlKomponente(
     override fun zuLatex(): String = "\\operatorname{proj}_{$index}\\left(${aufruf.zuLatex()}\\right)"
 }
 
+/** Methodenwertige Projektion mit Signatur für weitere symbolische Anwendungen. */
+data class MethodenWertKomponente(
+    val aufruf: StrukturellerMethodenAufruf,
+    val index: Int,
+    override val signatur: MethodenSignatur,
+) : MathematischesObjekt, SignaturtragendeMethode {
+    init { require(index > 0) }
+    override val name: String get() = "proj_$index"
+    override fun zuLatex(): String = "\\operatorname{proj}_{$index}\\left(${aufruf.zuLatex()}\\right)"
+}
+
 internal fun StrukturellerMethodenAufruf.ersetzeAufruf(bindungen: Map<String, MathematischesObjekt>): MathematischesObjekt {
     val ziel = ersetze(methode, bindungen)
     val argumente = ersetze(argumente, bindungen) as Tupel
@@ -60,6 +71,7 @@ internal fun MathematischesObjekt.aufgerufeneBedingungen(
                 emptyList()
             }
             is StrukturellerMethodenAufruf -> {
+                besuche(wert.methode, tiefe + 1)
                 besuche(wert.argumente, tiefe + 1)
                 val ziel = ersetze(wert.methode, bindungen)
                 if (ziel is MathematischeMethode) {
@@ -71,6 +83,7 @@ internal fun MathematischesObjekt.aufgerufeneBedingungen(
                 emptyList()
             }
             is MethodenZahlKomponente -> listOf(wert.aufruf)
+            is MethodenWertKomponente -> listOf(wert.aufruf)
             is IndexKomponente -> listOf(wert.quelle) + wert.indizes
             is Tupel -> wert.elemente
             is Matrix -> wert.zeilen.flatten()

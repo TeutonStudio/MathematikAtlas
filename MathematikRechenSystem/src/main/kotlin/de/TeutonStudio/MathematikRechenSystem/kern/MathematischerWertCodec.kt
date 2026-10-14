@@ -14,7 +14,7 @@ object MathematischerWertCodec {
     internal fun schreibeIntern(d: DataOutputStream, w: MathematischesObjekt, tiefe: Int) = wert(d,w,tiefe)
     internal fun liesIntern(d: DataInputStream, tiefe: Int): MathematischesObjekt = wert(d,tiefe)
 
-    private const val VERSION = 2
+    private const val VERSION = 3
     private const val MAX_ELEMENTE = 100_000
     private const val MAX_TIEFE = 128
 
@@ -29,7 +29,7 @@ object MathematischerWertCodec {
         require(text.length <= 16_000_000) { "Wertdaten überschreiten die Größenbegrenzung." }
         return DataInputStream(ByteArrayInputStream(Base64.getUrlDecoder().decode(text))).use { d ->
             val version = d.readInt()
-            require(version in 1..VERSION) { "Nicht unterstützte mathematische Wertversion." }
+            require(version == VERSION) { "Nicht unterstützte mathematische Wertversion $version; erwartet wird Version $VERSION." }
             wert(d, 0, version).also { require(d.available() == 0) { "Unerwartete Restdaten im mathematischen Wert." } }
         }
     }
@@ -108,6 +108,10 @@ object MathematischerWertCodec {
             }
             is MethodenZahlKomponente -> {
                 d.writeUTF("MethodenZahlKomponente"); wert(d, w.aufruf, tiefe + 1); d.writeInt(w.index)
+            }
+            is MethodenWertKomponente -> {
+                d.writeUTF("MethodenWertKomponente"); wert(d, w.aufruf, tiefe + 1); d.writeInt(w.index)
+                FormelKontextCodec.signatur(d, w.signatur)
             }
             is Abbildungsmenge -> {
                 d.writeUTF("Abbildungsmenge"); wert(d, w.zielMenge, tiefe + 1); wert(d, w.definitionsMenge, tiefe + 1)
@@ -232,6 +236,7 @@ object MathematischerWertCodec {
             "DefinierteMenge" -> DefinierteMenge(List(anzahl(d)) { GebundeneMengenVariable(wert(d, tiefe + 1, version) as Variable, wert(d, tiefe + 1, version) as MengenAusdruck) }, wert(d, tiefe + 1, version) as Aussage)
             "MethodenVariable" -> MethodenVariable(d.readUTF(), d.readUTF(), FormelKontextCodec.signatur(d))
             "MethodenAufruf" -> StrukturellerMethodenAufruf(wert(d, tiefe + 1, version), wert(d, tiefe + 1, version) as Tupel)
+            "MethodenWertKomponente" -> MethodenWertKomponente(wert(d, tiefe + 1, version) as StrukturellerMethodenAufruf, d.readInt(), FormelKontextCodec.signatur(d))
             "MethodenZahlKomponente" -> MethodenZahlKomponente(wert(d, tiefe + 1, version) as StrukturellerMethodenAufruf, d.readInt())
             "Abbildungsmenge" -> Abbildungsmenge(wert(d, tiefe + 1, version) as MengenAusdruck, wert(d, tiefe + 1, version) as MengenAusdruck)
             "MathematischeMethode" -> {
@@ -243,7 +248,7 @@ object MathematischerWertCodec {
                 val argumentIds = List(anzahl(d)) { d.readUTF() to d.readUTF() }.toMap()
                 val ergebnisIds = List(anzahl(d)) { d.readUTF() to d.readUTF() }.toMap()
                 val bedingungen = liste(d, tiefe, version).map { it as Aussage }.toSet()
-                val übersetzungen = if (version >= 2) ÜbersetzungsCodec.metadaten(d, tiefe + 1) else ÜbersetzungsMetadaten()
+                val übersetzungen = ÜbersetzungsCodec.metadaten(d, tiefe + 1)
                 MathematischeMethode(name, parameter, vorschrift, ziel, räume, ausgaben, domäne,
                     argumentIdentitäten = argumentIds, ergebnisIdentitäten = ergebnisIds, voraussetzungen = bedingungen, übersetzungen = übersetzungen)
             }

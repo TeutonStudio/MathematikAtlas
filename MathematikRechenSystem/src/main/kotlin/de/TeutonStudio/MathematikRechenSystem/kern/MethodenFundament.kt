@@ -20,8 +20,11 @@ data class MethodenKomponente(
     val name: String,
     val position: Int,
     val typ: TypAusdruck,
+    /** Vollständige verschachtelte Identitäten; TypAusdruck allein enthält keine IDs. */
+    val methodenSignatur: MethodenSignatur? = typ.alsMethodenSignaturOderNull(id),
 ) {
     init {
+        require(methodenSignatur == null || methodenSignatur.typAusdruck == typ) { "Verschachtelte Methodensignatur und Typ widersprechen sich." }
         require(id.isNotBlank()) { "Eine Methodenkomponente benötigt eine stabile ID." }
         require(name.isNotBlank()) { "Eine Methodenkomponente benötigt einen sichtbaren Namen." }
         require(position >= 0) { "Die Position einer Methodenkomponente darf nicht negativ sein." }
@@ -90,6 +93,7 @@ data class MathematischeErgebnisKomponente(
     val name: String,
     val position: Int,
     val zielMenge: MengenAusdruck,
+    val methodenSignatur: MethodenSignatur? = null,
 ) {
     init {
         require(id.isNotBlank())
@@ -98,7 +102,7 @@ data class MathematischeErgebnisKomponente(
     }
 
     val typ: TypAusdruck
-        get() = zielMenge.elementTypAusdruck()
+        get() = methodenSignatur?.typAusdruck ?: zielMenge.elementTypAusdruck()
 }
 
 /**
@@ -369,4 +373,17 @@ fun interface MethodenAnforderung {
         override fun prüfe(methode: Methode): String? =
             anforderungen.firstNotNullOfOrNull { it.prüfe(methode) }
     }
+}
+
+/** Typseitige Signatur einer methodenwertigen Komponente; IDs sind lokal zum Ergebnis. */
+internal fun TypAusdruck.alsMethodenSignaturOderNull(praefix: String): MethodenSignatur? {
+    val methode = this as? TypAusdruck.Parameterisiert ?: return null
+    if (methode.konstruktor != MathematischeTypen.Methode || methode.argumente.size != 2) return null
+    fun komponenten(typ: TypAusdruck, rolle: String): List<MethodenKomponente>? {
+        val tupel = typ as? TypAusdruck.Parameterisiert ?: return null
+        if (tupel.konstruktor != MathematischeTypen.Tupel) return null
+        return tupel.argumente.mapIndexed { i, t -> MethodenKomponente("$praefix:$rolle:$i", "$rolle${i + 1}", i, t) }
+    }
+    return MethodenSignatur(komponenten(methode.argumente[0], "argument") ?: return null,
+        komponenten(methode.argumente[1], "ergebnis") ?: return null)
 }

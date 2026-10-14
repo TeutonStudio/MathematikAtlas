@@ -10,7 +10,7 @@ object FormelKontextCodec {
         require(FormelBindungsPruefer.pruefe(formel) == FormelBindungsPruefung.Gueltig) { "Ungültiger Formelkontext." }
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { d ->
-            d.writeInt(1)
+            d.writeInt(2)
             text(d, StrukturFormelCodec.kodieren(formel.wurzel))
             d.writeInt(formel.quellen.size)
             formel.quellen.forEach { q ->
@@ -42,7 +42,8 @@ object FormelKontextCodec {
     fun dekodieren(kodiert: String): GebundeneFormel {
         require(kodiert.length <= 32_000_000)
         return DataInputStream(ByteArrayInputStream(Base64.getUrlDecoder().decode(kodiert))).use { d ->
-            require(d.readInt() == 1) { "Unbekannte Formelkontext-Version." }
+            val version = d.readInt()
+            require(version == 2) { "Nicht unterstützte Formelkontext-Version $version; erwartet wird Version 2." }
             val wurzel = StrukturFormelCodec.dekodieren(text(d))
             val quellen = List(anzahl(d)) {
                 val id = text(d); val name = text(d)
@@ -77,15 +78,28 @@ object FormelKontextCodec {
     }
     internal fun anzahl(d: DataInputStream): Int = d.readInt().also { require(it in 0..100_000) { "Ungültige Komponentenanzahl." } }
 
-    internal fun signatur(d: DataOutputStream, s: MethodenSignatur) {
+    internal fun signatur(d: DataOutputStream, s: MethodenSignatur, tiefe: Int = 0) {
+        require(tiefe <= 128) { "Methodensignatur ist zu tief verschachtelt." }
+        d.writeInt(-1) // Selbstversionierter Signaturblock; alte Blöcke beginnen mit der Argumentanzahl.
         listOf(s.argumente, s.ergebnisse).forEach { komponenten ->
             d.writeInt(komponenten.size)
-            komponenten.forEach { k -> text(d, k.id); text(d, k.name); d.writeInt(k.position); typ(d, k.typ) }
+            komponenten.forEach { k ->
+                text(d, k.id); text(d, k.name); d.writeInt(k.position); typ(d, k.typ)
+                d.writeBoolean(k.methodenSignatur != null)
+                k.methodenSignatur?.let { signatur(d, it, tiefe + 1) }
+            }
         }
     }
-    internal fun signatur(d: DataInputStream): MethodenSignatur {
-        fun komponenten() = List(anzahl(d)) { MethodenKomponente(text(d), text(d), d.readInt(), typ(d)) }
-        return MethodenSignatur(komponenten(), komponenten())
+    internal fun signatur(d: DataInputStream, tiefe: Int = 0): MethodenSignatur {
+        require(tiefe <= 128) { "Methodensignatur ist zu tief verschachtelt." }
+        val marker = d.readInt()
+        require(marker == -1) { "Nicht unterstütztes Signaturblock-Format." }
+        fun komponenten(n: Int) = List(n) {
+            val id = text(d); val name = text(d); val position = d.readInt(); val t = typ(d)
+            MethodenKomponente(id, name, position, t,
+                if (d.readBoolean()) signatur(d, tiefe + 1) else null)
+        }
+        return MethodenSignatur(komponenten(anzahl(d)), komponenten(anzahl(d)))
     }
     private fun typ(d: DataOutputStream, t: TypAusdruck, tiefe: Int = 0) {
         require(tiefe <= 128)

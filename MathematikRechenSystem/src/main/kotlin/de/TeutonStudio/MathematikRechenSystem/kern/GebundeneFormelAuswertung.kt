@@ -48,7 +48,9 @@ fun GebundeneFormel.werteAus(bindungen: Map<String, MathematischesObjekt> = empt
                         }
                         val aufruf = StrukturellerMethodenAufruf(methode, argumente)
                         Tupel(signatur.ergebnisse.mapIndexed { i, k ->
-                            if (MathematischeTypen.typSystem.prüfe(k.typ, de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Zahl)) == de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel)
+                            val methodenSignatur = k.methodenSignatur
+                            if (methodenSignatur != null) MethodenWertKomponente(aufruf, i + 1, methodenSignatur)
+                            else if (MathematischeTypen.typSystem.prüfe(k.typ, de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Zahl)) == de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel)
                                 MethodenZahlKomponente(aufruf, i + 1)
                             else IndexKomponente(aufruf, listOf(RationaleZahl.von((i + 1).toLong())))
                         })

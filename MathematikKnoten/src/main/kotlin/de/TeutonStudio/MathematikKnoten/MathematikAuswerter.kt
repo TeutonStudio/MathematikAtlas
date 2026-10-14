@@ -424,14 +424,15 @@ object StandardMathematikAuswerter {
             val definitionsMenge = if (
                 k.knoten.parameter[BILDMENGE_ARGUMENT_MODUS] == BILDMENGE_MODUS_EINZELMENGEN
             ) {
-                require(mathematisch.parameter.isNotEmpty()) {
-                    "Die Bildmengenbildung benötigt mindestens ein Methodenargument."
-                }
                 val mengen = mathematisch.parameter.indices.map { index ->
                     k.eingänge[bildmengeArgumentName(index)]?.objekt as? MengenAusdruck
                         ?: error("Menge für Methodenargument ${index + 1} fehlt.")
                 }
-                if (mengen.size == 1) mengen.single() else kartesischesProdukt(mengen)
+                when (mengen.size) {
+                    0 -> EndlicheMenge(setOf(Tupel(emptyList())))
+                    1 -> mengen.single()
+                    else -> kartesischesProdukt(mengen)
+                }
             } else {
                 k.menge("menge")
             }

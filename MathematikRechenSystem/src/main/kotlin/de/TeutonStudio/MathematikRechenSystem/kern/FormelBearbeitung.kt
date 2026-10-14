@@ -109,6 +109,7 @@ fun prüfeFormelTypen(f:GebundeneFormel):List<String> {
         }
         if(e is FormelAusdruck.Operation) {
             val a=e.argumente.sortedBy {it.position}.map {it.ausdruck}
+            if(e.operatorId=="formel.gruppierung") return a.singleOrNull()?.let(::typ) ?: de.TeutonStudio.TypSystem.TypAusdruck.Unbekannt
             if(e.operatorId=="tupel.konstruktion") return de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert(MathematischeTypen.Tupel,a.map(::typ))
             if(e.operatorId=="methode.anwenden") return (a.firstOrNull()?.let(::typ) as? de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert)?.takeIf {it.konstruktor==MathematischeTypen.Methode}?.argumente?.getOrNull(1) ?: de.TeutonStudio.TypSystem.TypAusdruck.Unbekannt
             if(e.operatorId=="tupel.projektion") {
