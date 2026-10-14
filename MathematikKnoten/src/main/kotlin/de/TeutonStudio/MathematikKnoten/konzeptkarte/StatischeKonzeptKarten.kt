@@ -11,7 +11,10 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.halbesIntervall|richtung=aufwaerts|Halbes Intervall (Untergrenze)")),
+            varianten = setOf(
+                VariantenId("mathematik.halbesIntervall|richtung=aufwaerts|Halbes Intervall (Untergrenze)"),
+                VariantenId("mathematik.halbesIntervall|richtung=aufwaerts|standardMenge=R|Halbes Intervall"),
+            ),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.halbesIntervall|Halbes Intervall|richtung=abwaerts.obergrenze.definition",

@@ -35,7 +35,10 @@ class IntervallGrundmengeTest {
         val menge = assertIs<DefinierteMenge>(
             berechne(alt, mapOf("grenze" to BedingterWert(z(3)))))
         assertEquals(ReelleZahlen, menge.variablen.single().grundMenge)
-        assertTrue(menge.bedingung.zuLatex().contains("\\leq"))
+        val vergleich = assertIs<Vergleich>(menge.bedingung)
+        assertEquals(VergleichsArt.KleinerGleich, vergleich.art)
+        assertEquals(Variable("x"), vergleich.links)
+        assertEquals(z(3), vergleich.rechts)
     }
 
     @Test fun standardmengeUndMengeneingang() {
