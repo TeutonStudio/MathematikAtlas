@@ -12,12 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 
@@ -71,6 +77,8 @@ fun KnotenAuswertungszeitFußzeile(dauerNanos: Long?, ausgewählt: Boolean = fal
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false,
             )
         }
     }
@@ -82,6 +90,7 @@ fun formatiereAuswertungsDauerNanos(dauerNanos: Long): String {
         dauer < 1_000L -> "<1 µs"
         dauer < 1_000_000L -> String.format(Locale.ROOT, "%.0f µs", dauer / 1_000.0).replace('.', ',')
         dauer < 1_000_000_000L -> String.format(Locale.ROOT, "%.1f ms", dauer / 1_000_000.0).replace('.', ',')
+        dauer >= 1_000_000_000_000_000L -> String.format(Locale.ROOT, "%.2e s", dauer / 1_000_000_000.0).replace('.', ',')
         else -> String.format(Locale.ROOT, "%.2f s", dauer / 1_000_000_000.0).replace('.', ',')
     }
 }
@@ -90,4 +99,34 @@ fun formatiereAuswertungsDauerNanos(dauerNanos: Long): String {
 internal fun unterkantenEinzüge(outline: Outline): Pair<Float, Float> = when (outline) {
     is Outline.Rounded -> outline.roundRect.bottomLeftCornerRadius.x to outline.roundRect.bottomRightCornerRadius.x
     else -> 0f to 0f
+}
+
+/** Gemeinsame (unskalierte) Rechteckgeometrie der Knoten-Zeitfußzeile. */
+internal data class ZeitfußzeilenGeometrie(
+    val hauptHöhe: Dp,
+    val links: Dp,
+    val rechts: Dp,
+    val breite: Dp,
+)
+
+/** Die Fußzeile füllt den unteren Bereich; ihre Oberkante ist die Hauptkörper-Unterkante. */
+internal fun berechneZeitfußzeilenGeometrie(
+    breite: Dp,
+    gesamtHöhe: Dp,
+    fußHöhe: Dp,
+    hauptForm: Shape,
+    dichte: Density,
+    richtung: LayoutDirection,
+): ZeitfußzeilenGeometrie = with(dichte) {
+    val hauptHöhe = (gesamtHöhe - fußHöhe).coerceAtLeast(0.dp)
+    val outline = hauptForm.createOutline(Size(breite.toPx(), hauptHöhe.toPx()), richtung, this)
+    val (linksPx, rechtsPx) = unterkantenEinzüge(outline)
+    val links = linksPx.toDp()
+    val rechts = rechtsPx.toDp()
+    ZeitfußzeilenGeometrie(
+        hauptHöhe = hauptHöhe,
+        links = links,
+        rechts = rechts,
+        breite = (breite - links - rechts).coerceAtLeast(0.dp),
+    )
 }

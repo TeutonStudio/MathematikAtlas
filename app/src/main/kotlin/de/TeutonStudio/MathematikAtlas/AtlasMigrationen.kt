@@ -31,8 +31,38 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
             )
         }
     })
-    return migriereMatrixKnoten(assoziativAktualisiert)
+    return migriereIntervallGrundmenge(migriereMatrixKnoten(assoziativAktualisiert))
 }
+
+/**
+ * Ergänzt einen fehlenden Grundmengenanschluss älterer Intervallknoten.
+ * Die Migration ist idempotent, alle existierenden Anschluss-IDs und Edges bleiben erhalten.
+ */
+internal fun migriereIntervallGrundmenge(karte: KartenDaten): KartenDaten = karte.copy(
+    knoten = karte.knoten.map { knoten ->
+        if (knoten.art !in setOf("mathematik.halbesIntervall", "mathematik.reellesIntervall")) {
+            knoten
+        } else {
+            val hatGrundmenge = knoten.anschlüsse.any {
+                it.name == "grundmenge" && it.richtung == AnschlussRichtung.Eingang
+            }
+            val ergänzt = if (hatGrundmenge) emptyList() else listOf(
+                AnschlussDaten(
+                    id = AnschlussId("migration-intervall-" + knoten.id.wert + "-grundmenge"),
+                    name = "grundmenge",
+                    richtung = AnschlussRichtung.Eingang,
+                    kante = AnschlussKante.Links,
+                    art = MathematikAnschlussArten.Menge.id,
+                    reihenfolge = if (knoten.art == "mathematik.halbesIntervall") 2 else 4,
+                ),
+            )
+            knoten.copy(
+                anschlüsse = knoten.anschlüsse + ergänzt,
+                parameter = knoten.parameter + ("standardMenge" to (knoten.parameter["standardMenge"] ?: "R")),
+            )
+        }
+    },
+)
 
 /** Vereinigt die vier historischen Vergleichsarten zu einem parametrierten Knoten. */
 internal fun migriereOrdnungsrelation(karte: KartenDaten): KartenDaten = karte.copy(

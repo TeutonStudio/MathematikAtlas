@@ -24,7 +24,6 @@ import de.TeutonStudio.MathematikKnoten.GeometrieTeilobjektTyp
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikKnoten.bildmengeArgumentName
 import de.TeutonStudio.MathematikKnoten.TUPEL_ERGÄNZEN_ART
-import de.TeutonStudio.MathematikKnoten.TUPEL_VARIABLE_ART
 import de.TeutonStudio.MathematikKnoten.WertebereichKonfiguration
 import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
@@ -62,12 +61,13 @@ object KnotenInspektorRegister {
         de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART to ÜbersetzerInspektor,
         de.TeutonStudio.MathematikKnoten.RICHTUNG_WINKEL_ART to RichtungsWinkelInspektor,
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
+        "mathematik.halbesIntervall" to IntervallKnotenInspektor,
+        "mathematik.reellesIntervall" to IntervallKnotenInspektor,
         "mathematik.abbild" to BildmengeInspektor,
         "mathematik.visualisierung" to VisualisierungsInspektor,
         "mathematik.kartenEingang" to KartenSchnittstellenInspektor,
         "mathematik.kartenAusgang" to KartenSchnittstellenInspektor,
         "mathematik.variable" to VariablenInspektor,
-        TUPEL_VARIABLE_ART to TupelVariablenInspektor,
         "mathematik.allgemeinerParameter" to AllgemeineParameterInspektor,
         "mathematik.termZuMethode" to TermZuMethodeInspektor,
         "mathematik.orbit" to OrbitInspektor,
@@ -274,26 +274,6 @@ private object VariablenInspektor : KnotenInspektor {
         }
         }
         de.TeutonStudio.MathematikKnoten.MatrixVariableFelder(knoten) { aktionen.knoten(it) }
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-    }
-}
-
-private object TupelVariablenInspektor : KnotenInspektor {
-    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
-        ParameterFeld("Name", knoten.parameter["name"] ?: "x") {
-            aktionen.parameter("name", it.trim().ifBlank { "x" })
-        }
-        ParameterFeld("Dimension", knoten.parameter["dimension"] ?: "2") { roh ->
-            roh.trim().toIntOrNull()?.takeIf { it >= 1 }?.let { aktionen.parameter("dimension", it.toString()) }
-        }
-        GrundmengenAuswahl("Komponenten-Wertevorrat", knoten.parameter["werteVorrat"] ?: "R") {
-            aktionen.parameter("werteVorrat", it)
-        }
-        Text(
-            "Die Komponenten bleiben ein einzelnes Tupelobjekt; bei der Methodenbildung werden nur Tupelvariablen geordnet destrukturiert.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }

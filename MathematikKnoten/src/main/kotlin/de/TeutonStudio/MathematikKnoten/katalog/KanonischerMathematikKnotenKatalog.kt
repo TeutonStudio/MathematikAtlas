@@ -55,7 +55,6 @@ object KanonischerMathematikKnotenKatalog {
 
         return (
             bereinigt +
-                TupelVariableKnotenVorlagen.standard +
                 VektorKonstruktorVorlagen.standard +
                 VektorOrientierungsVorlagen.alle +
                 MultinomVektorKnotenVorlagen.standard +

@@ -12,15 +12,26 @@ import kotlin.test.assertTrue
 
 class SmallIssuesBatchRegressionTest {
     @Test
-    fun `Tupelvariable bleibt Tupel und wird bei Methodenbildung in Indexreihenfolge destrukturiert`() {
+    fun `Variable als Tupel bleibt strukturiert und wird bei Methodenbildung geordnet destrukturiert`() {
         val register = GesamterMathematikAuswerter.erzeugeRegister()
-        val quelle = TupelVariableKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero).copy(
-            id = KnotenId("tupelvariable"),
-            parameter = mapOf("name" to "x", "dimension" to "3", "werteVorrat" to "R"),
+        val quelle = konfiguriereVariablenStruktur(
+            MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero),
+            VARIABLE_STRUKTUR_TUPEL,
+        ).copy(
+            id = KnotenId("tupel-variable"),
+            parameter = mapOf(
+                "name" to "x",
+                "werteVorrat" to "R",
+                VARIABLE_STRUKTUR to VARIABLE_STRUKTUR_TUPEL,
+                VARIABLE_DIMENSION to "3",
+            ),
         )
+        val ausgang = quelle.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+        assertEquals(MathematikAnschlussArten.Tupel.id, ausgang.art)
+        assertEquals("wert", ausgang.name)
         val tupelWert = register.finde(quelle.art)!!.auswerten(
             KnotenAuswertungsKontext(quelle, emptyMap(), RechenKontext()),
-        ).ausgaben.getValue("tupel")
+        ).ausgaben.getValue("wert")
         val tupel = assertIs<Tupel>(tupelWert.objekt)
 
         assertEquals(
@@ -33,6 +44,7 @@ class SmallIssuesBatchRegressionTest {
             listOf("komponente-1", "komponente-2", "komponente-3"),
             tupelWert.variablenQuellen.map { it.bindungsName },
         )
+        assertEquals(Tupelraum(List(3) { ReelleZahlen }), tupelWert.werteVorrat)
 
         val kartesisch = tupel.kartesischerTupelVertrag(
             tupelWert.variablenQuellen.associate { it.name to it.werteVorrat },
@@ -45,8 +57,7 @@ class SmallIssuesBatchRegressionTest {
             id = KnotenId("methode"),
             parameter = mapOf("name" to "f", "argumentReihenfolge" to ""),
         )
-        // Absichtlich umgekehrt angeliefert: die Komponentenreihenfolge muss stärker sein
-        // als die Listenreihenfolge des transportierten Metadatums.
+        // Transportreihenfolge der Metadaten darf die Komponentenreihenfolge nicht verändern.
         val methodeWert = register.finde(methodeKnoten.art)!!.auswerten(
             KnotenAuswertungsKontext(
                 methodeKnoten,
@@ -59,6 +70,16 @@ class SmallIssuesBatchRegressionTest {
 
         assertEquals(listOf("x_1", "x_2", "x_3"), methode.parameter.map { it.name })
         assertIs<Tupel>(methode.vorschrift)
+    }
+
+    @Test
+    fun `Eigenstaendige Tupelvariable ist nicht mehr verfuegbar`() {
+        val register = GesamterMathematikAuswerter.erzeugeRegister()
+        assertEquals(null, register.finde("mathematik.tupelvariable"))
+        assertFalse(
+            de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog
+                .alle().any { it.art == "mathematik.tupelvariable" },
+        )
     }
 
     @Test

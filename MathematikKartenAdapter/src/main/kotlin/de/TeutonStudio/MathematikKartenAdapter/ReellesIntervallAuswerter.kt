@@ -23,17 +23,21 @@ internal object ReellesIntervallAuswerter : MathematikKnotenAuswerter {
 
         val linksOffen = kontext.entscheideOffenheit("linksOffen", "links offen?")
         val rechtsOffen = kontext.entscheideOffenheit("rechtsOffen", "rechts offen?")
+        val grundmenge = kontext.intervallGrundmenge()
         val eingangswerte = kontext.eingänge.values
 
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "menge" to BedingterWert(
-                    objekt = reellesIntervall(
-                        links = links,
-                        linksOffen = linksOffen,
-                        rechts = rechts,
-                        rechtsOffen = rechtsOffen,
-                        kontext = kontext.rechenKontext,
+                    objekt = intervallEinschränken(
+                        reellesIntervall(
+                            links = links,
+                            linksOffen = linksOffen,
+                            rechts = rechts,
+                            rechtsOffen = rechtsOffen,
+                            kontext = kontext.rechenKontext,
+                        ),
+                        grundmenge,
                     ),
                     annahmen = eingangswerte.flatMap { it.annahmen }.toSet(),
                     reelleVariablen = reelleVariablen(eingangswerte),

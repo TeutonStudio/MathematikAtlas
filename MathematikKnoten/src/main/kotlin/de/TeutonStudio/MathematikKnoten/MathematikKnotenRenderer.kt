@@ -45,6 +45,7 @@ internal fun variablenFormel(knoten: KnotenDaten): String {
     val dimension = knoten.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
     return when {
         variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL -> "$name \\in \\mathrm{Grad}^{${variablenDimension(knoten)}}"
+        variablenStruktur(knoten) == VARIABLE_STRUKTUR_TUPEL -> "$name \\in {$werteVorrat}^{${variablenDimension(knoten)}}"
         dimension > 0 -> "$name \\in {$werteVorrat}^{${dimension}\\times${dimension}}"
         else -> "$name \\in $werteVorrat"
     }

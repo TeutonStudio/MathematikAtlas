@@ -63,7 +63,10 @@ Großer bereits implementierter Teilstand und veraltete Fortschrittsmatrix; Fäh
 - [x] Tests weisen ältere Strukturformel-, Formelkontext- und Wertcodec-Versionen zurück. Fokussierter Test `:MathematikRechenSystem:test --tests '*VertragsRoundtripTest'` erfolgreich.
 - [x] Nutzerentscheidung umgesetzt: keine Kompatibilität zu älteren Mathematikcodec-Versionen. Strukturformel-, Formelkontext- und Wertdecoder weisen alte Wire-Versionen ab; der Strukturformel-LaTeX-Lesepfad und das alte Signaturblockformat sind entfernt. Ablehnungstests für Version 1 bestehen.
 - [x] Releaseaudit bestätigt `x`-Klassifikation und unveränderte Basis; der GitHub-PR-Audit fand nur die bestehenden Drafts #433/#435/#436, keinen PR für den v3.2.1-Branch.
-- [-] Android-Metadaten, Roadmapzielversion und Desktop-Artefaktname auf v3.2.1 abgestimmt; lokale Prüfungen und abschließender unabhängiger Diffreview laufen. PR-CI und Merge sind noch offen.
+- [x] Android-Metadaten, Roadmapzielversion und Desktop-Artefaktname auf v3.2.1 abgestimmt; unabhängiger Review ohne Semantikblocker.
+- [x] Aktuellen master-Stand c0566f08 in den Kandidaten integriert. Dabei Anschluss-Test auf den neuen Grundraum-Eingang angepasst, Intervall-Roundtripvertrag aktualisiert und die Desktop-Fußzeile für lange Dauerwerte/Schriftgrößen korrigiert.
+- [x] Vollsuite nach Masterintegration erneut: `./gradlew test :app:assembleDebug :app:lintDebug :desktopApp:compileKotlin --rerun-tasks --console=plain` erfolgreich (219 Tasks, 1740 Tests, 0 Fehler/Überspringungen). Lokale Repository-, Architektur-, Releaseplan- und Versionsfolgeprüfungen erfolgreich.
+- [-] Release-PR #450 auf den aktuellen Masterstand aktualisieren; Release-Guard, Android-Emulator- und Linux-Desktop-CI sowie finale PR-Freigabe stehen noch aus.
 
 ## 15. Entscheidungsprotokoll
 2026-10-14: Benutzer wählt jeweils Empfehlung 1 für E01–E06 und stellt klar, dass keine Kompatibilität zu älteren Mathematikcodec-Versionen erforderlich ist. Der nächste Master-Release soll den in der Roadmap reservierten v3.2.1-Teilumfang veröffentlichen; die vollständige 77-Punkte-Matrix bleibt Folgearbeit. Bestehende fachliche Modelle und Register sind maßgeblich.
@@ -74,11 +77,11 @@ Lokaler Stand ist weiter als c0566f08 und schreibt Strukturcodec v3. Daher Imple
 ## 17. Ergebnis und Verifikation
 Lokaler Teilabschluss der Parser-, höherwertigen Methoden-, Codec- und Bildmengenlücken. Mathematikcodecs akzeptieren nur ihre aktuelle Version; ältere Formel-/Wertpayloads werden ohne Migrationspfad zurückgewiesen. Der Gesamtvertrag bleibt aktiv: verbleibende Legacy-Aufrufer, allgemeine Operatorintegration und vollständige 77-Punkte-Evidenz sind Folgearbeit und keine Behauptung dieses Teilreleases. Der Releasekandidat ist noch nicht veröffentlicht.
 
-- `./gradlew test :app:assembleDebug :app:lintDebug :desktopApp:compileKotlin`: erfolgreich, 219 Tasks, 1729 Tests laut XML-Berichten ohne Fehler oder Überspringungen auf dem Produktstand vor der abschließenden Release-Metadatenänderung; erneuter Lauf nach Metadatenanpassung erforderlich.
+- `./gradlew test :app:assembleDebug :app:lintDebug :desktopApp:compileKotlin --rerun-tasks --console=plain`: nach Integration von c0566f08 erfolgreich, 219 Tasks und 1740 XML-Tests ohne Fehler oder Überspringungen.
 - Nach dem letzten Parser-Fix für deklarierte explizite LaTeX-Befehle: fokussierte Rechenkerntests für Formelverträge, Methoden-Kontext, Bildmenge/Matrixprodukt und Rechenkern erfolgreich.
 - `python3 scripts/pruefe_repository.py`, `pruefe_releaseplan.py` und `pruefe_versionsfolge.py`: erfolgreich. `git diff --check`: erfolgreich.
 - `python3 scripts/pruefe_kern.py`: nicht ausführbar, das Skript erwartet `kotlinc` im PATH; Gradle-Kerntests bestehen.
 - Android-Laufzeitabnahme nicht erfolgt: ADB meldet kein Gerät und kein AVD. Keine UI-Laufzeitfreigabe behauptet.
 - Unabhängige Prüfung bestätigt die korrigierten Aufruffälle und nennt als Rest: vollständige Legacy-Ablösung sowie vollständige Umstellung aller aktiven Methodenpfade auf ID-only.
 - Frühere V1-Fixtureprüfung wurde mit der Nutzerentscheidung gegen Rückwärtskompatibilität überholt; Fixtures dienen nun ausschließlich dazu, die Ablehnung alter Mathematik-Wire-Versionen nachzuweisen.
-- Kein Commit oder Release. Ausgangsbranch bleibt `samai/v3.2.1-variable-grundraum-tupel-ordnung`; HEAD bleibt der vorhandene Commit. Fremde Arbeitsänderungen blieben unangetastet.
+- Releasekandidat-Commit `45fd1386` mit SamAI-Autor/Committer auf `samai/v3.2.1-variable-grundraum-tupel-ordnung`, PR #450 offen. Merge mit aktuellem master ist lokal vorbereitet; Veröffentlichung steht aus. Fremde Skill-, IDE- und Shelf-Änderungen bleiben außerhalb des Releaseumfangs.
