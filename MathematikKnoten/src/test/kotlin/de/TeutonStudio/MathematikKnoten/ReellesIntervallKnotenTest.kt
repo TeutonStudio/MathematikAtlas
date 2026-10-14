@@ -26,13 +26,14 @@ class ReellesIntervallKnotenTest {
             .sortedBy { it.reihenfolge }
 
         assertEquals("mathematik.reellesIntervall", knoten.art)
-        assertEquals(listOf("links", "linksOffen", "rechts", "rechtsOffen"), eingänge.map { it.name })
+        assertEquals(listOf("links", "linksOffen", "rechts", "rechtsOffen", "grundmenge"), eingänge.map { it.name })
         assertEquals(
             listOf(
                 MathematikAnschlussArten.Zahl.id,
                 MathematikAnschlussArten.Aussage.id,
                 MathematikAnschlussArten.Zahl.id,
                 MathematikAnschlussArten.Aussage.id,
+                MathematikAnschlussArten.Menge.id,
             ),
             eingänge.map { it.art },
         )
@@ -63,7 +64,8 @@ class ReellesIntervallKnotenTest {
 
         val zahl = quelle("Zahl", MathematikAnschlussArten.Zahl.id)
         val aussage = quelle("Aussage", MathematikAnschlussArten.Aussage.id)
-        val karte = KartenDaten(name = "Test", knoten = listOf(zahl, aussage, intervall))
+        val menge = quelle("Menge", MathematikAnschlussArten.Menge.id)
+        val karte = KartenDaten(name = "Test", knoten = listOf(zahl, aussage, menge, intervall))
         val prüfung = GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle))
 
         listOf("links", "rechts").forEach { name ->
@@ -72,6 +74,7 @@ class ReellesIntervallKnotenTest {
         listOf("linksOffen", "rechtsOffen").forEach { name ->
             assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karte, ref(aussage, "wert"), ref(intervall, name)))
         }
+        assertIs<VerbindungsPrüfung.Erlaubt>(prüfung.prüfe(karte, ref(menge, "wert"), ref(intervall, "grundmenge")))
     }
 
     @Test

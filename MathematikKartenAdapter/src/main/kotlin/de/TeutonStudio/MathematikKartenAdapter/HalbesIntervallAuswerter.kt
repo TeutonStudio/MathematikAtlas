@@ -17,12 +17,14 @@ internal object HalbesIntervallAuswerter : MathematikKnotenAuswerter {
             }
         } ?: false
         val richtung = kontext.knoten.parameter["richtung"] ?: "aufwaerts"
+        val grundmenge = kontext.intervallGrundmenge()
         require(richtung == "aufwaerts" || richtung == "abwaerts") { "Ungültige Richtung: $richtung" }
         val variable = Variable("x")
         val relation = if (offen) VergleichsArt.Kleiner else VergleichsArt.KleinerGleich
         val bedingung = if (richtung == "aufwaerts") Vergleich(grenze, relation, variable)
                         else Vergleich(variable, relation, grenze)
-        val menge = DefinierteMenge(listOf(GebundeneMengenVariable(variable, ReelleZahlen)), bedingung)
+        val reellerHalbstrahl = DefinierteMenge(listOf(GebundeneMengenVariable(variable, ReelleZahlen)), bedingung)
+        val menge = intervallEinschränken(reellerHalbstrahl, grundmenge)
         val werte = kontext.eingänge.values
         return KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(
             objekt = menge,
