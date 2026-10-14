@@ -12,6 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.Alignment
@@ -90,4 +95,34 @@ fun formatiereAuswertungsDauerNanos(dauerNanos: Long): String {
 internal fun unterkantenEinzüge(outline: Outline): Pair<Float, Float> = when (outline) {
     is Outline.Rounded -> outline.roundRect.bottomLeftCornerRadius.x to outline.roundRect.bottomRightCornerRadius.x
     else -> 0f to 0f
+}
+
+/** Gemeinsame (unskalierte) Rechteckgeometrie der Knoten-Zeitfußzeile. */
+internal data class ZeitfußzeilenGeometrie(
+    val hauptHöhe: Dp,
+    val links: Dp,
+    val rechts: Dp,
+    val breite: Dp,
+)
+
+/** Die Fußzeile füllt den unteren Bereich; ihre Oberkante ist die Hauptkörper-Unterkante. */
+internal fun berechneZeitfußzeilenGeometrie(
+    breite: Dp,
+    gesamtHöhe: Dp,
+    fußHöhe: Dp,
+    hauptForm: Shape,
+    dichte: Density,
+    richtung: LayoutDirection,
+): ZeitfußzeilenGeometrie = with(dichte) {
+    val hauptHöhe = (gesamtHöhe - fußHöhe).coerceAtLeast(0.dp)
+    val outline = hauptForm.createOutline(Size(breite.toPx(), hauptHöhe.toPx()), richtung, this)
+    val (linksPx, rechtsPx) = unterkantenEinzüge(outline)
+    val links = linksPx.toDp()
+    val rechts = rechtsPx.toDp()
+    ZeitfußzeilenGeometrie(
+        hauptHöhe = hauptHöhe,
+        links = links,
+        rechts = rechts,
+        breite = (breite - links - rechts).coerceAtLeast(0.dp),
+    )
 }

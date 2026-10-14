@@ -30,6 +30,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -330,6 +332,7 @@ fun KnotenKartenEditor(
                                 },
                                 editorUrsprungImRoot = editorUrsprungImRoot,
                                 sichtbarerBereich = sichtbarerWeltBereich,
+                                auswertungsDauerNanos = auswertungsDauerFür(knoten.id),
                             )
                         }
                     }
@@ -850,25 +853,30 @@ private fun KnotenDarstellung(
     beiInspektorÖffnen: () -> Unit,
     editorUrsprungImRoot: Offset,
     sichtbarerBereich: Rect?,
+    auswertungsDauerNanos: Long?,
 ) {
     val zoom = zustand.darstellungsKarte.ansicht.zoom
     val fußzeilenHöhe = with(LocalDensity.current) { MaterialTheme.typography.labelSmall.lineHeight.toDp() }
         .plus(8.dp).coerceAtLeast(18.dp)
-    var fußMaß by remember(knoten.id, LocalDensity.current) { mutableStateOf(IntSize.Zero) }
     var viewportMinimum by remember(knoten.id) { mutableStateOf(GraphGröße(0f, 0f)) }
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
+    val hauptkörperHöhe = (knoten.größe.höhe.dp - fußzeilenHöhe).coerceAtLeast(0.dp)
     val knotenForm = if (knoten.darstellungsForm == KnotenDarstellungsForm.Adapter)
-        RoundedCornerShape(adapterEckenRadius(knoten.größe.breite, knoten.größe.höhe).dp)
+        RoundedCornerShape(adapterEckenRadius(knoten.größe.breite, hauptkörperHöhe.value).dp)
     else MaterialTheme.shapes.medium
-    // Die aufgelöste Kontur berücksichtigt Theme, Pixeldichte und begrenzte Radien.
-    val fußzeilenEinzüge = with(LocalDensity.current) {
-        val outline = knotenForm.createOutline(
-            Size(knoten.größe.breite.dp.toPx(), knoten.größe.höhe.dp.toPx()),
-            androidx.compose.ui.platform.LocalLayoutDirection.current,
-            this,
-        )
-        unterkantenEinzüge(outline).let { (links, rechts) -> links.toDp() to rechts.toDp() }
-    }
+    // Die Oberkante der Fußzeile liegt exakt auf der Unterkante des Hauptkörpers.
+    // Ihre Ecken liegen auf dessen beiden unteren Übergängen zur Rundung.
+    val fußzeilenGeometrie = berechneZeitfußzeilenGeometrie(
+        knoten.größe.breite.dp, knoten.größe.höhe.dp, fußzeilenHöhe,
+        knotenForm, LocalDensity.current, androidx.compose.ui.platform.LocalLayoutDirection.current,
+    )
+    val textMesser = rememberTextMeasurer()
+    val fußzeilenTextbreite = auswertungsDauerNanos?.let {
+        textMesser.measure(
+            AnnotatedString("Δzeit  ${formatiereAuswertungsDauerNanos(it)}"),
+            style = MaterialTheme.typography.labelSmall,
+        ).size.width / LocalDensity.current.density + 12f
+    } ?: 0f
     val bildschirmPosition = weltZuBildschirm(knoten.position, dichte, ansicht)
     Box(
         modifier.offset { IntOffset(bildschirmPosition.x.roundToInt(), bildschirmPosition.y.roundToInt()) }
@@ -881,7 +889,7 @@ private fun KnotenDarstellung(
             .requiredSize(knoten.größe.breite.dp, knoten.größe.höhe.dp)
     ) {
         Card(
-            Modifier.fillMaxSize()
+            Modifier.fillMaxWidth().height(hauptkörperHöhe)
                 .pointerHoverIcon(PointerIcon.Hand)
                 .semantics {
                     contentDescription = "Knoten ${knoten.name}, ${knoten.anschlüsse.size} Anschlüsse"
@@ -970,8 +978,8 @@ private fun KnotenDarstellung(
             val höhe = if (renderer.misstNatürlichenInhalt) gemessen.height / lokaleDichte.density else minimum.höhe
             SideEffect {
                 zustand.meldeInhaltsminimum(knoten.id, GraphGröße(
-                    ceil(maxOf(kantenMinimum.breite, viewportMinimum.breite,
-                        maxOf(breite, fußMaß.width / lokaleDichte.density) + if (kapsel) maxOf(höhe, kantenMinimum.höhe) + fußzeilenHöhe.value else 0f)),
+                    ceil(maxOf(kantenMinimum.breite, viewportMinimum.breite, breite,
+                        fußzeilenTextbreite + fußzeilenGeometrie.links.value + fußzeilenGeometrie.rechts.value)),
                     ceil(maxOf(kantenMinimum.höhe, höhe, viewportMinimum.höhe) + fußzeilenHöhe.value),
                 ))
             }
@@ -987,7 +995,7 @@ private fun KnotenDarstellung(
                         }
                     })
                 }
-            }, modifier = Modifier.fillMaxSize().padding(bottom = fußzeilenHöhe)) { messbare, constraints ->
+            }, modifier = Modifier.fillMaxSize()) { messbare, constraints ->
                 val messConstraints = if (renderer.misstNatürlichenInhalt) Constraints() else Constraints(
                     maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight,
                 )
@@ -999,25 +1007,18 @@ private fun KnotenDarstellung(
             }
         }
 
-        // Die beiden unteren Tangentenpunkte der Hauptkarte definieren die
-        // oberen Ecken der Zeit-Fußzeile. Absolute Maße vermeiden, dass die
-        // Kombination aus Padding und fillMaxWidth die Kontur verschiebt.
-        val fußzeilenBreite = (knoten.größe.breite.dp -
-            fußzeilenEinzüge.first - fußzeilenEinzüge.second).coerceAtLeast(0.dp)
+        // Hauptkarte und Zeitfeld teilen die Kontur, ohne einander zu überdecken.
+        // Eine exakt begrenzte Fläche verhindert die bisherige unbeschränkte
+        // Kindmessung, bei der nur ein kleines Stück des Zeitfeldes gezeichnet wurde.
         Box(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = fußzeilenEinzüge.first, end = fußzeilenEinzüge.second)
-                .fillMaxWidth()
+                .offset(x = fußzeilenGeometrie.links)
+                .width(fußzeilenGeometrie.breite)
                 .height(fußzeilenHöhe),
             contentAlignment = Alignment.CenterStart,
         ) {
-            Layout(content = {
-                Box(Modifier.onSizeChanged { fußMaß = it }) { renderer.Fußzeile(knoten, ausgewählt) }
-            }) { messbare, constraints ->
-                val inhalt = messbare.single().measure(Constraints())
-                layout(constraints.maxWidth, constraints.maxHeight) { inhalt.placeRelative(0, 0) }
-            }
+            renderer.Fußzeile(knoten, ausgewählt)
         }
 
         if (zeigeKnotenInspektor) {

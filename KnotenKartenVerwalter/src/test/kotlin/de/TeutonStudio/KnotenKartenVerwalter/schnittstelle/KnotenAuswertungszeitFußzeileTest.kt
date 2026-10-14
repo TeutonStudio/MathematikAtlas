@@ -25,6 +25,29 @@ class KnotenAuswertungszeitFußzeileTest {
         }
     }
 
+    @Test fun `Zeitfeld beginnt genau an der Hauptkoerper Unterkante`() {
+        val form = RoundedCornerShape(12.dp)
+        for (richtung in listOf(LayoutDirection.Ltr, LayoutDirection.Rtl)) {
+            val geometrie = berechneZeitfußzeilenGeometrie(
+                240.dp, 120.dp, 20.dp, form, Density(2f), richtung,
+            )
+            assertEquals(100.dp, geometrie.hauptHöhe)
+            assertEquals(12.dp, geometrie.links)
+            assertEquals(12.dp, geometrie.rechts)
+            assertEquals(216.dp, geometrie.breite)
+            assertEquals(240.dp, geometrie.links + geometrie.breite + geometrie.rechts)
+        }
+    }
+
+    @Test fun `Zeitfeld folgt den unteren Tangenten des verkleinerten Kapselkoerpers`() {
+        val geometrie = berechneZeitfußzeilenGeometrie(
+            200.dp, 100.dp, 20.dp, RoundedCornerShape(40.dp), Density(1f), LayoutDirection.Ltr,
+        )
+        assertEquals(80.dp, geometrie.hauptHöhe)
+        assertEquals(40.dp, geometrie.links)
+        assertEquals(120.dp, geometrie.breite)
+    }
+
     @Test fun `Auswertungsdauer wird kompakt formatiert`() {
         assertEquals("<1 µs", formatiereAuswertungsDauerNanos(999L))
         assertEquals("12,4 ms", formatiereAuswertungsDauerNanos(12_400_000L))
