@@ -14,7 +14,7 @@ object MathematikKnotenVorlagen {
         listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("wert" to "2"),
     )
     val Variable = KnotenVorlage(
-        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable mit im Inspector definiertem Wertevorrat.", GraphGröße(190f, 102f),
+        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable als Zahl, Tupel, Winkeltupel, Zeilen- oder Spaltenvektor mit konfigurierbarem Wertebereich.", GraphGröße(190f, 102f),
         listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("name" to "x", "werteVorrat" to "R"),
     )
     val AllgemeinerParameter = KnotenVorlage(
