@@ -22,7 +22,12 @@ class DesktopAtlasZustand(
         speicher.ladeAktuell() ?: KartenDaten(name = "Neue Desktop-Karte"),
         laufzeit.graphPrüfung,
     )
-    init { editor.öffneGruppe(speicher.ladeAktiveGruppe()) }
+    init {
+        val verbindungsPlaner = ÜbersetzerVerbindungsPlaner(laufzeit.graphPrüfung)
+        editor.verbindungsPlaner = verbindungsPlaner::vorschläge
+        editor.verbindungÜberAdapterMöglich = verbindungsPlaner::möglich
+        editor.öffneGruppe(speicher.ladeAktiveGruppe())
+    }
     private val rechenScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var rechenAuftrag: Job? = null
     private var rechenGeneration = 0L

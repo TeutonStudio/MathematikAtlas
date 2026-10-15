@@ -102,3 +102,13 @@ Der vollständige interne Ablauf steht in `docs/codex/NEW_NODE_WORKFLOW.md` und 
 - `docs/codex/`: Agenten-Runbook, Architekturdetails, Pläne und verifizierter Projektzustand
 
 Wenn Dokumentation und Code einander widersprechen, gilt der Code als aktueller Istzustand. Die widersprechende Dokumentation soll im selben Änderungsvorhaben korrigiert werden.
+
+## Verbindungen mit Übersetzern und Drag bearbeiten
+
+Beim Verbinden zweier Anschlüsse wird zuerst eine direkte Verbindung versucht. Falls ein typgeprüfter Weg über vorhandene Übersetzer nötig ist, wird eine eindeutige kürzeste Kette automatisch eingefügt. Mehrere gleich kurze Wege werden mit ihren Übersetzungszielen zur Auswahl angeboten. Abbrechen lässt die bisherige Verdrahtung bestehen; Übernehmen lässt sich als Ganzes rückgängig machen. Zusätzliche Eingaben wie ein ausdrücklich gewählter Objektpunkt oder ein Rückführungszeugnis werden nicht automatisch erfunden.
+
+Ziehe einen zunächst unverbundenen Knoten mit seiner Mitte auf eine Verbindung. Die Zielkante wird hervorgehoben; beim Loslassen werden passende freie Ein-/Ausgänge angeschlossen. Bei mehreren Portpaaren erscheint eine Auswahl. Bewegung und Einfügen gehören zum selben Undo-Schritt.
+
+Zum Herausziehen am Desktop Alt beim Ziehen halten. Auf dem Tablet den Knoten wählen, **Aus Verbindung herausziehen** antippen und ihn anschließend ziehen; die Aktion ist auch im allgemeinen Knoten-Kontextdialog verfügbar. Eine eindeutige Eingangsquelle wird mit den bisherigen Ausgangszielen verbunden. Falls das typmäßig nicht möglich oder mehrdeutig ist, bleibt die Verdrahtung bestehen. Normales Verschieben trennt nichts. Escape kann einen vorgemerkten Herausziehmodus abbrechen.
+
+Android läuft immersiv ohne dauerhaft sichtbare Status- und Navigationsleisten. Mit einer Randwischgeste können die Systemleisten vorübergehend eingeblendet werden; Bildschirmtastatur und Displayaussparungen werden berücksichtigt.

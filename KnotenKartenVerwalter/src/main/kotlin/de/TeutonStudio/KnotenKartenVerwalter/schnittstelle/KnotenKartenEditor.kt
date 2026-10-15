@@ -102,6 +102,7 @@ fun KnotenKartenEditor(
     var leertasteGedrückt by remember { mutableStateOf(false) }
     var umschaltGedrückt by remember { mutableStateOf(false) }
     var primärModifierGedrückt by remember { mutableStateOf(false) }
+    var altGedrückt by remember { mutableStateOf(false) }
     LaunchedEffect(zustand.verbindungsStart) {
         if (zustand.verbindungsStart == null) magnetischesZiel = null
     }
@@ -123,6 +124,7 @@ fun KnotenKartenEditor(
             .onGloballyPositioned { editorUrsprungImRoot = it.positionInRoot() }
             .onPreviewKeyEvent { event ->
                 umschaltGedrückt = event.isShiftPressed
+                altGedrückt = event.isAltPressed
                 primärModifierGedrückt = event.isCtrlPressed || event.isMetaPressed
                 if (event.key == Key.Spacebar) {
                     leertasteGedrückt = event.type == KeyEventType.KeyDown
@@ -134,6 +136,7 @@ fun KnotenKartenEditor(
                     while (true) {
                         val event = awaitPointerEvent()
                         val änderung = event.changes.firstOrNull() ?: continue
+                        if (event.type == PointerEventType.Press) altGedrückt = event.keyboardModifiers.isAltPressed
                         beiZeigerPosition(bildschirmZuWelt(änderung.position, aktuelleAnsicht, aktuelleDichte))
                         when (event.type) {
                             PointerEventType.Press -> aktuelleAuswahlÄnderung = when {
@@ -320,6 +323,7 @@ fun KnotenKartenEditor(
                                     if (gruppe != null) zustand.öffneGruppe(gruppe) else if (knoten.id !in zustand.projektion.portale) beiKnotenDoppelklick(knoten)
                                 },
                                 auswahlÄnderung = aktuelleAuswahlÄnderung,
+                                beimZiehenLösen = { altGedrückt },
                                 zeigeKnotenInspektor = zeigeKnotenInspektor,
                                 beiInspektorÖffnen = {
                                     val gruppe = zustand.projektion.blöcke[knoten.id]
@@ -372,7 +376,16 @@ fun KnotenKartenEditor(
                 shape = MaterialTheme.shapes.medium,
             ) { Text(meldung, Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) }
         }
+        zustand.ausgewählterKnoten?.let { id ->
+            if (zustand.karte.verbindungen.any { it.von.knotenId == id || it.zu.knotenId == id }) {
+                OutlinedButton(
+                    onClick = { zustand.merkeKnotenZumHerausziehen(id) },
+                    modifier = Modifier.align(Alignment.TopCenter).padding(8.dp),
+                ) { Text("Aus Verbindung herausziehen") }
+            }
+        }
     }
+    VerbindungsAuswahlDialog(zustand)
 }
 
 @Composable
@@ -749,7 +762,7 @@ private fun Verbindungen(
     ) {
         geometrien.forEach { eintrag ->
             val verbindung = eintrag.verbindung
-            val istAusgewählt = zustand.ausgewählteVerbindung == verbindung.id
+            val istAusgewählt = zustand.ausgewählteVerbindung == verbindung.id || zustand.einfügeVerbindungsZiel == verbindung.id
             val istSchwebend = schwebendeVerbindung == verbindung.id
             val basisBreite = when {
                 istAusgewählt -> 5.dp.toPx()
@@ -849,6 +862,7 @@ private fun KnotenDarstellung(
     beiVerbindungAufHintergrund: (AnschlussVerweis, GraphPunkt) -> Unit,
     beiDoppelklick: () -> Unit,
     auswahlÄnderung: AuswahlÄnderung,
+    beimZiehenLösen: () -> Boolean,
     zeigeKnotenInspektor: Boolean,
     beiInspektorÖffnen: () -> Unit,
     editorUrsprungImRoot: Offset,
@@ -860,6 +874,7 @@ private fun KnotenDarstellung(
         .plus(16.dp).coerceAtLeast(18.dp)
     var viewportMinimum by remember(knoten.id) { mutableStateOf(GraphGröße(0f, 0f)) }
     var ziehbar by remember(knoten.id) { mutableStateOf(false) }
+    val aktuellLösen by rememberUpdatedState(beimZiehenLösen)
     val hauptkörperHöhe = (knoten.größe.höhe.dp - fußzeilenHöhe).coerceAtLeast(0.dp)
     val knotenForm = if (knoten.darstellungsForm == KnotenDarstellungsForm.Adapter)
         RoundedCornerShape(adapterEckenRadius(knoten.größe.breite, hauptkörperHöhe.value).dp)
@@ -910,16 +925,18 @@ private fun KnotenDarstellung(
                 .focusable()
                 .pointerInput(knoten.id, zoom, knoten.größe) {
                     detectDragGestures(
-                        onDragStart = { start ->
+                        orientationLock = null,
+                        onDragStart = { down, _, _ ->
+                            val start = down.position
                             ziehbar = knoten.enthältRelativenPunkt(GraphPunkt(start.x / density, start.y / density)) && (renderer.interaktionsModus == KnotenInteraktionsModus.GanzeFlächeZiehbar || start.y <= KOPFZEILE_HÖHE_DP * density)
                             if (knoten.id in zustand.projektion.portale) ziehbar = false
                             if (ziehbar) {
                                 if (knoten.id !in zustand.ausgewählteKnoten) zustand.wähleKnoten(knoten.id, auswahlÄnderung)
-                                zustand.beginneInteraktion()
+                                zustand.beginneKnotenZiehen(knoten.id, aktuellLösen())
                             }
                         },
-                        onDragEnd = { if (ziehbar) zustand.beendeInteraktion(); ziehbar = false },
-                        onDragCancel = { if (ziehbar) zustand.beendeInteraktion(); ziehbar = false },
+                        onDragEnd = { _ -> if (ziehbar) zustand.beendeKnotenZiehen(); ziehbar = false },
+                        onDragCancel = { if (ziehbar) zustand.verwerfeKnotenZiehen(); ziehbar = false },
                         onDrag = { änderung, delta ->
                             if (!ziehbar) return@detectDragGestures
                             änderung.consume()
@@ -936,6 +953,7 @@ private fun KnotenDarstellung(
                                     KartenAktion.KnotenVerschieben(aktuell.id, aktuell.position + GraphPunkt(delta.x / density, delta.y / density)),
                                     mitHistorie = false,
                                 )
+                                zustand.aktualisiereKnotenEinfügeziel(findeEinfügeVerbindung(zustand.darstellungsKarte, knoten.id)?.id)
                             }
                         },
                     )
@@ -1499,4 +1517,40 @@ private fun punktStreckenAbstand(p: Offset, a: Offset, b: Offset): Float {
     if (länge2 == 0f) return (p - a).getDistance()
     val t = (((p - a).x * ab.x + (p - a).y * ab.y) / länge2).coerceIn(0f, 1f)
     return (p - (a + ab * t)).getDistance()
+}
+
+
+@Composable
+private fun VerbindungsAuswahlDialog(zustand: KartenEditorZustand) {
+    val auswahl = zustand.verbindungsAuswahl ?: return
+    AtlasBestätigungsDialog(
+        onDismissRequest = zustand::verwerfeVerbindungsAuswahl,
+        title = { Text("Verbindungsweg auswählen") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Mehrere passende Wege sind möglich. Wähle die gewünschte Verbindung.")
+                auswahl.vorschläge.forEachIndexed { index, vorschlag ->
+                    OutlinedButton(onClick = { zustand.wähleVerbindungsVorschlag(index) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(vorschlag.titel)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = zustand::verwerfeVerbindungsAuswahl) { Text("Abbrechen") } },
+    )
+}
+
+/** Weltkoordinaten verwenden: die Auswahl bleibt unabhängig von Zoom und Pixeldichte. */
+internal fun findeEinfügeVerbindung(karte: KartenDaten, knotenId: KnotenId): VerbindungDaten? {
+    val knoten = karte.knoten.firstOrNull { it.id == knotenId } ?: return null
+    val mitte = Offset(knoten.position.x + knoten.größe.breite / 2f, knoten.position.y + knoten.größe.höhe / 2f)
+    return karte.verbindungen.asSequence()
+        .filterNot { it.von.knotenId == knotenId || it.zu.knotenId == knotenId }
+        .mapNotNull { verbindung ->
+            val a = anschlussPositionWelt(karte, verbindung.von) ?: return@mapNotNull null
+            val b = anschlussPositionWelt(karte, verbindung.zu) ?: return@mapNotNull null
+            val geometrie = berechneVerbindungsGeometrie(Offset(a.x, a.y), Offset(b.x, b.y), 72f)
+            val abstand = geometrie.abstandZu(mitte)
+            if (abstand <= minOf(knoten.größe.höhe / 2f, 40f)) verbindung to abstand else null
+        }.minByOrNull { it.second }?.first
 }

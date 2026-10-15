@@ -35,7 +35,7 @@ import java.nio.file.Paths
 import java.util.prefs.Preferences
 import javax.swing.JOptionPane
 
-private const val DESKTOP_APP_VERSION = "3.1.0"
+private const val DESKTOP_APP_VERSION = "3.2.2"
 
 private sealed interface DesktopKontext {
     val position: GraphPunkt
@@ -507,6 +507,7 @@ private fun DesktopKontextMenü(
                         TextButton(onClick = { atlas.editor.wähleKnoten(null); schließen() }, modifier = Modifier.fillMaxWidth()) { Text("Auswahl aufheben") }
                     }
                     is DesktopKontext.Knoten -> {
+                        TextButton(onClick = { atlas.editor.merkeKnotenZumHerausziehen(ziel.daten.id); schließen() }, modifier = Modifier.fillMaxWidth()) { Text("Aus Verbindung herausziehen") }
                         TextButton(onClick = { ausführen(AtlasBefehl.AuswahlKopieren) }, modifier = Modifier.fillMaxWidth()) { Text("Kopieren") }
                         TextButton(onClick = { ausführen(AtlasBefehl.AuswahlDuplizieren) }, modifier = Modifier.fillMaxWidth()) { Text("Duplizieren") }
                         TextButton(onClick = { ausführen(AtlasBefehl.AuswahlGruppieren) }, enabled = atlas.editor.ausgewählteKnoten.size >= 2, modifier = Modifier.fillMaxWidth()) { Text("Visuell gruppieren") }
