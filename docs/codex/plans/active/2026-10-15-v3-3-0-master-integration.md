@@ -21,8 +21,8 @@ Die fachlichen Verträge bleiben in den bereits geprüften [Geometry-Nodes-](../
 - [x] Autorisierung, unveränderte Masterbasis und vollständigen Umfang geprüft.
 - [x] Klassifikation y/3.3.0 und angekündigte Typfamilie bestätigt.
 - [x] Android/Desktop/Roadmap auf die Zielversion gebracht; Releaseguard inkl.14Regressionen grün. Finaler lokaler3.3.0-Lauf `test :app:assembleDebug :app:assembleDebugAndroidTest` erfolgreich39s, 1.852 Tests ohne Fehler/Überspringungen.
-- [ ] Explizite auftragsbezogene Dateien stagen, SamAI-Commit über `scripts/samai-git.sh`, Identität prüfen und Arbeitsbranch pushen.
-- [ ] PR nach master, Pflicht-CI vollständig abwarten; bei Fehlern Ursache beheben und Prüfungen wiederholen.
+- [x] 55 auftragsbezogene Dateien als SamAI-Commit `cdaf3dc807cf9fe698c8d09d5e989959a546dfce` committed, Identität geprüft, Arbeitsbranch gepusht; generierte `.kotlin/`-Ausgaben ausgeschlossen.
+- [-] [PR452](https://github.com/TeutonStudio/MathematikAtlas/pull/452) eröffnet. Erster Lauf: fünf von sechs Checks grün; Android auf API35: Editor2/2, App9/10, darunter neue Dialogtests4/5, kein Skip. Fehlgeschlagener Test fand eine noch nicht komponierte LazyColumn-Zeile mit `performScrollTo` nicht. Test verwendet nun `performScrollToNode` auf dem Listencontainer; fachliche Assertions unverändert. Zusätzliche JVM-Katalogregression bestätigt korrektes Ergebnisangebot. Lokaler Nachlauf `test :app:assembleDebug :app:assembleDebugAndroidTest` erfolgreich19s: 1.853 Tests, keine Fehler/Skips. Wiederholte CI vor Merge erforderlich.
 - [ ] Squash mit Titel `v3.3.0`; Remote-master und Master-Push-CI prüfen.
 
 ## Prüfungen und Codeabnahme
@@ -31,7 +31,7 @@ Der vor der Release-Metadatenänderung vollständig geprüfte Stand umfasst 1.85
 
 ## Laufzeitgrenzen, Risiken und Rückfall
 
-Desktop-Compose-Interaktionen der Geometrievorschau wurden ausgeführt. Die fünf neuen Android-Dialogtests sind kompiliert und als Test-APK gebaut, **noch nicht auf Android ausgeführt**: lokal kein eingerichtetes AVD/KVM oder nutzbares Gerät. Das ist eine ausdrücklich dokumentierte Laufzeitgrenze, kein behaupteter Laufzeitnachweis. Der Nutzungshistorie-Plan bleibt für diese Abnahme aktiv.
+Desktop-Compose-Interaktionen der Geometrievorschau wurden ausgeführt. Die fünf neuen Android-Dialogtests wurden im ersten PR-CI-Lauf auf dem API35-Emulator ausgeführt: vier bestanden, ein Test scheiterte am Scrollen zu einer noch nicht komponierten Listenzeile. Der Test ist korrigiert, aber sein erfolgreicher Emulatornachlauf steht vor dem Merge noch aus. Lokal gibt es kein eingerichtetes AVD/KVM oder nutzbares Gerät. Der Nutzungshistorie-Plan bleibt bis zum erfolgreichen Nachlauf aktiv.
 
 Kein direkter Commit oder Push auf master, kein Force-Push, keine Historienumschreibung und keine Umgehung fehlender/roter Pflichtchecks. Bei veränderter Remote-Basis vor Merge erneut auditieren. Bei einer gescheiterten Prüfung bleibt der veröffentlichte Vorgänger unverändert. Bereits vorhandene lokale Änderungen außerhalb des Auftrags werden nicht überschrieben.
 

@@ -42,7 +42,10 @@ class KnotenAuswahlNutzungGeraeteTest {
     @Test fun schnelleAuswahlZaehltSammelaktionEinmalUndUndoNichtErneut() {
         compose.onNodeWithText("Knoten suchen").performTextInput("Spaltenvektor erzeugen")
         // Der Suchtext ist zugleich der Eintragsname: das editierbare Suchfeld ausschließen.
-        compose.onNode(hasText("Spaltenvektor erzeugen",substring=false) and !hasSetTextAction()).performScrollTo().performClick()
+        val eintrag=hasText("Spaltenvektor erzeugen",substring=false) and !hasSetTextAction()
+        // Die Bildschirmtastatur kann die Zeile aus dem komponierten LazyColumn-Bereich verdrängen.
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(eintrag)
+        compose.onNode(eintrag).performClick()
         val d=daten();val s=d.sitzungen.single()
         assertEquals(SitzungsAbschluss.AUSWAHL,s.abschluss)
         assertEquals("Spaltenvektor erzeugen",s.suchschritte.last().zustand.originaltext)

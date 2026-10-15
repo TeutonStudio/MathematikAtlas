@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Implementiert und unabhängig statisch abgenommen; Android-Laufzeitabnahme offen. Umsetzung nach dem vom Nutzer gelieferten Plan. Aktuelle Basis ist `d435b4fcf62ce83409911f98c08f0a096e78c0dd`, veröffentlichte 3.2.2; Arbeitsbranch `samai/v3.3.0-geometry-nodes` mit bereits verifizierten ungecommitteten Geometrieänderungen. Die im Nutzerplan genannte 3.2.1-Basis ist historisch.
+Implementiert und unabhängig statisch abgenommen; Android-Laufzeitnachlauf vor Integration offen. Umsetzung nach dem vom Nutzer gelieferten Plan. Aktuelle Basis ist `d435b4fcf62ce83409911f98c08f0a096e78c0dd`, veröffentlichte 3.2.2; Arbeitsbranch `samai/v3.3.0-geometry-nodes` mit bereits verifizierten ungecommitteten Geometrieänderungen. Die im Nutzerplan genannte 3.2.1-Basis ist historisch.
 
 ## 2. Ziel
 
@@ -41,7 +41,7 @@ Neue `app/.../knotenauswahl/`-Modelle, Eintrags-/Ergebnisdarstellung, Verwalter 
 - [x] Atomare Speicherung, Grenzen, Schema- und Löschschutz: Codec-/IO-Regressionen erfolgreich.
 - [x] Gemeinsame Dialogdarstellung und Herkunft/Einfügeerfolg: gemeinsame Ergebnisdarstellung und expliziter Standard-Wrapper; JVM-Regressionen erfolgreich.
 - [x] Einstellungen, Lebenszyklus und unabhängige Codeverifikation: keine offenen konkreten Findings.
-- [!] Android-Dialogtests ausführen: kein eingerichteter Emulator/AVD, kein KVM-Gerät; Laufzeitabnahme bleibt offen.
+- [!] Erster PR452-Emulatorlauf: vier von fünf Dialogtests bestanden, ein LazyColumn-Scrolltest korrigiert; erfolgreicher Nachlauf noch erforderlich. Lokal kein eingerichteter Emulator/AVD oder KVM-Gerät.
 
 ## 10. Umsetzung
 
@@ -63,7 +63,7 @@ Dialogeffekte können beim Schließen abbrechen: letzter Zustand wird synchron a
 
 ## 14. Fortschritt
 
-32 neue JVM-Tests bestanden; Gesamtlauf `test :app:assembleDebug :app:compileDebugAndroidTestKotlin`: 1.852 Tests ohne Fehler/Überspringungen und erfolgreicher APK-Build. Repository-, Releaseplan-, Versionsfolge- und Diffprüfungen erfolgreich. Fünf Android-Dialogtests ergänzt, kompiliert und als Test-APK gebaut; Lint und Test-APK-Build erfolgreich (`:app:lintDebug :app:assembleDebugAndroidTest`, 5m31s). Separate Standalone-Kernprüfung erfolgreich. Unabhängiger `node_verifier` hat nach Korrektur dreier Befunde die Codeabnahme erteilt: partielle Einstellungsbefehle verhindern gegenseitiges Überschreiben, NFC+trim erhält Π/π getrennt, flüchtige vollständige Zustände erhalten Umformulierungen ohne gespeicherte Suchtexte. Unveränderte Tippentwürfe schreiben die Datei nicht erneut.
+33 neue JVM-Tests bestanden; Gesamtlauf `test :app:assembleDebug :app:compileDebugAndroidTestKotlin`: 1.853 Tests ohne Fehler/Überspringungen und erfolgreicher APK-Build. Repository-, Releaseplan-, Versionsfolge- und Diffprüfungen erfolgreich. Fünf Android-Dialogtests ergänzt, kompiliert und als Test-APK gebaut; Lint und Test-APK-Build erfolgreich (`:app:lintDebug :app:assembleDebugAndroidTest`, 5m31s). Separate Standalone-Kernprüfung erfolgreich. Unabhängiger `node_verifier` hat nach Korrektur dreier Befunde die Codeabnahme erteilt: partielle Einstellungsbefehle verhindern gegenseitiges Überschreiben, NFC+trim erhält Π/π getrennt, flüchtige vollständige Zustände erhalten Umformulierungen ohne gespeicherte Suchtexte. Unveränderte Tippentwürfe schreiben die Datei nicht erneut.
 
 ## 15. Entscheidungen
 
@@ -75,4 +75,9 @@ Aktuelle Repositorybasis statt veralteter 3.2.1. Konkrete Schutzgrenzen und IO-B
 
 ## 17. Ergebnis
 
-Implementiertes Verhalten und Schutzgrenzen: [Dokumentation](../../../KNOTENAUSWAHL_HISTORIE.md), [ADR](../../decisions/2026-10-15-knotenauswahl-historie.md). Nach der Implementierung hat der Nutzer Commit, Push und Masterintegration beauftragt; dieser Schritt wird im [Integrationsplan](2026-10-15-v3-3-0-master-integration.md) verwaltet. Branch und Basis wie oben. Plan bleibt aktiv, bis die fünf Android-Dialogtests auf Gerät/Emulator ausgeführt sind. Diese offene Laufzeitabnahme wird nicht durch erfolgreiche JVM-Tests oder Kompilierung ersetzt.
+Implementiertes Verhalten und Schutzgrenzen: [Dokumentation](../../../KNOTENAUSWAHL_HISTORIE.md), [ADR](../../decisions/2026-10-15-knotenauswahl-historie.md). Nach der Implementierung hat der Nutzer Commit, Push und Masterintegration beauftragt; dieser Schritt wird im [Integrationsplan](2026-10-15-v3-3-0-master-integration.md) verwaltet. Branch und Basis wie oben. Plan bleibt aktiv, bis die fünf Android-Dialogtests auf Gerät/Emulator erfolgreich bestanden sind. Diese offene Laufzeitabnahme wird nicht durch erfolgreiche JVM-Tests oder Kompilierung ersetzt.
+
+
+### Emulator-Nachprüfung im Releaseauftrag
+
+PR452 führte alle fünf neuen Dialogtests tatsächlich auf API35 aus: vier bestanden, keine übersprungenen Tests. Der schnelle Auswahltest scheiterte am Testzugriff auf eine durch Bildschirmtastatur außerhalb des komponierten LazyColumn-Bereichs liegende Zeile. Der Test scrollt nun zuerst über `performScrollToNode` auf dem Listencontainer; die Auswahl-/Typ-/Undo-Assertions bleiben unverändert. Ein zusätzlicher JVM-Test mit echtem Katalog und Operatorindex bestätigt Tab-Ausweichen und einfügbaren Eintrag. Vollständiger lokaler Nachlauf auf3.3.0 grün19s, 1.853 Tests ohne Fehler/Skips, Debug-/Test-APK erfolgreich. Erfolgreicher CI-Nachlauf vor Merge weiterhin erforderlich.

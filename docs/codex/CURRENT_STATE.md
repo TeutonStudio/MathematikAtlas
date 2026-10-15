@@ -1,5 +1,7 @@
 # Aktueller verifizierter Projektzustand
 
+> Release-Nachprüfung 2026-10-15: [PR452](https://github.com/TeutonStudio/MathematikAtlas/pull/452), erster SamAI-Branchcommit `cdaf3dc8`. Fünf von sechs CI-Checks grün; API35-Emulator führte zwölf Tests aus (Editor2/2, App9/10). Von fünf neuen Dialogtests bestanden vier, einer benötigte Scrollen über den LazyColumn-Container statt direkten Zugriff auf eine noch nicht komponierte Zeile. Test korrigiert, fachliche Assertions unverändert; zusätzliche JVM-Katalogregression ergänzt. Lokaler Nachlauf mit3.3.0: **1.853 Tests ohne Fehler/Überspringungen**, Debug-/Test-APK grün19s. Erfolgreicher Emulator-/PR-Nachlauf und Masterintegration stehen vor diesem Dokumentationscheckpoint noch aus.
+
 > Releasevorbereitung 2026-10-15: Auf Nutzerauftrag wird der vollständige geprüfte Stand als **v3.3.0** nach `master` integriert: 15 neue Geometry-Nodes-Typen, verbesserte Geometrieansichten und lokale Android-Knotenauswahlhistorie. Basis `d435b4fc`/v3.2.2, Branch `samai/v3.3.0-geometry-nodes`, Achse y, Zielcode3003000. Vor der Metadatenanpassung 1.852 Tests ohne Fehler/Überspringungen, Debug-/Test-APK, Lint und Kernprüfung erfolgreich; unabhängige Codeabnahmen ohne offene Befunde. PR-/Master-CI und finale Remote-SHA werden separat nachgewiesen. **Keine Android-Laufzeitabnahme des neuen Stands**; der Nutzungshistorie-Plan bleibt dafür aktiv. [Integrationsplan](plans/active/2026-10-15-v3-3-0-master-integration.md).
 
 Die folgenden Arbeitsstände dokumentieren die vorhergehenden Prüfzeitpunkte vor dieser Releasevorbereitung.

@@ -44,6 +44,16 @@ class StandardKnotenEintragTest {
         val all=result(b,"Matrix");val tab=result(b,"Matrix","Matrizen")
         assertEquals(all.zustand.angebote,tab.zustand.angebote)
     }
+    @Test fun `Spaltenvektorsuche weicht mit wirklichem Katalog auf Tupel Sammelaktionen aus`() {
+        val basis=statischeKnotenVorlagen()
+        val query="Spaltenvektor erzeugen"
+        val r=result(standardVorlagenEinträge(basis,OperatorKnotenSuchindex.sucheMitMetadaten(query,basis)),query)
+        assertEquals("Alle",r.zustand.gewünschterTab)
+        assertEquals("Tupel",r.zustand.aktiverTab)
+        val spalte=r.zeilen.mapNotNull { it.eintrag }.single { it.schluessel=="aktion/tupel-spalte" }
+        assertTrue(spalte.einfügbar)
+        assertEquals("Spaltenvektor erzeugen",spalte.name)
+    }
     @Test fun `Operatorindex liefert stabile Metadaten bei unveraenderten Suchtreffern`() {
         val b=statischeKnotenVorlagen()
         for(text in listOf("spur","vereinigung","+")) {
