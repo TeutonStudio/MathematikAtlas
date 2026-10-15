@@ -23,9 +23,21 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenR
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
 import java.io.File
 import kotlinx.coroutines.*
+import de.TeutonStudio.MathematikAtlas.knotenauswahl.*
 
 @Stable
 class AtlasZustand(context: Context) {
+    val knotenNutzung=de.TeutonStudio.MathematikAtlas.speicher.InstallationsKnotenNutzung.für(context)
+    var standardSitzung: String? by mutableStateOf(null)
+        private set
+    var nutzungUnterbrochen by mutableStateOf(false)
+        private set
+    var standardTab by mutableStateOf("Alle")
+        private set
+    private var suchHerkunft=SuchtextHerkunft.OHNE_FILTER
+    private var standardAuftrag: KnotenAuswahlAuftrag?=null
+    private var ergebnisCache: StandardKnotenErgebnis?=null
+    private var ergebnisSchluessel: List<Any?>?=null
     private val rechenScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var rechenAuftrag: Job? = null
     private var rechenGeneration = 0L
@@ -224,12 +236,15 @@ class AtlasZustand(context: Context) {
     }
 
     fun öffneKnotenAuswahl(position: GraphPunkt, start: AnschlussVerweis? = null) {
+        beendeStandardSitzung(SitzungsAbschluss.ABBRUCH)
+        standardTab="Alle"
         knotenAuswahlPosition = position
         knotenAuswahlStart = start
         sichereKnotenKategorieAuswahl()
     }
 
     fun schließeKnotenAuswahl() {
+        if(standardAuftrag==null) beendeStandardSitzung(SitzungsAbschluss.ABBRUCH)
         knotenAuswahlPosition = null
         knotenAuswahlStart = null
     }
@@ -345,13 +360,23 @@ class AtlasZustand(context: Context) {
         knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenRenderer
         knoten.art.startsWith("konzept.") -> KonzeptDokumentationsRenderer
         knoten.art == "mathematik.visualisierung" -> VisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
+        knoten.art == GEOMETRY_NODES_PREFIX+"preview" -> GeometryNodesVorschauRenderer { daten -> auswertung.knoten[daten.id] }
         knoten.art == "mathematik.geometrie.visualisierung" -> GeometrieVisualisierungsKnotenRenderer { daten -> auswertung.knoten[daten.id] }
         else -> renderer()
     }).mitAuswertungszeit { daten -> auswertung.knoten[daten.id] }
 
     fun setzeSuchText(text: String) {
+        if(text==suchText) return
+        val sid=standardSitzung
+        if(text.isEmpty() && sid!=null) knotenNutzung.protokollieren(sid,standardErgebnis().zustand,SuchAnlass.ZURUECKSETZEN)
         suchText = text
+        suchHerkunft=if(text.isBlank()) SuchtextHerkunft.ZURUECKGESETZT else SuchtextHerkunft.GETIPPT
         sichereKnotenKategorieAuswahl()
+        if(sid!=null) {
+            val z=standardErgebnis().zustand
+            knotenNutzung.aktualisieren(sid,z)
+            if(text.isBlank()) knotenNutzung.protokollieren(sid,z,SuchAnlass.ZURUECKSETZEN)
+        }
     }
 
     fun knotenKategorien(): List<String> = suchbareVorlagen().map { it.kategorie }.distinct()
@@ -374,11 +399,73 @@ class AtlasZustand(context: Context) {
         if (aktiveKnotenKategorie() == null) ausgewählteKnotenKategorie = null
     }
 
-    private fun suchbareVorlagen(): List<KnotenVorlage> {
+    private fun suchbareVorlagen(): List<KnotenVorlage> = suchbareEinträge().map { it.vorlage!! }
+
+    private fun suchbareEinträge(): List<StandardKnotenEintrag> {
         val basis = alleKnotenVorlagen()
-        val operatorTreffer = if (suchText.isBlank()) emptyList() else OperatorKnotenSuchindex.suche(suchText, basis)
-        return (operatorTreffer + basis).distinctBy { vorlage ->
-            vorlage.art to vorlage.standardParameter.toSortedMap().entries.joinToString("|") { "${it.key}=${it.value}" }
+        val operatorTreffer = if (suchText.isBlank()) emptyList() else OperatorKnotenSuchindex.sucheMitMetadaten(suchText, basis)
+        return standardVorlagenEinträge(basis,operatorTreffer)
+    }
+
+    fun standardErgebnis(): StandardKnotenErgebnis {
+        val key=listOf(suchText,suchHerkunft,standardTab,knotenAuswahlStart,editor.karte,karten)
+        if(ergebnisSchluessel==key) return checkNotNull(ergebnisCache)
+        val start=knotenAuswahlStart
+        val art=start?.let { r -> editor.karte.knoten.firstOrNull { it.id==r.knotenId }?.anschlüsse?.firstOrNull { it.id==r.anschlussId } }?.let { "${it.richtung}:${it.art.wert}" }
+        val neu=standardKnotenErgebnis(suchbareEinträge(),suchText,suchHerkunft,standardTab,::istKompatibelMitOffenerVerbindung,kannTupelVektorEinfügen(),kannMengendefinitionEinfügen(),kannFaltungEinfügen(),art)
+        ergebnisSchluessel=key;ergebnisCache=neu;return neu
+    }
+    fun beginneStandardSitzung(): String? {
+        if(nutzungUnterbrochen || knotenAuswahlPosition==null) return null
+        standardSitzung?.let { return it }
+        suchHerkunft=if(suchText.isBlank()) SuchtextHerkunft.OHNE_FILTER else SuchtextHerkunft.UEBERNOMMEN
+        val sid=nutzungsId();standardSitzung=sid
+        knotenNutzung.öffnen(sid,if(knotenAuswahlStart==null) "freie-standardliste" else "anschluss-standardliste",BuildConfig.VERSION_NAME,standardErgebnis().zustand)
+        return sid
+    }
+    fun wähleStandardTab(tab: String) {
+        if(tab==standardTab) return
+        standardSitzung?.let { knotenNutzung.protokollieren(it,standardErgebnis().zustand,SuchAnlass.TABWECHSEL) }
+        standardTab=tab
+        standardSitzung?.let { knotenNutzung.protokollieren(it,standardErgebnis().zustand,SuchAnlass.TABWECHSEL) }
+    }
+    fun beendeStandardSitzung(grund: SitzungsAbschluss) {
+        val sid=standardSitzung ?: return
+        knotenNutzung.schließen(sid,standardErgebnis().zustand,grund);standardSitzung=null
+    }
+    fun unterbrecheKnotenNutzung() {
+        nutzungUnterbrochen=true;beendeStandardSitzung(SitzungsAbschluss.UNTERBROCHEN);knotenNutzung.sichern()
+    }
+    fun setzeKnotenNutzungFort() { nutzungUnterbrochen=false }
+
+    /** Nur dieser explizite Standarddialogpfad zählt Entscheidungen; allgemeine Einfügefunktionen bleiben ungezählt. */
+    fun wähleStandardEintrag(sitzung: String,eintrag: StandardKnotenEintrag,position: GraphPunkt,anzeige: StandardKnotenErgebnis) {
+        if(standardSitzung!=sitzung || knotenAuswahlPosition==null || standardAuftrag!=null) return
+        val rang=anzeige.zustand.angebote.indexOfFirst { it.schluessel==eintrag.schluessel }+1
+        if(rang<1) return
+        val auftrag=KnotenAuswahlAuftrag(nutzungsId(),sitzung,eintrag.schluessel,rang,anzeige.zustand,eintrag.vorlage?.kartenVerweis?.version)
+        val vorher=editor.karte.knoten.mapTo(hashSetOf()) { it.id }
+        var übernommen=false
+        standardAuftrag=auftrag
+        try {
+            if(!eintrag.einfügbar) return
+            when(eintrag.aktion) {
+                StandardSammelAktion.FALTUNG -> fügeFaltungEin(position)
+                StandardSammelAktion.MENGENDEFINITION -> fügeMengendefinitionEin(position)
+                StandardSammelAktion.TUPEL_SPALTE -> fügeTupelVektorEin(true,position)
+                StandardSammelAktion.TUPEL_ZEILE -> fügeTupelVektorEin(false,position)
+                null -> fügeKnotenEin(checkNotNull(eintrag.vorlage),position)
+            }
+            übernommen=true
+        } finally {
+            val neu=editor.karte.knoten.filter { it.id !in vorher }.map { ErzeugterKnotenTyp(it.art,stabileKnotenVariante(it)) }
+            val erfolg=übernommen && neu.isNotEmpty()
+            knotenNutzung.ergebnis(auftrag,erfolg,neu)
+            standardAuftrag=null
+            if(erfolg || knotenAuswahlPosition==null) {
+                knotenNutzung.schließen(sitzung,auftrag.zustand,if(erfolg) SitzungsAbschluss.AUSWAHL else SitzungsAbschluss.ABBRUCH)
+                standardSitzung=null
+            }
         }
     }
 
@@ -464,7 +551,7 @@ class AtlasZustand(context: Context) {
     private fun aktualisiereAssoziativeKnoten(karte: KartenDaten): KartenDaten =
         migriereAssoziativeKnoten(migriereAussagenOperatoren(karte)).migriereKonsolidierteKnoten()
 
-    fun beendeBerechnungen() { rechenScope.cancel() }
+    fun beendeBerechnungen() { unterbrecheKnotenNutzung();rechenScope.cancel() }
 
     private fun synchronisierteKarte(karte: KartenDaten, ergebnis: KartenAuswertungsErgebnis): KartenDaten {
         val restriktion = synchronisiereRestriktionsAnschlüsse(karte, ergebnis)

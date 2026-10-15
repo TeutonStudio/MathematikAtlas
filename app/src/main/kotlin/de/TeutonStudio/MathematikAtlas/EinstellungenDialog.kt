@@ -259,6 +259,7 @@ private fun EinstellungsSeiteInhalt(
         verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
     ) {
         when (seite) {
+            EinstellungsSeiteId.KnotenNutzung -> de.TeutonStudio.MathematikAtlas.knotenauswahl.KnotenNutzungsEinstellungen(zustand.knotenNutzung)
             EinstellungsSeiteId.Darstellung -> DarstellungEinstellungsSeite()
             EinstellungsSeiteId.Beispielkarten -> BeispielkartenEinstellungsSeite(zustand)
             EinstellungsSeiteId.Ueber -> UeberEinstellungsSeite()

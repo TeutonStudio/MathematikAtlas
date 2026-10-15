@@ -136,6 +136,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         zustand.editor.führeAus(aktion);zustand.aktualisiereAuswertung()
                     }
                     de.TeutonStudio.MathematikKnoten.ErgebnisVertragsInhalt(zustand.auswertung.knoten[knoten.id])
+                    de.TeutonStudio.MathematikKnoten.GeometryNodesEinstellungen(knoten,zustand::beantrageKonfiguration)
                     StandardwerteEditor(knoten, zustand)
                     de.TeutonStudio.MathematikKnoten.MethodenProjektionsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
                     de.TeutonStudio.MathematikKnoten.VisualisierungsVertragsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)

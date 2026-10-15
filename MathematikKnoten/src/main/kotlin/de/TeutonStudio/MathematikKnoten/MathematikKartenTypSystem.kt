@@ -13,8 +13,11 @@ import de.TeutonStudio.TypSystem.TypSystem
  */
 fun erzeugeMathematikKartenTypSystem(arten: AnschlussArtRegister): TypSystem = StandardTypSystem(
     istAtomUntertyp = { von, erwartet ->
+        // Ein strukturelles Tupel bleibt auch ein Tupel für bestehende grobe Anschlüsse.
+        // Seine Komponenten-/Längenprüfung übernimmt weiterhin das neutrale Typsystem.
+        val vonArt = if (von == MathematischeTypen.Tupel) MathematikAnschlussArten.Tupel.id else AnschlussArtId(von.wert)
         MathematischeTypen.istAtomUntertyp(von, erwartet) ||
-            arten.istUnterart(AnschlussArtId(von.wert), AnschlussArtId(erwartet.wert))
+            arten.istUnterart(vonArt, AnschlussArtId(erwartet.wert))
     },
     konstruktoren = MathematischeTypen.konstruktoren,
 )

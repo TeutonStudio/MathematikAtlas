@@ -12,19 +12,25 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
  * Ein Treffer enthält bereits den gewählten Operator. Der Benutzer muss nach der
  * Suche nicht noch einmal denselben Auswahldialog bedienen.
  */
+data class OperatorKnotenSuchtreffer(val vorlage: KnotenVorlage,val operatorId: String)
+
 object OperatorKnotenSuchindex {
     private data class Eintrag(
         val begriffe: Set<String>,
         val vorlage: KnotenVorlage,
+        val operatorId: String,
     )
 
-    fun suche(text: String, basisVorlagen: List<KnotenVorlage>): List<KnotenVorlage> {
+    fun suche(text: String, basisVorlagen: List<KnotenVorlage>): List<KnotenVorlage> =
+        sucheMitMetadaten(text,basisVorlagen).map { it.vorlage }
+
+    fun sucheMitMetadaten(text: String, basisVorlagen: List<KnotenVorlage>): List<OperatorKnotenSuchtreffer> {
         val query = normalisiere(text)
         if (query.isBlank()) return emptyList()
         return eintraege(basisVorlagen)
             .filter { eintrag -> eintrag.begriffe.any { normalisiere(it).contains(query) } }
-            .map(Eintrag::vorlage)
-            .distinctBy { it.art to it.standardParameter.toSortedMap().toString() }
+            .distinctBy { it.vorlage.art to it.vorlage.standardParameter.toSortedMap().toString() }
+            .map { OperatorKnotenSuchtreffer(it.vorlage,it.operatorId) }
     }
 
     private fun eintraege(basisVorlagen: List<KnotenVorlage>): List<Eintrag> = buildList {
@@ -42,6 +48,7 @@ object OperatorKnotenSuchindex {
             )
             add(
                 Eintrag(
+                    operatorId = vertrag.operatorId,
                     begriffe = setOf(vertrag.titel, vertrag.operatorId, vertrag.familie.name, vertrag.symbolLatex) + vertrag.aliases,
                     vorlage = konfiguriert.alsSuchVorlage(
                         name = "${vertrag.familie.name.lowercase().replaceFirstChar(Char::uppercase)}rechner · ${vertrag.titel}",
@@ -59,6 +66,7 @@ object OperatorKnotenSuchindex {
             )
             add(
                 Eintrag(
+                    operatorId = operator.stabileId,
                     begriffe = setOf(operator.titel(), operator.name, operator.stabileId) + mengenAliase(operator),
                     vorlage = konfiguriert.alsSuchVorlage(
                         name = "Mengenrechner · ${operator.titel()}",
@@ -72,6 +80,7 @@ object OperatorKnotenSuchindex {
         RelationsOperatoren.alle.forEach { relation ->
             add(
                 Eintrag(
+                    operatorId = relation.stabileId,
                     begriffe = relation.suchbegriffe + relation.titel + relation.stabileId,
                     vorlage = PraedikatKnotenVorlagen.vorlage(relation).copy(
                         name = "Prädikat · ${relation.titel}",
@@ -87,6 +96,7 @@ object OperatorKnotenSuchindex {
             val konfiguriert = konfigurierePraedikat(basis, axiom)
             add(
                 Eintrag(
+                    operatorId = axiom.stabileId,
                     begriffe = axiom.suchbegriffe + axiom.titel + axiom.stabileId + axiom.systeme,
                     vorlage = konfiguriert.alsSuchVorlage(
                         name = "Prädikat · ${axiom.titel}",

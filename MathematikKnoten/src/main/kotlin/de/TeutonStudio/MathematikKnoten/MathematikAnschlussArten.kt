@@ -208,5 +208,5 @@ object MathematikAnschlussArten {
         LegacyMengenMethode,
         LegacySpaltenVektorMethode,
         LegacyZeilenVektorMethode,
-    ) + GeometrieAnschlussArten.alle
+    ) + GeometrieAnschlussArten.alle + GeometryNodesAnschlussArten.alle
 }

@@ -9,6 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import de.TeutonStudio.MathematikAtlas.knotenauswahl.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -27,6 +31,7 @@ internal fun KnotenAuswahlDialog(zustand: AtlasZustand, position: GraphPunkt) {
     val modusSpeicher = remember(context) { KnotenWählerModusSpeicher(context) }
     var modus by remember(modusSpeicher) { mutableStateOf(modusSpeicher.lade()) }
     val setzeModus: (KnotenWählerModus) -> Unit = { neu ->
+        if(neu!=modus) zustand.beendeStandardSitzung(SitzungsAbschluss.MODUSWECHSEL)
         modus = neu
         modusSpeicher.speichere(neu)
         if (neu == KnotenWählerModus.Konzeptbibliothek) zustand.setzeSuchText("")
@@ -77,262 +82,54 @@ internal fun KnotenWählerModusAuswahl(
 
 @Composable
 private fun StandardKnotenAuswahlInhalt(zustand: AtlasZustand, position: GraphPunkt, kopf: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
-
-        val sichtbareVorlagen = zustand.sichtbareVorlagen()
-        var ausgewählterTab by remember { mutableStateOf("Alle") }
-        val zeigeTupelVektorAktionen = zustand.suchText.isBlank() || listOf(
-            "Spaltenvektor erzeugen",
-            "Zeilenvektor erzeugen",
-            "Erzeugt ein Tupel und verbindet es mit Tupel zu Spalte oder Tupel zu Zeile",
-        ).any { it.contains(zustand.suchText, ignoreCase = true) }
-        val zeigeMengendefinition = zustand.suchText.isBlank() || listOf(
-            "Mengendefinition",
-            "Mengenkonstruktor",
-            "Mengendefinator",
-            "Erzeugt ein gekoppeltes Paar für eine symbolische Menge mit Prädikat",
-        ).any { it.contains(zustand.suchText, ignoreCase = true) }
-        val zeigeFaltung = zustand.suchText.isBlank() || listOf(
-            "Endliche Faltung",
-            "Faltungskonstruktor",
-            "Faltungsdefinator",
-            "Bindet Index und Akkumulator für iterierte Operatoren",
-        ).any { it.contains(zustand.suchText, ignoreCase = true) }
-        val rechnen = sichtbareVorlagen.filter(::istRechenVorlage)
-        val mengen = sichtbareVorlagen.filter { it.kategorie == "Mengen" && it.art !in mengenrechnungsArten }
-        val zahlen = sichtbareVorlagen.filter { it.art in setOf("mathematik.zahl", "mathematik.variable") }
-        val tupel = sichtbareVorlagen.filter { it.art == "mathematik.tupel" }
-        val matrizen = sichtbareVorlagen.filter { it.kategorie == "Matrizen" }
-        val geometrie = sichtbareVorlagen.filter { it.kategorie.startsWith("Geometrie:") }
-        val mengenZusatz = if (zeigeMengendefinition) 1 else 0
-        val faltungsZusatz = if (zeigeFaltung) 1 else 0
-        val tabs = listOf(
-            KnotenAuswahlTab("Alle", sichtbareVorlagen.filterNot { it.kategorie in kartenKategorien }, zusätzlicheEinträge = mengenZusatz + faltungsZusatz),
-            KnotenAuswahlTab("Rechnen", rechnen, zusätzlicheEinträge = faltungsZusatz),
-            KnotenAuswahlTab("Zahlen", zahlen),
-            KnotenAuswahlTab("Mengen", mengen, zusätzlicheEinträge = mengenZusatz),
-            KnotenAuswahlTab("Tupel", tupel, zusätzlicheEinträge = if (zeigeTupelVektorAktionen) 2 else 0),
-            KnotenAuswahlTab("Abbildungen", sichtbareVorlagen.filter { it.kategorie in abbildungsKategorien }),
-            KnotenAuswahlTab("Vektoren", sichtbareVorlagen.filter { it.kategorie == "Vektoren" }),
-            KnotenAuswahlTab("Matrizen", matrizen),
-            KnotenAuswahlTab("Geometrie", geometrie),
-            KnotenAuswahlTab("Aussagen", sichtbareVorlagen.filter { it.kategorie == "Aussage" || it.kategorie.startsWith("Aussagen:") }),
-            KnotenAuswahlTab("Karten", sichtbareVorlagen.filter { it.kategorie in kartenKategorien }),
-        )
-        val aktiverTab = tabs.firstOrNull { it.name == ausgewählterTab && it.anzahl > 0 }
-            ?: tabs.firstOrNull { it.anzahl > 0 }
-            ?: tabs.first()
-
-        LazyColumn(
-            Modifier.fillMaxWidth().weight(1f, fill = false),
-            contentPadding = PaddingValues(0.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            item { kopf() }
-            item {
-        OutlinedTextField(
-            value = zustand.suchText,
-            onValueChange = zustand::setzeSuchText,
-            label = { Text("Knoten suchen") },
-            supportingText = { Text("Name, Kategorie oder Beschreibung") },
-            trailingIcon = {
-                if (zustand.suchText.isNotEmpty()) {
-                    IconButton(
-                        onClick = { zustand.setzeSuchText("") },
-                        modifier = Modifier.semantics { contentDescription = "Suche zurücksetzen" },
-                    ) {
-                        Text("×", style = MaterialTheme.typography.titleLarge)
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-            }
-            item {
-        PrimaryScrollableTabRow(
-            selectedTabIndex = tabs.indexOf(aktiverTab),
-            edgePadding = AtlasDialogAbstände.beschreibung,
-        ) {
-            tabs.forEach { tab ->
-                Tab(
-                    selected = aktiverTab == tab,
-                    onClick = { ausgewählterTab = tab.name },
-                    enabled = tab.anzahl > 0,
-                    text = { Text("${tab.name} (${tab.anzahl})") },
-                )
-            }
+    val sitzung=zustand.standardSitzung ?: zustand.beginneStandardSitzung()
+    val anzeige=zustand.standardErgebnis()
+    val liste=rememberLazyListState()
+    DisposableEffect(sitzung) {
+        onDispose { sitzung?.let { zustand.knotenNutzung.schließen(it,null,SitzungsAbschluss.UNTERBROCHEN) } }
+    }
+    LaunchedEffect(sitzung,anzeige.zustand) {
+        if(sitzung!=null) {
+            zustand.knotenNutzung.aktualisieren(sitzung,anzeige.zustand)
+            if(anzeige.zustand.originaltext.isNotBlank()) delay(SUCH_RUHE_MS)
+            zustand.knotenNutzung.protokollieren(sitzung,anzeige.zustand,SuchAnlass.SUCHRUHE)
         }
+    }
+    LaunchedEffect(sitzung,anzeige.zustand) {
+        if(sitzung!=null) snapshotFlow { liste.layoutInfo.visibleItemsInfo.mapNotNull { it.key as? String }.toSet() }
+            .distinctUntilChanged().collect { zustand.knotenNutzung.sichtbar(sitzung,anzeige.zustand,it) }
+    }
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(AtlasDialogAbstände.beschreibung)) {
+        LazyColumn(Modifier.fillMaxWidth().weight(1f,fill=false),state=liste,contentPadding=PaddingValues(0.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+            item(key="kopf/modus") { kopf() }
+            item(key="kopf/suche") {
+                OutlinedTextField(value=zustand.suchText,onValueChange=zustand::setzeSuchText,label={ Text("Knoten suchen") },
+                    supportingText={ Text("Name, Kategorie oder Beschreibung") },trailingIcon={
+                        if(zustand.suchText.isNotEmpty()) IconButton(onClick={ zustand.setzeSuchText("") },modifier=Modifier.semantics { contentDescription="Suche zurücksetzen" }) {
+                            Text("×",style=MaterialTheme.typography.titleLarge)
+                        }
+                    },modifier=Modifier.fillMaxWidth())
             }
-            if (aktiverTab.name in setOf("Alle", "Rechnen") && zeigeFaltung) {
-                item {
-                    Text(
-                        "Iterierte Operatoren",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = AtlasDialogAbstände.beschreibung, start = 4.dp),
-                    )
-                }
-                item {
-                    ZusammengesetzterEintrag(
-                        name = "Endliche Faltung",
-                        beschreibung = "Erzeugt einen gekoppelten Faltungskonstruktor und Faltungsdefinator für Index, neutrales Element und Akkumulator.",
-                        enabled = zustand.kannFaltungEinfügen(),
-                        onClick = { zustand.fügeFaltungEin(position) },
-                    )
-                }
-            }
-            if (aktiverTab.name in setOf("Alle", "Mengen") && zeigeMengendefinition) {
-                item {
-                    Text(
-                        "Mengendefinition",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = AtlasDialogAbstände.beschreibung, start = 4.dp),
-                    )
-                }
-                item {
-                    ZusammengesetzterEintrag(
-                        name = "Mengendefinition",
-                        beschreibung = "Erzeugt einen gekoppelten Mengenkonstruktor und Mengendefinator ohne ungültige Direktverbindung.",
-                        enabled = zustand.kannMengendefinitionEinfügen(),
-                        onClick = { zustand.fügeMengendefinitionEin(position) },
-                    )
+            item(key="kopf/tabs") {
+                PrimaryScrollableTabRow(selectedTabIndex=anzeige.tabs.indexOf(anzeige.aktiverTab),edgePadding=AtlasDialogAbstände.beschreibung) {
+                    anzeige.tabs.forEach { tab -> Tab(selected=tab==anzeige.aktiverTab,onClick={ zustand.wähleStandardTab(tab.name) },enabled=tab.anzahl>0,text={ Text("${tab.name} (${tab.anzahl})") }) }
                 }
             }
-            if (aktiverTab.name == "Tupel" && zeigeTupelVektorAktionen) {
-                item {
-                    Text(
-                        "Vektor aus Tupel",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = AtlasDialogAbstände.beschreibung, start = 4.dp),
-                    )
-                }
-                item {
-                    ZusammengesetzterEintrag(
-                        name = "Spaltenvektor erzeugen",
-                        beschreibung = "Erzeugt ein Tupel und verbindet es mit „Tupel zu Spalte“.",
-                        enabled = zustand.kannTupelVektorEinfügen(),
-                        onClick = { zustand.fügeTupelVektorEin(spalte = true, position = position) },
-                    )
-                }
-                item {
-                    ZusammengesetzterEintrag(
-                        name = "Zeilenvektor erzeugen",
-                        beschreibung = "Erzeugt ein Tupel und verbindet es mit „Tupel zu Zeile“.",
-                        enabled = zustand.kannTupelVektorEinfügen(),
-                        onClick = { zustand.fügeTupelVektorEin(spalte = false, position = position) },
-                    )
-                }
+            items(anzeige.zeilen.size,key={ index -> anzeige.zeilen[index].eintrag?.schluessel ?: "kopf/gruppe/$index" }) { index ->
+                val zeile=anzeige.zeilen[index]
+                val eintrag=zeile.eintrag
+                if(eintrag==null) Text(zeile.titel.orEmpty(),style=MaterialTheme.typography.titleSmall,modifier=Modifier.padding(top=AtlasDialogAbstände.beschreibung,start=4.dp))
+                else AtlasDialogListenEintrag(headlineContent={ Text(eintrag.name) },supportingContent={ Text(eintrag.beschreibung) },
+                    modifier=Modifier.standardKnotenEintragFläche().clickable(enabled=eintrag.einfügbar) {
+                        sitzung?.let { zustand.wähleStandardEintrag(it,eintrag,position,anzeige) }
+                    })
             }
-            val gruppen = if (aktiverTab.name == "Alle") {
-                aktiverTab.vorlagen.groupBy(::kategorieAnzeige)
-            } else {
-                emptyMap<String, List<KnotenVorlage>>()
-            }
-            if (gruppen.isNotEmpty()) {
-                gruppen.keys.sortedWith(
-                    compareBy(
-                        { kategorienReihenfolge.indexOf(it).let { index -> if (index < 0) Int.MAX_VALUE else index } },
-                        { it },
-                    ),
-                ).forEach { gruppe ->
-                    val einträge = gruppen.getValue(gruppe)
-                    item {
-                        Text(
-                            gruppe,
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(top = AtlasDialogAbstände.beschreibung, start = 4.dp),
-                        )
-                    }
-                    items(einträge.sortedBy { it.name }) { vorlage ->
-                        AtlasDialogListenEintrag(
-                            headlineContent = { Text(vorlage.name) },
-                            supportingContent = { Text(vorlage.beschreibung) },
-                            modifier = Modifier.standardKnotenEintragFläche()
-                                .clickable { zustand.fügeKnotenEin(vorlage, position) },
-                        )
-                    }
-                }
-            }
-            if (aktiverTab.name != "Alle") {
-                items(aktiverTab.vorlagen.sortedBy { it.name }) { vorlage ->
-                    AtlasDialogListenEintrag(
-                        headlineContent = { Text(vorlage.name) },
-                        supportingContent = { Text(vorlage.beschreibung) },
-                        modifier = Modifier.standardKnotenEintragFläche()
-                            .clickable { zustand.fügeKnotenEin(vorlage, position) },
-                    )
-                }
-            }
-            if (aktiverTab.anzahl == 0) {
-                item {
-                    Text(
-                        "Keine passenden Knoten",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(AtlasDialogAbstände.eintragHorizontal),
-                    )
-                }
-            }
+            if(anzeige.aktiverTab.anzahl==0) item(key="kopf/leer") { Text("Keine passenden Knoten",color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(AtlasDialogAbstände.eintragHorizontal)) }
         }
     }
 }
 
-/** Einheitliche und klar erkennbare Kartenfläche für einfache und zusammengesetzte Knoten. */
 @Composable
-private fun Modifier.standardKnotenEintragFläche(): Modifier =
-    clip(MaterialTheme.shapes.small)
-        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.small)
-
-@Composable
-private fun ZusammengesetzterEintrag(
-    name: String,
-    beschreibung: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    AtlasDialogListenEintrag(
-        headlineContent = { Text(name) },
-        supportingContent = { Text(beschreibung) },
-        modifier = Modifier.standardKnotenEintragFläche()
-            .clickable(enabled = enabled, onClick = onClick),
-    )
-}
-
-private data class KnotenAuswahlTab(
-    val name: String,
-    val vorlagen: List<KnotenVorlage>,
-    val zusätzlicheEinträge: Int = 0,
-) {
-    val anzahl get() = vorlagen.size + zusätzlicheEinträge
-}
-
-private fun istRechenVorlage(vorlage: KnotenVorlage): Boolean =
-    vorlage.kategorie in rechnenKategorien || vorlage.art in mengenrechnungsArten
-
-private fun kategorieAnzeige(vorlage: KnotenVorlage): String = when {
-    istRechenVorlage(vorlage) -> "Rechnen"
-    vorlage.kategorie.startsWith("Aussagen:") -> vorlage.kategorie.substringAfter(": ")
-    vorlage.kategorie in abbildungsKategorien -> "Abbildungen"
-    vorlage.kategorie in kartenKategorien -> "Karten"
-    else -> vorlage.kategorie
-}
-
-private val mengenrechnungsArten = setOf(
-    "mathematik.vereinigung",
-    "mathematik.schnitt",
-    "mathematik.differenz",
-    "mathematik.kartesischesProdukt",
-    "mathematik.mächtigkeit",
-    "mathematik.iterierteVereinigung",
-    "mathematik.iterierterSchnitt",
-    "mathematik.iteriertesKartesischesProdukt",
-    "mathematik.abbild",
-)
-private val rechnenKategorien = setOf("Rechnen", "Analysis", "Algebra", "Zahlen", "Operatoren", "Steuerung")
-private val abbildungsKategorien = setOf("Methoden", "Abbildungen")
-private val kartenKategorien = setOf("Gruppen", "Gespeicherte Karten")
-private val kategorienReihenfolge = listOf(
-    "Rechnen", "Mengen", "Abbildungen", "Vektoren", "Matrizen",
-    "Geometrie: Räume", "Geometrie: Grundobjekte", "Geometrie: Konstruktionen", "Geometrie: Relationen",
-    "Geometrie: Struktur", "Geometrie: Mengen", "Geometrie: Transformationen", "Geometrie: Darstellung",
-    "Aussagenlogik", "Mengenprädikate", "Zahlenprädikate", "Aussagenprädikate", "Aussage", "Karten",
-)
+private fun Modifier.standardKnotenEintragFläche(): Modifier = clip(MaterialTheme.shapes.small)
+    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+    .border(1.dp,MaterialTheme.colorScheme.outlineVariant,MaterialTheme.shapes.small)

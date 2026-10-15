@@ -65,7 +65,8 @@ object KanonischerMathematikKnotenKatalog {
                 TangentialKnotenVorlagen.alle +
                 TopologischeStrukturKnotenVorlagen.alle +
                 ÜbersetzungsKnotenVorlagen.alle +
-                SvgKnotenVorlagen.alle
+                SvgKnotenVorlagen.alle +
+                GeometryNodesVorlagen.alle
             )
             .map(::topologieFaehigeEigenschaftsVorlage)
             .map(::methodenfaehigeRechnerVorlage)
