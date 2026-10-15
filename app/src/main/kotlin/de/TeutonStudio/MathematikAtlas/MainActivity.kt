@@ -33,7 +33,11 @@ class MainActivity : ComponentActivity() {
             val zustand = remember { AtlasZustand(applicationContext) }
             DisposableEffect(zustand, lifecycle) {
                 val beobachter = LifecycleEventObserver { _, ereignis ->
-                    if (ereignis == Lifecycle.Event.ON_STOP) zustand.sichereAktuellVorUnterbrechung()
+                    if (ereignis == Lifecycle.Event.ON_STOP) {
+                        zustand.unterbrecheKnotenNutzung()
+                        zustand.sichereAktuellVorUnterbrechung()
+                    }
+                    if (ereignis == Lifecycle.Event.ON_START) zustand.setzeKnotenNutzungFort()
                 }
                 lifecycle.addObserver(beobachter)
                 onDispose {

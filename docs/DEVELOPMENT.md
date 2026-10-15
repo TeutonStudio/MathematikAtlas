@@ -14,6 +14,8 @@ Dieses Dokument ist der öffentliche technische Einstieg für Mitwirkende. Agent
 
 Das Repository ist keine Vite-, React-, React-Flow-, shadcn/ui- oder KaTeX-Anwendung.
 
+Die neue [Geometry-Nodes-Grundlage](GEOMETRY_NODES.md) ergänzt endliche numerische Meshes, Punktwolken, Instanzen und kontextabhängige Felder. Die Anleitung enthält eine importierbare Beispielkarte und die unterstützten Grenzen.
+
 ## Module
 
 | Modul | Verantwortung |

@@ -1,0 +1,399 @@
+{
+  "erstelltAm": 1792063600714,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "04328c0f-4ea3-484d-9553-eecf79057946",
+        "anschlussId": "4e2223b6-c7a4-48cd-b1ea-1ab8ad8d31f7"
+      },
+      "id": "96af15b2-a73f-4628-b9ba-852277f4bb3a",
+      "zu": {
+        "knotenId": "d9670541-a4e8-4ecb-8842-15bdb0fab617",
+        "anschlussId": "3e8b23e5-97ba-4ca5-be2f-7d81cfb2f707"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "7472e516-8b5d-4626-a1f2-56d9f931f7a9",
+        "anschlussId": "25090dbc-4802-4904-b91c-32b14ccf57fc"
+      },
+      "id": "7bba0370-6518-431a-b73c-428768e2e13a",
+      "zu": {
+        "knotenId": "d9670541-a4e8-4ecb-8842-15bdb0fab617",
+        "anschlussId": "42749ff2-e314-4bfd-80da-233b5b5fc406"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "d9670541-a4e8-4ecb-8842-15bdb0fab617",
+        "anschlussId": "bc1ad150-73b6-4bae-89a3-354e2eafb9fe"
+      },
+      "id": "b7476e9d-1e2d-43a7-8aa2-917e764ccb6b",
+      "zu": {
+        "knotenId": "4f41fb36-ccf3-42c1-81e9-dcc5a516a25c",
+        "anschlussId": "2d63da6e-5361-4921-b1ec-7cb8e2641f06"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "ee63c2c8-e549-4ad3-8fe3-ccf92fdce4f9",
+        "anschlussId": "c50e870a-c6e0-4d99-9352-3f7af9660add"
+      },
+      "id": "15462941-6056-45ab-a4a3-8affb1f6d6b3",
+      "zu": {
+        "knotenId": "4f41fb36-ccf3-42c1-81e9-dcc5a516a25c",
+        "anschlussId": "dfd5920c-1691-486d-9c7c-8ed09d8a17c9"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "4f41fb36-ccf3-42c1-81e9-dcc5a516a25c",
+        "anschlussId": "179d2e66-3f5e-487d-9493-57a5bf0e1ab5"
+      },
+      "id": "d53bd61e-4c65-4f15-8aa8-ecd54e61a96d",
+      "zu": {
+        "knotenId": "7dd547af-0ecf-4c1b-a88a-51db7194c9b0",
+        "anschlussId": "94df8909-92ad-44b0-b20b-1cd048caa17c"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "7dd547af-0ecf-4c1b-a88a-51db7194c9b0",
+        "anschlussId": "9d050e43-c336-45b1-a50b-e8c3daaa27ac"
+      },
+      "id": "384ba85c-840c-4d49-80ab-a2cebda746ed",
+      "zu": {
+        "knotenId": "ac5f56bf-7ecc-4a8a-9b86-8dddf6667bfe",
+        "anschlussId": "b5402dae-67de-4b3d-95ea-9a9079ce7163"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Geometry Nodes \u2013 Würfel auf einem Gitter",
+  "knoten": [
+    {
+      "art": "mathematik.geometryNodes.meshGrid",
+      "größe": {
+        "breite": 285,
+        "höhe": 120
+      },
+      "anschlüsse": [{
+        "richtung": "Ausgang",
+        "art": "mathematik.geometryNodes.geometrie",
+        "kannSichErweitern": false,
+        "name": "geometrie",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "4e2223b6-c7a4-48cd-b1ea-1ab8ad8d31f7",
+        "reihenfolge": 0
+      }],
+      "parameter": {
+        "groesseX": "4",
+        "groesseY": "4",
+        "anzahlX": "3",
+        "anzahlY": "2"
+      },
+      "name": "Mesh-Gitter",
+      "id": "04328c0f-4ea3-484d-9553-eecf79057946",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.geometryNodes.position",
+      "größe": {
+        "breite": 285,
+        "höhe": 120
+      },
+      "anschlüsse": [{
+        "richtung": "Ausgang",
+        "art": "mathematik.geometryNodes.feld.vektor",
+        "kannSichErweitern": false,
+        "name": "feld",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "25090dbc-4802-4904-b91c-32b14ccf57fc",
+        "reihenfolge": 0
+      }],
+      "parameter": {},
+      "name": "Position",
+      "id": "7472e516-8b5d-4626-a1f2-56d9f931f7a9",
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.geometryNodes.setPosition",
+      "größe": {
+        "breite": 285,
+        "höhe": 180
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "3e8b23e5-97ba-4ca5-be2f-7d81cfb2f707",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.feld.bool",
+          "kannSichErweitern": false,
+          "name": "auswahl",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "dcc7af26-b106-4732-ad40-12e41f655ed0",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.feld.vektor",
+          "kannSichErweitern": false,
+          "name": "position",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "42749ff2-e314-4bfd-80da-233b5b5fc406",
+          "reihenfolge": 2
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.feld.vektor",
+          "kannSichErweitern": false,
+          "name": "offset",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "2f3636a3-1310-47f2-b440-2d3be6c60b69",
+          "reihenfolge": 3
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "bc1ad150-73b6-4bae-89a3-354e2eafb9fe",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "offsetX": "0",
+        "auswahl": "true",
+        "offsetZ": "2",
+        "offsetY": "0"
+      },
+      "name": "Position setzen",
+      "id": "d9670541-a4e8-4ecb-8842-15bdb0fab617",
+      "position": {
+        "x": 800,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.geometryNodes.meshCube",
+      "größe": {
+        "breite": 285,
+        "höhe": 120
+      },
+      "anschlüsse": [{
+        "richtung": "Ausgang",
+        "art": "mathematik.geometryNodes.geometrie",
+        "kannSichErweitern": false,
+        "name": "geometrie",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "c50e870a-c6e0-4d99-9352-3f7af9660add",
+        "reihenfolge": 0
+      }],
+      "parameter": {
+        "groesseZ": "0.5",
+        "groesseX": "0.5",
+        "groesseY": "0.5"
+      },
+      "name": "Mesh-Würfel",
+      "id": "ee63c2c8-e549-4ad3-8fe3-ccf92fdce4f9",
+      "position": {
+        "x": 1200,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.geometryNodes.instanceOnPoints",
+      "größe": {
+        "breite": 285,
+        "höhe": 207
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "punkte",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "2d63da6e-5361-4921-b1ec-7cb8e2641f06",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "instanz",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "dfd5920c-1691-486d-9c7c-8ed09d8a17c9",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.feld.bool",
+          "kannSichErweitern": false,
+          "name": "auswahl",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "9af6173d-f474-44ca-83ee-7203e0d53505",
+          "reihenfolge": 2
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.feld.vektor",
+          "kannSichErweitern": false,
+          "name": "rotation",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "42246a2f-d845-49cc-96ff-956018ad64ce",
+          "reihenfolge": 3
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.feld.vektor",
+          "kannSichErweitern": false,
+          "name": "skalierung",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "d3933400-c73a-4e1e-a739-088fe934e587",
+          "reihenfolge": 4
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "179d2e66-3f5e-487d-9493-57a5bf0e1ab5",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "auswahl": "true",
+        "rotationX": "0",
+        "rotationY": "0",
+        "rotationZ": "0",
+        "skalierungX": "1",
+        "skalierungY": "1",
+        "skalierungZ": "1"
+      },
+      "name": "Instanzen auf Punkten",
+      "id": "4f41fb36-ccf3-42c1-81e9-dcc5a516a25c",
+      "position": {
+        "x": 0,
+        "y": 450
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.geometryNodes.realizeInstances",
+      "größe": {
+        "breite": 285,
+        "höhe": 120
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "94df8909-92ad-44b0-b20b-1cd048caa17c",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "9d050e43-c336-45b1-a50b-e8c3daaa27ac",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Instanzen realisieren",
+      "id": "7dd547af-0ecf-4c1b-a88a-51db7194c9b0",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.geometryNodes.preview",
+      "größe": {
+        "breite": 510,
+        "höhe": 440
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "b5402dae-67de-4b3d-95ea-9a9079ce7163",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.geometryNodes.geometrie",
+          "kannSichErweitern": false,
+          "name": "geometrie",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "55ae534d-0cf2-4f8c-9612-6c8bb92122ac",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Geometrievorschau",
+      "id": "ac5f56bf-7ecc-4a8a-9b86-8dddf6667bfe",
+      "position": {
+        "x": 800,
+        "y": 450
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "7e422645-0eb5-4b7c-bb50-a315a5b999e8",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 9,
+  "version": 1
+}

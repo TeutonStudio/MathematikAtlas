@@ -4,6 +4,7 @@ internal enum class EinstellungsSeiteId {
     Darstellung,
     Beispielkarten,
     Ueber,
+    KnotenNutzung,
 }
 
 internal data class EinstellungsSeiteDefinition(
@@ -14,6 +15,7 @@ internal data class EinstellungsSeiteDefinition(
 )
 
 internal val standardEinstellungsSeiten = listOf(
+    EinstellungsSeiteDefinition(EinstellungsSeiteId.KnotenNutzung,"Knotenauswahl-Historie",listOf("Anwendung"),250),
     EinstellungsSeiteDefinition(
         id = EinstellungsSeiteId.Darstellung,
         titel = "Darstellung",

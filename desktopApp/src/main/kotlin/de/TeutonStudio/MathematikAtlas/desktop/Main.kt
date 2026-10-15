@@ -35,7 +35,7 @@ import java.nio.file.Paths
 import java.util.prefs.Preferences
 import javax.swing.JOptionPane
 
-private const val DESKTOP_APP_VERSION = "3.2.2"
+private const val DESKTOP_APP_VERSION = "3.3.0"
 
 private sealed interface DesktopKontext {
     val position: GraphPunkt
@@ -441,6 +441,7 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             if (besitztRechnerSchema(knoten))
                 OutlinedButton(onClick={ falkOffen=true }) { Text("Auswertungsschema") }
             FormelKartenAktionen(atlas.editor.karte,knoten) {aktion -> atlas.editor.führeAus(aktion);atlas.aktualisiereAuswertung()}
+            GeometryNodesEinstellungen(knoten,atlas::beantrageKonfiguration)
             ErgebnisVertragsInhalt(atlas.auswertung.knoten[knoten.id])
             MethodenProjektionsEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}
             VisualisierungsVertragsEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}

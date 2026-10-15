@@ -57,7 +57,7 @@ class EinstellungenNavigationTest {
         val navigation = baueEinstellungsNavigation(standardEinstellungsSeiten)
 
         assertEquals(
-            setOf(EinstellungsSeiteId.Darstellung, EinstellungsSeiteId.Beispielkarten, EinstellungsSeiteId.Ueber),
+            setOf(EinstellungsSeiteId.Darstellung, EinstellungsSeiteId.Beispielkarten, EinstellungsSeiteId.Ueber, EinstellungsSeiteId.KnotenNutzung),
             navigation.alleSeiten(),
         )
     }

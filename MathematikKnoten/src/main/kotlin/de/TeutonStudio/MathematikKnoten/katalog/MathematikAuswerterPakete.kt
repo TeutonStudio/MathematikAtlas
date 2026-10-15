@@ -51,6 +51,7 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("methodengraph") { registriereMethodenGraphKnoten() },
         MathematikAuswerterPaket("tangentialobjekt") { registriereTangentialKnoten() },
         MathematikAuswerterPaket("rand") { registriereRandKnoten() },
+        MathematikAuswerterPaket("geometry-nodes") { registriereGeometryNodes() },
         MathematikAuswerterPaket("svg") { registriereSvgKnoten() },
         MathematikAuswerterPaket("methodenargumente") { registriereMethodenArgumente() },
         MathematikAuswerterPaket("mathematische-eigenschaften") { registriereMathematischeEigenschaften() },

@@ -112,7 +112,8 @@ class DesktopAtlasZustand(
     }
 
     fun rendererFür(knoten: KnotenDaten): KnotenRenderer =
-        MathematikKnotenRenderer(
+        if(knoten.art == GEOMETRY_NODES_PREFIX+"preview") GeometryNodesVorschauRenderer { auswertung.knoten[it.id] }.mitAuswertungszeit { auswertung.knoten[it.id] }
+        else MathematikKnotenRenderer(
             ergebnisFür = { auswertung.knoten[it.id] },
             beiKnotenKlick = { editor.wähleKnoten(it.id) },
         ).mitAuswertungszeit { auswertung.knoten[it.id] }

@@ -197,6 +197,12 @@ Die aktuelle Übergangsschuld ist in GitHub-Issue #395 vollständig beschrieben.
 
 Eine Ablösung soll über eine offiziell unterstützte gemeinsame Android-/Desktop-Toolchain erfolgen. Mit Kotlin 2.3.21 liegt der unterstützte KMP-AGP-Bereich unter der aktuell verwendeten AGP-Version 9.4.0. Deshalb wird weder AGP beiläufig herabgestuft noch eine nicht unterstützte KMP-Kombination als Teil eines Fachrefactors eingeführt. Fachliche Quellen wie Knotenkatalog, Auswerterregistrierung, Kartenmigration und Kartenlaufzeit sind unabhängig davon bereits plattformneutral zentralisiert.
 
+## Prozedurale 3D-Geometrie
+
+`kern/prozeduralegeometrie/` ergänzt die intrinsische mathematische Geometrie um endliche numerische Geometry Sets und typisierte Feld-ASTs als `DarstellungsWert`. Ein Set enthält Mesh, Punktwolke und referenzierte Instanzen. Join und Realize versetzen Topologieindizes; Felder werden am Verbraucher gegen die unveränderte Punktdomäne ausgewertet. Gemeinsame Budgets begrenzen Modelle, Feldarbeit und expandierte Instanzen. Die Vorschau erzeugt nur ein begrenztes Renderabbild.
+
+Die 15 Vorlagen und vier Anschlussarten unter `MathematikKnoten/geometrynodes/` werden im bestehenden kanonischen Katalog und Auswerterregister installiert. Android und Desktop verwenden dieselbe Konfiguration und Vorschau. Einzelheiten: [ADR](decisions/2026-10-15-prozedurale-geometrie.md) und [Anleitung](../GEOMETRY_NODES.md).
+
 ## Fehlerzustände
 
 Fehler werden mindestens unterschieden in:
@@ -222,3 +228,7 @@ Eine neue Abstraktion ist gerechtfertigt, wenn mindestens eines gilt:
 - eine neue Versionierungs- oder Kompatibilitätsgrenze ist erforderlich.
 
 „Die Datei war lang“ genügt weiterhin nicht als Architekturbegründung. Dateien sind keine verängstigten Tiere, die durch bloße Größe ein neues Ökosystem verdienen.
+
+## Lokale Standarddialoghistorie
+
+Die Android-App führt eine vom Kartengraphen getrennte, begrenzte Standarddialoghistorie. Stabile Einträge und eine gemeinsame Ergebnisdarstellung verbinden UI und Erfassung; nur explizite Standardauswahlaufträge zählen tatsächliche Einfügungen. Ein installationsweiter IO-Dienst verarbeitet Laden/Ereignisse/AtomicFile-Schreiben/Löschen geordnet im No-Backup-Verzeichnis. Keine Statistik in Karten, Exporten oder fachneutralen Modulen. Details: [ADR](decisions/2026-10-15-knotenauswahl-historie.md) und [Vertrag](../KNOTENAUSWAHL_HISTORIE.md).
