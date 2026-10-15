@@ -63,7 +63,7 @@ Dialogeffekte können beim Schließen abbrechen: letzter Zustand wird synchron a
 
 ## 14. Fortschritt
 
-33 neue JVM-Tests bestanden; Gesamtlauf `test :app:assembleDebug :app:compileDebugAndroidTestKotlin`: 1.853 Tests ohne Fehler/Überspringungen und erfolgreicher APK-Build. Repository-, Releaseplan-, Versionsfolge- und Diffprüfungen erfolgreich. Fünf Android-Dialogtests ergänzt, kompiliert und als Test-APK gebaut; Lint und Test-APK-Build erfolgreich (`:app:lintDebug :app:assembleDebugAndroidTest`, 5m31s). Separate Standalone-Kernprüfung erfolgreich. Unabhängiger `node_verifier` hat nach Korrektur dreier Befunde die Codeabnahme erteilt: partielle Einstellungsbefehle verhindern gegenseitiges Überschreiben, NFC+trim erhält Π/π getrennt, flüchtige vollständige Zustände erhalten Umformulierungen ohne gespeicherte Suchtexte. Unveränderte Tippentwürfe schreiben die Datei nicht erneut.
+34 neue JVM-Tests bestanden; Gesamtlauf `test :app:assembleDebug :app:compileDebugAndroidTestKotlin`: 1.853 Tests ohne Fehler/Überspringungen und erfolgreicher APK-Build. Repository-, Releaseplan-, Versionsfolge- und Diffprüfungen erfolgreich. Fünf Android-Dialogtests ergänzt, kompiliert und als Test-APK gebaut; Lint und Test-APK-Build erfolgreich (`:app:lintDebug :app:assembleDebugAndroidTest`, 5m31s). Separate Standalone-Kernprüfung erfolgreich. Unabhängiger `node_verifier` hat nach Korrektur dreier Befunde die Codeabnahme erteilt: partielle Einstellungsbefehle verhindern gegenseitiges Überschreiben, NFC+trim erhält Π/π getrennt, flüchtige vollständige Zustände erhalten Umformulierungen ohne gespeicherte Suchtexte. Unveränderte Tippentwürfe schreiben die Datei nicht erneut.
 
 ## 15. Entscheidungen
 
@@ -81,3 +81,8 @@ Implementiertes Verhalten und Schutzgrenzen: [Dokumentation](../../../KNOTENAUSW
 ### Emulator-Nachprüfung im Releaseauftrag
 
 PR452 führte alle fünf neuen Dialogtests tatsächlich auf API35 aus: vier bestanden, keine übersprungenen Tests. Der schnelle Auswahltest scheiterte am Testzugriff auf eine durch Bildschirmtastatur außerhalb des komponierten LazyColumn-Bereichs liegende Zeile. Der Test scrollt nun zuerst über `performScrollToNode` auf dem Listencontainer; die Auswahl-/Typ-/Undo-Assertions bleiben unverändert. Ein zusätzlicher JVM-Test mit echtem Katalog und Operatorindex bestätigt Tab-Ausweichen und einfügbaren Eintrag. Vollständiger lokaler Nachlauf auf3.3.0 grün19s, 1.853 Tests ohne Fehler/Skips, Debug-/Test-APK erfolgreich. Erfolgreicher CI-Nachlauf vor Merge weiterhin erforderlich.
+
+
+### Zweiter Emulatorbefund: Sammelgraph
+
+Nach dem Scrollfix blieb der Auswahlabschluss im zweiten API35-Lauf offen. Die tatsächliche Sammelgraph-Verbindung ließ sich im JVM-Test als Typfehler reproduzieren (`typ.tupel<…>` gegenüber grobem `mathematik.tupel`). Die Statistik hat die nicht erfolgte Einfügung korrekt nicht gezählt. Minimaler Fix in `MathematikKartenTypSystem.kt` verbindet kanonische Tupel mit der registrierten groben Anschlussart; der neutrale Strukturvergleich bleibt unverändert. Zwei neue Mathematik-Brückentests und eine Sammelgraphregression sichern zulässige Verbindungen sowie unveränderte Längen-/Komponenten-/Zahlenausschlüsse. Unabhängige Codeabnahme ohne Findings. Gesamtnachlauf1.856Tests ohne Fehler/Skips und Debug-/Test-APK grün21s; erneuter Emulatornachweis weiterhin erforderlich.

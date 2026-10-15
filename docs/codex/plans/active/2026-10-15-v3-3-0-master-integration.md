@@ -38,3 +38,12 @@ Kein direkter Commit oder Push auf master, kein Force-Push, keine Historienumsch
 ## Entscheidungen und Ergebnis
 
 2026-10-15: Gesamten geprüften Funktionsstand in der bereits reservierten y-Version3.3.0 integrieren, statt die Nutzungsstatistik fälschlich als getrennte x-Version auf einer unveröffentlichten Basis zu veröffentlichen. Benutzerauftrag autorisiert Commit, Push und Masterintegration ohne zusätzliche Bestätigung. Finale Commit-SHA, PR und Master-CI sind vor dem Merge noch unbekannt und werden nicht vorweggenommen.
+
+
+## Zweiter Emulatorbefund und notwendige Produktkorrektur
+
+Der zweite Lauf auf Head `d041839` fand und klickte die Sammelzeile, aber die Sitzung blieb offen. Ein neuer JVM-Integrationstest reproduzierte die fachliche Ursache: Die reale Graphprüfung wies `typ.tupel<…>` an einem bestehenden groben `mathematik.tupel`-Anschluss ab. Die Sammelaktion brach deshalb vor dem Einfügen ab; die Statistik zählte zutreffend keinen Erfolg.
+
+Die Mathematik-Typbrücke projiziert jetzt ausschließlich die kanonische Tupel-Quell-ID auf ihre registrierte grobe Anschlussart. Der neutrale Strukturvergleich prüft weiter Komponenten und Tupellänge; Zahleneingänge werden nicht geöffnet. Keine Änderung am fachneutralen Graphmodul, am Kartenformat oder am Knotenkatalog. Zwei neue Brückentests und die echte Sammelgraphregression prüfen Ursache und Grenzen. `node_verifier` erteilte unabhängige Codeabnahme ohne Findings.
+
+Finaler lokaler Nachlauf `test :app:assembleDebug :app:assembleDebugAndroidTest`: erfolgreich21s, **1.856 Tests ohne Fehler oder Überspringungen**, beide APKs erfolgreich. Die Versionsklassifikation bleibt3.3.0/y. Der nächste vollständige PR-CI-Lauf mit API35-Emulator muss vor dem Merge grün sein; eine erfolgreiche Runtime-Abnahme wird hier noch nicht behauptet.

@@ -54,6 +54,15 @@ class StandardKnotenEintragTest {
         assertTrue(spalte.einfügbar)
         assertEquals("Spaltenvektor erzeugen",spalte.name)
     }
+    @Test fun `Sammelaktion kann frisches Tupel mit Spaltenadapter verbinden`() {
+        val tupel=de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen.Tupel.erzeuge(GraphPunkt.Zero)
+        val adapter=de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen.TupelZuSpalte.erzeuge(GraphPunkt.Zero)
+        val karte=KartenDaten(name="Sammelauswahl",knoten=listOf(tupel,adapter))
+        val quelle=AnschlussVerweis(tupel.id,tupel.anschlüsse.first { it.name=="tupel" }.id)
+        val ziel=AnschlussVerweis(adapter.id,adapter.anschlüsse.first { it.name=="tupel" }.id)
+        val prüfung=de.TeutonStudio.MathematikKnoten.MathematikKartenLaufzeit().graphPrüfung.prüfe(karte,quelle,ziel)
+        assertIs<de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung.Erlaubt>(prüfung,prüfung.toString())
+    }
     @Test fun `Operatorindex liefert stabile Metadaten bei unveraenderten Suchtreffern`() {
         val b=statischeKnotenVorlagen()
         for(text in listOf("spur","vereinigung","+")) {
