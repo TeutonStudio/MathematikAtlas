@@ -191,10 +191,20 @@ fun Methode.wendeKanonischAn(argumente: Map<String, MathematischesObjekt>): Math
 /** Prädikate werden nur durch ihre mathematische Semantik erkannt. */
 fun Methode.istPrädikat(): Boolean {
     val mathematisch = this as? MathematischeMethode ?: return false
-    if (mathematisch.ausgabeNamen.size != 1 || mathematisch.vorschriftFür(mathematisch.ausgabeNamen.single()) !is Aussage) {
+    if (mathematisch.ausgabeNamen.size != 1) {
         return false
     }
-    return mathematisch.mathematischeSignatur.ergebnisse.singleOrNull()?.zielMenge == WahrheitsMenge
+    val ausgabe = mathematisch.vorschriftFür(mathematisch.ausgabeNamen.single())
+    if (ausgabe.alsPrädikatsAussageOderNull() == null) return false
+    val ziel = mathematisch.mathematischeSignatur.ergebnisse.singleOrNull()?.zielMenge
+    return ziel == WahrheitsMenge || ausgabe is Tupel && ziel == Tupelraum(listOf(WahrheitsMenge))
+}
+
+/** Extrahiert die zulässige skalare Prädikatsausgabe ohne beliebige Tupel zu kollabieren. */
+fun MathematischesObjekt.alsPrädikatsAussageOderNull(): Aussage? = when (this) {
+    is Aussage -> this
+    is Tupel -> elemente.singleOrNull() as? Aussage
+    else -> null
 }
 
 /** Funktionen verarbeiten und liefern ausschließlich Zahl-, Vektor-, Matrix- oder Tensorräume. */

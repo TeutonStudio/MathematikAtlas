@@ -14,6 +14,23 @@ import kotlin.test.assertTrue
 
 class KonzeptBibliothekTest {
     @Test
+    fun `Logik und Mengenlehre besitzen die konsolidierten Fachgruppen`() {
+        fun kinder(id: String) = KonzeptBibliothekRegister.kategorien.single { it.id == id }.kinder.map { it.id }.toSet()
+
+        assertEquals(setOf("aussage", "praedikate", "quantoren"), kinder("logik"))
+        assertEquals(setOf("mengen", "mengenrechner", "mengeneigenschaften"), kinder("mengenlehre"))
+    }
+
+    @Test
+    fun `Geometry Nodes Kategorie besitzt Blender Unterschrift und ordnet Nodes ein`() {
+        val kategorie = KonzeptBibliothekRegister.kategorien.single { it.id == "geometrie-knoten" }
+        assertEquals("Geometrie Knoten", kategorie.bezeichnung)
+        assertEquals("Inspired by Blender", kategorie.unterschrift)
+        assertTrue(kategorie.kinder.map { it.id }.containsAll(listOf("grundknoten", "instanzen", "felder")))
+
+    }
+
+    @Test
     fun `feste Fachhierarchie enthält alle Hauptbereiche und höchstens drei Ebenen`() {
         val hauptbereiche = KonzeptBibliothekRegister.kategorien.map { it.bezeichnung }.toSet()
         assertTrue(
@@ -73,7 +90,7 @@ class KonzeptBibliothekTest {
     }
 
     @Test
-    fun `Funktionsgraph erscheint in Analysis und Mengenlehre Konstruktionen`() {
+    fun `Funktionsgraph erscheint in Analysis und Mengen`() {
         val vorlage = MethodenGraphKnotenVorlagen.Graph
         val eintrag = KonzeptBibliothekRegister.erstelle(listOf(vorlage))
             .single { it.vorlage == vorlage }
@@ -81,11 +98,11 @@ class KonzeptBibliothekTest {
         assertEquals(
             setOf(
                 listOf("analysis", "funktionen"),
-                listOf("mengenlehre", "konstruktionen"),
+                listOf("mengenlehre", "mengen"),
             ),
             eintrag.kategoriePfade.toSet(),
         )
-        assertEquals("Mengenlehre / Konstruktionen", KonzeptBibliothekRegister.bezeichnungFür(listOf("mengenlehre", "konstruktionen")))
+        assertEquals("Mengenlehre / Mengen", KonzeptBibliothekRegister.bezeichnungFür(listOf("mengenlehre", "mengen")))
         listOf("Graph", "Funktionsgraph", "Graph einer Funktion", "Graph einer Methode", "Γ_f").forEach { suchtext ->
             assertTrue(eintrag.passt(KonzeptBibliothekFilter(suchtext = suchtext)), "Suchtext '$suchtext' findet den Graphen nicht.")
         }

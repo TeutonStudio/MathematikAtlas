@@ -113,6 +113,23 @@ data class Tupelraum(val komponenten: List<MengenAusdruck>) : MengenAusdruck {
     }
 }
 
+/** Kompakte kartesische Potenz; auch Dimension eins bleibt ein Tupelraum. */
+data class KartesischerPotenzraum(
+    val grundmenge: MengenAusdruck,
+    val dimension: ZahlAusdruck,
+) : MengenAusdruck {
+    init {
+        val n = vereinfache(dimension) as? RationaleZahl
+        require(n == null || n.nenner == java.math.BigInteger.ONE && n.zähler.signum() >= 0) {
+            "Die Potenzdimension muss eine nichtnegative ganze Zahl sein."
+        }
+    }
+    override fun zuLatex() = "${grundmenge.zuLatex()}^{${dimension.zuLatex()}}"
+}
+
+fun kartesischePotenz(grundmenge: MengenAusdruck, dimension: ZahlAusdruck): MengenAusdruck =
+    KartesischerPotenzraum(grundmenge, dimension)
+
 /** Trägermenge endlicher Tupel variabler Länge über einer Elementmenge. */
 data class Folgenraum(val elementMenge: MengenAusdruck) : MengenAusdruck {
     override fun zuLatex() = "${elementMenge.zuLatex()}^{<\\omega}"
@@ -185,7 +202,7 @@ data class GefilterteMenge(
     init {
         val mathematisch = methode.alsMathematischeMethode("Mengenfilter")
         require(mathematisch.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
-        require(mathematisch.ausgabeNamen.size == 1 && mathematisch.einzigeAusgabe().second is Aussage) {
+        require(mathematisch.ausgabeNamen.size == 1 && mathematisch.einzigeAusgabe().second.alsPrädikatsAussageOderNull() != null) {
             "Eine Filtermethode muss genau eine Aussage ausgeben."
         }
     }
@@ -193,7 +210,8 @@ data class GefilterteMenge(
     override fun zuLatex(): String {
         val mathematisch = methode.alsMathematischeMethode("Mengenfilter")
         val parameter = mathematisch.parameter.single()
-        val bedingung = mathematisch.einzigeAusgabe().second as Aussage
+        val bedingung = mathematisch.einzigeAusgabe().second.alsPrädikatsAussageOderNull()
+            ?: error("Eine Filtermethode muss eine Aussage oder ein Bool-Einertupel ausgeben.")
         return "\\left\\{${parameter.zuLatex()}\\in${menge.zuLatex()}\\mid ${bedingung.zuLatex()}\\right\\}"
     }
 }
@@ -207,12 +225,13 @@ fun filtereMenge(
     val mathematisch = methode.alsMathematischeMethode("Mengenfilter")
     require(mathematisch.parameter.size == 1) { "Eine Filtermethode benötigt genau einen Elementparameter." }
     val (_, ausgabe) = mathematisch.einzigeAusgabe()
-    require(ausgabe is Aussage) { "Eine Filtermethode muss eine Aussage ausgeben." }
+    require(ausgabe.alsPrädikatsAussageOderNull() != null) { "Eine Filtermethode muss eine Aussage oder ein Bool-Einertupel ausgeben." }
     if (menge == LeereMenge) return LeereMenge
     if (menge is EndlicheMenge) {
         val behalten = linkedSetOf<MathematischesObjekt>()
         for (element in menge.elemente.sortedBy(::strukturellerSchlüssel)) {
-            val bedingung = mathematisch.wendeAn(listOf(element)) as Aussage
+            val bedingung = mathematisch.wendeAn(listOf(element)).alsPrädikatsAussageOderNull()
+                ?: error("Eine Filtermethode muss eine Aussage oder ein Bool-Einertupel ausgeben.")
             when (bedingung.entscheide(kontext).wahrheitswert) {
                 Wahrheitswert.Wahr -> behalten += element
                 Wahrheitswert.Lüge -> Unit
@@ -310,6 +329,7 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         }
         is EndlicheMenge -> Disjunktion(menge.elemente.map { Selbigkeit(element, it) }).entscheide(kontext)
         is KartesischesProdukt -> entscheideTupelMitgliedschaft(element, menge.mengen, kontext)
+        is KartesischerPotenzraum -> entscheideKartesischePotenzmitgliedschaft(element, menge, kontext)
         is ÜbersetzungsBildraum -> menge.enthält(element, kontext)
         is Tupelraum -> entscheideTupelMitgliedschaft(element, menge.komponenten, kontext)
         is Vereinigung -> Disjunktion(menge.mengen.map { ElementBeziehung(element, it) }).entscheide(kontext)
@@ -443,6 +463,23 @@ private fun entscheideTupelMitgliedschaft(
     return Konjunktion(
         tupel.elemente.zip(komponenten).map { (wert, menge) -> ElementBeziehung(wert, menge) },
     ).entscheide(kontext)
+}
+
+private fun entscheideKartesischePotenzmitgliedschaft(
+    element: MathematischesObjekt,
+    raum: KartesischerPotenzraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    val tupel = element as? Tupel ?: return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Ein kartesischer Potenzraum enthält nur geordnete Tupel.")
+    val n = (vereinfache(raum.dimension, kontext) as? RationaleZahl)
+        ?: return AussageErgebnis(null, EntscheidungsStatus.Unbekannt, "Die Potenzdimension ist noch nicht bestimmt.")
+    if (n.nenner != java.math.BigInteger.ONE || n.zähler.signum() < 0) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Die Potenzdimension muss eine nichtnegative ganze Zahl sein.")
+    }
+    val länge = runCatching { n.zähler.intValueExact() }.getOrNull()
+        ?: return AussageErgebnis(null, EntscheidungsStatus.Unbekannt, "Die Potenzdimension ist zu groß für eine konkrete Tupelprüfung.")
+    if (tupel.elemente.size != länge) return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Die Tupeldimension stimmt nicht mit dem Potenzraum überein.")
+    return Konjunktion(tupel.elemente.map { ElementBeziehung(it, raum.grundmenge) }).entscheide(kontext)
 }
 
 data class EchteTeilmengeBeziehung(val links: MengenAusdruck, val rechts: MengenAusdruck) : Aussage {

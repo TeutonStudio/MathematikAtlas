@@ -57,6 +57,7 @@ object MathematischerWertCodec {
             is SpaltenVektor -> { d.writeUTF("SpaltenVektor"); liste(d, w.werte, tiefe) }
             is ZeilenVektor -> { d.writeUTF("ZeilenVektor"); liste(d, w.werte, tiefe) }
             is Tupelraum -> { d.writeUTF("Tupelraum"); liste(d, w.komponenten, tiefe) }
+            is KartesischerPotenzraum -> { d.writeUTF("KartesischerPotenzraum"); wert(d, w.grundmenge, tiefe + 1); wert(d, w.dimension, tiefe + 1) }
             is KartesischesProdukt -> { d.writeUTF("KartesischesProdukt"); liste(d, w.mengen, tiefe) }
             is Vereinigung -> { d.writeUTF("Vereinigung"); liste(d, w.mengen, tiefe) }
             is Konjunktion -> { d.writeUTF("Konjunktion"); liste(d, w.aussagen, tiefe) }
@@ -192,6 +193,7 @@ object MathematischerWertCodec {
             "SpaltenVektor" -> SpaltenVektor(liste(d, tiefe, version).map { it as ZahlAusdruck })
             "ZeilenVektor" -> ZeilenVektor(liste(d, tiefe, version).map { it as ZahlAusdruck })
             "Tupelraum" -> Tupelraum(liste(d, tiefe, version).map { it as MengenAusdruck })
+            "KartesischerPotenzraum" -> KartesischerPotenzraum(wert(d, tiefe + 1, version) as MengenAusdruck, wert(d, tiefe + 1, version) as ZahlAusdruck)
             "KartesischesProdukt" -> KartesischesProdukt(liste(d, tiefe, version).map { it as MengenAusdruck })
             "Vereinigung" -> Vereinigung(liste(d, tiefe, version).map { it as MengenAusdruck })
             "Konjunktion" -> Konjunktion(liste(d, tiefe, version).map { it as Aussage })

@@ -36,6 +36,6 @@ class MengenKonstantenKnotenTest {
         val geladen = MathematikKartenCodec.lade(KartenDatenJson.schreibe(KartenDaten(name = "Alt", knoten = listOf(alt)))).migriereKonsolidierteKnoten().knoten.single()
         assertEquals(MENGEN_KNOTEN_ART, geladen.art)
         assertEquals("P", geladen.parameter[MENGEN_KNOTEN_AUSWAHL])
-        assertEquals(alt.anschlüsse.single().id, geladen.anschlüsse.single().id)
+        assertEquals(alt.anschlüsse.first { it.name == "menge" }.id, geladen.anschlüsse.first { it.name == "menge" }.id)
     }
 }

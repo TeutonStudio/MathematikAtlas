@@ -265,6 +265,16 @@ private fun HauptkategorieKachel(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            kategorie.unterschrift?.let { unterschrift ->
+                Text(
+                    unterschrift,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Text(
                 "$anzahl Konzepte",
                 style = MaterialTheme.typography.labelMedium,
@@ -306,7 +316,8 @@ private fun UnterkategorienEbene(
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
         BibliotheksNavigation(
             titel = hauptkategorie.bezeichnung,
-            untertitel = "Unterkategorie auswählen oder Konzepte über Wort- und Anschlussfilter eingrenzen.",
+            untertitel = hauptkategorie.unterschrift
+                ?: "Unterkategorie auswählen oder Konzepte über Wort- und Anschlussfilter eingrenzen.",
             onZurück = onZurück,
         )
         BibliotheksSucheUndFilter(

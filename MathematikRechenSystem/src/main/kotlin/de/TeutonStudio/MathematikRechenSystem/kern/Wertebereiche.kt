@@ -118,6 +118,7 @@ private fun inferiereElementMenge(
     is ÜbersetzungsBildraum -> menge
     is EndlicheIndexMenge -> NatürlicheZahlen
     is StrukturErgebnisMenge -> menge
+    is KartesischerPotenzraum -> menge
     NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen,
     Primzahlen, GaußscheGanzeZahlen, GaußschePrimzahlen, Gradmenge, is BenannteMenge -> menge
     LeereMenge -> LeereMenge

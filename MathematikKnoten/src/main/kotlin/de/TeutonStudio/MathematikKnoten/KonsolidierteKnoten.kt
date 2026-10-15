@@ -23,6 +23,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.LeereMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.MathematischesObjekt
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenKonstante
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
+import de.TeutonStudio.MathematikRechenSystem.kern.kartesischePotenz
 import de.TeutonStudio.MathematikRechenSystem.kern.NatürlicheZahlen
 import de.TeutonStudio.MathematikRechenSystem.kern.OrientierterVektor
 import de.TeutonStudio.MathematikRechenSystem.kern.Primzahlen
@@ -86,7 +87,11 @@ object MengenKnotenVorlagen {
         kategorie = "Mengen",
         beschreibung = "Ein einheitlicher Mengenknoten; die konkrete Menge oder eine versionsfeste eigene Karte wird im Inspector gewählt.",
         standardGröße = GraphGröße(230f, 105f),
-        anschlüsse = (if (auswahl == MengenKnotenAuswahl.GRADMENGE) listOf(zahlEingang("dim", 0)) else emptyList()) + mengenAusgang(),
+        anschlüsse = if (auswahl == MengenKnotenAuswahl.GRADMENGE) {
+            listOf(zahlEingang("dim", 0)) + mengenAusgang()
+        } else {
+            listOf(zahlEingang("dimension", 0)) + mengenAusgang()
+        },
         standardParameter = mapOf(MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId),
     )
 
@@ -195,7 +200,9 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
         if (auswahl == null) return@registriere KnotenAuswertungsErgebnis(ausgaben = emptyMap(), fehler = "Unbekannter Mengenoperator: $id")
         KnotenAuswertungsErgebnis(
             ausgaben = mapOf("menge" to BedingterWert(
-                if (auswahl == MengenKnotenAuswahl.GRADMENGE && "dim" in kontext.eingänge) {
+                if (auswahl != MengenKnotenAuswahl.GRADMENGE && "dimension" in kontext.eingänge) {
+                    kartesischePotenz(auswahl.menge(), kontext.eingänge["dimension"]!!.objekt as ZahlAusdruck)
+                } else if (auswahl == MengenKnotenAuswahl.GRADMENGE && "dim" in kontext.eingänge) {
                     val dimension = kontext.natuerlicheGanzzahl("dim", nullErlaubt = false)
                     require(dimension <= 65) { "Die Dimension darf höchstens 65 sein." }
                     de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(dimension - 1)
@@ -393,13 +400,13 @@ private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
     )
 }
 
-/** Ergänzt den optionalen Dimensionseingang, ohne vorhandene Referenzen zu ändern. */
+/** Ergänzt optionale Dimensionseingänge und erhält vorhandene Anschlussreferenzen. */
 fun KnotenDaten.mitGradmengenDimension(): KnotenDaten {
-    if (art != MENGEN_KNOTEN_ART || kartenVerweis != null ||
-        parameter[MENGEN_KNOTEN_AUSWAHL] != MengenKnotenAuswahl.GRADMENGE.stabileId ||
-        anschlüsse.any { it.name == "dim" && it.richtung == AnschlussRichtung.Eingang }
-    ) return this
-    return copy(anschlüsse = listOf(zahlEingang("dim", 0).copy(id = AnschlussId("${id.wert}-grad-dim"))) + anschlüsse)
+    if (art != MENGEN_KNOTEN_ART || kartenVerweis != null) return this
+    val auswahl = MengenKnotenAuswahl.entries.firstOrNull { it.stabileId == parameter[MENGEN_KNOTEN_AUSWAHL] } ?: return this
+    val name = if (auswahl == MengenKnotenAuswahl.GRADMENGE) "dim" else "dimension"
+    if (anschlüsse.any { it.name == name && it.richtung == AnschlussRichtung.Eingang }) return this
+    return copy(anschlüsse = listOf(zahlEingang(name, 0).copy(id = AnschlussId("${id.wert}-mengen-$name"))) + anschlüsse)
 }
 
 fun KartenDaten.migriereGradmengenDimension(): KartenDaten = copy(knoten = knoten.map { it.mitGradmengenDimension() })

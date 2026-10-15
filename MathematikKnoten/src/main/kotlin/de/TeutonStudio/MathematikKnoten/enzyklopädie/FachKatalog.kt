@@ -24,18 +24,19 @@ object FachKatalog {
     val GeometrieDarstellung = FachPfad.von("geometrie", "visualisierung")
 
     val MengenlehreMengen = FachPfad.von("mengenlehre", "mengen")
-    val MengenlehreOperationen = FachPfad.von("mengenlehre", "mengenoperationen")
-    val MengenlehreDefinitionen = FachPfad.von("mengenlehre", "mengendefinitionen")
-    val MengenlehreKonstruktionen = FachPfad.von("mengenlehre", "konstruktionen")
-    val MengenlehreAxiome = FachPfad.von("mengenlehre", "axiome")
-    val MengenEigenschaftenKardinalität = FachPfad.von("mengenlehre", "eigenschaften", "kardinalitaet")
-    val MengenEigenschaftenTopologie = FachPfad.von("mengenlehre", "eigenschaften", "topologie")
-    val MengenEigenschaftenKonvexität = FachPfad.von("mengenlehre", "eigenschaften", "konvexitaet")
-    val MengenlehreTopologieRäume = FachPfad.von("mengenlehre", "topologie", "raeume")
+    val MengenlehreOperationen = FachPfad.von("mengenlehre", "mengenrechner")
+    val MengenlehreEigenschaften = FachPfad.von("mengenlehre", "mengeneigenschaften")
+    val MengenlehreDefinitionen = MengenlehreMengen
+    val MengenlehreKonstruktionen = MengenlehreMengen
+    val MengenlehreAxiome = MengenlehreEigenschaften
+    val MengenEigenschaftenKardinalität = MengenlehreEigenschaften
+    val MengenEigenschaftenTopologie = MengenlehreEigenschaften
+    val MengenEigenschaftenKonvexität = MengenlehreEigenschaften
+    val MengenlehreTopologieRäume = MengenlehreMengen
 
-    val LogikAussagen = FachPfad.von("logik", "aussagen")
+    val LogikAussagen = FachPfad.von("logik", "aussage")
     val LogikPrädikate = FachPfad.von("logik", "praedikate")
-    val LogikAxiome = FachPfad.von("logik", "praedikate", "axiome")
+    val LogikAxiome = LogikPrädikate
     val LogikQuantoren = FachPfad.von("logik", "quantoren")
 
     val ArithmetikNatürlicheZahlen = FachPfad.von("arithmetik", "natuerliche-zahlen")
@@ -72,6 +73,7 @@ object FachKatalog {
         GeometrieDarstellung,
         MengenlehreMengen,
         MengenlehreOperationen,
+        MengenlehreEigenschaften,
         MengenlehreDefinitionen,
         MengenlehreKonstruktionen,
         MengenlehreAxiome,
@@ -94,6 +96,18 @@ object FachKatalog {
         TopologieAbbildungen,
         StochastikGrundbegriffe,
         EigeneKarten,
+        // Historische Konzeptdateien bleiben ladbar; die App normalisiert sie
+        // beim Aufbau der sichtbaren Bibliothek auf die neuen Fachgruppen.
+        FachPfad.von("logik", "aussagen"),
+        FachPfad.von("logik", "praedikate", "axiome"),
+        FachPfad.von("mengenlehre", "mengenoperationen"),
+        FachPfad.von("mengenlehre", "mengendefinitionen"),
+        FachPfad.von("mengenlehre", "konstruktionen"),
+        FachPfad.von("mengenlehre", "axiome"),
+        FachPfad.von("mengenlehre", "eigenschaften", "kardinalitaet"),
+        FachPfad.von("mengenlehre", "eigenschaften", "topologie"),
+        FachPfad.von("mengenlehre", "eigenschaften", "konvexitaet"),
+        FachPfad.von("mengenlehre", "topologie", "raeume"),
     )
 
     fun fürAxiomId(axiomId: String): Set<FachPfad> = buildSet {
@@ -126,6 +140,7 @@ object FachKatalog {
         val nameKlein = name.lowercase()
         val kategorieKlein = kategorie.lowercase()
         val eigenschaft = standardParameter["eigenschaft"]?.trim()?.lowercase().orEmpty()
+        val operator = standardParameter["operator"]?.lowercase().orEmpty()
 
         if (artKlein == "mathematik.methodengraph") {
             return setOf(AnalysisFunktionen, MengenlehreKonstruktionen)
@@ -214,7 +229,8 @@ object FachKatalog {
             ) {
                 add(
                     when {
-                        "quantor" in artKlein -> LogikQuantoren
+                        "quantor" in artKlein || operator.contains("quantor") ||
+                            artKlein.contains("iterierte") && artKlein.contains("aussage") -> LogikQuantoren
                         listOf("praedikat", "prädikat", "gleichheit", "ordnung").any(artKlein::contains) -> LogikPrädikate
                         else -> LogikAussagen
                     },

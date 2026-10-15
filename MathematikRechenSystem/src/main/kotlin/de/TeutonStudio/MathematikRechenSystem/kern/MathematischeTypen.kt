@@ -107,6 +107,7 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     RationaleZahlen -> TypAusdruck.Atom(MathematischeTypen.Rational)
     ReelleZahlen, is ReellesIntervall -> TypAusdruck.Atom(MathematischeTypen.Reell)
     KomplexeZahlen -> TypAusdruck.Atom(MathematischeTypen.Komplex)
+    is KartesischerPotenzraum -> TypAusdruck.Atom(MathematischeTypen.Tupel)
     is Tupelraum -> TypAusdruck.Parameterisiert(
         MathematischeTypen.Tupel,
         komponenten.map(MengenAusdruck::elementTypAusdruck),

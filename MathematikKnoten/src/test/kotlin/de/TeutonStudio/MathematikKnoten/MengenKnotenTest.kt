@@ -13,7 +13,27 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 
 class MengenKnotenTest {
-    private val register = StandardMathematikAuswerter.erzeugeRegister()
+    private val register = GesamterMathematikAuswerter.erzeugeRegister()
+
+    @Test
+    fun `Mengenquelle besitzt optionalen Dimensionseingang und erzeugt Potenzraum`() {
+        val knoten = MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
+        assertEquals("dimension", knoten.anschlüsse.first { it.richtung == AnschlussRichtung.Eingang }.name)
+        val ergebnis = register.finde(knoten.art)!!.auswerten(
+            KnotenAuswertungsKontext(knoten, mapOf("dimension" to BedingterWert(RationaleZahl.von(3))), RechenKontext()),
+        )
+        assertIs<KartesischerPotenzraum>(ergebnis.ausgaben.getValue("menge").objekt)
+    }
+
+    @Test
+    fun `alte Mengenquelle bekommt Dimension ohne Anschlussverlust`() {
+        val neu = MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
+        val alt = neu.copy(anschlüsse = neu.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang })
+        val migriert = alt.mitGradmengenDimension()
+        assertEquals(alt.anschlüsse.single(), migriert.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang })
+        assertEquals(migriert, migriert.mitGradmengenDimension())
+        assertEquals("dimension", migriert.anschlüsse.first().name)
+    }
 
     @Test
     fun `Einzelmenge nimmt beliebiges Objekt auf`() {

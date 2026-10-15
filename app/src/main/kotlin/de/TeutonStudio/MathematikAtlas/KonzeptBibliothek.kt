@@ -50,6 +50,7 @@ internal data class KonzeptKategorie(
     val id: String,
     val bezeichnung: String,
     val kinder: List<KonzeptKategorie> = emptyList(),
+    val unterschrift: String? = null,
 )
 
 internal enum class KonzeptVerfügbarkeit { Verfügbar, Geplant }
@@ -125,40 +126,30 @@ internal object KonzeptBibliothekRegister {
             ),
         ),
         KonzeptKategorie(
+            id = "geometrie-knoten",
+            bezeichnung = "Geometrie Knoten",
+            unterschrift = "Inspired by Blender",
+            kinder = listOf(
+                KonzeptKategorie("grundknoten", "Grundknoten"),
+                KonzeptKategorie("instanzen", "Instanzen"),
+                KonzeptKategorie("felder", "Felder und Attribute"),
+            ),
+        ),
+        KonzeptKategorie(
             "mengenlehre",
             "Mengenlehre",
             listOf(
                 KonzeptKategorie("mengen", "Mengen"),
-                KonzeptKategorie("mengenoperationen", "Mengenoperationen"),
-                KonzeptKategorie("mengendefinitionen", "Mengendefinitionen"),
-                KonzeptKategorie("konstruktionen", "Konstruktionen"),
-                KonzeptKategorie("axiome", "Axiome"),
-                KonzeptKategorie(
-                    "eigenschaften",
-                    "Eigenschaften",
-                    listOf(
-                        KonzeptKategorie("kardinalitaet", "Kardinalität"),
-                        KonzeptKategorie("topologie", "Topologie"),
-                        KonzeptKategorie("konvexitaet", "Konvexität"),
-                    ),
-                ),
-                KonzeptKategorie(
-                    "topologie",
-                    "Topologie",
-                    listOf(KonzeptKategorie("raeume", "Räume")),
-                ),
+                KonzeptKategorie("mengenrechner", "Mengenrechner"),
+                KonzeptKategorie("mengeneigenschaften", "Mengeneigenschaften"),
             ),
         ),
         KonzeptKategorie(
             "logik",
             "Logik",
             listOf(
-                KonzeptKategorie("aussagen", "Aussagen"),
-                KonzeptKategorie(
-                    "praedikate",
-                    "Prädikate",
-                    listOf(KonzeptKategorie("axiome", "Axiome")),
-                ),
+                KonzeptKategorie("aussage", "Aussage"),
+                KonzeptKategorie("praedikate", "Prädikate"),
                 KonzeptKategorie("quantoren", "Quantoren"),
             ),
         ),
@@ -213,7 +204,7 @@ internal object KonzeptBibliothekRegister {
 
         val kanonischeEinträge = KonzeptKnotenRegister.erstelle(vollständigeKanonischeVorlagen).flatMap { wissen ->
             val kategoriePfade = wissen.fachPfade
-                .map { it.segmente }
+                .map { normalisiereFachpfad(it.segmente) }
                 .sortedBy { it.joinToString("/") }
             if (wissen.knotenVorlagen.isEmpty()) {
                 listOf(
@@ -268,6 +259,22 @@ internal object KonzeptBibliothekRegister {
     fun bezeichnungFür(pfad: List<String>): String = pfad.indices.mapNotNull { index ->
         kategorienNachPfad[pfad.take(index + 1)]?.bezeichnung
     }.joinToString(" / ")
+
+    /** Migriert historische Konzeptdateien auf die aktuell sichtbare Fachhierarchie. */
+    private fun normalisiereFachpfad(pfad: List<String>): List<String> = when {
+        pfad == listOf("logik", "aussagen") -> listOf("logik", "aussage")
+        pfad == listOf("mengenlehre", "mengenoperationen") -> listOf("mengenlehre", "mengenrechner")
+        pfad == listOf("mengenlehre", "mengendefinitionen") ||
+            pfad == listOf("mengenlehre", "konstruktionen") ||
+            pfad == listOf("mengenlehre", "topologie", "raeume") -> listOf("mengenlehre", "mengen")
+        pfad == listOf("mengenlehre", "axiome") ||
+            pfad == listOf("mengenlehre", "eigenschaften", "kardinalitaet") ||
+            pfad == listOf("mengenlehre", "eigenschaften", "topologie") ||
+            pfad == listOf("mengenlehre", "eigenschaften", "konvexitaet") ->
+            listOf("mengenlehre", "mengeneigenschaften")
+        pfad == listOf("logik", "praedikate", "axiome") -> listOf("logik", "praedikate")
+        else -> pfad
+    }
 
     fun unterkategorien(hauptkategorie: String): List<KonzeptKategorie> =
         kategorien.firstOrNull { it.id == hauptkategorie }?.kinder.orEmpty()
@@ -327,6 +334,7 @@ internal object KonzeptBibliothekRegister {
         val name = vorlage.name.lowercase()
         val kategorie = vorlage.kategorie.lowercase()
         val eigenschaft = vorlage.standardParameter["eigenschaft"]?.lowercase().orEmpty()
+        val operator = vorlage.standardParameter["operator"]?.lowercase().orEmpty()
         val pfade = linkedSetOf<List<String>>()
 
         if (kategorie in setOf("eigene karten", "gespeicherte karten", "gruppen") || vorlage.kartenVerweis != null) {
@@ -334,16 +342,16 @@ internal object KonzeptBibliothekRegister {
         }
 
         if (art in setOf("mathematik.topologischerraum", "mathematik.metrischerraum")) {
-            pfade += listOf("mengenlehre", "topologie", "raeume")
+            pfade += listOf("mengenlehre", "mengen")
             pfade += listOf("topologie", "grundbegriffe")
         }
         if (art.contains("mengeneigenschaft")) {
             when (eigenschaft) {
                 "endlich", "unendlich", "abzählbar", "abzaehlbar", "überabzählbar", "ueberabzaehlbar", "uberabzahlbar" ->
-                    pfade += listOf("mengenlehre", "eigenschaften", "kardinalitaet")
+                    pfade += listOf("mengenlehre", "mengeneigenschaften")
                 "offen", "abgeschlossen", "geschlossen" ->
-                    pfade += listOf("mengenlehre", "eigenschaften", "topologie")
-                "konvexe-menge" -> pfade += listOf("mengenlehre", "eigenschaften", "konvexitaet")
+                    pfade += listOf("mengenlehre", "mengeneigenschaften")
+                "konvexe-menge" -> pfade += listOf("mengenlehre", "mengeneigenschaften")
             }
         }
         if (art.contains("methodeneigenschaft") && eigenschaft == "stetig") {
@@ -361,6 +369,15 @@ internal object KonzeptBibliothekRegister {
             pfade += listOf("geometrie", unterkategorie)
         }
 
+        if (kategorie.startsWith("geometry nodes:") || art.contains("geometrynodes")) {
+            val unterkategorie = when {
+                art.contains("instance") || name.contains("instanz") -> "instanzen"
+                art.contains("field") || art.contains("attribute") || name.contains("feld") -> "felder"
+                else -> "grundknoten"
+            }
+            pfade += listOf("geometrie-knoten", unterkategorie)
+        }
+
         if (kategorie == "vektoren" || art.contains("vektor")) pfade += listOf("lineare-algebra", "vektoren")
         if (kategorie == "matrizen" || art.contains("matrix") || art.contains("spur")) pfade += listOf("lineare-algebra", "matrizen")
         if (art.contains("tensor")) pfade += listOf("lineare-algebra", "tensoren")
@@ -371,12 +388,17 @@ internal object KonzeptBibliothekRegister {
 
         if (kategorie == "mengen" || kategorie.contains("mengen") || art.contains("menge")) {
             val unterkategorie = when {
-                art.contains("konstruktor") || art.contains("definator") -> "mengendefinitionen"
+                art.contains("konstruktor") || art.contains("definator") -> "mengen"
                 kategorie.contains("rechnung") || art.contains("schnitt") || art.contains("vereinigung") ||
-                    art.contains("differenz") || art.contains("produkt") -> "mengenoperationen"
+                    art.contains("differenz") || art.contains("produkt") || art.contains("mächtigkeit") ||
+                    art.contains("maechtigkeit") -> "mengenrechner"
                 else -> "mengen"
             }
-            pfade += listOf("mengenlehre", unterkategorie)
+            if (art.contains("mengeneigenschaft")) {
+                pfade += listOf("mengenlehre", "mengeneigenschaften")
+            } else {
+                pfade += listOf("mengenlehre", unterkategorie)
+            }
         }
 
         if (kategorie.startsWith("aussagen") || kategorie == "aussage" || art.contains("aussage") ||
@@ -384,9 +406,11 @@ internal object KonzeptBibliothekRegister {
             art.contains("gleichheit") || art.contains("ordnung")
         ) {
             val unterkategorie = when {
-                art.contains("quantor") -> "quantoren"
+                art.contains("quantor") || operator.contains("quantor") ||
+                    (art.contains("iteriert") && art.contains("aussage")) -> "quantoren"
                 art.contains("praedikat") || art.contains("prädikat") || art.contains("gleichheit") || art.contains("ordnung") -> "praedikate"
-                else -> "aussagen"
+                art.contains("wahr") || art.contains("lüge") || art.contains("luege") -> "aussage"
+                else -> "aussage"
             }
             pfade += listOf("logik", unterkategorie)
         }

@@ -148,7 +148,7 @@ object AxiomOperatoren {
         methode.wendeAn(argumente.toList())
 
     private fun prädikat(methode: Methode, vararg argumente: MathematischesObjekt): Aussage =
-        aufruf(methode, *argumente) as? Aussage
+        aufruf(methode, *argumente).alsPrädikatsAussageOderNull()
             ?: error("Die Methode '${methode.name}' liefert bei der Axiomauswertung keine Aussage.")
 
     private fun <T> endlich(menge: MengenAusdruck, block: (List<MathematischesObjekt>) -> T): T? =

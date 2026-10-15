@@ -49,7 +49,7 @@ fun Methode.lösePrädikatAuf(
     }
 
     val mathematisch = alsMathematischeMethode("Prädikatsdarstellung")
-    val aussageVorlage = mathematisch.einzigeAusgabe().second as? Aussage
+    val aussageVorlage = mathematisch.einzigeAusgabe().second.alsPrädikatsAussageOderNull()
         ?: throw MethodenSignaturFehler("Die Methode '$name' besitzt keine einzelne Aussageausgabe.")
     val aussage = ersetze(aussageVorlage, bindungen) as? Aussage
         ?: throw MethodenSignaturFehler("Die gebundene Ausgabe der Methode '$name' ist keine Aussage.")
@@ -125,7 +125,7 @@ fun AufgelöstesPrädikat.kompaktZuLatex(): String {
 fun GebundeneMethode.wertePrädikatAus(): Aussage {
     require(methode.istPrädikat()) { "Die gebundene Methode '${methode.name}' ist kein Prädikat." }
     require(freieParameter.isEmpty()) { "Das Prädikat '${methode.name}' besitzt noch freie Argumente." }
-    return methode.wendeKanonischAn(bindungen) as? Aussage
+    return methode.wendeKanonischAn(bindungen).alsPrädikatsAussageOderNull()
         ?: error("Das Prädikat '${methode.name}' hat keine Aussage geliefert.")
 }
 
