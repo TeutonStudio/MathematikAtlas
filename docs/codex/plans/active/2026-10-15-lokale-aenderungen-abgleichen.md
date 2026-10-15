@@ -1,6 +1,6 @@
 # Lokale Änderungen mit GitHub v3.3.0 abgleichen
 
-Status: Implementierung abgeschlossen, Veröffentlichung offen.
+Status: Rekonstruktion und lokale Verifikation abgeschlossen. Veröffentlichungspfad: [PR #453](https://github.com/TeutonStudio/MathematikAtlas/pull/453).
 
 ## Ziel und Nutzerwirkung
 GitHub-master aktualisieren und die dort noch fehlenden lokalen Änderungen erneut integrieren und veröffentlichen. Mengenquellen können kartesische Potenzräume liefern, Bool-Einertupel funktionieren als Prädikate, die Konzeptbibliothek erhält die lokal vorbereitete Fachhierarchie und Geometriekategorie.
@@ -28,7 +28,8 @@ Mathematik bleibt im Rechenkern, Auswertung im vorhandenen Register. Der veröff
 - [x] master per Fast-forward aktualisieren; SamAI-Branch erstellen.
 - [x] Fehlende Änderungen integrieren und Integrationslücken schließen.
 - [x] Unabhängiger Review durch master_verwalter; Bool-Consumer und Parameteranalyse korrigiert.
-- [-] Finale Prüfungen und Veröffentlichung.
+- [x] Finale lokale Prüfungen erfolgreich, 1864 Tests sowie Debug-Build und Lint.
+- [-] GitHub-Veröffentlichung über PR #453; ausschließlich nach grünen Pflichtchecks.
 
 ## Umsetzungsschritte
 Archivdateien selektiv wiederherstellen, Kollisionen anhand veröffentlichter Implementierungen auflösen, Codec/Substitution/Parameteranalyse ergänzen und bestehende Migration erweitern. Fachpfad- und Anschlussannahmen der Tests aktualisieren. Finale Prüfung vor Commit und PR.
@@ -43,7 +44,7 @@ Kartenformat bleibt 9. Neuer Mengenausdruck hat expliziten Wertcodec-Tag. Keine 
 Originaländerungen bleiben im Stash und Archiv erhalten. GitHub-Änderungen werden nicht überschrieben. Bei fehlgeschlagenen Pflichtchecks kein Merge. Visuelle Geräteprüfung konnte nicht ausgeführt werden.
 
 ## Fortschritt
-2026-10-15: Vergleich, Sicherung, Pull, Wiederherstellung, Releaseklassifikation und Review abgeschlossen; finale Tests und Veröffentlichung folgen.
+2026-10-15: Vergleich, Sicherung, Pull, Wiederherstellung, Releaseklassifikation und Review abgeschlossen; finale lokale Tests erfolgreich; Veröffentlichung erfolgt durch PR #453.
 
 ## Entscheidungsprotokoll
 2026-10-15: master_verwalter bestätigt v3.3.1, Achse x, Basis a789e606. Der lokale Geometrieprototyp wird durch die bessere veröffentlichte Familie abgelöst; zusätzliche Stubtypen würden unbestätigte Semantik und ein paralleles System einführen.
@@ -52,4 +53,4 @@ Originaländerungen bleiben im Stash und Archiv erhalten. GitHub-Änderungen wer
 Statt blindem Wiederaufspielen aller Dateien wird der überholte Geometrieprototyp gesichert. Notwendige Codec-, Migrations- und Prädikatsconsumer-Ergänzungen schließen Lücken des lokalen Ausgangsstands.
 
 ## Ergebnis und Verifikation
-Veröffentlichung noch offen; finalen Prüfstatus und Commit nachtragen.
+Der abgeglichene Release-Zielbaum basiert auf a789e606 und enthält die fehlenden lokalen Änderungen ohne parallelen Geometrieprototyp. Lokaler Produktcommit: 9e7fedd6760321a172aed0d76c448fc4856fdad4, Autor und Committer SamAI. Finale lokale Prüfungen sind grün; kein angeschlossenes Gerät für lokale Sichtprüfung. Verbindlicher GitHub-Nachweis für finalen Squashcommit, PR-Prüfungen und Mergezustand: [PR #453](https://github.com/TeutonStudio/MathematikAtlas/pull/453); Master-Pushprüfungen stehen beim dort verlinkten Versionscommit.

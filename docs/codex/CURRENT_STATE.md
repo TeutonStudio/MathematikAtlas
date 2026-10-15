@@ -1,9 +1,10 @@
-## Abgleich lokaler Änderungen am 2026-10-15 (v3.3.1 in Prüfung)
+## Abgleich lokaler Änderungen am 2026-10-15 (Releaseziel v3.3.1)
 
 - Basis: veröffentlichte v3.3.0 a789e606. Fehlende lokale Potenzraum-, Bool-Einertupel-, Bibliotheks- und Skilländerungen integriert; kein neuer registrierter Knotentyp.
 - Potenzräume bewahren null-/einstellige Tupel und symbolische Dimensionen; Wertcodec, Substitution, Parameteranalyse und Mengenquellenmigration ergänzt.
 - Finale JVM-Tests: 1864 ohne Fehler oder Überspringen; Android-Debug-Build erfolgreich. Android-Lint im finalen Wiederholungslauf erfolgreich; erster Versuch hatte einen internen FIR-Analyseabsturz. Repository-, Releaseplan-, Versionsfolge- und Guardregressionen bestanden.
 - Kein Android-Gerät/Emulator angeschlossen; visuelle Bibliotheksprüfung offen. Der ältere lokale Geometrieprototyp bleibt gesichert und wird durch die veröffentlichte Geometry-Nodes-Familie ersetzt.
+- Integration nach master: [PR #453](https://github.com/TeutonStudio/MathematikAtlas/pull/453), Squash-Titel `v3.3.1`; Veröffentlichung setzt grüne PR- und Master-Pushchecks voraus.
 - Detailnachweis: [Abgleichplan](plans/active/2026-10-15-lokale-aenderungen-abgleichen.md).
 
 # Aktueller verifizierter Projektzustand
