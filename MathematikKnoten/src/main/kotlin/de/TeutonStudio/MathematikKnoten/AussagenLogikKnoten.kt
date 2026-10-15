@@ -131,6 +131,7 @@ fun alleMathematikKnotenVorlagen(): List<KnotenVorlage> {
     val strukturRechner = StrukturFormelRechnerVorlagen.alle
     val strukturArten = strukturRechner.mapTo(mutableSetOf()) { it.art }
     val katalog = basis +
+        GeometrieKnotenVorlagen.alle +
         listOf(ZahlenRechnerKnotenVorlagen.standard) +
         FaltungsKnotenVorlagen.alle +
         MatrixdiagonaleKnotenVorlagen.alle +

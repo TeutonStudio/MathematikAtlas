@@ -22,6 +22,7 @@ class VertragsRoundtripTest {
             SpaltenVektor(listOf(x)), ZeilenVektor(listOf(x)), Matrix(listOf(listOf(x))),
             Tensor(listOf(1, 1, 1), listOf(x)),
             Tupelraum(listOf(ReelleZahlen, EndlicheMenge(setOf(RationaleZahl.Eins)))),
+            KartesischerPotenzraum(ReelleZahlen, Variable("n")),
             ReellesIntervall(RationaleZahl.Null, true, RationaleZahl.Eins, false),
         )
         werte.forEach { wert ->

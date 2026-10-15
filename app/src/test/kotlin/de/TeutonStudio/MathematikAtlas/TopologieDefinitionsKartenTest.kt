@@ -79,8 +79,8 @@ class TopologieDefinitionsKartenTest {
         val eintraege = KonzeptBibliothekRegister.erstelle(vorlagen)
 
         assertTrue(KonzeptBibliothekRegister.validierungsFehler(eintraege).isEmpty())
-        assertTrue(eintraege.any { listOf("mengenlehre", "topologie", "raeume") in it.kategoriePfade })
+        assertTrue(eintraege.any { listOf("mengenlehre", "mengen") in it.kategoriePfade })
         assertTrue(eintraege.any { listOf("topologie", "abbildungen") in it.kategoriePfade })
-        assertTrue(eintraege.any { listOf("mengenlehre", "eigenschaften", "kardinalitaet") in it.kategoriePfade })
+        assertTrue(eintraege.any { listOf("mengenlehre", "mengeneigenschaften") in it.kategoriePfade })
     }
 }

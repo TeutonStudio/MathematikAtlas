@@ -52,6 +52,9 @@ fun großerOperatorLatex(
     indexBedingung: String,
     rumpf: String,
 ): String {
+    if (operator == "\\mathop{\\stackrel{\\bullet}{\\bigvee}}") {
+        return "\\stackrel{\\bullet}{\\bigvee\\limits_{${indexBedingung}}} $rumpf"
+    }
     val kanonischerOperator = if (operator == "\\mathop{\\times}") "\\mathop{\\Large\\times}" else operator
     return "$kanonischerOperator\\limits_{${indexBedingung}} $rumpf"
 }
