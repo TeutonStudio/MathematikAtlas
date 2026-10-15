@@ -36,6 +36,108 @@ class KartenEditorZustand(
     var verbindungsVorschau by mutableStateOf<GraphPunkt?>(null)
         private set
 
+    /** Fachmodule liefern ausschließlich geprüfte Graphvorschläge, keine Editor-Sonderregeln. */
+    var verbindungsPlaner: ((KartenDaten, AnschlussVerweis, AnschlussVerweis) -> List<VerbindungsVorschlag>)? = null
+    /** Schnelle fachliche Vorschau; die konkrete Kette wird erst beim Ablegen geplant. */
+    var verbindungÜberAdapterMöglich: ((KartenDaten, AnschlussVerweis, AnschlussVerweis) -> Boolean)? = null
+    var verbindungsAuswahl by mutableStateOf<VerbindungsAuswahl?>(null)
+        private set
+    var einfügeVerbindungsZiel by mutableStateOf<VerbindungsId?>(null)
+        private set
+    private var vorschlagsQuelle: KartenDaten? = null
+    private val vorschlagsCache = mutableMapOf<Pair<AnschlussVerweis, AnschlussVerweis>, List<VerbindungsVorschlag>>()
+    private var herausziehKnoten: KnotenId? = null
+    private var ziehKnoten: KnotenId? = null
+    private var beimZiehenLösen = false
+    private var beimZiehenEinfügen = false
+    private var auswahlBeendetInteraktion = false
+
+    private fun übersetzungsVorschläge(start: AnschlussVerweis, ziel: AnschlussVerweis): List<VerbindungsVorschlag> {
+        if (vorschlagsQuelle !== karte) {
+            vorschlagsQuelle = karte
+            vorschlagsCache.clear()
+        }
+        return vorschlagsCache.getOrPut(start to ziel) {
+            val probe = karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == neuZuVerdrahtendeVerbindung?.id })
+            verbindungsPlaner?.invoke(probe, start, ziel).orEmpty()
+        }
+    }
+
+    fun verwerfeVerbindungsAuswahl() {
+        verbindungsAuswahl = null
+        if (auswahlBeendetInteraktion) beendeInteraktion()
+        auswahlBeendetInteraktion = false
+    }
+
+    fun wähleVerbindungsVorschlag(index: Int) {
+        val auswahl = verbindungsAuswahl ?: return
+        verbindungsAuswahl = null
+        val interaktionBeenden = auswahlBeendetInteraktion
+        auswahlBeendetInteraktion = false
+        val vorschlag = auswahl.vorschläge.getOrNull(index)
+        if (vorschlag == null) {
+            if (interaktionBeenden) beendeInteraktion()
+            return
+        }
+        if (karte != auswahl.basis || vorschlag.karte.id != karte.id || !istGültigeVerdrahtung(vorschlag.karte, prüfung)) {
+            letzteMeldung = "Die Karte hat sich geändert oder der Vorschlag ist nicht mehr gültig. Bitte erneut verbinden."
+            if (interaktionBeenden) beendeInteraktion()
+            return
+        }
+        führeAus(KartenAktion.KartenInhaltErsetzen(vorschlag.karte), mitHistorie = !interaktionBeenden)
+        if (interaktionBeenden) beendeInteraktion()
+        letzteMeldung = null
+    }
+
+    private fun bieteVerbindungsVorschlägeAn(vorschläge: List<VerbindungsVorschlag>, interaktionBeenden: Boolean = false) {
+        if (vorschläge.isEmpty()) return
+        verbindungsAuswahl = VerbindungsAuswahl(karte, vorschläge)
+        auswahlBeendetInteraktion = interaktionBeenden
+        if (vorschläge.size == 1) wähleVerbindungsVorschlag(0)
+    }
+
+    fun merkeKnotenZumHerausziehen(id: KnotenId) {
+        herausziehKnoten = id
+        letzteMeldung = "Knoten ziehen, um ihn herauszulösen und seine Verbindung zu überbrücken."
+    }
+
+    fun beginneKnotenZiehen(id: KnotenId, lösen: Boolean = false) {
+        beginneInteraktion()
+        ziehKnoten = id
+        beimZiehenLösen = lösen || herausziehKnoten == id
+        herausziehKnoten = null
+        beimZiehenEinfügen = !beimZiehenLösen && karte.verbindungen.none { it.von.knotenId == id || it.zu.knotenId == id }
+        einfügeVerbindungsZiel = null
+    }
+
+    fun aktualisiereKnotenEinfügeziel(id: VerbindungsId?) {
+        einfügeVerbindungsZiel = if (beimZiehenEinfügen) id else null
+    }
+
+    fun beendeKnotenZiehen() {
+        val id = ziehKnoten
+        val vorschläge = when {
+            id == null -> emptyList()
+            beimZiehenLösen -> listOfNotNull(planeKnotenHerausziehen(karte, id, prüfung))
+            einfügeVerbindungsZiel != null -> planeKnotenInVerbindung(karte, id, einfügeVerbindungsZiel!!, prüfung)
+            else -> emptyList()
+        }
+        if (beimZiehenLösen && vorschläge.isEmpty()) letzteMeldung = "Herausziehen benötigt eine eindeutige, kompatibel überbrückbare Verbindung."
+        if (vorschläge.size == 1) {
+            führeAus(KartenAktion.KartenInhaltErsetzen(vorschläge.single().karte), mitHistorie = false)
+        }
+        if (vorschläge.size > 1) bieteVerbindungsVorschlägeAn(vorschläge, interaktionBeenden = true)
+        else beendeInteraktion()
+        ziehKnoten = null
+        einfügeVerbindungsZiel = null
+    }
+
+    fun verwerfeKnotenZiehen() {
+        verwerfeLaufendeInteraktion()
+        ziehKnoten = null
+        einfügeVerbindungsZiel = null
+    }
+
     var geöffneteGruppe by mutableStateOf<VisuelleGruppenId?>(null)
         private set
     var ausgewählteGruppe by mutableStateOf<VisuelleGruppenId?>(null)
@@ -121,6 +223,8 @@ class KartenEditorZustand(
 
     fun öffneGruppe(id: VisuelleGruppenId?) {
         if (id != null && karte.visuelleGruppen.none { it.id == id }) return
+        verwerfeVerbindungsAuswahl()
+        herausziehKnoten = null
         brecheVerbindungsVorschauAb()
         geöffneteGruppe = id
         wähleKnoten(null)
@@ -144,6 +248,11 @@ class KartenEditorZustand(
     private var neuZuVerdrahtendeVerbindung: VerbindungDaten? = null
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
+        verbindungsAuswahl = null
+        auswahlBeendetInteraktion = false
+        herausziehKnoten = null
+        ziehKnoten = null
+        einfügeVerbindungsZiel = null
         val vorher = karte
         if (neu.id != karte.id) öffneGruppe(null)
         if (neu.id != karte.id) { inhaltsMinima = emptyMap(); gruppenKopfMinima = emptyMap() }
@@ -220,6 +329,7 @@ class KartenEditorZustand(
         } else begrenzteAktion
         var angewendet = karte.wendeAn(wirksameAktion)
         val neuEingefügt = when (wirksameAktion) {
+            is KartenAktion.KartenInhaltErsetzen -> wirksameAktion.karte.knoten.filter { neu -> karte.knoten.none { it.id == neu.id } }
             is KartenAktion.KnotenEinfügen -> listOf(wirksameAktion.knoten)
             is KartenAktion.KnotenMehrfachEinfügen -> wirksameAktion.knoten
             else -> emptyList()
@@ -344,6 +454,8 @@ class KartenEditorZustand(
     }
 
     fun brecheInteraktionAb(): Boolean {
+        if (verbindungsAuswahl != null) { verwerfeVerbindungsAuswahl(); return true }
+        if (herausziehKnoten != null) { herausziehKnoten = null; letzteMeldung = null; return true }
         if (verbindungsStart != null || verbindungsVorschau != null) {
             verwerfeVerbindungsInteraktion()
             return true
@@ -383,6 +495,8 @@ class KartenEditorZustand(
      * bleibt der bisherige Ausgang verankert und das Eingangsende wird neu gezogen.
      */
     fun beginneVerbindung(darstellungsRef: AnschlussVerweis, position: GraphPunkt? = null) {
+        verwerfeVerbindungsAuswahl()
+        vorschlagsCache.clear()
         val ref = projektion.original(darstellungsRef)
         if (gruppenÜbergangAktiv || darstellungsRef.knotenId in projektion.portale) return
         val anschluss = karte.findeAnschluss(ref)
@@ -484,11 +598,13 @@ class KartenEditorZustand(
                 letzteMeldung = null
             }
             is VerbindungsPrüfung.Abgelehnt -> {
+                val vorschläge = übersetzungsVorschläge(start, ref)
                 letzteMeldung = ergebnis.grund
                 verbindungsStart = null
                 verbindungsVorschau = null
                 neuZuVerdrahtendeVerbindung = null
                 entferneUnverbundeneDynamischeEingänge()
+                bieteVerbindungsVorschlägeAn(vorschläge)
             }
         }
     }
@@ -504,7 +620,8 @@ class KartenEditorZustand(
         val prüfKarte = if (verschoben != null) {
             karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == verschoben.id })
         } else karte
-        return prüfung.prüfe(prüfKarte, start, ref) is VerbindungsPrüfung.Erlaubt
+        return prüfung.prüfe(prüfKarte, start, ref) is VerbindungsPrüfung.Erlaubt ||
+            (verbindungÜberAdapterMöglich?.invoke(prüfKarte, start, ref) ?: übersetzungsVorschläge(start, ref).isNotEmpty())
     }
 
     fun löscheAuswahl() {
@@ -676,6 +793,7 @@ class KartenEditorZustand(
     fun kannWiederholen() = wiederholenVerfügbar
 
     fun rückgängig() {
+        verwerfeVerbindungsAuswahl()
         if (rückgängig.isEmpty()) return
         val aktuelleAnsicht = karte.ansicht
         verwerfeVerbindungsInteraktion()
@@ -690,6 +808,7 @@ class KartenEditorZustand(
     }
 
     fun wiederholen() {
+        verwerfeVerbindungsAuswahl()
         if (wiederholen.isEmpty()) return
         val aktuelleAnsicht = karte.ansicht
         verwerfeVerbindungsInteraktion()

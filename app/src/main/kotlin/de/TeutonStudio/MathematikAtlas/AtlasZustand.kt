@@ -102,6 +102,9 @@ class AtlasZustand(context: Context) {
             ?: KartenDaten(name = "Neue Karte")
         if (start.id !in karten.map(KartenDaten::id).toSet()) aktiveKarteSpeicher.löschen()
         editor = KartenEditorZustand(start, graphPrüfung)
+        val verbindungsPlaner = ÜbersetzerVerbindungsPlaner(graphPrüfung)
+        editor.verbindungsPlaner = verbindungsPlaner::vorschläge
+        editor.verbindungÜberAdapterMöglich = verbindungsPlaner::möglich
         editor.öffneGruppe(aktiveKarteSpeicher.ladeGruppe())
         letzterGespeicherterStand = start
         brotkrumen = if (karten.any { it.id == start.id }) {

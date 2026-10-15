@@ -1,5 +1,7 @@
 # Aktueller verifizierter Projektzustand
 
+> Neuer Releasekandidat, 2026-10-15: **3.2.2** auf `samai/v3.2.2-verbindungen-vollbild`, Basis `e535190058014810617ea2989d27838afe54692b` (v3.2.1). Enthält Graphindizes/-cache, automatische Übersetzerketten, atomare Verbindungs-Drag-Aktionen und Android-Vollbild. Kein neuer Knotentyp oder Datenformatwechsel. 1.777 JVM-/Desktoptests und Android-Debug-Build erfolgreich; Android-Instrumentierung kompiliert, lokal nicht ausgeführt. Unabhängige Abnahme der beiden [Graph-](plans/completed/2026-10-15-graph-auswertung.md) und [Verbindungspläne](plans/completed/2026-10-15-verbindungsbearbeitung-und-vollbild.md). Veröffentlichung und PR-/Master-CI werden separat nachgewiesen. Der nachfolgende Abschnitt dokumentiert den historischen verifizierten Stand vom 2026-10-12.
+
 > Stand: 2026-10-12, veröffentlichte V3 Alpha. Beide Releases und ihre PR-/Master-Push-Prüfungen sind abgeschlossen; lokales und GitHub-master wurden auf den veröffentlichten3.1.0-Commit synchronisiert. Vollständige Anforderungsmatrix: [V3_ALPHA_ABNAHME.md](../V3_ALPHA_ABNAHME.md).
 
 ## Metadaten

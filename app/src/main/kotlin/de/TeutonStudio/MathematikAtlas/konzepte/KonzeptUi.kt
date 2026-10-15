@@ -235,6 +235,9 @@ private fun KonzeptDialog(
                     ) { Text("Als bearbeitbare Karte kopieren") }
                 }
                 ursprungsKnoten?.let { knoten ->
+                    OutlinedButton(onClick = { zustand.editor.merkeKnotenZumHerausziehen(knoten.id); schließen() }) {
+                        Text("Aus Verbindung herausziehen")
+                    }
                     OutlinedButton(
                         onClick = {
                             zustand.editor.wähleKnoten(knoten.id)

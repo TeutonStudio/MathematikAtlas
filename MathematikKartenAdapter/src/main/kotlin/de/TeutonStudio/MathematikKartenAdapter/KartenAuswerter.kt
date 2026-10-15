@@ -9,10 +9,41 @@ class KartenAuswerter(
     private val nichtAuswertbareKnotenArten: Set<KnotenArtId> = emptySet(),
     private val nanoZeit: () -> Long = { System.nanoTime() },
 ) {
-    private data class CacheEintrag(val signatur: Int, val ergebnis: KnotenAuswertungsErgebnis)
+    private data class CacheSignatur(
+        val knoten: KnotenDaten,
+        val eingänge: Map<String, BedingterWert>,
+        val plan: GraphAuswertungsPlan,
+    )
+    private data class CacheEintrag(val signatur: CacheSignatur, val ergebnis: KnotenAuswertungsErgebnis)
     private val cache = mutableMapOf<KnotenId, CacheEintrag>()
 
-    fun leereCache() = cache.clear()
+    // Unterkarten wechseln während einer Auswertung: ein einzelner letzter Plan würde thrashen.
+    private val pläne = java.util.LinkedHashMap<KartenVerweis, GraphAuswertungsPlan>(16, 0.75f, true)
+
+    fun leereCache() {
+        cache.clear()
+        pläne.clear()
+    }
+
+    private fun planFür(karte: KartenDaten): GraphAuswertungsPlan {
+        val verweis = KartenVerweis(karte.id, karte.version)
+        val bisher = pläne[verweis]
+        if (bisher != null && bisher.passtZu(karte)) return bisher
+        if (bisher != null) verwerfePlan(verweis)
+        if (pläne.size >= 16) verwerfePlan(pläne.keys.first())
+        return GraphAuswertungsPlan(karte).also { pläne[verweis] = it }
+    }
+
+    private fun verwerfePlan(verweis: KartenVerweis) {
+        val plan = pläne.remove(verweis) ?: return
+        cache.entries.removeAll { it.value.signatur.plan === plan }
+    }
+
+    private fun speichereErgebnis(id: KnotenId, signatur: CacheSignatur, ergebnis: KnotenAuswertungsErgebnis) {
+        // Tiefe Unterkarten können den äußeren Plan während der Berechnung verdrängen.
+        // Ein danach abgelegtes Ergebnis dürfte diesen Plan nicht wieder festhalten.
+        if (signatur.plan in pläne.values) cache[id] = CacheEintrag(signatur, ergebnis)
+    }
 
     /** Verwirft ausschließlich das zwischengespeicherte Ergebnis des angegebenen Knotens. */
     fun verwerfeCache(knotenId: KnotenId) {
@@ -31,31 +62,23 @@ class KartenAuswerter(
     ): KartenAuswertungsErgebnis {
         val ergebnisse = linkedMapOf<KnotenId, KnotenAuswertungsErgebnis>()
         val fehler = mutableListOf<String>()
-        val eingehend = karte.verbindungen.groupBy { it.zu.knotenId }
-        val nachfolger = karte.verbindungen.groupBy { it.von.knotenId }
-        val grad = karte.knoten.associate { knoten -> knoten.id to eingehend[knoten.id].orEmpty().map { it.von.knotenId }.distinct().size }.toMutableMap()
-        val offen = java.util.PriorityQueue<KnotenId>(compareBy { it.wert })
-        grad.filterValues { it == 0 }.keys.forEach { offen.add(it) }
+        val plan = planFür(karte)
+        val index = GraphAuswertungsIndex(karte)
         val topologischeReihenfolge = mutableMapOf<KnotenId, Int>()
 
-        while (offen.isNotEmpty()) {
-            val id = offen.remove()
+        for (id in plan.reihenfolge) {
             topologischeReihenfolge[id] = topologischeReihenfolge.size
-            val knoten = karte.knoten.firstOrNull { it.id == id } ?: continue
+            val knoten = index.knoten.getValue(id)
             val fest = vorgegebeneAusgaben[id]
             val ergebnis = if (fest != null) {
                 KnotenAuswertungsErgebnis(fest)
             } else if (knoten.kartenVerweis != null) {
-                werteGruppenKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, kartenPfad)
+                werteGruppenKnotenAus(knoten, plan.eingehend[id].orEmpty(), index, plan, ergebnisse, kartenPfad)
             } else {
-                werteKnotenAus(knoten, eingehend[id].orEmpty(), karte, ergebnisse, topologischeReihenfolge, kartenPfad)
+                werteKnotenAus(knoten, plan.eingehend[id].orEmpty(), index, plan, ergebnisse, topologischeReihenfolge, kartenPfad)
             }
             ergebnisse[id] = ergebnis
             ergebnis.fehler?.let { fehler += "${knoten.name}: $it" }
-            nachfolger[id].orEmpty().map { it.zu.knotenId }.distinct().forEach { ziel ->
-                grad[ziel] = (grad[ziel] ?: 1) - 1
-                if (grad[ziel] == 0) offen.add(ziel)
-            }
         }
 
         val nichtAusgewertet = karte.knoten.map { it.id }.filterNot { it in ergebnisse }
@@ -66,7 +89,8 @@ class KartenAuswerter(
     private fun werteKnotenAus(
         knoten: KnotenDaten,
         verbindungen: List<VerbindungDaten>,
-        karte: KartenDaten,
+        index: GraphAuswertungsIndex,
+        plan: GraphAuswertungsPlan,
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
         topologischeReihenfolge: Map<KnotenId, Int>,
         kartenPfad: Set<KartenVerweis>,
@@ -79,7 +103,7 @@ class KartenAuswerter(
         )
 
         val verbundeneEingänge = runCatching {
-            sammleEingänge(knoten, verbindungen, karte, ergebnisse)
+            sammleEingänge(knoten, verbindungen, index, ergebnisse)
         }.getOrElse {
             return fehler(it.message ?: it::class.simpleName.orEmpty())
         }
@@ -108,7 +132,7 @@ class KartenAuswerter(
         val eingänge = ungeordneteEingänge.entries.sortedBy { portReihenfolge[it.key] ?: Int.MAX_VALUE }
             .associateTo(linkedMapOf()) { it.key to it.value }
         val annahmen = eingänge.values.flatMap { it.annahmen }.toSet()
-        val signatur = 31 * knoten.hashCode() + eingänge.hashCode()
+        val signatur = CacheSignatur(knoten, eingänge, plan)
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
 
         val basis = when {
@@ -147,7 +171,7 @@ class KartenAuswerter(
                 eingänge = eingänge,
                 auswertungsDauerNanos = dauerSeit(startNanos),
             )
-        cache[knoten.id] = CacheEintrag(signatur, ergebnis)
+        speichereErgebnis(knoten.id, signatur, ergebnis)
         return ergebnis
     }
 
@@ -190,13 +214,14 @@ class KartenAuswerter(
     private fun werteGruppenKnotenAus(
         knoten: KnotenDaten,
         verbindungen: List<VerbindungDaten>,
-        karte: KartenDaten,
+        index: GraphAuswertungsIndex,
+        plan: GraphAuswertungsPlan,
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
         kartenPfad: Set<KartenVerweis>,
     ): KnotenAuswertungsErgebnis {
         val startNanos = nanoZeit()
         val außen = runCatching {
-            sammleEingänge(knoten, verbindungen, karte, ergebnisse)
+            sammleEingänge(knoten, verbindungen, index, ergebnisse)
         }.getOrElse {
             return KnotenAuswertungsErgebnis(
                 emptyMap(),
@@ -204,7 +229,7 @@ class KartenAuswerter(
                 auswertungsDauerNanos = dauerSeit(startNanos),
             )
         }
-        val signatur = 31 * knoten.hashCode() + außen.hashCode()
+        val signatur = CacheSignatur(knoten, außen, plan)
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
 
         val ergebnis = werteReferenzierteKarteAus(
@@ -217,7 +242,7 @@ class KartenAuswerter(
             eingänge = außen,
             auswertungsDauerNanos = dauerSeit(startNanos),
         )
-        cache[knoten.id] = CacheEintrag(signatur, ergebnis)
+        speichereErgebnis(knoten.id, signatur, ergebnis)
         return ergebnis
     }
 
@@ -304,16 +329,16 @@ class KartenAuswerter(
     private fun sammleEingänge(
         knoten: KnotenDaten,
         verbindungen: List<VerbindungDaten>,
-        karte: KartenDaten,
+        index: GraphAuswertungsIndex,
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
     ): Map<String, BedingterWert> = buildMap {
         val gebundeneIds = verbindungen.map { it.zu.anschlussId }.toSet()
         verbindungen.forEach { verbindung ->
-            val zielAnschluss = knoten.anschlüsse.firstOrNull { it.id == verbindung.zu.anschlussId }
+            val zielAnschluss = index.anschluss(verbindung.zu)
                 ?: error("Eine Verbindung verweist auf einen fehlenden Eingang.")
-            val quellKnoten = karte.knoten.firstOrNull { it.id == verbindung.von.knotenId }
+            val quellKnoten = index.knoten[verbindung.von.knotenId]
                 ?: error("Die Quelle für '${zielAnschluss.name}' fehlt.")
-            val quellAnschluss = quellKnoten.anschlüsse.firstOrNull { it.id == verbindung.von.anschlussId }
+            val quellAnschluss = index.anschluss(verbindung.von)
                 ?: error("Der Quellanschluss für '${zielAnschluss.name}' fehlt.")
             val quelle = ergebnisse[quellKnoten.id]
             val wert = quelle?.ausgaben?.get(quellAnschluss.name)
