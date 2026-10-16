@@ -372,6 +372,7 @@ private fun werteMengenRelationAus(kontext: KnotenAuswertungsKontext): KnotenAus
 
 fun KartenDaten.migriereMengenOperatorKnoten(): KartenDaten = copy(
     knoten = knoten.map { alt ->
+        if (RECHNER_MIGRATION_DIAGNOSE in alt.parameter) return@map alt
         MengenRechnerMigration.alteKnotenArten[alt.art]?.let { operator ->
             val basis = alt.copy(
                 art = MengenRechner.KNOTEN_ART,

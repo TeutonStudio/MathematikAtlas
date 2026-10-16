@@ -210,6 +210,12 @@ fun interface MathematikKnotenAuswerter {
 
 class MathematikAuswerterRegister {
     private val auswerter = linkedMapOf<KnotenArtId, MathematikKnotenAuswerter>()
+    private val auswertungssperren = mutableListOf<(KnotenDaten) -> String?>()
+
+    /** Fachliche Ladegrenzen gelten auch bei direkter Auswerterverwendung. */
+    fun registriereAuswertungssperre(prüfung: (KnotenDaten) -> String?) { auswertungssperren += prüfung }
+    fun auswertungssperre(knoten: KnotenDaten): String? =
+        auswertungssperren.firstNotNullOfOrNull { it(knoten) }
     private val optionaleMethoden = linkedMapOf<KnotenArtId, (KnotenDaten) -> Set<String>>()
     /** Only explicitly declared optional inputs receive identity; required ports remain required. */
     fun registriereOptionaleMethodenEingänge(art: KnotenArtId, vertrag: (KnotenDaten) -> Set<String>) { optionaleMethoden[art] = vertrag }
@@ -222,7 +228,16 @@ class MathematikAuswerterRegister {
         val einzeln = kontext.mehrfachWerte().values.flatten().singleOrNull()
         if (einzeln != null && ergebnis.fehler == null) ergebnis.copy(ausgaben = ergebnis.ausgaben.mapValues { einzeln }) else ergebnis
     } }
-    fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
+    fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = findeUngesperrt(art)?.let { basis ->
+        if (auswertungssperren.isEmpty()) return basis
+        MathematikKnotenAuswerter { kontext ->
+            val diagnose = auswertungssperre(kontext.knoten)
+            if (diagnose != null) KnotenAuswertungsErgebnis(emptyMap(), fehler = diagnose, eingänge = kontext.eingänge)
+            else basis.auswerten(kontext)
+        }
+    }
+
+    private fun findeUngesperrt(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
         KARTEN_EINGANG_ART -> KartenEingangAuswerter
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter
         "mathematik.halbesIntervall" -> HalbesIntervallAuswerter

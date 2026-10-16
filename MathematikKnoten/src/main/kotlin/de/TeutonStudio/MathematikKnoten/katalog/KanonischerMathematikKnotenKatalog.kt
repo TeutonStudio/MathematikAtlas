@@ -36,7 +36,7 @@ object KanonischerMathematikKnotenKatalog {
     private val historischeMengenEinzelknoten: Set<String> = MengenRechnerMigration.alteKnotenArten.keys
 
     fun alle(): List<KnotenVorlage> {
-        val basis = de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen()
+        val basis = (de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen() + MengenraumKnotenVorlagen.alle)
             .map(::kanonisierePraedikatVorlage)
             .map(::topologieFaehigeEigenschaftsVorlage)
             .map(::methodenfaehigeRechnerVorlage)

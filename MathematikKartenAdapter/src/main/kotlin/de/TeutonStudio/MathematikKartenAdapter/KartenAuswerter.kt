@@ -106,6 +106,8 @@ class KartenAuswerter(
             auswertungsDauerNanos = dauerSeit(startNanos),
         )
 
+        register.auswertungssperre(knoten)?.let { return fehler(it) }
+
         val verbundeneEingänge = runCatching {
             sammleEingänge(knoten, verbindungen, index, ergebnisse)
         }.getOrElse {

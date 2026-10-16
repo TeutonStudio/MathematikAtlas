@@ -11,5 +11,9 @@ object GesamterMathematikAuswerter {
     fun erzeugeRegister(): MathematikAuswerterRegister =
         StandardMathematikAuswerter.erzeugeRegister().also(
             StandardMathematikAuswerterPakete::installiereIn,
-        )
+        ).also { register ->
+            register.registriereAuswertungssperre { knoten ->
+                knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { "Migrationsdiagnose: $it" }
+            }
+        }
 }

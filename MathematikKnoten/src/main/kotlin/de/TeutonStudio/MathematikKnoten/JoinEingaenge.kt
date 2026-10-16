@@ -32,6 +32,7 @@ fun KartenDaten.normalisiereJoinEingänge(): KartenDaten {
     val ziele = mutableMapOf<AnschlussVerweis, Pair<AnschlussVerweis, Int>>()
     val fallbackVerbindungen = mutableMapOf<VerbindungsId, String>()
     val neu = knoten.map { k ->
+        if (RECHNER_MIGRATION_DIAGNOSE in k.parameter) return@map k
         val ports = joinPorts(k)
         if (ports.isEmpty()) return@map k
         val join = ports.firstOrNull { it.belegung == AnschlussBelegung.Mehrfach } ?: ports.first()

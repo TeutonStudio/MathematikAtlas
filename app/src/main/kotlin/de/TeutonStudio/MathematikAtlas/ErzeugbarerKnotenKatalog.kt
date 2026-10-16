@@ -6,7 +6,6 @@ import de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatal
 
 /** Statische Erstellen-Vorlagen; Karteninstanzen ergänzen den bestehenden Gruppentyp. */
 internal fun statischeKnotenVorlagen(): List<KnotenVorlage> =
-    KanonischerMathematikKnotenKatalog.alle() + MengenraumKnotenVorlagen.alle +
-        GeometrieKnotenVorlagen.alle + KartenWerkzeugVorlagen.alle
+    KanonischerMathematikKnotenKatalog.alle() + KartenWerkzeugVorlagen.alle
 
 internal fun erzeugbareKnotenArten(): Set<String> = statischeKnotenVorlagen().map { it.art }.toSet() + "mathematik.gruppe"
