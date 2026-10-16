@@ -6,6 +6,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -125,29 +127,21 @@ internal fun RechnerOperatorAuswahlDialog(
                         )
                     }
                 } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().weight(1f).padding(AtlasDialogAbstände.eintragHorizontal),
-                        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
-                    ) {
-                        KategorienZeile(kategorien, kategorie, { kategorie = it })
-                        AuswahlBereich(
-                            suchtext = suchtext,
-                            suchtextÄndern = { suchtext = it },
-                            sucheFokus = sucheFokus,
-                            einträge = sichtbar,
-                            auswahlId = auswahlId,
-                            auswählen = { auswahlId = it.id },
-                            leeren = {
+                    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(AtlasDialogAbstände.eintragHorizontal)) {
+                        val steuerungsHöhe = maxHeight * .45f
+                        Column(Modifier.fillMaxSize()) {
+                            Column(Modifier.fillMaxWidth().heightIn(max = steuerungsHöhe)
+                                .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
+                                KategorienZeile(kategorien, kategorie, { kategorie = it })
+                                OperatorSuche(suchtext, { suchtext = it }, sucheFokus)
+                                OperatorDetails(ausgewählt, auswirkung, Modifier.fillMaxWidth().heightIn(max = 230.dp))
+                            }
+                            OperatorListe(sichtbar, auswahlId, { auswahlId = it.id }, {
                                 suchtext = ""
                                 kategorie = null
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        OperatorDetails(
-                            eintrag = ausgewählt,
-                            auswirkung = auswirkung,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp),
-                        )
+                            }, Modifier.fillMaxWidth().weight(1f))
+                        }
                     }
                 }
 
@@ -250,14 +244,27 @@ private fun AuswahlBereich(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
-        OutlinedTextField(
-            value = suchtext,
-            onValueChange = suchtextÄndern,
-            label = { Text("Operator suchen") },
-            supportingText = { Text("Titel, Symbol, ID, Kategorie, Synonym oder Anschlussrolle") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().focusRequester(sucheFokus),
-        )
+        OperatorSuche(suchtext, suchtextÄndern, sucheFokus)
+        OperatorListe(einträge, auswahlId, auswählen, leeren, Modifier.fillMaxWidth().weight(1f))
+    }
+}
+
+@Composable
+private fun OperatorSuche(suchtext: String, suchtextÄndern: (String) -> Unit, sucheFokus: FocusRequester) {
+    OutlinedTextField(
+        value = suchtext,
+        onValueChange = suchtextÄndern,
+        label = { Text("Operator suchen") },
+        supportingText = { Text("Titel, Symbol, ID, Kategorie, Synonym oder Anschlussrolle") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth().focusRequester(sucheFokus),
+    )
+}
+
+@Composable
+private fun OperatorListe(einträge: List<RechnerOperatorAuswahlEintrag>, auswahlId: String?,
+    auswählen: (RechnerOperatorAuswahlEintrag) -> Unit, leeren: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier) {
         if (einträge.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
