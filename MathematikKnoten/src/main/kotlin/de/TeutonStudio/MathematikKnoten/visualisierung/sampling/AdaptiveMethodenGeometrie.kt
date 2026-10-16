@@ -48,7 +48,7 @@ internal object AdaptiveMethodenGeometrie {
         auswerten: (List<Double>) -> AdaptivePunktAuswertung,
         abbruchPrüfen: () -> Unit,
     ): AdaptiveMethodenErgebnis {
-        val ziel = 1.0 / (c.sampling.auflösung1D - 1).coerceAtLeast(1)
+        val ziel = zielFehler(c, c.sampling.auflösung1D)
         val maximaleTiefe = (ceil(ln(c.sampling.auflösung1D.toDouble()) / ln(2.0)).toInt() + 4).coerceAtMost(24)
         val cache = linkedMapOf<Double, AdaptivePunktAuswertung>()
         val diagnosen = linkedSetOf<String>()
@@ -69,23 +69,36 @@ internal object AdaptiveMethodenGeometrie {
         val segmente = mutableListOf<Pair<VisualisierungsPunkt, VisualisierungsPunkt>>()
         fun teile(t0: Double, t1: Double, a: AdaptivePunktAuswertung, b: AdaptivePunktAuswertung, tiefe: Int) {
             erreichteTiefe = max(erreichteTiefe, tiefe)
-            if (a.punkt == null || b.punkt == null) return
             val tm = t0 + (t1 - t0) / 2.0
             val m = wert(tm)
-            if (m.punkt == null) return
-            val kantenLänge = normierterAbstand(a.punkt, b.punkt, c)
-            val krümmung = normierterAbstand(m.punkt, mittelpunkt(a.punkt, b.punkt), c)
-            if (!budgetErschöpft && tiefe < maximaleTiefe && (kantenLänge > ziel || krümmung > ziel * 0.35)) {
-                teile(t0, tm, a, m, tiefe + 1)
-                teile(tm, t1, m, b, tiefe + 1)
-            } else {
-                segmente += a.punkt to b.punkt
+            val pixelZiel = c.sampling.bildBreite > 0 && c.sampling.bildHöhe > 0
+            val gültig = a.punkt != null && b.punkt != null && m.punkt != null
+            val krümmung = if (gültig) normierterAbstand(m.punkt!!, mittelpunkt(a.punkt!!, b.punkt!!), c) else Double.POSITIVE_INFINITY
+            val kantenLänge = if (gültig) normierterAbstand(a.punkt!!, b.punkt!!, c) else Double.POSITIVE_INFINITY
+            if (tiefe < maximaleTiefe && (krümmung > ziel * (if (pixelZiel) 1.0 else .35) || !pixelZiel && kantenLänge > ziel)) {
+                val q1 = t0 + (tm - t0) / 2; val q3 = tm + (t1 - tm) / 2
+                val benötigt = listOf(q1, q3).count { it !in cache }
+                if (cache.size + benötigt <= c.sampling.maximalesRasterBudget) {
+                    wert(q1); wert(q3)
+                    teile(t0, tm, a, m, tiefe + 1)
+                    teile(tm, t1, m, b, tiefe + 1)
+                    return
+                }
+                budgetErschöpft = true
             }
+            // Keine Brücke über undefinierte Stellen oder einen ungelösten großen Sprung.
+            if (gültig && krümmung < 1.0) segmente += a.punkt!! to b.punkt!!
         }
-        val startSegmente = minOf(8, c.sampling.auflösung1D - 1).coerceAtLeast(1)
+        val startSegmente = minOf(if (c.sampling.bildBreite > 0) c.sampling.auflösung1D - 1 else 8,
+            c.sampling.auflösung1D - 1, (c.sampling.maximalesRasterBudget - 1) / 2).coerceAtLeast(1)
+        // Vor der ersten Verfeinerung alle Startsegmente inklusive Mittelpunkt sichern.
+        val start = List(startSegmente + 1) { index ->
+            bereich.minimum + (bereich.maximum - bereich.minimum) * index / startSegmente
+        }
+        start.forEach(::wert)
+        start.zipWithNext { a, b -> wert(a + (b - a) / 2) }
         repeat(startSegmente) { index ->
-            val t0 = bereich.minimum + (bereich.maximum - bereich.minimum) * index / startSegmente
-            val t1 = bereich.minimum + (bereich.maximum - bereich.minimum) * (index + 1) / startSegmente
+            val t0 = start[index]; val t1 = start[index + 1]
             teile(t0, t1, wert(t0), wert(t1), 0)
         }
         val linien = segmente.map { (a, b) -> VisualisierungsLinie(listOf(a, b)) }
@@ -107,7 +120,7 @@ internal object AdaptiveMethodenGeometrie {
         abbruchPrüfen: () -> Unit,
     ): AdaptiveMethodenErgebnis {
         data class Schlüssel(val u: Double, val v: Double)
-        val ziel = 1.0 / (c.sampling.auflösung2D - 1).coerceAtLeast(1)
+        val ziel = zielFehler(c, c.sampling.auflösung2D)
         val maximaleTiefe = (ceil(ln(c.sampling.auflösung2D.toDouble()) / ln(2.0)).toInt() + 3).coerceAtMost(18)
         val cache = linkedMapOf<Schlüssel, AdaptivePunktAuswertung>()
         val diagnosen = linkedSetOf<String>()
@@ -141,10 +154,10 @@ internal object AdaptiveMethodenGeometrie {
             fun kinderVorbereiten(): Boolean {
                 val stellen = listOf(
                     Schlüssel(um, v0), Schlüssel(um, v1), Schlüssel(u0, vm), Schlüssel(u1, vm),
-                    Schlüssel((u0 + um) / 2, (v0 + vm) / 2),
-                    Schlüssel((um + u1) / 2, (v0 + vm) / 2),
-                    Schlüssel((u0 + um) / 2, (vm + v1) / 2),
-                    Schlüssel((um + u1) / 2, (vm + v1) / 2),
+                    Schlüssel((u0 + (um - u0) / 2), (v0 + (vm - v0) / 2)),
+                    Schlüssel((um + (u1 - um) / 2), (v0 + (vm - v0) / 2)),
+                    Schlüssel((u0 + (um - u0) / 2), (vm + (v1 - vm) / 2)),
+                    Schlüssel((um + (u1 - um) / 2), (vm + (v1 - vm) / 2)),
                 )
                 if (cache.size + stellen.count { it !in cache } > c.sampling.maximalesRasterBudget) {
                     budgetErschöpft = true
@@ -170,7 +183,7 @@ internal object AdaptiveMethodenGeometrie {
             )
             val bilinear = mittelpunkt(mittelpunkt(pa, pe), mittelpunkt(pb, pd))
             val krümmung = normierterAbstand(pm, bilinear, c)
-            if (!budgetErschöpft && tiefe < maximaleTiefe && (kantenFehler > ziel || krümmung > ziel * 0.35) && kinderVorbereiten()) {
+            if (!budgetErschöpft && tiefe < maximaleTiefe && (krümmung > ziel || c.sampling.bildBreite <= 0 && kantenFehler > ziel) && kinderVorbereiten()) {
                 teile(u0, um, v0, vm, tiefe + 1)
                 teile(um, u1, v0, vm, tiefe + 1)
                 teile(u0, um, vm, v1, tiefe + 1)
@@ -235,12 +248,24 @@ internal object AdaptiveMethodenGeometrie {
         )
     }
 
+    private fun zielFehler(c: VisualisierungsKonfiguration, auflösung: Int): Double =
+        if (c.sampling.bildBreite > 0 && c.sampling.bildHöhe > 0)
+            c.sampling.zielFehlerPixel / maxOf(c.sampling.bildBreite, c.sampling.bildHöhe)
+        else 1.0 / (auflösung - 1).coerceAtLeast(1)
+
     private fun normierterAbstand(a: VisualisierungsPunkt, b: VisualisierungsPunkt, c: VisualisierungsKonfiguration): Double {
-        val dx = (a.x - b.x) / (c.bereiche.x.maximum - c.bereiche.x.minimum)
-        val dy = (a.y - b.y) / (c.bereiche.y.maximum - c.bereiche.y.minimum)
-        val dz = if (a.z != null && b.z != null && c.bereiche.z != null) {
-            (a.z - b.z) / (c.bereiche.z.maximum - c.bereiche.z.minimum)
+        val bereiche = if (c.dimension == de.TeutonStudio.MathematikKnoten.visualisierung.modell.RaumDimension.R3) c.bereiche else c.sampling.sichtBereiche ?: c.bereiche
+        val dx = (a.x - b.x) / (bereiche.x.maximum - bereiche.x.minimum)
+        val dy = (a.y - b.y) / (bereiche.y.maximum - bereiche.y.minimum)
+        val dz = if (a.z != null && b.z != null && bereiche.z != null) {
+            (a.z - b.z) / (bereiche.z.maximum - bereiche.z.minimum)
         } else 0.0
+        if (c.sampling.bildBreite > 0 && c.sampling.bildHöhe > 0) {
+            val maximum = maxOf(c.sampling.bildBreite, c.sampling.bildHöhe)
+            val px = dx * c.sampling.bildBreite / maximum
+            val py = dy * c.sampling.bildHöhe / maximum
+            return sqrt(px * px + py * py + dz * dz)
+        }
         return sqrt(dx * dx + dy * dy + dz * dz)
     }
 

@@ -235,7 +235,7 @@ class KnotenInEdgeEinfueger(
         }
         val normalAusgang = pruefung.normalisiere(mitEingang, ausgang, kontext.ziel)
             ?: return fehler("ausgangsverbindung_nicht_normalisierbar", "Die zweite Teilverbindung konnte nicht normalisiert werden.")
-        val ausgangsEdge = VerbindungDaten(von = normalAusgang.first, zu = normalAusgang.second)
+        val ausgangsEdge = original.copy(von = normalAusgang.first, zu = normalAusgang.second)
         val nachher = mitEingang.copy(verbindungen = mitEingang.verbindungen + ausgangsEdge)
 
         return KnotenEinfuegeErgebnis.Erfolg(

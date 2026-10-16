@@ -27,21 +27,27 @@ private fun relationsVariablen(
 
 object StandardMathematikAuswerter {
     fun erzeugeRegister() = MathematikAuswerterRegister().apply {
+        RechnerFamilie.entries.forEach { familie ->
+            registriereOptionaleMethodenEingänge(familie.knotenArt) { knoten ->
+                val op = RechnerOperatorRegistry.finde(familie, knoten.parameter[familie.operatorParameter])
+                if (op is RechnerOperatorAuflösung.Bekannt) op.vertrag.signaturen
+                    .firstOrNull { signatur -> signatur.eingänge.map { it.name }.toSet() == knoten.anschlüsse.filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }.map { it.name }.toSet() }
+                    ?.eingänge?.filter { it.identitaetBeiFehlenderMethode }?.mapTo(mutableSetOf()) { it.name }.orEmpty() else emptySet()
+            }
+        }
+        registriere(METHODEN_QUELLE_ART) { k ->
+            val eingang = k.eingänge["menge"]
+            val methode = if (eingang == null) IdentitaetsMethode else identitaetAuf(eingang.objekt as? MengenAusdruck ?: error("Identität erwartet eine Menge."))
+            KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(methode, annahmen = eingang?.annahmen.orEmpty(), latexDarstellung = "x\\mapsto x")))
+        }
         registriere("mathematik.zahl") { k ->
             KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(RationaleZahl.parse(k.knoten.parameter["wert"] ?: "0"))))
         }
         registriere("mathematik.variable") { k ->
-            val eingang = k.eingänge["grundraum"]
-            val grund = eingang?.let {
-                val menge = it.objekt as? MengenAusdruck ?: error("Der Grundraum muss eine Menge sein.")
-                if (variablenStruktur(k.knoten) == VARIABLE_STRUKTUR_WINKEL) kanonischerRichtungsraum(menge) else menge
-            }
-                ?: grundmenge(k.knoten.parameter["werteVorrat"] ?: "R")
-            val variable = if (eingang == null) k.knoten else k.knoten.copy(
-                parameter = k.knoten.parameter - VARIABLE_BEREICH_MODUS,
-            )
-            val wert = variablenStrukturWert(variable, grund, grundraumVerbunden = eingang != null)
-            KnotenAuswertungsErgebnis(mapOf("wert" to wert.copy(annahmen = wert.annahmen + eingang?.annahmen.orEmpty())))
+            val eingang = k.eingänge["grundraum"] ?: error("Grundraum fehlt. Verbinde eine Menge mit dem Grundraumeingang.")
+            val grund = eingang.objekt as? MengenAusdruck ?: error("Der Grundraum muss eine Menge sein.")
+            val wert = variablenGrundraumWert(k.knoten, grund)
+            KnotenAuswertungsErgebnis(mapOf("wert" to wert.copy(annahmen = wert.annahmen + eingang.annahmen)))
         }
         registriere("mathematik.allgemeinerParameter") { k ->
             val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
@@ -69,12 +75,12 @@ object StandardMathematikAuswerter {
             val werte = k.operatorEingänge { anschluss, index ->
                 Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }.map { it.objekt as? ZahlAusdruck ?: error("Zahleingang ${it} ist ungültig.") }
-            require(werte.size >= 2) { "Mindestens zwei Summanden müssen verbunden sein." }
+            require(werte.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens zwei Summanden müssen verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(addition(werte), k)))
         }
         registriere("mathematik.multiplikation") { k ->
-            val werte = listOf("a", "b", "c").mapNotNull { k.eingänge[it]?.objekt as? ZahlAusdruck }
-            require(werte.size >= 2) { "Mindestens zwei Faktoren müssen verbunden sein." }
+            val werte = k.knoten.anschlüsse.filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.mapNotNull { k.eingänge[it.name]?.objekt as? ZahlAusdruck }
+            require(werte.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens zwei Faktoren müssen verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(multiplikation(werte), k)))
         }
         registriere("mathematik.potenz") { k ->
@@ -85,7 +91,7 @@ object StandardMathematikAuswerter {
             val werte = k.operatorEingänge { anschluss, index ->
                 Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }
-            require(werte.size >= 2) { "Ein Extremwert benötigt mindestens zwei Eingänge." }
+            require(werte.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Ein Extremwert benötigt mindestens zwei Eingänge." }
             require(werte.all { it.istNachweisbarReell() }) { "Maximum und Minimum sind nur für nachweisbar reelle Zahlen definiert." }
             val zahlen = werte.map { it.objekt as? ZahlAusdruck ?: error("Extremwert benötigt Zahlen.") }
             val wert = when (k.knoten.parameter["modus"]) {
@@ -119,9 +125,9 @@ object StandardMathematikAuswerter {
         registriere("mathematik.überOderGleichmenge") { k -> mengenAussage(k) { a, b -> ObermengenBeziehung(a, b) } }
         registriere("mathematik.disjunkt") { k -> mengenAussage(k) { a, b -> Disjunktheit(a, b) } }
         registriere("mathematik.gleichungLösen") { k ->
-            val eingang = k.eingänge["relation"]
+            val eingang = (k.eingänge["relation"]
                 ?: k.eingänge["gleichung"]
-                ?: error("Relation fehlt.")
+                ?: error("Relation fehlt.")).mitSkalarenLösungsUnbekannten()
             val relation = eingang.objekt as? Aussage ?: error("Auflösen benötigt ein Prädikat.")
             val variablen = relationsVariablen(eingang, relation, k)
             val auflösung = lösePrädikat(relation, variablen, k.rechenKontext.copy(
@@ -275,9 +281,10 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(DefinierteMenge(variablen, bedingung), annahmen(k))))
         }
         registriere("mathematik.visualisierung") { k ->
-            val menge = k.eingänge["menge"] ?: error("Für die Visualisierung muss eine Menge verbunden sein.")
-            require(menge.objekt is MengenAusdruck) { "Der Visualisierungseingang enthält keine Menge." }
-            KnotenAuswertungsErgebnis(mapOf("menge" to menge))
+            require(k.eingänge.values.all { it.objekt is MengenAusdruck }) { "Visualisierungseingänge müssen Mengen enthalten." }
+            // Historische Durchleitung bleibt bis zur ausdrücklich bestätigten Umstellung lesbar.
+            KnotenAuswertungsErgebnis(if (k.knoten.anschlüsse.any { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang })
+                k.eingänge["menge"]?.let { mapOf("menge" to it) }.orEmpty() else emptyMap(), eingänge = k.eingänge)
         }
         registriere("mathematik.orbit") { k ->
             val verbundenerSchritt = k.eingänge["schritt"]?.objekt as? Methode
@@ -359,13 +366,13 @@ object StandardMathematikAuswerter {
             val mengen = k.operatorEingänge { anschluss, index ->
                 BenannteMenge(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }.map { it.objekt as? MengenAusdruck ?: error("Mengeneingang ${it} ist ungültig.") }
-            require(mengen.size >= 2) { "Mindestens zwei Mengen müssen verbunden sein." }
+            require(mengen.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens ein Mengenoperand muss verbunden sein." }
             val wert = vereinige(mengen)
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(wert, annahmen(k))))
         }
         registriere("mathematik.schnitt") { k ->
             val mengen = k.mengenOperatorEingänge()
-            require(mengen.size >= 2) { "Mindestens zwei Mengen müssen verbunden sein." }
+            require(mengen.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens ein Mengenoperand muss verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(schneide(mengen), annahmen(k))))
         }
         registriere("mathematik.differenz") { k ->

@@ -137,7 +137,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
     LaunchedEffect(zustand.editor.auswertungsRevision) {
         zustand.aktualisiereAuswertung()
     }
-    LaunchedEffect(zustand.editor.karte) {
+    LaunchedEffect(zustand.editor.karte, zustand.editor.interaktionAktiv) {
         delay(650)
         zustand.speichereAktuell()
     }
@@ -194,6 +194,10 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             .navigationBarsPadding()
             .background(MaterialTheme.colorScheme.background)
             .onPreviewKeyEvent { event ->
+                if (zustand.pie.aktiv) {
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) zustand.pie.zurück()
+                    return@onPreviewKeyEvent true
+                }
                 if (event.type == KeyEventType.KeyDown && (event.isCtrlPressed || event.isMetaPressed) && event.key == Key.S) {
                     ausführen(AtlasBefehl.Speichern); true
                 } else false
@@ -219,11 +223,19 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                 onBibliothek = if (schmal) ({ bibliothekAnfordern = true }) else null,
             )
             HorizontalDivider()
+            val pieLayout = erinnerePieLayout(zustand)
+            DisposableEffect(zustand.editor.karte.id, zustand.editor.geöffneteGruppe) {
+                onDispose { zustand.pie.schließen() }
+            }
             Box(
                 Modifier.weight(1f).fillMaxWidth()
                     .clipToBounds()
                     .kartenDropZiel(zustand, dichte.density)
-                    .onSizeChanged { editorGröße = it }
+                    .onSizeChanged {
+                        if (editorGröße != IntSize.Zero && editorGröße != it) zustand.pie.schließen()
+                        editorGröße = it
+                    }
+                    .pieEingaben(zustand, pieLayout, werkzeug == KartenWerkzeug.Auswahl && zustand.editor.verbindungsAuswahl == null)
                     .focusRequester(graphFokus)
                     .onFocusChanged { graphFokussiert = it.hasFocus }
                     .focusable()
@@ -236,6 +248,8 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
             ) {
                 KnotenKartenEditor(
                     zustand = zustand.editor,
+                    anschlussInfoFür = zustand::anschlussInfoFür,
+                    interaktionGesperrt = zustand.pie.aktiv,
                     modifier = Modifier.fillMaxSize(),
                     rendererFür = zustand::rendererFür,
                     farbeFürAnschluss = { anschluss -> anschlussFarbe(anschluss.art.wert) },
@@ -251,6 +265,14 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                     },
                     beiVerbindungKontext = { if (werkzeug == KartenWerkzeug.Auswahl) graphKontext = GraphKontext.Verbindung(it.id) },
                     beiAnschlussKontext = { if (werkzeug == KartenWerkzeug.Auswahl) graphKontext = GraphKontext.Anschluss(it) },
+                    beiVerbindungsEinfügeAnfrage = { kontext, punkt ->
+                        if (werkzeug == KartenWerkzeug.Auswahl) {
+                            val ansicht = zustand.editor.darstellungsKarte.ansicht
+                            zustand.pie.verbindungÖffnen(kontext, Offset(
+                                ansicht.verschiebung.x + punkt.x * dichte.density * ansicht.zoom,
+                                ansicht.verschiebung.y + punkt.y * dichte.density * ansicht.zoom))
+                        }
+                    },
                     beiVerbindungAufHintergrund = { start, position ->
                         if (werkzeug == KartenWerkzeug.Auswahl) zustand.öffneKnotenAuswahl(position, start)
                     },
@@ -309,6 +331,7 @@ fun MathematikAtlasApp(zustand: AtlasZustand) {
                 }
                 zustand.knotenAuswahlPosition?.let { KnotenAuswahlDialog(zustand, it) }
                 graphKontext?.let { KontextDialog(zustand, it) { graphKontext = null } }
+                PieMenü(zustand, pieLayout)
             }
         }
         VerticalDivider()
@@ -335,6 +358,11 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
     }
     if (kontext is GraphKontext.Knoten) {
         val knoten = zustand.editor.karte.knoten.firstOrNull { it.id == kontext.id }
+        val istVisualisierung = remember(kontext.id) { knoten?.art == "mathematik.visualisierung" }
+        if (istVisualisierung) {
+            AtlasVisualisierungsDialog(zustand, kontext.id, schließen)
+            return
+        }
         if (knoten != null) {
             KnotenKonzeptDialog(zustand, knoten, schließen)
             return

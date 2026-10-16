@@ -72,7 +72,7 @@ object MengenRechner {
         return when (operator) {
             MengenRechnerOperator.UNTERRAUM -> MengenRechnerErgebnis.Ungueltig("vektorvertrag", "Unterraum benötigt Richtungsvektoren statt Mengen.")
             MengenRechnerOperator.VEREINIGUNG -> {
-                if (eingaben.size < 2) ungueltigeAnzahl(operator, 2)
+                if (eingaben.isEmpty()) ungueltigeAnzahl(operator, 1)
                 else if (inkompatibel) bedingt(operator, eingaben, universen)
                 else MengenRechnerErgebnis.Wert(
                     vereinige(eingaben.map { it.menge }),
@@ -81,7 +81,7 @@ object MengenRechner {
                 )
             }
             MengenRechnerOperator.SCHNITT -> {
-                if (eingaben.size < 2) ungueltigeAnzahl(operator, 2)
+                if (eingaben.isEmpty()) ungueltigeAnzahl(operator, 1)
                 else if (inkompatibel) bedingt(operator, eingaben, universen)
                 else MengenRechnerErgebnis.Wert(
                     normalisiereZahlmengenSchnitt(eingaben.map { it.menge }, gemeinsamesUniversum),
@@ -98,7 +98,7 @@ object MengenRechner {
                 )
             }
             MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ -> {
-                if (eingaben.size < 2) ungueltigeAnzahl(operator, 2)
+                if (eingaben.isEmpty()) ungueltigeAnzahl(operator, 1)
                 else MengenRechnerErgebnis.Wert(
                     eingaben.map { it.menge }.reduce { links, rechts ->
                         vereinige(listOf(mengenDifferenz(links, rechts), mengenDifferenz(rechts, links)))

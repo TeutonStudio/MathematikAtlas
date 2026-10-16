@@ -27,10 +27,11 @@ class PolynomNumerikIntegrationTest {
         assertEquals(MathematikAnschlussArten.Matrix.id,neu.anschlüsse.single { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang }.art)
         val karte=KartenDaten(name="Matrixvariable",knoten=listOf(neu))
         val geladen=MathematikKartenCodec.lese(MathematikKartenCodec.schreibe(karte))
-        val r=MathematikKartenLaufzeit().auswerten(geladen).knoten.getValue(neu.id)
+        val r=MathematikKartenLaufzeit().auswerten(geladen.mitTestGrundräumen()).knoten.getValue(neu.id)
         val wert=r.ausgaben.getValue("wert")
         assertIs<Matrix>(wert.objekt)
-        assertEquals(listOf("X_1_1","X_1_2","X_2_1","X_2_2"),wert.variablenQuellen.map { it.name })
+        assertEquals(1, wert.variablenQuellen.size)
+        assertNotNull(wert.variablenQuellen.single().strukturBindung)
         assertTrue(wert.variablenQuellen.all { it.lösungsRolle==LösungsQuellenRolle.Variable })
     }
     @Test fun `Genauigkeit ist persistent und atomar rueckgaengig`() {
@@ -68,7 +69,7 @@ class PolynomNumerikIntegrationTest {
             von=AnschlussVerweis(a.id,a.anschlüsse.first { it.richtung==AnschlussRichtung.Ausgang }.id),
             zu=AnschlussVerweis(b.id,b.anschlüsse.first { it.richtung==AnschlussRichtung.Eingang && it.name==name }.id))
         val karte=KartenDaten(name="Matrixgleichung",knoten=listOf(x,eq,solver),verbindungen=listOf(edge(x,eq,"links"),edge(x,eq,"rechts"),edge(eq,solver,"relation")))
-        val r=MathematikKartenLaufzeit().auswerten(karte)
+        val r=MathematikKartenLaufzeit().auswerten(karte.mitTestGrundräumen())
         assertTrue(r.fehler.isEmpty(),r.fehler.joinToString())
         val p=r.knoten.getValue(solver.id).polynomProblem!!
         assertEquals(4,p.variablen.size)

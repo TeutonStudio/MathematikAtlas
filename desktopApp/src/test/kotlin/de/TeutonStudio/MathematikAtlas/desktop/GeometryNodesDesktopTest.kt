@@ -13,6 +13,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
+import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
+import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import androidx.compose.ui.geometry.Offset
@@ -69,11 +71,19 @@ class GeometryNodesDesktopTest {
         compose.onNodeWithText("Standardansicht").performClick();compose.waitForIdle();assertEquals(vorher,bild())
     }
     @Test fun fehlerAmVorschauknotenBleibtSichtbar() {
+        val knoten = node("preview").copy(position = GraphPunkt(50f, 100f), größe = GraphGröße(650f, 520f))
+        val editor = KartenEditorZustand(KartenDaten(name = "Fehler", knoten = listOf(knoten)),
+            GraphPrüfung(AnschlussArtRegister(emptyList())))
         val renderer=GeometryNodesVorschauRenderer { KnotenAuswertungsErgebnis(emptyMap(),fehler="Instanzen zuerst realisieren") }
-        compose.setContent { MaterialTheme { Box(Modifier.size(650.dp,520.dp)) {
-            renderer.Inhalt(node("preview"),false,object:KnotenRendererAktionen { override fun eigenschaftenErsetzen(eigenschaften: Map<String,KnotenEigenschaft>) {} })
-        } } }
-        compose.onNodeWithText("Instanzen zuerst realisieren").assertIsDisplayed()
+        compose.setContent { MaterialTheme {
+            KnotenKartenEditor(editor, Modifier.size(900.dp, 750.dp), rendererFür = { renderer }, zeigeKnotenInspektor = false)
+        } }
+        val fehler = compose.onNodeWithText("Instanzen zuerst realisieren")
+        fehler.assertIsDisplayed()
+        compose.onAllNodesWithText("Instanzen zuerst realisieren").assertCountEquals(1)
+        val körper = compose.onNodeWithContentDescription("Knoten ${knoten.name}, ${knoten.anschlüsse.size} Anschlüsse").fetchSemanticsNode().boundsInRoot
+        assertTrue(fehler.fetchSemanticsNode().boundsInRoot.bottom <= körper.top)
+
     }
     private fun bild(): List<Int> {
         val map=compose.onNodeWithTag("geometry-preview").captureToImage().toPixelMap()

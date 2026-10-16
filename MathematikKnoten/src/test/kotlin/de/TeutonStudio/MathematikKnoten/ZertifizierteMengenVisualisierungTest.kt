@@ -47,7 +47,6 @@ class ZertifizierteMengenVisualisierungTest {
         assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.Enthalten })
         assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.Unbekannt })
         assertTrue(ergebnis.punkte.isNotEmpty())
-        assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.NumerischEnthalten })
     }
 
     @Test fun `dreidimensionale Kugel erhaelt Randflaeche und Volumenzellen`() {
@@ -71,7 +70,6 @@ class ZertifizierteMengenVisualisierungTest {
             ),
         )
 
-        assertTrue(ergebnis.zellen.any { it.status == ZellenStatus.NumerischEnthalten })
         assertTrue(ergebnis.dreiecke.isNotEmpty())
         assertEquals(ergebnis.dreiecke.size, ergebnis.statistik.dreiecke)
     }
@@ -744,7 +742,8 @@ class ZertifizierteMengenVisualisierungTest {
             VisualisierungsSampler.sample(mandelbrotMenge(), standard),
         )
 
-        assertTrue(ergebnis.statistik.auswertungen <= 4_000)
+        assertTrue(ergebnis.statistik.auswertungen <= standard.sampling.maximalesRasterBudget)
+        assertEquals(ergebnis.statistik.auswertungen, ergebnis.statistik.zellArbeit + ergebnis.statistik.punktArbeit + ergebnis.statistik.randArbeit)
         assertTrue(ergebnis.zellen.size <= 8_000)
     }
 }

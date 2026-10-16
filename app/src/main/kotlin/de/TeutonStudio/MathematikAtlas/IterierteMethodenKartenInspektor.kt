@@ -28,8 +28,8 @@ private val ITERIERTE_METHODEN_ARTEN = setOf<KnotenArtId>(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun IterierteMethodenKartenInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
-    KnotenAuswertungsDiagnose(knoten, zustand)
+internal fun IterierteMethodenKartenInspektor(knoten: KnotenDaten, zustand: AtlasZustand, zeigeDiagnose: Boolean = true) {
+    if (zeigeDiagnose) KnotenAuswertungsDiagnose(knoten, zustand)
     if (knoten.art !in ITERIERTE_METHODEN_ARTEN) return
     val methodeVerbunden = zustand.istMethodenEingangVerbunden(knoten)
     val ausgewählt = knoten.eingangsKartenVerweise["methode"]
@@ -135,7 +135,7 @@ internal fun IterierteMethodenKartenInspektor(knoten: KnotenDaten, zustand: Atla
 }
 
 @Composable
-private fun KnotenAuswertungsDiagnose(knoten: KnotenDaten, zustand: AtlasZustand) {
+internal fun KnotenAuswertungsDiagnose(knoten: KnotenDaten, zustand: AtlasZustand) {
     val dauer = zustand.auswertung.knoten[knoten.id]?.auswertungsDauerNanos
     HorizontalDivider()
     Text("Auswertung", style = MaterialTheme.typography.titleSmall)

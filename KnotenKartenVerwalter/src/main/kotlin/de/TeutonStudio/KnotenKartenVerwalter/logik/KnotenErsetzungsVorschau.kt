@@ -12,9 +12,10 @@ data class KnotenErsetzungsAuswirkung(
     val hinzugefügteAnschlüsse: List<AnschlussDaten>,
     val entfallendeAnschlüsse: List<AnschlussDaten>,
     val entfallendeVerbindungen: List<VerbindungDaten>,
+    val entfallendeLokaleWerte: List<String> = emptyList(),
 ) {
     val trenntVerbindungen: Boolean
-        get() = entfallendeVerbindungen.isNotEmpty()
+        get() = entfallendeVerbindungen.isNotEmpty() || entfallendeLokaleWerte.isNotEmpty()
 }
 
 fun KartenDaten.vorschauKnotenErsetzen(neuerKnoten: KnotenDaten, prüfung: GraphPrüfung? = null): KnotenErsetzungsAuswirkung {

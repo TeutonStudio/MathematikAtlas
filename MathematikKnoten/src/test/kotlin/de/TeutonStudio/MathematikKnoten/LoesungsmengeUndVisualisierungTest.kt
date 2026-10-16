@@ -22,10 +22,10 @@ class LoesungsmengeUndVisualisierungTest {
         assertEquals(listOf("y", "x"), menge.variablen.map { it.variable.name })
         assertEquals(NatürlicheZahlen, menge.variablen[1].grundMenge)
     }
-    @Test fun `Visualisierung reicht Menge und Annahmen weiter`() {
+    @Test fun `Visualisierung bewahrt Eingang und Annahmen ohne Ausgang`() {
         val knoten = MathematikKnotenVorlagen.Visualisierung.erzeuge(GraphPunkt.Zero)
         val eingang = BedingterWert(EndlicheMenge(emptySet()), setOf(WahrheitsKonstante(true)))
-        assertEquals(eingang, register.finde(knoten.art)!!.auswerten(KnotenAuswertungsKontext(knoten, mapOf("menge" to eingang), RechenKontext())).ausgaben.getValue("menge"))
+        assertEquals(eingang, register.finde(knoten.art)!!.auswerten(KnotenAuswertungsKontext(knoten, mapOf("menge" to eingang), RechenKontext())).eingänge.getValue("menge"))
     }
     @Test fun `Sampler zeichnet Punkte Kreis und Kugel`() {
         val c2 = VisualisierungsKonfiguration(achsen = AchsenZuordnung("x", "y", "z"), bereiche = AchsenBereiche(ZahlenBereich(-2.0, 2.0), ZahlenBereich(-2.0, 2.0), ZahlenBereich(-2.0, 2.0)), sampling = SamplingKonfiguration(40, 16, .1))

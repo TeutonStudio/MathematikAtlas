@@ -34,59 +34,97 @@ fun konfiguriereVariablenStruktur(k: KnotenDaten, art: String): KnotenDaten {
         anschlüsse = k.anschlüsse.map { if (it.richtung == AnschlussRichtung.Ausgang) it.copy(art = anschlussArt) else it })
 }
 
-internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck, grundraumVerbunden: Boolean = false): BedingterWert {
+/** Ein Grundraumelement besitzt genau eine Quellenidentität, auch nach Projektionen. */
+internal fun variablenGrundraumWert(k: KnotenDaten, menge: MengenAusdruck): BedingterWert {
+    val grundraum = kanonischerRichtungsraum(menge)
     val name = k.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
-    val art = variablenStruktur(k)
-    val basis = if (art == VARIABLE_STRUKTUR_WINKEL) grundmenge else variablenWertevorrat(k, grundmenge)
-    val matrixDimension=k.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
-    require(matrixDimension in 0..8) { "Matrixdimension muss zwischen 1 und 8 liegen (0: Skalar)." }
-    if(art=="zahl" && matrixDimension>0) {
-        val komponenten=List(matrixDimension*matrixDimension) { i -> Variable("${name}_${i/matrixDimension+1}_${i%matrixDimension+1}") }
-        return BedingterWert(Matrix(List(matrixDimension) { i -> List(matrixDimension) { j -> komponenten[i*matrixDimension+j] } }),
-            variablenQuellen=komponenten.map { v -> VariablenQuelle(k.id,v.name,basis,bindungsId="${k.id.wert}:${v.name}",lösungsRolle=LösungsQuellenRolle.Variable) })
+    val id = "${k.id.wert}:grundraum-element"
+    val intern = "__variable:${k.id.wert}:$name"
+    val typ = grundraum.elementTypAusdruck()
+    val art = variablenAnschlussArt(typ)
+    fun komponentenRäume(raum: MengenAusdruck): List<MengenAusdruck>? {
+        raum.kartesischeFaktorenOderNull()?.let { return it }
+        if (raum !is EndlicheMenge || raum.elemente.isEmpty() || raum.elemente.any { it !is Tupel }) return null
+        val tupel = raum.elemente.filterIsInstance<Tupel>()
+        val n = tupel.first().elemente.size
+        if (tupel.any { it.elemente.size != n }) return null
+        return List(n) { i -> EndlicheMenge(tupel.map { it.elemente[i] }.toSet()) }
     }
-    if (art == "zahl") return BedingterWert(Variable(name), werteVorrat = basis,
-        variablenQuellen = listOf(VariablenQuelle(k.id, name, basis, lösungsRolle = LösungsQuellenRolle.Variable)))
-    val n = if (art == VARIABLE_STRUKTUR_WINKEL && grundraumVerbunden) {
-        require(istWinkelraum(grundmenge)) { "Ein Winkeltupel benötigt einen Richtungsraum mit Vorzeichen und Halbkreiswinkeln; verwende Gradmenge mit dim oder die Definitionskarte." }
-        (grundmenge as Tupelraum).komponenten.size - 1
-    } else variablenDimension(k)
-    if(art==VARIABLE_STRUKTUR_WINKEL) {
-        val domain=winkelraum(n)
-        val intern="__winkelquelle:${k.id.wert}:$name"
-        val parameter=TypisiertesElement(intern,MathematikAnschlussArten.Tupel.id.wert,latex=name,strukturForm=listOf(RationaleZahl.von((n+1).toLong())))
-        val objekt=Tupel(List(n+1) { i -> SymbolischeZahlKomponente(parameter,RationaleZahl.von((i+1).toLong())) })
-        return BedingterWert(objekt,werteVorrat=domain,komponentenMengen=domain.komponenten,
-            variablenQuellen=listOf(VariablenQuelle(k.id,intern,domain,lösungsRolle=LösungsQuellenRolle.Variable,
-                strukturBindung=StrukturQuellenBindung("${k.id.wert}:winkelraum",name,domain))))
+    val form = when (grundraum) {
+        is Vektorraum -> listOf(RationaleZahl.von(grundraum.dimension.toLong()))
+        is Matrizenraum -> listOf(RationaleZahl.von(grundraum.zeilen.toLong()), RationaleZahl.von(grundraum.spalten.toLong()))
+        is Tensorraum -> grundraum.dimensionen
+        else -> komponentenRäume(grundraum)?.let { listOf(RationaleZahl.von(it.size.toLong())) }
     }
-    // n ist die Anzahl der Winkel; das Vorzeichen ist eine zusätzliche Komponente.
-    val anzahl = if (art == VARIABLE_STRUKTUR_WINKEL) n + 1 else n
-    val variablen = List(anzahl) { i -> Variable("${name}_${i+1}", "${name}_{${i+1}}") }
-    val bereiche = List(anzahl) { i ->
-        if (art != VARIABLE_STRUKTUR_WINKEL) basis
-        else if (i == 0) EndlicheMenge(setOf(RationaleZahl.von(-1), RationaleZahl.Eins))
-        else ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), true)
-    }
-    val objekt: MathematischesObjekt = when (art) {
-        "zeile" -> ZeilenVektor(variablen)
-        "spalte" -> SpaltenVektor(variablen)
-        else -> Tupel(variablen)
-    }
-    val wertevorrat: MengenAusdruck = when (art) {
-        "zeile" -> Vektorraum(VektorOrientierung.Zeile, n, basis)
-        "spalte" -> Vektorraum(VektorOrientierung.Spalte, n, basis)
-        else -> Tupelraum(bereiche)
-    }
-    return BedingterWert(objekt, werteVorrat = wertevorrat,
-        variablenQuellen = variablen.mapIndexed { i, variable ->
-            VariablenQuelle(k.id, variable.name, bereiche[i],
-                bindungsId = "${k.id.wert}:struktur", bindungsName = "komponente-${i+1}",
-                reihenfolge = i, lösungsRolle = LösungsQuellenRolle.Variable)
+    val parameter = TypisiertesElement(intern, art.wert, latex = name, strukturForm = form?.takeUnless { achsen -> achsen.any { it == RationaleZahl.Null } })
+    fun element(raum: MengenAusdruck, quelle: MathematischesObjekt): MathematischesObjekt {
+        val faktoren = komponentenRäume(raum)
+        if (faktoren != null) return Tupel(faktoren.mapIndexed { i, faktor ->
+            val index = RationaleZahl.von((i + 1).toLong())
+            val numerisch = variablenAnschlussArt(faktor.elementTypAusdruck()) == MathematikAnschlussArten.Zahl.id ||
+                faktor == Gradmenge || faktor is EndlicheMenge && faktor.elemente.all { it is ZahlAusdruck }
+            val zugriff = strukturKomponente(quelle, index, numerisch)
+            element(faktor, zugriff)
         })
+        return when (raum) {
+            is Vektorraum -> {
+                val werte = List(raum.dimension) { SymbolischeZahlKomponente(quelle, RationaleZahl.von((it + 1).toLong())) }
+                if (raum.orientierung == VektorOrientierung.Zeile) ZeilenVektor(werte) else SpaltenVektor(werte)
+            }
+            is Matrizenraum -> Matrix(List(raum.zeilen) { i -> List(raum.spalten) { j ->
+                SymbolischeZahlKomponente(quelle, RationaleZahl.von((i + 1).toLong()), listOf(RationaleZahl.von((j + 1).toLong())))
+            } })
+            else -> quelle
+        }
+    }
+    // Numerische Skalare bleiben Zahlterme; alle strukturierten Zugriffe teilen den Wurzelparameter.
+    val skalar = art == MathematikAnschlussArten.Zahl.id
+    val objekt = when {
+        skalar -> Variable(name, bindungsId = id)
+        grundraum == Gradmenge -> WinkelParameter(name, bindungsId = id)
+        else -> element(grundraum, parameter)
+    }
+    return BedingterWert(objekt, werteVorrat = grundraum,
+        komponentenMengen = komponentenRäume(grundraum).orEmpty(),
+        variablenQuellen = listOf(VariablenQuelle(k.id, if (skalar || grundraum == Gradmenge) name else intern, grundraum, bindungsId = id,
+            lösungsRolle = LösungsQuellenRolle.Variable,
+            strukturBindung = StrukturQuellenBindung(id, name, grundraum))))
 }
 
-/** Ergänzt den optionalen Grundraum, ohne bestehende Ausgangsreferenzen zu verändern. */
+internal fun variablenAnschlussArt(typ: de.TeutonStudio.TypSystem.TypAusdruck): AnschlussArtId {
+    val id = when (typ) {
+        is de.TeutonStudio.TypSystem.TypAusdruck.Atom -> typ.id
+        is de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert -> typ.konstruktor
+        else -> null
+    }
+    return when {
+        id == MathematischeTypen.Tupel -> MathematikAnschlussArten.Tupel.id
+        id != null && MathematischeTypen.istAtomUntertyp(id, MathematischeTypen.Zahl) -> MathematikAnschlussArten.Zahl.id
+        id != null -> AnschlussArtId(id.wert)
+        else -> MathematikAnschlussArten.Objekt.id
+    }
+}
+
+/** Nur für das Lesen historischer Konfigurationen; nicht für die aktive Auswertung. */
+internal fun historischerVariablenGrundraum(k: KnotenDaten, basis: MengenAusdruck): MengenAusdruck {
+    val menge = variablenWertevorrat(k, basis)
+    return when (variablenStruktur(k)) {
+        "winkeltupel" -> winkelraum(variablenDimension(k))
+        "tupel" -> Tupelraum(List(variablenDimension(k)) { menge })
+        "zeile" -> Vektorraum(VektorOrientierung.Zeile, variablenDimension(k), menge)
+        "spalte" -> Vektorraum(VektorOrientierung.Spalte, variablenDimension(k), menge)
+        else -> {
+            val n = k.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
+            require(n in 0..8) { "Ungültige historische Matrixdimension." }
+            if (n == 0) menge else Matrizenraum(n, n, menge)
+        }
+    }
+}
+
+internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck, grundraumVerbunden: Boolean = false): BedingterWert =
+    variablenGrundraumWert(k, if (grundraumVerbunden) grundmenge else historischerVariablenGrundraum(k, grundmenge))
+
+/** Ergänzt den Grundraumanschluss, ohne bestehende Ausgangsreferenzen zu verändern. */
 fun KartenDaten.migriereVariablenGrundraum(): KartenDaten = copy(knoten = knoten.map { k ->
     if (k.art != "mathematik.variable" || k.anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name == "grundraum" }) k
     else k.copy(anschlüsse = k.anschlüsse + AnschlussDaten(

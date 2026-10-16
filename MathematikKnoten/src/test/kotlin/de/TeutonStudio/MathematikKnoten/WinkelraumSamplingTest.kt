@@ -22,7 +22,7 @@ class WinkelraumSamplingTest {
     private fun bild(n: Int, diagonal: List<Long>? = null): Abbild {
         val variable = konfiguriereVariablenStruktur(MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero), VARIABLE_STRUKTUR_WINKEL)
             .let { it.copy(parameter = it.parameter + mapOf(VARIABLE_DIMENSION to n.toString(), "name" to "w")) }
-        val w = eval(variable, emptyMap())
+        val w = eval(variable, testGrundraum(variable))
         val polar = konfiguriereÜbersetzerPolarAnschlüsse(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "kartesisch"), true)
         var f = eval(polar, mapOf("radius" to BedingterWert(z(1)), "winkel" to w))
         if (diagonal != null) {
@@ -159,10 +159,10 @@ class WinkelraumSamplingTest {
         val kopie = clip.erzeugeEinfügung(GraphPunkt(2000f, 0f))!!
         val kopiert = KartenDaten(name = "Kopie", knoten = kopie.knoten, verbindungen = kopie.verbindungen)
         for (k in listOf(karte, geladen, kopiert)) {
-            val e = laufzeit.auswerten(k)
+            val e = laufzeit.auswerten(k.mitTestGrundräumen())
             assertTrue(e.fehler.isEmpty(), e.fehler.toString())
             val ausgang = k.knoten.single { it.art == "mathematik.visualisierung" }
-            val menge = e.knoten.getValue(ausgang.id).ausgaben.getValue("menge").objekt as Abbild
+            val menge = e.knoten.getValue(ausgang.id).eingänge.getValue("menge").objekt as Abbild
             assertEquals(winkelraum(2), menge.menge)
             val bild = assertIs<VisualisierungsErgebnis.Erfolgreich>(VisualisierungsSampler.sample(menge, config(RaumDimension.R3)))
             assertTrue(bild.punkte.any { it.z!! > 0.99 } && bild.punkte.any { it.z!! < -0.99 })

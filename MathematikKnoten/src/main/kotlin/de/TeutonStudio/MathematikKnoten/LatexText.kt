@@ -22,10 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.hrm.latex.renderer.Latex
+import com.hrm.latex.renderer.font.MathFont
 import com.hrm.latex.renderer.model.LatexConfig
 import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
 
-private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\{#1\\right\\}}"
+private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\lbrace #1\\right\\rbrace}"
 private const val ATLAS_IMPLIES_MACRO = "\\newcommand{\\implies}{\\Rightarrow}"
 private const val ATLAS_IFF_MACRO = "\\newcommand{\\iff}{\\Leftrightarrow}"
 private const val ATLAS_LONGTO_MACRO = "\\newcommand{\\longto}{\\longrightarrow}"
@@ -109,6 +110,9 @@ private fun EchterLatexText(
         modifier = modifier,
         config = LatexConfig(
             fontSize = fontSize,
+            // Renderer 1.3.0 setzt mathbb in der Standard-OTF nicht auf Doppelstrichglyphen um.
+            // Der gebündelte TTF-Schriftsatz besitzt dafür eine eigene AMS-Schrift.
+            mathFont = MathFont.KaTeXTTF,
             accessibilityEnabled = true,
         ),
         isDarkTheme = dunklesSchema,
@@ -123,6 +127,8 @@ internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String 
     val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
     val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
     val rendererKompatibel = ersetzeNichtBedingteCases(latex)
+        .replace("\\{", "\\lbrace ").replace("\\}", "\\rbrace ")
+        .replace(Regex("""\\mathbb\s*([A-Za-z])""")) { "\\mathbb{${it.groupValues[1]}}" }
     val farbig = rendererKompatibel
         .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
         .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
@@ -502,7 +508,7 @@ private class LatexParser(
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
         "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",
-        "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦",
+        "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦", "hookrightarrow" to "↪",
         "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",
         "pm" to "±", "mp" to "∓", "sin" to "sin", "cos" to "cos", "ln" to "ln",
         "alpha" to "α", "beta" to "β", "gamma" to "γ", "delta" to "δ", "epsilon" to "ε", "theta" to "θ",

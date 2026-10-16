@@ -85,7 +85,8 @@ class AtlasZwischenablage {
             )
         }
         val verbindungen = quelle.verbindungen.map { verbindung ->
-            VerbindungDaten(
+            verbindung.copy(
+                id = neueVerbindungsId(),
                 von = AnschlussVerweis(
                     knotenIds.getValue(verbindung.von.knotenId),
                     anschlussIds.getValue(verbindung.von.anschlussId),

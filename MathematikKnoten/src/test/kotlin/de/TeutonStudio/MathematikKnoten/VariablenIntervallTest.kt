@@ -19,7 +19,7 @@ class VariablenIntervallTest {
             VARIABLE_INTERVALL_LINKS_OFFEN to "false", VARIABLE_INTERVALL_RECHTS_OFFEN to "false",
         ))
         val wert = register.finde(k.art)!!.auswerten(
-            KnotenAuswertungsKontext(k, emptyMap(), RechenKontext())).ausgaben.getValue("wert")
+            KnotenAuswertungsKontext(k, testGrundraum(k), RechenKontext())).ausgaben.getValue("wert")
         assertEquals(ReellesIntervall(RationaleZahl.Null, false, RationaleZahl.von(180), false), wert.werteVorrat)
         assertEquals(wert.werteVorrat, wert.variablenQuellen.single().werteVorrat)
     }

@@ -27,6 +27,61 @@ class VerbindungsBearbeitungTest {
         editor.führeAus(KartenAktion.KnotenVerschieben(id, GraphPunkt(500f, 300f)), mitHistorie = false)
     }
 
+    @Test fun joinBeitragBleibtBeimEinfuegenHerausziehenUndNeuverbindenAnSeinerPosition() {
+        val ziel = b.copy(anschlüsse = b.anschlüsse.map { if (it.name == "in") it.copy(belegung = AnschlussBelegung.Mehrfach) else it })
+        val d = knoten("D")
+        val original = kante(a, ziel).copy(eingangsReihenfolge = 3, eingangsFallback = "in@karte:alt")
+        val weiterer = kante(d, ziel).copy(eingangsReihenfolge = 8)
+        val vorher = basis().copy(knoten = listOf(a, ziel, c, d), verbindungen = listOf(original, weiterer))
+        val editor = KartenEditorZustand(vorher, prüfung)
+        editor.beginneKnotenZiehen(c.id); bewegen(editor, c.id)
+        editor.aktualisiereKnotenEinfügeziel(original.id); editor.beendeKnotenZiehen()
+        val eingefügt = editor.karte
+        assertEquals(3, eingefügt.verbindungen.size)
+        assertEquals(original.copy(von = ref(c, "out")), eingefügt.verbindungen.single { it.id == original.id })
+        assertTrue(weiterer in eingefügt.verbindungen)
+        assertFalse(eingefügt.verbindungen.any { it.von == original.von && it.zu == original.zu })
+        editor.rückgängig(); assertEquals(vorher, editor.karte)
+        editor.wiederholen(); assertEquals(eingefügt, editor.karte)
+        val bypass = assertNotNull(planeKnotenHerausziehen(eingefügt, c.id, prüfung)).karte
+        assertEquals(vorher.verbindungen.toSet(), bypass.verbindungen.toSet())
+        val neu = vorher.wendeAn(KartenAktion.VerbindungNeuVerbinden(original.id, original.copy(von = ref(c, "out"))))
+        assertEquals(original.copy(von = ref(c, "out")), neu.verbindungen.single { it.id == original.id })
+        assertTrue(weiterer in neu.verbindungen)
+        val paar = KompatiblesAnschlussPaar(c.anschlüsse.first().id, c.anschlüsse.last().id, x, x)
+        val kandidat = EinfuegeKandidat(c.art, null, c, listOf(paar))
+        val ohneC = vorher.copy(knoten = vorher.knoten.filterNot { it.id == c.id })
+        val dienst = assertIs<KnotenEinfuegeErgebnis.Erfolg>(KnotenInEdgeEinfueger(prüfung).einfuegen(ohneC, EdgeEinfuegeKontext.aus(original), kandidat, paar))
+        assertEquals(original.copy(von = ref(c, "out")), dienst.karte.verbindungen.single { it.id == original.id })
+        assertTrue(weiterer in dienst.karte.verbindungen)
+    }
+
+    @Test fun adapterUmbindungErhaeltJoinBeitragUndFallbackrolle() {
+        prüfung.mehrfachDarstellung = { _, _ -> false }
+        val quelle = knoten("Y", output = y)
+        val ziel = b.copy(anschlüsse = b.anschlüsse.map { if (it.name == "in") it.copy(belegung = AnschlussBelegung.Mehrfach) else it })
+        val original = kante(a, ziel).copy(eingangsReihenfolge = 3, eingangsFallback = "in@karte:alt")
+        val weiterer = kante(c, ziel).copy(eingangsReihenfolge = 8)
+        val vorher = basis().copy(knoten = listOf(a, ziel, c, quelle), verbindungen = listOf(original, weiterer))
+        val editor = KartenEditorZustand(vorher, prüfung)
+        editor.verbindungsPlaner = { basis, von, zu ->
+            val adapter = knoten("Y nach X", input = y)
+            val mitAdapter = basis.copy(knoten = basis.knoten + adapter)
+            val erster = verbindeGeprüft(mitAdapter, von, ref(adapter, "in"), prüfung)!!
+            listOf(VerbindungsVorschlag("Adapter", verbindeGeprüft(erster, ref(adapter, "out"), zu, prüfung)!!))
+        }
+        editor.beginneVerbindung(ref(quelle, "out"))
+        val beitrag = editor.darstellungsKarte.knoten.single { it.id == ziel.id }.anschlüsse.single { it.beitragsVerbindung == original.id }
+        editor.anschlussAngeklickt(AnschlussVerweis(ziel.id, beitrag.id))
+        assertEquals(3, editor.karte.verbindungen.size)
+        val ersetzt = editor.karte.verbindungen.single { it.id == original.id }
+        assertEquals(original.zu, ersetzt.zu)
+        assertEquals(original.eingangsReihenfolge, ersetzt.eingangsReihenfolge)
+        assertEquals(original.eingangsFallback, ersetzt.eingangsFallback)
+        assertTrue(weiterer in editor.karte.verbindungen)
+        editor.rückgängig(); assertEquals(vorher, editor.karte)
+    }
+
     @Test fun einfuegenIstMitBewegungEinUndoSchritt() {
         val vorher = basis()
         val editor = KartenEditorZustand(vorher, prüfung)

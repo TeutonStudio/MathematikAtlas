@@ -3,6 +3,11 @@ package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -61,7 +66,12 @@ fun AtlasDialog(
         ) {
             val breite = if (größe == AtlasDialogGröße.Kompakt) 560.dp else 1180.dp
             Surface(
-                modifier = modifier.widthIn(max = minOf(maxWidth, breite)).fillMaxWidth()
+                modifier = modifier.onPreviewKeyEvent { event ->
+                    if (properties.dismissOnBackPress && event.key == Key.Escape && event.type == KeyEventType.KeyDown) {
+                        onDismissRequest()
+                        true
+                    } else false
+                }.widthIn(max = minOf(maxWidth, breite)).fillMaxWidth()
                     .heightIn(max = maxHeight).pointerInput(Unit) { detectTapGestures { } },
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = 6.dp,

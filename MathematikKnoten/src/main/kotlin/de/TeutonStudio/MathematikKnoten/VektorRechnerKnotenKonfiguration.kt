@@ -113,7 +113,9 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
                 kontext.knoten.anschlüsse
                     .filter { it.richtung == AnschlussRichtung.Ausgang }
                     .sortedBy { it.reihenfolge }
-                    .mapIndexedNotNull { index, anschluss ->
+                    .filterNot { it.name == "methode" }
+                    .mapIndexedNotNull { position, anschluss ->
+                        val index = anschluss.name.removePrefix("element").toIntOrNull()?.minus(1) ?: position
                         elemente.getOrNull(index)?.let { element ->
                             anschluss.name to BedingterWert(element, annahmen)
                         }

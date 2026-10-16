@@ -15,7 +15,7 @@ class IndexRechnerDefinitionsKartenTest {
     private fun wert(original: KnotenDaten, eingänge: Map<String, MathematischesObjekt>, quellen: List<VariablenQuelle> = emptyList()): MathematischesObjekt {
         val erzeugt = assertNotNull(indexRechnerDefinitionsKarte(original))
         val karte = KartenJson.lese(KartenJson.schreibe(erzeugt))
-        erzeugt.knoten.zip(karte.knoten).forEach { (a,b) -> assertEquals(a, b, "Roundtrip ${a.name}") }
+        erzeugt.normalisiereJoinEingänge().knoten.zip(karte.knoten).forEach { (a,b) -> assertEquals(a, b, "Roundtrip ${a.name}") }
         assertTrue(karte.knoten.none { it.art == KonzeptKnotenArten.REGEL })
         assertTrue(karte.knoten.none { it.art == original.art && it.parameter[RechnerOperatorRegistry.familieFür(original.art)!!.operatorParameter] == original.parameter[RechnerOperatorRegistry.familieFür(original.art)!!.operatorParameter] })
         val prüfung = GraphPrüfung(AnschlussArtRegister(MathematikAnschlussArten.alle))

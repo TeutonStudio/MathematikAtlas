@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 import de.TeutonStudio.MathematikRechenSystem.kern.StrukturFormelCodec
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussBelegung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
@@ -18,11 +20,26 @@ import de.TeutonStudio.MathematikRechenSystem.kern.DivisionsSeite
 import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal object ZahlenRechnerInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
+        KnotenInspektorBereich.Knotendaten -> true
+        KnotenInspektorBereich.Eingangsdaten -> knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach } && (UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR])?.let { istVariadischerZahlenOperator(it) || istKomplexKonstruktor(it) } == true || ErweiterterZahlenOperator.vonId(knoten.parameter[ZAHLENRECHNER_OPERATOR]) in setOf(ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL, ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL))
+        KnotenInspektorBereich.Ausgangsdaten -> UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.DIFFERENTIAL
+    }
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
+        when (bereich) {
+            KnotenInspektorBereich.Knotendaten -> FachInhalt(knoten, ergebnis, aktionen, false)
+            KnotenInspektorBereich.Eingangsdaten -> { ZahlenRechnerEingänge(knoten, ergebnis, aktionen); ZahlenRechnerKomplexEingabe(knoten, ergebnis, aktionen) }
+            KnotenInspektorBereich.Ausgangsdaten -> { ZahlenRechnerAusgabe(knoten, ergebnis, aktionen) }
+        }
+    }
+
     @Composable
-    override fun Inhalt(
+    private fun FachInhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
+        mitAnschlüssen: Boolean,
     ) {
         de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche(knoten, ergebnis)
         val operatorId = knoten.parameter[ZAHLENRECHNER_OPERATOR]
@@ -141,43 +158,7 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
 
         if (standardOperator == UniversellerZahlenOperator.DIFFERENTIAL) {
             val ergebnisArt = aktuelleZahlenRechnerDifferentialErgebnisArt(knoten)
-            Text("Ergebnisart", style = MaterialTheme.typography.titleSmall)
-            if (ergebnisArt == null) {
-                Text(
-                    "Historischer Termmodus. Die bisherige skalare Ableitung bleibt unverändert, bis eine strukturierte Ergebnisart gewählt wird.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-            ) {
-                FilterChip(
-                    selected = ergebnisArt == ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
-                    onClick = {
-                        aktionen.knoten(
-                            konfiguriereZahlenRechnerDifferential(
-                                knoten,
-                                ZahlenRechnerDifferentialErgebnisArt.ABLEITUNGSFUNKTION,
-                            ),
-                        )
-                    },
-                    label = { Text("f′") },
-                )
-                FilterChip(
-                    selected = ergebnisArt == ZahlenRechnerDifferentialErgebnisArt.DIFFERENTIAL,
-                    onClick = {
-                        aktionen.knoten(
-                            konfiguriereZahlenRechnerDifferential(
-                                knoten,
-                                ZahlenRechnerDifferentialErgebnisArt.DIFFERENTIAL,
-                            ),
-                        )
-                    },
-                    label = { Text("df") },
-                )
-            }
+            if (mitAnschlüssen) ZahlenRechnerAusgabe(knoten, ergebnis, aktionen)
 
             if (ergebnisArt != null) {
                 val differentialOperator = aktuelleZahlenRechnerDifferentialOperator(knoten)
@@ -272,81 +253,9 @@ internal object ZahlenRechnerInspektor : KnotenInspektor {
             )
         }
 
-        val erweiterterMittelwert = erweiterterOperator == ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL ||
-            erweiterterOperator == ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL
-        if ((standardOperator != null && istVariadischerZahlenOperator(standardOperator)) || erweiterterMittelwert) {
-            val anzahl = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2
-            Text("Feste Operanden", style = MaterialTheme.typography.titleSmall)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        val neueAnzahl = (anzahl - 1).coerceAtLeast(2)
-                        val basis = knoten.copy(parameter = knoten.parameter + ("festeEingänge" to neueAnzahl.toString()))
-                        aktionen.knoten(
-                            if (erweiterterMittelwert) {
-                                konfiguriereErweitertenZahlenRechner(basis, requireNotNull(erweiterterOperator))
-                            } else {
-                                konfiguriereZahlenRechner(knoten = knoten, festeEingänge = neueAnzahl)
-                            },
-                        )
-                    },
-                    enabled = anzahl > 2,
-                ) { Text("−") }
-                Text(anzahl.toString(), modifier = Modifier.weight(1f))
-                OutlinedButton(
-                    onClick = {
-                        val neueAnzahl = anzahl + 1
-                        val basis = knoten.copy(parameter = knoten.parameter + ("festeEingänge" to neueAnzahl.toString()))
-                        aktionen.knoten(
-                            if (erweiterterMittelwert) {
-                                konfiguriereErweitertenZahlenRechner(basis, requireNotNull(erweiterterOperator))
-                            } else {
-                                konfiguriereZahlenRechner(knoten = knoten, festeEingänge = neueAnzahl)
-                            },
-                        )
-                    },
-                ) { Text("+") }
-            }
-        }
+        if (mitAnschlüssen) ZahlenRechnerEingänge(knoten, ergebnis, aktionen)
 
-        if (standardOperator != null && istKomplexKonstruktor(standardOperator)) {
-            val modus = knoten.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE]
-                ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT
-            Text("Komplexe Eingabe", style = MaterialTheme.typography.titleSmall)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-            ) {
-                FilterChip(
-                    selected = modus == ZAHLENRECHNER_KOMPLEX_SEPARIERT,
-                    onClick = {
-                        aktionen.knoten(
-                            konfiguriereZahlenRechner(
-                                knoten = knoten,
-                                komplexEingabe = ZAHLENRECHNER_KOMPLEX_SEPARIERT,
-                            ),
-                        )
-                    },
-                    label = { Text("Getrennt") },
-                )
-                FilterChip(
-                    selected = modus == ZAHLENRECHNER_KOMPLEX_TUPEL,
-                    onClick = {
-                        aktionen.knoten(
-                            konfiguriereZahlenRechner(
-                                knoten = knoten,
-                                komplexEingabe = ZAHLENRECHNER_KOMPLEX_TUPEL,
-                            ),
-                        )
-                    },
-                    label = { Text("Tupel") },
-                )
-            }
-        }
+        if (mitAnschlüssen) ZahlenRechnerKomplexEingabe(knoten, ergebnis, aktionen)
 
         if (standardOperator == UniversellerZahlenOperator.SINUS) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -493,4 +402,19 @@ private fun erweiterteZahlenKategorie(operator: ErweiterterZahlenOperator): Stri
     ErweiterterZahlenOperator.ARCTANGENS,
     -> "Trigonometrie"
     else -> "Hyperbelfunktionen"
+}
+
+@Composable
+private fun ZahlenRechnerEingänge(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorZahlenRechnerEingänge(knoten, aktionen::knoten)
+}
+
+@Composable
+private fun ZahlenRechnerKomplexEingabe(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorKomplexEingabe(knoten, aktionen::knoten)
+}
+
+@Composable
+private fun ZahlenRechnerAusgabe(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorAusgangsEinstellungen(knoten, ergebnis, aktionen::knoten)
 }

@@ -21,6 +21,11 @@ object OperatorKnotenSuchindex {
         val operatorId: String,
     )
 
+    /** Vollständiger bestehender Operatorbestand, unabhängig von einem Suchtext. */
+    fun alleMitMetadaten(basisVorlagen: List<KnotenVorlage>): List<OperatorKnotenSuchtreffer> =
+        eintraege(basisVorlagen).distinctBy { it.vorlage.art to it.vorlage.standardParameter.toSortedMap() }
+            .map { OperatorKnotenSuchtreffer(it.vorlage, it.operatorId) }
+
     fun suche(text: String, basisVorlagen: List<KnotenVorlage>): List<KnotenVorlage> =
         sucheMitMetadaten(text,basisVorlagen).map { it.vorlage }
 
@@ -120,6 +125,8 @@ object OperatorKnotenSuchindex {
         standardGröße = größe,
         anschlüsse = anschlüsse.map { it.copy(id = de.TeutonStudio.KnotenKartenVerwalter.daten.neueAnschlussId()) },
         standardParameter = parameter,
+        standardEigenschaften = eigenschaften,
+        kartenVerweis = kartenVerweis,
     )
 
     private fun normalisiere(text: String): String = text

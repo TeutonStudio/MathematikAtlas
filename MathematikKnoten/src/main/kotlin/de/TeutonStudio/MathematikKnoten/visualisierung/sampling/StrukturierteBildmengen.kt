@@ -58,6 +58,7 @@ internal fun sampleStrukturierteBildmenge(
     abbild: Abbild,
     konfiguration: VisualisierungsKonfiguration,
     abbruchPrüfen: () -> Unit,
+    graph: Boolean = false,
 ): VisualisierungsErgebnis {
     val methode = abbild.methode
     val dimension = when (konfiguration.dimension) {
@@ -65,11 +66,13 @@ internal fun sampleStrukturierteBildmenge(
         RaumDimension.R2, RaumDimension.C -> 2
         RaumDimension.R3 -> 3
     }
-    if (konfiguration.methodenModus == MethodenDarstellungsModus.Funktionsgraph) {
+    if (!graph && konfiguration.methodenModus == MethodenDarstellungsModus.Funktionsgraph) {
         return VisualisierungsErgebnis.NichtDarstellbar(
             "Ein strukturierter Parameter besitzt mehrere innere Achsen. Wähle für seine vollständige Bildmenge den Bildmodus.",
         )
     }
+    if (graph && konfiguration.ausgabeKoordinaten.isEmpty() && empfohleneRaumDimension(methode.graphRaum()) == null)
+        return VisualisierungsErgebnis.ProjektionErforderlich(4, dimension, "Der Graph benötigt eine explizite Koordinatenprojektion.")
     val budget = konfiguration.sampling.maximalesRasterBudget.coerceAtLeast(1)
     val achsen = mutableListOf<ProduktAchse>()
     val fensterHinweise = mutableListOf<String>()
@@ -94,10 +97,11 @@ internal fun sampleStrukturierteBildmenge(
                     }
                 }
                 ReelleZahlen, RationaleZahlen, GanzeZahlen, NatürlicheZahlen -> {
+                    val fensterBereiche = if (graph) konfiguration.sampling.sichtBereiche ?: konfiguration.bereiche else konfiguration.bereiche
                     val fenster = when (index) {
-                        0 -> konfiguration.bereiche.x
-                        1 -> konfiguration.bereiche.y
-                        else -> konfiguration.bereiche.z ?: konfiguration.bereiche.x
+                        0 -> fensterBereiche.x
+                        1 -> fensterBereiche.y
+                        else -> fensterBereiche.z ?: fensterBereiche.x
                     }
                     fensterHinweise += "Die unbeschränkte Parameterachse ${index + 1} wird durch ihr Parameterfenster begrenzt."
                     if (menge == GanzeZahlen || menge == NatürlicheZahlen) {
@@ -158,7 +162,7 @@ internal fun sampleStrukturierteBildmenge(
         try {
             val argument = packung.wert(werte)
             val ergebnis = methode.wendeAn(methode.argumenteAusGesamtArgument(argument))
-            val bild = if (konfiguration.methodenModus == MethodenDarstellungsModus.Koordinatenausgabe && methode.ausgabeNamen.size > 1 && konfiguration.ausgabeKoordinaten.isEmpty()) {
+            val bild = if (graph) Tupel(listOf(argument, ergebnis)) else if (konfiguration.methodenModus == MethodenDarstellungsModus.Koordinatenausgabe && methode.ausgabeNamen.size > 1 && konfiguration.ausgabeKoordinaten.isEmpty()) {
                 val vollständig = KoordinatenAdapter.extrahiere(ergebnis, 1, konfiguration.festeSchnitte)
                 require(vollständig is KoordinatenErgebnis.Darstellbar || vollständig is KoordinatenErgebnis.ProjektionErforderlich) {
                     vollständig.beschreibung
@@ -172,7 +176,7 @@ internal fun sampleStrukturierteBildmenge(
                 })
             } else ergebnis
             when (val koordinaten = KoordinatenAdapter.extrahiere(bild, dimension,
-                konfiguration.festeSchnitte, ausgabeKoordinaten = konfiguration.ausgabeKoordinaten)) {
+                konfiguration.festeSchnitte, ausgabeKoordinaten = if (graph && konfiguration.ausgabeKoordinaten.isEmpty()) (1..dimension).toList() else konfiguration.ausgabeKoordinaten)) {
                 is KoordinatenErgebnis.Darstellbar -> {
                     val w = koordinaten.werte
                     val punkt = VisualisierungsPunkt(w[0], w.getOrElse(1) { 0.0 }, w.getOrNull(2))

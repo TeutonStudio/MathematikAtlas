@@ -27,6 +27,7 @@ import de.TeutonStudio.MathematikAtlas.knotenauswahl.*
 
 @Stable
 class AtlasZustand(context: Context) {
+    internal val pie = PieZustand(this)
     val knotenNutzung=de.TeutonStudio.MathematikAtlas.speicher.InstallationsKnotenNutzung.für(context)
     var standardSitzung: String? by mutableStateOf(null)
         private set
@@ -45,6 +46,8 @@ class AtlasZustand(context: Context) {
 
     val speicher = KartenSpeicher(context)
     private val aktiveKarteSpeicher = AktiveKarteSpeicher(File(context.filesDir, "MathematikAtlas"))
+    fun anschlussInfoFür(karte: KartenDaten, ref: AnschlussVerweis) = laufzeit.anschlussInfoFür(karte, ref)
+
     private val laufzeit = MathematikKartenLaufzeit(
         kartenQuelle = KartenQuelle(speicher::lade),
         nichtAuswertbareKnotenArten = KartenWerkzeugVorlagen.nichtAuswertbareArten,
@@ -68,8 +71,8 @@ class AtlasZustand(context: Context) {
     fun verwerfeKonfiguration() { ausstehendeKonfiguration = null }
 
     internal fun übernehmeKonfiguration(kandidat: KnotenDaten) {
-        val umordnung = editor.karte.istReineAnschlussUmordnung(editor.karte.wendeAn(KartenAktion.KnotenErsetzen(kandidat)))
         val plan = planeKonfiguration(editor.karte, kandidat, graphPrüfung, laufzeit::auswerten)
+        val umordnung = editor.karte.istReineAnschlussUmordnung(plan.karte)
         editor.führeAus(KartenAktion.KartenInhaltErsetzen(plan.karte), dynamischeEingängeErhalten = umordnung)
     }
 
@@ -125,6 +128,7 @@ class AtlasZustand(context: Context) {
             emptyList()
         }
         MengenKnotenKartenQuelle.installieren(this)
+        MethodenQuellenKarten.installieren(this)
         MengenOperatorInspektorRegistrierung.installieren()
         VerbindungsDragZielHinweis.installiere { dragZustand, ziel ->
             methodenSignaturFürDragZiel(dragZustand, ziel)
@@ -173,6 +177,7 @@ class AtlasZustand(context: Context) {
     }
 
     fun öffne(karte: KartenDaten, alsUnterkarte: Boolean = false) {
+        pie.schließen()
         if (karte.id != editor.karte.id) {
             sichereAktuellVorUnterbrechung()
         }
@@ -189,6 +194,7 @@ class AtlasZustand(context: Context) {
     }
 
     fun geheZuBrotkrume(index: Int) {
+        pie.schließen()
         val ziel = brotkrumen.getOrNull(index) ?: return
         speicher.lade(ziel)?.let {
             val aktualisiert = aktualisiereAssoziativeKnoten(it)
@@ -202,7 +208,7 @@ class AtlasZustand(context: Context) {
     private var importLäuft = false
 
     fun speichereAktuell() {
-        if (importLäuft) return
+        if (importLäuft || editor.interaktionAktiv) return
         aktiveKarteSpeicher.speichere(editor.karte.id, editor.geöffneteGruppe)
         if (editor.verbindungsStart != null || editor.karte == letzterGespeicherterStand) return
         val gespeichert = speicher.speichere(editor.karte)
@@ -216,6 +222,7 @@ class AtlasZustand(context: Context) {
 
     /** Verwirft ausschließlich die flüchtige Verbindungsvorschau und sichert danach den Kartenstand. */
     fun sichereAktuellVorUnterbrechung() {
+        pie.schließen()
         editor.brecheVerbindungsVorschauAb()
         speichereAktuell()
     }
@@ -481,6 +488,12 @@ class AtlasZustand(context: Context) {
         val refs = karte.knoten.mapNotNull { it.kartenVerweis }
         if (refs.any { it.kartenId == gesuchteId }) return true
         return refs.any { ref -> if (!besucht.add(ref)) false else speicher.lade(ref)?.let { referenziertKarte(it, gesuchteId, besucht) } == true }
+    }
+
+    internal fun piePrüfEditor(basis: KartenDaten): KartenEditorZustand = KartenEditorZustand(basis, graphPrüfung).also {
+        val planer = ÜbersetzerVerbindungsPlaner(graphPrüfung)
+        it.verbindungsPlaner = planer::vorschläge
+        it.verbindungÜberAdapterMöglich = planer::möglich
     }
 
     private fun istKompatibelMitOffenerVerbindung(vorlage: KnotenVorlage): Boolean {

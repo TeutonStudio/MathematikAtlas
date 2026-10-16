@@ -1,0 +1,56 @@
+{
+  "plattform": "Linux amd64",
+  "java": "17.0.19",
+  "messungen": [
+    {
+      "fall": "Parabelgebiet",
+      "qualität": "Standard",
+      "vorschauMs": 27.940779,
+      "detailMs": 56.099547,
+      "cacheMs": 0.13166,
+      "cacheBytes": 972146
+    },
+    {
+      "fall": "Parabelgebiet",
+      "qualität": "Hoch",
+      "vorschauMs": 1.563932,
+      "detailMs": 143.521168,
+      "cacheMs": 0.14087,
+      "cacheBytes": 2590674
+    },
+    {
+      "fall": "Sinusgraph",
+      "qualität": "Standard",
+      "vorschauMs": 17.461474,
+      "detailMs": 7.910391,
+      "cacheMs": 0.08085,
+      "cacheBytes": 90942
+    },
+    {
+      "fall": "Sinusgraph",
+      "qualität": "Hoch",
+      "vorschauMs": 1.853512,
+      "detailMs": 4.329966,
+      "cacheMs": 0.07216,
+      "cacheBytes": 90942
+    },
+    {
+      "fall": "ZweiGebiete",
+      "qualität": "Standard",
+      "vorschauMs": 2.166853,
+      "detailMs": 19.697597,
+      "cacheMs": 0.1344,
+      "cacheBytes": 910898
+    },
+    {
+      "fall": "ZweiGebiete",
+      "qualität": "Hoch",
+      "vorschauMs": 1.906803,
+      "detailMs": 50.706599,
+      "cacheMs": 0.18408,
+      "cacheBytes": 2880970
+    }
+  ],
+  "datum": "2026-10-15",
+  "hinweis": "Einmalige Sampling-/Cachemessung im lokalen JVM-Testprozess (Java 17), kein Framebenchmark und kein Vergleich auf dem früheren SM-X920. Die Werte enthalten JIT-/Warmup-Effekte. Keine Leistungsassertion."
+}

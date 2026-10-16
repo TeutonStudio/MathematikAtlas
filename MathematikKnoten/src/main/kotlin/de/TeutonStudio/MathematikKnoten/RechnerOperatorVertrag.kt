@@ -43,6 +43,7 @@ data class RechnerPortVertrag(
     val reihenfolge: Int = 0,
     val variadisch: Boolean = false,
     val aliases: Set<String> = emptySet(),
+    val identitaetBeiFehlenderMethode: Boolean = false,
 )
 
 data class RechnerSignaturVertrag(

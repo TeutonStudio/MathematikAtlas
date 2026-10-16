@@ -9,7 +9,7 @@ class MathematikKnotenRendererTest {
     fun `Variable zeigt Namen und reellen Wertevorrat als Elementbeziehung`() {
         val variable = MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero)
 
-        assertEquals("x \\in \\mathbb{R}", variablenFormel(variable))
+        assertEquals("x \\in \\mathbb{R}", variablenFormel(variable, de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis(emptyMap(), eingänge = testGrundraum(variable))))
     }
 
     @Test
@@ -22,7 +22,7 @@ class MathematikKnotenRendererTest {
             VARIABLE_STRUKTUR to VARIABLE_STRUKTUR_TUPEL,
             VARIABLE_DIMENSION to "3",
         ))
-        assertEquals("x \\in {\\mathbb{R}}^{3}", variablenFormel(variable))
+        assertEquals("x \\in \\mathbb{R} \\times \\mathbb{R} \\times \\mathbb{R}", variablenFormel(variable, de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis(emptyMap(), eingänge = testGrundraum(variable))))
     }
 
     @Test
@@ -31,6 +31,6 @@ class MathematikKnotenRendererTest {
             parameter = mapOf("name" to "k", "werteVorrat" to "Z"),
         )
 
-        assertEquals("k \\in \\mathbb{Z}", variablenFormel(variable))
+        assertEquals("k \\in \\mathbb{Z}", variablenFormel(variable, de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis(emptyMap(), eingänge = testGrundraum(variable))))
     }
 }

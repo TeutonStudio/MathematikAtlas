@@ -6,6 +6,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialog
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -21,6 +23,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -124,29 +127,21 @@ internal fun RechnerOperatorAuswahlDialog(
                         )
                     }
                 } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().weight(1f).padding(AtlasDialogAbstände.eintragHorizontal),
-                        verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder),
-                    ) {
-                        KategorienZeile(kategorien, kategorie, { kategorie = it })
-                        AuswahlBereich(
-                            suchtext = suchtext,
-                            suchtextÄndern = { suchtext = it },
-                            sucheFokus = sucheFokus,
-                            einträge = sichtbar,
-                            auswahlId = auswahlId,
-                            auswählen = { auswahlId = it.id },
-                            leeren = {
+                    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(AtlasDialogAbstände.eintragHorizontal)) {
+                        val steuerungsHöhe = maxHeight * .45f
+                        Column(Modifier.fillMaxSize()) {
+                            Column(Modifier.fillMaxWidth().heightIn(max = steuerungsHöhe)
+                                .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
+                                KategorienZeile(kategorien, kategorie, { kategorie = it })
+                                OperatorSuche(suchtext, { suchtext = it }, sucheFokus)
+                                OperatorDetails(ausgewählt, auswirkung, Modifier.fillMaxWidth().heightIn(max = 230.dp))
+                            }
+                            OperatorListe(sichtbar, auswahlId, { auswahlId = it.id }, {
                                 suchtext = ""
                                 kategorie = null
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        OperatorDetails(
-                            eintrag = ausgewählt,
-                            auswirkung = auswirkung,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp),
-                        )
+                            }, Modifier.fillMaxWidth().weight(1f))
+                        }
                     }
                 }
 
@@ -249,14 +244,27 @@ private fun AuswahlBereich(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.felder)) {
-        OutlinedTextField(
-            value = suchtext,
-            onValueChange = suchtextÄndern,
-            label = { Text("Operator suchen") },
-            supportingText = { Text("Titel, Symbol, ID, Kategorie, Synonym oder Anschlussrolle") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().focusRequester(sucheFokus),
-        )
+        OperatorSuche(suchtext, suchtextÄndern, sucheFokus)
+        OperatorListe(einträge, auswahlId, auswählen, leeren, Modifier.fillMaxWidth().weight(1f))
+    }
+}
+
+@Composable
+private fun OperatorSuche(suchtext: String, suchtextÄndern: (String) -> Unit, sucheFokus: FocusRequester) {
+    OutlinedTextField(
+        value = suchtext,
+        onValueChange = suchtextÄndern,
+        label = { Text("Operator suchen") },
+        supportingText = { Text("Titel, Symbol, ID, Kategorie, Synonym oder Anschlussrolle") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth().focusRequester(sucheFokus),
+    )
+}
+
+@Composable
+private fun OperatorListe(einträge: List<RechnerOperatorAuswahlEintrag>, auswahlId: String?,
+    auswählen: (RechnerOperatorAuswahlEintrag) -> Unit, leeren: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier) {
         if (einträge.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -269,7 +277,7 @@ private fun AuswahlBereich(
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(210.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().testTag("rechner-operator-liste"),
                 contentPadding = PaddingValues(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.eintragVertikal),
                 horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
                 verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
@@ -299,7 +307,7 @@ private fun OperatorKachel(
     }
     OutlinedCard(
         onClick = auswählen,
-        modifier = Modifier.fillMaxWidth().semantics { selected = ausgewählt },
+        modifier = Modifier.fillMaxWidth().testTag("rechner-operator:${eintrag.id}").semantics { selected = ausgewählt },
         border = BorderStroke(
             if (ausgewählt) 2.dp else 1.dp,
             if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
@@ -419,7 +427,7 @@ private fun AuswirkungsDetails(wirkung: KnotenErsetzungsAuswirkung) {
     Text("Entfallen: ${wirkung.entfallendeAnschlüsse.namenOderKeine()}")
     if (wirkung.trenntVerbindungen) {
         Text(
-            "${wirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) werden getrennt.",
+            "${wirkung.entfallendeVerbindungen.size} Verbindung(en) und ${wirkung.entfallendeLokaleWerte.size} lokale Operanden (${wirkung.entfallendeLokaleWerte.joinToString()}) entfallen.",
             color = MaterialTheme.colorScheme.error,
             fontWeight = FontWeight.Bold,
         )
@@ -446,7 +454,7 @@ private fun DialogAktionen(
                         eintrag.id == aktuelleId -> "Formel bearbeiten"
                     eintrag?.art == RechnerOperatorAuswahlArt.FORMEL && eintrag.kandidat == null -> "Formel erstellen"
                     auswirkung?.trenntVerbindungen == true ->
-                        "Übernehmen und ${auswirkung.entfallendeVerbindungen.size} Verbindung(en) trennen"
+                        "Übernehmen und entfallende Operanden entfernen"
                     eintrag?.art == RechnerOperatorAuswahlArt.FORMEL -> "Formel übernehmen"
                     else -> "Übernehmen"
                 },

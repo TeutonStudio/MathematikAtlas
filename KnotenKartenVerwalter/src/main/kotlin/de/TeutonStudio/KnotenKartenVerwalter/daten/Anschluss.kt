@@ -4,6 +4,8 @@ import de.TeutonStudio.TypSystem.AnschlussVertrag
 import de.TeutonStudio.TypSystem.TypInferenzRegel
 
 enum class AnschlussRichtung { Neutral, Eingang, Ausgang }
+enum class AnschlussBelegung { Einzeln, Mehrfach }
+
 enum class AnschlussKante { Links, Rechts, Oben, Unten }
 
 data class AnschlussArt(
@@ -77,6 +79,13 @@ data class AnschlussDaten(
     val typInferenz: TypInferenzRegel? = null,
     /** Stabile fachliche Komponentenidentität; unabhängig von Portinstanz und Anzeigename. */
     val semantischeId: String? = null,
+    /** Nächster freier Platz nach allen verbundenen und fachlich verwalteten Beiträgen. */
+    val nächsteBeitragsReihenfolge: Int = 0,
+    val belegung: AnschlussBelegung = AnschlussBelegung.Einzeln,
+    /** Nur Darstellung: einzelne Andockpunkte eines Mehrfacheingangs. */
+    val beitragsVerbindung: VerbindungsId? = null,
+    val sammelAnschluss: AnschlussId? = null,
+    val sammelDarstellung: Boolean = false,
 )
 
 data class AnschlussVerweis(val knotenId: KnotenId, val anschlussId: AnschlussId)

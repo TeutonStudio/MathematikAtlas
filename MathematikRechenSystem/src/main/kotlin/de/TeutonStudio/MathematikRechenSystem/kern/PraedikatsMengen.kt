@@ -33,6 +33,7 @@ internal fun ZahlAusdruck.positiveGanzeZahlOderNull(): Int? =
 data class AussagenParameter(
     override val name: String,
     val latex: String = name,
+    override val bindungsId: String? = null,
 ) : Aussage, MethodenParameter {
     init { require(name.isNotBlank()) { "Der Name einer Aussagevariable darf nicht leer sein." } }
 
@@ -49,6 +50,7 @@ data class AussagenParameter(
 data class MengenParameter(
     override val name: String,
     val latex: String = name,
+    override val bindungsId: String? = null,
 ) : MengenAusdruck, MethodenParameter {
     init { require(name.isNotBlank()) { "Der Name einer Mengenvariable darf nicht leer sein." } }
     override fun zuLatex(): String = latex
@@ -125,7 +127,7 @@ private fun löseEindeutigenFall(
     val kandidat = kandidaten.single()
     if (kandidat.freieMethodenParameter().any { it.name == element.name }) return FallLösung.Offen
 
-    val bindung = mapOf(element.name to kandidat)
+    val bindung = mapOf((element.bindungsId ?: element.name) to kandidat)
     val ergebnisse = teile.map { teil -> ersetze(teil, bindung).entscheide(kontext) }
     return when {
         ergebnisse.any { it.wahrheitswert == Wahrheitswert.Lüge } -> FallLösung.Verworfen

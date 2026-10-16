@@ -14,6 +14,9 @@ class GraphPrüfung(
     /** Fachliche Konfiguration wird außerhalb des neutralen Editors abgeleitet. */
     private val anschlussAuflösung: (KartenDaten, AnschlussVerweis) -> AnschlussDaten? = { _, _ -> null },
 ) {
+    var normalisiereKarte: (KartenDaten) -> KartenDaten = { it }
+    var mehrfachDarstellung: (KartenDaten, KnotenDaten) -> Boolean = { _, _ -> true }
+
     fun prüfe(karte: KartenDaten, erster: AnschlussVerweis, zweiter: AnschlussVerweis): VerbindungsPrüfung {
         if (erster == zweiter) return VerbindungsPrüfung.Abgelehnt("Ein Anschluss kann nicht mit sich selbst verbunden werden.")
         val a = aufgelösterAnschluss(karte, erster) ?: return VerbindungsPrüfung.Abgelehnt("Erster Anschluss fehlt.")
@@ -21,13 +24,13 @@ class GraphPrüfung(
         val (ausgang, eingang) = richte(a, erster, b, zweiter)
             ?: return VerbindungsPrüfung.Abgelehnt("Die Anschlussrichtungen sind nicht kompatibel.")
 
-        val ohneAlteEingangsVerbindung = if (eingang.first.richtung == AnschlussRichtung.Eingang) {
+        val ohneAlteEingangsVerbindung = if (eingang.first.richtung == AnschlussRichtung.Eingang && eingang.first.belegung == AnschlussBelegung.Einzeln) {
             karte.copy(verbindungen = karte.verbindungen.filterNot { it.zu == eingang.second })
         } else karte
         val neueVerbindung = VerbindungDaten(von = ausgang.second, zu = eingang.second)
         val probe = ohneAlteEingangsVerbindung.copy(
             verbindungen = ohneAlteEingangsVerbindung.verbindungen.filterNot {
-                it.von == neueVerbindung.von && it.zu == neueVerbindung.zu
+                eingang.first.belegung == AnschlussBelegung.Einzeln && it.von == neueVerbindung.von && it.zu == neueVerbindung.zu
             } + neueVerbindung,
         )
 
@@ -114,9 +117,9 @@ class GraphPrüfung(
                     it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
                 } ?: return@mapNotNull null
                 val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
-                val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von
-                    ?: return@mapNotNull null
-                effektiveArt(karte, quelle, besucht.toMutableSet())
+                val quellen = karte.verbindungen.filter { it.zu == eingangsRef }.map { effektiveArt(karte, it.von, besucht.toMutableSet()) }
+                regel.prioritäten.firstOrNull { priorität -> quellen.any { arten.istUnterart(it, priorität) } }
+                    ?: quellen.firstOrNull()
             }
             return regel.prioritäten.firstOrNull { priorität ->
                 quellArten.any { quellArt -> arten.istUnterart(quellArt, priorität) }
@@ -125,13 +128,12 @@ class GraphPrüfung(
 
         if (anschluss.artVereinigtEingänge.isEmpty()) return anschluss.art
         if (!besucht.add(ref)) return anschluss.art
-        val quellArten = anschluss.artVereinigtEingänge.mapNotNull { eingangsName ->
+        val quellArten = anschluss.artVereinigtEingänge.flatMap { eingangsName ->
             val eingang = knoten.anschlüsse.firstOrNull {
                 it.name == eingangsName && it.richtung == AnschlussRichtung.Eingang
-            } ?: return@mapNotNull null
+            } ?: return@flatMap emptyList()
             val eingangsRef = AnschlussVerweis(knoten.id, eingang.id)
-            val quelle = karte.verbindungen.firstOrNull { it.zu == eingangsRef }?.von ?: return@mapNotNull null
-            effektiveArt(karte, quelle, besucht.toMutableSet())
+            karte.verbindungen.filter { it.zu == eingangsRef }.map { effektiveArt(karte, it.von, besucht.toMutableSet()) }
         }
         return arten.gemeinsameOberart(quellArten) ?: anschluss.art
     }
@@ -186,7 +188,12 @@ class GraphPrüfung(
             return effektiverTyp(karte, quelle, besucht.toMutableSet())
         }
 
-        fun quellTypen(eingänge: List<String>): List<TypAusdruck> = eingänge.mapNotNull(::quellTyp)
+        fun quellTypen(eingänge: List<String>): List<TypAusdruck> = eingänge.flatMap { name ->
+            val port = knoten.anschlüsse.firstOrNull { it.name == name && it.richtung == AnschlussRichtung.Eingang }
+            if (port?.belegung != AnschlussBelegung.Mehrfach) listOfNotNull(quellTyp(name))
+            else karte.verbindungen.filter { it.zu == AnschlussVerweis(knoten.id, port.id) }
+                .map { effektiverTyp(karte, it.von, besucht.toMutableSet()) }
+        }
 
         return when (regel) {
             is TypInferenzRegel.FolgtEingang -> quellTyp(regel.eingang)
@@ -267,8 +274,14 @@ class GraphPrüfung(
         anschlussAuflösung(karte, ref) ?: karte.findeAnschluss(ref)
 
     /** Auch erhaltene IDs können nach einer Konfiguration unvereinbare Verträge haben. */
-    fun inkompatibleVerbindungen(karte: KartenDaten): List<VerbindungDaten> =
-        karte.verbindungen.filterNot { istTypkompatibel(karte, it) }
+    fun inkompatibleVerbindungen(karte: KartenDaten): List<VerbindungDaten> {
+        val überzählig = karte.verbindungen.groupBy { it.zu }.flatMap { (ref, beiträge) ->
+            val port = aufgelösterAnschluss(karte, ref)
+            if (port?.richtung == AnschlussRichtung.Eingang && port.belegung == AnschlussBelegung.Einzeln)
+                beiträge.sortedBy { it.eingangsReihenfolge }.drop(1) else emptyList()
+        }.map { it.id }.toSet()
+        return karte.verbindungen.filter { it.id in überzählig || !istTypkompatibel(karte, it) }
+    }
 
     private fun istTypkompatibel(karte: KartenDaten, verbindung: VerbindungDaten): Boolean {
         val von = aufgelösterAnschluss(karte, verbindung.von) ?: return false

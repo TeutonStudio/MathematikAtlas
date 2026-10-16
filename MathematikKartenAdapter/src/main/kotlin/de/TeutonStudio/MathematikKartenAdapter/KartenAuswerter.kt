@@ -8,6 +8,7 @@ class KartenAuswerter(
     private val kartenQuelle: KartenQuelle = KartenQuelle { null },
     private val nichtAuswertbareKnotenArten: Set<KnotenArtId> = emptySet(),
     private val nanoZeit: () -> Long = { System.nanoTime() },
+    private val normalisiereKarte: (KartenDaten) -> KartenDaten = { it },
 ) {
     private data class CacheSignatur(
         val knoten: KnotenDaten,
@@ -69,8 +70,11 @@ class KartenAuswerter(
         for (id in plan.reihenfolge) {
             topologischeReihenfolge[id] = topologischeReihenfolge.size
             val knoten = index.knoten.getValue(id)
+            val konfigurationsFehler = runCatching { validiereMethodenQuellenKonfiguration(knoten) }.exceptionOrNull()
             val fest = vorgegebeneAusgaben[id]
-            val ergebnis = if (fest != null) {
+            val ergebnis = if (konfigurationsFehler != null) {
+                KnotenAuswertungsErgebnis(emptyMap(), fehler = konfigurationsFehler.message)
+            } else if (fest != null) {
                 KnotenAuswertungsErgebnis(fest)
             } else if (knoten.kartenVerweis != null) {
                 werteGruppenKnotenAus(knoten, plan.eingehend[id].orEmpty(), index, plan, ergebnisse, kartenPfad)
@@ -107,10 +111,14 @@ class KartenAuswerter(
         }.getOrElse {
             return fehler(it.message ?: it::class.simpleName.orEmpty())
         }
-        val ungeordneteEingänge = knoten.eingangsKartenVerweise.entries.fold(verbundeneEingänge) { aktuell, (name, verweis) ->
+        val mitKartenFallback = knoten.eingangsKartenVerweise.entries.fold(verbundeneEingänge) { aktuell, (name, verweis) ->
             if (name in aktuell) return@fold aktuell
+            val fallbackId = name.substringAfter("@karte:", "")
+            if (fallbackId.isNotEmpty() && knoten.parameter.containsKey("join.lokal.$fallbackId")) return@fold aktuell
+            if (fallbackId.isNotEmpty() && verbindungen.any { it.eingangsFallback == name }) return@fold aktuell
+            if ("@" !in name && aktuell.keys.any { it.startsWith(name + "@") }) return@fold aktuell
             val anschluss = knoten.anschlüsse.firstOrNull {
-                it.richtung == AnschlussRichtung.Eingang && it.name == name
+                it.richtung == AnschlussRichtung.Eingang && it.name == name.substringBefore("@")
             } ?: return fehler("Der Karten-Fallback verweist auf den unbekannten Eingang '$name'.")
             val fallback = werteReferenzierteKarteAus(
                 verweis = verweis,
@@ -126,16 +134,52 @@ class KartenAuswerter(
             if (!(setOf(anschluss.art) + anschluss.zulässigeArten).any { anschlussAkzeptiertMethode(it, wert.objekt) }) {
                 return fehler("Die ausgewählte Kartenmethode ist für den Eingang '$name' nicht kompatibel.")
             }
-            aktuell + (name to wert)
+            aktuell + ((if (anschluss.belegung == AnschlussBelegung.Mehrfach && "@" !in name) name + "@karte:standard" else name) to wert)
         }
+        val identitaeten = runCatching {
+            register.optionaleMethodenEingänge(knoten).filterNot { it in mitKartenFallback }.associateWith { name ->
+                val port = knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang && it.name == name }
+                val art = port.art.wert
+                val typ = port.vertrag.typ
+                val signatur = typ as? de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert
+                val endoTyp = if (signatur != null) {
+                    require(signatur.konstruktor == MathematischeTypen.Methode && signatur.argumente.size == 2) { "Der optionale Methodeneingang besitzt keinen Methodenvertrag." }
+                    val argumente = signatur.argumente[0] as? de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert
+                    val ergebnisse = signatur.argumente[1] as? de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert
+                    require(argumente?.konstruktor == MathematischeTypen.Tupel && ergebnisse?.konstruktor == MathematischeTypen.Tupel && argumente.argumente.size == 1 && ergebnisse.argumente.size == 1) { "Identität benötigt genau ein Argument und ein Ergebnis im optionalen Methodenvertrag." }
+                    val a = argumente.argumente.single(); val b = ergebnisse.argumente.single()
+                    require(a == b || a is de.TeutonStudio.TypSystem.TypAusdruck.Variable || b is de.TeutonStudio.TypSystem.TypAusdruck.Variable || a == de.TeutonStudio.TypSystem.TypAusdruck.Unbekannt || b == de.TeutonStudio.TypSystem.TypAusdruck.Unbekannt) { "Identität passt nicht zum nicht-endomorphen Methodenvertrag." }
+                    if (a is de.TeutonStudio.TypSystem.TypAusdruck.Variable || a == de.TeutonStudio.TypSystem.TypAusdruck.Unbekannt) b else a
+                } else null
+                val methode: Methode = if (endoTyp != null) TypisierteIdentitaetsMethode(endoTyp) else when (art) {
+                    "mathematik.funktion.zahl" -> TypisierteIdentitaetsMethode(de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Zahl))
+                    "mathematik.funktion.aussage" -> TypisierteIdentitaetsMethode(de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Aussage))
+                    "mathematik.methode", "mathematik.funktion", "atlas.wert", "mathematik.atlasWert", "mathematik.objekt" -> IdentitaetsMethode
+                    else -> error("Für den optionalen Methodeneingang '$name' muss eine zur spezialisierten Signatur passende Methode angegeben werden.")
+                }
+                BedingterWert(methode)
+            }
+        }.getOrElse { return fehler(it.message ?: "Ungültiger optionaler Methodenvertrag.") }
+        val ungeordneteEingänge = mitKartenFallback + identitaeten
         val portReihenfolge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.associate { it.name to it.reihenfolge }
-        val eingänge = ungeordneteEingänge.entries.sortedBy { portReihenfolge[it.key] ?: Int.MAX_VALUE }
+        fun beitragsPosition(name: String): Int {
+            val id = name.substringAfter("@", "")
+            return if (id.startsWith("lokal:")) knoten.parameter["join.position." + id.removePrefix("lokal:")]?.toIntOrNull() ?: Int.MAX_VALUE
+            else verbindungen.firstOrNull { it.id.wert == id }?.eingangsReihenfolge ?: knoten.parameter["join.position.$id"]?.toIntOrNull() ?: portReihenfolge[name] ?: Int.MAX_VALUE
+        }
+        val eingänge = ungeordneteEingänge.entries.sortedBy { beitragsPosition(it.key) }
             .associateTo(linkedMapOf()) { it.key to it.value }
         val annahmen = eingänge.values.flatMap { it.annahmen }.toSet()
         val signatur = CacheSignatur(knoten, eingänge, plan)
         cache[knoten.id]?.takeIf { it.signatur == signatur }?.let { return it.ergebnis }
 
         val basis = when {
+            knoten.art == METHODEN_QUELLE_ART && knoten.eigenschaften[METHODEN_QUELLE_KNOTEN] != null -> runCatching {
+                val text = (knoten.eigenschaften[METHODEN_QUELLE_KNOTEN] as? KnotenEigenschaft.Text)?.wert ?: error("Ungültige Knotenquelle.")
+                val quelle = KartenDatenJson.lese(text).knoten.single()
+                exportiereKarteAlsMethode(normalisiereKarte(methodenQuellKarte(quelle, knoten.id)), quelle.name, kartenPfad)
+            }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message) }
+
             knoten.art in nichtAuswertbareKnotenArten -> KnotenAuswertungsErgebnis(emptyMap())
 
             knoten.art == DARSTELLUNGSOPTIMIERUNG -> runCatching {
@@ -146,7 +190,7 @@ class KartenAuswerter(
                 )
             }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
 
-            knoten.art == MULTIPLIKATION -> werteMultiplikationAus(knoten, eingänge, annahmen)
+            knoten.art == MULTIPLIKATION && knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach } -> werteMultiplikationAus(knoten, eingänge, annahmen)
 
             knoten.art == KONJUGIERTE && eingänge["zahl"]?.istNachweisbarReell() == true ->
                 KnotenAuswertungsErgebnis(mapOf("wert" to eingänge.getValue("zahl")))
@@ -156,7 +200,10 @@ class KartenAuswerter(
                 if (auswerter == null) {
                     KnotenAuswertungsErgebnis(emptyMap(), fehler = "Kein Auswerter für ${knoten.art} registriert.")
                 } else runCatching {
-                    auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen), topologischeReihenfolge))
+                    auswerter.auswerten(KnotenAuswertungsKontext(knoten, eingänge, RechenKontext(annahmen), topologischeReihenfolge,
+                        mehrfachEingänge = knoten.anschlüsse.filter { it.belegung == AnschlussBelegung.Mehrfach }.associate { port ->
+                            port.name to eingänge.filterKeys { it.startsWith(port.name + "@") }.values.toList()
+                        }))
                 }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
             }
         }
@@ -236,7 +283,7 @@ class KartenAuswerter(
             verweis = knoten.kartenVerweis!!,
             außen = außen,
             kartenPfad = kartenPfad,
-            alsMethode = knoten.art.startsWith("methode."),
+            alsMethode = knoten.art.startsWith("methode.") || knoten.art == METHODEN_QUELLE_ART,
             methodenName = knoten.name,
         ).copy(
             eingänge = außen,
@@ -244,6 +291,16 @@ class KartenAuswerter(
         )
         speichereErgebnis(knoten.id, signatur, ergebnis)
         return ergebnis
+    }
+
+    /** Isolated evaluator prevents transient source IDs from sharing the live graph cache. */
+    fun exportiereKarteAlsMethode(karte: KartenDaten, name: String = karte.name): KnotenAuswertungsErgebnis =
+        exportiereKarteAlsMethode(karte, name, emptySet())
+
+    private fun exportiereKarteAlsMethode(karte: KartenDaten, name: String, kartenPfad: Set<KartenVerweis>): KnotenAuswertungsErgebnis {
+        val verweis = KartenVerweis(karte.id, karte.version)
+        val isoliert = KartenAuswerter(register, KartenQuelle { if (it == verweis) karte else kartenQuelle.lade(it) }, nichtAuswertbareKnotenArten, nanoZeit)
+        return isoliert.werteReferenzierteKarteAus(verweis, emptyMap(), kartenPfad, true, name)
     }
 
     private fun werteReferenzierteKarteAus(
@@ -302,8 +359,11 @@ class KartenAuswerter(
                     emptyMap(),
                     fehler = "Die mathematische Kartenausgabe '$name' liefert keinen mathematischen Wert.",
                 )
-            val ziel = wert.zielMenge
-                ?: return KnotenAuswertungsErgebnis(
+            val grenze = ausgänge.single { öffentlicherKartenName(it) == name }
+            val ziel = wert.zielMenge ?: if (METHODEN_KOMPONENTEN_ID in grenze.parameter) {
+                runCatching { inferiereZielmenge(objekt, werteVorräte, wert.annahmen) }.getOrNull()
+            } else null
+            if (ziel == null) return KnotenAuswertungsErgebnis(
                     emptyMap(),
                     fehler = "Für die Methodenausgabe '$name' fehlt die Zielmenge.",
                 )
@@ -319,7 +379,13 @@ class KartenAuswerter(
             werteVorräte = werteVorräte,
         )
         val herkunft = ÜbersetzungsMetadaten(herkunft = geordneteWerte.flatMap { it.second.übersetzungen.alsHerkunft().herkunft }.distinct())
-        val übertragen = methode.copy(voraussetzungen = geordneteWerte.flatMap { it.second.annahmen }.toSet(), übersetzungen = herkunft)
+        val argumentIds = interneEingänge.associate { eingang ->
+            öffentlicherKartenName(eingang) to (eingang.parameter[METHODEN_KOMPONENTEN_ID] ?: eingang.id.wert)
+        }
+        val ergebnisIds = ausgänge.associate { ausgang ->
+            öffentlicherKartenName(ausgang) to (ausgang.parameter[METHODEN_KOMPONENTEN_ID] ?: ausgang.id.wert)
+        }
+        val übertragen = methode.copy(argumentIdentitäten = argumentIds.filterKeys { key -> freie.any { it.name == key } }, ergebnisIdentitäten = ergebnisIds, voraussetzungen = geordneteWerte.flatMap { it.second.annahmen }.toSet(), übersetzungen = herkunft)
         return KnotenAuswertungsErgebnis(mapOf("methode" to BedingterWert(übertragen, latexDarstellung = methode.name, übersetzungen = herkunft)))
     }
 
@@ -333,7 +399,15 @@ class KartenAuswerter(
         ergebnisse: Map<KnotenId, KnotenAuswertungsErgebnis>,
     ): Map<String, BedingterWert> = buildMap {
         val gebundeneIds = verbindungen.map { it.zu.anschlussId }.toSet()
-        verbindungen.forEach { verbindung ->
+        knoten.anschlüsse.filter { it.belegung == AnschlussBelegung.Mehrfach }.forEach { port ->
+            knoten.parameter.filterKeys { it.startsWith("join.lokal.") }.entries.sortedBy { (key, _) -> knoten.parameter["join.position." + key.removePrefix("join.lokal.")]?.toIntOrNull() ?: Int.MAX_VALUE }.forEach { (key, text) ->
+                val objekt: MathematischesObjekt = if (port.art == AUSSAGE_ART || AUSSAGE_ART in port.zulässigeArten) {
+                    WahrheitsKonstante(text.toBooleanStrictOrNull() ?: error("Lokaler Operand muss true oder false sein."))
+                } else RationaleZahl.parse(text)
+                put(port.name + "@lokal:" + key.removePrefix("join.lokal."), BedingterWert(objekt))
+            }
+        }
+        verbindungen.sortedBy { it.eingangsReihenfolge }.forEach { verbindung ->
             val zielAnschluss = index.anschluss(verbindung.zu)
                 ?: error("Eine Verbindung verweist auf einen fehlenden Eingang.")
             val quellKnoten = index.knoten[verbindung.von.knotenId]
@@ -343,10 +417,10 @@ class KartenAuswerter(
             val quelle = ergebnisse[quellKnoten.id]
             val wert = quelle?.ausgaben?.get(quellAnschluss.name)
                 ?: error("Verbundener Eingang '${zielAnschluss.name}': ${quelle?.fehler ?: "Die Quelle liefert keinen Wert."}")
-            put(zielAnschluss.name, wert)
+            put(if (zielAnschluss.belegung == AnschlussBelegung.Mehrfach) zielAnschluss.name + "@" + verbindung.id.wert else zielAnschluss.name, wert)
         }
         knoten.anschlüsse.filter {
-            it.richtung == AnschlussRichtung.Eingang && (it.art == AUSSAGE_ART || AUSSAGE_ART in it.zulässigeArten) && it.id !in gebundeneIds
+            it.belegung != AnschlussBelegung.Mehrfach && it.richtung == AnschlussRichtung.Eingang && (it.art == AUSSAGE_ART || AUSSAGE_ART in it.zulässigeArten) && it.id !in gebundeneIds
         }.forEach { anschluss ->
             val text = knoten.parameter[standardwertSchlüssel(anschluss.name)]
             if (text == null && (anschluss.dynamischErzeugt || anschluss.name in knoten.eingangsKartenVerweise)) return@forEach
@@ -356,7 +430,7 @@ class KartenAuswerter(
         }
         knoten.anschlüsse
             .filter {
-                it.richtung == AnschlussRichtung.Eingang &&
+                it.belegung != AnschlussBelegung.Mehrfach && it.richtung == AnschlussRichtung.Eingang &&
                     (it.art == ZAHL_ART || ZAHL_ART in it.zulässigeArten || knoten.art == "mathematik.tupel" && it.art.wert == "mathematik.objekt") &&
                     it.name !in this && it.id !in gebundeneIds
             }
@@ -385,7 +459,11 @@ class KartenAuswerter(
         return copy(ausgaben = ausgaben.mapValues { (_, ausgabe) ->
             val gebundeneNamen = if (art == "mathematik.termZuMethode" || art == "atlas.uebersetzer")
                 (ausgabe.objekt as? Methode)?.parameter?.map { it.name }?.toSet().orEmpty() else emptySet()
-            ausgabe.copy(variablenQuellen = (ausgabe.variablenQuellen + quellen.filterNot { it.alsMethodenParameter && it.name in gebundeneNamen })
+            val gebundeneIds = if (art == "mathematik.termZuMethode" || art == "atlas.uebersetzer")
+                (ausgabe.objekt as? MathematischeMethode)?.argumentIdentitäten?.values.orEmpty() else emptyList()
+            ausgabe.copy(variablenQuellen = (ausgabe.variablenQuellen + quellen.filterNot {
+                it.alsMethodenParameter && (it.name in gebundeneNamen || it.bindungsId in gebundeneIds || it.strukturBindung?.id in gebundeneIds)
+            })
                 .distinctBy { quelle -> Pair(Triple(quelle.knotenId, quelle.name, quelle.werteVorrat), quelle.alsMethodenParameter) })
         })
     }

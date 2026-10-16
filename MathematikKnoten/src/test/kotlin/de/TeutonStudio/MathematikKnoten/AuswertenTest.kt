@@ -190,7 +190,7 @@ class AuswertenTest {
             verbindungen = listOf(kante(x, "wert", summe, "a"), kante(y, "wert", summe, "b"), kante(summe, "wert", methode, "term")),
         )
 
-        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val ergebnis = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswerten(karte.mitTestGrundräumen())
         val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf("x", "y"), funktion.parameter.map { it.name })
@@ -213,7 +213,7 @@ class AuswertenTest {
             )),
         )
 
-        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val ergebnis = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswerten(karte.mitTestGrundräumen())
         val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(listOf(AllgemeinerParameter("a")), funktion.parameter)
@@ -238,7 +238,7 @@ class AuswertenTest {
             )),
         )
 
-        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val ergebnis = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswerten(karte.mitTestGrundräumen())
         val funktion = assertIs<Methode>(ergebnis.knoten.getValue(methode.id).ausgaben.getValue("methode").objekt)
 
         assertEquals(bereich.zuMenge(), funktion.einzigeZielMenge)

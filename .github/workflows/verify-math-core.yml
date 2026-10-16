@@ -105,7 +105,9 @@ jobs:
           cat /tmp/atlas-emulator.log
           exit 1
       - name: Compose- und Inspector-Laufzeit prüfen
-        run: ./gradlew :KnotenKartenVerwalter:connectedDebugAndroidTest :app:connectedDebugAndroidTest --stacktrace
+        # Hardwaremessungen sind separat per atlas.measureVisualization=true ausführbar.
+        # Der aktuelle Instrumentierungsrunner zählt deaktivierte Assumptions als Fehler.
+        run: ./gradlew :KnotenKartenVerwalter:connectedDebugAndroidTest :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=de.TeutonStudio.MathematikAtlas.VisualisierungsLeistungsTest --stacktrace
       - name: Laufzeitberichte sichern
         if: always()
         uses: actions/upload-artifact@v4

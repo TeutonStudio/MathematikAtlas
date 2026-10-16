@@ -1,6 +1,8 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,21 +28,23 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.util.Locale
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldungsArt
 
 /**
  * Blender-artige Laufzeitanzeige in einem eigenen unteren Rahmen.
  *
- * Der Editor reserviert Platz innerhalb des effektiven Knotenrechtecks.
- * Die natürliche Textgröße geht in das Inhaltsminimum ein; Anschlüsse und
- * Trefferflächen folgen derselben effektiven Geometrie.
+ * Der Editor hängt die Zeile außerhalb des Knotenkörpers an.
+ * Auswahl, Größenänderung und Anschlüsse bleiben auf den Körper begrenzt.
  */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun KnotenAuswertungszeitFußzeile(dauerNanos: Long?, ausgewählt: Boolean = false) {
     val dauer = dauerNanos ?: return
     val formatiert = formatiereAuswertungsDauerNanos(dauer)
     val form = RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
-    val rahmenFarbe = if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-    val rahmenBreite = if (ausgewählt) 3.dp else 1.dp
+    val rahmenFarbe = MaterialTheme.colorScheme.outlineVariant
+    val rahmenBreite = 1.dp
     Surface(
         modifier = Modifier.fillMaxWidth().drawWithContent {
             drawContent()
@@ -84,6 +88,49 @@ fun KnotenAuswertungszeitFußzeile(dauerNanos: Long?, ausgewählt: Boolean = fal
     }
 }
 
+/** Alle Diagnosen vollständig, nach oben wachsend; der Körper bildet die Unterkante. */
+@Composable
+internal fun KnotenMeldungsKopfzeile(meldungen: List<KnotenMeldung>) {
+    val rahmenFarbe = MaterialTheme.colorScheme.outlineVariant
+    Surface(
+        modifier = Modifier.fillMaxWidth().drawWithContent {
+            drawContent()
+            val inset = 0.5.dp.toPx()
+            val rechts = (size.width - inset).coerceAtLeast(inset)
+            val radius = (minOf(4.dp.toPx(), size.width / 2, size.height / 2) - inset).coerceAtLeast(0f)
+            val rahmen = Path().apply {
+                moveTo(inset, size.height)
+                lineTo(inset, inset + radius)
+                if (radius > 0f) arcTo(Rect(inset, inset, inset + 2 * radius, inset + 2 * radius), 180f, 90f, false)
+                lineTo(rechts - radius, inset)
+                if (radius > 0f) arcTo(Rect(rechts - 2 * radius, inset, rechts, inset + 2 * radius), 270f, 90f, false)
+                lineTo(rechts, size.height)
+            }
+            drawPath(rahmen, rahmenFarbe, style = Stroke(1.dp.toPx()))
+        },
+        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 2.dp,
+    ) {
+        Column(Modifier.padding(horizontal = 6.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            meldungen.forEach { meldung ->
+                Text(
+                    text = meldung.text,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = when (meldung.art) {
+                        KnotenMeldungsArt.Fehler -> MaterialTheme.colorScheme.error
+                        KnotenMeldungsArt.Warnung -> MaterialTheme.colorScheme.tertiary
+                        KnotenMeldungsArt.Hinweis -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.fillMaxWidth().semantics {
+                        contentDescription = "${meldung.art}: ${meldung.text}"
+                    },
+                )
+            }
+        }
+    }
+}
+
 fun formatiereAuswertungsDauerNanos(dauerNanos: Long): String {
     val dauer = dauerNanos.coerceAtLeast(0L)
     return when {
@@ -109,24 +156,28 @@ internal data class ZeitfußzeilenGeometrie(
     val breite: Dp,
 )
 
-/** Die Fußzeile füllt den unteren Bereich; ihre Oberkante ist die Hauptkörper-Unterkante. */
+/** Die Oberkante der außen angefügten Fußzeile liegt auf der Körperunterkante. */
 internal fun berechneZeitfußzeilenGeometrie(
     breite: Dp,
-    gesamtHöhe: Dp,
-    fußHöhe: Dp,
+    körperHöhe: Dp,
     hauptForm: Shape,
     dichte: Density,
     richtung: LayoutDirection,
 ): ZeitfußzeilenGeometrie = with(dichte) {
-    val hauptHöhe = (gesamtHöhe - fußHöhe).coerceAtLeast(0.dp)
-    val outline = hauptForm.createOutline(Size(breite.toPx(), hauptHöhe.toPx()), richtung, this)
-    val (linksPx, rechtsPx) = unterkantenEinzüge(outline)
-    val links = linksPx.toDp()
-    val rechts = rechtsPx.toDp()
-    ZeitfußzeilenGeometrie(
-        hauptHöhe = hauptHöhe,
-        links = links,
-        rechts = rechts,
-        breite = (breite - links - rechts).coerceAtLeast(0.dp),
-    )
+    val hauptHöhe = körperHöhe.coerceAtLeast(0.dp)
+    val (links, rechts) = berechneAnhangEinzüge(breite, hauptHöhe, hauptForm, this, richtung, oben = false)
+    ZeitfußzeilenGeometrie(hauptHöhe, links, rechts, (breite - links - rechts).coerceAtLeast(0.dp))
+}
+
+/** An den Tangenten ansetzen; auch kreisförmige Adapter behalten ein lesbares Feld. */
+internal fun berechneAnhangEinzüge(
+    breite: Dp, körperHöhe: Dp, form: Shape, dichte: Density, richtung: LayoutDirection, oben: Boolean,
+): Pair<Dp, Dp> = with(dichte) {
+    val outline = form.createOutline(Size(breite.toPx(), körperHöhe.toPx()), richtung, this)
+    val (linksPx, rechtsPx) = if (oben && outline is Outline.Rounded)
+        outline.roundRect.topLeftCornerRadius.x to outline.roundRect.topRightCornerRadius.x
+    else unterkantenEinzüge(outline)
+    val summe = linksPx + rechtsPx
+    val faktor = if (summe > 0f) ((breite - minOf(48.dp, breite)).toPx() / summe).coerceIn(0f, 1f) else 1f
+    (linksPx * faktor).toDp() to (rechtsPx * faktor).toDp()
 }

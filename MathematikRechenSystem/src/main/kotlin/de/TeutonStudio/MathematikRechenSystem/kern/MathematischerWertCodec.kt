@@ -50,6 +50,8 @@ object MathematischerWertCodec {
         when (w) {
             is RationaleZahl -> { d.writeUTF("RationaleZahl"); d.writeUTF(w.zähler.toString()); d.writeUTF(w.nenner.toString()) }
             is Variable -> { d.writeUTF("Variable"); d.writeUTF(w.name); d.writeUTF(w.latex); d.writeBoolean(w.bindungsId != null); w.bindungsId?.let(d::writeUTF) }
+            is AussagenParameter -> { d.writeUTF("AussagenParameter"); d.writeUTF(w.name); d.writeUTF(w.latex); d.writeBoolean(w.bindungsId != null); w.bindungsId?.let(d::writeUTF) }
+            is MengenParameter -> { d.writeUTF("MengenParameter"); d.writeUTF(w.name); d.writeUTF(w.latex); d.writeBoolean(w.bindungsId != null); w.bindungsId?.let(d::writeUTF) }
             is AllgemeinerParameter -> { d.writeUTF("AllgemeinerParameter"); d.writeUTF(w.name); d.writeUTF(w.latex); d.writeBoolean(w.bindungsId != null); w.bindungsId?.let(d::writeUTF) }
             is MathematischeKonstante -> { d.writeUTF("MathematischeKonstante"); d.writeUTF(w.name); d.writeUTF(w.latex) }
             is BenannteMenge -> { d.writeUTF("BenannteMenge"); d.writeUTF(w.name); d.writeUTF(w.latex) }
@@ -135,7 +137,13 @@ object MathematischerWertCodec {
             is FehlendeObermenge -> { d.writeUTF("FehlendeObermenge"); d.writeUTF(w.anschlussArt) }
             is OffeneDefinitionsBedingung -> { d.writeUTF("OffeneDefinitionsBedingung"); wert(d, w.objekt, tiefe + 1) }
             is ÜbersetzungsBildraum -> { d.writeUTF("ÜbersetzungsBildraum"); ÜbersetzungsCodec.bild(d,w,tiefe + 1) }
-            is WinkelParameter -> { d.writeUTF("WinkelParameter"); d.writeUTF(w.name) }
+            is WinkelParameter -> {
+                if (w.bindungsId == null && w.latex == w.name) { d.writeUTF("WinkelParameter"); d.writeUTF(w.name) }
+                else {
+                    d.writeUTF("GebundenerWinkelParameter"); d.writeUTF(w.name); d.writeUTF(w.latex)
+                    d.writeBoolean(w.bindungsId != null); w.bindungsId?.let(d::writeUTF)
+                }
+            }
             is WinkelAusBogenmass -> { d.writeUTF("WinkelAusBogenmass"); wert(d,w.argument,tiefe+1) }
             is WinkelBogenmass -> { d.writeUTF("WinkelBogenmass"); wert(d,w.winkel,tiefe+1); d.writeUTF(w.vertreter.name) }
             is SinusGrad -> { d.writeUTF("SinusGrad"); wert(d,w.winkel,tiefe+1) }
@@ -186,6 +194,8 @@ object MathematischerWertCodec {
         return when (val art = d.readUTF()) {
             "RationaleZahl" -> RationaleZahl.von(java.math.BigInteger(d.readUTF()), java.math.BigInteger(d.readUTF()))
             "Variable" -> Variable(d.readUTF(), d.readUTF(), if (d.readBoolean()) d.readUTF() else null)
+            "AussagenParameter" -> AussagenParameter(d.readUTF(), d.readUTF(), if (d.readBoolean()) d.readUTF() else null)
+            "MengenParameter" -> MengenParameter(d.readUTF(), d.readUTF(), if (d.readBoolean()) d.readUTF() else null)
             "AllgemeinerParameter" -> AllgemeinerParameter(d.readUTF(), d.readUTF(), if (d.readBoolean()) d.readUTF() else null)
             "MathematischeKonstante" -> MathematischeKonstante(d.readUTF(), d.readUTF())
             "BenannteMenge" -> BenannteMenge(d.readUTF(), d.readUTF())
@@ -260,6 +270,7 @@ object MathematischerWertCodec {
             "OffeneDefinitionsBedingung" -> OffeneDefinitionsBedingung(wert(d, tiefe + 1, version))
             "ÜbersetzungsBildraum" -> ÜbersetzungsCodec.bild(d,tiefe + 1)
             "WinkelParameter" -> WinkelParameter(d.readUTF())
+            "GebundenerWinkelParameter" -> WinkelParameter(d.readUTF(), d.readUTF(), if (d.readBoolean()) d.readUTF() else null)
             "WinkelAusBogenmass" -> WinkelAusBogenmass(wert(d,tiefe+1,version) as ZahlAusdruck)
             "WinkelBogenmass" -> WinkelBogenmass(wert(d,tiefe+1,version) as WinkelAusdruck, WinkelVertreter.valueOf(d.readUTF()))
             "SinusGrad" -> SinusGrad(wert(d,tiefe+1,version) as WinkelAusdruck)

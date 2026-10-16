@@ -14,12 +14,17 @@ data class KnotenDaten(
     val kartenVerweis: KartenVerweis? = null,
     /** Versionsfeste Karten-Fallbacks für einzelne Eingänge; eine Edge besitzt stets Vorrang. */
     val eingangsKartenVerweise: Map<String, KartenVerweis> = emptyMap(),
+    /** Historischer Kompatibilitätswert; Anhänge gehören nicht mehr zur Körpergeometrie. Kein Codec-Feld. */
+    val darstellungsFußzeilenHöhe: Float = 32f,
 )
 
 data class VerbindungDaten(
     val id: VerbindungsId = neueVerbindungsId(),
     val von: AnschlussVerweis,
     val zu: AnschlussVerweis,
+    val eingangsReihenfolge: Int = 0,
+    /** Stabile Rolle des durch diese Verbindung übersteuerten Kartenfallbacks. */
+    val eingangsFallback: String? = null,
 )
 
 data class VisuelleKnotenGruppeDaten(

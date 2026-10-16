@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldung
 
 enum class KnotenInteraktionsModus { GanzeFlächeZiehbar, NurKopfzeileZiehbar }
 
@@ -17,6 +18,8 @@ interface KnotenRendererAktionen {
     fun eigenschaftenErsetzen(eigenschaften: Map<String, KnotenEigenschaft>)
     /** Unskalierte, abgeleitete Inhaltsgröße; kein persistierter Kartenparameter. */
     fun inhaltsminimumMelden(minimum: GraphGröße) {}
+    /** Vollständige flüchtige Diagnose oberhalb des Körpers; leer entfernt die Anzeige. */
+    fun meldungenMelden(meldungen: List<KnotenMeldung>) {}
 }
 
 interface KnotenRenderer {
@@ -31,8 +34,8 @@ interface KnotenRenderer {
     @Composable fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen)
 
     /**
-     * Optionale Diagnosezeile innerhalb des effektiven Knotenrechtecks.
-     * Ihre natürliche Größe ergänzt das abgeleitete Inhaltsminimum.
+     * Optionale Diagnosezeile außen unterhalb des Knotenkörpers.
+     * Sie verändert weder Inhaltsminimum noch Auswahl- oder Anschlussgeometrie.
      */
     @Composable fun Fußzeile(knoten: KnotenDaten, ausgewählt: Boolean) {}
 }

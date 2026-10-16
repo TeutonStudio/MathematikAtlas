@@ -28,8 +28,12 @@ class GradWinkel(grad: ZahlAusdruck) : WinkelAusdruck {
     override fun hashCode() = grad.hashCode()
 }
 
-data class WinkelParameter(override val name: String) : WinkelAusdruck, MethodenParameter {
-    override fun zuLatex() = name
+data class WinkelParameter(
+    override val name: String,
+    val latex: String = name,
+    override val bindungsId: String? = null,
+) : WinkelAusdruck, MethodenParameter {
+    override fun zuLatex() = latex
 }
 
 /** Die Quotientenabbildung q: R → Grad. Freie reelle Parameter bleiben substituierbar. */

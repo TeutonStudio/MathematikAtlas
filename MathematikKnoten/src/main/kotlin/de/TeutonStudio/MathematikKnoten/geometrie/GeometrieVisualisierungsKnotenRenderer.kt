@@ -22,6 +22,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldung
+import de.TeutonStudio.MathematikKnoten.knotenMeldungen
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikRechenSystem.kern.*
@@ -35,8 +37,15 @@ class GeometrieVisualisierungsKnotenRenderer(
 
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
-        val objekt = ergebnisFür(knoten)?.eingänge?.get("objekt")?.objekt as? GeometrischerAusdruck
+        val ergebnis = ergebnisFür(knoten)
+        val objekt = ergebnis?.eingänge?.get("objekt")?.objekt as? GeometrischerAusdruck
         val dimension = objekt?.raum?.dimension
+        val meldungen = ergebnis.knotenMeldungen() + listOfNotNull(when {
+            objekt == null && ergebnis?.fehler == null -> KnotenMeldung("Verbinde ein geometrisches Objekt.")
+            objekt != null && dimension !in 1..3 -> KnotenMeldung("R$dimension ist erst nach einer expliziten Projektion in R1, R2 oder R3 darstellbar.")
+            else -> null
+        })
+        SideEffect { aktionen.meldungenMelden(meldungen) }
         var kamera by remember(knoten.id) { mutableStateOf(GeometrieKamera()) }
         val linie = MaterialTheme.colorScheme.primary
         val punkt = MaterialTheme.colorScheme.tertiary
@@ -55,8 +64,6 @@ class GeometrieVisualisierungsKnotenRenderer(
             } },
             fuß = {
                 Column {
-                    if (objekt == null) Hinweis("Verbinde ein geometrisches Objekt.")
-                    else if (dimension !in 1..3) Hinweis("R$dimension ist erst nach einer expliziten Projektion in R1, R2 oder R3 darstellbar.")
                     if (objekt != null) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("${objekt::class.simpleName} · ${objekt.raum.id}", style = MaterialTheme.typography.labelSmall)
                         TextButton(onClick = { kamera = GeometrieKamera() }, enabled = kamera != GeometrieKamera()) { Text("Standardansicht") }
@@ -67,10 +74,7 @@ class GeometrieVisualisierungsKnotenRenderer(
     }
 }
 
-@Composable
-private fun Hinweis(text: String) {
-    Box(Modifier.fillMaxWidth().padding(12.dp)) { Text(text, style = MaterialTheme.typography.bodyMedium) }
-}
+
 
 private data class GeometrieKamera(
     val rotationX: Double = 0.0,

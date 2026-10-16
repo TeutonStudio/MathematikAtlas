@@ -81,13 +81,13 @@ fun formelTypFürWert(w:AtlasWert):FormelTyp = when(w) {is ZahlAusdruck -> Forme
 fun strukturTitel(w:AtlasWert):String = when(w) {is Tupel -> "Tupel · ${w.anzahl} Komponenten";is ZeilenVektor -> "Zeilenvektor · ${w.werte.size} Komponenten";is SpaltenVektor -> "Spaltenvektor · ${w.werte.size} Komponenten";is Matrix -> "Matrix · ${w.zeilenAnzahl} × ${w.spaltenAnzahl}";is Tensor -> "Tensor · ${w.dimensionen.joinToString(" × ")}";is Methode -> "Methode";is ZahlAusdruck -> "Skalar";else -> "Mathematisches Objekt"}
 
 @Composable
-fun MethodenProjektionsEinstellungen(k:KnotenDaten,r:KnotenAuswertungsErgebnis?,ändern:(KnotenDaten)->Unit) {
-    k.anschlüsse.filter {it.richtung==AnschlussRichtung.Ausgang && it.art==MathematikAnschlussArten.Methode.id}.forEach {p ->
+fun MethodenProjektionsEinstellungen(k:KnotenDaten,r:KnotenAuswertungsErgebnis?,ändern:(KnotenDaten)->Unit, anschlussId: AnschlussId? = null, nurAufruf: Boolean = false) {
+    k.anschlüsse.filter {!nurAufruf && (anschlussId == null || it.id == anschlussId) && it.richtung==AnschlussRichtung.Ausgang && it.art==MathematikAnschlussArten.Methode.id}.forEach {p ->
         Text("${p.name} · Methodenschnittstelle",style=MaterialTheme.typography.titleSmall)
         Auswahl("Argumentanzeige",listOf(METHODEN_ARGUMENTPROJEKTION_SEPARIERT,METHODEN_ARGUMENTPROJEKTION_TUPEL),k.methodenAusgangArgumentprojektion(p.name),{if(it==METHODEN_ARGUMENTPROJEKTION_TUPEL) "Gesamttupel" else "Getrennte Argumente"}) {v ->ändern(k.copy(parameter=k.parameter+(methodenAusgangArgumentprojektionSchlüssel(p.name) to v)))}
         Auswahl("Ergebnisanzeige",listOf(METHODEN_ERGEBNISPROJEKTION_DIREKT,METHODEN_ERGEBNISPROJEKTION_TUPEL),k.methodenAusgangErgebnisprojektion(p.name),{if(it==METHODEN_ERGEBNISPROJEKTION_TUPEL) "Ergebnistupel" else "Einzelausgabe, sofern möglich"}) {v ->ändern(k.copy(parameter=k.parameter+(methodenAusgangErgebnisprojektionSchlüssel(p.name) to v)))}
     }
-    if(k.art!=METHODEN_AUFRUF_ART) return
+    if(k.art!=METHODEN_AUFRUF_ART || anschlussId != null) return
     val m=r?.eingänge?.get("methode")?.objekt as? MathematischeMethode
     val getrennt=k.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION]!=METHODEN_ARGUMENTPROJEKTION_TUPEL
     Text("Argumentbindung",style=MaterialTheme.typography.titleSmall)

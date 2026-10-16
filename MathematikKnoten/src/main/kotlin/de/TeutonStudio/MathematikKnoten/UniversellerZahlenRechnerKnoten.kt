@@ -518,7 +518,7 @@ private fun universellSkalarAuswerten(
 
     return when (operator) {
         UniversellerZahlenOperator.ADDITION -> {
-            require(zahlenWerte.size >= 2) { "Addition benötigt mindestens zwei Summanden." }
+            require(zahlenWerte.size >= 1) { "Addition benötigt mindestens zwei Summanden." }
             UniverselleZahlenAusgabe(
                 addition(zahlenWerte.map { it.objekt as ZahlAusdruck }),
                 gemeinsam,
@@ -529,7 +529,7 @@ private fun universellSkalarAuswerten(
             gemeinsam,
         )
         UniversellerZahlenOperator.MULTIPLIKATION -> {
-            require(zahlenWerte.size >= 2) { "Multiplikation benötigt mindestens zwei Faktoren." }
+            require(zahlenWerte.size >= 1) { "Multiplikation benötigt mindestens zwei Faktoren." }
             UniverselleZahlenAusgabe(
                 multiplikation(zahlenWerte.map { it.objekt as ZahlAusdruck }),
                 gemeinsam,
@@ -659,7 +659,7 @@ private fun universellSkalarAuswerten(
             require(gemeinsam.geordnet) {
                 "${operator.titel} ist auf ${gemeinsam.latex} nicht definiert, da der Bereich nicht geordnet ist."
             }
-            require(zahlenWerte.size >= 2) { "${operator.titel} benötigt mindestens zwei Operanden." }
+            require(zahlenWerte.size >= 1) { "${operator.titel} benötigt mindestens zwei Operanden." }
             val zahlen = zahlenWerte.map { it.objekt as ZahlAusdruck }
             UniverselleZahlenAusgabe(
                 if (operator == UniversellerZahlenOperator.MINIMUM) minimum(zahlen) else maximum(zahlen),

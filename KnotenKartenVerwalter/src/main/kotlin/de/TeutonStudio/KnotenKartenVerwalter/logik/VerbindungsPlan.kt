@@ -10,10 +10,7 @@ data class VerbindungsAuswahl(val basis: KartenDaten, val vorschläge: List<Verb
 fun verbindeGeprüft(karte: KartenDaten, von: AnschlussVerweis, zu: AnschlussVerweis, prüfung: GraphPrüfung): KartenDaten? {
     if (prüfung.prüfe(karte, von, zu) !is VerbindungsPrüfung.Erlaubt) return null
     val (quelle, ziel) = prüfung.normalisiere(karte, von, zu) ?: return null
-    val ersetzeEingang = karte.findeAnschluss(ziel)?.richtung == AnschlussRichtung.Eingang
-    return karte.copy(verbindungen = karte.verbindungen.filterNot {
-        ersetzeEingang && it.zu == ziel || it.von == quelle && it.zu == ziel
-    } + VerbindungDaten(von = quelle, zu = ziel))
+    return karte.wendeAn(KartenAktion.VerbindungEinfügen(VerbindungDaten(von = quelle, zu = ziel)))
 }
 
 fun istGültigeVerdrahtung(karte: KartenDaten, prüfung: GraphPrüfung): Boolean {
@@ -22,7 +19,9 @@ fun istGültigeVerdrahtung(karte: KartenDaten, prüfung: GraphPrüfung): Boolean
     if (ports.distinct().size != ports.size) return false
     if (karte.verbindungen.map { it.id }.distinct().size != karte.verbindungen.size) return false
     if (karte.verbindungen.groupBy { it.zu }.any { (ziel, kanten) ->
-            kanten.size > 1 && karte.findeAnschluss(ziel)?.richtung == AnschlussRichtung.Eingang
+            kanten.size > 1 && karte.findeAnschluss(ziel)?.let {
+                it.richtung == AnschlussRichtung.Eingang && it.belegung == AnschlussBelegung.Einzeln
+            } == true
         }) return false
     val knotenIds = karte.knoten.map { it.id }.toSet()
     if (karte.verbindungen.any { kante ->
@@ -52,15 +51,17 @@ fun planeKnotenInVerbindung(karte: KartenDaten, knotenId: KnotenId, verbindungsI
     val knoten = karte.knoten.firstOrNull { it.id == knotenId } ?: return emptyList()
     val kante = karte.verbindungen.firstOrNull { it.id == verbindungsId } ?: return emptyList()
     if (knotenId in setOf(kante.von.knotenId, kante.zu.knotenId)) return emptyList()
-    // Die alte Zielbelegung bleibt während der Zwischenprüfung gültig und wird
-    // erst beim Anschließen des neuen Ausgangs atomar ersetzt.
+    // Die alte Kante hält abhängige Typen während der Zwischenprüfung stabil.
+    // Im fertigen Graph wird genau ihr Quellende ersetzt, auch bei Mehrfachbelegung.
     val basis = karte
     return knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.flatMap { eingang ->
         val eingangsRef = AnschlussVerweis(knotenId, eingang.id)
         if (basis.verbindungen.any { it.zu == eingangsRef }) return@flatMap emptyList()
         val mitEingang = verbindeGeprüft(basis, kante.von, eingangsRef, prüfung) ?: return@flatMap emptyList()
         knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }.mapNotNull { ausgang ->
-            val fertig = verbindeGeprüft(mitEingang, AnschlussVerweis(knotenId, ausgang.id), kante.zu, prüfung) ?: return@mapNotNull null
+            val fertig = mitEingang.copy(verbindungen = mitEingang.verbindungen.map {
+                if (it.id == kante.id) it.copy(von = AnschlussVerweis(knotenId, ausgang.id)) else it
+            })
             if (!istGültigeVerdrahtung(fertig, prüfung)) return@mapNotNull null
             VerbindungsVorschlag("${knoten.name}: ${eingang.name} → ${ausgang.name}", fertig)
         }
@@ -72,9 +73,13 @@ fun planeKnotenHerausziehen(karte: KartenDaten, id: KnotenId, prüfung: GraphPr�
     val eingang = karte.verbindungen.filter { it.zu.knotenId == id }.singleOrNull() ?: return null
     val ausgänge = karte.verbindungen.filter { it.von.knotenId == id }
     if (ausgänge.isEmpty() || ausgänge.map { it.von }.distinct().size != 1) return null
-    var probe = karte
-    for (ausgang in ausgänge) probe = verbindeGeprüft(probe, eingang.von, ausgang.zu, prüfung) ?: return null
-    probe = probe.copy(verbindungen = probe.verbindungen.filterNot { it.von.knotenId == id || it.zu.knotenId == id })
+    val probe = karte.copy(verbindungen = karte.verbindungen.mapNotNull { kante ->
+        when {
+            kante.id == eingang.id -> null
+            kante.von.knotenId == id -> kante.copy(von = eingang.von)
+            else -> kante
+        }
+    })
     if (!istGültigeVerdrahtung(probe, prüfung)) return null
     return VerbindungsVorschlag("Knoten aus Verbindung herausziehen", probe)
 }

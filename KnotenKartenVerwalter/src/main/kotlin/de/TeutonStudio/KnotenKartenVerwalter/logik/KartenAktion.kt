@@ -89,6 +89,7 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
         if (it.id == aktion.id) it.copy(anschlüsse = aktion.anschlüsse) else it
     })
     is KartenAktion.KnotenKonfigurationErsetzen -> {
+        prüfeNeueEinzelbelegung(aktion.id, aktion.anschlüsse)
         val gültigeAnschlüsse = aktion.anschlüsse.map { it.id }.toSet()
         copy(
             knoten = knoten.map {
@@ -101,6 +102,7 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
         )
     }
     is KartenAktion.KnotenErsetzen -> {
+        prüfeNeueEinzelbelegung(aktion.knoten.id, aktion.knoten.anschlüsse, aktion.entfallendeVerbindungen)
         val gültigeAnschlüsse = aktion.knoten.anschlüsse.map { it.id }.toSet()
         copy(
             knoten = knoten.map { if (it.id == aktion.knoten.id) aktion.knoten else it },
@@ -203,16 +205,34 @@ fun KartenDaten.wendeAn(aktion: KartenAktion): KartenDaten = when (aktion) {
         verbindungen = verbindungen.filterNot { it.von.knotenId == aktion.id || it.zu.knotenId == aktion.id },
     )
     is KartenAktion.VerbindungEinfügen -> fügeVerbindungEin(aktion.verbindung)
-    is KartenAktion.VerbindungNeuVerbinden -> copy(
-        verbindungen = verbindungen.filterNot { it.id == aktion.alteVerbindung },
-    ).fügeVerbindungEin(aktion.verbindung)
+    is KartenAktion.VerbindungNeuVerbinden -> {
+        val alt = verbindungen.firstOrNull { it.id == aktion.alteVerbindung }
+        val gleichesZiel = alt?.zu == aktion.verbindung.zu
+        val neu = if (gleichesZiel) aktion.verbindung.copy(
+            eingangsReihenfolge = alt.eingangsReihenfolge, eingangsFallback = alt.eingangsFallback,
+        ) else aktion.verbindung
+        copy(verbindungen = verbindungen.filterNot { it.id == aktion.alteVerbindung })
+            .fügeVerbindungEin(neu, erhalteReihenfolge = gleichesZiel)
+    }
     is KartenAktion.VerbindungLöschen -> copy(verbindungen = verbindungen.filterNot { it.id == aktion.id })
     is KartenAktion.AnsichtÄndern -> copy(ansicht = aktion.ansicht)
 }
 
 /** Erzwingt die Graph-Invariante, dass ein gerichteter Eingang höchstens eine eingehende Kante besitzt. */
-private fun KartenDaten.fügeVerbindungEin(verbindung: VerbindungDaten): KartenDaten {
-    val zielIstEingang = findeAnschluss(verbindung.zu)?.richtung == AnschlussRichtung.Eingang
+private fun KartenDaten.fügeVerbindungEin(verbindung: VerbindungDaten, erhalteReihenfolge: Boolean = false): KartenDaten {
+    val ziel = findeAnschluss(verbindung.zu)
+    val zielIstEingang = ziel?.richtung == AnschlussRichtung.Eingang && ziel.belegung == AnschlussBelegung.Einzeln
     val bereinigt = if (zielIstEingang) verbindungen.filterNot { it.zu == verbindung.zu } else verbindungen
-    return copy(verbindungen = bereinigt + verbindung)
+    val neu = if (!erhalteReihenfolge && ziel?.belegung == AnschlussBelegung.Mehrfach && verbindungen.none { it.id == verbindung.id })
+        verbindung.copy(eingangsReihenfolge = maxOf(ziel.nächsteBeitragsReihenfolge, (bereinigt.filter { it.zu == verbindung.zu }.maxOfOrNull { it.eingangsReihenfolge } ?: -1) + 1)) else verbindung
+    return copy(verbindungen = bereinigt.filterNot { it.id == neu.id } + neu)
+}
+
+/** Konfigurationsaufrufer müssen den vorhandenen Konfliktweg verwenden. */
+private fun KartenDaten.prüfeNeueEinzelbelegung(id: KnotenId, ports: List<AnschlussDaten>, entfernt: Set<VerbindungsId> = emptySet()) {
+    ports.filter { it.richtung == AnschlussRichtung.Eingang && it.belegung == AnschlussBelegung.Einzeln }.forEach { port ->
+        require(verbindungen.count { it.zu == AnschlussVerweis(id, port.id) && it.id !in entfernt } <= 1) {
+            "Der Einzelanschluss '${port.name}' besitzt mehrere Quellen. Bestätige zuerst die entfallenden Verbindungen."
+        }
+    }
 }

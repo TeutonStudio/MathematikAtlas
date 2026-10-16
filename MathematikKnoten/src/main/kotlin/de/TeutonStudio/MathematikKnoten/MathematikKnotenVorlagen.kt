@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKon
 object MathematikKnotenVorlagen {
     const val ORDNUNGSRELATION_ART = "mathematik.ordnungsrelation"
     const val ITERIERTE_AUSSAGENVERKNÜPFUNG_ART = "mathematik.iterierteAussagenverknüpfung"
-    private fun eingang(name: String, art: AnschlussArtId, reihe: Int = 0, erweiterbar: Boolean = false) = AnschlussDaten(name = name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = art, reihenfolge = reihe, kannSichErweitern = erweiterbar)
+    private fun eingang(name: String, art: AnschlussArtId, reihe: Int = 0, kannSichErweitern: Boolean = false) = AnschlussDaten(name = name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = art, reihenfolge = reihe, kannSichErweitern = kannSichErweitern)
     private fun ausgang(name: String, art: AnschlussArtId, reihe: Int = 0) = AnschlussDaten(name = name, richtung = AnschlussRichtung.Ausgang, kante = AnschlussKante.Rechts, art = art, reihenfolge = reihe)
 
     val Zahl = KnotenVorlage(
@@ -14,8 +14,9 @@ object MathematikKnotenVorlagen {
         listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id)), mapOf("wert" to "2"),
     )
     val Variable = KnotenVorlage(
-        "mathematik.variable", "Variable", "Rechnen", "Freie mathematische Variable als Zahl, Tupel, Winkeltupel, Zeilen- oder Spaltenvektor mit konfigurierbarem Wertebereich.", GraphGröße(190f, 102f),
-        listOf(ausgang("wert", MathematikAnschlussArten.Zahl.id), eingang("grundraum", MathematikAnschlussArten.Menge.id)), mapOf("name" to "x", "werteVorrat" to "R"),
+        "mathematik.variable", "Variable", "Rechnen", "Freies Element einer angeschlossenen Menge; Struktur und Dimension folgen dem Grundraum.", GraphGröße(190f, 102f),
+        listOf(ausgang("wert", MathematikAnschlussArten.Objekt.id), eingang("grundraum", MathematikAnschlussArten.Menge.id)), mapOf("name" to "x"),
+        standardEigenschaften = mapOf(VARIABLE_GRUNDRAUM_VERTRAG to KnotenEigenschaft.Text("1")),
     )
     val AllgemeinerParameter = KnotenVorlage(
         "mathematik.allgemeinerParameter", "Allgemeiner Parameter", "Abbildungen", "Freier, nicht auf Zahlterme beschränkter Parameter für allgemeine Methoden.", GraphGröße(215f, 102f),
@@ -184,8 +185,9 @@ object MathematikKnotenVorlagen {
         mapOf("automatisch" to "true", "variablen" to "", "grundmengen" to "R"),
     )
     val Visualisierung = KnotenVorlage(
-        "mathematik.visualisierung", "Visualisierung", "Visualisierung", "Stellt Mengen in R1, R2, R3 oder C mit analytischen Nachweisen und numerischer Ergänzung dar und reicht sie unverändert weiter.", GraphGröße(620f, 480f),
-        listOf(eingang("menge", MathematikAnschlussArten.Menge.id), ausgang("menge", MathematikAnschlussArten.Menge.id)),
+        "mathematik.visualisierung", "Visualisierung", "Visualisierung", "Stellt Mengen in R1, R2, R3 oder C mit analytischen Nachweisen und numerischer Ergänzung dar.", GraphGröße(620f, 480f),
+        listOf(eingang("menge", MathematikAnschlussArten.Menge.id, 0).copy(kannSichErweitern = true),
+            eingang("menge2", MathematikAnschlussArten.Menge.id, 1).copy(kannSichErweitern = true)),
         standardEigenschaften = VisualisierungsKonfiguration().zuEigenschaften(),
     )
     val Orbit = KnotenVorlage(
@@ -455,7 +457,7 @@ object MathematikKnotenVorlagen {
     val Äquivalenz = KnotenVorlage("mathematik.äquivalenz", "Äquivalenz", "Aussage", "Bildet A ⇔ B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Adjunktion = KnotenVorlage("mathematik.adjunktion", "Adjunktion", "Aussage", "Bildet die klassische UND-Verknüpfung A & B.", GraphGröße(220f, 105f), listOf(eingang("a", MathematikAnschlussArten.Aussage.id, 0), eingang("b", MathematikAnschlussArten.Aussage.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
 
-    val alle = listOf(Zahl, Variable, AllgemeinerParameter, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Kehrwert, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Ungleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Darstellungsoptimierung, Ableiten, Integrieren, EndlicheMenge, Einzelmenge, Mengenfilter, HalbesIntervall, ReellesIntervall, Lösungsmenge, Visualisierung, Orbit, OrbitBeschraenktheit, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteKonjunktion, IterierteDisjunktion, IterierteAdjunktion, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, AussageZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, VektorZuPolynom, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, MatrixProdukt, Transponieren, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
+    val alle = listOf(MethodenQuellKnotenVorlagen.Methode, Zahl, Variable, AllgemeinerParameter, Addition, Maximum, Minimum, Multiplikation, Division, Potenz, Kehrwert, Wurzel, Logarithmus, Tupel, KomplexAusTupel, Konjugierte, Realteil, Imaginärteil, KomplexerRadius, Winkel, Gleichheit, Ungleichheit, Wahr, Lüge, Element, Kleiner, Größer, KleinerGleich, GrößerGleich, Teilmenge, Übermenge, TeilOderGleichmenge, ÜberOderGleichmenge, Disjunkt, GleichungLösen, Auswerten, Darstellungsoptimierung, Ableiten, Integrieren, EndlicheMenge, Einzelmenge, Mengenfilter, HalbesIntervall, ReellesIntervall, Lösungsmenge, Visualisierung, Orbit, OrbitBeschraenktheit, Vereinigung, Schnitt, Differenz, KartesischesProdukt, NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, KomplexeZahlen, Mächtigkeit, IterierteSumme, IteriertesProdukt, IterierteKonjunktion, IterierteDisjunktion, IterierteAdjunktion, IterierteVereinigung, IterierterSchnitt, IteriertesKartesischesProdukt, Abbild, TermZuMethode, AussageZuMethode, Komposition, Iteration, MethodenDifferentieren, MethodenIntegrieren, SpaltenMethodeDifferentieren, ZeilenMethodeDifferentieren, SpaltenMethodeIntegrieren, ZeilenMethodeIntegrieren, Vektor, ZeilenVektor, VektorZuPolynom, TupelZuSpalte, TupelZuZeile, EinheitsSpalte, EinheitsZeile, VektorRadiusSpalte, VektorRadiusZeile, Matrix, Skalarprodukt, SkalarproduktZeile, KreuzproduktSpalte, KreuzproduktZeile, MatrixProdukt, Transponieren, MatrixInvertieren, KartenEingang, KartenAusgang, Fall, Konjunktion, Disjunktion, Implikation, Äquivalenz, Adjunktion)
 
     private fun aussagenVorlage(art: String, name: String, beschreibung: String, links: AnschlussArtId, rechts: AnschlussArtId, kategorie: String = "Aussagen: Aussagenprädikate") = KnotenVorlage(
         art, name, kategorie, beschreibung, GraphGröße(220f, 110f),

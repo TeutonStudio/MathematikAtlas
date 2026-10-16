@@ -17,7 +17,7 @@ class DivisionUndKehrwertTest {
             verbindungen = listOf(VerbindungDaten(von = ausgang(vier), zu = eingang(kehrwert, "zahl"))),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         assertEquals(RationaleZahl.von(1, 4), ergebnis.knoten.getValue(kehrwert.id).ausgaben.getValue("wert").objekt)
@@ -32,7 +32,7 @@ class DivisionUndKehrwertTest {
             verbindungen = listOf(VerbindungDaten(von = ausgang(nullKnoten), zu = eingang(kehrwert, "zahl"))),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.single().contains("Kehrwert von 0"))
     }
@@ -40,7 +40,7 @@ class DivisionUndKehrwertTest {
     @Test fun `Division verwendet bei nichtnull Divisor den Quotienten`() {
         val (karte, division) = divisionsKarte("8", "2", "99")
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         assertEquals(RationaleZahl.von(4), ergebnis.knoten.getValue(division.id).ausgaben.getValue("wert").objekt)
@@ -49,7 +49,7 @@ class DivisionUndKehrwertTest {
     @Test fun `Division verwendet bei Divisor null den dritten Eingang`() {
         val (karte, division) = divisionsKarte("8", "0", "99")
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         assertEquals(RationaleZahl.von(99), ergebnis.knoten.getValue(division.id).ausgaben.getValue("wert").objekt)
@@ -70,13 +70,13 @@ class DivisionUndKehrwertTest {
             ),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         val wert = ergebnis.knoten.getValue(division.id).ausgaben.getValue("wert").objekt
         val fall = assertIs<ZahlFallAusdruck>(wert)
         assertEquals(RationaleZahl.von(99), fall.wahr)
-        assertEquals(Gleichheit(Variable("y"), RationaleZahl.Null), fall.aussage)
+        assertEquals(Gleichheit(Variable("y", bindungsId = "divisor:grundraum-element"), RationaleZahl.Null), fall.aussage)
     }
 
     @Test fun `Unentschiedener Divisionsfall bleibt an einer Addition auswertbar`() {
@@ -98,7 +98,7 @@ class DivisionUndKehrwertTest {
             ),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         assertIs<Addition>(ergebnis.knoten.getValue(addition.id).ausgaben.getValue("wert").objekt)

@@ -81,6 +81,13 @@ Die mathematische Semantik liegt im `MathematikRechenSystem` oder im zuständige
 
 ## 7. Darstellung
 
+Die effektive Knotengröße beschreibt den Körper. Zeitdiagnosen hängen außen unten,
+Meldungen außen oben; sie verändern weder Körperauswahl noch Anschlusspositionen.
+Renderer melden vollständige Diagnosen mit Schweregrad über
+`KnotenRendererAktionen.meldungenMelden`; eine leere Liste entfernt das Meldungsfeld.
+Meldungen und gemessene Anhanghöhen sind flüchtig. Gruppen und Viewport-Culling
+berücksichtigen diese Außenflächen. Siehe [Entscheidung](decisions/2026-10-16-knoten-anhaenge.md).
+
 Definiere:
 
 - Titel und kompakte Bedeutung,
@@ -162,3 +169,14 @@ Nicht ausreichend:
 
 - „Der Knoten funktioniert.“
 - „Die UI sieht ordentlich aus.“
+
+
+## Join-Eingänge (Format 10)
+
+- `AnschlussBelegung.Mehrfach` erlaubt mehrere gerichtete Quellen desselben Eingangs; Einzelbelegung bleibt der Default des neutralen Codecs.
+- Jede Verbindung zählt einzeln. Ihre ID adressiert den Beitrag, `eingangsReihenfolge` bestimmt seine stabile Position. Lokale Werte und Kartenfallbacks werden gemeinsam mit Quellen geordnet ausgewertet.
+- Die Mathematik entscheidet über die Eignung: geschlossen, assoziativ und kommutativ. Bereichsabhängige Produkte zeigen ohne Kommutativitätsnachweis geordnete Einzelenden; der gespeicherte Graph wird dafür nicht verändert.
+- Null Beiträge sind unvollständig; ein Beitrag liefert nach fachlicher Validierung denselben bedingten Wert. Keine impliziten Neutralwerte oder unverbundenen Unbekannten im Join.
+- `KnotenAuswertungsKontext.mehrfachEingänge` stellt vollständige Wertlisten bereit. Mehrfachwerte dürfen nicht durch Überschreiben eines gemeinsamen Anschlussnamens reduziert werden.
+- Operatorwechsel übernehmen Beiträge geordnet oder melden überzählige Quellen/lokale Werte im bestätigten Konfigurationsplan. Kopieren, Umverdrahten und Undo erhalten Reihenfolge und Fallbackrollen.
+- [Architekturentscheidung](decisions/2026-10-16-join-eingaenge.md) und [ExecPlan](plans/completed/2026-10-16-join-eingaenge.md).

@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.MathematikKnoten.mitGradmengenDimension
+import de.TeutonStudio.MathematikKnoten.mitEinheitlicherMengenDimension
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -230,7 +231,7 @@ internal fun konfiguriereMengenQuelle(knoten: KnotenDaten, eintrag: MengenAuswah
                 name = ausgangsName, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Menge.id,
             ) else anschluss
         },
-    ).mitGradmengenDimension()
+    ).mitEinheitlicherMengenDimension()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -282,6 +283,10 @@ internal object MengenKnotenInspektor : KnotenInspektor {
                 art = RechnerOperatorAuswahlArt.UNBEKANNT,
             ),
         ) else emptyList()
+        if (knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dim", "dimension") } > 1) {
+            Text("Diese historische Karte besitzt mehrere verbundene Dimensionseingänge. Die Bereinigung zeigt betroffene Verbindungen vorab.", color = MaterialTheme.colorScheme.error)
+            androidx.compose.material3.OutlinedButton(onClick = { aktionen.knoten(knoten.mitEinheitlicherMengenDimension()) }) { Text("Dimensionseingänge bereinigen") }
+        }
         Text("Menge", style = MaterialTheme.typography.titleSmall)
         androidx.compose.material3.OutlinedButton(onClick = { geöffnet = true }, modifier = Modifier.fillMaxWidth()) {
             Text(aktuell?.titel ?: "Unbekannte Mengenquelle: $aktuelleId")

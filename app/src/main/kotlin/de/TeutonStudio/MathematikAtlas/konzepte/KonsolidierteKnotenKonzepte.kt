@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 
 internal fun dynamischesKonzeptFürKnoten(zustand: AtlasZustand, knoten: KnotenDaten): KonzeptDefinition? {
     val eingaben = zustand.auswertung.knoten[knoten.id]?.eingänge.orEmpty()
-    val dim = (eingaben["dim"]?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl)?.takeIf { it.nenner == java.math.BigInteger.ONE }?.zähler?.toString()
+    val dim = ((eingaben["dim"] ?: eingaben["dimension"])?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl)?.takeIf { it.nenner == java.math.BigInteger.ONE }?.zähler?.toString()
     val p = (eingaben["p"]?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.RationaleZahl)?.takeIf { it.nenner == java.math.BigInteger.ONE && it.zähler.signum() >= 0 }?.zähler?.toString()
     val konfiguriert = knoten.copy(parameter = knoten.parameter + buildMap {
         if (dim != null) put("definition.dim", dim)

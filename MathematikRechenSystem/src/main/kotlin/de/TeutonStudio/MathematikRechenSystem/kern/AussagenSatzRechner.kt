@@ -80,11 +80,11 @@ data class LogischeVerknuepfung(
         when (operator) {
             AussagenSatzOperator.NEGATION -> require(argumente.size == 1)
             AussagenSatzOperator.IMPLIKATION -> require(argumente.size == 2)
-            AussagenSatzOperator.AEQUIVALENZ -> require(argumente.size >= 2)
+            AussagenSatzOperator.AEQUIVALENZ -> require(argumente.isNotEmpty())
             AussagenSatzOperator.KONJUNKTION,
             AussagenSatzOperator.DISJUNKTION,
             AussagenSatzOperator.ADJUNKTION,
-            -> require(argumente.size >= 2)
+            -> require(argumente.isNotEmpty())
             else -> Unit
         }
     }

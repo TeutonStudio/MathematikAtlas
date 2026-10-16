@@ -160,9 +160,9 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
     var quellAnnahmen=termWert.annahmen+parameterQuelle?.annahmen.orEmpty()
     var quellenWerte=termWert.variablenQuellen+parameterQuelle?.variablenQuellen.orEmpty()
     val strukturQuellen=quellenWerte.filter { it.strukturBindung!=null }.groupBy { it.strukturBindung!!.id }
-    val freieVorher=(term.freieMethodenParameter()+parameterObjekt?.freieMethodenParameter().orEmpty()+quellAnnahmen.flatMap { it.freieMethodenParameter() }).associateBy { it.name }
+    val freieVorher=(term.freieMethodenParameter()+parameterObjekt?.freieMethodenParameter().orEmpty()+quellAnnahmen.flatMap { it.freieMethodenParameter() }).toSet()
     val strukturNamen=strukturQuellen.values.flatten().map { it.name }.toSet()
-    val belegt=(freieVorher.keys-strukturNamen).toMutableSet()
+    val belegt=freieVorher.filter { it.name !in strukturNamen }.map { it.name }.toMutableSet()
     val umbenennungen=linkedMapOf<String,MathematischesObjekt>()
     val quellenNamen=mutableMapOf<String,String>()
     strukturQuellen.values.forEach { zusammen ->
@@ -171,17 +171,18 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
         var name=bindung.parameterName;var suffix=1
         while(!belegt.add(name)) name="${bindung.parameterName}_${suffix++}"
         zusammen.forEach { q ->
-            val frei=freieVorher[q.name] ?: return@forEach
+            val frei=freieVorher.singleOrNull { it.bindungsId == bindung.id }
+                ?: freieVorher.singleOrNull { it.name == q.name && it.bindungsId == null } ?: return@forEach
             require(q.strukturBindung!!.komponentenPfad.isEmpty()) { "Historische Komponentenquellen benötigen eine explizite Argumentpackungsmigration." }
-            val parameter=when(frei) { is TypisiertesElement -> frei.copy(name=name,latex=name); else -> TypisiertesElement(name,MathematikAnschlussArten.Tupel.id.wert) }
-            umbenennungen[q.name]=parameter;quellenNamen[q.name]=name
+            val parameter=when(frei) { is TypisiertesElement -> frei.copy(name=name,latex=name); is Variable -> frei.copy(name=name,latex=name,bindungsId=null); is WinkelParameter -> frei.copy(name=name,latex=name,bindungsId=null); else -> error("Nicht unterstützte strukturierte Parameterquelle.") }
+            umbenennungen[frei.bindungsId ?: q.name]=parameter;quellenNamen[bindung.id]=name
         }
     }
     if(umbenennungen.isNotEmpty()) {
         term=ersetze(term,umbenennungen)
         parameterObjekt=parameterObjekt?.let { ersetze(it,umbenennungen) }
         quellAnnahmen=quellAnnahmen.map { ersetze(it,umbenennungen) as Aussage }.toSet()
-        quellenWerte=quellenWerte.map { q -> quellenNamen[q.name]?.let { q.copy(name=it,strukturBindung=q.strukturBindung?.copy(parameterName=it)) } ?: q }
+        quellenWerte=quellenWerte.map { q -> quellenNamen[q.strukturBindung?.id]?.let { q.copy(name=it,strukturBindung=q.strukturBindung?.copy(parameterName=it)) } ?: q }
     }
     val zusätzlich=parameterObjekt?.freieMethodenParameter().orEmpty()
     val freie = (term.freieMethodenParameter()+zusätzlich).associateBy { it.name }

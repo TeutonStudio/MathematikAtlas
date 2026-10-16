@@ -28,6 +28,7 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
         val methodenObjekt = methodenWert.objekt
         val methode = methodenObjekt as? Methode
+        if (methode is AllgemeinAuswertbareMethode) return rufeAllgemeinAuf(methode, methodenWert, kontext)
         val auswertbareMethode = methode as? MathematischAuswertbareMethode
         val mathematischeMethode = methode?.let {
             runCatching { it.alsMathematischeMethode("mathematischen Methodenaufruf") }.getOrNull()
@@ -116,6 +117,13 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
         val annahmenBindungen = mathematischeMethode?.parameter?.mapIndexed { i, p -> (p.bindungsId ?: p.name) to mathematischeArgumente[i] }?.toMap().orEmpty()
         val angewandteAnnahmen = methodenWert.annahmen.map { ersetze(it, annahmenBindungen) as Aussage }.toSet() + argumentWerte.flatMap { it.annahmen } + definitionsBedingungen
         require(angewandteAnnahmen.none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen eine Definitionsbedingung der Methode." }
+        if (mathematischeMethode?.argumentIdentitäten?.values?.singleOrNull() == IdentitaetsMethode.ARGUMENT &&
+            mathematischeMethode.ergebnisIdentitäten.values.singleOrNull() == IdentitaetsMethode.ERGEBNIS &&
+            mathematischeMethode.ergebnisTupel.elemente.singleOrNull() == mathematischeMethode.parameter.singleOrNull() &&
+            ergebnisProjektion != METHODEN_ERGEBNISPROJEKTION_TUPEL) {
+            return KnotenAuswertungsErgebnis(mapOf("wert" to argumentWerte.single().copy(
+                objekt = wert, annahmen = angewandteAnnahmen, zielMenge = zielMenge)))
+        }
         return KnotenAuswertungsErgebnis(
             ausgaben = mapOf(
                 "wert" to BedingterWert(
@@ -128,6 +136,52 @@ internal object MethodenAufrufAuswerter : MathematikKnotenAuswerter {
                 ),
             ),
         )
+    }
+
+    private fun rufeAllgemeinAuf(methode: AllgemeinAuswertbareMethode, methodenWert: BedingterWert, kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
+        require(kontext.knoten.parameter[METHODEN_AUFRUF_PARTIELL] != "true") { "Diese allgemeine Methode unterstützt keine partielle Bindung." }
+        val ports = kontext.knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name != "methode" }.sortedBy { it.reihenfolge }
+        val komponenten = methode.signatur.argumente
+        val tupelModus = kontext.knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION] == METHODEN_ARGUMENTPROJEKTION_TUPEL
+        val werte = if (tupelModus) {
+            require(ports.size == 1) { "Die Tupelprojektion benötigt genau einen Anschluss." }
+            val wert = kontext.eingänge[ports.single().name] ?: error("Argumenttupel fehlt.")
+            val tupel = wert.objekt as? Tupel ?: error("Ein echtes Argumenttupel wird benötigt.")
+            require(tupel.elemente.size == komponenten.size) { "Argumentanzahl stimmt nicht mit der Signatur überein." }
+            komponenten.mapIndexed { i, c -> c.id to wert.copy(objekt = tupel.elemente[i], latexDarstellung = null, zielMenge = (wert.zielMenge as? Tupelraum)?.komponenten?.getOrNull(i), werteVorrat = (wert.werteVorrat as? Tupelraum)?.komponenten?.getOrNull(i), komponentenMengen = null, elementArt = null, gebundeneFormel = null) }.toMap()
+        } else {
+            require(ports.size >= komponenten.size) { "Argumentanschlüsse fehlen." }
+            require(ports.drop(komponenten.size).none { it.name in kontext.eingänge }) { "Überzählige Argumente." }
+            komponenten.mapIndexed { i, c ->
+                val port = ports.singleOrNull { it.semantischeId == c.id } ?: ports[i].also {
+                    require(it.semantischeId == null) { "Argumentidentität stimmt nicht mit der Signatur überein." }
+                }
+                c.id to (kontext.eingänge[port.name] ?: error("Argument '${c.name}' fehlt."))
+            }.toMap()
+        }
+        val annahmen = methodenWert.annahmen + werte.values.flatMap { it.annahmen }
+        require(annahmen.none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen eine Definitionsbedingung der Methode." }
+        val ergebnisse = methode.rufeAuf(werte.mapValues { it.value.objekt })
+        require(ergebnisse.keys == methode.signatur.ergebnisse.map { it.id }.toSet()) { "Ergebnisidentitäten stimmen nicht mit der Signatur überein." }
+        val geordnet = methode.signatur.ergebnisse.map { c ->
+            val ergebnis = ergebnisse.getValue(c.id)
+            val durchgereicht = ergebnis.durchgereichtesArgument?.let { id ->
+                val wert = werte[id] ?: error("Die Methode verweist auf ein unbekanntes Argument.")
+                require(wert.objekt == ergebnis.wert) { "Der durchgereichte Wert stimmt nicht mit seinem Argument überein." }
+                wert
+            }
+            (durchgereicht ?: BedingterWert(ergebnis.wert)).copy(
+                objekt = ergebnis.wert,
+                annahmen = methodenWert.annahmen + werte.values.flatMap { it.annahmen },
+            )
+        }
+        val direkt = kontext.knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION] != METHODEN_ERGEBNISPROJEKTION_TUPEL && geordnet.size == 1
+        val wert = if (direkt) geordnet.single() else BedingterWert(
+            Tupel(geordnet.map { it.objekt as? MathematischesObjekt ?: error("Dieses Ergebnis kann nicht als mathematisches Tupel verpackt werden.") }),
+            annahmen = geordnet.flatMap { it.annahmen }.toSet(),
+            variablenQuellen = geordnet.flatMap { it.variablenQuellen },
+        )
+        return KnotenAuswertungsErgebnis(mapOf("wert" to wert))
     }
 
     private fun strukturierteArgumente(methode: MathematischeMethode, kontext: KnotenAuswertungsKontext): List<BedingterWert> {

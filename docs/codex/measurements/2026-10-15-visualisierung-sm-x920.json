@@ -1,0 +1,150 @@
+{
+  "geraet": "SM-X920",
+  "android": "16",
+  "resultate": [
+    {
+      "baseline": true,
+      "detail": false,
+      "dimension": "R2",
+      "zeitenMs": [
+        314.636538,
+        375.332847,
+        381.177231,
+        400.533923,
+        451.116385
+      ],
+      "allokationenBytes": 22702544,
+      "frames": 0,
+      "frameP95Ms": null,
+      "drawP95Ms": null,
+      "layoutP95Ms": null,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": true,
+      "detail": false,
+      "dimension": "R3",
+      "zeitenMs": [
+        545.573616,
+        406.344539,
+        487.600308,
+        481.564,
+        483.835385
+      ],
+      "allokationenBytes": 23162880,
+      "frames": 0,
+      "frameP95Ms": null,
+      "drawP95Ms": null,
+      "layoutP95Ms": null,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": true,
+      "detail": true,
+      "dimension": "R2",
+      "zeitenMs": [
+        162.562153,
+        164.519692,
+        139.964384,
+        140.221308,
+        141.330538
+      ],
+      "allokationenBytes": 35041376,
+      "frames": 90,
+      "frameP95Ms": 27.728891,
+      "drawP95Ms": 19.65077,
+      "layoutP95Ms": 0.225847,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": true,
+      "detail": true,
+      "dimension": "R3",
+      "zeitenMs": [
+        1230.176077,
+        1067.378769,
+        923.245846,
+        957.894462,
+        948.995
+      ],
+      "allokationenBytes": 907755520,
+      "frames": 90,
+      "frameP95Ms": 22.659979,
+      "drawP95Ms": 9.285615,
+      "layoutP95Ms": 0.080384,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": false,
+      "detail": false,
+      "dimension": "R2",
+      "zeitenMs": [
+        145.644,
+        125.869,
+        133.380307,
+        140.521846,
+        130.972693
+      ],
+      "allokationenBytes": 7340032,
+      "frames": 0,
+      "frameP95Ms": null,
+      "drawP95Ms": null,
+      "layoutP95Ms": null,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": false,
+      "detail": false,
+      "dimension": "R3",
+      "zeitenMs": [
+        137.310769,
+        131.921769,
+        140.702538,
+        132.831,
+        131.77023
+      ],
+      "allokationenBytes": 12812288,
+      "frames": 0,
+      "frameP95Ms": null,
+      "drawP95Ms": null,
+      "layoutP95Ms": null,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": false,
+      "detail": true,
+      "dimension": "R2",
+      "zeitenMs": [
+        415.556385,
+        355.925539,
+        374.778538,
+        365.805538,
+        365.688307
+      ],
+      "allokationenBytes": 27299888,
+      "frames": 90,
+      "frameP95Ms": 26.848384,
+      "drawP95Ms": 10.771385,
+      "layoutP95Ms": 0.210154,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    },
+    {
+      "baseline": false,
+      "detail": true,
+      "dimension": "R3",
+      "zeitenMs": [
+        1302.488539,
+        1215.191077,
+        1075.012077,
+        1115.570539,
+        1074.370461
+      ],
+      "allokationenBytes": 990330880,
+      "frames": 90,
+      "frameP95Ms": 15.251318,
+      "drawP95Ms": 5.607,
+      "layoutP95Ms": 0.161846,
+      "gestenMessung": "kontinuierliche Bewegung nach f\u00fcnf Aufw\u00e4rmschritten, ohne Anheben"
+    }
+  ]
+}

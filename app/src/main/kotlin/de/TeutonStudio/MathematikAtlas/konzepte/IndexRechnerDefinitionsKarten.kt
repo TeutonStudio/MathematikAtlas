@@ -438,7 +438,12 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         val node=add(basis.copy(parameter=basis.parameter+(METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_DIREKT),anschlüsse=basis.anschlüsse.map { if(it.richtung==AnschlussRichtung.Ausgang) it.copy(art=MathematikAnschlussArten.AtlasWert.id) else it }),"wert")
         verbinde(methode,node,"methode");verbinde(argumente,node,"argument-0");return node
     }
-    fun variable(name:String)=add(MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero).copy(parameter=mapOf("name" to name,"werteVorrat" to "Q")),"wert")
+    fun variable(name: String): IndexDefinitionsWert {
+        val grundraum = add(MathematikKnotenVorlagen.RationaleZahlen.erzeuge(GraphPunkt.Zero), "menge")
+        val variable = add(MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero).copy(parameter = mapOf("name" to name)), "wert")
+        verbinde(grundraum, variable, "grundraum")
+        return variable
+    }
     fun konstante(wert: Long) = add(MathematikKnotenVorlagen.Zahl.erzeuge(GraphPunkt.Zero).copy(parameter = mapOf("wert" to wert.toString())), "wert")
     fun zahl(op: UniversellerZahlenOperator, werte: List<IndexDefinitionsWert>): IndexDefinitionsWert {
         val basis = konfiguriereZahlenRechner(ZahlenRechnerKnotenVorlagen.alle.first().erzeuge(GraphPunkt.Zero), op)

@@ -88,7 +88,7 @@ object MengenKnotenVorlagen {
         beschreibung = "Ein einheitlicher Mengenknoten; die konkrete Menge oder eine versionsfeste eigene Karte wird im Inspector gewählt.",
         standardGröße = GraphGröße(230f, 105f),
         anschlüsse = if (auswahl == MengenKnotenAuswahl.GRADMENGE) {
-            listOf(zahlEingang("dim", 0)) + mengenAusgang()
+            listOf(zahlEingang("dimension", 0)) + mengenAusgang()
         } else {
             listOf(zahlEingang("dimension", 0)) + mengenAusgang()
         },
@@ -202,8 +202,8 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
             ausgaben = mapOf("menge" to BedingterWert(
                 if (auswahl != MengenKnotenAuswahl.GRADMENGE && "dimension" in kontext.eingänge) {
                     kartesischePotenz(auswahl.menge(), kontext.eingänge["dimension"]!!.objekt as ZahlAusdruck)
-                } else if (auswahl == MengenKnotenAuswahl.GRADMENGE && "dim" in kontext.eingänge) {
-                    val dimension = kontext.natuerlicheGanzzahl("dim", nullErlaubt = false)
+                } else if (auswahl == MengenKnotenAuswahl.GRADMENGE && ("dimension" in kontext.eingänge || "dim" in kontext.eingänge)) {
+                    val dimension = kontext.natuerlicheGanzzahl(if ("dim" in kontext.eingänge) "dim" else "dimension", nullErlaubt = false)
                     require(dimension <= 65) { "Die Dimension darf höchstens 65 sein." }
                     de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(dimension - 1)
                 } else auswahl.menge(),
@@ -404,12 +404,28 @@ private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
 fun KnotenDaten.mitGradmengenDimension(): KnotenDaten {
     if (art != MENGEN_KNOTEN_ART || kartenVerweis != null) return this
     val auswahl = MengenKnotenAuswahl.entries.firstOrNull { it.stabileId == parameter[MENGEN_KNOTEN_AUSWAHL] } ?: return this
-    val name = if (auswahl == MengenKnotenAuswahl.GRADMENGE) "dim" else "dimension"
-    if (anschlüsse.any { it.name == name && it.richtung == AnschlussRichtung.Eingang }) return this
+    val name = "dimension"
+    if (anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dimension", "dim") }) return this
     return copy(anschlüsse = listOf(zahlEingang(name, 0).copy(id = AnschlussId("${id.wert}-mengen-$name"))) + anschlüsse)
 }
 
-fun KartenDaten.migriereGradmengenDimension(): KartenDaten = copy(knoten = knoten.map { it.mitGradmengenDimension() })
+fun KartenDaten.migriereGradmengenDimension(): KartenDaten {
+    val verbunden = verbindungen.mapTo(hashSetOf()) { it.zu.anschlussId }
+    return copy(knoten = knoten.map { alt ->
+        val k = alt.mitGradmengenDimension()
+        if (k.art != MENGEN_KNOTEN_ART || k.kartenVerweis != null) k else {
+            val dimensionen = k.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dim", "dimension") }
+            val belegte = dimensionen.filter { it.id in verbunden }
+            if (belegte.size > 1) k // Beide Verbindungen bleiben bis zur expliziten Verlustbestätigung erhalten.
+            else {
+                val aktiv = belegte.singleOrNull() ?: dimensionen.firstOrNull { it.name == if (k.parameter[MENGEN_KNOTEN_AUSWAHL] == "Grad") "dim" else "dimension" } ?: dimensionen.firstOrNull()
+                k.copy(anschlüsse = k.anschlüsse.mapNotNull { a ->
+                    if (a == aktiv) a.copy(name = "dimension") else if (a in dimensionen) null else a
+                })
+            }
+        }
+    })
+}
 
 /** Packt ausschließlich nachgewiesene, endlich indizierte SIGNED-Richtungsprodukte. */
 internal fun kanonischerRichtungsraum(menge: MengenAusdruck): MengenAusdruck {
@@ -433,4 +449,13 @@ internal fun kanonischerRichtungsraum(menge: MengenAusdruck): MengenAusdruck {
     }
     val erwartet = de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(faktoren.size - 1)
     return if (faktoren == erwartet.komponenten) erwartet else menge
+}
+
+/** Explizite Konfiguration; verbundene Duplikate werden durch die Kartenaktionsvorschau geschützt. */
+fun KnotenDaten.mitEinheitlicherMengenDimension(): KnotenDaten {
+    val kandidaten = anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dim", "dimension") }
+    val aktiv = kandidaten.firstOrNull { it.name == if (parameter[MENGEN_KNOTEN_AUSWAHL] == MengenKnotenAuswahl.GRADMENGE.stabileId) "dim" else "dimension" } ?: kandidaten.firstOrNull()
+    return if (aktiv == null) mitGradmengenDimension() else copy(anschlüsse = anschlüsse.mapNotNull {
+        if (it == aktiv) it.copy(name = "dimension") else if (it in kandidaten) null else it
+    })
 }

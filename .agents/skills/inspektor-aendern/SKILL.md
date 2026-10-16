@@ -7,6 +7,16 @@ description: Inspector-Einstellungen im Mathematik Atlas erstellen, ändern oder
 
 Jede übernommene Einstellung muss zu einer fachlich und technisch gültigen Konfiguration führen. Prüfe die gesamte Kombination aus Modus, Parametern, Anschlüssen und verfügbaren Eingaben; einzeln gültige Werte genügen nicht.
 
+## Gemeinsame Inspectorstruktur
+
+- Android und Desktop verwenden die gemeinsamen `KnotenInspektorBereiche`: Standarddaten, Knotendaten, Eingangsdaten, Ausgangsdaten in dieser Reihenfolge. Alle Bereiche sind unabhängig klappbar; leere Bereiche entfallen. Bereiche beginnen offen, Anschlusszellen einschließlich gemeinsamer Einstellungen geschlossen. Klappzustände gehören mit Karten-, Knoten- und Anschluss-ID zur Sitzung, nicht in Kartendaten oder Undo-Historie.
+- Standarddaten enthalten Knotenname, Hintergrundfarbe, Rahmenfarbe und Form. Farben besitzen getrennte automatische Defaults. Feste Formen werden lesbar angezeigt; freie Formen nur bei dafür freigegebenen Werkzeugen wie Notizen anbieten. Notiz-Schriftfarbe ist eine eigene Fach-/Inhaltseinstellung und darf keine Körperfarbe überschreiben.
+- Knotendaten enthalten Operation/Modus, fachliche Parameter, Inhaltsdarstellung und Knotendiagnosen. Fehler bleiben am eingeklappten Bereich erkennbar. Feldbezogene Eingabefehler stehen zusätzlich am Feld. Gemeinsame Knotenaktionen bleiben außerhalb des klappbaren Inhalts erreichbar.
+- Eingangs-/Ausgangsdaten bestehen aus einer ersten Zelle „Gemeinsame Einstellungen“, sofern richtungsweite Optionen existieren, und einer Zelle je tatsächlichem Anschluss. Ordne nach fachlicher Reihenfolge, identifiziere Zellen über stabile IDs. Beispielsweise gehören Eingangsanzahl und Eingabeform zu Eingangsdaten, Übersetzungsziel, Ausgabeformat und Orientierung zu Ausgangsdaten. Das ist keine Sammelbearbeitung.
+- Einzelzellen zeigen Name, Typ, Verbindungen und tatsächliche Werte samt Voraussetzungen sowie erlaubte Einzeloptionen. Standardwerte und Kartenfallbacks gehören zum betroffenen Eingang, Methodenprojektionen zum betroffenen Ausgang. Unterscheide verbundene, lokale, fehlende und durch Quellen übersteuerte Werte. Ein Mehrfacheingang bleibt eine Zelle mit vollständigen geordneten Beiträgen.
+- Jede Einstellung besitzt genau einen Bearbeitungsort. Verwende das vorhandene Inspectorregister und seine Bereichs-/Anschluss-Einstiegspunkte statt ein paralleles Register oder ungefilterte Parametereditoren anzulegen. Bestehende direkte Inspector-Aufrufer und Vorschauen bleiben kompatibel.
+- Neue Formen erfordern gemeinsame Kontur-, Inhalts-, Treffer- und Anschlussgeometrie sowie eine Prüfung von Größenänderung und Diagnoseanhängen. Prüfe Farben/Formen auch nach Speichern/Laden, Kopieren und Undo/Redo. Ein reiner Inspectorumbau begründet keine Kartenformat- oder Versionsanhebung.
+
 ## Bestand und Zustandsvertrag
 
 - Lies die Projektanweisungen und die relevanten Teile von `docs/codex/PROJECT_CONTEXT.md`, `docs/codex/CURRENT_STATE.md`, `docs/codex/ARCHITECTURE.md` und `docs/codex/NODE_CONTRACT.md` relativ zum Repository.

@@ -12,12 +12,12 @@ class GradKnotenTest {
     private fun aus(k: KnotenDaten, wert: BedingterWert, name: String = "wert") = register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k, mapOf(name to wert), RechenKontext()))
     @Test fun `Gradmenge dimensioniert sich und migriert ohne Referenzverlust`() {
         val knoten = MengenKnotenVorlagen.vorlage(MengenKnotenAuswahl.GRADMENGE).erzeuge(GraphPunkt.Zero)
-        assertEquals(MathematikAnschlussArten.Zahl.id, knoten.anschlüsse.single { it.name == "dim" }.art)
+        assertEquals(MathematikAnschlussArten.Zahl.id, knoten.anschlüsse.single { it.name == "dimension" }.art)
         assertEquals(winkelraum(2), aus(knoten, BedingterWert(RationaleZahl.von(3)), "dim").ausgaben.getValue("menge").objekt)
         for (wert in listOf(RationaleZahl.Null, RationaleZahl.von(-1), RationaleZahl.von(3, 2), RationaleZahl.von(66))) {
             assertFails { aus(knoten, BedingterWert(wert), "dim") }
         }
-        val alt = knoten.copy(anschlüsse = knoten.anschlüsse.filter { it.name != "dim" })
+        val alt = knoten.copy(anschlüsse = knoten.anschlüsse.filter { it.name != "dimension" })
         val karte = KartenDaten(name = "Grad", knoten = listOf(alt))
         val geladen = MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(karte))
         assertEquals(alt.anschlüsse.single().id, geladen.knoten.single().anschlüsse.single { it.name == "menge" }.id)

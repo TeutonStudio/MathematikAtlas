@@ -29,6 +29,7 @@ import de.TeutonStudio.MathematikKnoten.ZAHLENRECHNER_ART
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikRechenSystem.kern.Abbild
 import de.TeutonStudio.MathematikRechenSystem.kern.Methode
+import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.MethodenParameter
 import de.TeutonStudio.MathematikRechenSystem.kern.OrbitFamilie
 import de.TeutonStudio.MathematikRechenSystem.kern.Tensor
@@ -38,6 +39,15 @@ import de.TeutonStudio.MathematikRechenSystem.kern.parseTensorPermutationOderNul
 import de.TeutonStudio.MathematikRechenSystem.kern.standardTensorPermutation
 
 interface KnotenInspektor {
+    val hauptBereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
+        get() = de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten
+    fun hatBereich(knoten: KnotenDaten, bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich): Boolean = bereich == hauptBereich
+    @Composable fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen,
+        bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) {
+        if (bereich == hauptBereich) Inhalt(knoten, ergebnis, aktionen)
+    }
+    @Composable fun AnschlussInhalt(knoten: KnotenDaten, anschluss: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten,
+        ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {}
     @Composable fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen)
 }
 interface KnotenInspektorAktionen {
@@ -58,6 +68,7 @@ interface KnotenInspektorAktionen {
 }
 object KnotenInspektorRegister {
     private val inspektoren = mapOf<String, KnotenInspektor>(
+        de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_ART to MethodenQuellenInspektor,
         de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART to ÜbersetzerInspektor,
         de.TeutonStudio.MathematikKnoten.RICHTUNG_WINKEL_ART to RichtungsWinkelInspektor,
         "mathematik.lösungsmenge" to LösungsmengeInspektor,
@@ -109,6 +120,7 @@ object KnotenInspektorRegister {
 }
 
 private object BildmengeInspektor : KnotenInspektor {
+    override val hauptBereich get() = de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,
@@ -174,9 +186,7 @@ private object OrdnungsrelationInspektor : KnotenInspektor {
                 FilterChip(
                     selected = aktuell == schlüssel,
                     onClick = {
-                        val bisherStandard = relationen.any { it.third == knoten.name }
-                        aktionen.parameter("relation", schlüssel)
-                        if (bisherStandard) aktionen.name(standardName)
+                        aktionen.knoten(konfiguriereOrdnungsrelation(knoten, schlüssel))
                     },
                     label = { Text(zeichen) },
                 )
@@ -195,85 +205,14 @@ private object OrdnungsrelationInspektor : KnotenInspektor {
 private object VariablenInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         ParameterFeld("Name", knoten.parameter["name"] ?: "x") { aktionen.parameter("name", it.trim()) }
-        Text("Struktur", style = MaterialTheme.typography.titleSmall)
-        listOf(listOf("zahl" to "Zahl", "tupel" to "Tupel", "winkeltupel" to "Winkeltupel"),
-            listOf("zeile" to "Zeile", "spalte" to "Spalte")).forEach { zeile ->
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
-                zeile.forEach { (id, titel) ->
-                    FilterChip(variablenStruktur(knoten) == id,
-                        { aktionen.knoten(konfiguriereVariablenStruktur(knoten, id)) }, label = { Text(titel) })
-                }
-            }
-        }
-        if (variablenStruktur(knoten) != "zahl") {
-            val winkel = variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL
-            ParameterFeld(if (winkel) "Anzahl Winkel n (Rⁿ⁺¹)" else "Komponenten",
-                knoten.parameter[VARIABLE_DIMENSION] ?: "2") { raw ->
-                raw.toIntOrNull()?.takeIf { it in (if (winkel) 0..de.TeutonStudio.MathematikRechenSystem.kern.MAXIMALE_RICHTUNGS_WINKEL else 1..64) }?.let {
-                    aktionen.parameter(VARIABLE_DIMENSION, it.toString())
-                }
-            }
-            if (winkel)
-                Text("Richtung: {−1,+1} × [0°,180°)ⁿ. Erste Komponente ist das Vorzeichen, danach folgen n Halbkreiswinkel.",
-                    style = MaterialTheme.typography.bodySmall)
-        }
-        val struktur = variablenStruktur(knoten)
-        val intervall = knoten.parameter[VARIABLE_BEREICH_MODUS] == VARIABLE_BEREICH_INTERVALL
-        // Winkelstruktur hat fest definierte Komponentenbereiche; fremde Intervalloptionen sind unzulässig.
-        if (struktur != VARIABLE_STRUKTUR_WINKEL) {
-        Text("Variablenbereich", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
-            FilterChip(!intervall, { aktionen.parameter(VARIABLE_BEREICH_MODUS, VARIABLE_BEREICH_GRUNDMENGE) },
-                label = { Text("Grundmenge") })
-            FilterChip(intervall, {
-                aktionen.knoten(knoten.copy(parameter = knoten.parameter + mapOf(
-                    VARIABLE_BEREICH_MODUS to VARIABLE_BEREICH_INTERVALL, "werteVorrat" to "R",
-                )))
-            }, label = { Text("Reelles Intervall") })
-        }
-        if (!intervall) {
-            GrundmengenAuswahl(if (struktur == VARIABLE_STRUKTUR_ZAHL) "Wertevorrat" else "Komponenten-Wertevorrat",
-                knoten.parameter["werteVorrat"] ?: "R") { aktionen.parameter("werteVorrat", it) }
+        val grundraum = ergebnis?.eingänge?.get("grundraum")?.objekt as? MengenAusdruck
+        Text("Grundraum", style = MaterialTheme.typography.titleSmall)
+        if (grundraum == null) {
+            Text("Grundraum fehlt. Verbinde eine Menge mit dem Grundraumeingang.", style = MaterialTheme.typography.bodySmall)
         } else {
-            Text("Winkelbereiche in Grad (reelle Repräsentanten)", style = MaterialTheme.typography.labelMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
-                listOf(Triple("Azimut", "360", true), Triple("Polar", "180", false)).forEach { (name, rechts, offen) ->
-                    FilterChip(
-                        knoten.parameter[VARIABLE_INTERVALL_LINKS].orEmpty() == "0" &&
-                            (knoten.parameter[VARIABLE_INTERVALL_RECHTS] ?: "360") == rechts &&
-                            (knoten.parameter[VARIABLE_INTERVALL_RECHTS_OFFEN] != "false") == offen,
-                        {
-                            aktionen.knoten(knoten.copy(parameter = knoten.parameter + mapOf(
-                                VARIABLE_INTERVALL_LINKS to "0", VARIABLE_INTERVALL_RECHTS to rechts,
-                                VARIABLE_INTERVALL_LINKS_OFFEN to "false",
-                                VARIABLE_INTERVALL_RECHTS_OFFEN to offen.toString(),
-                            )))
-                        },
-                        label = { Text(if (offen) "$name [0°, 360°)" else "$name [0°, 180°]") },
-                    )
-                }
-            }
-            ParameterFeld("Untere Grenze", knoten.parameter[VARIABLE_INTERVALL_LINKS] ?: "0") {
-                aktionen.parameter(VARIABLE_INTERVALL_LINKS, it)
-            }
-            ParameterFeld("Obere Grenze", knoten.parameter[VARIABLE_INTERVALL_RECHTS] ?: "360") {
-                aktionen.parameter(VARIABLE_INTERVALL_RECHTS, it)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-                FilterChip(knoten.parameter[VARIABLE_INTERVALL_LINKS_OFFEN] == "true", {
-                    aktionen.parameter(VARIABLE_INTERVALL_LINKS_OFFEN,
-                        (knoten.parameter[VARIABLE_INTERVALL_LINKS_OFFEN] != "true").toString())
-                }, label = { Text("Links offen") })
-                FilterChip(knoten.parameter[VARIABLE_INTERVALL_RECHTS_OFFEN] != "false", {
-                    aktionen.parameter(VARIABLE_INTERVALL_RECHTS_OFFEN,
-                        (knoten.parameter[VARIABLE_INTERVALL_RECHTS_OFFEN] == "false").toString())
-                }, label = { Text("Rechts offen") })
-            }
-            Text("Die Gradgrenzen beschreiben reelle Zahlenwerte. Die Winkelmenge G bleibt ein eigener Datentyp.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LatexText(grundraum.zuLatex())
+            Text("Struktur und Dimension werden vom Grundraum übernommen.", style = MaterialTheme.typography.bodySmall)
         }
-        }
-        de.TeutonStudio.MathematikKnoten.MatrixVariableFelder(knoten) { aktionen.knoten(it) }
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }
@@ -597,6 +536,12 @@ private fun TensorPermutationEditor(
 }
 
 private object KartenSchnittstellenInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) = false
+    @Composable override fun AnschlussInhalt(knoten: KnotenDaten, anschluss: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten,
+        ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        if (anschluss.name == "wert") Inhalt(knoten, ergebnis, aktionen)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         val wertAnschluss = knoten.anschlüsse.firstOrNull { it.name == "wert" } ?: return
@@ -650,101 +595,11 @@ private object LösungsmengeInspektor : KnotenInspektor {
 
 private object VisualisierungsInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
-        var config by remember(knoten.id, knoten.eigenschaften) { mutableStateOf(VisualisierungsKonfiguration.aus(knoten.eigenschaften)) }
-        fun ändern(neu: VisualisierungsKonfiguration) { config = neu; aktionen.eigenschaften(neu.zuEigenschaften()) }
-        val methode = ergebnis?.eingänge?.values
-            ?.mapNotNull { wert -> (wert.objekt as? Abbild)?.methode }
-            ?.firstOrNull()
-        Text("Raum", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-            FilterChip(config.dimensionsModus == DimensionsModus.Automatisch, {
-                ändern(config.copy(dimensionsModus = DimensionsModus.Automatisch))
-            }, label = { Text("Auto") })
-            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.R1, {
-                ändern(config.copy(dimension = RaumDimension.R1, dimensionsModus = DimensionsModus.Manuell))
-            }, label = { Text("R¹") })
-            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.R2, {
-                ändern(config.copy(dimension = RaumDimension.R2, dimensionsModus = DimensionsModus.Manuell))
-            }, label = { Text("R²") })
-            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.R3, {
-                ändern(config.copy(dimension = RaumDimension.R3, dimensionsModus = DimensionsModus.Manuell))
-            }, label = { Text("R³") })
-            FilterChip(config.dimensionsModus == DimensionsModus.Manuell && config.dimension == RaumDimension.C, {
-                ändern(config.copy(dimension = RaumDimension.C, achsen = AchsenZuordnung("re", "im", null), dimensionsModus = DimensionsModus.Manuell))
-            }, label = { Text("ℂ") })
-        }
-        Text("Methodenvisualisierung", style = MaterialTheme.typography.titleSmall)
-        if (methode == null) {
-            Text("Noch keine Methodensignatur erkannt.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else {
-            LatexText("${methode.name}\\left(${methode.parameter.joinToString { it.zuLatex() }}\\right) \\to ${methode.ausgabeNamen.joinToString()}")
-            methode.parameter.forEachIndexed { index, parameter ->
-                LatexText("${index + 1}.\\; ${parameter.zuLatex()} \\in ${methode.werteVorräte[parameter.name]?.zuLatex() ?: "?"}")
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
-            listOf(
-                MethodenDarstellungsModus.Automatisch to "Auto",
-                MethodenDarstellungsModus.Bild to "Bild",
-                MethodenDarstellungsModus.Funktionsgraph to "Graph",
-            ).forEach { (modus, label) ->
-                FilterChip(config.methodenModus == modus, { ändern(config.copy(methodenModus = modus)) }, label = { Text(label) })
-            }
-        }
-        FilterChip(
-            config.methodenModus == MethodenDarstellungsModus.Koordinatenausgabe,
-            { ändern(config.copy(methodenModus = MethodenDarstellungsModus.Koordinatenausgabe)) },
-            label = { Text("Koordinatenausgabe") },
-        )
-        Text("Ausgabeprojektion", style = MaterialTheme.typography.titleSmall)
-        Text("Für Ergebnisse oberhalb R³ zwei oder drei Ausgabekoordinaten wählen. Alle Parameter werden weiterhin ausgewertet.", style = MaterialTheme.typography.bodySmall)
-        ParameterFeld("Ausgabekoordinaten (z. B. 1, 2, 4)", config.ausgabeKoordinaten.joinToString(", ")) { text ->
-            val teile = text.split(',').map(String::trim)
-            val indizes = teile.mapNotNull(String::toIntOrNull)
-            if (text.isBlank()) ändern(config.copy(ausgabeKoordinaten = emptyList()))
-            else if (indizes.size == teile.size && indizes.size in 2..3 && indizes.all { it > 0 } && indizes.distinct().size == indizes.size) {
-                ändern(config.copy(ausgabeKoordinaten = indizes,
-                    dimension = if (indizes.size == 2) RaumDimension.R2 else RaumDimension.R3,
-                    dimensionsModus = DimensionsModus.Manuell))
-            }
-        }
-        Text("Achsen und Parameterfenster", style = MaterialTheme.typography.titleSmall)
-        ParameterFeld("X-Achse / erste Ausgabe", config.achsen.x) { ändern(config.copy(achsen = config.achsen.copy(x = it.trim()))) }
-        if (config.dimension != RaumDimension.R1) ParameterFeld("Y-Achse / zweite Ausgabe", config.achsen.y) { ändern(config.copy(achsen = config.achsen.copy(y = it.trim()))) }
-        if (config.dimension == RaumDimension.R3) ParameterFeld("Z-Achse / dritte Ausgabe", config.achsen.z.orEmpty()) { ändern(config.copy(achsen = config.achsen.copy(z = it.trim().ifBlank { null }))) }
-        BereichFeld("${methode?.parameter?.getOrNull(0)?.name ?: "X"}-Bereich", config.bereiche.x) { ändern(config.copy(bereiche = config.bereiche.copy(x = it))) }
-        if (config.dimension != RaumDimension.R1) BereichFeld("${methode?.parameter?.getOrNull(1)?.name ?: "Y"}-Bereich", config.bereiche.y) { ändern(config.copy(bereiche = config.bereiche.copy(y = it))) }
-        if (config.dimension == RaumDimension.R3) BereichFeld("${methode?.parameter?.getOrNull(2)?.name ?: "Z"}-Bereich", config.bereiche.z ?: ZahlenBereich(-10.0, 10.0)) { ändern(config.copy(bereiche = config.bereiche.copy(z = it))) }
-        Text("Sampling", style = MaterialTheme.typography.titleSmall)
-        ParameterFeld("Zielauflösung Kurven", config.sampling.auflösung1D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung1D = n.coerceIn(16, 2_000)))) } }
-        if (config.dimension != RaumDimension.R1) ParameterFeld("Zielauflösung Flächen (pro Parameterachse)", config.sampling.auflösung2D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung2D = n.coerceIn(16, 240)))) } }
-        if (config.dimension == RaumDimension.R3) ParameterFeld("Zielauflösung Volumen (pro Achse)", config.sampling.auflösung3D.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(auflösung3D = n.coerceIn(8, 64)))) } }
-        ParameterFeld("Maximale Auswertungen", config.sampling.maximalesRasterBudget.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximalesRasterBudget = n.coerceIn(1_000, 2_000_000)))) } }
-        ParameterFeld("Orbit-Schritte je Prüfpunkt", config.sampling.maximaleOrbitSchritte.toString()) { it.toIntOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(maximaleOrbitSchritte = n.coerceIn(1, 100_000)))) } }
-        ParameterFeld("Numerische Grenztoleranz", config.sampling.toleranz.toString()) { it.toDoubleOrNull()?.let { n -> ändern(config.copy(sampling = config.sampling.copy(toleranz = n.coerceIn(1e-5, 2.0)))) } }
-        Text("Die Zielauflösung verteilt Stützpunkte adaptiv im Bildraum. Im Knoten läuft eine begrenzte Vorschau; die eingestellte Detailqualität wird nach dem Halten der Grafik erst im Reiter „Hohe Auflösung“ berechnet.", style = MaterialTheme.typography.bodySmall)
-        Text("Farbe", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) { FarbModus.entries.forEach { modus -> FilterChip(config.farbe.modus == modus, { ändern(config.copy(farbe = config.farbe.copy(modus = modus))) }, label = { Text(when (modus) { FarbModus.Keine -> "Keine"; FarbModus.FesteFarbe -> "Fest"; FarbModus.Spektrum -> "Spektrum" }) }) } }
-        if (config.farbe.modus == FarbModus.Spektrum) {
-            ParameterFeld("Farbvariable", config.farbe.variable.orEmpty()) { ändern(config.copy(farbe = config.farbe.copy(variable = it.ifBlank { null }))) }
-            Text("Palette", style = MaterialTheme.typography.labelMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.winzig)) { listOf("Ozean", "Sonnenuntergang", "Wald").forEach { palette -> FilterChip(config.farbe.palette == palette, { ändern(config.copy(farbe = config.farbe.copy(palette = palette))) }, label = { Text(palette) }) } }
-            BereichFeld("Farbwertbereich", config.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)) { ändern(config.copy(farbe = config.farbe.copy(bereich = it))) }
-        }
-        Text("Feste Schnitte", style = MaterialTheme.typography.titleSmall)
-        ParameterFeld(
-            "Variable=Wert (mit Komma)",
-            config.festeSchnitte.entries.joinToString(", ") { "${it.key}=${it.value}" },
-        ) { text ->
-            val schnitte = text.split(',').mapNotNull { eintrag ->
-                val teile = eintrag.split('=', limit = 2).map(String::trim)
-                val wert = teile.getOrNull(1)?.toDoubleOrNull()
-                if (teile.size != 2 || teile[0].isBlank() || wert == null || !wert.isFinite()) null else teile[0] to wert
-            }.toMap()
-            if (text.isBlank() || schnitte.isNotEmpty()) ändern(config.copy(festeSchnitte = schnitte))
-        }
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-        OutlinedButton(onClick = { ändern(config.copy(kamera = KameraZustand(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0))) }) { Text("Standardansicht wiederherstellen") }
+        val c = VisualisierungsKonfiguration.aus(knoten.eigenschaften)
+        val menge = ergebnis?.eingänge?.get("menge")?.objekt as? MengenAusdruck
+        de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsEinstellungen(c, c.mitWirksamerDimension(menge).dimension,
+            { aktionen.eigenschaften(it.inEigenschaften(knoten.eigenschaften)) }, ebenenNamen = knoten.anschlüsse.filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.map { it.name })
+
     }
 }
 

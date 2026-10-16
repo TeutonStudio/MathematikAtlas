@@ -267,7 +267,7 @@ object TensorRechner {
         eingaben: List<TensorRechnerEingabe>,
         operation: (ZahlAusdruck, ZahlAusdruck) -> ZahlAusdruck,
     ): TensorRechnerErgebnis {
-        if (eingaben.size < 2) return ungueltig("argumentanzahl", "Mindestens zwei Tensoren werden benötigt.")
+        if (eingaben.isEmpty()) return ungueltig("argumentanzahl", "Mindestens ein Tensor wird benötigt.")
         val ansichten = mutableListOf<TensorielleAnsicht>()
         for (eingabe in eingaben) {
             when (val ansicht = eingabe.objekt.tensorielleAnsicht()) {

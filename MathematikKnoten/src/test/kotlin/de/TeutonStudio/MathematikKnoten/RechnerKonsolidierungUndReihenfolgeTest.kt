@@ -92,9 +92,8 @@ class RechnerKonsolidierungUndReihenfolgeTest {
             eingangsKartenVerweise = mapOf("input3" to KartenVerweis(KartenId("quelle"), 1)))
         val karte = KartenDaten(name = "Zahlenrollen", knoten = listOf(alt))
         val neu = MathematikKartenCodec.lade(KartenDatenJson.schreibe(karte)).knoten.single()
-        val name = neu.anschlüsse.single { it.id == dritter.id }.name
-        assertEquals("3", neu.parameter["standardwert.$name"])
-        assertEquals(alt.eingangsKartenVerweise.getValue("input3"), neu.eingangsKartenVerweise.getValue(name))
+        assertEquals("3", neu.parameter["join.lokal.${dritter.id.wert}"])
+        assertEquals(alt.eingangsKartenVerweise.getValue("input3"), neu.eingangsKartenVerweise.values.single())
         assertEquals(z(6), KartenAuswerter(register).auswerten(karte.copy(knoten = listOf(neu))).knoten.getValue(neu.id).ausgaben.getValue("wert").objekt)
     }
 
@@ -114,7 +113,7 @@ class RechnerKonsolidierungUndReihenfolgeTest {
         }
     }
 
-    @Test fun `gespeicherte binaere Rechner werden idempotent dynamisch ohne ID-Wechsel`() {
+    @Test fun `gespeicherte binaere Rechner werden idempotent zu Join mit stabiler Hauptrolle`() {
         listOf(
             StrukturFormelRechnerVorlagen.Matrix.erzeuge(GraphPunkt.Zero),
             konfiguriereTensorOperation(StrukturFormelRechnerVorlagen.Tensor.erzeuge(GraphPunkt.Zero), aktuelleTensorOperationDefinition(StrukturFormelRechnerVorlagen.Tensor.erzeuge(GraphPunkt.Zero))),
@@ -123,8 +122,8 @@ class RechnerKonsolidierungUndReihenfolgeTest {
             val alt = aktuell.copy(anschlüsse = aktuell.anschlüsse.map { it.copy(kannSichErweitern = false) })
             val karte = KartenDaten(name = "Testkarte", knoten = listOf(alt))
             val neu = MathematikKartenCodec.lade(KartenDatenJson.schreibe(karte))
-            assertEquals(alt.anschlüsse.map { it.id }.toSet(), neu.knoten.single().anschlüsse.map { it.id }.toSet())
-            assertTrue(eingänge(neu.knoten.single()).all { it.kannSichErweitern })
+            assertEquals(listOf(alt.anschlüsse.first().id, alt.anschlüsse.last().id).toSet(), neu.knoten.single().anschlüsse.map { it.id }.toSet())
+            assertTrue(eingänge(neu.knoten.single()).all { it.belegung == AnschlussBelegung.Mehrfach })
             assertEquals(neu, MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(neu)))
         }
     }

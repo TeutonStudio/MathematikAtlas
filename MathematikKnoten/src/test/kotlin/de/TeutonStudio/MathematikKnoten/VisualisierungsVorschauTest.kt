@@ -3,18 +3,10 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.SamplingKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.alsVorschau
-import de.TeutonStudio.MathematikKnoten.visualisierung.ui.reduziereGleichmäßig
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class VisualisierungsVorschauTest {
-    @Test
-    fun `interaktive Geometrie wird gleichmaessig statt am Ende abgeschnitten`() {
-        val reduziert = reduziereGleichmäßig((0..99).toList(), 5)
-
-        assertEquals(listOf(0, 24, 49, 74, 99), reduziert)
-    }
-
     @Test
     fun `Vorschau begrenzt hohe Qualitaet ohne die persistierte Konfiguration zu veraendern`() {
         val original = VisualisierungsKonfiguration(

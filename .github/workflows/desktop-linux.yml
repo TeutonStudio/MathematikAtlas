@@ -52,7 +52,7 @@ jobs:
       - name: Pakete bereitstellen
         uses: actions/upload-artifact@v4
         with:
-          name: mathematik-atlas-linux-v3.3.1
+          name: mathematik-atlas-linux-v3.4.0
           path: |
             desktopApp/build/compose/binaries/main/rpm/*.rpm
             desktopApp/build/compose/binaries/main/deb/*.deb

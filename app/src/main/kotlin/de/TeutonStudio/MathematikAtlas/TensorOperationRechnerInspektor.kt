@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
 import de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche
 
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
@@ -40,11 +41,26 @@ import de.TeutonStudio.MathematikRechenSystem.kern.StandardTensorOperationen
 import de.TeutonStudio.MathematikRechenSystem.kern.TensorOperationDefinition
 
 internal object TensorOperationRechnerInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
+        KnotenInspektorBereich.Knotendaten -> true
+        KnotenInspektorBereich.Eingangsdaten -> aktuelleTensorOperationDefinition(knoten).benoetigtAchsenEingabe()
+        KnotenInspektorBereich.Ausgangsdaten -> false
+    }
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
+        when (bereich) {
+            KnotenInspektorBereich.Knotendaten -> FachInhalt(knoten, ergebnis, aktionen, false)
+            KnotenInspektorBereich.Eingangsdaten -> { TensorRechnerEingänge(knoten, ergebnis, aktionen) }
+            KnotenInspektorBereich.Ausgangsdaten -> {  }
+        }
+    }
+
     @Composable
-    override fun Inhalt(
+    private fun FachInhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
+        mitAnschlüssen: Boolean,
     ) {
         de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche(knoten, ergebnis)
         val definition = aktuelleTensorOperationDefinition(knoten)
@@ -53,7 +69,6 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
             ?: definition.id.wert
         val bekannteDefinition = StandardTensorOperationen.registry.definition(operatorId)
         var operatorDialog by remember(knoten.id, definition.id) { mutableStateOf(false) }
-        var ausstehenderKnoten by remember(knoten.id) { mutableStateOf<KnotenDaten?>(null) }
         val operatorEinträge = remember(knoten) {
             buildList {
                 if (StandardTensorOperationen.registry.definition(operatorId) == null) {
@@ -75,14 +90,6 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
                             aktuellerAchsenEingabeModus(knoten), dynamischeAchsenAnzahl(knoten, auswählbar))))
                     }
 
-            }
-        }
-
-        fun übernehmeAchsenÄnderung(neu: KnotenDaten) {
-            if (aktionen.vorschauKnotenErsetzen(neu).trenntVerbindungen) {
-                ausstehenderKnoten = neu
-            } else {
-                aktionen.knoten(neu)
             }
         }
 
@@ -120,14 +127,8 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
             VertragsKarte(bekannteDefinition, knoten)
         }
 
-        if (bekannteDefinition?.benoetigtAchsenEingabe() == true) {
-            AchsenKonfiguration(
-                knoten = knoten,
-                definition = bekannteDefinition,
-                aktionen = aktionen,
-                knotenAendern = ::übernehmeAchsenÄnderung,
-            )
-        }
+        if (mitAnschlüssen) TensorRechnerEingänge(knoten, ergebnis, aktionen)
+
         if (bekannteDefinition != null && bekannteDefinition.parameter.isNotEmpty()) {
             OutlinedTextField(
                 value = knoten.parameter[TENSOR_OPERATION_PARAMETER].orEmpty(),
@@ -169,30 +170,7 @@ internal object TensorOperationRechnerInspektor : KnotenInspektor {
             )
         }
 
-        ausstehenderKnoten?.let { ziel ->
-            val auswirkung = aktionen.vorschauKnotenErsetzen(ziel)
-            AtlasBestätigungsDialog(
-                onDismissRequest = { ausstehenderKnoten = null },
-                title = { Text("Achseneingabe wirklich wechseln?") },
-                text = {
-                    Text(
-                        "${auswirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) an " +
-                            "${auswirkung.entfallendeAnschlüsse.joinToString { it.name }} werden getrennt.",
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            aktionen.knotenNachVerlustbestätigung(ziel)
-                            ausstehenderKnoten = null
-                        },
-                    ) { Text("Wechseln und Verbindungen trennen") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { ausstehenderKnoten = null }) { Text("Abbrechen") }
-                },
-            )
-        }
+
     }
 }
 
@@ -264,100 +242,7 @@ private fun AchsenKonfiguration(
     aktionen: KnotenInspektorAktionen,
     knotenAendern: (KnotenDaten) -> Unit,
 ) {
-    val modus = aktuellerAchsenEingabeModus(knoten)
-    val dynamischeAnzahl = dynamischeAchsenAnzahl(knoten, definition)
-
-    Text("Achseneingabe", style = MaterialTheme.typography.titleSmall)
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-    ) {
-        FilterChip(
-            selected = modus == AchsenEingabeModus.TUPEL,
-            onClick = {
-                knotenAendern(
-                    konfiguriereTensorOperation(
-                        knoten,
-                        definition,
-                        AchsenEingabeModus.TUPEL,
-                        dynamischeAnzahl,
-                    ),
-                )
-            },
-            label = { Text("Tupel") },
-        )
-        FilterChip(
-            selected = modus == AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES,
-            onClick = {
-                knotenAendern(
-                    konfiguriereTensorOperation(
-                        knoten,
-                        definition,
-                        AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES,
-                        dynamischeAnzahl,
-                    ),
-                )
-            },
-            label = { Text("Einzelhandles") },
-        )
-    }
-
-    OutlinedTextField(
-        value = knoten.parameter[TENSOR_ACHSEN_SPEZIFIKATION].orEmpty(),
-        onValueChange = { neu ->
-            aktionen.knoten(
-                knoten.copy(
-                    parameter = knoten.parameter - TENSOR_ACHSEN_MIGRATIONSFEHLER +
-                        (TENSOR_ACHSEN_SPEZIFIKATION to neu),
-                ),
-            )
-        },
-        label = { Text("Gespeicherte Achsen") },
-        supportingText = {
-            Text("1 = erste Achse, -1 = letzte Achse, 0 ist ungültig. Verbundene Handles überschreiben diese Werte.")
-        },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-    )
-
-    if (modus == AchsenEingabeModus.DYNAMISCHE_EINZELHANDLES && definition.maximaleAchsenAnzahl == null) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-        ) {
-            OutlinedButton(
-                onClick = {
-                    knotenAendern(
-                        konfiguriereTensorOperation(
-                            knoten,
-                            definition,
-                            modus,
-                            (dynamischeAnzahl - 1).coerceAtLeast(definition.minimaleAchsenAnzahl),
-                        ),
-                    )
-                },
-                enabled = dynamischeAnzahl > definition.minimaleAchsenAnzahl,
-            ) { Text("Achse entfernen") }
-            OutlinedButton(
-                onClick = {
-                    knotenAendern(
-                        konfiguriereTensorOperation(
-                            knoten,
-                            definition,
-                            modus,
-                            dynamischeAnzahl + 1,
-                        ),
-                    )
-                },
-            ) { Text("Achse hinzufügen") }
-        }
-    }
-
-    Text(
-        "Ein Modus- oder Signaturwechsel ist eine Knotenaktion. Semantisch fremde Handles werden nicht unter derselben ID wiederverwendet.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    de.TeutonStudio.MathematikKnoten.InspektorTensorAchsen(knoten, knotenAendern)
 }
 
 private fun dynamischeAchsenAnzahl(
@@ -366,3 +251,51 @@ private fun dynamischeAchsenAnzahl(
 ): Int = knoten.anschlüsse.count {
     it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("achse.")
 }.coerceAtLeast(definition.minimaleAchsenAnzahl.coerceAtLeast(1))
+
+@Composable
+private fun TensorRechnerEingänge(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    val bekannteDefinition = aktuelleTensorOperationDefinition(knoten)
+    var ausstehenderKnoten by remember(knoten.id) { mutableStateOf<KnotenDaten?>(null) }
+        fun übernehmeAchsenÄnderung(neu: KnotenDaten) {
+            if (aktionen.vorschauKnotenErsetzen(neu).trenntVerbindungen) {
+                ausstehenderKnoten = neu
+            } else {
+                aktionen.knoten(neu)
+            }
+        }
+
+
+        if (bekannteDefinition?.benoetigtAchsenEingabe() == true) {
+            AchsenKonfiguration(
+                knoten = knoten,
+                definition = bekannteDefinition,
+                aktionen = aktionen,
+                knotenAendern = ::übernehmeAchsenÄnderung,
+            )
+        }
+
+        ausstehenderKnoten?.let { ziel ->
+            val auswirkung = aktionen.vorschauKnotenErsetzen(ziel)
+            AtlasBestätigungsDialog(
+                onDismissRequest = { ausstehenderKnoten = null },
+                title = { Text("Achseneingabe wirklich wechseln?") },
+                text = {
+                    Text(
+                        "${auswirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) an " +
+                            "${auswirkung.entfallendeAnschlüsse.joinToString { it.name }} werden getrennt.",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            aktionen.knotenNachVerlustbestätigung(ziel)
+                            ausstehenderKnoten = null
+                        },
+                    ) { Text("Wechseln und Verbindungen trennen") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { ausstehenderKnoten = null }) { Text("Abbrechen") }
+                },
+            )
+        }
+}

@@ -10,13 +10,19 @@ enum class AuswahlModus { Einzeln, Gruppe }
 enum class AuswahlÄnderung { Ersetzen, Hinzufügen, Umschalten }
 enum class VerbindungsAblageErgebnis { NeueVerbindungAufHintergrund, BestehendeVerbindungGelöst, StartBeibehalten, KeineAktiveVerbindung }
 
+/** Flüchtige, graphneutrale Übergabe eines Anschlussdrags an einen Einfügeanbieter. */
+data class VerbindungsEinfügeKontext(val basis: KartenDaten, val start: AnschlussVerweis,
+    val ersetzt: VerbindungDaten?, val kennung: Long)
+data class VerbindungsEinfügeTreffer(val anschluss: AnschlussVerweis, val typ: String,
+    val direkt: Boolean, val wege: List<VerbindungsVorschlag>)
+
 @Stable
 class KartenEditorZustand(
     startKarte: KartenDaten,
     private val prüfung: GraphPrüfung,
 ) {
     var karte by mutableStateOf(
-        startKarte.bereinigteVisuelleGruppen(),
+        prüfung.normalisiereKarte(startKarte).bereinigteVisuelleGruppen(),
     )
         private set
     var auswertungsRevision by mutableStateOf(0L)
@@ -51,20 +57,75 @@ class KartenEditorZustand(
     private var beimZiehenLösen = false
     private var beimZiehenEinfügen = false
     private var auswahlBeendetInteraktion = false
+    private var auswahlEinfügeKontext: Pair<KnotenId, VerbindungDaten>? = null
+    private var layoutGruppenErhalten = false
+    internal var einfügeLayoutAnimation by mutableStateOf<EinfuegeLayoutAnimation?>(null)
+        private set
+    private var einfügeLayoutFortschritt by mutableStateOf(1f)
 
-    private fun übersetzungsVorschläge(start: AnschlussVerweis, ziel: AnschlussVerweis): List<VerbindungsVorschlag> {
+    internal fun aktualisiereEinfügeAnimation(animation: EinfuegeLayoutAnimation, fortschritt: Float) {
+        if (einfügeLayoutAnimation !== animation) return
+        einfügeLayoutFortschritt = fortschritt
+        if (fortschritt >= 1f) beendeEinfügeAnimation()
+    }
+
+    internal fun beendeEinfügeAnimation() {
+        einfügeLayoutAnimation = null
+        einfügeLayoutFortschritt = 1f
+    }
+
+    private fun übernehmeKnotenEinfügung(vorschlag: KartenDaten, kontext: Pair<KnotenId, VerbindungDaten>) {
+        val vorher = darstellungsKarte
+        val basis = if (geöffneteGruppe == null) vorschlag.mitAutomatischenVisuellenGruppenMitgliedschaften() else vorschlag
+        val geometrie = basis.mitMehrfachMinima().mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima, knotenAnhänge)
+        val layout = planeEinfuegeLayout(geometrie, kontext.first, kontext.second.von.knotenId,
+            kontext.second.zu.knotenId, knotenAnhänge, geöffneteGruppe, inhaltsMinima)
+        val verschoben = layout.anwenden(basis)
+        val erweitert = verschoben.mitMehrfachMinima().mitInhaltsminima(inhaltsMinima)
+            .mitGruppenInhaltsminimum(gruppenKopfMinima, knotenAnhänge).visuelleGruppen.associateBy { it.id }
+        val index = GruppenIndex(verschoben)
+        val fertig = verschoben.copy(visuelleGruppen = verschoben.visuelleGruppen.map { g ->
+            if (g.id !in layout.gruppenDeltas && index.knotenIn(g.id).any { it in layout.knotenDeltas || it == kontext.first }) erweitert.getValue(g.id) else g
+        })
+        führeAus(KartenAktion.KartenInhaltErsetzen(fertig), mitHistorie = false)
+        layoutGruppenErhalten = true
+        if (layout.knotenDeltas.isNotEmpty() || layout.gruppenDeltas.isNotEmpty()) {
+            einfügeLayoutFortschritt = 0f
+            einfügeLayoutAnimation = EinfuegeLayoutAnimation(vorher)
+        }
+    }
+
+    private fun übersetzungsVorschläge(start: AnschlussVerweis, ziel: AnschlussVerweis,
+        ersetzt: VerbindungDaten? = neuZuVerdrahtendeVerbindung): List<VerbindungsVorschlag> {
         if (vorschlagsQuelle !== karte) {
             vorschlagsQuelle = karte
             vorschlagsCache.clear()
         }
-        return vorschlagsCache.getOrPut(start to ziel) {
-            val probe = karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == neuZuVerdrahtendeVerbindung?.id })
-            verbindungsPlaner?.invoke(probe, start, ziel).orEmpty()
+        val baueVorschläge = {
+            val probe = karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == ersetzt?.id })
+            verbindungsPlaner?.invoke(probe, start, ziel).orEmpty().map { vorschlag ->
+                val alt = ersetzt ?: return@map vorschlag
+                val neu = vorschlag.karte.verbindungen.lastOrNull { kante ->
+                    probe.verbindungen.none { it.id == kante.id } && kante.zu == alt.zu
+                } ?: vorschlag.karte.verbindungen.lastOrNull { kante ->
+                    probe.verbindungen.none { it.id == kante.id } && (kante.zu == ziel || kante.von == start)
+                } ?: return@map vorschlag
+                vorschlag.copy(karte = erhalteVerbindungsBeitrag(vorschlag.karte, alt, neu))
+            }
         }
+        return if (ersetzt != null) baueVorschläge() else vorschlagsCache.getOrPut(start to ziel, baueVorschläge)
     }
+
+    private fun erhalteVerbindungsBeitrag(basis: KartenDaten, alt: VerbindungDaten, neu: VerbindungDaten): KartenDaten =
+        basis.copy(verbindungen = basis.verbindungen.map {
+            if (it.id == neu.id) it.copy(id = alt.id,
+                eingangsReihenfolge = if (neu.zu == alt.zu) alt.eingangsReihenfolge else neu.eingangsReihenfolge,
+                eingangsFallback = alt.eingangsFallback.takeIf { _ -> neu.zu == alt.zu }) else it
+        })
 
     fun verwerfeVerbindungsAuswahl() {
         verbindungsAuswahl = null
+        auswahlEinfügeKontext = null
         if (auswahlBeendetInteraktion) beendeInteraktion()
         auswahlBeendetInteraktion = false
     }
@@ -73,6 +134,8 @@ class KartenEditorZustand(
         val auswahl = verbindungsAuswahl ?: return
         verbindungsAuswahl = null
         val interaktionBeenden = auswahlBeendetInteraktion
+        val einfügeKontext = auswahlEinfügeKontext
+        auswahlEinfügeKontext = null
         auswahlBeendetInteraktion = false
         val vorschlag = auswahl.vorschläge.getOrNull(index)
         if (vorschlag == null) {
@@ -84,7 +147,8 @@ class KartenEditorZustand(
             if (interaktionBeenden) beendeInteraktion()
             return
         }
-        führeAus(KartenAktion.KartenInhaltErsetzen(vorschlag.karte), mitHistorie = !interaktionBeenden)
+        if (einfügeKontext != null) übernehmeKnotenEinfügung(vorschlag.karte, einfügeKontext)
+        else führeAus(KartenAktion.KartenInhaltErsetzen(vorschlag.karte), mitHistorie = !interaktionBeenden)
         if (interaktionBeenden) beendeInteraktion()
         letzteMeldung = null
     }
@@ -99,6 +163,86 @@ class KartenEditorZustand(
     fun merkeKnotenZumHerausziehen(id: KnotenId) {
         herausziehKnoten = id
         letzteMeldung = "Knoten ziehen, um ihn herauszulösen und seine Verbindung zu überbrücken."
+    }
+
+    private var nächsteVerbindungsEinfügung = 0L
+
+    /** Hält eine alte Kante unverändert; bereinigt lediglich die Pointervorschau. */
+    fun übergibVerbindungZurEinfügung(): VerbindungsEinfügeKontext? {
+        val start = verbindungsStart ?: return null
+        val ersetzt = neuZuVerdrahtendeVerbindung
+        brecheVerbindungsVorschauAb()
+        return VerbindungsEinfügeKontext(karte, start, ersetzt, ++nächsteVerbindungsEinfügung)
+    }
+
+    fun verbindungsEinfügeTreffer(kontext: VerbindungsEinfügeKontext, probe: KartenDaten,
+        knoten: KnotenDaten): List<VerbindungsEinfügeTreffer> {
+        if (probe.id != kontext.basis.id || probe.findeAnschluss(kontext.start) == null) return emptyList()
+        val basis = probe.copy(verbindungen = probe.verbindungen.filterNot { it.id == kontext.ersetzt?.id })
+        return knoten.anschlüsse.mapNotNull { port ->
+            val ref = AnschlussVerweis(knoten.id, port.id)
+            val direkt = prüfung.prüfe(basis, kontext.start, ref) is VerbindungsPrüfung.Erlaubt
+            val wege = if (direkt) {
+                val (von, zu) = prüfung.normalisiere(basis, kontext.start, ref) ?: return@mapNotNull null
+                listOf(VerbindungsVorschlag("Direkt verbinden", basis.wendeAn(KartenAktion.VerbindungEinfügen(VerbindungDaten(von = von, zu = zu)))))
+            } else {
+                if (verbindungÜberAdapterMöglich?.invoke(basis, kontext.start, ref) == false) return@mapNotNull null
+                verbindungsPlaner?.invoke(basis, kontext.start, ref).orEmpty()
+            }.filter { istGültigeVerdrahtung(it.karte, prüfung) }
+            if (wege.isEmpty()) null else VerbindungsEinfügeTreffer(ref, prüfung.effektiverTyp(basis, ref).toString(), direkt, wege)
+        }
+    }
+
+    fun beginneVerbindungsEinfügeZiehen(knoten: KnotenDaten, kontext: VerbindungsEinfügeKontext): Boolean {
+        if (karte != kontext.basis || interaktionAktiv) return false
+        beginneKnotenEinfügeZiehen(knoten)
+        // Die Anschlussauswahl entscheidet über die Verdrahtung, nicht Leitungs-Snapping.
+        beimZiehenEinfügen = false
+        return true
+    }
+
+    fun pausiereVerbindungsEinfügeZiehen() {
+        ziehKnoten = null
+        einfügeVerbindungsZiel = null
+    }
+
+    /** Der Aufrufer hält die Transaktionskennung und die aktuelle Dialogbasis fest. */
+    fun bestätigeVerbindungsEinfügung(kontext: VerbindungsEinfügeKontext, basis: KartenDaten,
+        knotenId: KnotenId, anschluss: AnschlussVerweis, weg: Int): Boolean {
+        if (!interaktionAktiv || karte != basis) return false
+        val knoten = karte.knoten.firstOrNull { it.id == knotenId } ?: return false
+        val treffer = verbindungsEinfügeTreffer(kontext, karte, knoten).firstOrNull { it.anschluss == anschluss } ?: return false
+        val gewählt = treffer.wege.getOrNull(weg) ?: return false
+        var fertig = gewählt.karte
+        kontext.ersetzt?.let { alt ->
+            val neu = fertig.verbindungen.lastOrNull { it.zu == anschluss || it.von == kontext.start } ?: return false
+            fertig = erhalteVerbindungsBeitrag(fertig, alt, neu)
+        }
+        if (!istGültigeVerdrahtung(fertig, prüfung)) return false
+        führeAus(KartenAktion.KartenInhaltErsetzen(fertig), mitHistorie = false)
+        pausiereVerbindungsEinfügeZiehen()
+        beendeInteraktion()
+        return true
+    }
+
+    /** Einfügen und anschließendes externes Ziehen bilden eine einzige Transaktion. */
+    fun beginneKnotenEinfügeZiehen(knoten: KnotenDaten) {
+        beginneInteraktion()
+        führeAus(KartenAktion.KnotenEinfügen(knoten), mitHistorie = false)
+        ausgewählteGruppe = null
+        ausgewählteKnoten = setOf(knoten.id)
+        ausgewählterKnoten = knoten.id
+        ausgewählteVerbindung = null
+        beginneKnotenZiehen(knoten.id)
+    }
+
+    /** Absolute Weltposition; der Aufrufer rechnet Dichte/Zoom genau einmal um. */
+    fun aktualisiereKnotenZiehen(position: GraphPunkt) {
+        val id = ziehKnoten ?: return
+        führeAus(KartenAktion.KnotenVerschieben(id, position), mitHistorie = false)
+        aktualisiereKnotenEinfügeziel(
+            de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.findeEinfügeVerbindung(darstellungsKarte, id)?.id,
+        )
     }
 
     fun beginneKnotenZiehen(id: KnotenId, lösen: Boolean = false) {
@@ -116,6 +260,8 @@ class KartenEditorZustand(
 
     fun beendeKnotenZiehen() {
         val id = ziehKnoten
+        val einfügeKontext = if (!beimZiehenLösen && id != null) karte.verbindungen
+            .firstOrNull { it.id == einfügeVerbindungsZiel }?.let { id to it } else null
         val vorschläge = when {
             id == null -> emptyList()
             beimZiehenLösen -> listOfNotNull(planeKnotenHerausziehen(karte, id, prüfung))
@@ -124,9 +270,13 @@ class KartenEditorZustand(
         }
         if (beimZiehenLösen && vorschläge.isEmpty()) letzteMeldung = "Herausziehen benötigt eine eindeutige, kompatibel überbrückbare Verbindung."
         if (vorschläge.size == 1) {
-            führeAus(KartenAktion.KartenInhaltErsetzen(vorschläge.single().karte), mitHistorie = false)
+            if (einfügeKontext != null) übernehmeKnotenEinfügung(vorschläge.single().karte, einfügeKontext)
+            else führeAus(KartenAktion.KartenInhaltErsetzen(vorschläge.single().karte), mitHistorie = false)
         }
-        if (vorschläge.size > 1) bieteVerbindungsVorschlägeAn(vorschläge, interaktionBeenden = true)
+        if (vorschläge.size > 1) {
+            auswahlEinfügeKontext = einfügeKontext
+            bieteVerbindungsVorschlägeAn(vorschläge, interaktionBeenden = true)
+        }
         else beendeInteraktion()
         ziehKnoten = null
         einfügeVerbindungsZiel = null
@@ -150,6 +300,11 @@ class KartenEditorZustand(
     private var projektionsQuelle: KartenDaten? = null
     private var projektionsGruppe: VisuelleGruppenId? = null
     private var projektionsCache by mutableStateOf<GruppenProjektion?>(null)
+    var knotenFußzeilenHöhe by mutableStateOf(32f)
+        private set
+    fun meldeKnotenFußzeilenHöhe(höhe: Float) {
+        if (höhe != knotenFußzeilenHöhe) { knotenFußzeilenHöhe = höhe; projektionsQuelle = null }
+    }
     var projektionImHintergrund = false
     private fun hatAktuelleProjektion(): Boolean {
         val alt = projektionsQuelle ?: return false
@@ -160,9 +315,10 @@ class KartenEditorZustand(
     suspend fun berechneProjektionImHintergrund() {
         val quelle = karte
         val gruppe = geöffneteGruppe
-        val ergebnis = withContext(Dispatchers.Default) { quelle.gruppenProjektion(gruppe, kotlin.coroutines.coroutineContext) }
+        val fußhöhe = knotenFußzeilenHöhe
+        val ergebnis = withContext(Dispatchers.Default) { quelle.mitMehrfachMinima().gruppenProjektion(gruppe, kotlin.coroutines.coroutineContext) }
         if (quelle.id == karte.id && quelle.knoten == karte.knoten && quelle.verbindungen == karte.verbindungen &&
-            quelle.visuelleGruppen.hatGleicheGruppenProjektionWie(karte.visuelleGruppen) && gruppe == geöffneteGruppe) {
+            quelle.visuelleGruppen.hatGleicheGruppenProjektionWie(karte.visuelleGruppen) && gruppe == geöffneteGruppe && fußhöhe == knotenFußzeilenHöhe) {
             projektionsQuelle = quelle
             projektionsGruppe = gruppe
             projektionsCache = ergebnis
@@ -176,16 +332,39 @@ class KartenEditorZustand(
                     return projektionsCache?.takeIf { projektionsQuelle?.id == karte.id && projektionsGruppe == geöffneteGruppe }
                         ?: GruppenProjektion(karte.copy(knoten = emptyList(), verbindungen = emptyList(), visuelleGruppen = emptyList()), emptyMap(), emptyMap(), emptyMap(), emptySet())
                 }
-                projektionsCache = karte.gruppenProjektion(geöffneteGruppe)
+                projektionsCache = karte.mitMehrfachMinima().gruppenProjektion(geöffneteGruppe)
                 projektionsQuelle = karte
                 projektionsGruppe = geöffneteGruppe
             }
             return projektionsCache!!
         }
+    var knotenAnhänge by mutableStateOf<Map<KnotenId, KnotenAnhangMaße>>(emptyMap())
+        private set
+    private var knotenMeldungen by mutableStateOf<Map<KnotenId, List<KnotenMeldung>>>(emptyMap())
+    fun meldungenFür(id: KnotenId): List<KnotenMeldung> = knotenMeldungen[id].orEmpty()
+
+    fun meldeKnotenMeldungen(id: KnotenId, meldungen: List<KnotenMeldung>) {
+        val normalisiert = meldungen.normalisierteMeldungen()
+        if (meldungenFür(id) != normalisiert) {
+            knotenMeldungen = if (normalisiert.isEmpty()) knotenMeldungen - id else knotenMeldungen + (id to normalisiert)
+            // Ohne Kopfzeile gibt es keinen onSizeChanged-Aufruf mehr.
+            if (normalisiert.isEmpty()) meldeKnotenAnhangHöhe(id, oben = true, höhe = 0f)
+        }
+    }
+
+    fun meldeKnotenAnhangHöhe(id: KnotenId, oben: Boolean, höhe: Float) {
+        if (!höhe.isFinite() || höhe < 0f) return
+        val bisher = knotenAnhänge[id] ?: KnotenAnhangMaße()
+        // Ein ausstehender Layout-Callback darf ein bereits entferntes Feld nicht wieder anmelden.
+        val neu = if (oben) bisher.copy(oben = if (meldungenFür(id).isEmpty()) 0f else höhe) else bisher.copy(unten = höhe)
+        if (neu != bisher) knotenAnhänge = if (neu == KnotenAnhangMaße()) knotenAnhänge - id else knotenAnhänge + (id to neu)
+    }
+
     private var inhaltsMinima by mutableStateOf<Map<KnotenId, GraphGröße>>(emptyMap())
     private var gruppenKopfMinima by mutableStateOf<Map<VisuelleGruppenId, GraphGröße>>(emptyMap())
     private var geometrieGruppenMinima: Map<VisuelleGruppenId, GraphGröße>? = null
     private var geometrieBasis: GruppenProjektion? = null
+    private var geometrieAnhänge: Map<KnotenId, KnotenAnhangMaße>? = null
     private var geometrieMinima: Map<KnotenId, GraphGröße>? = null
     private var geometrieProjektion: GruppenProjektion? = null
 
@@ -203,8 +382,8 @@ class KartenEditorZustand(
     val projektion: GruppenProjektion
         get() {
             val basis = basisProjektion
-            if (geometrieBasis !== basis || geometrieMinima !== inhaltsMinima || geometrieGruppenMinima !== gruppenKopfMinima) {
-                val vollständig = karte.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima)
+            if (geometrieBasis !== basis || geometrieMinima !== inhaltsMinima || geometrieGruppenMinima !== gruppenKopfMinima || geometrieAnhänge !== knotenAnhänge) {
+                val vollständig = karte.mitMehrfachMinima().mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima, knotenAnhänge)
                 val gruppen = vollständig.visuelleGruppen.associateBy { it.id }
                 val sichtbar = basis.karte.copy(
                     knoten = basis.karte.knoten.map { it.mitInhaltsminimum(inhaltsMinima[it.id]) },
@@ -214,15 +393,20 @@ class KartenEditorZustand(
                 geometrieBasis = basis
                 geometrieMinima = inhaltsMinima
                 geometrieGruppenMinima = gruppenKopfMinima
+                geometrieAnhänge = knotenAnhänge
             }
-            return geometrieProjektion!!
+            val ziel = geometrieProjektion!!.mitMehrfachAndockpunkten(prüfung.mehrfachDarstellung)
+            return einfügeLayoutAnimation?.let { animation ->
+                ziel.copy(karte = animation.darstellung(ziel.karte, einfügeLayoutFortschritt))
+            } ?: ziel
         }
 
     val darstellungsKarte: KartenDaten
-        get() = projektion.karte.mitInhaltsminima(inhaltsMinima).copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
+        get() = projektion.karte.copy(ansicht = geöffneteGruppe?.let { id -> karte.visuelleGruppen.firstOrNull { it.id == id }?.ansicht } ?: karte.ansicht)
 
     fun öffneGruppe(id: VisuelleGruppenId?) {
         if (id != null && karte.visuelleGruppen.none { it.id == id }) return
+        beendeEinfügeAnimation()
         verwerfeVerbindungsAuswahl()
         herausziehKnoten = null
         brecheVerbindungsVorschauAb()
@@ -243,11 +427,18 @@ class KartenEditorZustand(
     private val wiederholen = ArrayDeque<KartenDaten>()
     private var rückgängigVerfügbar by mutableStateOf(false)
     private var wiederholenVerfügbar by mutableStateOf(false)
-    private var interaktionsStart: KartenDaten? = null
+    private var interaktionsStart by mutableStateOf<KartenDaten?>(null)
+    val interaktionAktiv: Boolean get() = interaktionsStart != null
+    private var nächsteInteraktionsKennung = 0L
+    var interaktionsKennung by mutableStateOf<Long?>(null)
+        private set
     /** Verbindung, deren Eingangsende während einer Neuverdrahtung gerade frei gezogen wird. */
     private var neuZuVerdrahtendeVerbindung: VerbindungDaten? = null
 
     fun ersetzeKarte(neu: KartenDaten, historieLeeren: Boolean = true) {
+        beendeEinfügeAnimation()
+        auswahlEinfügeKontext = null
+        layoutGruppenErhalten = false
         verbindungsAuswahl = null
         auswahlBeendetInteraktion = false
         herausziehKnoten = null
@@ -255,7 +446,10 @@ class KartenEditorZustand(
         einfügeVerbindungsZiel = null
         val vorher = karte
         if (neu.id != karte.id) öffneGruppe(null)
-        if (neu.id != karte.id) { inhaltsMinima = emptyMap(); gruppenKopfMinima = emptyMap() }
+        if (neu.id != karte.id) {
+            inhaltsMinima = emptyMap(); gruppenKopfMinima = emptyMap()
+            knotenMeldungen = emptyMap(); knotenAnhänge = emptyMap()
+        }
         karte = neu.bereinigteVisuelleGruppen()
         if (!vorher.hatGleichenAuswertungsinhaltWie(karte)) auswertungsRevision += 1
         ausgewählteKnoten = emptySet()
@@ -266,11 +460,16 @@ class KartenEditorZustand(
         neuZuVerdrahtendeVerbindung = null
         letzteMeldung = null
         interaktionsStart = null
+        interaktionsKennung = null
         if (historieLeeren) leereHistorie()
     }
 
     fun beginneInteraktion() {
-        if (interaktionsStart == null) interaktionsStart = karte
+        beendeEinfügeAnimation()
+        if (interaktionsStart == null) {
+            interaktionsStart = karte
+            interaktionsKennung = ++nächsteInteraktionsKennung
+        }
     }
 
     /** Passt die geöffnete Gruppe an ihre unveränderten Mitglieder an, ohne sie neu zuzuordnen. */
@@ -280,7 +479,7 @@ class KartenEditorZustand(
         val zuAktualisieren = (listOf(gruppeId) + index.vorfahren(gruppeId)).toSet()
         // Nur erweitern: Benutzerrahmen und leere Untergruppen gehören ebenfalls zum Inhalt.
         val erweitert = mitInhaltsminima(inhaltsMinima)
-            .mitGruppenInhaltsminimum(gruppenKopfMinima).visuelleGruppen.associateBy { it.id }
+            .mitGruppenInhaltsminimum(gruppenKopfMinima, knotenAnhänge).visuelleGruppen.associateBy { it.id }
         return copy(visuelleGruppen = visuelleGruppen.map { gruppe ->
             if (gruppe.id in zuAktualisieren) erweitert.getValue(gruppe.id) else gruppe
         })
@@ -289,24 +488,33 @@ class KartenEditorZustand(
     fun beendeInteraktion() {
         val start = interaktionsStart ?: return
         interaktionsStart = null
+        interaktionsKennung = null
         karte = karte.bereinigteVisuelleGruppen().let { stand ->
-            if (geöffneteGruppe == null) stand.mitAutomatischenVisuellenGruppenMitgliedschaften()
+            if (layoutGruppenErhalten) stand
+            else if (geöffneteGruppe == null) stand.mitAutomatischenVisuellenGruppenMitgliedschaften()
             else stand.passeGeöffneteGruppeAnInhaltAn()
         }
+        layoutGruppenErhalten = false
         if (start == karte) return
         merkeFürRückgängig(start)
     }
 
     /** Verwirft die noch nicht bestätigte Gestenänderung, ohne einen Historieneintrag anzulegen. */
     fun verwerfeLaufendeInteraktion(): Boolean {
+        beendeEinfügeAnimation()
+        layoutGruppenErhalten = false
         val start = interaktionsStart ?: return false
         interaktionsStart = null
+        interaktionsKennung = null
+        val vorher = karte
         karte = start
+        if (!vorher.hatGleichenAuswertungsinhaltWie(start)) auswertungsRevision += 1
         bereinigeAuswahl()
         return true
     }
 
     fun führeAus(aktion: KartenAktion, mitHistorie: Boolean = true, dynamischeEingängeErhalten: Boolean = false) {
+        beendeEinfügeAnimation()
         if (aktion is KartenAktion.AnsichtÄndern) {
             val gruppe = geöffneteGruppe
             if (gruppe != null) karte = karte.wendeAn(KartenAktion.VisuelleGruppeAnsichtÄndern(gruppe, aktion.ansicht))
@@ -327,7 +535,7 @@ class KartenEditorZustand(
             val delta = aktuell?.let { aktion.position - it.position } ?: GraphPunkt.Zero
             KartenAktion.KnotenMehrfachVerschieben(ausgewählteKnoten, delta)
         } else begrenzteAktion
-        var angewendet = karte.wendeAn(wirksameAktion)
+        var angewendet = prüfung.normalisiereKarte(karte.wendeAn(wirksameAktion))
         val neuEingefügt = when (wirksameAktion) {
             is KartenAktion.KartenInhaltErsetzen -> wirksameAktion.karte.knoten.filter { neu -> karte.knoten.none { it.id == neu.id } }
             is KartenAktion.KnotenEinfügen -> listOf(wirksameAktion.knoten)
@@ -366,7 +574,7 @@ class KartenEditorZustand(
         val standVorAktion = (if (reineUmordnung) karte else karte.ohneUnverbundeneDynamischeEingänge()).bereinigteVisuelleGruppen()
         var neu = (if (reineUmordnung) angewendet else angewendet.ohneUnverbundeneDynamischeEingänge())
             .bereinigteVisuelleGruppen()
-        if (wirksameAktion is KartenAktion.VisuelleGruppeGrößeÄndern) neu = neu.copy(visuelleGruppen = neu.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima).visuelleGruppen)
+        if (wirksameAktion is KartenAktion.VisuelleGruppeGrößeÄndern) neu = neu.copy(visuelleGruppen = neu.mitInhaltsminima(inhaltsMinima).mitGruppenInhaltsminimum(gruppenKopfMinima, knotenAnhänge).visuelleGruppen)
         if (interaktionsStart == null && wirksameAktion.ändertGruppenGeometrie()) {
             neu = if (geöffneteGruppe == null) neu.mitAutomatischenVisuellenGruppenMitgliedschaften()
             else neu.passeGeöffneteGruppeAnInhaltAn()
@@ -501,7 +709,8 @@ class KartenEditorZustand(
         if (gruppenÜbergangAktiv || darstellungsRef.knotenId in projektion.portale) return
         val anschluss = karte.findeAnschluss(ref)
         val bestehend = if (anschluss?.richtung == AnschlussRichtung.Eingang) {
-            karte.verbindungen.firstOrNull { it.zu == ref }
+            val beitrag = darstellungsKarte.findeAnschluss(darstellungsRef)?.beitragsVerbindung
+            karte.verbindungen.firstOrNull { it.zu == ref && (it.id == beitrag || anschluss.belegung == AnschlussBelegung.Einzeln) }
         } else null
         neuZuVerdrahtendeVerbindung = bestehend
         val effektiverStart = bestehend?.von ?: ref
@@ -553,7 +762,7 @@ class KartenEditorZustand(
         val ref = projektion.original(darstellungsRef)
         val start = verbindungsStart
         if (start == null) {
-            beginneVerbindung(ref)
+            beginneVerbindung(darstellungsRef)
             letzteMeldung = if (neuZuVerdrahtendeVerbindung != null) {
                 "Bestehende Verbindung gewählt. Wähle einen neuen kompatiblen Eingang."
             } else {
@@ -568,7 +777,9 @@ class KartenEditorZustand(
 
         // Die bisher verschobene Kante gehört nicht zum Graphen, gegen den die neue
         // Position geprüft wird. Andernfalls könnte sie fälschlich einen Zyklus melden.
-        val verschoben = neuZuVerdrahtendeVerbindung
+        val zielPort = darstellungsKarte.findeAnschluss(darstellungsRef)
+        val zielBeitrag = zielPort?.beitragsVerbindung?.takeIf { !zielPort.sammelDarstellung }
+        val verschoben = neuZuVerdrahtendeVerbindung ?: zielBeitrag?.let { id -> karte.verbindungen.firstOrNull { it.id == id } }
         val prüfKarte = if (verschoben != null) {
             karte.copy(verbindungen = karte.verbindungen.filterNot { it.id == verschoben.id })
         } else karte
@@ -581,9 +792,9 @@ class KartenEditorZustand(
                     return
                 }
                 val unverändert = verschoben?.let { it.von == normal.first && it.zu == normal.second } == true ||
-                    verschoben == null && karte.verbindungen.any { it.von == normal.first && it.zu == normal.second }
+                    verschoben == null && karte.findeAnschluss(normal.second)?.belegung != AnschlussBelegung.Mehrfach && karte.verbindungen.any { it.von == normal.first && it.zu == normal.second }
                 if (!unverändert) {
-                    val neueVerbindung = VerbindungDaten(von = normal.first, zu = normal.second)
+                    val neueVerbindung = verschoben?.copy(von = normal.first, zu = normal.second, eingangsFallback = verschoben.eingangsFallback.takeIf { normal.second == verschoben.zu }) ?: VerbindungDaten(von = normal.first, zu = normal.second)
                     if (verschoben != null) {
                         führeAus(KartenAktion.VerbindungNeuVerbinden(verschoben.id, neueVerbindung))
                     } else {
@@ -598,7 +809,7 @@ class KartenEditorZustand(
                 letzteMeldung = null
             }
             is VerbindungsPrüfung.Abgelehnt -> {
-                val vorschläge = übersetzungsVorschläge(start, ref)
+                val vorschläge = übersetzungsVorschläge(start, ref, verschoben)
                 letzteMeldung = ergebnis.grund
                 verbindungsStart = null
                 verbindungsVorschau = null
@@ -681,7 +892,8 @@ class KartenEditorZustand(
         val interneVerbindungen = karte.verbindungen.filter {
             it.von.knotenId in ids && it.zu.knotenId in ids
         }.map { verbindung ->
-            VerbindungDaten(
+            verbindung.copy(
+                id = neueVerbindungsId(),
                 von = AnschlussVerweis(
                     knotenIds.getValue(verbindung.von.knotenId),
                     anschlussIds.getValue(verbindung.von.anschlussId),
@@ -779,6 +991,7 @@ class KartenEditorZustand(
 
     /** Ändert die Art eines Anschlusses als einen Undo/Redo-Schritt und bereinigt inkompatible Kanten. */
     fun ändereAnschlussArt(ref: AnschlussVerweis, art: AnschlussArtId) {
+        beendeEinfügeAnimation()
         val vorher = karte
         val neu = prüfung.ändereAnschlussArt(vorher, ref, art)
             .ohneUnverbundeneDynamischeEingänge()
@@ -793,6 +1006,7 @@ class KartenEditorZustand(
     fun kannWiederholen() = wiederholenVerfügbar
 
     fun rückgängig() {
+        beendeEinfügeAnimation()
         verwerfeVerbindungsAuswahl()
         if (rückgängig.isEmpty()) return
         val aktuelleAnsicht = karte.ansicht
@@ -808,6 +1022,7 @@ class KartenEditorZustand(
     }
 
     fun wiederholen() {
+        beendeEinfügeAnimation()
         verwerfeVerbindungsAuswahl()
         if (wiederholen.isEmpty()) return
         val aktuelleAnsicht = karte.ansicht

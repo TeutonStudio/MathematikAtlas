@@ -98,6 +98,14 @@ object MathematischeTypen {
 
 /** Typ eines Elements, das aus dieser mathematischen Menge gewählt wird. */
 fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
+    is EndlicheMenge -> {
+        val typen = elemente.map(::endlicherElementTyp).distinct()
+        when (typen.size) {
+            0 -> TypAusdruck.Unbekannt
+            1 -> typen.single()
+            else -> TypAusdruck.Vereinigung(typen)
+        }
+    }
     Gradmenge -> TypAusdruck.Atom(MathematischeTypen.Winkel)
     is Potenzmenge -> TypAusdruck.Parameterisiert(MathematischeTypen.Menge, listOf(grundMenge.elementTypAusdruck()))
     is EndlicheIndexMenge -> TypAusdruck.Atom(MathematischeTypen.Natuerlich)
@@ -107,7 +115,10 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
     RationaleZahlen -> TypAusdruck.Atom(MathematischeTypen.Rational)
     ReelleZahlen, is ReellesIntervall -> TypAusdruck.Atom(MathematischeTypen.Reell)
     KomplexeZahlen -> TypAusdruck.Atom(MathematischeTypen.Komplex)
-    is KartesischerPotenzraum -> TypAusdruck.Atom(MathematischeTypen.Tupel)
+    is KartesischerPotenzraum -> kartesischeFaktorenOderNull()?.let {
+        TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, it.map(MengenAusdruck::elementTypAusdruck))
+    } ?: TypAusdruck.Atom(MathematischeTypen.Tupel)
+    is KartesischesProdukt -> TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, mengen.map(MengenAusdruck::elementTypAusdruck))
     is Tupelraum -> TypAusdruck.Parameterisiert(
         MathematischeTypen.Tupel,
         komponenten.map(MengenAusdruck::elementTypAusdruck),
@@ -143,6 +154,16 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
         FundamentalerZahlbereich.KOMPLEX -> TypAusdruck.Atom(MathematischeTypen.Komplex)
         FundamentalerZahlbereich.QUATERNION -> TypAusdruck.Atom(MathematischeTypen.Quaternion)
     }
+    else -> TypAusdruck.Unbekannt
+}
+
+private fun endlicherElementTyp(wert: MathematischesObjekt): TypAusdruck = when (wert) {
+    is ZahlAusdruck -> TypAusdruck.Atom(MathematischeTypen.Zahl)
+    is WinkelAusdruck -> TypAusdruck.Atom(MathematischeTypen.Winkel)
+    is Aussage -> TypAusdruck.Atom(MathematischeTypen.Aussage)
+    is Tupel -> TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, wert.elemente.map(::endlicherElementTyp))
+    is MengenAusdruck -> TypAusdruck.Parameterisiert(MathematischeTypen.Menge, listOf(wert.elementTypAusdruck()))
+    is Methode -> wert.methodenTypAusdruck()
     else -> TypAusdruck.Unbekannt
 }
 

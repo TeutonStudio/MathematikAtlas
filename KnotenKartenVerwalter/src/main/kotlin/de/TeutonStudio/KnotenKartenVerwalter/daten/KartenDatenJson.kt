@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 /** Reiner JSON-Codec für [KartenDaten], ohne App-, Datei- oder Migrationszuständigkeit. */
 object KartenDatenJson {
-    const val FORMAT_VERSION = 9
+    const val FORMAT_VERSION = 10
 
     fun schreibe(karte: KartenDaten): String = JSONObject().apply {
         put("formatVersion", FORMAT_VERSION)
@@ -83,6 +83,8 @@ object KartenDatenJson {
                     put("art", anschluss.art.wert)
                     put("reihenfolge", anschluss.reihenfolge)
                     put("kannSichErweitern", anschluss.kannSichErweitern)
+                    put("belegung", anschluss.belegung.name)
+                    put("nächsteBeitragsReihenfolge", anschluss.nächsteBeitragsReihenfolge)
                     anschluss.semantischeId?.let { put("semantischeId",it) }
                     put("dynamischErzeugt", anschluss.dynamischErzeugt)
                     anschluss.artFolgtEingang?.let { put("artFolgtEingang", it) }
@@ -149,6 +151,8 @@ object KartenDatenJson {
                     art = AnschlussArtId(anschluss.getString("art")),
                     reihenfolge = anschluss.optInt("reihenfolge", 0),
                     semantischeId = anschluss.optString("semantischeId").takeIf(String::isNotBlank),
+                    nächsteBeitragsReihenfolge = anschluss.optInt("nächsteBeitragsReihenfolge", 0),
+                    belegung = enumValueOf(anschluss.optString("belegung", "Einzeln")),
                     kannSichErweitern = anschluss.optBoolean("kannSichErweitern", false),
                     dynamischErzeugt = anschluss.optBoolean("dynamischErzeugt", false),
                     artFolgtEingang = anschluss.optString("artFolgtEingang").takeIf(String::isNotBlank),
@@ -407,6 +411,8 @@ object KartenDatenJson {
 
     private fun verbindungZuJson(verbindung: VerbindungDaten) = JSONObject().apply {
         put("id", verbindung.id.wert)
+        put("eingangsReihenfolge", verbindung.eingangsReihenfolge)
+        verbindung.eingangsFallback?.let { put("eingangsFallback", it) }
         put("von", refZuJson(verbindung.von))
         put("zu", refZuJson(verbindung.zu))
     }
@@ -417,6 +423,8 @@ object KartenDatenJson {
 
     private fun verbindungVonJson(json: JSONObject) = VerbindungDaten(
         id = VerbindungsId(json.getString("id")),
+        eingangsReihenfolge = json.optInt("eingangsReihenfolge", 0),
+        eingangsFallback = json.optString("eingangsFallback").takeIf(String::isNotBlank),
         von = refVonJson(json.getJSONObject("von")),
         zu = refVonJson(json.getJSONObject("zu")),
     )

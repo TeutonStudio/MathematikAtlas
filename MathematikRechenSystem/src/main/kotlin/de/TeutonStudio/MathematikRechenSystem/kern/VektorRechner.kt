@@ -213,7 +213,7 @@ object VektorRechner {
 
         return when (anfrage.operator) {
             VektorRechnerOperator.ADDITION -> {
-                if (vektoren.size < 2) return anzahlFehler("Addition", "mindestens zwei Vektoren")
+                if (vektoren.isEmpty()) return anzahlFehler("Addition", "mindestens einen Vektor")
                 vektorErgebnis(
                     komponentenweise(vektoren) { werte -> addition(werte) },
                     anfrage.vektoren.first().vertrag,
@@ -312,7 +312,7 @@ object VektorRechner {
                 )
             }
             VektorRechnerOperator.HADAMARD_PRODUKT -> {
-                if (vektoren.size < 2) return anzahlFehler("Hadamard-Produkt", "mindestens zwei Vektoren")
+                if (vektoren.isEmpty()) return anzahlFehler("Hadamard-Produkt", "mindestens einen Vektor")
                 vektorErgebnis(
                     orientiereWie(
                         vektoren.first(),

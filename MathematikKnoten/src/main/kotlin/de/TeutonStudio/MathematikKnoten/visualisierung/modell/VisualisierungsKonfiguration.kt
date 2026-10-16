@@ -18,6 +18,20 @@ data class ZahlenBereich(val minimum: Double, val maximum: Double) {
 }
 data class AchsenBereiche(val x: ZahlenBereich, val y: ZahlenBereich, val z: ZahlenBereich?)
 enum class FarbModus { Keine, FesteFarbe, Spektrum }
+enum class DarstellungsQualität { Automatisch, Standard, Hoch }
+enum class FüllArt { Vollfläche, Schraffur, Kreuzschraffur, Hexagonal, Ohne }
+data class EbenenStil(val sichtbar: Boolean = true, val name: String = "", val farbe: Long? = null,
+    val deckkraft: Double = .25, val füllArt: FüllArt = FüllArt.Vollfläche) {
+    init { require(deckkraft.isFinite() && deckkraft in 0.0..1.0) }
+    fun zuEigenschaft() = KnotenEigenschaft.Objekt(mapOf("sichtbar" to KnotenEigenschaft.Text(sichtbar.toString()),
+        "name" to KnotenEigenschaft.Text(name), "farbe" to KnotenEigenschaft.Farbe(farbe ?: 0xFF2563EB),
+        "deckkraft" to KnotenEigenschaft.Dezimalzahl(deckkraft), "füllArt" to KnotenEigenschaft.Text(füllArt.name)))
+}
+private val ebenenFarben = listOf(0xFF2563EB, 0xFFDC2626, 0xFF16A34A, 0xFF9333EA, 0xFFEA580C, 0xFF0891B2)
+fun VisualisierungsKonfiguration.ebenenStil(name: String, index: Int = 0) = ebenen[name] ?: EbenenStil(
+    farbe = if (index == 0) farbe.festeFarbe else ebenenFarben[index % ebenenFarben.size])
+const val HOHES_VISUALISIERUNGS_DETAIL_BUDGET = 64_000
+
 enum class MethodenDarstellungsModus { Automatisch, Bild, Funktionsgraph, Koordinatenausgabe }
 data class FarbZuordnung(val modus: FarbModus, val variable: String?, val festeFarbe: Long?, val palette: String, val bereich: ZahlenBereich?)
 data class SamplingKonfiguration(
@@ -30,14 +44,18 @@ data class SamplingKonfiguration(
     val maximaleOrbitSchritte: Int = 256,
     /** Nur Laufzeitdarstellung, wird nicht persistiert. */
     val vorschau: Boolean = false,
+    val bildBreite: Double = 0.0,
+    val bildHöhe: Double = 0.0,
+    val sichtBereiche: AchsenBereiche? = null,
+    val zielFehlerPixel: Double = 1.0,
 )
 
 const val MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET = 8_000
 internal const val VISUALISIERUNGS_VORSCHAU_BUDGET = 192
 
 /**
- * Leichtgewichtige Knoten-Vorschau. Die persistierte Qualitätskonfiguration bleibt
- * unverändert und wird erst in der explizit geöffneten Detailansicht verwendet.
+ * Erster progressiver Zeichenschritt. Die persistierte Qualitätskonfiguration bleibt
+ * unverändert; Knoten und Arbeitsdialog verfeinern anschließend auf deren Detailniveau.
  */
 internal fun VisualisierungsKonfiguration.alsVorschau(): VisualisierungsKonfiguration = copy(
     sampling = sampling.copy(
@@ -81,10 +99,22 @@ data class VisualisierungsKonfiguration(
     val dimensionsModus: DimensionsModus = DimensionsModus.Automatisch,
     /** 1-basierte reelle Ausgabekoordinaten; leer bedeutet keine Projektion. */
     val ausgabeKoordinaten: List<Int> = emptyList(),
+    val achsenSichtbar: Boolean = true,
+    val rasterSichtbar: Boolean = true,
+    val qualität: DarstellungsQualität = DarstellungsQualität.Automatisch,
+    val ebenen: Map<String, EbenenStil> = emptyMap(),
+    /** Aktiver Ebenenstil ausschließlich für die gemeinsame Zeichenkomponente. */
+    val aktiverStil: EbenenStil = EbenenStil(),
 ) {
+    val detailBudget get() = if (qualität == DarstellungsQualität.Hoch) HOHES_VISUALISIERUNGS_DETAIL_BUDGET else MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET
     fun samplingSignatur(): List<Any?> =
-        listOf(dimension, achsen, bereiche, farbe.copy(festeFarbe = null), sampling, methodenModus, festeSchnitte, ausgabeKoordinaten)
+        listOf(dimension, achsen, bereiche, farbe.copy(modus = if (farbe.modus == FarbModus.Spektrum) FarbModus.Spektrum else FarbModus.FesteFarbe, festeFarbe = null, palette = ""), sampling, methodenModus, festeSchnitte, ausgabeKoordinaten)
     fun zuEigenschaften(): Map<String, KnotenEigenschaft> = mapOf(
+        "qualität" to KnotenEigenschaft.Text(qualität.name),
+        "ebenen" to KnotenEigenschaft.Objekt(ebenen.mapValues { it.value.zuEigenschaft() }),
+        "ansichtVersion" to KnotenEigenschaft.Ganzzahl(2),
+        "achsenSichtbar" to KnotenEigenschaft.Text(achsenSichtbar.toString()),
+        "rasterSichtbar" to KnotenEigenschaft.Text(rasterSichtbar.toString()),
         "ausgabeKoordinaten" to KnotenEigenschaft.Liste(ausgabeKoordinaten.map { KnotenEigenschaft.Ganzzahl(it) }),
         "dimension" to KnotenEigenschaft.Text(dimension.name),
         "dimensionsModus" to KnotenEigenschaft.Text(dimensionsModus.name),
@@ -135,7 +165,9 @@ data class VisualisierungsKonfiguration(
                     ?: standard.sampling.fensterBegrenztePrädikatsMengen,
                 samplingObjekt.ganzzahl("maximaleOrbitSchritte", standard.sampling.maximaleOrbitSchritte).coerceIn(1, 100_000),
             )
-            val kamera = eigenschaften.objekt("kamera").zuKamera(standard.kamera)
+            val alteKamera = eigenschaften.objekt("kamera").zuKamera(standard.kamera)
+            val kamera = if ("kamera" in eigenschaften && eigenschaften.ganzzahl("ansichtVersion", 1) < 2)
+                migriereAlteVisualisierungsKamera(alteKamera, dimension, bereiche) else alteKamera
             val festeSchnitte = eigenschaften.objekt("festeSchnitte")?.felder.orEmpty().mapNotNull { (name, wert) ->
                 val zahl = (wert as? KnotenEigenschaft.Dezimalzahl)?.wert
                 if (name.isBlank() || zahl == null || !zahl.isFinite()) null else name to zahl
@@ -144,7 +176,17 @@ data class VisualisierungsKonfiguration(
             val projektion = gespeicherteProjektion.takeIf { werte -> werte.all { it is KnotenEigenschaft.Ganzzahl } }
                 ?.map { (it as KnotenEigenschaft.Ganzzahl).wert }.orEmpty()
                 .takeIf { it.size in 2..3 && it.all { index -> index > 0 } && it.distinct().size == it.size }.orEmpty()
-            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte, dimensionsModus, projektion)
+            return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte, dimensionsModus, projektion,
+                eigenschaften.text("achsenSichtbar", "true").toBooleanStrictOrNull() ?: true,
+                eigenschaften.text("rasterSichtbar", "true").toBooleanStrictOrNull() ?: true,
+                runCatching { DarstellungsQualität.valueOf(eigenschaften.text("qualität", "Automatisch")) }.getOrDefault(DarstellungsQualität.Automatisch),
+                eigenschaften.objekt("ebenen")?.felder.orEmpty().mapNotNull { (name, wert) ->
+                    val f = (wert as? KnotenEigenschaft.Objekt)?.felder ?: return@mapNotNull null
+                    name to EbenenStil(f.text("sichtbar", "true").toBooleanStrictOrNull() ?: true, f.text("name", ""),
+                        (f["farbe"] as? KnotenEigenschaft.Farbe)?.argb,
+                        f.dezimalzahl("deckkraft", .25).takeIf { it.isFinite() && it in 0.0..1.0 } ?: .25,
+                        runCatching { FüllArt.valueOf(f.text("füllArt", "Vollfläche")) }.getOrDefault(FüllArt.Vollfläche))
+                }.toMap())
         }
     }
 }
@@ -182,4 +224,4 @@ private fun KnotenEigenschaft.Objekt?.zuFarbe(standard: FarbZuordnung): FarbZuor
         bereich,
     )
 }
-private fun KnotenEigenschaft.Objekt?.zuKamera(standard: KameraZustand): KameraZustand { val f = this?.felder.orEmpty(); return KameraZustand(f.dezimalzahl("rotationX", standard.rotationX), f.dezimalzahl("rotationY", standard.rotationY), f.dezimalzahl("rotationZ", standard.rotationZ), f.dezimalzahl("translationX", standard.translationX), f.dezimalzahl("translationY", standard.translationY), f.dezimalzahl("translationZ", standard.translationZ), f.dezimalzahl("zoom", standard.zoom).coerceIn(0.1, 20.0)) }
+private fun KnotenEigenschaft.Objekt?.zuKamera(standard: KameraZustand): KameraZustand { val f = this?.felder.orEmpty(); return KameraZustand(f.dezimalzahl("rotationX", standard.rotationX).takeIf(Double::isFinite) ?: standard.rotationX, f.dezimalzahl("rotationY", standard.rotationY).takeIf(Double::isFinite) ?: standard.rotationY, f.dezimalzahl("rotationZ", standard.rotationZ).takeIf(Double::isFinite) ?: standard.rotationZ, f.dezimalzahl("translationX", standard.translationX).takeIf(Double::isFinite) ?: standard.translationX, f.dezimalzahl("translationY", standard.translationY).takeIf(Double::isFinite) ?: standard.translationY, f.dezimalzahl("translationZ", standard.translationZ).takeIf(Double::isFinite) ?: standard.translationZ, f.dezimalzahl("zoom", standard.zoom).takeIf(Double::isFinite)?.coerceIn(0.001, 10_000.0) ?: standard.zoom) }

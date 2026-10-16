@@ -29,9 +29,9 @@ import de.TeutonStudio.MathematikKnoten.LatexText
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenRenderer
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.normalisiereLatexQuelltext
-import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsDetailansicht
+import de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsDialog
 
-internal fun besitztHochauflösendenVisualisierungsReiter(knoten: KnotenDaten?): Boolean =
+internal fun besitztVisualisierungsArbeitsdialog(knoten: KnotenDaten?): Boolean =
     knoten?.art == MathematikKnotenVorlagen.Visualisierung.art
 
 @Composable
@@ -39,13 +39,19 @@ internal fun KnotenKonzeptDialog(
     zustand: AtlasZustand,
     knoten: KnotenDaten,
     schließen: () -> Unit,
+    nurDefinition: Boolean = false,
+    vorschau: Boolean = false,
 ) {
+    if (besitztVisualisierungsArbeitsdialog(knoten) && !nurDefinition && !vorschau) {
+        AtlasVisualisierungsDialog(zustand, knoten.id, schließen)
+        return
+    }
     val kartenTabellenQuelle = remember(knoten.kartenVerweis, knoten.anschlüsse) {
         knoten.kartenVerweis
             ?.let(zustand.speicher::lade)
             ?.let { karte -> ermittleKartenWahrheitstabellenQuelle(zustand.anschlussArten, knoten, karte) }
     }
-    if (kartenTabellenQuelle != null) {
+    if (kartenTabellenQuelle != null && !vorschau) {
         KartenWahrheitstabellenDialog(
             zustand = zustand,
             knoten = knoten,
@@ -55,7 +61,7 @@ internal fun KnotenKonzeptDialog(
         return
     }
 
-    if (besitztSkalarproduktKonzeptDialog(knoten)) {
+    if (besitztSkalarproduktKonzeptDialog(knoten) && !vorschau) {
         SkalarproduktKonzeptDialog(
             zustand = zustand,
             knoten = knoten,
@@ -67,7 +73,7 @@ internal fun KnotenKonzeptDialog(
     val besitztAussagenDialog = AussagenOperatorArt.für(knoten) != null ||
         knoten.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
     var definitionAnzeigen by remember(knoten.id) { mutableStateOf(false) }
-    if (besitztAussagenDialog && !definitionAnzeigen) {
+    if (besitztAussagenDialog && !definitionAnzeigen && !vorschau) {
         AussagenOperatorDialog(
             zustand = zustand,
             knoten = knoten,
@@ -91,6 +97,7 @@ internal fun KnotenKonzeptDialog(
         konzept = konzept,
         ursprungsKnoten = knoten,
         schließen = schließen,
+        vorschau = vorschau,
     )
 }
 
@@ -115,15 +122,13 @@ private fun KonzeptDialog(
     konzept: KonzeptDefinition?,
     ursprungsKnoten: KnotenDaten?,
     schließen: () -> Unit,
+    vorschau: Boolean = false,
 ) {
     var reiterIndex by remember(konzept?.id, ursprungsKnoten?.art) { mutableIntStateOf(0) }
     var komplexDarstellung by remember(konzept?.id, ursprungsKnoten?.id) {
         mutableStateOf(KomplexDarstellung.Kartesisch)
     }
-    val besitztVisualisierungsReiter = besitztHochauflösendenVisualisierungsReiter(ursprungsKnoten)
-    val visualisierungsReiterIndex = konzept?.reiter?.size ?: 0
-    val zeigtVisualisierung = besitztVisualisierungsReiter && reiterIndex == visualisierungsReiterIndex
-    val aktiverReiter = if (zeigtVisualisierung) null else konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
+    val aktiverReiter = konzept?.reiter?.getOrNull(reiterIndex.coerceAtLeast(0))
     val aktiveKarte = aktiverReiter?.karteFür(komplexDarstellung)
     val zeigtFalkSchema = aktiverReiter?.darstellung in setOf(KonzeptReiterDarstellung.FalkSchema, KonzeptReiterDarstellung.Auswertungsschema)
 
@@ -135,18 +140,14 @@ private fun KonzeptDialog(
             AtlasDialogKopf(
                 titel = { Text(konzept?.name ?: ursprungsKnoten?.name.orEmpty(),) },
                 untertitel = { Text(
-                        if (zeigtVisualisierung) {
-                            "Die hochauflösende Darstellung wird nur in diesem Reiter berechnet und anschließend gecacht."
-                        } else {
-                            konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert."
-                        },
+                        konzept?.beschreibung ?: "Für diese Knotenart ist keine Definitionskarte registriert.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     ) },
                 aktionen = { TextButton(onClick = schließen) { Text("Schließen") } },
             )
             HorizontalDivider()
 
-            if (besitztVisualisierungsReiter || (konzept?.reiter?.size ?: 0) > 1) {
+            if ((konzept?.reiter?.size ?: 0) > 1) {
                 PrimaryTabRow(selectedTabIndex = reiterIndex) {
                     konzept?.reiter.orEmpty().forEachIndexed { index, reiter ->
                         Tab(
@@ -160,29 +161,11 @@ private fun KonzeptDialog(
                             },
                         )
                     }
-                    if (besitztVisualisierungsReiter) {
-                        Tab(
-                            selected = reiterIndex == visualisierungsReiterIndex,
-                            onClick = { reiterIndex = visualisierungsReiterIndex },
-                            text = { Text("Hohe Auflösung") },
-                        )
-                    }
+
                 }
             }
 
-            if (zeigtVisualisierung) {
-                val visualisierungsKnoten = checkNotNull(ursprungsKnoten)
-                VisualisierungsDetailansicht(
-                    knoten = visualisierungsKnoten,
-                    auswertung = zustand.auswertung.knoten[visualisierungsKnoten.id],
-                    eigenschaftenErsetzen = { eigenschaften ->
-                        zustand.editor.führeAus(
-                            KartenAktion.KnotenEigenschaftenErsetzen(visualisierungsKnoten.id, eigenschaften),
-                        )
-                    },
-                    modifier = Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.inhalt),
-                )
-            } else if (konzept == null) {
+            if (konzept == null) {
                 Box(Modifier.weight(1f).fillMaxWidth().padding(AtlasDialogAbstände.abschnitt)) {
                     Text(
                         "Fehlende Definition für ${ursprungsKnoten?.art.orEmpty()}",
@@ -226,7 +209,7 @@ private fun KonzeptDialog(
 
             HorizontalDivider()
             AtlasDialogAktionen {
-                aktiveKarte?.takeUnless { zeigtFalkSchema }?.let { karte ->
+                aktiveKarte?.takeUnless { zeigtFalkSchema || vorschau }?.let { karte ->
                     Button(
                         onClick = {
                             zustand.öffneBearbeitbareKopie(karte)
@@ -234,7 +217,7 @@ private fun KonzeptDialog(
                         },
                     ) { Text("Als bearbeitbare Karte kopieren") }
                 }
-                ursprungsKnoten?.let { knoten ->
+                ursprungsKnoten?.takeUnless { vorschau }?.let { knoten ->
                     OutlinedButton(onClick = { zustand.editor.merkeKnotenZumHerausziehen(knoten.id); schließen() }) {
                         Text("Aus Verbindung herausziehen")
                     }
@@ -298,6 +281,7 @@ private fun UnveränderlicheKonzeptKarte(
 
     KnotenKartenEditor(
         zustand = editor,
+        anschlussInfoFür = zustand::anschlussInfoFür,
         modifier = modifier,
         rendererFür = { knoten ->
             if (knoten.art.startsWith("konzept.")) KonzeptDokumentationsRenderer else mathematikRenderer
@@ -402,4 +386,15 @@ internal object KonzeptDokumentationsRenderer : KnotenRenderer {
             }
         }
     }
+}
+
+@Composable
+internal fun AtlasVisualisierungsDialog(zustand: AtlasZustand, id: KnotenId, schließen: () -> Unit) {
+    val knoten = zustand.editor.karte.knoten.firstOrNull { it.id == id }
+    var definition by remember(id) { mutableStateOf(false) }
+    if (definition && knoten != null) {
+        KnotenKonzeptDialog(zustand, knoten, schließen, nurDefinition = true)
+    } else VisualisierungsDialog(knoten, zustand.auswertung.knoten[id], { eigenschaften ->
+        zustand.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(id, eigenschaften))
+    }, schließen, definitionÖffnen = { definition = true })
 }

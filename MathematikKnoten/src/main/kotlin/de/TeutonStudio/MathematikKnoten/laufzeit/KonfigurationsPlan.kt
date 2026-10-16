@@ -14,8 +14,9 @@ fun planeKonfiguration(
     prüfung: GraphPrüfung,
     auswerten: (KartenDaten) -> KartenAuswertungsErgebnis,
 ): KonfigurationsPlan {
-    val direkte = bisher.vorschauKnotenErsetzen(kandidat, prüfung)
-    var neu = bisher.wendeAn(KartenAktion.KnotenErsetzen(kandidat, direkte.entfallendeVerbindungen.map { it.id }.toSet()))
+    val wechsel = bereiteJoinWechselVor(bisher, kandidat)
+    val direkte = wechsel.karte.vorschauKnotenErsetzen(wechsel.kandidat, prüfung).copy(entfallendeLokaleWerte = wechsel.entfernteLokale)
+    var neu = wechsel.karte.wendeAn(KartenAktion.KnotenErsetzen(wechsel.kandidat, direkte.entfallendeVerbindungen.map { it.id }.toSet()))
     // Signaturen können weitere Signaturen bestimmen. Jede Runde wird aus dem
     // tatsächlich vorgeschlagenen Stand ausgewertet, nie aus dem sichtbaren Altstand.
     repeat(bisher.knoten.size + 1) {

@@ -25,7 +25,7 @@ class PrädikatsKnotenIntegrationTest {
     }
     @Test fun `connected graph distinguishes numeric parameter from target variable`() {
         val (karte,id)=fixture()
-        val r=MathematikKartenLaufzeit().auswerten(karte)
+        val r=MathematikKartenLaufzeit().auswerten(karte.mitTestGrundräumen())
         assertTrue(r.fehler.isEmpty(),r.fehler.joinToString())
         val e=r.knoten.getValue(id)
         assertEquals(listOf("x"),e.lösungsVariablen.map { it.variable.name })
@@ -35,10 +35,10 @@ class PrädikatsKnotenIntegrationTest {
     @Test fun `json reload regenerates roles and stable connections`() {
         val (karte,id)=fixture()
         val geladen=MathematikKartenCodec.lese(MathematikKartenCodec.schreibe(karte))
-        assertEquals(karte.verbindungen,geladen.verbindungen)
+        assertEquals(karte.normalisiereJoinEingänge().verbindungen,geladen.verbindungen)
         val laufzeit=MathematikKartenLaufzeit()
-        val vorher=laufzeit.auswerten(karte).knoten.getValue(id)
-        val nachher=laufzeit.auswerten(geladen).knoten.getValue(id)
+        val vorher=laufzeit.auswerten(karte.mitTestGrundräumen()).knoten.getValue(id)
+        val nachher=laufzeit.auswerten(geladen.mitTestGrundräumen()).knoten.getValue(id)
         assertEquals(vorher.lösungsVariablen,nachher.lösungsVariablen)
         assertEquals(vorher.lösungsParameter,nachher.lösungsParameter)
         assertEquals(vorher.ausgaben,nachher.ausgaben)
@@ -47,12 +47,12 @@ class PrädikatsKnotenIntegrationTest {
         val (karte,id)=fixture()
         val laufzeit=MathematikKartenLaufzeit()
         val editor=KartenEditorZustand(karte,laufzeit.graphPrüfung)
-        val original=laufzeit.auswerten(editor.karte).knoten.getValue(id)
+        val original=laufzeit.auswerten(editor.karte.mitTestGrundräumen()).knoten.getValue(id)
         val a=karte.knoten.first { it.id == KnotenId("a") }
         editor.führeAus(KartenAktion.KnotenErsetzen(a.copy(parameter=a.parameter + ("name" to "b"))))
-        assertEquals(listOf("b"),laufzeit.auswerten(editor.karte).knoten.getValue(id).lösungsParameter.map { it.name })
+        assertEquals(listOf("b"),laufzeit.auswerten(editor.karte.mitTestGrundräumen()).knoten.getValue(id).lösungsParameter.map { it.name })
         editor.rückgängig()
-        assertEquals(original.ausgaben,laufzeit.auswerten(editor.karte).knoten.getValue(id).ausgaben)
+        assertEquals(original.ausgaben,laufzeit.auswerten(editor.karte.mitTestGrundräumen()).knoten.getValue(id).ausgaben)
     }
     @Test fun `auswerten separates undefined predicate and an open predicate`() {
         val knoten=node(MathematikKnotenVorlagen.Auswerten,"eval")
