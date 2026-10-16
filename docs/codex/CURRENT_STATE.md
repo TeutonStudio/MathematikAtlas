@@ -1,3 +1,5 @@
+> Android-CI-Nachprüfung PR #454: Der erste Head41d94f04 hatte vier grüne Pflichtjobs und sechs App-Laufzeitfehler bei erfolgreichen7/7Editor-Gerätetests. Gezielte Anpassungen der Testgeometrie, realer Mehranschlusskandidaten, Opt-in-RuleChain und eindeutiger Methodenquellenauswahl sind vorbereitet. Fehlender Dialogbutton ist noch nicht als Produkt-/Tastaturlayoutfehler erklärt; erst die erneute vollständige CI bestätigt den korrigierten Head. Kein Merge vor allen grünen Pflichtjobs.
+
 ## Releaseabschluss v3.4.0, 2026-10-16 (lokal geprüft)
 
 - Exakte veröffentlichte Basis: `v3.3.1`, `c4b23c69c431370b600cd4bd810c8d5135c43ff7`. Ziel `v3.4.0` ist eine Knoten-Version y mit exakt einem neuen registrierten, separat erzeugbaren Typ `mathematik.methode`. Android `3.4.0/3004000`, Desktop/CI `3.4.0`.

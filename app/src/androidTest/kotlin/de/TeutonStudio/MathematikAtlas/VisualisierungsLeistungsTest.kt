@@ -30,15 +30,27 @@ import org.json.JSONObject
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runners.model.Statement
 import java.io.File
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** Opt-in-Messung; keine zeitabhängige Unit-Testassertion und kein behauptetes Hardwarelimit. */
 class VisualisierungsLeistungsTest {
-    @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
+    private val compose=createAndroidComposeRule<ComponentActivity>()
+    // Die Annahme muss außerhalb der Compose-Coroutine geprüft werden, damit
+    // AndroidJUnitRunner die Opt-in-Messung als übersprungen klassifiziert.
+    @get:Rule val regeln: TestRule = RuleChain.outerRule(TestRule { basis, _ ->
+        object : Statement() {
+            override fun evaluate() {
+                assumeTrue(InstrumentationRegistry.getArguments().getString("atlas.measureVisualization") == "true")
+                basis.evaluate()
+            }
+        }
+    }).around(compose)
     @Test fun vergleicheRendererAufDerselbenHardware() {
-        assumeTrue(InstrumentationRegistry.getArguments().getString("atlas.measureVisualization")=="true")
         val frames=Collections.synchronizedList(mutableListOf<Long>())
         val drawFrames=Collections.synchronizedList(mutableListOf<Long>())
         val layoutFrames=Collections.synchronizedList(mutableListOf<Long>())
@@ -108,7 +120,6 @@ class VisualisierungsLeistungsTest {
     }
 
     @Test fun messeTupelfilterUndUeberlagerteGebiete() {
-        assumeTrue(InstrumentationRegistry.getArguments().getString("atlas.measureVisualization")=="true")
         val frames=Collections.synchronizedList(mutableListOf<Long>())
         val erfassen=AtomicBoolean(false)
         val thread=HandlerThread("AtlasFilterMessung").also{it.start()}

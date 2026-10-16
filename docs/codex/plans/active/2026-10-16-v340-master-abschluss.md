@@ -76,3 +76,15 @@ Der Gesamtumfang wurde um die bereits vorhandenen lokalen Join-/Graph-/Inspector
 ## Ergebnis und Verifikation
 
 Lokaler finaler Releasekandidat vollständig geprüft und unabhängig statisch abgenommen. Verbindlicher Online-Nachweis: Release-PR des oben benannten Releasebranches, dessen finaler geprüfter Head sowie anschließender Squashcommit `v3.4.0` auf master. Diese GitHub-Schritte bleiben bis zum nachweisbaren Abschluss offen.
+
+## Erster GitHub-Lauf auf PR #454
+
+Release-PR: https://github.com/TeutonStudio/MathematikAtlas/pull/454, geprüfter Arbeitscommit `41d94f04c58afd56f15b73d47436de901ddb276d` (SamAI/SamAI). Release-Guard, Android-Build, Mathematikkern und Linux-Paketierung erfolgreich. Android-Laufzeitjob 117149321273 / Run38953156592 fehlgeschlagen; kein Merge. Editor-Gerätetests 7/7 bestanden; App51Tests mit6Fehlern.
+
+Konkrete Fehler: Methodenquellen-Dialogtest findet `Abbrechen` nicht; drei Pie-Tests erwarten eine noch offene Sitzung; zwei optionale Visualisierungsleistungsmessungen werden trotz AssumptionViolatedException vom Instrumentationspfad als Fehler gemeldet. Der Emulator besitzt laut Startlog320×640 bei160dpi. Die feste Pie-Dragtestgeometrie legt den Startport bereits außerhalb dieser Breite. Die zwei Pie-Mehrfachauswahltests wählen Addition, deren inzwischen einstelliger Join-Eingang korrekt unmittelbar verbindet; sie prüfen damit keinen mehrdeutigen Anschlussfall mehr. Dialog-/Instrumentationsdetails müssen gezielt geklärt werden, bevor ein korrigierter Head erneut alle Pflichtprüfungen durchläuft. Artefaktnachweis lokal `/tmp/atlas-v340-runtime-454.zip`; kein pauschaler Rerun und keine bewiesene Emulatorstörung.
+
+## Gezielte Android-CI-Korrektur
+
+Die Stift-Testszene verwendet jetzt eine Position und Größe innerhalb des tatsächlichen Hosts und begrenzt das Dragziel auf dessen Grenzen. Die Mehranschluss-/Abbruchtests verwenden Potenz mit tatsächlich mehreren geordneten Eingängen anstelle der einportigen Join-Addition. Die optionale Messannahme wird über eine äußere RuleChain vor der Compose-Coroutine ausgewertet; Messablauf und Opt-in-Argument bleiben erhalten.
+
+Der Methodenquellen-Dialogtest wählt die beabsichtigte Potenzquelle anhand eines stabilen Operator-ID-Testtags, scrollt zur Kachel. Ein zuvor mehrdeutiger oder außerhalb des sichtbaren Bereichs liegender Tap ist eine begründete Hypothese, keine bewiesene Fehlerursache. Weder Tastaturlayout noch Produktfehlerfreiheit werden aus dieser Testanpassung abgeleitet; erst der neue Android-CI-Lauf kann den Bedienpfad bestätigen. Die einzige produktive Anpassung ist ein inertes Semantik-Testtag. Lokale App-Tests, Lint und App-/Test-APK erfolgreich (45s, 207Tasks); abschließende Test-APK-Kompilierung der endgültigen Testfassung ebenfalls erfolgreich (113Tasks aktuell,708ms). Es wurde weder eine zusätzliche Espresso-Abhängigkeit aufgenommen noch ein IME-Schließen in der Testfassung verwendet. Sämtliche fünf Pflichtjobs müssen auf dem neuen Head erneut grün sein.

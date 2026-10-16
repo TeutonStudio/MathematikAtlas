@@ -21,6 +21,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -299,7 +300,7 @@ private fun OperatorKachel(
     }
     OutlinedCard(
         onClick = auswählen,
-        modifier = Modifier.fillMaxWidth().semantics { selected = ausgewählt },
+        modifier = Modifier.fillMaxWidth().testTag("rechner-operator:${eintrag.id}").semantics { selected = ausgewählt },
         border = BorderStroke(
             if (ausgewählt) 2.dp else 1.dp,
             if (ausgewählt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,

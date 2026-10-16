@@ -44,12 +44,12 @@ class MethodenQuelleGeraeteTest {
         compose.setContent { MaterialTheme { Column { MethodenQuellenInspektor.Inhalt(state.value, null, aktionen) } } }
         compose.onNodeWithText("Identität").performClick()
         compose.onNodeWithText("Operator suchen").performTextInput("Potenz")
-        compose.onAllNodes(hasText("Potenz", substring = false) and hasClickAction()).onLast().performClick()
+        compose.onNodeWithTag("rechner-operator:operator:ZAHL:zahl.potenz").performScrollTo().performClick()
         compose.onNodeWithText("Abbrechen").performClick()
         compose.runOnIdle { assertEquals(standard, state.value) }
         compose.onNodeWithText("Identität").performClick()
         compose.onNodeWithText("Operator suchen").performTextInput("Potenz")
-        compose.onAllNodes(hasText("Potenz", substring = false) and hasClickAction()).onLast().performClick()
+        compose.onNodeWithTag("rechner-operator:operator:ZAHL:zahl.potenz").performScrollTo().performClick()
         compose.onNodeWithText("Übernehmen").performClick()
         compose.runOnIdle {
             assertNotNull(methodenQuellKnoten(state.value))

@@ -88,7 +88,7 @@ class PieGeraeteTest {
 
     private fun startKnoten(richtung: AnschlussRichtung = AnschlussRichtung.Ausgang,
         art: AnschlussArtId = MathematikAnschlussArten.Zahl.id): KnotenDaten = KnotenDaten(
-        art = "test", name = "Start", position = GraphPunkt(140f, 240f), größe = GraphGröße(200f, 100f),
+        art = "test", name = "Start", position = GraphPunkt(24f, 80f), größe = GraphGröße(120f, 80f),
         anschlüsse = listOf(AnschlussDaten(name = "start", richtung = richtung, art = art,
             kante = if (richtung == AnschlussRichtung.Ausgang) AnschlussKante.Rechts else AnschlussKante.Links)))
 
@@ -108,7 +108,8 @@ class PieGeraeteTest {
             val start = startKnoten()
             compose.runOnIdle { atlas.editor.ersetzeKarte(KartenDaten(name = "Stift", knoten = listOf(start))) }
             val griff = compose.onNode(hasContentDescription("Start, Anschluss start", substring = true)).fetchSemanticsNode().boundsInRoot.center
-            val ziel = griff + Offset(260f, 160f)
+            val host = compose.onNodeWithTag("piehost").fetchSemanticsNode().boundsInRoot
+            val ziel = Offset(minOf(griff.x + 120f, host.right - 24f), minOf(griff.y + 160f, host.bottom - 24f))
             stift(MotionEvent.ACTION_DOWN, griff)
             stift(MotionEvent.ACTION_MOVE, griff + Offset(50f, 30f), button)
             compose.runOnIdle { assertEquals(PieEbene.Geschlossen, atlas.pie.ebene) }
@@ -131,7 +132,7 @@ class PieGeraeteTest {
     @Test fun mehrereAnschluesseWerdenAusgewaehltUndAtomarVerbunden() {
         szene(); val start = startKnoten(); öffneAnschlussPie(start)
         val eintrag = compose.runOnIdle { atlas.pie.einträge.first { e ->
-            e.vorlage.art == ZAHLENRECHNER_ART && e.vorlage.standardParameter[ZAHLENRECHNER_OPERATOR] == "zahl.addition"
+            e.vorlage.art == ZAHLENRECHNER_ART && e.vorlage.standardParameter[ZAHLENRECHNER_OPERATOR] == "zahl.potenz"
         } }
         compose.runOnIdle {
             atlas.pie.definitionÖffnen(eintrag); assertEquals(PieEbene.Definition, atlas.pie.ebene)
@@ -174,7 +175,7 @@ class PieGeraeteTest {
             }
             compose.waitUntil(timeoutMillis = 60_000) { !atlas.pie.lädt }
             compose.runOnIdle {
-                val e = atlas.pie.einträge.first { it.vorlage.art == ZAHLENRECHNER_ART && it.vorlage.standardParameter[ZAHLENRECHNER_OPERATOR] == "zahl.addition" }
+                val e = atlas.pie.einträge.first { it.vorlage.art == ZAHLENRECHNER_ART && it.vorlage.standardParameter[ZAHLENRECHNER_OPERATOR] == "zahl.potenz" }
                 atlas.pie.beginneZiehen(e, Offset(600f, 500f), Offset.Zero, 1f); atlas.pie.ablegen()
                 assertEquals(PieEbene.Anschluss, atlas.pie.ebene)
             }
