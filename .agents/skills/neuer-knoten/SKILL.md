@@ -1,11 +1,17 @@
 ---
 name: neuer-knoten
-description: Plant, implementiert und verifiziert neue Knotentypen einschließlich ihrer mathematischen Semantik, Persistenz und Versionswirkung.
+description: Plant, implementiert und verifiziert neue oder wesentlich geänderte Knotenverträge sowie Knotenkonsolidierungen im Mathematik Atlas; prüft kanonischen Bestand, Methoden-, Tupel- und Formelverträge, Migration und Versionswirkung.
 ---
 
 # Neuen Knoten entwickeln
 
 Verwende diesen Skill für neue Knotentypen und Knotenfamilien sowie wesentliche Änderungen an bestehenden Knotenverträgen, Operatorzuordnung oder Knotendarstellung. Lies zuerst `AGENTS.md`, `docs/codex/NEW_NODE_WORKFLOW.md`, `docs/codex/NODE_CONTRACT.md` und die relevanten Architekturdateien.
+
+## Kanonischen Bestand und Vertragsumfang bestimmen
+
+Bei Typentscheidung, Konsolidierung, Legacybereinigung oder Änderungen an Methoden, Tupeln, Formeln und Übersetzungen lies [Katalog-, Migrations- und Vertragsregeln](references/katalog-und-vertraege.md). Diese Referenz beschreibt die bevorzugten Bestandspfade, verlustfreie Grenzen und die zugehörigen Prüfgates. Ein Analysebefund ist ein Prüfauftrag, keine Löschfreigabe.
+
+Unterscheide den sichtbaren Erstellen-Katalog `KanonischerMathematikKnotenKatalog.alle()` von lade-kompatiblen Vorlagen und Auswertern. Ermittle die tatsächlich hinzugefügten Typ-Schlüssel über den Katalogdiff und `release/knotentypen.json`, nicht über Dateinamen, Vorlagenanzahl oder neue Operatoren. Verwende den Katalog auch für Suche, anschlussbezogene Varianten und Methodenquellen; keine mathematische Ersetzungslogik je Plattform.
 
 ## Rollen vor der Typentscheidung trennen
 
@@ -62,7 +68,7 @@ Ein Implementierungsagent darf weder einen neuen Knotentyp in eine reservierte `
 
 ## Ablauf
 
-1. `master_verwalter` prüft Releasezustand, Versionsraum und reserviert die passende `y`-Version.
+1. `master_verwalter` prüft Releasezustand, Versionsraum und reserviert anhand des tatsächlichen Katalogumfangs die passende `x`- oder `y`-Version.
 2. `node_planner` untersucht vergleichbare Knoten, Registry, Auswerter, Inspector, Persistenz und Tests.
 3. Der Plan nennt alle neuen Typ-Schlüssel und enthält einen Abschnitt **Versionswirkung**.
 4. `math_reviewer` prüft mathematisch nicht triviale Semantik.
@@ -81,6 +87,8 @@ Ein Implementierungsagent darf weder einen neuen Knotentyp in eine reservierte `
 - Auswertung und Fehlerfälle,
 - Inspector und Darstellung,
 - Persistenz und Migration,
+- bei Konsolidierung: Altart/Altoperator, kanonisches Ziel, Verbraucher, Migration, Erhalt von IDs/Metadaten und belegte Entfernungsvoraussetzungen,
+- bei Methoden-/Tupel-/Formeländerungen: betroffene Vertragsanforderungen, Ende-zu-Ende-Nachweis und ausdrücklich offene Restpunkte nach der verlinkten Referenz,
 - Tests und Prüfbefehle,
 - reservierte Version und Begründung für `y` oder `x`.
 
