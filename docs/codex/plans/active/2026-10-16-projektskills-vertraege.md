@@ -1,7 +1,7 @@
 # ExecPlan: Projektskills für kanonische Knoten und Verträge
 
 ## 1. Titel und Status
-2026-10-16; Skillüberarbeitung zur PR-Prüfung, keine Veröffentlichung. Branch `samai/v3.4.1-projektskills-vertraege`, Basis `d37d479f8f51a1d153f962eeca77838262b88a09` (`v3.4.0`).
+2026-10-16; Skillüberarbeitung zur PR-Prüfung abgeschlossen, Release-/CI-Abnahme offen, keine Veröffentlichung. Branch `samai/v3.4.1-projektskills-vertraege`, Basis `d37d479f8f51a1d153f962eeca77838262b88a09` (`v3.4.0`).
 
 ## 2. Ziel und Nutzerwirkung
 Vorhandene Skills sollen bei Knotenarbeit kanonische Bestandspfade bevorzugen, Redundanzbefunde vor einer Bereinigung belegen und Methoden-, Tupel- und Formelverträge einschließlich Identitäten und Metadaten erhalten. Ergebnis ist ein eigener Prüf-PR.
@@ -27,8 +27,9 @@ Vier vorhandene `SKILL.md`, eine gemeinsame Referenz und dieser Plan. Governance
 ## 9. Meilensteine
 - [x] M1 Bestand/Governance prüfen: master, fünf Skills, Katalog/Migration/Verträge gelesen; unabhängiger `master_verwalter` bestätigt v3.4.1/x und Basis.
 - [x] M2 Regeln ergänzen: vier Skills und gemeinsame Referenz erstellt; README-Skill unverändert.
-- [-] M3 Verifikation: Skillvalidierung, Links, Repository-, Standardkarten- und Releasechecks bestehen; unabhängige Nachprüfung und PR-Kontext folgen.
-- [ ] M4 SamAI-Commit, Push und Draft-PR; CI-Status dem Head zuordnen.
+- [x] M3 Lokale Verifikation: Skillvalidierung, Links, Repository-, Standardkarten- und Releasechecks bestanden; unabhängige Nachprüfung einschließlich zweier Anwendungsszenarien ohne blockierende Findings. Tatsächlicher PR-Kontext #455 bestanden.
+- [x] M4 Implementierungscommit `ff2feed26b96bf3dc95148940d97be57630a33ce` als SamAI/SamAI geprüft und gepusht; [Draft-PR #455](https://github.com/TeutonStudio/MathematikAtlas/pull/455) gegen unveränderte Basis master eröffnet. Alle fünf Pflichtjobs gestartet; vollständige CI-Abnahme offen.
+- [ ] M5 Releaseabnahme außerhalb dieses Skillpflegeauftrags: aktuelle Head-CI und menschliche PR-Prüfung; kein Merge beauftragt.
 
 ## 10. Konkrete Umsetzungsschritte
 `neuer-knoten` um Katalogentscheidung, Migrations-/Vertragsevidenz und korrekte x/y-Ablaufregel ergänzen. Inspector/Dialog an dieselbe Referenz anbinden; Release-Skill um Manifest-, Migrations-, CI- und Vollständigkeitsgate ergänzen. Prüfungen ausführen, Abschlussdiff prüfen, über SamAI-Werkzeug committen, nur eigenen Branch pushen und Draft-PR gegen master eröffnen.
@@ -52,4 +53,4 @@ Repository-/Architektur-/Methodenmodell-/Desktop-Shadowprüfungen, 15 Standardka
 Frühere Chatanalyse nicht als Text verfügbar; stattdessen aktuelle Quellpfade und versionierte Vertragsanalysen geprüft. Zusätzlich nötige Release-Metadaten folgen dem vorhandenen Guard, ohne dessen Ausnahmeregel zu erweitern.
 
 ## 17. Ergebnis und Verifikation
-Skillregeln umgesetzt; abschließende Nachprüfung/Commit/PR und CI-Status noch einzutragen. Standalone-Kernprüfung nicht ausführbar: `kotlinc` fehlt. Gradle-Gesamtprüfung `bash gradlew test :app:assembleDebug :app:lintDebug :desktopApp:compileKotlin --no-daemon --console=plain` nach Netzwerkfreigabe gestartet, vor der Projektprüfung abgebrochen: benötigtes JDK 21 fehlt und Toolchain-Download ist nicht konfiguriert (lokal JDK 25). Keine Build-/Laufzeitabnahme behauptet.
+Vier vorhandene Skills und eine gemeinsame Referenz umgesetzt, keine neuen Skills oder Produktänderungen. Unabhängige statische Abnahme und Szenarienprüfung (unsichtbare Legacyknoten entfernen; strukturierten Methodenaufruf als LaTeX speichern) ohne blockierende Findings. Prüf-PR #455 vorhanden; die statischen Prüfungen beziehen sich auf den Implementierungsstand `ff2feed2`, dieser anschließende Planabschluss ändert nur dieses Dokument. PR-Kontextprüfung mit echten GitHub-Basis-/Head-/Titelangaben bestanden. Pflicht-CI läuft; keine Mergefreigabe. Skillauftrag erfüllt, Plan bleibt für die separate Release-/CI-Abnahme aktiv. Standalone-Kernprüfung nicht ausführbar: `kotlinc` fehlt. Gradle-Gesamtprüfung `bash gradlew test :app:assembleDebug :app:lintDebug :desktopApp:compileKotlin --no-daemon --console=plain` nach Netzwerkfreigabe gestartet, vor der Projektprüfung abgebrochen: benötigtes JDK 21 fehlt und Toolchain-Download ist nicht konfiguriert (lokal JDK 25). Keine Build-/Laufzeitabnahme behauptet.
