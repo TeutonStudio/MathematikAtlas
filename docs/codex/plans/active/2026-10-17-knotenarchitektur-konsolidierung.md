@@ -185,6 +185,26 @@ Shadowprüfung, 15 Standardkarten, Releaseplan/Versionsfolge und 14 Guards grün
 Diese historischen Nachweise sind keine Freigabe der neuen Implementierung.
 Neue Ergebnisse werden hier dem geprüften Commit zugeordnet.
 
+M0-Nachlauf: 2.123 JVM-/Desktop-Testfälle, keine Fehler, ein vorhandener
+Opt-in-Messfall übersprungen; elf neue Katalog-/Migrations-/Dispatchregressionen.
+Unabhängige Nachprüfung nach den Pipeline-, Typ-, Rollen- und Dispatchkorrekturen
+ohne offene Findings. Debug-/Test-APKs und Desktopkompilierung erfolgreich.
+Repository-/Standardkarten-/Releaseplan-/Versionsfolge-/14Guard-/Diffprüfungen grün.
+Android-Gerät SM-X920: sieben Editortests bestanden; Appprüfung konnte wegen
+INSTALL_FAILED_UPDATE_INCOMPATIBLE (andere installierte Signatur) nicht starten.
+Bestehende App/Daten wurden bewahrt. Gradle meldete dennoch Gesamt-Erfolg;
+dies wird ausdrücklich nicht als bestandene App-Laufzeitprüfung gewertet.
+Standalone-Kern lokal mangels kotlinc nicht ausführbar; RPM lokal wegen fehlendem
+rpmbuild/unsupported rpm nicht erzeugbar. PR456 CI erbrachte am ersten Head
+aed308cacc1cfd3d10fa04877ea82adde061a553 die Kern-/Emulator-/RPM-Installations-/
+Neustartpersistenz-/Deinstallationsnachweise. Nachfolgende Rollen-/Dispatchhärtung
+benötigt erneute CI am finalen Head; Veröffentlichung bis dahin gesperrt.
+Android-Lint und endgültiger Gesamtprozessabschluss grün: kompletter obiger
+Gradle-Test-/Lint-/APK-/Desktopbefehl ohne lokale Geräte-/RPM-Tasks erfolgreich
+in 2m49s, 277 Tasks. Quellstand: aed308ca plus die abschließende explizite
+Rollen-/Dispatchhärtung; der nachfolgende SamAI-Commit umfasst exakt diesen
+geprüften Produktbaum. M0 bleibt bis grüner CI dieses Commits unveröffentlicht.
+
 ## 15. Entscheidungsprotokoll
 
 2026-10-17 Nutzer bestätigt: mehrdeutige Altknoten ausdrücklich ablehnen,

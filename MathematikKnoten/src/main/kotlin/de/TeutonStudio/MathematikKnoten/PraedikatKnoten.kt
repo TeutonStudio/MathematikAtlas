@@ -188,8 +188,13 @@ fun KartenDaten.migrierePraedikatKnoten(): KartenDaten = copy(knoten = knoten.ma
     val benutzt = mutableSetOf<AnschlussId>()
     val paare: List<Pair<AnschlussDaten, AnschlussDaten>> = erwartet.map { soll ->
         val kandidaten = alt.anschlüsse.filter { it.id !in benutzt && it.richtung == soll.richtung }
+        val historischerName = when (operatorId) {
+            "geometrie.relation.inzidenz" -> mapOf("punkt" to "links", "objekt" to "rechts")[soll.name]
+            "menge.relation.element" -> mapOf("element" to "links", "menge" to "rechts")[soll.name]
+            else -> null
+        }
         val quelle = kandidaten.singleOrNull { it.name == soll.name }
-            ?: kandidaten.singleOrNull { it.reihenfolge == soll.reihenfolge }
+            ?: kandidaten.singleOrNull { historischerName != null && it.name == historischerName }
             ?: return@migration abgelehnt("Die Anschlussrolle '${soll.name}' ist mehrdeutig oder fehlt.")
         benutzt += quelle.id
         quelle to soll

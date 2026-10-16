@@ -72,7 +72,10 @@ class KartenAuswerter(
             val knoten = index.knoten.getValue(id)
             val konfigurationsFehler = runCatching { validiereMethodenQuellenKonfiguration(knoten) }.exceptionOrNull()
             val fest = vorgegebeneAusgaben[id]
-            val ergebnis = if (konfigurationsFehler != null) {
+            val sperre = register.auswertungssperre(knoten)
+            val ergebnis = if (sperre != null) {
+                KnotenAuswertungsErgebnis(emptyMap(), fehler = sperre)
+            } else if (konfigurationsFehler != null) {
                 KnotenAuswertungsErgebnis(emptyMap(), fehler = konfigurationsFehler.message)
             } else if (fest != null) {
                 KnotenAuswertungsErgebnis(fest)
@@ -105,8 +108,6 @@ class KartenAuswerter(
             fehler = text,
             auswertungsDauerNanos = dauerSeit(startNanos),
         )
-
-        register.auswertungssperre(knoten)?.let { return fehler(it) }
 
         val verbundeneEingänge = runCatching {
             sammleEingänge(knoten, verbindungen, index, ergebnisse)

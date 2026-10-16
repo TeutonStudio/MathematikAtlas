@@ -1,6 +1,6 @@
 # Kanonischer Erstellen-Katalog und diagnostische Migrationsgrenzen
 
-Datum: 2026-10-17. Status: M0 implementiert, Verifikation läuft.
+Datum: 2026-10-17. Status: M0 implementiert und lokal verifiziert; Release-CI ausstehend.
 
 ## Kontext
 
@@ -24,11 +24,13 @@ Verträge und Reihenfolge und remappt Standards und Kartenfallbacks gemeinsam.
 Zusätzliche/doppelte/mehrfach belegte oder inkompatibel typisierte Ports,
 ungeklärte Typableitungen und kollidierende Quellen bleiben im Originalknoten
 mit Migrationsdiagnose erhalten. Nachfolgende Normalisierung darf diese Daten
-nicht bereinigen. Die Diagnose sperrt fachliche Auswertung.
+nicht bereinigen. Die Diagnose sperrt fachliche Auswertung. Rollen werden ausschließlich anhand
+kanonischer Namen oder ausdrücklich bekannter Legacy-Aliase migriert;
+Layoutpositionen begründen keine semantische Rolle.
 
 Der Mathematikadapter bietet dafür eine generische registrierbare Auswertungssperre;
-der Gesamtauswerter liefert die fachliche Diagnose. Sie gilt vor Eingangssammlung
-im Graph und auch bei direktem Registeraufruf. Keine neue Parallelregistry.
+der Gesamtauswerter liefert die fachliche Diagnose. Sie gilt vor allen Graphdispatchzweigen einschließlich vorgegebener Ausgaben
+und Kartenreferenzen sowie bei direktem Registeraufruf. Keine neue Parallelregistry.
 
 ## Alternativen
 

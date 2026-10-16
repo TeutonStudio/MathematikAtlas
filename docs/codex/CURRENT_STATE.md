@@ -592,7 +592,13 @@ Numerische Prüfgrenze: getrennte Ungleichungsrandzüge werden derzeit nur für 
   Rollenwechsel remappen Standards und Kartenfallbacks mit stabilen IDs.
   Eine Migrationsdiagnose sperrt direkte und graphische Auswertung. Nachfolgende
   Mengen-/Methoden-/Join-/Dynamiknormalisierung respektiert diese Grenze.
-- Unabhängige Quellprüfung nach vier korrigierten Findings ohne offene Findings.
-  Gesamtverifikation und Veröffentlichung noch offen; keine Gesamtfreigabe M1–M7.
+- Unabhängige Quellprüfung einschließlich expliziter Legacyrollen und Sperre vor
+  Kartenreferenzen/festen Ausgaben ohne offene Findings. Vollständige lokale
+  JVM-/Desktop-/App-Lint-/APK-Prüfung erfolgreich: 2.123 Testfälle, 0 Fehler,
+  1 vorhandener Opt-in-Messfall übersprungen; elf neue Regressionen bestanden.
+  Sieben Editortests am SM-X920 bestanden; Appinstallation wegen abweichender
+  Signatur blockiert, vorhandene App/Daten bewahrt. Standalone-kotlinc und lokale
+  RPM-Erzeugung nicht verfügbar; CI-Nachweise und Veröffentlichung siehe Plan.
+  Keine Gesamtfreigabe M1–M7.
   [Aktiver Gesamtplan](plans/active/2026-10-17-knotenarchitektur-konsolidierung.md),
   [Entscheidung](decisions/2026-10-17-kanonischer-katalog-migrationsschutz.md).

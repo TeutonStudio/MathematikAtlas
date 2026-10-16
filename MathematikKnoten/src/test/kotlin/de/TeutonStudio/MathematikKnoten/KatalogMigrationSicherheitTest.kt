@@ -140,4 +140,28 @@ class KatalogMigrationSicherheitTest {
         assertEquals(gesperrt, KartenDatenJson.lese(MathematikKartenCodec.schreibe(gesperrt)))
     }
 
+    @Test fun `unbekannte Rollennamen werden nicht aus Layoutpositionen erfunden`() {
+        val basis = GeometrieKnotenVorlagen.Inzidenz.erzeuge(GraphPunkt.Zero)
+        val alt = basis.copy(anschlüsse = basis.anschlüsse.map {
+            if (it.name == "links") it.copy(name = "unbekannt") else it
+        })
+        val neu = KartenDaten(name = "Rolle", knoten = listOf(alt)).migrierePraedikatKnoten().knoten.single()
+        assertEquals(alt, neu.copy(parameter = alt.parameter))
+        assertNotNull(neu.parameter[RECHNER_MIGRATION_DIAGNOSE])
+    }
+
+    @Test fun `Sperre gilt vor Kartenreferenzen und vorgegebenen Ausgaben`() {
+        val alt = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero).copy(
+            parameter = mapOf(RECHNER_MIGRATION_DIAGNOSE to "Original erhalten"),
+            kartenVerweis = KartenVerweis(KartenId("fremdeKarte"), 1))
+        val register = GesamterMathematikAuswerter.erzeugeRegister()
+        val auswerter = KartenAuswerter(register, KartenQuelle { error("Gesperrte Karte darf nicht geladen werden") })
+        val karte = KartenDaten(name = "Referenz", knoten = listOf(alt))
+        val fest = mapOf(alt.id to mapOf("wert" to BedingterWert(RationaleZahl.Eins)))
+        listOf(auswerter.auswerten(karte), auswerter.auswerten(karte, fest)).forEach {
+            assertEquals("Migrationsdiagnose: Original erhalten", it.knoten.getValue(alt.id).fehler)
+            assertTrue(it.knoten.getValue(alt.id).ausgaben.isEmpty())
+        }
+    }
+
 }
