@@ -1,4 +1,4 @@
-> Android-CI-Nachprüfung PR #454: Der erste Head41d94f04 hatte vier grüne Pflichtjobs und sechs App-Laufzeitfehler bei erfolgreichen7/7Editor-Gerätetests. Gezielte Anpassungen der Testgeometrie, realer Mehranschlusskandidaten, Opt-in-RuleChain und eindeutiger Methodenquellenauswahl sind vorbereitet. Fehlender Dialogbutton ist noch nicht als Produkt-/Tastaturlayoutfehler erklärt; erst die erneute vollständige CI bestätigt den korrigierten Head. Kein Merge vor allen grünen Pflichtjobs.
+> Android-CI-Nachprüfung PR #454: Nach Head91f69aa3 verbleiben eine fehlerhafte Lazy-Auswahlbedienung und zwei als Fehler gemeldete deaktivierte Opt-in-Messungen. Der Gerätetest nutzt jetzt den Lazycontainer-Scrollvertrag; reguläre CI schließt ausschließlich die separat ausführbaren Hardwaremessungen ausdrücklich aus. Diese Messungen gelten damit weder als bestanden noch als Skip. Kein Layoutrefactor; alle funktionalen Gerätetests bleiben verpflichtend. Neuer vollständiger CI-Nachweis vor Veröffentlichung erforderlich.
 
 ## Releaseabschluss v3.4.0, 2026-10-16 (lokal geprüft)
 

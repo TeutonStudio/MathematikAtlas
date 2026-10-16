@@ -270,7 +270,7 @@ private fun AuswahlBereich(
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(210.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().testTag("rechner-operator-liste"),
                 contentPadding = PaddingValues(horizontal = AtlasDialogAbstände.eintragHorizontal, vertical = AtlasDialogAbstände.eintragVertikal),
                 horizontalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
                 verticalArrangement = Arrangement.spacedBy(AtlasDialogAbstände.beschreibung),
