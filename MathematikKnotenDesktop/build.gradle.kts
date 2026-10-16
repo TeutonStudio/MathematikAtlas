@@ -8,7 +8,6 @@ kotlin {
     jvmToolchain(17)
     sourceSets.named("main") {
         kotlin.srcDir("../MathematikKnoten/src/main/kotlin")
-        kotlin.exclude("de/TeutonStudio/MathematikKnoten/visualisierung/ui/VisualisierungsKnotenRenderer.kt")
     }
 }
 

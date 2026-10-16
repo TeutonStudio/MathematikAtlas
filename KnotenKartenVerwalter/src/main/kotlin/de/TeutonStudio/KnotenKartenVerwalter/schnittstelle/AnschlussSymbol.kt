@@ -21,6 +21,10 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId
 import de.TeutonStudio.TypSystem.TypAusdruck
 import de.TeutonStudio.TypSystem.TypId
 import kotlin.math.max
@@ -74,6 +78,15 @@ internal fun anschlussSymbolPlan(anschluss: AnschlussDaten): AnschlussSymbolPlan
         return AnschlussSymbolPlan.Tupel(tupelRingPlan(emptyList(), unendlich = false))
     }
     return AnschlussSymbolPlan.Standard
+}
+
+/** Zeigt die fließende Methodensignatur, ohne die deklarierte Eingangsanforderung zu verengen. */
+fun KartenDaten.symbolAnschluss(knotenId: KnotenId, anschluss: AnschlussDaten): AnschlussDaten {
+    if (anschluss.richtung != AnschlussRichtung.Eingang) return anschluss
+    val quelle = verbindungen.firstOrNull { it.zu == AnschlussVerweis(knotenId, anschluss.id) }?.von ?: return anschluss
+    val port = knoten.firstOrNull { it.id == quelle.knotenId }?.anschlüsse?.firstOrNull { it.id == quelle.anschlussId }
+        ?: return anschluss
+    return if (port.vertrag.typ.alsMethodenSignatur() != null) anschluss.copy(vertrag = anschluss.vertrag.copy(typ = port.vertrag.typ)) else anschluss
 }
 
 /**

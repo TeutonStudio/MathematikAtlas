@@ -47,6 +47,37 @@ private fun vergleicheObjekte(links: MathematischesObjekt, rechts: Mathematische
     fun konkreteStruktur(a: MathematischesObjekt) = a is Tupel || a is OrientierterVektor || a is Matrix || a is Tensor ||
         a is RationaleZahl || a is KomplexeZahl || a is WahrheitsKonstante
     if (selbig && l::class != r::class && konkreteStruktur(l) && konkreteStruktur(r)) return vergleichsWert(false)
+    if (l is MengenAusdruck && r is MengenAusdruck) {
+        val a = l.kartesischeFaktorenOderNull()
+        val b = r.kartesischeFaktorenOderNull()
+        fun leer(m: MengenAusdruck): Boolean = when (m) {
+            LeereMenge -> true
+            is EndlicheMenge -> m.elemente.isEmpty()
+            else -> m.kartesischeFaktorenOderNull()?.any(::leer) == true
+        }
+        fun nichtLeer(m: MengenAusdruck): Boolean = when {
+            m is EndlicheMenge -> m.elemente.isNotEmpty()
+            MengenKonstante.vonMenge(m) != null -> m != LeereMenge
+            m is ReellesIntervall -> (m.links as? RationaleZahl)?.let { x ->
+                (m.rechts as? RationaleZahl)?.let { y -> x < y || x == y && !m.linksOffen && !m.rechtsOffen }
+            } == true
+            else -> m.kartesischeFaktorenOderNull()?.all(::nichtLeer) == true
+        }
+        if (leer(l) && leer(r)) return vergleichsWert(true)
+        if (a != null && b != null) {
+            val vergleich = folge(a, b)
+            if (vergleich.wahrheitswert != Wahrheitswert.Lüge) return vergleich
+            return if (a.all(::nichtLeer) && b.all(::nichtLeer) || leer(l) && b.all(::nichtLeer) || leer(r) && a.all(::nichtLeer))
+                vergleich else unbekannterVergleich()
+        }
+        if (l is KartesischerPotenzraum && r is KartesischerPotenzraum &&
+            vereinfache(l.dimension, kontext) == vereinfache(r.dimension, kontext)) {
+            // Gleiche symbolische Dimension und gleiche Basis sind hinreichend;
+            // unterschiedliche Basen beweisen bei eventuell Dimension 0 nichts.
+            val basis = paar(l.grundmenge, r.grundmenge)
+            if (basis.wahrheitswert == Wahrheitswert.Wahr) return basis
+        }
+    }
     val lk = komponenten(l)
     val rk = komponenten(r)
     if (lk != null && rk != null) return folge(lk, rk)

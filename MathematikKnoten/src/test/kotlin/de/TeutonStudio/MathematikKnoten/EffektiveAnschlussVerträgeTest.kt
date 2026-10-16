@@ -54,10 +54,12 @@ class EffektiveAnschlussVerträgeTest {
         editor.wiederholen()
         assertTrue(editor.karte.verbindungen.isEmpty())
     }
-    @Test fun `Variable verwendet konfigurierten Zahlenbereich statt Legacyfallback`() {
+    @Test fun `Variable verwendet verbundenen Zahlenbereich statt Legacyfallback`() {
         val q = MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero).copy(parameter = mapOf("werteVorrat" to "C"))
         val z = ziel(MathematikAnschlussArten.Zahl.id, TypAusdruck.Atom(MathematischeTypen.Reell))
-        val karte = KartenDaten(name = "Test", knoten = listOf(q, z))
+        val laufzeit = MathematikKartenLaufzeit()
+        val start = KartenDaten(name = "Test", knoten = listOf(q, z)).mitTestGrundräumen()
+        val karte = synchronisiereMethodenAufrufe(start, laufzeit.auswerten(start), laufzeit.graphPrüfung)
         assertEquals(TypAusdruck.Atom(MathematischeTypen.Komplex), prüfung().effektiverTyp(karte, ref(q)))
         assertIs<VerbindungsPrüfung.Abgelehnt>(prüfung().prüfe(karte, ref(q), ref(z)))
     }

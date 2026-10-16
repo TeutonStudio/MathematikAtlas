@@ -335,6 +335,11 @@ private fun KontextDialog(zustand: AtlasZustand, kontext: GraphKontext, schließ
     }
     if (kontext is GraphKontext.Knoten) {
         val knoten = zustand.editor.karte.knoten.firstOrNull { it.id == kontext.id }
+        val istVisualisierung = remember(kontext.id) { knoten?.art == "mathematik.visualisierung" }
+        if (istVisualisierung) {
+            AtlasVisualisierungsDialog(zustand, kontext.id, schließen)
+            return
+        }
         if (knoten != null) {
             KnotenKonzeptDialog(zustand, knoten, schließen)
             return

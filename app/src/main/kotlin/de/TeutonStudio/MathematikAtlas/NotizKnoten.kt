@@ -7,7 +7,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
+import de.TeutonStudio.MathematikAtlas.speicher.RgbFarbe
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +26,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktione
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 
 internal const val NOTIZ_KNOTEN_ART = "karte.notiz"
+internal const val NOTIZ_SCHRIFTFARBE = "notiz.schriftfarbe"
 internal const val NOTIZ_TEXT_PARAMETER = "text"
 internal const val NOTIZ_AUSRICHTUNG_PARAMETER = "textAusrichtung"
 internal const val NOTIZ_SCHRIFTGROESSE_PARAMETER = "schriftgrößeSp"
@@ -88,6 +92,7 @@ internal object NotizKnotenRenderer : KnotenRenderer {
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(LocalAtlasAbstände.current.bereich),
+                color = (knoten.eigenschaften[NOTIZ_SCHRIFTFARBE] as? KnotenEigenschaft.Farbe)?.argb?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface,
                 fontSize = notizSchriftgrößeSp(knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER]).sp,
                 textAlign = notizTextAusrichtung(knoten.parameter[NOTIZ_AUSRICHTUNG_PARAMETER]),
                 overflow = TextOverflow.Clip,
@@ -138,6 +143,19 @@ internal object NotizKnotenInspektor : KnotenInspektor {
                 }
             }
         }
+
+        var farbeOffen by remember { mutableStateOf(false) }
+        val argb = (knoten.eigenschaften[NOTIZ_SCHRIFTFARBE] as? KnotenEigenschaft.Farbe)?.argb
+        Text("Schriftfarbe", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { aktionen.eigenschaften(knoten.eigenschaften - NOTIZ_SCHRIFTFARBE) }) { Text("Automatisch") }
+            OutlinedButton(onClick = { farbeOffen = true }) { Text("Farbe auswählen") }
+        }
+        fun rgb(wert: Long) = RgbFarbe(((wert shr 16) and 255) / 255.0, ((wert shr 8) and 255) / 255.0, (wert and 255) / 255.0)
+        FarbAuswahlDialog(farbeOffen, rgb(argb ?: 0xFF202020), rgb(0xFF202020), "Schriftfarbe", { farbeOffen = false }, {
+            aktionen.eigenschaften(knoten.eigenschaften + (NOTIZ_SCHRIFTFARBE to KnotenEigenschaft.Farbe(it.argbLong)))
+            farbeOffen = false
+        })
 
         val schriftgröße = notizSchriftgrößeSp(knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER])
         Text("Schriftgröße", style = MaterialTheme.typography.titleSmall)

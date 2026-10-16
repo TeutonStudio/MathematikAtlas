@@ -20,6 +20,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.symbolAnschluss
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AnschlussSymbol
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.sichtbareAnschlussArtIds
 
@@ -52,7 +53,7 @@ internal fun anschlussLegendenEinträge(
     register: AnschlussArtRegister,
 ): List<AnschlussLegendenEintrag> {
     val signaturen = karte.knoten
-        .flatMap { it.anschlüsse }
+        .flatMap { k -> k.anschlüsse.map { karte.symbolAnschluss(k.id, it) } }
         .map { anschluss ->
             AnschlussLegendenSignatur(
                 ids = sichtbareAnschlussArtIds(anschluss),

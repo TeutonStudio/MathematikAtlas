@@ -5,6 +5,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.vorschauTeilgraphErsetzen
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand
 import de.TeutonStudio.MathematikKnoten.abstraktion.*
+import de.TeutonStudio.MathematikRechenSystem.kern.freieVariablen
 import de.TeutonStudio.MathematikRechenSystem.kern.Variable
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.zerlegeAlsPolynom
@@ -21,12 +22,12 @@ class PolynomAbstraktionsRegelTest {
     @Test
     fun `kubisches rechengeflecht wird als tupel und polynom vorgeschlagen und atomar ersetzt`() {
         val laufzeit = MathematikKartenLaufzeit()
-        val karte = kubischesPolynom()
-        val vorherAuswertung = laufzeit.auswerten(karte)
+        val karte = kubischesPolynom().mitTestGrundräumen()
+        val vorherAuswertung = laufzeit.auswerten(karte.mitTestGrundräumen())
         assertTrue(vorherAuswertung.fehler.isEmpty(), vorherAuswertung.fehler.joinToString())
         val wurzel = karte.knoten.last()
         val ausdruck = vorherAuswertung.knoten.getValue(wurzel.id).ausgaben.getValue("wert").objekt as ZahlAusdruck
-        assertNotNull(zerlegeAlsPolynom(ausdruck, Variable("x")))
+        assertNotNull(zerlegeAlsPolynom(ausdruck, ausdruck.freieVariablen().single()))
 
         val vorschlag = AbstraktionsRegister().analysiere(
             AbstraktionsKontext(
@@ -46,7 +47,7 @@ class PolynomAbstraktionsRegelTest {
 
         val editor = KartenEditorZustand(karte, laufzeit.graphPrüfung)
         editor.führeAus(KartenAktion.TeilgraphErsetzen(vorschlag.ersetzungsPlan))
-        assertTrue(laufzeit.auswerten(editor.karte).fehler.isEmpty())
+        assertTrue(laufzeit.auswerten(editor.karte.mitTestGrundräumen()).fehler.isEmpty())
         editor.rückgängig()
         assertEquals(karte, editor.karte)
     }
@@ -54,7 +55,7 @@ class PolynomAbstraktionsRegelTest {
     @Test
     fun `gemeinsam verwendeter zwischenknoten wird von keinem vorschlag geloescht`() {
         val laufzeit = MathematikKartenLaufzeit()
-        val basis = kubischesPolynom()
+        val basis = kubischesPolynom().mitTestGrundräumen()
         val potenz = basis.knoten.first { it.art == "mathematik.potenz" }
         val eins = zahl(1, GraphPunkt(0f, 600f))
         val verbraucher = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt(900f, 600f))
@@ -81,7 +82,7 @@ class PolynomAbstraktionsRegelTest {
     @Test
     fun `nachgeschaltete term zu methode schnittstelle bleibt erhalten`() {
         val laufzeit = MathematikKartenLaufzeit()
-        val basis = kubischesPolynom()
+        val basis = kubischesPolynom().mitTestGrundräumen()
         val wurzel = basis.knoten.last()
         val termZuMethode = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt(1480f, 240f))
         val grenze = verbinde(wurzel, "wert", termZuMethode, "term")
@@ -89,11 +90,11 @@ class PolynomAbstraktionsRegelTest {
             knoten = basis.knoten + termZuMethode,
             verbindungen = basis.verbindungen + grenze,
         )
-        val vorher = laufzeit.auswerten(karte).knoten.getValue(termZuMethode.id).ausgaben.getValue("methode")
+        val vorher = laufzeit.auswerten(karte.mitTestGrundräumen()).knoten.getValue(termZuMethode.id).ausgaben.getValue("methode")
         val vorschlag = AbstraktionsRegister().analysiere(
             AbstraktionsKontext(
                 karte = karte,
-                auswertung = laufzeit.auswerten(karte),
+                auswertung = laufzeit.auswerten(karte.mitTestGrundräumen()),
                 graphPrüfung = laufzeit.graphPrüfung,
                 auswerten = laufzeit::auswerten,
             ),

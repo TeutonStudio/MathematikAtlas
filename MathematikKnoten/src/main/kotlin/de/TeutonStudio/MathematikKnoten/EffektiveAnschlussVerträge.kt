@@ -123,15 +123,9 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
         }
         knoten.art == TUPEL_ABFLACHEN_ART -> TypAusdruck.Unbekannt
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.variable" -> {
-            val n = TypAusdruck.Literal(variablenDimension(knoten).toString())
-            val zahl = TypAusdruck.Atom(MathematischeTypen.Zahl)
-            when (variablenStruktur(knoten)) {
-                "zahl" -> WertebereichKonfiguration.Zahl(knoten.parameter["werteVorrat"] ?: "R").zuMenge().elementTypAusdruck()
-                "zeile" -> TypAusdruck.Parameterisiert(MathematischeTypen.ZeilenVektor, listOf(zahl, n))
-                "spalte" -> TypAusdruck.Parameterisiert(MathematischeTypen.SpaltenVektor, listOf(zahl, n))
-                else -> TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, List(variablenDimension(knoten) + if (variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL) 1 else 0) { zahl })
-            }
+            anschluss.vertrag.typ
         }
+
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.allgemeinerParameter" -> {
             val bereich = WertebereichKonfiguration.vonEigenschaft(knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT])
             if (bereich == WertebereichKonfiguration.Aussage) TypAusdruck.Atom(MathematischeTypen.Aussage)

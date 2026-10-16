@@ -150,6 +150,12 @@ class KartenEditorZustand(
     private var projektionsQuelle: KartenDaten? = null
     private var projektionsGruppe: VisuelleGruppenId? = null
     private var projektionsCache by mutableStateOf<GruppenProjektion?>(null)
+    var knotenFußzeilenHöhe by mutableStateOf(32f)
+        private set
+    fun meldeKnotenFußzeilenHöhe(höhe: Float) {
+        if (höhe != knotenFußzeilenHöhe) { knotenFußzeilenHöhe = höhe; projektionsQuelle = null }
+    }
+    private fun KartenDaten.mitKörpergeometrie(höhe: Float = knotenFußzeilenHöhe) = copy(knoten = knoten.map { it.copy(darstellungsFußzeilenHöhe = höhe) })
     var projektionImHintergrund = false
     private fun hatAktuelleProjektion(): Boolean {
         val alt = projektionsQuelle ?: return false
@@ -160,9 +166,10 @@ class KartenEditorZustand(
     suspend fun berechneProjektionImHintergrund() {
         val quelle = karte
         val gruppe = geöffneteGruppe
-        val ergebnis = withContext(Dispatchers.Default) { quelle.gruppenProjektion(gruppe, kotlin.coroutines.coroutineContext) }
+        val fußhöhe = knotenFußzeilenHöhe
+        val ergebnis = withContext(Dispatchers.Default) { quelle.mitKörpergeometrie(fußhöhe).gruppenProjektion(gruppe, kotlin.coroutines.coroutineContext) }
         if (quelle.id == karte.id && quelle.knoten == karte.knoten && quelle.verbindungen == karte.verbindungen &&
-            quelle.visuelleGruppen.hatGleicheGruppenProjektionWie(karte.visuelleGruppen) && gruppe == geöffneteGruppe) {
+            quelle.visuelleGruppen.hatGleicheGruppenProjektionWie(karte.visuelleGruppen) && gruppe == geöffneteGruppe && fußhöhe == knotenFußzeilenHöhe) {
             projektionsQuelle = quelle
             projektionsGruppe = gruppe
             projektionsCache = ergebnis
@@ -176,7 +183,7 @@ class KartenEditorZustand(
                     return projektionsCache?.takeIf { projektionsQuelle?.id == karte.id && projektionsGruppe == geöffneteGruppe }
                         ?: GruppenProjektion(karte.copy(knoten = emptyList(), verbindungen = emptyList(), visuelleGruppen = emptyList()), emptyMap(), emptyMap(), emptyMap(), emptySet())
                 }
-                projektionsCache = karte.gruppenProjektion(geöffneteGruppe)
+                projektionsCache = karte.mitKörpergeometrie().gruppenProjektion(geöffneteGruppe)
                 projektionsQuelle = karte
                 projektionsGruppe = geöffneteGruppe
             }

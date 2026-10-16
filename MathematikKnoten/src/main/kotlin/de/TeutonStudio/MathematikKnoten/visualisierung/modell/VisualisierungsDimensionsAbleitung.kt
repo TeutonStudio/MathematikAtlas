@@ -4,6 +4,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 /** Leitet nur dann einen Darstellungsraum ab, wenn die Mengenstruktur ihn eindeutig festlegt. */
 fun empfohleneRaumDimension(menge: MengenAusdruck): RaumDimension? = when (menge) {
+    is MethodenGraphMenge -> empfohleneRaumDimension(menge.methode.graphRaum())
     is Abbild -> empfohleneRaumDimension(menge.methode.zielMenge)
     KomplexeZahlen -> RaumDimension.C
     NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen,
@@ -45,7 +46,11 @@ fun empfohleneRaumDimension(menge: MengenAusdruck): RaumDimension? = when (menge
 
 fun VisualisierungsKonfiguration.mitWirksamerDimension(menge: MengenAusdruck?): VisualisierungsKonfiguration {
     if (dimensionsModus == DimensionsModus.Manuell || ausgabeKoordinaten.isNotEmpty() || menge == null) return this
-    val abgeleitet = empfohleneRaumDimension(menge) ?: return this
+    val abgeleitet = if (menge is Abbild && (methodenModus == MethodenDarstellungsModus.Funktionsgraph ||
+        methodenModus == MethodenDarstellungsModus.Automatisch && menge.methode.vorschrift is ZahlAusdruck && menge.methode.zielMenge != KomplexeZahlen)) {
+        (menge.methode.parameter.size + 1).alsReellerRaum()
+    } else empfohleneRaumDimension(menge)
+    if (abgeleitet == null) return this
     if (abgeleitet == dimension) return this
     val neueAchsen = when (abgeleitet) {
         RaumDimension.C -> AchsenZuordnung("re", "im", null)

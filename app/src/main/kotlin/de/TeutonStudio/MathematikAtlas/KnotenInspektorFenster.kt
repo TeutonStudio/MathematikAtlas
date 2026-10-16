@@ -57,6 +57,9 @@ private val INSPEKTOR_RAND = 16.dp
 @Composable
 internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
     val knoten = zustand.ausgewählterKnoten
+    var visualisierungsId by remember { mutableStateOf<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId?>(null) }
+    visualisierungsId?.let { id -> de.TeutonStudio.MathematikAtlas.AtlasVisualisierungsDialog(zustand, id) { visualisierungsId = null } }
+
     LaunchedEffect(knoten?.id) {
         if (knoten == null) InspektorSichtbarkeit.schließen()
     }
@@ -91,6 +94,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                         .padding(LocalAtlasAbstände.current.inhalt),
                     verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
                 ) {
+                    if (knoten.art == "mathematik.visualisierung") Button(onClick = { visualisierungsId = knoten.id }) { Text("Visualisierung öffnen") }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -139,8 +143,10 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                     de.TeutonStudio.MathematikKnoten.GeometryNodesEinstellungen(knoten,zustand::beantrageKonfiguration)
                     StandardwerteEditor(knoten, zustand)
                     de.TeutonStudio.MathematikKnoten.MethodenProjektionsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
+                    de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsAnschlussEinstellungen(knoten, zustand::beantrageKonfiguration)
+                    de.TeutonStudio.MathematikKnoten.GraphEingangsEinstellungen(knoten, zustand::beantrageKonfiguration)
                     de.TeutonStudio.MathematikKnoten.VisualisierungsVertragsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
-                    if (knoten.kartenVerweis != null) KartenKnotenInspektor(knoten, zustand)
+                    if (knoten.kartenVerweis != null && knoten.art != de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_ART) KartenKnotenInspektor(knoten, zustand)
                     IterierteMethodenKartenInspektor(knoten, zustand)
                     if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
                     val inspektor = when {

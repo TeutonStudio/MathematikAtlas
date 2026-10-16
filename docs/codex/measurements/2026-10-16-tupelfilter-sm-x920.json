@@ -1,0 +1,64 @@
+{
+  "geraet": "SM-X920",
+  "android": "16",
+  "hinweis": "Opt-in Instrumentierung, fünf kalte Geometrievarianten; Detailzeit enthält Compose-Test-Synchronisierung. Frame-Messung während kontinuierlichem Pan nach fünf Aufwärmschritten. Keine Zeitassertionen.",
+  "resultate": [
+    {
+      "ebenen": 1,
+      "qualität": "Standard",
+      "detailSichtbarMs": [
+        629.720923,
+        541.33877,
+        498.465,
+        582.261846,
+        473.015923
+      ],
+      "allokationenBytesFuenfAnfragen": 268682576,
+      "frames": 90,
+      "frameP95Ms": 24.269623
+    },
+    {
+      "ebenen": 1,
+      "qualität": "Hoch",
+      "detailSichtbarMs": [
+        1165.685,
+        975.229846,
+        931.608308,
+        956.662231,
+        907.775385
+      ],
+      "allokationenBytesFuenfAnfragen": 2139693152,
+      "frames": 90,
+      "frameP95Ms": 26.555555
+    },
+    {
+      "ebenen": 2,
+      "qualität": "Standard",
+      "detailSichtbarMs": [
+        351.905923,
+        323.922538,
+        399.016616,
+        389.664,
+        356.417615
+      ],
+      "allokationenBytesFuenfAnfragen": 263663664,
+      "frames": 90,
+      "frameP95Ms": 28.315365
+    },
+    {
+      "ebenen": 2,
+      "qualität": "Hoch",
+      "detailSichtbarMs": [
+        682.220923,
+        700.662154,
+        715.264539,
+        696.302461,
+        656.92223
+      ],
+      "allokationenBytesFuenfAnfragen": 2069876736,
+      "frames": 90,
+      "frameP95Ms": 26.917638
+    }
+  ],
+  "einordnung": "Kein identischer Filter-Vorherlauf vorhanden. Nicht direkt mit den früheren Funktionsgraph-Messungen vergleichbar. Ziel p95 ≤16,7 ms bleibt offen. Allokationen sind kumulativ über fünf Anfragen und umfassen Instrumentierung; kein Live-Heapmaß. Vorschau/Detail/Cache getrennt auf JVM gemessen."
+}

@@ -208,6 +208,12 @@ fun interface MathematikKnotenAuswerter {
 
 class MathematikAuswerterRegister {
     private val auswerter = linkedMapOf<KnotenArtId, MathematikKnotenAuswerter>()
+    private val optionaleMethoden = linkedMapOf<KnotenArtId, (KnotenDaten) -> Set<String>>()
+    /** Only explicitly declared optional inputs receive identity; required ports remain required. */
+    fun registriereOptionaleMethodenEingänge(art: KnotenArtId, vertrag: (KnotenDaten) -> Set<String>) { optionaleMethoden[art] = vertrag }
+    fun optionaleMethodenEingänge(knoten: KnotenDaten): Set<String> = optionaleMethoden[knoten.art]?.invoke(knoten).orEmpty().also { namen ->
+        require(namen.all { name -> knoten.anschlüsse.any { it.name == name && it.richtung == AnschlussRichtung.Eingang && (it.art.wert == "mathematik.methode" || it.art.wert == "mathematik.funktion" || it.art.wert.startsWith("mathematik.funktion.") || AnschlussArtId("mathematik.methode") in it.zulässigeArten) } }) { "Ungültiger optionaler Methodeneingangsvertrag." }
+    }
     fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = wert }
     fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
         KARTEN_EINGANG_ART -> KartenEingangAuswerter

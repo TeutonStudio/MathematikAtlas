@@ -19,7 +19,7 @@ class LatexTextTest {
         val latex = "f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto \\frac{x}{2}\\end{cases}"
         val quelltext = atlasLatexQuelltext(latex, dunklesSchema = false)
 
-        assertContains(quelltext, "\\left\\{")
+        assertContains(quelltext, "\\left\\lbrace")
         assertContains(quelltext, "\\begin{matrix}")
         assertContains(quelltext, "\\end{matrix}\\right.")
         assertContains(quelltext, "\\frac{x}{2}")

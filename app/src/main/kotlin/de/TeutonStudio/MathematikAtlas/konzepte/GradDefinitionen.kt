@@ -177,6 +177,8 @@ internal fun gradRichtungsDefinitionsKarte(dimension: Int): KartenDaten {
     val winkel = neu(MathematikKnotenVorlagen.ReellesIntervall, 600f, 0f,
         mapOf("standardwert.links" to "0", "standardwert.rechts" to "180", "standardwert.linksOffen" to "false", "standardwert.rechtsOffen" to "true"))
     val i = neu(MathematikKnotenVorlagen.Variable, 0f, -220f, mapOf("name" to "i"))
+    val indexGrundraum = neu(MathematikKnotenVorlagen.GanzeZahlen, -300f, -220f)
+    verbinde(indexGrundraum, "menge", i, "grundraum")
     val nullwert = neu(MathematikKnotenVorlagen.Zahl, 0f, -50f, mapOf("wert" to "0"))
     val ungleich = neu(MathematikKnotenVorlagen.Ungleichheit, 300f, -180f)
     verbinde(i, "wert", ungleich, "links"); verbinde(nullwert, "wert", ungleich, "rechts")

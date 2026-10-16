@@ -2,7 +2,6 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
-import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
 import de.TeutonStudio.MathematikKartenAdapter.KartenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART
 import de.TeutonStudio.MathematikKnoten.übersetzerZiel
@@ -63,7 +62,8 @@ fun synchronisiereStrukturZerleger(
                 .sortedBy { it.reihenfolge }
                 .forEachIndexed { index, anschluss ->
                     val alt = AnschlussVerweis(knoten.id, anschluss.id)
-                    val neu = AnschlussVerweis(knoten.id, dynamischerAusgangId(knoten, index, anschluss.name))
+                    val komponentenIndex = anschluss.name.removePrefix("element").toIntOrNull()?.minus(1) ?: index
+                    val neu = AnschlussVerweis(knoten.id, dynamischerAusgangId(knoten, komponentenIndex, anschluss.name))
                     if (alt != neu) put(alt, neu)
                 }
         }
@@ -169,12 +169,10 @@ fun synchronisiereStrukturZerleger(
         it.von in vorhandeneAnschlüsse && it.zu in vorhandeneAnschlüsse
     })
 
-    val gültigeVerbindungen = ergebnis.verbindungen.filter { verbindung ->
-        val ohneAktuelle = ergebnis.copy(
-            verbindungen = ergebnis.verbindungen.filterNot { it.id == verbindung.id },
-        )
-        prüfung.prüfe(ohneAktuelle, verbindung.von, verbindung.zu) is VerbindungsPrüfung.Erlaubt
-    }
+    // Eine einzelne unvereinbare Kante darf keine unabhängigen Kanten mitreißen.
+    val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis).map { it.id }.toSet()
+    val gültigeVerbindungen = ergebnis.verbindungen.filterNot { it.id in inkompatibleIds }
+
     return ergebnis.copy(verbindungen = gültigeVerbindungen)
 }
 
@@ -249,7 +247,7 @@ private fun synchronisiereAuflöserKnoten(
         it.richtung == AnschlussRichtung.Eingang && it.name == eingangsName
     } ?: return knoten
     val bisherigeAusgänge = knoten.anschlüsse
-        .filter { it.richtung == AnschlussRichtung.Ausgang }
+        .filter { it.richtung == AnschlussRichtung.Ausgang && it.name != "methode" }
         .sortedBy { it.reihenfolge }
 
     val ausgänge = elemente.mapIndexed { index, element ->

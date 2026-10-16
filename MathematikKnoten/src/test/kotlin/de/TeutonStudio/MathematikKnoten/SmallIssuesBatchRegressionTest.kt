@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 class SmallIssuesBatchRegressionTest {
     @Test
-    fun `Variable als Tupel bleibt strukturiert und wird bei Methodenbildung geordnet destrukturiert`() {
+    fun `Variable als Tupel bleibt bei Methodenbildung ein logischer Parameter`() {
         val register = GesamterMathematikAuswerter.erzeugeRegister()
         val quelle = konfiguriereVariablenStruktur(
             MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero),
@@ -30,20 +30,13 @@ class SmallIssuesBatchRegressionTest {
         assertEquals(MathematikAnschlussArten.Tupel.id, ausgang.art)
         assertEquals("wert", ausgang.name)
         val tupelWert = register.finde(quelle.art)!!.auswerten(
-            KnotenAuswertungsKontext(quelle, emptyMap(), RechenKontext()),
+            KnotenAuswertungsKontext(quelle, testGrundraum(quelle), RechenKontext()),
         ).ausgaben.getValue("wert")
         val tupel = assertIs<Tupel>(tupelWert.objekt)
 
-        assertEquals(
-            listOf("x_1", "x_2", "x_3"),
-            tupel.elemente.map { assertIs<Variable>(it).name },
-        )
-        assertEquals(listOf(0, 1, 2), tupelWert.variablenQuellen.map { it.reihenfolge })
-        assertEquals(1, tupelWert.variablenQuellen.map { it.bindungsId }.distinct().size)
-        assertEquals(
-            listOf("komponente-1", "komponente-2", "komponente-3"),
-            tupelWert.variablenQuellen.map { it.bindungsName },
-        )
+        assertTrue(tupel.elemente.all { it is SymbolischeZahlKomponente })
+        assertEquals(1, tupelWert.variablenQuellen.size)
+        assertNotNull(tupelWert.variablenQuellen.single().strukturBindung)
         assertEquals(Tupelraum(List(3) { ReelleZahlen }), tupelWert.werteVorrat)
 
         val kartesisch = tupel.kartesischerTupelVertrag(
@@ -68,7 +61,7 @@ class SmallIssuesBatchRegressionTest {
         ).ausgaben.getValue("methode")
         val methode = assertIs<Methode>(methodeWert.objekt)
 
-        assertEquals(listOf("x_1", "x_2", "x_3"), methode.parameter.map { it.name })
+        assertEquals(listOf("x"), methode.parameter.map { it.name })
         assertIs<Tupel>(methode.vorschrift)
     }
 

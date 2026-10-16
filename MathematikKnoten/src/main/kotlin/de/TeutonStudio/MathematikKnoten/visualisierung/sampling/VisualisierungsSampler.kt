@@ -16,6 +16,7 @@ data class VisualisierungsPunkt(
     val z: Double? = null,
     val farbwert: Double? = null,
     val weitereFarbwerte: List<Double> = emptyList(),
+    val rasterProbe: Boolean = false,
 )
 
 enum class DarstellungsNachweis {
@@ -29,6 +30,7 @@ enum class DarstellungsNachweis {
 data class VisualisierungsLinie(
     val punkte: List<VisualisierungsPunkt>,
     val nachweis: DarstellungsNachweis = DarstellungsNachweis.Numerisch,
+    val offenerRand: Boolean = false,
 )
 
 data class VisualisierungsDreieck(
@@ -46,6 +48,9 @@ data class VisualisierungsStatistik(
     val zellen: Int = 0,
     val maximaleTiefe: Int = 0,
     val budgetErschöpft: Boolean = false,
+    val zellArbeit: Int = 0,
+    val punktArbeit: Int = 0,
+    val randArbeit: Int = 0,
 )
 
 enum class ZellenStatus { Enthalten, NumerischEnthalten, Ausgeschlossen, Gemischt, Unbekannt }
@@ -135,6 +140,12 @@ sealed interface VisualisierungsDefinition {
         val fensterBegrenzt: Boolean = false,
         val zellNachweis: ((List<RationalesIntervall>) -> ZellNachweis)? = null,
         val farbMitgliedschaft: ((List<Double>) -> List<Pair<Double, NumerischeMitgliedschaft>>)? = null,
+        val randResiduum: ((List<Double>) -> Double?)? = null,
+        val offenerRand: Boolean = false,
+        /** Gemeinsames Zertifikatsbudget zählt Zellbesuche und AST-Arbeit. Nur Laufzeit. */
+        val zellArbeitsBudget: AuswertungsBudget? = null,
+        val farbProbenAnzahl: Int = 1,
+        val numerischeFläche: Boolean = false,
     ) : VisualisierungsDefinition
 
     data class ProduktDomänen(
@@ -216,6 +227,9 @@ object VisualisierungsSampler {
                     "Auswertungsschritte und überschreitet das Rasterbudget von ${konfiguration.sampling.maximalesRasterBudget}.",
             )
         }
+        if (menge is GefilterteMenge && endlicheSchätzung == null) {
+            normalisiereFilter(menge, konfiguration, abbruchPrüfen)?.let { return it }
+        }
         if (menge is KoordinatenBild) return normalisiereKoordinatenBild(menge, dimension)
         if (menge is OrbitBeschraenktheitsMenge) {
             return normalisiereOrbitMenge(menge, konfiguration, abbruchPrüfen)
@@ -273,10 +287,27 @@ object VisualisierungsSampler {
     ): VisualisierungsErgebnis {
         val laufzeit = konfiguration.copy(sampling = konfiguration.sampling.copy(
             maximalesRasterBudget = minOf(konfiguration.sampling.maximalesRasterBudget,
-                de.TeutonStudio.MathematikKnoten.visualisierung.modell.MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET),
+                konfiguration.detailBudget),
         ))
+        if (menge is Vereinigung && menge.mengen.any { it is EndlicheMenge }) {
+            val teil = laufzeit.copy(sampling = laufzeit.sampling.copy(maximalesRasterBudget = (laufzeit.sampling.maximalesRasterBudget / menge.mengen.size).coerceAtLeast(1)))
+            return vereinigeVisualisierungsErgebnisse(menge.mengen.map { sample(it, teil, abbruchPrüfen) })
+                ?: VisualisierungsErgebnis.Erfolgreich(emptyList(), false)
+        }
+        if (menge is MethodenGraphMenge) {
+            val m = menge.methode
+            val signatur = m.mathematischeMethodenSignatur()
+            val domäne = if (m.parameter.size == 1 && signatur.effektiverDefinitionsRaum == null)
+                signatur.argumente.single().definitionsMenge else m.argumentRaum()
+            val graphConfig = laufzeit.copy(methodenModus = MethodenDarstellungsModus.Funktionsgraph)
+            val abbild = Abbild(if (m.parameter.size > 1 && domäne is Tupelraum) KartesischesProdukt(domäne.komponenten) else domäne, m)
+            return if (m.parameter.size == 1 && (domäne is Tupelraum || domäne is KartesischesProdukt || domäne is Vektorraum) || m.vorschrift !is ZahlAusdruck)
+                sampleStrukturierteBildmenge(abbild, graphConfig, abbruchPrüfen, graph = true)
+            else sampleAbbild(abbild, graphConfig, abbruchPrüfen)
+        }
         if (menge is Abbild) return sampleAbbild(menge, laufzeit, abbruchPrüfen)
-        return materialisiere(normalisiere(menge, laufzeit, abbruchPrüfen), laufzeit, abbruchPrüfen)
+        val räumlich = laufzeit.copy(bereiche = laufzeit.sampling.sichtBereiche ?: laufzeit.bereiche)
+        return materialisiere(normalisiere(menge, räumlich, abbruchPrüfen), räumlich, abbruchPrüfen)
     }
 
     private fun materialisiere(
@@ -548,6 +579,7 @@ object VisualisierungsSampler {
                 mitgliedschaft = { punkt ->
                     produktMitgliedschaft(produkt, faktorDimensionen, punkt, konfiguration)
                 },
+                zellArbeitsBudget = intervallBudget,
                 zellNachweis = { zelle ->
                     produktZellNachweis(produkt, faktorDimensionen, zelle, konfiguration, intervallBudget)
                 },
@@ -565,6 +597,7 @@ object VisualisierungsSampler {
                 ),
                 fensterBegrenzt = true,
                 mitgliedschaft = { punkt -> mitgliedschaft(produkt, punkt, konfiguration) },
+                zellArbeitsBudget = intervallBudget,
                 zellNachweis = { zelle -> zellNachweisMenge(produkt, zelle, konfiguration, intervallBudget) },
             )
         }
@@ -726,7 +759,16 @@ object VisualisierungsSampler {
                     "die Werteliste ist fensterbegrenzt und unvollständig.",
             )
         } else emptyList()
+        val vergleich = menge.bedingung as? Vergleich
+        val hatStetigenRand = dimension == 2 && farbVariable == null && vergleich != null &&
+            menge.variablen.all { it.grundMenge == ReelleZahlen } && istPolynom(vergleich.links) && istPolynom(vergleich.rechts)
         return VisualisierungsDefinition.Region(
+            randResiduum = if (hatStetigenRand) { punkt ->
+                val env = achsen.zip(punkt).toMap() + konfiguration.festeSchnitte
+                val a = numerischerWert(vergleich!!.links, env); val b = numerischerWert(vergleich.rechts, env)
+                if (a == null || b == null) null else a-b
+            } else null,
+            offenerRand = vergleich?.art in setOf(VergleichsArt.Kleiner, VergleichsArt.Größer),
             dimension = dimension,
             hinweise = farbHinweise,
             fensterBegrenzt = farbVariable != null,
@@ -738,7 +780,120 @@ object VisualisierungsSampler {
                 zellNachweisDefinierteMenge(menge, achsen, zelle, konfiguration, farbVariable, intervallBudget)
             },
             farbMitgliedschaft = farbMitgliedschaft,
+            zellArbeitsBudget = intervallBudget,
+            numerischeFläche = menge.variablen.all {it.grundMenge == ReelleZahlen || it.grundMenge is ReellesIntervall},
+            farbProbenAnzahl = if(farbVariable == null) 1 else minOf(48, konfiguration.sampling.auflösung2D),
         )
+    }
+
+    /** Bindet das öffentliche Gesamtargument einmal; keine Namenssubstitution im Pointer-/Zeichenpfad. */
+    private fun externeFilterParameter(methode: MathematischeMethode): Set<MethodenParameter> {
+        val objekte = listOf(methode.vorschrift) + methode.voraussetzungen +
+            methode.werteVorräte.values + listOfNotNull(methode.effektiverWerteVorrat)
+        fun freie(objekt: MathematischesObjekt): Set<MethodenParameter> = when(objekt) {
+            is DefinierteMenge -> (objekt.variablen.flatMap { freie(it.grundMenge) } + freie(objekt.bedingung)).filterNot { frei ->
+                objekt.variablen.any { (it.variable.bindungsId ?: it.variable.name) == (frei.bindungsId ?: frei.name) }
+            }.toSet()
+            is Tupelraum -> objekt.komponenten.flatMap(::freie).toSet()
+            is KartesischesProdukt -> objekt.mengen.flatMap(::freie).toSet()
+            else -> objekt.freieMethodenParameter()
+        }
+        return objekte.flatMap(::freie).filterNot { frei ->
+            methode.parameter.any { (it.bindungsId ?: it.name) == (frei.bindungsId ?: frei.name) }
+        }.toSet()
+    }
+
+    /** Entpackt Definitionsräume strukturell; ein Tupelargument bleibt ein Argument. */
+    private fun filterBedingung(aussage: Aussage, reelleKoordinaten: Set<Variable> = emptySet()): Aussage {
+        fun inMenge(element: MathematischesObjekt, menge: MengenAusdruck): Aussage {
+            val komponenten = when(menge) {
+                is Tupelraum -> menge.komponenten
+                is KartesischesProdukt -> menge.mengen
+                else -> null
+            }
+            if (element is Tupel && komponenten != null && element.elemente.size == komponenten.size) {
+                return Konjunktion(element.elemente.zip(komponenten).map { (e, m) -> inMenge(e, m) })
+            }
+            if (menge is DefinierteMenge) {
+                val elemente = if (menge.variablen.size == 1) listOf(element) else (element as? Tupel)?.elemente
+                if (elemente != null && elemente.size == menge.variablen.size) {
+                    val bindungen = menge.variablen.zip(elemente).associate { (v, e) -> (v.variable.bindungsId ?: v.variable.name) to e }
+                    return Konjunktion(menge.variablen.zip(elemente).map { (v, e) -> inMenge(e, ersetze(v.grundMenge, bindungen) as MengenAusdruck) } +
+                        filterBedingung(ersetze(menge.bedingung, bindungen), reelleKoordinaten))
+                }
+            }
+            if (element is Variable && element in reelleKoordinaten && menge == ReelleZahlen) return WahrheitsKonstante(true)
+            if (element is ZahlAusdruck && menge is ReellesIntervall) return Konjunktion(listOf(
+                Vergleich(menge.links, if(menge.linksOffen) VergleichsArt.Kleiner else VergleichsArt.KleinerGleich, element),
+                Vergleich(element, if(menge.rechtsOffen) VergleichsArt.Kleiner else VergleichsArt.KleinerGleich, menge.rechts),
+            ))
+            return ElementBeziehung(element, menge)
+        }
+        return when(aussage) {
+            is ElementBeziehung -> inMenge(aussage.element, aussage.menge)
+            is Konjunktion -> Konjunktion(aussage.aussagen.map { filterBedingung(it, reelleKoordinaten) })
+            else -> aussage
+        }
+    }
+
+    private fun normalisiereFilter(
+        filter: GefilterteMenge, c: VisualisierungsKonfiguration, abbruchPrüfen: () -> Unit,
+    ): VisualisierungsDefinition? {
+        val variablen = mutableListOf<GebundeneMengenVariable>()
+        fun blatt(menge: MengenAusdruck): Variable {
+            val name = c.achsenNamen.getOrNull(variablen.size) ?: error("Die Filtermenge benötigt eine explizite Projektion.")
+            return Variable(name).also { variablen += GebundeneMengenVariable(it, menge) }
+        }
+        fun packe(menge: MengenAusdruck): MathematischesObjekt = when(menge) {
+            is KartesischesProdukt -> Tupel(menge.mengen.map(::packe))
+            is Tupelraum -> Tupel(menge.komponenten.map(::packe))
+            is Vektorraum -> {
+                val werte = List(menge.dimension) { packe(menge.skalarMenge) as ZahlAusdruck }
+                if(menge.orientierung == VektorOrientierung.Zeile) ZeilenVektor(werte) else SpaltenVektor(werte)
+            }
+            KomplexeZahlen -> KomplexeZahl(blatt(ReelleZahlen), blatt(ReelleZahlen))
+            ReelleZahlen, RationaleZahlen, GanzeZahlen, NatürlicheZahlen, is ReellesIntervall, is EndlicheMenge -> blatt(menge)
+            else -> error("Die Filtergrundmenge benötigt numerische Mitgliedschaft ohne Koordinatenzertifikat.")
+        }
+        return try {
+            val punkt = packe(filter.menge)
+            if (variablen.size != c.raumDimension) return null
+            val methode = filter.methode.alsMathematischeMethode("die Filterdarstellung")
+            val extern = externeFilterParameter(methode)
+            if (extern.isNotEmpty()) return VisualisierungsDefinition.BedingtRäumlich(
+                "Der Filter enthält ungebundene externe Parameter: ${extern.joinToString { it.name }}.",
+            )
+            val argumente = Tupel(listOf(punkt))
+            if(methode.prüfeDefinitionsBedingungen(argumente).any { it.entscheide().wahrheitswert == Wahrheitswert.Lüge }) {
+                return normalisiereDefinierteMenge(DefinierteMenge(variablen,WahrheitsKonstante(false)),c,abbruchPrüfen)
+            }
+            val anwendung = methode.wendeMitBedingungenAn(argumente)
+            val prädikat = anwendung.ergebnis.elemente.single().alsPrädikatsAussageOderNull() ?: return null
+            // Diese konkrete Mitgliedschaft wird bereits durch die gebundenen Grundmengen zertifiziert.
+            val voraussetzungen = anwendung.bedingungen.filterNot {
+                it is ElementBeziehung && it.element == punkt && it.menge == filter.menge
+            }
+            fun teile(a: Aussage): List<Aussage> = if(a is Konjunktion) a.aussagen.flatMap(::teile) else listOf(vereinfacheAussage(a, RechenKontext()))
+            val teile = (listOf(prädikat) + voraussetzungen).map { filterBedingung(it, variablen.map { v -> v.variable }.toSet()) }.flatMap(::teile).filterNot { it is WahrheitsKonstante && it.wert }
+            val bedingung = if(teile.any { it is WahrheitsKonstante && !it.wert }) WahrheitsKonstante(false)
+                else teile.singleOrNull() ?: if(teile.isEmpty()) WahrheitsKonstante(true) else Konjunktion(teile)
+            val definition = normalisiereDefinierteMenge(DefinierteMenge(variablen, bedingung), c, abbruchPrüfen)
+            definition
+        } catch (abbruch: java.util.concurrent.CancellationException) { throw abbruch
+        } catch (_: IllegalArgumentException) { null
+        } catch (_: IllegalStateException) { null }
+    }
+
+    /** Unsupported certificates are not recursively requested throughout the entire viewport. */
+    private fun hatZellNachweis(menge: MengenAusdruck): Boolean = when(menge) {
+        LeereMenge, ReelleZahlen, RationaleZahlen, GanzeZahlen, NatürlicheZahlen, KomplexeZahlen,
+        is ReellesIntervall, is EndlicheMenge, is DefinierteMenge -> true
+        is KartesischesProdukt -> menge.mengen.all(::hatZellNachweis)
+        is Vereinigung -> menge.mengen.all(::hatZellNachweis)
+        is Schnitt -> menge.mengen.all(::hatZellNachweis) && (menge.mengen.isNotEmpty() || menge.grundMenge?.let(::hatZellNachweis) == true)
+        is MengenDifferenz -> hatZellNachweis(menge.links) && hatZellNachweis(menge.rechts)
+        is SymmetrischeDifferenz -> hatZellNachweis(menge.links) && hatZellNachweis(menge.rechts)
+        else -> false
     }
 
     private fun normalisiereAllgemeineRegion(
@@ -762,10 +917,12 @@ object VisualisierungsSampler {
         )
         return VisualisierungsDefinition.Region(
             dimension = konfiguration.raumDimension,
-            hinweise = hinweise,
+            numerischeFläche = menge is PrädikatsMenge && konfiguration.sampling.fensterBegrenztePrädikatsMengen,
             fensterBegrenzt = hinweise.isNotEmpty(),
             mitgliedschaft = { punkt -> mitgliedschaft(menge, punkt, konfiguration) },
-            zellNachweis = { zelle -> zellNachweisMenge(menge, zelle, konfiguration, intervallBudget) },
+            zellNachweis = if(hatZellNachweis(menge)) { zelle -> zellNachweisMenge(menge, zelle, konfiguration, intervallBudget) } else null,
+            zellArbeitsBudget = intervallBudget,
+            hinweise = hinweise + if(hatZellNachweis(menge)) emptyList() else listOf("Für diese Mengenform ist kein Zellzertifikat verfügbar; die Fläche wird numerisch angenähert."),
         )
     }
 
@@ -1023,26 +1180,33 @@ object VisualisierungsSampler {
         c: VisualisierungsKonfiguration,
         abbruchPrüfen: () -> Unit,
     ): VisualisierungsErgebnis {
-        val zellBudget = if (region.zellNachweis == null) 0 else (c.sampling.maximalesRasterBudget / 2).coerceAtLeast(1)
-        val punktBudget = (c.sampling.maximalesRasterBudget - zellBudget).coerceAtLeast(2)
-        val konfiguriertesN = when (region.dimension) {
-            1 -> c.sampling.auflösung1D
-            2 -> c.sampling.auflösung2D
-            else -> c.sampling.auflösung3D
+        val gesamtBudget = c.sampling.maximalesRasterBudget
+        val zellLimit = if(region.zellNachweis == null) 0 else gesamtBudget / 2
+        val zellBudget = region.zellArbeitsBudget ?: AuswertungsBudget(zellLimit.coerceAtLeast(1), abbruchPrüfen)
+        val kostenProPunkt = region.farbProbenAnzahl + if(region.randResiduum == null) 0 else 1
+        val konfiguriertesN = when(region.dimension) {
+            1 -> c.sampling.auflösung1D; 2 -> c.sampling.auflösung2D; else -> c.sampling.auflösung3D
         }
-        val budgetN = floor(punktBudget.toDouble().pow(1.0 / region.dimension)).toInt().coerceAtLeast(2)
-        val n = minOf(konfiguriertesN, budgetN)
-        val rasterGröße = ganzzahlPotenz(n.toLong(), region.dimension)
-        if (rasterGröße > punktBudget) {
-            return VisualisierungsErgebnis.NichtDarstellbar(
-                "Das ${region.dimension}D-Raster benötigt $rasterGröße Prüfungen und überschreitet das verbleibende Budget von $punktBudget.",
-            )
-        }
+        val zielAuflösung = if(c.sampling.bildBreite > 0 && c.sampling.bildHöhe > 0)
+            ceil(maxOf(c.sampling.bildBreite, c.sampling.bildHöhe) * 1.2 / c.sampling.zielFehlerPixel).toInt().coerceIn(2,65536)
+            else konfiguriertesN
         val bereiche = c.achsenBereiche
         val punkte = mutableListOf<VisualisierungsPunkt>()
         val unbekannteGründe = linkedSetOf<String>()
-        val zellen = adaptiveZellen(region, bereiche, n, zellBudget, abbruchPrüfen)
+        val zellen = if(region.zellNachweis == null && (region.dimension != 2 || !region.numerischeFläche))
+            listOf(VisualisierungsZelle(bereiche.map {it.minimum},bereiche.map {it.maximum},ZellenStatus.Unbekannt,"Kein Zellzertifikat verfügbar."))
+            else if(zellLimit == 0 || region.zellNachweis == null) emptyList()
+            else adaptiveZellen(region, bereiche, zielAuflösung, zellBudget, abbruchPrüfen)
+        val zellArbeit = if(region.zellNachweis == null) 0 else zellBudget.verbraucht
+        val punktBudget = ((gesamtBudget - zellArbeit).coerceAtLeast(0) / kostenProPunkt)
+        val budgetN = floor(punktBudget.toDouble().pow(1.0 / region.dimension)).toInt()
+        if(budgetN < 2) return VisualisierungsErgebnis.Teilweise(emptyList(),
+            region.hinweise + "Das Arbeitsbudget reicht nicht für ein vollständiges ${region.dimension}D-Raster.",
+            zellen = zellen.ifEmpty { listOf(VisualisierungsZelle(bereiche.map {it.minimum},bereiche.map {it.maximum},ZellenStatus.Unbekannt,"Arbeitsbudget ausgeschöpft.")) },
+            statistik = VisualisierungsStatistik(auswertungen=zellArbeit,zellArbeit=zellArbeit,budgetErschöpft=true))
+        val n = minOf(konfiguriertesN,budgetN)
         val rasterWerte = linkedMapOf<List<Int>, NumerischeMitgliedschaft>()
+        val randWerte = linkedMapOf<List<Int>, NumerischeMitgliedschaft>()
         val indices = IntArray(region.dimension)
         fun besuche(tiefe: Int) {
             abbruchPrüfen()
@@ -1055,6 +1219,9 @@ object VisualisierungsSampler {
             }
             val koordinaten = indices.mapIndexed { index, rasterIndex ->
                 lerp(bereiche[index], rasterIndex.toDouble() / (n - 1))
+            }
+            region.randResiduum?.invoke(koordinaten)?.takeIf { it.isFinite() }?.let {
+                randWerte[indices.toList()] = NumerischeMitgliedschaft.Grenze(it)
             }
             val farbWerte = region.farbMitgliedschaft?.invoke(koordinaten)
             if (farbWerte != null) {
@@ -1092,22 +1259,34 @@ object VisualisierungsSampler {
             }
         }
         besuche(0)
-        val rasterGeometrie = RasterGeometrie.erzeuge(region.dimension, n, bereiche, rasterWerte)
-        val alleZellen = zellen + rasterGeometrie.zellen
+        val rasterGeometrie = RasterGeometrie.erzeuge(region.dimension, n, bereiche, rasterWerte).let { raster ->
+            // Nur ein Vorzeichenwechsel begründet hier eine numerische Gebietsgrenze.
+            // Ein identisch nuller oder nur berührender Ausdruck erzeugt keine erfundenen Rasterlinien.
+            val residuen=randWerte.values.filterIsInstance<NumerischeMitgliedschaft.Grenze>().map { it.residuum }
+            if (residuen.none { it<0 } || residuen.none { it>0 }) raster else raster.copy(linien = raster.linien +
+                RasterGeometrie.erzeuge(2, n, bereiche, randWerte).linien.map { it.copy(offenerRand = region.offenerRand) })
+        }
+        val hatFläche = rasterWerte.values.any { it == NumerischeMitgliedschaft.Enthalten }
+        val alleZellen = if(region.dimension == 2 && region.numerischeFläche && (hatFläche || region.zellNachweis == null))
+            ergänzeNumerischeFlächen(zellen, n, bereiche, rasterWerte)
+            else if(region.dimension == 2) zellen else zellen + rasterGeometrie.zellen
         val zusammengefasst = punkte.groupBy { Triple(it.x, it.y, it.z) }.values.map { gleichePosition ->
             val farben = gleichePosition.mapNotNull { it.farbwert }.distinct().sorted()
-            gleichePosition.first().copy(farbwert = farben.firstOrNull(), weitereFarbwerte = farben.drop(1))
+            gleichePosition.first().copy(farbwert = farben.firstOrNull(), weitereFarbwerte = farben.drop(1), rasterProbe = region.dimension == 2 && hatFläche && (region.numerischeFläche || zellen.any {it.status == ZellenStatus.Enthalten}))
         }
         val offeneZellen = alleZellen.filter { it.status == ZellenStatus.Unbekannt || it.status == ZellenStatus.Gemischt }
         val statistik = VisualisierungsStatistik(
-            auswertungen = rasterWerte.size,
+            auswertungen = zellArbeit + rasterWerte.size * kostenProPunkt,
+            zellArbeit = zellArbeit,
+            punktArbeit = rasterWerte.size * region.farbProbenAnzahl,
+            randArbeit = if(region.randResiduum == null) 0 else rasterWerte.size,
             stützpunkte = zusammengefasst.size,
             linien = rasterGeometrie.linien.size,
             dreiecke = rasterGeometrie.dreiecke.size,
             zellen = alleZellen.size,
-            budgetErschöpft = alleZellen.any { it.grund?.contains("budget", ignoreCase = true) == true },
+            budgetErschöpft = zellen.any { it.grund?.contains("budget", ignoreCase = true) == true } || (n < konfiguriertesN && region.zellNachweis == null),
         )
-        if (zusammengefasst.isEmpty() && unbekannteGründe.isEmpty() && offeneZellen.isEmpty()) {
+        if (zusammengefasst.isEmpty() && unbekannteGründe.isEmpty() && offeneZellen.isEmpty() && alleZellen.none { it.status == ZellenStatus.Enthalten || it.status == ZellenStatus.NumerischEnthalten }) {
             return VisualisierungsErgebnis.Erfolgreich(
                 emptyList(), true,
                 region.hinweise + "Im gewählten Fenster wurden keine Treffer gefunden.",
@@ -1126,6 +1305,8 @@ object VisualisierungsSampler {
             "Mehrdeutige Farbe bei ($koordinaten): belegt sind $belegung; die numerische Abtastung ist unvollständig."
         }
         val gemeinsameHinweise = region.hinweise +
+            "Arbeitsbudget: ${statistik.auswertungen}/$gesamtBudget (Zellen ${statistik.zellArbeit}, Punkte ${statistik.punktArbeit}, Rand ${statistik.randArbeit})." +
+            (if(statistik.budgetErschöpft) listOf("Das Arbeitsbudget ist ausgeschöpft; verbleibende Flächen werden nur numerisch angenähert oder als unbestimmt gekennzeichnet.") else emptyList()) +
             (if (region.fensterBegrenzt) listOf("Die Ergebnisqualität gilt ausschließlich im gewählten Sichtfenster.") else emptyList()) +
             (if (region.dimension == 3) listOf("R³ wird als zertifizierte Zellen und numerische Punktwolke dargestellt.") else emptyList()) +
             unbekannteGründe.take(4).map { "Unbestimmt: $it" } +
@@ -1152,11 +1333,40 @@ object VisualisierungsSampler {
         )
     }
 
+    private fun ergänzeNumerischeFlächen(
+        zertifikate: List<VisualisierungsZelle>, n: Int, bereiche: List<ZahlenBereich>,
+        werte: Map<List<Int>, NumerischeMitgliedschaft>,
+    ): List<VisualisierungsZelle> {
+        val schritte = bereiche.take(2).map { (it.maximum-it.minimum)/(n-1) }
+        val offene = zertifikate.filter {it.status == ZellenStatus.Unbekannt}
+            .ifEmpty { if(zertifikate.isEmpty()) listOf(VisualisierungsZelle(bereiche.map {it.minimum},bereiche.map {it.maximum},ZellenStatus.Unbekannt)) else emptyList() }
+        val ergebnis = zertifikate.filterNot {it.status == ZellenStatus.Unbekannt}.toMutableList()
+        offene.forEach { z ->
+            fun index(a: Int, wert: Double) = floor((wert-bereiche[a].minimum)/schritte[a]).toInt().coerceIn(0,n-2)
+            for(i in index(0,z.minimum[0])..index(0,z.maximum[0])) for(j in index(1,z.minimum[1])..index(1,z.maximum[1])) {
+                val min = listOf(maxOf(z.minimum[0],bereiche[0].minimum+i*schritte[0]),maxOf(z.minimum[1],bereiche[1].minimum+j*schritte[1]))
+                val max = listOf(minOf(z.maximum[0],bereiche[0].minimum+(i+1)*schritte[0]),minOf(z.maximum[1],bereiche[1].minimum+(j+1)*schritte[1]))
+                if(min.indices.any {min[it]>=max[it]}) continue
+                val proben = listOf(werte[listOf(i,j)],werte[listOf(i+1,j)],werte[listOf(i,j+1)],werte[listOf(i+1,j+1)])
+                val status = when {
+                    proben.any {it == null || it is NumerischeMitgliedschaft.Unbekannt} -> ZellenStatus.Unbekannt
+                    proben.all {it == NumerischeMitgliedschaft.Enthalten} -> ZellenStatus.NumerischEnthalten
+                    proben.all {it == NumerischeMitgliedschaft.NichtEnthalten} -> ZellenStatus.Ausgeschlossen
+                    else -> z.status
+                }
+                ergebnis += VisualisierungsZelle(min,max,status,if(status == ZellenStatus.Unbekannt)
+                    proben.filterIsInstance<NumerischeMitgliedschaft.Unbekannt>().firstOrNull()?.grund ?: z.grund
+                    else "Numerische Näherung aus vier Eckproben; kein Zellbeweis.")
+            }
+        }
+        return ergebnis
+    }
+
     private fun adaptiveZellen(
         region: VisualisierungsDefinition.Region,
         bereiche: List<ZahlenBereich>,
         zielAuflösung: Int,
-        budget: Int,
+        budget: AuswertungsBudget,
         abbruchPrüfen: () -> Unit,
     ): List<VisualisierungsZelle> {
         val nachweis = region.zellNachweis ?: return listOf(
@@ -1167,47 +1377,36 @@ object VisualisierungsSampler {
                 grund = "Für diese Mengenform ist kein analytischer Zellnachweis verfügbar.",
             ),
         )
-        if (budget <= 0) return emptyList()
         val maximaleTiefe = ceil(ln(zielAuflösung.toDouble()) / ln(2.0)).toInt().coerceAtLeast(0)
         val ergebnis = mutableListOf<VisualisierungsZelle>()
-        var verbraucht = 0
-        fun klassifiziere(minimum: List<Double>, maximum: List<Double>, tiefe: Int) {
+        data class Auftrag(val minimum: List<Double>, val maximum: List<Double>, val tiefe: Int)
+        val wartend = java.util.ArrayDeque<Auftrag>()
+        wartend.add(Auftrag(bereiche.map { it.minimum }, bereiche.map { it.maximum }, 0))
+        // Breitensuche klassifiziert zuerst alle groben Bereiche, bevor Randdetails Budget verbrauchen.
+        while (wartend.isNotEmpty()) {
             abbruchPrüfen()
-            if (verbraucht >= budget) {
+            val (minimum, maximum, tiefe) = wartend.removeFirst()
+            if (!budget.schritt()) {
                 ergebnis += VisualisierungsZelle(minimum, maximum, ZellenStatus.Unbekannt, "Zellbudget ausgeschöpft.")
-                return
+                continue
             }
-            verbraucht++
-            val intervalle = minimum.zip(maximum) { a, b -> RationalesIntervall(rationaleKoordinate(a), rationaleKoordinate(b)) }
+            val intervalle = minimum.zip(maximum) { a,b -> RationalesIntervall(rationaleKoordinate(a), rationaleKoordinate(b)) }
             val wert = nachweis(intervalle)
-            val offen = wert is ZellNachweis.Unbekannt || wert is ZellNachweis.Gemischt
-            if (offen && tiefe < maximaleTiefe && verbraucht + (1 shl region.dimension) <= budget) {
-                val mitten = minimum.zip(maximum) { a, b -> a + (b - a) / 2.0 }
-                val kombinationen = 1 shl region.dimension
-                repeat(kombinationen) { maske ->
-                    val unten = minimum.indices.map { achse -> if (maske and (1 shl achse) == 0) minimum[achse] else mitten[achse] }
-                    val oben = maximum.indices.map { achse -> if (maske and (1 shl achse) == 0) mitten[achse] else maximum[achse] }
-                    klassifiziere(unten, oben, tiefe + 1)
+            val unterstützt = (wert as? ZellNachweis.Unbekannt)?.grund?.let { "besitzt" !in it && "verfügbar" !in it } ?: true
+            val offen = unterstützt && (wert is ZellNachweis.Unbekannt || wert is ZellNachweis.Gemischt)
+            if (offen && tiefe < maximaleTiefe && budget.verbraucht + wartend.size + (1 shl region.dimension) <= budget.maximum) {
+                val mitten = minimum.zip(maximum) { a,b -> a+(b-a)/2 }
+                repeat(1 shl region.dimension) { maske ->
+                    wartend.add(Auftrag(minimum.indices.map { if(maske and (1 shl it)==0) minimum[it] else mitten[it] },
+                        maximum.indices.map { if(maske and (1 shl it)==0) mitten[it] else maximum[it] },tiefe+1))
                 }
-            } else {
-                ergebnis += VisualisierungsZelle(
-                    minimum,
-                    maximum,
-                    when (wert) {
-                        ZellNachweis.Enthalten -> ZellenStatus.Enthalten
-                        ZellNachweis.Ausgeschlossen -> ZellenStatus.Ausgeschlossen
-                        is ZellNachweis.Gemischt -> ZellenStatus.Gemischt
-                        is ZellNachweis.Unbekannt -> ZellenStatus.Unbekannt
-                    },
-                    when (wert) {
-                        is ZellNachweis.Gemischt -> wert.grund
-                        is ZellNachweis.Unbekannt -> wert.grund
-                        else -> null
-                    },
-                )
-            }
+            } else ergebnis += VisualisierungsZelle(minimum,maximum,when(wert) {
+                ZellNachweis.Enthalten -> ZellenStatus.Enthalten
+                ZellNachweis.Ausgeschlossen -> ZellenStatus.Ausgeschlossen
+                is ZellNachweis.Gemischt -> ZellenStatus.Gemischt
+                is ZellNachweis.Unbekannt -> ZellenStatus.Unbekannt
+            },when(wert) {is ZellNachweis.Gemischt -> wert.grund;is ZellNachweis.Unbekannt -> wert.grund;else -> null})
         }
-        klassifiziere(bereiche.map { it.minimum }, bereiche.map { it.maximum }, 0)
         return ergebnis
     }
 
@@ -1279,7 +1478,9 @@ object VisualisierungsSampler {
                 auflösung3D = parameterAuflösung,
             ),
         )
-        val bereiche = konfiguration.achsenBereiche
+        val sicht = konfiguration.sampling.sichtBereiche
+        val bereiche = if (modus == MethodenDarstellungsModus.Funktionsgraph && sicht != null)
+            listOf(sicht.x, sicht.y, sicht.z).filterNotNull() else konfiguration.achsenBereiche
         val domänen = faktoren.mapIndexed { index, faktor ->
             val bereich = bereiche.getOrNull(index)
                 ?: return VisualisierungsErgebnis.NichtDarstellbar("Für Parameter ${index + 1} fehlt ein Inspectorbereich.")
@@ -1287,7 +1488,7 @@ object VisualisierungsSampler {
                 faktor,
                 bereich,
                 domänenKonfiguration,
-                beschränkeEndlichesIntervallAufSichtfenster = false,
+                beschränkeEndlichesIntervallAufSichtfenster = modus == MethodenDarstellungsModus.Funktionsgraph,
             )) {
                 is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
                 is DomänenErgebnis.Fehler -> return VisualisierungsErgebnis.NichtDarstellbar(
@@ -1545,15 +1746,30 @@ object VisualisierungsSampler {
     }
 
     private fun werteFilter(
-        menge: GefilterteMenge,
-        punkt: List<Double>,
-        c: VisualisierungsKonfiguration,
-    ): NumerischeMitgliedschaft = runCatching {
-        val parameter = menge.methode.parameter.single()
-        val aussage = menge.methode.vorschrift as Aussage
-        val gebunden = ersetze(aussage, mapOf(parameter.name to punktObjekt(punkt, c)))
-        werteAussage(gebunden, c.achsenNamen.zip(punkt).toMap() + c.festeSchnitte, c.sampling.toleranz)
-    }.getOrElse { NumerischeMitgliedschaft.Unbekannt("Filtermethode: ${it.message ?: "nicht auswertbar"}") }
+        menge: GefilterteMenge, punkt: List<Double>, c: VisualisierungsKonfiguration,
+    ): NumerischeMitgliedschaft { return try {
+        val methode = menge.methode.alsMathematischeMethode("die Filtermitgliedschaft")
+        if (externeFilterParameter(methode).isNotEmpty()) return NumerischeMitgliedschaft.Unbekannt("Der Filter enthält ungebundene externe Parameter.")
+        val argumente = Tupel(listOf(punktObjekt(punkt, c)))
+        val env = c.achsenNamen.zip(punkt).toMap() + c.festeSchnitte
+        val voraussetzungen = kombiniereMitgliedschaften(methode.prüfeDefinitionsBedingungen(argumente).map {
+            werteAussage(filterBedingung(it), env, c.sampling.toleranz)
+        }, und = true)
+        if (voraussetzungen != NumerischeMitgliedschaft.Enthalten) return voraussetzungen
+        val anwendung = methode.wendeMitBedingungenAn(argumente)
+        val prädikat = anwendung.ergebnis.elemente.single().alsPrädikatsAussageOderNull()
+            ?: error("Der Filter liefert keine Aussage.")
+        kombiniereMitgliedschaften((anwendung.bedingungen + prädikat).map {
+            werteAussage(it, c.achsenNamen.zip(punkt).toMap() + c.festeSchnitte, c.sampling.toleranz)
+        }, und = true)
+    } catch (abbruch: java.util.concurrent.CancellationException) { throw abbruch
+    } catch (fehler: IllegalArgumentException) {
+        NumerischeMitgliedschaft.Unbekannt("Filtervoraussetzung: ${fehler.message}")
+    } catch (fehler: IllegalStateException) {
+        NumerischeMitgliedschaft.Unbekannt("Filtermethode: ${fehler.message ?: "nicht auswertbar"}")
+    }
+
+    }
 
     private fun wertePrädikatsMenge(
         menge: PrädikatsMenge,
@@ -1895,6 +2111,15 @@ object VisualisierungsSampler {
         }
     }
 
+    /** Nur globale Polynome besitzen hier einen nachgewiesenen stetigen reellen Rand. */
+    private fun istPolynom(a: ZahlAusdruck): Boolean = when(a) {
+        is Variable, is RationaleZahl -> true
+        is Addition -> a.summanden.all(::istPolynom)
+        is Multiplikation -> a.faktoren.all(::istPolynom)
+        is Potenz -> istPolynom(a.basis) && (a.exponent as? RationaleZahl)?.let { it.nenner == BigInteger.ONE && it.zähler.signum() >= 0 } == true
+        else -> false
+    }
+
     private fun numerischerWert(
         ausdruck: ZahlAusdruck,
         umgebung: Map<String, Double>,
@@ -2022,4 +2247,26 @@ object VisualisierungsSampler {
 
     private fun kurzeZahl(wert: Double): String =
         BigDecimal.valueOf(wert).stripTrailingZeros().toPlainString()
+}
+
+internal fun vereinigeVisualisierungsErgebnisse(ergebnisse: List<VisualisierungsErgebnis>): VisualisierungsErgebnis? {
+    if (ergebnisse.isEmpty()) return null
+    val e = ergebnisse.mapNotNull { it as? VisualisierungsErgebnis.Erfolgreich }
+    val t = ergebnisse.mapNotNull { it as? VisualisierungsErgebnis.Teilweise }
+    val hinweise = ergebnisse.mapNotNull { when(it) {
+        is VisualisierungsErgebnis.NichtDarstellbar -> it.grund
+        is VisualisierungsErgebnis.ProjektionErforderlich -> it.grund
+        is VisualisierungsErgebnis.BedingtDarstellbar -> it.grund
+        else -> null
+    } } + e.flatMap { it.hinweise } + t.flatMap { it.hinweise }
+    val punkte=e.flatMap { it.punkte }+t.flatMap { it.punkte };val linien=e.flatMap { it.linien }+t.flatMap { it.linien }
+    val dreiecke=e.flatMap { it.dreiecke }+t.flatMap { it.dreiecke };val zellen=e.flatMap { it.zellen }+t.flatMap { it.zellen }
+    val intervalle=e.flatMap { it.intervalle }+t.flatMap { it.intervalle }
+    val statistik=VisualisierungsStatistik(auswertungen=(e.map { it.statistik }+t.map { it.statistik }).sumOf { it.auswertungen },
+        budgetErschöpft=(e.map { it.statistik }+t.map { it.statistik }).any { it.budgetErschöpft },
+        zellArbeit=(e.map {it.statistik}+t.map {it.statistik}).sumOf {it.zellArbeit},
+        punktArbeit=(e.map {it.statistik}+t.map {it.statistik}).sumOf {it.punktArbeit},
+        randArbeit=(e.map {it.statistik}+t.map {it.statistik}).sumOf {it.randArbeit})
+    return if(t.isNotEmpty() || e.size!=ergebnisse.size) VisualisierungsErgebnis.Teilweise(punkte,hinweise,zellen=zellen,linien=linien,dreiecke=dreiecke,intervalle=intervalle,statistik=statistik)
+        else VisualisierungsErgebnis.Erfolgreich(punkte,e.any { it.istApproximation },hinweise,zellen=zellen,linien=linien,dreiecke=dreiecke,intervalle=intervalle,statistik=statistik)
 }

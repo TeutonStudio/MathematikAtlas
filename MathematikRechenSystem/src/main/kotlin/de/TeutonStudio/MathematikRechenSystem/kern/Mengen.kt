@@ -127,6 +127,19 @@ data class KartesischerPotenzraum(
     override fun zuLatex() = "${grundmenge.zuLatex()}^{${dimension.zuLatex()}}"
 }
 
+/** Endliche Faktoren einer Tupelmenge, ohne verschachtelte Tupel abzuflachen. */
+fun MengenAusdruck.kartesischeFaktorenOderNull(maximum: Int = 4096): List<MengenAusdruck>? = when (this) {
+    is Tupelraum -> komponenten
+    is KartesischesProdukt -> mengen
+    is KartesischerPotenzraum -> {
+        val n = vereinfache(dimension) as? RationaleZahl
+        if (n == null || n.nenner != java.math.BigInteger.ONE || n.zähler.signum() < 0 ||
+            n.zähler > java.math.BigInteger.valueOf(maximum.toLong())) null
+        else List(n.zähler.toInt()) { grundmenge }
+    }
+    else -> null
+}
+
 fun kartesischePotenz(grundmenge: MengenAusdruck, dimension: ZahlAusdruck): MengenAusdruck =
     KartesischerPotenzraum(grundmenge, dimension)
 
@@ -319,7 +332,7 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         is DefinierteMenge -> entscheidePrädikatsMitgliedschaft(element, menge, kontext)
         is BeschraenkteZahlmenge -> entscheideBeschränkteMitgliedschaft(element, menge, kontext)
         is PrädikatsMenge -> {
-            val bedingung = ersetze(menge.bedingung, mapOf(menge.element.name to element))
+            val bedingung = ersetze(menge.bedingung, mapOf((menge.element.bindungsId ?: menge.element.name) to element))
             val lage = prüfeDefinitionslage(bedingung, kontext)
             when (lage.wahrheitswert) {
                 Wahrheitswert.Wahr -> bedingung.entscheide(kontext)

@@ -64,7 +64,7 @@ internal fun enzyklopädieKonzeptFürKnoten(context: Context, knoten: KnotenDate
             id = asset.id,
             titel = asset.titel,
             rolle = asset.rolle.zuAppRolle(),
-            karte = geladene.getValue(asset),
+            karte = de.TeutonStudio.MathematikKnoten.graphDefinitionsKarte(knoten, geladene.getValue(asset)),
             darstellungsVarianten = varianten,
             darstellung = if (asset.id == MATRIXPRODUKT_FALK_REITER_ID) {
                 KonzeptReiterDarstellung.FalkSchema

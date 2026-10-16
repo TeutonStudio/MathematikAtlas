@@ -1,5 +1,6 @@
 package de.TeutonStudio.KnotenKartenVerwalter.schnittstelle
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
@@ -16,6 +17,35 @@ class AnschlussSymbolTest {
     private val zahl = TypAusdruck.Atom(TypId("mathematik.zahl"))
     private val aussage = TypAusdruck.Atom(TypId("mathematik.aussage"))
     private val menge = TypAusdruck.Atom(TypId("mathematik.menge"))
+
+    @Test fun `Methodeneingang folgt nur fuer die Zeichnung dem verbundenen Ausgang`() {
+        val ersterTyp = TypAusdruck.Parameterisiert(TypId("mathematik.methode"), listOf(tupel(zahl), tupel(aussage)))
+        val zweiterTyp = TypAusdruck.Parameterisiert(TypId("mathematik.methode"), listOf(tupel(menge, zahl), tupel(menge)))
+        val a = KnotenDaten(art = "test.quelle", name = "A", anschlüsse = listOf(anschluss(ersterTyp).copy(richtung = AnschlussRichtung.Ausgang)))
+        val b = KnotenDaten(art = "test.quelle", name = "B", anschlüsse = listOf(anschluss(zweiterTyp).copy(richtung = AnschlussRichtung.Ausgang)))
+        val input = AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.methode"))
+        val ziel = KnotenDaten(art = "test.ziel", name = "Ziel", anschlüsse = listOf(input))
+        val leer = KartenDaten(name = "Farben", knoten = listOf(a, b, ziel))
+        fun verbunden(q: KnotenDaten) = leer.copy(verbindungen = listOf(VerbindungDaten(von = AnschlussVerweis(q.id, q.anschlüsse.single().id), zu = AnschlussVerweis(ziel.id, input.id))))
+        assertEquals(ersterTyp, verbunden(a).symbolAnschluss(ziel.id, input).vertrag.typ)
+        assertEquals(zweiterTyp, verbunden(b).symbolAnschluss(ziel.id, input).vertrag.typ)
+        assertEquals(input, leer.symbolAnschluss(ziel.id, input))
+        assertEquals(TypAusdruck.Unbekannt, ziel.anschlüsse.single().vertrag.typ)
+    }
+
+    @Test fun `ein logisches Tupelargument bleibt Tupelfarbe und Vereinigungen teilen beide Seiten`() {
+        val signatur = TypAusdruck.Parameterisiert(TypId("mathematik.methode"), listOf(
+            tupel(tupel(zahl, zahl)), tupel(aussage)))
+        val plan = assertIs<AnschlussSymbolPlan.Methode>(anschlussSymbolPlan(anschluss(signatur)))
+        assertEquals(listOf("mathematik.tupel"), plan.argumentFarben)
+        assertEquals(listOf("mathematik.aussage"), plan.ausgabeFarben)
+        val mehrdeutig = TypAusdruck.Parameterisiert(TypId("mathematik.methode"), listOf(
+            tupel(TypAusdruck.Vereinigung(listOf(zahl, menge))),
+            tupel(TypAusdruck.Vereinigung(listOf(aussage, menge)))))
+        val geteilt = assertIs<AnschlussSymbolPlan.Methode>(anschlussSymbolPlan(anschluss(mehrdeutig)))
+        assertEquals(listOf("mathematik.zahl", "mathematik.menge"), geteilt.argumentFarben)
+        assertEquals(listOf("mathematik.aussage", "mathematik.menge"), geteilt.ausgabeFarben)
+    }
 
     @Test
     fun `Methodenanschluss trennt Argument- und Ausgabefarben`() {

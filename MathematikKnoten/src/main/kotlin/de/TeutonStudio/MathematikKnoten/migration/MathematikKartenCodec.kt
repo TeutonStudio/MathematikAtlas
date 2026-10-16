@@ -59,6 +59,7 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
+        .migriereHistorischeVariablenGrundräume()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
@@ -77,6 +78,7 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
+        .migriereHistorischeVariablenGrundräume()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()

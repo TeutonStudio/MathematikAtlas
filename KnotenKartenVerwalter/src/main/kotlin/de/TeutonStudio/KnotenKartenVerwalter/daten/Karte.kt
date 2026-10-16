@@ -14,6 +14,8 @@ data class KnotenDaten(
     val kartenVerweis: KartenVerweis? = null,
     /** Versionsfeste Karten-Fallbacks für einzelne Eingänge; eine Edge besitzt stets Vorrang. */
     val eingangsKartenVerweise: Map<String, KartenVerweis> = emptyMap(),
+    /** Laufzeitgeometrie des Editors, ausdrücklich kein Feld des Karten-Codecs. */
+    val darstellungsFußzeilenHöhe: Float = 32f,
 )
 
 data class VerbindungDaten(

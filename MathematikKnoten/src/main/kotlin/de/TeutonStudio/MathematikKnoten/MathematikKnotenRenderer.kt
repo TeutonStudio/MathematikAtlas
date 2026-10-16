@@ -1,5 +1,8 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_ART
+import de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_KNOTEN
+
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasBestätigungsDialog
 
 import de.TeutonStudio.MathematikRechenSystem.kern.potenzLatex
@@ -31,24 +34,10 @@ import de.TeutonStudio.MathematikKartenAdapter.anzeigeLatex
 import de.TeutonStudio.MathematikKartenAdapter.prädikatsArgumente
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
-internal fun variablenFormel(knoten: KnotenDaten): String {
+internal fun variablenFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis? = null): String {
     val name = knoten.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
-    val werteVorratKennung = knoten.parameter["werteVorrat"]?.trim().orEmpty().ifBlank { "R" }
-    val werteVorrat = when (werteVorratKennung.uppercase()) {
-        "N", "ℕ" -> "\\mathbb{N}"
-        "Z", "ℤ" -> "\\mathbb{Z}"
-        "Q", "ℚ" -> "\\mathbb{Q}"
-        "R", "ℝ" -> "\\mathbb{R}"
-        "C", "ℂ" -> "\\mathbb{C}"
-        else -> werteVorratKennung
-    }
-    val dimension = knoten.parameter[MATRIX_VARIABLE_DIMENSION]?.toIntOrNull() ?: 0
-    return when {
-        variablenStruktur(knoten) == VARIABLE_STRUKTUR_WINKEL -> "$name \\in \\mathrm{Grad}^{${variablenDimension(knoten)}}"
-        variablenStruktur(knoten) == VARIABLE_STRUKTUR_TUPEL -> "$name \\in {$werteVorrat}^{${variablenDimension(knoten)}}"
-        dimension > 0 -> "$name \\in {$werteVorrat}^{${dimension}\\times${dimension}}"
-        else -> "$name \\in $werteVorrat"
-    }
+    val grundraum = ergebnis?.eingänge?.get("grundraum")?.objekt as? de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
+    return "$name \\in ${grundraum?.zuLatex() ?: "?"}"
 }
 
 class MathematikKnotenRenderer(
@@ -95,12 +84,16 @@ class MathematikKnotenRenderer(
                 Text(methode.aliasAnzeige(), style = MaterialTheme.typography.labelSmall)
             }
             when {
+                knoten.art == METHODEN_QUELLE_ART && knoten.kartenVerweis == null && METHODEN_QUELLE_KNOTEN !in knoten.eigenschaften -> {
+                    LatexFormel("\\hookrightarrow\\dots", style = MaterialTheme.typography.bodyLarge)
+                    LatexFormel("x\\mapsto x", style = MaterialTheme.typography.bodyLarge)
+                }
                 knoten.art == MENGENKONSTRUKTOR_ART -> LatexFormel(
                     mengenkonstruktorFormel(knoten),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 knoten.art == "mathematik.variable" -> LatexFormel(
-                    variablenFormel(knoten),
+                    variablenFormel(knoten, ergebnis),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 knoten.art == "mathematik.addition" -> LatexFormel(operatorFormel(knoten, ergebnis, " + "), style = MaterialTheme.typography.bodyLarge)
@@ -124,6 +117,8 @@ class MathematikKnotenRenderer(
                 )
                 objekt is de.TeutonStudio.MathematikRechenSystem.kern.Tupel && ausgabe?.zielMenge is de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum -> LatexFormel(
                     "${objekt.zuLatex()} \\in ${(ausgabe.zielMenge as de.TeutonStudio.MathematikRechenSystem.kern.Tupelraum).potenzLatex()}", style = MaterialTheme.typography.bodyLarge)
+                knoten.art == VektorRechner.KNOTEN_ART && knoten.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.ZERLEGEN.stabileId && ergebnis != null && ergebnis.ausgaben.keys.any { it.startsWith("element") } -> LatexFormel(
+                    zerlegenAnzeigeLatex(knoten, ergebnis), style = MaterialTheme.typography.bodyLarge)
                 ausgabe != null -> LatexFormel(ausgabe.anzeigeLatex(), style = MaterialTheme.typography.bodyLarge)
                 knoten.parameter.isNotEmpty() -> LatexText(knoten.parameter.values.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
                 else -> Text(knoten.art.substringAfterLast('.'), style = MaterialTheme.typography.bodySmall)
@@ -392,3 +387,8 @@ private fun PseudoDefinitionsKnoten(
         }
     }
 }
+
+internal fun zerlegenAnzeigeLatex(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis): String =
+    knoten.anschlüsse.filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Ausgang && it.name != "methode" }
+        .sortedBy { it.reihenfolge }.mapNotNull { ergebnis.ausgaben[it.name]?.anzeigeLatex() }
+        .joinToString(" & ", "\\begin{pmatrix}", "\\end{pmatrix}")

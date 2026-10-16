@@ -8,12 +8,12 @@ import kotlin.test.assertTrue
 
 class VisualisierungsKonzeptReiterTest {
     @Test
-    fun `nur Visualisierungsknoten erhalten den Hochaufloesungsreiter im Haltedialog`() {
+    fun `nur Visualisierungsknoten erhalten den Arbeitsdialog im Haltedialog`() {
         val visualisierung = MathematikKnotenVorlagen.Visualisierung.erzeuge(GraphPunkt.Zero)
         val zahl = MathematikKnotenVorlagen.Zahl.erzeuge(GraphPunkt.Zero)
 
-        assertTrue(besitztHochauflösendenVisualisierungsReiter(visualisierung))
-        assertFalse(besitztHochauflösendenVisualisierungsReiter(zahl))
-        assertFalse(besitztHochauflösendenVisualisierungsReiter(null))
+        assertTrue(besitztVisualisierungsArbeitsdialog(visualisierung))
+        assertFalse(besitztVisualisierungsArbeitsdialog(zahl))
+        assertFalse(besitztVisualisierungsArbeitsdialog(null))
     }
 }

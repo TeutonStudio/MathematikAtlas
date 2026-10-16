@@ -71,10 +71,12 @@ fun KnotenKartenEditor(
     beiKnotenInspektor: (KnotenDaten) -> Unit = { InspektorSichtbarkeit.öffnen() },
     auswertungsDauerFür: (KnotenId) -> Long? = { null },
 ) {
+    val fußhöhe = with(LocalDensity.current) { MaterialTheme.typography.labelSmall.lineHeight.toDp() }.plus(16.dp).coerceAtLeast(18.dp).value
+    SideEffect { zustand.meldeKnotenFußzeilenHöhe(fußhöhe) }
     zustand.projektionImHintergrund = true
     DisposableEffect(zustand) { onDispose { zustand.projektionImHintergrund = false } }
     val gruppenStruktur = remember(zustand.karte.visuelleGruppen) { zustand.karte.visuelleGruppen.map { it.copy(ansicht = AnsichtsFenster.Standard, ansichtInitialisiert = false) } }
-    LaunchedEffect(zustand.karte.id, zustand.karte.knoten, zustand.karte.verbindungen, gruppenStruktur, zustand.geöffneteGruppe) {
+    LaunchedEffect(zustand.karte.id, zustand.karte.knoten, zustand.karte.verbindungen, gruppenStruktur, zustand.geöffneteGruppe, zustand.knotenFußzeilenHöhe) {
         if (zustand.projektionWirdBerechnet) zustand.berechneProjektionImHintergrund()
     }
     val dichte = LocalDensity.current
@@ -1068,7 +1070,7 @@ private fun KnotenDarstellung(
                 }
                 AnschlussGriff(
                     knoten = knoten,
-                    anschluss = anschluss,
+                    anschluss = zustand.karte.symbolAnschluss(knoten.id, anschluss),
                     index = index,
                     anzahl = anschlüsse.size,
                     zustand = zustand,

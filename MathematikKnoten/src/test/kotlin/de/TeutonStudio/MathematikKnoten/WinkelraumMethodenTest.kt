@@ -11,7 +11,7 @@ class WinkelraumMethodenTest {
     private fun eval(k:KnotenDaten,werte:Map<String,BedingterWert>)=register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,werte,RechenKontext())).also { assertNull(it.fehler,it.fehler) }
     private fun quelle(n:Int,name:String="w"):BedingterWert {
         val k=konfiguriereVariablenStruktur(MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt.Zero),VARIABLE_STRUKTUR_WINKEL).let { it.copy(parameter=it.parameter+mapOf(VARIABLE_DIMENSION to n.toString(),"name" to name)) }
-        return eval(k,emptyMap()).ausgaben.getValue("wert")
+        return eval(k,testGrundraum(k)).ausgaben.getValue("wert")
     }
     @Test fun `Wn Quelle Polar Methode Argumente und oeffentliche Definitionsmenge bilden eine Struktur`() {
         for(n in listOf(0,1,2,3,64)) {

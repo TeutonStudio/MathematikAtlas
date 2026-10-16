@@ -2,7 +2,6 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.GraphPrüfung
-import de.TeutonStudio.KnotenKartenVerwalter.logik.VerbindungsPrüfung
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.MathematikAnschlussArten
 import de.TeutonStudio.MathematikRechenSystem.kern.*
@@ -69,7 +68,7 @@ fun synchronisiereMethodenAufrufe(
                 )
             }
             else -> knoten
-        }
+        }.let { synchronisiereSemantischeAusgänge(it, auswertung, karte) }
     }
 
     val argumentIdErsetzungen=buildMap {
@@ -100,17 +99,68 @@ fun synchronisiereMethodenAufrufe(
         it.von in vorhandeneAnschlüsse && it.zu in vorhandeneAnschlüsse
     })
 
-    val gültigeVerbindungen = ergebnis.verbindungen.filter { verbindung ->
-        val ohneAktuelle = ergebnis.copy(
-            verbindungen = ergebnis.verbindungen.filterNot { it.id == verbindung.id },
-        )
-        prüfung.prüfe(ohneAktuelle, verbindung.von, verbindung.zu) is VerbindungsPrüfung.Erlaubt
-    }
+    // Eine einzelne unvereinbare Kante darf keine unabhängigen Kanten mitreißen.
+    val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis).map { it.id }.toSet()
+    val gültigeVerbindungen = ergebnis.verbindungen.filterNot { it.id in inkompatibleIds }
+
     return synchronisiereStrukturZerleger(
         ergebnis.copy(verbindungen = gültigeVerbindungen),
         auswertung,
         prüfung,
     )
+}
+
+/** Signaturen und Variablentypen sind abgeleitete Laufzeitverträge, keine UI-Schattenwerte. */
+private fun synchronisiereSemantischeAusgänge(knoten: KnotenDaten, auswertung: KartenAuswertungsErgebnis, karte: KartenDaten): KnotenDaten {
+    val ergebnis = auswertung.knoten[knoten.id]
+    val grundraum = (ergebnis?.eingänge?.get("grundraum")?.objekt as? MengenAusdruck)?.let(::kanonischerRichtungsraum)
+    val ports = knoten.anschlüsse.map { p ->
+        val methode = ergebnis?.ausgaben?.get(p.name)?.objekt as? Methode
+        when {
+            p.richtung == AnschlussRichtung.Ausgang && methode != null ->
+                p.copy(vertrag = p.vertrag.copy(typ = methode.methodenTypAusdruck()))
+            p.richtung == AnschlussRichtung.Ausgang && knoten.art == METHODEN_AUFRUF_ART &&
+                ergebnis?.eingänge?.get("methode")?.objekt is AllgemeinAuswertbareMethode -> {
+                val ergebnisWert = ergebnis.ausgaben[p.name]
+                val wert = ergebnisWert?.objekt
+                val argumentPort = knoten.anschlüsse.singleOrNull { it.richtung == AnschlussRichtung.Eingang && it.name != "methode" }
+                val alterArgumentPort = argumentPort?.let { argument -> karte.knoten.singleOrNull { it.id == knoten.id }?.anschlüsse?.singleOrNull { it.richtung == AnschlussRichtung.Eingang && it.name == argument.name } }
+                val quellRef = alterArgumentPort?.let { argument -> karte.verbindungen.singleOrNull { it.zu == AnschlussVerweis(knoten.id, argument.id) }?.von }
+                val quellTyp = quellRef?.let { ref -> karte.knoten.singleOrNull { it.id == ref.knotenId }?.anschlüsse?.singleOrNull { it.id == ref.anschlussId }?.vertrag?.typ }?.takeUnless { it == TypAusdruck.Unbekannt }
+                val argumentTyp = if (knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION] == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
+                    (quellTyp as? TypAusdruck.Parameterisiert)?.takeIf { it.konstruktor == MathematischeTypen.Tupel }?.argumente?.singleOrNull()
+                } else quellTyp
+                val durchgereichterTyp = if ((ergebnis.eingänge["methode"]?.objekt == IdentitaetsMethode || ergebnis.eingänge["methode"]?.objekt is TypisierteIdentitaetsMethode) && argumentTyp != null) {
+                    if (knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION] == METHODEN_ERGEBNISPROJEKTION_TUPEL) TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, listOf(argumentTyp)) else argumentTyp
+                } else null
+                val typ = ergebnisWert?.zielMenge?.elementTypAusdruck() ?: ergebnisWert?.werteVorrat?.elementTypAusdruck() ?: durchgereichterTyp ?: when (wert) {
+                    is Methode -> wert.methodenTypAusdruck()
+                    is MathematischesObjekt -> runCatching { inferiereZielmenge(wert, ergebnisWert.reelleVariablen, ergebnisWert.annahmen).elementTypAusdruck() }.getOrNull()
+                    else -> null
+                }
+                if (typ == null) p else p.copy(art = anschlussArtFürTyp(typ), vertrag = AnschlussVertrag(typ))
+            }
+            p.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.variable" -> {
+                // Fehlende Eingaben sind eine Auswertungsdiagnose, kein Grund, bestehende Edges zu löschen.
+                if (grundraum == null) p else {
+                    val typ = grundraum.elementTypAusdruck()
+                    p.copy(art = variablenAnschlussArt(typ), vertrag = p.vertrag.copy(typ = typ))
+                }
+            }
+            p.richtung == AnschlussRichtung.Ausgang && ergebnis?.ausgaben?.get(p.name) != null &&
+                (p.vertrag.typ as? TypAusdruck.Parameterisiert)?.konstruktor == MathematischeTypen.Methode ->
+                p.copy(vertrag = p.vertrag.copy(typ = TypAusdruck.Unbekannt))
+            else -> p
+        }
+    }
+    val methode = ergebnis?.ausgaben?.values?.mapNotNull { it.objekt as? Methode }?.singleOrNull()
+    val standardnamen = setOf("Term zu Methode", "Aussage zu Methode", "Aussage zu Prädikat")
+    val name = if (knoten.art == "mathematik.termZuMethode" && knoten.name in standardnamen && methode != null) {
+        if (methode.istPrädikat()) "Aussage zu Prädikat"
+        else if (knoten.anschlüsse.any { it.name == "term" && it.richtung == AnschlussRichtung.Eingang && it.art == MathematikAnschlussArten.Aussage.id }) "Aussage zu Methode"
+        else "Term zu Methode"
+    } else knoten.name
+    return knoten.copy(name = name, anschlüsse = ports)
 }
 
 private data class MethodenQuellAusgang(

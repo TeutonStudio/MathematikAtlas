@@ -112,7 +112,9 @@ class DesktopAtlasZustand(
     }
 
     fun rendererFür(knoten: KnotenDaten): KnotenRenderer =
-        if(knoten.art == GEOMETRY_NODES_PREFIX+"preview") GeometryNodesVorschauRenderer { auswertung.knoten[it.id] }.mitAuswertungszeit { auswertung.knoten[it.id] }
+        if(knoten.art == "karte.notiz") DesktopNotizRenderer
+        else if(knoten.art == "mathematik.visualisierung") de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsKnotenRenderer { auswertung.knoten[it.id] }.mitAuswertungszeit { auswertung.knoten[it.id] }
+        else if(knoten.art == GEOMETRY_NODES_PREFIX+"preview") GeometryNodesVorschauRenderer { auswertung.knoten[it.id] }.mitAuswertungszeit { auswertung.knoten[it.id] }
         else MathematikKnotenRenderer(
             ergebnisFür = { auswertung.knoten[it.id] },
             beiKnotenKlick = { editor.wähleKnoten(it.id) },

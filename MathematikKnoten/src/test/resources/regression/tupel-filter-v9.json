@@ -1,0 +1,637 @@
+{
+  "formatVersion": 9,
+  "id": "486ca2b9-41cb-4348-8d48-14c23ba3a4ed",
+  "name": "Neue Karte 18",
+  "version": 1,
+  "erstelltAm": 1792071387260,
+  "archiviert": false,
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "knoten": [
+    {
+      "id": "60686eb9-dae3-4098-b1f7-591fe0315a05",
+      "art": "mathematik.menge",
+      "name": "Menge",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "mengeAuswahl": "R"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "60686eb9-dae3-4098-b1f7-591fe0315a05-mengen-dimension",
+          "name": "dimension",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.zahl",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "2fbc85f4-cc58-449a-affe-69cc4b24544e",
+          "name": "menge",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.menge",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "119df997-f355-4d7c-99be-a767c4c9001e",
+      "art": "mathematik.mengenrechner",
+      "name": "Mengenrechner · Kartesisches Produkt",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "operator": "menge.kartesischesProdukt",
+        "festeEingänge": "2"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "5c49f0d4-577b-43d0-94d8-8d2c43ede8ae",
+          "name": "a",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "atlas.wert",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "93970578-76bb-45bf-ad9b-45948a284e31",
+          "name": "b",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "atlas.wert",
+          "reihenfolge": 1,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "3e03db52-c84a-4f80-8aff-21a193d6a1e9",
+          "name": "menge",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.menge",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "227e3db8-0edb-49f9-be42-81dac5ede1cf",
+      "art": "mathematik.variable",
+      "name": "Variable",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "name": "x",
+        "werteVorrat": "R",
+        "variable.struktur": "tupel"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "c38d991a-91c4-4283-9b33-82ee73e2f974",
+          "name": "wert",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.tupel",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "a2fc3cd7-4407-472b-ac4b-6e1f9e3b3b0c",
+          "name": "grundraum",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.menge",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39",
+      "art": "mathematik.vektorrechner",
+      "name": "Vektorrechner · Zerlegen",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "operator": "vektor.zerlegen",
+        "vektorZerlegen.anzahl": "2",
+        "strukturAusgabe": "tupel",
+        "metrik": "metrik.l2",
+        "achse": "1"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "8db9cae2-fe02-48ef-8b68-97e30e0d02cc",
+          "name": "struktur",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "atlas.wert",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39:vektorZerlegen:element:1",
+          "name": "element1",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.zahl",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": true
+        },
+        {
+          "id": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39:vektorZerlegen:element:2",
+          "name": "element2",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.zahl",
+          "reihenfolge": 1,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": true
+        }
+      ]
+    },
+    {
+      "id": "e2156c33-8965-40e5-8332-2545856156cb",
+      "art": "mathematik.zahlenrechner",
+      "name": "Zahlrechner · Quadrat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "operator": "zahl.quadrat"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "01215077-3a7d-4644-9577-f6295432c615",
+          "name": "a",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "atlas.wert",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "4456f9e3-f176-4934-89f5-5669a2faf587",
+          "name": "wert",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.zahl",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "1261151b-fc0e-4368-b8b6-88fe0ce178fa",
+      "art": "mathematik.ordnungsrelation",
+      "name": "Kleiner",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "relation": "kleiner"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "35f51d01-dce8-4ddc-a659-0bc10c0a4bf9",
+          "name": "links",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.zahl",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "896509a0-21ba-4872-89dd-c7e055d1ba32",
+          "name": "rechts",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.zahl",
+          "reihenfolge": 1,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "5dcf1a0e-458b-4256-a03b-fb0efedde7ae",
+          "name": "aussage",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.aussage",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "5339c712-bb31-44c8-a15f-0acd99e32cce",
+      "art": "mathematik.wahr",
+      "name": "Wahr",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {},
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "3aa265da-8565-4835-96d4-43e19cb57f2b",
+          "name": "aussage",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.aussage",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "d374f7bf-8c0f-4774-95d1-996842b07b26",
+      "art": "mathematik.aussagensatz",
+      "name": "Aussagesatz",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "operator": "aussage.konjunktion"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "def83e10-ca64-4f3d-af71-a3966272ab38",
+          "name": "a",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "atlas.wert",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "891872ce-eeb9-4e2b-b473-90dcd7fd7a84",
+          "name": "b",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "atlas.wert",
+          "reihenfolge": 1,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "62541221-71e0-43e9-8793-05d918482ff6",
+          "name": "wert",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.aussage",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "2d06c770-541f-403c-9765-67a8d3c8c420",
+      "art": "mathematik.termZuMethode",
+      "name": "Term zu Methode",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "name": "f",
+        "argumentReihenfolge": "",
+        "methodenAusgang.methode.argumentprojektion": "tupel"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "4ad40276-35f1-4e44-ac12-b7c7ca4745a5",
+          "name": "term",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.objekt",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "667c8448-25be-4699-9f24-1153c3fb4fb0",
+          "name": "methode",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.methode",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "3519dc26-520a-4502-bbd0-ca4f32c867a0",
+      "art": "mathematik.termZuMethode",
+      "name": "Aussage zu Prädikat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {
+        "name": "P",
+        "argumentReihenfolge": "",
+        "methodenAusgang.methode.argumentprojektion": "tupel"
+      },
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "6a2f8403-ca2b-4187-afd6-031557902f78",
+          "name": "term",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.aussage",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "edb85758-05db-424c-a2c7-e30a62344a2d",
+          "name": "methode",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.methode",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    },
+    {
+      "id": "db81206d-c955-4033-a717-d940f860fdfa",
+      "art": "mathematik.mengenfilter",
+      "name": "Mengenfilter",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 270,
+        "höhe": 145
+      },
+      "parameter": {},
+      "eigenschaften": {},
+      "anschlüsse": [
+        {
+          "id": "03e37fd9-2e81-4954-b5f1-dcc170b4ab2f",
+          "name": "menge",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.menge",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "a82f64c9-cf21-4556-98f8-5811fb860d92",
+          "name": "methode",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.methode",
+          "reihenfolge": 1,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        },
+        {
+          "id": "53a76ae4-08bd-4e37-a6b5-066c55a8d35f",
+          "name": "menge",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.menge",
+          "reihenfolge": 0,
+          "kannSichErweitern": false,
+          "dynamischErzeugt": false
+        }
+      ]
+    }
+  ],
+  "verbindungen": [
+    {
+      "id": "regression-edge-0",
+      "von": {
+        "knotenId": "60686eb9-dae3-4098-b1f7-591fe0315a05",
+        "anschlussId": "2fbc85f4-cc58-449a-affe-69cc4b24544e"
+      },
+      "zu": {
+        "knotenId": "119df997-f355-4d7c-99be-a767c4c9001e",
+        "anschlussId": "5c49f0d4-577b-43d0-94d8-8d2c43ede8ae"
+      }
+    },
+    {
+      "id": "regression-edge-1",
+      "von": {
+        "knotenId": "60686eb9-dae3-4098-b1f7-591fe0315a05",
+        "anschlussId": "2fbc85f4-cc58-449a-affe-69cc4b24544e"
+      },
+      "zu": {
+        "knotenId": "119df997-f355-4d7c-99be-a767c4c9001e",
+        "anschlussId": "93970578-76bb-45bf-ad9b-45948a284e31"
+      }
+    },
+    {
+      "id": "regression-edge-2",
+      "von": {
+        "knotenId": "119df997-f355-4d7c-99be-a767c4c9001e",
+        "anschlussId": "3e03db52-c84a-4f80-8aff-21a193d6a1e9"
+      },
+      "zu": {
+        "knotenId": "227e3db8-0edb-49f9-be42-81dac5ede1cf",
+        "anschlussId": "a2fc3cd7-4407-472b-ac4b-6e1f9e3b3b0c"
+      }
+    },
+    {
+      "id": "regression-edge-3",
+      "von": {
+        "knotenId": "227e3db8-0edb-49f9-be42-81dac5ede1cf",
+        "anschlussId": "c38d991a-91c4-4283-9b33-82ee73e2f974"
+      },
+      "zu": {
+        "knotenId": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39",
+        "anschlussId": "8db9cae2-fe02-48ef-8b68-97e30e0d02cc"
+      }
+    },
+    {
+      "id": "regression-edge-4",
+      "von": {
+        "knotenId": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39",
+        "anschlussId": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39:vektorZerlegen:element:2"
+      },
+      "zu": {
+        "knotenId": "e2156c33-8965-40e5-8332-2545856156cb",
+        "anschlussId": "01215077-3a7d-4644-9577-f6295432c615"
+      }
+    },
+    {
+      "id": "regression-edge-5",
+      "von": {
+        "knotenId": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39",
+        "anschlussId": "cbc8fbd3-22a6-48c7-9c8c-1c508780dd39:vektorZerlegen:element:1"
+      },
+      "zu": {
+        "knotenId": "1261151b-fc0e-4368-b8b6-88fe0ce178fa",
+        "anschlussId": "35f51d01-dce8-4ddc-a659-0bc10c0a4bf9"
+      }
+    },
+    {
+      "id": "regression-edge-6",
+      "von": {
+        "knotenId": "e2156c33-8965-40e5-8332-2545856156cb",
+        "anschlussId": "4456f9e3-f176-4934-89f5-5669a2faf587"
+      },
+      "zu": {
+        "knotenId": "1261151b-fc0e-4368-b8b6-88fe0ce178fa",
+        "anschlussId": "896509a0-21ba-4872-89dd-c7e055d1ba32"
+      }
+    },
+    {
+      "id": "regression-edge-7",
+      "von": {
+        "knotenId": "5339c712-bb31-44c8-a15f-0acd99e32cce",
+        "anschlussId": "3aa265da-8565-4835-96d4-43e19cb57f2b"
+      },
+      "zu": {
+        "knotenId": "d374f7bf-8c0f-4774-95d1-996842b07b26",
+        "anschlussId": "def83e10-ca64-4f3d-af71-a3966272ab38"
+      }
+    },
+    {
+      "id": "regression-edge-8",
+      "von": {
+        "knotenId": "1261151b-fc0e-4368-b8b6-88fe0ce178fa",
+        "anschlussId": "5dcf1a0e-458b-4256-a03b-fb0efedde7ae"
+      },
+      "zu": {
+        "knotenId": "d374f7bf-8c0f-4774-95d1-996842b07b26",
+        "anschlussId": "891872ce-eeb9-4e2b-b473-90dcd7fd7a84"
+      }
+    },
+    {
+      "id": "regression-edge-9",
+      "von": {
+        "knotenId": "d374f7bf-8c0f-4774-95d1-996842b07b26",
+        "anschlussId": "62541221-71e0-43e9-8793-05d918482ff6"
+      },
+      "zu": {
+        "knotenId": "2d06c770-541f-403c-9765-67a8d3c8c420",
+        "anschlussId": "4ad40276-35f1-4e44-ac12-b7c7ca4745a5"
+      }
+    },
+    {
+      "id": "regression-edge-10",
+      "von": {
+        "knotenId": "d374f7bf-8c0f-4774-95d1-996842b07b26",
+        "anschlussId": "62541221-71e0-43e9-8793-05d918482ff6"
+      },
+      "zu": {
+        "knotenId": "3519dc26-520a-4502-bbd0-ca4f32c867a0",
+        "anschlussId": "6a2f8403-ca2b-4187-afd6-031557902f78"
+      }
+    },
+    {
+      "id": "regression-edge-11",
+      "von": {
+        "knotenId": "119df997-f355-4d7c-99be-a767c4c9001e",
+        "anschlussId": "3e03db52-c84a-4f80-8aff-21a193d6a1e9"
+      },
+      "zu": {
+        "knotenId": "db81206d-c955-4033-a717-d940f860fdfa",
+        "anschlussId": "03e37fd9-2e81-4954-b5f1-dcc170b4ab2f"
+      }
+    },
+    {
+      "id": "regression-edge-12",
+      "von": {
+        "knotenId": "3519dc26-520a-4502-bbd0-ca4f32c867a0",
+        "anschlussId": "edb85758-05db-424c-a2c7-e30a62344a2d"
+      },
+      "zu": {
+        "knotenId": "db81206d-c955-4033-a717-d940f860fdfa",
+        "anschlussId": "a82f64c9-cf21-4556-98f8-5811fb860d92"
+      }
+    }
+  ],
+  "visuelleGruppen": []
+}

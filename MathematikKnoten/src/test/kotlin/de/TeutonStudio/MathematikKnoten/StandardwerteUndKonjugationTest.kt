@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class StandardwerteUndKonjugationTest {
-    private val auswerter = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister())
+    private val auswerter = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister())
 
     @Test
     fun `Multiplikation startet mit zwei erweiterbaren Eingängen`() {
@@ -42,7 +42,7 @@ class StandardwerteUndKonjugationTest {
             verbindungen = listOf(verbinde(basis, "wert", potenz, "basis")),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
         val wert = ergebnis.knoten.getValue(potenz.id).ausgaben.getValue("wert").objekt
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
@@ -66,7 +66,7 @@ class StandardwerteUndKonjugationTest {
             ),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
         val wert = ergebnis.knoten.getValue(potenz.id).ausgaben.getValue("wert").objekt
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
@@ -86,7 +86,7 @@ class StandardwerteUndKonjugationTest {
             verbindungen = listOf(verbinde(basis, "wert", potenz, "basis")),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
         assertTrue(ergebnis.fehler.single().contains("Standardwert für 'exponent'"))
     }
@@ -104,11 +104,11 @@ class StandardwerteUndKonjugationTest {
             verbindungen = listOf(verbinde(variable, "wert", konjugierte, "zahl")),
         )
 
-        val ergebnis = auswerter.auswerten(karte)
+        val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
         val wert = ergebnis.knoten.getValue(konjugierte.id).ausgaben.getValue("wert")
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
-        assertEquals(Variable("x"), wert.objekt)
+        assertEquals(Variable("x", bindungsId = "x:grundraum-element"), wert.objekt)
         assertEquals(ReelleZahlen, wert.werteVorrat)
     }
 

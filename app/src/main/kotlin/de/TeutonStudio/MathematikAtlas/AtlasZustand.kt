@@ -125,6 +125,7 @@ class AtlasZustand(context: Context) {
             emptyList()
         }
         MengenKnotenKartenQuelle.installieren(this)
+        MethodenQuellenKarten.installieren(this)
         MengenOperatorInspektorRegistrierung.installieren()
         VerbindungsDragZielHinweis.installiere { dragZustand, ziel ->
             methodenSignaturFürDragZiel(dragZustand, ziel)

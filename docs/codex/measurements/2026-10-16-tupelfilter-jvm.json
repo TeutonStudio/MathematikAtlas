@@ -1,0 +1,87 @@
+{
+  "plattform": "Linux amd64",
+  "java": "17.0.19",
+  "messungen": [
+    {
+      "fall": "TupelfilterNutzerkarte",
+      "qualität": "Standard",
+      "vorschauMs": 25.975669,
+      "detailMs": 62.865693,
+      "cacheMs": 0.145611,
+      "cacheBytes": 478004
+    },
+    {
+      "fall": "TupelfilterNutzerkarte",
+      "qualität": "Hoch",
+      "vorschauMs": 1.827973,
+      "detailMs": 212.393766,
+      "cacheMs": 0.15001,
+      "cacheBytes": 2694102
+    },
+    {
+      "fall": "TupelfilterUndParabelgebiet",
+      "qualität": "Standard",
+      "vorschauMs": 1.785133,
+      "detailMs": 11.706527,
+      "cacheMs": 0.14847,
+      "cacheBytes": 528918
+    },
+    {
+      "fall": "TupelfilterUndParabelgebiet",
+      "qualität": "Hoch",
+      "vorschauMs": 1.064382,
+      "detailMs": 82.906703,
+      "cacheMs": 0.223481,
+      "cacheBytes": 3425848
+    },
+    {
+      "fall": "Parabelgebiet",
+      "qualität": "Standard",
+      "vorschauMs": 1.543892,
+      "detailMs": 9.344644,
+      "cacheMs": 0.08644,
+      "cacheBytes": 477178
+    },
+    {
+      "fall": "Parabelgebiet",
+      "qualität": "Hoch",
+      "vorschauMs": 0.672081,
+      "detailMs": 64.370096,
+      "cacheMs": 0.09599,
+      "cacheBytes": 2693276
+    },
+    {
+      "fall": "Sinusgraph",
+      "qualität": "Standard",
+      "vorschauMs": 12.168578,
+      "detailMs": 6.121349,
+      "cacheMs": 0.10257,
+      "cacheBytes": 90942
+    },
+    {
+      "fall": "Sinusgraph",
+      "qualität": "Hoch",
+      "vorschauMs": 1.254643,
+      "detailMs": 2.536903,
+      "cacheMs": 0.07091,
+      "cacheBytes": 90942
+    },
+    {
+      "fall": "ZweiGebiete",
+      "qualität": "Standard",
+      "vorschauMs": 1.352322,
+      "detailMs": 5.523049,
+      "cacheMs": 0.09857,
+      "cacheBytes": 437400
+    },
+    {
+      "fall": "ZweiGebiete",
+      "qualität": "Hoch",
+      "vorschauMs": 0.549211,
+      "detailMs": 43.206634,
+      "cacheMs": 0.11133,
+      "cacheBytes": 2724580
+    }
+  ],
+  "hinweis": "Einzelmessungen im lokalen JVM-Testprozess, nicht vorgewärmt; Vorschau/Detail/Cache getrennt. Keine Framezeiten oder belastbarer Vorher-Nachher-Vergleich. Auswertung derselben Nutzerkarte und überlagerter Mengen. Geometriebudget wird unter den Ebenen geteilt."
+}

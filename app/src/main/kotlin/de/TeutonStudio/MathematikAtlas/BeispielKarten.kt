@@ -65,6 +65,8 @@ object BeispielKarten {
         )
         return KarteBauer("Mandelbrot-Menge als Orbitfamilie")
             .knoten(zustand, parameter, zwei, quadrat, addiereParameter, methode, nullStart, orbit, komplexe, beschränkt, visualisierung)
+            .verbinde(komplexe, "menge", zustand, "grundraum")
+            .verbinde(komplexe, "menge", parameter, "grundraum")
             .verbinde(zustand, "wert", quadrat, "basis")
             .verbinde(zwei, "wert", quadrat, "exponent")
             .verbinde(quadrat, "wert", addiereParameter, "a")

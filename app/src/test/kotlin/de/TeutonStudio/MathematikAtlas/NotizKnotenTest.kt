@@ -67,4 +67,16 @@ class NotizKnotenTest {
         assertEquals("blocksatz", gelesen.parameter[NOTIZ_AUSRICHTUNG_PARAMETER])
         assertEquals("24", gelesen.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER])
     }
+
+    @Test fun `Schriftfarbe roundtript und ist atomar rueckgaengig`() {
+        val n=KartenWerkzeugVorlagen.Notiz.erzeuge(GraphPunkt.Zero)
+        val karte=KartenDaten(name="Farbe",knoten=listOf(n))
+        val editor=de.TeutonStudio.KnotenKartenVerwalter.zustand.KartenEditorZustand(karte,de.TeutonStudio.MathematikKnoten.MathematikKartenLaufzeit().graphPrüfung)
+        val farbe=de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft.Farbe(0xFFB01234)
+        editor.führeAus(de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion.KnotenEigenschaftenErsetzen(n.id,mapOf(NOTIZ_SCHRIFTFARBE to farbe)))
+        val geladen=KartenJson.lese(KartenJson.schreibe(editor.karte))
+        assertEquals(farbe,geladen.knoten.single().eigenschaften[NOTIZ_SCHRIFTFARBE])
+        editor.rückgängig();assertEquals(karte,editor.karte)
+        editor.wiederholen();assertEquals(farbe,editor.karte.knoten.single().eigenschaften[NOTIZ_SCHRIFTFARBE])
+    }
 }
