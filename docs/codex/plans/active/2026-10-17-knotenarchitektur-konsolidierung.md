@@ -185,7 +185,7 @@ Shadowprüfung, 15 Standardkarten, Releaseplan/Versionsfolge und 14 Guards grün
 Diese historischen Nachweise sind keine Freigabe der neuen Implementierung.
 Neue Ergebnisse werden hier dem geprüften Commit zugeordnet.
 
-M0-Nachlauf: 2.123 JVM-/Desktop-Testfälle, keine Fehler, ein vorhandener
+M0-Nachlauf: 2.125 JVM-/Desktop-Testfälle, keine Fehler, ein vorhandener
 Opt-in-Messfall übersprungen; elf neue Katalog-/Migrations-/Dispatchregressionen.
 Unabhängige Nachprüfung nach den Pipeline-, Typ-, Rollen- und Dispatchkorrekturen
 ohne offene Findings. Debug-/Test-APKs und Desktopkompilierung erfolgreich.
@@ -204,6 +204,15 @@ Gradle-Test-/Lint-/APK-/Desktopbefehl ohne lokale Geräte-/RPM-Tasks erfolgreich
 in 2m49s, 277 Tasks. Quellstand: aed308ca plus die abschließende explizite
 Rollen-/Dispatchhärtung; der nachfolgende SamAI-Commit umfasst exakt diesen
 geprüften Produktbaum. M0 bleibt bis grüner CI dieses Commits unveröffentlicht.
+
+Abschließender Desktopbefund: Die bisherige Namens-/Kategoriesuche bot keine
+Operatorvorlagen an. Der Einfügepfad verwendet jetzt zusätzlich den bestehenden
+OperatorKnotenSuchindex und dedupliziert anhand der kanonischen Variantenkennung.
+Zwei Regressionen sichern konfigurierte Geometrierelationen, Matrixspur und
+unveränderten leeren Suchkatalog. Gezielte Katalogtests und vollständiger
+Desktop-Test-/Kompilierlauf bestanden (37s); unabhängige Quellprüfung ohne
+Findings. Produktbaum: 06120b57 plus dieser Desktop-Suchpatch.
+Erneute CI aller Releasegates am nachfolgenden Commit bleibt verpflichtend.
 
 ## 15. Entscheidungsprotokoll
 

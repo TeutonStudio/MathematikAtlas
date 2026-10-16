@@ -17,7 +17,9 @@ Alle erzeugbaren mathematischen Vorlagen stammen aus
 KanonischerMathematikKnotenKatalog. Plattformen ergänzen nur eigene Werkzeuge und
 Gruppen. Das Release-Manifest entspricht dem gemeinsamen mathematischen Katalog
 zuzüglich ausdrücklich deklarierter Plattformtypen; Tests prüfen Gleichheit.
-Geometrierelationen bleiben über vorkonfigurierte Prädikate suchbar.
+Geometrierelationen bleiben über vorkonfigurierte Prädikate suchbar. Android und
+Desktop ergänzen Suchtreffer aus demselben vorhandenen OperatorKnotenSuchindex;
+Varianten werden über die kanonische Variantenkennung dedupliziert.
 
 Eindeutige Prädikatmigration bewahrt Nutzername, Port- und Verbindungsidentitäten,
 Verträge und Reihenfolge und remappt Standards und Kartenfallbacks gemeinsam.

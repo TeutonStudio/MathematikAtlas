@@ -594,11 +594,12 @@ Numerische Prüfgrenze: getrennte Ungleichungsrandzüge werden derzeit nur für 
   Mengen-/Methoden-/Join-/Dynamiknormalisierung respektiert diese Grenze.
 - Unabhängige Quellprüfung einschließlich expliziter Legacyrollen und Sperre vor
   Kartenreferenzen/festen Ausgaben ohne offene Findings. Vollständige lokale
-  JVM-/Desktop-/App-Lint-/APK-Prüfung erfolgreich: 2.123 Testfälle, 0 Fehler,
+  JVM-/Desktop-/App-Lint-/APK-Prüfung erfolgreich: 2.125 Testfälle, 0 Fehler,
   1 vorhandener Opt-in-Messfall übersprungen; elf neue Regressionen bestanden.
   Sieben Editortests am SM-X920 bestanden; Appinstallation wegen abweichender
   Signatur blockiert, vorhandene App/Daten bewahrt. Standalone-kotlinc und lokale
   RPM-Erzeugung nicht verfügbar; CI-Nachweise und Veröffentlichung siehe Plan.
-  Keine Gesamtfreigabe M1–M7.
+  Desktop sucht zusätzlich im vorhandenen Operatorindex; zwei Regressionen und
+  der vollständige Desktopnachlauf bestanden. Keine Gesamtfreigabe M1–M7.
   [Aktiver Gesamtplan](plans/active/2026-10-17-knotenarchitektur-konsolidierung.md),
   [Entscheidung](decisions/2026-10-17-kanonischer-katalog-migrationsschutz.md).
