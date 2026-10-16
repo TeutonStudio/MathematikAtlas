@@ -152,26 +152,15 @@ class FaltungsAuswerterTest {
     }
 
     @Test
-    fun `unbekannter Methodenaufruf normalisiert symbolische Einzelausgabe zum Einertupel`() {
+    fun `unsignierter Methodenwert wird ohne erfundene Mengenparameter abgewiesen`() {
         val methode = TypisiertesElement("A", "mathematik.funktion", "A")
-        val i = Variable("i")
-        val knoten = methodenAufrufKnoten("mathematik.menge")
-
-        val ergebnis = MethodenAufrufAuswerter.auswerten(
-            KnotenAuswertungsKontext(
-                knoten,
-                mapOf(
-                    "methode" to BedingterWert(methode),
-                    "argument1" to BedingterWert(i, werteVorrat = NatürlicheZahlen),
-                ),
-                RechenKontext(),
-            ),
-        )
-
-        val tupel = assertIs<Tupel>(ergebnis.ausgaben.getValue("wert").objekt)
-        val wert = assertIs<MengenParameter>(tupel.elemente.single())
-        assertEquals("A(i)", wert.zuLatex())
-        assertEquals("\\left(A\\left(i\\right)\\right)", ergebnis.ausgaben.getValue("wert").latexDarstellung)
+        val fehler = kotlin.test.assertFails {
+            MethodenAufrufAuswerter.auswerten(KnotenAuswertungsKontext(
+                methodenAufrufKnoten("mathematik.menge"),
+                mapOf("methode" to BedingterWert(methode), "argument1" to BedingterWert(Variable("i"))),
+                RechenKontext()))
+        }
+        kotlin.test.assertTrue(fehler.message.orEmpty().contains("Methodensignatur"))
     }
 
     @Test

@@ -725,7 +725,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.aussage|Aussagenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.aussage|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Aussagenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-aussagenmethode-anwenden-1",
@@ -734,7 +734,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.aussage|Aussagenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.aussage|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Aussagenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-mengenmethode-anwenden-2",
@@ -743,7 +743,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.aussage|Aussagenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.aussage|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Aussagenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-methode-allgemein-anwenden-3",
@@ -752,7 +752,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.aussage|Aussagenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.aussage|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Aussagenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.definition",
@@ -761,7 +761,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.menge|Mengenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.menge|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Mengenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-aussagenmethode-anwenden-1",
@@ -770,7 +770,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.menge|Mengenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.menge|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Mengenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-mengenmethode-anwenden-2",
@@ -779,7 +779,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.menge|Mengenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.menge|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Mengenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-methode-allgemein-anwenden-3",
@@ -788,7 +788,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.menge|Mengenmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.menge|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Mengenmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.definition",
@@ -797,7 +797,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.objekt|Methode allgemein anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.objekt|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Methode allgemein anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-aussagenmethode-anwenden-1",
@@ -806,7 +806,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.objekt|Methode allgemein anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.objekt|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Methode allgemein anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-mengenmethode-anwenden-2",
@@ -815,7 +815,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.objekt|Methode allgemein anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.objekt|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Methode allgemein anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-methode-allgemein-anwenden-3",
@@ -824,7 +824,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.objekt|Methode allgemein anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.objekt|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Methode allgemein anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.definition",
@@ -833,7 +833,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.zahl|Zahlmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.zahl|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Zahlmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-aussagenmethode-anwenden-1",
@@ -842,7 +842,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.zahl|Zahlmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.zahl|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Zahlmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-mengenmethode-anwenden-2",
@@ -851,7 +851,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.zahl|Zahlmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.zahl|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Zahlmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-methode-allgemein-anwenden-3",
@@ -860,7 +860,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
-            varianten = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.zahl|Zahlmethode anwenden")),
+            varianten = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.zahl|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Zahlmethode anwenden")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenDifferentieren|Methode differentieren|.1b94f5c5.definition",
@@ -914,7 +914,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.ordnungsrelation|relation=größerGleich|Größer oder gleich")),
+            varianten = setOf(VariantenId("mathematik.praedikat|operator=relation.groesserGleich|praedikatSeite=relationen|relation=größerGleich|Größer oder gleich")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Größer|relation=größer.9eec3900.definition",
@@ -923,7 +923,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.ordnungsrelation|relation=größer|Größer")),
+            varianten = setOf(VariantenId("mathematik.praedikat|operator=relation.groesser|praedikatSeite=relationen|relation=größer|Größer")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Kleiner oder gleich|relation=kleinerGleich.b457e5ce.definition",
@@ -932,7 +932,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.ordnungsrelation|relation=kleinerGleich|Kleiner oder gleich")),
+            varianten = setOf(VariantenId("mathematik.praedikat|operator=relation.kleinerGleich|praedikatSeite=relationen|relation=kleinerGleich|Kleiner oder gleich")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Kleiner|relation=kleiner.96e04cd4.definition",
@@ -941,7 +941,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.ordnungsrelation|relation=kleiner|Kleiner")),
+            varianten = setOf(VariantenId("mathematik.praedikat|operator=relation.kleiner|praedikatSeite=relationen|relation=kleiner|Kleiner")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.reellesIntervall|Reelles Intervall|.f0cea39b.definition",
@@ -968,7 +968,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.spaltenMethodeDifferentieren|Spaltenmethode differentieren")),
+            varianten = setOf(VariantenId("mathematik.methodenDifferentieren|methodenAnforderung.methode.ergebnisArt=mathematik.vektor.spalte|orientierung=spalte|Vektormethode differentieren")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.spaltenMethodeIntegrieren|Spaltenmethode integrieren|.51248d63.definition",
@@ -977,7 +977,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.spaltenMethodeIntegrieren|Spaltenmethode integrieren")),
+            varianten = setOf(VariantenId("mathematik.methodenIntegrieren|methodenAnforderung.methode.ergebnisArt=mathematik.vektor.spalte|orientierung=spalte|Vektormethode integrieren")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.spur|Spur|.9a98ce73.definition",
@@ -4529,7 +4529,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.zeilenMethodeDifferentieren|Zeilenmethode differentieren")),
+            varianten = setOf(VariantenId("mathematik.methodenDifferentieren|methodenAnforderung.methode.ergebnisArt=mathematik.vektor.zeile|orientierung=zeile|Vektormethode differentieren")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.zeilenMethodeIntegrieren|Zeilenmethode integrieren|.64fa65e9.definition",
@@ -4538,7 +4538,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.zeilenMethodeIntegrieren|Zeilenmethode integrieren")),
+            varianten = setOf(VariantenId("mathematik.methodenIntegrieren|methodenAnforderung.methode.ergebnisArt=mathematik.vektor.zeile|orientierung=zeile|Vektormethode integrieren")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.zeilenVektor|Zeilenvektor|festeEingänge=2;operatorAnzeige=wert.d383feee.definition",

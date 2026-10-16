@@ -166,3 +166,18 @@ Der abgegrenzte Übersetzungsvertrag wird in [eigenem ExecPlan](2026-10-13-ueber
 ## Ergänzung 2026-10-14: Formelvertragsabschluss
 
 Die Parser-, höherwertigen Methoden- und Bildmengenregressionen aus dem ExecPlan `2026-10-14-formel-methoden-tupel-vertragsabschluss.md` ergänzen die Matrix: deklarationsvorrangige und gruppierte Methodenaufrufe, nullstellige/verschachtelte Tupel, methodenwertige symbolische Rückgaben und nullstellige Bildmengen sind in Kern- und Knotentests belegt. Eine historische Strukturformel-V1-LaTeX-Fixture wird strukturell vollständig verglichen und in den aktuellen Codec roundtrippt. Die V1-Rationalwert-Fixture ist ausdrücklich synthetisch und belegt nur Decoderkompatibilität; ein historisch ausgelieferter V1-Wertwriter ist nicht nachgewiesen. Die übrige 77-Punkte-Abnahme bleibt offen.
+
+## Ergänzende Evidenz aus Knotenarchitektur M1 (2026-10-17)
+
+M06/M07/M08/M09/M11/M13/M22/M23 sowie F24/I04: Der gemeinsame Adapter bindet nun
+nach Komponenten-ID, hält F((a,b),g) bei zwei Argumenten, erhält innere Tupel und
+Komponentenräume, verwendet offene mathematische Capabilities und einen strukturierten
+symbolischen Aufruf statt LaTeX-Ersatznamen. Historische Einzelaufrufe delegieren
+und werden eindeutig in feste direkte Projektionen migriert. Bedingungen sind im
+Kern, Adapter und beim Differenzenquotienten über Laden/Speichern/Import nachgewiesen.
+Tests: MethodenCapabilityKonsolidierungTest, MethodenKonsolidierungVertragTest,
+MethodenKonsolidierungMigrationTest, MethodenAufrufDifferenzenquotientTest.
+
+Dies ergänzt die bisherigen Teilnachweise; Statuswerte der gesamten Matrix bleiben
+unverändert. Allgemeine Signaturrestriktionen, weitere AST-Ergebnistypen und die
+vollständige Palette/Bindungsoberfläche sind dadurch nicht pauschal abgeschlossen.

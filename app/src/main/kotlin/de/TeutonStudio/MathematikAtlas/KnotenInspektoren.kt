@@ -98,6 +98,8 @@ object KnotenInspektorRegister {
         "mathematik.einheitsZeile" to OrientierungsKnotenInspektor,
         "mathematik.kreuzproduktSpalte" to OrientierungsKnotenInspektor,
         "mathematik.kreuzproduktZeile" to OrientierungsKnotenInspektor,
+        "mathematik.methodenDifferentieren" to OrientierungsKnotenInspektor,
+        "mathematik.methodenIntegrieren" to OrientierungsKnotenInspektor,
         "mathematik.spaltenMethodeDifferentieren" to OrientierungsKnotenInspektor,
         "mathematik.zeilenMethodeDifferentieren" to OrientierungsKnotenInspektor,
         "mathematik.spaltenMethodeIntegrieren" to OrientierungsKnotenInspektor,

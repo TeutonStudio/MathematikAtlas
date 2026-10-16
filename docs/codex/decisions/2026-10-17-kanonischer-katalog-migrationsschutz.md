@@ -1,6 +1,6 @@
 # Kanonischer Erstellen-Katalog und diagnostische Migrationsgrenzen
 
-Datum: 2026-10-17. Status: M0 implementiert und lokal verifiziert; Release-CI ausstehend.
+Datum: 2026-10-17. Status: M0 veröffentlicht und releasegeprüft als v3.4.2, Commit 5813c0337b5c7b2284d882b785559dfeea4ae3cd (PR #456).
 
 ## Kontext
 

@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object MethodeAllgemeinAnwendenKonzeptDateiFE4FE5CF : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.methodenAnwendung|methodenAnwendung.ergebnisArt=mathematik.objekt|Methode allgemein anwenden"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.methodeAufrufen|festeEingänge=1|methodenAnwendung.ergebnisArt=mathematik.objekt|methodenAufruf.argumentprojektion=separiert|methodenAufruf.ergebnisprojektion=direkt|methodenAufruf.projektionFest=true|Methode allgemein anwenden"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object MethodeAllgemeinAnwendenKonzeptDateiFE4FE5CF : ExpliziteKonzeptD
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.methodenAnwendung"),
+            knotenArten = setOf("mathematik.methodeAufrufen"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

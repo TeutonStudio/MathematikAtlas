@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object KleinerKonzeptDatei69B0A80F : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.ordnungsrelation|Kleiner|relation=kleiner")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.ordnungsrelation|relation=kleiner|Kleiner"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.praedikat|operator=relation.kleiner|praedikatSeite=relationen|relation=kleiner|Kleiner"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object KleinerKonzeptDatei69B0A80F : ExpliziteKonzeptDatei {
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.ordnungsrelation"),
+            knotenArten = setOf("mathematik.praedikat"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

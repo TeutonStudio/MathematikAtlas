@@ -170,7 +170,9 @@ fun synchronisiereStrukturZerleger(
     })
 
     // Eine einzelne unvereinbare Kante darf keine unabhängigen Kanten mitreißen.
-    val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis).map { it.id }.toSet()
+    val geschützt = ergebnis.knoten.filter { RECHNER_MIGRATION_DIAGNOSE in it.parameter || METHODEN_AUFRUF_VERTRAGSFEHLER in it.parameter }.map { it.id }.toSet()
+    val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis)
+        .filter { it.von.knotenId !in geschützt && it.zu.knotenId !in geschützt }.map { it.id }.toSet()
     val gültigeVerbindungen = ergebnis.verbindungen.filterNot { it.id in inkompatibleIds }
 
     return ergebnis.copy(verbindungen = gültigeVerbindungen)

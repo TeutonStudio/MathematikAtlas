@@ -188,16 +188,16 @@ fun Methode.wendeKanonischAn(argumente: Map<String, MathematischesObjekt>): Math
     return auswertbar.wendeMathematischAn(argumente)
 }
 
-/** Prädikate werden nur durch ihre mathematische Semantik erkannt. */
+/** Neutrale Klassifikation: eine bekannte boolesche Ergebniskomponente. */
 fun Methode.istPrädikat(): Boolean {
-    val mathematisch = this as? MathematischeMethode ?: return false
-    if (mathematisch.ausgabeNamen.size != 1) {
-        return false
-    }
-    val ausgabe = mathematisch.vorschriftFür(mathematisch.ausgabeNamen.single())
-    if (ausgabe.alsPrädikatsAussageOderNull() == null) return false
-    val ziel = mathematisch.mathematischeSignatur.ergebnisse.singleOrNull()?.zielMenge
-    return ziel == WahrheitsMenge || ausgabe is Tupel && ziel == Tupelraum(listOf(WahrheitsMenge))
+    val signatur = (this as? SignaturtragendeMethode)?.signatur ?: return false
+    val typ = signatur.ergebnisse.singleOrNull()?.typ ?: return false
+    val aussage = TypAusdruck.Atom(MathematischeTypen.Aussage)
+    if (typ != aussage && typ != TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, listOf(aussage))) return false
+    // Eine symbolische Vorschrift muss ihren eigenen deklarierten Vertrag erfüllen.
+    if (this is SymbolischMathematischeMethode &&
+        vorschriftFür(ausgabeNamen.singleOrNull() ?: return false).alsPrädikatsAussageOderNull() == null) return false
+    return true
 }
 
 /** Extrahiert die zulässige skalare Prädikatsausgabe ohne beliebige Tupel zu kollabieren. */

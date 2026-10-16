@@ -5,7 +5,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 /**
  * Vollständige Vorlagenquelle für Definitionsdialoge und Konzeptkarten.
  *
- * Der Erstellen-Dialog verwendet [alleMathematikKnotenVorlagen] und zeigt je
+ * Der Erstellen-Dialog verwendet den kanonischen Mathematikkatalog und zeigt je
  * Rechnerfamilie nur einen konfigurierbaren Knoten. Definitionsoberflächen
  * benötigen dagegen weiterhin jede operatorabhängige Anschluss- und
  * Regelvariante des Zahlenrechners sowie die vorkonfigurierten Axiom-Prädikate.
@@ -15,8 +15,11 @@ fun alleMathematikDefinitionsVorlagen(): List<KnotenVorlage> =
         alleMathematikKnotenVorlagen().filterNot { it.art == ZAHLENRECHNER_ART } +
             ZahlenRechnerKnotenVorlagen.alle +
             AxiomKnotenVorlagen.alle
-    ).distinctBy { vorlage ->
-        vorlage.art to listOf(
+    ).map(de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog::kanonisiereMethodenUndRelationsVorlage)
+    .distinctBy { vorlage ->
+        if (vorlage.art in setOf("mathematik.methodeAufrufen", "mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren"))
+            de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog.variantenKennung(vorlage)
+        else vorlage.art + listOf(
             vorlage.standardParameter[ZAHLENRECHNER_OPERATOR].orEmpty(),
             vorlage.standardParameter["operator"].orEmpty(),
             vorlage.standardParameter["eingabeModus"].orEmpty(),

@@ -4,6 +4,8 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import org.json.JSONObject
 import de.TeutonStudio.MathematikKartenAdapter.normalisiereSchnittstellenReihenfolge
+import de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_KNOTEN
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 
 /**
  * Kanonische Serialisierungs- und Migrationspipeline für mathematische Karten.
@@ -40,7 +42,9 @@ object MathematikKartenCodec {
 }
 
 object MathematikKartenMigrationen {
-    fun vorSpeichern(karte: KartenDaten): KartenDaten = karte
+    fun vorSpeichern(karte: KartenDaten): KartenDaten = vorSpeichern(karte, 0)
+
+    private fun vorSpeichern(karte: KartenDaten, tiefe: Int): KartenDaten = karte
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
@@ -48,6 +52,7 @@ object MathematikKartenMigrationen {
         .migriereWinkelraumAufrufe()
         .migriereMatrixZerlegenZumÜbersetzer()
         .klassifiziereAdapter()
+        .migriereMethodenKonsolidierung()
         .migrierePraedikatKnoten()
         .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
@@ -59,8 +64,11 @@ object MathematikKartenMigrationen {
         .migriereRechnerMethodenAnschluesse()
         .normalisiereDynamischeRechnerOperanden()
         .normalisiereJoinEingänge()
+        .migriereEingebetteteMethodenQuellen(tiefe) { vorSpeichern(it, tiefe + 1) }
 
-    fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
+    fun nachDekodierung(karte: KartenDaten): KartenDaten = nachDekodierung(karte, 0)
+
+    private fun nachDekodierung(karte: KartenDaten, tiefe: Int): KartenDaten = karte
         .migriereHistorischeVariablenGrundräume()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
@@ -69,6 +77,7 @@ object MathematikKartenMigrationen {
         .migriereWinkelraumAufrufe()
         .migriereMatrixZerlegenZumÜbersetzer()
         .klassifiziereAdapter()
+        .migriereMethodenKonsolidierung()
         .migrierePraedikatKnoten()
         .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
@@ -80,8 +89,11 @@ object MathematikKartenMigrationen {
         .migriereIntegralKnoten()
         .normalisiereDynamischeRechnerOperanden()
         .normalisiereJoinEingänge()
+        .migriereEingebetteteMethodenQuellen(tiefe) { nachDekodierung(it, tiefe + 1) }
 
-    fun nachLaden(karte: KartenDaten): KartenDaten = karte
+    fun nachLaden(karte: KartenDaten): KartenDaten = nachLaden(karte, 0)
+
+    private fun nachLaden(karte: KartenDaten, tiefe: Int): KartenDaten = karte
         .migriereHistorischeVariablenGrundräume()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
@@ -90,6 +102,7 @@ object MathematikKartenMigrationen {
         .migriereWinkelraumAufrufe()
         .migriereMatrixZerlegenZumÜbersetzer()
         .klassifiziereAdapter()
+        .migriereMethodenKonsolidierung()
         .migrierePraedikatKnoten()
         .migriereRechnerEinzeloperationen()
         .migriereTensorraumDimensionen()
@@ -103,4 +116,18 @@ object MathematikKartenMigrationen {
         .migriereRechnerMethodenAnschluesse()
         .normalisiereDynamischeRechnerOperanden()
         .normalisiereJoinEingänge()
+        .migriereEingebetteteMethodenQuellen(tiefe) { nachLaden(it, tiefe + 1) }
+
+    private fun KartenDaten.migriereEingebetteteMethodenQuellen(tiefe: Int, migration: (KartenDaten) -> KartenDaten): KartenDaten = copy(knoten = knoten.map { k ->
+        if (RECHNER_MIGRATION_DIAGNOSE in k.parameter) return@map k
+        val quelle = k.eigenschaften[METHODEN_QUELLE_KNOTEN] ?: return@map k
+        runCatching {
+            require(tiefe < 32) { "Eingebettete Methodenquellen sind zu tief verschachtelt." }
+            val text = (quelle as? KnotenEigenschaft.Text)?.wert ?: error("Die eingebettete Knotenquelle ist kein Kartentext.")
+            val alt = KartenDatenJson.lese(text)
+            val neu = migration(alt)
+            if (neu == alt) k else k.copy(eigenschaften = k.eigenschaften + (METHODEN_QUELLE_KNOTEN to KnotenEigenschaft.Text(KartenDatenJson.schreibe(neu))))
+        }.getOrElse { fehler -> k.copy(parameter = k.parameter + (RECHNER_MIGRATION_DIAGNOSE to "Eingebettete Methodenquelle bleibt erhalten: ${fehler.message}")) }
+    })
+
 }

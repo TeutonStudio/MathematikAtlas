@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object SpaltenmethodeDifferentierenKonzeptDateiE0E646C8 : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.spaltenMethodeDifferentieren|Spaltenmethode differentieren|")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.spaltenMethodeDifferentieren|Spaltenmethode differentieren"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.methodenDifferentieren|methodenAnforderung.methode.ergebnisArt=mathematik.vektor.spalte|orientierung=spalte|Vektormethode differentieren"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object SpaltenmethodeDifferentierenKonzeptDateiE0E646C8 : ExpliziteKonz
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.spaltenMethodeDifferentieren"),
+            knotenArten = setOf("mathematik.methodenDifferentieren"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

@@ -10,7 +10,7 @@ import kotlin.test.*
 class KatalogMigrationSicherheitTest {
     @Test fun `Raumtypen sind gemeinsam sichtbar und Geometriealtarten nur Suchvorlagen`() {
         val katalog = KanonischerMathematikKnotenKatalog.alle()
-        assertEquals(136, katalog.map { it.art }.toSet().size)
+        assertEquals(132, katalog.map { it.art }.toSet().size)
         assertTrue(katalog.map { it.art }.containsAll(MengenraumKnotenVorlagen.alle.map { it.art }))
         val alt = GeometrieKnotenVorlagen.alle.filter { it.art in PraedikatKnotenMigration.alteKnotenArten }
         assertEquals(8, alt.size)

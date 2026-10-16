@@ -155,13 +155,17 @@ object PraedikatKnotenMigration {
 
     val alteKnotenArten: Set<String> = direkteLegacyArten.keys +
         MengenRelationsMigration.alteKnotenArten.keys +
-        MengenRelationRechner.KNOTEN_ART
+        MengenRelationRechner.KNOTEN_ART + "mathematik.ordnungsrelation"
 
     fun operatorId(knoten: KnotenDaten): String? = when {
         knoten.art == RelationsOperatoren.KNOTEN_ART -> {
             val id = knoten.parameter[RelationsOperatoren.OPERATOR_PARAMETER]
             AxiomOperatoren.vonIdOderNull(id)?.stabileId ?: RelationsOperatoren.vonIdOderNull(id)?.stabileId
         }
+        knoten.art == "mathematik.ordnungsrelation" -> mapOf(
+            "kleiner" to "relation.kleiner", "kleinerGleich" to "relation.kleinerGleich",
+            "größer" to "relation.groesser", "größerGleich" to "relation.groesserGleich",
+        )[knoten.parameter["relation"]]
         knoten.art == MengenRelationRechner.KNOTEN_ART ->
             MengenRelationsOperator.vonIdOderNull(knoten.parameter[MENGENRELATION_OPERATOR_PARAMETER])?.stabileId
         knoten.art in MengenRelationsMigration.alteKnotenArten ->
@@ -172,7 +176,8 @@ object PraedikatKnotenMigration {
 
 /** Unklare Altverträge bleiben vollständig erhalten und werden nicht ausgewertet. */
 fun KartenDaten.migrierePraedikatKnoten(): KartenDaten = copy(knoten = knoten.map migration@ { alt ->
-    val operatorId = PraedikatKnotenMigration.operatorId(alt) ?: return@migration alt
+    val operatorId = PraedikatKnotenMigration.operatorId(alt) ?: return@migration if (alt.art == "mathematik.ordnungsrelation")
+        alt.copy(parameter = alt.parameter + (RECHNER_MIGRATION_DIAGNOSE to "Unbekannte gespeicherte Ordnungsrelation '${alt.parameter["relation"]}'; Originaldaten bleiben erhalten.")) else alt
     val relation = RelationsOperatoren.vonIdOderNull(operatorId)
     val axiom = AxiomOperatoren.vonIdOderNull(operatorId)
     if (relation == null && axiom == null) return@migration alt
