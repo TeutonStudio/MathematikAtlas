@@ -32,6 +32,7 @@ private fun alteMethodenErgebnisArt(art: String): String? = when (art) {
 internal fun KartenDaten.migriereMethodenAnschlüsse(): KartenDaten {
     var verändert = false
     val neueKnoten = knoten.map { knoten ->
+        if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
         var parameter = knoten.parameter
         val neueAnschlüsse = knoten.anschlüsse.map { anschluss ->
             val alteArt = anschluss.art.wert

@@ -320,7 +320,7 @@ private fun Katalog(
     modifier: Modifier = Modifier,
 ) {
     val sichtbar = remember(atlas.vorlagen, suchtext) {
-        atlas.vorlagen.filter { suchtext.isBlank() || it.name.contains(suchtext, true) || it.kategorie.contains(suchtext, true) }
+        desktopKnotenSuchVorlagen(suchtext, atlas.vorlagen)
     }
     Column(modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Knotenkatalog", style = MaterialTheme.typography.titleLarge)

@@ -1,6 +1,8 @@
 package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
+import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
+import de.TeutonStudio.TypSystem.*
 import de.TeutonStudio.MathematikKartenAdapter.BedingterWert
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
@@ -168,38 +170,63 @@ object PraedikatKnotenMigration {
     }
 }
 
-fun KartenDaten.migrierePraedikatKnoten(): KartenDaten {
-    var geändert = false
-    val neueKnoten = knoten.map { knoten ->
-        val operatorId = PraedikatKnotenMigration.operatorId(knoten) ?: return@map knoten
-        val relation = RelationsOperatoren.vonIdOderNull(operatorId)
-        val axiom = AxiomOperatoren.vonIdOderNull(operatorId)
-        if (relation == null && axiom == null) return@map knoten
+/** Unklare Altverträge bleiben vollständig erhalten und werden nicht ausgewertet. */
+fun KartenDaten.migrierePraedikatKnoten(): KartenDaten = copy(knoten = knoten.map migration@ { alt ->
+    val operatorId = PraedikatKnotenMigration.operatorId(alt) ?: return@migration alt
+    val relation = RelationsOperatoren.vonIdOderNull(operatorId)
+    val axiom = AxiomOperatoren.vonIdOderNull(operatorId)
+    if (relation == null && axiom == null) return@migration alt
+    val erwartet = relation?.let(::praedikatAnschluesse) ?: praedikatAnschluesse(axiom!!)
+    val seite = if (axiom != null) PRAEDIKAT_SEITE_AXIOME else PRAEDIKAT_SEITE_RELATIONEN
 
-        val erwarteteAnschlüsse = relation?.let(::praedikatAnschluesse) ?: praedikatAnschluesse(axiom!!)
-        val erwarteteSeite = if (axiom != null) PRAEDIKAT_SEITE_AXIOME else PRAEDIKAT_SEITE_RELATIONEN
-        if (
-            knoten.art == RelationsOperatoren.KNOTEN_ART &&
-            knoten.parameter[RelationsOperatoren.OPERATOR_PARAMETER] == operatorId &&
-            praedikatSchnittstelleEntspricht(knoten, erwarteteAnschlüsse) &&
-            knoten.parameter[PRAEDIKAT_SEITE_PARAMETER] == erwarteteSeite
-        ) return@map knoten
-
-        geändert = true
-        knoten.copy(
-            art = RelationsOperatoren.KNOTEN_ART,
-            name = if (knoten.name in historischeRelationsStandardnamen || knoten.art != RelationsOperatoren.KNOTEN_ART) {
-                "Prädikat"
-            } else knoten.name,
-            anschlüsse = erhaltePraedikatAnschlussIds(knoten.anschlüsse, erwarteteAnschlüsse),
-            parameter = knoten.parameter + mapOf(
-                RelationsOperatoren.OPERATOR_PARAMETER to operatorId,
-                PRAEDIKAT_SEITE_PARAMETER to erwarteteSeite,
-            ),
-        )
+    fun abgelehnt(grund: String) = alt.copy(parameter = alt.parameter +
+        (RECHNER_MIGRATION_DIAGNOSE to "${alt.art} bleibt erhalten: $grund"))
+    if (alt.anschlüsse.size != erwartet.size || alt.anschlüsse.map { it.id }.distinct().size != alt.anschlüsse.size ||
+        alt.anschlüsse.any { it.richtung == AnschlussRichtung.Neutral || it.belegung == AnschlussBelegung.Mehrfach } ||
+        alt.anschlüsse.groupBy { it.richtung }.any { (_, ports) -> ports.map { it.name }.distinct().size != ports.size })
+        return@migration abgelehnt("Die gespeicherten Anschlussrollen sind nicht eindeutig auf $operatorId abbildbar.")
+    val benutzt = mutableSetOf<AnschlussId>()
+    val paare: List<Pair<AnschlussDaten, AnschlussDaten>> = erwartet.map { soll ->
+        val kandidaten = alt.anschlüsse.filter { it.id !in benutzt && it.richtung == soll.richtung }
+        val historischerName = when (operatorId) {
+            "geometrie.relation.inzidenz" -> mapOf("punkt" to "links", "objekt" to "rechts")[soll.name]
+            "menge.relation.element" -> mapOf("element" to "links", "menge" to "rechts")[soll.name]
+            else -> null
+        }
+        val quelle = kandidaten.singleOrNull { it.name == soll.name }
+            ?: kandidaten.singleOrNull { historischerName != null && it.name == historischerName }
+            ?: return@migration abgelehnt("Die Anschlussrolle '${soll.name}' ist mehrdeutig oder fehlt.")
+        benutzt += quelle.id
+        quelle to soll
     }
-    return if (geändert) copy(knoten = neueKnoten) else this
-}
+    val arten = AnschlussArtRegister(MathematikAnschlussArten.alle)
+    val typen = erzeugeMathematikKartenTypSystem(arten)
+    if (paare.any { (quelle, soll) ->
+            !arten.istUnterart(quelle.art, soll.art) ||
+                quelle.zulässigeArten.any { !arten.istUnterart(it, soll.art) } ||
+                quelle.vertrag.typ != TypAusdruck.Unbekannt &&
+                    typen.prüfe(quelle.vertrag.typ, TypAusdruck.Atom(TypId(soll.art.wert))) != TypPrüfung.Kompatibel ||
+                quelle.typInferenz != null || quelle.artFolgtEingang != null ||
+                quelle.artVereinigtEingänge.isNotEmpty() || quelle.artAbbildungVonEingang != null ||
+                quelle.artPriorisiertEingänge != null
+        }) return@migration abgelehnt("Gespeicherte Anschlussarten oder Typableitungen sind mit $operatorId nicht eindeutig kompatibel.")
+    if (benutzt.size != alt.anschlüsse.size) return@migration abgelehnt("Nicht alle Anschlüsse konnten erhalten werden.")
+    val rollen = paare.filter { it.first.richtung == AnschlussRichtung.Eingang }.associate { it.first.name to it.second.name }
+    val standards = alt.parameter.filterKeys { it.startsWith("standardwert.") }.map { (key, value) ->
+        "standardwert.${rollen[key.removePrefix("standardwert.")] ?: key.removePrefix("standardwert.")}" to value
+    }
+    val karten = alt.eingangsKartenVerweise.map { (name, value) -> (rollen[name] ?: name) to value }
+    if (standards.map { it.first }.distinct().size != standards.size || karten.map { it.first }.distinct().size != karten.size)
+        return@migration abgelehnt("Mehrdeutige gespeicherte Eingangsquellen.")
+    alt.copy(
+        art = RelationsOperatoren.KNOTEN_ART,
+        name = if (alt.name in historischeRelationsStandardnamen) "Prädikat" else alt.name,
+        anschlüsse = paare.map { (quelle, soll) -> quelle.copy(name = soll.name, kannSichErweitern = false) },
+        eingangsKartenVerweise = karten.toMap(),
+        parameter = alt.parameter.filterKeys { it != RECHNER_MIGRATION_DIAGNOSE && !it.startsWith("standardwert.") } +
+            standards.toMap() + mapOf(RelationsOperatoren.OPERATOR_PARAMETER to operatorId, PRAEDIKAT_SEITE_PARAMETER to seite),
+    )
+})
 
 private val historischeRelationsStandardnamen = setOf(
     "Gleichheit",
@@ -220,12 +247,6 @@ private val historischeRelationsStandardnamen = setOf(
     "Prädikat",
 ) + MengenRelationsOperator.entries.map { it.titel }
 
-private fun praedikatSchnittstelleEntspricht(
-    knoten: KnotenDaten,
-    erwartet: List<AnschlussDaten>,
-): Boolean = knoten.anschlüsse.size == erwartet.size && knoten.anschlüsse.zip(erwartet).all { (ist, soll) ->
-    ist.name == soll.name && ist.richtung == soll.richtung && ist.art == soll.art
-}
 
 private fun erhaltePraedikatAnschlussIds(
     bisher: List<AnschlussDaten>,

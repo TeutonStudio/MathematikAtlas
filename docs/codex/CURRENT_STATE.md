@@ -580,3 +580,26 @@ Numerische Prüfgrenze: getrennte Ungleichungsrandzüge werden derzeit nur für 
 - Zeichenpakete je Ebene werden erst nach vollständiger Hintergrundaufbereitung atomar ersetzt; keine leeren Zwischenlisten bei Navigation. Inspektion und ebenenübergreifende 3D-Tiefensortierung verwenden dieselben Daten. Arbeits-/Orbitgrenzen, zwei Aufträge und 32-MiB-Geometrie-LRU bleiben erhalten. Keine Persistenz-/Anschlussänderung.
 - Sechs neue Anfrage-/Abbruch-/Schlüsselregressionen und zwei native offene-Gesten-Bildtests bestanden. Native Desktop-Visualisierersuite 17/17; beide neuen Bildtests gegen rekonstruierten Ausgangsrenderer erwartungsgemäß rot, gegen neue Implementierung grün. Vollständiger Gradle-Test-/App-Lint-/APK-/Desktoplauf erfolgreich; unabhängige Nachprüfung ohne Blocker.
 - Android-Gegenstücke kompiliert. SM-X920 per ADB nicht verbunden; Nutzer bestätigt Nichtverfügbarkeit für heute. Android-Laufzeit und identischer Geräte-Vorher/Nachher-Vergleich bleiben offen. Kein neues Leistungsversprechen, 60-Hz-Ziel weiterhin offen. Nachweise im aktiven Visualisierer-ExecPlan und ergänzter ADR. Keine neuen Commits oder Releasearbeit.
+
+## Knotenarchitektur: M0-Katalog und Migrationsschutz (17.10.2026)
+
+- Der gemeinsame Erstellen-Katalog enthält die sieben zuvor nur auf Android
+  ergänzten Mengen-/Raumtypen. Android ergänzt ausschließlich eigene Werkzeuge;
+  acht historische Geometrieprädikate werden als konfigurierte Prädikate gesucht.
+  M0-Zielbestand: 136 gemeinsame mathematische / 138 vollständige Androidtypen.
+- Die Katalogtests prüfen exakte Typmengen statt bloßes Enthaltensein.
+  Unklare Prädikatmigrationen bewahren Ports, Typverträge und Quellen; eindeutige
+  Rollenwechsel remappen Standards und Kartenfallbacks mit stabilen IDs.
+  Eine Migrationsdiagnose sperrt direkte und graphische Auswertung. Nachfolgende
+  Mengen-/Methoden-/Join-/Dynamiknormalisierung respektiert diese Grenze.
+- Unabhängige Quellprüfung einschließlich expliziter Legacyrollen und Sperre vor
+  Kartenreferenzen/festen Ausgaben ohne offene Findings. Vollständige lokale
+  JVM-/Desktop-/App-Lint-/APK-Prüfung erfolgreich: 2.125 Testfälle, 0 Fehler,
+  1 vorhandener Opt-in-Messfall übersprungen; elf neue Regressionen bestanden.
+  Sieben Editortests am SM-X920 bestanden; Appinstallation wegen abweichender
+  Signatur blockiert, vorhandene App/Daten bewahrt. Standalone-kotlinc und lokale
+  RPM-Erzeugung nicht verfügbar; CI-Nachweise und Veröffentlichung siehe Plan.
+  Desktop sucht zusätzlich im vorhandenen Operatorindex; zwei Regressionen und
+  der vollständige Desktopnachlauf bestanden. Keine Gesamtfreigabe M1–M7.
+  [Aktiver Gesamtplan](plans/active/2026-10-17-knotenarchitektur-konsolidierung.md),
+  [Entscheidung](decisions/2026-10-17-kanonischer-katalog-migrationsschutz.md).

@@ -2,10 +2,11 @@ schema_version = 1
 project = "MathematikAtlas"
 default_branch = "master"
 current_series = "3.4.x"
-current_version = "3.4.1"
+current_version = "3.4.2"
 first_guarded_version = "2.3.13"
 
 releases = [
+  { version = "3.4.2", title = "Kanonischer plattformgleicher Knotenkatalog und sichere Prädikatmigration", roadmap = "v3.4.x Knotenarchitektur-Konsolidierung M0", status = "released", previous_release = "3.4.1", branch = "samai/v3.4.2/konsolidierung-m0", kind = "fix", version_axis = "x", reason = "Konsolidiert vorhandene Mengen- und Raumtypen im gemeinsamen Android-/Desktop-Katalog, entfernt plattformspezifische Erstellen-Ergänzungen und sichtbare Geometriealtarten, erhält deren Lade-/Migrationspfade und sperrt mehrdeutige Prädikat-/Rechnermigrationen diagnostisch ohne Datenverlust. Kein neuer registrierter und separat erzeugbarer Knotentyp; Format 10 bleibt unverändert. M0 des beauftragten sequenziellen M0–M7-Plans; keine Folgeversion reserviert. Der Status released beschreibt den geprüften PR-Zielbaum; Veröffentlichung erst durch finalen Commit v3.4.2 auf master und grüne Releaseprüfungen. Exakte veröffentlichte Basis v3.4.1 9fea31ddbaaef8bd26fa7a2730177eaaa9744909. Historische Draft-PRs #433, #435 und #436 bleiben unverändert außerhalb dieser Integration und werden nicht als Releasebasis verwendet." },
   { version = "2.3.1", title = "Suche im Knoten-erstellen-Dialog zurücksetzen", roadmap = "v2.3.x Definitionskarten", status = "released" },
   { version = "2.3.2", title = "Kehrwert, Division und dynamische Falltypen", roadmap = "v2.3.x Definitionskarten", status = "superseded", superseded_by = "2.3.11", reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht." },
   { version = "2.3.3", title = "JSON-Referenzen und Listenbearbeitung", roadmap = "v2.3.x Definitionskarten", status = "superseded", superseded_by = "2.3.11", reason = "Auf einem gestapelten Entwicklungsbranch umgesetzt, aber nicht einzeln auf master veröffentlicht." },
