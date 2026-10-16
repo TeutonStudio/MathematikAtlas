@@ -35,6 +35,14 @@ Bestimme die Versionsachse vor jeder Reservierung aus dem vollständigen geplant
 
 Prüfe die Klassifikation vor dem Abschluss erneut gegen den tatsächlichen Diff.
 
+## Katalog- und Vertragsgate bei Konsolidierung
+
+- Prüfe `release/knotentypen.json` gegen den tatsächlichen kanonischen Erstellen-Katalog und die Android-/Desktop-Katalogtests. Geänderte Labels, Operatoren, Übersetzerziele und entfernte sichtbare Duplikate allein erzeugen keine `y`-Version. Neue eigenständig erzeugbare Typen dürfen nicht als bloße Aliasbereinigung versteckt werden.
+- Bei entfernten/ersetzten Typen oder APIs verlange die Verbraucherinventur und Migrationsnachweise aus [Katalog-, Migrations- und Vertragsregeln](../neuer-knoten/references/katalog-und-vertraege.md). Weniger Katalogeinträge beweisen weder tote Auswerter noch verlustfreie Migration. Lade-Kompatibilität und die bewusste Ablehnung alter Mathematik-Wire-Versionen sind getrennte Verträge.
+- Ordne Tests und CI dem geprüften Head-SHA zu. `pruefe_repository.py` umfasst Architektur-, Methodenmodell- und Desktop-Shadowprüfungen; `pruefe_releaseplan.py`, `pruefe_versionsfolge.py` im tatsächlichen PR-Kontext und `test_release_guards.py` sichern die Releaseintegration. Bestehende Android-/Desktop-/Kern-Workflows bleiben maßgeblich; keine Gates oder Whitelists zur Bereinigung abschwächen.
+- Eine Skill- oder Dokumentationsänderung schließt keinen Produktvertrag. Ein Gesamtabschluss von Methoden-, Tupel- und Formelverträgen benötigt aktualisierte Anforderungsevidenz einschließlich noch offener Legacy-/UI-Pfade. Teilnachweise und historische grüne Läufe sind keine Gesamtfreigabe.
+- Prüfe die Dokumentationsausnahme am aktuellen `pruefe_versionsfolge.py`: derzeit nur Markdown unter `docs/` und Root-`README*.md`. Änderungen an `.agents/skills` benötigen daher eine eigene `x`-Version und kohärente Release-/Android-/Desktop-Metadaten; den Guard nicht als Nebenwirkung umgehen.
+
 ## Git-Identität
 
 SamAI verwendet für lokale Branches und Commits ausschließlich `bash scripts/samai-git.sh`.

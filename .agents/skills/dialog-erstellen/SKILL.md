@@ -34,6 +34,8 @@ Ein Dialog muss zur bestehenden Dialogfamilie und zur konkreten Aufgabe passen. 
 
 ## Konkrete Referenzpfade
 
+Für Operator-/Übersetzerauswahl, Formeleingabe oder Methodenquellen gelten zusätzlich die betroffenen [Katalog-, Migrations- und Vertragsregeln](../neuer-knoten/references/katalog-und-vertraege.md). Verwende vorhandene Registry-IDs und deklarierte Formelquellen samt Typen, Signaturen und Bindungen. Die Vorschau darf fehlenden Kontext nicht aus LaTeX oder Labels rekonstruieren; unbekannte Aufrufe und nicht unterstützte Codecs benötigen eine Diagnose. Übernahme und Abbruch müssen auch Kontext, offene Voraussetzungen und Übersetzungszeugnisse korrekt behandeln.
+
 Prüfe den aktuellen Code; diese Beispiele dienen der Orientierung und sind keine unveränderlichen Kopiervorlagen:
 
 - Kurze Auswahl mit eindeutiger Abschlussaktion: `app/src/main/kotlin/de/TeutonStudio/MathematikAtlas/KartenExportFormatDialog.kt`.
