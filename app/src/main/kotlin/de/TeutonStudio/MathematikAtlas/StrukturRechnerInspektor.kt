@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
 import de.TeutonStudio.MathematikKnoten.RechnerSchemaSchaltfläche
 
 import de.TeutonStudio.MathematikKnoten.FORMEL_ZEICHNUNG_EIGENSCHAFT
@@ -47,15 +48,31 @@ import de.TeutonStudio.MathematikRechenSystem.kern.MatrixRechnerOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.MatrixZerlegeRichtung
 
 internal object StrukturRechnerInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
+        KnotenInspektorBereich.Knotendaten -> true
+        KnotenInspektorBereich.Eingangsdaten -> de.TeutonStudio.MathematikKnoten.hatRechnerEingangsEinstellungen(knoten)
+        KnotenInspektorBereich.Ausgangsdaten -> knoten.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId
+    }
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
+        when (bereich) {
+            KnotenInspektorBereich.Knotendaten -> FachInhalt(knoten, ergebnis, aktionen, false)
+            KnotenInspektorBereich.Eingangsdaten -> { if (knoten.art == TensorRechner.KNOTEN_ART) TensorOperationRechnerInspektor.BereichInhalt(knoten, ergebnis, aktionen, bereich) else StrukturRechnerEingänge(knoten, ergebnis, aktionen) }
+            KnotenInspektorBereich.Ausgangsdaten -> { StrukturRechnerAusgänge(knoten, ergebnis, aktionen) }
+        }
+    }
+
     @Composable
-    override fun Inhalt(
+    private fun FachInhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
+        mitAnschlüssen: Boolean,
     ) {
         RechnerSchemaSchaltfläche(knoten, ergebnis)
         if (knoten.art == TensorRechner.KNOTEN_ART) {
-            TensorOperationRechnerInspektor.Inhalt(knoten, ergebnis, aktionen)
+            if (mitAnschlüssen) TensorOperationRechnerInspektor.Inhalt(knoten, ergebnis, aktionen)
+            else TensorOperationRechnerInspektor.BereichInhalt(knoten, ergebnis, aktionen, KnotenInspektorBereich.Knotendaten)
             return
         }
 
@@ -65,15 +82,8 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         val formelModus = operatorId == familie.formelOperatorId
         val bekannterOperator = StrukturRechnerOperatoren.fuer(familie).firstOrNull { it.id == operatorId }
         val operator = bekannterOperator ?: StrukturRechnerOperatoren.fuer(familie).first()
-        if (familie == StrukturRechnerKnotenFamilie.MATRIX && operatorId == "matrix.produkt") {
-            var feste by remember(knoten.id, knoten.parameter["festeEingänge"]) { mutableStateOf(knoten.parameter["festeEingänge"] ?: "2") }
-            OutlinedTextField(value = feste, onValueChange = { text ->
-                feste = text
-                text.toIntOrNull()?.takeIf { it >= 2 }?.let { n ->
-                    aktionen.knoten(konfiguriereStrukturRechner(knoten.copy(parameter = knoten.parameter + ("festeEingänge" to n.toString())), familie, operatorId))
-                }
-            }, label = { Text("Feste Faktoren (mindestens 2)") })
-        }
+        if (mitAnschlüssen) StrukturRechnerEingänge(knoten, ergebnis, aktionen)
+
         var operatorDialog by remember(knoten.id, operatorId) { mutableStateOf(false) }
         var formelDialog by remember(knoten.id) { mutableStateOf(false) }
         var formelKandidat by remember(knoten.id, operatorId) { mutableStateOf<KnotenDaten?>(null) }
@@ -226,26 +236,8 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         if (familie == StrukturRechnerKnotenFamilie.AUSSAGESATZ) {
             AussagenParameter(knoten, operator, aktionen)
         }
-        if (
-            familie == StrukturRechnerKnotenFamilie.MATRIX &&
-            operatorId == MatrixRechnerOperator.ZERLEGEN.stabileId
-        ) {
-            val richtung = runCatching {
-                MatrixZerlegeRichtung.valueOf(
-                    knoten.parameter[MATRIX_ZERLEGEN_RICHTUNG] ?: MatrixZerlegeRichtung.ZEILEN.name,
-                )
-            }.getOrDefault(MatrixZerlegeRichtung.ZEILEN)
-            Text("Zerlegung", style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-                MatrixZerlegeRichtung.entries.forEach { wert ->
-                    androidx.compose.material3.FilterChip(
-                        selected = richtung == wert,
-                        onClick = { aktionen.parameter(MATRIX_ZERLEGEN_RICHTUNG, wert.name) },
-                        label = { Text(if (wert == MatrixZerlegeRichtung.ZEILEN) "Zeilen" else "Spalten") },
-                    )
-                }
-            }
-        }
+        if (mitAnschlüssen) StrukturRechnerAusgänge(knoten, ergebnis, aktionen)
+
         if (familie == StrukturRechnerKnotenFamilie.TENSOR) {
             TensorParameter(knoten, operatorId, aktionen)
         }
@@ -426,4 +418,14 @@ private fun ParameterZeile(
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
+}
+
+@Composable
+private fun StrukturRechnerEingänge(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorStrukturRechnerEingänge(knoten, aktionen::knoten)
+}
+
+@Composable
+private fun StrukturRechnerAusgänge(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorAusgangsEinstellungen(knoten, ergebnis, aktionen::knoten)
 }

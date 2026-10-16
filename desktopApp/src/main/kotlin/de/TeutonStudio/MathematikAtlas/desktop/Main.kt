@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikAtlas.desktop
 
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.inEigenschaften
+import de.TeutonStudio.MathematikKartenAdapter.METHODEN_AUFRUF_ART
 
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogAbstände
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AtlasDialogKopf
@@ -189,7 +190,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
         })
     atlas.konfigurationsPlan?.let { plan ->
         AtlasBestätigungsDialog(onDismissRequest = atlas::verwerfeKonfiguration, title = { Text("Verbindungsverlust bestätigen") },
-            text = { Text("${plan.auswirkung.entfallendeVerbindungen.size} Verbindungen entfallen. Die gesamte Änderung kann gemeinsam rückgängig gemacht werden.") },
+            text = { Text("${plan.auswirkung.entfallendeVerbindungen.size} Verbindungen und ${plan.auswirkung.entfallendeLokaleWerte.size} lokale Operanden entfallen (${plan.auswirkung.entfallendeLokaleWerte.joinToString()}). Die gesamte Änderung kann gemeinsam rückgängig gemacht werden.") },
             confirmButton = { TextButton(onClick = atlas::bestätigeKonfiguration) { Text("Übernehmen") } },
             dismissButton = { TextButton(onClick = atlas::verwerfeKonfiguration) { Text("Abbrechen") } })
     }
@@ -263,6 +264,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
                 ) {
                     KnotenKartenEditor(
                         zustand = atlas.editor,
+                        anschlussInfoFür = atlas::anschlussInfoFür,
                         modifier = Modifier.fillMaxSize(),
                         rendererFür = atlas::rendererFür,
                         auswertungsDauerFür = { atlas.auswertung.knoten[it]?.auswertungsDauerNanos },
@@ -382,14 +384,14 @@ private fun DesktopWerkzeugleiste(
 }
 
 @Composable
-private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, modifier: Modifier = Modifier) {
+internal fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, modifier: Modifier = Modifier) {
+    val klappzustand = remember { InspektorKlappZustand() }
     val knoten = atlas.editor.karte.knoten.firstOrNull { it.id == atlas.editor.ausgewählterKnoten }
     var visualisierungsId by remember { mutableStateOf<KnotenId?>(null) }
     visualisierungsId?.let { id -> DesktopVisualisierungsDialog(atlas, id) { visualisierungsId = null } }
     var falkOffen by remember(knoten?.id) { mutableStateOf(false) }
     var rechenwegOffen by remember(knoten?.id) { mutableStateOf(false) }
     if (knoten != null && besitztPrädikatsRechenweg(knoten.art)) {
-        Button(onClick = { rechenwegOffen = true }) { Text("Rechenweg öffnen") }
         if (rechenwegOffen) PrädikatsRechenwegDialog(knoten.name, atlas.auswertung.knoten[knoten.id], { config -> atlas.beantrageKonfiguration(konfigurierePolynomNumerik(knoten, config)) }) { rechenwegOffen = false }
     }
     if (falkOffen && knoten != null) AtlasDialog(onDismissRequest = { falkOffen = false }) {
@@ -402,26 +404,28 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
     }
     var formelOffen by remember(knoten?.id) { mutableStateOf(false) }
     if (formelOffen && knoten != null) DesktopFormelEditor(knoten, atlas) { formelOffen = false }
-    var name by remember(knoten?.id, knoten?.name) { mutableStateOf(knoten?.name.orEmpty()) }
-    Column(modifier.padding(14.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Inspector", style = MaterialTheme.typography.titleLarge)
+    Column(modifier.background(MaterialTheme.colorScheme.surfaceContainerLow).padding(14.dp)) {
+        Text("Inspektor", style = MaterialTheme.typography.titleLarge)
         if (knoten == null) {
             Text("Wähle einen Knoten aus.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().focusRequester(fokus),
-            )
-            Button(onClick = { atlas.benenneAuswahlUm(name) }, enabled = name.isNotBlank() && name != knoten.name) { Text("Übernehmen") }
-            HorizontalDivider()
+            val ergebnis = atlas.auswertung.knoten[knoten.id]
+            val meldungen = inspektorMeldungen(knoten, ergebnis, atlas.editor.meldungenFür(knoten.id))
+            val eingangsOptionen = hatDesktopEingangsEinstellungen(knoten, atlas.editor.karte)
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                KnotenInspektorBereiche(
+                    karte = atlas.editor.karte, knoten = knoten, klappzustand = klappzustand,
+                    standarddaten = { KnotenStandardDatenEditor(knoten,
+                        if (knoten.art == "karte.notiz") KnotenDarstellungsForm.entries.toSet() else setOf(knoten.darstellungsForm),
+                        namensModifier = Modifier.focusRequester(fokus), übernehmen = atlas::beantrageKonfiguration) },
+                    knotendaten = {
+                        meldungen.forEach { Text(it.text, color = if (it.art == KnotenMeldungsArt.Fehler) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
+                        if (besitztPrädikatsRechenweg(knoten.art)) Button(onClick = { rechenwegOffen = true }) { Text("Rechenweg öffnen") }
             DesktopMethodenQuelle(knoten, atlas)
             if (knoten.art == "mathematik.variable") {
                 MatrixVariableFelder(knoten) { atlas.beantrageKonfiguration(it) }
             }
-            if (knoten.art == ÜBERSETZER_ART) ÜbersetzerEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}
             if (knoten.art == ZAHLENRECHNER_ART && UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.SINUS) Row {
                 Checkbox(checked = knoten.parameter[SINUS_WINKELRAUM] == "grad", onCheckedChange = {
                     atlas.beantrageKonfiguration(konfiguriereSinusWinkelraum(knoten, it))
@@ -448,53 +452,58 @@ private fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester, 
             if (besitztRechnerSchema(knoten))
                 OutlinedButton(onClick={ falkOffen=true }) { Text("Auswertungsschema") }
             FormelKartenAktionen(atlas.editor.karte,knoten) {aktion -> atlas.editor.führeAus(aktion);atlas.aktualisiereAuswertung()}
-            de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsAnschlussEinstellungen(knoten, atlas::beantrageKonfiguration)
             if (knoten.art == MENGEN_KNOTEN_ART && knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dim", "dimension") } > 1) {
                 Text("Mehrere verbundene Dimensionseingänge. Betroffene Verbindungen werden vor der Bereinigung angezeigt.",color=MaterialTheme.colorScheme.error)
                 OutlinedButton(onClick={atlas.beantrageKonfiguration(knoten.mitEinheitlicherMengenDimension())}) {Text("Dimensionseingänge bereinigen")}
             }
-            DesktopNotizFarbe(knoten, atlas::beantrageKonfiguration)
-            GraphEingangsEinstellungen(knoten, atlas::beantrageKonfiguration)
+            DesktopNotizDaten(knoten, atlas::beantrageKonfiguration)
             GeometryNodesEinstellungen(knoten,atlas::beantrageKonfiguration)
-            ErgebnisVertragsInhalt(atlas.auswertung.knoten[knoten.id])
-            MethodenProjektionsEinstellungen(knoten,atlas.auswertung.knoten[knoten.id]) {atlas.beantrageKonfiguration(it)}
+            ErgebnisVertragsInhalt(ergebnis?.copy(fehler = null))
             if (knoten.art == "mathematik.visualisierung") {
                 Button(onClick = { visualisierungsId = knoten.id }) { Text("Visualisierung öffnen") }
                 val c = de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration.aus(knoten.eigenschaften)
                 de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsEinstellungen(c, c.dimension,
-                    { neu -> atlas.editor.führeAus(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, neu.inEigenschaften(knoten.eigenschaften))) }, ebenenNamen = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.map { it.name })
+                    { neu -> atlas.beantrageKonfiguration(knoten.copy(eigenschaften = neu.inEigenschaften(knoten.eigenschaften))) }, ebenenNamen = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.map { it.name })
             }
-            Text("Art", style = MaterialTheme.typography.labelLarge)
-            Text(knoten.art)
-            knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            Text("Position: ${knoten.position.x.toInt()}, ${knoten.position.y.toInt()}")
-            Text("Größe: ${knoten.größe.breite.toInt()} × ${knoten.größe.höhe.toInt()}")
-            Text("Anschlüsse: ${knoten.anschlüsse.size}")
-            if (istDynamischeOperation(knoten)) {
-                de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.DynamischeOperandenListe(atlas.editor.karte, knoten, belegteOperationsEingänge(knoten)) { aktion ->
-                    atlas.editor.führeAus(aktion)
-                    atlas.aktualisiereAuswertung()
+
+                        if (knoten.art != "karte.notiz") {
+                            Text(ergebnis?.auswertungsDauerNanos?.let { "Letzte Auswertung: ${formatiereAuswertungsDauerNanos(it)}" } ?: "Noch keine Auswertungsdauer gemessen.")
+                            OutlinedButton(onClick = { atlas.berechneKnotenCacheNeu(knoten.id) }) { Text("Cache neu errechnen") }
+                        }
+                    },
+                    eingangsEinstellungen = if (!eingangsOptionen) null else ({
+                        DesktopEingangsEinstellungen(knoten, atlas)
+                    }),
+                    ausgangsEinstellungen = if (!hatGemeinsameAusgangsEinstellungen(knoten)) null else ({
+                        InspektorAusgangsEinstellungen(knoten, ergebnis, atlas::beantrageKonfiguration)
+                    }),
+                    anschlussTyp = { port -> MathematikAnschlussArten.alle.firstOrNull { it.id == port.art }?.name ?: port.art.wert },
+                    diagnose = meldungen.takeIf { it.isNotEmpty() }?.let { "${it.count { m -> m.art == KnotenMeldungsArt.Fehler }} Fehler · ${it.size} Meldung(en)" },
+                ) { port ->
+                    InspektorAnschlussDaten(atlas.editor.karte, knoten, port, atlas.auswertung.knoten, atlas::beantrageKonfiguration)
                 }
             }
-            HorizontalDivider()
-            Text("Auswertung", style = MaterialTheme.typography.labelLarge)
-            val dauer = atlas.auswertung.knoten[knoten.id]?.auswertungsDauerNanos
-            Text(
-                dauer?.let { "Letzte Auswertung: ${formatiereAuswertungsDauerNanos(it)}" }
-                    ?: "Noch keine Auswertungsdauer gemessen.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            OutlinedButton(
-                onClick = { atlas.berechneKnotenCacheNeu(knoten.id) },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Cache neu errechnen") }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { atlas.editor.dupliziereAuswahl(); atlas.aktualisiereAuswertung() }) { Text("Duplizieren") }
+                TextButton(onClick = { atlas.editor.löscheAuswahl(); atlas.aktualisiereAuswertung() }) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
+            }
         }
-        Spacer(Modifier.weight(1f))
-        if (atlas.auswertung.fehler.isNotEmpty()) {
-            Text("Diagnosen", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
-            atlas.auswertung.fehler.take(5).forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
-        }
+    }
+}
+
+private fun hatDesktopEingangsEinstellungen(knoten: KnotenDaten, karte: KartenDaten): Boolean =
+    hatRechnerEingangsEinstellungen(knoten) || istDynamischeOperation(knoten) && dynamischeOperandengruppen(karte, knoten, belegteOperationsEingänge(knoten)).isNotEmpty() || knoten.art == METHODEN_GRAPH_KNOTEN_ART || knoten.art == METHODEN_AUFRUF_ART ||
+        knoten.art == "mathematik.visualisierung" && (knoten.anschlüsse.any { it.richtung == AnschlussRichtung.Ausgang } || knoten.anschlüsse.count { it.kannSichErweitern } < 2)
+
+@Composable
+private fun DesktopEingangsEinstellungen(knoten: KnotenDaten, atlas: DesktopAtlasZustand) {
+    InspektorRechnerEingangsEinstellungen(knoten, atlas::beantrageKonfiguration)
+    GraphEingangsEinstellungen(knoten, atlas::beantrageKonfiguration)
+    de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsAnschlussEinstellungen(knoten, atlas::beantrageKonfiguration)
+    if (knoten.art == METHODEN_AUFRUF_ART) MethodenProjektionsEinstellungen(knoten, atlas.auswertung.knoten[knoten.id], atlas::beantrageKonfiguration, nurAufruf = true)
+    if (istDynamischeOperation(knoten)) DynamischeOperandenListe(atlas.editor.karte, knoten, belegteOperationsEingänge(knoten)) { aktion ->
+        val kandidat = atlas.editor.karte.wendeAn(aktion).knoten.single { it.id == knoten.id }
+        atlas.beantrageKonfiguration(kandidat)
     }
 }
 
@@ -616,17 +625,46 @@ private fun DesktopVisualisierungsDialog(atlas: DesktopAtlasZustand, id: KnotenI
 
 /** Desktop liest dieselben optionalen Notizeigenschaften wie Android. */
 internal object DesktopNotizRenderer : KnotenRenderer {
+    override val misstNatürlichenInhalt = false
+    @Composable override fun Mindestgröße(knoten: KnotenDaten): GraphGröße {
+        val schrift = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
+        return GraphGröße(180f * schrift, 110f * schrift)
+    }
     override val interaktionsModus = KnotenInteraktionsModus.GanzeFlächeZiehbar
     @Composable override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
             Text(knoten.name,style=MaterialTheme.typography.titleMedium)
             HorizontalDivider()
             Text(knoten.parameter["text"].orEmpty(),Modifier.fillMaxWidth().weight(1f),
-                color=(knoten.eigenschaften["notiz.schriftfarbe"] as? KnotenEigenschaft.Farbe)?.argb?.let {Color(it)} ?: MaterialTheme.colorScheme.onSurface,
+                color=(knoten.eigenschaften["notiz.schriftfarbe"] as? KnotenEigenschaft.Farbe)?.argb?.let {Color(it)} ?: LocalContentColor.current,
                 fontSize=(knoten.parameter["schriftgrößeSp"]?.toIntOrNull()?.takeIf {it in 8..96} ?: 16).sp,
                 textAlign=when(knoten.parameter["textAusrichtung"]) {"rechts" -> androidx.compose.ui.text.style.TextAlign.End;"zentriert" -> androidx.compose.ui.text.style.TextAlign.Center;"blocksatz" -> androidx.compose.ui.text.style.TextAlign.Justify;else -> androidx.compose.ui.text.style.TextAlign.Start})
         }
     }
+}
+
+@Composable
+private fun DesktopNotizDaten(knoten: KnotenDaten, ändern: (KnotenDaten) -> Unit) {
+    if (knoten.art != "karte.notiz") return
+    OutlinedTextField(knoten.parameter["text"].orEmpty(),
+        { ändern(knoten.copy(parameter = knoten.parameter + ("text" to it))) },
+        label = { Text("Text") }, minLines = 5, modifier = Modifier.fillMaxWidth())
+    Text("Ausrichtung", style = MaterialTheme.typography.titleSmall)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf("links" to "Linksbündig", "zentriert" to "Zentriert", "rechts" to "Rechtsbündig", "blocksatz" to "Blocksatz").forEach { (id, titel) ->
+            FilterChip(selected = (knoten.parameter["textAusrichtung"] ?: "links") == id,
+                onClick = { ändern(knoten.copy(parameter = knoten.parameter + ("textAusrichtung" to id))) }, label = { Text(titel) })
+        }
+    }
+    val gespeichert = knoten.parameter["schriftgrößeSp"] ?: "16"
+    var schrift by remember(knoten.id, gespeichert) { mutableStateOf(gespeichert) }
+    val größe = schrift.toIntOrNull()?.takeIf { it in 8..96 }
+    OutlinedTextField(schrift, { schrift = it }, label = { Text("Schriftgröße (sp)") }, singleLine = true,
+        isError = größe == null, supportingText = { Text("8–96 sp") }, modifier = Modifier.fillMaxWidth())
+    TextButton(enabled = größe != null && schrift != gespeichert, onClick = {
+        größe?.let { ändern(knoten.copy(parameter = knoten.parameter + ("schriftgrößeSp" to it.toString()))) }
+    }) { Text("Schriftgröße übernehmen") }
+    DesktopNotizFarbe(knoten, ändern)
 }
 
 @Composable

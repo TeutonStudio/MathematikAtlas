@@ -271,4 +271,85 @@ class VisualisierungsGeraeteTest {
         compose.onNodeWithText("Sichtbarer Weltbereich:",substring=true).assertExists()
         compose.onNodeWithText("20 % Reserve",substring=true).assertExists()
     }
+
+    @Test fun offeneGesteErhaeltAlleDetailsMehrererEbenen() {
+        val x=Variable("x");val y=Variable("y")
+        val graph=Methode(name="f",parameter=listOf(x),vorschrift=Sinus(multiplikation(RationaleZahl.von(9),x)),zielMenge=ReelleZahlen,
+            werteVorräte=mapOf("x" to ReellesIntervall(RationaleZahl.von(-2),false,RationaleZahl.von(2),false))).graphMenge()
+        val gebiet=DefinierteMenge(listOf(GebundeneMengenVariable(x,ReelleZahlen),GebundeneMengenVariable(y,ReelleZahlen)),
+            Vergleich(y,VergleichsArt.Kleiner,multiplikation(x,x)))
+        val e=KnotenAuswertungsErgebnis(emptyMap(),eingänge=mapOf("menge" to BedingterWert(graph),"menge2" to BedingterWert(gebiet)))
+        val c=VisualisierungsKonfiguration(dimension=RaumDimension.R2,dimensionsModus=DimensionsModus.Manuell,
+            bereiche=AchsenBereiche(ZahlenBereich(-2.0,2.0),ZahlenBereich(-2.0,2.0),null),achsenSichtbar=false,rasterSichtbar=false)
+        var daten by mutableStateOf(knoten().copy(eigenschaften=c.zuEigenschaften()))
+        compose.setContent {MaterialTheme {VisualisierungsDetailansicht(daten,e,{daten=daten.copy(eigenschaften=it)},Modifier.size(600.dp,400.dp))}}
+        warteAufNavigationsDetail()
+        val node=compose.onNodeWithTag("visualisierung-plot")
+        val vorher=node.captureToImage().toPixelMap()
+        node.performTouchInput {down(center)}
+        compose.waitForIdle()
+        val berührt=node.captureToImage().toPixelMap()
+        assertTrue("Berühren darf Details nicht ändern",ausschnitt(vorher)==ausschnitt(berührt))
+        node.performTouchInput {moveTo(center+Offset(12f,0f))}
+        compose.waitForIdle()
+        val verschoben=node.captureToImage().toPixelMap()
+        var fehler=0.0;var anzahl=0
+        for(j in vorher.height/4 until vorher.height*3/4) for(i in vorher.width/4 until vorher.width*3/4) {
+            val a=vorher[i,j];val b=verschoben[i+12,j]
+            fehler+=kotlin.math.abs(a.red-b.red)+kotlin.math.abs(a.green-b.green)+kotlin.math.abs(a.blue-b.blue);anzahl++
+        }
+        assertTrue("Pan muss vorhandene Detailgeometrie transformieren: ${fehler/anzahl}",fehler/anzahl<.01)
+        node.performTouchInput {up()}
+        warteAufNavigationsDetail()
+        node.performTouchInput {down(0,center-Offset(70f,0f));down(1,center+Offset(70f,0f))}
+        val vorPinch=node.captureToImage().toPixelMap()
+        node.performTouchInput {moveTo(0,center-Offset(95f,0f));moveTo(1,center+Offset(95f,0f))}
+        compose.waitForIdle()
+        val gezoomt=node.captureToImage().toPixelMap()
+        assertTrue("Pinch muss die Kamera ändern",ausschnitt(vorPinch)!=ausschnitt(gezoomt))
+        node.performTouchInput {up(0);up(1)}
+        warteAufNavigationsDetail()
+        val vorMausrad=VisualisierungsKonfiguration.aus(daten.eigenschaften).kamera
+        node.performMouseInput {moveTo(center);scroll(-1f)}
+        warteAufNavigationsDetail()
+        assertTrue(VisualisierungsKonfiguration.aus(daten.eigenschaften).kamera.zoom>vorMausrad.zoom)
+        val vorTastatur=VisualisierungsKonfiguration.aus(daten.eigenschaften).kamera
+        node.performKeyInput {pressKey(androidx.compose.ui.input.key.Key.DirectionRight);pressKey(androidx.compose.ui.input.key.Key.Plus)}
+        warteAufNavigationsDetail()
+        assertTrue(VisualisierungsKonfiguration.aus(daten.eigenschaften).kamera.zoom>vorTastatur.zoom)
+        assertTrue(VisualisierungsKonfiguration.aus(daten.eigenschaften).kamera.translationX!=vorTastatur.translationX)
+        compose.onNodeWithText("+").performClick()
+        warteAufNavigationsDetail()
+        assertTrue(ausschnitt(node.captureToImage().toPixelMap()).distinct().size>10)
+    }
+
+    @Test fun beruehrenEiner3DFlaecheAendertWederGeometrieNochKanten() {
+        val x=Variable("x");val y=Variable("y")
+        val intervall=ReellesIntervall(RationaleZahl.von(-2),false,RationaleZahl.von(2),false)
+        val fläche=Methode(name="f",parameter=listOf(x,y),vorschrift=multiplikation(x,y),zielMenge=ReelleZahlen,
+            werteVorräte=mapOf("x" to intervall,"y" to intervall)).graphMenge()
+        val e=KnotenAuswertungsErgebnis(emptyMap(),eingänge=mapOf("menge" to BedingterWert(fläche)))
+        val c=VisualisierungsKonfiguration(dimension=RaumDimension.R3,dimensionsModus=DimensionsModus.Manuell,
+            bereiche=AchsenBereiche(ZahlenBereich(-3.0,3.0),ZahlenBereich(-3.0,3.0),ZahlenBereich(-3.0,3.0)),
+            kamera=KameraZustand(25.0,-35.0,0.0,0.0,0.0,0.0,1.0),achsenSichtbar=false,rasterSichtbar=false)
+        var daten by mutableStateOf(knoten().copy(eigenschaften=c.zuEigenschaften()))
+        compose.setContent {MaterialTheme {VisualisierungsDetailansicht(daten,e,{daten=daten.copy(eigenschaften=it)},Modifier.size(600.dp,400.dp))}}
+        warteAufNavigationsDetail()
+        val node=compose.onNodeWithTag("visualisierung-plot")
+        val vorher=ausschnitt(node.captureToImage().toPixelMap())
+        assertTrue(vorher.distinct().size>10)
+        node.performTouchInput {down(center)}
+        compose.waitForIdle()
+        assertTrue("Berühren darf weder 3D-Geometrie noch Kanten ändern",vorher==ausschnitt(node.captureToImage().toPixelMap()))
+        node.performTouchInput {moveTo(center+Offset(20f,10f));up()}
+        warteAufNavigationsDetail()
+        assertTrue("Die Fläche muss nach Rotation anders erscheinen",vorher!=ausschnitt(node.captureToImage().toPixelMap()))
+    }
+
+    private fun warteAufNavigationsDetail() {
+        compose.waitUntil(20_000) {compose.onAllNodesWithText("Berechne",substring=true).fetchSemanticsNodes().isEmpty() && compose.onAllNodesWithText("Verfeinere",substring=true).fetchSemanticsNodes().isEmpty()}
+        compose.waitForIdle()
+    }
+    private fun ausschnitt(p:androidx.compose.ui.graphics.PixelMap):List<Int> =
+        (p.height/4 until p.height*3/4).flatMap {j -> (p.width/4 until p.width*3/4).map {i -> p[i,j].toArgb()}}
 }

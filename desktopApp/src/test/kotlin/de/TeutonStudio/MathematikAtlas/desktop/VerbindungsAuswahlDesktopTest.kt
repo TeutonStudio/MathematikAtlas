@@ -26,12 +26,14 @@ class VerbindungsAuswahlDesktopTest {
         val editor=KartenEditorZustand(basis,laufzeit.graphPrüfung)
         editor.verbindungsPlaner={ k,v,z -> planeÜbersetzerVerbindungen(k,v,z,laufzeit.graphPrüfung) }
         compose.setContent { MaterialTheme { KnotenKartenEditor(editor,Modifier.size(1200.dp,750.dp),zeigeKnotenInspektor=false) } }
-        compose.onNode(hasContentDescription("Quelle, Anschluss wert",substring=true)).performClick()
-        compose.onNode(hasContentDescription("Ziel, Anschluss wert",substring=true)).performClick()
+        val quellePort = compose.onNode(hasContentDescription("Quelle, Anschluss wert",substring=true))
+        val zielPort = compose.onNode(hasContentDescription("Ziel, Anschluss wert",substring=true))
+        val delta = zielPort.fetchSemanticsNode().boundsInRoot.center - quellePort.fetchSemanticsNode().boundsInRoot.center
+        quellePort.performTouchInput { swipe(center, center + delta, durationMillis = 300) }
         compose.onNodeWithText("Verbindungsweg auswählen").assertIsDisplayed()
         return editor
     }
-    @Test fun klickAufPortsOeffnetAuswahlUndUebernimmtDenGewaehltenUebersetzer() {
+    @Test fun dragAufPortOeffnetAuswahlUndUebernimmtDenGewaehltenUebersetzer() {
         val editor=zeige()
         compose.runOnIdle { assertEquals(basis,editor.karte) }
         compose.onNodeWithText("Matrix zerlegen").performScrollTo().performClick()

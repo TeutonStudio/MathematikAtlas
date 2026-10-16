@@ -45,6 +45,13 @@ private fun werteTensorOperationAus(
         }
         val operator = definition.alsBestehenderTensorOperatorOderNull()
             ?: return fehlerErgebnis(kontext, "Unbekannter assoziativer Tensoroperator.")
+        if (werte.size == 1) {
+            return when (val geprüft = TensorRechner.erzeuge(operator, listOf(TensorRechnerEingabe("links", werte.single())))) {
+                is TensorRechnerErgebnis.Wert -> KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(geprüft.objekt, kontext.annahmen())))
+                is TensorRechnerErgebnis.Ungueltig -> fehlerErgebnis(kontext, geprüft.nachricht)
+                is TensorRechnerErgebnis.Bedingt -> fehlerErgebnis(kontext, geprüft.bedingungen.joinToString())
+            }
+        }
         var wert = werte.first()
         var symbolisch = false
         val bedingungen = mutableListOf<String>()

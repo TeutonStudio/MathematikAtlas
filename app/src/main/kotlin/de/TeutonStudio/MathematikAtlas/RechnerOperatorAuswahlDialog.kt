@@ -419,7 +419,7 @@ private fun AuswirkungsDetails(wirkung: KnotenErsetzungsAuswirkung) {
     Text("Entfallen: ${wirkung.entfallendeAnschlüsse.namenOderKeine()}")
     if (wirkung.trenntVerbindungen) {
         Text(
-            "${wirkung.entfallendeVerbindungen.size} bestehende Verbindung(en) werden getrennt.",
+            "${wirkung.entfallendeVerbindungen.size} Verbindung(en) und ${wirkung.entfallendeLokaleWerte.size} lokale Operanden (${wirkung.entfallendeLokaleWerte.joinToString()}) entfallen.",
             color = MaterialTheme.colorScheme.error,
             fontWeight = FontWeight.Bold,
         )
@@ -446,7 +446,7 @@ private fun DialogAktionen(
                         eintrag.id == aktuelleId -> "Formel bearbeiten"
                     eintrag?.art == RechnerOperatorAuswahlArt.FORMEL && eintrag.kandidat == null -> "Formel erstellen"
                     auswirkung?.trenntVerbindungen == true ->
-                        "Übernehmen und ${auswirkung.entfallendeVerbindungen.size} Verbindung(en) trennen"
+                        "Übernehmen und entfallende Operanden entfernen"
                     eintrag?.art == RechnerOperatorAuswahlArt.FORMEL -> "Formel übernehmen"
                     else -> "Übernehmen"
                 },

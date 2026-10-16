@@ -14,8 +14,11 @@ import de.TeutonStudio.MathematikKnoten.*
 class DesktopAtlasZustand(
     val speicher: DesktopKartenSpeicher = DesktopKartenSpeicher(),
 ) {
+    fun anschlussInfoFür(karte: KartenDaten, ref: AnschlussVerweis) = laufzeit.anschlussInfoFür(karte, ref)
+
     private val laufzeit = MathematikKartenLaufzeit(
         kartenQuelle = KartenQuelle(speicher::lade),
+        nichtAuswertbareKnotenArten = setOf("karte.notiz"),
     )
     val vorlagen: List<KnotenVorlage> = desktopKnotenVorlagen()
     val editor = KartenEditorZustand(
@@ -55,7 +58,7 @@ class DesktopAtlasZustand(
         auswertung = KartenAuswertungsErgebnis(emptyMap(), emptyList())
         rechenAuftrag = rechenScope.launch {
             val berechnet = withContext(Dispatchers.Default) {
-                MathematikKartenLaufzeit(kartenQuelle = KartenQuelle(speicher::lade)).auswerten(moment)
+                MathematikKartenLaufzeit(kartenQuelle = KartenQuelle(speicher::lade), nichtAuswertbareKnotenArten = setOf("karte.notiz")).auswerten(moment)
             }
             if (generation == rechenGeneration && editor.karte == moment) auswertung = berechnet
         }
@@ -124,7 +127,7 @@ class DesktopAtlasZustand(
         runCatching { planeKonfiguration(editor.karte, kandidat, laufzeit.graphPrüfung, laufzeit::auswerten) }
             .onFailure { meldung = it.message }
             .onSuccess { plan ->
-                if (plan.auswirkung.entfallendeVerbindungen.isEmpty()) übernehmeKonfigurationsPlan(plan)
+                if (!plan.auswirkung.trenntVerbindungen) übernehmeKonfigurationsPlan(plan)
                 else konfigurationsPlan = plan
             }
     }

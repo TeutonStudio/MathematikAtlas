@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -67,6 +68,11 @@ internal fun notizTextAusrichtung(wert: String?): TextAlign = when (wert) {
 }
 
 internal object NotizKnotenRenderer : KnotenRenderer {
+    override val misstNatürlichenInhalt = false
+    @Composable override fun Mindestgröße(knoten: KnotenDaten): GraphGröße {
+        val schrift = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
+        return GraphGröße(180f * schrift, 110f * schrift)
+    }
     override val interaktionsModus = KnotenInteraktionsModus.GanzeFlächeZiehbar
 
     @Composable
@@ -92,7 +98,7 @@ internal object NotizKnotenRenderer : KnotenRenderer {
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(LocalAtlasAbstände.current.bereich),
-                color = (knoten.eigenschaften[NOTIZ_SCHRIFTFARBE] as? KnotenEigenschaft.Farbe)?.argb?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface,
+                color = (knoten.eigenschaften[NOTIZ_SCHRIFTFARBE] as? KnotenEigenschaft.Farbe)?.argb?.let { Color(it) } ?: LocalContentColor.current,
                 fontSize = notizSchriftgrößeSp(knoten.parameter[NOTIZ_SCHRIFTGROESSE_PARAMETER]).sp,
                 textAlign = notizTextAusrichtung(knoten.parameter[NOTIZ_AUSRICHTUNG_PARAMETER]),
                 overflow = TextOverflow.Clip,

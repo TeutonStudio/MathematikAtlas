@@ -49,7 +49,7 @@ class PolynomAbstraktionsRegelTest {
         editor.führeAus(KartenAktion.TeilgraphErsetzen(vorschlag.ersetzungsPlan))
         assertTrue(laufzeit.auswerten(editor.karte.mitTestGrundräumen()).fehler.isEmpty())
         editor.rückgängig()
-        assertEquals(karte, editor.karte)
+        assertEquals(karte.normalisiereJoinEingänge(), editor.karte)
     }
 
     @Test

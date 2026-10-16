@@ -1,6 +1,9 @@
 package de.TeutonStudio.MathematikKnoten
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldungsArt
+import de.TeutonStudio.KnotenKartenVerwalter.daten.normalisierteMeldungen
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenAuswertungszeitFußzeile
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInteraktionsModus
@@ -20,7 +23,14 @@ fun KnotenRenderer.mitAuswertungszeit(
 
         @Composable
         override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
-            basis.Inhalt(knoten, ausgewählt, aktionen)
+            var lokaleMeldungen by remember(knoten.id, knoten.art) { mutableStateOf(emptyList<KnotenMeldung>()) }
+            val gemeinsameMeldungen = ergebnisFür(knoten).knotenMeldungen()
+            SideEffect { aktionen.meldungenMelden((gemeinsameMeldungen + lokaleMeldungen).normalisierteMeldungen()) }
+            basis.Inhalt(knoten, ausgewählt, object : KnotenRendererAktionen by aktionen {
+                override fun meldungenMelden(meldungen: List<KnotenMeldung>) {
+                    lokaleMeldungen = meldungen.normalisierteMeldungen()
+                }
+            })
         }
 
         @Composable
@@ -28,4 +38,17 @@ fun KnotenRenderer.mitAuswertungszeit(
             KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos, ausgewählt)
         }
     }
+}
+
+/** Gemeinsame Auswertungsdiagnosen, auch für direkt verwendete Standardrenderer. */
+internal fun KnotenAuswertungsErgebnis?.knotenMeldungen(): List<KnotenMeldung> {
+    val ergebnis = this ?: return emptyList()
+    return buildList {
+        ergebnis.fehler?.let { add(KnotenMeldung(it, KnotenMeldungsArt.Fehler)) }
+        ergebnis.elementFehler.values.forEach { add(KnotenMeldung(it, KnotenMeldungsArt.Fehler)) }
+        ergebnis.warnungen.forEach { add(KnotenMeldung(it, KnotenMeldungsArt.Warnung)) }
+        ergebnis.ausgaben.values.forEach { ausgabe ->
+            ausgabe.übersetzungen.aktuell?.hinweise()?.forEach { add(KnotenMeldung(it)) }
+        }
+    }.normalisierteMeldungen()
 }

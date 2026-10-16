@@ -40,8 +40,9 @@ internal fun KnotenKonzeptDialog(
     knoten: KnotenDaten,
     schließen: () -> Unit,
     nurDefinition: Boolean = false,
+    vorschau: Boolean = false,
 ) {
-    if (besitztVisualisierungsArbeitsdialog(knoten) && !nurDefinition) {
+    if (besitztVisualisierungsArbeitsdialog(knoten) && !nurDefinition && !vorschau) {
         AtlasVisualisierungsDialog(zustand, knoten.id, schließen)
         return
     }
@@ -50,7 +51,7 @@ internal fun KnotenKonzeptDialog(
             ?.let(zustand.speicher::lade)
             ?.let { karte -> ermittleKartenWahrheitstabellenQuelle(zustand.anschlussArten, knoten, karte) }
     }
-    if (kartenTabellenQuelle != null) {
+    if (kartenTabellenQuelle != null && !vorschau) {
         KartenWahrheitstabellenDialog(
             zustand = zustand,
             knoten = knoten,
@@ -60,7 +61,7 @@ internal fun KnotenKonzeptDialog(
         return
     }
 
-    if (besitztSkalarproduktKonzeptDialog(knoten)) {
+    if (besitztSkalarproduktKonzeptDialog(knoten) && !vorschau) {
         SkalarproduktKonzeptDialog(
             zustand = zustand,
             knoten = knoten,
@@ -72,7 +73,7 @@ internal fun KnotenKonzeptDialog(
     val besitztAussagenDialog = AussagenOperatorArt.für(knoten) != null ||
         knoten.art == MathematikKnotenVorlagen.ITERIERTE_AUSSAGENVERKNÜPFUNG_ART
     var definitionAnzeigen by remember(knoten.id) { mutableStateOf(false) }
-    if (besitztAussagenDialog && !definitionAnzeigen) {
+    if (besitztAussagenDialog && !definitionAnzeigen && !vorschau) {
         AussagenOperatorDialog(
             zustand = zustand,
             knoten = knoten,
@@ -96,6 +97,7 @@ internal fun KnotenKonzeptDialog(
         konzept = konzept,
         ursprungsKnoten = knoten,
         schließen = schließen,
+        vorschau = vorschau,
     )
 }
 
@@ -120,6 +122,7 @@ private fun KonzeptDialog(
     konzept: KonzeptDefinition?,
     ursprungsKnoten: KnotenDaten?,
     schließen: () -> Unit,
+    vorschau: Boolean = false,
 ) {
     var reiterIndex by remember(konzept?.id, ursprungsKnoten?.art) { mutableIntStateOf(0) }
     var komplexDarstellung by remember(konzept?.id, ursprungsKnoten?.id) {
@@ -206,7 +209,7 @@ private fun KonzeptDialog(
 
             HorizontalDivider()
             AtlasDialogAktionen {
-                aktiveKarte?.takeUnless { zeigtFalkSchema }?.let { karte ->
+                aktiveKarte?.takeUnless { zeigtFalkSchema || vorschau }?.let { karte ->
                     Button(
                         onClick = {
                             zustand.öffneBearbeitbareKopie(karte)
@@ -214,7 +217,7 @@ private fun KonzeptDialog(
                         },
                     ) { Text("Als bearbeitbare Karte kopieren") }
                 }
-                ursprungsKnoten?.let { knoten ->
+                ursprungsKnoten?.takeUnless { vorschau }?.let { knoten ->
                     OutlinedButton(onClick = { zustand.editor.merkeKnotenZumHerausziehen(knoten.id); schließen() }) {
                         Text("Aus Verbindung herausziehen")
                     }
@@ -278,6 +281,7 @@ private fun UnveränderlicheKonzeptKarte(
 
     KnotenKartenEditor(
         zustand = editor,
+        anschlussInfoFür = zustand::anschlussInfoFür,
         modifier = modifier,
         rendererFür = { knoten ->
             if (knoten.art.startsWith("konzept.")) KonzeptDokumentationsRenderer else mathematikRenderer

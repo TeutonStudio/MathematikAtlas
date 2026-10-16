@@ -51,7 +51,7 @@ class KonfigurationsPlanTest {
         val editor = KartenEditorZustand(karte, laufzeit.graphPrüfung)
         editor.führeAus(KartenAktion.KartenInhaltErsetzen(plan.karte))
         editor.rückgängig()
-        assertEquals(karte, editor.karte)
+        assertEquals(karte.normalisiereJoinEingänge(), editor.karte)
         editor.wiederholen()
         assertEquals(plan.karte.verbindungen, editor.karte.verbindungen)
     }

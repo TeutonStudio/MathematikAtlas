@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,11 +16,26 @@ import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.MatrixDiagonalArt
 
 internal object MatrixdiagonaleInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
+        KnotenInspektorBereich.Knotendaten -> true
+        KnotenInspektorBereich.Eingangsdaten -> false
+        KnotenInspektorBereich.Ausgangsdaten -> matrixdiagonaleModus(knoten) == MATRIXDIAGONALE_AUSLESEN
+    }
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
+        when (bereich) {
+            KnotenInspektorBereich.Knotendaten -> FachInhalt(knoten, ergebnis, aktionen, false)
+            KnotenInspektorBereich.Eingangsdaten -> {  }
+            KnotenInspektorBereich.Ausgangsdaten -> { MatrixdiagonaleAusgang(knoten, ergebnis, aktionen) }
+        }
+    }
+
     @Composable
-    override fun Inhalt(
+    private fun FachInhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
+        mitAnschlüssen: Boolean,
     ) {
         val gespeichert = knoten.parameter[MATRIXDIAGONALE_ART_PARAMETER]
         val aktuell = MatrixDiagonalArt.vonParameter(gespeichert)
@@ -33,16 +49,8 @@ internal object MatrixdiagonaleInspektor : KnotenInspektor {
                     label = { Text(titel) })
             }
         }
-        if (matrixdiagonaleModus(knoten) == MATRIXDIAGONALE_AUSLESEN) {
-            Text("Ausgabeformat", style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
-                listOf("tupel" to "Tupel", "zeile" to "Zeile", "spalte" to "Spalte").forEach { (form, titel) ->
-                    FilterChip(selected = matrixdiagonaleAusgabe(knoten) == form,
-                        onClick = { aktionen.knoten(konfiguriereMatrixdiagonale(knoten, ausgabe = form)) },
-                        label = { Text(titel) })
-                }
-            }
-        }
+        if (mitAnschlüssen) MatrixdiagonaleAusgang(knoten, ergebnis, aktionen)
+
         Text("Diagonale", style = MaterialTheme.typography.titleSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -87,4 +95,9 @@ internal object MatrixdiagonaleInspektor : KnotenInspektor {
             Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
     }
+}
+
+@Composable
+private fun MatrixdiagonaleAusgang(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorAusgangsEinstellungen(knoten, ergebnis, aktionen::knoten)
 }

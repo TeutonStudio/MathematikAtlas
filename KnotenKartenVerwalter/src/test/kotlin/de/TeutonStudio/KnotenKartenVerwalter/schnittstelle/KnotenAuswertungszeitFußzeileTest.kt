@@ -29,9 +29,9 @@ class KnotenAuswertungszeitFußzeileTest {
         val form = RoundedCornerShape(12.dp)
         for (richtung in listOf(LayoutDirection.Ltr, LayoutDirection.Rtl)) {
             val geometrie = berechneZeitfußzeilenGeometrie(
-                240.dp, 120.dp, 20.dp, form, Density(2f), richtung,
+                240.dp, 120.dp, form, Density(2f), richtung,
             )
-            assertEquals(100.dp, geometrie.hauptHöhe)
+            assertEquals(120.dp, geometrie.hauptHöhe)
             assertEquals(12.dp, geometrie.links)
             assertEquals(12.dp, geometrie.rechts)
             assertEquals(216.dp, geometrie.breite)
@@ -39,13 +39,20 @@ class KnotenAuswertungszeitFußzeileTest {
         }
     }
 
-    @Test fun `Zeitfeld folgt den unteren Tangenten des verkleinerten Kapselkoerpers`() {
+    @Test fun `Zeitfeld folgt den unteren Tangenten des unveraenderten Kapselkoerpers`() {
         val geometrie = berechneZeitfußzeilenGeometrie(
-            200.dp, 100.dp, 20.dp, RoundedCornerShape(40.dp), Density(1f), LayoutDirection.Ltr,
+            200.dp, 100.dp, RoundedCornerShape(40.dp), Density(1f), LayoutDirection.Ltr,
         )
-        assertEquals(80.dp, geometrie.hauptHöhe)
+        assertEquals(100.dp, geometrie.hauptHöhe)
         assertEquals(40.dp, geometrie.links)
         assertEquals(120.dp, geometrie.breite)
+    }
+
+    @Test fun `Kreisfoermiger Adapter behaelt ein lesbares Anhangfeld`() {
+        for (oben in listOf(false, true)) {
+            val (links, rechts) = berechneAnhangEinzüge(100.dp, 100.dp, RoundedCornerShape(50), Density(1f), LayoutDirection.Ltr, oben)
+            assertEquals(48.dp, 100.dp - links - rechts)
+        }
     }
 
     @Test fun `Auswertungsdauer wird kompakt formatiert`() {

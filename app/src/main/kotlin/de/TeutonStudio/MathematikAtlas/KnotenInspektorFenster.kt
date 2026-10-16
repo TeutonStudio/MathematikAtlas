@@ -23,7 +23,7 @@ import androidx.compose.ui.zIndex
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion
 import de.TeutonStudio.KnotenKartenVerwalter.logik.vorschauKnotenErsetzen
-import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.InspektorSichtbarkeit
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.KnotenKartenVerwalter.zustand.MINDESTEINGÄNGE_PARAMETER
 import de.TeutonStudio.MathematikKartenAdapter.*
 import de.TeutonStudio.MathematikKnoten.ANALYSIS_EIGENSCHAFT_KNOTEN_ART
@@ -56,6 +56,7 @@ private val INSPEKTOR_RAND = 16.dp
 @Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
+    val klappzustand = remember { InspektorKlappZustand() }
     val knoten = zustand.ausgewählterKnoten
     var visualisierungsId by remember { mutableStateOf<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId?>(null) }
     visualisierungsId?.let { id -> de.TeutonStudio.MathematikAtlas.AtlasVisualisierungsDialog(zustand, id) { visualisierungsId = null } }
@@ -69,8 +70,8 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
         val auswirkung = zustand.vorschauKonfiguration(kandidat)
         AtlasBestätigungsDialog(
             onDismissRequest = zustand::verwerfeKonfiguration,
-            title = { Text("Verbindungen entfernen?") },
-            text = { Text("Diese Konfiguration entfernt ${auswirkung.entfallendeVerbindungen.size} Verbindung(en), deren Anschlüsse oder Verträge nicht mehr passen. Rückgängig stellt Konfiguration und Verbindungen gemeinsam wieder her.") },
+            title = { Text("Operanden entfernen?") },
+            text = { Text("Diese Konfiguration entfernt ${auswirkung.entfallendeVerbindungen.size} Verbindung(en) und ${auswirkung.entfallendeLokaleWerte.size} lokale Operanden (${auswirkung.entfallendeLokaleWerte.joinToString()}). Rückgängig stellt den bisherigen Stand wieder her.") },
             confirmButton = { TextButton(onClick = zustand::bestätigeKonfiguration) { Text("Übernehmen") } },
             dismissButton = { TextButton(onClick = zustand::verwerfeKonfiguration) { Text("Abbrechen") } },
         )
@@ -86,210 +87,110 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
                 shadowElevation = 8.dp,
                 shape = MaterialTheme.shapes.large,
             ) {
-                var knotenUmbenennenGeöffnet by remember(knoten.id) { mutableStateOf(false) }
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(LocalAtlasAbstände.current.inhalt),
-                    verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich),
-                ) {
-                    if (knoten.art == "mathematik.visualisierung") Button(onClick = { visualisierungsId = knoten.id }) { Text("Visualisierung öffnen") }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                    ) {
-                        Text("Inspektor", modifier = Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                val ergebnis = zustand.auswertung.knoten[knoten.id]
+                val meldungen = inspektorMeldungen(knoten, ergebnis, zustand.editor.meldungenFür(knoten.id))
+                val inspektor = when {
+                    knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenInspektor
+                    knoten.art == RESTRIKTIONS_KNOTEN_ART -> RestriktionsKnotenInspektor
+                    knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART -> AnalysisEigenschaftInspektor
+                    else -> KnotenInspektorRegister.finde(knoten.art)
+                }
+                val aktionen = object : KnotenInspektorAktionen {
+                    override fun parameter(schlüssel: String, wert: String) {
+                        zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
+                    }
+                    override fun name(wert: String) {
+                        val aktuell = zustand.editor.karte.knoten.firstOrNull { it.id == knoten.id }
+                        if (wert.isNotBlank() && aktuell != null) zustand.beantrageKonfiguration(aktuell.copy(name = wert.trim()))
+                    }
+                    override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) {
+                        zustand.konfiguriereKnoten(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
+                    }
+                    override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
+                        zustand.beantrageKonfiguration(knoten.copy(anschlüsse = knoten.anschlüsse.map {
+                            if (it.id == verweis.anschlussId) it.copy(art = art) else it
+                        }))
+                    }
+                    override fun knoten(knoten: KnotenDaten) {
+                        zustand.konfiguriereKnoten(KartenAktion.KnotenErsetzen(knoten))
+                    }
+                    override fun knotenNachVerlustbestätigung(knoten: KnotenDaten) {
+                        zustand.übernehmeKonfiguration(knoten)
+                    }
+                    override fun vorschauKnotenErsetzen(knoten: KnotenDaten) =
+                        zustand.vorschauKonfiguration(knoten)
+                }
+                val fachErgebnis = ergebnis?.copy(fehler = null)
+                val eingangsOptionen = inspektor?.hatBereich(knoten, KnotenInspektorBereich.Eingangsdaten) == true ||
+                    hatGemeinsameEingangsEinstellungen(knoten, zustand.editor.karte)
+                val ausgangsOptionen = inspektor?.hatBereich(knoten, KnotenInspektorBereich.Ausgangsdaten) == true
+                val hatKnotendaten = inspektor?.hatBereich(knoten, KnotenInspektorBereich.Knotendaten) == true ||
+                    meldungen.isNotEmpty() || !ergebnis?.ausgaben.isNullOrEmpty() ||
+                    knoten.kartenVerweis != null || inspektor == null && knoten.parameter.isNotEmpty() ||
+                    knoten.art.startsWith(GEOMETRY_NODES_PREFIX)
+                Column(Modifier.fillMaxSize()) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("Inspektor", Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
                         TextButton(onClick = InspektorSichtbarkeit::schließen) { Text("Schließen") }
                     }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                    ) {
-                        Text(knoten.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                        TextButton(onClick = { knotenUmbenennenGeöffnet = true }) { Text("Umbenennen") }
-                    }
-                    if (knotenUmbenennenGeöffnet) {
-                        NameÄndernDialog(
-                            titel = "Knoten umbenennen",
-                            aktuellerName = knoten.name,
-                            schließen = { knotenUmbenennenGeöffnet = false },
-                            bestätigen = { name ->
-                                zustand.ersetzeKarteMitAuswahl(
-                                    zustand.editor.karte.copy(
-                                        knoten = zustand.editor.karte.knoten.map { aktuell ->
-                                            if (aktuell.id == knoten.id) aktuell.copy(name = name) else aktuell
-                                        },
-                                    ),
-                                )
-                                zustand.speichereAktuell()
-                                knotenUmbenennenGeöffnet = false
+                    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                        .padding(LocalAtlasAbstände.current.inhalt),
+                        verticalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.bereich)) {
+                        KnotenInspektorBereiche(
+                            karte = zustand.editor.karte, knoten = knoten, klappzustand = klappzustand,
+                            standarddaten = {
+                                KnotenStandardDatenEditor(knoten,
+                                    if (knoten.art == NOTIZ_KNOTEN_ART) KnotenDarstellungsForm.entries.toSet() else setOf(knoten.darstellungsForm),
+                                    übernehmen = zustand::beantrageKonfiguration)
                             },
-                        )
-                    }
-                    Text(knoten.art, style = MaterialTheme.typography.labelMedium)
-                    knoten.parameter[RECHNER_MIGRATION_DIAGNOSE]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    if (istDynamischeOperation(knoten) || knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN) {
-                        de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.DynamischeOperandenListe(
-                            zustand.editor.karte, knoten, belegteOperationsEingänge(knoten),
-                        ) { aktion -> zustand.konfiguriereKnoten(aktion) }
-                    }
-                    de.TeutonStudio.MathematikKnoten.FormelKartenAktionen(zustand.editor.karte,knoten) { aktion ->
-                        zustand.editor.führeAus(aktion);zustand.aktualisiereAuswertung()
-                    }
-                    de.TeutonStudio.MathematikKnoten.ErgebnisVertragsInhalt(zustand.auswertung.knoten[knoten.id])
-                    de.TeutonStudio.MathematikKnoten.GeometryNodesEinstellungen(knoten,zustand::beantrageKonfiguration)
-                    StandardwerteEditor(knoten, zustand)
-                    de.TeutonStudio.MathematikKnoten.MethodenProjektionsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
-                    de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsAnschlussEinstellungen(knoten, zustand::beantrageKonfiguration)
-                    de.TeutonStudio.MathematikKnoten.GraphEingangsEinstellungen(knoten, zustand::beantrageKonfiguration)
-                    de.TeutonStudio.MathematikKnoten.VisualisierungsVertragsEinstellungen(knoten,zustand.auswertung.knoten[knoten.id],zustand::beantrageKonfiguration)
-                    if (knoten.kartenVerweis != null && knoten.art != de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_ART) KartenKnotenInspektor(knoten, zustand)
-                    IterierteMethodenKartenInspektor(knoten, zustand)
-                    if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
-                    val inspektor = when {
-                        knoten.art == NOTIZ_KNOTEN_ART -> NotizKnotenInspektor
-                        knoten.art == RESTRIKTIONS_KNOTEN_ART -> RestriktionsKnotenInspektor
-                        knoten.art == ANALYSIS_EIGENSCHAFT_KNOTEN_ART -> AnalysisEigenschaftInspektor
-                        else -> KnotenInspektorRegister.finde(knoten.art)
-                    }
-                    inspektor?.let {
-                        it.Inhalt(
-                            knoten,
-                            zustand.auswertung.knoten[knoten.id],
-                            object : KnotenInspektorAktionen {
-                                override fun parameter(schlüssel: String, wert: String) {
-                                    zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, wert))
+                            knotendaten = if (!hatKnotendaten) null else ({
+                                meldungen.forEach { Text(it.text, color = if (it.art == KnotenMeldungsArt.Fehler) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
+                                if (knoten.art == "mathematik.visualisierung") Button(onClick = { visualisierungsId = knoten.id }) { Text("Visualisierung öffnen") }
+                                FormelKartenAktionen(zustand.editor.karte, knoten) { aktion ->
+                                    zustand.editor.führeAus(aktion); zustand.aktualisiereAuswertung()
                                 }
-                                override fun name(wert: String) {
-                                    zustand.ersetzeKarteMitAuswahl(
-                                        zustand.editor.karte.copy(
-                                            knoten = zustand.editor.karte.knoten.map { aktuell ->
-                                                if (aktuell.id == knoten.id) aktuell.copy(name = wert) else aktuell
-                                            },
-                                        ),
-                                    )
-                                }
-                                override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) {
-                                    zustand.konfiguriereKnoten(KartenAktion.KnotenEigenschaftenErsetzen(knoten.id, eigenschaften))
-                                }
-                                override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) {
-                                    zustand.beantrageKonfiguration(knoten.copy(anschlüsse = knoten.anschlüsse.map {
-                                        if (it.id == verweis.anschlussId) it.copy(art = art) else it
-                                    }))
-                                }
-                                override fun knoten(knoten: KnotenDaten) {
-                                    zustand.konfiguriereKnoten(KartenAktion.KnotenErsetzen(knoten))
-                                }
-                                override fun knotenNachVerlustbestätigung(knoten: KnotenDaten) {
-                                    zustand.übernehmeKonfiguration(knoten)
-                                }
-                                override fun vorschauKnotenErsetzen(knoten: KnotenDaten) =
-                                    zustand.vorschauKonfiguration(knoten)
-                            },
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-                            OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
-                            Button(
-                                onClick = zustand::löscheAuswahlMitMengendefinition,
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                            ) { Text("Löschen") }
-                        }
-                        return@Column
-                    }
-                    if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
-                    if (knoten.art == "mathematik.tupel") TupelInspektor(knoten, zustand)
-                    if (knoten.art in setOf("mathematik.matrixProdukt", "mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
-                        knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN
-                    ) {
-                        val mindestAnzahl = if (knoten.art == "mathematik.tupel") 0 else 2
-                        val wert = knoten.parameter["festeEingänge"] ?: "2"
-                        var text by remember(knoten.id, wert) { mutableStateOf(wert) }
-                        OutlinedTextField(
-                            value = text,
-                            onValueChange = {
-                                text = it
-                                it.toIntOrNull()
-                                    ?.takeIf { anzahl -> anzahl >= mindestAnzahl }
-                                    ?.let { anzahl ->
-                                        if (knoten.art == "mathematik.tupel") {
-                                            zustand.beantrageKonfiguration(konfiguriereTupel(knoten.copy(parameter = knoten.parameter + ("festeEingänge" to anzahl.toString())), TUPEL_EINZEL_EINGABEN))
-                                        } else {
-                                            zustand.konfiguriereFesteEingänge(knoten.id, anzahl)
-                                        }
-                                    }
-                            },
-                            label = { Text("Feste Eingänge") },
-                            supportingText = {
-                                Text("Mindestens $mindestAnzahl; weitere Eingänge entstehen beim Verbinden.")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        val zeigeWerte = knoten.parameter["operatorAnzeige"] != "name"
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-                        ) {
-                            Text("Anzeige: Namen", modifier = Modifier.weight(1f))
-                            Switch(
-                                checked = zeigeWerte,
-                                onCheckedChange = { werte ->
-                                    zustand.konfiguriereKnoten(
-                                        KartenAktion.KnotenParameterÄndern(
-                                            knoten.id,
-                                            "operatorAnzeige",
-                                            if (werte) "wert" else "name",
-                                        ),
-                                    )
-                                },
-                            )
-                            Text("Werte")
+                                ErgebnisVertragsInhalt(fachErgebnis)
+                                GeometryNodesEinstellungen(knoten, zustand::beantrageKonfiguration)
+                                VisualisierungsVertragsEinstellungen(knoten, fachErgebnis, zustand::beantrageKonfiguration)
+                                if (knoten.kartenVerweis != null && knoten.art != METHODEN_QUELLE_ART) KartenKnotenInspektor(knoten, zustand)
+                                if (knoten.art != NOTIZ_KNOTEN_ART) KnotenAuswertungsDiagnose(knoten, zustand)
+                                if (knoten.art == MENGENKONSTRUKTOR_ART) MengenkonstruktorEditor(knoten, zustand)
+                                if (inspektor != null) inspektor.BereichInhalt(knoten, fachErgebnis, aktionen, KnotenInspektorBereich.Knotendaten)
+                                else GenerischeKnotenDaten(knoten, zustand)
+                            }),
+                            eingangsEinstellungen = if (!eingangsOptionen) null else ({
+                                GemeinsameEingangsEinstellungen(knoten, zustand)
+                                inspektor?.BereichInhalt(knoten, fachErgebnis, aktionen, KnotenInspektorBereich.Eingangsdaten)
+                            }),
+                            ausgangsEinstellungen = if (!ausgangsOptionen) null else ({
+                                inspektor?.BereichInhalt(knoten, fachErgebnis, aktionen, KnotenInspektorBereich.Ausgangsdaten)
+                            }),
+                            anschlussTyp = { port -> MathematikAnschlussArten.alle.firstOrNull { it.id == port.art }?.name ?: port.art.wert },
+                            diagnose = meldungen.takeIf { it.isNotEmpty() }?.let { "${it.count { m -> m.art == KnotenMeldungsArt.Fehler }} Fehler · ${it.size} Meldung(en)" },
+                        ) { port ->
+                            InspektorAnschlussDaten(zustand.editor.karte, knoten, port, zustand.auswertung.knoten, zustand::beantrageKonfiguration)
+                            inspektor?.AnschlussInhalt(knoten, port, fachErgebnis, aktionen)
+                            if (port.richtung == AnschlussRichtung.Eingang && port.name == "methode") IterierteMethodenKartenInspektor(knoten, zustand, zeigeDiagnose = false)
                         }
                     }
-                    if (knoten.art == "mathematik.extremwert") {
-                        Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
-                    }
-                    knoten.parameter.filterKeys {
-                        it !in setOf(
-                            "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
-                            "werteVorrat", "zielmenge", "argumentReihenfolge", MINDESTEINGÄNGE_PARAMETER,
-                            MENGENDEFINITION_PAAR, MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
-                            MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
-                        ) && !it.startsWith(STANDARDWERT_PREFIX) &&
-                            !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.") &&
-                            !it.startsWith(METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX)
-                    }.forEach { (schlüssel, wert) ->
-                        var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
-                        OutlinedTextField(
-                            value = text,
-                            onValueChange = {
-                                text = it
-                                zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
-                            },
-                            label = { Text(schlüssel) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
+                    FlowRow(Modifier.fillMaxWidth().padding(horizontal = LocalAtlasAbstände.current.inhalt),
+                        horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
                         OutlinedButton(onClick = zustand::dupliziereAuswahlMitMengendefinition) { Text("Duplizieren") }
-                        Button(
-                            onClick = zustand::löscheAuswahlMitMengendefinition,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        ) { Text("Löschen") }
+                        TextButton(onClick = zustand::löscheAuswahlMitMengendefinition) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
                     }
                 }
             }
+
         },
     ) { messbare, beschränkungen ->
-        val breite = INSPEKTOR_BREITE.roundToPx().coerceAtMost(beschränkungen.maxWidth)
-        val oben = INSPEKTOR_OBEN.roundToPx()
-        val unten = INSPEKTOR_UNTEN.roundToPx()
-        val rand = INSPEKTOR_RAND.roundToPx()
+        val rand = INSPEKTOR_RAND.roundToPx().coerceAtMost(beschränkungen.maxWidth / 12)
+        val breite = INSPEKTOR_BREITE.roundToPx().coerceAtMost((beschränkungen.maxWidth - 2 * rand).coerceAtLeast(0))
+        // MainActivity zieht die IME bereits ab. Bei geringer Resthöhe erhält
+        // der Inspector den ganzen verbleibenden Platz für Titel, Scrollen und Aktionen.
+        val kompakt = beschränkungen.maxHeight < 480.dp.roundToPx()
+        val oben = if (kompakt) 0 else INSPEKTOR_OBEN.roundToPx()
+        val unten = if (kompakt) 0 else INSPEKTOR_UNTEN.roundToPx().coerceAtMost(beschränkungen.maxHeight / 5)
         val höhe = (beschränkungen.maxHeight - oben - unten).coerceAtLeast(0)
         val panel = messbare.single().measure(Constraints.fixed(breite, höhe))
         layout(0, beschränkungen.maxHeight) {
@@ -496,157 +397,6 @@ private fun ParameterTextFeld(
     )
 }
 
-@Composable
-private fun StandardwerteEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
-    val zahlEingänge = knoten.anschlüsse.filter {
-        it.richtung == AnschlussRichtung.Eingang &&
-            (it.art == MathematikAnschlussArten.Zahl.id || knoten.art == "mathematik.tupel" && it.art == MathematikAnschlussArten.Objekt.id) &&
-            !it.dynamischErzeugt
-    }
-    val aussageEingänge = knoten.anschlüsse.filter {
-        it.richtung == AnschlussRichtung.Eingang && it.art == MathematikAnschlussArten.Aussage.id
-    }
-    if (zahlEingänge.isEmpty() && aussageEingänge.isEmpty()) return
-
-    HorizontalDivider()
-    Text("Standardwerte", style = MaterialTheme.typography.titleSmall)
-    Text(
-        "Ein Standardwert wird nur verwendet, solange der zugehörige Eingang nicht verbunden ist. Aussagen sind standardmäßig Falsch.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    aussageEingänge.forEach { anschluss ->
-        val schlüssel = "$STANDARDWERT_PREFIX${anschluss.name}"
-        val verbunden = zustand.editor.karte.verbindungen.any {
-            it.zu.knotenId == knoten.id && it.zu.anschlussId == anschluss.id
-        }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("${anschluss.name}: ${if (knoten.parameter[schlüssel] == "true") "Wahr" else "Falsch"}", Modifier.weight(1f))
-            Switch(
-                modifier = Modifier.semantics { contentDescription = "${anschluss.name}: Standardwert" },
-                checked = knoten.parameter[schlüssel] == "true",
-                enabled = !verbunden,
-                onCheckedChange = { zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it.toString())) },
-            )
-        }
-        if (verbunden) Text("Verbindung bestimmt den Wert.", style = MaterialTheme.typography.bodySmall)
-    }
-    zahlEingänge.sortedBy { it.reihenfolge }.forEach { anschluss ->
-        val schlüssel = "$STANDARDWERT_PREFIX${anschluss.name}"
-        val wert = knoten.parameter[schlüssel].orEmpty()
-        var text by remember(knoten.id, anschluss.id, wert) { mutableStateOf(wert) }
-        OutlinedTextField(
-            value = text,
-            onValueChange = {
-                text = it
-                zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
-            },
-            label = { Text("Standardwert: ${anschluss.name}") },
-            supportingText = { Text("Ganze Zahl oder Bruch, beispielsweise -1 oder 1/2.") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@Composable
-private fun MethodenAusgangProjektionEditor(knoten: KnotenDaten, zustand: AtlasZustand) {
-    val methodenAusgänge = knoten.anschlüsse.filter {
-        it.richtung == AnschlussRichtung.Ausgang && it.art == MathematikAnschlussArten.Methode.id
-    }
-    if (methodenAusgänge.isEmpty()) return
-
-    HorizontalDivider()
-    Text("Methodenprojektion", style = MaterialTheme.typography.titleSmall)
-    Text(
-        "Argument- und Ergebnisprojektion verändern die Karten-Schnittstelle der Methode, nicht ihre geordnete Parameterliste oder Rechenvorschrift.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    methodenAusgänge.forEach { ausgang ->
-        if (methodenAusgänge.size > 1) {
-            Text(ausgang.name, style = MaterialTheme.typography.labelLarge)
-        }
-
-        Text("Argumente", style = MaterialTheme.typography.labelMedium)
-        val argumentProjektion = knoten.methodenAusgangArgumentprojektion(ausgang.name)
-        Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
-            FilterChip(
-                selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
-                onClick = {
-                    zustand.konfiguriereKnoten(
-                        KartenAktion.KnotenParameterÄndern(
-                            knoten.id,
-                            methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
-                            METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
-                        ),
-                    )
-                },
-                label = { Text("Separiert") },
-            )
-            FilterChip(
-                selected = argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL,
-                onClick = {
-                    zustand.konfiguriereKnoten(
-                        KartenAktion.KnotenParameterÄndern(
-                            knoten.id,
-                            methodenAusgangArgumentprojektionSchlüssel(ausgang.name),
-                            METHODEN_ARGUMENTPROJEKTION_TUPEL,
-                        ),
-                    )
-                },
-                label = { Text("Ein Tupel") },
-            )
-        }
-
-        val methode = zustand.auswertung.knoten[knoten.id]
-            ?.ausgaben
-            ?.get(ausgang.name)
-            ?.objekt as? Methode
-        val zielIstTupel = methode?.let {
-            runCatching { it.mathematischeMethodenSignatur().ergebnisse.singleOrNull()?.zielMenge is Tupelraum }.getOrDefault(false)
-        } == true
-        Text("Ergebnis", style = MaterialTheme.typography.labelMedium)
-        if (zielIstTupel) {
-            Text(
-                "Die Zielmenge ist bereits ein Tupelraum; das Ergebnis bleibt ein Tupel und wird nicht nochmals verpackt.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            val ergebnisProjektion = knoten.methodenAusgangErgebnisprojektion(ausgang.name)
-            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
-                FilterChip(
-                    selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_DIREKT,
-                    onClick = {
-                        zustand.konfiguriereKnoten(
-                            KartenAktion.KnotenParameterÄndern(
-                                knoten.id,
-                                methodenAusgangErgebnisprojektionSchlüssel(ausgang.name),
-                                METHODEN_ERGEBNISPROJEKTION_DIREKT,
-                            ),
-                        )
-                    },
-                    label = { Text("Direkt") },
-                )
-                FilterChip(
-                    selected = ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_TUPEL,
-                    onClick = {
-                        zustand.konfiguriereKnoten(
-                            KartenAktion.KnotenParameterÄndern(
-                                knoten.id,
-                                methodenAusgangErgebnisprojektionSchlüssel(ausgang.name),
-                                METHODEN_ERGEBNISPROJEKTION_TUPEL,
-                            ),
-                        )
-                    },
-                    label = { Text("1D-Tupel") },
-                )
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
@@ -742,4 +492,79 @@ private fun MatrixInspektor(knoten: KnotenDaten, zustand: AtlasZustand) {
             style = MaterialTheme.typography.bodySmall,
         )
     }
+}
+
+private fun hatGenerischeEingangsEinstellungen(knoten: KnotenDaten): Boolean =
+    KnotenInspektorRegister.finde(knoten.art) == null &&
+    (knoten.art in setOf("mathematik.matrixProdukt", "mathematik.addition", "mathematik.multiplikation", "mathematik.extremwert", "mathematik.vereinigung", "mathematik.schnitt", "mathematik.kartesischesProdukt", "mathematik.vektor", "mathematik.zeilenVektor") ||
+        knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN)
+
+private fun hatGemeinsameEingangsEinstellungen(knoten: KnotenDaten, karte: KartenDaten): Boolean =
+    istDynamischeOperation(knoten) && de.TeutonStudio.KnotenKartenVerwalter.logik.dynamischeOperandengruppen(karte, knoten, belegteOperationsEingänge(knoten)).isNotEmpty() || hatGenerischeEingangsEinstellungen(knoten) || knoten.art == METHODEN_GRAPH_KNOTEN_ART ||
+        knoten.art == METHODEN_AUFRUF_ART || knoten.art == "mathematik.visualisierung" &&
+        (knoten.anschlüsse.any { it.richtung == AnschlussRichtung.Ausgang } || knoten.anschlüsse.count { it.kannSichErweitern } < 2)
+
+@Composable
+private fun GemeinsameEingangsEinstellungen(knoten: KnotenDaten, zustand: AtlasZustand) {
+    if (istDynamischeOperation(knoten) || knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_EINZEL_EINGABEN)
+        DynamischeOperandenListe(zustand.editor.karte, knoten, belegteOperationsEingänge(knoten)) { zustand.konfiguriereKnoten(it) }
+    GraphEingangsEinstellungen(knoten, zustand::beantrageKonfiguration)
+    de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsAnschlussEinstellungen(knoten, zustand::beantrageKonfiguration)
+    if (knoten.art == METHODEN_AUFRUF_ART) MethodenProjektionsEinstellungen(knoten, zustand.auswertung.knoten[knoten.id], zustand::beantrageKonfiguration, nurAufruf = true)
+    if (hatGenerischeEingangsEinstellungen(knoten)) {
+        if (knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach }) {
+            val mindestAnzahl = if (knoten.art == "mathematik.tupel") 0 else 2
+            val wert = knoten.parameter["festeEingänge"] ?: "2"
+            var text by remember(knoten.id, wert) { mutableStateOf(wert) }
+            val anzahl = text.toIntOrNull()?.takeIf { it >= mindestAnzahl }
+            OutlinedTextField(text, { text = it }, label = { Text("Feste Eingänge") },
+                isError = anzahl == null, supportingText = { Text("Mindestens $mindestAnzahl; weitere Eingänge entstehen beim Verbinden.") },
+                modifier = Modifier.fillMaxWidth(), singleLine = true)
+            TextButton(enabled = anzahl != null && anzahl.toString() != wert, onClick = {
+                anzahl?.let { n ->
+                    if (knoten.art == "mathematik.tupel") zustand.beantrageKonfiguration(konfiguriereTupel(knoten.copy(parameter = knoten.parameter + ("festeEingänge" to n.toString())), TUPEL_EINZEL_EINGABEN))
+                    else zustand.konfiguriereFesteEingänge(knoten.id, n)
+                }
+            }) { Text("Eingangsanzahl übernehmen") }
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Eingangsanzeige: Namen", Modifier.weight(1f))
+            Switch(checked = knoten.parameter["operatorAnzeige"] != "name", onCheckedChange = {
+                zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, "operatorAnzeige", if (it) "wert" else "name"))
+            })
+            Text("Werte")
+        }
+    }
+}
+
+@Composable
+private fun GenerischeKnotenDaten(knoten: KnotenDaten, zustand: AtlasZustand) {
+    if (GeometryNodesVorlagen.finde(knoten.art) != null) return
+    if (knoten.art == "mathematik.matrix") MatrixInspektor(knoten, zustand)
+    if (knoten.art == "mathematik.tupel") TupelInspektor(knoten, zustand)
+    if (knoten.art == "mathematik.extremwert") {
+        Text("Modus: ${if (knoten.parameter["modus"] == "minimum") "Minimum" else "Maximum"}")
+    }
+    knoten.parameter.filterKeys {
+        it !in setOf(
+            "festeEingänge", "operatorAnzeige", "modus", "erzeugungsArt", "höhe", "breite",
+            "werteVorrat", "zielmenge", "argumentReihenfolge", MINDESTEINGÄNGE_PARAMETER,
+            MENGENDEFINITION_PAAR, MENGENDEFINITION_MENGENNAME, MENGENDEFINITION_ELEMENTNAME,
+            MENGENDEFINITION_ELEMENTART, MENGENDEFINITION_ELEMENTMENGE,
+        ) && !it.startsWith(STANDARDWERT_PREFIX) &&
+            !it.startsWith("faltung.") && !it.startsWith("methodenAnwendung.") &&
+            !it.startsWith(METHODEN_AUSGANG_ARGUMENTPROJEKTION_PREFIX) && !it.startsWith("join.")
+    }.forEach { (schlüssel, wert) ->
+        var text by remember(knoten.id, schlüssel, wert) { mutableStateOf(wert) }
+        OutlinedTextField(
+            value = text,
+            onValueChange = {
+                text = it
+                zustand.konfiguriereKnoten(KartenAktion.KnotenParameterÄndern(knoten.id, schlüssel, it))
+            },
+            label = { Text(schlüssel) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
 }

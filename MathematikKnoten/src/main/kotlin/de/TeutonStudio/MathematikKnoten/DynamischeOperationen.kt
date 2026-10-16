@@ -16,6 +16,10 @@ fun istDynamischeOperation(knoten: KnotenDaten): Boolean {
 
 /** Bei unverändertem Operator bleiben existierende Operanden und ihre Reihenfolge verbindlich. */
 internal fun erhalteDynamischeOperanden(knoten: KnotenDaten, neu: List<AnschlussDaten>, gleicherOperator: Boolean): List<AnschlussDaten> {
+    if (gleicherOperator && neu.any { it.kannSichErweitern } && knoten.anschlüsse.any { it.belegung == AnschlussBelegung.Mehrfach }) {
+        val join = knoten.anschlüsse.first { it.belegung == AnschlussBelegung.Mehrfach }
+        return listOf(join) + neu.filter { it.richtung != AnschlussRichtung.Eingang }
+    }
     if (!gleicherOperator || !istDynamischeOperation(knoten) || neu.none { it.kannSichErweitern }) return neu
     val alt = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.kannSichErweitern }
     if (alt.isEmpty()) return neu
@@ -44,7 +48,7 @@ internal fun geordneteOperationsWerte(kontext: KnotenAuswertungsKontext): Linked
                 "Operand ${index + 1} ('${port.name}') fehlt oder ist nicht auswertbar."
             } else put(port.name, wert.mathematischesObjekt("Operand ${index + 1} ('${port.name}')"))
         }
-        require(size >= 2) { "Die Operation benötigt mindestens zwei Operanden." }
+        require(size >= if (kontext.mehrfachEingänge.isEmpty()) 2 else 1) { "Die Operation benötigt mindestens zwei Operanden." }
     }
 }
 

@@ -200,6 +200,8 @@ data class KnotenAuswertungsKontext(
     val rechenKontext: RechenKontext,
     /** Deterministische Kahn-Reihenfolge der aktuellen Karte für abgeleitete Argumentlisten. */
     val topologischeReihenfolge: Map<KnotenId, Int> = emptyMap(),
+    /** Alle Beiträge eines Mehrfacheingangs, einschließlich lokaler Werte. */
+    val mehrfachEingänge: Map<String, List<BedingterWert>> = emptyMap(),
 )
 
 fun interface MathematikKnotenAuswerter {
@@ -214,7 +216,12 @@ class MathematikAuswerterRegister {
     fun optionaleMethodenEingänge(knoten: KnotenDaten): Set<String> = optionaleMethoden[knoten.art]?.invoke(knoten).orEmpty().also { namen ->
         require(namen.all { name -> knoten.anschlüsse.any { it.name == name && it.richtung == AnschlussRichtung.Eingang && (it.art.wert == "mathematik.methode" || it.art.wert == "mathematik.funktion" || it.art.wert.startsWith("mathematik.funktion.") || AnschlussArtId("mathematik.methode") in it.zulässigeArten) } }) { "Ungültiger optionaler Methodeneingangsvertrag." }
     }
-    fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = wert }
+    fun registriere(art: KnotenArtId, wert: MathematikKnotenAuswerter) { auswerter[art] = MathematikKnotenAuswerter { kontext ->
+        val entfaltet = kontext.entfalteMehrfachEingänge()
+        val ergebnis = wert.auswerten(entfaltet)
+        val einzeln = kontext.mehrfachWerte().values.flatten().singleOrNull()
+        if (einzeln != null && ergebnis.fehler == null) ergebnis.copy(ausgaben = ergebnis.ausgaben.mapValues { einzeln }) else ergebnis
+    } }
     fun finde(art: KnotenArtId): MathematikKnotenAuswerter? = when (art) {
         KARTEN_EINGANG_ART -> KartenEingangAuswerter
         "mathematik.reellesIntervall" -> ReellesIntervallAuswerter

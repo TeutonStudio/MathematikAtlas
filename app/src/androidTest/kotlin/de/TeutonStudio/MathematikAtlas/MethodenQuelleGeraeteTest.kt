@@ -14,6 +14,23 @@ import org.junit.Test
 
 class MethodenQuelleGeraeteTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun joinQuelleBietetFesteArgumentanzahlMitValidierung() {
+        val kandidat = methodenKnotenQuellen().first { it.id == "operator:ZAHL:zahl.addition" }
+        val state = mutableStateOf(konfiguriereMethodenQuelle(MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero), kandidat.knoten))
+        val aktionen = object : KnotenInspektorAktionen {
+            override fun knoten(knoten: KnotenDaten) { state.value = knoten }
+            override fun parameter(schlüssel: String, wert: String) = Unit
+            override fun name(wert: String) = Unit
+            override fun eigenschaften(eigenschaften: Map<String, KnotenEigenschaft>) = Unit
+            override fun anschlussArt(verweis: AnschlussVerweis, art: AnschlussArtId) = Unit
+        }
+        compose.setContent { MaterialTheme { Column { MethodenQuellenInspektor.Inhalt(state.value, null, aktionen) } } }
+        compose.onNodeWithText("Anzahl Argumente").performTextReplacement("1")
+        compose.onNodeWithText("Argumentanzahl übernehmen").assertIsNotEnabled()
+        compose.onNodeWithText("Anzahl Argumente").performTextReplacement("4")
+        compose.onNodeWithText("Argumentanzahl übernehmen").assertIsEnabled().performClick()
+        compose.runOnIdle { assertEquals(4, methodenQuellKnoten(state.value)!!.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang }) }
+    }
     @Test fun quellenDialogSuchtKonfiguriertUndVerwirftEntwurf() {
         val standard = MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero)
         val state = mutableStateOf(standard)

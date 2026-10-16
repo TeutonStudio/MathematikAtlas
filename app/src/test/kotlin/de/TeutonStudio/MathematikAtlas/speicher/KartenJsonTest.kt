@@ -12,7 +12,7 @@ class KartenJsonTest {
         )))
         val karte = KartenDaten(name = "Test", knoten = listOf(KnotenDaten(art = "mathematik.visualisierung", name = "Visualisierung", eigenschaften = eigenschaften)))
         val text = KartenJson.schreibe(karte)
-        assertTrue(text.contains("\"formatVersion\": 9"))
+        assertTrue(text.contains("\"formatVersion\": 10"))
         assertEquals(karte, KartenJson.lese(text))
     }
 
@@ -115,7 +115,7 @@ class KartenJsonTest {
 
         assertEquals("mathematik.extremwert", gelesen.art)
         assertEquals("minimum", gelesen.parameter.getValue("modus"))
-        assertEquals(extremwert.anschlüsse.map { it.id }, gelesen.anschlüsse.map { it.id })
+        assertEquals(listOf(extremwert.anschlüsse.first().id, extremwert.anschlüsse.last().id), gelesen.anschlüsse.map { it.id })
     }
 
     @Test fun `Reelles Intervall behält Grundmenge und Anschluss IDs beim Roundtrip`() {

@@ -55,8 +55,10 @@ internal fun DesktopMethodenQuelle(knoten: KnotenDaten, atlas: DesktopAtlasZusta
         Text("Konfiguration: ${quelle.name}", style = MaterialTheme.typography.titleSmall)
         if (quelle.anschlüsse.any { it.kannSichErweitern }) {
             var anzahl by remember(quelle) { mutableStateOf(quelle.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang }.toString()) }
-            OutlinedTextField(anzahl, { anzahl = it }, label = { Text("Anzahl Argumente") })
-            TextButton(onClick = {
+            val gültig = anzahl.toIntOrNull()?.let { it in 2..128 } == true
+            OutlinedTextField(anzahl, { anzahl = it }, label = { Text("Anzahl Argumente") },
+                isError = !gültig, supportingText = { if (!gültig) Text("Ganze Zahl zwischen 2 und 128 eingeben.") })
+            TextButton(enabled = gültig, onClick = {
                 runCatching { konfiguriereMethodenQuellParameter(quelle, "festeEingänge", anzahl) }
                     .onSuccess { atlas.beantrageKonfiguration(konfiguriereMethodenQuelle(knoten, it)) }.onFailure { fehler = it.message }
             }) { Text("Argumentanzahl übernehmen") }

@@ -18,6 +18,7 @@ import de.TeutonStudio.MathematikKnoten.TupelErgänzenModus
 import de.TeutonStudio.MathematikKnoten.konfiguriereTupelErgänzen
 
 internal object TupelErgänzenInspektor : KnotenInspektor {
+    override val hauptBereich get() = de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,

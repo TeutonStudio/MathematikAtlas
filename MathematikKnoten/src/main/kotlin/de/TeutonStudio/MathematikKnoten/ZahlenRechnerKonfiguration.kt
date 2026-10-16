@@ -71,6 +71,7 @@ fun konfiguriereZahlenRechner(
             art = vorgabe.art,
             reihenfolge = index,
             kannSichErweitern = vorgabe.kannSichErweitern,
+            belegung = vorgabe.belegung,
             dynamischErzeugt = index >= 2 && operator in variadischeZahlenOperatoren,
             zulässigeArten = vorgabe.zulässigeArten,
         )

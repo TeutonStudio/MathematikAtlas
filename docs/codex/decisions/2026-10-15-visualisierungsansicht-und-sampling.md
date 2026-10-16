@@ -16,7 +16,7 @@ Die gemeinsame Berechnung begrenzt parallele Arbeit auf zwei Aufträge, priorisi
 
 ## Alternativen
 
-Ein separater Webrenderer oder plattformspezifische Ersatzimplementierungen würden neue Abhängigkeiten und unterschiedliche Semantik einführen. Vollständige Neuberechnung je Pointerereignis würde fachliche Arbeit an die Bildrate koppeln. Deshalb werden während einer Geste vorhandene zusammenhängende Vorschaugeometrien transformiert; Nachberechnung erfolgt nach der Geste mit 120 ms Ruhezeit.
+Ein separater Webrenderer oder plattformspezifische Ersatzimplementierungen würden neue Abhängigkeiten und unterschiedliche Semantik einführen. Vollständige Neuberechnung je Pointerereignis würde fachliche Arbeit an die Bildrate koppeln. Deshalb werden während einer Geste vorhandene Detailgeometrien mit unverändertem Zeichenstil transformiert; Nachberechnung erfolgt nach der Geste mit 120 ms Ruhezeit.
 
 ## Konsequenzen und Nachweise
 
@@ -43,3 +43,13 @@ Ein Filter über einem unterstützten Koordinatenraum wird über die kanonische 
 Bewiesene Zellen bleiben maßgeblich. Unbekannte Blätter kontinuierlicher zweidimensionaler Regionen können lokal durch numerische Eckproben ergänzt werden; deren Füllung bleibt eine Näherung und keine Zertifizierung. Unbekannte Proben bleiben unbekannt. Gemischte Zellen dichter/disjunkter Mengen werden nicht in volle Flächen umgewandelt. Tatsächlich diskrete Punkte bleiben sichtbar. Numerische Ergänzung ersetzt das einzelne unbekannte Blatt und überlagert keine schon nutzbare Fläche mit einer globalen Schraffur.
 
 Zellbesuche samt Intervallarbeit, Punktproben einschließlich Farbdimension und Randberechnungen teilen das Arbeitsbudget. Ein nicht unterstützter Zellnachweis wird nicht erneut über das ganze Fenster unterteilt. Die Plotdiagnose trennt sichtbaren Weltbereich, Berechnungsbereich mit 20 % gesamter Breiten-/Höhenreserve und Parameterfenster; Navigation verändert keine fachliche Definitionsmenge. Alle neuen Angaben sind Laufzeitzustand. Kartenformat und Anschlüsse ändern sich nicht.
+
+## Ergänzung 16.10.2026: Detailgeometrie während Navigation
+
+Gesten verwenden dieselben fertig vorbereiteten Zeichenpakete wie die ruhende Ansicht. Ein Fingerkontakt, Pan, Pinch, Mausrad oder Tastaturwechsel löst keinen Wechsel auf Grobgeometrie und keine Ausblendung von Dreieckkanten aus. Die Koordinateninspektion greift auf dieselben vorbereiteten Daten zu; die 3D-Tiefensortierung bleibt ebenenübergreifend.
+
+Die Anfrageverwaltung unterscheidet fachliche Inhaltsidentität von Kamera und Detailanforderung. Eingang, Raum, Achsen, Parameterfenster, Projektion, feste Parameter, fachliche Toleranz, Prädikatsfenster und Orbitgrenzen invalidieren die Wiederverwendung. Kamera, gemessene Fenstergröße, reine Stile und Qualitätsanforderung dürfen ein passendes Ergebnis behalten. Eine grobe Vorschau wird nur ohne vorhandenes passendes Ergebnis berechnet. Navigation wartet 120 ms Ruhe und fordert unmittelbar Detail an; kooperative Abbrüche und zusätzliche Aktivitätsprüfung verhindern verspätete Veröffentlichungen.
+
+Jede Ebene behält ihr unveränderliches veröffentlichtes Zeichenpaket, bis dessen Ersatz vollständig im Hintergrund vorbereitet ist. Änderungen der fachlichen Identität setzen das Paket synchron zurück. Dies ersetzt die früheren separaten Grob-/Detail-Zeichenlisten und verhindert leere Zwischenbilder bei bloßer Kameraänderung. Neu sichtbare, noch nicht berechnete Gebiete bleiben ungefüllt. Die Arbeitsgrenzen, zwei parallele Aufträge und der 32-MiB-LRU bleiben bestehen: Darstellungstreue während Navigation macht Rechen- oder Speichergrenzen nicht überflüssig.
+
+Native Desktop-Bildregressionen vergleichen den unveränderten Ausschnitt während einer offenen Geste in R² mit mehreren Ebenen und R³. Beide schlagen gegen den Ausgangsrenderer fehl und bestehen mit der neuen Implementierung. Android-Gegenstücke sind im Test-APK enthalten; mangels Gerät heute nicht ausgeführt. Keine neue Aussage über Framezeiten oder das weiterhin offene 60-Hz-Ziel.

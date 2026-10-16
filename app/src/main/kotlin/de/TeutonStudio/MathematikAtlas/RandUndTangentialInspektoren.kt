@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,37 +25,28 @@ import de.TeutonStudio.MathematikRechenSystem.kern.DifferentialBegriff
 import de.TeutonStudio.MathematikRechenSystem.kern.TangentialAusgabeForm
 
 internal object TangentialKnotenInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
+        KnotenInspektorBereich.Knotendaten -> true
+        KnotenInspektorBereich.Eingangsdaten -> false
+        KnotenInspektorBereich.Ausgangsdaten -> true
+    }
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
+        when (bereich) {
+            KnotenInspektorBereich.Knotendaten -> FachInhalt(knoten, ergebnis, aktionen, false)
+            KnotenInspektorBereich.Eingangsdaten -> {  }
+            KnotenInspektorBereich.Ausgangsdaten -> { TangentialAusgang(knoten, ergebnis, aktionen) }
+        }
+    }
+
     @Composable
-    override fun Inhalt(
+    private fun FachInhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
+        mitAnschlüssen: Boolean,
     ) {
-        val ausgabeform = aktuelleTangentialAusgabeform(knoten)
-        Text("Ausgabe", style = MaterialTheme.typography.titleSmall)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard),
-        ) {
-            FilterChip(
-                selected = ausgabeform == TangentialAusgabeForm.METHODE,
-                onClick = {
-                    if (ausgabeform != TangentialAusgabeForm.METHODE) {
-                        aktionen.knoten(konfiguriereTangentialKnoten(knoten, TangentialAusgabeForm.METHODE))
-                    }
-                },
-                label = { Text("Methode") },
-            )
-            FilterChip(
-                selected = ausgabeform == TangentialAusgabeForm.MENGE,
-                onClick = {
-                    if (ausgabeform != TangentialAusgabeForm.MENGE) {
-                        aktionen.knoten(konfiguriereTangentialKnoten(knoten, TangentialAusgabeForm.MENGE))
-                    }
-                },
-                label = { Text("Menge") },
-            )
-        }
+        if (mitAnschlüssen) TangentialAusgang(knoten, ergebnis, aktionen)
 
         val begriff = DifferentialBegriff.entries.firstOrNull {
             it.name == knoten.parameter[TANGENTIAL_DIFFERENTIALBEGRIFF_PARAMETER]
@@ -145,4 +137,9 @@ internal object RandKnotenInspektor : KnotenInspektor {
         )
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
+}
+
+@Composable
+private fun TangentialAusgang(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorAusgangsEinstellungen(knoten, ergebnis, aktionen::knoten)
 }

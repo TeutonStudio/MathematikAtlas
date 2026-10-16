@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -10,11 +11,26 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
 
 internal object VektorKonstruktorInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
+        KnotenInspektorBereich.Knotendaten -> true
+        KnotenInspektorBereich.Eingangsdaten -> false
+        KnotenInspektorBereich.Ausgangsdaten -> true
+    }
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
+        when (bereich) {
+            KnotenInspektorBereich.Knotendaten -> FachInhalt(knoten, ergebnis, aktionen, false)
+            KnotenInspektorBereich.Eingangsdaten -> {  }
+            KnotenInspektorBereich.Ausgangsdaten -> { VektorKonstruktorAusgang(knoten, ergebnis, aktionen) }
+        }
+    }
+
     @Composable
-    override fun Inhalt(
+    private fun FachInhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
+        mitAnschlüssen: Boolean,
     ) {
         val config = vektorKonstruktorKonfiguration(knoten)
         Text("Erzeugungsart", style = MaterialTheme.typography.titleSmall)
@@ -38,27 +54,8 @@ internal object VektorKonstruktorInspektor : KnotenInspektor {
                 label = { Text("Dimension + Methode") },
             )
         }
-        Text("Orientierung", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-            FilterChip(
-                selected = config.orientierung == VEKTOR_ORIENTIERUNG_SPALTE,
-                onClick = {
-                    aktionen.knoten(
-                        konfiguriereVektorKonstruktor(knoten, orientierung = VEKTOR_ORIENTIERUNG_SPALTE),
-                    )
-                },
-                label = { Text("Spalte") },
-            )
-            FilterChip(
-                selected = config.orientierung == VEKTOR_ORIENTIERUNG_ZEILE,
-                onClick = {
-                    aktionen.knoten(
-                        konfiguriereVektorKonstruktor(knoten, orientierung = VEKTOR_ORIENTIERUNG_ZEILE),
-                    )
-                },
-                label = { Text("Zeile") },
-            )
-        }
+        if (mitAnschlüssen) VektorKonstruktorAusgang(knoten, ergebnis, aktionen)
+
         Text(
             if (config.erzeugungsArt == VEKTOR_METHODE) {
                 "Die einstellige Indexmethode wird wie beim Tupelkonstruktor mit 1,…,n ausgewertet."
@@ -73,48 +70,18 @@ internal object VektorKonstruktorInspektor : KnotenInspektor {
 }
 
 internal object MultinomVektorInspektor : KnotenInspektor {
+    override val hauptBereich get() = KnotenInspektorBereich.Ausgangsdaten
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
-        val form = knoten.parameter[MULTINOM_AUSGABEFORM_PARAMETER] ?: MULTINOM_AUSGABE_VEKTOR
-        val orient = knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: VEKTOR_ORIENTIERUNG_SPALTE
-        Text("Ausgabeform", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-            FilterChip(
-                selected = form == MULTINOM_AUSGABE_VEKTOR,
-                onClick = { aktionen.knoten(konfiguriereMultinomVektor(knoten, ausgabeForm = MULTINOM_AUSGABE_VEKTOR)) },
-                label = { Text("Vektor") },
-            )
-            FilterChip(
-                selected = form == MULTINOM_AUSGABE_TUPEL,
-                onClick = { aktionen.knoten(konfiguriereMultinomVektor(knoten, ausgabeForm = MULTINOM_AUSGABE_TUPEL)) },
-                label = { Text("Tupel") },
-            )
-        }
-        if (form == MULTINOM_AUSGABE_VEKTOR) {
-            Text("Orientierung", style = MaterialTheme.typography.titleSmall)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.standard)) {
-                FilterChip(
-                    selected = orient == VEKTOR_ORIENTIERUNG_SPALTE,
-                    onClick = { aktionen.knoten(konfiguriereMultinomVektor(knoten, orientierung = VEKTOR_ORIENTIERUNG_SPALTE)) },
-                    label = { Text("Spalte") },
-                )
-                FilterChip(
-                    selected = orient == VEKTOR_ORIENTIERUNG_ZEILE,
-                    onClick = { aktionen.knoten(konfiguriereMultinomVektor(knoten, orientierung = VEKTOR_ORIENTIERUNG_ZEILE)) },
-                    label = { Text("Zeile") },
-                )
-            }
-        }
-        LatexText("(x^k)_{0\\le k\\le dim}", style = MaterialTheme.typography.bodyLarge)
-        Text(
-            "x und dim stammen aus den Knoteneingängen; dim bezeichnet den höchsten Exponenten.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        InspektorAusgangsEinstellungen(knoten, ergebnis, aktionen::knoten)
     }
+}
+
+@Composable
+private fun VektorKonstruktorAusgang(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+    de.TeutonStudio.MathematikKnoten.InspektorAusgangsEinstellungen(knoten, ergebnis, aktionen::knoten)
 }

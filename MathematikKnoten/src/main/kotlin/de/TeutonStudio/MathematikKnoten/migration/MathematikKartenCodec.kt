@@ -57,6 +57,7 @@ object MathematikKartenMigrationen {
         .migriereIntegralKnoten()
         .migriereRechnerMethodenAnschluesse()
         .normalisiereDynamischeRechnerOperanden()
+        .normalisiereJoinEingänge()
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = karte
         .migriereHistorischeVariablenGrundräume()
@@ -76,6 +77,7 @@ object MathematikKartenMigrationen {
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
         .normalisiereDynamischeRechnerOperanden()
+        .normalisiereJoinEingänge()
 
     fun nachLaden(karte: KartenDaten): KartenDaten = karte
         .migriereHistorischeVariablenGrundräume()
@@ -97,4 +99,5 @@ object MathematikKartenMigrationen {
         .migriereStrukturierteDivision()
         .migriereRechnerMethodenAnschluesse()
         .normalisiereDynamischeRechnerOperanden()
+        .normalisiereJoinEingänge()
 }

@@ -12,7 +12,7 @@ object MethodenQuellKnotenVorlagen {
 }
 
 fun methodenQuellKnoten(knoten: KnotenDaten): KnotenDaten? =
-    (knoten.eigenschaften[METHODEN_QUELLE_KNOTEN] as? KnotenEigenschaft.Text)?.wert?.let { KartenDatenJson.lese(it).knoten.single() }
+    (knoten.eigenschaften[METHODEN_QUELLE_KNOTEN] as? KnotenEigenschaft.Text)?.wert?.let { methodenQuellArgumente(KartenDatenJson.lese(it).knoten.single()) }
 
 /** Ein Quellenwechsel ist eine atomare Modelländerung mit stabilem Methodenausgang. */
 fun konfiguriereMethodenQuelle(knoten: KnotenDaten, quelle: KnotenDaten? = null, karte: KartenVerweis? = null, quelleId: String? = null): KnotenDaten {
@@ -45,14 +45,18 @@ fun methodenKnotenQuellen(): List<MethodenKnotenQuelle> {
                     RechnerOperatorRegistry.konfiguriere(v.erzeuge(GraphPunkt(0f, 0f)), op.operatorId).copy(name = op.titel))
             }
         }
-    return kandidaten.distinctBy { it.first }.map { (id, kategorie, quelle) ->
+    return kandidaten.distinctBy { it.first }.map { (id, kategorie, quellKnoten) ->
+        val quelle = methodenQuellArgumente(quellKnoten)
         val probe = runCatching { auswerter.exportiereKarteAlsMethode(methodenQuellKarte(quelle, KnotenId("probe:$id"))) }
         MethodenKnotenQuelle(id, quelle.name, kategorie, quelle, probe.exceptionOrNull()?.message ?: probe.getOrNull()?.fehler, methodenQuellenSignatur(probe.getOrNull()?.ausgaben?.get("methode")?.objekt as? SignaturtragendeMethode))
     }
 }
 
 /** Verwendet die vorhandenen fachlichen Konfigurationsfunktionen auch für eingebettete Quellen. */
-fun konfiguriereMethodenQuellParameter(quelle: KnotenDaten, schlüssel: String, wert: String): KnotenDaten {
+fun konfiguriereMethodenQuellParameter(quelle: KnotenDaten, schlüssel: String, wert: String): KnotenDaten =
+    konfiguriereFesteMethodenQuellParameter(methodenQuellArgumente(quelle), schlüssel, wert)
+
+private fun konfiguriereFesteMethodenQuellParameter(quelle: KnotenDaten, schlüssel: String, wert: String): KnotenDaten {
     val familie = RechnerOperatorRegistry.familieFür(quelle.art)
     if (familie != null && schlüssel == familie.operatorParameter) {
         require(RechnerOperatorRegistry.finde(familie, wert) is RechnerOperatorAuflösung.Bekannt) { "Unbekannter Operator." }

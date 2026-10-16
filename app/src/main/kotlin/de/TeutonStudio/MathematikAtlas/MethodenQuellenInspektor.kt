@@ -72,6 +72,16 @@ internal object MethodenQuellenInspektor : KnotenInspektor {
                 if (fehler == null) aktionen.knoten(konfiguriereMethodenQuelle(knoten, neu))
             }
             Text("Konfiguration: ${quelle.name}", style = MaterialTheme.typography.titleSmall)
+            if (quelle.anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.kannSichErweitern }) {
+                var anzahl by remember(quelle) { mutableStateOf(quelle.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang }.toString()) }
+                val gültig = anzahl.toIntOrNull()?.let { it in 2..128 } == true
+                OutlinedTextField(anzahl, { anzahl = it }, label = { Text("Anzahl Argumente") },
+                    isError = !gültig, supportingText = { if (!gültig) Text("Ganze Zahl zwischen 2 und 128 eingeben.") })
+                TextButton(enabled = gültig, onClick = {
+                    runCatching { konfiguriereMethodenQuellParameter(quelle, "festeEingänge", anzahl) }
+                        .onSuccess(::übernehme).onFailure { konfigurationsFehler = it.message }
+                }) { Text("Argumentanzahl übernehmen") }
+            }
             inspektor?.Inhalt(quelle, null, object : KnotenInspektorAktionen {
                 override fun parameter(schlüssel: String, wert: String) = runCatching { konfiguriereMethodenQuellParameter(quelle, schlüssel, wert) }.onSuccess(::übernehme).onFailure { konfigurationsFehler = it.message }.let { Unit }
                 override fun name(wert: String) = übernehme(quelle.copy(name = wert))

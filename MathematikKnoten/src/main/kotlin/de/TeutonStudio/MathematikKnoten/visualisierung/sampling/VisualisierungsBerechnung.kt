@@ -91,3 +91,31 @@ internal fun VisualisierungsErgebnis.geschätzteBytes(): Long {
 }
 
 internal val gemeinsameVisualisierungsBerechnung = VisualisierungsBerechnung()
+
+/** Kamera und Detailanforderung dürfen bestehende, fachlich passende Geometrie weiterverwenden. */
+internal fun VisualisierungsKonfiguration.inhaltsSignatur(menge: MengenAusdruck?): List<Any?> = listOf(
+    menge, dimension, achsen, bereiche, methodenModus, festeSchnitte, ausgabeKoordinaten,
+    if (farbe.modus == FarbModus.Spektrum) listOf(farbe.variable, farbe.bereich) else null,
+    sampling.toleranz, sampling.fensterBegrenztePrädikatsMengen, sampling.maximaleOrbitSchritte,
+)
+
+/** Nur ein Erstaufbau benötigt eine Vorschau. Navigation wartet und fordert direkt Detail an. */
+internal suspend fun berechneVisualisierungsFolge(
+    c: VisualisierungsKonfiguration,
+    hatGeometrie: Boolean,
+    berechne: suspend (VisualisierungsKonfiguration) -> VisualisierungsErgebnis,
+    veröffentliche: (VisualisierungsErgebnis, Boolean) -> Unit,
+    warteAufRuhe: suspend () -> Unit = { delay(120) },
+) {
+    if (!hatGeometrie) {
+        val vorschau = c.alsVorschau().let { it.copy(sampling = it.sampling.copy(
+            zielFehlerPixel = 3.0 / if(c.dimension == RaumDimension.R3) c.kamera.zoom else 1.0)) }
+        val ergebnis = berechne(vorschau)
+        currentCoroutineContext().ensureActive()
+        veröffentliche(ergebnis, false)
+    }
+    warteAufRuhe()
+    val ergebnis = berechne(c)
+    currentCoroutineContext().ensureActive()
+    veröffentliche(ergebnis, true)
+}

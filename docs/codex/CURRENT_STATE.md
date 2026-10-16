@@ -1,3 +1,162 @@
+## Releaseabschluss v3.4.0, 2026-10-16 (lokal geprüft)
+
+- Exakte veröffentlichte Basis: `v3.3.1`, `c4b23c69c431370b600cd4bd810c8d5135c43ff7`. Ziel `v3.4.0` ist eine Knoten-Version y mit exakt einem neuen registrierten, separat erzeugbaren Typ `mathematik.methode`. Android `3.4.0/3004000`, Desktop/CI `3.4.0`.
+- Vollständiger Umfang: Methodenquelle, Grundraumverträge, Visualisierung, Join-Mehrfacheingänge mit Format-10-Migration, Anschlussinfos/Pie, Einfügelayout, Inspectorbereiche und globale Meldungsebenen. Join-Ersetzung bewahrt Zielbeitragsmetadaten; Methodenquellen aus Join-Vorlagen besitzen feste Argumentrollen. Nachgewiesene Integrationsfehler korrigiert und unabhängig nachgeprüft, keine offenen Findings.
+- Finaler Gesamtaufruf mit `--no-parallel`: JVM-/Desktoptests, Android-Lint, App-/App-Test-/Editor-Test-APKs und Desktopkompilierung erfolgreich (2m56s, 277 Tasks). **2112 Fälle, 0 Fehler, 1 vorhandener Opt-in-Skip = 2111 bestanden**. Repository-/Architektur-, Standardkarten-, Release-/PR-Kontext- und Diffprüfung sowie 14 Guardregressionen erfolgreich.
+- Ein vorheriger 5000-ms-Timeout im Visualisierungs-Abbruchtest bestand anschließend isoliert mit `--rerun-tasks` und im vollständigen Nachlauf. Keine Produktionsänderung dafür; Ursache nicht nachgewiesen. Standalone-Kernskript mangels `kotlinc` lokal nicht ausführbar, Gradle-Kerntests grün.
+- Veröffentlichung erfordert grüne Pflicht-CI einschließlich Android-Emulator und Linux-Paketierung sowie den finalen Squashcommit auf master; der Roadmapstatus `released` beschreibt bis dahin den Zielbaum. Physische Stiftabnahme und vollständiges 60-Hz-Ziel bleiben offen. IDE-/Kotlin-/Python-Artefakte ausgeschlossen.
+- [Abschlussplan](plans/active/2026-10-16-v340-master-abschluss.md); Arbeitsbranch `samai/v3.4.0/master-abschluss`, Integration über `release/v3.4.0-methoden-grundraeume-visualisierung`.
+
+## Anschlussbezogenes Pie und globale Meldungsebenen, 2026-10-16 (lokal)
+
+- Anschlussdrag währenddessen per Stiftseitentaste bewaffnen; Anheben auf freiem
+  Hintergrund öffnet passende Varianten direkt in konzentrischen Kreisen.
+  Anschlusskontakte haben Vorrang vor dem allgemeinen Pie-Aufruf. Diskrete
+  Fachvarianten und sämtliche Übersetzungsziele/Unteroptionen werden über die
+  bestehenden Kataloge/Konfigurationsfunktionen enumeriert; konkrete Wege werden
+  gegen den ganzen Graph geprüft. Filterberechnung ist abbrechbar/asynchron mit
+  Lade-/Leerzustand und Schutz gegen veraltete Sitzungen.
+- Tippen bleibt Definition; Herausziehen fügt ein. Bei mehreren Anschlüssen oder
+  Wegen explizite Auswahl im gemeinsamen Atlas-Dialog. Einfügen/Platzieren/
+  Verdrahten/Übersetzer bilden einen Undo-Schritt; Abbruch erhält alte Kante und
+  vorherige Knoten-/Gruppen-/Verbindungsauswahl. Mehrfachbeiträge und deren
+  Reihenfolge bleiben erhalten. Keine Speicherung unbestätigter Zwischenstände.
+- Obere Meldungsfenster: nicht ausgewählt hinter allen Knotenkörpern, ausgewählt
+  davor, bei Mehrfachauswahl aktive Meldung zuletzt. Globale Ebenen mit gleichen
+  Weltkoordinaten und Gruppenalpha; Körperreihenfolge bleibt erhalten.
+- Nachgewiesen: `/tmp/atlas-anschluss-final.log` vollständiger Gradle-Lauf grün,
+  **2.108 Testfälle, 0 Fehler, 1 vorhandener Skip** (2.107 bestanden). Android-App/
+  Test-APK, Lint und Desktopkompilierung erfolgreich; Repository-/Architektur-,
+  Releaseplan-, Versionsfolge- und Diffprüfung grün. Tatsächliche Compose-Prüfungen
+  für Überdeckung, Mehrfachauswahl, Bedienbarkeit, Schrift1/2, Zoom und beide Themes.
+  Anschlussdialog bei niedrigem Fenster/vielen langen Einträgen geprüft; normale
+  und große Dialogscreenshots selbst sowie unabhängig visuell kontrolliert.
+- Vier neue Android-Gesten-/Dialogregressionen gebaut. Für diese Erweiterung
+  kein Gerätelauf: ADB bei beiden Abfragen leer. Frühere sieben Geräteprüfungen
+  des vorherigen Pie-Stands ersetzen die neue Laufzeit-/physische Stiftabnahme
+  nicht. Unabhängige statische Abnahme ohne offene Produktions-Findings; Plan
+  bleibt für Geräteprüfung aktiv.
+- Keine Schema-, Versions-, Abhängigkeits- oder Desktop-Whiteliständerung. Keine
+  Commits/Pushes; bestehender Releasebranch und HEAD04925fc1 (SamAI/SamAI) erhalten.
+  [ExecPlan](plans/active/2026-10-16-node-pie.md),
+  [Meldungsebenen](decisions/2026-10-16-knoten-anhaenge.md).
+
+## Pie-Knotenauswahl rund um den Tipppunkt mit Zoom, 2026-10-16 (lokal)
+
+## Anschlussinfos durch Hover und Tippen, 2026-10-16 (lokal)
+
+- Gemeinsamer Android-/Desktop-Editor: Maus-/Stift-Hover zeigt nach 500 ms eine
+  auf 320 dp begrenzte Kurzinfo; Tipp/Klick öffnet den lesenden Anschlussdialog.
+  LongPress/Rechtsklick behalten Kontext; Drag behält Snap, Join, Umverbinden und
+  Adapterauswahl. Infos verwenden Originalreferenzen, markieren getroffene
+  Join-Beiträge und verändern weder Graph noch Undo/Redo. Gemeinsamer Provider
+  liefert effektive Typverträge; keine Werte, Format-/Versions-/Abhängigkeitsänderung.
+- Nachgewiesen: finaler Gradle-Gesamtlauf mit **2089 bestandenen JVM-/Desktoptests,
+  0 Fehlern und 1 vorhandenem Opt-in-Skip**, Android-App-/App-Test-/Editor-Test-APKs
+  und Android-Lint erfolgreich. Repository/Architektur, Releaseplan, Versionsfolge
+  und Diffprüfung erfolgreich. Unabhängiger Review inklusive Nachprüfung abgenommen.
+- Android SM-X920 / Android 16: **3/3 Info-/Touch-/Stift-MotionEvent-Tests und
+  1/1 Join-Test bestanden**. Native Dialog-Backevents direkt geprüft; globale
+  Tasteneingabe wegen fehlendem Systemfokus der Testfenster nicht abgenommen.
+  Physischer Stiftlauf durch einen Menschen offen. Desktoplayouts 390×600/800×350,
+  Schriftfaktor 2 und beide Themes visuell geprüft; Kurzinfo bei Zoom .5/1.25 geprüft.
+- Standalone-Kernskript mangels kotlinc nicht ausführbar; Gradle-Kerntests grün.
+  Branch `release/v3.4.0-methoden-grundraeume-visualisierung`, HEAD `04925fc1`
+  unverändert; keine Commits/Pushes. [ExecPlan](plans/completed/2026-10-16-anschluss-info.md),
+  [ADR](decisions/2026-10-16-anschluss-info.md).
+
+- Die zweite Ebene verteilt Knoten über volle 360 Grad um den ursprünglichen
+  Tipppunkt. Gruppen bleiben zusammen; definierte Karten belegen getrennte
+  Hälften (Schnittstelle links, Methodenausgang rechts).
+- Pinch/Mausrad zoomen die geöffnete Pie-Auswahl unabhängig von der gesperrten
+  Kartenkamera. Vorschauen, Abstände und Gruppenlabels skalieren zusammen;
+  Herausziehen berücksichtigt den Menüzoom beim Griffpunkt. Ein Finger nach
+  Pinch bleibt in der Menügeste; Scroll bei gedrücktem Zeiger verändert sie nicht.
+- Nachgewiesen: 47/47 gezielte JVM-/Compose-Regressionen, Android-App-/Test-APK,
+  Desktop-Kompilierung und Repository-/Architekturprüfung erfolgreich.
+  Unabhängige statische Nachprüfung ohne offene Findings. Sieben Androidtests
+  auf SM-X920 erfolgreich, einschließlich Pinch/Fingerwechsel und Einfügedrag
+  nach Menüzoom mit Undo/Redo. Achter Mausradtest gebaut, wegen anschließend
+  getrenntem Gerät nicht ausgeführt. Physischer Stiftlauf und vollständige
+  visuelle Abnahme bleiben offen; ältere Aussagen ohne Geräteprüfung sind
+  durch diesen begrenzten Nachweis teilweise überholt.
+- Keine Versionsänderung, Commits oder Pushes. Details im
+  [Pie-ExecPlan](plans/active/2026-10-16-node-pie.md).
+
+## Kartennavigation nach Pie-Integration korrigiert, 2026-10-16 (lokal)
+
+- Der gemeinsame Editor akzeptiert den vom Tap-Handler konsumierten Erstkontakt
+  wieder für Pan/Pinch. Menüsperre und Prüfung konsumierter Bewegungen bleiben
+  erhalten. Die mittlere Maustaste wird auf Desktop unabhängig vom primären
+  Compose-Tap-Einstieg erkannt; Sekundärmaus startet keine Kamerageste.
+- Nachgewiesen: Red-Lauf mit 6 erwarteten Fehlern, danach 8/8 Navigationstests
+  einschließlich Knoten-/Port-Drag ohne Kamerabewegung sowie Undo/Redo. Insgesamt
+  43/43 gezielte Desktop-/Editor-/App-Regressionen grün; Android-Debug-/Test-APK,
+  Desktop-Kompilierung, Repository-/Architektur- und Diffprüfung erfolgreich.
+  Unabhängig statisch ohne Findings abgenommen.
+- Zwei zusätzliche Android-Navigationstests kompiliert. Geräteprüfung weiterhin
+  offen: Tablet nach zwischenzeitlicher Verbindung nicht mehr an ADB; isolierter
+  Abschlusslauf endet mit `No connected devices`. Keine Geräteabnahme behauptet.
+- Keine Versionsänderung/Commits/Pushes. Details und Prüfnachweise im
+  [Pie-ExecPlan](plans/active/2026-10-16-node-pie.md).
+
+## Android-Node-Pie, 2026-10-16 (lokal)
+
+- Stift-Seitentaste + Tippen öffnet Kategorien am exakten Punkt; Kategorie öffnet
+  einen verschiebbaren Fächer mit nativen Vorschauknoten im Kartenzoom. Definierte
+  Karten erscheinen mit Schnittstelle und Methodenausgang. Tap öffnet eine reine
+  Definition; Herausziehen setzt dieselbe Pointergeste als atomare Einfügeinteraktion
+  fort. Speicherschutz und kennungsgebundene Rücknahme verhindern Zwischenstände.
+- Nachgewiesen: vollständiger JVM-/Desktoplauf mit 2.060 Testfällen, 0 Fehlern,
+  1 vorhandenem Skip; Android-App-/Test-/Editor-Test-APKs, Lint, Desktop-Kompilierung
+  und Repository-/Releaseplan-/Versionsfolgeprüfung grün. Zusätzlich 2/2 gezielte
+  Desktop-Compose-Prüfungen für Vorschauzoom und Eingabesperre; Screenshot mit
+  Schriftfaktor2/dunklemTheme visuell geprüft. Unabhängig statisch abgenommen.
+- Android-MotionEvent-Regressionen gebaut, Laufzeitabnahme offen: kein Gerät an ADB;
+  temporäre API36-/API35-Emulatoren sterben mit Host-Segfault139 vor dem Boot.
+  Ring-/Fächerdarstellung und echter Stiftablauf damit noch nicht bestätigt.
+  Standalone-Kernskript mangels `kotlinc` nicht ausführbar; Gradle-Kerntests grün.
+- Keine neue Version, kein Commit/Push. Bestehender Releasebranch und HEAD04925fc1
+  erhalten. [ExecPlan](plans/active/2026-10-16-node-pie.md),
+  [ADR](decisions/2026-10-16-node-pie.md).
+
+## Join-Eingänge, 2026-10-16 (lokal)
+
+- Geeignete vorhandene kommutative und assoziative Operatoren besitzen gemeinsame Mehrfacheingänge mit wachsender Kapsel und einzeln greifbaren Leitungen. Bereichsabhängige Produkte zeigen ohne Nachweis geordnete Einzelenden; Matrix-/Tensorprodukt bleiben geordnet. Eine Quelle ergibt nach Validierung Identität; null Beiträge bleiben unvollständig.
+- Format 10, gemeinsame idempotente Migration, vollständige Beitragslisten, lokale Werte, Kartenfallbackrollen und stabile Reihenfolge. Graphbewusste Operatorwechsel übernehmen Beiträge oder zeigen Verluste vorab; Kopieren und Undo/Redo sind abgesichert. Kein neuer Knotentyp und keine neue Abhängigkeit.
+- Nachgewiesen: 2.027 bestandene JVM-/Desktoptests, 0 Fehler, 1 vorhandene übersprungene Opt-in-Messung; 21 Join-Regressionen. Desktop-Touch/Maus bei Zoom, Schrift und beiden Themes ausgeführt, Screenshot visuell geprüft. Android-App-/Test- und Editor-Test-APKs sowie Lint erfolgreich. Repository/Architektur, Releaseplan, Versionsfolge und Diffprüfung erfolgreich; unabhängig codegeprüft.
+- Android-Gestenregression kompiliert, Laufzeitabnahme offen: ADB ohne Geräte. Standalone-Kernskript mangels `kotlinc` nicht ausführbar; Gradle-Kern-JVM-Tests erfolgreich. Keine Commits oder Veröffentlichung; bestehender Branch `release/v3.4.0-methoden-grundraeume-visualisierung`, HEAD `04925fc1352ad551622c1916fbd8f36c9ab83105`; andere lokale Änderungen erhalten.
+- [Abschlussplan](plans/completed/2026-10-16-join-eingaenge.md), [ADR](decisions/2026-10-16-join-eingaenge.md).
+
+## Platzschaffen beim Ablegen auf Verbindungen, 2026-10-16 (lokal)
+
+- Der gemeinsame Android-/Desktop-Editor schafft nach erfolgreicher Drag-Einfügung
+  beidseitig 32 Graph-Einheiten Platz. Der eingefügte Knoten bleibt stehen;
+  ausgelöste Kollisionen nehmen auch unverbundene Hindernisse mit. Gruppen bleiben
+  als Blöcke zusammen, aktive Einfügecontainer erweitern ihre Rahmen. Effektive
+  Inhaltsgrößen, eingeklappte Gruppen und Diagnose-/Zeitanhänge werden berücksichtigt.
+- Verdrahtung, Bewegung und Layout bilden einen Undo-/Redo-Schritt. Mehrdeutige
+  Anschlusspaare verschieben erst nach bestätigter Auswahl. Die 200-ms-Animation
+  betrifft ausschließlich die gemeinsame Darstellung; Endpositionen sind sofort
+  gespeichert. Keine Format-, Versions- oder Abhängigkeitsänderung.
+- Finaler Gradle-Gesamtlauf: **2.005 bestandene Tests, 0 Fehler, 1 vorhandene
+  übersprungene Opt-in-Messung**; Android-App-/Test-APKs, Editor-Test-APK und Lint
+  erfolgreich. Repository-/Architektur- und Diffprüfung erfolgreich. 17 neue
+  Layouttests und 3 neue Desktoptests bestanden; Maus/Touch, Zoom, große Schrift,
+  Themes und Animationsunterbrechung tatsächlich geprüft, Screenshots visuell geprüft.
+- Unabhängig abgenommen. Android-Laufzeitprüfung offen: ADB ohne angeschlossene
+  Geräte, keine eingerichteten AVDs. Android-Regression für Zoom/Schrift/Themes gebaut.
+  Branch `release/v3.4.0-methoden-grundraeume-visualisierung`, HEAD `04925fc1`
+  unverändert; keine neuen Commits. [Abschlussplan](plans/completed/2026-10-16-einfuegen-platz-schaffen.md)
+  und [ADR](decisions/2026-10-16-einfuege-layout.md).
+
+## Doppelstrichschrift, 2026-10-16 (lokale Korrektur)
+
+- `LatexText` verwendet ausdrücklich den bereits gebündelten TTF-Schriftsatz des nativen Renderers. Dessen eigene AMS-Schrift stellt `\mathbb{R}` und `\mathbb R` als Doppelstrichbuchstaben dar; auch `LatexFormel` und die Annotationen der Atlas-Integralglyphe nutzen diesen Pfad. Keine neue Abhängigkeit, API-, Versions- oder Persistenzänderung.
+- Nachgewiesen: 13 gezielte LaTeX-Tests erfolgreich; vollständiger JVM-/Desktop-Prüfpfad mit **1.985 bestandenen Tests, 0 Fehlern und 1 vorhandener übersprungener Opt-in-Messung**; Repositoryprüfung, Android-Debug-/Test-APK und Desktop-Kompilierung erfolgreich. Der Gesamtstand enthält außerdem bereits vorhandene lokale Änderungen anderer Aufgaben.
+- **3/3 Android-Compose-Prüfungen auf SM-X920 / Android 16 bestanden.** Bildvergleich prüft N/Z/Q/R/C/H gegen aufrechte normale Buchstaben und beide mathbb-Schreibweisen gegeneinander, jeweils hell/dunkel. Bilder des echten Mengen-Knotens, der Potenzen/Indizes, Brüche, Matrixklammern, Methodenformel und Atlas-Integral visuell geprüft. Gegenprobe mit ursprünglicher OTF-Konfiguration lässt beide Glyphentests erwartungsgemäß scheitern; korrigierter Abschlusslauf wieder grün. Erster Lauf bei ausgeschaltetem Bildschirm fand keine Compose-Hierarchie; nach Aufwecken erfolgreich.
+- Prüfgrenze: Der bereits im ursprünglichen OTF-Pfad sichtbare Methodenklammerfehler (`lbrace` als Text) bleibt außerhalb dieser Schriftkorrektur bestehen. Desktop-Laufzeitabnahme speziell der Doppelstrichschrift nicht durchgeführt. Keine Commits oder Veröffentlichung aus dieser Aufgabe; bestehender Branch `release/v3.4.0-methoden-grundraeume-visualisierung`, HEAD `04925fc1352ad551622c1916fbd8f36c9ab83105`.
+
 ## Methodenquelle und Identität, 2026-10-15 (reserviertes Ziel v3.4.0)
 
 - Auf `samai/v3.4.0/methodenknoten`, Basis `c4b23c69`/v3.3.1, ist genau ein neuer regulärer Typ `mathematik.methode` implementiert: Identität mit optionaler Menge, konfigurierte geeignete Knotenvorlagen/Rechneroperatoren und versionsfeste Karten als Methodenquellen. Vorhandene uncommittete Methoden-/Visualisierungsänderungen sind erhalten.
@@ -361,3 +520,61 @@ Numerische Prüfgrenze: getrennte Ungleichungsrandzüge werden derzeit nur für 
 - Vorhandener Gesamtstand auf Basis des finalen v3.3.1-Commits `c4b23c69` für den beauftragten Masterabschluss abgegrenzt: Methodenquelle/Identität, Variablengrundräume und Migration, Visualisierung sowie Anschluss-/Darstellungskorrekturen. Genau ein neuer erzeugbarer Typ `mathematik.methode`; deshalb Knoten-Version y/3.4.0. Prädikatindexplanung bleibt Vorbereitung.
 - Android 3.4.0/3004000, Desktoppaket 3.4.0 und Roadmap-Zielbaum abgestimmt. Finale lokale Repository-, Architektur-, Standardkarten-, Releaseplan-, Versionsfolge- und 14 Guardregressionsprüfungen erfolgreich. Gradle-Gesamtlauf mit Tests, Lint, Debug-/Test-APK und Desktop-Kompilierung erfolgreich; XML: 1.974 bestandene JVM-/Desktop-Tests, 0 Fehler, 1 vorhandene Opt-in-Messung übersprungen.
 - Zusätzliche lokale Android-Bedientests scheitern aktuell am gesperrten SM-X920 (`deviceLocked=1`, keine Compose-Hierarchie). Keine erfolgreiche aktuelle Android-Laufzeitabnahme behauptet. Standalone-`kotlinc` fehlt; Gradle-Kerntests erfolgreich. Vollständige PR-Pflicht-CI einschließlich Android-Laufzeit und Linux-Paketprüfung bleibt Mergevoraussetzung. Nachweis: [Masterabschlussplan](plans/active/2026-10-16-v340-master-abschluss.md).
+
+
+## Angefügte Knotendiagnosen vom 16.10.2026 (lokaler Arbeitsstand)
+
+- Die effektive Knotengröße beschreibt nur den Körper. Zeit hängt außen unten,
+  vollständige Meldungen hängen außen oben. Auswahl und Größenänderung folgen dem
+  Körper; Anschlüsse verwenden für Rechtecke und Adapter dieselbe Körpergeometrie.
+- Gemeinsame Rendererhülle vereinigt Auswertungs- und lokale Renderdiagnosen,
+  priorisiert Fehler und entfernt doppelte Texte. Leere Meldungen entfernen das
+  obere Feld. Anhänge sind flüchtig; Gruppen/Culling berücksichtigen deren Maße.
+- Vollständiger Gradle-Test-/Android-Buildlauf erfolgreich: 1.984 bestandene Tests,
+  0 Fehler, 1 vorhandene Messprüfung übersprungen. 52 Desktop-Tests einschließlich
+  großer Schrift, Zoom, Themes, Mausgriffe und langer Kopfzeile beim Pan.
+  Debug- und Android-Test-APK gebaut, neue Android-Regression kompiliert.
+- Android-Bedienabnahme offen: angeschlossenes SM-X920 gesperrt und im Ruhezustand.
+  Standalone-Kernskript mangels kotlinc nicht ausführbar; 585 Gradle-Kerntests grün.
+  Repository-/Architektur-/Releaseplan-/Versionsfolgeprüfungen erfolgreich,
+  unabhängige Diffprüfung ohne offene Findings. Keine Version oder Commits geändert.
+- Details: [ExecPlan](plans/completed/2026-10-16-knoten-anhaenge.md),
+  [Darstellungsentscheidung](decisions/2026-10-16-knoten-anhaenge.md).
+
+
+## Inspectorüberarbeitung vom 16.10.2026 (lokaler Arbeitsstand)
+
+- Android und Desktop verwenden vier unabhängig klappbare Bereiche: Standarddaten,
+  Knotendaten, Eingangsdaten, Ausgangsdaten. Leere Bereiche entfallen. Richtungsweite
+  Optionen stehen in der ersten Zelle, individuelle Werte/Optionen am Anschluss.
+  Sitzungsschlüssel erhalten Klappzustände bei Knotenwechsel und Portumordnung.
+- Hintergrund- und Rahmenfarben sind separat automatisch oder individuell wählbar.
+  Notizen bieten Rechteck, Kapsel, Ellipse, Dreieck und Raute mit sicherer
+  Inhaltsfläche und konsistenter Treffergeometrie. Fachlich feste Formen bleiben
+  lesbar. Format 10 und Version bleiben unverändert; keine neue Abhängigkeit.
+- Standardwerte, vollständige Mehrfachbeiträge, Kartenfallbacks und Methodenprojektionen
+  stehen am zugehörigen Port. Gemeinsame Rechner-/Tensor-/Übersetzeroptionen werden
+  wiederverwendet; Verluste verwenden den Konfigurationsplan. Relationsparameter
+  und Standardname wechseln atomar. Inspector-Skill aktualisiert und validiert.
+- Vollständiger Gradle-Test-/Buildlauf erfolgreich: 2.045 bestandene JVM-/Desktoptests,
+  0 Fehler, 1 vorhandene Opt-in-Messung übersprungen. 18 neue Regressionen einschließlich
+  sechs nativer Desktop-Bedientests bestanden. App-/Editor-Lint ohne Fehler;
+  Android-App-/Test-APKs, Editor-Test-APK und Desktopkompilierung erfolgreich.
+- Repository-/Architektur-/Shadowmodul-/Releaseplan-/Versionsfolge-/Diffprüfungen
+  erfolgreich; unabhängig quellgeprüft ohne offene Findings. Form-Screenshots
+  visuell geprüft. Android-Laufzeitprüfung offen: ADB ohne Geräte, keine AVDs.
+  Standalone-Kernskript mangels kotlinc nicht ausführbar; 585 Gradle-Kerntests grün.
+- Zusatz-Lint des MathematikKnoten-Moduls verbleibt bei einem nachweislich vorhandenen
+  API-Level-Befund in VisualisierungsSampler.kt:1850 (BigInteger.TWO, API 33 gegenüber
+  minSdk 26). Kein Inspectorfehler; die Stelle wurde nicht geändert.
+- Keine neuen Commits oder Veröffentlichung; bestehender Branch
+  `release/v3.4.0-methoden-grundraeume-visualisierung`, HEAD `04925fc1` unverändert.
+  Details: [ExecPlan](plans/completed/2026-10-16-inspektor-ueberarbeitung.md),
+  [ADR](decisions/2026-10-16-inspektor-bereiche.md).
+
+## Detailqualität während Visualisierer-Navigation (16.10.2026, lokal)
+
+- Der gemeinsame Plot verwendet während Pan/Pinch/Rotation dieselben vorbereiteten Geometrien und Kanten wie in Ruhe. Initiale Grobgeometrie dient ausschließlich dem Erstaufbau. Kameraänderungen behalten passende Ergebnisse und fordern nach 120 ms Ruhe direkt Detail an; fachliche Änderungen invalidieren weiterhin zuverlässig.
+- Zeichenpakete je Ebene werden erst nach vollständiger Hintergrundaufbereitung atomar ersetzt; keine leeren Zwischenlisten bei Navigation. Inspektion und ebenenübergreifende 3D-Tiefensortierung verwenden dieselben Daten. Arbeits-/Orbitgrenzen, zwei Aufträge und 32-MiB-Geometrie-LRU bleiben erhalten. Keine Persistenz-/Anschlussänderung.
+- Sechs neue Anfrage-/Abbruch-/Schlüsselregressionen und zwei native offene-Gesten-Bildtests bestanden. Native Desktop-Visualisierersuite 17/17; beide neuen Bildtests gegen rekonstruierten Ausgangsrenderer erwartungsgemäß rot, gegen neue Implementierung grün. Vollständiger Gradle-Test-/App-Lint-/APK-/Desktoplauf erfolgreich; unabhängige Nachprüfung ohne Blocker.
+- Android-Gegenstücke kompiliert. SM-X920 per ADB nicht verbunden; Nutzer bestätigt Nichtverfügbarkeit für heute. Android-Laufzeit und identischer Geräte-Vorher/Nachher-Vergleich bleiben offen. Kein neues Leistungsversprechen, 60-Hz-Ziel weiterhin offen. Nachweise im aktiven Visualisierer-ExecPlan und ergänzter ADR. Keine neuen Commits oder Releasearbeit.

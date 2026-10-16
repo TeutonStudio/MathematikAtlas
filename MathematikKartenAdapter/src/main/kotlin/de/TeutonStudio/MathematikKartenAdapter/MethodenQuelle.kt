@@ -6,8 +6,31 @@ const val METHODEN_QUELLE_ART = "mathematik.methode"
 const val METHODEN_QUELLE_KNOTEN = "methodenQuelle.knoten"
 const val METHODEN_KOMPONENTEN_ID = "methodenKomponenteId"
 
+/** Eine Methodenquelle benötigt eine feste Signatur auch für einen Mehrfacheingang. */
+fun methodenQuellArgumente(quelle: KnotenDaten): KnotenDaten {
+    if (quelle.anschlüsse.none { it.richtung == AnschlussRichtung.Eingang && it.belegung == AnschlussBelegung.Mehrfach }) return quelle
+    val anzahl = quelle.parameter["festeEingänge"]?.let {
+        it.toIntOrNull()?.takeIf { n -> n in 2..128 } ?: error("Die Anzahl muss zwischen 2 und 128 liegen.")
+    } ?: 2
+    return quelle.copy(anschlüsse = quelle.anschlüsse.flatMap { port ->
+        if (port.richtung != AnschlussRichtung.Eingang || port.belegung != AnschlussBelegung.Mehrfach) listOf(port)
+        else (0 until anzahl).map { index ->
+            port.copy(
+                id = if (index == 0) port.id else AnschlussId("${port.id.wert}:methodenArgument:$index"),
+                name = if (index == 0) port.name else "${port.name}.argument${index + 1}",
+                semantischeId = if (index == 0) port.semantischeId else "${port.semantischeId ?: port.id.wert}:argument:$index",
+                reihenfolge = port.reihenfolge + index, belegung = AnschlussBelegung.Einzeln,
+                kannSichErweitern = true, dynamischErzeugt = false, nächsteBeitragsReihenfolge = 0,
+            )
+        }
+    })
+}
+
 /** Builds the ordinary public card boundary around one configured operation. */
-fun methodenQuellKarte(quelle: KnotenDaten, besitzer: KnotenId): KartenDaten {
+fun methodenQuellKarte(quelle: KnotenDaten, besitzer: KnotenId): KartenDaten =
+    baueMethodenQuellKarte(methodenQuellArgumente(quelle), besitzer)
+
+private fun baueMethodenQuellKarte(quelle: KnotenDaten, besitzer: KnotenId): KartenDaten {
     require(quelle.art != METHODEN_QUELLE_ART && quelle.kartenVerweis == null) { "Diese Quelle wird über den Kartenmodus bereitgestellt." }
     val basis = "${besitzer.wert}:methodenQuelle"
     val knoten = quelle.copy(id = KnotenId("$basis:operation"))
@@ -23,7 +46,7 @@ fun methodenQuellKarte(quelle: KnotenDaten, besitzer: KnotenId): KartenDaten {
             name = port.name,
             parameter = mapOf("name" to port.name, KARTEN_SCHNITTSTELLEN_POSITION to index.toString(), METHODEN_KOMPONENTEN_ID to (port.semantischeId ?: port.id.wert)),
             anschlüsse = listOf(port.copy(id = AnschlussId("$basis:rand:${port.id.wert}"), name = "wert", art = symbolischeArt, richtung = if (eingang) AnschlussRichtung.Ausgang else AnschlussRichtung.Eingang,
-                kannSichErweitern = false, dynamischErzeugt = false)))
+                belegung = AnschlussBelegung.Einzeln, nächsteBeitragsReihenfolge = 0, kannSichErweitern = false, dynamischErzeugt = false)))
     }
     val verbindungen = grenzen.zip(rand).map { (port, grenze) ->
         val innen = AnschlussVerweis(knoten.id, port.id)

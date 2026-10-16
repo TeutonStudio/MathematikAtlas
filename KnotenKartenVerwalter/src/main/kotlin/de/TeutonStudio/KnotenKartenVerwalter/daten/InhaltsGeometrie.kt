@@ -1,5 +1,17 @@
 package de.TeutonStudio.KnotenKartenVerwalter.daten
 
+enum class KnotenMeldungsArt { Fehler, Warnung, Hinweis }
+
+/** Flüchtige, fachneutrale Diagnose; kein Bestandteil des Karten-Codecs. */
+data class KnotenMeldung(val text: String, val art: KnotenMeldungsArt = KnotenMeldungsArt.Hinweis)
+
+fun Iterable<KnotenMeldung>.normalisierteMeldungen(): List<KnotenMeldung> =
+    filter { it.text.isNotBlank() }.map { it.copy(text = it.text.trim()) }
+        .sortedBy { it.art.ordinal }.distinctBy { it.text }
+
+/** Unskalierte Höhen außerhalb des Körpers, ausschließlich für die Darstellung. */
+data class KnotenAnhangMaße(val oben: Float = 0f, val unten: Float = 0f)
+
 /** Abgeleitete Geometrie: Benutzermaße bleiben gespeichert, Inhaltsminima nicht. */
 fun KnotenDaten.mitInhaltsminimum(minimum: GraphGröße?): KnotenDaten = if (minimum == null) this else copy(
     größe = GraphGröße(maxOf(größe.breite, minimum.breite), maxOf(größe.höhe, minimum.höhe)),
@@ -10,7 +22,10 @@ fun KartenDaten.mitInhaltsminima(minima: Map<KnotenId, GraphGröße>): KartenDat
 ).mitGruppenInhaltsminimum()
 
 /** Von innen nach außen erweitern; insbesondere leere Untergruppen mit umfassen. */
-fun KartenDaten.mitGruppenInhaltsminimum(kopfMinima: Map<VisuelleGruppenId, GraphGröße> = emptyMap()): KartenDaten {
+fun KartenDaten.mitGruppenInhaltsminimum(
+    kopfMinima: Map<VisuelleGruppenId, GraphGröße> = emptyMap(),
+    anhänge: Map<KnotenId, KnotenAnhangMaße> = emptyMap(),
+): KartenDaten {
     if (visuelleGruppen.isEmpty()) return this
     val index = GruppenIndex(this)
     val nachId = knoten.associateBy { it.id }
@@ -21,7 +36,11 @@ fun KartenDaten.mitGruppenInhaltsminimum(kopfMinima: Map<VisuelleGruppenId, Grap
             maxOf(original.größe.höhe, kopf.höhe + VISUELLE_GRUPPE_INHALT_ABSTAND)))
         gruppen[g.id] = g
         if (!g.eingeklappt) {
-            val inhalt = g.knotenIds.mapNotNull(nachId::get).map { it.position to it.größe } +
+            val inhalt = g.knotenIds.mapNotNull(nachId::get).map {
+                val anhang = anhänge[it.id] ?: KnotenAnhangMaße()
+                (it.position - GraphPunkt(0f, anhang.oben)) to
+                    GraphGröße(it.größe.breite, it.größe.höhe + anhang.oben + anhang.unten)
+            } +
                 index.kinder[g.id].orEmpty().mapNotNull { kind -> gruppen[kind.id]?.let { it.position to it.größe } }
             if (inhalt.isNotEmpty()) {
                 val links = minOf(g.position.x, inhalt.minOf { it.first.x } - VISUELLE_GRUPPE_INHALT_ABSTAND)

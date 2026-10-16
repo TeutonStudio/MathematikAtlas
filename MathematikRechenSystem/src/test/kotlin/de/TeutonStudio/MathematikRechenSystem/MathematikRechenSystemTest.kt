@@ -34,8 +34,8 @@ class MathematikRechenSystemTest {
         assertEquals("\\max\\left\\{x,3\\right\\}", maximum(Variable("x"), RationaleZahl.von(3)).zuLatex())
     }
 
-    @Test fun extremwerteBenötigenMindestensZweiOperanden() {
-        assertFailsWith<IllegalArgumentException> { maximum(listOf(RationaleZahl.Eins)) }
+    @Test fun extremwerteBenötigenMindestensEinenOperanden() {
+        assertEquals(RationaleZahl.Eins, maximum(listOf(RationaleZahl.Eins)))
         assertFailsWith<IllegalArgumentException> { minimum(emptyList()) }
     }
 

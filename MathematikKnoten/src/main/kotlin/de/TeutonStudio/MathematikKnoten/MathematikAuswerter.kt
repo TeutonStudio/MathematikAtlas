@@ -75,12 +75,12 @@ object StandardMathematikAuswerter {
             val werte = k.operatorEingänge { anschluss, index ->
                 Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }.map { it.objekt as? ZahlAusdruck ?: error("Zahleingang ${it} ist ungültig.") }
-            require(werte.size >= 2) { "Mindestens zwei Summanden müssen verbunden sein." }
+            require(werte.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens zwei Summanden müssen verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(addition(werte), k)))
         }
         registriere("mathematik.multiplikation") { k ->
-            val werte = listOf("a", "b", "c").mapNotNull { k.eingänge[it]?.objekt as? ZahlAusdruck }
-            require(werte.size >= 2) { "Mindestens zwei Faktoren müssen verbunden sein." }
+            val werte = k.knoten.anschlüsse.filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.mapNotNull { k.eingänge[it.name]?.objekt as? ZahlAusdruck }
+            require(werte.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens zwei Faktoren müssen verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("wert" to reellerZahlwert(multiplikation(werte), k)))
         }
         registriere("mathematik.potenz") { k ->
@@ -91,7 +91,7 @@ object StandardMathematikAuswerter {
             val werte = k.operatorEingänge { anschluss, index ->
                 Variable(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }
-            require(werte.size >= 2) { "Ein Extremwert benötigt mindestens zwei Eingänge." }
+            require(werte.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Ein Extremwert benötigt mindestens zwei Eingänge." }
             require(werte.all { it.istNachweisbarReell() }) { "Maximum und Minimum sind nur für nachweisbar reelle Zahlen definiert." }
             val zahlen = werte.map { it.objekt as? ZahlAusdruck ?: error("Extremwert benötigt Zahlen.") }
             val wert = when (k.knoten.parameter["modus"]) {
@@ -366,13 +366,13 @@ object StandardMathematikAuswerter {
             val mengen = k.operatorEingänge { anschluss, index ->
                 BenannteMenge(unbekannteKennung(k.knoten, anschluss), unbekanntesOperatorLatex(k.knoten, index))
             }.map { it.objekt as? MengenAusdruck ?: error("Mengeneingang ${it} ist ungültig.") }
-            require(mengen.size >= 2) { "Mindestens zwei Mengen müssen verbunden sein." }
+            require(mengen.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens ein Mengenoperand muss verbunden sein." }
             val wert = vereinige(mengen)
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(wert, annahmen(k))))
         }
         registriere("mathematik.schnitt") { k ->
             val mengen = k.mengenOperatorEingänge()
-            require(mengen.size >= 2) { "Mindestens zwei Mengen müssen verbunden sein." }
+            require(mengen.size >= if (k.mehrfachEingänge.isEmpty()) 2 else 1) { "Mindestens ein Mengenoperand muss verbunden sein." }
             KnotenAuswertungsErgebnis(mapOf("menge" to BedingterWert(schneide(mengen), annahmen(k))))
         }
         registriere("mathematik.differenz") { k ->

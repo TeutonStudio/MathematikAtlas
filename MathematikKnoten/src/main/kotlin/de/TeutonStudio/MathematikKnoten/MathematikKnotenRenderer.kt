@@ -12,6 +12,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,8 +50,9 @@ class MathematikKnotenRenderer(
 
     @Composable
     override fun Inhalt(knoten: KnotenDaten, ausgewählt: Boolean, aktionen: KnotenRendererAktionen) {
+        val ergebnis = ergebnisFür(knoten)
+        SideEffect { aktionen.meldungenMelden(ergebnis.knotenMeldungen()) }
         if (knoten.art in MATHEMATISCHE_ADAPTER_ARTEN) {
-            val adapterErgebnis = ergebnisFür(knoten)
             Column(
                 Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.Center,
@@ -66,14 +68,9 @@ class MathematikKnotenRenderer(
                     "mathematik.geometrie.zuTrägermenge" -> "Geometrie → Trägermenge"
                     else -> if (knoten.anschlüsse.any { it.name == "term" && it.art == MathematikAnschlussArten.Aussage.id }) "Aussage → Methode" else "Term → Methode"
                 }, style = MaterialTheme.typography.labelSmall)
-                adapterErgebnis?.ausgaben?.values?.firstOrNull()?.übersetzungen?.aktuell?.hinweise()?.take(1)?.forEach { hinweis ->
-                    Text(hinweis, style = MaterialTheme.typography.labelSmall)
-                }
-                adapterErgebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2) }
             }
             return
         }
-        val ergebnis = ergebnisFür(knoten)
         val ausgabe = ergebnis?.ausgaben?.values?.firstOrNull()
         val objekt = ausgabe?.objekt
         var geöffneteDefinition by remember(knoten.id) { mutableStateOf<AutomatischesAdjektiv?>(null) }
@@ -130,9 +127,6 @@ class MathematikKnotenRenderer(
                 if (quelle != null && ziel != null) LatexFormel(
                     "${if (quelle is Tupelraum) quelle.potenzLatex() else quelle.zuLatex()} \\longto ${if (ziel is Tupelraum) ziel.potenzLatex() else ziel.zuLatex()}", style = MaterialTheme.typography.bodySmall)
             }
-            ausgabe?.übersetzungen?.aktuell?.hinweise()?.take(1)?.forEach { hinweis ->
-                Text(hinweis, style = MaterialTheme.typography.labelSmall)
-            }
             val adjektive = objekt?.let(::automatischeAdjektive).orEmpty()
             if (adjektive.isNotEmpty()) {
                 Row(
@@ -166,9 +160,6 @@ class MathematikKnotenRenderer(
             (objekt as? EigenschaftsAussage)?.let { aussage ->
                 EigenschaftsStatusZeile(aussage)
             }
-            ergebnis?.fehler?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, maxLines = 2)
-            }
         }
 
         geöffneteDefinition?.let { adjektiv ->
@@ -184,7 +175,7 @@ class MathematikKnotenRenderer(
         KnotenAuswertungszeitFußzeile(ergebnisFür(knoten)?.auswertungsDauerNanos, ausgewählt)
     }
 
-    private fun operatorFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, zeichen: String): String = knoten.anschlüsse
+    private fun operatorFormel(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, zeichen: String): String = joinOperatorFormel(knoten, ergebnis, zeichen) ?: knoten.anschlüsse
         .filter { it.richtung == de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung.Eingang }
         .sortedBy { it.reihenfolge }
         .mapIndexed { index, anschluss ->

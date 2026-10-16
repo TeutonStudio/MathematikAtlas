@@ -35,7 +35,7 @@ class PrädikatsKnotenIntegrationTest {
     @Test fun `json reload regenerates roles and stable connections`() {
         val (karte,id)=fixture()
         val geladen=MathematikKartenCodec.lese(MathematikKartenCodec.schreibe(karte))
-        assertEquals(karte.verbindungen,geladen.verbindungen)
+        assertEquals(karte.normalisiereJoinEingänge().verbindungen,geladen.verbindungen)
         val laufzeit=MathematikKartenLaufzeit()
         val vorher=laufzeit.auswerten(karte.mitTestGrundräumen()).knoten.getValue(id)
         val nachher=laufzeit.auswerten(geladen.mitTestGrundräumen()).knoten.getValue(id)

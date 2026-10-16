@@ -6,6 +6,7 @@ import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.MathematikKartenLaufzeit
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration
 import de.TeutonStudio.MathematikRechenSystem.kern.OrbitBeschraenktheitsMenge
+import de.TeutonStudio.MathematikKnoten.normalisiereJoinEingänge
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -46,7 +47,7 @@ class BeispielKartenTest {
     @Test
     fun `Mandelbrot Beispiel bleibt eine ausführbare generische Orbitkarte`() {
         val karte = BeispielKarten.alle().single { it.name == "Mandelbrot-Menge als Orbitfamilie" }
-        assertEquals(karte, KartenJson.lese(KartenJson.schreibe(karte)))
+        assertEquals(karte.normalisiereJoinEingänge(), KartenJson.lese(KartenJson.schreibe(karte)))
         val ergebnis = MathematikKartenLaufzeit().auswerten(karte)
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.hrm.latex.renderer.Latex
+import com.hrm.latex.renderer.font.MathFont
 import com.hrm.latex.renderer.model.LatexConfig
 import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
 
@@ -109,6 +110,9 @@ private fun EchterLatexText(
         modifier = modifier,
         config = LatexConfig(
             fontSize = fontSize,
+            // Renderer 1.3.0 setzt mathbb in der Standard-OTF nicht auf Doppelstrichglyphen um.
+            // Der gebündelte TTF-Schriftsatz besitzt dafür eine eigene AMS-Schrift.
+            mathFont = MathFont.KaTeXTTF,
             accessibilityEnabled = true,
         ),
         isDarkTheme = dunklesSchema,

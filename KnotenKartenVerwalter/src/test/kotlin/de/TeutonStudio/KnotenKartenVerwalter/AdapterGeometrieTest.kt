@@ -11,11 +11,11 @@ class AdapterGeometrieTest {
     private val adapter = KnotenDaten(art = "test.adapter", name = "Adapter", größe = GraphGröße(200f, 100f), anschlüsse = eingänge, eigenschaften = mapOf(KNOTEN_FORM_EIGENSCHAFT to KnotenEigenschaft.Text("adapter")))
 
     @Test fun `Griffe liegen auf der gerundeten Kapselkontur`() {
-        assertEquals(9.95837f, adapter.anschlussPositionRelativ(eingänge[0]).x, .0001f)
-        assertEquals(9.95837f, adapter.anschlussPositionRelativ(eingänge[0]).y, .0001f)
-        assertEquals(GraphPunkt(0f, 34f), adapter.anschlussPositionRelativ(eingänge[1]))
-        assertEquals(9.95837f, adapter.anschlussPositionRelativ(eingänge[2]).x, .0001f)
-        assertEquals(58.04163f, adapter.anschlussPositionRelativ(eingänge[2]).y, .0001f)
+        assertEquals(14.64466f, adapter.anschlussPositionRelativ(eingänge[0]).x, .0001f)
+        assertEquals(14.64466f, adapter.anschlussPositionRelativ(eingänge[0]).y, .0001f)
+        assertEquals(GraphPunkt(0f, 50f), adapter.anschlussPositionRelativ(eingänge[1]))
+        assertEquals(14.64466f, adapter.anschlussPositionRelativ(eingänge[2]).x, .0001f)
+        assertEquals(85.35534f, adapter.anschlussPositionRelativ(eingänge[2]).y, .0001f)
         eingänge.forEach { assertTrue(adapter.enthältRelativenPunkt(adapter.anschlussPositionRelativ(it))) }
         assertFalse(adapter.enthältRelativenPunkt(GraphPunkt(0f, 0f)))
         assertTrue(adapter.enthältRelativenPunkt(GraphPunkt(100f, 0f)))

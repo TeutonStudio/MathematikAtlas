@@ -9,10 +9,14 @@ import de.TeutonStudio.MathematikKnoten.*
 
 /** Dimension ergibt sich aus der Anzahl der Winkel; Trennzeichen ist ein Semikolon. */
 object RichtungsWinkelInspektor : KnotenInspektor {
-    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?,
-        aktionen: KnotenInspektorAktionen) {
+    @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen,
+        bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) {
+        if (bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten) FachInhalt(knoten, ergebnis, aktionen, false)
+    }
+    @Composable private fun FachInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, zeigeN: Boolean) {
         Text("n Halbkreiswinkel → Richtung in Rⁿ⁺¹", style = MaterialTheme.typography.titleSmall)
-        OutlinedTextField(
+        if (zeigeN) OutlinedTextField(
             value = knoten.parameter[RICHTUNG_WINKEL_ANZAHL] ?: "0",
             onValueChange = { eingabe ->
                 if (eingabe.toIntOrNull()?.let { it in 0..31 } == true)

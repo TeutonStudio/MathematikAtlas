@@ -131,7 +131,8 @@ private fun extremwert(operanden: Iterable<ZahlAusdruck>, maximum: Boolean): Zah
             else -> listOf(operand)
         }
     }
-    require(flach.size >= 2) { "Ein Extremwert benötigt mindestens zwei Operanden." }
+    require(flach.isNotEmpty()) { "Ein Extremwert benötigt mindestens einen Operanden." }
+    if (flach.size == 1) return flach.single()
     val eindeutig = flach.distinct()
     if (eindeutig.size == 1) return eindeutig.single()
     if (eindeutig.all { it is RationaleZahl }) {

@@ -25,6 +25,23 @@ import kotlin.test.*
 
 class MethodenQuelleDesktopTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun joinQuelleBietetFesteArgumentanzahlMitValidierungUndUndo() {
+        val atlas = DesktopAtlasZustand(DesktopKartenSpeicher(Files.createTempDirectory("methoden-join-ui-")))
+        val kandidat = methodenKnotenQuellen().first { it.id == "operator:ZAHL:zahl.addition" }
+        val quelle = konfiguriereMethodenQuelle(MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero), kandidat.knoten)
+        atlas.editor.führeAus(de.TeutonStudio.KnotenKartenVerwalter.logik.KartenAktion.KnotenEinfügen(quelle))
+        compose.setContent { MaterialTheme { Column { DesktopMethodenQuelle(atlas.editor.karte.knoten.single(), atlas) } } }
+        compose.onNodeWithText("Anzahl Argumente").performTextReplacement("1")
+        compose.onNodeWithText("Argumentanzahl übernehmen").assertIsNotEnabled()
+        compose.onNodeWithText("Anzahl Argumente").performTextReplacement("4")
+        compose.onNodeWithText("Argumentanzahl übernehmen").assertIsEnabled().performClick()
+        compose.runOnIdle {
+            assertEquals(4, methodenQuellKnoten(atlas.editor.karte.knoten.single())!!.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang })
+            atlas.editor.rückgängig()
+            assertEquals(quelle, atlas.editor.karte.knoten.single())
+            atlas.beendeBerechnungen()
+        }
+    }
     @Test fun sucheAuswahlAbbruchUndIdentitaetBleibenBedienbar() {
         val atlas = DesktopAtlasZustand(DesktopKartenSpeicher(Files.createTempDirectory("methoden-ui-")))
         val quelle = MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero)

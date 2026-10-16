@@ -144,20 +144,19 @@ private fun AtlasZustand.knotenFürKarte(
     )
 }
 
-private fun AtlasZustand.karteIstAlsKnotenZulässig(karte: KartenDaten): Boolean =
-    karte.id != editor.karte.id && !karte.archiviert && !referenziertKarte(karte, editor.karte.id, mutableSetOf())
+internal fun AtlasZustand.karteIstAlsKnotenZulässig(karte: KartenDaten): Boolean =
+    istKarteAlsKnotenZulässig(karte, editor.karte.id, speicher::lade)
 
-private fun AtlasZustand.referenziertKarte(
-    karte: KartenDaten,
-    gesuchteId: KartenId,
-    besucht: MutableSet<KartenVerweis>,
-): Boolean {
-    val refs = karte.knoten.flatMap(KnotenDaten::alleKartenVerweise)
-    if (refs.any { it.kartenId == gesuchteId }) return true
-    return refs.any { ref ->
-        if (!besucht.add(ref)) false
-        else speicher.lade(ref)?.let { referenziertKarte(it, gesuchteId, besucht) } == true
+/** Gemeinsamer vollständiger Rekursionsschutz, einschließlich Eingangsfallbacks. */
+internal fun istKarteAlsKnotenZulässig(karte: KartenDaten, aktiveId: KartenId, lade: (KartenVerweis) -> KartenDaten?): Boolean {
+    val besucht = mutableSetOf<KartenVerweis>()
+    fun referenziert(kandidat: KartenDaten): Boolean {
+        val refs = kandidat.knoten.flatMap(KnotenDaten::alleKartenVerweise)
+        return refs.any { it.kartenId == aktiveId } || refs.any { ref ->
+            besucht.add(ref) && lade(ref)?.let(::referenziert) == true
+        }
     }
+    return karte.id != aktiveId && !karte.archiviert && !referenziert(karte)
 }
 
 private fun schnittstellenFehler(karte: KartenDaten, zustand: KartenKnotenZustand): String? {

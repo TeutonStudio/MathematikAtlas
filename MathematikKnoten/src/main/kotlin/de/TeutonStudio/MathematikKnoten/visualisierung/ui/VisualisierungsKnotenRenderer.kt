@@ -37,6 +37,8 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldungsArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInteraktionsModus
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenViewportInhalt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRenderer
@@ -46,7 +48,6 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.*
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.math.*
 
@@ -61,32 +62,43 @@ class VisualisierungsKnotenRenderer(private val ergebnisFür: (KnotenDaten) -> K
         KnotenViewportInhalt(aktionen, kopf = {
             Text("Visualisierung · ${raumName(c.dimension)}", style = MaterialTheme.typography.titleMedium)
         }, ansicht = { modifier ->
-            VisualisierungsSzene(mengen, c, false, {}, modifier)
+            VisualisierungsSzene(mengen, c, false, {}, modifier, aktionen::meldungenMelden)
         }, fuß = { Text("Vorschau · Halten für Details", style = MaterialTheme.typography.labelSmall) })
     }
 }
 
-private data class VisualisierungsBerechnungsStand(val ergebnis: VisualisierungsErgebnis? = null, val fertig: Boolean = false, val vorschau: VisualisierungsErgebnis? = null)
+private data class VisualisierungsBerechnungsStand(val ergebnis: VisualisierungsErgebnis? = null, val fertig: Boolean = false)
+
+private fun visualisierungsMeldungen(ergebnis: VisualisierungsErgebnis): List<KnotenMeldung> = when (ergebnis) {
+    is VisualisierungsErgebnis.NichtDarstellbar -> listOf(KnotenMeldung(ergebnis.grund, KnotenMeldungsArt.Fehler))
+    is VisualisierungsErgebnis.ProjektionErforderlich -> listOf(KnotenMeldung(ergebnis.grund, KnotenMeldungsArt.Warnung))
+    is VisualisierungsErgebnis.BedingtDarstellbar -> (listOf(ergebnis.grund) + ergebnis.bedingungen).map { KnotenMeldung(it, KnotenMeldungsArt.Warnung) }
+    is VisualisierungsErgebnis.Teilweise -> ergebnis.hinweise.ifEmpty { listOf("Die Darstellung ist teilweise.") }
+        .map { KnotenMeldung(it, KnotenMeldungsArt.Warnung) }
+    is VisualisierungsErgebnis.Erfolgreich -> ergebnis.hinweise.map { KnotenMeldung(it) } +
+        if (ergebnis.statistik.budgetErschöpft) listOf(KnotenMeldung("Budget ausgeschöpft", KnotenMeldungsArt.Warnung)) else emptyList()
+}
 
 /** Ein neuer Schlüssel besitzt einen neuen Zustand; alte Resultate können keine Anfrage überspringen. */
 @Composable
 private fun erinnertesVisualisierungsErgebnis(menge: MengenAusdruck?, c: VisualisierungsKonfiguration, detail: Boolean): State<VisualisierungsBerechnungsStand> {
-    val schlüssel = listOf(menge, c.samplingSignatur(), detail)
+    val inhalt = c.inhaltsSignatur(menge)
+    var vorhanden by remember(inhalt) { mutableStateOf<VisualisierungsErgebnis?>(null) }
+    val schlüssel = listOf(inhalt, c.samplingSignatur(), detail)
     val zustand = remember(schlüssel) {
         val vollständig = menge?.let { gemeinsameVisualisierungsBerechnung.gecacht(it, c) }
-        mutableStateOf(VisualisierungsBerechnungsStand(vollständig, vollständig != null))
+        mutableStateOf(VisualisierungsBerechnungsStand(vollständig ?: vorhanden, vollständig != null))
     }
     LaunchedEffect(schlüssel) {
-        if (zustand.value.fertig) return@LaunchedEffect
+        if (zustand.value.fertig) { vorhanden = zustand.value.ergebnis; return@LaunchedEffect }
         if (menge == null) { zustand.value = VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar("Verbinde eine Menge mit dem Eingang."), true); return@LaunchedEffect }
         try {
-            run {
-                val vorschau = gemeinsameVisualisierungsBerechnung.berechne(menge, c.alsVorschau().copy(
-                    sampling = c.alsVorschau().sampling.copy(zielFehlerPixel = 3.0 / if (c.dimension == RaumDimension.R3) c.kamera.zoom else 1.0)), detail)
-                zustand.value = VisualisierungsBerechnungsStand(vorschau, false, vorschau)
-            }
-            delay(120)
-            zustand.value = VisualisierungsBerechnungsStand(gemeinsameVisualisierungsBerechnung.berechne(menge, c, detail), true, zustand.value.vorschau)
+            berechneVisualisierungsFolge(c, vorhanden != null,
+                berechne = { gemeinsameVisualisierungsBerechnung.berechne(menge, it, detail) },
+                veröffentliche = { ergebnis, fertig ->
+                    vorhanden = ergebnis
+                    zustand.value = VisualisierungsBerechnungsStand(ergebnis, fertig)
+                })
         } catch (abbruch: kotlinx.coroutines.CancellationException) { throw abbruch }
         catch (fehler: Exception) { zustand.value = VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar(fehler.message ?: "Darstellung konnte nicht berechnet werden."), true) }
     }
@@ -95,7 +107,8 @@ private fun erinnertesVisualisierungsErgebnis(menge: MengenAusdruck?, c: Visuali
 
 @Composable
 private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, konfiguration: VisualisierungsKonfiguration, interaktiv: Boolean,
-    ändern: (VisualisierungsKonfiguration) -> Unit, modifier: Modifier = Modifier) {
+    ändern: (VisualisierungsKonfiguration) -> Unit, modifier: Modifier = Modifier,
+    beiMeldungen: ((List<KnotenMeldung>) -> Unit)? = null) {
     BoxWithConstraints(modifier.clipToBounds()) {
         val dichte = androidx.compose.ui.platform.LocalDensity.current
         val breite = with(dichte) { maxWidth.toPx() }.coerceAtLeast(1f)
@@ -116,27 +129,22 @@ private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, kon
             val empfohlen = konfiguration.copy(dimensionsModus = DimensionsModus.Automatisch).mitWirksamerDimension(menge).dimension
             if (empfohlen != konfiguration.dimension && konfiguration.ausgabeKoordinaten.isEmpty())
                 VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar("$name: Raum $empfohlen passt nicht zu ${konfiguration.dimension}."), true)
-            else {
-                val aktuell = erinnertesVisualisierungsErgebnis(menge, ebenenConfig[index], interaktiv).value
-                var vorhanden by remember(menge, konfiguration.dimension, konfiguration.methodenModus, konfiguration.bereiche,
-                    konfiguration.ausgabeKoordinaten, konfiguration.festeSchnitte) { mutableStateOf<VisualisierungsErgebnis?>(null) }
-                LaunchedEffect(aktuell.ergebnis) { aktuell.ergebnis?.let { vorhanden = it } }
-                aktuell.copy(ergebnis = aktuell.ergebnis ?: vorhanden)
-            }
+            else erinnertesVisualisierungsErgebnis(menge, ebenenConfig[index], interaktiv).value
         } }
-        val stand = VisualisierungsBerechnungsStand(vereinigeVisualisierungsErgebnisse(stände.mapNotNull { it.ergebnis }), stände.all { it.fertig }, vereinigeVisualisierungsErgebnisse(stände.mapNotNull { it.vorschau }))
+        val stand = VisualisierungsBerechnungsStand(vereinigeVisualisierungsErgebnisse(stände.mapNotNull { it.ergebnis }), stände.all { it.fertig })
         val ergebnis = stand.ergebnis ?: if (mengen.isEmpty()) VisualisierungsErgebnis.NichtDarstellbar("Verbinde eine Menge mit einem Eingang.") else null
-        val menge = mengen
-        val zeichenEbenen = stände.mapIndexed { i, e -> Triple(e.ergebnis, ebenenConfig[i], e.vorschau) }
-        var letzteGeometrie by remember(menge, konfiguration.dimension, konfiguration.methodenModus,
-            konfiguration.achsen, konfiguration.festeSchnitte, konfiguration.ausgabeKoordinaten, konfiguration.bereiche) {
-            mutableStateOf<VisualisierungsErgebnis?>(null)
+        val zeichenEbenen = stände.mapIndexed { i, e ->
+            val (name, menge) = aktiveMengen[i]
+            VisualisierungsZeichenEbene(name, ebenenConfig[i].inhaltsSignatur(menge), e.ergebnis, ebenenConfig[i])
         }
-        var letzteVorschau by remember(menge, konfiguration.dimension, konfiguration.methodenModus, konfiguration.achsen, konfiguration.festeSchnitte, konfiguration.ausgabeKoordinaten, konfiguration.bereiche) { mutableStateOf<VisualisierungsErgebnis?>(null) }
-        LaunchedEffect(stand.vorschau) { if (stand.vorschau != null) letzteVorschau = stand.vorschau }
-        LaunchedEffect(ergebnis) { if (ergebnis != null) letzteGeometrie = ergebnis }
-        Plot(ergebnis ?: letzteGeometrie, konfiguration, { ändern(konfiguration.copy(kamera = it)) }, Modifier.fillMaxSize(), interaktiv, stand.vorschau ?: letzteVorschau, zeichenEbenen, aktiveMengen)
-        if (!stand.fertig) Text(if (letzteGeometrie == null && ergebnis == null) "Berechne Darstellung …" else "Verfeinere Darstellung …",
+        Plot(konfiguration, { ändern(konfiguration.copy(kamera = it)) }, Modifier.fillMaxSize(), interaktiv, zeichenEbenen)
+        val fortschritt = if (ergebnis == null) "Berechne Darstellung …" else "Verfeinere Darstellung …"
+        if (beiMeldungen != null) {
+            val meldungen = (stände.mapNotNull { it.ergebnis }.ifEmpty { listOfNotNull(ergebnis) })
+                .flatMap(::visualisierungsMeldungen) + if (!stand.fertig) listOf(KnotenMeldung(fortschritt)) else emptyList()
+            SideEffect { beiMeldungen(meldungen) }
+        }
+        if (beiMeldungen == null && !stand.fertig) Text(fortschritt,
             modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
         val status = when (val e = ergebnis) {
             is VisualisierungsErgebnis.NichtDarstellbar -> e.grund
@@ -156,13 +164,13 @@ private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, kon
                 Text("● ${stil.name.ifBlank { "Menge ${mengen.indexOfFirst { it.first==name }+1}" }} · $nachweis", color=Color(stil.farbe ?: 0xFF2563EB), style=MaterialTheme.typography.labelSmall)
             } }
         }
-        if (status.isNotBlank()) Surface(Modifier.align(androidx.compose.ui.Alignment.TopStart).widthIn(max=if(interaktiv) maxWidth*.55f else maxWidth).padding(6.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = .92f)) {
+        if (beiMeldungen == null && status.isNotBlank()) Surface(Modifier.align(androidx.compose.ui.Alignment.TopStart).widthIn(max=if(interaktiv) maxWidth*.55f else maxWidth).padding(6.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = .92f)) {
             Text(status, style = MaterialTheme.typography.labelSmall, maxLines = if (interaktiv) 4 else 2, modifier = Modifier.padding(4.dp))
         }
         if (interaktiv) {
             var menüOffen by remember { mutableStateOf(false) }
-            val eingepassteKamera = remember(ergebnis, letzteGeometrie, konfiguration, breite, höhe) {
-                kameraEinpassen(ergebnis ?: letzteGeometrie, konfiguration, breite.toDouble(), höhe.toDouble())
+            val eingepassteKamera = remember(ergebnis, konfiguration, breite, höhe) {
+                kameraEinpassen(ergebnis, konfiguration, breite.toDouble(), höhe.toDouble())
             }
             Row(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = { ändern(konfiguration.copy(kamera = t.navigiere(0.0, 0.0, 1.4, breite / 2.0, höhe / 2.0))) }) { Text("+") }
@@ -290,15 +298,6 @@ private data class VisualisierungsZeichenDaten(
     val intervalle: List<VisualisierungsIntervall>,
 )
 
-internal fun <T> reduziereGleichmäßig(werte: List<T>, maximum: Int): List<T> {
-    require(maximum > 0)
-    if (werte.size <= maximum) return werte
-    if (maximum == 1) return listOf(werte.first())
-    return List(maximum) { index ->
-        werte[(index.toLong() * werte.lastIndex / (maximum - 1)).toInt()]
-    }
-}
-
 private fun bereiteZeichenDatenVor(
     ergebnis: VisualisierungsErgebnis?,
 ): VisualisierungsZeichenDaten {
@@ -320,15 +319,19 @@ private fun bereiteZeichenDatenVor(
     )
 }
 
+private data class VisualisierungsZeichenEbene(
+    val name: String, val inhalt: List<Any?>,
+    val ergebnis: VisualisierungsErgebnis?, val konfiguration: VisualisierungsKonfiguration,
+)
+
+private data class VisualisierungsZeichenPaket(val daten: VisualisierungsZeichenDaten)
+
 @Composable private fun Plot(
-    ergebnis: VisualisierungsErgebnis?,
     konfiguration: VisualisierungsKonfiguration,
     onKamera: (KameraZustand) -> Unit,
     modifier: Modifier,
-    interaktiv: Boolean = true,
-    interaktionsErgebnis: VisualisierungsErgebnis? = null,
-    ebenen: List<Triple<VisualisierungsErgebnis?, VisualisierungsKonfiguration, VisualisierungsErgebnis?>> = emptyList(),
-    eingangsIdentität: Any? = null,
+    interaktiv: Boolean,
+    ebenen: List<VisualisierungsZeichenEbene>,
 ) {
     val textMeasurer = rememberTextMeasurer(cacheSize = 128)
     var plotGröße by remember { mutableStateOf(IntSize(1, 1)) }
@@ -337,23 +340,27 @@ private fun bereiteZeichenDatenVor(
     var inspektion by remember { mutableStateOf<Offset?>(null) }
     var kamera by remember { mutableStateOf(konfiguration.kamera) }
     var gesteAktiv by remember { mutableStateOf(false) }
-    val persistierteKamera by rememberUpdatedState(konfiguration.kamera)
     val aktuelleKameraÜbernehmen by rememberUpdatedState(onKamera)
     LaunchedEffect(konfiguration.kamera, gesteAktiv) {
         if (!gesteAktiv) kamera = konfiguration.kamera
     }
-    val datenZustand = remember(ergebnis) { mutableStateOf(VisualisierungsZeichenDaten(emptyList(), emptyList(), emptyList(), emptyList(), emptyList())) }
-    LaunchedEffect(ergebnis) { datenZustand.value = withContext(Dispatchers.Default) { bereiteZeichenDatenVor(ergebnis) } }
-    val vollständigeZeichenDaten = datenZustand.value
-    val interaktionsZustand = remember(interaktionsErgebnis) { mutableStateOf<VisualisierungsZeichenDaten?>(null) }
-    LaunchedEffect(interaktionsErgebnis) { if (interaktionsErgebnis != null) interaktionsZustand.value = withContext(Dispatchers.Default) { bereiteZeichenDatenVor(interaktionsErgebnis) } }
-    val unSortierteZeichenDaten = if (gesteAktiv) interaktionsZustand.value ?: vollständigeZeichenDaten else vollständigeZeichenDaten
-    val ebenenErgebnisse = ebenen.map { it.first to it.third }
-    val ebenenDaten = remember(eingangsIdentität) { mutableStateOf<List<Pair<VisualisierungsZeichenDaten, VisualisierungsZeichenDaten?>>>(emptyList()) }
-    LaunchedEffect(eingangsIdentität, ebenenErgebnisse) {
-        ebenenDaten.value = withContext(Dispatchers.Default) { ebenenErgebnisse.map { (voll, grob) ->
-            bereiteZeichenDatenVor(voll) to grob?.let(::bereiteZeichenDatenVor)
-        } }
+    // Ein Ergebniswechsel setzt das veröffentlichte Paket nicht zurück. Erst ein vollständig
+    // aufbereiteter Ersatz wird atomar sichtbar; ein fachlicher Eingangwechsel setzt es zurück.
+    val zeichenPakete = ebenen.map { ebene -> key(ebene.name, ebene.inhalt) {
+        var paket by remember { mutableStateOf<VisualisierungsZeichenPaket?>(null) }
+        LaunchedEffect(ebene.ergebnis) {
+            if (ebene.ergebnis != null) {
+                paket = withContext(Dispatchers.Default) {
+                    VisualisierungsZeichenPaket(bereiteZeichenDatenVor(ebene.ergebnis))
+                }
+            }
+        }
+        paket
+    } }
+    val unSortierteZeichenDaten = remember(zeichenPakete) {
+        val daten = zeichenPakete.mapNotNull { it?.daten }
+        VisualisierungsZeichenDaten(daten.flatMap { it.zellen }, daten.flatMap { it.punkte },
+            daten.flatMap { it.segmente }, daten.flatMap { it.dreiecke }, daten.flatMap { it.intervalle })
     }
     val sortierCaches = remember(ebenen.size) { List(ebenen.size) { DreieckSortierCache() } }
     val globalerSortierCache = remember { EbenenDreieckSortierCache() }
@@ -424,15 +431,15 @@ private fun bereiteZeichenDatenVor(
             }
             RaumDimension.R3 -> if (darstellungsKonfiguration.achsenSichtbar) zeichne3DAchsen(darstellungsKonfiguration, xAchse, yAchse, zAchse, textMeasurer)
         }
-        ebenenDaten.value.forEachIndexed { index, (voll, grob) ->
-        val unSortierteZeichenDaten = if (gesteAktiv) grob ?: voll else voll
-        val darstellungsKonfiguration = ebenen.getOrNull(index)?.second?.copy(kamera = kamera) ?: darstellungsKonfiguration
+        zeichenPakete.forEachIndexed { index, paket ->
+        val unSortierteZeichenDaten = paket?.daten ?: return@forEachIndexed
+        val darstellungsKonfiguration = ebenen[index].konfiguration.copy(kamera = kamera)
         val sortierteDreiecke = if (darstellungsKonfiguration.dimension == RaumDimension.R3) emptyList() else sortierCaches[index].sortiere(unSortierteZeichenDaten.dreiecke, darstellungsKonfiguration)
         zeichneZellen(unSortierteZeichenDaten.zellen, darstellungsKonfiguration)
         if (darstellungsKonfiguration.dimension == RaumDimension.R1) {
             unSortierteZeichenDaten.intervalle.forEach { zeichneIntervall(it, darstellungsKonfiguration, farbeFür(null, darstellungsKonfiguration)) }
         }
-        val zeichnetDreieckKanten = !gesteAktiv && sortierteDreiecke.size <= 1_500
+        val zeichnetDreieckKanten = sortierteDreiecke.size <= 1_500
         if (darstellungsKonfiguration.dimension != RaumDimension.R3)
             sortierteDreiecke.forEach { zeichneDreieck(it, darstellungsKonfiguration, zeichnetDreieckKanten) }
         if (darstellungsKonfiguration.farbe.modus != FarbModus.Spektrum) {
@@ -472,11 +479,11 @@ private fun bereiteZeichenDatenVor(
         }
         }
         if (darstellungsKonfiguration.dimension == RaumDimension.R3) {
-            val dreiecksEbenen = ebenenDaten.value.map { (voll,grob) -> (if(gesteAktiv) grob ?: voll else voll).dreiecke }
+            val dreiecksEbenen = zeichenPakete.map { it?.daten?.dreiecke.orEmpty() }
             val sortiert = globalerSortierCache.sortiere(dreiecksEbenen, darstellungsKonfiguration)
             sortiert.forEach { (index,dreieck) ->
-                val c = ebenen.getOrNull(index)?.second?.copy(kamera=kamera) ?: darstellungsKonfiguration
-                zeichneDreieck(dreieck,c,!gesteAktiv && sortiert.size <= 1500)
+                val c = ebenen.getOrNull(index)?.konfiguration?.copy(kamera=kamera) ?: darstellungsKonfiguration
+                zeichneDreieck(dreieck,c,sortiert.size <= 1500)
             }
         }
         if (interaktiv && inspektion != null) zeichneInspektion(inspektion!!, unSortierteZeichenDaten, darstellungsKonfiguration, textMeasurer, beschriftung)

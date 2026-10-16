@@ -39,6 +39,15 @@ import de.TeutonStudio.MathematikRechenSystem.kern.parseTensorPermutationOderNul
 import de.TeutonStudio.MathematikRechenSystem.kern.standardTensorPermutation
 
 interface KnotenInspektor {
+    val hauptBereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich
+        get() = de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten
+    fun hatBereich(knoten: KnotenDaten, bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich): Boolean = bereich == hauptBereich
+    @Composable fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen,
+        bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) {
+        if (bereich == hauptBereich) Inhalt(knoten, ergebnis, aktionen)
+    }
+    @Composable fun AnschlussInhalt(knoten: KnotenDaten, anschluss: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten,
+        ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {}
     @Composable fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen)
 }
 interface KnotenInspektorAktionen {
@@ -111,6 +120,7 @@ object KnotenInspektorRegister {
 }
 
 private object BildmengeInspektor : KnotenInspektor {
+    override val hauptBereich get() = de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,
@@ -176,9 +186,7 @@ private object OrdnungsrelationInspektor : KnotenInspektor {
                 FilterChip(
                     selected = aktuell == schlüssel,
                     onClick = {
-                        val bisherStandard = relationen.any { it.third == knoten.name }
-                        aktionen.parameter("relation", schlüssel)
-                        if (bisherStandard) aktionen.name(standardName)
+                        aktionen.knoten(konfiguriereOrdnungsrelation(knoten, schlüssel))
                     },
                     label = { Text(zeichen) },
                 )
@@ -528,6 +536,12 @@ private fun TensorPermutationEditor(
 }
 
 private object KartenSchnittstellenInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) = false
+    @Composable override fun AnschlussInhalt(knoten: KnotenDaten, anschluss: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten,
+        ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
+        if (anschluss.name == "wert") Inhalt(knoten, ergebnis, aktionen)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
         val wertAnschluss = knoten.anschlüsse.firstOrNull { it.name == "wert" } ?: return

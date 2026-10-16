@@ -54,4 +54,35 @@ class InhaltsGeometrieTest {
         z.rückgängig()
         assertEquals(karte, z.karte)
     }
+    @Test fun `Anhaenge erweitern nur Gruppen und nicht den Koerper oder Karten JSON`() {
+        val karte = KartenDaten(name = "Test", knoten = listOf(k), visuelleGruppen = listOf(g))
+        val z = zustand(karte)
+        z.meldeKnotenMeldungen(k.id, listOf(KnotenMeldung("Fehler", KnotenMeldungsArt.Fehler)))
+        z.meldeKnotenAnhangHöhe(k.id, oben = true, höhe = 160f)
+        z.meldeKnotenAnhangHöhe(k.id, oben = false, höhe = 32f)
+        val dargestellt = z.darstellungsKarte
+        val gruppe = dargestellt.visuelleGruppen.single()
+        assertEquals(k.größe, dargestellt.knoten.single().größe)
+        assertTrue(gruppe.position.y + VISUELLE_GRUPPE_KOPFZEILE_HÖHE + 24f <= k.position.y - 160f)
+        assertTrue(gruppe.position.y + gruppe.größe.höhe >= k.position.y + k.größe.höhe + 32f + 24f)
+        assertEquals(karte, z.karte)
+        assertEquals(KartenDatenJson.schreibe(karte), KartenDatenJson.schreibe(z.karte))
+        z.meldeKnotenMeldungen(k.id, emptyList())
+        z.meldeKnotenAnhangHöhe(k.id, oben = true, höhe = 160f) // verspäteter Layout-Callback
+        assertEquals(0f, z.knotenAnhänge.getValue(k.id).oben)
+        assertEquals(32f, z.knotenAnhänge.getValue(k.id).unten)
+        assertTrue(z.meldungenFür(k.id).isEmpty())
+        z.ersetzeKarte(KartenDaten(name = "Andere Karte"))
+        assertTrue(z.knotenAnhänge.isEmpty())
+    }
+
+    @Test fun `Meldungen sind vollstaendig priorisiert und eindeutiger Text behaelt hoechsten Schweregrad`() {
+        val meldungen = listOf(
+            KnotenMeldung("gleich"), KnotenMeldung("Warnung", KnotenMeldungsArt.Warnung),
+            KnotenMeldung("gleich", KnotenMeldungsArt.Fehler), KnotenMeldung("  "), KnotenMeldung("Hinweis"),
+        ).normalisierteMeldungen()
+        assertEquals(listOf("gleich", "Warnung", "Hinweis"), meldungen.map { it.text })
+        assertEquals(KnotenMeldungsArt.Fehler, meldungen.first().art)
+    }
+
 }

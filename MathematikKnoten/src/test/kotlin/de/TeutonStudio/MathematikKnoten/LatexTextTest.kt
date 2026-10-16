@@ -9,6 +9,23 @@ import kotlin.test.assertNull
 
 class LatexTextTest {
     @Test
+    fun `Doppelstrichnotation bleibt in beiden Themes samt Potenzen und Indizes erhalten`() {
+        val fälle = mapOf(
+            "\\mathbb{R}" to "\\mathbb{R}",
+            "\\mathbb R" to "\\mathbb{R}",
+            "\\mathbb{R}^2" to "\\mathbb{R}^2",
+            "\\mathbb N_0" to "\\mathbb{N}_0",
+            "x\\in\\mathbb{R}" to "x\\in\\mathbb{R}",
+        )
+        for (dunkel in listOf(false, true)) {
+            for ((eingabe, erwartet) in fälle) {
+                val quelltext = atlasLatexQuelltext(eingabe, dunklesSchema = dunkel)
+                assertEquals(erwartet, quelltext.takeLast(erwartet.length))
+            }
+        }
+    }
+
+    @Test
     fun `Formelbegrenzer werden entfernt ohne den Formelinhalt umzuschreiben`() {
         assertEquals("\\frac{a}{b}", normalisiereLatexQuelltext("$\\frac{a}{b}$"))
         assertEquals("\\begin{cases}x&x>0\\end{cases}", normalisiereLatexQuelltext("\\[\\begin{cases}x&x>0\\end{cases}\\]"))

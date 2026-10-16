@@ -7,6 +7,35 @@ import kotlin.test.*
 
 class MethodenQuellKnotenTest {
     private val auswerter = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister())
+    @Test fun `kanonische Joinquellen behalten binaere und konfigurierte Argumentrollen`() {
+        val kandidaten = methodenKnotenQuellen()
+        for (art in listOf("zahl.addition", "menge.vereinigung", "menge.schnitt")) {
+            val basis = kandidaten.first { joinOperatorId(it.knoten) == if (art == "menge.schnitt") "menge.vereinigung" else art }
+            val kandidat = if (art == "menge.schnitt") basis.copy(knoten = konfiguriereMethodenQuellParameter(basis.knoten, "operator", art)) else basis
+            if (art == "zahl.addition") assertNull(kandidat.fehler, kandidat.id)
+            else assertTrue(kandidat.fehler?.contains("Zielmenge") == true, kandidat.fehler)
+            assertEquals(2, kandidat.knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang })
+            assertTrue(kandidat.knoten.anschlüsse.any { it.kannSichErweitern })
+            for (anzahl in listOf(2, 4)) {
+                val quelle = konfiguriereMethodenQuellParameter(kandidat.knoten, "festeEingänge", anzahl.toString())
+                assertEquals(anzahl, methodenQuellKarte(quelle, KnotenId("probe")).knoten.count { it.art == "mathematik.kartenEingang" })
+                if (art != "zahl.addition") continue
+                val methodenknoten = konfiguriereMethodenQuelle(MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero), quelle)
+                val laufzeit = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister(), normalisiereKarte = { it.normalisiereJoinEingänge() })
+                val export = laufzeit.auswerten(KartenDaten(name = "Quelle", knoten = listOf(methodenknoten))).knoten.getValue(methodenknoten.id)
+                assertNull(export.fehler, "$art/$anzahl")
+                val methode = assertIs<MathematischeMethode>(export.ausgaben.getValue("methode").objekt)
+                assertEquals(anzahl, methode.signatur.argumente.size)
+                assertEquals(anzahl, methode.signatur.argumente.map { it.id }.distinct().size)
+                val werte = List(anzahl) { index -> RationaleZahl.von((index + 1).toLong()) }
+                val ergebnis = methode.wendeMitBedingungenAn(Tupel(werte)).ergebnis
+                val erwartet = RationaleZahl.von((anzahl * (anzahl + 1) / 2).toLong())
+                assertEquals(Tupel(listOf(erwartet)), ergebnis, "$art/$anzahl")
+                val geladen = KartenDatenJson.lese(KartenDatenJson.schreibe(KartenDaten(name = "Quelle", knoten = listOf(methodenknoten)))).knoten.single()
+                assertEquals(quelle, methodenQuellKnoten(geladen))
+            }
+        }
+    }
     @Test fun `Standardquelle ist Identitaet und Ausgang bleibt bei Quellenwechsel stabil`() {
         val knoten = MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt(0f, 0f))
         val ergebnis = auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(knoten)))

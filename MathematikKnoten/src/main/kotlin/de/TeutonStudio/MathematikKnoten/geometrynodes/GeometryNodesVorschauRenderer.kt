@@ -15,6 +15,8 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldung
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenMeldungsArt
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.*
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikRechenSystem.kern.*
@@ -26,6 +28,12 @@ class GeometryNodesVorschauRenderer(private val ergebnisFuer: (KnotenDaten) -> K
         val ergebnis=ergebnisFuer(knoten)
         val geometrie=ergebnis?.ausgaben?.get("geometrie")?.objekt as? ProzeduraleGeometrie
         val render=remember(geometrie) { geometrie?.let { runCatching { geometryVorschau(it) } } }
+        val meldungen = ergebnis.knotenMeldungen() + buildList {
+            if (render?.getOrNull()?.begrenzt == true) add(KnotenMeldung("Vorschau begrenzt; Geometrie bleibt vollständig.", KnotenMeldungsArt.Warnung))
+            render?.exceptionOrNull()?.message?.let { add(KnotenMeldung(it, KnotenMeldungsArt.Fehler)) }
+            if (geometrie == null && ergebnis?.fehler == null) add(KnotenMeldung("Verbinde ein Geometry Set."))
+        }
+        SideEffect { aktionen.meldungenMelden(meldungen) }
         val ansicht=remember(render) { render?.getOrNull()?.let(::GeometryAnsicht) }
         var kamera by remember(knoten.id) { mutableStateOf(GeometryKamera()) }
         var verschieben by remember(knoten.id) { mutableStateOf(false) }
@@ -59,9 +67,6 @@ class GeometryNodesVorschauRenderer(private val ergebnisFuer: (KnotenDaten) -> K
             },
             fuß={ Column {
                 if(geometrie!=null) Text("Direkt: ${geometrie.mesh?.punkte?.size ?: 0} Eckpunkte · ${geometrie.mesh?.flaechen?.size ?: 0} Flächen · ${geometrie.punktwolke?.punkte?.size ?: 0} Punkte · ${geometrie.instanzen.size} Instanzen",style=MaterialTheme.typography.labelSmall)
-                if(render?.getOrNull()?.begrenzt==true) Text("Vorschau begrenzt; Geometrie bleibt vollständig.",style=MaterialTheme.typography.labelSmall)
-                (ergebnis?.fehler ?: render?.exceptionOrNull()?.message)?.let { Text(it,color=MaterialTheme.colorScheme.error) }
-                if(geometrie==null && ergebnis?.fehler==null) Text("Verbinde ein Geometry Set.")
                 Row {
                     TextButton(onClick={ kamera=kamera.zoomen(0.8) }) { Text("−") }
                     TextButton(onClick={ kamera=kamera.zoomen(1.25) }) { Text("+") }

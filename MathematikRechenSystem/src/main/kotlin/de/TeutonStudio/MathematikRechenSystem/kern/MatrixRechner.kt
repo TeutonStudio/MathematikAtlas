@@ -106,7 +106,7 @@ object MatrixRechner {
                 )
             }
             MatrixRechnerOperator.ADDITION -> {
-                if (anfrage.matrizen.size < 2) return anzahlFehler("Addition", "mindestens zwei Matrizen")
+                if (anfrage.matrizen.isEmpty()) return anzahlFehler("Addition", "mindestens eine Matrix")
                 gleicheForm(anfrage.matrizen)?.let { return it }
                 MatrixRechnerErgebnis.MatrixWert(
                     anfrage.matrizen.map(MatrixOperand::matrix).reduce(Matrix::plus),
@@ -148,10 +148,9 @@ object MatrixRechner {
                 }
             }
             MatrixRechnerOperator.HADAMARD_PRODUKT -> {
-                if (anfrage.matrizen.size < 2) return anzahlFehler("Hadamard-Produkt", "mindestens zwei Matrizen")
+                if (anfrage.matrizen.isEmpty()) return anzahlFehler("Hadamard-Produkt", "mindestens eine Matrix")
                 gleicheForm(anfrage.matrizen)?.let { return it }
                 val links = anfrage.matrizen[0].matrix
-                val rechts = anfrage.matrizen[1].matrix
                 MatrixRechnerErgebnis.MatrixWert(
                     Matrix(
                         List(links.zeilenAnzahl) { z ->
