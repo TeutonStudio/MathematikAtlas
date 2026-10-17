@@ -427,7 +427,7 @@ private fun AuswirkungsDetails(wirkung: KnotenErsetzungsAuswirkung) {
     Text("Entfallen: ${wirkung.entfallendeAnschlüsse.namenOderKeine()}")
     if (wirkung.trenntVerbindungen) {
         Text(
-            "${wirkung.entfallendeVerbindungen.size} Verbindung(en) und ${wirkung.entfallendeLokaleWerte.size} lokale Operanden (${wirkung.entfallendeLokaleWerte.joinToString()}) entfallen.",
+            "${wirkung.entfallendeVerbindungen.size} Verbindung(en) und ${wirkung.entfallendeLokaleWerte.size} lokale Werte/Kartenfallbacks (${wirkung.entfallendeLokaleWerte.joinToString()}) entfallen.",
             color = MaterialTheme.colorScheme.error,
             fontWeight = FontWeight.Bold,
         )

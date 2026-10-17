@@ -1,0 +1,82 @@
+[
+  {
+    "path": "app/src/main/assets/de/TeutonStudio/MathematikAtlas/standardkarten/karten/standard-function-rational-removable-hole.json",
+    "sha256": "72644f22d5ec268a0711d790cd24462ded010294d5ef74e30d3279b5e88c0fa6",
+    "nodes": [
+      [
+        "n4",
+        "mathematik.einzelmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-1c62c5fb8fe05c0b5658-v7.json",
+    "sha256": "9654bf102aa8bd7a62454ae69cced55a740c4662d9e29fb5aa51703cf8640bbc",
+    "nodes": [
+      [
+        "definition-iteriertes-kartesisches-produkt-1-abbildungsmenge",
+        "mathematik.abbildungsmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-74cd55853a62bde54812-v7.json",
+    "sha256": "f75fca622f283d61ecef8146f5baa12525311bee2dae35967b559db7010ce293",
+    "nodes": [
+      [
+        "definition-iteriertes-kartesisches-produkt-0-abbildungsmenge",
+        "mathematik.abbildungsmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-971091cb78c4a08729bd-v7.json",
+    "sha256": "1221a34451b034e471b9c2fea236c28b10c03ab317e126e5b89bd6ac3a1c4eab",
+    "nodes": [
+      [
+        "definition-ordnungsrelation-kleiner-0-einzel-null",
+        "mathematik.einzelmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-d375f9d1ffd9d08a0a46-v7.json",
+    "sha256": "02bf6fc590d1fdb68729b179e4216586057b401327c7188a0894afe9f288426d",
+    "nodes": [
+      [
+        "definition-ordnungsrelation-größer-0-einzel-null",
+        "mathematik.einzelmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-f05b1aa68468d07795cb-v7.json",
+    "sha256": "d5d122624b21e1f94baa8927a49c54fe851d3838d924bca3323fbbe479d49c14",
+    "nodes": [
+      [
+        "definition-iteriertes-kartesisches-produkt-2-abbildungsmenge",
+        "mathematik.abbildungsmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-halbes-intervall-obergrenze-v7.json",
+    "sha256": "81670001ab753467f37f964dc8d0df5df42d1c514e8a6a62835fc2350fdfe067",
+    "nodes": [
+      [
+        "definition-halbes-intervall-obergrenze-rechts-einzel",
+        "mathematik.einzelmenge"
+      ]
+    ]
+  },
+  {
+    "path": "MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte/karte-halbes-intervall-untergrenze-v7.json",
+    "sha256": "78c6c69fa17613913ef0072dd6e47cb88a052b0bf116e7cc106b64cd53cfe914",
+    "nodes": [
+      [
+        "definition-halbes-intervall-untergrenze-links-einzel",
+        "mathematik.einzelmenge"
+      ]
+    ]
+  }
+]

@@ -1,0 +1,610 @@
+{
+  "erstelltAm": 1785883810215,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-variable-x",
+        "anschlussId": "definition-halbes-intervall-obergrenze-variable-x-anschluss-0"
+      },
+      "id": "definition-halbes-intervall-obergrenze-rechts-kleiner-x",
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-kleiner",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-kleiner-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-eingang-2",
+        "anschlussId": "definition-halbes-intervall-obergrenze-eingang-2-wert"
+      },
+      "id": "definition-halbes-intervall-obergrenze-rechts-kleiner-rechts",
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-kleiner",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-kleiner-anschluss-1"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-einzel-rechts",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-eingang-2",
+        "anschlussId": "definition-halbes-intervall-obergrenze-eingang-2-wert"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-einzel",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-einzel-anschluss-0"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-leer-rechts",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-leer",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-leer-anschluss-0"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-randfall",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-0"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-offen-rechts",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-eingang-3",
+        "anschlussId": "definition-halbes-intervall-obergrenze-eingang-3-wert"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-randfall",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-1"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-geschlossen-rechts",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-einzel",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-einzel-anschluss-1"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-randfall",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-2"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-rechts-relation-methode",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-kleiner",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-kleiner-anschluss-2"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts",
+        "anschlussId": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts-anschluss-0"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-rechts-methode-filter",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts",
+        "anschlussId": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts-anschluss-1"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-mengenfilter-rechts",
+        "anschlussId": "definition-halbes-intervall-obergrenze-mengenfilter-rechts-anschluss-1"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-reelle-zahlen-rechts",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-reelle-zahlen",
+        "anschlussId": "definition-halbes-intervall-obergrenze-reelle-zahlen-anschluss-0"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-mengenfilter-rechts",
+        "anschlussId": "definition-halbes-intervall-obergrenze-mengenfilter-rechts-anschluss-0"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-rechts-halbstrahl-offen",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-mengenfilter-rechts",
+        "anschlussId": "definition-halbes-intervall-obergrenze-mengenfilter-rechts-anschluss-2"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-vereinigung",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-vereinigung-anschluss-0"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-rechts-halbstrahl-rand",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-randfall",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-3"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-vereinigung",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-vereinigung-anschluss-1"
+      }
+    },
+    {
+      "id": "definition-halbes-intervall-obergrenze-ausgangsverbindung",
+      "von": {
+        "knotenId": "definition-halbes-intervall-obergrenze-rechts-vereinigung",
+        "anschlussId": "definition-halbes-intervall-obergrenze-rechts-vereinigung-anschluss-2"
+      },
+      "zu": {
+        "knotenId": "definition-halbes-intervall-obergrenze-karten-ausgang",
+        "anschlussId": "definition-halbes-intervall-obergrenze-karten-ausgang-anschluss-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition: Halbes Intervall (Obergrenze)",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 240,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-eingang-2-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "grenze",
+      "id": "definition-halbes-intervall-obergrenze-eingang-2",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 240,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-eingang-3-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "vorschauWert": "false",
+        "typ": "mathematik.aussage",
+        "folgtEingang": "",
+        "variabel": "false"
+      },
+      "name": "offen",
+      "id": "definition-halbes-intervall-obergrenze-eingang-3",
+      "position": {
+        "x": 300,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.ordnungsrelation",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-kleiner-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-kleiner-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-kleiner-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "relation": "kleiner"
+      },
+      "name": "Kleiner",
+      "id": "definition-halbes-intervall-obergrenze-rechts-kleiner",
+      "position": {
+        "x": 600,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-karten-ausgang-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "menge"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-halbes-intervall-obergrenze-karten-ausgang",
+      "position": {
+        "x": 900,
+        "y": 0
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-variable-x-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "x",
+        "werteVorrat": "R"
+      },
+      "name": "Variable",
+      "id": "definition-halbes-intervall-obergrenze-variable-x",
+      "position": {
+        "x": 0,
+        "y": 160
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.reelleZahlen",
+      "größe": {
+        "breite": 210,
+        "höhe": 90
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-reelle-zahlen-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Reelle Zahlen",
+      "id": "definition-halbes-intervall-obergrenze-reelle-zahlen",
+      "position": {
+        "x": 900,
+        "y": 160
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.einzelmenge",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "element",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-einzel-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-einzel-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Einzelmenge",
+      "id": "definition-halbes-intervall-obergrenze-rechts-einzel",
+      "position": {
+        "x": 0,
+        "y": 320
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.leereMenge",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-leer-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Leere Menge",
+      "id": "definition-halbes-intervall-obergrenze-rechts-leer",
+      "position": {
+        "x": 300,
+        "y": 320
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.fall",
+      "größe": {
+        "breite": 260,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wahr",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "lüge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-2",
+          "reihenfolge": 2
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-randfall-anschluss-3",
+          "reihenfolge": 0,
+          "artVereinigtEingänge": [
+            "wahr",
+            "lüge"
+          ]
+        }
+      ],
+      "parameter": {},
+      "name": "Fallunterscheidung",
+      "id": "definition-halbes-intervall-obergrenze-rechts-randfall",
+      "position": {
+        "x": 600,
+        "y": 320
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.vereinigung",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-vereinigung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-vereinigung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-rechts-vereinigung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Vereinigung",
+      "id": "definition-halbes-intervall-obergrenze-rechts-vereinigung",
+      "position": {
+        "x": 900,
+        "y": 320
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.termZuMethode",
+      "größe": {
+        "breite": 265,
+        "höhe": 135
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "g",
+        "argumentReihenfolge": ""
+      },
+      "name": "Term zu Methode",
+      "id": "definition-halbes-intervall-obergrenze-term-zu-methode-rechts",
+      "position": {
+        "x": 300,
+        "y": 160
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.mengenfilter",
+      "größe": {
+        "breite": 270,
+        "höhe": 120
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-mengenfilter-rechts-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-mengenfilter-rechts-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-obergrenze-mengenfilter-rechts-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Mengenfilter",
+      "id": "definition-halbes-intervall-obergrenze-mengenfilter-rechts",
+      "position": {
+        "x": 600,
+        "y": 160
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.halbesIntervall|Halbes Intervall|richtung=abwaerts.obergrenze.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.75
+  },
+  "formatVersion": 7,
+  "version": 1
+}

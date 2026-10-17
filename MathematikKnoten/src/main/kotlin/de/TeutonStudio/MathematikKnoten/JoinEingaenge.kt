@@ -7,6 +7,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import de.TeutonStudio.TypSystem.TypInferenzRegel
 
 fun joinOperatorId(knoten: KnotenDaten): String? = when (knoten.art) {
+    ENDLICHE_MENGE_ART -> null
     "mathematik.addition" -> "zahl.addition"
     "mathematik.multiplikation" -> "zahl.multiplikation"
     "mathematik.extremwert" -> "zahl." + knoten.parameter.getOrDefault("modus", "maximum")

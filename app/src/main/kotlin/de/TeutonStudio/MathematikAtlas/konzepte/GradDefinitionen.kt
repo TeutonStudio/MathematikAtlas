@@ -108,7 +108,7 @@ internal fun unterraumDefinitionsKarte(original: KnotenDaten): KartenDaten {
             tuple.anschlüsse.filter { it.richtung==AnschlussRichtung.Eingang }.forEach { connect(nullwert,"wert",tuple,it.name) };tuple
         }
         val koordinaten=if(c.art=="mathematik.tupel") c else add(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),"tupel"),"stuetzpunkttupel").also { connect(c,"wert",it,"wert") }
-        val singleton=add(MathematikKnotenVorlagen.Einzelmenge.erzeuge(GraphPunkt.Zero),"einzelmenge");connect(koordinaten,if(koordinaten.art=="mathematik.tupel") "tupel" else "ergebnis",singleton,"element")
+        val singleton=add(endlicheMengeGraphVorlage().erzeuge(GraphPunkt.Zero),"einzelmenge");connect(koordinaten,if(koordinaten.art=="mathematik.tupel") "tupel" else "ergebnis",singleton,"element1")
         val out=add(KnotenDaten(art="mathematik.kartenAusgang",name="Nullpunkt / Stützpunkt",anschlüsse=listOf(AnschlussDaten(name="wert",art=MathematikAnschlussArten.Menge.id,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links))),"ausgang");connect(singleton,"menge",out,"wert")
         return KartenDaten(id=KartenId(prefix),name="Unterraum ohne Richtungen",erstelltAm=0L,knoten=nodes,verbindungen=edges)
     }
@@ -169,9 +169,9 @@ internal fun gradRichtungsDefinitionsKarte(dimension: Int): KartenDaten {
     }
     val plus = neu(MathematikKnotenVorlagen.Zahl, 0f, 300f, mapOf("wert" to "1"))
     val minus = neu(MathematikKnotenVorlagen.Zahl, 0f, 450f, mapOf("wert" to "-1"))
-    val einzelPlus = neu(MathematikKnotenVorlagen.Einzelmenge, 300f, 300f)
-    val einzelMinus = neu(MathematikKnotenVorlagen.Einzelmenge, 300f, 450f)
-    verbinde(plus, "wert", einzelPlus, "element"); verbinde(minus, "wert", einzelMinus, "element")
+    val einzelPlus = neu(endlicheMengeGraphVorlage(), 300f, 300f)
+    val einzelMinus = neu(endlicheMengeGraphVorlage(), 300f, 450f)
+    verbinde(plus, "wert", einzelPlus, "element1"); verbinde(minus, "wert", einzelMinus, "element1")
     val union = neu(MathematikKnotenVorlagen.Vereinigung, 600f, 380f)
     verbinde(einzelPlus, "menge", union, "a"); verbinde(einzelMinus, "menge", union, "b")
     val winkel = neu(MathematikKnotenVorlagen.ReellesIntervall, 600f, 0f,

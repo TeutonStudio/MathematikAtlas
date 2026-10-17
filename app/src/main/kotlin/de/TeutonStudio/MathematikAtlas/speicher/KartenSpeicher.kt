@@ -54,6 +54,20 @@ class KartenSpeicher(private val context: Context) {
         .sortedByDescending(::versionAusDatei)
         .firstNotNullOfOrNull(::leseDatei)
 
+    /** Nur die höchste physische Originalrevision ist Provenienzevidenz; nie eine ältere Ersatzdatei. */
+    internal fun ladeOriginalAktuell(id: KartenId): Result<KartenDaten?> = runCatching {
+        val datei=kartenOrdnerFür(id).listFiles {f -> f.isFile && f.name.matches(Regex("v\\d+\\.json"))}
+            .orEmpty().maxByOrNull(::versionAusDatei) ?: return@runCatching null
+        KartenDatenJson.lese(datei.readText()).also {
+            require(it.id==id && it.version==versionAusDatei(datei)) { "Originalrevision und Dateiverweis widersprechen einander." }
+        }
+    }
+
+    /** Offizielle Quellenupdates erhalten auch unreferenzierte, bereits kanonische Vorgängerrevisionen. */
+    internal fun speichereNeueRevision(karte: KartenDaten): KartenDaten = speichere(karte.copy(
+        version=Math.addExact(maxOf(karte.version,höchsteVersion(karte.id)),1),
+    ))
+
     fun speichere(karte: KartenDaten): KartenDaten {
         val normalisiert = MathematikKartenMigrationen.vorSpeichern(karte)
         val verweis = KartenVerweis(normalisiert.id, normalisiert.version)

@@ -1,3 +1,28 @@
+## Aktueller Konsolidierungsstand, 17. Oktober 2026
+
+Veröffentlichte Basis: v3.4.6/43726159, M0–M3 einschließlich separater
+Testreparatur abgeschlossen; alle finalen Master-Gates grün. M4 ist als
+v3.4.7/x auf `samai/v3.4.7/konsolidierung-m4` implementiert und lokal geprüft,
+noch nicht veröffentlicht. Gemeinsamer Erstellenbestand 121 mathematische Arten,
+Android einschließlich Werkzeug/Gruppe 123. Einzel-, Potenz- und Abbildungsmenge
+sind konfigurierte vorhandene Konstruktor-/Rechnerpfade; mathematische Methoden
+sind als ganze Graph-Elemente verdrahtbar, Scriptmethoden werden abgewiesen.
+Strenge Migration, Voraussetzungen, Rollen/IDs, präzise Definitionen und
+Undo-Verlustvorschau sind geprüft. Nur der exakte Originalhash beweist eine
+unveränderte Standardkarte; offizielle Updates bewahren Vorgängerrevisionen.
+
+Endgültige lokale Suite: 2213 Fälle, 0 Fehler, 1 vorhandener Skip; Lint,
+Android-/Test-APKs und Desktop grün (3m27s/277 Tasks), APK 3.4.7/3004007.
+Unabhängige Abschlussprüfung ohne weitere Findings. Repository-/Standardkarten-/
+Releaseprüfungen und 14 Guardregressionen grün. Standalone-Kernskript ohne
+`kotlinc` nicht ausführbar; lokales jpackage meldet weiterhin unsupported rpm
+(2 s, `/tmp/atlas-m4-rpm.log`). Android-/Linux-Laufzeitabnahme am finalen
+Release-SHA steht aus. CI an 974544a8: fünf Gates grün, Android-Laufzeit
+66 Fälle mit zwei Fehlern. Fehlender Android-Aufruf der gemeinsamen
+Mengeneinstellungen korrigiert; historischer Testhash wird plattformgerecht
+aus dem unveränderten Original rekonstruiert, Produktionsschutz unverändert.
+Erneute CI erforderlich, kein Merge. M5–M7 offen. Nachfolgend historische Einträge.
+
 > Releaseprüfung PR #454: Der schmale Operator-Auswahldialog wurde wegen des nachgewiesenen Höhenkonflikts gezielt begrenzt. Scrollbarer Steuerbereich höchstens45Prozent, eigener verbleibender Trefferbereich; Titel und Aktionen bleiben im AtlasDialog-Rahmen. Unabhängig statisch ohne Findings geprüft; Androidregression für Listenhöhe, Auswahl, Abbruch und Übernahme bei Schriftfaktor1/2 ergänzt. Lokale App-Tests/Lint/APKs grün48s; native Laufzeitfreigabe erst nach vollständiger CI auf neuem Head. b22267cc bleibt ohne Mergefreigabe. Optionale Hardwaremessungen bleiben separat und gelten nicht als ausgeführt.
 
 ## Releaseabschluss v3.4.0, 2026-10-16 (lokal geprüft)
@@ -681,3 +706,7 @@ M3-Revisionsschutz: vollständiger lokaler Abschlusslauf bestanden (49 s, 277 Ta
 2195 Tests, 0 Fehler, 1 bestehender Skip), einschließlich Lint, APKs, Test-APKs
 und Desktop. Protokoll: `/tmp/atlas-m3-revision-final.log`. CI am ergänzten
 Release-Head und dessen Veröffentlichung stehen weiterhin aus.
+
+M3 ist als v3.4.6/43726159 veröffentlicht; alle vier finalen Master-Workflows
+(38997004505/38997004486/38997004522/38997004509) grün. M4 wurde erst danach
+als v3.4.7/x reserviert und wird umgesetzt; noch keine M4-Produktfreigabe.

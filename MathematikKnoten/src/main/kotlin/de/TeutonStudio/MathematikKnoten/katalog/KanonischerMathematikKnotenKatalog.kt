@@ -104,6 +104,7 @@ object KanonischerMathematikKnotenKatalog {
         return vorlagen.flatMap { v ->
             val k = v.erzeuge(GraphPunkt.Zero)
             val varianten: List<Pair<String, KnotenDaten>> = when (v.art) {
+                ENDLICHE_MENGE_ART -> listOf(ENDLICHE_MENGE_LOKAL,ENDLICHE_MENGE_GRAPH).map {it to konfiguriereEndlicheMenge(k,it)}
                 "mathematik.tupel" -> listOf(TUPEL_EINZEL_EINGABEN, TUPEL_METHODE).map { it to konfiguriereTupel(k, it) }
                 "mathematik.matrix" -> listOf(MATRIX_EINZEL_EINGABEN, MATRIX_ZEILEN, MATRIX_SPALTEN, MATRIX_METHODE).map {
                     it to konfiguriereMatrix(k, it, matrixKonfiguration(k).höhe, matrixKonfiguration(k).breite)
@@ -197,6 +198,12 @@ object KanonischerMathematikKnotenKatalog {
         v.anschlüsse.map { it.copy(id = AnschlussId("vorlage")) }).joinToString("|")
 
     internal fun kanonisiereMethodenUndRelationsVorlage(v: KnotenVorlage): KnotenVorlage {
+        if (v.art in mengenKonsolidierungAltarten) {
+            val alt=KnotenDaten(art=v.art,name=v.name,anschlüsse=v.anschlüsse,parameter=v.standardParameter,eigenschaften=v.standardEigenschaften)
+            val neu=KartenDaten(name="Vorlage",knoten=listOf(alt)).migriereMengenKonsolidierung().knoten.single()
+            check(RECHNER_MIGRATION_DIAGNOSE !in neu.parameter) { "Ungültige Mengenvorlage ${v.name}: ${neu.parameter[RECHNER_MIGRATION_DIAGNOSE]}" }
+            return v.copy(art=neu.art,anschlüsse=neu.anschlüsse,standardParameter=neu.parameter,standardEigenschaften=neu.eigenschaften)
+        }
         if (v.art in übersetzungsKonsolidierungAltarten) {
             val alt=KnotenDaten(art=v.art,name=v.name,anschlüsse=v.anschlüsse,parameter=v.standardParameter,eigenschaften=v.standardEigenschaften)
             val neu=KartenDaten(name="Vorlage",knoten=listOf(alt)).migriereÜbersetzungsKonsolidierung().knoten.single()

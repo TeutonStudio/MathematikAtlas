@@ -126,15 +126,18 @@ internal class StandardKartenInstaller(
         // Fehlende lokale Karten werden zu Tombstones. Nutzeränderungen werden anhand
         // des zuletzt installierten normalisierten Inhalts erkannt und nie überschrieben.
         status = status.mapValuesTo(linkedMapOf()) { (_, alt) ->
-            val lokal = speicher.ladeAktuell(alt.lokaleKartenId)
+            val original = speicher.ladeOriginalAktuell(alt.lokaleKartenId)
             when {
-                alt.status == StandardKartenStatus.GELÖSCHT -> alt
-                lokal == null -> {
+                alt.status != StandardKartenStatus.AKTIV -> alt
+                original.isFailure -> {
+                    bericht = bericht.copy(alsGeändertErkannt = bericht.alsGeändertErkannt + 1)
+                    alt.copy(status = StandardKartenStatus.BENUTZERGEÄNDERT)
+                }
+                original.getOrNull() == null -> {
                     bericht = bericht.copy(alsGelöschtErkannt = bericht.alsGelöschtErkannt + 1)
                     alt.copy(status = StandardKartenStatus.GELÖSCHT)
                 }
-                alt.installierterHash.isNotBlank() &&
-                    standardKartenInhaltsHash(lokal) != alt.installierterHash -> {
+                !standardKarteUnverändert(requireNotNull(original.getOrNull()), alt.installierterHash) -> {
                     bericht = bericht.copy(alsGeändertErkannt = bericht.alsGeändertErkannt + 1)
                     alt.copy(status = StandardKartenStatus.BENUTZERGEÄNDERT)
                 }
@@ -200,7 +203,7 @@ internal class StandardKartenInstaller(
                 lokaleVerweise = lokaleVerweise,
                 lokaleVersion = aktuell?.version ?: 1,
             )
-            val gespeichert = speicher.speichere(remappt)
+            val gespeichert = if (alt == null) speicher.speichere(remappt) else speicher.speichereNeueRevision(remappt)
             lokaleVerweise[eintrag.sourceId] = KartenVerweis(gespeichert.id, gespeichert.version)
 
             status[eintrag.sourceId] = InstallierteStandardKarte(
@@ -321,17 +324,17 @@ internal class StandardKartenInstaller(
     }
 }
 
-internal fun standardKartenInhaltsHash(karte: KartenDaten): String {
-    val normalisiert = karte.copy(
-        version = 1,
-        erstelltAm = 0L,
-        archiviert = false,
-        ansicht = AnsichtsFenster.Standard,
-    )
-    val bytes = KartenJson.schreibe(normalisiert).toByteArray(Charsets.UTF_8)
-    return MessageDigest.getInstance("SHA-256")
-        .digest(bytes)
-        .joinToString("") { "%02x".format(it) }
+internal fun originalStandardKartenInhaltsHash(karte: KartenDaten): String = standardKartenHash(karte, original=true)
+internal fun standardKartenInhaltsHash(karte: KartenDaten): String = standardKartenHash(karte, original=false)
+
+/** Nur exakte gespeicherte Inhalte beweisen eine unveränderte Installation. */
+internal fun standardKarteUnverändert(original: KartenDaten, installierterHash: String): Boolean =
+    installierterHash.isNotBlank() && originalStandardKartenInhaltsHash(original)==installierterHash
+
+private fun standardKartenHash(karte: KartenDaten, original: Boolean): String {
+    val normalisiert=karte.copy(version=1,erstelltAm=0L,archiviert=false,ansicht=AnsichtsFenster.Standard)
+    val text=if(original) KartenDatenJson.schreibe(normalisiert) else KartenJson.schreibe(normalisiert)
+    return MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.UTF_8)).joinToString("") {"%02x".format(it)}
 }
 
 private fun KartenDaten.remappeStandardKartenVerweise(

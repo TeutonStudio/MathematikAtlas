@@ -190,7 +190,7 @@ private fun FrameWindowScope.DesktopAtlasApp(atlas: DesktopAtlasZustand, awtFens
         })
     atlas.konfigurationsPlan?.let { plan ->
         AtlasBestätigungsDialog(onDismissRequest = atlas::verwerfeKonfiguration, title = { Text("Verbindungsverlust bestätigen") },
-            text = { Text("${plan.auswirkung.entfallendeVerbindungen.size} Verbindungen und ${plan.auswirkung.entfallendeLokaleWerte.size} lokale Operanden entfallen (${plan.auswirkung.entfallendeLokaleWerte.joinToString()}). Die gesamte Änderung kann gemeinsam rückgängig gemacht werden.") },
+            text = { Text("${plan.auswirkung.entfallendeVerbindungen.size} Verbindungen und ${plan.auswirkung.entfallendeLokaleWerte.size} lokale Werte/Kartenfallbacks entfallen (${plan.auswirkung.entfallendeLokaleWerte.joinToString()}). Die gesamte Änderung kann gemeinsam rückgängig gemacht werden.") },
             confirmButton = { TextButton(onClick = atlas::bestätigeKonfiguration) { Text("Übernehmen") } },
             dismissButton = { TextButton(onClick = atlas::verwerfeKonfiguration) { Text("Abbrechen") } })
     }

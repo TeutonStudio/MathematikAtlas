@@ -250,6 +250,7 @@ private fun werteMengenRechnerAus(kontext: KnotenAuswertungsKontext): KnotenAusw
         kontext.knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER],
     ) ?: error("Unbekannter Mengenrechner-Operator.")
     val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
+    require(annahmen.none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) { "Eine Voraussetzung der Mengenoperation ist widerlegt." }
     val objekt: MengenAusdruck
     val warnungen = mutableListOf<String>()
 
@@ -329,12 +330,7 @@ private fun werteMengenRechnerAus(kontext: KnotenAuswertungsKontext): KnotenAusw
 
     return KnotenAuswertungsErgebnis(
         ausgaben = mapOf(
-            "menge" to BedingterWert(
-                objekt = objekt,
-                annahmen = annahmen,
-                reelleVariablen = reelleVariablen(kontext.eingänge.values),
-                variablenQuellen = kontext.eingänge.values.flatMap { it.variablenQuellen }.geordnetEindeutig(),
-            ),
+            "menge" to kontext.rechnerErgebnisWert(objekt),
         ),
         warnungen = warnungen,
         eingänge = kontext.eingänge,

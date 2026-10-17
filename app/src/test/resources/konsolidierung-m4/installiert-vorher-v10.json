@@ -1,0 +1,369 @@
+{
+  "erstelltAm": 123456,
+  "verbindungen": [
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n3",
+        "anschlussId": "h1"
+      },
+      "id": "e1",
+      "zu": {
+        "knotenId": "n4",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n2",
+        "anschlussId": "h1"
+      },
+      "id": "e2",
+      "zu": {
+        "knotenId": "n5",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n4",
+        "anschlussId": "h2"
+      },
+      "id": "e3",
+      "zu": {
+        "knotenId": "n5",
+        "anschlussId": "h2"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n1",
+        "anschlussId": "h1"
+      },
+      "id": "e4",
+      "zu": {
+        "knotenId": "n6",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n5",
+        "anschlussId": "h3"
+      },
+      "id": "e5",
+      "zu": {
+        "knotenId": "n6",
+        "anschlussId": "h2"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n6",
+        "anschlussId": "h3"
+      },
+      "id": "e6",
+      "zu": {
+        "knotenId": "n7",
+        "anschlussId": "h1"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Hebbare Definitionslücke",
+  "knoten": [
+    {
+      "art": "mathematik.gruppe",
+      "größe": {
+        "breite": 250,
+        "höhe": 120
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "methode",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {},
+      "name": "x + 1",
+      "kartenVerweis": {
+        "kartenId": "standard.function.linear.x-plus-1",
+        "version": 1
+      },
+      "id": "n1",
+      "position": {
+        "x": 40,
+        "y": 170
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.reelleZahlen",
+      "größe": {
+        "breite": 210,
+        "höhe": 90
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "menge",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {},
+      "name": "Reelle Zahlen",
+      "id": "n2",
+      "position": {
+        "x": 40,
+        "y": 360
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "1"},
+      "name": "1",
+      "id": "n3",
+      "position": {
+        "x": 40,
+        "y": 500
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.einzelmenge",
+      "größe": {
+        "breite": 225,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "element",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Einzelmenge",
+      "id": "n4",
+      "position": {
+        "x": 280,
+        "y": 500
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.differenz",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "h3",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Differenz",
+      "id": "n5",
+      "position": {
+        "x": 520,
+        "y": 390
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.restriktion",
+      "größe": {
+        "breite": 300,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "h3",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"methodenBereich.operator": "restriktion"},
+      "name": "Restriktion",
+      "id": "n6",
+      "position": {
+        "x": 790,
+        "y": 230
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "methode"},
+      "name": "Karten-Ausgang",
+      "id": "n7",
+      "position": {
+        "x": 1110,
+        "y": 230
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "karte.notiz",
+      "größe": {
+        "breite": 560,
+        "höhe": 220
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "textAusrichtung": "links",
+        "schriftgrößeSp": "16",
+        "text": "Erwartetes Ergebnis\n\nf: ℝ \\ {1} → ℝ\nx ↦ x + 1\n\nDieselbe Methode wird klassisch durch (x²−1)/(x−1) für x≠1 beschrieben.\nlim_{x→1} f(x)=2."
+      },
+      "name": "Erwartetes Ergebnis",
+      "id": "n8",
+      "position": {
+        "x": 700,
+        "y": 420
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "m4-vorher-installiert",
+  "ansicht": {
+    "x": 40,
+    "y": 40,
+    "zoom": 0.68
+  },
+  "formatVersion": 10,
+  "version": 7
+}

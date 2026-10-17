@@ -64,6 +64,9 @@ object OperatorKnotenSuchindex {
             )
         }
 
+        add(Eintrag(setOf("Einzelmenge", "Singleton", "Menge eines Elements", "Endliche Menge aus Graph-Elementen"),
+            endlicheMengeGraphVorlage(), "menge.einzelmenge"))
+
         listOf("tupel","zeile","spalte","abflachen").forEach { ziel ->
             val knoten=konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),ziel)
             val titel=when(ziel) { "tupel" -> "Vektor zu Tupel"; "zeile" -> "Tupel zu Zeile"; "spalte" -> "Tupel zu Spalte"; else -> "Tupel abflachen" }
