@@ -57,7 +57,10 @@ class KnotenAuswahlNutzungGeraeteTest {
     }
     @Test fun resetUndAbbrechenErhaltenAuchNochNichtBeruhigteSuche() {
         compose.onNodeWithText("Knoten suchen").performTextInput("keinTreffer-ellipsoid-xyz")
-        compose.onNodeWithContentDescription("Suche zurücksetzen").performClick()
+        // Die IME kann den Suchkopf im LazyColumn-Bereich verdrängen.
+        compose.onNodeWithContentDescription("Suche zurücksetzen")
+            .performScrollTo().assertIsDisplayed().performClick()
+        compose.runOnIdle { assertEquals("", atlas.suchText) }
         compose.onNodeWithText("Schließen",substring=false).performClick()
         val d=daten();val s=d.sitzungen.single()
         assertEquals(SitzungsAbschluss.ABBRUCH,s.abschluss)

@@ -614,7 +614,7 @@ expliziter direkter Einzelresultatprojektion. Ordnungsrelationen und orientierte
 Methodenanalysis werden als konfigurierte vorhandene Arten erzeugt. Details und
 SHA-bezogene Prüfnachweise stehen im aktiven Gesamtplan.
 
-M2 ist als v3.4.4/x auf veröffentlichter M1-Basis reserviert und noch unveröffentlicht.
+M2 wurde als v3.4.4/x integriert (ec152625926698f58e1ddd1d1a1d6420f8b0c6cc). Die finale Android-Laufzeitabnahme scheiterte in einem bestehenden Such-Resettest; das enge Test-Reparaturrelease v3.4.5/x ist reserviert. M3 bleibt unreserviert.
 Im aktuellen Produktbaum erzeugen Spur, Matrixdiagonale, Vektorradius und Kreuzprodukt
 konfigurierte vorhandene Rechner; der Katalogtest bestätigt 128 gemeinsame Arten.
 Reelle Norm, Kreuzproduktkomponenten, Basisvektorerzeugung und Transposition delegieren

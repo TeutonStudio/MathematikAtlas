@@ -6,7 +6,9 @@
 Ausgang: master 9fea31ddbaaef8bd26fa7a2730177eaaa9744909, v3.4.1.
 M0: veröffentlicht als v3.4.2, Commit 5813c0337b5c7b2284d882b785559dfeea4ae3cd.
 M1: veröffentlicht als v3.4.3, Commit e665a7fde78fe845dc7c62fa60fa00896d35f58a.
-M2: samai/v3.4.4/konsolidierung-m2, als x reserviert auf veröffentlichtem M1.
+M2: integriert als v3.4.4, ec152625926698f58e1ddd1d1a1d6420f8b0c6cc;
+abschließende Android-Laufzeitabnahme fehlgeschlagen. Enges Test-Reparaturrelease
+v3.4.5/x auf samai/v3.4.5/such-reset-reparatur in Umsetzung; M3 unreserviert.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -399,3 +401,26 @@ App/Daten bleiben erhalten. Diese Pfade müssen in CI am finalen PR-/master-SHA
 bestehen; eine lokale Buildfreigabe allein ist keine Veröffentlichungsfreigabe.
 Produktbaum zur SamAI-Commit-/PR-Erstellung freigegeben; Merge erst nach endgültigen
 SHA-bezogenen CI-Nachweisen und Integrationsfreigabe.
+
+M2 master-Abnahme: Release-Guard 38991354934, Linux/RPM/Persistenz 38991354962,
+Android-Build 38991354922 und Kern-verify im Workflow 38991354976 erfolgreich.
+Android-runtime desselben Workflows: Editor 7/7, App 51 Tests mit einem Fehler
+in KnotenAuswahlNutzungGeraeteTest.resetUndAbbrechenErhaltenAuchNochNichtBeruhigteSuche:
+GETIPPT statt ZURUECKGESETZT. Keine M3-Reservierung vor vollständiger Abnahme.
+Historischer Master-Commit bleibt unverändert; Autor Alexander, Committer GitHub/web-flow.
+
+Reparatur v3.4.5: Gerätetest scrollt Reset vor echtem Klick sichtbar und prüft
+unmittelbar den leeren Suchtext. Unveränderte Erwartung ZURUECKGESETZT.
+Unabhängige Lesekontrolle bestätigt die engere Prüfung; exakte ursprüngliche
+Ursache ohne Semantikbaum im Fehlerzeitpunkt nicht bewiesen (verdrängter
+Suchkopf oder erneuter Eingabe-Callback möglich). Kein Infrastrukturfehler
+behauptet. CI muss tatsächliche Resetaktion und nachfolgende Protokollierung belegen.
+
+Reparatur v3.4.5 lokale Freigabe: vollständige Gradle-Suite mit test, lintDebug,
+Debug-APK, beiden Android-Test-APKs, Desktop-Kompilierung und allen vier
+Desktop-Testtasks erfolgreich (59 s, 277 Tasks; 2.180 Tests, 0 Fehler,
+1 bestehender Opt-in-Skip). APK bestätigt 3.4.5/3004005. Repository,
+15 Standardkarten, Releaseplan, Versionsfolge, 14 Guardregressionen und
+Diffprüfung bestehen. Standalone-Kernprüfung weiterhin ohne kotlinc nicht
+ausführbar; lokale RPM-Werkzeuggrenze unverändert, keine lokale Laufzeitfreigabe.
+Unabhängige Abschlussprüfung: keine blockierenden Findings.
