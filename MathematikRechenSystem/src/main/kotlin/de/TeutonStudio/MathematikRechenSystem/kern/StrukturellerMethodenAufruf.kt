@@ -41,10 +41,12 @@ data class MethodenWertKomponente(
 internal fun StrukturellerMethodenAufruf.ersetzeAufruf(bindungen: Map<String, MathematischesObjekt>): MathematischesObjekt {
     val ziel = ersetze(methode, bindungen)
     val argumente = ersetze(argumente, bindungen) as Tupel
-    return if (ziel is MathematischeMethode) {
-        if (ziel.prüfeDefinitionsBedingungen(argumente).any { it.entscheide().wahrheitswert == Wahrheitswert.Lüge })
+    return if (ziel is MathematischAuswertbareMethode) {
+        require(ziel.signatur.argumente.size == argumente.anzahl) { "Falsche Argumentanzahl." }
+        val ids = ziel.signatur.argumente.mapIndexed { i,k -> k.id to argumente.elemente[i] }.toMap()
+        if (ziel.prüfeDefinitionsBedingungen(ids).any { it.entscheide().wahrheitswert == Wahrheitswert.Lüge })
             copy(methode = ziel, argumente = argumente)
-        else ziel.wendeMathematischAlsTupelAn(argumente)
+        else ziel.wendeMitIdentitätenAn(ids).ergebnis
     } else copy(methode = ziel, argumente = argumente)
 }
 
@@ -74,11 +76,11 @@ internal fun MathematischesObjekt.aufgerufeneBedingungen(
                 besuche(wert.methode, tiefe + 1)
                 besuche(wert.argumente, tiefe + 1)
                 val ziel = ersetze(wert.methode, bindungen)
-                if (ziel is MathematischeMethode) {
+                if (ziel is MathematischAuswertbareMethode) {
                     val argumente = ersetze(wert.argumente, bindungen) as Tupel
-                    bedingungen += ziel.prüfeDefinitionsBedingungen(argumente)
-                    val innereBindungen = ziel.parameter.mapIndexed { i, p -> (p.bindungsId ?: p.name) to argumente.elemente[i] }.toMap()
-                    bedingungen += ziel.aufgerufeneVoraussetzungen(innereBindungen, kontext)
+                    require(ziel.signatur.argumente.size == argumente.anzahl) { "Falsche Argumentanzahl." }
+                    val ids = ziel.signatur.argumente.mapIndexed { i,k -> k.id to argumente.elemente[i] }.toMap()
+                    bedingungen += ziel.prüfeDefinitionsBedingungen(ids, kontext)
                 }
                 emptyList()
             }
@@ -158,3 +160,34 @@ internal fun MathematischeMethode.aufgerufeneVoraussetzungen(
     kontext: RechenKontext,
 ): Set<Aussage> = (listOf(vorschrift, zielMenge) + voraussetzungen + werteVorräte.values + listOfNotNull(effektiverWerteVorrat))
     .flatMap { it.aufgerufeneBedingungen(bindungen, kontext) }.toSet()
+
+/** Gemeinsamer strukturierter Aufruf für nachweisbar signierte mathematische Symbole. */
+fun symbolischerMethodenAufruf(
+    methode: MathematischesObjekt,
+    signatur: MethodenSignatur,
+    argumente: Tupel,
+    kontext: RechenKontext = RechenKontext(),
+): MathematischeAnwendung {
+    require(signatur.argumente.size == argumente.anzahl) { "Falsche Argumentanzahl." }
+    signatur.argumente.zip(argumente.elemente).forEach { (formal, wert) ->
+        formal.methodenSignatur?.let { erwartet ->
+            val tatsächlich = (wert as? SignaturtragendeMethode)?.signatur ?: error("Das Argument '${formal.name}' benötigt einen Methodenwert.")
+            require(MathematischeTypen.typSystem.prüfe(tatsächlich.typAusdruck, erwartet.typAusdruck) !is de.TeutonStudio.TypSystem.TypPrüfung.Inkompatibel) { "Die Methodensignatur des Arguments '${formal.name}' ist inkompatibel." }
+        }
+    }
+    val bedingungen = signatur.argumente.zip(argumente.elemente).mapNotNull { (formal, wert) ->
+        val raum = bereichFürTyp(formal.typ)
+        if (raum is FehlendeObermenge) null else ElementBeziehung(wert, raum)
+    }.toSet()
+    val entscheidungen = bedingungen.associateWith { it.entscheide(kontext) }
+    require(entscheidungen.values.none { it.wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen die symbolische Methodensignatur." }
+    val aufruf = StrukturellerMethodenAufruf(methode, argumente)
+    val ergebnis = Tupel(signatur.ergebnisse.mapIndexed { i, k ->
+        val methodenSignatur = k.methodenSignatur
+        if (methodenSignatur != null) MethodenWertKomponente(aufruf, i + 1, methodenSignatur)
+        else if (MathematischeTypen.typSystem.prüfe(k.typ, de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Zahl)) == de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel)
+            MethodenZahlKomponente(aufruf, i + 1)
+        else error("Die symbolische Ergebnisprojektion für den Typ ${k.typ} ist nicht unterstützt; es wird kein Ersatzwert erzeugt.")
+    })
+    return MathematischeAnwendung(ergebnis, entscheidungen.filterValues { it.wahrheitswert != Wahrheitswert.Wahr }.keys)
+}

@@ -58,7 +58,7 @@ internal fun KartenTabellenEingabeKonfiguration(
 }
 
 @Composable
-private fun VerbundenerKartenTabellenEingang(
+internal fun VerbundenerKartenTabellenEingang(
     feld: KartenTabellenAnschluss,
     wert: BedingterWert,
     text: (String, String) -> String,
@@ -77,16 +77,20 @@ private fun VerbundenerKartenTabellenEingang(
                         style = MaterialTheme.typography.bodySmall,
                     )
                     LatexText(objekt.zuLatex(), style = MaterialTheme.typography.bodyMedium)
+                } else if (runCatching { objekt.alsMathematischeMethode("Wahrheitstabelle") }.isFailure) {
+                    Text("Für diese Methode fehlen eine mathematische Vorschrift und Definitionsmengen für die Wahrheitstabelle.",
+                        color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 } else {
+                    val mathematisch = objekt.alsMathematischeMethode("Wahrheitstabelle")
                     LatexText(
                         runCatching { kartenTabellenPrädikatSignatur(objekt) }.getOrElse { objekt.zuLatex() },
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    objekt.parameter.forEachIndexed { index, parameter ->
+                    mathematisch.parameter.forEachIndexed { index, parameter ->
                         val schlüssel = kartenTabellenPrädikatArgumentSchlüssel(feld, index)
                         val standard = when (parameter) {
                             is AussagenParameter -> "wahr"
-                            else -> objekt.werteVorräte[parameter.name]
+                            else -> mathematisch.werteVorräte[parameter.name]
                                 ?.let(::standardArgumentFürKartenTabelle)
                                 ?: ""
                         }
@@ -95,7 +99,7 @@ private fun VerbundenerKartenTabellenEingang(
                             onValueChange = { speichereText(schlüssel, it) },
                             label = { Text("Argument ${index + 1}: ${parameter.name}") },
                             supportingText = {
-                                objekt.werteVorräte[parameter.name]?.let { Text("Wertevorrat: ${it.zuLatex()}") }
+                                mathematisch.werteVorräte[parameter.name]?.let { Text("Wertevorrat: ${it.zuLatex()}") }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,

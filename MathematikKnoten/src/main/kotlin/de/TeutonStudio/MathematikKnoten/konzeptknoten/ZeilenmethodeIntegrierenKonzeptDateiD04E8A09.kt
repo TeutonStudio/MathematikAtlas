@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object ZeilenmethodeIntegrierenKonzeptDateiD04E8A09 : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.zeilenMethodeIntegrieren|Zeilenmethode integrieren|")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.zeilenMethodeIntegrieren|Zeilenmethode integrieren"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.methodenIntegrieren|methodenAnforderung.methode.ergebnisArt=mathematik.vektor.zeile|orientierung=zeile|Vektormethode integrieren"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object ZeilenmethodeIntegrierenKonzeptDateiD04E8A09 : ExpliziteKonzeptD
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.zeilenMethodeIntegrieren"),
+            knotenArten = setOf("mathematik.methodenIntegrieren"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

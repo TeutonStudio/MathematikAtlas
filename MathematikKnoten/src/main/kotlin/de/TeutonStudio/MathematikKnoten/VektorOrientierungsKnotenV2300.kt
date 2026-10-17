@@ -18,14 +18,20 @@ fun orientierungFürOrientierungsKnoten(knoten: KnotenDaten): String =
         ?.takeIf { it in setOf(VEKTOR_ORIENTIERUNG_SPALTE, VEKTOR_ORIENTIERUNG_ZEILE) }
         ?: if (knoten.art in ZEILEN_ALIAS_ARTEN) VEKTOR_ORIENTIERUNG_ZEILE else VEKTOR_ORIENTIERUNG_SPALTE
 
+/** Nur ausdrücklich typisierte Suchvarianten besitzen eine wählbare Ergebnisorientierung. */
+fun istKonfigurierteVektorAnalysis(k: KnotenDaten): Boolean =
+    k.art in setOf("mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren") &&
+        k.parameter[methodenErgebnisArtSchlüssel("methode")] in setOf("mathematik.vektor.spalte", "mathematik.vektor.zeile")
+
 fun konfiguriereOrientierungsKnoten(
     knoten: KnotenDaten,
     orientierung: String,
 ): KnotenDaten {
-    val orient = if (orientierung == VEKTOR_ORIENTIERUNG_ZEILE) VEKTOR_ORIENTIERUNG_ZEILE else VEKTOR_ORIENTIERUNG_SPALTE
+    require(orientierung in setOf(VEKTOR_ORIENTIERUNG_ZEILE,VEKTOR_ORIENTIERUNG_SPALTE)) { "Unbekannte Orientierung '$orientierung'." }
+    val orient = orientierung
     val zeile = orient == VEKTOR_ORIENTIERUNG_ZEILE
-    val vorhandene = knoten.anschlüsse.associateBy { it.name }
-    fun eingang(name: String, art: AnschlussArtId, index: Int): AnschlussDaten = vorhandene[name]?.takeIf { it.art == art }?.copy(
+    val vorhandene = knoten.anschlüsse.associateBy { it.richtung to it.name }
+    fun eingang(name: String, art: AnschlussArtId, index: Int): AnschlussDaten = vorhandene[AnschlussRichtung.Eingang to name]?.copy(
         name = name,
         richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links,
@@ -34,7 +40,7 @@ fun konfiguriereOrientierungsKnoten(
         kannSichErweitern = false,
         dynamischErzeugt = false,
     ) ?: AnschlussDaten(name = name, richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = art, reihenfolge = index)
-    fun ausgang(name: String, art: AnschlussArtId): AnschlussDaten = vorhandene[name]?.takeIf { it.art == art }?.copy(
+    fun ausgang(name: String, art: AnschlussArtId): AnschlussDaten = vorhandene[AnschlussRichtung.Ausgang to name]?.copy(
         name = name,
         richtung = AnschlussRichtung.Ausgang,
         kante = AnschlussKante.Rechts,
@@ -76,13 +82,18 @@ fun konfiguriereOrientierungsKnoten(
             "Vektormethode integrieren",
             listOf(eingang("methode", methodeArt, 0), ausgang("methode", methodeArt)),
         )
+        "mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren" -> {
+            require(istKonfigurierteVektorAnalysis(knoten)) { "Diese Analysis folgt der tatsächlichen Ergebnisorientierung ihrer Methode." }
+            Triple(knoten.art, knoten.name, listOf(eingang("methode", methodeArt, 0), ausgang("methode", methodeArt)))
+        }
         else -> error("Knoten '${knoten.art}' besitzt keinen reinen Orientierungsvertrag.")
     }
     return knoten.copy(
         art = art,
         name = name,
         anschlüsse = anschlüsse,
-        parameter = knoten.parameter + (VEKTOR_ORIENTIERUNG_PARAMETER to orient),
+        parameter = knoten.parameter + (VEKTOR_ORIENTIERUNG_PARAMETER to orient) +
+            if (istKonfigurierteVektorAnalysis(knoten)) mapOf(methodenErgebnisArtSchlüssel("methode") to vektorArt.wert) else emptyMap(),
     )
 }
 

@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object GroesserOderGleichKonzeptDateiEA21E5BD : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.ordnungsrelation|Größer oder gleich|relation=größerGleich")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.ordnungsrelation|relation=größerGleich|Größer oder gleich"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.praedikat|operator=relation.groesserGleich|praedikatSeite=relationen|relation=größerGleich|Größer oder gleich"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object GroesserOderGleichKonzeptDateiEA21E5BD : ExpliziteKonzeptDatei {
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.ordnungsrelation"),
+            knotenArten = setOf("mathematik.praedikat"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

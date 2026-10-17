@@ -37,23 +37,13 @@ fun GebundeneFormel.werteAus(bindungen: Map<String, MathematischesObjekt> = empt
                 "methode.anwenden" -> {
                     val methode = a.first()
                     val argumente = Tupel(a.drop(1))
-                    if (methode is MathematischeMethode) {
-                        methode.wendeMitBedingungenAn(argumente).also { bedingungen += it.bedingungen }.ergebnis
+                    if (methode is MathematischAuswertbareMethode) {
+                        require(methode.signatur.argumente.size == argumente.anzahl) { "Falsche Argumentanzahl." }
+                        methode.wendeMitIdentitätenAn(methode.signatur.argumente.mapIndexed { i, k -> k.id to argumente.elemente[i] }.toMap()).also { bedingungen += it.bedingungen }.ergebnis
                     } else {
+                        require(methode is MethodenVariable || methode is MethodenWertKomponente) { "Die Methode besitzt keine mathematische Auswertungs-Capability." }
                         val signatur = (methode as? SignaturtragendeMethode)?.signatur ?: error("Methodensignatur fehlt.")
-                        require(signatur.argumente.size == argumente.anzahl) { "Falsche Argumentanzahl." }
-                        signatur.argumente.zip(argumente.elemente).forEach { (formal,wert) ->
-                            val raum=bereichFürTyp(formal.typ)
-                            if(raum !is FehlendeObermenge) bedingungen += ElementBeziehung(wert,raum)
-                        }
-                        val aufruf = StrukturellerMethodenAufruf(methode, argumente)
-                        Tupel(signatur.ergebnisse.mapIndexed { i, k ->
-                            val methodenSignatur = k.methodenSignatur
-                            if (methodenSignatur != null) MethodenWertKomponente(aufruf, i + 1, methodenSignatur)
-                            else if (MathematischeTypen.typSystem.prüfe(k.typ, de.TeutonStudio.TypSystem.TypAusdruck.Atom(MathematischeTypen.Zahl)) == de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel)
-                                MethodenZahlKomponente(aufruf, i + 1)
-                            else IndexKomponente(aufruf, listOf(RationaleZahl.von((i + 1).toLong())))
-                        })
+                        symbolischerMethodenAufruf(methode, signatur, argumente).also { bedingungen += it.bedingungen }.ergebnis
                     }
                 }
                 else -> {

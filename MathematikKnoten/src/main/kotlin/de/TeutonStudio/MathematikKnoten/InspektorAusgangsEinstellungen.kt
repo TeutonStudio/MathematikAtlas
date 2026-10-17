@@ -13,7 +13,7 @@ private val orientierungsArten = setOf("mathematik.tupelZuSpalte", "mathematik.t
     "mathematik.spaltenMethodeDifferentieren", "mathematik.zeilenMethodeDifferentieren", "mathematik.spaltenMethodeIntegrieren", "mathematik.zeilenMethodeIntegrieren")
 
 fun hatGemeinsameAusgangsEinstellungen(k: KnotenDaten): Boolean = when {
-    k.art == ÜBERSETZER_ART || k.art in orientierungsArten || k.art in setOf("mathematik.vektor", "mathematik.zeilenVektor", "mathematik.multinomVektor", TANGENTIAL_KNOTEN_ART) -> true
+    k.art == ÜBERSETZER_ART || k.art in orientierungsArten || istKonfigurierteVektorAnalysis(k) || k.art in setOf("mathematik.vektor", "mathematik.zeilenVektor", "mathematik.multinomVektor", TANGENTIAL_KNOTEN_ART) -> true
     k.art == MATRIXDIAGONALE_ART -> matrixdiagonaleModus(k) == MATRIXDIAGONALE_AUSLESEN
     k.art == ZAHLENRECHNER_ART -> UniversellerZahlenOperator.vonIdOderNull(k.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.DIFFERENTIAL
     k.art == MatrixRechner.KNOTEN_ART -> k.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId
@@ -33,7 +33,11 @@ fun InspektorAusgangsEinstellungen(k: KnotenDaten, r: KnotenAuswertungsErgebnis?
     val orientierungen = listOf(VEKTOR_ORIENTIERUNG_SPALTE to "Spalte", VEKTOR_ORIENTIERUNG_ZEILE to "Zeile")
     when {
         k.art == ÜBERSETZER_ART -> ÜbersetzerEinstellungen(k, r, übernehmen)
-        k.art in orientierungsArten -> auswahl("Orientierung", orientierungen, orientierungFürOrientierungsKnoten(k)) { konfiguriereOrientierungsKnoten(k, it) }
+        k.art in orientierungsArten || istKonfigurierteVektorAnalysis(k) -> {
+            val orientierung = k.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: orientierungFürOrientierungsKnoten(k)
+            if (orientierung !in orientierungen.map { it.first }) Text("Unbekannte gespeicherte Orientierung '$orientierung'. Bitte eine gültige Orientierung wählen.", color=MaterialTheme.colorScheme.error)
+            auswahl("Orientierung", orientierungen, orientierung) { konfiguriereOrientierungsKnoten(k, it) }
+        }
         k.art in setOf("mathematik.vektor", "mathematik.zeilenVektor") -> auswahl("Orientierung", orientierungen, vektorKonstruktorKonfiguration(k).orientierung) { konfiguriereVektorKonstruktor(k, orientierung = it) }
         k.art == "mathematik.multinomVektor" -> {
             val form = k.parameter[MULTINOM_AUSGABEFORM_PARAMETER] ?: MULTINOM_AUSGABE_VEKTOR

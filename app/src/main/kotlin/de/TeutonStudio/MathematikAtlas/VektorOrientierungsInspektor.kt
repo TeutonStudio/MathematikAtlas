@@ -11,6 +11,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
 
 internal object OrientierungsKnotenInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = bereich == KnotenInspektorBereich.Ausgangsdaten && hatGemeinsameAusgangsEinstellungen(knoten)
     override val hauptBereich get() = KnotenInspektorBereich.Ausgangsdaten
     @Composable
     override fun Inhalt(

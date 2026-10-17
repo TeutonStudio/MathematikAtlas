@@ -155,78 +155,13 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
     }
 }
 
-/** Historischer mathematischer Einzelaufruf. Neue dynamische Aufrufe verwenden MethodenAufrufAuswerter. */
+/** Historische Einzelprojektion delegiert an den kanonischen Methodenaufruf. */
 internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
-    override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
-        val methodenWert = kontext.eingänge["methode"] ?: error("Die Methode fehlt.")
-        val argumentAnschlüsse = kontext.knoten.anschlüsse
-            .filter { it.name != "methode" && it.name != "wert" }
-            .sortedBy { it.reihenfolge }
-        val methodenObjekt = methodenWert.objekt
-        val methode = methodenObjekt as? Methode
-        if (methode != null && methode !is MathematischAuswertbareMethode) {
-            error("Die Methode '${methode.name}' besitzt keine mathematische Auswertungs-Capability.")
-        }
-        val mathematischeMethode = methode?.alsMathematischeMethode("historischen mathematischen Methodenaufruf")
-        val argumentWerte = if (mathematischeMethode != null) {
-            val benötigteAnschlüsse = argumentAnschlüsse.take(mathematischeMethode.parameter.size)
-            require(benötigteAnschlüsse.size == mathematischeMethode.parameter.size) {
-                "Die Methode '${mathematischeMethode.name}' benötigt ${mathematischeMethode.parameter.size} Argumentanschlüsse, vorhanden sind ${argumentAnschlüsse.size}."
-            }
-            val fehlende = benötigteAnschlüsse.filter { kontext.eingänge[it.name] == null }
-            require(fehlende.isEmpty()) {
-                "Der Methode '${mathematischeMethode.name}' fehlen die Argumente ${fehlende.joinToString { "'${it.name}'" }}."
-            }
-            val überzählige = argumentAnschlüsse.drop(mathematischeMethode.parameter.size)
-                .filter { kontext.eingänge[it.name] != null }
-            require(überzählige.isEmpty()) {
-                "Die Methode '${mathematischeMethode.name}' benötigt ${mathematischeMethode.parameter.size} Argumente; überzählig verbunden sind ${überzählige.joinToString { "'${it.name}'" }}."
-            }
-            benötigteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
-        } else {
-            val letztesVerbundenesArgument = argumentAnschlüsse.indexOfLast { kontext.eingänge[it.name] != null }
-            if (letztesVerbundenesArgument < 0) emptyList() else {
-                val verwendeteAnschlüsse = argumentAnschlüsse.take(letztesVerbundenesArgument + 1)
-                val fehlendes = verwendeteAnschlüsse.firstOrNull { kontext.eingänge[it.name] == null }
-                require(fehlendes == null) {
-                    "Vor dem verbundenen Argument '${verwendeteAnschlüsse.last().name}' fehlt '${fehlendes?.name}'."
-                }
-                verwendeteAnschlüsse.map { kontext.eingänge.getValue(it.name) }
-            }
-        }
-        val argumente = argumentWerte.mapIndexed { index, wert ->
-            wert.objekt as? MathematischesObjekt
-                ?: error("Das Argument ${index + 1} ist kein mathematisches Objekt.")
-        }
-        val ergebnisArt = kontext.knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]
-            ?.trim().orEmpty().ifBlank { "mathematik.objekt" }
-        val (wert, zielMenge) = if (mathematischeMethode != null) {
-            val ausgabe = mathematischeMethode.einzigeAusgabe()
-            val bindungen = mathematischeMethode.parameter
-                .mapIndexed { index, parameter -> parameter.name to argumente[index] }
-                .toMap()
-            (methode as MathematischAuswertbareMethode).wendeMathematischAn(bindungen) to
-                mathematischeMethode.zielMengeFür(ausgabe.first, bindungen)
-        } else {
-            val symbolischeMethode = methodenObjekt as? MathematischesObjekt
-                ?: error("Eine symbolische mathematische Anwendung benötigt ein MathematischesObjekt.")
-            symbolischerAnwendungsWert(symbolischeMethode, argumente, ergebnisArt) to null
-        }
-        val methodenReferenz = mathematischeMethode?.name ?: methodenWert.anzeigeLatex()
-        val anwendungsLatex = "$methodenReferenz(${argumentWerte.joinToString(",") { it.anzeigeLatex() }})"
-        return KnotenAuswertungsErgebnis(
-            ausgaben = mapOf(
-                "wert" to BedingterWert(
-                    objekt = wert,
-                    annahmen = (listOf(methodenWert) + argumentWerte).flatMap { it.annahmen }.toSet(),
-                    zielMenge = zielMenge,
-                    reelleVariablen = reelleVariablen(argumentWerte),
-                    variablenQuellen = (listOf(methodenWert) + argumentWerte).flatMap { it.variablenQuellen },
-                    latexDarstellung = anwendungsLatex,
-                ),
-            ),
-        )
-    }
+    override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis =
+        MethodenAufrufAuswerter.auswerten(kontext.copy(knoten = kontext.knoten.copy(parameter = kontext.knoten.parameter + mapOf(
+            METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
+            METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_DIREKT,
+        ))))
 }
 
 internal object MethodenZielmengeAuswerter : MathematikKnotenAuswerter {
@@ -255,21 +190,6 @@ private fun gebundenerParameter(name: String, art: AnschlussArtId): MethodenPara
     "mathematik.aussage" -> AussagenParameter(name)
     "mathematik.menge" -> MengenParameter(name)
     else -> TypisiertesElement(name, art.wert)
-}
-
-private fun symbolischerAnwendungsWert(
-    methode: MathematischesObjekt,
-    argumente: List<MathematischesObjekt>,
-    ergebnisArt: String,
-): MathematischesObjekt {
-    val latex = "${methode.zuLatex()}(${argumente.joinToString(",") { it.zuLatex() }})"
-    val kennung = latex.replace("\\", "_").replace(Regex("[^\\p{L}\\p{N}_]+"), "_")
-    return when (ergebnisArt) {
-        "mathematik.zahl" -> Variable(kennung)
-        "mathematik.aussage" -> AussagenParameter(kennung, latex)
-        "mathematik.menge" -> MengenParameter(kennung, latex)
-        else -> TypisiertesElement(kennung, ergebnisArt, latex)
-    }
 }
 
 private fun entferneAkkumulator(

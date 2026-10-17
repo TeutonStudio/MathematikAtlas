@@ -603,3 +603,17 @@ Numerische Prüfgrenze: getrennte Ungleichungsrandzüge werden derzeit nur für 
   der vollständige Desktopnachlauf bestanden. Keine Gesamtfreigabe M1–M7.
   [Aktiver Gesamtplan](plans/active/2026-10-17-knotenarchitektur-konsolidierung.md),
   [Entscheidung](decisions/2026-10-17-kanonischer-katalog-migrationsschutz.md).
+
+M0 wurde als v3.4.2 (5813c0337b5c7b2284d882b785559dfeea4ae3cd, PR #456)
+veröffentlicht; alle Prüfungen am finalen PR-Head und master-Commit einschließlich
+Emulator und Linux-RPM-Laufzeit erfolgreich. M1 ist als v3.4.3/x auf dieser Basis
+reserviert; seine Produktverträge sind noch in Arbeit.
+
+M1-Produktbaum (v3.4.3 reserviert, noch nicht veröffentlicht): gemeinsame Erzeugung
+132 mathematische Arten, Android einschließlich Werkzeug/Gruppe 134. Historische
+Methodenaufrufe delegieren den ID-basierten kanonischen Pfad und migrieren mit fester
+direkter Einzelresultatprojektion. Ordnungsrelationen und orientierte Methodenanalysis
+werden als konfigurierte vorhandene Arten erzeugt. Migrationen und Synchronisierung
+bewahren bei unvereinbaren Verträgen Anschlüsse und Verbindungen mit Diagnose.
+Gezielte Vertrags-/Migrations-/Differenzenquotienttests und unabhängige Nachprüfung
+bestehen; endgültige Releaseabnahme offen.

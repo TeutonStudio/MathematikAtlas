@@ -58,7 +58,10 @@ object KanonischerMathematikKnotenKatalog {
         return (
             bereinigt +
                 VektorKonstruktorVorlagen.standard +
-                VektorOrientierungsVorlagen.alle +
+                VektorOrientierungsVorlagen.alle.flatMap { v ->
+                    if (v.art in HISTORISCHE_METHODEN_ANALYSIS) listOf(v, v.copy(standardParameter = v.standardParameter + (VEKTOR_ORIENTIERUNG_PARAMETER to VEKTOR_ORIENTIERUNG_ZEILE))) else listOf(v)
+                } +
+                listOf(MathematikKnotenVorlagen.Kleiner, MathematikKnotenVorlagen.KleinerGleich, MathematikKnotenVorlagen.Größer, MathematikKnotenVorlagen.GrößerGleich) +
                 MultinomVektorKnotenVorlagen.standard +
                 MengenRechnerKnotenVorlagen.standard +
                 PraedikatKnotenVorlagen.standard +
@@ -70,11 +73,13 @@ object KanonischerMathematikKnotenKatalog {
                 SvgKnotenVorlagen.alle +
                 GeometryNodesVorlagen.alle
             )
+            .map(::kanonisiereMethodenUndRelationsVorlage)
             .map(::topologieFaehigeEigenschaftsVorlage)
             .map(::methodenfaehigeRechnerVorlage)
             .map(::joinVorlage)
             .distinctBy { vorlage ->
-                vorlage.art to listOf(
+                if (vorlage.art in setOf("mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren")) variantenKennung(vorlage)
+                else vorlage.art to listOf(
                     vorlage.standardParameter["operator"].orEmpty(),
                     vorlage.standardParameter["eingabeModus"].orEmpty(),
                     vorlage.standardParameter[SVG_OPERATOR_PARAMETER].orEmpty(),
@@ -185,6 +190,19 @@ object KanonischerMathematikKnotenKatalog {
     fun variantenKennung(v: KnotenVorlage): String = listOf(v.art, (v.standardParameter - TENSOR_ACHSEN_IDS).toSortedMap(),
         v.standardEigenschaften.toSortedMap(), v.kartenVerweis,
         v.anschlüsse.map { it.copy(id = AnschlussId("vorlage")) }).joinToString("|")
+
+    internal fun kanonisiereMethodenUndRelationsVorlage(v: KnotenVorlage): KnotenVorlage {
+        if (v.art != METHODEN_ANWENDUNG_ART && v.art !in HISTORISCHE_METHODEN_ANALYSIS && v.art != "mathematik.ordnungsrelation") return v
+        val alt = KnotenDaten(art=v.art, name=v.name, anschlüsse=v.anschlüsse, parameter=v.standardParameter, eigenschaften=v.standardEigenschaften)
+        val neu = KartenDaten(name="Vorlage",knoten=listOf(alt)).migriereMethodenKonsolidierung().migrierePraedikatKnoten().knoten.single()
+        check(RECHNER_MIGRATION_DIAGNOSE !in neu.parameter) { "Ungültige kanonische Vorlage ${v.name}" }
+        val parameter = if (v.art in HISTORISCHE_METHODEN_ANALYSIS) neu.parameter +
+            (methodenErgebnisArtSchlüssel("methode") to if (neu.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] == VEKTOR_ORIENTIERUNG_ZEILE) "mathematik.vektor.zeile" else "mathematik.vektor.spalte") else neu.parameter
+        val name = if (v.art in HISTORISCHE_METHODEN_ANALYSIS) {
+            if (neu.art == "mathematik.methodenDifferentieren") "Vektormethode differentieren" else "Vektormethode integrieren"
+        } else v.name
+        return v.copy(art=neu.art, name=name, anschlüsse=neu.anschlüsse, standardParameter=parameter, standardEigenschaften=neu.eigenschaften)
+    }
 
     private fun kanonisierePraedikatVorlage(vorlage: KnotenVorlage): KnotenVorlage =
         if (

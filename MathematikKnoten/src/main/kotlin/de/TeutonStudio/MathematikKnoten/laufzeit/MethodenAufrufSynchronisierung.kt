@@ -42,15 +42,22 @@ fun synchronisiereMethodenAufrufe(
 ): KartenDaten {
 
     val synchronisierteKnoten = karte.knoten.map { knoten ->
+        if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
         when (knoten.art) {
             METHODEN_AUFRUF_ART -> {
                 val methode = auswertung.knoten[knoten.id]
                     ?.eingänge
                     ?.get("methode")
                     ?.objekt as? Methode
-                val argumentProjektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
-                val ergebnisProjektion = methodenErgebnisprojektionFürVerbraucher(karte, knoten)
-                synchronisiereMethodenAufruf(knoten, methode, argumentProjektion, ergebnisProjektion)
+                val fest = knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true"
+                val argumentProjektion = if (fest) knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION] ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT else methodenArgumentprojektionFürVerbraucher(karte, knoten)
+                val ergebnisProjektion = if (fest) knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION] ?: METHODEN_ERGEBNISPROJEKTION_DIREKT else methodenErgebnisprojektionFürVerbraucher(karte, knoten)
+                val belegt = knoten.anschlüsse.filter { p ->
+                    karte.verbindungen.any { it.von == AnschlussVerweis(knoten.id,p.id) || it.zu == AnschlussVerweis(knoten.id,p.id) } ||
+                        "standardwert.${p.name}" in knoten.parameter || p.name in knoten.eingangsKartenVerweise
+                }.map { it.id }.toSet()
+                synchronisiereMethodenAufruf(knoten, methode, argumentProjektion, ergebnisProjektion, belegt,
+                    auswertung.knoten[knoten.id]?.eingänge.orEmpty())
             }
             METHODEN_ARGUMENTE_ART -> {
                 val methode = auswertung.knoten[knoten.id]
@@ -100,7 +107,9 @@ fun synchronisiereMethodenAufrufe(
     })
 
     // Eine einzelne unvereinbare Kante darf keine unabhängigen Kanten mitreißen.
-    val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis).map { it.id }.toSet()
+    val geschützt = ergebnis.knoten.filter { RECHNER_MIGRATION_DIAGNOSE in it.parameter || METHODEN_AUFRUF_VERTRAGSFEHLER in it.parameter }.map { it.id }.toSet()
+    val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis)
+        .filter { it.von.knotenId !in geschützt && it.zu.knotenId !in geschützt }.map { it.id }.toSet()
     val gültigeVerbindungen = ergebnis.verbindungen.filterNot { it.id in inkompatibleIds }
 
     return synchronisiereStrukturZerleger(
@@ -112,6 +121,8 @@ fun synchronisiereMethodenAufrufe(
 
 /** Signaturen und Variablentypen sind abgeleitete Laufzeitverträge, keine UI-Schattenwerte. */
 private fun synchronisiereSemantischeAusgänge(knoten: KnotenDaten, auswertung: KartenAuswertungsErgebnis, karte: KartenDaten): KnotenDaten {
+    if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter || METHODEN_AUFRUF_VERTRAGSFEHLER in knoten.parameter ||
+        knoten.art == METHODEN_AUFRUF_ART && knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true") return knoten
     val ergebnis = auswertung.knoten[knoten.id]
     val grundraum = (ergebnis?.eingänge?.get("grundraum")?.objekt as? MengenAusdruck)?.let(::kanonischerRichtungsraum)
     val ports = knoten.anschlüsse.map { p ->
@@ -197,6 +208,8 @@ private fun synchronisiereMethodenAufruf(
     methode: Methode?,
     argumentProjektion: String,
     ergebnisProjektion: String,
+    belegt: Set<AnschlussId>,
+    eingangswerte: Map<String, BedingterWert>,
 ): KnotenDaten {
     if (METHODEN_STRUKTUR_PACKUNG in knoten.eigenschaften || METHODEN_STRUKTUR_MIGRATIONSFEHLER in knoten.parameter) return knoten
     val methodenEingang = knoten.anschlüsse.firstOrNull {
@@ -207,33 +220,22 @@ private fun synchronisiereMethodenAufruf(
     } ?: return knoten
     val bisherigeArgumente = knoten.argumentAnschlüsse()
 
-    if (methode == null) {
-        val argumente = listOf(tupelAnschluss(knoten.id, bisherigeArgumente.firstOrNull()))
-        return knoten.copy(
-            anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
-                ausgang.copy(
-                    art = MathematikAnschlussArten.Tupel.id,
-                    vertrag = AnschlussVertrag(
-                        TypAusdruck.Parameterisiert(MathematischeTypen.Tupel, emptyList()),
-                    ),
-                ),
-            parameter = knoten.parameter
-                .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }
-                .minus(METHODEN_AUFRUF_STELLIGKEIT)
-                .minus(METHODEN_AUFRUF_ZIELMENGE)
-                .minus(METHODEN_AUFRUF_VERTRAGSFEHLER)
-                .plus(METHODEN_ANWENDUNG_ERGEBNIS_ART to MathematikAnschlussArten.Tupel.id.wert)
-                .plus(METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_TUPEL)
-                .plus(METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_TUPEL)
-                .plus("festeEingänge" to "1"),
-        )
-    }
+    // Eine vorübergehend fehlende Signatur darf weder Anschlüsse noch Quellen löschen.
+    if (methode == null) return knoten
 
     val signatur = (methode as? SignaturtragendeMethode)?.signatur ?: return knoten.copy(
         parameter = knoten.parameter + (
             METHODEN_AUFRUF_VERTRAGSFEHLER to "Die Methode '${methode.name}' besitzt keine neutrale Methodensignatur."
         ),
     )
+    fun abgelehnt(grund: String) = knoten.copy(parameter = knoten.parameter + (METHODEN_AUFRUF_VERTRAGSFEHLER to grund))
+    val ids = signatur.argumente.map { it.id }
+    val vorhandeneIds = bisherigeArgumente.mapNotNull { it.semantischeId }
+    if (vorhandeneIds.distinct().size != vorhandeneIds.size || vorhandeneIds.any { it !in ids } ||
+        bisherigeArgumente.map { it.name }.distinct().size != bisherigeArgumente.size ||
+        knoten.anschlüsse.map { it.id }.distinct().size != knoten.anschlüsse.size) return abgelehnt("Die gespeicherten Argumentidentitäten passen nicht eindeutig zur Methodensignatur.")
+    if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true" && ergebnisProjektion == METHODEN_ERGEBNISPROJEKTION_DIREKT && signatur.ergebnisse.size != 1)
+        return abgelehnt("Die gespeicherte direkte Projektion benötigt genau eine Ergebniskomponente.")
     val mathematischeSignatur = (methode as? MathematischeSignaturtragendeMethode)?.mathematischeSignatur
 
     val effektiveErgebnisProjektion = when {
@@ -246,8 +248,24 @@ private fun synchronisiereMethodenAufruf(
     } else {
         signatur.ergebnisse.single().typ
     }
+    if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true") {
+        knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART]?.let { art ->
+            MethodenAnforderung.ErgebnisArt(art).prüfe(methode)?.let { return abgelehnt(it) }
+        }
+        if (ausgang.vertrag.typ != TypAusdruck.Unbekannt &&
+            MathematischeTypen.typSystem.prüfe(ergebnisTyp, ausgang.vertrag.typ) != de.TeutonStudio.TypSystem.TypPrüfung.Kompatibel)
+            return abgelehnt("Der gespeicherte Einzelresultattyp passt nicht zur Methodensignatur.")
+    }
     val ergebnisArt = if(knoten.parameter[METHODEN_AUFRUF_PARTIELL]=="true") MathematikAnschlussArten.Methode.id else anschlussArtFürTyp(ergebnisTyp)
 
+    val verwendeteNamen = bisherigeArgumente.map { it.name }.toMutableSet()
+    fun neuerName(index: Int): String {
+        val basis = "argument-$index"
+        var name = basis
+        var suffix = 1
+        while (!verwendeteNamen.add(name)) name = "$basis-${suffix++}"
+        return name
+    }
     val argumente = if (argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) {
         if (signatur.argumente.isEmpty()) emptyList()
         else listOf(
@@ -267,19 +285,42 @@ private fun synchronisiereMethodenAufruf(
             )).copy(
                 id = bisher?.id ?: AnschlussId("${knoten.id.wert}:methodenAufruf:komponente:${komponent.id}"),
                 semantischeId = komponent.id,
-                name = "argument-$index",
-                art = anschlussArtFürTyp(komponent.typ),
+                name = bisher?.name ?: neuerName(index),
+                art = if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true" && bisher != null) bisher.art else anschlussArtFürTyp(komponent.typ),
                 reihenfolge = index + 1,
                 kannSichErweitern = false,
                 dynamischErzeugt = false,
-                vertrag = AnschlussVertrag(komponent.typ),
+                vertrag = if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true" && bisher != null) bisher.vertrag else AnschlussVertrag(komponent.typ),
             )
         }
     }
 
+    val entfernte = bisherigeArgumente.filter { alt -> argumente.none { it.id == alt.id } }
+    if (entfernte.any { it.id in belegt }) return abgelehnt("Die Signatur-/Projektionsänderung würde belegte Argumentanschlüsse entfernen; die Originaldaten bleiben erhalten.")
+    if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true" && bisherigeArgumente.any { alt ->
+        if (alt.id !in belegt) false else argumente.singleOrNull { it.id == alt.id }?.let { neu ->
+            val wert = eingangswerte[alt.name]
+            val objekt = wert?.objekt
+            val tatsächlicherTyp = when (objekt) {
+                is Methode -> objekt.methodenTypAusdruck()
+                is MathematischesObjekt -> runCatching {
+                    val vorräte = wert.reelleVariablen + wert.variablenQuellen.associate { it.name to it.werteVorrat } +
+                        if (objekt is Variable) (wert.werteVorrat ?: wert.zielMenge)?.let { mapOf(objekt.name to it) }.orEmpty() else emptyMap()
+                    inferiereZielmenge(objekt, vorräte, wert.annahmen).elementTypAusdruck()
+                }.getOrNull()
+                else -> null
+            } ?: wert?.zielMenge?.elementTypAusdruck() ?: wert?.werteVorrat?.elementTypAusdruck()
+            val altTyp = tatsächlicherTyp ?: alt.vertrag.typ.takeUnless { it == TypAusdruck.Unbekannt }
+                ?: alt.art.takeUnless { it == MathematikAnschlussArten.Objekt.id }
+                    ?.let { TypAusdruck.Atom(de.TeutonStudio.TypSystem.TypId(it.wert)) }
+            val zielTyp = if (argumentProjektion == METHODEN_ARGUMENTPROJEKTION_TUPEL) signatur.argumentTyp
+                else signatur.argumente.single { it.id == neu.semantischeId }.typ
+            altTyp != null && MathematischeTypen.typSystem.prüfe(altTyp, zielTyp) is de.TeutonStudio.TypSystem.TypPrüfung.Inkompatibel
+        } ?: false
+    }) return abgelehnt("Die Methodensignatur ist mit einem belegten Argumentanschluss unvereinbar; die Originaldaten bleiben erhalten.")
     val vertragsParameter = buildMap {
         put(METHODEN_AUFRUF_STELLIGKEIT, signatur.argumente.size.toString())
-        put(METHODEN_ANWENDUNG_ERGEBNIS_ART, ergebnisArt.wert)
+        put(METHODEN_ANWENDUNG_ERGEBNIS_ART, if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true") knoten.parameter[METHODEN_ANWENDUNG_ERGEBNIS_ART] ?: ausgang.art.wert else ergebnisArt.wert)
         put(METHODEN_AUFRUF_ARGUMENTPROJEKTION, argumentProjektion)
         put(METHODEN_AUFRUF_ERGEBNISPROJEKTION, effektiveErgebnisProjektion)
         put("festeEingänge", argumente.size.toString())
@@ -304,8 +345,8 @@ private fun synchronisiereMethodenAufruf(
     return knoten.copy(
         anschlüsse = listOf(methodenEingang.copy(reihenfolge = 0)) + argumente +
             ausgang.copy(
-                art = ergebnisArt,
-                vertrag = AnschlussVertrag(if(knoten.parameter[METHODEN_AUFRUF_PARTIELL]=="true") TypAusdruck.Atom(MathematischeTypen.Methode) else ergebnisTyp),
+                art = if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true") ausgang.art else ergebnisArt,
+                vertrag = if (knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true") ausgang.vertrag else AnschlussVertrag(if(knoten.parameter[METHODEN_AUFRUF_PARTIELL]=="true") TypAusdruck.Atom(MathematischeTypen.Methode) else ergebnisTyp),
             ),
         parameter = knoten.parameter
             .filterKeys { !it.startsWith(METHODEN_AUFRUF_PARAMETER_PREFIX) }
@@ -408,8 +449,8 @@ private fun tupelAnschluss(knotenId: KnotenId, bisher: AnschlussDaten?): Anschlu
         kante = AnschlussKante.Links,
         art = MathematikAnschlussArten.Tupel.id,
     )).copy(
-        id = argumentId(knotenId, 0),
-        name = "argument-0",
+        id = bisher?.id ?: argumentId(knotenId, 0),
+        name = bisher?.name ?: "argument-0",
         art = MathematikAnschlussArten.Tupel.id,
         reihenfolge = 1,
         kannSichErweitern = false,

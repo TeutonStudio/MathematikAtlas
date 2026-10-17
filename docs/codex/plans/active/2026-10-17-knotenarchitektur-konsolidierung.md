@@ -4,7 +4,8 @@
 
 2026-10-17: Vom Nutzer beauftragter Gesamtplan M0–M7 in Umsetzung.
 Ausgang: master 9fea31ddbaaef8bd26fa7a2730177eaaa9744909, v3.4.1.
-M0: samai/v3.4.2/konsolidierung-m0, vom master_verwalter als x reserviert.
+M0: veröffentlicht als v3.4.2, Commit 5813c0337b5c7b2284d882b785559dfeea4ae3cd.
+M1: samai/v3.4.3/konsolidierung-m1, vom master_verwalter als x reserviert.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -90,8 +91,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 
 ## 9. Meilensteine
 
-- [-] M0 Katalog und Migrationsschutz: 136 gemeinsame/138 vollständige Arten.
-- [ ] M1 Methodenaufrufe/Prädikate: vier Spezialarten entfernen.
+- [x] M0 Katalog und Migrationsschutz: 136 gemeinsame/138 vollständige Arten; v3.4.2 veröffentlicht, 5813c0337b5c7b2284d882b785559dfeea4ae3cd, PR #456 und alle PR-/master-Gates grün.
+- [-] M1 Methodenaufrufe/Prädikate: v3.4.3/x reserviert, Branch samai/v3.4.3/konsolidierung-m1, Basis veröffentlichter M0-Commit. Vier Spezialarten entfernen.
 - [ ] M2 Matrix/Vektor/Tensor: vier Spezialarten entfernen.
 - [ ] M3 Tupel/Übersetzer: vier Spezialarten entfernen.
 - [ ] M4 Mengen: drei Spezialarten entfernen.
@@ -233,3 +234,85 @@ Weitere Abweichungen nur mit konkreter Evidenz und fachlicher Begründung.
 Offen. Erst abgeschlossen bei 121/123 konsistenten Typen, allen migrierten
 Verbrauchern, keinem unabhängigen historischen Rechenfallback, vollständigen
 Pflicht-/Laufzeitnachweisen und unabhängiger Abnahme.
+
+M0-Veröffentlichung: PR #456, finaler GitHub-Squash 5813c0337b5c7b2284d882b785559dfeea4ae3cd
+(v3.4.2), Autor Alexander/Committer GitHub web-flow; lokale Arbeitscommits SamAI/SamAI.
+Finaler PR-Head 0d511f9d288893d2fd1cd90ce5e13406be47b416 vollständig grün.
+Master-Nachweise: [Guard](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38978826218),
+[Linux/RPM/Persistenz](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38978826212),
+[Android-Build](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38978826208),
+[Kern/Emulator](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38978826204).
+
+M1-Bestand: 43 ausführbare Altaufrufe in 40 JSON-Dateien; 16 weitere knotenArt-
+Beschriftungen gehören zu konzept.regel und sind keine ausführbaren Quellen.
+Die vier gespeicherten Ordnungsrelationen verwenden sämtlich relation=kleiner;
+Tests aller vier erlaubten Werte werden ergänzt. Portnamen bleiben bei bloßer
+Signaturumordnung ebenso stabil wie IDs, damit lokale Quellen erhalten bleiben.
+
+M1-Zustandsmatrix Analysis: allgemeine Analysis ohne Ergebnisanforderung folgt der
+Orientierung der Eingabemethode und bietet keine wirkungslose Orientierungsauswahl.
+Neue Vektorsuchvarianten deklarieren den vorhandenen semantischen Ergebnisvertrag;
+Spalte/Zeile ist dort eine atomare Ausgangseinstellung über den KonfigurationsPlan.
+Historische explizite Ergebnisanforderungen bleiben erhalten; bloße frühere
+Orientierungsparameter führen nicht nachträglich eine Transposition oder neue
+Auswertungsbedingung ein. Unbekannte gespeicherte Orientierungen werden angezeigt.
+Der frühere Wrapper wählte tatsächlich identische Auswerter; dies ist die konkrete
+Begründung für das Ausblenden einer fachlich wirkungslosen Auswahl.
+
+M1-Wahrheitstabellen: bestehender AtlasDialog/Arbeitsdialog mit Schließen-, Escape-
+und Außenklickpfad bleibt zuständig. Vergleich: vorhandener Nichtprädikat-Fehlerzustand
+im selben Eingabebaustein und KartenExportFormatDialog/AtlasDialog-Rahmen. Fehlende
+symbolische Mathematikfähigkeit erhält sichtbare Diagnose statt Legacyzugriff;
+keine Kartenänderung oder neue Dialogaktion. Layout-/Laufzeitnachweis noch offen.
+
+M1-Umsetzung: vier physische Spezialarten aus der Erzeugung entfernt; gemeinsame
+132/Android 134 Arten. Auch die Definitionsvorlagen sind kanonisiert, historische
+Konzept- und Karten-IDs bleiben auflösbar. 43 echte Altaufrufe aus 40 unveränderten
+JSON-Dateien werden in allen vier Codecphasen verglichen; eingebettete Quellen
+werden durch dieselbe Pipeline verarbeitet. ID-Bindung, offene mathematische
+Capabilities, strukturierter symbolischer AST, direkte/äußere Tupelprojektion und
+Metadatenherkunft sind durch neue Vertragsfälle abgesichert. Differenzenquotient
+läuft durch Altkarte, Laden, Synchronisieren, Speichern und Import: 8 bei x=3/h=2,
+Diagnose bei h=0, offene Voraussetzung h≠0 bei symbolischem h.
+
+Unabhängige M1-Prüfung fand einen zusätzlichen Synchronisierungsverlust: unveränderte
+Port-ID genügt nicht, wenn ihr Vertrag inkompatibel überschrieben wird. Feste
+historische Ergebnisverträge und belegte Argumentverträge werden deshalb vor
+Übernahme geprüft; Originalanschlüsse und Kanten bleiben bei Ablehnung erhalten.
+ADR: decisions/2026-10-17-identitaetsbasierte-methodenaufrufe.md. Die 77-Punkte-Matrix
+enthält ergänzende Evidenz, keine pauschale Erledigungserklärung.
+
+M1-Nachprüfung der Synchronisierung: feste historische Aufrufe bewahren auch die
+physischen Portarten/-verträge. Tatsächliche Eingangswerte und ihre Metadaten werden
+gegen die neue Signatur geprüft; eine breite historische Objektart wird nicht mit
+einem tatsächlich falschen Wert verwechselt. Positive Standard-Altaufrufregression
+und negative Ergebnis-/Argumentvertragsfälle bestehen. Unabhängige read-only
+Nachprüfung ohne weitere Findings. Vollständige Testresultate aktuell: 2.154 Fälle,
+0 Fehler, 1 vorhandener Skip. Lint-/Buildprozess und Release-CI noch abschließen.
+Lokale standalone-Kernprüfung weiterhin nicht ausführbar: kotlinc fehlt; Gradle-
+Kernprüfung besteht. App-Gerätetest wegen vorhandener anders signierter Installation
+nicht lokal ausführbar, deren Daten bleiben erhalten. RPM-Laufzeitabnahme erfolgt
+über bestehende isolierte CI wie M0; lokales rpmbuild fehlt.
+
+M1 lokaler Schlusslauf: vollständiger angegebener Gradle-Test-/Lint-/APK-/Test-APK-
+und Desktop-Kompilierbefehl erfolgreich in 3m21s (277 Tasks). 2.154 Testfälle,
+0 Fehler, 1 vorhandener Skip. Repository-/Standardkarten-/Releaseplan-/Versionsfolge-
+und 14 Guardregressionen sowie Diffprüfung bestehen. Unabhängige Nachprüfung ohne
+Findings. Frühere Fehlversuche (zu strenge Legacy-Portprüfung und überlappende
+Desktop-Gradle-Läufe) sind durch diesen sequenziellen finalen Lauf ersetzt.
+Freigabe zur Erstellung des eigenständigen Release-PRs v3.4.3; Veröffentlichung
+weiter an alle Gates am finalen PR-Head und nachfolgenden master-SHA gebunden.
+
+M1-Abnahmeergänzung vor Veröffentlichung: Ein gezielt reproduzierter Randfall
+zeigte, dass ein symbolischer Eingang mit explizitem reellem Wertevorrat ohne
+zusätzliche reelleVariablen-Map konservativ als komplex abgeleitet wurde. Die
+Synchronisierung berücksichtigt nun Quellenmetadaten und den ausdrücklich
+deklarierten Bereich einer direkten Variable. Konkrete Werte werden weiter anhand
+ihres Objekts typisiert. Erweiterte Standard-Altaufrufregression für Zahl und reelles
+Symbol sowie alle 14 Migrations-/Differenzenquotientfälle bestehen. Unabhängige
+Zusatzprüfung ohne Findings. PR #457 erhält dafür einen neuen Head; Nachweise des
+vorangegangenen f90a14b9 gelten nicht als CI-Freigabe des aktualisierten Heads.
+Zusatz-Vollprüfung ebenfalls erfolgreich: 3m36s, 277 Tasks, alle Test-/Lint-/APK-
+und Desktop-Kompilieraufgaben grün. Unabhängige Zusatzprüfung ohne Findings.
+Der aktualisierte Produktbaum ist zur Commit-/PR-Aktualisierung freigegeben;
+Veröffentlichung erst nach CI am dadurch erzeugten endgültigen SHA.

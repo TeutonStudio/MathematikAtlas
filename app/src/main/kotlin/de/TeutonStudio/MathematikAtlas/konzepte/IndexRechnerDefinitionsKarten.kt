@@ -396,10 +396,17 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         verbinde(term,node,"wert");verbinde(parameterQuelle,node,"parameterQuelle");return node
     }
     fun kleiner(a:IndexDefinitionsWert,c:IndexDefinitionsWert):IndexDefinitionsWert {
-        val basis=MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero)
-        val node=add(basis.copy(anschlüsse=basis.anschlüsse.map { if(it.richtung==AnschlussRichtung.Eingang) it.copy(art=MathematikAnschlussArten.AtlasWert.id,zulässigeArten=emptySet()) else it }),"aussage")
-        verbinde(a,node,"links");verbinde(c,node,"rechts");return node
+        // Generische Indexwerte werden an der Zahlengrenze geprüft, bevor sie
+        // einen kanonisch typisierten Relationsanschluss erreichen.
+        fun zahlwert(w: IndexDefinitionsWert): IndexDefinitionsWert =
+            if (w.knoten.anschlüsse.single { it.name == w.ausgang && it.richtung == AnschlussRichtung.Ausgang }.art == MathematikAnschlussArten.Zahl.id) w
+            else zahl(UniversellerZahlenOperator.ADDITION, listOf(w, konstante(0)))
+        val links = zahlwert(a); val rechts = zahlwert(c)
+        val basis=PraedikatKnotenVorlagen.vorlage(RelationsOperatoren.vonIdOderNull("relation.kleiner")!!).erzeuge(GraphPunkt.Zero)
+        val node=add(basis,"aussage")
+        verbinde(links,node,"links");verbinde(rechts,node,"rechts");return node
     }
+
     fun fall(aussage:IndexDefinitionsWert,wahr:IndexDefinitionsWert,lüge:IndexDefinitionsWert):IndexDefinitionsWert {
         val basis=MathematikKnotenVorlagen.Fall.erzeuge(GraphPunkt.Zero)
         val node=add(basis.copy(parameter=basis.parameter+("fall.annahmenNurGewaehlterZweig" to "true"),anschlüsse=basis.anschlüsse.map { it.copy(art=MathematikAnschlussArten.AtlasWert.id,zulässigeArten=emptySet()) }),"wert")
