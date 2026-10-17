@@ -11,6 +11,7 @@ import de.TeutonStudio.MathematikKnoten.alleMathematikKnotenVorlagen
 import de.TeutonStudio.MathematikKnoten.historischeMengenKnotenArten
 import de.TeutonStudio.MathematikKnoten.historischeSkalarproduktArten
 import de.TeutonStudio.MathematikKnoten.historischeZahlenRechnerArten
+import de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog
 
 /**
  * Knotentypen, die gebündelte Standardkarten verwenden dürfen.
@@ -20,6 +21,7 @@ import de.TeutonStudio.MathematikKnoten.historischeZahlenRechnerArten
  * müssen deshalb vom Standardkarten-Installer als unterstützt akzeptiert werden.
  */
 internal fun bekannteStandardKartenKnotenArten(): Set<String> = buildSet {
+    KanonischerMathematikKnotenKatalog.alle().mapTo(this) { it.art }
     alleMathematikKnotenVorlagen().mapTo(this) { it.art }
     MengenraumKnotenVorlagen.alle.mapTo(this) { it.art }
     GeometrieKnotenVorlagen.alle.mapTo(this) { it.art }

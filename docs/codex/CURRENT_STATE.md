@@ -35,8 +35,18 @@ Releaseplan 117, Versionsfolge, 14 Guardregressionen und Diffprüfung grün.
 Unabhängige Schlussprüfung ohne offene Blocker. Standalone-Kernskript mangels
 kotlinc nicht ausführbar; Gradle-Kerntests grün. Lokale RPM-Paketierung scheitert
 an fehlender jpackage-Unterstützung für rpm (/tmp/atlas-m7b-rpm.log).
-Veröffentlichung und native Abnahme erfordern sämtliche PR-/Master-Gates und
-isolierte Android-/Linux-Laufzeitbelege des finalen SHA. Keine Gesamtfreigabe
+Erste PR-SHA-Abnahme 9bb96999: fünf Gates einschließlich Linux-RPM/Persistenz
+grün; Emulator 66/68, zwei Standardkarten-Updatefehler. Kein Merge/Retry.
+Installer-Bekanntmenge fehlte mathematik.mengenrechner nach Kartenkanonisierung;
+mit neuem 15-Karten-Manifesttest lokal reproduziert und durch additive Aufnahme
+des gemeinsamen Katalogs korrigiert. Hash-/Originalschutz unverändert,
+unabhängig geprüft; gezielte Installer-/Provenienztests grün. Neuer vollständiger
+Produktlauf grün: /tmp/atlas-m7b-installer-produkt-final.log, 57 s/277 Tasks,
+2274 Fälle/0 Fehler/1 vorhandener Skip; 2273 bestanden. Repository, 15 Standardkarten,
+Releaseplan, Versionsfolge, 14 Guardregressionen und Diff ebenfalls grün.
+Neue SHA-Abnahme erforderlich. Veröffentlichung und native Abnahme
+erfordern sämtliche PR-/Master-Gates und isolierte Android-/Linux-Laufzeitbelege
+des finalen SHA. Keine Gesamtfreigabe
 der unverändert als Anforderungsevidenz geführten 77-Punkte-Matrix.
 
 Nachfolgend historische Einträge.

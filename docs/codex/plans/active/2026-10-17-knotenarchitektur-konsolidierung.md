@@ -1052,3 +1052,36 @@ offene Blocker. Zusätzliches Kernskript wegen fehlendem kotlinc nicht ausführb
 Gradle-Kerntests bestanden. Lokale RPM-Prüfung /tmp/atlas-m7b-rpm.log scheitert
 an nicht unterstütztem jpackage-rpm-Pakettyp. Native Emulator-/RPM-/Persistenz-
 Abnahme und Veröffentlichung bleiben an die finalen PR-/Master-SHAs gebunden.
+
+
+M7b erste SHA-Abnahme 9bb9699927fe1c2630dc47bd9e955047c17e92fc:
+PR #465, fünf Gates grün einschließlich Linux-RPM/Installation/zwei Starts
+mit derselben Karten-ID, Revision 1→2 und Deinstallation. Isolierte Emulator-
+abnahme: 68 Fälle, 66 bestanden, zwei Fehler in StandardKartenMigrationGeraeteTest
+(aktualisiert=0 statt 1). Kein Merge oder Retry. Fehlerartefakt
+/tmp/atlas-m7b-runtime-9bb96999-failed.zip, SHA-256
+22fb016cb3d3dc49bd4e5bc130cede70e0540786c1090bb09e1873b09e67b086;
+Zähler aus HTML, keine XML im Archiv. Dauerhafte Belege:
+https://github.com/TeutonStudio/MathematikAtlas/pull/465#issuecomment-6231690513.
+
+Produktursache gezielt lokal reproduziert: Der Installer verwendete ausschließlich
+historische Vorlagenlisten als Bekanntmenge; der separat im kanonischen Katalog
+ergänzte mathematik.mengenrechner fehlte. Nach Kanonisierung der Produktkarten
+übersprang der Installer die Karte „Hebbare Definitionslücke“ vor ihrer
+Aktualisierung. Neuer Manifestabdeckungstest über alle 15 Standardkarten schlägt
+vor Fix genau mit dieser fehlenden Art fehl (/tmp/atlas-m7b-installer-vorher.log).
+Enger Fix ergänzt alle kanonischen Katalogarten zur vorhandenen Bekanntmenge;
+historische Ladetypen, Provenienz-/Hash-/Originalschutz unverändert. Gezielte
+Installer-/Provenienztests anschließend grün (1 s/78 Tasks,
+/tmp/atlas-m7b-installer-nachher.log), unabhängig ohne neue Blocker geprüft.
+Vollständige Produkt- und danach neue SHA-Abnahme erforderlich; alter Head bleibt
+gesperrt.
+
+
+M7b Installer-Schlussdelta vollständig lokal grün:
+/tmp/atlas-m7b-installer-produkt-final.log, 57 s/277 Tasks, 2274 Fälle,
+0 Fehler, 1 vorhandener Skip (2273 bestanden), einschließlich JVM-/Desktoptests,
+Lint und sämtlicher APK-/Desktop-Builds. Repository/Architektur, 15 Standardkarten,
+Releaseplan 117, Versionsfolge, 14 Guardregressionen und Diff erneut grün.
+Nur zwei Produktionszeilen im Installer und der gezielte Abdeckungstest ergänzt;
+Veröffentlichung weiterhin erst nach neuen SHA-Gates und Geräteabnahme.
