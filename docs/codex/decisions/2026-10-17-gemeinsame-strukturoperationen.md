@@ -1,6 +1,6 @@
 # Gemeinsame Matrix-, Vektor- und Tensoroperationen
 
-Datum: 2026-10-17. Status: M2 in Umsetzung, v3.4.4/x reserviert; Veröffentlichung offen.
+Datum: 2026-10-17. Status: M2 als v3.4.4/x auf master integriert (ec152625); finale Android-Laufzeitabnahme wegen eines bestehenden Such-Resettests offen, Reparatur v3.4.5/x in Umsetzung.
 
 ## Kontext
 
