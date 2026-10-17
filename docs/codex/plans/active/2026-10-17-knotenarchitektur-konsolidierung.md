@@ -96,8 +96,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 
 - [x] M0 Katalog und Migrationsschutz: 136 gemeinsame/138 vollständige Arten; v3.4.2 veröffentlicht, 5813c0337b5c7b2284d882b785559dfeea4ae3cd, PR #456 und alle PR-/master-Gates grün.
 - [x] M1 Methodenaufrufe/Prädikate: v3.4.3 veröffentlicht, e665a7fde78fe845dc7c62fa60fa00896d35f58a, PR #457, alle PR-/master-Gates grün; 132 gemeinsame/134 Androidtypen.
-- [-] M2 Matrix/Vektor/Tensor: v3.4.4/x reserviert, Branch samai/v3.4.4/konsolidierung-m2, Basis e665a7fd; zuerst Methodenhebung und Fachkerne absichern, vier Spezialarten entfernen.
-- [ ] M3 Tupel/Übersetzer: vier Spezialarten entfernen.
+- [x] M2 Matrix/Vektor/Tensor: v3.4.4 integriert; Schlussabnahme über separat veröffentlichte Testreparatur v3.4.5/e6760b9a vollständig grün, ursprünglicher Laufzeitfehler historisch erhalten.
+- [-] M3 Tupel/Übersetzer: v3.4.6/x ab v3.4.5/e6760b9a reserviert; vier Spezialarten entfernen, vorhandene Übersetzerziele konsolidieren.
 - [ ] M4 Mengen: drei Spezialarten entfernen.
 - [ ] M5 Quellenverträge und Konstanten ohne Typentfernung vereinheitlichen.
 - [ ] M6 Begriffe und Verantwortlichkeiten korrigieren.
@@ -424,3 +424,34 @@ Desktop-Testtasks erfolgreich (59 s, 277 Tasks; 2.180 Tests, 0 Fehler,
 Diffprüfung bestehen. Standalone-Kernprüfung weiterhin ohne kotlinc nicht
 ausführbar; lokale RPM-Werkzeuggrenze unverändert, keine lokale Laufzeitfreigabe.
 Unabhängige Abschlussprüfung: keine blockierenden Findings.
+
+
+## M2-Abschluss über Testreparatur v3.4.5 (2026-10-17)
+
+M2 bleibt historisch als v3.4.4 auf `ec152625926698f58e1ddd1d1a1d6420f8b0c6cc`
+integriert; sein ursprünglicher Android-master-Lauf mit einem Suchresetfehler
+wird nicht nachträglich als erfolgreich ausgegeben. Die enge Testreparatur ist
+separat als v3.4.5 auf `e6760b9a41aaeb186dee7ee7c13254430cb47ee8` veröffentlicht
+(PR #459, geprüfter Head `89a1097a5c09531772bccd63934b9fb66df9d0a9`).
+Kein Produktionsverhalten, Katalog, Format oder Gate wurde geändert. Die genaue
+ursprüngliche Fehlerursache bleibt unbewiesen.
+
+Alle sechs Reparatur-PR-Gates sind erfolgreich. Das gesicherte
+[Laufzeitartefakt](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992259351)
+belegt 7 Editor- und 51 App-Tests ohne Fehler oder Skips; der Resettest wurde
+in 6,266 s erfolgreich ausgeführt. Sämtliche finalen master-Workflows am
+Reparaturcommit sind durch die Root-CLI als vollständig erfolgreich bestätigt:
+[Release-Guard](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803512),
+[Linux/RPM/Persistenz](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803457),
+[Android-Build](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803546),
+[Kern/Android-Laufzeit](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803470).
+Der konkrete zusätzliche master-Artefaktexport ist noch nicht gesichert; die
+Workflow-Erfolge sind diesem finalen SHA zugeordnet. Lokale Werkzeug- und
+Gerätesignaturgrenzen bleiben unverändert dokumentiert.
+
+Lokale Arbeitscommits sind SamAI/SamAI verifiziert. Beide finalen GitHub-Squashcommits
+haben Autor Alexander und Committer GitHub/web-flow und sind keine lokalen SamAI-Commits.
+M3 ist anschließend als v3.4.6/x auf `samai/v3.4.6/konsolidierung-m3` ab exakt
+`e6760b9a41aaeb186dee7ee7c13254430cb47ee8` reserviert; Reservierungscommit
+`63acb023c1bc33b8e38016834f480563faee8e3d`, ausschließlich Roadmap, SamAI/SamAI.
+M4–M7 bleiben unreserviert.

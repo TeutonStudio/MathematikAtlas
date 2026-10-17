@@ -614,7 +614,7 @@ expliziter direkter Einzelresultatprojektion. Ordnungsrelationen und orientierte
 Methodenanalysis werden als konfigurierte vorhandene Arten erzeugt. Details und
 SHA-bezogene Prüfnachweise stehen im aktiven Gesamtplan.
 
-M2 wurde als v3.4.4/x integriert (ec152625926698f58e1ddd1d1a1d6420f8b0c6cc). Die finale Android-Laufzeitabnahme scheiterte in einem bestehenden Such-Resettest; das enge Test-Reparaturrelease v3.4.5/x ist reserviert. M3 bleibt unreserviert.
+M2 wurde als v3.4.4/x integriert (ec152625926698f58e1ddd1d1a1d6420f8b0c6cc). Die zunächst fehlgeschlagene Android-Schlussabnahme ist über die separat veröffentlichte enge Testreparatur v3.4.5 (e6760b9a41aaeb186dee7ee7c13254430cb47ee8) abgeschlossen; sämtliche finalen master-Gates sind grün. Der ursprüngliche Fehler bleibt historisch dokumentiert, seine genaue Ursache unbewiesen. M3 ist als v3.4.6/x reserviert.
 Im aktuellen Produktbaum erzeugen Spur, Matrixdiagonale, Vektorradius und Kreuzprodukt
 konfigurierte vorhandene Rechner; der Katalogtest bestätigt 128 gemeinsame Arten.
 Reelle Norm, Kreuzproduktkomponenten, Basisvektorerzeugung und Transposition delegieren
@@ -622,6 +622,37 @@ gemeinsame Kernoperationen. Mehrdeutige Strukturmigrationen bewahren Originaldat
 sperren Auswertung mit konkreter Diagnose. Gezielte Codec-/Metadatenregressionen und
 der vollständige lokale Produktlauf bestehen: 2.180 Tests, 0 Fehler, 1 bestehender
 Skip, Lint/APKs/Desktop. Unabhängige Prüfung ohne weitere Findings; abschließende
-SHA-bezogene CI- und Geräte-/RPM-Abnahme sowie Veröffentlichung offen.
+SHA-bezogene CI-/Emulator-/RPM-Abnahme durch v3.4.5 abgeschlossen; physische App-Geräteinstallation bleibt wegen fremder Signatur unverändert begrenzt.
 Die vorhandene konjugierte Tensor-Norm bleibt ein getrennter Vertrag. Quellenarten,
 polymorphes Transponieren und direkte Tupelstrukturknoten bleiben erhalten.
+
+
+## M2-Abschluss über Testreparatur v3.4.5 (2026-10-17)
+
+M2 bleibt historisch als v3.4.4 auf `ec152625926698f58e1ddd1d1a1d6420f8b0c6cc`
+integriert; sein ursprünglicher Android-master-Lauf mit einem Suchresetfehler
+wird nicht nachträglich als erfolgreich ausgegeben. Die enge Testreparatur ist
+separat als v3.4.5 auf `e6760b9a41aaeb186dee7ee7c13254430cb47ee8` veröffentlicht
+(PR #459, geprüfter Head `89a1097a5c09531772bccd63934b9fb66df9d0a9`).
+Kein Produktionsverhalten, Katalog, Format oder Gate wurde geändert. Die genaue
+ursprüngliche Fehlerursache bleibt unbewiesen.
+
+Alle sechs Reparatur-PR-Gates sind erfolgreich. Das gesicherte
+[Laufzeitartefakt](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992259351)
+belegt 7 Editor- und 51 App-Tests ohne Fehler oder Skips; der Resettest wurde
+in 6,266 s erfolgreich ausgeführt. Sämtliche finalen master-Workflows am
+Reparaturcommit sind durch die Root-CLI als vollständig erfolgreich bestätigt:
+[Release-Guard](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803512),
+[Linux/RPM/Persistenz](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803457),
+[Android-Build](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803546),
+[Kern/Android-Laufzeit](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803470).
+Der konkrete zusätzliche master-Artefaktexport ist noch nicht gesichert; die
+Workflow-Erfolge sind diesem finalen SHA zugeordnet. Lokale Werkzeug- und
+Gerätesignaturgrenzen bleiben unverändert dokumentiert.
+
+Lokale Arbeitscommits sind SamAI/SamAI verifiziert. Beide finalen GitHub-Squashcommits
+haben Autor Alexander und Committer GitHub/web-flow und sind keine lokalen SamAI-Commits.
+M3 ist anschließend als v3.4.6/x auf `samai/v3.4.6/konsolidierung-m3` ab exakt
+`e6760b9a41aaeb186dee7ee7c13254430cb47ee8` reserviert; Reservierungscommit
+`63acb023c1bc33b8e38016834f480563faee8e3d`, ausschließlich Roadmap, SamAI/SamAI.
+M4–M7 bleiben unreserviert.
