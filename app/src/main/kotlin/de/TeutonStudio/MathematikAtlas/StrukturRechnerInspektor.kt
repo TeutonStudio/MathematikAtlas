@@ -51,7 +51,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
     override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
         KnotenInspektorBereich.Knotendaten -> true
         KnotenInspektorBereich.Eingangsdaten -> de.TeutonStudio.MathematikKnoten.hatRechnerEingangsEinstellungen(knoten)
-        KnotenInspektorBereich.Ausgangsdaten -> knoten.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId
+        KnotenInspektorBereich.Ausgangsdaten -> de.TeutonStudio.MathematikKnoten.hatGemeinsameAusgangsEinstellungen(knoten)
     }
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)
     @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen, bereich: KnotenInspektorBereich) {
@@ -236,6 +236,7 @@ internal object StrukturRechnerInspektor : KnotenInspektor {
         if (familie == StrukturRechnerKnotenFamilie.AUSSAGESATZ) {
             AussagenParameter(knoten, operator, aktionen)
         }
+        de.TeutonStudio.MathematikKnoten.InspektorMatrixDiagonalEinstellungen(knoten, aktionen::knoten)
         if (mitAnschlüssen) StrukturRechnerAusgänge(knoten, ergebnis, aktionen)
 
         if (familie == StrukturRechnerKnotenFamilie.TENSOR) {

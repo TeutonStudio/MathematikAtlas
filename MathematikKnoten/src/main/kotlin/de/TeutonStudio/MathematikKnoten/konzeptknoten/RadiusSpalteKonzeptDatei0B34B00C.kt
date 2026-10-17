@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object RadiusSpalteKonzeptDatei0B34B00C : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.vektorRadiusSpalte|Radius (Spalte)|")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.vektorRadiusSpalte|Radius (Spalte)"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.vektorrechner|achse=1|integral.massModus=AUTO|integral.massSymbol=\\mu|metrik=metrik.l2|operator=vektor.norm|strukturAusgabe=tupel|Radius (Spalte)"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object RadiusSpalteKonzeptDatei0B34B00C : ExpliziteKonzeptDatei {
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.vektorRadiusSpalte"),
+            knotenArten = setOf("mathematik.vektorrechner"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

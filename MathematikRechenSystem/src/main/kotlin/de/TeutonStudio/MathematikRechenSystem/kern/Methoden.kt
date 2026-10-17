@@ -306,8 +306,15 @@ private fun normalisiereLegacyDefinitionsRaum(
 ): MengenAusdruck? = when {
     raum == null -> null
     stelligkeit == 0 && raum == LeereMenge -> Tupelraum(emptyList())
-    stelligkeit == 1 && raum !is Tupelraum -> Tupelraum(listOf(raum))
+    stelligkeit == 1 && !raum.istExpliziterArgumentTupelraum() -> Tupelraum(listOf(raum))
     else -> raum
+}
+
+/** Auch der Schnitt mehrerer Argumenträume bleibt ein Raum logischer Argumenttupel. */
+private fun MengenAusdruck.istExpliziterArgumentTupelraum(): Boolean = when (this) {
+    is Tupelraum -> true
+    is Schnitt -> mengen.isNotEmpty() && mengen.all { it.istExpliziterArgumentTupelraum() }
+    else -> false
 }
 
 private fun kanonischeVorschrift(ausgaben: Map<String, MathematischesObjekt>): MathematischesObjekt =

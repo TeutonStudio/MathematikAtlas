@@ -56,7 +56,7 @@ object VektorMetriken {
         titel = "Euklidisch (L²)",
         suchbegriffe = setOf("L2", "euklidisch"),
     ) { differenzen ->
-        Wurzel(addition(differenzen.map { Potenz(it, RationaleZahl.von(2)) }))
+        reelleEuklidischeNorm(differenzen)
     }
 
     val l1 = VektorMetrikDefinition(
@@ -142,6 +142,9 @@ data class VektorRechnerAnfrage(
     val metrik: VektorMetrikDefinition = VektorMetriken.standard,
     val achse: Int = 1,
     val strukturAusgabe: VektorStrukturAusgabe = VektorStrukturAusgabe.TUPEL,
+    val variablenVorräte: Map<String, MengenAusdruck> = emptyMap(),
+    val annahmen: Set<Aussage> = emptySet(),
+    val kreuzproduktOrientierung: VektorOrientierung? = null,
 )
 
 sealed interface VektorRechnerErgebnis {
@@ -210,8 +213,28 @@ object VektorRechner {
             }
         }
         pruefeVertraege(anfrage.vektoren)?.let { return it }
+        val vorräte = buildMap {
+            anfrage.vektoren.zip(vektoren).forEach { (quelle, vektor) ->
+                vektor.werte.filterIsInstance<Variable>().forEach { variable ->
+                    put(variable.bindungsId ?: variable.name, quelle.vertrag.zahlbereich.alsMenge())
+                }
+            }
+            putAll(anfrage.variablenVorräte)
+        }
+        val reelleNormOperation = anfrage.operator in setOf(VektorRechnerOperator.NORM, VektorRechnerOperator.NORMALISIERUNG,
+            VektorRechnerOperator.WINKEL, VektorRechnerOperator.WINKEL_ZU_ACHSE) ||
+            anfrage.operator == VektorRechnerOperator.DISTANZ && anfrage.metrik == VektorMetriken.euklidisch
+        val normBedingungen=linkedSetOf<Aussage>()
+        if (reelleNormOperation) {
+            if (anfrage.vektoren.any { it.vertrag.zahlbereich > FundamentalerZahlbereich.REELL })
+                return VektorRechnerErgebnis.Ungueltig("norm_nicht_reell", "Diese euklidische Operation benötigt einen reellen Vektorvertrag.")
+            runCatching { vektoren.forEach { normBedingungen += reelleEuklidischeNormAnwendung(it.werte,vorräte,anfrage.annahmen).bedingungen } }.exceptionOrNull()?.let {
+                return VektorRechnerErgebnis.Ungueltig("norm_nicht_reell", it.message ?: "Reelle Komponenten sind nicht nachgewiesen.")
+            }
+        }
 
-        return when (anfrage.operator) {
+        val normAnnahmen=anfrage.annahmen+normBedingungen
+        val ergebnis = when (anfrage.operator) {
             VektorRechnerOperator.ADDITION -> {
                 if (vektoren.isEmpty()) return anzahlFehler("Addition", "mindestens einen Vektor")
                 vektorErgebnis(
@@ -282,18 +305,17 @@ object VektorRechner {
                         "Das klassische Kreuzprodukt benötigt genau zwei dreidimensionale Vektoren.",
                     )
                 }
-                val a = vektoren[0].werte
-                val b = vektoren[1].werte
-                val komponenten = listOf(
-                    subtraktion(multiplikation(a[1], b[2]), multiplikation(a[2], b[1])),
-                    subtraktion(multiplikation(a[2], b[0]), multiplikation(a[0], b[2])),
-                    subtraktion(multiplikation(a[0], b[1]), multiplikation(a[1], b[0])),
-                )
+                if (anfrage.kreuzproduktOrientierung != null && vektoren.any { (if (it is SpaltenVektor) VektorOrientierung.Spalte else VektorOrientierung.Zeile) != anfrage.kreuzproduktOrientierung })
+                    return VektorRechnerErgebnis.Ungueltig("kreuzprodukt_orientierung", "Die Vektoren entsprechen nicht der gewählten Kreuzproduktorientierung.")
+                if (anfrage.vektoren.any { it.vertrag.zahlbereich > FundamentalerZahlbereich.KOMPLEX })
+                    return VektorRechnerErgebnis.Ungueltig("kreuzprodukt_nichtkommutativ", "Das klassische Kreuzprodukt benötigt einen kommutativen Koeffizientenbereich.")
+                val komponenten = runCatching { kreuzproduktKomponenten(vektoren[0].werte,vektoren[1].werte,vorräte,anfrage.annahmen) }
+                    .getOrElse { return VektorRechnerErgebnis.Ungueltig("kreuzprodukt_bereich",it.message ?: "Koeffizientenbereich ist nicht nachgewiesen.") }
                 vektorErgebnis(orientiereWie(vektoren.first(), komponenten), anfrage.vektoren.first().vertrag)
             }
             VektorRechnerOperator.NORM -> {
                 if (vektoren.size != 1) return anzahlFehler("Norm", "genau einen Vektor")
-                VektorRechnerErgebnis.ZahlWert(norm(vektoren.single()), FundamentalerZahlbereich.REELL)
+                VektorRechnerErgebnis.ZahlWert(norm(vektoren.single(),vorräte,normAnnahmen), FundamentalerZahlbereich.REELL)
             }
             VektorRechnerOperator.NORMALISIERUNG -> {
                 if (vektoren.size != 1) return anzahlFehler("Normalisierung", "genau einen Vektor")
@@ -304,7 +326,7 @@ object VektorRechner {
                         "Der Nullvektor kann nicht normalisiert werden.",
                     )
                 }
-                val laenge = norm(vektor)
+                val laenge = norm(vektor,vorräte,normAnnahmen)
                 vektorErgebnis(
                     orientiereWie(vektor, vektor.werte.map { Division(it, laenge) }),
                     anfrage.vektoren.single().vertrag,
@@ -345,9 +367,9 @@ object VektorRechner {
                     listOf(Ungleichheit(nenner, RationaleZahl.Null)),
                 )
             }
-            VektorRechnerOperator.WINKEL -> winkel(vektoren)
-            VektorRechnerOperator.DISTANZ -> distanz(vektoren, anfrage.vektoren, anfrage.metrik)
-            VektorRechnerOperator.WINKEL_ZU_ACHSE -> winkelZuAchse(vektoren, anfrage.achse)
+            VektorRechnerOperator.WINKEL -> winkel(vektoren,vorräte,normAnnahmen)
+            VektorRechnerOperator.DISTANZ -> distanz(vektoren, anfrage.vektoren, anfrage.metrik,vorräte,normAnnahmen)
+            VektorRechnerOperator.WINKEL_ZU_ACHSE -> winkelZuAchse(vektoren, anfrage.achse,vorräte,normAnnahmen)
             VektorRechnerOperator.RADIUS,
             VektorRechnerOperator.POLARWINKEL,
             VektorRechnerOperator.KARTESISCH,
@@ -355,6 +377,11 @@ object VektorRechner {
             VektorRechnerOperator.ZERLEGEN,
             VektorRechnerOperator.ZUSAMMENFUEHREN,
             -> error("Spezialoperator wurde vor der Vektormaterialisierung abgefangen.")
+        }
+        return when(ergebnis) {
+            is VektorRechnerErgebnis.ZahlWert -> ergebnis.copy(bedingungen=(ergebnis.bedingungen+normBedingungen).distinct())
+            is VektorRechnerErgebnis.VektorWert -> ergebnis.copy(bedingungen=(ergebnis.bedingungen+normBedingungen).distinct())
+            is VektorRechnerErgebnis.Ungueltig -> ergebnis
         }
     }
 
@@ -374,19 +401,20 @@ object VektorRechner {
         vektoren: List<OrientierterVektor>,
         quellen: List<VektorQuelle>,
         metrik: VektorMetrikDefinition,
+        vorräte: Map<String,MengenAusdruck>, annahmen: Set<Aussage>,
     ): VektorRechnerErgebnis {
         if (vektoren.size != 2) return anzahlFehler("Distanz", "genau zwei Vektoren")
         val differenzen = vektoren[0].werte.zip(vektoren[1].werte, ::subtraktion)
         return VektorRechnerErgebnis.ZahlWert(
-            metrik.auswerten(differenzen),
+            if (metrik == VektorMetriken.euklidisch) reelleEuklidischeNorm(differenzen,vorräte,annahmen) else metrik.auswerten(differenzen),
             gemeinsamerBereich(quellen),
         )
     }
 
-    private fun winkel(vektoren: List<OrientierterVektor>): VektorRechnerErgebnis {
+    private fun winkel(vektoren: List<OrientierterVektor>, vorräte: Map<String,MengenAusdruck>, annahmen: Set<Aussage>): VektorRechnerErgebnis {
         if (vektoren.size != 2) return anzahlFehler("Winkel", "genau zwei Vektoren")
-        val normA = norm(vektoren[0])
-        val normB = norm(vektoren[1])
+        val normA = norm(vektoren[0],vorräte,annahmen)
+        val normB = norm(vektoren[1],vorräte,annahmen)
         if (vektoren.any(::istExakterNullvektor)) {
             return VektorRechnerErgebnis.Ungueltig(
                 "winkel_nullvektor",
@@ -405,7 +433,7 @@ object VektorRechner {
         )
     }
 
-    private fun winkelZuAchse(vektoren: List<OrientierterVektor>, achse: Int): VektorRechnerErgebnis {
+    private fun winkelZuAchse(vektoren: List<OrientierterVektor>, achse: Int, vorräte: Map<String,MengenAusdruck>, annahmen: Set<Aussage>): VektorRechnerErgebnis {
         if (vektoren.size != 1) return anzahlFehler("Winkel zu Achse", "genau einen Vektor")
         val vektor = vektoren.single()
         if (achse !in 1..vektor.werte.size) {
@@ -420,7 +448,7 @@ object VektorRechner {
                 "Der Winkel des Nullvektors zu einer Achse ist nicht definiert.",
             )
         }
-        val laenge = norm(vektor)
+        val laenge = norm(vektor,vorräte,annahmen)
         return VektorRechnerErgebnis.ZahlWert(
             ArcCosinus(Division(vektor.werte[achse - 1], laenge)),
             FundamentalerZahlbereich.REELL,
@@ -595,8 +623,8 @@ object VektorRechner {
         rechts: OrientierterVektor,
     ): ZahlAusdruck = addition(links.werte.zip(rechts.werte) { a, b -> multiplikation(a, b) })
 
-    private fun norm(vektor: OrientierterVektor): ZahlAusdruck =
-        Wurzel(addition(vektor.werte.map { Potenz(it, RationaleZahl.von(2)) }))
+    private fun norm(vektor: OrientierterVektor, vorräte: Map<String,MengenAusdruck>, annahmen: Set<Aussage>): ZahlAusdruck =
+        reelleEuklidischeNorm(vektor.werte,vorräte,annahmen)
 
     private fun orientiereWie(vorbild: OrientierterVektor, werte: List<ZahlAusdruck>): OrientierterVektor =
         if (vorbild is ZeilenVektor) ZeilenVektor(werte) else SpaltenVektor(werte)

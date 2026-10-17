@@ -605,15 +605,23 @@ Numerische Prüfgrenze: getrennte Ungleichungsrandzüge werden derzeit nur für 
   [Entscheidung](decisions/2026-10-17-kanonischer-katalog-migrationsschutz.md).
 
 M0 wurde als v3.4.2 (5813c0337b5c7b2284d882b785559dfeea4ae3cd, PR #456)
-veröffentlicht; alle Prüfungen am finalen PR-Head und master-Commit einschließlich
-Emulator und Linux-RPM-Laufzeit erfolgreich. M1 ist als v3.4.3/x auf dieser Basis
-reserviert; seine Produktverträge sind noch in Arbeit.
+veröffentlicht. M1 folgte als v3.4.3 (e665a7fde78fe845dc7c62fa60fa00896d35f58a,
+PR #457); alle Prüfungen am endgültigen PR-Head und master-Commit einschließlich
+Emulator und Linux-RPM/Persistenz erfolgreich. M1 umfasst 132 gemeinsame
+mathematische Arten und 134 Androidarten einschließlich Werkzeug/Gruppe.
+Historische Methodenaufrufe verwenden den ID-basierten kanonischen Pfad mit
+expliziter direkter Einzelresultatprojektion. Ordnungsrelationen und orientierte
+Methodenanalysis werden als konfigurierte vorhandene Arten erzeugt. Details und
+SHA-bezogene Prüfnachweise stehen im aktiven Gesamtplan.
 
-M1-Produktbaum (v3.4.3 reserviert, noch nicht veröffentlicht): gemeinsame Erzeugung
-132 mathematische Arten, Android einschließlich Werkzeug/Gruppe 134. Historische
-Methodenaufrufe delegieren den ID-basierten kanonischen Pfad und migrieren mit fester
-direkter Einzelresultatprojektion. Ordnungsrelationen und orientierte Methodenanalysis
-werden als konfigurierte vorhandene Arten erzeugt. Migrationen und Synchronisierung
-bewahren bei unvereinbaren Verträgen Anschlüsse und Verbindungen mit Diagnose.
-Gezielte Vertrags-/Migrations-/Differenzenquotienttests und unabhängige Nachprüfung
-bestehen; endgültige Releaseabnahme offen.
+M2 ist als v3.4.4/x auf veröffentlichter M1-Basis reserviert und noch unveröffentlicht.
+Im aktuellen Produktbaum erzeugen Spur, Matrixdiagonale, Vektorradius und Kreuzprodukt
+konfigurierte vorhandene Rechner; der Katalogtest bestätigt 128 gemeinsame Arten.
+Reelle Norm, Kreuzproduktkomponenten, Basisvektorerzeugung und Transposition delegieren
+gemeinsame Kernoperationen. Mehrdeutige Strukturmigrationen bewahren Originaldaten und
+sperren Auswertung mit konkreter Diagnose. Gezielte Codec-/Metadatenregressionen und
+der vollständige lokale Produktlauf bestehen: 2.180 Tests, 0 Fehler, 1 bestehender
+Skip, Lint/APKs/Desktop. Unabhängige Prüfung ohne weitere Findings; abschließende
+SHA-bezogene CI- und Geräte-/RPM-Abnahme sowie Veröffentlichung offen.
+Die vorhandene konjugierte Tensor-Norm bleibt ein getrennter Vertrag. Quellenarten,
+polymorphes Transponieren und direkte Tupelstrukturknoten bleiben erhalten.

@@ -106,30 +106,23 @@ internal fun MathematikAuswerterRegister.registriereMatrixdiagonale() {
         if (matrixdiagonaleModus(kontext.knoten) == MATRIXDIAGONALE_ERZEUGEN) {
             val objekt = kontext.eingänge["werte"]?.mathematischesObjekt("Diagonalmatrix-Eingang")
                 ?: error("Tupel oder Vektor zum Erzeugen fehlt.")
-            val matrix = diagonalmatrixErzeugen(objekt)
-            ergebnis = if (art == MatrixDiagonalArt.HAUPTDIAGONALE) matrix else
-                Matrix(matrix.zeilen.map { it.reversed() })
+            ergebnis = diagonalmatrixErzeugen(objekt, art)
             ausgang = "matrix"
         } else {
             val objekt = kontext.eingänge["matrix"]?.objekt ?: error("Matrixeingang fehlt.")
             val matrix = objekt as? Tensorartig ?: error("Der Eingang ist keine Matrix.")
             require(matrix.tensorStufe == 2) { "Eine Diagonale benötigt einen Tensor zweiter Stufe." }
             val tupel = matrixDiagonale(matrix, art)
-            val werte = tupel.elemente.mapIndexed { index, objekt ->
-                objekt as? ZahlAusdruck ?: error("Diagonalwert ${index + 1} ist keine Zahl.")
-            }
-            ergebnis = when (matrixdiagonaleAusgabe(kontext.knoten)) {
-                "zeile" -> ZeilenVektor(werte)
-                "spalte" -> SpaltenVektor(werte)
-                else -> tupel
-            }
+            ergebnis = projiziereMatrixDiagonale(tupel, VektorStrukturAusgabe.entries.single {
+                it.stabileId == matrixdiagonaleAusgabe(kontext.knoten)
+            })
             if (objekt is Matrix && art == MatrixDiagonalArt.HAUPTDIAGONALE &&
                 (!istDiagonalmatrix(objekt) || objekt.zeilenAnzahl != objekt.spaltenAnzahl))
                 warnungen += "Auslesen verwirft Nebendiagonaleinträge; nur Diagonalmatrizen sind umkehrbar."
             ausgang = "diagonale"
         }
         KnotenAuswertungsErgebnis(
-            ausgaben = mapOf(ausgang to BedingterWert(ergebnis, annahmen)),
+            ausgaben = mapOf(ausgang to kontext.rechnerErgebnisWert(ergebnis, annahmen)),
             eingänge = kontext.eingänge, warnungen = warnungen,
         )
     }

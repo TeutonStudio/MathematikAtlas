@@ -4,7 +4,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
  * Baut aus einem Tupel oder einem orientierten Vektor eine quadratische
  * Diagonalmatrix. Die Reihenfolge der Komponenten bleibt erhalten.
  */
-fun diagonalmatrixErzeugen(argument: MathematischesObjekt): Matrix {
+fun diagonalmatrixErzeugen(argument: MathematischesObjekt, art: MatrixDiagonalArt = MatrixDiagonalArt.HAUPTDIAGONALE): Matrix {
     val komponenten: List<ZahlAusdruck> = when (argument) {
         is OrientierterVektor -> argument.werte
         is Tupel -> argument.elemente.mapIndexed { index, element ->
@@ -16,7 +16,7 @@ fun diagonalmatrixErzeugen(argument: MathematischesObjekt): Matrix {
     require(komponenten.isNotEmpty()) { "Die Diagonalmatrix benötigt mindestens einen Eintrag." }
     return Matrix(List(komponenten.size) { zeile ->
         List(komponenten.size) { spalte ->
-            if (zeile == spalte) komponenten[zeile] else RationaleZahl.Null
+            if (spalte == if (art == MatrixDiagonalArt.HAUPTDIAGONALE) zeile else komponenten.lastIndex-zeile) komponenten[zeile] else RationaleZahl.Null
         }
     })
 }
@@ -29,13 +29,9 @@ fun diagonalmatrixAuslesen(matrix: Matrix, ausgabe: String = "tupel"): Mathemati
     require(matrix.zeilenAnzahl == matrix.spaltenAnzahl) {
         "Die Hauptdiagonalumwandlung erfordert eine quadratische Matrix."
     }
-    val werte = List(matrix.zeilenAnzahl) { i -> matrix.zeilen[i][i] }
-    return when (ausgabe) {
-        "tupel" -> Tupel(werte)
-        "zeile" -> ZeilenVektor(werte)
-        "spalte" -> SpaltenVektor(werte)
-        else -> throw IllegalArgumentException("Ausgabe muss Tupel, Zeile oder Spalte sein.")
-    }
+    val form = VektorStrukturAusgabe.entries.singleOrNull { it.stabileId == ausgabe }
+        ?: throw IllegalArgumentException("Ausgabe muss Tupel, Zeile oder Spalte sein.")
+    return projiziereMatrixDiagonale(matrixDiagonale(matrix,MatrixDiagonalArt.HAUPTDIAGONALE),form)
 }
 
 fun istDiagonalmatrix(matrix: Matrix): Boolean =
@@ -45,3 +41,13 @@ fun istDiagonalmatrix(matrix: Matrix): Boolean =
                 i == j || vereinfache(matrix.zeilen[i][j]) == RationaleZahl.Null
             }
         }
+
+
+fun projiziereMatrixDiagonale(tupel: Tupel, ausgabe: VektorStrukturAusgabe): MathematischesObjekt {
+    val werte=tupel.elemente.mapIndexed {i,w -> w as? ZahlAusdruck ?: error("Diagonalwert ${i+1} ist keine Zahl.")}
+    return when(ausgabe) {
+        VektorStrukturAusgabe.TUPEL -> tupel
+        VektorStrukturAusgabe.ZEILE -> ZeilenVektor(werte)
+        VektorStrukturAusgabe.SPALTE -> SpaltenVektor(werte)
+    }
+}

@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object SpurKonzeptDatei849FE507 : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.spur|Spur|")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.spur|Spur"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.matrixrechner|operator=matrix.spur|Spur"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object SpurKonzeptDatei849FE507 : ExpliziteKonzeptDatei {
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.spur"),
+            knotenArten = setOf("mathematik.matrixrechner"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

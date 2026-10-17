@@ -16,7 +16,8 @@ fun hatGemeinsameAusgangsEinstellungen(k: KnotenDaten): Boolean = when {
     k.art == ÜBERSETZER_ART || k.art in orientierungsArten || istKonfigurierteVektorAnalysis(k) || k.art in setOf("mathematik.vektor", "mathematik.zeilenVektor", "mathematik.multinomVektor", TANGENTIAL_KNOTEN_ART) -> true
     k.art == MATRIXDIAGONALE_ART -> matrixdiagonaleModus(k) == MATRIXDIAGONALE_AUSLESEN
     k.art == ZAHLENRECHNER_ART -> UniversellerZahlenOperator.vonIdOderNull(k.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.DIFFERENTIAL
-    k.art == MatrixRechner.KNOTEN_ART -> k.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId
+    k.art == MatrixRechner.KNOTEN_ART -> k.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId || istMatrixDiagonalLeser(k)
+    k.art == VektorRechner.KNOTEN_ART -> k.parameter[VEKTOR_RECHNER_OPERATOR] == VektorRechnerOperator.KREUZPRODUKT.stabileId
     else -> false
 }
 
@@ -32,6 +33,16 @@ fun InspektorAusgangsEinstellungen(k: KnotenDaten, r: KnotenAuswertungsErgebnis?
     }
     val orientierungen = listOf(VEKTOR_ORIENTIERUNG_SPALTE to "Spalte", VEKTOR_ORIENTIERUNG_ZEILE to "Zeile")
     when {
+        istMatrixDiagonalLeser(k) -> {
+            val aktuell=k.parameter[MATRIXDIAGONALE_AUSGABE] ?: "tupel"
+            if(aktuell !in VektorStrukturAusgabe.entries.map {it.stabileId}) Text("Unbekannte gespeicherte Diagonalprojektion '$aktuell'.",color=MaterialTheme.colorScheme.error)
+            auswahl("Ausgabeformat",VektorStrukturAusgabe.entries.map {it.stabileId to it.titel},aktuell) {konfiguriereMatrixRechnerDiagonalAusgabe(k,it)}
+        }
+        k.art==VektorRechner.KNOTEN_ART && k.parameter[VEKTOR_RECHNER_OPERATOR]==VektorRechnerOperator.KREUZPRODUKT.stabileId -> {
+            val aktuell=k.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: "frei"
+            if(aktuell !in listOf("frei",VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE)) Text("Unbekannte gespeicherte Orientierung '$aktuell'.",color=MaterialTheme.colorScheme.error)
+            auswahl("Orientierung",listOf("frei" to "Vom ersten Vektor")+orientierungen,aktuell) {konfiguriereKreuzproduktRechnerOrientierung(k,it.takeUnless {it=="frei"})}
+        }
         k.art == ÜBERSETZER_ART -> ÜbersetzerEinstellungen(k, r, übernehmen)
         k.art in orientierungsArten || istKonfigurierteVektorAnalysis(k) -> {
             val orientierung = k.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: orientierungFürOrientierungsKnoten(k)
@@ -54,5 +65,19 @@ fun InspektorAusgangsEinstellungen(k: KnotenDaten, r: KnotenAuswertungsErgebnis?
         }
         k.art == MatrixRechner.KNOTEN_ART && k.parameter[RECHNER_OPERATOR_PARAMETER] == MatrixRechnerOperator.ZERLEGEN.stabileId ->
             auswahl("Zerlegung", MatrixZerlegeRichtung.entries.map { it.name to if (it == MatrixZerlegeRichtung.ZEILEN) "Zeilen" else "Spalten" }, k.parameter[MATRIX_ZERLEGEN_RICHTUNG] ?: MatrixZerlegeRichtung.ZEILEN.name) { k.copy(parameter = k.parameter + (MATRIX_ZERLEGEN_RICHTUNG to it)) }
+    }
+}
+
+/** Fachliche Erzeugungsart; Ergebnisprojektionen bleiben im Bereich Ausgangsdaten. */
+@Composable
+fun InspektorMatrixDiagonalEinstellungen(k: KnotenDaten, übernehmen: (KnotenDaten)->Unit) {
+    if(k.art!=MatrixRechner.KNOTEN_ART || k.parameter[RECHNER_OPERATOR_PARAMETER]!=MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN.stabileId) return
+    val aktuell=k.parameter[MATRIXDIAGONALE_ART_PARAMETER] ?: MatrixDiagonalArt.HAUPTDIAGONALE.parameterWert
+    Text("Diagonale",style=MaterialTheme.typography.titleSmall)
+    if(MatrixDiagonalArt.ausParameterOderNull(aktuell)==null) Text("Unbekannte gespeicherte Diagonalart '$aktuell'.",color=MaterialTheme.colorScheme.error)
+    FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        MatrixDiagonalArt.entries.forEach {art -> FilterChip(selected=aktuell==art.parameterWert,
+            onClick={if(aktuell!=art.parameterWert) übernehmen(konfiguriereMatrixRechnerDiagonalArt(k,art.parameterWert))},
+            label={Text(if(art==MatrixDiagonalArt.HAUPTDIAGONALE) "Hauptdiagonale" else "Nebendiagonale")}) }
     }
 }

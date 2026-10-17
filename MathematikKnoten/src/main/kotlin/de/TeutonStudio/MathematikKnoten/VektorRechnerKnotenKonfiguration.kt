@@ -31,7 +31,16 @@ fun konfiguriereVektorRechner(
     operator: VektorRechnerOperator,
 ): KnotenDaten {
     require(knoten.art == VektorRechner.KNOTEN_ART)
-    val gewuenscht = vektorRechnerAnschluesse(operator) + if (operator in setOf(VektorRechnerOperator.POTENZ, VektorRechnerOperator.SKALARPRODUKT)) knoten.anschlüsse.filter { it.name == SKALARPRODUKT_DEFINITION_EINGANG } else emptyList()
+    val gewuenscht = vektorRechnerAnschluesse(operator).map { port ->
+        if (operator == VektorRechnerOperator.KREUZPRODUKT && port.richtung == AnschlussRichtung.Ausgang) {
+            val art = when (kreuzproduktRechnerOrientierung(knoten)) {
+                VektorOrientierung.Spalte -> MathematikAnschlussArten.SpaltenVektor.id
+                VektorOrientierung.Zeile -> MathematikAnschlussArten.ZeilenVektor.id
+                null -> port.art
+            }
+            port.copy(art = art)
+        } else port
+    } + if (operator in setOf(VektorRechnerOperator.POTENZ, VektorRechnerOperator.SKALARPRODUKT)) knoten.anschlüsse.filter { it.name == SKALARPRODUKT_DEFINITION_EINGANG } else emptyList()
     val signatur = if (operator.stabileId == knoten.parameter[VEKTOR_RECHNER_OPERATOR] && operator in setOf(VektorRechnerOperator.ADDITION, VektorRechnerOperator.ZUSAMMENFUEHREN)) {
         val präfix = if (operator == VektorRechnerOperator.ADDITION) "vektor." else "element."
         gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith(präfix) &&
@@ -42,7 +51,11 @@ fun konfiguriereVektorRechner(
     ) {
         gewuenscht + knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang && it.name.startsWith("element") }
     } else gewuenscht
-    val neu = erhalteRechnerAnschlussIds(knoten.anschlüsse, signatur, RechnerFamilie.VEKTOR, operator.stabileId)
+    val neu = erhalteRechnerAnschlussIds(knoten.anschlüsse, signatur, RechnerFamilie.VEKTOR, operator.stabileId).map { port ->
+        if (operator == VektorRechnerOperator.KREUZPRODUKT && port.richtung == AnschlussRichtung.Ausgang)
+            knoten.anschlüsse.singleOrNull { it.richtung == port.richtung && it.name == port.name }?.let { port.copy(id=it.id) } ?: port
+        else port
+    }
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
             name = if (knoten.name == "Vektorrechner" || VektorRechnerOperator.entries.any { it.titel == knoten.name }) {
@@ -65,7 +78,17 @@ fun konfiguriereVektorRechner(
                 ),
             ),
         ),
-    )
+    ) .let { normalisiert ->
+        if(knoten.parameter[VEKTOR_RECHNER_OPERATOR]!=operator.stabileId) normalisiert else
+            normalisiert.copy(anschlüsse=normalisiert.anschlüsse.map {p ->
+                val alt=knoten.anschlüsse.singleOrNull {it.id==p.id} ?: return@map p
+                p.copy(vertrag=alt.vertrag,typInferenz=alt.typInferenz,semantischeId=alt.semantischeId,
+                    artFolgtEingang=alt.artFolgtEingang,artVereinigtEingänge=alt.artVereinigtEingänge,
+                    artAbbildungVonEingang=alt.artAbbildungVonEingang,
+                    artPriorisiertEingänge=alt.artPriorisiertEingänge ?: p.artPriorisiertEingänge)
+            })
+    }
+
 }
 
 fun vektorRechnerVorlage(operator: VektorRechnerOperator): KnotenVorlage = methodenfaehigeRechnerVorlage(
@@ -88,8 +111,10 @@ fun vektorRechnerVorlage(operator: VektorRechnerOperator): KnotenVorlage = metho
 )
 
 internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
-        val operator = VektorRechnerOperator.vonIdOderNull(kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR])
-            ?: VektorRechnerOperator.SKALARPRODUKT
+        val gespeichert = kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR]
+        val operator = VektorRechnerOperator.vonIdOderNull(gespeichert)
+            ?: if (gespeichert == null) VektorRechnerOperator.SKALARPRODUKT else error("Unbekannter Vektoroperator: $gespeichert")
+        if (operator == VektorRechnerOperator.DISTANZ) require(kontext.knoten.parameter[VEKTOR_RECHNER_METRIK]?.let { id -> VektorMetriken.alle.any { it.stabileId==id } } != false) { "Unbekannte gespeicherte Vektormetrik." }
         val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
 
         if (operator == VektorRechnerOperator.ZERLEGEN) {
@@ -147,10 +172,11 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
             -> listOf("vektor")
             else -> emptyList()
         }
+        val vorräte = kontext.eingänge.values.rechnerQuellBereiche()
         val quellen = vektorNamen.mapNotNull { name ->
             kontext.eingänge[name]
                 ?.mathematischesObjekt("Vektoroperand '$name'")
-                ?.let(::vektorQuelleErweitert)
+                ?.let { vektorQuelleErweitert(it,vorräte,annahmen) }
         }
         val skalare = listOfNotNull(kontext.eingänge[if (operator == VektorRechnerOperator.KARTESISCH) "radius" else "skalar"]?.mathematischesObjekt("Skalar") as? ZahlAusdruck)
         val objekte = when (operator) {
@@ -168,6 +194,9 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
                 operator = operator,
                 exponent = if (operator == VektorRechnerOperator.POTENZ) (kontext.eingänge["p"]?.objekt as? ZahlAusdruck ?: kontext.knoten.parameter[VEKTOR_POTENZ_EXPONENT]?.toLongOrNull()?.let(RationaleZahl::von) ?: RationaleZahl.von(2)) else RationaleZahl.von(2),
                 vektoren = quellen,
+                variablenVorräte = vorräte,
+                annahmen = annahmen,
+                kreuzproduktOrientierung = if (operator == VektorRechnerOperator.KREUZPRODUKT) kreuzproduktRechnerOrientierung(kontext.knoten) else null,
                 skalare = skalare,
                 objekte = objekte,
                 methode = kontext.eingänge["vektorfeld"]?.objekt as? Methode,
@@ -188,13 +217,13 @@ internal val vektorFachauswerter = de.TeutonStudio.MathematikKartenAdapter.Mathe
         when (ergebnis) {
             is VektorRechnerErgebnis.ZahlWert -> KnotenAuswertungsErgebnis(
                 ausgaben = mapOf(
-                    ausgangName to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen),
+                    ausgangName to kontext.rechnerErgebnisWert(ergebnis.wert, ergebnis.bedingungen.toSet(),ergebnis.bereich.alsMenge()),
                 ),
                 eingänge = kontext.eingänge,
             )
             is VektorRechnerErgebnis.VektorWert -> KnotenAuswertungsErgebnis(
                 ausgaben = mapOf(
-                    ausgangName to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen),
+                    ausgangName to kontext.rechnerErgebnisWert(ergebnis.wert, ergebnis.bedingungen.toSet()),
                 ),
                 eingänge = kontext.eingänge,
             )
@@ -265,7 +294,7 @@ private fun vektorIntegralKomponenten(menge: MengenAusdruck): List<MengenAusdruc
     else -> listOf(menge)
 }
 
-private fun vektorQuelleErweitert(objekt: MathematischesObjekt): VektorQuelle {
+internal fun vektorQuelleErweitert(objekt: MathematischesObjekt, vorräte: Map<String,MengenAusdruck> = emptyMap(), annahmen: Set<Aussage> = emptySet()): VektorQuelle {
     val werte: List<ZahlAusdruck>
     val quelle: (KartesischerKoordinatenVertrag) -> VektorQuelle
     when (objekt) {
@@ -282,11 +311,8 @@ private fun vektorQuelleErweitert(objekt: MathematischesObjekt): VektorQuelle {
         else -> error("Der Vektorrechner erwartet einen Vektor oder ein kartesisches Zahlentupel.")
     }
     require(werte.isNotEmpty()) { "Ein leerer Vektor ist für diese Operation nicht zulässig." }
-    val bereich = when {
-        werte.any { it is KomplexeZahl } -> FundamentalerZahlbereich.KOMPLEX
-        werte.all { it is RationaleZahl } -> FundamentalerZahlbereich.RATIONAL
-        else -> FundamentalerZahlbereich.REELL
-    }
+    val bereich = maximaleZahlenGrundmenge(werte.map { inferiereZahlenWertevorrat(it,vorräte,annahmen) })
+        .fundamentalerZahlbereichOderNull() ?: error("Der Koeffizientenbereich ist nicht nachgewiesen.")
     return quelle(
         KartesischerKoordinatenVertrag(
             dimension = werte.size,
@@ -296,4 +322,20 @@ private fun vektorQuelleErweitert(objekt: MathematischesObjekt): VektorQuelle {
             standardBasis = true,
         ),
     )
+}
+
+/** Fehlende Konfiguration behält die bestehende freie Orientierung des Rechners. */
+internal fun kreuzproduktRechnerOrientierung(k: KnotenDaten): VektorOrientierung? =
+    when (val wert=k.parameter[VEKTOR_ORIENTIERUNG_PARAMETER]) {
+        null -> null
+        VEKTOR_ORIENTIERUNG_SPALTE -> VektorOrientierung.Spalte
+        VEKTOR_ORIENTIERUNG_ZEILE -> VektorOrientierung.Zeile
+        else -> error("Unbekannte gespeicherte Kreuzproduktorientierung '$wert'.")
+    }
+
+fun konfiguriereKreuzproduktRechnerOrientierung(k: KnotenDaten, orientierung: String?): KnotenDaten {
+    require(k.art==VektorRechner.KNOTEN_ART && k.parameter[VEKTOR_RECHNER_OPERATOR]==VektorRechnerOperator.KREUZPRODUKT.stabileId)
+    val neu=k.copy(parameter=k.parameter-VEKTOR_ORIENTIERUNG_PARAMETER + listOfNotNull(orientierung?.let { VEKTOR_ORIENTIERUNG_PARAMETER to it }).toMap())
+    kreuzproduktRechnerOrientierung(neu)
+    return konfiguriereVektorRechner(neu,VektorRechnerOperator.KREUZPRODUKT)
 }

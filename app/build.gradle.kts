@@ -37,8 +37,8 @@ android {
         minSdk = 26
         targetSdk = 36
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        versionCode = 3004003
-        versionName = "3.4.3"
+        versionCode = 3004004
+        versionName = "3.4.4"
         buildConfigField("String", "GIT_COMMIT_SHA", "\"$gitCommitSha\"")
     }
 

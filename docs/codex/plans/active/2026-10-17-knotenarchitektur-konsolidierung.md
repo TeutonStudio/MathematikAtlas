@@ -5,7 +5,8 @@
 2026-10-17: Vom Nutzer beauftragter Gesamtplan M0–M7 in Umsetzung.
 Ausgang: master 9fea31ddbaaef8bd26fa7a2730177eaaa9744909, v3.4.1.
 M0: veröffentlicht als v3.4.2, Commit 5813c0337b5c7b2284d882b785559dfeea4ae3cd.
-M1: samai/v3.4.3/konsolidierung-m1, vom master_verwalter als x reserviert.
+M1: veröffentlicht als v3.4.3, Commit e665a7fde78fe845dc7c62fa60fa00896d35f58a.
+M2: samai/v3.4.4/konsolidierung-m2, als x reserviert auf veröffentlichtem M1.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -92,8 +93,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 ## 9. Meilensteine
 
 - [x] M0 Katalog und Migrationsschutz: 136 gemeinsame/138 vollständige Arten; v3.4.2 veröffentlicht, 5813c0337b5c7b2284d882b785559dfeea4ae3cd, PR #456 und alle PR-/master-Gates grün.
-- [-] M1 Methodenaufrufe/Prädikate: v3.4.3/x reserviert, Branch samai/v3.4.3/konsolidierung-m1, Basis veröffentlichter M0-Commit. Vier Spezialarten entfernen.
-- [ ] M2 Matrix/Vektor/Tensor: vier Spezialarten entfernen.
+- [x] M1 Methodenaufrufe/Prädikate: v3.4.3 veröffentlicht, e665a7fde78fe845dc7c62fa60fa00896d35f58a, PR #457, alle PR-/master-Gates grün; 132 gemeinsame/134 Androidtypen.
+- [-] M2 Matrix/Vektor/Tensor: v3.4.4/x reserviert, Branch samai/v3.4.4/konsolidierung-m2, Basis e665a7fd; zuerst Methodenhebung und Fachkerne absichern, vier Spezialarten entfernen.
 - [ ] M3 Tupel/Übersetzer: vier Spezialarten entfernen.
 - [ ] M4 Mengen: drei Spezialarten entfernen.
 - [ ] M5 Quellenverträge und Konstanten ohne Typentfernung vereinheitlichen.
@@ -316,3 +317,85 @@ Zusatz-Vollprüfung ebenfalls erfolgreich: 3m36s, 277 Tasks, alle Test-/Lint-/AP
 und Desktop-Kompilieraufgaben grün. Unabhängige Zusatzprüfung ohne Findings.
 Der aktualisierte Produktbaum ist zur Commit-/PR-Aktualisierung freigegeben;
 Veröffentlichung erst nach CI am dadurch erzeugten endgültigen SHA.
+
+
+M1-Veröffentlichung: PR #457, endgültiger PR-Head a936f79cc7c1fd06be92acc4c21220c37da11e14,
+finaler GitHub-Squash e665a7fde78fe845dc7c62fa60fa00896d35f58a / v3.4.3.
+Squashautor Alexander, Committer GitHub/web-flow; lokale Commits SamAI/SamAI.
+Alle PR-Gates grün; Master-Nachweise:
+[Guard](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38985690143),
+[Linux/RPM/Persistenz](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38985690140),
+[Android](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38985690144),
+[Kern/Emulator](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38985690135).
+
+M2 begonnen nach vollständiger M1-Abnahme. Reservierung 15b0ff06717bfb048f9c1c34cd809f75d37e68f7,
+nur Roadmap, SamAI/SamAI verifiziert. Untersuchung: Ein gespeicherter tatsächlicher
+Matrixdiagonalenknoten; Spur, Radius und Kreuzprodukt haben Code-/Konzeptverbraucher.
+Methodenhebung band bisher nach Namen statt Bindungs-ID und verlor eigene
+Methodenvoraussetzungen. Korrektur und drei gezielte Hebungstests bestehen; mehrere
+logische Ergebnisse werden ausdrücklich nicht als Einzeloperand gehoben.
+Gemeinsame reale Norm, Kreuzproduktkomponenten und Basisvektorerzeugung sind in Arbeit.
+Nichtreelle Normfälle werden ausdrücklich diagnostiziert; die vorhandene konjugierte
+Tensor-Norm bleibt ein getrennter Vertrag. Transposition unterscheidet weiterhin
+Vektororientierung und Tensorachsenpermutation.
+
+
+M2-Zwischenstand: 128 mathematische Typen im gemeinsamen Katalogtest;
+Spur/Matrixdiagonale/Radius/Kreuzprodukt werden als konfigurierte Rechner erzeugt.
+Definitions- und Konzeptvorlagen sind kanonisiert; historische Wissens-IDs bleiben.
+Gemeinsame Inspectoroptionen verwenden den bestehenden KonfigurationsPlan.
+Die Migration prüft explizite Rollen/Typen/Kardinalitäten und remappt Defaults,
+Kartenfallbacks sowie typisierte Rollenreferenzen bei unveränderten Instanz-IDs.
+Lesen, Laden, Importieren, Vor-Speichern und erneutes Laden werden getrennt geprüft.
+Unabhängig gefundener Metadatenverlust durch spätere Vektorrechner-Normalisierung
+ist behoben und über alle Codecphasen regressionsgesichert.
+
+Mathematische Nachprüfungen: Methodenhebung erhält Bindungsidentitäten,
+Voraussetzungen aller Quellmethoden und eigene Operationsbedingungen. Effektive und
+komponentenweise Definitionsräume werden gemeinsam geschnitten. Explizite
+Argumenttupelräume werden auch als Schnitt nicht in eine zusätzliche Tupelschicht
+eingepackt. Reelle Intervalle/beschränkte Bereiche liefern konservative Grundmengen;
+Normnachweise akzeptieren gültige typisierte Quellkomponenten und lehnen unbekannte,
+nichtreelle oder undefinierte Komponenten ab. Keine Rückwärtsableitung innerer
+Variablenbereiche aus einem zusammengesetzten reellen Wert.
+
+Unveränderte historische Matrixdiagonalen-Definitionskarte als Testfixture gesichert:
+SHA-256 763ee69d0e1eb2dce3bc7d504a7eb735fc6d1e9ea5ef14923324751a9f9fe16f.
+Kopieren/Duplizieren, externe Kartenverweise, Undo/Redo und vorab angezeigter
+Verbindungsverlust bei Diagonalprojektion sind ergänzt. Android-Gerätetest für den
+produktiven Inspector ergänzt; lokale Installation weiterhin durch fremde Signatur
+blockiert, vorhandene App/Daten bleiben erhalten. Geräteabnahme erst am finalen CI-SHA.
+Android-Knoten-/App-Unit-Tests bestanden (14 s); abschließender Gesamtlauf steht aus.
+Formelprüfung fand fehlende Formelannahmen im Normcallback und inaktive äußere
+Modusparameter in Formeloperationen. Korrekturen mit gezielten Regressionen in Prüfung.
+[Architekturentscheidung](../../decisions/2026-10-17-gemeinsame-strukturoperationen.md).
+
+M2 unabhängige Abschlussprüfung: keine weiteren Blocker im geprüften Produktdiff.
+Die vorherigen Findings zu Methodenhebung, Normdomänen, Codec-Portmetadaten und
+Formelbedingungen/-modusscope sind korrigiert. Geprüfte Reichweite: fachliche
+Kernverträge, alle Codecphasen, Katalog/Definition/Konzepte, gemeinsame Inspectorpfade
+und Formeladapter. Prüfer arbeitete ausschließlich lesend und führte keine Tests aus.
+Die abschließende lokale Produktsuite und CI am endgültigen Release-SHA bleiben
+Voraussetzung der Veröffentlichung. Releaseverwalter bestätigt x-Klassifikation,
+Android 3.4.4/3004004, Desktop 3.4.4 und Manifest 130 ohne Neutypen.
+
+M2 lokale Freigabe des Produktbaums: 2.180 Tests, 0 Fehler, 1 bestehender
+Opt-in-Messfall übersprungen. Vollständiger Gradle-Lauf mit --no-parallel test,
+:app:lintDebug, :app:assembleDebug, :app:assembleDebugAndroidTest,
+:KnotenKartenVerwalter:assembleDebugAndroidTest, :desktopApp:compileKotlin sowie
+allen vier ausdrücklich angeforderten Desktop-Testtasks erfolgreich (3 min 15 s,
+277 Tasks). APK-Metadaten bestätigen 3.4.4/3004004. Logs lokal:
+/tmp/atlas-m2-freigabe.log. Repository/Architektur/Shadowmodule, 15 Standardkarten,
+Releaseplan/Versionsfolge und 14 Release-Guard-Regressionen sowie git diff --check
+bestehen. Unabhängige Zusatzprüfungen bestätigen auch die tatsächliche
+Einzelanschlussbelegung und den vorhandenen N₀-Zahlbereich ohne Findings.
+
+Konkrete lokale Prüfgrenzen: scripts/pruefe_kern.py beendet mit Exit 2, weil
+Standalone-kotlinc fehlt (Java vorhanden). :desktopApp:packageRpm scheitert an
+jpackage „Invalid or unsupported type: [rpm]“; rpmbuild ist lokal nicht vorhanden.
+Daher keine lokale RPM-Installation/-Deinstallation oder Prozess-Persistenzabnahme.
+App-Geräteinstallation war bereits durch fremde Signatur blockiert; vorhandene
+App/Daten bleiben erhalten. Diese Pfade müssen in CI am finalen PR-/master-SHA
+bestehen; eine lokale Buildfreigabe allein ist keine Veröffentlichungsfreigabe.
+Produktbaum zur SamAI-Commit-/PR-Erstellung freigegeben; Merge erst nach endgültigen
+SHA-bezogenen CI-Nachweisen und Integrationsfreigabe.

@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikKnoten.konzeptkarte.StatischeKonzeptKarten
 
 internal object KreuzproduktZeilenKonzeptDatei4F9C6B31 : ExpliziteKonzeptDatei {
     override val id: WissensId = WissensId("mathematik.kreuzproduktZeile|Kreuzprodukt (Zeilen)|")
-    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.kreuzproduktZeile|Kreuzprodukt (Zeilen)"))
+    override val varianten: Set<VariantenId> = setOf(VariantenId("mathematik.vektorrechner|achse=1|integral.massModus=AUTO|integral.massSymbol=\\mu|metrik=metrik.l2|operator=vektor.kreuzprodukt|orientierung=zeile|strukturAusgabe=tupel|Kreuzprodukt (Zeilen)"))
 
     override fun erstelle(vorlagen: List<KnotenVorlage>): WissensEintrag {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
@@ -19,7 +19,7 @@ internal object KreuzproduktZeilenKonzeptDatei4F9C6B31 : ExpliziteKonzeptDatei {
             aliase = emptySet(),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
-            knotenArten = setOf("mathematik.kreuzproduktZeile"),
+            knotenArten = setOf("mathematik.vektorrechner"),
             varianten = passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet(),
             knotenVorlagen = passendeVorlagen,
             karten = StatischeKonzeptKarten.fürVarianten(passendeVorlagen.map(KnotenVorlage::stabileVariantenId).toSet()),

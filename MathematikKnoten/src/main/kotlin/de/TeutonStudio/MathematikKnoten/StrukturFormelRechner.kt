@@ -86,7 +86,7 @@ fun konfiguriereStrukturRechner(
     require(knoten.art == familie.knotenArt) { "Der Knoten gehört nicht zur Rechnerfamilie ${familie.name}." }
     val operator = StrukturRechnerOperatoren.finde(familie, operatorId)
     val gewünschte = if (familie == StrukturRechnerKnotenFamilie.MATRIX) {
-        rechnerAnschlüsse(RechnerFamilie.MATRIX, operator.id)
+        matrixDiagonalAnschlüsse(knoten,operator.id,rechnerAnschlüsse(RechnerFamilie.MATRIX, operator.id))
     } else operator.eingänge.mapIndexed { index, eingang ->
         neuerEingang(eingang.name, eingang.typ, index).copy(kannSichErweitern = eingang.variadisch)
     } + neuerAusgang(operator.ergebnisTyp)
@@ -100,7 +100,11 @@ fun konfiguriereStrukturRechner(
             dynamischErzeugt = index >= feste, kannSichErweitern = true) } + gewünschte.filter { it.richtung == AnschlussRichtung.Ausgang }
     } else gewünschte
     val anschlüsse = if (familie == StrukturRechnerKnotenFamilie.MATRIX)
-        erhalteRechnerAnschlussIds(knoten.anschlüsse, produktEingänge, RechnerFamilie.MATRIX, operator.id)
+        erhalteRechnerAnschlussIds(knoten.anschlüsse, produktEingänge, RechnerFamilie.MATRIX, operator.id).map { port ->
+            if (operator.id in matrixDiagonalLeser && port.richtung==AnschlussRichtung.Ausgang) {
+                knoten.anschlüsse.singleOrNull {it.richtung==port.richtung&&it.name==port.name}?.let {port.copy(id=it.id)} ?: port
+            } else port
+        }
     else erhalteRechnerAnschlussIds(knoten.anschlüsse, gewünschte)
     return normalisiereRechnerMethodenAnschluesse(
         knoten.copy(
@@ -275,11 +279,15 @@ private fun KnotenAuswertungsKontext.werteStrukturRechnerSicher(
     }
     KnotenAuswertungsErgebnis(
         bezeugteAusgaben = if (operatorId == familie.formelOperatorId && ladeStrukturRechnerFormel(knoten) is FormelAusdruck.Literal) setOf("wert") else emptySet(),
-        ausgaben = mapOf("wert" to BedingterWert(wert, annahmenFuerStrukturFormel() + rechenBedingungen,
-            übersetzungen = ladeStrukturRechnerFormel(knoten)?.übersetzungsMetadaten() ?: ÜbersetzungsMetadaten(),
-            reelleVariablen = de.TeutonStudio.MathematikKartenAdapter.reelleVariablen(eingänge.values),
-            variablenQuellen = eingänge.values.flatMap { it.variablenQuellen }
-                .distinctBy { it.identität })),
+        warnungen = if (istMatrixDiagonalLeser(knoten)) {
+            val matrix=eingänge["matrix"]?.objekt as? Tensorartig
+            if(matrix==null || matrix.tensorStufe!=2) emptyList() else listOfNotNull(matrixDiagonalVerlustWarnung(matrix,
+                if(operatorId==MatrixRechnerOperator.NEBENDIAGONALE.stabileId) MatrixDiagonalArt.NEBENDIAGONALE else MatrixDiagonalArt.HAUPTDIAGONALE))
+        } else emptyList(),
+        ausgaben = mapOf("wert" to rechnerErgebnisWert(wert, annahmenFuerStrukturFormel() + rechenBedingungen,
+            übersetzungen = if (operatorId == familie.formelOperatorId)
+                ladeStrukturRechnerFormel(knoten)?.übersetzungsMetadaten() ?: ÜbersetzungsMetadaten()
+                else ÜbersetzungsMetadaten())),
         eingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
             .mapNotNull { port -> eingänge[port.name]?.let { port.name to it } }.toMap(),
     )
@@ -366,7 +374,7 @@ private fun werteStrukturFormelAus(kontext: KnotenAuswertungsKontext, bedingunge
                 ?: error("Formeleingang '${variable.name}' fehlt.")
             )
     }
-    return werteFormelAusdruckAus(wurzel, variablen, kontext.knoten, bedingungen)
+    return werteFormelAusdruckAus(wurzel, variablen, kontext.knoten, bedingungen,kontext.eingänge.values.rechnerQuellBereiche(),kontext.eingänge.values.flatMap {it.annahmen}.toSet())
 }
 
 private fun werteFormelAusdruckAus(
@@ -374,6 +382,7 @@ private fun werteFormelAusdruckAus(
     variablen: Map<String, MathematischesObjekt>,
     knoten: KnotenDaten,
     bedingungen: MutableSet<Aussage>,
+    vorräte: Map<String,MengenAusdruck>, annahmen: Set<Aussage>,
 ): AtlasWert = when (ausdruck) {
     is FormelAusdruck.Literal -> {
         val metadata = ausdruck.übersetzungsMetadaten()
@@ -385,9 +394,9 @@ private fun werteFormelAusdruckAus(
     is FormelAusdruck.Operation -> {
         bedingungen += ausdruck.bedingungen.map { ersetze(it, variablen) }
         val argumente = ausdruck.argumente.sortedBy { it.position }.associate { argument ->
-            argument.rollenId to werteFormelAusdruckAus(argument.ausdruck, variablen, knoten, bedingungen)
+            argument.rollenId to werteFormelAusdruckAus(argument.ausdruck, variablen, knoten, bedingungen,vorräte,annahmen)
         }
-        werteFormelOperationAus(ausdruck.operatorId, argumente, knoten, bedingungen)
+        werteFormelOperationAus(ausdruck.operatorId, argumente, knoten, bedingungen,vorräte,annahmen+bedingungen)
     }
 }
 
@@ -396,6 +405,7 @@ internal fun werteFormelOperationAus(
     argumente: Map<String, AtlasWert>,
     knoten: KnotenDaten,
     bedingungen: MutableSet<Aussage>,
+    variablenVorräte: Map<String,MengenAusdruck> = emptyMap(), annahmen: Set<Aussage> = emptySet(),
 ): AtlasWert {
     val mathematischeArgumente = argumente.mapValues { (rolle, wert) ->
         wert.alsMathematischesObjekt("Formelargument '$rolle'")
@@ -406,16 +416,18 @@ internal fun werteFormelOperationAus(
         operatorId == "tupel.projektion" -> (mathematischeArgumente.getValue("tupel") as? Tupel
             ?: error("Tupelprojektion benötigt ein Tupel.")).wertAn(mathematischeArgumente.getValue("index"))
         operatorId == "methode.anwenden" -> {
-            val methode = mathematischeArgumente.getValue("methode") as? MathematischeMethode
+            val methode = mathematischeArgumente.getValue("methode") as? MathematischAuswertbareMethode
                 ?: error("Der Formelaufruf benötigt eine mathematisch auswertbare Methode.")
-            methode.wendeMitBedingungenAn(Tupel(mathematischeArgumente.filterKeys { it != "methode" }.values.toList())).also {
+            val werte = mathematischeArgumente.filterKeys { it != "methode" }.values.toList()
+            require(werte.size == methode.mathematischeSignatur.argumente.size) { "Die Formelargumentanzahl passt nicht zur Methodensignatur." }
+            methode.wendeMitIdentitätenAn(methode.mathematischeSignatur.argumente.mapIndexed {i,k -> k.id to werte[i]}.toMap()).also {
                 bedingungen += it.bedingungen
             }.ergebnis
         }
         operatorId.startsWith("zahl.") -> werteZahlFormelAus(operatorId, mathematischeArgumente.values.toList())
         operatorId.startsWith("aussage.") -> werteAussagenFormelAus(operatorId, mathematischeArgumente, knoten)
-        formelFamilie == OperatorFamilie.VEKTOR -> werteVektorFormelAus(operatorId, mathematischeArgumente)
-        formelFamilie == OperatorFamilie.MATRIX -> werteMatrixFormelAus(operatorId, mathematischeArgumente, bedingungen = bedingungen)
+        formelFamilie == OperatorFamilie.VEKTOR -> werteVektorFormelAus(operatorId, mathematischeArgumente,variablenVorräte,annahmen+bedingungen,bedingungen)
+        formelFamilie == OperatorFamilie.MATRIX -> werteMatrixFormelAus(operatorId, mathematischeArgumente, variablenVorräte, bedingungen)
         formelFamilie == OperatorFamilie.TENSOR -> werteTensorFormelAus(operatorId, mathematischeArgumente, knoten)
         else -> error("Unbekannter Formeloperator $operatorId.")
     }
@@ -458,10 +470,12 @@ private fun werteAussagenFormelAus(
 private fun werteVektorFormelAus(
     operatorId: String,
     argumente: Map<String, MathematischesObjekt>,
+    vorräte: Map<String,MengenAusdruck> = emptyMap(), annahmen: Set<Aussage> = emptySet(),
+    bedingungen: MutableSet<Aussage>? = null, knoten: KnotenDaten? = null,
 ): MathematischesObjekt {
     val operator = VektorRechnerOperator.entries.firstOrNull { it.stabileId == operatorId }
         ?: error("Unbekannter Vektoroperator $operatorId.")
-    val quellen = argumente.values.mapNotNull(::vektorQuelleOderNull)
+    val quellen = argumente.values.mapNotNull { vektorQuelleOderNull(it,vorräte,annahmen) }
     val skalare = argumente.values.filterIsInstance<ZahlAusdruck>()
     val anfrage = when (operator) {
         VektorRechnerOperator.POTENZ -> VektorRechnerAnfrage(operator, quellen, exponent = argumente["p"] as? ZahlAusdruck ?: RationaleZahl.von(2))
@@ -472,9 +486,10 @@ private fun werteVektorFormelAus(
             objekte = listOf(argumente["winkel"] ?: error("Winkeltupel oder Vorzeichen fehlt.")))
         else -> VektorRechnerAnfrage(operator, quellen, skalare)
     }
-    return when (val ergebnis = VektorRechner.erzeuge(anfrage)) {
-        is VektorRechnerErgebnis.VektorWert -> ergebnis.wert
-        is VektorRechnerErgebnis.ZahlWert -> ergebnis.wert
+    return when (val ergebnis = VektorRechner.erzeuge(anfrage.copy(variablenVorräte=vorräte,annahmen=annahmen,
+        kreuzproduktOrientierung=if(operator==VektorRechnerOperator.KREUZPRODUKT) knoten?.let(::kreuzproduktRechnerOrientierung) else null))) {
+        is VektorRechnerErgebnis.VektorWert -> ergebnis.wert.also { bedingungen?.addAll(ergebnis.bedingungen) }
+        is VektorRechnerErgebnis.ZahlWert -> ergebnis.wert.also { bedingungen?.addAll(ergebnis.bedingungen) }
         is VektorRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)
     }
 }
@@ -484,19 +499,31 @@ private fun werteMatrixFormelAus(
     argumente: Map<String, MathematischesObjekt>,
     variablenVorräte: Map<String, MengenAusdruck> = emptyMap(),
     bedingungen: MutableSet<Aussage>? = null,
+    knoten: KnotenDaten? = null,
 ): AtlasWert {
     val operator = MatrixRechnerOperator.entries.firstOrNull { it.stabileId == operatorId }
         ?: error("Unbekannter Matrixoperator $operatorId.")
     if (operator == MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN) {
         val werte = argumente["werte"] ?: error("Diagonalmatrix benötigt Tupel oder Vektor.")
-        return matrixErgebnisWert(MatrixRechner.erzeuge(MatrixRechnerAnfrage(operator, emptyList(), diagonalWerte = werte)), bedingungen)
+        return matrixErgebnisWert(MatrixRechner.erzeuge(MatrixRechnerAnfrage(operator, emptyList(), diagonalWerte = werte,
+            diagonalArt=knoten?.let(::matrixRechnerDiagonalArt) ?: MatrixDiagonalArt.HAUPTDIAGONALE)), bedingungen)
     }
     val matrizen = argumente.mapNotNull { (rolle, objekt) ->
-        (if (operator == MatrixRechnerOperator.MATRIXPRODUKT) objekt.alsMatrixFaktor() else objekt as? Matrix)?.let { MatrixOperand(rolle, it, if(operator in setOf(MatrixRechnerOperator.INVERSE,MatrixRechnerOperator.DETERMINANTE)) maximaleZahlenGrundmenge(it.zeilen.flatten().map { q -> inferiereZahlenWertevorrat(q,variablenVorräte) }).fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL else if(operator in setOf(MatrixRechnerOperator.CHARAKTERISTISCHES_POLYNOM,MatrixRechnerOperator.MINIMALPOLYNOM)) it.tensorZahlBereich.fundamentalerZahlbereichOderNull() ?: FundamentalerZahlbereich.REELL else FundamentalerZahlbereich.REELL) }
+        val matrix = when {
+            operator == MatrixRechnerOperator.MATRIXPRODUKT -> objekt.alsMatrixFaktor()
+            operator in setOf(MatrixRechnerOperator.SPUR, MatrixRechnerOperator.HAUPTDIAGONALE, MatrixRechnerOperator.NEBENDIAGONALE) ->
+                (objekt as? Tensorartig)?.alsRangZweiMatrix()
+            else -> objekt as? Matrix
+        } ?: return@mapNotNull null
+        val bereich = maximaleZahlenGrundmenge(matrix.zeilen.flatten().map {
+            inferiereZahlenWertevorrat(it, variablenVorräte, bedingungen.orEmpty())
+        }).fundamentalerZahlbereichOderNull() ?: error("Der Matrixkoeffizientenbereich ist nicht nachgewiesen.")
+        MatrixOperand(rolle, matrix, bereich)
     }
     val skalare = argumente.values.filterIsInstance<ZahlAusdruck>()
     val vektoren = argumente.values.mapNotNull(::orientierterVektorOderNull)
-    return matrixErgebnisWert(MatrixRechner.erzeuge(MatrixRechnerAnfrage(operator, matrizen, skalare, vektoren)), bedingungen)
+    return matrixErgebnisWert(MatrixRechner.erzeuge(MatrixRechnerAnfrage(operator, matrizen, skalare, vektoren,
+        diagonalAusgabe=if(operator.stabileId in matrixDiagonalLeser) knoten?.let(::matrixRechnerDiagonalAusgabe) ?: VektorStrukturAusgabe.TUPEL else VektorStrukturAusgabe.TUPEL)), bedingungen)
 }
 
 private fun werteTensorFormelAus(
@@ -529,8 +556,8 @@ private fun werteStrukturOperatorAus(
     }
     return when (familie) {
         StrukturRechnerKnotenFamilie.AUSSAGESATZ -> werteAussagenFormelAus(definition.id, argumente, kontext.knoten)
-        StrukturRechnerKnotenFamilie.VEKTOR -> werteVektorFormelAus(definition.id, argumente)
-        StrukturRechnerKnotenFamilie.MATRIX -> werteMatrixFormelAus(definition.id, argumente,kontext.eingänge.values.flatMap { it.variablenQuellen }.associate { it.name to it.werteVorrat }, bedingungen)
+        StrukturRechnerKnotenFamilie.VEKTOR -> werteVektorFormelAus(definition.id, argumente,kontext.eingänge.values.rechnerQuellBereiche(),kontext.eingänge.values.flatMap {it.annahmen}.toSet(),bedingungen,kontext.knoten)
+        StrukturRechnerKnotenFamilie.MATRIX -> werteMatrixFormelAus(definition.id, argumente,kontext.eingänge.values.rechnerQuellBereiche(), bedingungen,kontext.knoten)
         StrukturRechnerKnotenFamilie.TENSOR -> werteTensorFormelAus(definition.id, argumente, kontext.knoten)
     }
 }
@@ -560,18 +587,8 @@ private fun tensorKonfiguration(knoten: KnotenDaten) = TensorRechnerKonfiguratio
 private fun parseStrukturIntListe(wert: String?): List<Int> =
     wert.orEmpty().split(',').mapNotNull { it.trim().takeIf(String::isNotEmpty)?.toIntOrNull() }
 
-private fun vektorQuelleOderNull(objekt: MathematischesObjekt): VektorQuelle? {
-    val vektor = orientierterVektorOderNull(objekt) ?: return null
-    val vertrag = KartesischerKoordinatenVertrag(
-        dimension = vektor.werte.size,
-        zahlbereich = FundamentalerZahlbereich.REELL,
-        basisId = "standard",
-        koordinatensystemId = "kartesisch",
-        standardBasis = true,
-    )
-    return if (objekt is Tupel) VektorQuelle.Koordinaten(objekt, vertrag)
-    else VektorQuelle.Vektor(vektor, vertrag)
-}
+private fun vektorQuelleOderNull(objekt: MathematischesObjekt, vorräte: Map<String,MengenAusdruck>, annahmen: Set<Aussage>): VektorQuelle? =
+    if (objekt is OrientierterVektor || objekt is Tupel) vektorQuelleErweitert(objekt,vorräte,annahmen) else null
 
 private fun orientierterVektorOderNull(objekt: MathematischesObjekt): OrientierterVektor? {
     return when (objekt) {

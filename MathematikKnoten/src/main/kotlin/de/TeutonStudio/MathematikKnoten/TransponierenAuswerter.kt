@@ -8,15 +8,8 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 internal fun MathematikAuswerterRegister.registriereTransponieren() {
     registriere("mathematik.transponieren") { k ->
         val eingang = k.eingänge["wert"] ?: error("Transponierbarer Wert fehlt.")
-        val transponiert = when (val wert = eingang.objekt) {
-            is SpaltenVektor -> wert.transponiert()
-            is ZeilenVektor -> wert.transponiert()
-            is Matrix -> wert.transponiert()
-            is Tensor -> wert.permutiereAchsen(
-                parseTensorPermutation(k.knoten.parameter["achsenPermutation"], wert.rang),
-            )
-            else -> error("Nur Vektoren, Matrizen und Tensoren können transponiert werden.")
-        }
-        KnotenAuswertungsErgebnis(mapOf("wert" to eingang.copy(objekt = transponiert)))
+        val wert=eingang.mathematischesObjekt("Transponierbarer Wert")
+        val transponiert=transponiereStruktur(wert,if(wert is Tensor) parseTensorPermutation(k.knoten.parameter["achsenPermutation"],wert.rang) else null)
+        KnotenAuswertungsErgebnis(mapOf("wert" to eingang.copy(objekt = transponiert,übersetzungen=eingang.übersetzungen.alsHerkunft())))
     }
 }

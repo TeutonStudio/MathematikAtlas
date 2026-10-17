@@ -50,6 +50,31 @@ class InspektorBereicheGeraeteTest {
         compose.runOnIdle { atlas.beendeBerechnungen() }
     }
 
+    @Test fun diagonalprojektionWechseltImGemeinsamenAusgangsbereichMitUndo() {
+        val basis=KartenDaten(name="D",knoten=listOf(MatrixdiagonaleKnotenVorlagen.Matrixdiagonale.erzeuge(GraphPunkt.Zero)))
+            .migriereStrukturKonsolidierung().knoten.single()
+        lateinit var atlas: AtlasZustand
+        compose.setContent {
+            val context=LocalContext.current
+            atlas=remember { AtlasZustand(IsolierterInspektorTestContext(context)).also {
+                it.editor.ersetzeKarte(KartenDaten(name="Diagonalprojektion",knoten=listOf(basis)))
+                it.editor.wähleKnoten(basis.id);it.aktualisiereAuswertung();InspektorSichtbarkeit.öffnen()
+            } }
+            MaterialTheme { Row(Modifier.fillMaxSize()) { Spacer(Modifier.weight(1f));Inspektor(atlas,Modifier) } }
+        }
+        compose.onNodeWithText("Standarddaten").performClick()
+        compose.onNodeWithText("Ausgangsdaten").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Gemeinsame Einstellungen").performScrollTo().performClick()
+        compose.onNodeWithText("Zeilenvektor").performScrollTo().performClick()
+        compose.runOnIdle {
+            val neu=atlas.editor.karte.knoten.single()
+            assertEquals("zeile",neu.parameter[MATRIXDIAGONALE_AUSGABE])
+            assertEquals(basis.anschlüsse.map {it.id},neu.anschlüsse.map {it.id})
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(basis,atlas.editor.karte.knoten.single());atlas.beendeBerechnungen()
+        }
+    }
+
     @Test fun relationswechselAendertParameterUndStandardnamenInEinemUndoSchritt() {
         val basis = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero)
         lateinit var atlas: AtlasZustand

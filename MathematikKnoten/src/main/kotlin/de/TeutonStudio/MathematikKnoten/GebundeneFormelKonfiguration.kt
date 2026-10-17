@@ -82,9 +82,10 @@ fun werteGebundeneKnotenFormelAus(k:KnotenAuswertungsKontext):KnotenAuswertungsE
             p.name to p.copy(bindungsId=q.id)
         }
     val eingangsAnnahmen=k.eingänge.values.flatMap {it.annahmen}.map {ersetze(it,historischeBindungen)}.toSet()
-    val r=f.copy(annahmen=f.annahmen+eingangsAnnahmen).werteAus(bindungen) { op,a ->
+    val r=f.copy(annahmen=f.annahmen+eingangsAnnahmen).werteMitOperationsKontextAus(bindungen) { op,a,operationsAnnahmen ->
         val bedingungen=mutableSetOf<Aussage>()
-        val w=werteFormelOperationAus(op.operatorId,op.argumente.sortedBy {it.position}.map {it.rollenId}.zip(a).toMap(),k.knoten,bedingungen) as? MathematischesObjekt ?: error("Der Operator liefert keinen mathematischen Formelwert.")
+        val w=werteFormelOperationAus(op.operatorId,op.argumente.sortedBy {it.position}.map {it.rollenId}.zip(a).toMap(),k.knoten,bedingungen,
+            (f.quellen+eingangsQuellen).mapNotNull {q -> q.werteVorrat?.let {q.id to it}}.toMap()+k.eingänge.values.rechnerQuellBereiche(),operationsAnnahmen) as? MathematischesObjekt ?: error("Der Operator liefert keinen mathematischen Formelwert.")
         FormelKernErgebnis(w,bedingungen)
     }
     val freieIds=(r.objekt.freieMethodenParameter()+r.bedingungen.flatMap {it.freieMethodenParameter()}).mapNotNull {it.bindungsId}.toSet()

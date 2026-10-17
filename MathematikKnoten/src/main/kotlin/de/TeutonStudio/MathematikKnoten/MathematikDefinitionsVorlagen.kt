@@ -17,7 +17,7 @@ fun alleMathematikDefinitionsVorlagen(): List<KnotenVorlage> =
             AxiomKnotenVorlagen.alle
     ).map(de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog::kanonisiereMethodenUndRelationsVorlage)
     .distinctBy { vorlage ->
-        if (vorlage.art in setOf("mathematik.methodeAufrufen", "mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren"))
+        if (vorlage.art in setOf("mathematik.methodeAufrufen", "mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren", "mathematik.matrixrechner", "mathematik.vektorrechner"))
             de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog.variantenKennung(vorlage)
         else vorlage.art + listOf(
             vorlage.standardParameter[ZAHLENRECHNER_OPERATOR].orEmpty(),

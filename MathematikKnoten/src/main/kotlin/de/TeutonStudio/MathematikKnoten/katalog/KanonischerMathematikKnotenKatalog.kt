@@ -59,7 +59,7 @@ object KanonischerMathematikKnotenKatalog {
             bereinigt +
                 VektorKonstruktorVorlagen.standard +
                 VektorOrientierungsVorlagen.alle.flatMap { v ->
-                    if (v.art in HISTORISCHE_METHODEN_ANALYSIS) listOf(v, v.copy(standardParameter = v.standardParameter + (VEKTOR_ORIENTIERUNG_PARAMETER to VEKTOR_ORIENTIERUNG_ZEILE))) else listOf(v)
+                    if (v.art in HISTORISCHE_METHODEN_ANALYSIS || v.art == "mathematik.kreuzproduktSpalte") listOf(v, v.let { val k=konfiguriereOrientierungsKnoten(it.erzeuge(GraphPunkt.Zero),VEKTOR_ORIENTIERUNG_ZEILE); it.copy(anschlüsse=k.anschlüsse,standardParameter=k.parameter) }) else listOf(v)
                 } +
                 listOf(MathematikKnotenVorlagen.Kleiner, MathematikKnotenVorlagen.KleinerGleich, MathematikKnotenVorlagen.Größer, MathematikKnotenVorlagen.GrößerGleich) +
                 MultinomVektorKnotenVorlagen.standard +
@@ -78,7 +78,7 @@ object KanonischerMathematikKnotenKatalog {
             .map(::methodenfaehigeRechnerVorlage)
             .map(::joinVorlage)
             .distinctBy { vorlage ->
-                if (vorlage.art in setOf("mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren")) variantenKennung(vorlage)
+                if (vorlage.art in setOf("mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren", MatrixRechner.KNOTEN_ART, VektorRechner.KNOTEN_ART)) variantenKennung(vorlage)
                 else vorlage.art to listOf(
                     vorlage.standardParameter["operator"].orEmpty(),
                     vorlage.standardParameter["eingabeModus"].orEmpty(),
@@ -115,9 +115,14 @@ object KanonischerMathematikKnotenKatalog {
                 }
                 "mathematik.variable" -> listOf("zahl", "tupel", "winkeltupel", "zeile", "spalte").map { it to konfiguriereVariablenStruktur(k, it) }
                 TUPEL_ERGÄNZEN_ART -> TupelErgänzenModus.entries.map { it.name to konfiguriereTupelErgänzen(k, it) }
-                MATRIXDIAGONALE_ART -> listOf(MATRIXDIAGONALE_AUSLESEN, MATRIXDIAGONALE_ERZEUGEN).flatMap { modus ->
-                    listOf("tupel", "zeile", "spalte").map { "$modus · $it" to konfiguriereMatrixdiagonale(k, modus, it) }
+                MatrixRechner.KNOTEN_ART -> when {
+                    istMatrixDiagonalLeser(k) -> VektorStrukturAusgabe.entries.map { it.titel to konfiguriereMatrixRechnerDiagonalAusgabe(k,it.stabileId) }
+                    k.parameter[RECHNER_OPERATOR_PARAMETER]==MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN.stabileId -> MatrixDiagonalArt.entries.map {it.parameterWert to konfiguriereMatrixRechnerDiagonalArt(k,it.parameterWert)}
+                    else -> listOf("" to k)
                 }
+                VektorRechner.KNOTEN_ART -> if(k.parameter[VEKTOR_RECHNER_OPERATOR]==VektorRechnerOperator.KREUZPRODUKT.stabileId)
+                    listOf(null,VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE).map { (it ?: "Vom ersten Vektor") to konfiguriereKreuzproduktRechnerOrientierung(k,it) }
+                    else listOf("" to k)
                 MULTINOMVEKTOR_ART -> listOf(MULTINOM_AUSGABE_VEKTOR, MULTINOM_AUSGABE_TUPEL).flatMap { form ->
                     listOf(VEKTOR_ORIENTIERUNG_SPALTE, VEKTOR_ORIENTIERUNG_ZEILE).map { orient ->
                         "$form · $orient" to konfiguriereMultinomVektor(k, form, orient)
@@ -192,6 +197,12 @@ object KanonischerMathematikKnotenKatalog {
         v.anschlüsse.map { it.copy(id = AnschlussId("vorlage")) }).joinToString("|")
 
     internal fun kanonisiereMethodenUndRelationsVorlage(v: KnotenVorlage): KnotenVorlage {
+        if (v.art in strukturKonsolidierungAltarten) {
+            val alt=KnotenDaten(art=v.art,name=v.name,anschlüsse=v.anschlüsse,parameter=v.standardParameter,eigenschaften=v.standardEigenschaften)
+            val neu=KartenDaten(name="Vorlage",knoten=listOf(alt)).migriereStrukturKonsolidierung().knoten.single()
+            check(RECHNER_MIGRATION_DIAGNOSE !in neu.parameter) { "Ungültige kanonische Vorlage ${v.name}: ${neu.parameter[RECHNER_MIGRATION_DIAGNOSE]}" }
+            return v.copy(art=neu.art,anschlüsse=neu.anschlüsse,standardParameter=neu.parameter,standardEigenschaften=neu.eigenschaften)
+        }
         if (v.art != METHODEN_ANWENDUNG_ART && v.art !in HISTORISCHE_METHODEN_ANALYSIS && v.art != "mathematik.ordnungsrelation") return v
         val alt = KnotenDaten(art=v.art, name=v.name, anschlüsse=v.anschlüsse, parameter=v.standardParameter, eigenschaften=v.standardEigenschaften)
         val neu = KartenDaten(name="Vorlage",knoten=listOf(alt)).migriereMethodenKonsolidierung().migrierePraedikatKnoten().knoten.single()

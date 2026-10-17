@@ -223,58 +223,60 @@ fun istNachweisbarReell(
     ausdruck: ZahlAusdruck,
     variableIstReell: (Variable) -> Boolean = { false },
     annahmen: Set<Aussage> = emptySet(),
+    komponentenNachweis: (SymbolischeZahlKomponente) -> Boolean = { false },
 ): Boolean = when (ausdruck) {
     is MethodenZahlKomponente -> false
     is RationaleZahl -> true
     is MathematischeKonstante -> ausdruck == Pi || ausdruck == EulerscheZahl
     is Variable -> variableIstReell(ausdruck)
-    is Addition -> ausdruck.summanden.all { istNachweisbarReell(it, variableIstReell, annahmen) }
-    is Multiplikation -> ausdruck.faktoren.all { istNachweisbarReell(it, variableIstReell, annahmen) }
-    is Division -> istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen) &&
-        istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen) && ausdruck.divisor.istNachweisbarNichtNull(annahmen)
+    is Addition -> ausdruck.summanden.all { istNachweisbarReell(it, variableIstReell, annahmen, komponentenNachweis) }
+    is Multiplikation -> ausdruck.faktoren.all { istNachweisbarReell(it, variableIstReell, annahmen, komponentenNachweis) }
+    is Division -> istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen, komponentenNachweis) &&
+        istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen, komponentenNachweis) && ausdruck.divisor.istNachweisbarNichtNull(annahmen)
     is StrukturierteDivision -> ausdruck.kommutativitaet == KommutativitaetsStatus.NACHGEWIESEN &&
         ausdruck.invertierbarkeit == InvertierbarkeitsStatus.NACHGEWIESEN &&
-        istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen) &&
-        istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen)
-    is InversesElement -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+        istNachweisbarReell(ausdruck.dividend, variableIstReell, annahmen, komponentenNachweis) &&
+        istNachweisbarReell(ausdruck.divisor, variableIstReell, annahmen, komponentenNachweis)
+    is InversesElement -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis) &&
         ausdruck.argument.istNachweisbarNichtNull(annahmen)
-    is Potenz -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
+    is Potenz -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen, komponentenNachweis) &&
         (ausdruck.exponent as? RationaleZahl)?.let { exponent ->
             exponent.nenner == BigInteger.ONE && (exponent.zähler.signum() >= 0 || ausdruck.basis.istNachweisbarNichtNull(annahmen))
         } == true
-    is Konjugierte -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
+    is Konjugierte -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis)
     is Betrag -> true
     is SinusGrad, is WinkelBogenmass -> true
-    is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
-    is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
-    is ArcSinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+    is Sinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis)
+    is Cosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis)
+    is ArcSinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis) &&
         ausdruck.argument.istNachweisbarImEinheitsIntervall(annahmen)
-    is ArcCosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+    is ArcCosinus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis) &&
         ausdruck.argument.istNachweisbarImEinheitsIntervall(annahmen)
-    is Exponentialfunktion -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen)
-    is NatürlicherLogarithmus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarPositiv(annahmen)
-    is Logarithmus -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen) &&
-        istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) &&
+    is Exponentialfunktion -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis)
+    is NatürlicherLogarithmus -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis) && ausdruck.argument.istNachweisbarPositiv(annahmen)
+    is Logarithmus -> istNachweisbarReell(ausdruck.basis, variableIstReell, annahmen, komponentenNachweis) &&
+        istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis) &&
         ausdruck.basis.istNachweisbarPositiv(annahmen) && ausdruck.basis.istNachweisbarNichtEins() &&
         ausdruck.argument.istNachweisbarPositiv(annahmen)
-    is Maximum -> ausdruck.operanden.all { istNachweisbarReell(it, variableIstReell, annahmen) }
-    is Minimum -> ausdruck.operanden.all { istNachweisbarReell(it, variableIstReell, annahmen) }
+    is Maximum -> ausdruck.operanden.all { istNachweisbarReell(it, variableIstReell, annahmen, komponentenNachweis) }
+    is Minimum -> ausdruck.operanden.all { istNachweisbarReell(it, variableIstReell, annahmen, komponentenNachweis) }
     is Argument -> false
-    is Wurzel -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen) && ausdruck.argument.istNachweisbarNichtNegativ(annahmen)
+    is Wurzel -> istNachweisbarReell(ausdruck.argument, variableIstReell, annahmen, komponentenNachweis) && ausdruck.argument.istNachweisbarNichtNegativ(annahmen)
     is KomplexeZahl -> false
     is ZahlFallAusdruck ->
-        istNachweisbarReell(ausdruck.wahr, variableIstReell, annahmen + ausdruck.aussage) &&
-            istNachweisbarReell(ausdruck.lüge, variableIstReell, annahmen + Negation(ausdruck.aussage))
+        istNachweisbarReell(ausdruck.wahr, variableIstReell, annahmen + ausdruck.aussage, komponentenNachweis) &&
+            istNachweisbarReell(ausdruck.lüge, variableIstReell, annahmen + Negation(ausdruck.aussage), komponentenNachweis)
     is IterierteSumme, is IteriertesProdukt -> false
     is DifferentialVariable, is DifferentialTerm, is SymbolischerHyperReellerWert -> false
-    is StrukturAchsenLaenge, is SymbolischeZahlKomponente -> false
+    is StrukturAchsenLaenge -> true
+    is SymbolischeZahlKomponente -> komponentenNachweis(ausdruck)
 }
 
 /**
  * Kleinste der unterstützten Zahlgrundmengen, die alle [mengen] enthält.
  *
- * Die fünf Grundmengen bilden im aktuellen Modell die totale Kette
- * `N ⊂ Z ⊂ Q ⊂ R ⊂ C`. Andere Mengen haben keine vergleichbare
+ * Die vorhandenen Grundmengen bilden die Kette
+ * `N ⊂ N₀ ⊂ Z ⊂ Q ⊂ R ⊂ C ⊂ H`. Andere Mengen haben keine vergleichbare
  * Zahlbereichsordnung und werden deshalb bewusst abgelehnt.
  */
 fun maximaleZahlenGrundmenge(mengen: Iterable<MengenAusdruck>): MengenAusdruck {
@@ -307,7 +309,8 @@ fun inferiereZahlenWertevorrat(
         else -> NatürlicheZahlen
     }
     is MathematischeKonstante -> if (ausdruck == Pi || ausdruck == EulerscheZahl) ReelleZahlen else KomplexeZahlen
-    is Variable -> werteVorräte[ausdruck.name] ?: KomplexeZahlen
+    is Variable -> (ausdruck.bindungsId?.let(werteVorräte::get) ?: werteVorräte[ausdruck.name])
+        ?.let(::numerischeDomainGrundmenge) ?: KomplexeZahlen
     is Addition -> maximaleZahlenGrundmenge(ausdruck.summanden.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
     is Multiplikation -> maximaleZahlenGrundmenge(ausdruck.faktoren.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
     is Maximum -> maximaleZahlenGrundmenge(ausdruck.operanden.map { inferiereZahlenWertevorrat(it, werteVorräte, annahmen) })
@@ -341,18 +344,18 @@ fun inferiereZahlenWertevorrat(
         if (exponent != null && exponent.nenner == BigInteger.ONE) {
             val basis = inferiereZahlenWertevorrat(ausdruck.basis, werteVorräte, annahmen)
             if (exponent.zähler.signum() >= 0) basis else maximaleZahlenGrundmenge(listOf(RationaleZahlen, basis))
-        } else if (istNachweisbarReell(ausdruck, { werteVorräte[it.name] in reelleZahlenGrundmengen }, annahmen)) ReelleZahlen else KomplexeZahlen
+        } else if (istNachweisbarReell(ausdruck, { (it.bindungsId?.let(werteVorräte::get) ?: werteVorräte[it.name]) in reelleZahlenGrundmengen }, annahmen)) ReelleZahlen else KomplexeZahlen
     }
     is Wurzel, is NatürlicherLogarithmus, is Logarithmus -> if (istNachweisbarReell(
         ausdruck,
-        variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
+        variableIstReell = { variable -> (variable.bindungsId?.let(werteVorräte::get) ?: werteVorräte[variable.name]) in reelleZahlenGrundmengen },
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
     is Konjugierte -> inferiereZahlenWertevorrat(ausdruck.argument, werteVorräte, annahmen)
     is Betrag, is Argument, is ArcSinus, is ArcCosinus, is SinusGrad, is WinkelBogenmass -> ReelleZahlen
     is Sinus, is Cosinus, is Exponentialfunktion -> if (when(ausdruck) { is Sinus -> inferiereZahlenWertevorrat(ausdruck.argument,werteVorräte,annahmen) in reelleZahlenGrundmengen; is Cosinus -> inferiereZahlenWertevorrat(ausdruck.argument,werteVorräte,annahmen) in reelleZahlenGrundmengen; else -> false } || istNachweisbarReell(
         ausdruck,
-        variableIstReell = { variable -> werteVorräte[variable.name] in reelleZahlenGrundmengen },
+        variableIstReell = { variable -> (variable.bindungsId?.let(werteVorräte::get) ?: werteVorräte[variable.name]) in reelleZahlenGrundmengen },
         annahmen = annahmen,
     )) ReelleZahlen else KomplexeZahlen
     is KomplexeZahl -> KomplexeZahlen
@@ -366,7 +369,7 @@ fun inferiereZahlenWertevorrat(
     )
     is StrukturAchsenLaenge -> NatürlicheZahlen
     is SymbolischeZahlKomponente -> when(val quelle=ausdruck.quelle) {
-        is MethodenParameter -> when(val raum=werteVorräte[quelle.name]) {
+        is MethodenParameter -> when(val raum=quelle.bindungsId?.let(werteVorräte::get) ?: werteVorräte[quelle.name]) {
             is Matrizenraum -> raum.skalarMenge
             is Vektorraum -> raum.skalarMenge
             is Tupelraum -> {
@@ -383,15 +386,16 @@ fun inferiereZahlenWertevorrat(
     }
 }
 
-private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen)
+private val reelleZahlenGrundmengen = setOf(NatürlicheZahlen, NichtnegativeGanzeZahlenSemantik.menge, GanzeZahlen, RationaleZahlen, ReelleZahlen)
 
 private fun zahlenGrundmengenRang(menge: MengenAusdruck): Int = when (menge) {
     NatürlicheZahlen -> 0
-    GanzeZahlen -> 1
-    RationaleZahlen -> 2
-    ReelleZahlen -> 3
-    KomplexeZahlen -> 4
-    FundamentalerZahlbereich.QUATERNION.alsMenge() -> 5
+    NichtnegativeGanzeZahlenSemantik.menge -> 1
+    GanzeZahlen -> 2
+    RationaleZahlen -> 3
+    ReelleZahlen -> 4
+    KomplexeZahlen -> 5
+    FundamentalerZahlbereich.QUATERNION.alsMenge() -> 6
     else -> error("'$menge' ist keine unterstützte Zahlgrundmenge.")
 }
 
@@ -484,6 +488,25 @@ fun komplexAusPolar(tupel: Tupel): KomplexeZahl {
 
 private fun numerischeDomainGrundmenge(menge:MengenAusdruck):MengenAusdruck = when(menge) {
     is ReellesIntervall -> ReelleZahlen
+    is BeschraenkteZahlmenge -> menge.traeger.alsMenge()
+    is Schnitt -> (menge.mengen + listOfNotNull(menge.grundMenge))
+        .mapNotNull(::nachgewieseneZahlenGrundmenge)
+        .minByOrNull(::zahlenGrundmengenRang) ?: KomplexeZahlen
+    is Vereinigung -> if (menge.mengen.isEmpty()) KomplexeZahlen else
+        maximaleZahlenGrundmenge(menge.mengen.map(::numerischeDomainGrundmenge))
+    is MengenDifferenz -> numerischeDomainGrundmenge(menge.links)
     is EndlicheMenge -> if(menge.elemente.isEmpty()) KomplexeZahlen else maximaleZahlenGrundmenge(menge.elemente.map { inferiereZielmenge(it) })
     else -> menge.fundamentalerZahlbereichOderNull()?.alsMenge() ?: KomplexeZahlen
+}
+
+/** Eine Schnittbedingung verengt den Träger; unbekannte Bedingungen liefern keinen Zahlbereich. */
+fun nachgewieseneZahlenGrundmenge(menge: MengenAusdruck): MengenAusdruck? = when (menge) {
+    is ReellesIntervall, is BeschraenkteZahlmenge, is EndlicheMenge -> numerischeDomainGrundmenge(menge)
+    is Schnitt -> (menge.mengen + listOfNotNull(menge.grundMenge))
+        .mapNotNull(::nachgewieseneZahlenGrundmenge).minByOrNull(::zahlenGrundmengenRang)
+    is MengenDifferenz -> nachgewieseneZahlenGrundmenge(menge.links)
+    is Vereinigung -> menge.mengen.map(::nachgewieseneZahlenGrundmenge)
+        .takeIf { it.isNotEmpty() && it.all { grundmenge -> grundmenge != null } }
+        ?.let { maximaleZahlenGrundmenge(it.filterNotNull()) }
+    else -> menge.fundamentalerZahlbereichOderNull()?.alsMenge()
 }
